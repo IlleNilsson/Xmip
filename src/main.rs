@@ -6,6 +6,12 @@ use uuid::Uuid;
 const CHECKPOINT_FILE: &str = "execution-context.pb";
 const CRASH_MARKER_FILE: &str = "crash-once.marker";
 
+/// Protobuf-compatible runtime state.
+///
+/// This is intentionally the kernel boundary. Endpoint implementations may be
+/// written in Rust, C#, PowerShell, Python, shell scripts, or other technologies,
+/// but the runtime truth crossing the boundary is this protobuf/gRPC-compatible
+/// execution context.
 #[derive(Clone, PartialEq, Message)]
 pub struct ExecutionContext {
     #[prost(string, tag = "1")]
@@ -32,26 +38,38 @@ pub struct ExecutionContext {
     pub lineage: Vec<String>,
     #[prost(string, repeated, tag = "12")]
     pub preservation_log: Vec<String>,
+
+    #[prost(string, tag = "13")]
+    pub receive_location: String,
+    #[prost(string, tag = "14")]
+    pub receive_port: String,
+    #[prost(string, tag = "15")]
+    pub endpoint_technology: String,
+    #[prost(string, tag = "16")]
+    pub message_format: String,
+    #[prost(string, tag = "17")]
+    pub send_port: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Enumeration)]
 #[repr(i32)]
 pub enum Step {
     Unspecified = 0,
-    StreamIn = 1,
-    Deserialize = 2,
-    Transform = 3,
-    Promote = 4,
-    Publish = 5,
-    ProcessLane = 6,
-    DeliveryLane = 7,
-    SendOut = 8,
-    Complete = 9,
+    ReceiveLocation = 1,
+    ReceivePort = 2,
+    Analyze = 3,
+    Deserialize = 4,
+    Promote = 5,
+    Publish = 6,
+    ProcessLane = 7,
+    DeliveryLane = 8,
+    SendOut = 9,
+    Complete = 10,
 }
 
 fn main() {
-    println!("Xmip Linear Kernel 0.1.1");
-    println!("Subscription-driven protobuf recovery demo\n");
+    println!("Xmip Linear Kernel 0.1.2");
+    println!("Architecture-aligned protobuf recovery demo\n");
 
     let mut ctx = load_or_create_execution();
 
@@ -60,9 +78,10 @@ fn main() {
         println!("Current step: {:?}", step);
 
         match step {
-            Step::StreamIn => stream_in(&mut ctx),
+            Step::ReceiveLocation => receive_location(&mut ctx),
+            Step::ReceivePort => receive_port(&mut ctx),
+            Step::Analyze => analyze(&mut ctx),
             Step::Deserialize => deserialize(&mut ctx),
-            Step::Transform => transform(&mut ctx),
             Step::Promote => promote(&mut ctx),
             Step::Publish => publish(&mut ctx),
             Step::ProcessLane => process_lane(&mut ctx),
@@ -82,7 +101,7 @@ fn main() {
 fn new_execution() -> ExecutionContext {
     ExecutionContext {
         execution_id: Uuid::new_v4().to_string(),
-        current_step: Step::StreamIn as i32,
+        current_step: Step::ReceiveLocation as i32,
         generation: 0,
         ingress_stream: String::new(),
         message_body: String::new(),
@@ -93,6 +112,11 @@ fn new_execution() -> ExecutionContext {
         send_locations: Vec::new(),
         lineage: vec!["ExecutionCreated".to_string()],
         preservation_log: vec!["PreservationStarted".to_string()],
+        receive_location: String::new(),
+        receive_port: String::new(),
+        endpoint_technology: String::new(),
+        message_format: String::new(),
+        send_port: String::new(),
     }
 }
 
@@ -104,7 +128,8 @@ fn load_or_create_execution() -> ExecutionContext {
 
         ctx.generation += 1;
         ctx.lineage.push(format!("RecoveredGeneration{}", ctx.generation));
-        ctx.preservation_log.push(format!("RecoveredFromCheckpointGeneration{}", ctx.generation));
+        ctx.preservation_log
+            .push(format!("RecoveredFromCheckpointGeneration{}", ctx.generation));
 
         println!("Recovered execution from protobuf checkpoint.");
         println!("ExecutionId: {}", ctx.execution_id);
@@ -124,8 +149,7 @@ fn persist_checkpoint(ctx: &ExecutionContext) {
     let mut buffer = Vec::new();
     ctx.encode(&mut buffer)
         .expect("failed to encode protobuf execution context");
-    fs::write(CHECKPOINT_FILE, buffer)
-        .expect("failed to persist checkpoint");
+    fs::write(CHECKPOINT_FILE, buffer).expect("failed to persist checkpoint");
 
     let step = Step::try_from(ctx.current_step).unwrap_or(Step::Unspecified);
     println!("Checkpoint persisted as protobuf buffer at boundary: {:?}\n", step);
@@ -135,41 +159,71 @@ fn preserve(ctx: &mut ExecutionContext, event: &str) {
     ctx.preservation_log.push(event.to_string());
 }
 
-fn stream_in(ctx: &mut ExecutionContext) {
-    println!("Stream enters Xmip at receive location.");
+fn receive_location(ctx: &mut ExecutionContext) {
+    println!("Stream arrives at receiveLocation.");
 
+    ctx.receive_location = "receiveLocation:orders/inbound-script".to_string();
+    ctx.endpoint_technology = "external-script-or-language-endpoint".to_string();
+
+    // Xmip starts here. The endpoint may be implemented by another language or
+    // script technology, but Xmip receives the stream and makes it durable.
     ctx.ingress_stream = "order_id=1001; customer_id=SE-42; priority=high; destination=email,archive,webhook; body=hello from xmip linear".to_string();
 
-    ctx.lineage.push("StreamInCompleted".to_string());
-    preserve(ctx, "IngressStreamPreserved");
-    ctx.current_step = Step::Deserialize as i32;
+    ctx.lineage.push("ReceiveLocationCompleted".to_string());
+    preserve(ctx, "IngressStreamPreservedAtReceiveLocation");
+    ctx.current_step = Step::ReceivePort as i32;
 }
 
-fn deserialize(ctx: &mut ExecutionContext) {
-    println!("Deserializing stream into understandable message.");
+fn receive_port(ctx: &mut ExecutionContext) {
+    println!("Binding stream to receivePort.");
 
     if ctx.ingress_stream.is_empty() {
         panic!("missing ingress stream");
     }
 
+    ctx.receive_port = "receivePort:orders".to_string();
+
+    ctx.lineage.push("ReceivePortBound".to_string());
+    preserve(ctx, "ReceivePortBindingPreserved");
+    ctx.current_step = Step::Analyze as i32;
+}
+
+fn analyze(ctx: &mut ExecutionContext) {
+    println!("Analyzing stream and detecting format.");
+
+    if ctx.ingress_stream.trim().starts_with('{') {
+        ctx.message_format = "json".to_string();
+    } else if ctx.ingress_stream.trim().starts_with('<') {
+        ctx.message_format = "xml".to_string();
+    } else if ctx.ingress_stream.contains('=') && ctx.ingress_stream.contains(';') {
+        ctx.message_format = "key-value-flat-stream".to_string();
+    } else {
+        ctx.message_format = "unknown".to_string();
+    }
+
+    if ctx.message_format == "unknown" {
+        panic!("unable to determine message format");
+    }
+
+    ctx.lineage
+        .push(format!("AnalyzeCompleted:format={}", ctx.message_format));
+    preserve(ctx, "FormatDetectionPreserved");
+    ctx.current_step = Step::Deserialize as i32;
+}
+
+fn deserialize(ctx: &mut ExecutionContext) {
+    println!("Deserializing stream into an understandable message.");
+
+    if ctx.ingress_stream.is_empty() {
+        panic!("missing ingress stream");
+    }
+
+    // Minimal demo deserializer. Real handlers will live behind explicit
+    // content/contract handlers, potentially implemented in different runtimes.
     ctx.message_body = ctx.ingress_stream.clone();
 
     ctx.lineage.push("DeserializeCompleted".to_string());
     preserve(ctx, "MessageBodyPreserved");
-    ctx.current_step = Step::Transform as i32;
-}
-
-fn transform(ctx: &mut ExecutionContext) {
-    println!("Transforming message after deserialization.");
-
-    if ctx.message_body.is_empty() {
-        panic!("missing message body");
-    }
-
-    ctx.transformed_body = ctx.message_body.to_uppercase();
-
-    ctx.lineage.push("TransformCompleted".to_string());
-    preserve(ctx, "TransformedMessagePreserved");
     ctx.current_step = Step::Promote as i32;
 }
 
@@ -205,8 +259,7 @@ fn publish(ctx: &mut ExecutionContext) {
     ctx.current_step = Step::ProcessLane as i32;
 
     if !Path::new(CRASH_MARKER_FILE).exists() {
-        fs::write(CRASH_MARKER_FILE, "crashed once")
-            .expect("failed to write crash marker");
+        fs::write(CRASH_MARKER_FILE, "crashed once").expect("failed to write crash marker");
 
         persist_checkpoint(ctx);
         panic!("Simulated crash after Publish boundary. Run again to recover.");
@@ -229,14 +282,14 @@ fn resolve_subscriptions(properties: &[String]) -> Vec<String> {
     }
 
     if properties.iter().any(|p| p.starts_with("destination=")) {
-        subscriptions.push("delivery:direct-send".to_string());
+        subscriptions.push("sendPort:orders-out".to_string());
     }
 
     subscriptions
 }
 
 fn process_lane(ctx: &mut ExecutionContext) {
-    println!("Executing process lane subscriptions.");
+    println!("Executing process/orchestration subscriptions.");
 
     let process_subscriptions: Vec<String> = ctx
         .subscriptions
@@ -256,14 +309,23 @@ fn process_lane(ctx: &mut ExecutionContext) {
 }
 
 fn delivery_lane(ctx: &mut ExecutionContext) {
-    println!("Preparing delivery lane from subscriptions.");
+    println!("Preparing sendPort delivery lane from subscriptions.");
 
-    let has_direct_delivery = ctx
+    let has_send_port_subscription = ctx
         .subscriptions
         .iter()
-        .any(|s| s == "delivery:direct-send");
+        .any(|s| s == "sendPort:orders-out");
 
-    if has_direct_delivery {
+    if has_send_port_subscription {
+        ctx.send_port = "sendPort:orders-out".to_string();
+
+        // Optional delivery-side transformation. Transformation is not required
+        // before promotion/publish; it belongs to process or delivery semantics.
+        ctx.transformed_body = ctx.message_body.to_uppercase();
+        ctx.lineage
+            .push("DeliveryTransformCompleted:orders-out".to_string());
+        preserve(ctx, "DeliveryTransformPreserved");
+
         ctx.send_locations = vec![
             "sendLocation:email".to_string(),
             "sendLocation:archive".to_string(),
@@ -281,12 +343,18 @@ fn delivery_lane(ctx: &mut ExecutionContext) {
 }
 
 fn send_out(ctx: &mut ExecutionContext) {
-    println!("Sending to all resolved destinations.");
+    println!("Sending to all resolved sendLocation(s).");
 
     let send_locations = ctx.send_locations.clone();
+    let payload = if ctx.transformed_body.is_empty() {
+        &ctx.message_body
+    } else {
+        &ctx.transformed_body
+    };
 
     for location in send_locations {
         println!("Sent to {}", location);
+        println!("Payload: {}", payload);
         ctx.lineage.push(format!("SendCompleted:{}", location));
         ctx.preservation_log.push(format!("SendRecorded:{}", location));
     }
@@ -298,6 +366,10 @@ fn complete(ctx: &ExecutionContext) {
     println!("\nExecution complete.");
     println!("ExecutionId: {}", ctx.execution_id);
     println!("Generation: {}", ctx.generation);
+    println!("ReceiveLocation: {}", ctx.receive_location);
+    println!("ReceivePort: {}", ctx.receive_port);
+    println!("MessageFormat: {}", ctx.message_format);
+    println!("SendPort: {}", ctx.send_port);
 
     println!("\nLineage:");
     for item in &ctx.lineage {
