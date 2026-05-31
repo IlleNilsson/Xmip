@@ -1,6 +1,6 @@
 # Xmip Artifact Model
 
-This document captures the initial Xmip artifact model.
+This document captures the current Xmip artifact model.
 
 It is intentionally architecture-first. It does not define final file formats, Rust structs, persistence schemas, or module loading mechanics.
 
@@ -237,7 +237,9 @@ A Subscription is an Artifact Definition in TOML.
 
 A Subscription contains a set of rules.
 
-When those rules evaluate to true, the Subscription publishes.
+When those rules evaluate to true at runtime, the Subscription causes a runtime action according to its Artifact Definition.
+
+That action may publish.
 
 At runtime, matching subscriptions create Subscription Instances.
 
@@ -245,7 +247,7 @@ A Subscription Instance is chained runtime metadata attached to the message jour
 
 The Subscription Instance chain is similar to a call stack in a programming language: it records how a message was published through Xmip over time.
 
-A publication can publish back into Xmip, where additional subscriptions may evaluate and publish again.
+A publication can publish back into Xmip, where additional subscriptions may evaluate and cause further actions.
 
 ## Example concept
 
