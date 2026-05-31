@@ -8,18 +8,27 @@ It is intentionally architecture-first. It does not define final file formats, R
 
 In Xmip, artifacts are defined at startup from TOML configuration.
 
-At runtime, Xmip operates on artifact instances.
+The TOML configuration defines Artifact Definitions.
+
+An Artifact Definition does not become useful by itself.
+
+At runtime, the Xmip kernel combines an Artifact Definition with loaded module code that satisfies the required traits, interfaces, or contracts.
+
+That combination becomes an Artifact Instance.
 
 ```text
 TOML configuration
-    -> artifact definitions
-        -> startup binding
-            -> runtime artifact instances
+    -> Artifact Definition
+        + loaded module code
+        + validated contracts
+            -> Artifact Instance at runtime
 ```
 
-## Artifact definition
+The runtime operates on Artifact Instances, not raw TOML and not module code alone.
 
-An artifact definition is a configured capability declaration.
+## Artifact Definition
+
+An Artifact Definition is a configured capability declaration.
 
 It combines:
 
@@ -30,15 +39,17 @@ It combines:
 - contract requirements,
 - topology references.
 
-An artifact definition is not the running object itself.
+An Artifact Definition is not the running object itself.
 
-It is the startup definition used by a Xmip instance to construct runtime artifact instances.
+It is the startup definition used by a Xmip instance together with loaded module code to construct Artifact Instances.
 
-## Runtime artifact instance
+## Artifact Instance
 
-A runtime artifact instance is the in-memory/runtime representation created from an artifact definition when a Xmip kernel starts.
+An Artifact Instance is the runtime result of binding an Artifact Definition to module code.
 
-A runtime artifact instance is bound to:
+An Artifact Instance exists only after the Xmip kernel has loaded modules, resolved the Artifact Definition, validated configuration, and bound the definition to a contract-compatible implementation.
+
+An Artifact Instance is bound to:
 
 - the Xmip kernel lifecycle,
 - a module implementation,
@@ -47,25 +58,25 @@ A runtime artifact instance is bound to:
 - current deployment profile,
 - preservation and recovery semantics.
 
-The runtime works with instances, not raw TOML.
+The runtime works with Artifact Instances.
 
 ## Module + configuration
 
 An artifact is not just configuration.
 
-An artifact is also not just a binary module.
+An artifact is also not just module code.
 
 Conceptually:
 
 ```text
-Artifact = Module + Configuration
+Artifact Definition + Module Code = Artifact Instance
 ```
 
-More precisely:
+or:
 
 ```text
-Artifact definition = configured module capability declaration
-Runtime artifact instance = activated configured module capability
+Artifact Definition = configured module capability declaration
+Artifact Instance = runtime-bound configured module capability
 ```
 
 ## Artifact identity
@@ -84,7 +95,7 @@ OrdersInbound
 
 `OrdersInbound` remains the same artifact identity.
 
-Newer runtime artifact instances use the new module/configuration after startup or redeployment.
+Newer Artifact Instances use the new module/configuration after startup or redeployment.
 
 This means preservation, lineage, and deployment history must not be anchored only to the concrete implementation technology.
 
@@ -157,24 +168,27 @@ A Xmip instance startup should conceptually perform the following:
 
 1. Load kernel configuration.
 2. Load available modules.
-3. Load TOML artifact definitions.
+3. Load TOML Artifact Definitions.
 4. Resolve artifact categories and module references.
 5. Validate configuration against required traits/interfaces/contracts.
-6. Create runtime artifact instances.
-7. Validate topology references between artifact instances.
-8. Start eligible receive/schedule/runtime entry points.
+6. Bind Artifact Definitions to module code.
+7. Create Artifact Instances.
+8. Validate topology references between Artifact Instances.
+9. Start eligible receive/schedule/runtime entry points.
 
 ## Receive artifacts
 
 ReceivePort and ReceiveLocation are both artifacts.
 
-At runtime, both become runtime artifact instances.
+At runtime, both become Artifact Instances.
 
 ### ReceivePort
 
 A ReceivePort is a named placeholder for one or more ReceiveLocation artifacts.
 
 It is part of the topology and gives receive locations a stable named place to publish into.
+
+A ReceivePort may have multiple ReceiveLocation artifacts bound to it.
 
 ### ReceiveLocation
 
@@ -185,10 +199,10 @@ It binds a module implementation and configuration to a named ReceivePort.
 Example:
 
 ```text
-ReceivePort artifact definition
+ReceivePort Artifact Definition
     name = Orders
 
-ReceiveLocation artifact definition
+ReceiveLocation Artifact Definition
     name = OrdersInbound
     module = receive-http
     receivePort = Orders
@@ -197,7 +211,7 @@ ReceiveLocation artifact definition
 Later, `OrdersInbound` may change transport implementation:
 
 ```text
-ReceiveLocation artifact definition
+ReceiveLocation Artifact Definition
     name = OrdersInbound
     module = receive-mqtt
     receivePort = Orders
@@ -205,29 +219,54 @@ ReceiveLocation artifact definition
 
 `OrdersInbound` remains the same artifact identity.
 
-Newer artifact instances use MQTT instead of HTTP.
+Newer Artifact Instances use MQTT instead of HTTP.
+
+## Send artifacts
+
+SendPort and SendLocation are both artifacts.
+
+At runtime, both become Artifact Instances.
+
+A SendPort may have multiple SendLocation artifacts bound to it.
+
+The detailed send semantics, including delivery rules, retry behavior, failover behavior, success with warnings, and error behavior, must be defined separately.
+
+## Subscription artifacts
+
+A Subscription is an Artifact Definition in TOML.
+
+A Subscription contains a set of rules.
+
+When those rules evaluate to true, the Subscription publishes.
+
+At runtime, matching subscriptions create Subscription Instances.
+
+A Subscription Instance is chained runtime metadata attached to the message journey until the message leaves Xmip through a SendLocation.
+
+The Subscription Instance chain is similar to a call stack in a programming language: it records how a message was published through Xmip over time.
+
+A publication can publish back into Xmip, where additional subscriptions may evaluate and publish again.
 
 ## Example concept
 
 A receive location is not merely a TOML file and not merely a receive module.
 
-It is a configured module capability.
+It is a configured module capability declared in TOML and activated with module code at runtime.
 
 ```text
-receive module
-    + receive configuration
-        -> receive artifact definition
-            -> receive artifact instance at runtime
+receive module code
+    + receive Artifact Definition
+        -> receive Artifact Instance at runtime
 ```
 
-The same principle applies to send locations, transformations, processors/orchestrations, serializers, deserializers, and other capability categories.
+The same principle applies to send locations, transformations, processors/orchestrations, serializers, deserializers, subscriptions, and other capability categories.
 
 ## Open questions
 
 The following remain open and must not be guessed:
 
-1. Are subscriptions artifacts, relationships, or both?
-2. Is there a deployment artifact that groups artifact definitions?
-3. What exact state is preserved for an artifact instance?
-4. What is the minimum TOML structure for the smallest valid Xmip deployment?
-5. Are SendPort and SendLocation related in the same way as ReceivePort and ReceiveLocation?
+1. Is there a deployment artifact that groups Artifact Definitions?
+2. What exact state is preserved for an Artifact Instance?
+3. What is the minimum TOML structure for the smallest valid Xmip deployment?
+4. What are the exact SendPort and SendLocation runtime semantics?
+5. How are Subscription Instance chains bounded, recovered, and protected from cycles?
