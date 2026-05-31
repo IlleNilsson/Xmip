@@ -68,6 +68,26 @@ Artifact definition = configured module capability declaration
 Runtime artifact instance = activated configured module capability
 ```
 
+## Artifact identity
+
+Artifact identity belongs to the artifact, not to the concrete module implementation or transport technology.
+
+An artifact may change module implementation while keeping its identity.
+
+Example:
+
+```text
+OrdersInbound
+    version 1 -> receive-http module
+    version 2 -> receive-mqtt module
+```
+
+`OrdersInbound` remains the same artifact identity.
+
+Newer runtime artifact instances use the new module/configuration after startup or redeployment.
+
+This means preservation, lineage, and deployment history must not be anchored only to the concrete implementation technology.
+
 ## Kernel knowledge
 
 The Xmip kernel knows the universal integration lifecycle categories:
@@ -144,6 +164,49 @@ A Xmip instance startup should conceptually perform the following:
 7. Validate topology references between artifact instances.
 8. Start eligible receive/schedule/runtime entry points.
 
+## Receive artifacts
+
+ReceivePort and ReceiveLocation are both artifacts.
+
+At runtime, both become runtime artifact instances.
+
+### ReceivePort
+
+A ReceivePort is a named placeholder for one or more ReceiveLocation artifacts.
+
+It is part of the topology and gives receive locations a stable named place to publish into.
+
+### ReceiveLocation
+
+A ReceiveLocation is a configured receive capability.
+
+It binds a module implementation and configuration to a named ReceivePort.
+
+Example:
+
+```text
+ReceivePort artifact definition
+    name = Orders
+
+ReceiveLocation artifact definition
+    name = OrdersInbound
+    module = receive-http
+    receivePort = Orders
+```
+
+Later, `OrdersInbound` may change transport implementation:
+
+```text
+ReceiveLocation artifact definition
+    name = OrdersInbound
+    module = receive-mqtt
+    receivePort = Orders
+```
+
+`OrdersInbound` remains the same artifact identity.
+
+Newer artifact instances use MQTT instead of HTTP.
+
 ## Example concept
 
 A receive location is not merely a TOML file and not merely a receive module.
@@ -163,9 +226,8 @@ The same principle applies to send locations, transformations, processors/orches
 
 The following remain open and must not be guessed:
 
-1. How does artifact identity survive configuration changes?
-2. How does artifact identity survive module replacement?
-3. Are subscriptions artifacts, relationships, or both?
-4. Is there a deployment artifact that groups artifact definitions?
-5. What exact state is preserved for an artifact instance?
-6. What is the minimum TOML structure for the smallest valid Xmip deployment?
+1. Are subscriptions artifacts, relationships, or both?
+2. Is there a deployment artifact that groups artifact definitions?
+3. What exact state is preserved for an artifact instance?
+4. What is the minimum TOML structure for the smallest valid Xmip deployment?
+5. Are SendPort and SendLocation related in the same way as ReceivePort and ReceiveLocation?
