@@ -145,9 +145,9 @@ Kernel-to-kernel communication happens through Protocol Buffers over gRPC.
 
 These boundaries are different and must not be confused.
 
-## Deployment range
+## Deployment targets
 
-Xmip must support:
+Xmip may be deployed to different targets, such as:
 
 ```text
 IoT device
@@ -159,4 +159,8 @@ Cloud cluster
 Hybrid on-prem/cloud
 ```
 
-The kernel semantics must remain stable across these deployment shapes.
+These are deployment targets or deployment profiles.
+
+They are not separate runtime models and do not receive special treatment in the core architecture.
+
+The kernel semantics must remain stable across deployment targets.
