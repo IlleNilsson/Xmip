@@ -4,26 +4,54 @@
 
 Xmip is centered on messages.
 
-Xmip is about incoming, deserialized, transformed or promoted, processed, serialized, and outgoing messages with traceable publish and subscribe history inside Xmip.
-
 The message and its runtime context are the primary runtime concerns.
 
+Artifacts, modules, subscriptions, validations, processes, and send operations participate while a message or stream is passing through Xmip.
+
+They do not own the message journey.
+
 ## Message lifecycle
+
+Xmip is not a mandatory linear pipeline.
+
+A message or stream enters Xmip, accumulates context, is published into Xmip, and is acted upon by subscriptions according to the context available at that point.
 
 Conceptually:
 
 ```text
-Incoming message
-    -> Deserialize
-    -> Transform / Promote
-    -> Process
-    -> Serialize
-    -> Outgoing message
+Receive / Stream enters Xmip
+    -> validate receive or stream boundary
+    -> collect envelope and receive context
+    -> publish into Xmip
+    -> subscription evaluation
+        -> Inbox
+        -> Process / Orchestration
+        -> SendPort
+        -> publish again when appropriate
 ```
 
-The exact path is determined by Artifact Definitions, Artifact Instances, Subscription rules, and runtime publications.
+Optional message understanding stages may occur before publication or before later publications:
 
-## Incoming message
+```text
+Deserialize
+    -> validate deserialized message contract
+
+Transform
+    -> validate transformed message contract
+
+Promote
+    -> add promoted properties to message context
+```
+
+Promotion may happen during transformation.
+
+Promotion is not itself a validation gate.
+
+Publication is not itself a validation gate.
+
+The exact path is determined by Artifact Definitions, Artifact Instances, Message Contracts, Subscription rules, and runtime publications.
+
+## Incoming message or stream
 
 A message may originate from many places, including:
 
@@ -36,11 +64,54 @@ A message may originate from many places, including:
 
 The original incoming representation matters, but it is not the whole runtime message.
 
+If the message is still a stream, Xmip may not know its internal structure.
+
+At that stage subscriptions and validation may use envelope and receive context, such as:
+
+- ReceiveLocation,
+- ReceivePort,
+- Content Type,
+- subject,
+- headers,
+- metadata,
+- file name,
+- file attributes,
+- queue name,
+- sender identity,
+- service identity,
+- certificate.
+
+## Message contracts and validation gates
+
+Validation belongs to meaningful message-boundary stages.
+
+Validation may occur at:
+
+- receive / stream boundary,
+- deserialize boundary,
+- transform boundary,
+- process/orchestration input,
+- process/orchestration output,
+- pre-serialization boundary,
+- optional outgoing representation boundary.
+
+Validation is a gate.
+
+A message that fails a required validation gate must not continue through that passage as if it were valid.
+
+Xmip cannot validate a serialized payload as structured message data after serialization.
+
+Structured message validation must happen before serialization.
+
+After serialization, Xmip may only perform representation checks.
+
 ## Deserialization
 
-Deserialization turns the incoming representation into a form Xmip can reason about.
+Deserialization turns an incoming representation into a form Xmip can reason about structurally.
 
-Deserialization occurs before transformation.
+Deserialization is optional and contract-driven.
+
+A message does not have to be deserialized before it can be published into Xmip or matched by subscriptions.
 
 ## Transformation and promotion
 
@@ -50,29 +121,74 @@ Promotion extracts values and makes them available as runtime context.
 
 Promoted properties support Subscription evaluation, processing decisions, and delivery decisions.
 
+There is no separate concept of transformed properties.
+
+Promotion may happen during transformation.
+
+## Publication
+
+Publication makes a message available inside Xmip for Subscription evaluation.
+
+A message may be published with only receive/envelope context.
+
+A later publication may include richer context after deserialization, transformation, or promotion.
+
+Publication does not require that the message has passed through all optional understanding stages.
+
+## Subscription evaluation
+
+Subscriptions evaluate against whatever context is available at the point of publication.
+
+Subscription context may include receive/envelope metadata, promoted properties, message contract metadata, artifact metadata, and runtime metadata.
+
+When a Subscription evaluates true at runtime, it causes a runtime action due to its Artifact Definition.
+
+That action may target:
+
+- Inbox,
+- Process / Orchestration,
+- SendPort,
+- another publication into Xmip.
+
+A Subscription Instance becomes part of the message history.
+
+Subscription Instances form a chain similar to a call stack.
+
 ## Processing
 
 Processing performs business activity or orchestration activity.
 
-Processing may continue the message journey and may publish.
+Processing may consume, transform, validate, assign, publish, or send messages according to Artifact Definitions and Message Contracts.
+
+Processing may continue the message journey and may publish back into Xmip.
 
 ## Serialization
 
 Before a message leaves Xmip through a SendLocation, it may be serialized into the required outgoing representation.
 
-## Publish and subscribe history
+Structured validation must happen before serialization.
 
-Xmip maintains traceable publish and subscribe history for the message while it is inside Xmip.
+After serialization, Xmip may check representation requirements such as content type, encoding, destination metadata, and send identity.
 
-A Subscription is an Artifact Definition.
+## Audit, tracking, and correlation
 
-When a Subscription evaluates true at runtime, it causes runtime action due to its Artifact Definition.
+Xmip maintains Audit for runtime explainability.
 
-That action may publish.
+Audit consists of:
 
-A Subscription Instance becomes part of the message history.
+- Logs,
+- Traces,
+- Tracking.
 
-Subscription Instances form a chain similar to a call stack.
+Only Tracking stores the actual message.
+
+Logs and Traces store metadata only.
+
+Every message or stream entering Xmip receives a CorrelationId.
+
+Significant runtime activities receive SubCorrelationIds.
+
+No runtime action should occur without a correlation footprint.
 
 ## Runtime message context
 
@@ -81,9 +197,14 @@ The runtime message context is more than payload.
 Known categories include:
 
 - message content,
+- receive/envelope context,
 - promoted properties,
+- Message Contract validation results,
 - Subscription Instance chain,
 - publication history,
+- audit metadata,
+- tracking metadata,
+- correlation metadata,
 - execution metadata,
 - lineage metadata,
 - preservation metadata,
@@ -100,3 +221,4 @@ The following remain open:
 3. How are Subscription Instance chains bounded?
 4. How are repeated publication chains controlled?
 5. What is the canonical representation of message content at each lifecycle stage?
+6. Which Message Contracts are first-class Artifact Definitions, and which are module-provided validation capabilities?
