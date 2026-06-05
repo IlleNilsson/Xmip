@@ -21,7 +21,29 @@ Audit exists to answer:
 
 Every meaningful Xmip runtime step and interaction shall be auditable.
 
-Audit is required for both successful and failed outcomes.
+Audit is always available to Xmip Core and Extensions.
+
+Audit policy is configurable, except for failures.
+
+Failures shall always be audited.
+
+Failure audit records shall always be persisted.
+
+## Audit context durability
+
+Hosts are perishable.
+
+Operating system processes are perishable.
+
+Threads and tasks are perishable.
+
+Artifact Instances and Module Instances are perishable.
+
+Therefore, durable Audit persistence is the historical truth, not host memory, process memory, thread state, or runtime instance state.
+
+An Audit record shall outlive the runtime entity that produced it.
+
+Audit records must carry enough context to reconstruct where, what, why, when, and outcome after the producing runtime entity is gone.
 
 ## Receive acceptance and rejection
 
@@ -29,18 +51,7 @@ Xmip always receives an external stream first.
 
 Xmip Receive either accepts or rejects the stream.
 
-Both outcomes shall be audited.
-
-```text
-External Stream
-    -> Xmip Receive
-        -> Accept
-            -> Audit success
-            -> Xmip Message created
-        -> Reject
-            -> Audit failure
-            -> no Xmip Message created
-```
+Both outcomes are auditable runtime events.
 
 Accept means that Xmip takes ownership and creates a Xmip Message.
 
@@ -52,11 +63,13 @@ A rejected stream receive attempt is still an auditable runtime event.
 
 Logs are for Xmip internals.
 
-Logs explain internal operational behavior of the Xmip runtime, nodes, artifact instances, module instances, configuration loading, startup, shutdown, failures, warnings, and internal decisions.
+Logs explain internal operational behavior of the Xmip runtime, hosts, processes, threads, artifact instances, module instances, configuration loading, startup, shutdown, failures, warnings, and internal decisions.
 
 Logs should be verbose enough for operators and developers to understand what Xmip itself did.
 
 Logs must not store message payloads.
+
+Failures are always logged through Audit and persisted as failure audit records.
 
 ## Traces
 
@@ -67,6 +80,8 @@ Traces follow Xmip Messages through Xmip runtime execution.
 Tracing records message-related execution flow, correlation, sub-correlation, timing, runtime boundaries, artifact instances, subscription instances, and interaction paths.
 
 Traces must not store message payloads.
+
+Tracing is configurable per host, contract, and artifact.
 
 ## Tracking
 
@@ -86,6 +101,8 @@ Tracking may store:
 Only Tracking stores the actual message.
 
 Tracking must be controlled separately from Logs and Traces because it may contain sensitive data.
+
+Tracking is configurable per host, contract, and artifact.
 
 ## Correlation Footprint
 
@@ -114,19 +131,26 @@ Examples include:
 
 SubCorrelationIds form a hierarchy beneath the CorrelationId.
 
-## Audit Event
+## Audit Event Context
 
-Each audit event should contain:
+Each audit event should contain relevant context from these levels:
 
+- host,
+- operating system process,
+- thread or task,
+- Artifact Definition,
+- Artifact Instance,
+- Module Definition,
+- Module Instance,
+- Message Contract,
 - CorrelationId when an owned Xmip Message exists,
 - SubCorrelationId when applicable,
 - ParentSubCorrelationId when applicable,
+- Xmip Message identity when applicable,
+- Error identity when applicable,
 - EventName,
 - Purpose,
-- Node,
-- Address,
-- ArtifactInstance,
-- ModuleInstance when applicable,
+- Node or address,
 - ServiceIdentity,
 - StartTime,
 - EndTime,
