@@ -6,7 +6,9 @@ Xmip requires message validation as a runtime gate.
 
 Every incoming message or stream must be validated according to what is knowable at that point in the message journey.
 
-Validation is not limited to the initial receive step. Validation may occur at every passage while a message travels through Xmip.
+Validation is not required after every runtime activity.
+
+Validation belongs at meaningful message-boundary stages where Xmip can verify whether the message is allowed to continue.
 
 ## Message Contract
 
@@ -17,11 +19,16 @@ A Message Contract may apply to:
 - incoming streams,
 - deserialized messages,
 - transformed messages,
-- promoted context,
 - process/orchestration input,
 - process/orchestration output,
-- send input,
+- serialized messages,
 - outgoing messages.
+
+Promotion and publication do not by themselves require validation gates.
+
+Promotion extracts values into message context.
+
+Publication makes a message available inside Xmip for subscription evaluation.
 
 ## Stream validation
 
@@ -57,6 +64,21 @@ Examples:
 - domain constraints,
 - promoted property expectations.
 
+## Transformation validation
+
+After transformation, Xmip may validate the transformed message.
+
+Examples:
+
+- transformed structure,
+- transformed field data types,
+- target message contract,
+- required fields,
+- allowed values,
+- domain constraints.
+
+Promotion may happen during transformation, but promoted context is not a separate validation gate by itself.
+
 ## Validation gates
 
 Validation is a gate.
@@ -67,21 +89,19 @@ The outcome must be audited.
 
 ## Passage validation
 
-Validation may happen at every significant passage:
+Validation may happen at these significant message-boundary passages:
 
-- receive,
-- deserialize,
-- transform,
-- promote,
-- publish,
-- subscription match,
-- message assignment,
+- receive / stream boundary,
+- deserialize boundary,
+- transform boundary,
 - process/orchestration input,
 - process/orchestration output,
-- serialize,
-- send.
+- serialize boundary,
+- optional outgoing boundary.
 
-Each passage may define required or optional Message Contracts.
+Validation is not required merely because a message is promoted or published into Xmip.
+
+Subscriptions may evaluate after publication using the context already available.
 
 ## Outgoing validation
 
@@ -121,4 +141,4 @@ If the actual message must be preserved, it belongs in Tracking.
 
 ## Principle
 
-Xmip must be able to prove not only that a message moved through Xmip, but that it satisfied the required Message Contracts at each required passage.
+Xmip must be able to prove not only that a message moved through Xmip, but that it satisfied the required Message Contracts at each required message-boundary passage.
