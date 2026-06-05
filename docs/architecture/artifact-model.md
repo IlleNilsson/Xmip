@@ -18,6 +18,8 @@ The word Artifact should be treated as an umbrella term. When precision matters,
 
 An Artifact Definition is a configured runtime-capability declaration.
 
+An Artifact Definition defines what should happen.
+
 An Artifact Definition is composed of:
 
 - configuration,
@@ -35,6 +37,13 @@ Conceptually:
 
 ```text
 Artifact Definition
+    = What should happen
+```
+
+and more structurally:
+
+```text
+Artifact Definition
     = Configuration
     + Xmip Capability Contracts
     + Configured Module References
@@ -42,7 +51,11 @@ Artifact Definition
 
 ## Artifact Instance
 
-An Artifact Instance is the runtime result of resolving and binding an Artifact Definition.
+An Artifact Instance is the runtime execution of an Artifact Definition.
+
+An Artifact Instance is active, not merely a passive runtime object.
+
+It is responsible for being started, executing its capability responsibility, ending successfully or unsuccessfully, and reporting its due Audit.
 
 An Artifact Instance exists only after the Xmip kernel has:
 
@@ -56,6 +69,13 @@ Conceptually:
 
 ```text
 Artifact Instance
+    = The runtime execution of an Artifact Definition
+```
+
+and more structurally:
+
+```text
+Artifact Instance
     = Artifact Definition
     + Loaded Modules
     + Validated Contracts
@@ -63,6 +83,26 @@ Artifact Instance
 ```
 
 The runtime operates on Artifact Instances, not raw TOML and not module code alone.
+
+## Artifact Instance lifecycle audit
+
+Audit is part of Artifact Instance execution.
+
+An Artifact Instance shall report Audit when it starts, including why it was started.
+
+An Artifact Instance shall report Audit during execution when meaningful runtime activities occur.
+
+An Artifact Instance shall report Audit after execution completes.
+
+Completion Audit shall include outcome:
+
+- success,
+- success with warnings,
+- failure.
+
+Failure Audit shall include details about what went wrong, without placing message payloads in Logs or Traces.
+
+If actual message content must be preserved, that content belongs in Tracking.
 
 ## Module Definition and Module Instance
 
