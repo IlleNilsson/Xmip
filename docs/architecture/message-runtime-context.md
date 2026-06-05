@@ -2,25 +2,56 @@
 
 ## Purpose
 
-Xmip is centered on messages.
+Xmip is centered on messages, but Xmip always receives a stream first.
 
-The message and its runtime context are the primary runtime concerns.
+The stream may represent many things, such as an application message, file, photo, binary payload, document, or another transferable representation.
 
-Artifacts, modules, subscriptions, validations, processes, and send operations participate while a message or stream is passing through Xmip.
+A stream becomes a Xmip Message only after it has entered the world of Xmip and Xmip has taken ownership.
+
+Xmip takes ownership only after the required receive or stream boundary validation succeeds.
+
+After ownership is accepted, the Xmip Message and its runtime context are the primary runtime concerns.
+
+Artifacts, modules, subscriptions, validations, processes, and send operations participate while a Xmip Message is passing through Xmip.
 
 They do not own the message journey.
+
+## Stream acceptance and ownership
+
+Xmip receives streams.
+
+A received stream is not automatically a Xmip Message.
+
+Before ownership, Xmip may inspect only what is knowable at the stream boundary, such as envelope, source, identity, certificate, headers, metadata, file attributes, content type, and receive location.
+
+If the required receive or stream boundary validation succeeds, Xmip accepts ownership and creates a Xmip Message.
+
+If validation fails, Xmip must not treat the stream as an owned Xmip Message.
+
+The failure must still be audited as a rejected receive attempt.
+
+Conceptually:
+
+```text
+External stream
+    -> receive / stream boundary validation
+        -> accepted: Xmip Message is created and owned by Xmip
+        -> rejected: no Xmip Message ownership is taken
+```
 
 ## Message lifecycle
 
 Xmip is not a mandatory linear pipeline.
 
-A message or stream enters Xmip, accumulates context, is published into Xmip, and is acted upon by subscriptions according to the context available at that point.
+After stream validation succeeds and Xmip takes ownership, the Xmip Message accumulates context, is published into Xmip, and is acted upon by subscriptions according to the context available at that point.
 
 Conceptually:
 
 ```text
-Receive / Stream enters Xmip
+External stream
     -> validate receive or stream boundary
+    -> accept ownership
+    -> create Xmip Message
     -> collect envelope and receive context
     -> publish into Xmip
     -> subscription evaluation
@@ -51,9 +82,9 @@ Publication is not itself a validation gate.
 
 The exact path is determined by Artifact Definitions, Artifact Instances, Message Contracts, Subscription rules, and runtime publications.
 
-## Incoming message or stream
+## Incoming stream sources
 
-A message may originate from many places, including:
+A stream may originate from many places, including:
 
 - files,
 - streams,
@@ -64,7 +95,7 @@ A message may originate from many places, including:
 
 The original incoming representation matters, but it is not the whole runtime message.
 
-If the message is still a stream, Xmip may not know its internal structure.
+At the stream boundary, Xmip may not know the internal structure.
 
 At that stage subscriptions and validation may use envelope and receive context, such as:
 
@@ -97,7 +128,9 @@ Validation may occur at:
 
 Validation is a gate.
 
-A message that fails a required validation gate must not continue through that passage as if it were valid.
+A stream that fails required receive or stream boundary validation must not become an owned Xmip Message.
+
+A Xmip Message that fails a later required validation gate must not continue through that passage as if it were valid.
 
 Xmip cannot validate a serialized payload as structured message data after serialization.
 
@@ -107,11 +140,11 @@ After serialization, Xmip may only perform representation checks.
 
 ## Deserialization
 
-Deserialization turns an incoming representation into a form Xmip can reason about structurally.
+Deserialization turns an owned Xmip Message representation into a form Xmip can reason about structurally.
 
 Deserialization is optional and contract-driven.
 
-A message does not have to be deserialized before it can be published into Xmip or matched by subscriptions.
+A Xmip Message does not have to be deserialized before it can be published into Xmip or matched by subscriptions.
 
 ## Transformation and promotion
 
@@ -127,17 +160,17 @@ Promotion may happen during transformation.
 
 ## Publication
 
-Publication makes a message available inside Xmip for Subscription evaluation.
+Publication makes an owned Xmip Message available inside Xmip for Subscription evaluation.
 
-A message may be published with only receive/envelope context.
+A Xmip Message may be published with only receive/envelope context.
 
 A later publication may include richer context after deserialization, transformation, or promotion.
 
-Publication does not require that the message has passed through all optional understanding stages.
+Publication does not require that the Xmip Message has passed through all optional understanding stages.
 
 ## Subscription evaluation
 
-Subscriptions evaluate against whatever context is available at the point of publication.
+Subscriptions evaluate against whatever context is available at the point of publication or reintroduction.
 
 Subscription context may include receive/envelope metadata, promoted properties, message contract metadata, artifact metadata, and runtime metadata.
 
@@ -158,13 +191,13 @@ Subscription Instances form a chain similar to a call stack.
 
 Processing performs business activity or orchestration activity.
 
-Processing may consume, transform, validate, assign, publish, or send messages according to Artifact Definitions and Message Contracts.
+Processing may consume, transform, validate, assign, publish, or send Xmip Messages according to Artifact Definitions and Message Contracts.
 
 Processing may continue the message journey and may publish back into Xmip.
 
 ## Serialization
 
-Before a message leaves Xmip through a SendLocation, it may be serialized into the required outgoing representation.
+Before a Xmip Message leaves Xmip through a SendLocation, it may be serialized into the required outgoing representation.
 
 Structured validation must happen before serialization.
 
@@ -184,7 +217,9 @@ Only Tracking stores the actual message.
 
 Logs and Traces store metadata only.
 
-Every message or stream entering Xmip receives a CorrelationId.
+A rejected stream receive attempt is audited even when no Xmip Message ownership is taken.
+
+Every owned Xmip Message receives a CorrelationId.
 
 Significant runtime activities receive SubCorrelationIds.
 
