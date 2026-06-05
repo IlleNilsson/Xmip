@@ -21,8 +21,8 @@ A Message Contract may apply to:
 - transformed messages,
 - process/orchestration input,
 - process/orchestration output,
-- serialized messages,
-- outgoing messages.
+- messages before serialization,
+- outgoing message intent before leaving Xmip.
 
 Promotion and publication do not by themselves require validation gates.
 
@@ -79,6 +79,25 @@ Examples:
 
 Promotion may happen during transformation, but promoted context is not a separate validation gate by itself.
 
+## Serialization and outgoing checks
+
+Xmip cannot validate a serialized message as structured message data after it has already been serialized.
+
+Structured message validation must happen before serialization.
+
+After serialization, Xmip may perform representation checks only.
+
+Examples:
+
+- serialized representation exists,
+- content type is assigned,
+- target encoding is assigned,
+- destination contract metadata is present,
+- send identity requirements are present,
+- target system requirements are present.
+
+These are outgoing representation checks, not structured message validation.
+
 ## Validation gates
 
 Validation is a gate.
@@ -96,8 +115,8 @@ Validation may happen at these significant message-boundary passages:
 - transform boundary,
 - process/orchestration input,
 - process/orchestration output,
-- serialize boundary,
-- optional outgoing boundary.
+- pre-serialization boundary,
+- optional outgoing representation boundary.
 
 Validation is not required merely because a message is promoted or published into Xmip.
 
@@ -107,14 +126,18 @@ Subscriptions may evaluate after publication using the context already available
 
 Validation when leaving Xmip is optional but supported.
 
+Outgoing validation means validating message intent and representation requirements before or around send.
+
+Outgoing validation does not mean validating already serialized bytes as structured message data.
+
 Outgoing validation may check:
 
-- expected output structure,
+- expected output structure before serialization,
 - outgoing content type,
 - destination contract,
-- serialized representation,
 - target system requirements,
-- send identity requirements.
+- send identity requirements,
+- representation metadata after serialization.
 
 ## Audit relationship
 
