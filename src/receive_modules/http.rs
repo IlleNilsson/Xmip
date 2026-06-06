@@ -1,4 +1,5 @@
 use super::{ReceiveEndpointModule, ReceivedStream};
+use crate::receive_claims::{ReceiveClaim, ReceiveClaimMode};
 
 pub struct HttpReceiveModule;
 
@@ -9,6 +10,13 @@ impl ReceiveEndpointModule for HttpReceiveModule {
 
     fn technology(&self) -> &'static str {
         "http"
+    }
+
+    fn claim(&self) -> ReceiveClaim {
+        ReceiveClaim {
+            mode: ReceiveClaimMode::Shared,
+            resource: "http-listener".to_string(),
+        }
     }
 
     fn receive(&self) -> ReceivedStream {
