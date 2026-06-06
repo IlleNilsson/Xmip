@@ -2,5 +2,7 @@
 pub enum ReceiveAcquisitionMode {
     DirectIncoming,
     SoughtForIncoming,
-    EventBasedIncoming,
+    ResourceEventIncoming,
+    BrokerEventIncoming,
+    ScheduledIncoming,
 }
