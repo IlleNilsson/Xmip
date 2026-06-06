@@ -1,3 +1,9 @@
+pub mod file;
+pub mod http;
+
+use file::FileReceiveModule;
+use http::HttpReceiveModule;
+
 pub trait ReceiveEndpointModule {
     fn name(&self) -> &'static str;
     fn technology(&self) -> &'static str;
@@ -11,48 +17,10 @@ pub struct ReceivedStream {
     pub body: String,
 }
 
-pub struct HttpReceiveModule;
-pub struct FileReceiveModule;
-
-impl ReceiveEndpointModule for HttpReceiveModule {
-    fn name(&self) -> &'static str {
-        "xmip.receive.http"
-    }
-
-    fn technology(&self) -> &'static str {
-        "http"
-    }
-
-    fn receive(&self) -> ReceivedStream {
-        ReceivedStream {
-            source_address: "orders-http-endpoint".to_string(),
-            content_type: "application-x-www-form-urlencoded".to_string(),
-            body: "order_id=1001; customer_id=SE-42; priority=high; destination=email,archive,webhook".to_string(),
-        }
-    }
-}
-
-impl ReceiveEndpointModule for FileReceiveModule {
-    fn name(&self) -> &'static str {
-        "xmip.receive.file"
-    }
-
-    fn technology(&self) -> &'static str {
-        "file"
-    }
-
-    fn receive(&self) -> ReceivedStream {
-        ReceivedStream {
-            source_address: "orders-file-endpoint".to_string(),
-            content_type: "text-plain".to_string(),
-            body: "order_id=1001; customer_id=SE-42; priority=high; destination=email,archive".to_string(),
-        }
-    }
-}
-
 pub fn load_receive_module(name: &str) -> Box<dyn ReceiveEndpointModule> {
     match name {
         "file" => Box::new(FileReceiveModule),
-        _ => Box::new(HttpReceiveModule),
+        "http" => Box::new(HttpReceiveModule),
+        other => panic!("unknown receive endpoint module: {other}. Use 'http' or 'file'."),
     }
 }
