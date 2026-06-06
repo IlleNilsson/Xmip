@@ -1,0 +1,84 @@
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendPort {
+    pub name: String,
+    pub locations: Vec<SendLocation>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendLocation {
+    pub name: String,
+    pub address: String,
+    pub technology: SendTechnology,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SendTechnology {
+    Http,
+    File,
+    Queue,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendRequest {
+    pub payload: String,
+    pub content_type: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SendOutcome {
+    Sent { location: String },
+    Failed { location: String, reason: String, retryable: bool },
+}
+
+pub fn send_via_port(port: &SendPort, request: &SendRequest) -> Vec<SendOutcome> {
+    port.locations
+        .iter()
+        .map(|location| send_to_location(location, request))
+        .collect()
+}
+
+fn send_to_location(location: &SendLocation, request: &SendRequest) -> SendOutcome {
+    if location.address.is_empty() {
+        return SendOutcome::Failed {
+            location: location.name.clone(),
+            reason: "missing send location address".to_string(),
+            retryable: false,
+        };
+    }
+
+    if request.payload.is_empty() {
+        return SendOutcome::Failed {
+            location: location.name.clone(),
+            reason: "missing payload".to_string(),
+            retryable: false,
+        };
+    }
+
+    SendOutcome::Sent {
+        location: location.name.clone(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn send_port_sends_to_all_locations() {
+        let port = SendPort {
+            name: "orders-out".to_string(),
+            locations: vec![
+                SendLocation { name: "orders-http".to_string(), address: "http-orders".to_string(), technology: SendTechnology::Http },
+                SendLocation { name: "orders-archive".to_string(), address: "file-orders".to_string(), technology: SendTechnology::File },
+            ],
+        };
+        let request = SendRequest { payload: "order".to_string(), content_type: "text/plain".to_string() };
+
+        let outcomes = send_via_port(&port, &request);
+
+        assert_eq!(outcomes.len(), 2);
+        assert!(matches!(outcomes[0], SendOutcome::Sent { .. }));
+        assert!(matches!(outcomes[1], SendOutcome::Sent { .. }));
+    }
+}
