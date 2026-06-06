@@ -1,6 +1,9 @@
+#[path = "../receive_claims.rs"]
+mod receive_claims;
 #[path = "../receive_modules.rs"]
 mod receive_modules;
 
+use receive_claims::ReceiveClaimRegistry;
 use receive_modules::load_receive_module;
 use std::env;
 
@@ -50,11 +53,21 @@ impl RuntimeContext {
 fn main() {
     let endpoint = env::args().nth(1).unwrap_or_else(|| "http".to_string());
     let module = load_receive_module(&endpoint);
+    let mut claims = ReceiveClaimRegistry::new();
     let mut ctx = RuntimeContext::new();
 
     ctx.endpoint_module = module.name().to_string();
     ctx.endpoint_technology = module.technology().to_string();
     ctx.audit.push(format!("ReceiveModuleLoaded:{}", module.name()));
+
+    if let Err(error) = claims.claim(&module.claim()) {
+        ctx.audit.push(format!("Failure:ReceiveClaimRejected:{error}"));
+        ctx.outputs.push("ReceiveClaimRejected".to_string());
+        print_summary(&ctx);
+        return;
+    }
+
+    ctx.audit.push(format!("ReceiveClaimAccepted:{:?}", module.claim()));
 
     loop {
         match ctx.step {
@@ -122,6 +135,10 @@ fn main() {
         }
     }
 
+    print_summary(&ctx);
+}
+
+fn print_summary(ctx: &RuntimeContext) {
     println!("EndpointModule: {}", ctx.endpoint_module);
     println!("EndpointTechnology: {}", ctx.endpoint_technology);
     println!("SourceAddress: {}", ctx.source_address);
