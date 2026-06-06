@@ -3,10 +3,12 @@ pub mod http;
 
 use file::FileReceiveModule;
 use http::HttpReceiveModule;
+use crate::receive_claims::ReceiveClaim;
 
 pub trait ReceiveEndpointModule {
     fn name(&self) -> &'static str;
     fn technology(&self) -> &'static str;
+    fn claim(&self) -> ReceiveClaim;
     fn receive(&self) -> ReceivedStream;
 }
 
