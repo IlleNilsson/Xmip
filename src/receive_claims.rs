@@ -4,6 +4,7 @@ use std::collections::HashSet;
 pub enum ReceiveClaimMode {
     Shared,
     Exclusive,
+    Pattern,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,6 +16,7 @@ pub struct ReceiveClaim {
 #[derive(Debug, Default)]
 pub struct ReceiveClaimRegistry {
     exclusive: HashSet<String>,
+    patterns: HashSet<String>,
 }
 
 impl ReceiveClaimRegistry {
@@ -30,6 +32,14 @@ impl ReceiveClaimRegistry {
                     Err(format!("exclusive receive resource already claimed: {}", claim.resource))
                 } else {
                     self.exclusive.insert(claim.resource.clone());
+                    Ok(())
+                }
+            }
+            ReceiveClaimMode::Pattern => {
+                if self.patterns.contains(&claim.resource) {
+                    Err(format!("receive pattern already claimed: {}", claim.resource))
+                } else {
+                    self.patterns.insert(claim.resource.clone());
                     Ok(())
                 }
             }
@@ -57,5 +67,24 @@ mod tests {
 
         assert!(registry.claim(&claim).is_ok());
         assert!(registry.claim(&claim).is_err());
+    }
+
+    #[test]
+    fn queue_pattern_claims_conflict_on_same_pattern() {
+        let mut registry = ReceiveClaimRegistry::new();
+        let claim = ReceiveClaim { mode: ReceiveClaimMode::Pattern, resource: "queue-orders|subject=invoice.created".to_string() };
+
+        assert!(registry.claim(&claim).is_ok());
+        assert!(registry.claim(&claim).is_err());
+    }
+
+    #[test]
+    fn queue_pattern_claims_allow_different_patterns_on_same_queue() {
+        let mut registry = ReceiveClaimRegistry::new();
+        let invoice = ReceiveClaim { mode: ReceiveClaimMode::Pattern, resource: "queue-orders|subject=invoice.created".to_string() };
+        let shipment = ReceiveClaim { mode: ReceiveClaimMode::Pattern, resource: "queue-orders|subject=shipment.created".to_string() };
+
+        assert!(registry.claim(&invoice).is_ok());
+        assert!(registry.claim(&shipment).is_ok());
     }
 }
