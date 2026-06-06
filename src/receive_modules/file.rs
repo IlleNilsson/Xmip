@@ -1,4 +1,5 @@
 use super::{ReceiveEndpointModule, ReceivedStream};
+use crate::receive_claims::{ReceiveClaim, ReceiveClaimMode};
 
 pub struct FileReceiveModule;
 
@@ -9,6 +10,13 @@ impl ReceiveEndpointModule for FileReceiveModule {
 
     fn technology(&self) -> &'static str {
         "file"
+    }
+
+    fn claim(&self) -> ReceiveClaim {
+        ReceiveClaim {
+            mode: ReceiveClaimMode::Exclusive,
+            resource: "orders-file-endpoint".to_string(),
+        }
     }
 
     fn receive(&self) -> ReceivedStream {
