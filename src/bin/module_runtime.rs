@@ -2,14 +2,18 @@
 mod receive_claims;
 #[path = "../receive_modules.rs"]
 mod receive_modules;
+#[path = "../receive_security.rs"]
+mod receive_security;
 
 use receive_claims::ReceiveClaimRegistry;
 use receive_modules::load_receive_module;
+use receive_security::{authorize_receive, IdentityEvidence, ReceiveIdentity, ReceivePermission};
 use std::env;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum RuntimeStep {
     Receive,
+    Authorize,
     Accept,
     Promote,
     Publish,
@@ -25,6 +29,7 @@ struct RuntimeContext {
     source_address: String,
     content_type: String,
     stream: String,
+    identity: Option<ReceiveIdentity>,
     xmip_message: Option<String>,
     promoted_properties: Vec<String>,
     subscriptions: Vec<String>,
@@ -41,6 +46,7 @@ impl RuntimeContext {
             source_address: String::new(),
             content_type: String::new(),
             stream: String::new(),
+            identity: None,
             xmip_message: None,
             promoted_properties: Vec::new(),
             subscriptions: Vec::new(),
@@ -76,8 +82,25 @@ fn main() {
                 ctx.source_address = received.source_address;
                 ctx.content_type = received.content_type;
                 ctx.stream = received.body;
+                ctx.identity = Some(identify_receive_source(&ctx));
                 ctx.audit.push("ExternalStreamReceived".to_string());
-                ctx.step = RuntimeStep::Accept;
+                ctx.step = RuntimeStep::Authorize;
+            }
+            RuntimeStep::Authorize => {
+                let identity = ctx.identity.as_ref().expect("receive identity missing");
+                let receive_decision = authorize_receive(identity, ReceivePermission::ReceiveFromEndpoint);
+                let accept_decision = authorize_receive(identity, ReceivePermission::AcceptStream);
+
+                ctx.audit.push(format!("Authorization:ReceiveFromEndpoint:{}", receive_decision.reason));
+                ctx.audit.push(format!("Authorization:AcceptStream:{}", accept_decision.reason));
+
+                if receive_decision.allowed && accept_decision.allowed {
+                    ctx.step = RuntimeStep::Accept;
+                } else {
+                    ctx.outputs.push("Reject:UnauthorizedReceive".to_string());
+                    ctx.audit.push("Failure:UnauthorizedReceiveRejected".to_string());
+                    ctx.step = RuntimeStep::Complete;
+                }
             }
             RuntimeStep::Accept => {
                 ctx.xmip_message = Some(ctx.stream.clone());
@@ -97,6 +120,17 @@ fn main() {
                 ctx.step = RuntimeStep::Publish;
             }
             RuntimeStep::Publish => {
+                let identity = ctx.identity.as_ref().expect("receive identity missing");
+                let publish_decision = authorize_receive(identity, ReceivePermission::PublishIntoXmip);
+                ctx.audit.push(format!("Authorization:PublishIntoXmip:{}", publish_decision.reason));
+
+                if !publish_decision.allowed {
+                    ctx.outputs.push("Reject:UnauthorizedPublish".to_string());
+                    ctx.audit.push("Failure:UnauthorizedPublishRejected".to_string());
+                    ctx.step = RuntimeStep::Complete;
+                    continue;
+                }
+
                 if ctx.promoted_properties.iter().any(|p| p == "message.type=order") {
                     ctx.subscriptions.push("process:order-business-process".to_string());
                 }
@@ -138,11 +172,26 @@ fn main() {
     print_summary(&ctx);
 }
 
+fn identify_receive_source(ctx: &RuntimeContext) -> ReceiveIdentity {
+    let evidence = match ctx.endpoint_technology.as_str() {
+        "http" | "webhook" => IdentityEvidence::TokenSubject("demo-http-client".to_string()),
+        "file" | "ftp" | "sftp" | "ftps" => IdentityEvidence::ServicePrincipal("demo-file-agent".to_string()),
+        "msmq" | "rabbitmq" => IdentityEvidence::ServicePrincipal("demo-queue-consumer".to_string()),
+        _ => IdentityEvidence::NetworkPeer(ctx.source_address.clone()),
+    };
+
+    ReceiveIdentity {
+        evidence,
+        authenticated: true,
+    }
+}
+
 fn print_summary(ctx: &RuntimeContext) {
     println!("EndpointModule: {}", ctx.endpoint_module);
     println!("EndpointTechnology: {}", ctx.endpoint_technology);
     println!("SourceAddress: {}", ctx.source_address);
     println!("ContentType: {}", ctx.content_type);
+    println!("Identity: {:?}", ctx.identity);
 
     println!("\nOutputs:");
     for output in &ctx.outputs {
