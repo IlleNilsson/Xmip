@@ -1,9 +1,13 @@
 pub mod file;
 pub mod http;
+pub mod msmq;
+pub mod rabbitmq;
 
+use crate::receive_claims::ReceiveClaim;
 use file::FileReceiveModule;
 use http::HttpReceiveModule;
-use crate::receive_claims::ReceiveClaim;
+use msmq::MsmqReceiveModule;
+use rabbitmq::RabbitMqReceiveModule;
 
 pub trait ReceiveEndpointModule {
     fn name(&self) -> &'static str;
@@ -23,6 +27,8 @@ pub fn load_receive_module(name: &str) -> Box<dyn ReceiveEndpointModule> {
     match name {
         "file" => Box::new(FileReceiveModule),
         "http" => Box::new(HttpReceiveModule),
-        other => panic!("unknown receive endpoint module: {other}. Use 'http' or 'file'."),
+        "msmq" => Box::new(MsmqReceiveModule),
+        "rabbitmq" => Box::new(RabbitMqReceiveModule),
+        other => panic!("unknown receive endpoint module: {other}. Use 'http', 'file', 'msmq', or 'rabbitmq'."),
     }
 }
