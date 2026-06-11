@@ -1,0 +1,39 @@
+# Rust build output
+/target/
+**/target/
+
+# Xmip runtime proof artifacts
+execution-context.pb
+crash-once.marker
+*.pb
+*.checkpoint
+*.runtime
+*.audit.local
+*.trace.local
+*.tracking.local
+
+# Local inbound/outbound test folders
+/inbound/
+/outbound/
+/tmp/
+/temp/
+
+# Environment and local settings
+.env
+.env.*
+*.local
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
