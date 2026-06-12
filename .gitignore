@@ -1,6 +1,29 @@
-# Rust build output
+# Rust / Cargo build output
+target/
 /target/
 **/target/
+
+# Cargo hashed build artifacts commonly seen under target/debug
+target/debug/
+target/debug/*
+target/debug/deps/
+target/debug/deps/*
+target/debug/incremental/
+target/debug/incremental/*
+target/debug/.fingerprint/
+target/debug/.fingerprint/*
+target/debug/build/
+target/debug/build/*
+
+# Rust generated files
+*.rlib
+*.rmeta
+*.d
+*.pdb
+*.exe
+*.dll
+*.so
+*.dylib
 
 # Xmip runtime proof artifacts
 execution-context.pb
