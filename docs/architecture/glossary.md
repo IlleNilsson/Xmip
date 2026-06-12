@@ -170,6 +170,18 @@ Interchange I1 -> I2 -> I3
     Message M3 created by assignment
 ```
 
+## Interchange History
+
+Interchange History is the persisted history of all messages sprung from the original incoming message.
+
+Interchange History shall be persisted until all messages sprung from the incoming message have left Xmip or reached a terminal Xmip outcome.
+
+The detail level of Interchange History persistence is controlled by Xmip TOML configuration.
+
+Depending on configuration, Interchange History may persist metadata only, stream references, selected sections, full message states, or full message payloads.
+
+Regardless of configured detail level, messages in the Interchange History must be recoverable and viewable according to the configured retention and security policy while the history is active.
+
 ## Message
 
 A Message is an immutable processing unit within an Interchange Chain.
@@ -206,7 +218,18 @@ Audit is the persistent accountability record of Xmip actions and outcomes.
 
 Failures are always audited.
 
-Audit policy may decide which successful actions are persisted as audit records, but failures are not optional.
+The following lifecycle events are always audited:
+
+- entry into Xmip,
+- leaving Xmip,
+- assigned,
+- transformed,
+- passed on,
+- picked up,
+- sent,
+- failure.
+
+Audit policy may decide additional successful actions to persist as audit records, but the mandatory lifecycle events and failures are not optional.
 
 ## Failure Persistence
 
@@ -278,6 +301,7 @@ Message
     Interchange Chain
         root Interchange
         current Interchange
+    Interchange History
     Sections
 ```
 
@@ -286,6 +310,12 @@ Failure
     persists message state
     persists interchange chain
     persists Artifact Instance context
+```
+
+```text
+Audit
+    mandatory lifecycle events
+    mandatory failures
 ```
 
 ```text
