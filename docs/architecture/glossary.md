@@ -135,6 +135,71 @@ BusinessProcess Definition
     -> BusinessProcess Instance
 ```
 
+## Interchange
+
+An Interchange is a trackable message-flow lineage through Xmip.
+
+When a message first enters Xmip, Xmip creates a root Interchange with an interchange id.
+
+When a message is assigned, transformed, or otherwise produces a new trackable message lineage, Xmip creates a child Interchange with a new interchange id.
+
+The child Interchange references its parent Interchange.
+
+A message therefore carries an interchange chain, not only a single interchange id.
+
+The interchange chain allows Xmip to track the full parent-child journey of a message through receive, assignment, transformation, process, subscription, send, retry, failure, and recovery.
+
+## Interchange Chain
+
+An Interchange Chain is the ordered list of Interchange ids carried by a message.
+
+The first item is the root Interchange.
+
+The last item is the current Interchange.
+
+Example:
+
+```text
+Interchange I1
+    Message M1 received
+
+Interchange I1 -> I2
+    Message M2 created by transformation
+
+Interchange I1 -> I2 -> I3
+    Message M3 created by assignment
+```
+
+## Message
+
+A Message is an immutable processing unit within an Interchange Chain.
+
+A Message has:
+
+- message id,
+- interchange chain,
+- current interchange id,
+- metadata,
+- one or more Sections.
+
+A new Message is created when Xmip performs an operation that creates a new message state, such as assignment or transformation.
+
+Routing alone does not create a new Message.
+
+## Section
+
+A Section is a stream contained within a Message.
+
+Each Section has:
+
+- section id,
+- metadata,
+- stream reference.
+
+A Message contains one or more Sections.
+
+Sections may reuse stream references when content is unchanged.
+
 ## Retired terms
 
 ### Adapter
@@ -174,6 +239,14 @@ Artifact Definition
 Runtime
     Artifact Instance
         handles assigned message
+```
+
+```text
+Message
+    Interchange Chain
+        root Interchange
+        current Interchange
+    Sections
 ```
 
 ```text
