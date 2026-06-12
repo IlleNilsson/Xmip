@@ -10,6 +10,16 @@ The Kernel loads Modules, applies runtime policy, controls execution, owns persi
 
 The Kernel shall not hard-code technology behavior.
 
+## TOML Configuration
+
+TOML configuration defines set values that affect Xmip runtime behavior and the Artifacts a node can handle.
+
+TOML configuration is not runtime state.
+
+TOML configuration defines what may exist and how it should be configured.
+
+Runtime persistence records what did happen, what is happening, and what must resume or be audited.
+
 ## Module
 
 A Module is a loadable Xmip capability package.
@@ -75,6 +85,56 @@ Handlers bind Xmip to external communication, protocol, format, or transport beh
 
 Extensions provide reusable executable capability callable from within Xmip runtime.
 
+## Artifact Definition
+
+An Artifact Definition is a named Xmip configuration object defined in TOML.
+
+An Artifact Definition declares:
+
+- artifact name,
+- artifact kind,
+- Handler reference,
+- Handler configuration,
+- runtime-affecting configuration values,
+- contracts or contract references where applicable,
+- security requirements where applicable,
+- tracing and tracking settings where applicable.
+
+An Artifact Definition describes what a node may handle.
+
+An Artifact Definition does not process a message by itself.
+
+## Artifact Instance
+
+An Artifact Instance is the runtime execution of an Artifact Definition.
+
+An Artifact Instance is created when Xmip runtime uses an Artifact Definition to handle a specific message, stream, action, or execution scope.
+
+An Artifact Instance handles the message it was given.
+
+An Artifact Instance is auditable and may be traceable and trackable according to policy.
+
+Runtime persistence records Artifact Instance state, outcome, failure, retry, and recovery information where applicable.
+
+## Definition versus Instance
+
+Definition means configured in TOML.
+
+Instance means running or previously run in runtime.
+
+Examples:
+
+```text
+ReceiveLocation Definition
+    -> ReceiveLocation Instance
+
+SendLocation Definition
+    -> SendLocation Instance
+
+BusinessProcess Definition
+    -> BusinessProcess Instance
+```
+
 ## Retired terms
 
 ### Adapter
@@ -96,6 +156,24 @@ Kernel
     Module
         Handler
         Extension
+```
+
+```text
+TOML Configuration
+    Runtime settings
+    Artifact Definitions
+```
+
+```text
+Artifact Definition
+    references Handler
+    contains Handler configuration
+```
+
+```text
+Runtime
+    Artifact Instance
+        handles assigned message
 ```
 
 ```text
