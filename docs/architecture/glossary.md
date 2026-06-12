@@ -200,6 +200,38 @@ A Message contains one or more Sections.
 
 Sections may reuse stream references when content is unchanged.
 
+## Audit
+
+Audit is the persistent accountability record of Xmip actions and outcomes.
+
+Failures are always audited.
+
+Audit policy may decide which successful actions are persisted as audit records, but failures are not optional.
+
+## Failure Persistence
+
+When a failure occurs, Xmip shall persist the message in its failure-time state.
+
+The persisted failure state shall include:
+
+- message id,
+- interchange chain,
+- current interchange id,
+- message metadata,
+- section metadata,
+- stream references or stored streams as required by policy,
+- Artifact Instance context,
+- failure reason,
+- failure classification,
+- time of failure,
+- runtime place where failure occurred.
+
+Failure persistence is mandatory.
+
+Failure persistence is part of auditability.
+
+Failure persistence exists so Xmip can inspect, report, recover, retry, move to a dead message queue, or explain what failed and why.
+
 ## Retired terms
 
 ### Adapter
@@ -247,6 +279,13 @@ Message
         root Interchange
         current Interchange
     Sections
+```
+
+```text
+Failure
+    persists message state
+    persists interchange chain
+    persists Artifact Instance context
 ```
 
 ```text
