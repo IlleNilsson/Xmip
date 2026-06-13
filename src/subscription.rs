@@ -16,12 +16,9 @@ pub struct SubscriptionPattern {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SubscriptionAction {
-    StartProcess { process_definition: String },
+    KickOffProcess { process_definition: String },
     ResumeProcess { process_instance_id: String },
-    SendToPort { send_port: String },
-    Assign { assignment_name: String },
-    Transform { transformation_name: String },
-    MoveToDeadMessageQueue { reason: String },
+    KickOffSendPort { send_port: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
