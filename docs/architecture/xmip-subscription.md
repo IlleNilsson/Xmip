@@ -51,15 +51,12 @@ A pattern may be based on:
 
 When a Subscription matches, Xmip creates an action.
 
-Examples:
+A Subscription action shall kick off one of two runtime paths:
 
-- start a ProcessInstance,
-- resume a ProcessInstance,
-- send to a SendPort,
-- route to a SendLocation through a SendPort,
-- assign a message,
-- transform a message,
-- move to a dead message queue when required.
+- start or resume a ProcessInstance,
+- send to a SendPort.
+
+The Process or SendPort may then perform assignments, transformations, delivery decisions, retries, failover, dead-message handling, and other internal work according to its own definition and runtime policy.
 
 ## Rule
 
