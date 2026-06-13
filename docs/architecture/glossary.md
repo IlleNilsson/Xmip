@@ -12,13 +12,84 @@ The Kernel shall not hard-code technology behavior.
 
 ## TOML Configuration
 
-TOML configuration defines set values that affect Xmip runtime behavior and the Artifacts a node can handle.
+TOML configuration defines set values that affect Xmip runtime behavior and the Definitions a node can handle.
 
 TOML configuration is not runtime state.
 
 TOML configuration defines what may exist and how it should be configured.
 
 Runtime persistence records what did happen, what is happening, and what must resume or be audited.
+
+## Definition
+
+A Definition is a named Xmip configuration object defined in TOML.
+
+A Definition declares what may exist and how it is configured.
+
+Examples:
+
+- ReceivePortDefinition,
+- ReceiveLocationDefinition,
+- SubscriptionDefinition,
+- ProcessDefinition,
+- SendPortDefinition,
+- SendLocationDefinition,
+- ContractDefinition.
+
+A Definition may declare:
+
+- name,
+- kind-specific configuration,
+- Handler reference where applicable,
+- Handler configuration where applicable,
+- runtime-affecting configuration values,
+- contracts or contract references where applicable,
+- security requirements where applicable,
+- tracing and tracking settings where applicable.
+
+A Definition describes what a node may handle.
+
+A Definition does not process a message by itself.
+
+## Instance
+
+An Instance is the runtime execution of a Definition.
+
+An Instance is created when Xmip runtime uses a Definition to handle a specific message, stream, action, or execution scope.
+
+An Instance handles the message it was given.
+
+An Instance is auditable and may be traceable and trackable according to policy.
+
+Runtime persistence records Instance state, outcome, failure, retry, and recovery information where applicable.
+
+Examples:
+
+- ReceivePortInstance,
+- ReceiveLocationInstance,
+- SubscriptionInstance,
+- ProcessInstance,
+- SendPortInstance,
+- SendLocationInstance.
+
+## Definition versus Instance
+
+Definition means configured in TOML.
+
+Instance means running or previously run in runtime.
+
+Examples:
+
+```text
+ReceiveLocationDefinition
+    -> ReceiveLocationInstance
+
+SendLocationDefinition
+    -> SendLocationInstance
+
+ProcessDefinition
+    -> ProcessInstance
+```
 
 ## Module
 
@@ -84,56 +155,6 @@ An Extension has a utility purpose.
 Handlers bind Xmip to external communication, protocol, format, or transport behavior.
 
 Extensions provide reusable executable capability callable from within Xmip runtime.
-
-## Artifact Definition
-
-An Artifact Definition is a named Xmip configuration object defined in TOML.
-
-An Artifact Definition declares:
-
-- artifact name,
-- artifact kind,
-- Handler reference,
-- Handler configuration,
-- runtime-affecting configuration values,
-- contracts or contract references where applicable,
-- security requirements where applicable,
-- tracing and tracking settings where applicable.
-
-An Artifact Definition describes what a node may handle.
-
-An Artifact Definition does not process a message by itself.
-
-## Artifact Instance
-
-An Artifact Instance is the runtime execution of an Artifact Definition.
-
-An Artifact Instance is created when Xmip runtime uses an Artifact Definition to handle a specific message, stream, action, or execution scope.
-
-An Artifact Instance handles the message it was given.
-
-An Artifact Instance is auditable and may be traceable and trackable according to policy.
-
-Runtime persistence records Artifact Instance state, outcome, failure, retry, and recovery information where applicable.
-
-## Definition versus Instance
-
-Definition means configured in TOML.
-
-Instance means running or previously run in runtime.
-
-Examples:
-
-```text
-ReceiveLocation Definition
-    -> ReceiveLocation Instance
-
-SendLocation Definition
-    -> SendLocation Instance
-
-BusinessProcess Definition
-    -> BusinessProcess Instance
-```
 
 ## Interchange
 
@@ -243,7 +264,7 @@ The persisted failure state shall include:
 - message metadata,
 - section metadata,
 - stream references or stored streams as required by policy,
-- Artifact Instance context,
+- Instance context,
 - failure reason,
 - failure classification,
 - time of failure,
@@ -269,6 +290,18 @@ Retired.
 
 Use Module, Handler, or Extension depending on the exact meaning.
 
+### Artifact
+
+Retired.
+
+Use explicit Definition and Instance names instead.
+
+### Enabler
+
+Retired.
+
+Use explicit Definition and Instance names instead.
+
 ## Terminology hierarchy
 
 ```text
@@ -281,18 +314,19 @@ Kernel
 ```text
 TOML Configuration
     Runtime settings
-    Artifact Definitions
+    Definitions
 ```
 
 ```text
-Artifact Definition
-    references Handler
-    contains Handler configuration
+Definition
+    TOML configuration
+    may reference Handler
+    may contain Handler configuration
 ```
 
 ```text
 Runtime
-    Artifact Instance
+    Instance
         handles assigned message
 ```
 
@@ -309,7 +343,7 @@ Message
 Failure
     persists message state
     persists interchange chain
-    persists Artifact Instance context
+    persists Instance context
 ```
 
 ```text
