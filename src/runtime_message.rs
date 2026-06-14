@@ -1,6 +1,6 @@
 use prost::Message;
 
-#[derive(Clone, PartialEq, Message)]
+#[derive(Debug, Clone, PartialEq, Message)]
 pub struct RuntimeSection {
     #[prost(string, tag = "1")]
     pub section_id: String,
@@ -10,7 +10,7 @@ pub struct RuntimeSection {
     pub stream_bytes: Vec<u8>,
 }
 
-#[derive(Clone, PartialEq, Message)]
+#[derive(Debug, Clone, PartialEq, Message)]
 pub struct RuntimeMessage {
     #[prost(string, tag = "1")]
     pub message_id: String,
@@ -24,7 +24,7 @@ pub struct RuntimeMessage {
     pub promoted_properties: Vec<String>,
 }
 
-#[derive(Clone, PartialEq, Message)]
+#[derive(Debug, Clone, PartialEq, Message)]
 pub struct RuntimeInterchange {
     #[prost(string, tag = "1")]
     pub interchange_id: String,
