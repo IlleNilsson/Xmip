@@ -10,8 +10,8 @@ The installer shall install:
 - Xmip management binaries,
 - default TOML configuration,
 - service definitions where supported,
-- local persistence database,
-- local management database.
+- bundled runtime persistence database,
+- bundled management database.
 
 ## Package manager first
 
@@ -30,9 +30,11 @@ Manual archive installation may exist, but package-manager installation is the p
 
 Xmip installation includes two local databases by default.
 
-### Persistence database
+### Runtime persistence database
 
-The persistence database stores runtime truth.
+Default engine: RocksDB-style embedded key/value store.
+
+The runtime persistence database stores runtime truth.
 
 It stores:
 
@@ -43,10 +45,13 @@ It stores:
 - process state,
 - retry state,
 - failure state,
+- replay checkpoints,
 - recovery state,
-- audit records required for runtime recovery.
+- runtime audit records.
 
 ### Management database
+
+Default engine: SQLite-style embedded relational store.
 
 The management database stores management truth.
 
@@ -60,13 +65,16 @@ It stores:
 - configuration versions,
 - deployment state,
 - operator metadata,
-- management audit.
+- management audit,
+- queryable administration views.
 
 ## Rule
 
 Runtime persistence and management persistence are separate databases.
 
-They may use the same embedded database engine, but they must remain separate stores.
+Runtime persistence is the source of truth for replay.
+
+Management persistence is the source of truth for administration.
 
 ## Default local layout
 
@@ -76,8 +84,8 @@ xmip/
     config/
     modules/
     data/
-        persistence/
-        management/
+        persistence-rocksdb/
+        management.sqlite
     logs/
 ```
 
