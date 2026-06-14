@@ -10,8 +10,7 @@ $paths = @(
     "$InstallRoot\config",
     "$InstallRoot\modules",
     "$InstallRoot\data",
-    "$InstallRoot\data\persistence",
-    "$InstallRoot\data\management",
+    "$InstallRoot\data\persistence-rocksdb",
     "$InstallRoot\logs"
 )
 
@@ -21,14 +20,21 @@ foreach ($path in $paths) {
     }
 }
 
+$managementDb = "$InstallRoot\data\management.sqlite"
+if (-not (Test-Path $managementDb)) {
+    New-Item -ItemType File -Path $managementDb | Out-Null
+}
+
 $nodeConfig = @"
 [node]
 name = "local-xmip-node"
 cluster = "local-xmip-cluster"
 
 [storage]
-persistence_path = "$InstallRoot\data\persistence"
-management_path = "$InstallRoot\data\management"
+persistence_engine = "rocksdb"
+persistence_path = "$InstallRoot\data\persistence-rocksdb"
+management_engine = "sqlite"
+management_path = "$InstallRoot\data\management.sqlite"
 
 [modules]
 load_from = "$InstallRoot\modules"
@@ -40,5 +46,5 @@ if (-not (Test-Path $configPath)) {
 }
 
 Write-Host "Xmip local layout initialized at $InstallRoot"
-Write-Host "Persistence store: $InstallRoot\data\persistence"
-Write-Host "Management store:   $InstallRoot\data\management"
+Write-Host "Persistence store: $InstallRoot\data\persistence-rocksdb"
+Write-Host "Management store:   $InstallRoot\data\management.sqlite"
