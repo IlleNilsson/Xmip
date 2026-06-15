@@ -52,6 +52,7 @@ Examples:
 - handler-file,
 - handler-ftp-family,
 - handler-http,
+- handler-web-api,
 - handler-soap,
 - handler-grpc,
 - handler-tcp,
@@ -78,10 +79,11 @@ Examples:
 ```text
 IP
     TCP
-        HTTP
-            REST
-            SOAP
-            WebHook
+        HTTP base
+            shared HTTP functions
+            shared HTTP security
+            Web API repository
+            SOAP repository
         gRPC
         raw TCP
     UDP
@@ -109,6 +111,16 @@ Industrial and device
     Modbus
     MQTT
 ```
+
+## HTTP family rule
+
+HTTP support lives in its own base handler repository.
+
+The HTTP base repository owns shared HTTP functions and shared HTTP security.
+
+Web API support lives in its own repository derived from the HTTP base repository.
+
+SOAP support lives in its own repository derived from the HTTP base repository when transported over HTTP.
 
 ## Rule
 
