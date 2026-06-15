@@ -1,0 +1,12 @@
+[node]
+name = "{{ xmip_node_name }}"
+cluster = "{{ xmip_cluster_name }}"
+
+[storage]
+persistence_engine = "{{ xmip_persistence_engine }}"
+persistence_path = "{{ xmip_install_root }}/data/persistence-rocksdb"
+management_engine = "{{ xmip_management_engine }}"
+management_path = "{{ xmip_install_root }}/data/management.sqlite"
+
+[modules]
+load_from = "{{ xmip_install_root }}/modules"
