@@ -1,31 +1,19 @@
 # Rust / Cargo build output
 target/
-/target/
 **/target/
 
-# Cargo hashed build artifacts commonly seen under target/debug
-target/debug/
-target/debug/*
-target/debug/deps/
-target/debug/deps/*
-target/debug/incremental/
-target/debug/incremental/*
-target/debug/.fingerprint/
-target/debug/.fingerprint/*
-target/debug/build/
-target/debug/build/*
+# Keep Cargo.lock committed for Xmip runtime/platform reproducibility.
+# Do not add Cargo.lock here.
 
-# Rust generated files
+# Rust compiler intermediate artifacts
 *.rlib
 *.rmeta
 *.d
-*.pdb
-*.exe
-*.dll
-*.so
-*.dylib
 
-# Xmip runtime proof artifacts
+# Local debug symbols and OS-specific build products generated under development
+*.pdb
+
+# Xmip local runtime proof artifacts
 execution-context.pb
 crash-once.marker
 *.pb
@@ -35,11 +23,25 @@ crash-once.marker
 *.trace.local
 *.tracking.local
 
+# Local runtime data and embedded databases
+data/
+**/data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+persistence-rocksdb/
+**/persistence-rocksdb/
+management.sqlite
+
 # Local inbound/outbound test folders
 /inbound/
 /outbound/
 /tmp/
 /temp/
+tmp/
+temp/
 
 # Environment and local settings
 .env
@@ -60,3 +62,4 @@ Desktop.ini
 # Logs
 *.log
 logs/
+**/logs/
