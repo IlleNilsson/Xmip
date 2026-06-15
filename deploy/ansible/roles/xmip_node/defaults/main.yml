@@ -1,0 +1,6 @@
+---
+xmip_install_root: /opt/xmip
+xmip_node_name: local-xmip-node
+xmip_cluster_name: local-xmip-cluster
+xmip_persistence_engine: rocksdb
+xmip_management_engine: sqlite
