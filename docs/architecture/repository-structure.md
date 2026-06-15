@@ -25,7 +25,9 @@ Xmip shall be organized as logical sub-repositories.
 
 The main runtime shall live in its own sub-repository.
 
-Each Handler technology shall live in its own sub-repository.
+Handler technologies shall live in logical handler sub-repositories.
+
+A handler sub-repository may contain multiple closely related protocol variants when they share more than they differ.
 
 ## Main runtime sub-repository
 
@@ -43,14 +45,12 @@ The main runtime sub-repository contains:
 
 ## Handler sub-repositories
 
-Each Handler technology has a corresponding sub-repository.
+Each logical Handler technology or tightly related Handler family has a corresponding sub-repository.
 
 Examples:
 
 - handler-file,
-- handler-ftp,
-- handler-sftp,
-- handler-ftps,
+- handler-ftp-family,
 - handler-http,
 - handler-soap,
 - handler-grpc,
@@ -90,9 +90,10 @@ IP
 
 File transfer
     File
-    FTP
-    FTPS
-    SFTP
+    FTP family
+        FTP
+        FTPS
+        SFTP
 
 Queueing and streaming
     MSMQ
