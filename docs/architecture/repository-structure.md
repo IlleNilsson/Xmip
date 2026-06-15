@@ -51,19 +51,25 @@ Examples:
 
 - handler-file,
 - handler-ftp-family,
+- handler-tcp-base,
+- handler-udp-base,
 - handler-http,
 - handler-web-api,
 - handler-soap,
 - handler-grpc,
-- handler-tcp,
-- handler-udp,
+- handler-queue-stream-common,
 - handler-rabbitmq,
 - handler-kafka,
 - handler-msmq,
 - handler-ibmmq,
 - handler-azure-service-bus,
 - handler-azure-event-grid,
+- handler-industrial-device-common,
 - handler-canbus,
+- handler-opc-ua,
+- handler-modbus,
+- handler-mqtt,
+- handler-data-exchange-common,
 - handler-hl7,
 - handler-fhir,
 - handler-edi.
@@ -78,38 +84,43 @@ Examples:
 
 ```text
 IP
-    TCP
-        HTTP base
+    TCP base
+        raw TCP repository
+        HTTP base repository
             shared HTTP functions
             shared HTTP security
             Web API repository
             SOAP repository
-        gRPC
-        raw TCP
-    UDP
-        raw UDP
-        IoT and industrial protocols where applicable
+        gRPC repository
+    UDP base
+        raw UDP repository
+        UDP based device and IoT repositories where applicable
 
 File transfer
-    File
-    FTP family
+    File repository
+    FTP family repository
         FTP
         FTPS
         SFTP
 
-Queueing and streaming
-    MSMQ
-    RabbitMQ
-    Kafka
-    AWS SQS
-    NATS
-    Redis Streams
+Queueing and streaming common
+    MSMQ repository
+    RabbitMQ repository
+    Kafka repository
+    AWS SQS repository
+    NATS repository
+    Redis Streams repository
 
-Industrial and device
-    CANBUS
-    OPC UA
-    Modbus
-    MQTT
+Industrial and device common
+    CAN bus repository
+    OPC UA repository
+    Modbus repository
+    MQTT repository
+
+Data exchange common
+    EDI repository
+    HL7 repository
+    FHIR repository
 ```
 
 ## HTTP family rule
@@ -121,6 +132,32 @@ The HTTP base repository owns shared HTTP functions and shared HTTP security.
 Web API support lives in its own repository derived from the HTTP base repository.
 
 SOAP support lives in its own repository derived from the HTTP base repository when transported over HTTP.
+
+## Queue and stream family rule
+
+Queue and stream handlers share a common base repository.
+
+The common base owns shared queue and stream concepts such as connection lifecycle, producer and consumer behavior, acknowledgement, batching, ordering, metadata mapping, and stream handoff to Xmip.
+
+Specific technologies such as MSMQ, RabbitMQ, Kafka, AWS SQS, NATS, and Redis Streams live in derived repositories.
+
+## Industrial and device family rule
+
+Industrial, edge, device, and IoT handlers share a common base repository.
+
+Specific technologies such as CAN bus, OPC UA, Modbus, and MQTT live in derived repositories.
+
+## Data exchange family rule
+
+EDI, HL7, and FHIR share a data exchange common base repository where parsing, contract mapping, validation hooks, and message metadata mapping can be reused.
+
+Each standard still lives in its own derived repository.
+
+## TCP and UDP family rule
+
+TCP and UDP each have a base repository for shared socket-level behavior.
+
+Higher-level protocols live in derived repositories.
 
 ## Rule
 
