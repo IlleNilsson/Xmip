@@ -1,3 +1,4 @@
+pub mod handler;
 pub mod management_store;
 pub mod runtime_message;
 pub mod runtime_store;
