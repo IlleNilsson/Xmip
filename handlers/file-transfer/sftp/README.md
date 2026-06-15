@@ -1,5 +1,7 @@
-# SFTP Handler
+# Moved
 
-Placeholder for the SFTP handler technology sub-repository.
+SFTP belongs in the shared FTP family handler repository.
 
-SFTP belongs to the file transfer family.
+Use:
+
+handlers/file-transfer/ftp-family
