@@ -1,0 +1,39 @@
+# Xmip DSC v3 sample
+# Intended as a starter desired-state document.
+
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: XmipRoot
+    type: Microsoft.DSC/PowerShell
+    properties:
+      resources:
+        - name: CreateXmipLayout
+          type: PSDesiredStateConfiguration/Script
+          properties:
+            GetScript: |
+              @{ Result = Test-Path '/opt/xmip' }
+            TestScript: |
+              Test-Path '/opt/xmip/config/xmip-node.toml'
+            SetScript: |
+              $root = '/opt/xmip'
+              New-Item -ItemType Directory -Force -Path $root | Out-Null
+              New-Item -ItemType Directory -Force -Path "$root/bin" | Out-Null
+              New-Item -ItemType Directory -Force -Path "$root/config" | Out-Null
+              New-Item -ItemType Directory -Force -Path "$root/modules" | Out-Null
+              New-Item -ItemType Directory -Force -Path "$root/data/persistence-rocksdb" | Out-Null
+              New-Item -ItemType Directory -Force -Path "$root/logs" | Out-Null
+              New-Item -ItemType File -Force -Path "$root/data/management.sqlite" | Out-Null
+              @'
+              [node]
+              name = "local-xmip-node"
+              cluster = "local-xmip-cluster"
+
+              [storage]
+              persistence_engine = "rocksdb"
+              persistence_path = "/opt/xmip/data/persistence-rocksdb"
+              management_engine = "sqlite"
+              management_path = "/opt/xmip/data/management.sqlite"
+
+              [modules]
+              load_from = "/opt/xmip/modules"
+              '@ | Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8
