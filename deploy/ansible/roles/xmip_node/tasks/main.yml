@@ -1,0 +1,26 @@
+---
+- name: Create Xmip directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ xmip_install_root }}"
+    - "{{ xmip_install_root }}/bin"
+    - "{{ xmip_install_root }}/config"
+    - "{{ xmip_install_root }}/modules"
+    - "{{ xmip_install_root }}/data"
+    - "{{ xmip_install_root }}/data/persistence-rocksdb"
+    - "{{ xmip_install_root }}/logs"
+
+- name: Create Xmip management database placeholder
+  ansible.builtin.file:
+    path: "{{ xmip_install_root }}/data/management.sqlite"
+    state: touch
+    mode: '0644'
+
+- name: Write Xmip node TOML
+  ansible.builtin.template:
+    src: xmip-node.toml.j2
+    dest: "{{ xmip_install_root }}/config/xmip-node.toml"
+    mode: '0644'
