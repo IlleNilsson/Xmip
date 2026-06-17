@@ -39,6 +39,16 @@ The core runtime uses the HandlerRegistry to resolve configured handler names.
 
 The runtime talks to Handler traits, not concrete handler implementations.
 
+## Extension registration
+
+Extensions are registered in the ExtensionRegistry.
+
+Extensions are runtime utilities and are not Handlers.
+
+Handlers perform technology-specific receive, send, content, or logic work.
+
+Extensions provide reusable support capabilities available to runtime components.
+
 ## Current implementation stage
 
 Implemented now:
@@ -46,12 +56,13 @@ Implemented now:
 - manifest model exists,
 - module manifest path discovery exists,
 - handler registry exists,
-- manifest-to-registry registration exists.
+- manifest-to-registry registration exists,
+- TOML manifest DTO exists,
+- extension registry exists.
 
 Still missing:
 
-- TOML manifest parsing,
+- TOML manifest conversion into the runtime manifest model,
 - dynamic binary loading,
-- extension registry,
 - host process isolation,
 - signature and trust validation.
