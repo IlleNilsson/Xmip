@@ -29,6 +29,8 @@ It supports:
 
 The server runtime should discover and load modules as needed based on configuration.
 
+The server runtime may use async IO, worker tasks, and channel handoff between runtime stages.
+
 ## Purpose-compiled runtime
 
 A purpose-compiled runtime is a smaller Xmip runtime built for a specific target, site, endpoint, embedded use case, industrial use case, or constrained environment.
@@ -64,6 +66,16 @@ Both runtime profiles are configured by Xmip definitions.
 The server runtime may load modules on demand according to TOML configuration.
 
 The purpose-compiled runtime may compile selected capabilities into the executable, but it must still behave according to Xmip definitions and runtime contracts.
+
+## Rust runtime rule
+
+Runtime profile selection happens at build and packaging time.
+
+Runtime profiles are not Git branches.
+
+Stages should pass owned work to each other instead of sharing mutable message state.
+
+Blocking handler work must not block latency-sensitive runtime loops.
 
 ## Principle
 
