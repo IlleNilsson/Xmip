@@ -62,6 +62,7 @@ Examples:
 - xmip-handler-http,
 - xmip-handler-web-api,
 - xmip-handler-soap,
+- xmip-handler-websocket,
 - xmip-handler-grpc,
 - xmip-handler-queue-stream-common,
 - xmip-handler-rabbitmq,
@@ -97,6 +98,7 @@ IP
             shared HTTP security
             Web API repository
             SOAP repository
+            WebSocket repository
         gRPC repository
     UDP base
         raw UDP repository
@@ -138,6 +140,8 @@ The HTTP base repository owns shared HTTP functions and shared HTTP security.
 Web API support lives in its own repository derived from the HTTP base repository.
 
 SOAP support lives in its own repository derived from the HTTP base repository when transported over HTTP.
+
+WebSocket support lives in its own repository derived from the HTTP base repository because the connection starts as an HTTP upgrade, but its runtime behavior is long-lived and bidirectional.
 
 ## Queue and stream family rule
 
