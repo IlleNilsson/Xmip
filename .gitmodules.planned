@@ -29,6 +29,10 @@
     path = handlers/ip/tcp/http/soap
     url = https://github.com/IlleNilsson/xmip-handler-soap.git
 
+[submodule "handlers/ip/tcp/http/websocket"]
+    path = handlers/ip/tcp/http/websocket
+    url = https://github.com/IlleNilsson/xmip-handler-websocket.git
+
 [submodule "handlers/ip/tcp/grpc"]
     path = handlers/ip/tcp/grpc
     url = https://github.com/IlleNilsson/xmip-handler-grpc.git
