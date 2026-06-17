@@ -23,7 +23,7 @@ The Xmip project does not take responsibility for external forks.
 
 Xmip shall be organized as logical sub-repositories.
 
-The main runtime shall live in its own sub-repository.
+The main runtime shall live in its own sub-repository named `xmip-runtime`.
 
 Handler technologies shall live in logical handler sub-repositories.
 
@@ -31,7 +31,13 @@ A handler sub-repository may contain multiple closely related protocol variants 
 
 ## Main runtime sub-repository
 
-The main runtime sub-repository contains:
+The main runtime sub-repository is:
+
+```text
+xmip-runtime
+```
+
+The runtime sub-repository contains:
 
 - kernel,
 - runtime execution,
@@ -49,30 +55,30 @@ Each logical Handler technology or tightly related Handler family has a correspo
 
 Examples:
 
-- handler-file,
-- handler-ftp-family,
-- handler-tcp-base,
-- handler-udp-base,
-- handler-http,
-- handler-web-api,
-- handler-soap,
-- handler-grpc,
-- handler-queue-stream-common,
-- handler-rabbitmq,
-- handler-kafka,
-- handler-msmq,
-- handler-ibmmq,
-- handler-azure-service-bus,
-- handler-azure-event-grid,
-- handler-industrial-device-common,
-- handler-canbus,
-- handler-opc-ua,
-- handler-modbus,
-- handler-mqtt,
-- handler-data-exchange-common,
-- handler-hl7,
-- handler-fhir,
-- handler-edi.
+- xmip-handler-file,
+- xmip-handler-ftp-family,
+- xmip-handler-tcp-base,
+- xmip-handler-udp-base,
+- xmip-handler-http,
+- xmip-handler-web-api,
+- xmip-handler-soap,
+- xmip-handler-grpc,
+- xmip-handler-queue-stream-common,
+- xmip-handler-rabbitmq,
+- xmip-handler-kafka,
+- xmip-handler-msmq,
+- xmip-handler-ibmmq,
+- xmip-handler-azure-service-bus,
+- xmip-handler-azure-event-grid,
+- xmip-handler-industrial-device-common,
+- xmip-handler-canbus,
+- xmip-handler-opc-ua,
+- xmip-handler-modbus,
+- xmip-handler-mqtt,
+- xmip-handler-data-exchange-common,
+- xmip-handler-hl7,
+- xmip-handler-fhir,
+- xmip-handler-edi.
 
 ## Network investigation alignment
 
