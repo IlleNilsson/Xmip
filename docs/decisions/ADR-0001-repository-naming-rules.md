@@ -31,6 +31,7 @@ xmip-core
 ```text
 xmip-core
 xmip-handler-canbus
+xmip-handler-file
 xmip-handler-ftp
 xmip-handler-grpc
 xmip-handler-http
@@ -48,20 +49,17 @@ xmip-handler-websocket
 mip-handler-canbus
 handler-canbus
 xmip-canbus
+```
+
+## File handler
+
+The canonical repository name is:
+
+```text
 xmip-handler-file
 ```
 
-## File system handler
-
-The name `xmip-handler-file` is rejected because it is too vague.
-
-Use:
-
-```text
-xmip-handler-file-system
-```
-
-for local or shared file system receive and send behavior.
+This handler is responsible for local or shared file system receive and send behavior.
 
 FTP, FTPS, and SFTP remain in:
 
