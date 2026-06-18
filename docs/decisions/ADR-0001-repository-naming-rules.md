@@ -48,7 +48,6 @@ xmip-handler-websocket
 mip-handler-canbus
 handler-canbus
 xmip-canbus
-xmip-handler-fil
 xmip-handler-file
 ```
 
