@@ -1,6 +1,7 @@
 pub mod extension_registry;
 pub mod handler;
 pub mod handler_registry;
+pub mod handler_taxonomy;
 pub mod management_store;
 pub mod module_loader;
 pub mod module_manifest;
