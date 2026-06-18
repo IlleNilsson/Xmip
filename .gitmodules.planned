@@ -1,13 +1,13 @@
 # Planned Xmip submodules.
 # Rename this file to .gitmodules only after the target GitHub repositories exist.
 
-[submodule "runtime/xmip-runtime"]
-    path = runtime/xmip-runtime
-    url = https://github.com/IlleNilsson/xmip-runtime.git
+[submodule "runtime/xmip-core"]
+    path = runtime/xmip-core
+    url = https://github.com/IlleNilsson/xmip-core.git
 
 [submodule "handlers/file-transfer/ftp-family"]
     path = handlers/file-transfer/ftp-family
-    url = https://github.com/IlleNilsson/xmip-handler-ftp-family.git
+    url = https://github.com/IlleNilsson/xmip-handler-ftp.git
 
 [submodule "handlers/ip/tcp/base"]
     path = handlers/ip/tcp/base
