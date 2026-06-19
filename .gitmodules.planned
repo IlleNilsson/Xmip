@@ -1,21 +1,33 @@
 # Planned Xmip submodules.
-# Rename this file to .gitmodules only after the target GitHub repositories exist.
+# Rename this file to .gitmodules after the target repositories exist.
 
 [submodule "runtime/xmip-core"]
     path = runtime/xmip-core
     url = https://github.com/IlleNilsson/xmip-core.git
 
-[submodule "handlers/file-transfer/ftp-family"]
-    path = handlers/file-transfer/ftp-family
+[submodule "handlers/file"]
+    path = handlers/file
+    url = https://github.com/IlleNilsson/xmip-handler-file.git
+
+[submodule "handlers/file-transfer/ftp"]
+    path = handlers/file-transfer/ftp
     url = https://github.com/IlleNilsson/xmip-handler-ftp.git
 
 [submodule "handlers/ip/tcp/base"]
     path = handlers/ip/tcp/base
     url = https://github.com/IlleNilsson/xmip-handler-tcp-base.git
 
+[submodule "handlers/ip/tcp/raw-tcp"]
+    path = handlers/ip/tcp/raw-tcp
+    url = https://github.com/IlleNilsson/xmip-handler-raw-tcp.git
+
 [submodule "handlers/ip/udp/base"]
     path = handlers/ip/udp/base
     url = https://github.com/IlleNilsson/xmip-handler-udp-base.git
+
+[submodule "handlers/ip/udp/raw-udp"]
+    path = handlers/ip/udp/raw-udp
+    url = https://github.com/IlleNilsson/xmip-handler-raw-udp.git
 
 [submodule "handlers/ip/tcp/http"]
     path = handlers/ip/tcp/http
@@ -37,6 +49,10 @@
     path = handlers/ip/tcp/grpc
     url = https://github.com/IlleNilsson/xmip-handler-grpc.git
 
+[submodule "handlers/ip/tcp/mllp"]
+    path = handlers/ip/tcp/mllp
+    url = https://github.com/IlleNilsson/xmip-handler-mllp.git
+
 [submodule "handlers/queue-stream/common"]
     path = handlers/queue-stream/common
     url = https://github.com/IlleNilsson/xmip-handler-queue-stream-common.git
@@ -52,6 +68,18 @@
 [submodule "handlers/queue-stream/apache-kafka"]
     path = handlers/queue-stream/apache-kafka
     url = https://github.com/IlleNilsson/xmip-handler-kafka.git
+
+[submodule "handlers/queue-stream/ibmmq"]
+    path = handlers/queue-stream/ibmmq
+    url = https://github.com/IlleNilsson/xmip-handler-ibmmq.git
+
+[submodule "handlers/queue-stream/azure-service-bus"]
+    path = handlers/queue-stream/azure-service-bus
+    url = https://github.com/IlleNilsson/xmip-handler-azure-service-bus.git
+
+[submodule "handlers/queue-stream/azure-event-grid"]
+    path = handlers/queue-stream/azure-event-grid
+    url = https://github.com/IlleNilsson/xmip-handler-azure-event-grid.git
 
 [submodule "handlers/queue-stream/aws-sqs"]
     path = handlers/queue-stream/aws-sqs
@@ -69,8 +97,8 @@
     path = handlers/industrial-device/common
     url = https://github.com/IlleNilsson/xmip-handler-industrial-device-common.git
 
-[submodule "handlers/industrial-device/can-bus"]
-    path = handlers/industrial-device/can-bus
+[submodule "handlers/industrial-device/canbus"]
+    path = handlers/industrial-device/canbus
     url = https://github.com/IlleNilsson/xmip-handler-canbus.git
 
 [submodule "handlers/industrial-device/opc-ua"]
