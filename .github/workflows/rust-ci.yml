@@ -33,9 +33,12 @@ jobs:
       - name: Test
         run: cargo test --all-targets
 
+      - name: Validate handler universe
+        run: cargo run --bin xmip-handlers
+
       - name: Run demo first pass
-        run: cargo run
+        run: cargo run --bin xmip-linear-kernel
         continue-on-error: true
 
       - name: Run demo recovery pass
-        run: cargo run
+        run: cargo run --bin xmip-linear-kernel
