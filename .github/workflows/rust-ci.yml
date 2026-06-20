@@ -1,0 +1,41 @@
+name: Rust CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Build
+        run: cargo build --all-targets
+
+      - name: Test
+        run: cargo test --all-targets
+
+      - name: Run demo first pass
+        run: cargo run
+        continue-on-error: true
+
+      - name: Run demo recovery pass
+        run: cargo run
