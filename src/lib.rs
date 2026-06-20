@@ -15,3 +15,4 @@ pub mod module_manifest_toml;
 pub mod runtime_message;
 pub mod runtime_store;
 pub mod threaded_runtime;
+pub mod xmip_message_model;
