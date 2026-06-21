@@ -2,8 +2,8 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 use xmip_linear_kernel::xmip_message_model::{CreationInstance, CreationKind, Interchange, Message, PromotedProperty, Section};
 use xmip_linear_kernel::xmip_send_model::{
-    SendAttemptOutcome, SendFailureKind, SendLocation, SendPort, SendRuntime, SendStatus,
-    SendTransport,
+    SendAttemptOutcome, SendFailureKind, SendLocation, SendPort, SendPortGroup, SendRuntime,
+    SendStatus, SendTransport,
 };
 
 fn source_interchange() -> (Interchange, uuid::Uuid) {
@@ -36,31 +36,31 @@ impl SendTransport for ScriptedTransport {
 }
 
 #[test]
-fn send_succeeds_without_receive_runtime() {
+fn send_port_succeeds_without_receive_runtime() {
     let (mut interchange, message_id) = source_interchange();
     let send_port = SendPort::new(
         "sendPort:orders-out",
-        vec![SendLocation::primary("primary", "https://target.example/orders", 3)],
+        vec![SendLocation::new("location-a", "https://target.example/orders", 3)],
     )
     .expect("send port should be valid");
     let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
 
-    let result = SendRuntime::execute(&mut interchange, message_id, &send_port, &transport)
+    let result = SendRuntime::execute_port(&mut interchange, message_id, &send_port, &transport)
         .expect("send should execute");
 
     assert_eq!(result.status, SendStatus::Success);
-    assert_eq!(result.successful_location, Some("primary".to_string()));
+    assert_eq!(result.successful_location, Some("location-a".to_string()));
     assert_eq!(interchange.audit.len(), 1);
 }
 
 #[test]
-fn non_retryable_failure_fails_over_to_next_location() {
+fn non_retryable_failure_moves_to_next_send_location_in_order() {
     let (mut interchange, message_id) = source_interchange();
     let send_port = SendPort::new(
         "sendPort:orders-out",
         vec![
-            SendLocation::primary("primary", "https://primary.example/orders", 3),
-            SendLocation::secondary("secondary", "https://secondary.example/orders", 3),
+            SendLocation::new("location-a", "https://a.example/orders", 3),
+            SendLocation::new("location-b", "https://b.example/orders", 3),
         ],
     )
     .expect("send port should be valid");
@@ -69,21 +69,21 @@ fn non_retryable_failure_fails_over_to_next_location() {
         SendAttemptOutcome::Success,
     ]);
 
-    let result = SendRuntime::execute(&mut interchange, message_id, &send_port, &transport)
+    let result = SendRuntime::execute_port(&mut interchange, message_id, &send_port, &transport)
         .expect("send should execute");
 
     assert_eq!(result.status, SendStatus::SuccessWithWarnings);
-    assert_eq!(result.successful_location, Some("secondary".to_string()));
+    assert_eq!(result.successful_location, Some("location-b".to_string()));
     assert_eq!(result.warnings.len(), 1);
     assert_eq!(result.location_results.len(), 2);
 }
 
 #[test]
-fn retryable_failure_retries_same_location_before_failure() {
+fn retryable_failure_retries_same_send_location_before_next_location() {
     let (mut interchange, message_id) = source_interchange();
     let send_port = SendPort::new(
         "sendPort:orders-out",
-        vec![SendLocation::primary("primary", "https://primary.example/orders", 2)],
+        vec![SendLocation::new("location-a", "https://a.example/orders", 2)],
     )
     .expect("send port should be valid");
     let transport = ScriptedTransport::new(vec![
@@ -92,7 +92,7 @@ fn retryable_failure_retries_same_location_before_failure() {
         SendAttemptOutcome::Success,
     ]);
 
-    let result = SendRuntime::execute(&mut interchange, message_id, &send_port, &transport)
+    let result = SendRuntime::execute_port(&mut interchange, message_id, &send_port, &transport)
         .expect("send should execute");
 
     assert_eq!(result.status, SendStatus::Success);
@@ -100,13 +100,13 @@ fn retryable_failure_retries_same_location_before_failure() {
 }
 
 #[test]
-fn all_locations_failed_returns_error_status() {
+fn all_send_locations_failed_returns_error_status() {
     let (mut interchange, message_id) = source_interchange();
     let send_port = SendPort::new(
         "sendPort:orders-out",
         vec![
-            SendLocation::primary("primary", "https://primary.example/orders", 0),
-            SendLocation::secondary("secondary", "https://secondary.example/orders", 0),
+            SendLocation::new("location-a", "https://a.example/orders", 0),
+            SendLocation::new("location-b", "https://b.example/orders", 0),
         ],
     )
     .expect("send port should be valid");
@@ -115,7 +115,7 @@ fn all_locations_failed_returns_error_status() {
         SendAttemptOutcome::Failure { kind: SendFailureKind::NonRetryable, reason: "bad endpoint".to_string() },
     ]);
 
-    let result = SendRuntime::execute(&mut interchange, message_id, &send_port, &transport)
+    let result = SendRuntime::execute_port(&mut interchange, message_id, &send_port, &transport)
         .expect("send should execute");
 
     assert_eq!(result.status, SendStatus::Failure);
@@ -128,7 +128,7 @@ fn send_side_promotion_and_transform_create_new_messages() {
     let (mut interchange, message_id) = source_interchange();
     let send_port = SendPort::new(
         "sendPort:orders-out",
-        vec![SendLocation::primary("primary", "https://target.example/orders", 0)],
+        vec![SendLocation::new("location-a", "https://target.example/orders", 0)],
     )
     .expect("send port should be valid")
     .with_promotion(PromotedProperty::new("destination.format", "json"))
@@ -136,11 +136,35 @@ fn send_side_promotion_and_transform_create_new_messages() {
     let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
 
     let before = interchange.messages.len();
-    let result = SendRuntime::execute(&mut interchange, message_id, &send_port, &transport)
+    let result = SendRuntime::execute_port(&mut interchange, message_id, &send_port, &transport)
         .expect("send should execute");
 
     assert_eq!(result.status, SendStatus::Success);
     assert_eq!(interchange.messages.len(), before + 2);
     assert!(interchange.audit.iter().any(|entry| entry.outcome == "send-side promotion"));
     assert!(interchange.audit.iter().any(|entry| entry.outcome == "send-side transform"));
+}
+
+#[test]
+fn send_port_group_executes_independent_send_ports() {
+    let (mut interchange, message_id) = source_interchange();
+    let port_a = SendPort::new(
+        "sendPort:archive",
+        vec![SendLocation::new("archive-location", "file:///archive/orders", 0)],
+    )
+    .expect("send port should be valid");
+    let port_b = SendPort::new(
+        "sendPort:webhook",
+        vec![SendLocation::new("webhook-location", "https://webhook.example/orders", 0)],
+    )
+    .expect("send port should be valid");
+    let group = SendPortGroup::new("sendPortGroup:orders", vec![port_a, port_b])
+        .expect("send port group should be valid");
+    let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success, SendAttemptOutcome::Success]);
+
+    let result = SendRuntime::execute_group(&mut interchange, message_id, &group, &transport)
+        .expect("send port group should execute");
+
+    assert_eq!(result.status, SendStatus::Success);
+    assert_eq!(result.port_results.len(), 2);
 }
