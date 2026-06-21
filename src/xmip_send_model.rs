@@ -2,26 +2,15 @@ use crate::xmip_message_model::{AuditAction, AuditEntry, CreationInstance, Creat
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SendLocationRole {
-    Primary,
-    Secondary,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SendLocation {
     pub name: String,
-    pub role: SendLocationRole,
     pub target_uri: String,
     pub retry_count: u32,
 }
 
 impl SendLocation {
-    pub fn primary(name: impl Into<String>, target_uri: impl Into<String>, retry_count: u32) -> Self {
-        Self { name: name.into(), role: SendLocationRole::Primary, target_uri: target_uri.into(), retry_count }
-    }
-
-    pub fn secondary(name: impl Into<String>, target_uri: impl Into<String>, retry_count: u32) -> Self {
-        Self { name: name.into(), role: SendLocationRole::Secondary, target_uri: target_uri.into(), retry_count }
+    pub fn new(name: impl Into<String>, target_uri: impl Into<String>, retry_count: u32) -> Self {
+        Self { name: name.into(), target_uri: target_uri.into(), retry_count }
     }
 }
 
@@ -59,6 +48,22 @@ impl SendPort {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendPortGroup {
+    pub name: String,
+    pub ports: Vec<SendPort>,
+}
+
+impl SendPortGroup {
+    pub fn new(name: impl Into<String>, ports: Vec<SendPort>) -> Result<Self, String> {
+        if ports.is_empty() {
+            return Err("send port group requires at least one send port".to_string());
+        }
+
+        Ok(Self { name: name.into(), ports })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendFailureKind {
     Retryable,
     NonRetryable,
@@ -89,7 +94,7 @@ pub struct SendLocationResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SendResult {
+pub struct SendPortResult {
     pub send_port_name: String,
     pub status: SendStatus,
     pub successful_location: Option<String>,
@@ -98,15 +103,24 @@ pub struct SendResult {
     pub error: Option<String>,
 }
 
+pub type SendResult = SendPortResult;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendPortGroupResult {
+    pub group_name: String,
+    pub port_results: Vec<SendPortResult>,
+    pub status: SendStatus,
+}
+
 pub struct SendRuntime;
 
 impl SendRuntime {
-    pub fn execute<T: SendTransport>(
+    pub fn execute_port<T: SendTransport>(
         interchange: &mut Interchange,
         source_message_id: Uuid,
         send_port: &SendPort,
         transport: &T,
-    ) -> Result<SendResult, String> {
+    ) -> Result<SendPortResult, String> {
         let mut working_message = interchange
             .messages
             .get(&source_message_id)
@@ -147,7 +161,7 @@ impl SendRuntime {
 
                         let status = if warnings.is_empty() { SendStatus::Success } else { SendStatus::SuccessWithWarnings };
 
-                        return Ok(SendResult {
+                        return Ok(SendPortResult {
                             send_port_name: send_port.name.clone(),
                             status,
                             successful_location: Some(location.name.clone()),
@@ -178,7 +192,7 @@ impl SendRuntime {
             }
         }
 
-        Ok(SendResult {
+        Ok(SendPortResult {
             send_port_name: send_port.name.clone(),
             status: SendStatus::Failure,
             successful_location: None,
@@ -186,5 +200,37 @@ impl SendRuntime {
             warnings,
             error: Some("all send locations failed".to_string()),
         })
+    }
+
+    pub fn execute_group<T: SendTransport>(
+        interchange: &mut Interchange,
+        source_message_id: Uuid,
+        group: &SendPortGroup,
+        transport: &T,
+    ) -> Result<SendPortGroupResult, String> {
+        let mut port_results = Vec::new();
+
+        for port in &group.ports {
+            port_results.push(Self::execute_port(interchange, source_message_id, port, transport)?);
+        }
+
+        let status = if port_results.iter().all(|result| result.status == SendStatus::Success) {
+            SendStatus::Success
+        } else if port_results.iter().any(|result| result.status != SendStatus::Failure) {
+            SendStatus::SuccessWithWarnings
+        } else {
+            SendStatus::Failure
+        };
+
+        Ok(SendPortGroupResult { group_name: group.name.clone(), port_results, status })
+    }
+
+    pub fn execute<T: SendTransport>(
+        interchange: &mut Interchange,
+        source_message_id: Uuid,
+        send_port: &SendPort,
+        transport: &T,
+    ) -> Result<SendPortResult, String> {
+        Self::execute_port(interchange, source_message_id, send_port, transport)
     }
 }
