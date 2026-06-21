@@ -1,4 +1,7 @@
-use crate::xmip_message_model::{AuditAction, AuditEntry, CreationInstance, CreationKind, Interchange, Message, PromotedProperty, Section};
+use crate::xmip_message_model::{
+    AuditAction, AuditEntry, CreationInstance, CreationKind, Interchange, Message, PromotedProperty,
+    Section,
+};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,7 +13,11 @@ pub struct SendLocation {
 
 impl SendLocation {
     pub fn new(name: impl Into<String>, target_uri: impl Into<String>, retry_count: u32) -> Self {
-        Self { name: name.into(), target_uri: target_uri.into(), retry_count }
+        Self {
+            name: name.into(),
+            target_uri: target_uri.into(),
+            retry_count,
+        }
     }
 }
 
@@ -59,7 +66,10 @@ impl SendPortGroup {
             return Err("send port group requires at least one send port".to_string());
         }
 
-        Ok(Self { name: name.into(), ports })
+        Ok(Self {
+            name: name.into(),
+            ports,
+        })
     }
 }
 
@@ -72,7 +82,10 @@ pub enum SendFailureKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendAttemptOutcome {
     Success,
-    Failure { kind: SendFailureKind, reason: String },
+    Failure {
+        kind: SendFailureKind,
+        reason: String,
+    },
 }
 
 pub trait SendTransport {
@@ -129,19 +142,45 @@ impl SendRuntime {
 
         if !send_port.send_side_promotions.is_empty() {
             working_message = working_message.assign(
-                CreationInstance::new(CreationKind::Assignment, format!("send-promotion:{}", send_port.name), "cluster", "node"),
+                CreationInstance::new(
+                    CreationKind::Assignment,
+                    format!("send-promotion:{}", send_port.name),
+                    "cluster",
+                    "node",
+                ),
                 send_port.send_side_promotions.clone(),
             );
             interchange.add_message(working_message.clone())?;
-            interchange.add_audit(AuditEntry::new(interchange.interchange_id, Some(working_message.message_id), AuditAction::Promotion, send_port.name.clone(), "send-side promotion"))?;
+            interchange.add_audit(AuditEntry::new(
+                interchange.interchange_id,
+                Some(working_message.message_id),
+                AuditAction::Promotion,
+                send_port.name.clone(),
+                "send-side promotion",
+            ))?;
         }
 
         if let Some(content_type) = &send_port.send_side_transform_content_type {
-            let creation = CreationInstance::new(CreationKind::Transformation, format!("send-transform:{}", send_port.name), "cluster", "node");
-            let section = Section::new(creation.clone(), content_type.clone(), format!("send://{}/payload", send_port.name));
+            let creation = CreationInstance::new(
+                CreationKind::Transformation,
+                format!("send-transform:{}", send_port.name),
+                "cluster",
+                "node",
+            );
+            let section = Section::new(
+                creation.clone(),
+                content_type.clone(),
+                format!("send://{}/payload", send_port.name),
+            );
             working_message = working_message.transform(creation, vec![section]);
             interchange.add_message(working_message.clone())?;
-            interchange.add_audit(AuditEntry::new(interchange.interchange_id, Some(working_message.message_id), AuditAction::Transformation, send_port.name.clone(), "send-side transform"))?;
+            interchange.add_audit(AuditEntry::new(
+                interchange.interchange_id,
+                Some(working_message.message_id),
+                AuditAction::Transformation,
+                send_port.name.clone(),
+                "send-side transform",
+            ))?;
         }
 
         let mut warnings = Vec::new();
@@ -156,10 +195,24 @@ impl SendRuntime {
 
                 match &outcome {
                     SendAttemptOutcome::Success => {
-                        interchange.add_audit(AuditEntry::new(interchange.interchange_id, Some(working_message.message_id), AuditAction::Send, location.name.clone(), "success"))?;
-                        location_results.push(SendLocationResult { location_name: location.name.clone(), attempts: attempt, outcome });
+                        interchange.add_audit(AuditEntry::new(
+                            interchange.interchange_id,
+                            Some(working_message.message_id),
+                            AuditAction::Send,
+                            location.name.clone(),
+                            "success",
+                        ))?;
+                        location_results.push(SendLocationResult {
+                            location_name: location.name.clone(),
+                            attempts: attempt,
+                            outcome,
+                        });
 
-                        let status = if warnings.is_empty() { SendStatus::Success } else { SendStatus::SuccessWithWarnings };
+                        let status = if warnings.is_empty() {
+                            SendStatus::Success
+                        } else {
+                            SendStatus::SuccessWithWarnings
+                        };
 
                         return Ok(SendPortResult {
                             send_port_name: send_port.name.clone(),
@@ -170,22 +223,61 @@ impl SendRuntime {
                             error: None,
                         });
                     }
-                    SendAttemptOutcome::Failure { kind: SendFailureKind::Retryable, reason } => {
+                    SendAttemptOutcome::Failure {
+                        kind: SendFailureKind::Retryable,
+                        reason,
+                    } => {
                         if attempt <= location.retry_count {
                             continue;
                         }
 
-                        let warning = format!("{} failed after retries: {}", location.name, reason);
-                        warnings.push(warning.clone());
-                        interchange.add_audit(AuditEntry::new(interchange.interchange_id, Some(working_message.message_id), AuditAction::Failure, location.name.clone(), warning))?;
-                        location_results.push(SendLocationResult { location_name: location.name.clone(), attempts: attempt, outcome });
-                        break;
+                        let error = format!(
+                            "{} failed after retryable retries: {}",
+                            location.name, reason
+                        );
+                        interchange.add_audit(AuditEntry::new(
+                            interchange.interchange_id,
+                            Some(working_message.message_id),
+                            AuditAction::Failure,
+                            location.name.clone(),
+                            error.clone(),
+                        ))?;
+                        location_results.push(SendLocationResult {
+                            location_name: location.name.clone(),
+                            attempts: attempt,
+                            outcome,
+                        });
+
+                        return Ok(SendPortResult {
+                            send_port_name: send_port.name.clone(),
+                            status: SendStatus::Failure,
+                            successful_location: None,
+                            location_results,
+                            warnings,
+                            error: Some(error),
+                        });
                     }
-                    SendAttemptOutcome::Failure { kind: SendFailureKind::NonRetryable, reason } => {
-                        let warning = format!("{} non-retryable failure: {}", location.name, reason);
+                    SendAttemptOutcome::Failure {
+                        kind: SendFailureKind::NonRetryable,
+                        reason,
+                    } => {
+                        let warning = format!(
+                            "{} non-retryable failure; trying next send location: {}",
+                            location.name, reason
+                        );
                         warnings.push(warning.clone());
-                        interchange.add_audit(AuditEntry::new(interchange.interchange_id, Some(working_message.message_id), AuditAction::Failure, location.name.clone(), warning))?;
-                        location_results.push(SendLocationResult { location_name: location.name.clone(), attempts: attempt, outcome });
+                        interchange.add_audit(AuditEntry::new(
+                            interchange.interchange_id,
+                            Some(working_message.message_id),
+                            AuditAction::Failure,
+                            location.name.clone(),
+                            warning,
+                        ))?;
+                        location_results.push(SendLocationResult {
+                            location_name: location.name.clone(),
+                            attempts: attempt,
+                            outcome,
+                        });
                         break;
                     }
                 }
@@ -211,18 +303,33 @@ impl SendRuntime {
         let mut port_results = Vec::new();
 
         for port in &group.ports {
-            port_results.push(Self::execute_port(interchange, source_message_id, port, transport)?);
+            port_results.push(Self::execute_port(
+                interchange,
+                source_message_id,
+                port,
+                transport,
+            )?);
         }
 
-        let status = if port_results.iter().all(|result| result.status == SendStatus::Success) {
+        let status = if port_results
+            .iter()
+            .all(|result| result.status == SendStatus::Success)
+        {
             SendStatus::Success
-        } else if port_results.iter().any(|result| result.status != SendStatus::Failure) {
+        } else if port_results
+            .iter()
+            .any(|result| result.status != SendStatus::Failure)
+        {
             SendStatus::SuccessWithWarnings
         } else {
             SendStatus::Failure
         };
 
-        Ok(SendPortGroupResult { group_name: group.name.clone(), port_results, status })
+        Ok(SendPortGroupResult {
+            group_name: group.name.clone(),
+            port_results,
+            status,
+        })
     }
 
     pub fn execute<T: SendTransport>(
