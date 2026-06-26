@@ -3,6 +3,7 @@ use crate::handler_universe::{HandlerRepository, HandlerSpace};
 pub const INDUSTRIAL_HANDLER_REPOSITORIES: &[HandlerRepository] = &[
     HandlerRepository { repository_name: "xmip-handler-industrial-device-common", submodule_path: "handlers/industrial-device/common", space: HandlerSpace::IndustrialIoT },
     HandlerRepository { repository_name: "xmip-handler-canbus", submodule_path: "handlers/industrial-device/canbus", space: HandlerSpace::IndustrialIoT },
+    HandlerRepository { repository_name: "xmip-handler-nmea2000", submodule_path: "handlers/industrial-device/nmea2000", space: HandlerSpace::IndustrialIoT },
     HandlerRepository { repository_name: "xmip-handler-opc-ua", submodule_path: "handlers/industrial-device/opc-ua", space: HandlerSpace::IndustrialIoT },
     HandlerRepository { repository_name: "xmip-handler-modbus", submodule_path: "handlers/industrial-device/modbus", space: HandlerSpace::IndustrialIoT },
     HandlerRepository { repository_name: "xmip-handler-mqtt", submodule_path: "handlers/industrial-device/mqtt", space: HandlerSpace::IndustrialIoT },
