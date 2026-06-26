@@ -4,8 +4,8 @@ use xmip_linear_kernel::xmip_message_model::{
     CreationInstance, CreationKind, Interchange, Message, PromotedProperty, Section,
 };
 use xmip_linear_kernel::xmip_send_model::{
-    SendAttemptOutcome, SendFailureKind, SendLocation, SendPort, SendPortGroup, SendRuntime,
-    SendStatus, SendTransport,
+    SendAttemptOutcome, SendFailureKind, SendIdentity, SendLocation, SendPort, SendPortGroup,
+    SendRuntime, SendStatus, SendTransport,
 };
 
 fn source_interchange() -> (Interchange, uuid::Uuid) {
@@ -30,7 +30,12 @@ impl ScriptedTransport {
 }
 
 impl SendTransport for ScriptedTransport {
-    fn send(&self, _location: &SendLocation, _message: &Message) -> SendAttemptOutcome {
+    fn send(
+        &self,
+        _location: &SendLocation,
+        _message: &Message,
+        _identity: &SendIdentity,
+    ) -> SendAttemptOutcome {
         self.outcomes
             .lock()
             .expect("transport lock")
@@ -54,6 +59,7 @@ fn send_port_succeeds_without_receive_runtime() {
 
     assert_eq!(result.status, SendStatus::Success);
     assert_eq!(result.successful_location, Some("location-a".to_string()));
+    assert_eq!(result.location_results[0].exposed_identity.name, "xmip-sending-process");
     assert_eq!(interchange.audit.len(), 1);
 }
 
@@ -206,4 +212,113 @@ fn send_port_group_executes_independent_send_ports() {
 
     assert_eq!(result.status, SendStatus::Success);
     assert_eq!(result.port_results.len(), 2);
+}
+
+#[test]
+fn send_identity_is_inherited_from_sending_process() {
+    let (mut interchange, message_id) = source_interchange();
+    let port = SendPort::new(
+        "sendPort:orders-out",
+        vec![SendLocation::new("location-a", "https://target.example/orders", 0)],
+    )
+    .expect("send port should be valid");
+    let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
+
+    let result = SendRuntime::execute_port_with_identity(
+        &mut interchange,
+        message_id,
+        &port,
+        SendIdentity::new("process-identity"),
+        &transport,
+    )
+    .expect("send should execute");
+
+    assert_eq!(result.location_results[0].exposed_identity.name, "process-identity");
+}
+
+#[test]
+fn send_identity_group_overrides_sending_process() {
+    let (mut interchange, message_id) = source_interchange();
+    let port = SendPort::new(
+        "sendPort:orders-out",
+        vec![SendLocation::new("location-a", "https://target.example/orders", 0)],
+    )
+    .expect("send port should be valid");
+    let group = SendPortGroup::new("sendPortGroup:orders", vec![port])
+        .expect("send port group should be valid")
+        .with_identity(SendIdentity::new("group-identity"));
+    let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
+
+    let result = SendRuntime::execute_group_with_identity(
+        &mut interchange,
+        message_id,
+        &group,
+        SendIdentity::new("process-identity"),
+        &transport,
+    )
+    .expect("send group should execute");
+
+    assert_eq!(
+        result.port_results[0].location_results[0].exposed_identity.name,
+        "group-identity"
+    );
+}
+
+#[test]
+fn send_identity_port_overrides_group() {
+    let (mut interchange, message_id) = source_interchange();
+    let port = SendPort::new(
+        "sendPort:orders-out",
+        vec![SendLocation::new("location-a", "https://target.example/orders", 0)],
+    )
+    .expect("send port should be valid")
+    .with_identity(SendIdentity::new("port-identity"));
+    let group = SendPortGroup::new("sendPortGroup:orders", vec![port])
+        .expect("send port group should be valid")
+        .with_identity(SendIdentity::new("group-identity"));
+    let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
+
+    let result = SendRuntime::execute_group_with_identity(
+        &mut interchange,
+        message_id,
+        &group,
+        SendIdentity::new("process-identity"),
+        &transport,
+    )
+    .expect("send group should execute");
+
+    assert_eq!(
+        result.port_results[0].location_results[0].exposed_identity.name,
+        "port-identity"
+    );
+}
+
+#[test]
+fn send_identity_location_overrides_port() {
+    let (mut interchange, message_id) = source_interchange();
+    let port = SendPort::new(
+        "sendPort:orders-out",
+        vec![SendLocation::new("location-a", "https://target.example/orders", 0)
+            .with_identity(SendIdentity::new("location-identity"))],
+    )
+    .expect("send port should be valid")
+    .with_identity(SendIdentity::new("port-identity"));
+    let group = SendPortGroup::new("sendPortGroup:orders", vec![port])
+        .expect("send port group should be valid")
+        .with_identity(SendIdentity::new("group-identity"));
+    let transport = ScriptedTransport::new(vec![SendAttemptOutcome::Success]);
+
+    let result = SendRuntime::execute_group_with_identity(
+        &mut interchange,
+        message_id,
+        &group,
+        SendIdentity::new("process-identity"),
+        &transport,
+    )
+    .expect("send group should execute");
+
+    assert_eq!(
+        result.port_results[0].location_results[0].exposed_identity.name,
+        "location-identity"
+    );
 }
