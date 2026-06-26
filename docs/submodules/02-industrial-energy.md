@@ -1,8 +1,9 @@
-# Planned submodules: industrial, device, IoT, and energy
+# Planned submodules: industrial, device, IoT, marine, and energy
 
 ```text
 handlers/industrial-device/common -> xmip-handler-industrial-device-common
 handlers/industrial-device/canbus -> xmip-handler-canbus
+handlers/industrial-device/nmea2000 -> xmip-handler-nmea2000
 handlers/industrial-device/opc-ua -> xmip-handler-opc-ua
 handlers/industrial-device/modbus -> xmip-handler-modbus
 handlers/industrial-device/mqtt -> xmip-handler-mqtt
