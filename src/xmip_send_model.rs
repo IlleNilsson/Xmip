@@ -5,10 +5,22 @@ use crate::xmip_message_model::{
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendIdentity {
+    pub name: String,
+}
+
+impl SendIdentity {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self { name: name.into() }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SendLocation {
     pub name: String,
     pub target_uri: String,
     pub retry_count: u32,
+    pub identity: Option<SendIdentity>,
 }
 
 impl SendLocation {
@@ -17,7 +29,13 @@ impl SendLocation {
             name: name.into(),
             target_uri: target_uri.into(),
             retry_count,
+            identity: None,
         }
+    }
+
+    pub fn with_identity(mut self, identity: SendIdentity) -> Self {
+        self.identity = Some(identity);
+        self
     }
 }
 
@@ -25,6 +43,7 @@ impl SendLocation {
 pub struct SendPort {
     pub name: String,
     pub locations: Vec<SendLocation>,
+    pub identity: Option<SendIdentity>,
     pub send_side_promotions: Vec<PromotedProperty>,
     pub send_side_transform_content_type: Option<String>,
 }
@@ -38,9 +57,15 @@ impl SendPort {
         Ok(Self {
             name: name.into(),
             locations,
+            identity: None,
             send_side_promotions: Vec::new(),
             send_side_transform_content_type: None,
         })
+    }
+
+    pub fn with_identity(mut self, identity: SendIdentity) -> Self {
+        self.identity = Some(identity);
+        self
     }
 
     pub fn with_promotion(mut self, property: PromotedProperty) -> Self {
@@ -58,6 +83,7 @@ impl SendPort {
 pub struct SendPortGroup {
     pub name: String,
     pub ports: Vec<SendPort>,
+    pub identity: Option<SendIdentity>,
 }
 
 impl SendPortGroup {
@@ -69,7 +95,13 @@ impl SendPortGroup {
         Ok(Self {
             name: name.into(),
             ports,
+            identity: None,
         })
+    }
+
+    pub fn with_identity(mut self, identity: SendIdentity) -> Self {
+        self.identity = Some(identity);
+        self
     }
 }
 
@@ -89,7 +121,12 @@ pub enum SendAttemptOutcome {
 }
 
 pub trait SendTransport {
-    fn send(&self, location: &SendLocation, message: &Message) -> SendAttemptOutcome;
+    fn send(
+        &self,
+        location: &SendLocation,
+        message: &Message,
+        identity: &SendIdentity,
+    ) -> SendAttemptOutcome;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,6 +139,7 @@ pub enum SendStatus {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SendLocationResult {
     pub location_name: String,
+    pub exposed_identity: SendIdentity,
     pub attempts: u32,
     pub outcome: SendAttemptOutcome,
 }
@@ -125,6 +163,35 @@ pub struct SendPortGroupResult {
     pub status: SendStatus,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SendExecutionContext {
+    pub process_identity: SendIdentity,
+    pub group_identity: Option<SendIdentity>,
+}
+
+impl SendExecutionContext {
+    pub fn new(process_identity: SendIdentity) -> Self {
+        Self {
+            process_identity,
+            group_identity: None,
+        }
+    }
+
+    pub fn with_group_identity(mut self, identity: Option<SendIdentity>) -> Self {
+        self.group_identity = identity;
+        self
+    }
+
+    fn resolve_identity(&self, port: &SendPort, location: &SendLocation) -> SendIdentity {
+        location
+            .identity
+            .clone()
+            .or_else(|| port.identity.clone())
+            .or_else(|| self.group_identity.clone())
+            .unwrap_or_else(|| self.process_identity.clone())
+    }
+}
+
 pub struct SendRuntime;
 
 impl SendRuntime {
@@ -132,6 +199,28 @@ impl SendRuntime {
         interchange: &mut Interchange,
         source_message_id: Uuid,
         send_port: &SendPort,
+        transport: &T,
+    ) -> Result<SendPortResult, String> {
+        let context = SendExecutionContext::new(SendIdentity::new("xmip-sending-process"));
+        Self::execute_port_with_context(interchange, source_message_id, send_port, &context, transport)
+    }
+
+    pub fn execute_port_with_identity<T: SendTransport>(
+        interchange: &mut Interchange,
+        source_message_id: Uuid,
+        send_port: &SendPort,
+        process_identity: SendIdentity,
+        transport: &T,
+    ) -> Result<SendPortResult, String> {
+        let context = SendExecutionContext::new(process_identity);
+        Self::execute_port_with_context(interchange, source_message_id, send_port, &context, transport)
+    }
+
+    pub fn execute_port_with_context<T: SendTransport>(
+        interchange: &mut Interchange,
+        source_message_id: Uuid,
+        send_port: &SendPort,
+        context: &SendExecutionContext,
         transport: &T,
     ) -> Result<SendPortResult, String> {
         let mut working_message = interchange
@@ -187,11 +276,12 @@ impl SendRuntime {
         let mut location_results = Vec::new();
 
         for location in &send_port.locations {
+            let identity = context.resolve_identity(send_port, location);
             let mut attempt = 0;
 
             loop {
                 attempt += 1;
-                let outcome = transport.send(location, &working_message);
+                let outcome = transport.send(location, &working_message, &identity);
 
                 match &outcome {
                     SendAttemptOutcome::Success => {
@@ -200,10 +290,11 @@ impl SendRuntime {
                             Some(working_message.message_id),
                             AuditAction::Send,
                             location.name.clone(),
-                            "success",
+                            format!("success; identity={}", identity.name),
                         ))?;
                         location_results.push(SendLocationResult {
                             location_name: location.name.clone(),
+                            exposed_identity: identity,
                             attempts: attempt,
                             outcome,
                         });
@@ -232,8 +323,8 @@ impl SendRuntime {
                         }
 
                         let error = format!(
-                            "{} failed after retryable retries: {}",
-                            location.name, reason
+                            "{} failed after retryable retries using identity {}: {}",
+                            location.name, identity.name, reason
                         );
                         interchange.add_audit(AuditEntry::new(
                             interchange.interchange_id,
@@ -244,6 +335,7 @@ impl SendRuntime {
                         ))?;
                         location_results.push(SendLocationResult {
                             location_name: location.name.clone(),
+                            exposed_identity: identity,
                             attempts: attempt,
                             outcome,
                         });
@@ -262,8 +354,8 @@ impl SendRuntime {
                         reason,
                     } => {
                         let warning = format!(
-                            "{} non-retryable failure; trying next send location: {}",
-                            location.name, reason
+                            "{} non-retryable failure using identity {}; trying next send location: {}",
+                            location.name, identity.name, reason
                         );
                         warnings.push(warning.clone());
                         interchange.add_audit(AuditEntry::new(
@@ -275,6 +367,7 @@ impl SendRuntime {
                         ))?;
                         location_results.push(SendLocationResult {
                             location_name: location.name.clone(),
+                            exposed_identity: identity,
                             attempts: attempt,
                             outcome,
                         });
@@ -300,13 +393,32 @@ impl SendRuntime {
         group: &SendPortGroup,
         transport: &T,
     ) -> Result<SendPortGroupResult, String> {
+        Self::execute_group_with_identity(
+            interchange,
+            source_message_id,
+            group,
+            SendIdentity::new("xmip-sending-process"),
+            transport,
+        )
+    }
+
+    pub fn execute_group_with_identity<T: SendTransport>(
+        interchange: &mut Interchange,
+        source_message_id: Uuid,
+        group: &SendPortGroup,
+        process_identity: SendIdentity,
+        transport: &T,
+    ) -> Result<SendPortGroupResult, String> {
         let mut port_results = Vec::new();
 
         for port in &group.ports {
-            port_results.push(Self::execute_port(
+            let context = SendExecutionContext::new(process_identity.clone())
+                .with_group_identity(group.identity.clone());
+            port_results.push(Self::execute_port_with_context(
                 interchange,
                 source_message_id,
                 port,
+                &context,
                 transport,
             )?);
         }
