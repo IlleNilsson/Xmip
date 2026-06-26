@@ -3,6 +3,7 @@ param([Parameter(Mandatory = $true)][string] $Owner)
 $Submodules = @(
     @{ Path = 'handlers/industrial-device/common'; Repository = 'xmip-handler-industrial-device-common' },
     @{ Path = 'handlers/industrial-device/canbus'; Repository = 'xmip-handler-canbus' },
+    @{ Path = 'handlers/industrial-device/nmea2000'; Repository = 'xmip-handler-nmea2000' },
     @{ Path = 'handlers/industrial-device/opc-ua'; Repository = 'xmip-handler-opc-ua' },
     @{ Path = 'handlers/industrial-device/modbus'; Repository = 'xmip-handler-modbus' },
     @{ Path = 'handlers/industrial-device/mqtt'; Repository = 'xmip-handler-mqtt' },
