@@ -23,6 +23,7 @@ fn handler_universe_contains_core_required_handlers() {
         "xmip-handler-rabbitmq",
         "xmip-handler-kafka",
         "xmip-handler-canbus",
+        "xmip-handler-nmea2000",
         "xmip-handler-opc-ua",
         "xmip-handler-hl7",
         "xmip-handler-fhir",
