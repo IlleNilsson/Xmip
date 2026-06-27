@@ -37,9 +37,22 @@ pub enum ActorKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActorMode {
+    Receiving,
     Observing,
     Executing,
+    Sending,
     Coordinating,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CompletionPolicy {
+    NoError,
+    ExitCodeZero,
+    Acknowledgement,
+    Response,
+    RequestReply,
+    Transaction,
+    StreamEstablished,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -55,7 +68,6 @@ pub enum ActorCapability {
     Send,
     Receive,
     Observe,
-    RequireResponse,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +77,7 @@ pub struct ActorRef {
     pub mode: ActorMode,
     pub name: String,
     pub capabilities: Vec<ActorCapability>,
+    pub completion_policy: Option<CompletionPolicy>,
 }
 
 impl ActorRef {
@@ -73,7 +86,15 @@ impl ActorRef {
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
     ) -> Self {
-        Self::new_with_mode(ActorMode::Coordinating, kind, name, capabilities)
+        Self::coordinating(kind, name, capabilities)
+    }
+
+    pub fn receiving(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
+        Self::new_with_mode(ActorMode::Receiving, kind, name, capabilities, None)
     }
 
     pub fn observing(
@@ -81,7 +102,7 @@ impl ActorRef {
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
     ) -> Self {
-        Self::new_with_mode(ActorMode::Observing, kind, name, capabilities)
+        Self::new_with_mode(ActorMode::Observing, kind, name, capabilities, None)
     }
 
     pub fn executing(
@@ -89,7 +110,16 @@ impl ActorRef {
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
     ) -> Self {
-        Self::new_with_mode(ActorMode::Executing, kind, name, capabilities)
+        Self::new_with_mode(ActorMode::Executing, kind, name, capabilities, Some(CompletionPolicy::NoError))
+    }
+
+    pub fn sending(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+        completion_policy: CompletionPolicy,
+    ) -> Self {
+        Self::new_with_mode(ActorMode::Sending, kind, name, capabilities, Some(completion_policy))
     }
 
     pub fn coordinating(
@@ -97,7 +127,7 @@ impl ActorRef {
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
     ) -> Self {
-        Self::new_with_mode(ActorMode::Coordinating, kind, name, capabilities)
+        Self::new_with_mode(ActorMode::Coordinating, kind, name, capabilities, None)
     }
 
     fn new_with_mode(
@@ -105,6 +135,7 @@ impl ActorRef {
         kind: ActorKind,
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
+        completion_policy: Option<CompletionPolicy>,
     ) -> Self {
         Self {
             id: ActorId::new(),
@@ -112,6 +143,7 @@ impl ActorRef {
             mode,
             name: name.into(),
             capabilities,
+            completion_policy,
         }
     }
 
@@ -127,6 +159,10 @@ impl ActorRef {
         self.capabilities.contains(&ActorCapability::OwnMessage)
     }
 
+    pub fn is_receiving(&self) -> bool {
+        self.mode == ActorMode::Receiving
+    }
+
     pub fn is_observing(&self) -> bool {
         self.mode == ActorMode::Observing
     }
@@ -135,7 +171,11 @@ impl ActorRef {
         self.mode == ActorMode::Executing
     }
 
-    pub fn requires_response(&self) -> bool {
-        self.capabilities.contains(&ActorCapability::RequireResponse)
+    pub fn is_sending(&self) -> bool {
+        self.mode == ActorMode::Sending
+    }
+
+    pub fn expects_completion_result(&self) -> bool {
+        self.completion_policy.is_some()
     }
 }
