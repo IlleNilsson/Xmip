@@ -36,6 +36,13 @@ pub enum ActorKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ActorMode {
+    Observing,
+    Executing,
+    Coordinating,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActorCapability {
     Publish,
     Subscribe,
@@ -47,12 +54,15 @@ pub enum ActorCapability {
     Transform,
     Send,
     Receive,
+    Observe,
+    RequireResponse,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActorRef {
     pub id: ActorId,
     pub kind: ActorKind,
+    pub mode: ActorMode,
     pub name: String,
     pub capabilities: Vec<ActorCapability>,
 }
@@ -63,9 +73,43 @@ impl ActorRef {
         name: impl Into<String>,
         capabilities: Vec<ActorCapability>,
     ) -> Self {
+        Self::new_with_mode(ActorMode::Coordinating, kind, name, capabilities)
+    }
+
+    pub fn observing(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
+        Self::new_with_mode(ActorMode::Observing, kind, name, capabilities)
+    }
+
+    pub fn executing(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
+        Self::new_with_mode(ActorMode::Executing, kind, name, capabilities)
+    }
+
+    pub fn coordinating(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
+        Self::new_with_mode(ActorMode::Coordinating, kind, name, capabilities)
+    }
+
+    fn new_with_mode(
+        mode: ActorMode,
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
         Self {
             id: ActorId::new(),
             kind,
+            mode,
             name: name.into(),
             capabilities,
         }
@@ -81,5 +125,17 @@ impl ActorRef {
 
     pub fn can_own_message(&self) -> bool {
         self.capabilities.contains(&ActorCapability::OwnMessage)
+    }
+
+    pub fn is_observing(&self) -> bool {
+        self.mode == ActorMode::Observing
+    }
+
+    pub fn is_executing(&self) -> bool {
+        self.mode == ActorMode::Executing
+    }
+
+    pub fn requires_response(&self) -> bool {
+        self.capabilities.contains(&ActorCapability::RequireResponse)
     }
 }
