@@ -1,4 +1,4 @@
-use xmip_linear_kernel::actor_model::{ActorKind, ActorRole};
+use xmip_linear_kernel::actor_model::{ActorCapability, ActorKind};
 use xmip_linear_kernel::artifact_actor_mapping::{
     process_actor, receive_location_actor, receive_port_actor, send_location_actor,
     send_port_actor, send_port_group_actor,
@@ -9,8 +9,8 @@ fn receive_location_reports_and_publishes_to_receive_port() {
     let actor = receive_location_actor("receiveLocation:file-in");
 
     assert_eq!(actor.kind, ActorKind::ReceiveLocation);
-    assert!(actor.roles.contains(&ActorRole::Receiver));
-    assert!(actor.roles.contains(&ActorRole::Reporter));
+    assert!(actor.capabilities.contains(&ActorCapability::Receive));
+    assert!(actor.capabilities.contains(&ActorCapability::Report));
     assert!(actor.can_publish());
 }
 
@@ -19,7 +19,7 @@ fn receive_port_can_own_and_publish_message() {
     let actor = receive_port_actor("receivePort:orders");
 
     assert_eq!(actor.kind, ActorKind::ReceivePort);
-    assert!(actor.can_own());
+    assert!(actor.can_own_message());
     assert!(actor.can_publish());
     assert!(actor.can_subscribe());
 }
@@ -29,16 +29,16 @@ fn process_can_own_transform_route_publish_and_subscribe() {
     let actor = process_actor("process:order-flow");
 
     assert_eq!(actor.kind, ActorKind::Process);
-    assert!(actor.can_own());
+    assert!(actor.can_own_message());
     assert!(actor.can_publish());
     assert!(actor.can_subscribe());
-    assert!(actor.roles.contains(&ActorRole::Transformer));
-    assert!(actor.roles.contains(&ActorRole::Router));
-    assert!(actor.roles.contains(&ActorRole::Executor));
+    assert!(actor.capabilities.contains(&ActorCapability::Transform));
+    assert!(actor.capabilities.contains(&ActorCapability::Route));
+    assert!(actor.capabilities.contains(&ActorCapability::Execute));
 }
 
 #[test]
-fn send_side_artifacts_have_distinct_actor_roles() {
+fn send_side_artifacts_have_distinct_actor_capabilities() {
     let group = send_port_group_actor("sendPortGroup:orders");
     let port = send_port_actor("sendPort:orders-out");
     let location = send_location_actor("sendLocation:https-out");
@@ -48,7 +48,7 @@ fn send_side_artifacts_have_distinct_actor_roles() {
     assert_eq!(location.kind, ActorKind::SendLocation);
 
     assert!(group.can_publish());
-    assert!(port.can_own());
-    assert!(location.roles.contains(&ActorRole::Sender));
-    assert!(location.roles.contains(&ActorRole::Reporter));
+    assert!(port.can_own_message());
+    assert!(location.capabilities.contains(&ActorCapability::Send));
+    assert!(location.capabilities.contains(&ActorCapability::Report));
 }
