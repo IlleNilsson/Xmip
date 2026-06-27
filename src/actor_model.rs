@@ -36,17 +36,17 @@ pub enum ActorKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ActorRole {
-    Publisher,
-    Subscriber,
-    Owner,
-    Reporter,
-    Commander,
-    Executor,
-    Router,
-    Transformer,
-    Sender,
-    Receiver,
+pub enum ActorCapability {
+    Publish,
+    Subscribe,
+    OwnMessage,
+    Report,
+    Command,
+    Execute,
+    Route,
+    Transform,
+    Send,
+    Receive,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -54,28 +54,32 @@ pub struct ActorRef {
     pub id: ActorId,
     pub kind: ActorKind,
     pub name: String,
-    pub roles: Vec<ActorRole>,
+    pub capabilities: Vec<ActorCapability>,
 }
 
 impl ActorRef {
-    pub fn new(kind: ActorKind, name: impl Into<String>, roles: Vec<ActorRole>) -> Self {
+    pub fn new(
+        kind: ActorKind,
+        name: impl Into<String>,
+        capabilities: Vec<ActorCapability>,
+    ) -> Self {
         Self {
             id: ActorId::new(),
             kind,
             name: name.into(),
-            roles,
+            capabilities,
         }
     }
 
     pub fn can_publish(&self) -> bool {
-        self.roles.contains(&ActorRole::Publisher)
+        self.capabilities.contains(&ActorCapability::Publish)
     }
 
     pub fn can_subscribe(&self) -> bool {
-        self.roles.contains(&ActorRole::Subscriber)
+        self.capabilities.contains(&ActorCapability::Subscribe)
     }
 
-    pub fn can_own(&self) -> bool {
-        self.roles.contains(&ActorRole::Owner)
+    pub fn can_own_message(&self) -> bool {
+        self.capabilities.contains(&ActorCapability::OwnMessage)
     }
 }
