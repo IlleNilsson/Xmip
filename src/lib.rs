@@ -16,6 +16,7 @@ pub mod module_manifest;
 pub mod module_manifest_toml;
 pub mod runtime_message;
 pub mod runtime_store;
+pub mod sending_actor_mapping;
 pub mod threaded_runtime;
 pub mod xmip_message_model;
 pub mod xmip_runtime_flow;
