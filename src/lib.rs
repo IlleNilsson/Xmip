@@ -1,5 +1,6 @@
 pub mod actor_model;
 pub mod artifact_actor_mapping;
+pub mod artifact_capability_matrix;
 pub mod extension_registry;
 pub mod handler;
 pub mod handler_registry;
