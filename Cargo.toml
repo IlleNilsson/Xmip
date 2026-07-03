@@ -1,11 +1,29 @@
+[workspace]
+members = [
+    ".",
+]
+resolver = "2"
+
 [package]
 name = "xmip-linear-kernel"
 version = "0.1.1"
 edition = "2021"
 
+[features]
+default = ["server-profile"]
+server-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
+desktop-profile = ["sqlite-store", "prost-codec"]
+edge-profile = ["sqlite-store", "prost-codec"]
+iot-profile = ["minimal-runtime"]
+embedded-profile = ["minimal-runtime"]
+minimal-runtime = []
+sqlite-store = ["dep:rusqlite"]
+prost-codec = ["dep:prost"]
+dynamic-modules = []
+
 [dependencies]
-prost = "0.14.3"
-rusqlite = { version = "0.37", features = ["bundled"] }
+prost = { version = "0.14.3", optional = true }
+rusqlite = { version = "0.37", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 toml = "0.9"
 uuid = { version = "1", features = ["v4"] }
