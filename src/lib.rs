@@ -23,5 +23,6 @@ pub mod runtime_store;
 pub mod sending_actor_mapping;
 pub mod threaded_runtime;
 pub mod xmip_message_model;
+pub mod xmip_model;
 pub mod xmip_runtime_flow;
 pub mod xmip_send_model;
