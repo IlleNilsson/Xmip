@@ -1,0 +1,15 @@
+[package]
+name = "xmip-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = ["dynamic-loading"]
+dynamic-loading = []
+
+[dependencies]
+serde.workspace = true
+xmip-runtime = { path = "../xmip-runtime" }
+xmip-plugin-api = { path = "../xmip-plugin-api" }
