@@ -1,3 +1,4 @@
+pub mod capability_registry;
 pub mod execution_tree;
 
 use serde::{Deserialize, Serialize};
