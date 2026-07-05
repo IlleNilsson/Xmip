@@ -2,24 +2,24 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PluginIdentity {
+pub struct ModuleIdentity {
     pub name: String,
     pub version: String,
-    pub kind: PluginKind,
+    pub kind: ModuleKind,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum PluginKind {
+pub enum ModuleKind {
     TransportHandler,
     ContentHandler,
     LogicHandler,
     StoreProvider,
-    ManagementExtension,
+    ManagementModule,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PluginCapability {
+pub struct ModuleCapability {
     pub capability: String,
     pub execution_host: ExecutionHostKind,
     pub low_latency_capable: bool,
@@ -40,17 +40,32 @@ pub enum ExecutionHostKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PluginManifest {
-    pub identity: PluginIdentity,
-    pub capabilities: Vec<PluginCapability>,
-    pub entrypoint: PluginEntrypoint,
+pub struct ModuleManifest {
+    pub identity: ModuleIdentity,
+    pub capabilities: Vec<ModuleCapability>,
+    pub entrypoint: ModuleEntrypoint,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PluginEntrypoint {
+pub struct ModuleEntrypoint {
     pub library_path: Option<String>,
     pub executable_path: Option<String>,
     pub symbol: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExtensionManifest {
+    pub name: String,
+    pub version: String,
+    pub execution_host: ExecutionHostKind,
+    pub entrypoint: ExtensionEntrypoint,
+    pub required_capabilities: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExtensionEntrypoint {
+    pub path: String,
+    pub symbol_or_command: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,16 +95,16 @@ pub enum HandlerStatus {
     NonRetryableFailure,
 }
 
-pub trait XmipPlugin: Send + Sync {
-    fn manifest(&self) -> &PluginManifest;
+pub trait XmipModule: Send + Sync {
+    fn manifest(&self) -> &ModuleManifest;
 }
 
-pub trait TransportHandler: XmipPlugin {
+pub trait TransportHandler: XmipModule {
     fn receive(&self, invocation: HandlerInvocation) -> HandlerResult;
     fn send(&self, invocation: HandlerInvocation) -> HandlerResult;
 }
 
-pub trait ContentHandler: XmipPlugin {
+pub trait ContentHandler: XmipModule {
     fn deserialize(&self, invocation: HandlerInvocation) -> HandlerResult;
     fn serialize(&self, invocation: HandlerInvocation) -> HandlerResult;
 }
