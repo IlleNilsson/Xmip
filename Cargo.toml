@@ -1,19 +1,46 @@
 [workspace]
 members = [
     ".",
+    "crates/xmip-plugin-api",
+    "crates/xmip-runtime",
+    "crates/xmip-host",
+    "crates/xmip-handler-file",
 ]
 resolver = "2"
 
-[package]
-name = "xmip-linear-kernel"
+[workspace.package]
 version = "0.1.1"
 edition = "2021"
+license = "LicenseRef-Xmip-Free-Use-No-Fork"
+repository = "https://github.com/IlleNilsson/Xmip"
+
+[workspace.dependencies]
+prost = "0.14.3"
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.9"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[package]
+name = "xmip-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "xmip_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "xmip-tiny-device"
+path = "src/main.rs"
 
 [features]
 default = ["server-profile"]
 server-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
-desktop-profile = ["sqlite-store", "prost-codec"]
-edge-profile = ["sqlite-store", "prost-codec"]
+desktop-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
+edge-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
 iot-profile = ["minimal-runtime", "prost-codec"]
 embedded-profile = ["minimal-runtime", "prost-codec"]
 minimal-runtime = []
@@ -22,8 +49,8 @@ prost-codec = ["dep:prost"]
 dynamic-modules = []
 
 [dependencies]
-prost = { version = "0.14.3", optional = true }
-rusqlite = { version = "0.37", features = ["bundled"], optional = true }
-serde = { version = "1", features = ["derive"] }
-toml = "0.9"
-uuid = { version = "1", features = ["v4", "serde"] }
+prost = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+serde.workspace = true
+toml.workspace = true
+uuid.workspace = true
