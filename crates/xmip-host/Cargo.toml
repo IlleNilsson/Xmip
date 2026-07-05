@@ -12,4 +12,4 @@ dynamic-loading = []
 [dependencies]
 serde.workspace = true
 xmip-runtime = { path = "../xmip-runtime" }
-xmip-plugin-api = { path = "../xmip-plugin-api" }
+xmip-module-api = { path = "../xmip-module-api" }
