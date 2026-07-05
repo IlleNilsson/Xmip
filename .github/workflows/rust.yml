@@ -1,0 +1,40 @@
+name: Rust
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  workspace:
+    name: Workspace build and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo check workspace
+        run: cargo check --workspace
+
+      - name: Cargo test workspace
+        run: cargo test --workspace
+
+  profiles:
+    name: Profile checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: IoT profile check
+        run: cargo check --workspace --no-default-features --features iot-profile
+
+      - name: Embedded profile check
+        run: cargo check --workspace --no-default-features --features embedded-profile
