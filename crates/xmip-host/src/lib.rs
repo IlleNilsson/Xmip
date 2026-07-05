@@ -43,23 +43,48 @@ impl HostProcess {
 
 #[cfg(feature = "dynamic-loading")]
 pub mod dynamic {
-    use xmip_module_api::ModuleManifest;
+    use xmip_module_api::{
+        validate_module_abi, ModuleAbiDescriptor, ModuleManifest, XMIP_MODULE_ENTRYPOINT,
+    };
 
     #[derive(Clone, Debug)]
     pub struct DynamicModuleRequest {
         pub manifest: ModuleManifest,
         pub resolved_library_path: String,
+        pub descriptor: ModuleAbiDescriptor,
     }
 
-    pub fn validate_dynamic_request(request: &DynamicModuleRequest) -> Result<(), String> {
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct VerifiedDynamicModule {
+        pub module_name: String,
+        pub resolved_library_path: String,
+        pub entrypoint_symbol: String,
+    }
+
+    pub fn verify_dynamic_module(
+        request: &DynamicModuleRequest,
+    ) -> Result<VerifiedDynamicModule, String> {
         if request.resolved_library_path.trim().is_empty() {
             return Err("dynamic module request requires a resolved library path".to_string());
         }
 
-        if request.manifest.entrypoint.symbol.as_deref().unwrap_or_default().is_empty() {
+        validate_module_abi(request.descriptor)?;
+
+        let entrypoint_symbol = request
+            .manifest
+            .entrypoint
+            .symbol
+            .clone()
+            .unwrap_or_else(|| XMIP_MODULE_ENTRYPOINT.to_string());
+
+        if entrypoint_symbol.trim().is_empty() {
             return Err("dynamic module request requires an exported symbol".to_string());
         }
 
-        Ok(())
+        Ok(VerifiedDynamicModule {
+            module_name: request.manifest.identity.name.clone(),
+            resolved_library_path: request.resolved_library_path.clone(),
+            entrypoint_symbol,
+        })
     }
 }
