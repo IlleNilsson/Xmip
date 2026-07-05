@@ -11,7 +11,7 @@ Xmip is a modular platform. The normal architecture is not a single binary.
 ```text
 xmip-core                 shared message, artifact, protocol, handler, and runtime models
 crates/xmip-module-api    stable contracts for modules and extensions
-crates/xmip-runtime       runtime registry, dispatch, node, and Host Process planning
+crates/xmip-runtime       runtime registry, dispatch, node, execution tree, and Host Process planning
 crates/xmip-host          Host Process lifecycle and dynamic-module validation
 crates/xmip-handler-file  first transport-handler module example
 xmip-tiny-device          compact binary proof for IoT/embedded targets only
@@ -24,6 +24,7 @@ The tiny-device binary remains useful for constrained devices and recovery demon
 Xmip avoids the bare word **Process** where it can mean more than one thing.
 
 - **System Process** means an operating-system process.
+- **Host Process** means a System Process started or managed by Xmip.
 - **Xmip Process** means an integration process defined and executed by Xmip.
 
 See `docs/terminology.md` for the current terminology rules.
