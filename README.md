@@ -9,12 +9,17 @@ Xmip Continuum is the forward-moving architecture and runtime line where the Xmi
 Xmip is a modular platform. The normal architecture is not a single binary.
 
 ```text
-xmip-core                 shared message, artifact, protocol, handler, and runtime models
-crates/xmip-module-api    stable contracts for modules and extensions
-crates/xmip-runtime       runtime registry, dispatch, node, execution tree, and Host Process planning
-crates/xmip-host          Host Process lifecycle and dynamic-module validation
-crates/xmip-handler-file  first transport-handler module example
-xmip-tiny-device          compact binary proof for IoT/embedded targets only
+xmip-core                    shared message, artifact, protocol, handler, and runtime models
+crates/xmip-module-api       stable contracts for modules and extensions
+crates/xmip-configuration    TOML configuration model and configuration-to-runtime mapping
+crates/xmip-runtime          runtime registry, dispatch, node, execution tree, and Host Process planning
+crates/xmip-service          Xmip Service startup planner
+crates/xmip-host             Host Process lifecycle and dynamic-module validation
+crates/xmip-persistence      durable checkpoint, deduplication, and runtime store contracts
+crates/xmip-tracking         tracking event contracts
+crates/xmip-cli              prototype command-line surface
+crates/xmip-handler-file     first transport-handler module example
+xmip-tiny-device             compact binary proof for IoT/embedded targets only
 ```
 
 The tiny-device binary remains useful for constrained devices and recovery demonstrations, but it is not the shape of the server, desktop, edge, or full platform runtime.
@@ -46,16 +51,19 @@ Xmip Continuum main
 
 ## Runtime direction
 
-Xmip runtime is built around separately loadable capability modules:
+Xmip runtime is built around configuration, execution trees, System Processes, Host Processes, modules, and extensions:
 
 ```text
-Cluster Node
-    -> Runtime Registry
-    -> Execution Tree
-    -> Host Process Plan
-    -> Host Process
-    -> Module / Handler
-    -> Transport, Content, Logic, Store, or Management capability
+Xmip Service
+    -> Read Configuration
+    -> Build Execution Tree
+    -> Validate Startup
+    -> Plan System Processes
+    -> Start System Processes / Host Processes
+    -> Load Modules
+    -> Register Capabilities
+    -> Verify Extensions
+    -> Accept Work
 ```
 
 Modules are compiled code loaded during Xmip Service startup according to configuration. Extensions are verified during startup as far as possible, but loaded only when an artifact requires them.
@@ -98,6 +106,12 @@ cargo build --workspace
 cargo test --workspace
 cargo build --workspace --no-default-features --features iot-profile
 cargo build --workspace --no-default-features --features embedded-profile
+```
+
+Run the prototype CLI:
+
+```powershell
+cargo run -p xmip-cli --bin xmip
 ```
 
 Run the tiny-device proof:
