@@ -1,3 +1,5 @@
+pub mod execution_tree;
+
 use serde::{Deserialize, Serialize};
 use xmip_plugin_api::{
     ExtensionManifest, HandlerInvocation, HandlerResult, ModuleKind, ModuleManifest,
