@@ -1,39 +1,39 @@
 use xmip_plugin_api::{
-    ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, PluginCapability,
-    PluginEntrypoint, PluginIdentity, PluginKind, PluginManifest, TransportHandler, XmipPlugin,
+    ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, ModuleCapability,
+    ModuleEntrypoint, ModuleIdentity, ModuleKind, ModuleManifest, TransportHandler, XmipModule,
 };
 
 pub struct FileTransportHandler {
-    manifest: PluginManifest,
+    manifest: ModuleManifest,
 }
 
 impl Default for FileTransportHandler {
     fn default() -> Self {
         Self {
-            manifest: PluginManifest {
-                identity: PluginIdentity {
+            manifest: ModuleManifest {
+                identity: ModuleIdentity {
                     name: "xmip-handler-file".to_string(),
                     version: env!("CARGO_PKG_VERSION").to_string(),
-                    kind: PluginKind::TransportHandler,
+                    kind: ModuleKind::TransportHandler,
                 },
-                capabilities: vec![PluginCapability {
+                capabilities: vec![ModuleCapability {
                     capability: "transport:file".to_string(),
                     execution_host: ExecutionHostKind::NativeRust,
                     low_latency_capable: false,
                     trusted_required: true,
                 }],
-                entrypoint: PluginEntrypoint {
+                entrypoint: ModuleEntrypoint {
                     library_path: Some("xmip_handler_file".to_string()),
                     executable_path: None,
-                    symbol: Some("xmip_create_plugin".to_string()),
+                    symbol: Some("xmip_create_module".to_string()),
                 },
             },
         }
     }
 }
 
-impl XmipPlugin for FileTransportHandler {
-    fn manifest(&self) -> &PluginManifest {
+impl XmipModule for FileTransportHandler {
+    fn manifest(&self) -> &ModuleManifest {
         &self.manifest
     }
 }
@@ -61,6 +61,6 @@ impl TransportHandler for FileTransportHandler {
 }
 
 #[no_mangle]
-pub extern "C" fn xmip_create_plugin() -> *mut FileTransportHandler {
+pub extern "C" fn xmip_create_module() -> *mut FileTransportHandler {
     Box::into_raw(Box::new(FileTransportHandler::default()))
 }
