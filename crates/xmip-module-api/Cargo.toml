@@ -8,3 +8,4 @@ repository.workspace = true
 [dependencies]
 serde.workspace = true
 uuid.workspace = true
+xmip-module-abi = { path = "../xmip-module-abi" }
