@@ -1,6 +1,7 @@
 use xmip_module_api::{
-    ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, ModuleCapability,
-    ModuleEntrypoint, ModuleIdentity, ModuleKind, ModuleManifest, TransportHandler, XmipModule,
+    ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, ModuleAbiDescriptor,
+    ModuleAbiKind, ModuleCapability, ModuleEntrypoint, ModuleIdentity, ModuleKind, ModuleManifest,
+    TransportHandler, XmipModule, XMIP_MODULE_ABI_VERSION,
 };
 
 pub struct FileTransportHandler {
@@ -25,7 +26,7 @@ impl Default for FileTransportHandler {
                 entrypoint: ModuleEntrypoint {
                     library_path: Some("xmip_handler_file".to_string()),
                     executable_path: None,
-                    symbol: Some("xmip_create_module".to_string()),
+                    symbol: Some("xmip_create_module_v1".to_string()),
                 },
             },
         }
@@ -61,6 +62,14 @@ impl TransportHandler for FileTransportHandler {
 }
 
 #[no_mangle]
-pub extern "C" fn xmip_create_module() -> *mut FileTransportHandler {
+pub extern "C" fn xmip_module_descriptor_v1() -> ModuleAbiDescriptor {
+    ModuleAbiDescriptor {
+        abi_version: XMIP_MODULE_ABI_VERSION,
+        module_kind: ModuleAbiKind::TransportHandler,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn xmip_create_module_v1() -> *mut FileTransportHandler {
     Box::into_raw(Box::new(FileTransportHandler::default()))
 }
