@@ -1,4 +1,4 @@
-use xmip_plugin_api::PluginManifest;
+use xmip_plugin_api::ModuleManifest;
 use xmip_runtime::{HostBitness, HostProcessPlan};
 
 #[derive(Clone, Debug)]
@@ -17,7 +17,7 @@ pub enum HostProcessState {
 }
 
 impl HostProcess {
-    pub fn from_manifest(manifest: PluginManifest, trusted: bool, low_latency: bool) -> Self {
+    pub fn from_manifest(manifest: ModuleManifest, trusted: bool, low_latency: bool) -> Self {
         Self {
             plan: HostProcessPlan {
                 host_type: format!("{}-host", manifest.identity.name),
@@ -25,6 +25,7 @@ impl HostProcess {
                 bitness: HostBitness::Native,
                 low_latency,
                 modules: vec![manifest],
+                verified_extensions: Vec::new(),
             },
             state: HostProcessState::Planned,
         }
@@ -42,11 +43,11 @@ impl HostProcess {
 
 #[cfg(feature = "dynamic-loading")]
 pub mod dynamic {
-    use xmip_plugin_api::PluginManifest;
+    use xmip_plugin_api::ModuleManifest;
 
     #[derive(Clone, Debug)]
     pub struct DynamicModuleRequest {
-        pub manifest: PluginManifest,
+        pub manifest: ModuleManifest,
         pub resolved_library_path: String,
     }
 
