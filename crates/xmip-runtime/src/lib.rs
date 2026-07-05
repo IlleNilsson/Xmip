@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
-use xmip_plugin_api::{HandlerInvocation, HandlerResult, PluginManifest};
+use xmip_plugin_api::{
+    ExtensionManifest, HandlerInvocation, HandlerResult, ModuleKind, ModuleManifest,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuntimeNode {
@@ -24,7 +26,8 @@ pub struct HostProcessPlan {
     pub trusted: bool,
     pub bitness: HostBitness,
     pub low_latency: bool,
-    pub modules: Vec<PluginManifest>,
+    pub modules: Vec<ModuleManifest>,
+    pub verified_extensions: Vec<ExtensionManifest>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,15 +40,15 @@ pub enum HostBitness {
 
 #[derive(Clone, Debug, Default)]
 pub struct ModuleRegistry {
-    manifests: Vec<PluginManifest>,
+    manifests: Vec<ModuleManifest>,
 }
 
 impl ModuleRegistry {
-    pub fn register(&mut self, manifest: PluginManifest) {
+    pub fn register(&mut self, manifest: ModuleManifest) {
         self.manifests.push(manifest);
     }
 
-    pub fn manifests(&self) -> &[PluginManifest] {
+    pub fn manifests(&self) -> &[ModuleManifest] {
         &self.manifests
     }
 
@@ -59,11 +62,12 @@ impl ModuleRegistry {
                 .iter()
                 .cloned()
                 .map(|module| HostProcessPlan {
-                    host_type: format!("{}-host", module.identity.kind_name()),
+                    host_type: format!("{}-host", module.identity.kind.kind_name()),
                     trusted: module.capabilities.iter().any(|c| c.trusted_required),
                     bitness: HostBitness::Native,
                     low_latency: module.capabilities.iter().any(|c| c.low_latency_capable),
                     modules: vec![module],
+                    verified_extensions: Vec::new(),
                 })
                 .collect(),
         }
@@ -74,18 +78,18 @@ pub trait RuntimeDispatcher {
     fn dispatch(&self, invocation: HandlerInvocation) -> HandlerResult;
 }
 
-trait PluginKindName {
+trait ModuleKindName {
     fn kind_name(&self) -> &'static str;
 }
 
-impl PluginKindName for xmip_plugin_api::PluginKind {
+impl ModuleKindName for ModuleKind {
     fn kind_name(&self) -> &'static str {
         match self {
-            xmip_plugin_api::PluginKind::TransportHandler => "transport",
-            xmip_plugin_api::PluginKind::ContentHandler => "content",
-            xmip_plugin_api::PluginKind::LogicHandler => "logic",
-            xmip_plugin_api::PluginKind::StoreProvider => "store",
-            xmip_plugin_api::PluginKind::ManagementExtension => "management",
+            ModuleKind::TransportHandler => "transport",
+            ModuleKind::ContentHandler => "content",
+            ModuleKind::LogicHandler => "logic",
+            ModuleKind::StoreProvider => "store",
+            ModuleKind::ManagementModule => "management",
         }
     }
 }
