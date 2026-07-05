@@ -1,27 +1,51 @@
 # Xmip terminology
 
-Xmip uses explicit terms when a word has more than one valid meaning in the platform.
+Xmip terminology shall avoid ambiguous words in code, configuration, documentation, and diagnostics.
 
 ## Process terminology
 
-The bare word **Process** is ambiguous in Xmip and should be avoided in code, configuration, documentation, and diagnostics unless the meaning is already explicit from the immediate context.
+The bare word **Process** is ambiguous in Xmip and should not be used alone unless the surrounding context makes the meaning unavoidable.
 
 Use these terms instead:
 
 | Term | Meaning |
 | --- | --- |
-| **System Process** | An operating-system process managed by Windows, Linux, macOS, or another operating system. |
-| **Xmip Process** | An integration process defined and executed by Xmip. It may include receive, assignment, transformation, routing, execution, and send behavior. |
+| **System Process** | An operating system process managed by Windows, Linux, macOS, or another host operating system. |
+| **Host Process** | A System Process started by Xmip to host one or more Modules and, when required, execute Extensions. |
+| **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
+| **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
-When the intended meaning is unclear, ask for clarification instead of assuming.
+When a person writes or says **Process** without qualification and the meaning is not clear, the correct response is to ask whether they mean **System Process** or **Xmip Process**.
 
-## Module and Extension terminology
+## Module terminology
 
-| Term | Meaning |
-| --- | --- |
-| **Module** | Compiled code loaded during Xmip Service startup according to configuration. A module registers capabilities with the runtime. |
-| **Extension** | Code referenced by an artifact and verified during startup as far as possible, but loaded only when execution requires it. |
-| **Host Process** | A System Process created or managed by Xmip to host modules and extensions under a specific trust, runtime, bitness, or latency boundary. |
-| **Artifact** | A configured Xmip definition such as a receive port, receive location, Xmip Process, assignment, transformation, send port, or send location. |
+A **Module** is compiled code loaded during Xmip Service startup according to configuration.
 
-Xmip validates what it can during startup. It cannot own every bad decision in configuration or extension code, but it should mitigate avoidable failures by building and validating a clear execution tree before runtime execution begins.
+A Module may provide capabilities such as:
+
+- Transport Handler
+- Content Handler
+- Logic Handler
+- Store Provider
+- Management Module
+
+Modules are discovered, verified, loaded, and registered during startup as far as configuration and available metadata allow.
+
+## Extension terminology
+
+An **Extension** is code referenced by an artifact and executed when needed.
+
+Extensions are verified during startup as far as possible, but they are not loaded during startup unless Xmip later defines a specific preloading policy.
+
+## Startup rule
+
+Xmip Service startup builds a validated execution tree from configuration.
+
+The tree identifies:
+
+- Modules to load during startup.
+- Xmip Processes to start.
+- Xmip Subprocesses and their required Modules.
+- Extensions to verify but not load.
+
+Xmip cannot own every incorrect decision made in configuration or code, but it should mitigate predictable mistakes through validation, diagnostics, warnings, and clear failure boundaries.
