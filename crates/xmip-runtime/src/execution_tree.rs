@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
-use xmip_plugin_api::{ExtensionManifest, ModuleManifest};
+use xmip_module_api::{ExtensionManifest, ModuleManifest};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct XmipServiceConfiguration {
@@ -281,7 +281,7 @@ fn verified_extension(extension: &ExtensionManifest) -> VerifiedExtensionNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xmip_plugin_api::{
+    use xmip_module_api::{
         ExecutionHostKind, ExtensionEntrypoint, ModuleCapability, ModuleEntrypoint, ModuleIdentity,
         ModuleKind,
     };
