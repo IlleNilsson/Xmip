@@ -1,0 +1,13 @@
+[package]
+name = "xmip-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "xmip"
+path = "src/main.rs"
+
+[dependencies]
+xmip-service = { path = "../xmip-service" }
