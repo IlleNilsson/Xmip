@@ -2,8 +2,13 @@
 members = [
     ".",
     "crates/xmip-module-api",
+    "crates/xmip-configuration",
     "crates/xmip-runtime",
+    "crates/xmip-service",
     "crates/xmip-host",
+    "crates/xmip-persistence",
+    "crates/xmip-tracking",
+    "crates/xmip-cli",
     "crates/xmip-handler-file",
 ]
 resolver = "2"
