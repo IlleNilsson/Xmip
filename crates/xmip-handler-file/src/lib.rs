@@ -1,4 +1,4 @@
-use xmip_plugin_api::{
+use xmip_module_api::{
     ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, ModuleCapability,
     ModuleEntrypoint, ModuleIdentity, ModuleKind, ModuleManifest, TransportHandler, XmipModule,
 };
