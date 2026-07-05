@@ -1,4 +1,4 @@
-use xmip_plugin_api::ModuleManifest;
+use xmip_module_api::ModuleManifest;
 use xmip_runtime::{HostBitness, HostProcessPlan};
 
 #[derive(Clone, Debug)]
@@ -43,7 +43,7 @@ impl HostProcess {
 
 #[cfg(feature = "dynamic-loading")]
 pub mod dynamic {
-    use xmip_plugin_api::ModuleManifest;
+    use xmip_module_api::ModuleManifest;
 
     #[derive(Clone, Debug)]
     pub struct DynamicModuleRequest {
