@@ -4,6 +4,21 @@ This repository's `main` branch represents **Xmip Continuum**.
 
 Xmip Continuum is the forward-moving architecture and runtime line where the Xmip platform is shaped, corrected, expanded, and consolidated.
 
+## Repository shape
+
+Xmip is a modular platform. The normal architecture is not a single binary.
+
+```text
+xmip-core                 shared message, artifact, protocol, handler, and runtime models
+crates/xmip-plugin-api    stable contracts for dynamically loaded modules
+crates/xmip-runtime       runtime registry, dispatch, node, and host-process planning
+crates/xmip-host          host-process lifecycle and dynamic-module validation
+crates/xmip-handler-file  first transport-handler module example
+xmip-tiny-device          compact binary proof for IoT/embedded targets only
+```
+
+The tiny-device binary remains useful for constrained devices and recovery demonstrations, but it is not the shape of the server, desktop, edge, or full platform runtime.
+
 ## Branch strategy
 
 - `main` is Xmip Continuum.
@@ -19,11 +34,26 @@ Xmip Linear release branch
 Xmip Continuum main
 ```
 
+## Runtime direction
+
+Xmip runtime is built around separately loadable capability modules:
+
+```text
+Cluster Node
+    -> Runtime Registry
+    -> Host Process Plan
+    -> Host Process
+    -> Dynamic Module / Handler
+    -> Transport, Content, Logic, Store, or Management capability
+```
+
+Transport handlers, content handlers, logic handlers, stores, and management extensions are separate modules. The host process exists to isolate trust, bitness, latency, and runtime technology requirements.
+
 ## Current executable proof
 
 The current Rust executable started as the Xmip Linear Kernel proof.
 
-It is now carried inside Xmip Continuum as executable evidence, not as the branch identity.
+It is now carried inside Xmip Continuum as executable evidence and as the `xmip-tiny-device` binary, not as the branch or repository identity.
 
 The proof models runtime ideas such as:
 
@@ -48,10 +78,19 @@ It also contains early code for:
 - cluster identity,
 - runtime persistence records.
 
-## Run the executable proof
+## Build examples
 
 ```powershell
-cargo run
+cargo build --workspace
+cargo test --workspace
+cargo build --workspace --no-default-features --features iot-profile
+cargo build --workspace --no-default-features --features embedded-profile
+```
+
+Run the tiny-device proof:
+
+```powershell
+cargo run --bin xmip-tiny-device
 ```
 
 The older linear recovery demo may intentionally crash after `Publish` on the first run and continue after checkpoint reload on the next run.
@@ -60,14 +99,6 @@ Reset demo state:
 
 ```powershell
 Remove-Item .\execution-context.pb, .\crash-once.marker -ErrorAction SilentlyContinue
-```
-
-The module runtime proof can be run with a selected receive endpoint:
-
-```powershell
-cargo run --bin module_runtime -- http
-cargo run --bin module_runtime -- file
-cargo run --bin module_runtime -- rabbitmq
 ```
 
 ## Important
