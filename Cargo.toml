@@ -1,6 +1,7 @@
 [workspace]
 members = [
     ".",
+    "crates/xmip-module-abi",
     "crates/xmip-module-api",
     "crates/xmip-configuration",
     "crates/xmip-runtime",
