@@ -10,14 +10,23 @@ Xmip is a modular platform. The normal architecture is not a single binary.
 
 ```text
 xmip-core                 shared message, artifact, protocol, handler, and runtime models
-crates/xmip-plugin-api    stable contracts for dynamically loaded modules
-crates/xmip-runtime       runtime registry, dispatch, node, and host-process planning
-crates/xmip-host          host-process lifecycle and dynamic-module validation
+crates/xmip-module-api    stable contracts for modules and extensions
+crates/xmip-runtime       runtime registry, dispatch, node, and Host Process planning
+crates/xmip-host          Host Process lifecycle and dynamic-module validation
 crates/xmip-handler-file  first transport-handler module example
 xmip-tiny-device          compact binary proof for IoT/embedded targets only
 ```
 
 The tiny-device binary remains useful for constrained devices and recovery demonstrations, but it is not the shape of the server, desktop, edge, or full platform runtime.
+
+## Terminology
+
+Xmip avoids the bare word **Process** where it can mean more than one thing.
+
+- **System Process** means an operating-system process.
+- **Xmip Process** means an integration process defined and executed by Xmip.
+
+See `docs/terminology.md` for the current terminology rules.
 
 ## Branch strategy
 
@@ -41,13 +50,16 @@ Xmip runtime is built around separately loadable capability modules:
 ```text
 Cluster Node
     -> Runtime Registry
+    -> Execution Tree
     -> Host Process Plan
     -> Host Process
-    -> Dynamic Module / Handler
+    -> Module / Handler
     -> Transport, Content, Logic, Store, or Management capability
 ```
 
-Transport handlers, content handlers, logic handlers, stores, and management extensions are separate modules. The host process exists to isolate trust, bitness, latency, and runtime technology requirements.
+Modules are compiled code loaded during Xmip Service startup according to configuration. Extensions are verified during startup as far as possible, but loaded only when an artifact requires them.
+
+Transport handlers, content handlers, logic handlers, stores, and management modules are separate modules. A Host Process exists to isolate trust, bitness, latency, and runtime technology requirements.
 
 ## Current executable proof
 
@@ -64,7 +76,7 @@ External Stream
     -> Accept
     -> Promote
     -> Publish
-    -> Process / Send outcome
+    -> Xmip Process / Send outcome
 ```
 
 It also contains early code for:
