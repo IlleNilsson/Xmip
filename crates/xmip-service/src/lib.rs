@@ -15,9 +15,39 @@ pub enum XmipServiceState {
     Failed,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StartupPhase {
+    ReadConfiguration,
+    BuildExecutionTree,
+    ValidateStartup,
+    PlanSystemProcesses,
+    StartSystemProcesses,
+    LoadModules,
+    RegisterCapabilities,
+    VerifyExtensions,
+    AcceptWork,
+}
+
+impl StartupPhase {
+    pub fn id(&self) -> &'static str {
+        match self {
+            StartupPhase::ReadConfiguration => "read-configuration",
+            StartupPhase::BuildExecutionTree => "build-execution-tree",
+            StartupPhase::ValidateStartup => "validate-startup",
+            StartupPhase::PlanSystemProcesses => "plan-system-processes",
+            StartupPhase::StartSystemProcesses => "start-system-processes",
+            StartupPhase::LoadModules => "load-modules",
+            StartupPhase::RegisterCapabilities => "register-capabilities",
+            StartupPhase::VerifyExtensions => "verify-extensions",
+            StartupPhase::AcceptWork => "accept-work",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct XmipServiceStartupPlan {
     pub state: XmipServiceState,
+    pub phases: Vec<StartupPhase>,
     pub execution_tree: ExecutionTree,
     pub validation_report: StartupValidationReport,
 }
@@ -32,21 +62,26 @@ pub fn plan_startup_from_toml(source: &str) -> Result<XmipServiceStartupPlan, St
 
     Ok(XmipServiceStartupPlan {
         state: XmipServiceState::ReadyToStartSystemProcesses,
+        phases: startup_phases(),
         execution_tree,
         validation_report,
     })
 }
 
-pub fn startup_sequence() -> Vec<&'static str> {
+pub fn startup_phases() -> Vec<StartupPhase> {
     vec![
-        "read-configuration",
-        "build-execution-tree",
-        "validate-startup",
-        "plan-system-processes",
-        "start-system-processes",
-        "load-modules",
-        "register-capabilities",
-        "verify-extensions",
-        "accept-work",
+        StartupPhase::ReadConfiguration,
+        StartupPhase::BuildExecutionTree,
+        StartupPhase::ValidateStartup,
+        StartupPhase::PlanSystemProcesses,
+        StartupPhase::StartSystemProcesses,
+        StartupPhase::LoadModules,
+        StartupPhase::RegisterCapabilities,
+        StartupPhase::VerifyExtensions,
+        StartupPhase::AcceptWork,
     ]
+}
+
+pub fn startup_sequence() -> Vec<&'static str> {
+    startup_phases().iter().map(StartupPhase::id).collect()
 }
