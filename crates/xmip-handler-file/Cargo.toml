@@ -11,4 +11,4 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 serde.workspace = true
 uuid.workspace = true
-xmip-plugin-api = { path = "../xmip-plugin-api" }
+xmip-module-api = { path = "../xmip-module-api" }
