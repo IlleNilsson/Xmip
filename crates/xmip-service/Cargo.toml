@@ -1,0 +1,12 @@
+[package]
+name = "xmip-service"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+xmip-configuration = { path = "../xmip-configuration" }
+xmip-runtime = { path = "../xmip-runtime" }
+xmip-host = { path = "../xmip-host" }
