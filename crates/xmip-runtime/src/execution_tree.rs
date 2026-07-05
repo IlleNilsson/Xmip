@@ -23,7 +23,7 @@ pub struct ConfiguredXmipProcess {
     pub name: String,
     pub start: bool,
     pub required_modules: Vec<String>,
-    pub subprocesses: Vec<ConfiguredXmipSubprocess>,
+    pub xmip_subprocesses: Vec<ConfiguredXmipSubprocess>,
     pub extensions: Vec<ExtensionManifest>,
 }
 
@@ -54,7 +54,7 @@ pub struct ModuleStartupNode {
 pub struct XmipProcessStartupNode {
     pub name: String,
     pub required_modules: Vec<String>,
-    pub subprocesses: Vec<XmipSubprocessStartupNode>,
+    pub xmip_subprocesses: Vec<XmipSubprocessStartupNode>,
     pub extension_names: Vec<String>,
 }
 
@@ -112,18 +112,18 @@ pub fn build_execution_tree(
                 verified_extensions.push(verified_extension(extension));
             }
 
-            let subprocesses = xmip_process
-                .subprocesses
+            let xmip_subprocesses = xmip_process
+                .xmip_subprocesses
                 .iter()
-                .map(|subprocess| {
-                    for extension in &subprocess.extensions {
+                .map(|xmip_subprocess| {
+                    for extension in &xmip_subprocess.extensions {
                         verified_extensions.push(verified_extension(extension));
                     }
 
                     XmipSubprocessStartupNode {
-                        name: subprocess.name.clone(),
-                        required_modules: subprocess.required_modules.clone(),
-                        extension_names: subprocess
+                        name: xmip_subprocess.name.clone(),
+                        required_modules: xmip_subprocess.required_modules.clone(),
+                        extension_names: xmip_subprocess
                             .extensions
                             .iter()
                             .map(|extension| extension.name.clone())
@@ -135,7 +135,7 @@ pub fn build_execution_tree(
             XmipProcessStartupNode {
                 name: xmip_process.name.clone(),
                 required_modules: xmip_process.required_modules.clone(),
-                subprocesses,
+                xmip_subprocesses,
                 extension_names: xmip_process
                     .extensions
                     .iter()
@@ -211,15 +211,15 @@ pub fn validate_startup_configuration(
             );
         }
 
-        for subprocess in &xmip_process.subprocesses {
-            if subprocess.name.trim().is_empty() {
+        for xmip_subprocess in &xmip_process.xmip_subprocesses {
+            if xmip_subprocess.name.trim().is_empty() {
                 errors.push(format!(
-                    "Xmip Process '{}' has a subprocess without a name",
+                    "Xmip Process '{}' has an Xmip Subprocess without a name",
                     xmip_process.name
                 ));
             }
 
-            for required_module in &subprocess.required_modules {
+            for required_module in &xmip_subprocess.required_modules {
                 validate_required_module(
                     required_module,
                     &configured_modules,
@@ -227,19 +227,19 @@ pub fn validate_startup_configuration(
                     &mut errors,
                     &mut warnings,
                     &format!(
-                        "subprocess '{}' of Xmip Process '{}'",
-                        subprocess.name, xmip_process.name
+                        "Xmip Subprocess '{}' of Xmip Process '{}'",
+                        xmip_subprocess.name, xmip_process.name
                     ),
                 );
             }
 
-            for extension in &subprocess.extensions {
+            for extension in &xmip_subprocess.extensions {
                 verify_extension_manifest(
                     extension,
                     &mut errors,
                     &format!(
-                        "subprocess '{}' of Xmip Process '{}'",
-                        subprocess.name, xmip_process.name
+                        "Xmip Subprocess '{}' of Xmip Process '{}'",
+                        xmip_subprocess.name, xmip_process.name
                     ),
                 );
             }
@@ -331,7 +331,7 @@ mod tests {
                 name: "inbound".to_string(),
                 start: true,
                 required_modules: vec!["file".to_string()],
-                subprocesses: vec![ConfiguredXmipSubprocess {
+                xmip_subprocesses: vec![ConfiguredXmipSubprocess {
                     name: "normalize".to_string(),
                     required_modules: vec!["file".to_string()],
                     extensions: vec![ExtensionManifest {
