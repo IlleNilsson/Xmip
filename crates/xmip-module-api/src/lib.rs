@@ -105,6 +105,7 @@ pub struct ContentHandlerInvocation {
     pub invocation: HandlerInvocation,
     pub operation: ContentOperation,
     pub requested_properties: Vec<String>,
+    pub demoted_properties: Vec<DemotedProperty>,
     pub contract_ref: Option<String>,
     pub max_bytes_to_inspect: Option<u64>,
 }
@@ -116,9 +117,27 @@ pub enum ContentOperation {
     Inspect,
     CreateMessageSections,
     Promote,
+    Demote,
     Validate,
     Serialize,
     Materialize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DemotedProperty {
+    pub name: String,
+    pub value: String,
+    pub target: DemotionTarget,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DemotionTarget {
+    StreamHeader,
+    StreamMetadata,
+    PayloadElement,
+    Envelope,
+    TransportProperty,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -128,6 +147,7 @@ pub struct ContentHandlerResult {
     pub recognized: Option<bool>,
     pub message_sections: Vec<ContentMessageSection>,
     pub promoted_properties: Vec<(String, String)>,
+    pub demoted_properties: Vec<DemotedProperty>,
     pub output_payload_ref: Option<String>,
     pub diagnostic: Option<String>,
 }
