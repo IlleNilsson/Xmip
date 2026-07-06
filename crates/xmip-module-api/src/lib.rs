@@ -104,7 +104,7 @@ pub enum HandlerStatus {
 pub struct ContentHandlerInvocation {
     pub invocation: HandlerInvocation,
     pub operation: ContentOperation,
-    pub requested_properties: Vec<String>,
+    pub requested_properties: Vec<ContentPropertySelector>,
     pub demoted_properties: Vec<DemotedProperty>,
     pub contract_ref: Option<String>,
     pub max_bytes_to_inspect: Option<u64>,
@@ -124,10 +124,40 @@ pub enum ContentOperation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContentPropertySelector {
+    pub property_name: String,
+    pub path: ContentPath,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContentPath {
+    pub expression: String,
+    pub segments: Vec<ContentPathSegment>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ContentPathSegment {
+    Name(String),
+    NumberedIndex(u64),
+    NamedIndex(String),
+    AnyIndex,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PromotedProperty {
+    pub name: String,
+    pub value: String,
+    pub source: ContentPropertySelector,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DemotedProperty {
     pub name: String,
     pub value: String,
+    pub source: Option<ContentPropertySelector>,
     pub target: DemotionTarget,
+    pub target_path: Option<ContentPath>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -146,7 +176,7 @@ pub struct ContentHandlerResult {
     pub status: HandlerStatus,
     pub recognized: Option<bool>,
     pub message_sections: Vec<ContentMessageSection>,
-    pub promoted_properties: Vec<(String, String)>,
+    pub promoted_properties: Vec<PromotedProperty>,
     pub demoted_properties: Vec<DemotedProperty>,
     pub output_payload_ref: Option<String>,
     pub diagnostic: Option<String>,
