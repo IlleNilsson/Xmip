@@ -76,7 +76,7 @@ pub struct ExtensionEntrypoint {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HandlerInvocation {
     pub invocation_id: Uuid,
-    pub interchange_id: Uuid,
+    pub journey_id: Uuid,
     pub message_id: Uuid,
     pub artifact_name: String,
     pub location_name: Option<String>,
@@ -150,7 +150,7 @@ pub enum ContentSelectorSegment {
 pub enum SelectorEvaluation {
     StreamPrefix,
     StreamScan,
-    MaterializedSection,
+    Materialized,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
