@@ -192,19 +192,19 @@ pub struct ContentCreatedMessage {
     pub content_type: Option<String>,
 }
 
-pub trait Module: Send + Sync {
+pub trait XmipModule: Send + Sync {
     fn manifest(&self) -> &ModuleManifest;
 }
 
-pub trait TransportHandler: Module {
+pub trait Module: XmipModule {}
+
+impl<T> Module for T where T: XmipModule {}
+
+pub trait TransportHandler: XmipModule {
     fn receive(&self, invocation: HandlerInvocation) -> HandlerResult;
     fn send(&self, invocation: HandlerInvocation) -> HandlerResult;
 }
 
-pub trait ContentHandler: Module {
+pub trait ContentHandler: XmipModule {
     fn handle_content(&self, invocation: ContentHandlerInvocation) -> ContentHandlerResult;
 }
-
-pub trait XmipModule: Module {}
-
-impl<T> XmipModule for T where T: Module {}
