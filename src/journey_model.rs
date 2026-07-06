@@ -27,7 +27,7 @@ pub struct JourneyMessageRef {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct XmipMessage {
+pub struct Message {
     pub journey_id: Uuid,
     pub message_id: Uuid,
     pub stream_ref: StreamRef,
@@ -51,12 +51,12 @@ pub enum MessageCreationSource {
     SendPreparation,
 }
 
-pub fn create_initial_message(stream_uri: impl Into<String>) -> (Journey, XmipMessage) {
+pub fn create_initial_message(stream_uri: impl Into<String>) -> (Journey, Message) {
     let journey_id = Uuid::new_v4();
     let message_id = Uuid::new_v4();
     let stream_id = Uuid::new_v4();
 
-    let message = XmipMessage {
+    let message = Message {
         journey_id,
         message_id,
         stream_ref: StreamRef {
@@ -82,11 +82,11 @@ pub fn create_initial_message(stream_uri: impl Into<String>) -> (Journey, XmipMe
 }
 
 pub fn create_derived_message(
-    previous: &XmipMessage,
+    previous: &Message,
     stream_uri: impl Into<String>,
     created_by: MessageCreationSource,
-) -> XmipMessage {
-    XmipMessage {
+) -> Message {
+    Message {
         journey_id: previous.journey_id,
         message_id: Uuid::new_v4(),
         stream_ref: StreamRef {
@@ -100,10 +100,10 @@ pub fn create_derived_message(
 }
 
 pub fn create_metadata_only_message(
-    previous: &XmipMessage,
+    previous: &Message,
     created_by: MessageCreationSource,
-) -> XmipMessage {
-    XmipMessage {
+) -> Message {
+    Message {
         journey_id: previous.journey_id,
         message_id: Uuid::new_v4(),
         stream_ref: previous.stream_ref.clone(),
@@ -112,7 +112,7 @@ pub fn create_metadata_only_message(
     }
 }
 
-pub fn append_message_to_journey(journey: &mut Journey, message: &XmipMessage) {
+pub fn append_message_to_journey(journey: &mut Journey, message: &Message) {
     if journey.journey_id != message.journey_id {
         return;
     }
