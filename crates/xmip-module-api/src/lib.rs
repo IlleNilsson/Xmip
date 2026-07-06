@@ -100,6 +100,45 @@ pub enum HandlerStatus {
     NonRetryableFailure,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContentHandlerInvocation {
+    pub invocation: HandlerInvocation,
+    pub operation: ContentOperation,
+    pub requested_properties: Vec<String>,
+    pub contract_ref: Option<String>,
+    pub max_bytes_to_inspect: Option<u64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ContentOperation {
+    Identify,
+    Inspect,
+    CreateMessageSections,
+    Promote,
+    Validate,
+    Serialize,
+    Materialize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContentHandlerResult {
+    pub invocation_id: Uuid,
+    pub status: HandlerStatus,
+    pub recognized: Option<bool>,
+    pub message_sections: Vec<ContentMessageSection>,
+    pub promoted_properties: Vec<(String, String)>,
+    pub output_payload_ref: Option<String>,
+    pub diagnostic: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContentMessageSection {
+    pub section_name: Option<String>,
+    pub stream_ref: String,
+    pub content_type: Option<String>,
+}
+
 pub trait XmipModule: Send + Sync {
     fn manifest(&self) -> &ModuleManifest;
 }
@@ -110,6 +149,5 @@ pub trait TransportHandler: XmipModule {
 }
 
 pub trait ContentHandler: XmipModule {
-    fn deserialize(&self, invocation: HandlerInvocation) -> HandlerResult;
-    fn serialize(&self, invocation: HandlerInvocation) -> HandlerResult;
+    fn handle_content(&self, invocation: ContentHandlerInvocation) -> ContentHandlerResult;
 }
