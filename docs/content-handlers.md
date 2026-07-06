@@ -55,11 +55,13 @@ materialize   deserialize only the requested part or shape of the stream
 
 `demote` is the send-side counterpart to promotion. It takes selected Xmip context, promoted properties, or message properties and writes them into the outgoing stream, envelope, metadata, headers, or transport-facing properties as configured by the send artifact.
 
-## Promotion and demotion selectors
+## Content Selectors
 
-Promotion and demotion use selectors, not only flat property names.
+Promotion and demotion use **Content Selectors**, not XPath, JSONPath, or programming-language indexes.
 
-Selectors must support named paths, numbered indexes, wildcard indexes, and named indexes.
+A Content Selector is an Xmip selector language. It must be simple to write and possible for a Content Handler to evaluate against a partially materialized stream.
+
+The expression is user-facing. The parsed structure is handler-facing.
 
 Examples:
 
@@ -71,16 +73,26 @@ headers['desiredProperty']
 envelope.body.items[3]['sku']
 ```
 
-The runtime stores both the original selector expression and a parsed selector structure so handlers can validate, optimize, and report diagnostics without losing the configured expression.
+These examples are not XPath and not JSONPath. Brackets are Xmip selector notation only.
 
 Selector segment kinds:
 
 ```text
-Name           path segment such as order or customer
-NumberedIndex  numeric index such as [0] or [3]
-NamedIndex     named index such as ['desiredProperty']
-AnyIndex       wildcard index such as [n]
+Name    named step such as order or customer
+Number  ordinal occurrence such as [0] or [3]
+Key     named key such as ['desiredProperty']
+Any     streaming wildcard such as [n]
 ```
+
+A selector also declares how it can be evaluated:
+
+```text
+stream-prefix          can be resolved near the beginning of the stream
+stream-scan            can be resolved by scanning forward without full materialization
+materialized-section   requires a materialized section or shape
+```
+
+The goal is simple usage, not simple implementation. Content Handlers may need advanced internals, but artifacts should use one consistent selector language.
 
 ## Rule
 
