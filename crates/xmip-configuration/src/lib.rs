@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use xmip_module_api::{ExtensionManifest, ModuleManifest};
+use xmip_core::{ExtensionManifest, ModuleManifest};
 use xmip_runtime::execution_tree::{
     ConfiguredModule, ConfiguredXmipProcess, ConfiguredXmipSubprocess, XmipServiceConfiguration,
 };
