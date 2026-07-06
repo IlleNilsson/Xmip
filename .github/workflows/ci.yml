@@ -1,0 +1,27 @@
+name: Xmip CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust:
+    name: Rust workspace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: Cargo check
+        run: cargo check --workspace --all-targets
+
+      - name: Cargo test
+        run: cargo test --workspace
