@@ -5,7 +5,7 @@ use uuid::Uuid;
 pub struct DurableRecordIdentity {
     pub cluster_name: String,
     pub node_name: String,
-    pub interchange_id: Uuid,
+    pub journey_id: Uuid,
     pub message_id: Option<Uuid>,
 }
 
@@ -27,10 +27,10 @@ pub struct RecoveryWaitCondition {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct DurableInterchangeState {
+pub struct DurableJourneyState {
     pub cluster_name: String,
-    pub interchange_id: Uuid,
-    pub state: InterchangeRecoveryState,
+    pub journey_id: Uuid,
+    pub state: JourneyRecoveryState,
     pub current_xmip_process: Option<String>,
     pub last_known_step: Option<String>,
     pub active_message_ids: Vec<Uuid>,
@@ -39,7 +39,7 @@ pub struct DurableInterchangeState {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum InterchangeRecoveryState {
+pub enum JourneyRecoveryState {
     Active,
     Waiting,
     Suspended,
@@ -51,7 +51,7 @@ pub enum InterchangeRecoveryState {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RecoveryLease {
     pub cluster_name: String,
-    pub interchange_id: Uuid,
+    pub journey_id: Uuid,
     pub owner_node_name: String,
     pub lease_token: String,
     pub expires_utc: String,
@@ -59,18 +59,18 @@ pub struct RecoveryLease {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeduplicationRecord {
-    pub interchange_id: Uuid,
+    pub journey_id: Uuid,
     pub message_id: Uuid,
     pub source_fingerprint: String,
 }
 
 pub trait RuntimeStore {
-    fn persist_interchange_state(&self, state: DurableInterchangeState) -> Result<(), String>;
-    fn load_interchange_state(
+    fn persist_journey_state(&self, state: DurableJourneyState) -> Result<(), String>;
+    fn load_journey_state(
         &self,
         cluster_name: &str,
-        interchange_id: Uuid,
-    ) -> Result<Option<DurableInterchangeState>, String>;
+        journey_id: Uuid,
+    ) -> Result<Option<DurableJourneyState>, String>;
     fn persist_checkpoint(&self, checkpoint: DurableExecutionCheckpoint) -> Result<(), String>;
     fn load_checkpoint(
         &self,
