@@ -126,22 +126,31 @@ pub enum ContentOperation {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ContentPropertySelector {
     pub property_name: String,
-    pub path: ContentPath,
+    pub selector: ContentSelector,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ContentPath {
+pub struct ContentSelector {
     pub expression: String,
-    pub segments: Vec<ContentPathSegment>,
+    pub segments: Vec<ContentSelectorSegment>,
+    pub evaluation: SelectorEvaluation,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum ContentPathSegment {
+pub enum ContentSelectorSegment {
     Name(String),
-    NumberedIndex(u64),
-    NamedIndex(String),
-    AnyIndex,
+    Number(u64),
+    Key(String),
+    Any,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SelectorEvaluation {
+    StreamPrefix,
+    StreamScan,
+    MaterializedSection,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -157,7 +166,7 @@ pub struct DemotedProperty {
     pub value: String,
     pub source: Option<ContentPropertySelector>,
     pub target: DemotionTarget,
-    pub target_path: Option<ContentPath>,
+    pub target_selector: Option<ContentSelector>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
