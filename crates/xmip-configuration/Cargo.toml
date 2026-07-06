@@ -8,5 +8,5 @@ repository.workspace = true
 [dependencies]
 serde.workspace = true
 toml.workspace = true
-xmip-module-api = { path = "../xmip-module-api" }
+xmip-core = { path = "../.." }
 xmip-runtime = { path = "../xmip-runtime" }
