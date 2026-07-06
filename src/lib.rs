@@ -11,6 +11,7 @@ pub mod handler_universe_enterprise;
 pub mod handler_universe_industrial;
 pub mod handler_universe_network;
 pub mod handler_universe_registry;
+pub mod journey_model;
 pub mod management_store;
 pub mod module_loader;
 pub mod module_manifest;
