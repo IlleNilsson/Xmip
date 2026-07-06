@@ -2,9 +2,7 @@ pub mod capability_registry;
 pub mod execution_tree;
 
 use serde::{Deserialize, Serialize};
-use xmip_module_api::{
-    ExtensionManifest, HandlerInvocation, HandlerResult, ModuleKind, ModuleManifest,
-};
+use xmip_core::{ExtensionManifest, HandlerInvocation, HandlerResult, ModuleKind, ModuleManifest};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuntimeNode {
