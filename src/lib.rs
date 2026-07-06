@@ -1,4 +1,5 @@
 pub mod journey_model;
+pub mod transport_technology;
 pub mod vertical_slice;
 
 pub use journey_model::{
@@ -6,4 +7,8 @@ pub use journey_model::{
     create_initial_message_with_treatment, create_metadata_only_message, ExecutionProfile,
     Journey, JourneyMessageRef, JourneyState, Message, MessageCreationSource, MessageDurability,
     MessagePriority, MessageTreatment, StreamRef,
+};
+
+pub use transport_technology::{
+    core_transport_tree, depends_on, TransportTechnology, TransportTechnologyLayer,
 };
