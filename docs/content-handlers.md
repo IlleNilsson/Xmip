@@ -4,7 +4,7 @@ Content Handlers are one of the central concepts in Xmip.
 
 Xmip is stream-first. A Content Handler shall not deserialize more of a stream than is required by the current action.
 
-After transport-level identification and authorization, a Content Handler may step in at several stages of execution. It can identify content, create message sections, promote properties, validate content, inspect content, serialize content, or deserialize only the parts needed by the current step.
+After transport-level identification and authorization, a Content Handler may step in at several stages of execution. It can identify content, create message sections, promote properties, validate content, inspect content, demote properties, serialize content, or materialize only the parts needed by the current step.
 
 ## Principle
 
@@ -25,6 +25,17 @@ Receive stream
     -> Xmip Message created
 ```
 
+## Typical send flow
+
+```text
+Xmip Message selected for send
+    -> send artifact selects stream section(s)
+    -> Content Handler demotes context and message properties when configured
+    -> Content Handler serializes or envelopes only when needed
+    -> outgoing stream reference produced
+    -> Transport Handler sends stream
+```
+
 ## Content Handler responsibilities
 
 A Content Handler may support one or more of these operations:
@@ -34,6 +45,7 @@ identify      determine whether the handler recognizes the stream
 inspect       read enough of the stream to describe it
 create        create message section metadata and stream references
 promote       extract selected properties as far and as fast as needed
+demote        write selected context, promoted, or message properties to the outgoing stream
 validate      verify content against a contract when configured
 serialize     write interpreted content back to a stream
 materialize   deserialize only the requested part or shape of the stream
@@ -41,8 +53,12 @@ materialize   deserialize only the requested part or shape of the stream
 
 `materialize` is intentionally not called full deserialization. Xmip should avoid full deserialization unless a specific action requires it.
 
+`demote` is the send-side counterpart to promotion. It takes selected Xmip context, promoted properties, or message properties and writes them into the outgoing stream, envelope, metadata, headers, or transport-facing properties as configured by the send artifact.
+
 ## Rule
 
 Content Handlers must be lazy and stream-preserving.
 
-They should promote as fast and as far as needed, then stop. The original stream remains referenced by the message section unless a transformation, assignment, or serialization step produces a new stream.
+On receive, they should promote as fast and as far as needed, then stop. The original stream remains referenced by the message section unless a transformation, assignment, or serialization step produces a new stream.
+
+On send, they should demote only the configured properties and serialize only when the outgoing stream requires it.
