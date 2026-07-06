@@ -1,5 +1,5 @@
 [package]
-name = "xmip-module-abi"
+name = "xmip-abi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
