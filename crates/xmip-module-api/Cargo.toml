@@ -6,6 +6,5 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-serde.workspace = true
-uuid.workspace = true
+xmip-core = { path = "../.." }
 xmip-module-abi = { path = "../xmip-module-abi" }
