@@ -115,7 +115,7 @@ pub struct ContentHandlerInvocation {
 pub enum ContentOperation {
     Identify,
     Inspect,
-    CreateMessageSections,
+    CreateMessage,
     Promote,
     Demote,
     Validate,
@@ -184,7 +184,7 @@ pub struct ContentHandlerResult {
     pub invocation_id: Uuid,
     pub status: HandlerStatus,
     pub recognized: Option<bool>,
-    pub message_sections: Vec<ContentMessageSection>,
+    pub created_message: Option<ContentCreatedMessage>,
     pub promoted_properties: Vec<PromotedProperty>,
     pub demoted_properties: Vec<DemotedProperty>,
     pub output_payload_ref: Option<String>,
@@ -192,8 +192,7 @@ pub struct ContentHandlerResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ContentMessageSection {
-    pub section_name: Option<String>,
+pub struct ContentCreatedMessage {
     pub stream_ref: String,
     pub content_type: Option<String>,
 }
