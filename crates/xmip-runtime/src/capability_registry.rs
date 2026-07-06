@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use xmip_module_api::{ModuleCapability, ModuleIdentity, ModuleManifest};
+use xmip_core::{ModuleCapability, ModuleIdentity, ModuleManifest};
 
 #[derive(Clone, Debug, Default)]
 pub struct CapabilityRegistry {
