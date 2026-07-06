@@ -30,7 +30,7 @@ pub struct XmipProcessConfiguration {
     pub name: String,
     pub start: bool,
     pub required_modules: Vec<String>,
-    pub subprocesses: Vec<XmipSubprocessConfiguration>,
+    pub xmip_subprocesses: Vec<XmipSubprocessConfiguration>,
     pub extensions: Vec<ExtensionManifest>,
 }
 
@@ -50,34 +50,42 @@ pub fn to_service_configuration(document: XmipConfigurationDocument) -> XmipServ
         service_name: document.service.name,
         cluster_name: document.service.cluster_name,
         node_name: document.service.node_name,
-        modules: document
-            .modules
-            .into_iter()
-            .map(|module| ConfiguredModule {
-                name: module.name,
-                manifest: module.manifest,
-                start: module.start,
-            })
-            .collect(),
+        modules: document.modules.into_iter().map(to_configured_module).collect(),
         xmip_processes: document
             .xmip_processes
             .into_iter()
-            .map(|xmip_process| ConfiguredXmipProcess {
-                name: xmip_process.name,
-                start: xmip_process.start,
-                required_modules: xmip_process.required_modules,
-                subprocesses: xmip_process
-                    .subprocesses
-                    .into_iter()
-                    .map(|subprocess| ConfiguredXmipSubprocess {
-                        name: subprocess.name,
-                        required_modules: subprocess.required_modules,
-                        extensions: subprocess.extensions,
-                    })
-                    .collect(),
-                extensions: xmip_process.extensions,
-            })
+            .map(to_configured_process)
             .collect(),
+    }
+}
+
+fn to_configured_module(module: ModuleConfiguration) -> ConfiguredModule {
+    ConfiguredModule {
+        name: module.name,
+        manifest: module.manifest,
+        start: module.start,
+    }
+}
+
+fn to_configured_process(process: XmipProcessConfiguration) -> ConfiguredXmipProcess {
+    ConfiguredXmipProcess {
+        name: process.name,
+        start: process.start,
+        required_modules: process.required_modules,
+        xmip_subprocesses: process
+            .xmip_subprocesses
+            .into_iter()
+            .map(to_configured_subprocess)
+            .collect(),
+        extensions: process.extensions,
+    }
+}
+
+fn to_configured_subprocess(subprocess: XmipSubprocessConfiguration) -> ConfiguredXmipSubprocess {
+    ConfiguredXmipSubprocess {
+        name: subprocess.name,
+        required_modules: subprocess.required_modules,
+        extensions: subprocess.extensions,
     }
 }
 
