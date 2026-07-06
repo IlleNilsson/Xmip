@@ -7,4 +7,4 @@ repository.workspace = true
 
 [dependencies]
 xmip-core = { path = "../.." }
-xmip-module-abi = { path = "../xmip-module-abi" }
+xmip-abi = { path = "../xmip-module-abi" }
