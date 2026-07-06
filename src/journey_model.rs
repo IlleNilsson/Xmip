@@ -33,6 +33,9 @@ pub struct Message {
     pub stream_ref: StreamRef,
     pub generation: u32,
     pub created_by: MessageCreationSource,
+    pub priority: MessagePriority,
+    pub execution_profile: ExecutionProfile,
+    pub durability: MessageDurability,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,7 +54,57 @@ pub enum MessageCreationSource {
     SendPreparation,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MessagePriority {
+    Immediate,
+    High,
+    Normal,
+    Low,
+    Background,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ExecutionProfile {
+    Conversation,
+    Business,
+    PassThrough,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MessageDurability {
+    Ephemeral,
+    Durable,
+    Recoverable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MessageTreatment {
+    pub priority: MessagePriority,
+    pub execution_profile: ExecutionProfile,
+    pub durability: MessageDurability,
+}
+
+impl Default for MessageTreatment {
+    fn default() -> Self {
+        Self {
+            priority: MessagePriority::Normal,
+            execution_profile: ExecutionProfile::Business,
+            durability: MessageDurability::Recoverable,
+        }
+    }
+}
+
 pub fn create_initial_message(stream_uri: impl Into<String>) -> (Journey, Message) {
+    create_initial_message_with_treatment(stream_uri, MessageTreatment::default())
+}
+
+pub fn create_initial_message_with_treatment(
+    stream_uri: impl Into<String>,
+    treatment: MessageTreatment,
+) -> (Journey, Message) {
     let journey_id = Uuid::new_v4();
     let message_id = Uuid::new_v4();
     let stream_id = Uuid::new_v4();
@@ -66,6 +119,9 @@ pub fn create_initial_message(stream_uri: impl Into<String>) -> (Journey, Messag
         },
         generation: 0,
         created_by: MessageCreationSource::Receive,
+        priority: treatment.priority,
+        execution_profile: treatment.execution_profile,
+        durability: treatment.durability,
     };
 
     let journey = Journey {
@@ -96,6 +152,9 @@ pub fn create_derived_message(
         },
         generation: previous.generation + 1,
         created_by,
+        priority: previous.priority.clone(),
+        execution_profile: previous.execution_profile.clone(),
+        durability: previous.durability.clone(),
     }
 }
 
@@ -109,6 +168,9 @@ pub fn create_metadata_only_message(
         stream_ref: previous.stream_ref.clone(),
         generation: previous.generation + 1,
         created_by,
+        priority: previous.priority.clone(),
+        execution_profile: previous.execution_profile.clone(),
+        durability: previous.durability.clone(),
     }
 }
 
@@ -153,5 +215,45 @@ mod tests {
         assert_ne!(received.message_id, transformed.message_id);
         assert_ne!(received.stream_ref.stream_id, transformed.stream_ref.stream_id);
         assert_eq!(journey.messages.len(), 2);
+    }
+
+    #[test]
+    fn message_treatment_is_independent_of_format_or_size() {
+        let treatment = MessageTreatment {
+            priority: MessagePriority::Immediate,
+            execution_profile: ExecutionProfile::Conversation,
+            durability: MessageDurability::Ephemeral,
+        };
+
+        let (_journey, message) = create_initial_message_with_treatment(
+            "store://incoming/tiny-text",
+            treatment,
+        );
+
+        assert_eq!(message.priority, MessagePriority::Immediate);
+        assert_eq!(message.execution_profile, ExecutionProfile::Conversation);
+        assert_eq!(message.durability, MessageDurability::Ephemeral);
+    }
+
+    #[test]
+    fn derived_message_keeps_treatment() {
+        let treatment = MessageTreatment {
+            priority: MessagePriority::Background,
+            execution_profile: ExecutionProfile::PassThrough,
+            durability: MessageDurability::Durable,
+        };
+        let (_journey, received) = create_initial_message_with_treatment(
+            "store://incoming/heavy",
+            treatment,
+        );
+        let moved = create_derived_message(
+            &received,
+            "store://outgoing/heavy",
+            MessageCreationSource::SendPreparation,
+        );
+
+        assert_eq!(moved.priority, MessagePriority::Background);
+        assert_eq!(moved.execution_profile, ExecutionProfile::PassThrough);
+        assert_eq!(moved.durability, MessageDurability::Durable);
     }
 }
