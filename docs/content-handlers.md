@@ -55,6 +55,33 @@ materialize   deserialize only the requested part or shape of the stream
 
 `demote` is the send-side counterpart to promotion. It takes selected Xmip context, promoted properties, or message properties and writes them into the outgoing stream, envelope, metadata, headers, or transport-facing properties as configured by the send artifact.
 
+## Promotion and demotion selectors
+
+Promotion and demotion use selectors, not only flat property names.
+
+Selectors must support named paths, numbered indexes, wildcard indexes, and named indexes.
+
+Examples:
+
+```text
+order.customer.name
+orders[0].id
+orders[n].id
+headers['desiredProperty']
+envelope.body.items[3]['sku']
+```
+
+The runtime stores both the original selector expression and a parsed selector structure so handlers can validate, optimize, and report diagnostics without losing the configured expression.
+
+Selector segment kinds:
+
+```text
+Name           path segment such as order or customer
+NumberedIndex  numeric index such as [0] or [3]
+NamedIndex     named index such as ['desiredProperty']
+AnyIndex       wildcard index such as [n]
+```
+
 ## Rule
 
 Content Handlers must be lazy and stream-preserving.
