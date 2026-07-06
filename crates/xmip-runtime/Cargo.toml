@@ -9,4 +9,3 @@ repository.workspace = true
 serde.workspace = true
 uuid.workspace = true
 xmip-core = { path = "../.." }
-xmip-module-api = { path = "../xmip-module-api" }
