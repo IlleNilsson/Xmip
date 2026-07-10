@@ -1,150 +1,176 @@
 # Xmip repository model
 
-Xmip uses repositories by purpose.
+The `Xmip` repository is the integration point and current source of truth.
 
-The main repository, `Xmip`, is the integration point. It can reference other repositories as git submodules, but the architecture is not defined by the file-system tree. The architecture is defined by dependency graphs and runtime configuration.
+All previous experimental repositories have been removed. New repositories will be created deliberately, one purpose at a time, and may be referenced by `Xmip` as git submodules.
 
-## Platform repositories
+A repository is created only when it has:
 
-These repositories form the Xmip platform:
+- one clear responsibility,
+- a stable public contract,
+- an independent build and release lifecycle,
+- a reason to be versioned separately.
+
+## Planned platform repositories
 
 ```text
 xmip-core
-    shared domain model and contracts
+    Journey, Message, Stream, Event and shared domain contracts.
 
 xmip-abi
-    stable binary boundary for dynamically loaded Modules
+    Stable binary boundary for dynamically loaded Modules.
 
 xmip-service
-    long-running System Process that starts and supervises Xmip
+    Long-running Xmip Service System Process.
 
 xmip-host
-    Host Process implementation used to load and execute Modules
+    Host Process startup, isolation, module loading and execution.
 
 xmip-runtime
-    scheduling, dispatch, Journey execution, recovery coordination
+    Scheduling, dispatch, Publications, Subscriptions, routing and Xmip Process execution.
 
 xmip-cluster
-    cluster membership, node capability awareness, failover and recovery ownership
+    Cluster membership, node capability awareness, failover, recovery ownership and leases.
 
 xmip-configuration
-    TOML configuration parsing and validation
+    TOML parsing, validation, environment profiles and deployment configuration.
 
 xmip-persistence
-    Journey state, checkpoint, lease and deduplication storage contracts
+    Durable Journey state, checkpoints, deduplication and storage contracts.
 
 xmip-tracking
-    audit and tracking contracts
+    Retained Messages, Streams, lineage, execution history and replay source data.
+
+xmip-auditing
+    Authoritative audit history, inspection and replay using Tracking.
 
 xmip-cli
-    command-line administration surface
+    Command-line administration and operational tooling.
 ```
 
-## Module repositories
+Auditing and Tracking are separate. Auditing depends on Tracking for retained Messages, Streams and execution history.
 
-Module repositories implement Xmip contracts. They should not redefine Xmip concepts.
+## Planned module repository families
 
-```text
-Transport Handler repositories
-    move streams between Xmip and the outside world
+### Transport Handlers
 
-Content Handler repositories
-    identify, deserialize, serialize, promote and demote content
-
-Contract repositories
-    validate messages and define selectors/paths usable by Content Handlers
-
-Store repositories
-    persist Journey, Message, Stream, checkpoint, lease and audit state
-```
-
-## Separation of concerns
-
-A Receive or Send configuration composes independent concerns:
-
-```text
-Transport
-    how bytes/streams enter or leave
-
-Content
-    how a stream is recognized and understood
-
-Contract
-    what the content must satisfy and which paths/properties are meaningful
-```
+Transport Handlers move Streams and deal with transport-specific ingress, egress, errors and responses.
 
 Examples:
 
 ```text
-FILE + XML + PurchaseOrderContract
-HTTP + JSON + InvoiceContract
-FTP + EDI + OrderContract
-MLLP + HL7 + AdmissionContract
-HTTP + FHIR + PatientContract
+xmip-handler-file
+xmip-handler-ftp
+xmip-handler-sftp
+xmip-handler-http
+xmip-handler-grpc
+xmip-handler-mllp
+xmip-handler-websocket
+xmip-handler-rabbitmq
+xmip-handler-ibm-mq
+xmip-handler-azure-service-bus
+xmip-handler-azure-event-grid
 ```
 
-Xmip must not create one handler for every combination. That would explode.
+Lower-level technologies such as TCP and UDP are dependencies and reusable capabilities. They become separate repositories only if they acquire a stable reusable Xmip-specific purpose.
 
-Wrong:
+### Content Handlers
+
+Content Handlers understand Message representations and bridge immutable Streams and immutable Messages.
 
 ```text
-HTTP JSON handler
-FTP XML handler
-FILE EDI handler
+xmip-content-xml
+xmip-content-json
+xmip-content-csv
+xmip-content-edi
+xmip-content-hl7
+xmip-content-fhir
+xmip-content-text
+xmip-content-binary
 ```
 
-Right:
+### Contract Modules
+
+Contracts validate Message instances and provide paths, selectors, promotion and demotion knowledge.
+
+Standard implementations may include:
 
 ```text
-HTTP Transport Handler
-XML Content Handler
-JSON Content Handler
-EDI Content Handler
-Purchase Order Contract
-Invoice Contract
+xmip-contract-xml-schema
+xmip-contract-json-schema
+xmip-contract-regex
+xmip-contract-edi
+xmip-contract-hl7
+xmip-contract-fhir
 ```
 
-## Dependency graph
+Stakeholders may create project-specific Contract Modules such as:
 
-Technology hierarchy is a dependency graph, not a repository hierarchy.
+```text
+acme-contract-purchase-order
+hospital-contract-admission
+municipality-contract-citizen-case
+```
+
+A custom Contract may derive from a standard Contract or another custom Contract. Derivation belongs to the contract technology and its design/build process, not to runtime TOML.
+
+### Stores
+
+Stores implement persistence contracts.
+
+```text
+xmip-store-sqlite
+xmip-store-postgresql
+xmip-store-sqlserver
+xmip-store-rocksdb
+```
+
+### Extensions
+
+Stakeholder or partner Extensions may implement custom actions, authentication, authorization, secret providers, certificate providers, business rules and Process activities.
+
+## Dependency model
+
+The technology tree is a dependency graph, not a forced Git directory hierarchy.
 
 ```text
 HTTP depends on TCP
-SOAP may depend on HTTP
-FHIR content may be carried over HTTP
 MLLP depends on TCP
+SOAP request/response logic uses HTTP
+FHIR instances may be carried through HTTP, FILE or another transport
+JSON instances may be carried through HTTP, FILE, FTP, MQ or another transport
 ```
 
-A repository may depend on another repository or crate. A repository may also be used as a git submodule by more than one parent repository.
+Transport, content and Contract remain independent and are composed by configuration.
 
-## Contracts and selectors
+## Submodule policy
 
-Contracts are used for:
+`Xmip` may reference focused repositories as submodules after those repositories exist and contain a valid initial commit.
 
-- validation,
-- promotion,
-- demotion,
-- selectors,
-- paths,
-- meaning.
-
-Content Handlers use contracts and selectors to inspect only as much of a stream as necessary.
-
-## Current naming direction
-
-Use lower-case repository names for GitHub consistency:
+Suggested integration layout:
 
 ```text
-xmip-core
-xmip-service
-xmip-host
-xmip-runtime
-xmip-cluster
-xmip-handler-file
-xmip-handler-http
-xmip-content-xml
-xmip-content-json
-xmip-contract-xml-schema
-xmip-contract-json-schema
-xmip-store-sqlite
+submodules/
+    platform/
+    handlers/
+    content/
+    contracts/
+    stores/
+    extensions/
 ```
+
+This folder layout organizes the integration checkout. It does not define runtime dependency or technology inheritance.
+
+Submodules must use real repository URLs and must be added only after repository creation has been verified with `git ls-remote`.
+
+## Clean-slate sequence
+
+1. Keep all architecture and prototype work in `Xmip`.
+2. Stabilize the public purpose and contract of the first component.
+3. Create its repository with an initial commit.
+4. Move or rebuild that component in the new repository.
+5. Build and test it independently.
+6. Add it to `Xmip` as a submodule.
+7. Repeat one component at a time.
+
+The first candidate should be `xmip-core`, because every other platform and module repository depends on its shared domain contracts.
