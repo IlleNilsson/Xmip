@@ -478,6 +478,7 @@ Pause
 Continue
 Retry
 Stop
+Dismiss
 ```
 
 ### Retry
@@ -492,19 +493,31 @@ Successful prior actions are not repeated unnecessarily.
 
 Stop prevents further execution. The resulting state depends on the reason and policy.
 
-## 20. Journey operations
-
-### Replay
-
-Replay starts a new Journey from another Journey's starting point using its original immutable evidence and records lineage to the original Journey.
-
-Replay is not Retry.
-
 ### Dismiss
 
 Dismiss intentionally terminates a Dead or otherwise selected Journey without deleting its history, Messages, Streams, Tracking or Audit.
 
-Replay and Dismiss are audited.
+## 20. Replay
+
+Replay is not a Journey command and is not Retry.
+
+Replay uses retained Auditing and Tracking evidence to create a new Journey from a selected historical source. A replay source may be:
+
+```text
+A historical Receive Location event
+A historical Receive Port event or Publication
+A historical Journey starting point
+```
+
+Replay uses the Message, corresponding Stream, artifact context and configuration identity retained at the selected audited source. The new Journey records lineage to the original audited source and to the original Journey when one exists.
+
+Examples:
+
+- Replay what entered a particular Receive Location during a selected period.
+- Replay a Message as it entered a Receive Port before its actions and Publication.
+- Replay an entire Journey from its original starting point.
+
+The historical source remains unchanged. Replay itself is audited.
 
 ## 21. Resilience
 
@@ -567,10 +580,11 @@ First-party repositories are added to `Xmip` as git submodules after creation.
 6. Routing evaluates Subscriptions.
 7. Any unrecoverable automatic failure creates a Dead Journey.
 8. Retry continues the same Journey from the failed audited stage.
-9. Replay starts a new Journey from another Journey's starting point.
-10. Auditing uses Tracking to inspect and replay Journeys.
-11. Xmip owns public traits/interfaces; stakeholders own implementations.
-12. Development may be permissive; production is hardened by policy.
+9. Dismiss is a command on the selected Journey.
+10. Replay creates a new Journey from a selected audited Receive Location, Receive Port or Journey source.
+11. Auditing uses Tracking to inspect and replay retained Messages and Streams.
+12. Xmip owns public traits/interfaces; stakeholders own implementations.
+13. Development may be permissive; production is hardened by policy.
 
 ## 25. Design goal
 
