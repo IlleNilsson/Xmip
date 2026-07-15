@@ -11,6 +11,7 @@ members = [
     "crates/xmip-tracking",
     "crates/xmip-cli",
     "crates/xmip-handler-file",
+    "crates/xmip-exclusiveness",
 ]
 resolver = "2"
 
