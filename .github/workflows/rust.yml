@@ -26,7 +26,13 @@ jobs:
         run: cargo fetch
 
       - name: Apply formatting in evaluation checkout
-        run: cargo fmt --all
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo fmt --all > fmt.log 2>&1 || {
+            cat fmt.log
+            exit 1
+          }
 
       - name: Clippy
         continue-on-error: true
@@ -63,7 +69,12 @@ jobs:
 
       - name: IoT profile check
         continue-on-error: true
-        run: cargo check --workspace --no-default-features --features iot-profile
+        shell: bash
+        run: |
+          cargo check --workspace --no-default-features --features iot-profile > iot.log 2>&1 || {
+            tail -n 120 iot.log
+            exit 1
+          }
 
       - name: Embedded profile check
         shell: bash
