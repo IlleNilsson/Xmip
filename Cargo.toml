@@ -34,6 +34,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+autobins = false
 
 [lib]
 name = "xmip_core"
