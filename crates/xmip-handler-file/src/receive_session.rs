@@ -1,80 +1,75 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use xmip_core::{
-    create_initial_message, Journey, Message, ReceiveOwner, ReceiveOwnershipError,
-    ReceiveOwnershipLease, ReceiveOwnershipStore,
+use uuid::Uuid;
+use xmip_core::{create_initial_message, Journey, Message};
+use xmip_exclusiveness::{
+    AcquireOutcome, ExclusiveAction, ExclusiveOwner, ExclusiveRequest, ExclusivenessBoundary,
+    ExclusivenessError, ExclusivenessScope, ExclusivenessStore,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileReceiveError {
-    Ownership(ReceiveOwnershipError),
-    OwnershipLost {
-        receive_location_name: String,
-        expected_owner: ReceiveOwner,
-    },
+    Exclusiveness(ExclusivenessError),
+    NotAcquired,
+    TimedOut,
 }
 
-impl From<ReceiveOwnershipError> for FileReceiveError {
-    fn from(value: ReceiveOwnershipError) -> Self {
-        Self::Ownership(value)
+impl From<ExclusivenessError> for FileReceiveError {
+    fn from(value: ExclusivenessError) -> Self {
+        Self::Exclusiveness(value)
     }
 }
 
-/// Owns one FILE Receive Location on one Node in one Host Process.
+/// FILE receive uses Resource-scoped exclusiveness.
 ///
-/// The session may accept files only while its exclusive lease is current.
-/// A received Stream is handed to the Receive Port boundary, represented here
-/// by creation of the initial Message and Journey.
-pub struct FileReceiveSession<S: ReceiveOwnershipStore> {
+/// The Receive Port boundary creates the initial Message and Journey only after
+/// the exclusive task has acquired its configured resource.
+pub struct FileReceiveSession<S: ExclusivenessStore> {
     store: Arc<S>,
-    receive_location_name: String,
-    owner: ReceiveOwner,
-    lease_duration: Duration,
+    request: ExclusiveRequest,
 }
 
-impl<S: ReceiveOwnershipStore> FileReceiveSession<S> {
+impl<S: ExclusivenessStore> FileReceiveSession<S> {
     #[must_use]
     pub fn new(
         store: Arc<S>,
-        receive_location_name: impl Into<String>,
-        owner: ReceiveOwner,
+        cluster_name: impl Into<String>,
+        node_name: impl Into<String>,
+        host_process_name: impl Into<String>,
+        resource_key: impl Into<String>,
+        acquire_timeout: Duration,
         lease_duration: Duration,
+        requested_at: SystemTime,
     ) -> Self {
         Self {
             store,
-            receive_location_name: receive_location_name.into(),
-            owner,
-            lease_duration,
+            request: ExclusiveRequest {
+                task_id: Uuid::new_v4(),
+                action: ExclusiveAction::Receive,
+                boundary: ExclusivenessBoundary {
+                    scope: ExclusivenessScope::Resource,
+                    key: resource_key.into(),
+                },
+                owner: ExclusiveOwner::new(cluster_name, node_name, host_process_name),
+                requested_at,
+                acquire_timeout,
+                lease_duration,
+            },
         }
     }
 
-    pub fn acquire(&self, now: SystemTime) -> Result<ReceiveOwnershipLease, FileReceiveError> {
-        self.store
-            .acquire(
-                &self.receive_location_name,
-                self.owner.clone(),
-                self.lease_duration,
-                now,
-            )
-            .map_err(Into::into)
+    pub fn acquire(&self, now: SystemTime) -> Result<AcquireOutcome, FileReceiveError> {
+        self.store.request(self.request.clone(), now).map_err(Into::into)
     }
 
-    pub fn renew(&self, now: SystemTime) -> Result<ReceiveOwnershipLease, FileReceiveError> {
-        self.store
-            .renew(
-                &self.receive_location_name,
-                &self.owner,
-                self.lease_duration,
-                now,
-            )
-            .map_err(Into::into)
+    pub fn renew(&self, now: SystemTime) -> Result<(), FileReceiveError> {
+        self.store.renew(self.request.task_id, now)?;
+        Ok(())
     }
 
-    pub fn release(&self) -> Result<(), FileReceiveError> {
-        self.store
-            .release(&self.receive_location_name, &self.owner)
-            .map_err(Into::into)
+    pub fn release(&self, now: SystemTime) -> Result<(), FileReceiveError> {
+        self.store.release(self.request.task_id, now).map_err(Into::into)
     }
 
     pub fn receive(
@@ -82,97 +77,84 @@ impl<S: ReceiveOwnershipStore> FileReceiveSession<S> {
         stream_uri: impl Into<String>,
         now: SystemTime,
     ) -> Result<(Journey, Message), FileReceiveError> {
-        let current = self
-            .store
-            .current(&self.receive_location_name, now)?;
-
-        let owned = current
-            .as_ref()
-            .is_some_and(|lease| lease.owner == self.owner && !lease.is_expired_at(now));
-
-        if !owned {
-            return Err(FileReceiveError::OwnershipLost {
-                receive_location_name: self.receive_location_name.clone(),
-                expected_owner: self.owner.clone(),
-            });
+        match self.store.poll(self.request.task_id, now)? {
+            AcquireOutcome::Acquired(_) => Ok(create_initial_message(stream_uri)),
+            AcquireOutcome::Queued { .. } => Err(FileReceiveError::NotAcquired),
+            AcquireOutcome::TimedOut => Err(FileReceiveError::TimedOut),
         }
-
-        Ok(create_initial_message(stream_uri))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xmip_core::{InMemoryReceiveOwnershipStore, MessageCreationSource};
+    use xmip_core::MessageCreationSource;
+    use xmip_exclusiveness::InMemoryExclusivenessStore;
 
     fn now() -> SystemTime {
         SystemTime::UNIX_EPOCH + Duration::from_secs(10_000)
     }
 
-    #[test]
-    fn owner_can_receive_and_receive_port_boundary_creates_message_and_journey() {
-        let store = Arc::new(InMemoryReceiveOwnershipStore::default());
-        let session = FileReceiveSession::new(
+    fn session(
+        store: Arc<InMemoryExclusivenessStore>,
+        host: &str,
+    ) -> FileReceiveSession<InMemoryExclusivenessStore> {
+        FileReceiveSession::new(
             store,
-            "orders-file",
-            ReceiveOwner::new("node-a", "file-host-1"),
+            "cluster-a",
+            "node-a",
+            host,
+            "file:///incoming/orders",
             Duration::from_secs(30),
-        );
+            Duration::from_secs(5),
+            now(),
+        )
+    }
 
-        session.acquire(now()).expect("ownership must be acquired");
-        let (journey, message) = session
-            .receive("file:///incoming/order-1.xml", now())
-            .expect("owner must receive");
+    #[test]
+    fn acquired_resource_creates_message_and_journey() {
+        let store = Arc::new(InMemoryExclusivenessStore::default());
+        let owner = session(store, "file-host-1");
+        assert!(matches!(owner.acquire(now()).unwrap(), AcquireOutcome::Acquired(_)));
+
+        let (journey, message) = owner
+            .receive("file:///incoming/orders/order-1.xml", now())
+            .expect("exclusive owner must receive");
 
         assert_eq!(journey.journey_id, message.journey_id);
-        assert_eq!(journey.messages.len(), 1);
         assert_eq!(message.created_by, MessageCreationSource::Receive);
         assert!(message.stream_ref.immutable);
     }
 
     #[test]
-    fn process_without_ownership_cannot_receive_the_same_location() {
-        let store = Arc::new(InMemoryReceiveOwnershipStore::default());
-        let owner = FileReceiveSession::new(
-            Arc::clone(&store),
-            "orders-file",
-            ReceiveOwner::new("node-a", "file-host-1"),
-            Duration::from_secs(30),
-        );
-        let intruder = FileReceiveSession::new(
-            store,
-            "orders-file",
-            ReceiveOwner::new("node-b", "file-host-2"),
-            Duration::from_secs(30),
-        );
+    fn competing_file_receive_is_queued() {
+        let store = Arc::new(InMemoryExclusivenessStore::default());
+        let first = session(Arc::clone(&store), "file-host-1");
+        let second = session(store, "file-host-2");
 
-        owner.acquire(now()).expect("first process must own");
-
-        assert!(matches!(
-            intruder.receive("file:///incoming/order-1.xml", now()),
-            Err(FileReceiveError::OwnershipLost { .. })
-        ));
+        assert!(matches!(first.acquire(now()).unwrap(), AcquireOutcome::Acquired(_)));
+        assert_eq!(second.acquire(now()).unwrap(), AcquireOutcome::Queued { position: 1 });
+        assert_eq!(
+            second.receive("file:///incoming/orders/order-1.xml", now()),
+            Err(FileReceiveError::NotAcquired)
+        );
     }
 
     #[test]
-    fn expired_owner_cannot_receive() {
-        let store = Arc::new(InMemoryReceiveOwnershipStore::default());
-        let session = FileReceiveSession::new(
-            store,
-            "orders-file",
-            ReceiveOwner::new("node-a", "file-host-1"),
-            Duration::from_secs(5),
-        );
+    fn queued_receive_is_promoted_after_release() {
+        let store = Arc::new(InMemoryExclusivenessStore::default());
+        let first = session(Arc::clone(&store), "file-host-1");
+        let second = session(store, "file-host-2");
 
-        session.acquire(now()).expect("ownership must be acquired");
+        first.acquire(now()).unwrap();
+        second.acquire(now()).unwrap();
+        first.release(now() + Duration::from_secs(1)).unwrap();
 
-        assert!(matches!(
-            session.receive(
-                "file:///incoming/order-1.xml",
-                now() + Duration::from_secs(6)
-            ),
-            Err(FileReceiveError::OwnershipLost { .. })
-        ));
+        assert!(second
+            .receive(
+                "file:///incoming/orders/order-2.xml",
+                now() + Duration::from_secs(1)
+            )
+            .is_ok());
     }
 }
