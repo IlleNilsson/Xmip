@@ -12,4 +12,5 @@ crate-type = ["rlib", "cdylib"]
 serde.workspace = true
 uuid.workspace = true
 xmip-core = { path = "../.." }
+xmip-exclusiveness = { path = "../xmip-exclusiveness" }
 xmip-module-api = { path = "../xmip-module-api" }
