@@ -1,5 +1,6 @@
 pub mod contracts;
 pub mod journey_model;
+pub mod receive_ownership;
 pub mod transport_technology;
 pub mod vertical_slice;
 
@@ -17,6 +18,11 @@ pub use journey_model::{
     create_initial_message_with_treatment, create_metadata_only_message, ExecutionProfile,
     Journey, JourneyMessageRef, JourneyState, Message, MessageCreationSource, MessageDurability,
     MessagePriority, MessageTreatment, StreamRef,
+};
+
+pub use receive_ownership::{
+    InMemoryReceiveOwnershipStore, ReceiveOwner, ReceiveOwnershipError, ReceiveOwnershipLease,
+    ReceiveOwnershipStore,
 };
 
 pub use transport_technology::{
