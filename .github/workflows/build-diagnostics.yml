@@ -1,0 +1,24 @@
+name: Build diagnostics
+
+on:
+  push:
+    branches: [build-evaluation]
+  pull_request:
+    branches: [main]
+
+jobs:
+  full-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Full workspace build diagnostic
+        run: cargo build --workspace --all-features
+
+  embedded-profile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Embedded profile diagnostic
+        run: cargo check --workspace --no-default-features --features embedded-profile
