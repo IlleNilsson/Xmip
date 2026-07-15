@@ -22,8 +22,8 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Download dependencies
-        run: cargo fetch --locked
+      - name: Download dependencies and refresh lockfile
+        run: cargo fetch
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -32,13 +32,13 @@ jobs:
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
       - name: Check workspace
-        run: cargo check --workspace --all-targets --all-features --locked
+        run: cargo check --workspace --all-targets --all-features
 
       - name: Test workspace
-        run: cargo test --workspace --all-features --locked
+        run: cargo test --workspace --all-features
 
       - name: Build workspace
-        run: cargo build --workspace --all-features --locked
+        run: cargo build --workspace --all-features
 
   profiles:
     name: Profile checks
@@ -54,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: IoT profile check
-        run: cargo check --workspace --no-default-features --features iot-profile --locked
+        run: cargo check --workspace --no-default-features --features iot-profile
 
       - name: Embedded profile check
-        run: cargo check --workspace --no-default-features --features embedded-profile --locked
+        run: cargo check --workspace --no-default-features --features embedded-profile
