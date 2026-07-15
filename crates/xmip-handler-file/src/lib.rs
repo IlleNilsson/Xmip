@@ -1,3 +1,7 @@
+mod receive_session;
+
+pub use receive_session::{FileReceiveError, FileReceiveSession};
+
 use xmip_module_api::{
     ExecutionHostKind, HandlerInvocation, HandlerResult, HandlerStatus, ModuleAbiDescriptor,
     ModuleAbiKind, ModuleCapability, ModuleEntrypoint, ModuleIdentity, ModuleKind, ModuleManifest,
