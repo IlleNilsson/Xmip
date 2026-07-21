@@ -1,264 +1,119 @@
 # Xmip
 
-Xmip is a cross-platform messaging and integration platform built around immutable Streams, immutable Messages, long-running Journeys, modular Handlers and executable Contracts.
+Xmip is a cross-platform messaging and integration platform built around immutable Streams, immutable Messages, long-running Journeys, modular capabilities and implied Contracts.
 
-The repository is currently the integration point for the platform. Focused repositories will be recreated and referenced as git submodules according to the versioned architecture specification.
+This repository is the integration and architecture repository. Purpose-specific repositories are created and reconciled from [`xmip-architecture.json`](xmip-architecture.json) and referenced as Git submodules where defined.
 
-## Architecture specification
+## Authoritative architecture
 
-The authoritative baseline is:
+The current architecture baseline is:
 
-[**Xmip Architecture Specification v1.0**](docs/Xmip-Architecture-Specification-v1.0.md)
+- [`docs/Xmip-Architecture-Specification-v1.1.md`](docs/Xmip-Architecture-Specification-v1.1.md)
+- [`xmip-architecture.json`](xmip-architecture.json)
+- [`Set-XmipArchitecture.ps1`](Set-XmipArchitecture.ps1)
 
-Changes to top-level concepts, repository responsibilities, public traits/interfaces or Journey semantics require an explicit design review and an update to the specification.
+Architecture changes must update the specification and manifest together.
 
-## Architectural foundation
-
-Xmip is Stream-centric at its foundation, Stream-and-Message-centric in processing, and Journey-centric in execution and operations.
+## Runtime lifecycle
 
 ```text
-External source
-    -> immutable Stream
-    -> immutable Message referencing that Stream
-    -> Content Handling
-    -> Contract validation
-    -> Receive Port Publication
-    -> Routing evaluates Subscriptions
-    -> Xmip Process, Send Port or Send Port Group
-    -> Send Location
-    -> optional response Stream
-    -> new Message in the same Journey
+Incoming Stream
+    -> Transport identification
+    -> Transport authentication
+    -> Transport authorization
+    -> Message creation
+    -> Default promotion
+    -> Optional message identification
+    -> Optional message authentication
+    -> Optional message authorization
+    -> Contract implication
+    -> Optional deserialization
+    -> Validation
+    -> Journey creation
 ```
 
-A Journey retains the lineage of all Messages, Streams, actions and outcomes until it is completed or intentionally dismissed.
+Transport security is completed before Message creation. A Journey begins only after required validation succeeds.
 
 ## Core vocabulary
 
-```text
-Stream
-    Immutable data accepted by or produced within Xmip.
+**Stream**  
+Immutable data received by or produced within Xmip.
 
-Message
-    Immutable Xmip object that references one Stream.
+**Message**  
+An immutable Xmip object containing one or more immutable sections. Each accepted incoming Stream becomes a section with its own identifier.
 
-Journey
-    The complete execution context and history of related work through Xmip over time.
+**Message Context**  
+Metadata and promoted values available to configuration, routing and processing.
 
-Event
-    Something happened that may cause configured work.
+**Journey**  
+The execution context and lineage of related Messages and actions after required validation has succeeded.
 
-Handler
-    Executable Module fulfilling an Xmip trait or interface.
+**Contract**  
+A schema, profile, standard or code used to imply and evaluate structural expectations. A Contract does not execute itself.
 
-Contract
-    Executable validation and structural knowledge applied to a Message.
+**Artifact Definition**  
+TOML configuration describing intended Xmip behaviour.
 
-System Process
-    An operating-system process.
+**Artifact Instance**  
+An Artifact Definition bound at runtime to loaded module code satisfying Xmip contracts.
 
-Xmip Service
-    The long-running System Process that starts and supervises Xmip.
+## Contract implication
 
-Host Process
-    A System Process started by Xmip to load and execute Modules.
-
-Xmip Process
-    A configured process that progresses a Journey.
-```
-
-## Receive model
-
-A Receive Port is the logical common ingress for information of one purpose.
-
-All Receive Locations configured under a Receive Port feed that same Receive Port.
+Xmip does not merely select a Contract by name.
 
 ```text
-HTTP Receive Location ─┐
-FILE Receive Location ─┼─> Invoices Receive Port ─> Publication ─> Routing
-FTP Receive Location  ─┘
+Receive Configuration
++ Incoming Stream
++ Message Context
+    -> Implied Contract
+    -> Evaluation and validation
 ```
 
-A Receive Location defines how the Stream arrives and owns its transport binding, authentication, authorization, interaction type and response behavior.
+`xmip-contract` owns Contract implication, evaluation coordination and results. Technology repositories implement specific Contract technologies such as XML Schema and JSON Schema.
 
-Receive Location types are:
+## Representation, Contract and Path
+
+These responsibilities are independent:
+
+- **Message representation:** XML, JSON, CSV, HL7 ER7, binary and similar forms.
+- **Contract:** XML Schema, JSON Schema, FHIR profiles, HL7 profiles and custom code.
+- **Path:** XPath, JSONPath, dot paths, indexes, JSON Pointer and FHIRPath.
+
+FHIR is a Contract and domain-standard family represented through XML or JSON. SOAP is an envelope/protocol concern, not a generic Message representation.
+
+## Send security responsibility
+
+A Send Location presents configured identity material such as credentials, certificates, tokens and claims. The external receiver performs identification, authentication and authorization.
+
+## Repository classification
 
 ```text
-Composite
-Data Transfer
-Batch Load
+Foundation   Things Xmip is
+Capabilities Things Xmip does
+Technology   How a capability is implemented
+Operations   Running and governing Xmip
+Platform     Platform-wide runtime services
 ```
 
-Every Stream reaching a Receive Location creates a Journey, Message and Stream, even when a later required condition fails.
+Technology repositories are direct children of their common capability repository and become first-party Git submodules according to the manifest.
 
-## Publication and Routing
+## Reconcile the architecture
 
-Every incoming Stream becomes a Publication through its Receive Port.
+Plan mode is read-only:
 
-A Publication is not an attempt. Every Publication is audited.
-
-Routing is the evaluation of the Publication against Subscriptions owned by:
-
-```text
-Xmip Processes
-Send Ports
-Send Port Groups
+```powershell
+./Set-XmipArchitecture.ps1 -IncludeReserved
 ```
 
-When no Subscription matches, the Journey becomes Dead with a Routing cause.
+Apply the desired state explicitly:
 
-## Send model
-
-A Send Port or Send Port Group selects one or more Send Locations.
-
-A Send Location may perform:
-
-```text
-Assignment
-Transformation
-Contract validation
-Content serialization and demotion
-Transport send
-Automatic Retry
-Failover
-Optional response receive
+```powershell
+./Set-XmipArchitecture.ps1 `
+  -IncludeReserved `
+  -Apply `
+  -CreateRepositories `
+  -ConfigureRepositories `
+  -SynchronizeSubmodules
 ```
 
-A response from a Send Location creates a new immutable Stream and a new immutable Message in the same Journey. Because it is ingress, it must be authenticated, authorized and audited before acceptance.
-
-A Receive Location may also return an optional response. Data Transfer and Batch Load normally acknowledge acceptance and validation immediately. Composite interactions may wait for a Process-produced response.
-
-## Transport, Content and Contracts are independent
-
-Xmip does not create a Module for every combination.
-
-```text
-FILE + XML + PurchaseOrderContract
-HTTP + JSON + InvoiceContract
-FTP + EDI + OrderContract
-MLLP + HL7 + AdmissionContract
-HTTP + FHIR + PatientContract
-```
-
-Transport Handlers move Streams.
-
-Content Handlers understand Message representations such as XML instances, JSON instances, CSV, EDI, HL7, FHIR, text or binary.
-
-Contracts validate Messages and provide structural knowledge, selectors, paths, promotion and demotion support. A Contract may be implemented by XML Schema, JSON Schema, RegEx, standardized profiles, implementation guides or custom executable code.
-
-Contract derivation is a design-time and build-time concern of the contract technology. Xmip TOML selects an already built, versioned Contract; it does not define inheritance.
-
-## Journey lifecycle
-
-Journey states:
-
-```text
-Created
-Running
-Paused
-Waiting
-Dead
-Completed
-Dismissed
-```
-
-Journey control commands operating on the same Journey:
-
-```text
-Start
-Pause
-Continue
-Retry
-Stop
-```
-
-`Retry` resumes the same Journey from its failed audited stage. Automatic Retry may be performed by Xmip; an authorized operator may issue Retry after configured retries are exhausted.
-
-`Replay` is different: it creates a new Journey from another Journey's starting point while preserving lineage.
-
-A Dead Journey may be retried, replayed or dismissed according to authorization and policy.
-
-## Auditing and Tracking
-
-Auditing is the authoritative record of significant Xmip interactions and boundaries.
-
-Tracking retains Messages, Streams or Stream references, lineage, state and execution history that Auditing uses to inspect, follow and replay Journeys.
-
-Default audited boundaries include:
-
-```text
-Receive Location
-Receive Port and its actions
-Authentication and authorization
-Transport Handling
-Content Handling
-Contract validation
-Publication
-Routing
-Xmip Process entry and result
-Assignment entry and result
-Transformation entry and result
-Send Port Group
-Send Port
-Send Location
-Automatic Retry and operator Retry
-Response ingress
-Replay
-Dismissal
-Success and failure
-```
-
-Execution itself is not automatically audited instruction-by-instruction. Xmip, Handlers, Processes and Extensions may emit additional audit events at any meaningful execution stage.
-
-## Security posture
-
-Every ingress path must support authentication, authorization and auditing.
-
-Development environments may permit broad or test identities. Production environments must support stronger policy, trusted certificates, safe secret references, least privilege and explicit rejection of insecure configuration.
-
-Xmip shall ease stakeholder security work through support for:
-
-```text
-ACME and certificate renewal
-Let's Encrypt and other ACME authorities
-Mutual TLS
-Username/password without plaintext configuration
-API keys and tokens
-OAuth/OIDC
-SSH keys
-External secret providers
-Custom authentication and authorization Modules
-```
-
-Secrets must never be written to Tracking or Auditing.
-
-## Repository direction
-
-The planned platform repositories include:
-
-```text
-xmip-core
-xmip-abi
-xmip-service
-xmip-host
-xmip-runtime
-xmip-cluster
-xmip-configuration
-xmip-persistence
-xmip-resilience
-xmip-tracking
-xmip-auditing
-xmip-cli
-xmip-powershell
-```
-
-Independent repositories will provide Transport, Content, Contract, Store, Security and other Modules. External stakeholders may implement Xmip traits/interfaces in their own repositories and deploy compatible Modules by reference.
-
-First-party repositories will be referenced by `Xmip` as git submodules after their responsibilities and public contracts are established.
-
-## Governing design rule
-
-Xmip owns the public contracts. Stakeholders own implementations.
-
-The platform must always be able to answer:
-
-> Show me the Journey.
+The script reports missing, unexpected, deprecated, retired and misconfigured items. It never deletes repositories automatically.
