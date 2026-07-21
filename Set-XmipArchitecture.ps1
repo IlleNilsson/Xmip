@@ -20,12 +20,12 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.1.3'
+$ScriptVersion = [version]'1.1.4'
 
 function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 
 function Get-PropertyValue {
-    param([Parameter(Mandatory)] $Object, [Parameter(Mandatory)] [string] $Name, $Default = $null)
+    param([AllowNull()] $Object, [Parameter(Mandatory)] [string] $Name, $Default = $null)
     if ($null -eq $Object) { return $Default }
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property -or $null -eq $property.Value) { return $Default }
