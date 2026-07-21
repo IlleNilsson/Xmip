@@ -20,7 +20,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.1.0'
+$ScriptVersion = [version]'1.1.1'
 
 function Write-Step([string] $Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
@@ -52,7 +52,14 @@ function Invoke-Native {
     }
 }
 
-function Get-PropertyValue($Object, [string] $Name, $Default = $null) {
+function Get-PropertyValue {
+    param(
+        [Parameter(Mandatory)] $Object,
+        [Parameter(Mandatory)] [string] $Name,
+        $Default = $null
+    )
+
+    if ($null -eq $Object) { return $Default }
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property -or $null -eq $property.Value) { return $Default }
     return $property.Value
@@ -64,9 +71,7 @@ function Get-GitHubHeaders {
         'X-GitHub-Api-Version' = '2022-11-28'
         'User-Agent' = 'Xmip-Architecture-Reconciler'
     }
-    if ($GitHubToken) {
-        $headers.Authorization = "Bearer $GitHubToken"
-    }
+    if ($GitHubToken) { $headers.Authorization = "Bearer $GitHubToken" }
     return $headers
 }
 
@@ -77,7 +82,13 @@ function Invoke-GitHubApi {
         $Body
     )
 
-    $uri = if ($Path -match '^https?://') { $Path } else { "$($GitHubApiBaseUri.TrimEnd('/'))/$($Path.TrimStart('/'))" }
+    $uri = if ($Path -match '^https?://') {
+        $Path
+    }
+    else {
+        "$($GitHubApiBaseUri.TrimEnd('/'))/$($Path.TrimStart('/'))"
+    }
+
     $parameters = @{
         Method = $Method
         Uri = $uri
@@ -88,6 +99,7 @@ function Invoke-GitHubApi {
         $parameters.ContentType = 'application/json'
         $parameters.Body = ($Body | ConvertTo-Json -Depth 50)
     }
+
     return Invoke-RestMethod @parameters
 }
 
@@ -113,18 +125,18 @@ function Convert-CommonRepository($Item, $Defaults) {
             description = [string]$Item[1]
             architecturalDomain = [string]$Item[2]
             repositoryRole = [string]$Item[3]
-            maturity = [string]$Defaults.maturity
+            maturity = [string](Get-PropertyValue $Defaults 'maturity' 'reserved')
             dependencies = @($Item[4])
         }
     }
 
     return [pscustomobject]@{
-        name = [string]$Item.name
-        description = [string]$Item.description
-        architecturalDomain = [string]$Item.architecturalDomain
-        repositoryRole = [string]$Item.repositoryRole
-        maturity = [string](Get-PropertyValue $Item 'maturity' $Defaults.maturity)
-        dependencies = @($Item.dependencies)
+        name = [string](Get-PropertyValue $Item 'name')
+        description = [string](Get-PropertyValue $Item 'description')
+        architecturalDomain = [string](Get-PropertyValue $Item 'architecturalDomain')
+        repositoryRole = [string](Get-PropertyValue $Item 'repositoryRole')
+        maturity = [string](Get-PropertyValue $Item 'maturity' (Get-PropertyValue $Defaults 'maturity' 'reserved'))
+        dependencies = @(Get-PropertyValue $Item 'dependencies' @())
     }
 }
 
@@ -138,60 +150,69 @@ function Convert-TechnologyGroup($Group) {
     }
 
     return [pscustomobject]@{
-        parent = [string]$Group.parent
-        dependencies = @($Group.dependencies)
-        technologies = @($Group.technologies)
+        parent = [string](Get-PropertyValue $Group 'parent')
+        dependencies = @(Get-PropertyValue $Group 'dependencies' @())
+        technologies = @(Get-PropertyValue $Group 'technologies' @())
     }
 }
 
 function Expand-XmipManifest($Source) {
-    if ($Source.repositories) { return $Source }
+    $existingRepositories = Get-PropertyValue $Source 'repositories'
+    if ($existingRepositories) { return $Source }
 
+    $defaults = Get-PropertyValue $Source 'defaults' ([pscustomobject]@{})
     $repositories = [Collections.Generic.List[object]]::new()
 
-    foreach ($raw in @($Source.commonRepositories)) {
-        $item = Convert-CommonRepository $raw $Source.defaults
+    foreach ($raw in @(Get-PropertyValue $Source 'commonRepositories' @())) {
+        $item = Convert-CommonRepository $raw $defaults
+        $domain = $item.architecturalDomain
         $repositories.Add([pscustomobject]@{
             name = $item.name
             description = $item.description
-            architecturalDomain = $item.architecturalDomain
+            architecturalDomain = $domain
             repositoryRole = $item.repositoryRole
             maturity = $item.maturity
             dependencies = @($item.dependencies)
             github = [pscustomobject]@{
-                visibility = $Source.defaults.visibility
-                autoInitialize = $Source.defaults.autoInitialize
-                hasIssues = $Source.defaults.hasIssues
-                hasProjects = $Source.defaults.hasProjects
-                hasWiki = $Source.defaults.hasWiki
-                topics = @('xmip', $item.architecturalDomain.ToLowerInvariant())
+                visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
+                autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
+                hasIssues = [bool](Get-PropertyValue $defaults 'hasIssues' $true)
+                hasProjects = [bool](Get-PropertyValue $defaults 'hasProjects' $false)
+                hasWiki = [bool](Get-PropertyValue $defaults 'hasWiki' $false)
+                topics = @('xmip', $domain.ToLowerInvariant())
             }
             submodule = [pscustomobject]@{ enabled = $false }
         })
     }
 
-    foreach ($rawGroup in @($Source.technologyGroups)) {
+    foreach ($rawGroup in @(Get-PropertyValue $Source 'technologyGroups' @())) {
         $group = Convert-TechnologyGroup $rawGroup
         $capability = $group.parent -replace '^xmip-', ''
         foreach ($rawTechnology in @($group.technologies)) {
-            $technology = if ($rawTechnology -is [string]) { [pscustomobject]@{ name = $rawTechnology } } else { $rawTechnology }
-            $technologyName = [string]$technology.name
+            $technology = if ($rawTechnology -is [string]) {
+                [pscustomobject]@{ name = $rawTechnology }
+            }
+            else {
+                $rawTechnology
+            }
+
+            $technologyName = [string](Get-PropertyValue $technology 'name')
             $repositories.Add([pscustomobject]@{
                 name = "$($group.parent)-$technologyName"
                 description = [string](Get-PropertyValue $technology 'description' "$technologyName implementation of $($group.parent).")
                 architecturalDomain = 'Technology'
                 repositoryRole = 'technology-implementation'
-                maturity = [string](Get-PropertyValue $technology 'maturity' $Source.defaults.maturity)
+                maturity = [string](Get-PropertyValue $technology 'maturity' (Get-PropertyValue $defaults 'maturity' 'reserved'))
                 capability = $capability
                 technology = $technologyName
                 parent = $group.parent
                 dependencies = @($group.dependencies)
                 github = [pscustomobject]@{
-                    visibility = $Source.defaults.visibility
-                    autoInitialize = $Source.defaults.autoInitialize
-                    hasIssues = $Source.defaults.hasIssues
-                    hasProjects = $Source.defaults.hasProjects
-                    hasWiki = $Source.defaults.hasWiki
+                    visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
+                    autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
+                    hasIssues = [bool](Get-PropertyValue $defaults 'hasIssues' $true)
+                    hasProjects = [bool](Get-PropertyValue $defaults 'hasProjects' $false)
+                    hasWiki = [bool](Get-PropertyValue $defaults 'hasWiki' $false)
                     topics = @('xmip', 'technology', $capability, $technologyName)
                 }
                 submodule = [pscustomobject]@{
@@ -214,45 +235,54 @@ function Get-XmipManifest([string] $Path) {
     }
 
     $source = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -Depth 100
-    if ($source.minimumScriptVersion -and $ScriptVersion -lt [version]$source.minimumScriptVersion) {
-        throw "Manifest requires script version $($source.minimumScriptVersion); current version is $ScriptVersion."
+    $minimumScriptVersion = Get-PropertyValue $source 'minimumScriptVersion'
+    if ($minimumScriptVersion -and $ScriptVersion -lt [version]$minimumScriptVersion) {
+        throw "Manifest requires script version $minimumScriptVersion; current version is $ScriptVersion."
     }
+
     return Expand-XmipManifest $source
 }
 
 function Test-XmipManifest($Manifest) {
     Write-Step 'Validating architecture manifest'
-    if (-not $Manifest.owner) { throw 'Manifest owner is missing.' }
-    if (-not $Manifest.repositories) { throw 'Manifest contains no repositories.' }
 
-    $names = @($Manifest.repositories.name)
+    $owner = Get-PropertyValue $Manifest 'owner'
+    $repositories = @(Get-PropertyValue $Manifest 'repositories' @())
+    if (-not $owner) { throw 'Manifest owner is missing.' }
+    if ($repositories.Count -eq 0) { throw 'Manifest contains no repositories.' }
+
+    $names = @($repositories | ForEach-Object { Get-PropertyValue $_ 'name' })
     $duplicates = $names | Group-Object | Where-Object Count -gt 1
     if ($duplicates) { throw "Duplicate repositories: $($duplicates.Name -join ', ')" }
 
     $nameSet = [Collections.Generic.HashSet[string]]::new([string[]]$names, [StringComparer]::OrdinalIgnoreCase)
-    foreach ($repository in $Manifest.repositories) {
-        if ($repository.name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') {
-            throw "Invalid repository name: $($repository.name)"
+    foreach ($repository in $repositories) {
+        $name = [string](Get-PropertyValue $repository 'name')
+        $description = [string](Get-PropertyValue $repository 'description')
+        $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+        $submodule = Get-PropertyValue $repository 'submodule' ([pscustomobject]@{ enabled = $false })
+        $parent = [string](Get-PropertyValue $repository 'parent')
+
+        if ($name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid repository name: $name" }
+        if (-not $description) { throw "Description missing: $name" }
+        if ($maturity -notin @('planned','reserved','created','configured','submodule','workspace','scaffolded','implemented','verified','supported','deprecated','retired')) {
+            throw "Invalid maturity '$maturity' for '$name'"
         }
-        if (-not $repository.description) { throw "Description missing: $($repository.name)" }
-        if ($repository.maturity -notin @('planned','reserved','created','configured','submodule','workspace','scaffolded','implemented','verified','supported','deprecated','retired')) {
-            throw "Invalid maturity '$($repository.maturity)' for '$($repository.name)'"
+        if ([bool](Get-PropertyValue $submodule 'enabled' $false) -and -not $nameSet.Contains($parent)) {
+            throw "Unknown parent '$parent' for '$name'"
         }
-        if ($repository.submodule.enabled -and -not $nameSet.Contains([string]$repository.parent)) {
-            throw "Unknown parent '$($repository.parent)' for '$($repository.name)'"
-        }
-        foreach ($dependency in @($repository.dependencies)) {
-            if (-not $nameSet.Contains([string]$dependency)) {
-                throw "Unknown dependency '$dependency' for '$($repository.name)'"
-            }
-            if ($dependency -eq $repository.name) { throw "Self dependency: $($repository.name)" }
+        foreach ($dependency in @(Get-PropertyValue $repository 'dependencies' @())) {
+            if (-not $nameSet.Contains([string]$dependency)) { throw "Unknown dependency '$dependency' for '$name'" }
+            if ($dependency -eq $name) { throw "Self dependency: $name" }
         }
     }
 
     $state = @{}
     $stack = [Collections.Generic.List[string]]::new()
     $map = @{}
-    foreach ($repository in $Manifest.repositories) { $map[$repository.name] = @($repository.dependencies) }
+    foreach ($repository in $repositories) {
+        $map[[string](Get-PropertyValue $repository 'name')] = @(Get-PropertyValue $repository 'dependencies' @())
+    }
 
     function Visit([string] $Name) {
         if ($state[$Name] -eq 1) {
@@ -277,14 +307,16 @@ function Get-GitHubOwner([string] $Owner) {
 
 function Get-ActualRepositories([string] $Owner) {
     $ownerInfo = Get-GitHubOwner $Owner
-    if ($ownerInfo.type -eq 'Organization') {
+    if ((Get-PropertyValue $ownerInfo 'type') -eq 'Organization') {
         return Get-GitHubPagedCollection "/orgs/$Owner/repos?type=all"
     }
 
     if ($GitHubToken) {
         $currentUser = Invoke-GitHubApi GET '/user'
-        if ($currentUser.login -ieq $Owner) {
-            return @(Get-GitHubPagedCollection '/user/repos?affiliation=owner' | Where-Object { $_.owner.login -ieq $Owner })
+        if ((Get-PropertyValue $currentUser 'login') -ieq $Owner) {
+            return @(Get-GitHubPagedCollection '/user/repos?affiliation=owner' | Where-Object {
+                (Get-PropertyValue (Get-PropertyValue $_ 'owner') 'login') -ieq $Owner
+            })
         }
     }
 
@@ -297,7 +329,9 @@ function Test-RepositoryExists([string] $Owner, [string] $Name) {
         return $true
     }
     catch {
-        if ($_.Exception.Response.StatusCode.value__ -eq 404) { return $false }
+        $statusCode = Get-PropertyValue (Get-PropertyValue $_.Exception 'Response') 'StatusCode'
+        $numericStatusCode = Get-PropertyValue $statusCode 'value__' $statusCode
+        if ($numericStatusCode -eq 404) { return $false }
         throw
     }
 }
@@ -311,7 +345,7 @@ function New-TransactionReport($Manifest, $Actual) {
     return [ordered]@{
         generatedAtUtc = [DateTime]::UtcNow.ToString('o')
         scriptVersion = $ScriptVersion.ToString()
-        schemaVersion = [string]$Manifest.schemaVersion
+        schemaVersion = [string](Get-PropertyValue $Manifest 'schemaVersion' 'unversioned')
         architectureVersion = [string](Get-PropertyValue $Manifest 'architectureVersion' 'unversioned')
         owner = $Manifest.owner
         desiredCount = $desired.Count
@@ -320,28 +354,14 @@ function New-TransactionReport($Manifest, $Actual) {
         unexpected = @($actualMap.Keys | Where-Object { $_ -like 'xmip-*' -and -not $desired.ContainsKey($_) } | Sort-Object)
         deprecated = @($Manifest.repositories | Where-Object maturity -eq 'deprecated' | Select-Object name, description | Sort-Object name)
         retired = @($Manifest.repositories | Where-Object maturity -eq 'retired' | Select-Object name, description | Sort-Object name)
-        operations = [ordered]@{
-            created = 0
-            configured = 0
-            submodulesAdded = 0
-            metadataWritten = 0
-            commits = 0
-            pushes = 0
-            skipped = 0
-        }
+        operations = [ordered]@{ created = 0; configured = 0; submodulesAdded = 0; metadataWritten = 0; commits = 0; pushes = 0; skipped = 0 }
     }
 }
 
 function New-Repository($Manifest, $Repository, $Report) {
     $fullName = "$($Manifest.owner)/$($Repository.name)"
-    if (Test-RepositoryExists $Manifest.owner $Repository.name) {
-        $Report.operations.skipped++
-        return
-    }
-    if (-not $Apply) {
-        Write-Host "PLAN create repository: $fullName"
-        return
-    }
+    if (Test-RepositoryExists $Manifest.owner $Repository.name) { $Report.operations.skipped++; return }
+    if (-not $Apply) { Write-Host "PLAN create repository: $fullName"; return }
     if (-not $GitHubToken) { throw 'GITHUB_TOKEN or -GitHubToken is required for repository creation.' }
     if (-not $PSCmdlet.ShouldProcess($fullName, 'Create repository')) { return }
 
@@ -356,33 +376,26 @@ function New-Repository($Manifest, $Repository, $Report) {
         has_wiki = [bool]$Repository.github.hasWiki
     }
 
-    if ($ownerInfo.type -eq 'Organization') {
+    if ((Get-PropertyValue $ownerInfo 'type') -eq 'Organization') {
         $null = Invoke-GitHubApi POST "/orgs/$($Manifest.owner)/repos" $body
     }
     else {
         $currentUser = Invoke-GitHubApi GET '/user'
-        if ($currentUser.login -ine $Manifest.owner) {
-            throw "Authenticated GitHub user '$($currentUser.login)' cannot create repositories for '$($Manifest.owner)'."
+        if ((Get-PropertyValue $currentUser 'login') -ine $Manifest.owner) {
+            throw "Authenticated GitHub user '$((Get-PropertyValue $currentUser 'login'))' cannot create repositories for '$($Manifest.owner)'."
         }
         $null = Invoke-GitHubApi POST '/user/repos' $body
     }
 
-    if (@($Repository.github.topics).Count -gt 0) {
-        $null = Invoke-GitHubApi PUT "/repos/$fullName/topics" @{ names = @($Repository.github.topics) }
-    }
+    $topics = @(Get-PropertyValue $Repository.github 'topics' @())
+    if ($topics.Count -gt 0) { $null = Invoke-GitHubApi PUT "/repos/$fullName/topics" @{ names = $topics } }
     $Report.operations.created++
 }
 
 function Set-Repository($Manifest, $Repository, $Report) {
     $fullName = "$($Manifest.owner)/$($Repository.name)"
-    if (-not (Test-RepositoryExists $Manifest.owner $Repository.name)) {
-        Write-Warning "Cannot configure missing repository: $fullName"
-        return
-    }
-    if (-not $Apply) {
-        Write-Host "PLAN configure repository: $fullName"
-        return
-    }
+    if (-not (Test-RepositoryExists $Manifest.owner $Repository.name)) { Write-Warning "Cannot configure missing repository: $fullName"; return }
+    if (-not $Apply) { Write-Host "PLAN configure repository: $fullName"; return }
     if (-not $GitHubToken) { throw 'GITHUB_TOKEN or -GitHubToken is required for repository configuration.' }
     if (-not $PSCmdlet.ShouldProcess($fullName, 'Configure repository')) { return }
 
@@ -394,7 +407,7 @@ function Set-Repository($Manifest, $Repository, $Report) {
         has_wiki = [bool]$Repository.github.hasWiki
     }
     $null = Invoke-GitHubApi PATCH "/repos/$fullName" $body
-    $null = Invoke-GitHubApi PUT "/repos/$fullName/topics" @{ names = @($Repository.github.topics) }
+    $null = Invoke-GitHubApi PUT "/repos/$fullName/topics" @{ names = @(Get-PropertyValue $Repository.github 'topics' @()) }
     $Report.operations.configured++
 }
 
@@ -403,9 +416,7 @@ function Sync-Parent($Manifest, $Parent, $Report) {
         $_.submodule.enabled -and $_.parent -eq $Parent.name -and $_.maturity -notin @('deprecated','retired')
     })
 
-    foreach ($child in $children) {
-        Write-Host "PLAN ensure submodule $($Parent.name)/$($child.submodule.path) -> $($child.name)"
-    }
+    foreach ($child in $children) { Write-Host "PLAN ensure submodule $($Parent.name)/$($child.submodule.path) -> $($child.name)" }
     if (-not $Apply) { return }
 
     $path = Join-Path $WorkingDirectory $Parent.name
@@ -429,9 +440,10 @@ function Sync-Parent($Manifest, $Parent, $Report) {
             Invoke-Native git @('submodule','add',"https://github.com/$($Manifest.owner)/$($child.name).git",$child.submodule.path) $path
             $Report.operations.submodulesAdded++
         }
-        if ($child.submodule.revision) {
+        $revision = Get-PropertyValue $child.submodule 'revision'
+        if ($revision) {
             Invoke-Native git @('submodule','update','--init','--',$child.submodule.path) $path
-            Invoke-Native git @('checkout',[string]$child.submodule.revision) (Join-Path $path $child.submodule.path)
+            Invoke-Native git @('checkout',[string]$revision) (Join-Path $path $child.submodule.path)
             Invoke-Native git @('add','--',$child.submodule.path) $path
         }
     }
@@ -444,7 +456,7 @@ function Sync-Parent($Manifest, $Parent, $Report) {
             maturity = $Parent.maturity
             dependencies = @($Parent.dependencies)
             technologySubmodules = @($children | ForEach-Object {
-                [ordered]@{ name = $_.name; path = $_.submodule.path; revision = $_.submodule.revision }
+                [ordered]@{ name = $_.name; path = $_.submodule.path; revision = Get-PropertyValue $_.submodule 'revision' }
             })
         } | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $path 'xmip.repository.json') -Encoding utf8NoBOM
         $Report.operations.metadataWritten++
@@ -487,12 +499,8 @@ $selected = @($manifest.repositories | Where-Object {
     ($IncludeReserved -or $_.maturity -ne 'reserved') -and $_.maturity -notin @('deprecated','retired')
 })
 
-if ($CreateRepositories) {
-    foreach ($repository in $selected) { New-Repository $manifest $repository $report }
-}
-if ($ConfigureRepositories) {
-    foreach ($repository in $selected) { Set-Repository $manifest $repository $report }
-}
+if ($CreateRepositories) { foreach ($repository in $selected) { New-Repository $manifest $repository $report } }
+if ($ConfigureRepositories) { foreach ($repository in $selected) { Set-Repository $manifest $repository $report } }
 if ($SynchronizeSubmodules -or $GenerateMetadata) {
     foreach ($parent in $selected | Where-Object { -not $_.submodule.enabled }) {
         if ($manifest.repositories | Where-Object { $_.submodule.enabled -and $_.parent -eq $parent.name }) {
