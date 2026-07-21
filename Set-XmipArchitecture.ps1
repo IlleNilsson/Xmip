@@ -20,7 +20,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.1.2'
+$ScriptVersion = [version]'1.1.3'
 
 function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 
@@ -216,17 +216,22 @@ function Get-ActualRepositories([string] $Owner) {
     if ((Get-PropertyValue $ownerInfo 'type') -eq 'Organization') {
         return ,@(Get-GitHubPagedCollection "/orgs/$Owner/repos?type=all")
     }
+
     if ($GitHubToken) {
         $currentUser = Invoke-GitHubApi GET '/user'
         if ((Get-PropertyValue $currentUser 'login') -ieq $Owner) {
-            $owned = @(Get-GitHubPagedCollection '/user/repos?affiliation=owner')
-            if ($owned.Count -eq 0) { return ,@() }
-            return ,@($owned | Where-Object {
-                $repoOwner = Get-PropertyValue $_ 'owner'
-                (Get-PropertyValue $repoOwner 'login') -ieq $Owner
-            })
+            $filtered = [Collections.Generic.List[object]]::new()
+            foreach ($repository in @(Get-GitHubPagedCollection '/user/repos?affiliation=owner')) {
+                if ($null -eq $repository) { continue }
+                $repoOwner = Get-PropertyValue $repository 'owner'
+                if ((Get-PropertyValue $repoOwner 'login') -ieq $Owner) {
+                    $filtered.Add($repository)
+                }
+            }
+            return ,@($filtered.ToArray())
         }
     }
+
     return ,@(Get-GitHubPagedCollection "/users/$Owner/repos?type=owner")
 }
 
