@@ -11,424 +11,238 @@ param(
     [switch] $CommitChanges,
     [switch] $PushChanges,
     [switch] $IncludeReserved,
-    [switch] $ReportDeprecated = $true,
-    [string] $ReportPath,
+    [switch] $WriteReport,
+    [string] $ReportPath = (Join-Path $WorkingDirectory 'xmip-architecture-report.json'),
     [switch] $PassThru
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ScriptVersion = [version]'1.0.0'
 
-function Write-Step([string] $Message) {
-    Write-Host "==> $Message" -ForegroundColor Cyan
-}
-
+function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 function Assert-Command([string] $Name) {
-    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        throw "Required command '$Name' was not found."
-    }
+    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) { throw "Required command '$Name' was not found." }
 }
-
 function Invoke-Native {
     param([string] $FilePath, [string[]] $Arguments = @(), [string] $At = '')
     $previous = $PWD
     try {
         if ($At) { Set-Location $At }
         & $FilePath @Arguments
-        if ($LASTEXITCODE -ne 0) {
-            throw "Command failed: $FilePath $($Arguments -join ' ')"
+        if ($LASTEXITCODE -ne 0) { throw "Command failed: $FilePath $($Arguments -join ' ')" }
+    }
+    finally { Set-Location $previous }
+}
+function Get-PropertyValue($Object, [string] $Name, $Default = $null) {
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property -or $null -eq $property.Value) { return $Default }
+    $property.Value
+}
+
+function Convert-CommonRepository($Item, $Defaults) {
+    if ($Item -is [System.Array]) {
+        return [pscustomobject]@{
+            name = [string]$Item[0]
+            description = [string]$Item[1]
+            architecturalDomain = [string]$Item[2]
+            repositoryRole = [string]$Item[3]
+            maturity = [string]$Defaults.maturity
+            dependencies = @($Item[4])
         }
     }
-    finally {
-        Set-Location $previous
+    [pscustomobject]@{
+        name = [string]$Item.name
+        description = [string]$Item.description
+        architecturalDomain = [string]$Item.architecturalDomain
+        repositoryRole = [string]$Item.repositoryRole
+        maturity = [string](Get-PropertyValue $Item 'maturity' $Defaults.maturity)
+        dependencies = @($Item.dependencies)
     }
+}
+
+function Convert-TechnologyGroup($Group) {
+    if ($Group -is [System.Array]) {
+        return [pscustomobject]@{ parent=[string]$Group[0]; dependencies=@($Group[1]); technologies=@($Group[2]) }
+    }
+    [pscustomobject]@{ parent=[string]$Group.parent; dependencies=@($Group.dependencies); technologies=@($Group.technologies) }
 }
 
 function Expand-XmipManifest($Source) {
     if ($Source.repositories) { return $Source }
-
     $repositories = [Collections.Generic.List[object]]::new()
 
-    foreach ($item in @($Source.commonRepositories)) {
+    foreach ($raw in @($Source.commonRepositories)) {
+        $item = Convert-CommonRepository $raw $Source.defaults
         $repositories.Add([pscustomobject]@{
-            name = $item.name
-            description = $item.description
-            architecturalDomain = $item.architecturalDomain
-            repositoryRole = $item.repositoryRole
-            maturity = $(if ($item.maturity) { $item.maturity } else { $Source.defaults.maturity })
-            dependencies = @($item.dependencies)
-            github = [pscustomobject]@{
-                visibility = $Source.defaults.visibility
-                autoInitialize = $Source.defaults.autoInitialize
-                hasIssues = $Source.defaults.hasIssues
-                hasProjects = $Source.defaults.hasProjects
-                hasWiki = $Source.defaults.hasWiki
-                topics = @('xmip', $item.architecturalDomain.ToLowerInvariant())
+            name=$item.name; description=$item.description; architecturalDomain=$item.architecturalDomain
+            repositoryRole=$item.repositoryRole; maturity=$item.maturity; dependencies=@($item.dependencies)
+            github=[pscustomobject]@{
+                visibility=$Source.defaults.visibility; autoInitialize=$Source.defaults.autoInitialize
+                hasIssues=$Source.defaults.hasIssues; hasProjects=$Source.defaults.hasProjects
+                hasWiki=$Source.defaults.hasWiki; topics=@('xmip',$item.architecturalDomain.ToLowerInvariant())
             }
-            submodule = [pscustomobject]@{ enabled = $false }
+            submodule=[pscustomobject]@{ enabled=$false }
         })
     }
 
-    foreach ($group in @($Source.technologyGroups)) {
-        $capability = $group.parent -replace '^xmip-', ''
-        foreach ($technology in @($group.technologies)) {
-            $technologyName = $(if ($technology.name) { $technology.name } else { [string] $technology })
-            $description = $(if ($technology.description) { $technology.description } else { "$technologyName implementation of $($group.parent)." })
-            $maturity = $(if ($technology.maturity) { $technology.maturity } else { $Source.defaults.maturity })
+    foreach ($rawGroup in @($Source.technologyGroups)) {
+        $group = Convert-TechnologyGroup $rawGroup
+        $capability = $group.parent -replace '^xmip-',''
+        foreach ($rawTechnology in @($group.technologies)) {
+            $technology = if ($rawTechnology -is [string]) { [pscustomobject]@{ name=$rawTechnology } } else { $rawTechnology }
+            $technologyName = [string]$technology.name
             $name = "$($group.parent)-$technologyName"
-
             $repositories.Add([pscustomobject]@{
-                name = $name
-                description = $description
-                architecturalDomain = 'Technology'
-                repositoryRole = 'technology-implementation'
-                maturity = $maturity
-                capability = $capability
-                technology = $technologyName
-                parent = $group.parent
-                dependencies = @($group.dependencies)
-                github = [pscustomobject]@{
-                    visibility = $Source.defaults.visibility
-                    autoInitialize = $Source.defaults.autoInitialize
-                    hasIssues = $Source.defaults.hasIssues
-                    hasProjects = $Source.defaults.hasProjects
-                    hasWiki = $Source.defaults.hasWiki
-                    topics = @('xmip', 'technology', $capability, $technologyName)
+                name=$name
+                description=[string](Get-PropertyValue $technology 'description' "$technologyName implementation of $($group.parent).")
+                architecturalDomain='Technology'; repositoryRole='technology-implementation'
+                maturity=[string](Get-PropertyValue $technology 'maturity' $Source.defaults.maturity)
+                capability=$capability; technology=$technologyName; parent=$group.parent
+                dependencies=@($group.dependencies)
+                github=[pscustomobject]@{
+                    visibility=$Source.defaults.visibility; autoInitialize=$Source.defaults.autoInitialize
+                    hasIssues=$Source.defaults.hasIssues; hasProjects=$Source.defaults.hasProjects
+                    hasWiki=$Source.defaults.hasWiki; topics=@('xmip','technology',$capability,$technologyName)
                 }
-                submodule = [pscustomobject]@{
-                    enabled = $true
-                    parentRepository = $group.parent
-                    path = "modules/$technologyName"
-                    revision = $technology.revision
-                    branch = $technology.branch
+                submodule=[pscustomobject]@{
+                    enabled=$true; parentRepository=$group.parent
+                    path="modules/$technologyName"
+                    revision=Get-PropertyValue $technology 'revision'
                 }
             })
         }
     }
-
     $Source | Add-Member -NotePropertyName repositories -NotePropertyValue @($repositories) -Force
     $Source
 }
 
 function Get-XmipManifest([string] $Path) {
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw "Manifest not found: $Path"
-    }
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Manifest not found: $Path" }
     $source = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -Depth 100
+    if ($source.minimumScriptVersion -and $ScriptVersion -lt [version]$source.minimumScriptVersion) {
+        throw "Manifest requires script version $($source.minimumScriptVersion); current version is $ScriptVersion."
+    }
     Expand-XmipManifest $source
-}
-
-function Test-DependencyGraph($Manifest) {
-    $map = @{}
-    foreach ($repository in $Manifest.repositories) {
-        $map[$repository.name] = @($repository.dependencies)
-    }
-
-    $state = @{}
-    $stack = [Collections.Generic.List[string]]::new()
-
-    function Visit([string] $Name) {
-        if ($state[$Name] -eq 1) {
-            $index = $stack.IndexOf($Name)
-            $cycle = @($stack[$index..($stack.Count - 1)]) + $Name
-            throw "Dependency cycle: $($cycle -join ' -> ')"
-        }
-        if ($state[$Name] -eq 2) { return }
-
-        $state[$Name] = 1
-        $stack.Add($Name)
-        foreach ($dependency in $map[$Name]) { Visit $dependency }
-        $stack.RemoveAt($stack.Count - 1)
-        $state[$Name] = 2
-    }
-
-    foreach ($name in $map.Keys) { Visit $name }
 }
 
 function Test-XmipManifest($Manifest) {
     Write-Step 'Validating architecture manifest'
-
     if (-not $Manifest.owner) { throw 'Manifest owner is missing.' }
     if (-not $Manifest.repositories) { throw 'Manifest contains no repositories.' }
-
     $names = @($Manifest.repositories.name)
     $duplicates = $names | Group-Object | Where-Object Count -gt 1
     if ($duplicates) { throw "Duplicate repositories: $($duplicates.Name -join ', ')" }
-
-    $nameSet = [Collections.Generic.HashSet[string]]::new([string[]] $names, [StringComparer]::OrdinalIgnoreCase)
-
+    $nameSet = [Collections.Generic.HashSet[string]]::new([string[]]$names,[StringComparer]::OrdinalIgnoreCase)
     foreach ($repository in $Manifest.repositories) {
-        if ($repository.name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') {
-            throw "Invalid repository name: $($repository.name)"
-        }
+        if ($repository.name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid repository name: $($repository.name)" }
         if (-not $repository.description) { throw "Description missing: $($repository.name)" }
-        if ($repository.maturity -notin @('reserved','scaffolded','implemented','verified','supported','deprecated','retired')) {
+        if ($repository.maturity -notin @('planned','reserved','created','configured','submodule','workspace','scaffolded','implemented','verified','supported','deprecated','retired')) {
             throw "Invalid maturity '$($repository.maturity)' for '$($repository.name)'"
         }
-        if ($repository.submodule.enabled) {
-            if (-not $repository.parent) { throw "Submodule '$($repository.name)' has no parent." }
-            if (-not $nameSet.Contains([string] $repository.parent)) {
-                throw "Unknown parent '$($repository.parent)' for '$($repository.name)'"
-            }
-            if (-not $repository.submodule.path) { throw "Submodule path missing: $($repository.name)" }
+        if ($repository.submodule.enabled -and -not $nameSet.Contains([string]$repository.parent)) {
+            throw "Unknown parent '$($repository.parent)' for '$($repository.name)'"
         }
         foreach ($dependency in @($repository.dependencies)) {
-            if (-not $nameSet.Contains([string] $dependency)) {
-                throw "Unknown dependency '$dependency' for '$($repository.name)'"
-            }
+            if (-not $nameSet.Contains([string]$dependency)) { throw "Unknown dependency '$dependency' for '$($repository.name)'" }
             if ($dependency -eq $repository.name) { throw "Self dependency: $($repository.name)" }
         }
     }
 
-    Test-DependencyGraph $Manifest
+    $state=@{}; $stack=[Collections.Generic.List[string]]::new(); $map=@{}
+    foreach ($repository in $Manifest.repositories) { $map[$repository.name]=@($repository.dependencies) }
+    function Visit([string]$Name) {
+        if ($state[$Name] -eq 1) {
+            $index=$stack.IndexOf($Name); $cycle=@($stack[$index..($stack.Count-1)])+$Name
+            throw "Dependency cycle: $($cycle -join ' -> ')"
+        }
+        if ($state[$Name] -eq 2) { return }
+        $state[$Name]=1; $stack.Add($Name)
+        foreach ($dependency in $map[$Name]) { Visit $dependency }
+        $stack.RemoveAt($stack.Count-1); $state[$Name]=2
+    }
+    foreach ($name in $map.Keys) { Visit $name }
 }
 
-function Get-SelectedRepositories($Manifest) {
-    @($Manifest.repositories | Where-Object {
-        ($IncludeReserved -or $_.maturity -ne 'reserved') -and
-        $_.maturity -notin @('deprecated', 'retired')
-    })
-}
-
-function Get-ActualGitHubRepositories([string] $Owner) {
-    $json = & gh repo list $Owner --limit 1000 --json name,description,visibility,isArchived 2>$null
+function Get-ActualRepositories([string]$Owner) {
+    $json=& gh repo list $Owner --limit 1000 --json name,description,visibility,isArchived 2>$null
     if ($LASTEXITCODE -ne 0) { throw "Unable to list repositories for '$Owner'." }
     @($json | ConvertFrom-Json)
 }
 
-function Get-ArchitectureDrift($Manifest, [array] $ActualRepositories) {
-    $desired = @{}
-    foreach ($repository in $Manifest.repositories) { $desired[$repository.name] = $repository }
-
-    $actual = @{}
-    foreach ($repository in $ActualRepositories) { $actual[$repository.name] = $repository }
-
-    $deprecated = @($Manifest.repositories | Where-Object maturity -eq 'deprecated' | Sort-Object name)
-    $retired = @($Manifest.repositories | Where-Object maturity -eq 'retired' | Sort-Object name)
-    $deprecatedNames = @{}
-    foreach ($repository in @($deprecated + $retired)) { $deprecatedNames[$repository.name] = $repository.maturity }
-
-    $references = @()
-    foreach ($repository in $Manifest.repositories | Where-Object maturity -notin @('deprecated','retired')) {
-        foreach ($dependency in @($repository.dependencies)) {
-            if ($deprecatedNames.ContainsKey([string] $dependency)) {
-                $references += [pscustomobject]@{
-                    repository = $repository.name
-                    dependency = $dependency
-                    maturity = $deprecatedNames[$dependency]
-                }
-            }
-        }
-    }
-
-    [pscustomobject]@{
-        generatedAtUtc = [DateTime]::UtcNow.ToString('o')
-        owner = $Manifest.owner
-        desiredCount = $desired.Count
-        actualCount = $actual.Count
-        missing = @($desired.Keys | Where-Object { -not $actual.ContainsKey($_) } | Sort-Object)
-        unexpected = @($actual.Keys | Where-Object { $_ -like 'xmip-*' -and -not $desired.ContainsKey($_) } | Sort-Object)
-        deprecated = $deprecated
-        retired = $retired
-        activeDeprecatedReferences = $references
+function New-TransactionReport($Manifest,$Actual) {
+    $desired=@{}; foreach($r in $Manifest.repositories){$desired[$r.name]=$r}
+    $actualMap=@{}; foreach($r in $Actual){$actualMap[$r.name]=$r}
+    [ordered]@{
+        generatedAtUtc=[DateTime]::UtcNow.ToString('o'); scriptVersion=$ScriptVersion.ToString()
+        schemaVersion=[string]$Manifest.schemaVersion; architectureVersion=[string](Get-PropertyValue $Manifest 'architectureVersion' 'unversioned')
+        owner=$Manifest.owner; desiredCount=$desired.Count; actualCount=$actualMap.Count
+        missing=@($desired.Keys|Where-Object{-not $actualMap.ContainsKey($_)}|Sort-Object)
+        unexpected=@($actualMap.Keys|Where-Object{$_ -like 'xmip-*' -and -not $desired.ContainsKey($_)}|Sort-Object)
+        deprecated=@($Manifest.repositories|Where-Object maturity -eq 'deprecated'|Select-Object name,description|Sort-Object name)
+        retired=@($Manifest.repositories|Where-Object maturity -eq 'retired'|Select-Object name,description|Sort-Object name)
+        operations=[ordered]@{created=0;configured=0;submodulesAdded=0;metadataWritten=0;commits=0;pushes=0;skipped=0}
     }
 }
 
-function Show-ArchitectureDrift($Drift) {
-    Write-Step "Drift: $($Drift.missing.Count) missing, $($Drift.unexpected.Count) unexpected, $($Drift.deprecated.Count) deprecated, $($Drift.retired.Count) retired"
-    foreach ($name in $Drift.missing) { Write-Warning "MISSING: $name" }
-    foreach ($name in $Drift.unexpected) { Write-Warning "UNEXPECTED: $name" }
-    foreach ($item in $Drift.deprecated) { Write-Warning "DEPRECATED: $($item.name)" }
-    foreach ($item in $Drift.retired) { Write-Warning "RETIRED: $($item.name)" }
-    foreach ($reference in $Drift.activeDeprecatedReferences) {
-        Write-Warning "$($reference.repository) depends on $($reference.maturity) repository $($reference.dependency)"
-    }
-}
-
-function Test-RepositoryExists([string] $Owner, [string] $Name) {
+function Test-RepositoryExists([string]$Owner,[string]$Name) {
     & gh repo view "$Owner/$Name" --json name *> $null
     $LASTEXITCODE -eq 0
 }
-
-function New-XmipRepository($Manifest, $Repository) {
-    $fullName = "$($Manifest.owner)/$($Repository.name)"
-    if (Test-RepositoryExists $Manifest.owner $Repository.name) { return }
-
-    $arguments = @('repo','create',$fullName,'--description',[string]$Repository.description,"--$($Repository.github.visibility)")
-    if ($Repository.github.autoInitialize) { $arguments += '--add-readme' }
-
-    if ($Apply -and $PSCmdlet.ShouldProcess($fullName, 'Create repository')) {
-        Invoke-Native gh $arguments
-    }
-    else {
-        Write-Host "PLAN create repository: $fullName"
+function New-Repository($Manifest,$Repository,$Report) {
+    $fullName="$($Manifest.owner)/$($Repository.name)"
+    if(Test-RepositoryExists $Manifest.owner $Repository.name){$Report.operations.skipped++;return}
+    if(-not $Apply){Write-Host "PLAN create repository: $fullName";return}
+    if($PSCmdlet.ShouldProcess($fullName,'Create repository')){
+        $args=@('repo','create',$fullName,'--description',[string]$Repository.description,"--$($Repository.github.visibility)")
+        if($Repository.github.autoInitialize){$args+='--add-readme'}
+        Invoke-Native gh $args; $Report.operations.created++
     }
 }
-
-function Set-XmipRepositorySettings($Manifest, $Repository) {
-    $fullName = "$($Manifest.owner)/$($Repository.name)"
-    if (-not (Test-RepositoryExists $Manifest.owner $Repository.name)) {
-        Write-Warning "Cannot configure missing repository: $fullName"
-        return
-    }
-
-    $arguments = @(
-        'repo','edit',$fullName,
-        '--description',[string]$Repository.description,
-        '--visibility',[string]$Repository.github.visibility,
-        '--enable-issues',([string]$Repository.github.hasIssues).ToLowerInvariant(),
-        '--enable-projects',([string]$Repository.github.hasProjects).ToLowerInvariant(),
-        '--enable-wiki',([string]$Repository.github.hasWiki).ToLowerInvariant()
-    )
-
-    if ($Apply -and $PSCmdlet.ShouldProcess($fullName, 'Configure repository')) {
-        Invoke-Native gh $arguments
-    }
-    else {
-        Write-Host "PLAN configure repository: $fullName"
+function Set-Repository($Manifest,$Repository,$Report) {
+    $fullName="$($Manifest.owner)/$($Repository.name)"
+    if(-not(Test-RepositoryExists $Manifest.owner $Repository.name)){Write-Warning "Cannot configure missing repository: $fullName";return}
+    if(-not $Apply){Write-Host "PLAN configure repository: $fullName";return}
+    if($PSCmdlet.ShouldProcess($fullName,'Configure repository')){
+        Invoke-Native gh @('repo','edit',$fullName,'--description',[string]$Repository.description,'--visibility',[string]$Repository.github.visibility,
+            '--enable-issues',([string]$Repository.github.hasIssues).ToLowerInvariant(),'--enable-projects',([string]$Repository.github.hasProjects).ToLowerInvariant(),
+            '--enable-wiki',([string]$Repository.github.hasWiki).ToLowerInvariant())
+        $Report.operations.configured++
     }
 }
-
-function Get-RepositoryClone($Manifest, $Repository) {
-    if (-not $Apply) { throw 'Repository cloning is an Apply-mode operation.' }
-
-    $path = Join-Path $WorkingDirectory $Repository.name
-    $url = "https://github.com/$($Manifest.owner)/$($Repository.name).git"
-
-    if (Test-Path (Join-Path $path '.git')) {
-        Invoke-Native git @('fetch','--all','--prune') $path
-        Invoke-Native git @('checkout',$Manifest.defaults.defaultBranch) $path
-        Invoke-Native git @('pull','--ff-only') $path
-    }
-    else {
-        New-Item -ItemType Directory -Force -Path $WorkingDirectory | Out-Null
-        Invoke-Native git @('clone',$url,$path)
-    }
-    $path
-}
-
-function Get-ConfiguredSubmodulePaths([string] $RepositoryPath) {
-    if (-not (Test-Path (Join-Path $RepositoryPath '.gitmodules'))) { return @() }
-    $lines = & git -C $RepositoryPath config --file .gitmodules --get-regexp path 2>$null
-    if ($LASTEXITCODE -ne 0) { return @() }
-    @($lines | ForEach-Object { ($_ -split '\s+', 2)[1] })
-}
-
-function Set-ParentSubmodules($Manifest, $Parent) {
-    $children = @($Manifest.repositories | Where-Object {
-        $_.submodule.enabled -and $_.parent -eq $Parent.name -and $_.maturity -notin @('deprecated','retired')
-    })
-
-    if (-not $Apply) {
-        foreach ($child in $children) {
-            Write-Host "PLAN ensure submodule $($Parent.name)/$($child.submodule.path) -> $($child.name)"
+function Sync-Parent($Manifest,$Parent,$Report) {
+    $children=@($Manifest.repositories|Where-Object{$_.submodule.enabled -and $_.parent -eq $Parent.name -and $_.maturity -notin @('deprecated','retired')})
+    foreach($child in $children){Write-Host "PLAN ensure submodule $($Parent.name)/$($child.submodule.path) -> $($child.name)"}
+    if(-not $Apply){return}
+    $path=Join-Path $WorkingDirectory $Parent.name
+    if(Test-Path (Join-Path $path '.git')){Invoke-Native git @('fetch','--all','--prune') $path;Invoke-Native git @('checkout',$Manifest.defaults.defaultBranch) $path;Invoke-Native git @('pull','--ff-only') $path}
+    else{New-Item -ItemType Directory -Force -Path $WorkingDirectory|Out-Null;Invoke-Native git @('clone',"https://github.com/$($Manifest.owner)/$($Parent.name).git",$path)}
+    $configured=@();if(Test-Path(Join-Path $path '.gitmodules')){$configured=@((& git -C $path config --file .gitmodules --get-regexp path 2>$null)|ForEach-Object{($_ -split '\s+',2)[1]})}
+    foreach($child in $children){
+        if($child.submodule.path -notin $configured -and $PSCmdlet.ShouldProcess("$($Parent.name)/$($child.submodule.path)","Add submodule $($child.name)")){
+            Invoke-Native git @('submodule','add',"https://github.com/$($Manifest.owner)/$($child.name).git",$child.submodule.path) $path;$Report.operations.submodulesAdded++
         }
-        return
+        if($child.submodule.revision){Invoke-Native git @('submodule','update','--init','--',$child.submodule.path) $path;Invoke-Native git @('checkout',[string]$child.submodule.revision) (Join-Path $path $child.submodule.path);Invoke-Native git @('add','--',$child.submodule.path) $path}
     }
-
-    $path = Get-RepositoryClone $Manifest $Parent
-    $configuredPaths = @(Get-ConfiguredSubmodulePaths $path)
-    $desiredPaths = @($children.submodule.path)
-
-    foreach ($unexpectedPath in $configuredPaths | Where-Object { $_ -notin $desiredPaths }) {
-        Write-Warning "UNEXPECTED SUBMODULE: $($Parent.name)/$unexpectedPath. No automatic removal is performed."
-    }
-
-    foreach ($child in $children) {
-        $remote = "https://github.com/$($Manifest.owner)/$($child.name).git"
-        $submodulePath = [string] $child.submodule.path
-
-        if ($submodulePath -notin $configuredPaths -and $PSCmdlet.ShouldProcess("$($Parent.name)/$submodulePath", "Add submodule $($child.name)")) {
-            Invoke-Native git @('submodule','add',$remote,$submodulePath) $path
-        }
-
-        if ($child.submodule.revision) {
-            Invoke-Native git @('submodule','update','--init','--',$submodulePath) $path
-            Invoke-Native git @('checkout',[string]$child.submodule.revision) (Join-Path $path $submodulePath)
-            Invoke-Native git @('add','--',$submodulePath) $path
-        }
-    }
-
-    if ($GenerateMetadata) {
-        [ordered]@{
-            name = $Parent.name
-            architecturalDomain = $Parent.architecturalDomain
-            repositoryRole = $Parent.repositoryRole
-            maturity = $Parent.maturity
-            dependencies = @($Parent.dependencies)
-            technologySubmodules = @($children | ForEach-Object {
-                [ordered]@{ name=$_.name; path=$_.submodule.path; revision=$_.submodule.revision }
-            })
-        } | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $path 'xmip.repository.json') -Encoding utf8NoBOM
-    }
-
-    if ($CommitChanges) {
-        Invoke-Native git @('add','--all') $path
-        & git -C $path diff --cached --quiet
-        if ($LASTEXITCODE -ne 0 -and $PSCmdlet.ShouldProcess($Parent.name, 'Commit architecture reconciliation')) {
-            Invoke-Native git @('commit','-m','Reconcile Xmip architecture') $path
-            if ($PushChanges) { Invoke-Native git @('push','origin',$Manifest.defaults.defaultBranch) $path }
-        }
-    }
+    if($GenerateMetadata){[ordered]@{name=$Parent.name;domain=$Parent.architecturalDomain;role=$Parent.repositoryRole;maturity=$Parent.maturity;dependencies=@($Parent.dependencies);technologySubmodules=@($children|ForEach-Object{[ordered]@{name=$_.name;path=$_.submodule.path;revision=$_.submodule.revision}})}|ConvertTo-Json -Depth 30|Set-Content -LiteralPath(Join-Path $path 'xmip.repository.json') -Encoding utf8NoBOM;$Report.operations.metadataWritten++}
+    if($CommitChanges){Invoke-Native git @('add','--all') $path;& git -C $path diff --cached --quiet;if($LASTEXITCODE -ne 0 -and $PSCmdlet.ShouldProcess($Parent.name,'Commit architecture reconciliation')){Invoke-Native git @('commit','-m','Reconcile Xmip architecture') $path;$Report.operations.commits++;if($PushChanges){Invoke-Native git @('push','origin',$Manifest.defaults.defaultBranch) $path;$Report.operations.pushes++}}}
 }
 
 Assert-Command gh
 Assert-Command git
-
-$manifest = Get-XmipManifest $ManifestPath
+$manifest=Get-XmipManifest $ManifestPath
 Test-XmipManifest $manifest
-$selectedRepositories = @(Get-SelectedRepositories $manifest)
-$actualRepositories = @(Get-ActualGitHubRepositories $manifest.owner)
-$drift = Get-ArchitectureDrift $manifest $actualRepositories
-Show-ArchitectureDrift $drift
+$actual=@(Get-ActualRepositories $manifest.owner)
+$report=New-TransactionReport $manifest $actual
+Write-Step "Drift: $($report.missing.Count) missing, $($report.unexpected.Count) unexpected, $($report.deprecated.Count) deprecated, $($report.retired.Count) retired"
+foreach($name in $report.missing){Write-Warning "MISSING: $name"}
+foreach($name in $report.unexpected){Write-Warning "UNEXPECTED: $name"}
 
-if (-not $ReportPath) { $ReportPath = Join-Path $WorkingDirectory 'xmip-architecture-drift.json' }
-if ($ReportDeprecated -and $Apply) {
-    $directory = Split-Path -Parent $ReportPath
-    if ($directory) { New-Item -ItemType Directory -Force -Path $directory | Out-Null }
-    $drift | ConvertTo-Json -Depth 50 | Set-Content -LiteralPath $ReportPath -Encoding utf8NoBOM
-    Write-Host "Report written: $ReportPath"
-}
-elseif ($ReportDeprecated) {
-    Write-Host "PLAN report path: $ReportPath"
-}
-
-if (-not ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata)) {
-    Write-Step 'No reconciliation operation selected; reporting only.'
-}
-
-if ($CreateRepositories) {
-    Write-Step 'Reconciling missing repositories'
-    foreach ($repository in $selectedRepositories) { New-XmipRepository $manifest $repository }
-}
-
-if ($ConfigureRepositories) {
-    Write-Step 'Reconciling repository settings'
-    foreach ($repository in $selectedRepositories) { Set-XmipRepositorySettings $manifest $repository }
-}
-
-if ($SynchronizeSubmodules -or $GenerateMetadata) {
-    Write-Step 'Reconciling capability submodules'
-    foreach ($parent in $selectedRepositories | Where-Object { -not $_.submodule.enabled }) {
-        if ($manifest.repositories | Where-Object { $_.submodule.enabled -and $_.parent -eq $parent.name }) {
-            Set-ParentSubmodules $manifest $parent
-        }
-    }
-}
-
-$result = [pscustomobject]@{
-    Manifest = (Resolve-Path $ManifestPath).Path
-    Owner = $manifest.owner
-    SelectedRepositoryCount = $selectedRepositories.Count
-    DesiredRepositoryCount = $manifest.repositories.Count
-    ActualRepositoryCount = $actualRepositories.Count
-    MissingCount = $drift.missing.Count
-    UnexpectedCount = $drift.unexpected.Count
-    DeprecatedCount = $drift.deprecated.Count
-    RetiredCount = $drift.retired.Count
-    Mode = $(if ($Apply) { 'Apply' } else { 'Plan' })
-    ReportPath = $ReportPath
-}
-
-Write-Step "Architecture reconciliation completed in $($result.Mode) mode"
-if ($PassThru) { $result }
+$selected=@($manifest.repositories|Where-Object{($IncludeReserved -or $_.maturity -ne 'reserved') -and $_.maturity -notin @('deprecated','retired')})
+if($CreateRepositories){foreach($repository in $selected){New-Repository $manifest $repository $report}}
+if($ConfigureRepositories){foreach($repository in $selected){Set-Repository $manifest $repository $report}}
+if($SynchronizeSubmodules -or $GenerateMetadata){foreach($parent in $selected|Where-Object{-not $_.submodule.enabled}){if($manifest.repositories|Where-Object{$_.submodule.enabled -and $_.parent -eq $parent.name}){Sync-Parent $manifest $parent $report}}}
+if(-not($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata)){Write-Step 'Reporting only; no reconciliation operation selected.'}
+if($WriteReport){$directory=Split-Path -Parent $ReportPath;if($directory){New-Item -ItemType Directory -Force -Path $directory|Out-Null};$report|ConvertTo-Json -Depth 50|Set-Content -LiteralPath $ReportPath -Encoding utf8NoBOM;Write-Host "Report written: $ReportPath"}
+Write-Step "Architecture reconciliation completed in $(if($Apply){'Apply'}else{'Plan'}) mode"
+if($PassThru){[pscustomobject]$report}
