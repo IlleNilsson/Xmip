@@ -20,7 +20,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.1.4'
+$ScriptVersion = [version]'1.2.0'
 
 function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 
@@ -249,7 +249,102 @@ function New-TransactionReport($Manifest, $Actual) {
     }
 }
 
+function New-XmipGitHubRepository {
+    param(
+        [Parameter(Mandatory)] $Repository,
+        [Parameter(Mandatory)] [string] $Owner,
+        [Parameter(Mandatory)] [ValidateSet('User','Organization')] [string] $OwnerType
+    )
+
+    $name = [string](Get-PropertyValue $Repository 'name')
+    $description = [string](Get-PropertyValue $Repository 'description')
+    $github = Get-PropertyValue $Repository 'github' ([pscustomobject]@{})
+    $visibility = [string](Get-PropertyValue $github 'visibility' 'public')
+    if ($visibility -notin @('public','private','internal')) {
+        throw "Unsupported GitHub visibility '$visibility' for '$name'."
+    }
+    if ($OwnerType -eq 'User' -and $visibility -eq 'internal') {
+        throw "Visibility 'internal' is not valid for user-owned repository '$name'."
+    }
+
+    $body = [ordered]@{
+        name = $name
+        description = $description
+        private = ($visibility -eq 'private')
+        auto_init = [bool](Get-PropertyValue $github 'autoInitialize' $true)
+        has_issues = [bool](Get-PropertyValue $github 'hasIssues' $true)
+        has_projects = [bool](Get-PropertyValue $github 'hasProjects' $false)
+        has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
+    }
+    if ($OwnerType -eq 'Organization') {
+        $body.visibility = $visibility
+    }
+
+    $path = if ($OwnerType -eq 'Organization') { "/orgs/$Owner/repos" } else { '/user/repos' }
+    return Invoke-GitHubApi POST $path $body
+}
+
+function Invoke-CreateRepositories {
+    param(
+        [Parameter(Mandatory)] $Manifest,
+        [Parameter(Mandatory)] [System.Collections.IDictionary] $Report
+    )
+
+    if (-not $GitHubToken) { throw '-CreateRepositories requires -GitHubToken or GITHUB_TOKEN.' }
+
+    $owner = [string](Get-PropertyValue $Manifest 'owner')
+    $ownerInfo = Invoke-GitHubApi GET "/users/$Owner"
+    $ownerType = [string](Get-PropertyValue $ownerInfo 'type')
+    if ($ownerType -notin @('User','Organization')) {
+        throw "Unsupported GitHub owner type '$ownerType' for '$Owner'."
+    }
+
+    if ($ownerType -eq 'User') {
+        $currentUser = Invoke-GitHubApi GET '/user'
+        $currentLogin = [string](Get-PropertyValue $currentUser 'login')
+        if ($currentLogin -ine $owner) {
+            throw "Authenticated GitHub user '$currentLogin' cannot create repositories for '$Owner'."
+        }
+    }
+
+    $desired = @{}
+    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
+        $desired[[string](Get-PropertyValue $repository 'name')] = $repository
+    }
+
+    foreach ($name in @($Report.missing)) {
+        $repository = $desired[$name]
+        if ($null -eq $repository) { throw "Missing repository definition for '$name'." }
+
+        $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+        if ($maturity -eq 'reserved' -and -not $IncludeReserved) {
+            Write-Warning "SKIPPED RESERVED: $name"
+            $Report.operations.skipped++
+            continue
+        }
+
+        if (-not $PSCmdlet.ShouldProcess("$Owner/$name", 'Create GitHub repository')) {
+            $Report.operations.skipped++
+            continue
+        }
+
+        Write-Step "Creating repository $Owner/$name"
+        $created = New-XmipGitHubRepository -Repository $repository -Owner $Owner -OwnerType $ownerType
+        $createdName = [string](Get-PropertyValue $created 'name')
+        if ($createdName -ine $name) {
+            throw "GitHub returned repository '$createdName' while creating '$name'."
+        }
+
+        $Report.operations.created++
+        $Report.actualCount++
+        $Report.missing = @($Report.missing | Where-Object { $_ -ine $name })
+    }
+}
+
 if ($Apply -and -not ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata)) { throw '-Apply requires at least one reconciliation operation switch.' }
+if (-not $Apply -and ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata -or $CommitChanges -or $PushChanges)) {
+    throw 'Reconciliation operation switches require -Apply.'
+}
 if ($SynchronizeSubmodules -or $GenerateMetadata -or $CommitChanges -or $PushChanges) { Assert-Command git }
 
 $manifest = Get-XmipManifest $ManifestPath
@@ -260,10 +355,17 @@ Write-Step "Drift: $($report.missing.Count) missing, $($report.unexpected.Count)
 foreach ($name in $report.missing) { Write-Warning "MISSING: $name" }
 foreach ($name in $report.unexpected) { Write-Warning "UNEXPECTED: $name" }
 
-if ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata) {
-    throw 'Apply operations are temporarily blocked in this stabilization build. Run Plan mode only.'
+if ($Apply) {
+    if ($CreateRepositories) {
+        Invoke-CreateRepositories -Manifest $manifest -Report $report
+    }
+    if ($ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata) {
+        throw 'Configure, submodule and metadata operations remain blocked in this stabilization build.'
+    }
 }
-else { Write-Step 'Reporting only; no reconciliation operation selected.' }
+else {
+    Write-Step 'Reporting only; no reconciliation operation selected.'
+}
 
 if ($WriteReport) {
     $directory = Split-Path -Parent $ReportPath
