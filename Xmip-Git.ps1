@@ -7,6 +7,13 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Pull')]
     [switch] $Pull,
 
+    [Parameter(Mandatory, ParameterSetName = 'Branch')]
+    [switch] $Branch,
+
+    [Parameter(Mandatory, ParameterSetName = 'Push')]
+    [ValidateNotNullOrEmpty()]
+    [string] $Push,
+
     [string] $ManifestPath = (Join-Path $PSScriptRoot 'xmip-architecture.json'),
     [string] $DestinationPath = (Join-Path (Get-Location) 'xmip-repositories'),
 
@@ -49,10 +56,29 @@ function Invoke-Git {
     $previousLocation = $PWD
     try {
         if ($At) { Set-Location -LiteralPath $At }
-        & git @Arguments
+        $output = @(& git @Arguments 2>&1)
         if ($LASTEXITCODE -ne 0) {
-            throw "Git command failed: git $($Arguments -join ' ')"
+            $detail = ($output -join [Environment]::NewLine)
+            throw "Git command failed: git $($Arguments -join ' ')$([Environment]::NewLine)$detail"
         }
+        return $output
+    }
+    finally {
+        Set-Location $previousLocation
+    }
+}
+
+function Test-GitCommand {
+    param(
+        [Parameter(Mandatory)] [string[]] $Arguments,
+        [Parameter(Mandatory)] [string] $At
+    )
+
+    $previousLocation = $PWD
+    try {
+        Set-Location -LiteralPath $At
+        & git @Arguments *> $null
+        return ($LASTEXITCODE -eq 0)
     }
     finally {
         Set-Location $previousLocation
@@ -148,7 +174,13 @@ if (-not $owner) { throw 'Manifest owner is missing.' }
 $repositoryNames = @(Expand-XmipRepositoryNames -Manifest $manifest)
 if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
-$operation = if ($Pull) { 'Pull' } else { 'Clone' }
+$operation = switch ($PSCmdlet.ParameterSetName) {
+    'Pull' { 'Pull' }
+    'Branch' { 'Branch' }
+    'Push' { 'Push' }
+    default { 'Clone' }
+}
+
 $resolvedDestination = [IO.Path]::GetFullPath($DestinationPath)
 
 if ($operation -eq 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination)) {
@@ -156,7 +188,7 @@ if ($operation -eq 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestinatio
         New-Item -ItemType Directory -Path $resolvedDestination -Force | Out-Null
     }
 }
-elseif ($operation -eq 'Pull' -and -not (Test-Path -LiteralPath $resolvedDestination -PathType Container)) {
+elseif ($operation -ne 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination -PathType Container)) {
     throw "Destination directory does not exist: $resolvedDestination"
 }
 
@@ -166,6 +198,7 @@ foreach ($repositoryName in $repositoryNames) {
     $repositoryPath = Join-Path $resolvedDestination $repositoryName
     $cloneUrl = Get-CloneUrl -Owner $owner -RepositoryName $repositoryName -Transport $Transport
     $status = $null
+    $branches = @()
 
     if ($operation -eq 'Clone') {
         if (Test-Path -LiteralPath $repositoryPath) {
@@ -177,7 +210,7 @@ foreach ($repositoryName in $repositoryNames) {
             $status = 'existing'
         }
         elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
-            Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath)
+            Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
             Write-Host "CLONED: $repositoryName"
             $status = 'cloned'
         }
@@ -185,19 +218,42 @@ foreach ($repositoryName in $repositoryNames) {
             $status = 'skipped'
         }
     }
-    else {
-        if (-not (Test-Path -LiteralPath $repositoryPath)) {
-            Write-Warning "MISSING: $repositoryName"
-            $status = 'missing'
-        }
-        elseif (-not (Test-GitRepository -Path $repositoryPath)) {
-            throw "Destination path exists but is not a Git repository: $repositoryPath"
-        }
-        elseif ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
-            Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune')
-            Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only')
+    elseif (-not (Test-Path -LiteralPath $repositoryPath)) {
+        Write-Warning "MISSING: $repositoryName"
+        $status = 'missing'
+    }
+    elseif (-not (Test-GitRepository -Path $repositoryPath)) {
+        throw "Destination path exists but is not a Git repository: $repositoryPath"
+    }
+    elseif ($operation -eq 'Pull') {
+        if ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
+            Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune') | Out-Host
+            Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
             Write-Host "PULLED: $repositoryName"
             $status = 'pulled'
+        }
+        else {
+            $status = 'skipped'
+        }
+    }
+    elseif ($operation -eq 'Branch') {
+        $branches = @(Invoke-Git -At $repositoryPath -Arguments @('branch', '--all', '--no-color'))
+        Write-Host "BRANCHES: $repositoryName"
+        foreach ($branchName in $branches) {
+            Write-Host "  $branchName"
+        }
+        $status = 'listed'
+    }
+    else {
+        $branchExists = Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Push")
+        if (-not $branchExists) {
+            Write-Warning "BRANCH MISSING: $repositoryName/$Push"
+            $status = 'branch-missing'
+        }
+        elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Push branch '$Push' to origin")) {
+            Invoke-Git -At $repositoryPath -Arguments @('push', 'origin', $Push) | Out-Host
+            Write-Host "PUSHED: $repositoryName/$Push"
+            $status = 'pushed'
         }
         else {
             $status = 'skipped'
@@ -209,6 +265,8 @@ foreach ($repositoryName in $repositoryNames) {
         path = $repositoryPath
         url = $cloneUrl
         operation = $operation.ToLowerInvariant()
+        branch = if ($operation -eq 'Push') { $Push } else { $null }
+        branches = $branches
         status = $status
     })
 }
@@ -219,16 +277,20 @@ $summary = [pscustomobject]@{
     manifestPath = [IO.Path]::GetFullPath($ManifestPath)
     destinationPath = $resolvedDestination
     transport = $Transport
+    branch = if ($operation -eq 'Push') { $Push } else { $null }
     repositoryCount = $repositoryNames.Count
     cloned = @($results | Where-Object status -eq 'cloned').Count
     pulled = @($results | Where-Object status -eq 'pulled').Count
+    listed = @($results | Where-Object status -eq 'listed').Count
+    pushed = @($results | Where-Object status -eq 'pushed').Count
     existing = @($results | Where-Object status -eq 'existing').Count
     missing = @($results | Where-Object status -eq 'missing').Count
+    branchMissing = @($results | Where-Object status -eq 'branch-missing').Count
     skipped = @($results | Where-Object status -eq 'skipped').Count
     repositories = @($results)
 }
 
-Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Existing: $($summary.existing); Missing: $($summary.missing); Skipped: $($summary.skipped)."
+Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Listed: $($summary.listed); Pushed: $($summary.pushed); Existing: $($summary.existing); Missing: $($summary.missing); Branch missing: $($summary.branchMissing); Skipped: $($summary.skipped)."
 
 if ($PassThru) {
     return $summary
