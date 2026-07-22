@@ -1,13 +1,6 @@
 #requires -PSEdition Core
 #requires -Version 7.6.3
 
-Set-StrictMode -Version Latest
-
-$script:XmipGitRequiredPowerShellVersion = [Version]'7.6.3'
-if ($PSVersionTable.PSEdition -ne 'Core' -or $PSVersionTable.PSVersion -ne $script:XmipGitRequiredPowerShellVersion) {
-    throw "Xmip requires PowerShell Core 7.6.3 exactly. Current runtime: $($PSVersionTable.PSEdition) $($PSVersionTable.PSVersion)."
-}
-
 $script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'xmip-architecture.json'
 
 function Xmip-Git {
@@ -40,44 +33,27 @@ function Xmip-Git {
         [switch] $PassThru
     )
 
+    Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
     function Get-PropertyValue {
-        param(
-            [AllowNull()] $Object,
-            [Parameter(Mandatory)] [string] $Name,
-            $Default = $null
-        )
-
+        param([AllowNull()] $Object, [Parameter(Mandatory)] [string] $Name, $Default = $null)
         if ($null -eq $Object) { return $Default }
         $property = $Object.PSObject.Properties[$Name]
         if ($null -eq $property -or $null -eq $property.Value) { return $Default }
-        return $property.Value
-    }
-
-    function Assert-Command {
-        param([Parameter(Mandatory)] [string] $Name)
-
-        if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-            throw "Required command '$Name' was not found."
-        }
+        $property.Value
     }
 
     function Invoke-Git {
-        param(
-            [Parameter(Mandatory)] [string[]] $Arguments,
-            [string] $At = ''
-        )
-
+        param([Parameter(Mandatory)] [string[]] $Arguments, [string] $At = '')
         $previousLocation = $PWD
         try {
             if ($At) { Set-Location -LiteralPath $At }
             $output = @(& git @Arguments 2>&1)
             if ($LASTEXITCODE -ne 0) {
-                $detail = ($output -join [Environment]::NewLine)
-                throw "Git command failed: git $($Arguments -join ' ')$([Environment]::NewLine)$detail"
+                throw "Git command failed: git $($Arguments -join ' ')$([Environment]::NewLine)$($output -join [Environment]::NewLine)"
             }
-            return $output
+            $output
         }
         finally {
             Set-Location $previousLocation
@@ -85,109 +61,56 @@ function Xmip-Git {
     }
 
     function Test-GitCommand {
-        param(
-            [Parameter(Mandatory)] [string[]] $Arguments,
-            [Parameter(Mandatory)] [string] $At
-        )
-
+        param([Parameter(Mandatory)] [string[]] $Arguments, [Parameter(Mandatory)] [string] $At)
         $previousLocation = $PWD
         try {
             Set-Location -LiteralPath $At
             & git @Arguments *> $null
-            return ($LASTEXITCODE -eq 0)
+            $LASTEXITCODE -eq 0
         }
         finally {
             Set-Location $previousLocation
         }
     }
 
-    function Expand-XmipRepositoryNames {
+    function Get-RepositoryNames {
         param([Parameter(Mandatory)] $Manifest)
-
         $names = [Collections.Generic.List[string]]::new()
-        $explicitRepositories = @(Get-PropertyValue $Manifest 'repositories' @())
+        $explicit = @(Get-PropertyValue $Manifest 'repositories' @())
 
-        if ($explicitRepositories.Count -gt 0) {
-            foreach ($repository in $explicitRepositories) {
+        if ($explicit.Count -gt 0) {
+            foreach ($repository in $explicit) {
                 $name = [string](Get-PropertyValue $repository 'name')
                 if ($name) { $names.Add($name) }
             }
         }
         else {
             foreach ($repository in @(Get-PropertyValue $Manifest 'commonRepositories' @())) {
-                $name = if ($repository -is [System.Array]) {
-                    [string]$repository[0]
-                }
-                else {
-                    [string](Get-PropertyValue $repository 'name')
-                }
+                $name = if ($repository -is [System.Array]) { [string]$repository[0] } else { [string](Get-PropertyValue $repository 'name') }
                 if ($name) { $names.Add($name) }
             }
 
             foreach ($group in @(Get-PropertyValue $Manifest 'technologyGroups' @())) {
-                $parent = if ($group -is [System.Array]) {
-                    [string]$group[0]
-                }
-                else {
-                    [string](Get-PropertyValue $group 'parent')
-                }
-
-                $technologies = if ($group -is [System.Array]) {
-                    @($group[2])
-                }
-                else {
-                    @(Get-PropertyValue $group 'technologies' @())
-                }
-
+                $parent = if ($group -is [System.Array]) { [string]$group[0] } else { [string](Get-PropertyValue $group 'parent') }
+                $technologies = if ($group -is [System.Array]) { @($group[2]) } else { @(Get-PropertyValue $group 'technologies' @()) }
                 foreach ($technology in $technologies) {
-                    $technologyName = if ($technology -is [string]) {
-                        $technology
-                    }
-                    else {
-                        [string](Get-PropertyValue $technology 'name')
-                    }
-
-                    if ($parent -and $technologyName) {
-                        $names.Add("$parent-$technologyName")
-                    }
+                    $technologyName = if ($technology -is [string]) { $technology } else { [string](Get-PropertyValue $technology 'name') }
+                    if ($parent -and $technologyName) { $names.Add("$parent-$technologyName") }
                 }
             }
         }
 
-        return @($names | Sort-Object -Unique)
+        @($names | Sort-Object -Unique)
     }
 
-    function Get-CloneUrl {
-        param(
-            [Parameter(Mandatory)] [string] $Owner,
-            [Parameter(Mandatory)] [string] $RepositoryName,
-            [Parameter(Mandatory)] [ValidateSet('Https', 'Ssh')] [string] $Transport
-        )
-
-        if ($Transport -eq 'Ssh') {
-            return "git@github.com:$Owner/$RepositoryName.git"
-        }
-
-        return "https://github.com/$Owner/$RepositoryName.git"
-    }
-
-    function Test-GitRepository {
-        param([Parameter(Mandatory)] [string] $Path)
-
-        return Test-Path -LiteralPath (Join-Path $Path '.git') -PathType Container
-    }
-
-    Assert-Command -Name 'git'
-
-    if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
-        throw "Manifest not found: $ManifestPath"
-    }
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "Required command 'git' was not found." }
+    if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) { throw "Manifest not found: $ManifestPath" }
 
     $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json -Depth 100
     $owner = [string](Get-PropertyValue $manifest 'owner')
     if (-not $owner) { throw 'Manifest owner is missing.' }
 
-    $repositoryNames = @(Expand-XmipRepositoryNames -Manifest $manifest)
+    $repositoryNames = @(Get-RepositoryNames -Manifest $manifest)
     if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
     $operation = switch ($PSCmdlet.ParameterSetName) {
@@ -199,7 +122,6 @@ function Xmip-Git {
     }
 
     $resolvedDestination = [IO.Path]::GetFullPath($DestinationPath)
-
     if ($operation -eq 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination)) {
         if ($PSCmdlet.ShouldProcess($resolvedDestination, 'Create destination directory')) {
             New-Item -ItemType Directory -Path $resolvedDestination -Force | Out-Null
@@ -213,17 +135,14 @@ function Xmip-Git {
 
     foreach ($repositoryName in $repositoryNames) {
         $repositoryPath = Join-Path $resolvedDestination $repositoryName
-        $cloneUrl = Get-CloneUrl -Owner $owner -RepositoryName $repositoryName -Transport $Transport
+        $cloneUrl = if ($Transport -eq 'Ssh') { "git@github.com:$owner/$repositoryName.git" } else { "https://github.com/$owner/$repositoryName.git" }
         $status = $null
         $branches = @()
         $branchName = $null
 
         if ($operation -eq 'Clone') {
             if (Test-Path -LiteralPath $repositoryPath) {
-                if (-not (Test-GitRepository -Path $repositoryPath)) {
-                    throw "Destination path exists but is not a Git repository: $repositoryPath"
-                }
-
+                if (-not (Test-Path -LiteralPath (Join-Path $repositoryPath '.git') -PathType Container)) { throw "Destination path exists but is not a Git repository: $repositoryPath" }
                 Write-Host "EXISTS: $repositoryName"
                 $status = 'existing'
             }
@@ -232,15 +151,13 @@ function Xmip-Git {
                 Write-Host "CLONED: $repositoryName"
                 $status = 'cloned'
             }
-            else {
-                $status = 'skipped'
-            }
+            else { $status = 'skipped' }
         }
         elseif (-not (Test-Path -LiteralPath $repositoryPath)) {
             Write-Warning "MISSING: $repositoryName"
             $status = 'missing'
         }
-        elseif (-not (Test-GitRepository -Path $repositoryPath)) {
+        elseif (-not (Test-Path -LiteralPath (Join-Path $repositoryPath '.git') -PathType Container)) {
             throw "Destination path exists but is not a Git repository: $repositoryPath"
         }
         elseif ($operation -eq 'Pull') {
@@ -250,22 +167,17 @@ function Xmip-Git {
                 Write-Host "PULLED: $repositoryName"
                 $status = 'pulled'
             }
-            else {
-                $status = 'skipped'
-            }
+            else { $status = 'skipped' }
         }
         elseif ($operation -eq 'Branch') {
             $branches = @(Invoke-Git -At $repositoryPath -Arguments @('branch', '--all', '--no-color'))
             Write-Host "BRANCHES: $repositoryName"
-            foreach ($listedBranch in $branches) {
-                Write-Host "  $listedBranch"
-            }
+            $branches | ForEach-Object { Write-Host "  $_" }
             $status = 'listed'
         }
         elseif ($operation -eq 'BranchCreate') {
             $branchName = $Create
-            $branchExists = Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Create")
-            if ($branchExists) {
+            if (Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Create")) {
                 Write-Host "BRANCH EXISTS: $repositoryName/$Create"
                 $status = 'branch-existing'
             }
@@ -274,14 +186,11 @@ function Xmip-Git {
                 Write-Host "BRANCH CREATED: $repositoryName/$Create"
                 $status = 'branch-created'
             }
-            else {
-                $status = 'skipped'
-            }
+            else { $status = 'skipped' }
         }
         else {
             $branchName = $Push
-            $branchExists = Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Push")
-            if (-not $branchExists) {
+            if (-not (Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Push"))) {
                 Write-Warning "BRANCH MISSING: $repositoryName/$Push"
                 $status = 'branch-missing'
             }
@@ -290,9 +199,7 @@ function Xmip-Git {
                 Write-Host "PUSHED: $repositoryName/$Push"
                 $status = 'pushed'
             }
-            else {
-                $status = 'skipped'
-            }
+            else { $status = 'skipped' }
         }
 
         $results.Add([pscustomobject]@{
@@ -329,7 +236,5 @@ function Xmip-Git {
 
     Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Listed: $($summary.listed); Branch created: $($summary.branchCreated); Branch existing: $($summary.branchExisting); Pushed: $($summary.pushed); Existing: $($summary.existing); Missing: $($summary.missing); Branch missing: $($summary.branchMissing); Skipped: $($summary.skipped)."
 
-    if ($PassThru) {
-        return $summary
-    }
+    if ($PassThru) { $summary }
 }
