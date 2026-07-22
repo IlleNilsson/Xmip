@@ -1,6 +1,12 @@
-#requires -Version 7.2
+#requires -PSEdition Core
+#requires -Version 7.6.3
 
 Set-StrictMode -Version Latest
+
+$script:XmipGitRequiredPowerShellVersion = [Version]'7.6.3'
+if ($PSVersionTable.PSEdition -ne 'Core' -or $PSVersionTable.PSVersion -ne $script:XmipGitRequiredPowerShellVersion) {
+    throw "Xmip requires PowerShell Core 7.6.3 exactly. Current runtime: $($PSVersionTable.PSEdition) $($PSVersionTable.PSVersion)."
+}
 
 $script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'xmip-architecture.json'
 
