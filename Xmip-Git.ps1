@@ -1,11 +1,18 @@
 #requires -Version 7.2
-[CmdletBinding(SupportsShouldProcess = $true)]
+[CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Clone')]
 param(
+    [Parameter(ParameterSetName = 'Clone')]
+    [switch] $Clone,
+
+    [Parameter(Mandatory, ParameterSetName = 'Pull')]
+    [switch] $Pull,
+
     [string] $ManifestPath = (Join-Path $PSScriptRoot 'xmip-architecture.json'),
     [string] $DestinationPath = (Join-Path (Get-Location) 'xmip-repositories'),
+
     [ValidateSet('Https', 'Ssh')]
     [string] $Transport = 'Https',
-    [switch] $UpdateExisting,
+
     [switch] $PassThru
 )
 
@@ -108,6 +115,26 @@ function Expand-XmipRepositoryNames {
     return @($names | Sort-Object -Unique)
 }
 
+function Get-CloneUrl {
+    param(
+        [Parameter(Mandatory)] [string] $Owner,
+        [Parameter(Mandatory)] [string] $RepositoryName,
+        [Parameter(Mandatory)] [ValidateSet('Https', 'Ssh')] [string] $Transport
+    )
+
+    if ($Transport -eq 'Ssh') {
+        return "git@github.com:$Owner/$RepositoryName.git"
+    }
+
+    return "https://github.com/$Owner/$RepositoryName.git"
+}
+
+function Test-GitRepository {
+    param([Parameter(Mandatory)] [string] $Path)
+
+    return Test-Path -LiteralPath (Join-Path $Path '.git') -PathType Container
+}
+
 Assert-Command -Name 'git'
 
 if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
@@ -119,53 +146,58 @@ $owner = [string](Get-PropertyValue $manifest 'owner')
 if (-not $owner) { throw 'Manifest owner is missing.' }
 
 $repositoryNames = @(Expand-XmipRepositoryNames -Manifest $manifest)
-if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories to clone.' }
+if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
+$operation = if ($Pull) { 'Pull' } else { 'Clone' }
 $resolvedDestination = [IO.Path]::GetFullPath($DestinationPath)
-if (-not (Test-Path -LiteralPath $resolvedDestination)) {
+
+if ($operation -eq 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination)) {
     if ($PSCmdlet.ShouldProcess($resolvedDestination, 'Create destination directory')) {
         New-Item -ItemType Directory -Path $resolvedDestination -Force | Out-Null
     }
+}
+elseif ($operation -eq 'Pull' -and -not (Test-Path -LiteralPath $resolvedDestination -PathType Container)) {
+    throw "Destination directory does not exist: $resolvedDestination"
 }
 
 $results = [Collections.Generic.List[object]]::new()
 
 foreach ($repositoryName in $repositoryNames) {
     $repositoryPath = Join-Path $resolvedDestination $repositoryName
-    $cloneUrl = if ($Transport -eq 'Ssh') {
-        "git@github.com:$owner/$repositoryName.git"
-    }
-    else {
-        "https://github.com/$owner/$repositoryName.git"
-    }
+    $cloneUrl = Get-CloneUrl -Owner $owner -RepositoryName $repositoryName -Transport $Transport
+    $status = $null
 
-    if (Test-Path -LiteralPath $repositoryPath) {
-        $gitDirectory = Join-Path $repositoryPath '.git'
-        if (-not (Test-Path -LiteralPath $gitDirectory)) {
-            throw "Destination path exists but is not a Git repository: $repositoryPath"
-        }
+    if ($operation -eq 'Clone') {
+        if (Test-Path -LiteralPath $repositoryPath) {
+            if (-not (Test-GitRepository -Path $repositoryPath)) {
+                throw "Destination path exists but is not a Git repository: $repositoryPath"
+            }
 
-        if ($UpdateExisting) {
-            if ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch and fast-forward existing repository')) {
-                Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune')
-                Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only')
-                Write-Host "UPDATED: $repositoryName"
-                $status = 'updated'
-            }
-            else {
-                $status = 'skipped'
-            }
-        }
-        else {
             Write-Host "EXISTS: $repositoryName"
             $status = 'existing'
         }
-    }
-    else {
-        if ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
+        elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
             Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath)
             Write-Host "CLONED: $repositoryName"
             $status = 'cloned'
+        }
+        else {
+            $status = 'skipped'
+        }
+    }
+    else {
+        if (-not (Test-Path -LiteralPath $repositoryPath)) {
+            Write-Warning "MISSING: $repositoryName"
+            $status = 'missing'
+        }
+        elseif (-not (Test-GitRepository -Path $repositoryPath)) {
+            throw "Destination path exists but is not a Git repository: $repositoryPath"
+        }
+        elseif ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
+            Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune')
+            Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only')
+            Write-Host "PULLED: $repositoryName"
+            $status = 'pulled'
         }
         else {
             $status = 'skipped'
@@ -176,24 +208,27 @@ foreach ($repositoryName in $repositoryNames) {
         repository = $repositoryName
         path = $repositoryPath
         url = $cloneUrl
+        operation = $operation.ToLowerInvariant()
         status = $status
     })
 }
 
 $summary = [pscustomobject]@{
+    operation = $operation.ToLowerInvariant()
     owner = $owner
     manifestPath = [IO.Path]::GetFullPath($ManifestPath)
     destinationPath = $resolvedDestination
     transport = $Transport
     repositoryCount = $repositoryNames.Count
     cloned = @($results | Where-Object status -eq 'cloned').Count
-    updated = @($results | Where-Object status -eq 'updated').Count
+    pulled = @($results | Where-Object status -eq 'pulled').Count
     existing = @($results | Where-Object status -eq 'existing').Count
+    missing = @($results | Where-Object status -eq 'missing').Count
     skipped = @($results | Where-Object status -eq 'skipped').Count
     repositories = @($results)
 }
 
-Write-Host "Clone completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Updated: $($summary.updated); Existing: $($summary.existing); Skipped: $($summary.skipped)."
+Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Existing: $($summary.existing); Missing: $($summary.missing); Skipped: $($summary.skipped)."
 
 if ($PassThru) {
     return $summary
