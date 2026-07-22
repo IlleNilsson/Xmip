@@ -12,6 +12,9 @@ function Xmip-Git {
         [Parameter(Mandatory, ParameterSetName = 'Pull')]
         [switch] $Pull,
 
+        [Parameter(Mandatory, ParameterSetName = 'Status')]
+        [switch] $Status,
+
         [Parameter(Mandatory, ParameterSetName = 'Branch')]
         [Parameter(Mandatory, ParameterSetName = 'BranchCreate')]
         [switch] $Branch,
@@ -103,6 +106,39 @@ function Xmip-Git {
         @($names | Sort-Object -Unique)
     }
 
+    function Get-RepositoryStatus {
+        param([Parameter(Mandatory)] [string] $At)
+
+        $porcelain = @(Invoke-Git -At $At -Arguments @('status', '--porcelain=v1'))
+        $branch = [string](@(Invoke-Git -At $At -Arguments @('symbolic-ref', '--quiet', '--short', 'HEAD')) | Select-Object -First 1)
+        $detached = -not $branch
+        if ($detached) {
+            $branch = [string](@(Invoke-Git -At $At -Arguments @('rev-parse', '--short', 'HEAD')) | Select-Object -First 1)
+        }
+
+        $ahead = 0
+        $behind = 0
+        $hasUpstream = Test-GitCommand -At $At -Arguments @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}')
+        if ($hasUpstream) {
+            $counts = [string](@(Invoke-Git -At $At -Arguments @('rev-list', '--left-right', '--count', 'HEAD...@{upstream}')) | Select-Object -First 1)
+            if ($counts -match '^(\d+)\s+(\d+)$') {
+                $ahead = [int]$Matches[1]
+                $behind = [int]$Matches[2]
+            }
+        }
+
+        [pscustomobject]@{
+            branch = $branch
+            detached = $detached
+            clean = $porcelain.Count -eq 0
+            changed = @($porcelain | Where-Object { $_ -notmatch '^\?\?' }).Count
+            untracked = @($porcelain | Where-Object { $_ -match '^\?\?' }).Count
+            hasUpstream = $hasUpstream
+            ahead = $ahead
+            behind = $behind
+        }
+    }
+
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "Required command 'git' was not found." }
     if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) { throw "Manifest not found: $ManifestPath" }
 
@@ -115,6 +151,7 @@ function Xmip-Git {
 
     $operation = switch ($PSCmdlet.ParameterSetName) {
         'Pull' { 'Pull' }
+        'Status' { 'Status' }
         'Branch' { 'Branch' }
         'BranchCreate' { 'BranchCreate' }
         'Push' { 'Push' }
@@ -136,70 +173,79 @@ function Xmip-Git {
     foreach ($repositoryName in $repositoryNames) {
         $repositoryPath = Join-Path $resolvedDestination $repositoryName
         $cloneUrl = if ($Transport -eq 'Ssh') { "git@github.com:$owner/$repositoryName.git" } else { "https://github.com/$owner/$repositoryName.git" }
-        $status = $null
+        $statusValue = $null
         $branches = @()
         $branchName = $null
+        $repositoryStatus = $null
 
         if ($operation -eq 'Clone') {
             if (Test-Path -LiteralPath $repositoryPath) {
                 if (-not (Test-Path -LiteralPath (Join-Path $repositoryPath '.git') -PathType Container)) { throw "Destination path exists but is not a Git repository: $repositoryPath" }
                 Write-Host "EXISTS: $repositoryName"
-                $status = 'existing'
+                $statusValue = 'existing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
                 Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
                 Write-Host "CLONED: $repositoryName"
-                $status = 'cloned'
+                $statusValue = 'cloned'
             }
-            else { $status = 'skipped' }
+            else { $statusValue = 'skipped' }
         }
         elseif (-not (Test-Path -LiteralPath $repositoryPath)) {
             Write-Warning "MISSING: $repositoryName"
-            $status = 'missing'
+            $statusValue = 'missing'
         }
         elseif (-not (Test-Path -LiteralPath (Join-Path $repositoryPath '.git') -PathType Container)) {
             throw "Destination path exists but is not a Git repository: $repositoryPath"
+        }
+        elseif ($operation -eq 'Status') {
+            $repositoryStatus = Get-RepositoryStatus -At $repositoryPath
+            $branchName = $repositoryStatus.branch
+            $statusValue = if ($repositoryStatus.clean) { 'clean' } else { 'dirty' }
+            $position = if ($repositoryStatus.hasUpstream) { "ahead $($repositoryStatus.ahead), behind $($repositoryStatus.behind)" } else { 'no upstream' }
+            $head = if ($repositoryStatus.detached) { "detached $branchName" } else { $branchName }
+            Write-Host "STATUS: $repositoryName [$head] $statusValue; $position; changed $($repositoryStatus.changed); untracked $($repositoryStatus.untracked)"
         }
         elseif ($operation -eq 'Pull') {
             if ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
                 Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune') | Out-Host
                 Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
                 Write-Host "PULLED: $repositoryName"
-                $status = 'pulled'
+                $statusValue = 'pulled'
             }
-            else { $status = 'skipped' }
+            else { $statusValue = 'skipped' }
         }
         elseif ($operation -eq 'Branch') {
             $branches = @(Invoke-Git -At $repositoryPath -Arguments @('branch', '--all', '--no-color'))
             Write-Host "BRANCHES: $repositoryName"
             $branches | ForEach-Object { Write-Host "  $_" }
-            $status = 'listed'
+            $statusValue = 'listed'
         }
         elseif ($operation -eq 'BranchCreate') {
             $branchName = $Create
             if (Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Create")) {
                 Write-Host "BRANCH EXISTS: $repositoryName/$Create"
-                $status = 'branch-existing'
+                $statusValue = 'branch-existing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Create local branch '$Create' at HEAD")) {
                 Invoke-Git -At $repositoryPath -Arguments @('branch', $Create) | Out-Host
                 Write-Host "BRANCH CREATED: $repositoryName/$Create"
-                $status = 'branch-created'
+                $statusValue = 'branch-created'
             }
-            else { $status = 'skipped' }
+            else { $statusValue = 'skipped' }
         }
         else {
             $branchName = $Push
             if (-not (Test-GitCommand -At $repositoryPath -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$Push"))) {
                 Write-Warning "BRANCH MISSING: $repositoryName/$Push"
-                $status = 'branch-missing'
+                $statusValue = 'branch-missing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Push branch '$Push' to origin")) {
                 Invoke-Git -At $repositoryPath -Arguments @('push', 'origin', $Push) | Out-Host
                 Write-Host "PUSHED: $repositoryName/$Push"
-                $status = 'pushed'
+                $statusValue = 'pushed'
             }
-            else { $status = 'skipped' }
+            else { $statusValue = 'skipped' }
         }
 
         $results.Add([pscustomobject]@{
@@ -209,7 +255,14 @@ function Xmip-Git {
             operation = $operation.ToLowerInvariant()
             branch = $branchName
             branches = $branches
-            status = $status
+            status = $statusValue
+            clean = if ($repositoryStatus) { $repositoryStatus.clean } else { $null }
+            detached = if ($repositoryStatus) { $repositoryStatus.detached } else { $null }
+            changed = if ($repositoryStatus) { $repositoryStatus.changed } else { $null }
+            untracked = if ($repositoryStatus) { $repositoryStatus.untracked } else { $null }
+            hasUpstream = if ($repositoryStatus) { $repositoryStatus.hasUpstream } else { $null }
+            ahead = if ($repositoryStatus) { $repositoryStatus.ahead } else { $null }
+            behind = if ($repositoryStatus) { $repositoryStatus.behind } else { $null }
         })
     }
 
@@ -221,6 +274,12 @@ function Xmip-Git {
         transport = $Transport
         branch = if ($operation -eq 'Push') { $Push } elseif ($operation -eq 'BranchCreate') { $Create } else { $null }
         repositoryCount = $repositoryNames.Count
+        clean = @($results | Where-Object status -eq 'clean').Count
+        dirty = @($results | Where-Object status -eq 'dirty').Count
+        detached = @($results | Where-Object detached -eq $true).Count
+        withoutUpstream = @($results | Where-Object { $_.operation -eq 'status' -and $_.hasUpstream -eq $false }).Count
+        ahead = @($results | Where-Object { $_.operation -eq 'status' -and $_.ahead -gt 0 }).Count
+        behind = @($results | Where-Object { $_.operation -eq 'status' -and $_.behind -gt 0 }).Count
         cloned = @($results | Where-Object status -eq 'cloned').Count
         pulled = @($results | Where-Object status -eq 'pulled').Count
         listed = @($results | Where-Object status -eq 'listed').Count
@@ -234,7 +293,12 @@ function Xmip-Git {
         repositories = @($results)
     }
 
-    Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Listed: $($summary.listed); Branch created: $($summary.branchCreated); Branch existing: $($summary.branchExisting); Pushed: $($summary.pushed); Existing: $($summary.existing); Missing: $($summary.missing); Branch missing: $($summary.branchMissing); Skipped: $($summary.skipped)."
+    if ($operation -eq 'Status') {
+        Write-Host "Status completed. Total: $($summary.repositoryCount); Clean: $($summary.clean); Dirty: $($summary.dirty); Detached: $($summary.detached); Ahead: $($summary.ahead); Behind: $($summary.behind); No upstream: $($summary.withoutUpstream); Missing: $($summary.missing)."
+    }
+    else {
+        Write-Host "$operation completed. Total: $($summary.repositoryCount); Cloned: $($summary.cloned); Pulled: $($summary.pulled); Listed: $($summary.listed); Branch created: $($summary.branchCreated); Branch existing: $($summary.branchExisting); Pushed: $($summary.pushed); Existing: $($summary.existing); Missing: $($summary.missing); Branch missing: $($summary.branchMissing); Skipped: $($summary.skipped)."
+    }
 
     if ($PassThru) { $summary }
 }
