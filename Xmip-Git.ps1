@@ -188,7 +188,7 @@ if ($operation -eq 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestinatio
         New-Item -ItemType Directory -Path $resolvedDestination -Force | Out-Null
     }
 }
-elif ($operation -ne 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination -PathType Container)) {
+elseif ($operation -ne 'Clone' -and -not (Test-Path -LiteralPath $resolvedDestination -PathType Container)) {
     throw "Destination directory does not exist: $resolvedDestination"
 }
 
