@@ -8,7 +8,7 @@ This repository is the integration and architecture repository. Purpose-specific
 
 The current architecture baseline is:
 
-- [`docs/Xmip-Architecture-Specification-v1.1.md`](docs/Xmip-Architecture-Specification-v1.1.md)
+- [`docs/Xmip-Architecture-Specification-v1.2.md`](docs/Xmip-Architecture-Specification-v1.1.md)
 - [`xmip-architecture.json`](xmip-architecture.json)
 - [`Set-XmipArchitecture.ps1`](Set-XmipArchitecture.ps1)
 
@@ -96,6 +96,10 @@ Platform     Platform-wide runtime services
 ```
 
 Technology repositories are direct children of their common capability repository and become first-party Git submodules according to the manifest.
+
+Receive and Send own orchestration. Direction-neutral transport implementations live under `xmip-transport-*`; content representations live under `xmip-message-*`; method and operation semantics live under `xmip-logic-*`. Handler is a runtime role, not a repository prefix.
+
+Each repository has one primary Rust crate with the same lowercase hyphenated name as the repository unless an explicit architecture decision states otherwise.
 
 ## Reconcile the architecture
 

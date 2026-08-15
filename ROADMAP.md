@@ -5,6 +5,8 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 ## 1. Architecture baseline
 
 - Stabilize the repository classification and dependency model.
+- Reconcile Contract, representation, Path, Transport and Logic repository boundaries.
+- Replace direction-specific transport repositories with direction-neutral `xmip-transport-*` implementations.
 - Keep the architecture specification and manifest synchronized.
 - Define versioning and compatibility rules for artifacts, contracts and runtime components.
 - Complete C4 views for system context, containers, components and deployment.
@@ -20,6 +22,8 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 ## 3. Common capabilities
 
 - Contract implication, evaluation and validation.
+- JSON and XML vertical slices across representation, Path and Contract.
+- Direction-neutral transport contracts used by Receive and Send orchestration.
 - Path expressions.
 - Stream preparation.
 - Transformation, assignment, promotion and demotion.
