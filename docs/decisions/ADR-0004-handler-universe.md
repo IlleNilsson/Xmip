@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Superseded by ADR-0005 when ADR-0005 is accepted.
 
 ## Decision
 
@@ -14,7 +14,7 @@ The handler universe is expandable, but the baseline shall cover integration, bu
 
 ## Rule
 
-Every handler repository must follow ADR-0001:
+The historical handler repository rule below is superseded by the capability-specific repository prefixes in ADR-0005:
 
 ```text
 xmip-handler-<technology-or-family>
