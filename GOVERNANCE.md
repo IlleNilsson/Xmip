@@ -32,6 +32,16 @@ Repository responsibilities must remain narrow. Common capability repositories d
 
 Public contracts, message semantics and artifact definitions should evolve deliberately. Breaking changes require an explicit version change, migration impact statement and review.
 
+## Licensing
+
+Xmip is licensed under the GNU Affero General Public License, version 3 or later (`AGPL-3.0-or-later`).
+
+The license is chosen so that Xmip source remains free and so that modifications are returned to the community, including when a modified version is made available to users over a network rather than distributed as software.
+
+`xmip-architecture.json` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
+
+Contributions are accepted under the same license. The license governs the freedoms attached to the source; it does not replace the contribution and review process defined in this document.
+
 ## Contributions
 
 External contributions are welcome through the official pull-request process. Acceptance is moderated to preserve architectural coherence and long-term compatibility.
