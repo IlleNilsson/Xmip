@@ -56,7 +56,9 @@ Re-exporting Rust types means a module author compiles against Xmip source. That
 7. Ownership, lifetime and error representation are part of the specification, not left to convention.
 8. Unwinding never crosses the boundary.
 
-9. The header that defines the boundary is licensed permissively, so that implementing against it never propagates Xmip's licence. Xmip's implementation stays AGPL-3.0-or-later.
+9. The boundary carries no licence exception. The header is AGPL-3.0-or-later like the rest of Xmip. A user takes Xmip under Xmip's licence and may additionally have to satisfy the licences of what Xmip itself depends on; reconciling that is the user's business, not Xmip's.
+
+10. The Rust binding crate is `xmip-core-abi`. It replaces `crates/xmip-module-abi` (whose package is actually named `xmip-abi`) and `crates/xmip-module-api`. Neither parses under ADR-0011 — there is no provider named `module` — and the first disagrees with its own package name.
 
 ## The descriptor
 
@@ -119,11 +121,17 @@ The other thirteen traits are deliberately unspecified. The reasoning above stil
 
 ## The licence of the boundary
 
-Clause 9 above resolves what this ADR set out to make possible. `include/xmip_module.h` is `Apache-2.0 OR MIT`; Xmip remains AGPL-3.0-or-later.
+Clause 9. `include/xmip_module.h` is AGPL-3.0-or-later, like the rest of Xmip.
 
-The header is the one file a third party must copy into their own build in order to implement anything. Under AGPL it would carry AGPL with it, and every implementer would inherit Xmip's licence by the act of `#include` — which is the outcome this ADR exists to prevent. A boundary that only works by taking Xmip's licence is not a boundary; it is a moat.
+A permissive header was considered and rejected. The case for it: the header is the one file a third party must copy into their own build, so under AGPL it carries AGPL with it, and an implementer inherits Xmip's licence by the act of `#include`. The case against, and the one that decided it: Xmip does not undertake to resolve anyone's licensing position. A user takes Xmip under Xmip's licence, and may additionally have to satisfy the licences of what Xmip itself depends on. Reconciling that is the user's business.
 
-The exception is narrow and stays narrow: the header and nothing else. A binding crate wrapping the header is a convenience over a public specification and may be permissive too. Anything linking `xmip-core` is Xmip's implementation and stays AGPL. The test is whether a file exists to *describe* the boundary or to *be* Xmip.
+What this ADR set out to make possible is unaffected. A module author is not obliged to write Rust, is not obliged to link Xmip code, and compiles against a C ABI rather than against Xmip source. That is a technical boundary and it stands. It was never a licence exemption, and "the boundary is the trait, not the licence" describes where Xmip stops dictating design.
+
+## The binding crate
+
+Clause 10. `xmip-core-abi` joins `xmip-core-cli`, `xmip-core-powershell`, `xmip-core-runtime`, `xmip-core-host`, `xmip-core-service`, `xmip-core-persistence`, `xmip-core-tracking` and `xmip-core-configuration` as a crate inside `Xmip` that has not been extracted to its own repository.
+
+`xmip-module-api` collapses rather than moves. Its entire content is `pub use xmip_core::contracts::*` plus a re-export of the other crate; once the first goes, as clause 2 and the Consequences section require, nothing is left worth renaming.
 
 ## Open
 
