@@ -43,8 +43,28 @@ A pull request should state:
 
 A branch or commit is not considered completed work until a pull request exists. A pull request is not project history until it is merged.
 
-## Contributions and ownership
+## Licence
 
-Xmip is free to use, but the project is centrally governed. Contributions are reviewed and accepted through the official repositories. Creating incompatible forks or copies is outside the intended contribution model.
+Xmip is licensed under the GNU Affero General Public License, version 3 or later.
+
+That licence grants the right to use, study, modify, redistribute and fork Xmip. This project does not restrict those rights and does not seek to.
+
+What the licence asks in return is that modifications to Xmip itself remain available under the same terms, including when a modified version is offered to users over a network.
+
+## Extending Xmip
+
+Extensions do not require permission.
+
+Any organisation may implement Xmip traits and interfaces and publish modules under whatever licence it chooses. Those modules are the publisher’s work, the publisher’s support and the publisher’s responsibility. Xmip neither endorses nor maintains them.
+
+The boundary is the trait, not the licence.
+
+## Contributions
+
+Contributions to Xmip itself are reviewed and accepted through the official repositories, following the workflow above.
 
 By contributing, you agree that accepted changes may be maintained, revised or replaced as the Xmip architecture develops.
+
+## The name
+
+A fork is free to exist. The name Xmip identifies this project, and a fork is asked not to present itself as Xmip.
