@@ -1,55 +1,69 @@
-# Handler implementation plan
+# Repository and crate implementation plan
 
-Xmip handlers are built from the technology tree. The tree is used to understand reuse and dependencies, not to pretend all transports are the same.
+## Status
 
-## First executable handler wave
+Proposed by ADR-0005.
+
+## Rule
+
+Repository creation, crate scaffolding, compilation, linking, test execution and packaging are separate operations.
+
+A repository may be reserved or scaffolded without claiming that its implementation is complete. No automatic verification trigger is enabled by the repository template.
+
+Every repository has one primary Rust crate whose name matches the repository name unless an accepted ADR defines an exception.
+
+## Architecture before implementation
+
+Before a repository or crate is created:
+
+1. Its responsibility and classification must exist in `xmip-architecture.json`.
+2. Its dependencies must be explicit and acyclic.
+3. Representation, Contract, Path, Transport and Logic responsibilities must remain separate.
+4. The architecture specification and manifest must agree.
+
+## First Contract vertical slices
 
 ```text
-file-system
-    file
-    file-watch
-    file-poll
+JSON
+    xmip-message-json
+    xmip-path-json-pointer
+    xmip-contract-json-schema
 
-ip
-    tcp
-        http
-            soap
-            rest
-            webhook
-            grpc
-        ftp
-        sftp
-        mllp
-        mqtt
-    udp
-        dns
-        syslog
+XML
+    xmip-message-xml
+    xmip-path-xpath
+    xmip-contract-xml-schema
 ```
 
-## Implementation rule
+The common `xmip-message`, `xmip-path` and `xmip-contract` crates must first expose compatible boundaries. Structural reading and writing must not remain owned by `xmip-contract`.
 
-A handler starts as a buildable Rust crate that implements the Xmip TransportHandler contract.
+## First Transport wave
 
-The first version may only pass through stream references and promote transport facts. That is still useful because it proves:
+```text
+xmip-transport
+xmip-transport-file
+xmip-transport-tcp
+xmip-transport-http
+xmip-transport-websocket
+xmip-transport-mllp
+```
 
-- the crate builds,
-- the Xmip contract is implemented,
-- the module manifest is valid,
-- the ABI descriptor is exported,
-- receive/send invocation shape is stable.
+`xmip-transport` owns the direction-neutral contract. Receive and Send adapt their orchestration to that contract. The existing monorepo `xmip-handler-file` crate is migration input for `xmip-transport-file`; it is not a second implementation.
 
-Protocol-specific behavior is added incrementally from the official specifications.
+## Logic follows its dependencies
 
-## Specification anchors
+```text
+xmip-logic-http-api
+xmip-logic-soap
+xmip-logic-grpc
+```
 
-- HTTP: IETF RFC 9110 and related RFC 9112 / 9113 / 9114 documents.
-- TCP: IETF RFC 9293.
-- UDP: IETF RFC 768.
-- MQTT: OASIS MQTT 5.0.
-- File watching: platform file-system events plus Rust notify crate behavior.
+Logic scaffolding begins only after its declared Transport, representation and Contract dependencies exist.
 
-## Do not fake completeness
+## Later families
 
-A handler must not claim protocol compliance until it has protocol-level tests.
+EDI, HL7 and code-contract families remain reserved until their explicit shared-family dependencies are represented and reviewed in the manifest.
 
-For now the generated handlers are scaffolds. They are valid Xmip modules, not complete protocol implementations.
+## Completeness
+
+A scaffold is not a protocol implementation. Protocol compliance requires implementation against authoritative specifications and conformance evidence.

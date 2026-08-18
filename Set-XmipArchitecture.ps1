@@ -20,7 +20,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.3.0'
+$ScriptVersion = [version]'1.4.0'
 
 function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 
@@ -171,6 +171,7 @@ function Expand-XmipManifest($Source) {
     if ($existing.Count -gt 0) { return $Source }
 
     $defaults = Get-PropertyValue $Source 'defaults' ([pscustomobject]@{})
+    $cratePolicy = Get-PropertyValue $Source 'cratePolicy' ([pscustomobject]@{})
     $repositories = [Collections.Generic.List[object]]::new()
 
     foreach ($raw in @(Get-PropertyValue $Source 'commonRepositories' @())) {
@@ -183,6 +184,12 @@ function Expand-XmipManifest($Source) {
             repositoryRole = $item.repositoryRole
             maturity = $item.maturity
             dependencies = @($item.dependencies)
+            primaryCrate = [pscustomobject]@{
+                name = $item.name
+                language = [string](Get-PropertyValue $cratePolicy 'language' 'rust')
+                edition = [string](Get-PropertyValue $cratePolicy 'edition' '2024')
+                license = [string](Get-PropertyValue $cratePolicy 'license' (Get-PropertyValue $defaults 'license' 'NOASSERTION'))
+            }
             github = [pscustomobject]@{
                 visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
                 autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
@@ -206,8 +213,16 @@ function Expand-XmipManifest($Source) {
                 $rawTechnology
             }
             $technologyName = [string](Get-PropertyValue $technology 'name')
+            $repositoryName = "$($group.parent)-$technologyName"
+            $technologyDependencies = @($group.dependencies) + @(Get-PropertyValue $technology 'dependencies' @())
+            $technologyDependencies = @(
+                $technologyDependencies |
+                    ForEach-Object { [string]$_ } |
+                    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+                    Select-Object -Unique
+            )
             $repositories.Add([pscustomobject]@{
-                name = "$($group.parent)-$technologyName"
+                name = $repositoryName
                 description = [string](Get-PropertyValue $technology 'description' "$technologyName implementation of $($group.parent).")
                 architecturalDomain = 'Technology'
                 repositoryRole = 'technology-implementation'
@@ -215,7 +230,13 @@ function Expand-XmipManifest($Source) {
                 capability = $capability
                 technology = $technologyName
                 parent = $group.parent
-                dependencies = @($group.dependencies)
+                dependencies = @($technologyDependencies)
+                primaryCrate = [pscustomobject]@{
+                    name = [string](Get-PropertyValue $technology 'crateName' $repositoryName)
+                    language = [string](Get-PropertyValue $cratePolicy 'language' 'rust')
+                    edition = [string](Get-PropertyValue $technology 'crateEdition' (Get-PropertyValue $cratePolicy 'edition' '2024'))
+                    license = [string](Get-PropertyValue $cratePolicy 'license' (Get-PropertyValue $defaults 'license' 'NOASSERTION'))
+                }
                 github = [pscustomobject]@{
                     visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
                     autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
@@ -227,7 +248,7 @@ function Expand-XmipManifest($Source) {
                 submodule = [pscustomobject]@{
                     enabled = $true
                     parentRepository = $group.parent
-                    path = "modules/$technologyName"
+                    path = [string](Get-PropertyValue $technology 'submodulePath' "modules/$technologyName")
                     revision = Get-PropertyValue $technology 'revision'
                 }
             })
@@ -264,15 +285,24 @@ function Test-XmipManifest($Manifest) {
     }
 
     $nameSet = [Collections.Generic.HashSet[string]]::new([string[]]$names, [StringComparer]::OrdinalIgnoreCase)
+    $cratePolicy = Get-PropertyValue $Manifest 'cratePolicy' ([pscustomobject]@{})
+    $primaryCrateMatchesRepository = [bool](Get-PropertyValue $cratePolicy 'primaryCrateMatchesRepository' $false)
     foreach ($repository in $repositories) {
         $name = [string](Get-PropertyValue $repository 'name')
         $description = [string](Get-PropertyValue $repository 'description')
         $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
         $submodule = Get-PropertyValue $repository 'submodule' ([pscustomobject]@{ enabled = $false })
         $parent = [string](Get-PropertyValue $repository 'parent')
+        $primaryCrate = Get-PropertyValue $repository 'primaryCrate' ([pscustomobject]@{})
+        $crateName = [string](Get-PropertyValue $primaryCrate 'name')
 
         if ($name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid repository name: $name" }
         if (-not $description) { throw "Description missing: $name" }
+        if (-not $crateName) { throw "Primary crate missing: $name" }
+        if ($crateName -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid primary crate name '$crateName' for '$name'" }
+        if ($primaryCrateMatchesRepository -and $crateName -cne $name) {
+            throw "Primary crate '$crateName' must match repository '$name'."
+        }
         if ($maturity -notin @('planned','reserved','created','configured','submodule','workspace','scaffolded','implemented','verified','supported','deprecated','retired')) {
             throw "Invalid maturity '$maturity' for '$name'"
         }
