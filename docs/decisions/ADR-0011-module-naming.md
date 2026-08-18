@@ -21,26 +21,39 @@ This matters because Xmip is built for third-party modules. An organisation conf
 One rule covers the whole namespace.
 
 ```text
-xmip-<provider>-<standard>-<module>
+xmip-<provider>-<module>-<standard>
 ```
 
 | part | meaning | tokens |
 |---|---|---|
 | `provider` | who publishes it. `core` is reserved and means Xmip itself | exactly 1 |
+| `module` | the core module whose trait is implemented | exactly 1 |
 | `standard` | the standard, technology, dialect or vendor implemented | 0 or more |
-| `module` | the core module whose trait is implemented | 0 or 1 |
 
-Provider and module are single tokens. Everything between them is the standard. Every name therefore resolves without a lookup table.
+Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a core module; three or more is an implementation. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
 
 Only `core` may omit the standard. Any other provider must name what it implements.
 
 ```text
-xmip-core-transform             core   ·  —         ·  transform     a core module
-xmip-core-xslt-transform        core   ·  xslt      ·  transform     Xmip’s XSLT
-xmip-saxon-xslt-transform       saxon  ·  xslt      ·  transform     Saxon’s XSLT
-xmip-core-json-schema-contract  core   ·  json-schema ·  contract
-xmip-core-http-transport        core   ·  http      ·  transport
+xmip-core-transform                core   ·  transform  ·  —             a core module
+xmip-core-transform-xslt           core   ·  transform  ·  xslt          Xmip’s XSLT
+xmip-saxon-transform-xslt          saxon  ·  transform  ·  xslt          Saxon’s XSLT
+xmip-core-contract-json-schema     core   ·  contract   ·  json-schema
+xmip-core-path-xpath               core   ·  path       ·  xpath
+xmip-core-transport-http           core   ·  transport  ·  http
 ```
+
+### Why the module comes second
+
+Putting the module last produces names that repeat themselves when the standard already contains the module word:
+
+```text
+xmip-core-xpath-path        xmip-core-path-xpath
+xmip-core-jsonpath-path     xmip-core-path-jsonpath
+xmip-core-json-pointer-path xmip-core-path-json-pointer
+```
+
+The right column also sorts by module, so every `xmip-core-path-*` groups together in a listing, and it keeps the variable-length part at the end where it belongs.
 
 ### Token discipline
 
@@ -50,12 +63,16 @@ xmip-core-http-transport        core   ·  http      ·  transport
 - where a vendor defines the dialect, the vendor token carries it
 
 ```text
-xmip-core-mssql-contract     T-SQL
-xmip-core-oracle-contract    PL/SQL
-xmip-core-sql-contract       ANSI SQL — the one with no vendor
+xmip-core-contract-mssql     T-SQL
+xmip-core-contract-oracle    PL/SQL
+xmip-core-contract-sql       ANSI SQL — the one with no vendor
 ```
 
-Bare `edi` and `hl7` are therefore not contract tokens. `edi-x12`, `edi-edifact` and `hl7-v2` are, because someone defines those.
+Bare `edi` and `hl7` are therefore not contract standards. `edi-x12`, `edi-edifact` and `hl7-v2` are, because someone defines those.
+
+### Native implementations are still implementations
+
+Xmip’s own path model — dot navigation, index navigation and predicates — is implemented by `xmip-core-path-dot`, `xmip-core-path-index` and `xmip-core-path-predicate`. Being native means `provider = core`, not that the module is absent from the namespace.
 
 ### The `core` provider is the endorsement boundary
 
@@ -74,33 +91,31 @@ ADR-0010 remains in force. Its architectural decisions stand unchanged:
 - handler is a runtime module role, not a repository-name prefix;
 - credential and identity presentation is not a transport technology.
 
-Only the naming patterns in ADR-0010 clauses 3, 6, 7, 8 and 9 are superseded. The capability model they describe is retained and improved by it: collapsing the direction-specific technology groups removed 44 duplicate repositories, and that result is preserved here.
-
-Translation:
+Only the naming patterns in ADR-0010 clauses 3, 6, 7, 8 and 9 are superseded. The capability model they describe is retained: collapsing the direction-specific technology groups removed 44 duplicate repositories, and that result is preserved here.
 
 | ADR-0010 | This ADR |
 |---|---|
-| `xmip-transport-file` | `xmip-core-file-transport` |
-| `xmip-transport-http` | `xmip-core-http-transport` |
-| `xmip-message-json` | `xmip-core-json-message` |
-| `xmip-message-xml` | `xmip-core-xml-message` |
-| `xmip-path-json-pointer` | `xmip-core-json-pointer-path` |
-| `xmip-path-xpath` | `xmip-core-xpath-path` |
-| `xmip-contract-json-schema` | `xmip-core-json-schema-contract` |
-| `xmip-contract-xml-schema` | `xmip-core-xml-schema-contract` |
-| `xmip-logic-soap` | `xmip-core-soap-logic` |
-| `xmip-logic-grpc` | `xmip-core-grpc-logic` |
+| `xmip-transport-file` | `xmip-core-transport-file` |
+| `xmip-transport-http` | `xmip-core-transport-http` |
+| `xmip-message-json` | `xmip-core-message-json` |
+| `xmip-message-xml` | `xmip-core-message-xml` |
+| `xmip-path-json-pointer` | `xmip-core-path-json-pointer` |
+| `xmip-path-xpath` | `xmip-core-path-xpath` |
+| `xmip-contract-json-schema` | `xmip-core-contract-json-schema` |
+| `xmip-contract-xml-schema` | `xmip-core-contract-xml-schema` |
+| `xmip-logic-soap` | `xmip-core-logic-soap` |
+| `xmip-logic-grpc` | `xmip-core-logic-grpc` |
 
-A second implementation of the same standard is now expressible, which was the point:
+The shape is close to ADR-0010 — the difference is the provider slot, which is what lets a second implementation exist:
 
 ```text
-xmip-core-json-schema-contract     shipped by Xmip
-xmip-acme-json-schema-contract     shipped by someone else
+xmip-core-contract-json-schema     shipped by Xmip
+xmip-acme-contract-json-schema     shipped by someone else
 ```
 
 ## Supersedes
 
-- ADR-0001, handler repository naming. A transport implementation is `xmip-core-<technology>-transport`, not `xmip-handler-<technology>`.
+- ADR-0001, handler repository naming. A transport implementation is `xmip-core-transport-<technology>`, not `xmip-handler-<technology>`.
 - ADR-0010, clauses 3, 6, 7, 8 and 9.
 
 ADR-0001 clause `xmip-<core-area>` for core repositories is unaffected.
