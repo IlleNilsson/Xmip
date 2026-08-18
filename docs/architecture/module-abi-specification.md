@@ -1,6 +1,6 @@
 # The Xmip module ABI
 
-**Status:** Proposed. Normative once accepted.
+**Status:** Accepted.
 **ABI version:** 1
 **Header:** [`include/xmip_module.h`](../../include/xmip_module.h)
 **Decided by:** ADR-0012 (the module boundary), ADR-0011 (naming), ADR-0010 (capability boundaries)
@@ -367,14 +367,26 @@ specification question.
 
 ---
 
-## Open
+## The licence of the boundary
 
-**The header's licence.** The header is marked `Apache-2.0 OR MIT` while Xmip
-is AGPL-3.0-or-later. This is deliberate and it is a decision, not an
-oversight: a boundary header under AGPL propagates AGPL to anyone who
-`#include`s it, which would make the boundary closed in exactly the way ADR-0012
-set out to prevent. "The boundary is the trait, not the licence" only holds if
-the trait itself carries no licence.
+`include/xmip_module.h` is `Apache-2.0 OR MIT`. Xmip itself remains
+AGPL-3.0-or-later and nothing here changes that.
 
-It needs the copyright holder's confirmation before this document leaves
-Proposed.
+The header is the one file in this repository that a third party must copy into
+their own build in order to implement anything at all. Under AGPL it would carry
+AGPL with it, and every implementer would inherit Xmip's licence by the act of
+`#include`. That is the outcome ADR-0012 exists to prevent. A boundary that only
+works by taking Xmip's licence is not a boundary; it is a moat.
+
+So the line is drawn where it was always meant to be drawn:
+
+> Xmip's implementation is AGPL. Xmip's boundary is not. Cross it under whatever
+> licence you like, and carry your own support.
+
+This exception is narrow and should stay narrow. It covers the header and
+nothing else. A binding crate that wraps the header is a convenience over a
+public specification and may be permissive too; anything that links
+`xmip-core` is Xmip's implementation and stays AGPL. The test is whether a file
+exists to *describe* the boundary or to *be* Xmip.
+
+Recorded as clause 9 of ADR-0012.
