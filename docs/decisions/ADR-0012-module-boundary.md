@@ -58,7 +58,9 @@ Re-exporting Rust types means a module author compiles against Xmip source. That
 
 9. The boundary carries no licence exception. The header is AGPL-3.0-or-later like the rest of Xmip. A user takes Xmip under Xmip's licence and may additionally have to satisfy the licences of what Xmip itself depends on; reconciling that is the user's business, not Xmip's.
 
-10. The Rust binding crate is `xmip-core-abi`. It replaces `crates/xmip-module-abi` (whose package is actually named `xmip-abi`) and `crates/xmip-module-api`. Neither parses under ADR-0011 — there is no provider named `module` — and the first disagrees with its own package name.
+10. The binding crate is `xmip-core-abi`. It replaces `crates/xmip-module-abi` (whose package is actually named `xmip-abi`) and `crates/xmip-module-api`. Neither parses under ADR-0011 — there is no provider named `module` — and the first disagrees with its own package name.
+
+11. `abi`, `cli` and `powershell` are surface modules, open to any provider. Xmip publishes `xmip-core-abi`; a provider extends it with `xmip-<provider>-abi`, and may ship `xmip-<provider>-cli` and `xmip-<provider>-powershell` for the command line. They take a provider and stop, because there is no external standard to name.
 
 ## The descriptor
 
@@ -127,9 +129,18 @@ A permissive header was considered and rejected. The case for it: the header is 
 
 What this ADR set out to make possible is unaffected. A module author is not obliged to write Rust, is not obliged to link Xmip code, and compiles against a C ABI rather than against Xmip source. That is a technical boundary and it stands. It was never a licence exemption, and "the boundary is the trait, not the licence" describes where Xmip stops dictating design.
 
-## The binding crate
+## The binding crate and the surface modules
 
-Clause 10. `xmip-core-abi` joins `xmip-core-cli`, `xmip-core-powershell`, `xmip-core-runtime`, `xmip-core-host`, `xmip-core-service`, `xmip-core-persistence`, `xmip-core-tracking` and `xmip-core-configuration` as a crate inside `Xmip` that has not been extracted to its own repository.
+Clauses 10 and 11. `abi` is a core module with a plugin surface, not internal plumbing. Xmip publishes `xmip-core-abi`. Any provider may extend it.
+
+```text
+xmip-core-abi      xmip-core-cli      xmip-core-powershell
+xmip-acme-abi      xmip-acme-cli      xmip-acme-powershell
+```
+
+These are **surface** modules under ADR-0011: a provider extends Xmip's own surface rather than implementing someone else's specification, so there is no standard to name and the name stops at the provider. That is the one case where a non-`core` provider may omit the last slot.
+
+A binding is a convenience over the header, never the definition of the boundary and never normative. A module that skips every binding and writes `extern "C"` by hand is exactly as conformant — which is the point of specifying the boundary in C rather than in a language.
 
 `xmip-module-api` collapses rather than moves. Its entire content is `pub use xmip_core::contracts::*` plus a re-export of the other crate; once the first goes, as clause 2 and the Consequences section require, nothing is left worth renaming.
 
