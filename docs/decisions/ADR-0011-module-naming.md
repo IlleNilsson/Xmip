@@ -30,9 +30,32 @@ xmip-<provider>-<module>-<standard>
 | `module` | the core module whose trait is implemented | exactly 1 |
 | `standard` | the standard, technology, dialect or vendor implemented | 0 or more |
 
-Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a core module; three or more is an implementation. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
+Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a name with no standard: a core module where the provider is `core`, a provider's extension of a surface module otherwise. Three or more is always an implementation. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
 
-Only `core` may omit the standard. Any other provider must name what it implements.
+Whether a name carries a standard is a property of the module, fixed once and recorded in
+the manifest, not a choice made per repository.
+
+A module is **standard-keyed** when its implementations are defined by someone else's
+specification. `transform`, `contract`, `path`, `transport`, `authenticate` and the rest
+are standard-keyed, and any provider other than `core` must name the standard —
+`xmip-saxon-transform-xslt`, never `xmip-saxon-transform`. Only `core` may omit it, because
+`xmip-core-transform` is the module itself rather than an implementation of anything.
+
+A module is **surface** when a provider extends Xmip's own surface rather than implementing
+an external specification. `abi`, `cli` and `powershell` are surface modules. They take a
+provider and stop:
+
+```text
+xmip-core-abi          xmip-core-cli          xmip-core-powershell
+xmip-acme-abi          xmip-acme-cli          xmip-acme-powershell
+```
+
+There is no standard to name, so requiring one would force an invented token. `xmip-acme-cli`
+is already unambiguous: it is Acme's contribution to the command surface. A provider
+publishes one of each at most, which is the accepted cost of the shorter name.
+
+Surface modules are open to any provider on the same terms as every other module. They are
+not core-only, and no approval is needed to publish one.
 
 ```text
 xmip-core-transform                core   ·  transform  ·  —             a core module
