@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: Apache-2.0 OR MIT */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
 /* Copyright the Xmip authors. */
 
 /*
@@ -10,9 +10,14 @@
  * here. A module written in C, C++, Zig, Go or Rust is the same module to the
  * host, and the host cannot tell which it loaded.
  *
- * Licence. Xmip itself is AGPL-3.0-or-later. This header is deliberately
- * permissive so that including it never propagates a licence to the implementer.
- * The boundary is the trait, not the licence.
+ * Licence. AGPL-3.0-or-later, like the rest of Xmip. There is no exception for
+ * the boundary. A user takes Xmip under Xmip's licence, and may additionally have
+ * to satisfy the licences of what Xmip itself depends on. Reconciling that is the
+ * user's business, not Xmip's.
+ *
+ * The boundary is still a boundary in the sense that matters here: it is a C ABI,
+ * it is language-neutral, and no implementer is obliged to write Rust or link
+ * Xmip code. It is not a licence exemption.
  */
 
 #ifndef XMIP_MODULE_H
