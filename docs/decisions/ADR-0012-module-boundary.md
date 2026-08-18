@@ -56,6 +56,8 @@ Re-exporting Rust types means a module author compiles against Xmip source. That
 7. Ownership, lifetime and error representation are part of the specification, not left to convention.
 8. Unwinding never crosses the boundary.
 
+9. The header that defines the boundary is licensed permissively, so that implementing against it never propagates Xmip's licence. Xmip's implementation stays AGPL-3.0-or-later.
+
 ## The descriptor
 
 ```c
@@ -107,6 +109,22 @@ A module written in C#, PowerShell or Java never links Xmip code at all. A modul
 
 The existing `module_kind` values disappear. `xmip-handler-file`, the one concrete implementation, migrates to `xmip-core-transport-file` under ADR-0010 and adopts the new descriptor at that point.
 
+## The specification
+
+Written. It is `docs/architecture/module-abi-specification.md`, with the header at `include/xmip_module.h`.
+
+It covers the universal boundary — primitives, status codes, the descriptor, streams, the host table, the module handle, the entrypoint and the vtable header — and four trait tables: transport, message, path and contract. Those four are creation wave one.
+
+The other thirteen traits are deliberately unspecified. The reasoning above still holds for them: a trait table designed without an implementation in front of it is a guess, and a guess published as `v1` becomes a permanent compatibility promise. Each is written when its first implementation is.
+
+## The licence of the boundary
+
+Clause 9 above resolves what this ADR set out to make possible. `include/xmip_module.h` is `Apache-2.0 OR MIT`; Xmip remains AGPL-3.0-or-later.
+
+The header is the one file a third party must copy into their own build in order to implement anything. Under AGPL it would carry AGPL with it, and every implementer would inherit Xmip's licence by the act of `#include` — which is the outcome this ADR exists to prevent. A boundary that only works by taking Xmip's licence is not a boundary; it is a moat.
+
+The exception is narrow and stays narrow: the header and nothing else. A binding crate wrapping the header is a convenience over a public specification and may be permissive too. Anything linking `xmip-core` is Xmip's implementation and stays AGPL. The test is whether a file exists to *describe* the boundary or to *be* Xmip.
+
 ## Open
 
-The specification itself is not written by this ADR. It decides the shape; the content — the exact function tables per trait, the error enumeration, the buffer conventions — is the next piece of work, and is best done alongside the first real implementation rather than in the abstract.
+Nothing in this ADR. What remains is implementation: a first module built against the specification, and a conformance suite able to drive the seven rules in its section 11 from outside a module.
