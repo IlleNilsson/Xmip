@@ -354,39 +354,54 @@ every one of these from outside the module. It does not exist yet.
 
 ## 13. Rust bindings
 
-`xmip-module-abi` becomes a binding crate over this header rather than the
-definition of the boundary. It is convenience, and it is not normative. A Rust
-module that bypasses it and writes `extern "C"` by hand is exactly as
-conformant.
+The binding crate is `xmip-core-abi`. It is a convenience over this header, not
+the definition of the boundary, and it is not normative. A Rust module that
+bypasses it and writes `extern "C"` by hand is exactly as conformant.
 
-The existing `xmip-module-api` re-export — `pub use xmip_core::contracts::*`
-— is what currently pulls an implementer into Rust, and into AGPL by
-linkage. That re-export is what this boundary replaces. Removing it is
-tracked separately; it is a source change in a live crate, not a
-specification question.
+It joins `xmip-core-cli`, `xmip-core-powershell`, `xmip-core-runtime`,
+`xmip-core-host`, `xmip-core-service`, `xmip-core-persistence`,
+`xmip-core-tracking` and `xmip-core-configuration` as a crate that lives inside
+`Xmip` and has not been extracted to its own repository.
+
+`xmip-core-abi` replaces two crates that exist today and carry three names
+between them, none of which parse under ADR-0011:
+
+| directory | package | why it fails |
+|---|---|---|
+| `crates/xmip-module-abi/` | `xmip-abi` | directory and package disagree |
+| `crates/xmip-module-api/` | `xmip-module-api` | there is no provider named `module` |
+
+`xmip-module-api` collapses rather than moves. Its entire content is
+`pub use xmip_core::contracts::*` plus a re-export of the other crate. The first
+of those has to go — it is what pulls an implementer into Rust, and into AGPL by
+linkage — and once it does, nothing is left worth renaming.
+
+This is a source change in live crates with dependents, not a specification
+question, and belongs in its own reviewed change.
 
 ---
 
-## The licence of the boundary
+## 14. The licence of the boundary
 
-`include/xmip_module.h` is `Apache-2.0 OR MIT`. Xmip itself remains
-AGPL-3.0-or-later and nothing here changes that.
+`include/xmip_module.h` is AGPL-3.0-or-later, like the rest of Xmip. There is no
+exception for the boundary.
 
-The header is the one file in this repository that a third party must copy into
-their own build in order to implement anything at all. Under AGPL it would carry
-AGPL with it, and every implementer would inherit Xmip's licence by the act of
-`#include`. That is the outcome ADR-0012 exists to prevent. A boundary that only
-works by taking Xmip's licence is not a boundary; it is a moat.
+A permissive header was considered and rejected. The case for it: the header is
+the one file a third party must copy into their own build, so under AGPL it
+carries AGPL with it. The case against, and the one that decided it: Xmip does
+not undertake to resolve anyone's licensing position. A user takes Xmip under
+Xmip's licence, and may additionally have to satisfy the licences of what Xmip
+itself depends on. Reconciling that is the user's business.
 
-So the line is drawn where it was always meant to be drawn:
+The boundary remains a boundary in the sense that matters to this document. It
+is a C ABI, it is language-neutral, and no implementer is obliged to write Rust
+or to link Xmip code. What it is not is a licence exemption. "The boundary is
+the trait, not the licence" describes where Xmip stops dictating *design* — it
+was never a promise about *licence*.
 
-> Xmip's implementation is AGPL. Xmip's boundary is not. Cross it under whatever
-> licence you like, and carry your own support.
-
-This exception is narrow and should stay narrow. It covers the header and
-nothing else. A binding crate that wraps the header is a convenience over a
-public specification and may be permissive too; anything that links
-`xmip-core` is Xmip's implementation and stays AGPL. The test is whether a file
-exists to *describe* the boundary or to *be* Xmip.
+A note for implementers, and not legal advice: whether an AGPL header propagates
+to code that includes it is contested, and turns on facts about the header and
+on jurisdiction. Anyone intending to ship a module under a different licence
+should take their own advice rather than rely on this document.
 
 Recorded as clause 9 of ADR-0012.
