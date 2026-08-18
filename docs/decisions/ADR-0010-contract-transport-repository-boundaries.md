@@ -1,8 +1,12 @@
-# ADR-0005: Contract, transport and handler repository boundaries
+# ADR-0010: Contract, transport and handler repository boundaries
 
 ## Status
 
-Proposed.
+Accepted.
+
+Renumbered from ADR-0005, which collided with ADR-0005 pre-alpha refactor discipline.
+
+The repository naming patterns in clauses 3, 6, 7, 8 and 9 are superseded by ADR-0011. Every other decision in this ADR stands.
 
 ## Context
 
