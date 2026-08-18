@@ -352,19 +352,24 @@ every one of these from outside the module. It does not exist yet.
   These are not stable across compiler versions, let alone languages.
 - **Thirteen of the seventeen traits.** By design.
 
-## 13. Rust bindings
+## 13. Bindings
 
-The binding crate is `xmip-core-abi`. It is a convenience over this header, not
-the definition of the boundary, and it is not normative. A Rust module that
-bypasses it and writes `extern "C"` by hand is exactly as conformant.
+`abi` is a core module with a plugin surface, not internal plumbing. It is a **surface
+module** under ADR-0011: a provider extends Xmip's own surface rather than implementing an
+external specification, so the name takes a provider and stops.
 
-It joins `xmip-core-cli`, `xmip-core-powershell`, `xmip-core-runtime`,
-`xmip-core-host`, `xmip-core-service`, `xmip-core-persistence`,
-`xmip-core-tracking` and `xmip-core-configuration` as a crate that lives inside
-`Xmip` and has not been extracted to its own repository.
+```text
+xmip-core-abi     Xmip's Rust binding
+xmip-acme-abi     Acme's binding, in whatever language Acme works in
+```
 
-`xmip-core-abi` replaces two crates that exist today and carry three names
-between them, none of which parse under ADR-0011:
+Anyone may publish one. A binding is a convenience over this header, never the definition
+of the boundary, and never normative. A module that skips every binding and writes
+`extern "C"` by hand is exactly as conformant — which is the point of specifying the
+boundary in C rather than in a language.
+
+`xmip-core-abi` replaces two crates that exist today and carry three names between them,
+none of which parse under ADR-0011:
 
 | directory | package | why it fails |
 |---|---|---|
@@ -372,12 +377,12 @@ between them, none of which parse under ADR-0011:
 | `crates/xmip-module-api/` | `xmip-module-api` | there is no provider named `module` |
 
 `xmip-module-api` collapses rather than moves. Its entire content is
-`pub use xmip_core::contracts::*` plus a re-export of the other crate. The first
-of those has to go — it is what pulls an implementer into Rust, and into AGPL by
-linkage — and once it does, nothing is left worth renaming.
+`pub use xmip_core::contracts::*` plus a re-export of the other crate. The first of those
+has to go — it is what pulls an implementer into Rust, and into AGPL by linkage — and once
+it does, nothing is left worth renaming.
 
-This is a source change in live crates with dependents, not a specification
-question, and belongs in its own reviewed change.
+This is a source change in live crates with dependents, not a specification question, and
+belongs in its own reviewed change.
 
 ---
 
