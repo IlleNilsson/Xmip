@@ -56,6 +56,12 @@ Re-exporting Rust types means a module author compiles against Xmip source. That
 7. Ownership, lifetime and error representation are part of the specification, not left to convention.
 8. Unwinding never crosses the boundary.
 
+9. The boundary carries no licence exception. The header is AGPL-3.0-or-later like the rest of Xmip. A user takes Xmip under Xmip's licence and may additionally have to satisfy the licences of what Xmip itself depends on; reconciling that is the user's business, not Xmip's.
+
+10. The binding crate is `xmip-core-abi`. It replaces `crates/xmip-module-abi` (whose package is actually named `xmip-abi`) and `crates/xmip-module-api`. Neither parses under ADR-0011 — there is no provider named `module` — and the first disagrees with its own package name.
+
+11. `abi`, `cli` and `powershell` are surface modules, open to any provider. Xmip publishes `xmip-core-abi`; a provider extends it with `xmip-<provider>-abi`, and may ship `xmip-<provider>-cli` and `xmip-<provider>-powershell` for the command line. They take a provider and stop, because there is no external standard to name.
+
 ## The descriptor
 
 ```c
@@ -107,6 +113,37 @@ A module written in C#, PowerShell or Java never links Xmip code at all. A modul
 
 The existing `module_kind` values disappear. `xmip-handler-file`, the one concrete implementation, migrates to `xmip-core-transport-file` under ADR-0010 and adopts the new descriptor at that point.
 
+## The specification
+
+Written. It is `docs/architecture/module-abi-specification.md`, with the header at `include/xmip_module.h`.
+
+It covers the universal boundary — primitives, status codes, the descriptor, streams, the host table, the module handle, the entrypoint and the vtable header — and four trait tables: transport, message, path and contract. Those four are creation wave one.
+
+The other thirteen traits are deliberately unspecified. The reasoning above still holds for them: a trait table designed without an implementation in front of it is a guess, and a guess published as `v1` becomes a permanent compatibility promise. Each is written when its first implementation is.
+
+## The licence of the boundary
+
+Clause 9. `include/xmip_module.h` is AGPL-3.0-or-later, like the rest of Xmip.
+
+A permissive header was considered and rejected. The case for it: the header is the one file a third party must copy into their own build, so under AGPL it carries AGPL with it, and an implementer inherits Xmip's licence by the act of `#include`. The case against, and the one that decided it: Xmip does not undertake to resolve anyone's licensing position. A user takes Xmip under Xmip's licence, and may additionally have to satisfy the licences of what Xmip itself depends on. Reconciling that is the user's business.
+
+What this ADR set out to make possible is unaffected. A module author is not obliged to write Rust, is not obliged to link Xmip code, and compiles against a C ABI rather than against Xmip source. That is a technical boundary and it stands. It was never a licence exemption, and "the boundary is the trait, not the licence" describes where Xmip stops dictating design.
+
+## The binding crate and the surface modules
+
+Clauses 10 and 11. `abi` is a core module with a plugin surface, not internal plumbing. Xmip publishes `xmip-core-abi`. Any provider may extend it.
+
+```text
+xmip-core-abi      xmip-core-cli      xmip-core-powershell
+xmip-acme-abi      xmip-acme-cli      xmip-acme-powershell
+```
+
+These are **surface** modules under ADR-0011: a provider extends Xmip's own surface rather than implementing someone else's specification, so there is no standard to name and the name stops at the provider. That is the one case where a non-`core` provider may omit the last slot.
+
+A binding is a convenience over the header, never the definition of the boundary and never normative. A module that skips every binding and writes `extern "C"` by hand is exactly as conformant — which is the point of specifying the boundary in C rather than in a language.
+
+`xmip-module-api` collapses rather than moves. Its entire content is `pub use xmip_core::contracts::*` plus a re-export of the other crate; once the first goes, as clause 2 and the Consequences section require, nothing is left worth renaming.
+
 ## Open
 
-The specification itself is not written by this ADR. It decides the shape; the content — the exact function tables per trait, the error enumeration, the buffer conventions — is the next piece of work, and is best done alongside the first real implementation rather than in the abstract.
+Nothing in this ADR. What remains is implementation: a first module built against the specification, and a conformance suite able to drive the seven rules in its section 11 from outside a module.
