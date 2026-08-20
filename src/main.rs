@@ -22,7 +22,10 @@ fn main() {
 
     let assigned = apply_assignment(&mut work.journey, &work.message);
     println!("Assignment created Message: {}", assigned.message_id);
-    println!("Assignment reused Stream: {}\n", assigned.stream_ref.stream_id);
+    println!(
+        "Assignment reused Stream: {}\n",
+        assigned.stream_ref.stream_id
+    );
 
     let transformed = apply_transformation(
         &mut work.journey,
@@ -30,7 +33,10 @@ fn main() {
         "store://transformed/order-1001",
     );
     println!("Transformation created Message: {}", transformed.message_id);
-    println!("Transformation created Stream: {}\n", transformed.stream_ref.stream_id);
+    println!(
+        "Transformation created Stream: {}\n",
+        transformed.stream_ref.stream_id
+    );
 
     let pass_through = receive_event(
         RuntimeEvent::FileReceived {
@@ -40,8 +46,17 @@ fn main() {
     );
 
     if pass_through.message.execution_profile == ExecutionProfile::PassThrough {
-        println!("Pass-through Journey created: {}", pass_through.journey.journey_id);
-        println!("Pass-through Message created: {}", pass_through.message.message_id);
-        println!("Pass-through Stream referenced: {}", pass_through.message.stream_ref.uri);
+        println!(
+            "Pass-through Journey created: {}",
+            pass_through.journey.journey_id
+        );
+        println!(
+            "Pass-through Message created: {}",
+            pass_through.message.message_id
+        );
+        println!(
+            "Pass-through Stream referenced: {}",
+            pass_through.message.stream_ref.uri
+        );
     }
 }

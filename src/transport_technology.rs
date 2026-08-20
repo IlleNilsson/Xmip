@@ -80,7 +80,10 @@ pub fn file_transport_tree() -> Vec<TransportTechnology> {
             layer: TransportTechnologyLayer::Watch,
             built_on: vec!["file-system".to_string()],
             reusable_by: vec!["file".to_string()],
-            events: vec![TransportEventKind::TimerElapsed, TransportEventKind::FileReady],
+            events: vec![
+                TransportEventKind::TimerElapsed,
+                TransportEventKind::FileReady,
+            ],
         },
         TransportTechnology {
             name: "file".to_string(),
@@ -131,8 +134,15 @@ pub fn ip_transport_tree() -> Vec<TransportTechnology> {
             family: TransportTechnologyFamily::IpNetwork,
             layer: TransportTechnologyLayer::Application,
             built_on: vec!["tcp".to_string()],
-            reusable_by: vec!["soap".to_string(), "rest".to_string(), "webhook".to_string()],
-            events: vec![TransportEventKind::RequestReceived, TransportEventKind::ResponseReceived],
+            reusable_by: vec![
+                "soap".to_string(),
+                "rest".to_string(),
+                "webhook".to_string(),
+            ],
+            events: vec![
+                TransportEventKind::RequestReceived,
+                TransportEventKind::ResponseReceived,
+            ],
         },
         TransportTechnology {
             name: "grpc".to_string(),
@@ -140,7 +150,10 @@ pub fn ip_transport_tree() -> Vec<TransportTechnology> {
             layer: TransportTechnologyLayer::Application,
             built_on: vec!["http".to_string()],
             reusable_by: Vec::new(),
-            events: vec![TransportEventKind::RequestReceived, TransportEventKind::ResponseReceived],
+            events: vec![
+                TransportEventKind::RequestReceived,
+                TransportEventKind::ResponseReceived,
+            ],
         },
     ]
 }
@@ -187,7 +200,10 @@ mod tests {
 
     #[test]
     fn file_is_parallel_to_ip_networking() {
-        assert_eq!(family_of("file"), Some(TransportTechnologyFamily::FileSystem));
+        assert_eq!(
+            family_of("file"),
+            Some(TransportTechnologyFamily::FileSystem)
+        );
         assert_eq!(family_of("ip"), Some(TransportTechnologyFamily::IpNetwork));
         assert!(!depends_on("file", "ip"));
     }

@@ -60,7 +60,9 @@ impl<S: ExclusivenessStore> FileReceiveSession<S> {
     }
 
     pub fn acquire(&self, now: SystemTime) -> Result<AcquireOutcome, FileReceiveError> {
-        self.store.request(self.request.clone(), now).map_err(Into::into)
+        self.store
+            .request(self.request.clone(), now)
+            .map_err(Into::into)
     }
 
     pub fn renew(&self, now: SystemTime) -> Result<(), FileReceiveError> {
@@ -69,7 +71,9 @@ impl<S: ExclusivenessStore> FileReceiveSession<S> {
     }
 
     pub fn release(&self, now: SystemTime) -> Result<(), FileReceiveError> {
-        self.store.release(self.request.task_id, now).map_err(Into::into)
+        self.store
+            .release(self.request.task_id, now)
+            .map_err(Into::into)
     }
 
     pub fn receive(
@@ -115,7 +119,10 @@ mod tests {
     fn acquired_resource_creates_message_and_journey() {
         let store = Arc::new(InMemoryExclusivenessStore::default());
         let owner = session(store, "file-host-1");
-        assert!(matches!(owner.acquire(now()).unwrap(), AcquireOutcome::Acquired(_)));
+        assert!(matches!(
+            owner.acquire(now()).unwrap(),
+            AcquireOutcome::Acquired(_)
+        ));
 
         let (journey, message) = owner
             .receive("file:///incoming/orders/order-1.xml", now())
@@ -132,8 +139,14 @@ mod tests {
         let first = session(Arc::clone(&store), "file-host-1");
         let second = session(store, "file-host-2");
 
-        assert!(matches!(first.acquire(now()).unwrap(), AcquireOutcome::Acquired(_)));
-        assert_eq!(second.acquire(now()).unwrap(), AcquireOutcome::Queued { position: 1 });
+        assert!(matches!(
+            first.acquire(now()).unwrap(),
+            AcquireOutcome::Acquired(_)
+        ));
+        assert_eq!(
+            second.acquire(now()).unwrap(),
+            AcquireOutcome::Queued { position: 1 }
+        );
         assert_eq!(
             second.receive("file:///incoming/orders/order-1.xml", now()),
             Err(FileReceiveError::NotAcquired)
