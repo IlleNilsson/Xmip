@@ -30,7 +30,24 @@ xmip-<provider>-<module>-<standard>
 | `module` | the core module whose trait is implemented | exactly 1 |
 | `standard` | the standard, technology, dialect or vendor implemented | 0 or more |
 
-Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a name with no standard: a core module where the provider is `core`, a provider's extension of a surface module otherwise. Three or more is always an implementation. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
+Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a name with no standard: a core module where the provider is `core`, a provider's extension of a surface module otherwise. Three or more is always an implementation.
+
+A name with a single token after `xmip-` is **platform level**. It carries no provider and
+implements nothing, so it is not a module name at all:
+
+```text
+xmip-core        foundation contracts, identifiers and shared types
+xmip-template    scaffolding for new repositories
+```
+
+Two repositories sit outside the pattern entirely, because they are not named for what they
+contain: `Xmip`, the platform itself, and `.github`, the organisation defaults.
+
+This ADR governs module names. It does not govern infrastructure, and forcing infrastructure
+into the pattern produces worse names than leaving it out. `xmip-repo-template` was
+considered and rejected for exactly that reason: two tokens after `xmip-` reads as provider
+`repo` and module `template`, and there is no such provider and no such trait. One token
+keeps it level with `xmip-core`, which is what it is. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
 
 Whether a name carries a standard is a property of the module, fixed once and recorded in
 the manifest, not a choice made per repository.
@@ -102,6 +119,50 @@ Xmip’s own path model — dot navigation, index navigation and predicates — 
 `xmip-core-*` is what Xmip ships, hosts and supports. Anything else names its own provider and carries its own licence, its own support and its own responsibility. No approval, no registration and no negotiation is required to publish one.
 
 This is why the rule needs no enforcement mechanism. The name states who stands behind the module.
+
+### The provider slot and the standard slot are not alike
+
+```text
+xmip-acme-contract-volkswagen-multimedia
+     ^^^^          ^^^^^^^^^^^^^^^^^^^^^
+     who made it   what it talks to
+```
+
+The provider slot is **attributive**. Under the endorsement rule it states who publishes and
+supports the module, so a name there is a claim about authorship.
+
+The standard slot is **descriptive**. It names someone else's specification, and naming the
+standard you interoperate with is simply accurate. The manifest already does this two dozen
+times — `aws-sqs`, `azure-service-bus`, `ibm-mq`, `google-pub-sub`, `oracle`, `mssql`,
+`opc-ua`. None of those need anyone's permission, and neither would
+`volkswagen-multimedia`.
+
+So a vendor name in slot 3 is unremarkable. A vendor name in slot 2 is a statement about who
+built the thing, and is only correct when they did.
+
+### A worked example: CAN bus
+
+`can-bus` is a transport standard, so it fills the standard slot like any other. The
+provider slot is what lets the same standard have more than one implementation:
+
+```text
+xmip-core-transport-can-bus     Xmip's own
+xmip-bosch-transport-can-bus    Bosch's, should Bosch ever publish one
+```
+
+CAN was developed by Robert Bosch GmbH, and the `bosch` provider token is set aside here for
+that reason. If Bosch, or anyone acting for Bosch, wants to publish CAN modules for Xmip,
+the token is theirs and Xmip will not use it for anything else.
+
+**Xmip is not affiliated with, endorsed by, or sponsored by Robert Bosch GmbH.** No
+`xmip-bosch-*` repository exists, and Xmip does not create repositories under another
+organisation's name. The token appears in this document as an illustration of the provider
+slot and nowhere else — it is deliberately absent from `commonRepositories`, which is the
+list the reconcile script acts on. It will be removed on request from Bosch.
+
+This is the general shape of the rule, not a special case. Any vendor whose name is the
+obvious provider for a standard they originated is in the same position: the token is
+reserved for them, and until they take it up, `core` is the only provider that ships.
 
 ## Relationship to ADR-0010
 
