@@ -120,6 +120,30 @@ Xmip’s own path model — dot navigation, index navigation and predicates — 
 
 This is why the rule needs no enforcement mechanism. The name states who stands behind the module.
 
+### A worked example: CAN bus
+
+`can-bus` is a transport standard, so it fills the standard slot like any other. The
+provider slot is what lets the same standard have more than one implementation:
+
+```text
+xmip-core-transport-can-bus     Xmip's own
+xmip-bosch-transport-can-bus    Bosch's, should Bosch ever publish one
+```
+
+CAN was developed by Robert Bosch GmbH, and the `bosch` provider token is set aside here for
+that reason. If Bosch, or anyone acting for Bosch, wants to publish CAN modules for Xmip,
+the token is theirs and Xmip will not use it for anything else.
+
+**Xmip is not affiliated with, endorsed by, or sponsored by Robert Bosch GmbH.** No
+`xmip-bosch-*` repository exists, and Xmip does not create repositories under another
+organisation's name. The token appears in this document as an illustration of the provider
+slot and nowhere else — it is deliberately absent from `commonRepositories`, which is the
+list the reconcile script acts on. It will be removed on request from Bosch.
+
+This is the general shape of the rule, not a special case. Any vendor whose name is the
+obvious provider for a standard they originated is in the same position: the token is
+reserved for them, and until they take it up, `core` is the only provider that ships.
+
 ## Relationship to ADR-0010
 
 ADR-0010 remains in force. Its architectural decisions stand unchanged:
