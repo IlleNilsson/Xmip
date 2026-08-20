@@ -120,6 +120,26 @@ Xmip’s own path model — dot navigation, index navigation and predicates — 
 
 This is why the rule needs no enforcement mechanism. The name states who stands behind the module.
 
+### The provider slot and the standard slot are not alike
+
+```text
+xmip-acme-contract-volkswagen-multimedia
+     ^^^^          ^^^^^^^^^^^^^^^^^^^^^
+     who made it   what it talks to
+```
+
+The provider slot is **attributive**. Under the endorsement rule it states who publishes and
+supports the module, so a name there is a claim about authorship.
+
+The standard slot is **descriptive**. It names someone else's specification, and naming the
+standard you interoperate with is simply accurate. The manifest already does this two dozen
+times — `aws-sqs`, `azure-service-bus`, `ibm-mq`, `google-pub-sub`, `oracle`, `mssql`,
+`opc-ua`. None of those need anyone's permission, and neither would
+`volkswagen-multimedia`.
+
+So a vendor name in slot 3 is unremarkable. A vendor name in slot 2 is a statement about who
+built the thing, and is only correct when they did.
+
 ### A worked example: CAN bus
 
 `can-bus` is a transport standard, so it fills the standard slot like any other. The
