@@ -69,7 +69,7 @@ Receive Configuration
     -> Evaluation and validation
 ```
 
-`xmip-contract` owns Contract implication, evaluation coordination and results. Technology repositories implement specific Contract technologies such as XML Schema and JSON Schema.
+`xmip-core-contract` owns Contract implication, evaluation coordination and results. Technology repositories implement specific Contract technologies such as XML Schema and JSON Schema.
 
 ## Representation, Contract and Path
 
@@ -97,7 +97,7 @@ Platform     Platform-wide runtime services
 
 Technology repositories are direct children of their common capability repository and become first-party Git submodules according to the manifest.
 
-Receive and Send own orchestration. Direction-neutral transport implementations live under `xmip-transport-*`; content representations live under `xmip-message-*`; method and operation semantics live under `xmip-logic-*`. Handler is a runtime role, not a repository prefix.
+Receive and Send own orchestration. Direction-neutral transport implementations are named `xmip-<provider>-transport-<standard>`; content representations `xmip-<provider>-message-<standard>`; method and operation semantics `xmip-<provider>-logic-<standard>`. Xmip publishes its own as `xmip-core-*`. Handler is a runtime role, not a repository prefix.
 
 Each repository has one primary Rust crate with the same lowercase hyphenated name as the repository unless an explicit architecture decision states otherwise.
 
