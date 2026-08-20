@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use xmip_configuration::parse_service_configuration;
-use xmip_runtime::execution_tree::{
-    build_execution_tree, ExecutionTree, StartupValidationReport,
-};
+use xmip_runtime::execution_tree::{build_execution_tree, ExecutionTree, StartupValidationReport};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum XmipServiceState {
@@ -52,11 +50,14 @@ pub struct XmipServiceStartupPlan {
     pub validation_report: StartupValidationReport,
 }
 
-pub fn plan_startup_from_toml(source: &str) -> Result<XmipServiceStartupPlan, StartupValidationReport> {
-    let configuration = parse_service_configuration(source).map_err(|error| StartupValidationReport {
-        errors: vec![format!("configuration parse failed: {error}")],
-        warnings: Vec::new(),
-    })?;
+pub fn plan_startup_from_toml(
+    source: &str,
+) -> Result<XmipServiceStartupPlan, StartupValidationReport> {
+    let configuration =
+        parse_service_configuration(source).map_err(|error| StartupValidationReport {
+            errors: vec![format!("configuration parse failed: {error}")],
+            warnings: Vec::new(),
+        })?;
 
     let (execution_tree, validation_report) = build_execution_tree(configuration)?;
 
