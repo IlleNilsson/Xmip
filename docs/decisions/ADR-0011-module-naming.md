@@ -30,7 +30,24 @@ xmip-<provider>-<module>-<standard>
 | `module` | the core module whose trait is implemented | exactly 1 |
 | `standard` | the standard, technology, dialect or vendor implemented | 0 or more |
 
-Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a name with no standard: a core module where the provider is `core`, a provider's extension of a surface module otherwise. Three or more is always an implementation. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
+Provider and module are single tokens. Everything after them is the standard. Two tokens after `xmip-` is a name with no standard: a core module where the provider is `core`, a provider's extension of a surface module otherwise. Three or more is always an implementation.
+
+A name with a single token after `xmip-` is **platform level**. It carries no provider and
+implements nothing, so it is not a module name at all:
+
+```text
+xmip-core        foundation contracts, identifiers and shared types
+xmip-template    scaffolding for new repositories
+```
+
+Two repositories sit outside the pattern entirely, because they are not named for what they
+contain: `Xmip`, the platform itself, and `.github`, the organisation defaults.
+
+This ADR governs module names. It does not govern infrastructure, and forcing infrastructure
+into the pattern produces worse names than leaving it out. `xmip-repo-template` was
+considered and rejected for exactly that reason: two tokens after `xmip-` reads as provider
+`repo` and module `template`, and there is no such provider and no such trait. One token
+keeps it level with `xmip-core`, which is what it is. Every name therefore resolves without a lookup table, and a multi-token standard needs no special handling because it sits at the end.
 
 Whether a name carries a standard is a property of the module, fixed once and recorded in
 the manifest, not a choice made per repository.
