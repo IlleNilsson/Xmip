@@ -213,7 +213,10 @@ mod tests {
 
         assert_eq!(received.journey_id, transformed.journey_id);
         assert_ne!(received.message_id, transformed.message_id);
-        assert_ne!(received.stream_ref.stream_id, transformed.stream_ref.stream_id);
+        assert_ne!(
+            received.stream_ref.stream_id,
+            transformed.stream_ref.stream_id
+        );
         assert_eq!(journey.messages.len(), 2);
     }
 
@@ -225,10 +228,8 @@ mod tests {
             durability: MessageDurability::Ephemeral,
         };
 
-        let (_journey, message) = create_initial_message_with_treatment(
-            "store://incoming/tiny-text",
-            treatment,
-        );
+        let (_journey, message) =
+            create_initial_message_with_treatment("store://incoming/tiny-text", treatment);
 
         assert_eq!(message.priority, MessagePriority::Immediate);
         assert_eq!(message.execution_profile, ExecutionProfile::Conversation);
@@ -242,10 +243,8 @@ mod tests {
             execution_profile: ExecutionProfile::PassThrough,
             durability: MessageDurability::Durable,
         };
-        let (_journey, received) = create_initial_message_with_treatment(
-            "store://incoming/heavy",
-            treatment,
-        );
+        let (_journey, received) =
+            create_initial_message_with_treatment("store://incoming/heavy", treatment);
         let moved = create_derived_message(
             &received,
             "store://outgoing/heavy",
