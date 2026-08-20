@@ -50,7 +50,11 @@ pub fn to_service_configuration(document: XmipConfigurationDocument) -> XmipServ
         service_name: document.service.name,
         cluster_name: document.service.cluster_name,
         node_name: document.service.node_name,
-        modules: document.modules.into_iter().map(to_configured_module).collect(),
+        modules: document
+            .modules
+            .into_iter()
+            .map(to_configured_module)
+            .collect(),
         xmip_processes: document
             .xmip_processes
             .into_iter()

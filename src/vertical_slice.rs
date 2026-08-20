@@ -108,7 +108,13 @@ mod tests {
         assert_eq!(work.message.journey_id, assigned.journey_id);
         assert_eq!(assigned.journey_id, transformed.journey_id);
         assert_eq!(work.journey.messages.len(), 3);
-        assert_eq!(work.message.stream_ref.stream_id, assigned.stream_ref.stream_id);
-        assert_ne!(assigned.stream_ref.stream_id, transformed.stream_ref.stream_id);
+        assert_eq!(
+            work.message.stream_ref.stream_id,
+            assigned.stream_ref.stream_id
+        );
+        assert_ne!(
+            assigned.stream_ref.stream_id,
+            transformed.stream_ref.stream_id
+        );
     }
 }

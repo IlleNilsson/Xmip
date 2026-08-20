@@ -261,7 +261,9 @@ fn validate_required_module(
     owner: &str,
 ) {
     if !configured_modules.contains(required_module) {
-        errors.push(format!("{owner} requires missing module '{required_module}'"));
+        errors.push(format!(
+            "{owner} requires missing module '{required_module}'"
+        ));
         return;
     }
 
@@ -282,7 +284,10 @@ fn verify_extension_manifest(extension: &ExtensionManifest, errors: &mut Vec<Str
     }
 
     if extension.entrypoint.path.trim().is_empty() {
-        errors.push(format!("extension '{}' requires an entrypoint path", extension.name));
+        errors.push(format!(
+            "extension '{}' requires an entrypoint path",
+            extension.name
+        ));
     }
 }
 

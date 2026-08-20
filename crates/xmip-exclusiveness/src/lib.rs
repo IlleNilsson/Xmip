@@ -26,7 +26,11 @@ pub struct ExclusiveOwner {
 }
 
 impl ExclusiveOwner {
-    pub fn new(cluster: impl Into<String>, node: impl Into<String>, process: impl Into<String>) -> Self {
+    pub fn new(
+        cluster: impl Into<String>,
+        node: impl Into<String>,
+        process: impl Into<String>,
+    ) -> Self {
         Self {
             cluster_name: cluster.into(),
             node_name: node.into(),
@@ -81,7 +85,11 @@ pub enum ExclusivenessError {
 }
 
 pub trait ExclusivenessStore: Send + Sync {
-    fn request(&self, request: ExclusiveRequest, now: SystemTime) -> Result<AcquireOutcome, ExclusivenessError>;
+    fn request(
+        &self,
+        request: ExclusiveRequest,
+        now: SystemTime,
+    ) -> Result<AcquireOutcome, ExclusivenessError>;
     fn poll(&self, task_id: Uuid, now: SystemTime) -> Result<AcquireOutcome, ExclusivenessError>;
     fn renew(&self, task_id: Uuid, now: SystemTime) -> Result<ExclusiveLease, ExclusivenessError>;
     fn release(&self, task_id: Uuid, now: SystemTime) -> Result<(), ExclusivenessError>;
@@ -100,11 +108,17 @@ pub struct InMemoryExclusivenessStore {
 
 impl InMemoryExclusivenessStore {
     fn lock(&self) -> Result<std::sync::MutexGuard<'_, State>, ExclusivenessError> {
-        self.state.lock().map_err(|_| ExclusivenessError::StoreUnavailable)
+        self.state
+            .lock()
+            .map_err(|_| ExclusivenessError::StoreUnavailable)
     }
 
     fn expire_and_promote(state: &mut State, boundary: &ExclusivenessBoundary, now: SystemTime) {
-        if state.holders.get(boundary).is_some_and(|lease| lease.is_expired_at(now)) {
+        if state
+            .holders
+            .get(boundary)
+            .is_some_and(|lease| lease.is_expired_at(now))
+        {
             state.holders.remove(boundary);
         }
 
@@ -112,9 +126,13 @@ impl InMemoryExclusivenessStore {
             return;
         }
 
-        let Some(queue) = state.queues.get_mut(boundary) else { return; };
+        let Some(queue) = state.queues.get_mut(boundary) else {
+            return;
+        };
         while let Some(request) = queue.pop_front() {
-            if now.duration_since(request.requested_at).unwrap_or_default() >= request.acquire_timeout {
+            if now.duration_since(request.requested_at).unwrap_or_default()
+                >= request.acquire_timeout
+            {
                 continue;
             }
             let lease = ExclusiveLease {
@@ -129,7 +147,11 @@ impl InMemoryExclusivenessStore {
 }
 
 impl ExclusivenessStore for InMemoryExclusivenessStore {
-    fn request(&self, request: ExclusiveRequest, now: SystemTime) -> Result<AcquireOutcome, ExclusivenessError> {
+    fn request(
+        &self,
+        request: ExclusiveRequest,
+        now: SystemTime,
+    ) -> Result<AcquireOutcome, ExclusivenessError> {
         if request.acquire_timeout.is_zero() || request.lease_duration.is_zero() {
             return Err(ExclusivenessError::InvalidDuration);
         }
@@ -141,17 +163,26 @@ impl ExclusivenessStore for InMemoryExclusivenessStore {
                 expires_at: now + request.lease_duration,
                 request,
             };
-            state.holders.insert(lease.request.boundary.clone(), lease.clone());
+            state
+                .holders
+                .insert(lease.request.boundary.clone(), lease.clone());
             return Ok(AcquireOutcome::Acquired(lease));
         }
         let queue = state.queues.entry(request.boundary.clone()).or_default();
         queue.push_back(request);
-        Ok(AcquireOutcome::Queued { position: queue.len() })
+        Ok(AcquireOutcome::Queued {
+            position: queue.len(),
+        })
     }
 
     fn poll(&self, task_id: Uuid, now: SystemTime) -> Result<AcquireOutcome, ExclusivenessError> {
         let mut state = self.lock()?;
-        let boundaries: Vec<_> = state.holders.keys().cloned().chain(state.queues.keys().cloned()).collect();
+        let boundaries: Vec<_> = state
+            .holders
+            .keys()
+            .cloned()
+            .chain(state.queues.keys().cloned())
+            .collect();
         for boundary in boundaries {
             Self::expire_and_promote(&mut state, &boundary, now);
             if let Some(lease) = state.holders.get(&boundary) {
@@ -160,11 +191,17 @@ impl ExclusivenessStore for InMemoryExclusivenessStore {
                 }
             }
             if let Some(queue) = state.queues.get(&boundary) {
-                if let Some((position, request)) = queue.iter().enumerate().find(|(_, r)| r.task_id == task_id) {
-                    if now.duration_since(request.requested_at).unwrap_or_default() >= request.acquire_timeout {
+                if let Some((position, request)) =
+                    queue.iter().enumerate().find(|(_, r)| r.task_id == task_id)
+                {
+                    if now.duration_since(request.requested_at).unwrap_or_default()
+                        >= request.acquire_timeout
+                    {
                         return Ok(AcquireOutcome::TimedOut);
                     }
-                    return Ok(AcquireOutcome::Queued { position: position + 1 });
+                    return Ok(AcquireOutcome::Queued {
+                        position: position + 1,
+                    });
                 }
             }
         }
@@ -173,7 +210,11 @@ impl ExclusivenessStore for InMemoryExclusivenessStore {
 
     fn renew(&self, task_id: Uuid, now: SystemTime) -> Result<ExclusiveLease, ExclusivenessError> {
         let mut state = self.lock()?;
-        let Some(lease) = state.holders.values_mut().find(|lease| lease.request.task_id == task_id) else {
+        let Some(lease) = state
+            .holders
+            .values_mut()
+            .find(|lease| lease.request.task_id == task_id)
+        else {
             return Err(ExclusivenessError::NotHolder);
         };
         if lease.is_expired_at(now) {
@@ -185,7 +226,11 @@ impl ExclusivenessStore for InMemoryExclusivenessStore {
 
     fn release(&self, task_id: Uuid, now: SystemTime) -> Result<(), ExclusivenessError> {
         let mut state = self.lock()?;
-        let Some(boundary) = state.holders.iter().find_map(|(key, lease)| (lease.request.task_id == task_id).then(|| key.clone())) else {
+        let Some(boundary) = state
+            .holders
+            .iter()
+            .find_map(|(key, lease)| (lease.request.task_id == task_id).then(|| key.clone()))
+        else {
             return Err(ExclusivenessError::NotHolder);
         };
         state.holders.remove(&boundary);
@@ -198,11 +243,19 @@ impl ExclusivenessStore for InMemoryExclusivenessStore {
 mod tests {
     use super::*;
 
-    fn request(action: ExclusiveAction, key: &str, owner: &str, now: SystemTime) -> ExclusiveRequest {
+    fn request(
+        action: ExclusiveAction,
+        key: &str,
+        owner: &str,
+        now: SystemTime,
+    ) -> ExclusiveRequest {
         ExclusiveRequest {
             task_id: Uuid::new_v4(),
             action,
-            boundary: ExclusivenessBoundary { scope: ExclusivenessScope::Resource, key: key.into() },
+            boundary: ExclusivenessBoundary {
+                scope: ExclusivenessScope::Resource,
+                key: key.into(),
+            },
             owner: ExclusiveOwner::new("cluster-a", "node-a", owner),
             requested_at: now,
             acquire_timeout: Duration::from_secs(30),
@@ -216,8 +269,14 @@ mod tests {
         let now = SystemTime::UNIX_EPOCH + Duration::from_secs(100);
         let first = request(ExclusiveAction::Receive, "resource-a", "host-1", now);
         let second = request(ExclusiveAction::Send, "resource-a", "host-2", now);
-        assert!(matches!(store.request(first, now).unwrap(), AcquireOutcome::Acquired(_)));
-        assert_eq!(store.request(second, now).unwrap(), AcquireOutcome::Queued { position: 1 });
+        assert!(matches!(
+            store.request(first, now).unwrap(),
+            AcquireOutcome::Acquired(_)
+        ));
+        assert_eq!(
+            store.request(second, now).unwrap(),
+            AcquireOutcome::Queued { position: 1 }
+        );
     }
 
     #[test]
@@ -230,7 +289,12 @@ mod tests {
         let second_id = second.task_id;
         store.request(first, now).unwrap();
         store.request(second, now).unwrap();
-        store.release(first_id, now + Duration::from_secs(1)).unwrap();
-        assert!(matches!(store.poll(second_id, now + Duration::from_secs(1)).unwrap(), AcquireOutcome::Acquired(_)));
+        store
+            .release(first_id, now + Duration::from_secs(1))
+            .unwrap();
+        assert!(matches!(
+            store.poll(second_id, now + Duration::from_secs(1)).unwrap(),
+            AcquireOutcome::Acquired(_)
+        ));
     }
 }
