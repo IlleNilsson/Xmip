@@ -14,7 +14,7 @@ fn main() {
         Arrival {
             receive_location: "drop/anonymous",
             transport: "file",
-            stream_uri: "store://in/a-1",
+            stream_uri: "xmip://stream/a-1",
             bytes: 1204,
             action: Action::Send,
             identity: Identity::Absent,
@@ -30,7 +30,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-y",
             transport: "http",
-            stream_uri: "store://in/b-2",
+            stream_uri: "xmip://stream/b-2",
             bytes: 3310,
             action: Action::Post,
             identity: Identity::Presented("certificate CN=partner-y"),
@@ -46,7 +46,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-z",
             transport: "http",
-            stream_uri: "store://in/c-3",
+            stream_uri: "xmip://stream/c-3",
             bytes: 880,
             action: Action::Post,
             identity: Identity::Presented("jwt sub=partner-z"),
@@ -63,7 +63,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "store://in/d-4",
+            stream_uri: "xmip://stream/d-4",
             bytes: 4182,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
@@ -79,7 +79,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-x",
             transport: "http",
-            stream_uri: "store://in/e-5",
+            stream_uri: "xmip://stream/e-5",
             bytes: 2210,
             action: Action::Post,
             identity: Identity::Presented("jwt sub=partner-x"),
@@ -95,7 +95,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "store://in/f-6",
+            stream_uri: "xmip://stream/f-6",
             bytes: 1990,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
@@ -111,7 +111,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "store://in/g-7",
+            stream_uri: "xmip://stream/g-7",
             bytes: 4182,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
