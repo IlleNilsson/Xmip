@@ -14,7 +14,7 @@ fn main() {
         Arrival {
             receive_location: "drop/anonymous",
             transport: "file",
-            stream_uri: "xmip://stream/a-1",
+            origin_uri: "file:///drop/anonymous/a-1.dat",
             bytes: 1204,
             action: Action::Send,
             identity: Identity::Absent,
@@ -30,7 +30,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-y",
             transport: "http",
-            stream_uri: "xmip://stream/b-2",
+            origin_uri: "https://partner-y.example/xmip/post",
             bytes: 3310,
             action: Action::Post,
             identity: Identity::Presented("certificate CN=partner-y"),
@@ -46,7 +46,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-z",
             transport: "http",
-            stream_uri: "xmip://stream/c-3",
+            origin_uri: "https://partner-z.example/xmip/post",
             bytes: 880,
             action: Action::Post,
             identity: Identity::Presented("jwt sub=partner-z"),
@@ -63,7 +63,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "xmip://stream/d-4",
+            origin_uri: "file:///drop/partner-x/d-4.edi",
             bytes: 4182,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
@@ -79,7 +79,7 @@ fn main() {
         Arrival {
             receive_location: "https/partner-x",
             transport: "http",
-            stream_uri: "xmip://stream/e-5",
+            origin_uri: "https://partner-x.example/xmip/post",
             bytes: 2210,
             action: Action::Post,
             identity: Identity::Presented("jwt sub=partner-x"),
@@ -95,7 +95,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "xmip://stream/f-6",
+            origin_uri: "file:///drop/partner-x/f-6.json",
             bytes: 1990,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
@@ -111,7 +111,7 @@ fn main() {
         Arrival {
             receive_location: "drop/partner-x",
             transport: "file",
-            stream_uri: "xmip://stream/g-7",
+            origin_uri: "file:///drop/partner-x/g-7.json",
             bytes: 4182,
             action: Action::Poll,
             identity: Identity::Implied("party:partner-x"),
@@ -129,7 +129,7 @@ fn main() {
 
     for arrival in arrivals.iter() {
         let (disposition, _journey) = admit(arrival);
-        kept.push((arrival.stream_uri, disposition.kept()));
+        kept.push((arrival.origin_uri, disposition.kept()));
     }
 
     println!();
