@@ -145,7 +145,11 @@ pub fn admit(a: &Arrival) -> (Disposition, Option<Journey>) {
     }
 
     step("5", "default promotion", "message.type, destination");
-    step("6", "configuration inspect", "message security not required here");
+    step(
+        "6",
+        "configuration inspect",
+        "message security not required here",
+    );
     step("7", "message identity", "skipped");
     step("8", "message authentication", "skipped");
     step("9", "message authorization", "skipped");
@@ -158,7 +162,9 @@ pub fn admit(a: &Arrival) -> (Disposition, Option<Journey>) {
         Err(why) => {
             step("12", "validation", why);
             if a.can_respond {
-                println!("      responded to the caller immediately, the transport carries a reply");
+                println!(
+                    "      responded to the caller immediately, the transport carries a reply"
+                );
             } else {
                 println!("      no reply channel, the audit record is the only trace");
             }
@@ -169,7 +175,8 @@ pub fn admit(a: &Arrival) -> (Disposition, Option<Journey>) {
     }
 
     // Step 13: Journey creation. Only now, and only once.
-    let (journey, message) = create_initial_message_with_treatment(a.stream_uri, business_treatment());
+    let (journey, message) =
+        create_initial_message_with_treatment(a.stream_uri, business_treatment());
     step("13", "journey created", "one Journey for this interchange");
     println!(
         "      journey {}   message {}   state {:?}",
@@ -183,7 +190,10 @@ pub fn admit(a: &Arrival) -> (Disposition, Option<Journey>) {
         return (Disposition::DeadMessageQueue, Some(journey));
     }
 
-    println!("      published, {} subscriptions matched", a.subscriptions.len());
+    println!(
+        "      published, {} subscriptions matched",
+        a.subscriptions.len()
+    );
     for s in a.subscriptions {
         println!("        {}  executed within this Journey", s);
     }
