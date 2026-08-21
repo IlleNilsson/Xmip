@@ -1,4 +1,5 @@
 pub mod contracts;
+pub mod disposition;
 pub mod journey_model;
 pub mod transport_technology;
 pub mod vertical_slice;
