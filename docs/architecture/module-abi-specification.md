@@ -98,6 +98,65 @@ the host read first, and the host will have already rejected it.
 
 ---
 
+### Finding the library
+
+Naming is a platform convention, not an Xmip decision, and the **host** applies it — a module
+author never writes these names:
+
+| platform | file |
+|---|---|
+| Linux | `libxmip_core_transport_http.so` |
+| macOS | `libxmip_core_transport_http.dylib` |
+| Windows | `xmip_core_transport_http.dll` |
+
+The repository name with hyphens replaced by underscores, the platform prefix where the
+platform has one, the platform suffix always. `XMIP_MODULE_PREFIX` and
+`XMIP_MODULE_SUFFIX` in the header resolve to the right pair at compile time.
+
+**The host loads by absolute path**, resolved under `defaults.submoduleRoot`. It does not
+search. `LD_LIBRARY_PATH`, `DYLD_LIBRARY_PATH` and the Windows DLL search order are all
+ways for something other than the intended file to be loaded, and a platform that runs other
+people's modules cannot afford that. On Windows this means `LoadLibraryExW` with
+`LOAD_WITH_ALTERED_SEARCH_PATH` and a full path, never `LoadLibraryA` with a bare name.
+
+**Load privately.** `dlopen` with `RTLD_LOCAL`, never `RTLD_GLOBAL`. Two modules may
+legitimately contain the same symbol — two XSLT engines both statically linking a
+compression library, say — and a global namespace makes the second one silently bind to the
+first one's copy. Symbol collisions between independently published modules are expected,
+not a fault.
+
+### Exporting the entrypoint
+
+The symbol needs C linkage and external visibility. Windows exports nothing unless asked;
+ELF and Mach-O export everything unless the build hides it. A module should build with
+`-fvisibility=hidden` and use the macro to put one symbol back:
+
+```c
+XMIP_EXPORT XmipStatus
+xmip_create_module_v1(const XmipHost *host, XmipModule *out);
+```
+
+A Rust module writes `#[no_mangle] pub extern "C"` and needs no macro.
+
+### Unloading
+
+`destroy` first, then unload. Never the reverse, and never while anything is in flight.
+
+Unloading a library frees its code. Any pointer still held into it — a vtable, a
+`XmipBuffer.release` function, a `last_error` string, a thread the module started — becomes
+a jump into unmapped memory. The crash appears far from the cause and blames the host.
+
+So before `dlclose` or `FreeLibrary`:
+
+1. every module instance from this library has had `destroy` called,
+2. every `XmipBuffer` it produced has been released,
+3. no borrowed `XmipStr` from it is still held,
+4. any thread it started has been joined — `stop` must not return until they have.
+
+When a host cannot prove all four, **not unloading is the correct answer**. Leaking a
+mapping is survivable; unloading a live one is not. Runtime upgrade of a sub-module depends
+on getting this right, which is why it is stated here rather than left to the loader.
+
 ## 4. Ownership
 
 There is one rule and it has no exceptions:
