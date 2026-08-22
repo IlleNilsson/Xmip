@@ -4,7 +4,7 @@
 //! and the disposition rules from ADR-0013 as running code. Every gate is printed,
 //! and every refusal states what Xmip kept.
 
-use crate::journey_model::{create_initial_message_with_treatment, Journey, Message};
+use crate::journey_model::{create_initial_message_with_treatment, Journey};
 use crate::vertical_slice::business_treatment;
 
 /// Where an identity came from, if anywhere.
