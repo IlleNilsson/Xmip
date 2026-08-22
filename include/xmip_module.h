@@ -37,6 +37,51 @@ extern "C" {
 #define XMIP_ABI_VERSION  1u
 #define XMIP_ENTRYPOINT   "xmip_create_module_v1"
 
+/*
+ * Exporting the entrypoint.
+ *
+ * The symbol must have C linkage and be visible outside the shared library.
+ * How that is spelled differs by platform, so the macro spells it:
+ *
+ *     XMIP_EXPORT XmipStatus
+ *     xmip_create_module_v1(const XmipHost *host, XmipModule *out);
+ *
+ * On Windows nothing is exported unless it is asked for. On ELF and Mach-O
+ * everything is exported unless the build hides it, and a module built with
+ * -fvisibility=hidden - which it should be - needs the attribute back.
+ *
+ * A Rust module writes #[no_mangle] pub extern "C" and needs no macro.
+ */
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  define XMIP_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+#  define XMIP_EXPORT __attribute__((visibility("default")))
+#else
+#  define XMIP_EXPORT
+#endif
+
+/*
+ * The file the host looks for. Naming is a platform convention, not an Xmip
+ * decision, and the host applies it rather than the module author:
+ *
+ *     linux      libxmip_core_transport_http.so
+ *     macos      libxmip_core_transport_http.dylib
+ *     windows    xmip_core_transport_http.dll
+ *
+ * The repository name with hyphens replaced by underscores, the platform
+ * prefix where the platform has one, the platform suffix always.
+ */
+#if defined(_WIN32)
+#  define XMIP_MODULE_PREFIX ""
+#  define XMIP_MODULE_SUFFIX ".dll"
+#elif defined(__APPLE__)
+#  define XMIP_MODULE_PREFIX "lib"
+#  define XMIP_MODULE_SUFFIX ".dylib"
+#else
+#  define XMIP_MODULE_PREFIX "lib"
+#  define XMIP_MODULE_SUFFIX ".so"
+#endif
+
 /* ===================================================================== */
 /* 2. Primitives                                                         */
 /* ===================================================================== */
