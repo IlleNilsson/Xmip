@@ -45,16 +45,33 @@ path = "src/main.rs"
 
 [features]
 default = ["server-profile"]
+
+# Build profiles. A build profile decides what is compiled in, and
+# runtime-profiles.md says profile selection happens at build and packaging
+# time. Three are shipped. Any other composition of the capabilities below is
+# a custom build, which that document calls a purpose-compiled runtime.
 server-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
 desktop-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
-edge-profile = ["sqlite-store", "prost-codec", "dynamic-modules"]
-iot-profile = ["minimal-runtime", "prost-codec"]
-embedded-profile = ["minimal-runtime", "prost-codec"]
+tiny-profile = ["minimal-runtime", "prost-codec"]
+
+# desktop-profile is the same composition as server-profile today. What will
+# separate them is an interactive host and a local GUI host, and neither
+# exists yet. The name is declared so packaging has a stable target and so the
+# difference lands in a decided place when it arrives.
+
+# tiny-profile replaces iot-profile and embedded-profile, which were identical
+# to each other and to this.
+
+# Deployment profiles are deliberately absent. IoT device, edge node, single
+# server, cluster, cloud node and hybrid select modules, and module selection
+# is configuration. deployment-profiles.md: a deployment profile selects
+# modules and does not redefine Xmip. That belongs in TOML, not here.
+
+# Capabilities. A custom build composes these directly.
 minimal-runtime = []
 sqlite-store = ["dep:rusqlite"]
 prost-codec = ["dep:prost"]
 dynamic-modules = []
-
 [dependencies]
 prost = { workspace = true, optional = true }
 rusqlite = { workspace = true, optional = true }
