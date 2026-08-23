@@ -4,6 +4,8 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+Amended the same day, to record the language of each surface, the single command that sits under all of them, and the Blazor hosting decision. Clauses 7 to 12 are the amendment.
+
 ## Context
 
 Xmip has a runtime and no way to look at it. The manifest already declares the four observation capabilities, xmip-core-event, xmip-core-observe, xmip-core-report and xmip-core-audit, and the three surfaces, abi, cli and powershell. What it does not have is anything an operator sits in front of.
@@ -24,6 +26,12 @@ The same console reached into the MessageBox directly. That is why parts of it w
 4. Observation never sits in the message path. observe consumes events. It is not a step that must succeed for a Message to proceed.
 5. Observation is lossy by design and says so. report and audit are the durable records. observe is a sample of what is happening now.
 6. Remote operation is carried by existing shell remoting: PowerShell Remoting over WinRM or SSH, and the CLI over SSH. Xmip defines no bespoke remote control protocol.
+7. The runtime is Rust. abi is Rust, as the binding crate over the C header that ADR-0012 made normative. cli is bash. powershell is PowerShell. The GUI is .NET 11 Blazor.
+8. There is one command-line executable. It is written in Rust, produced by xmip-core-cli, and it is called xmip.
+9. Every operator surface goes through that executable. The PowerShell module invokes it. It does not call the ABI. There is exactly one path from an operator to the runtime.
+10. The executable emits JSON. A follow mode emits JSON Lines, one object per line, so it streams down a pipe, over SSH and through a remoting session without becoming a different mechanism. The PowerShell module shapes that JSON into objects.
+11. The GUI never reaches the runtime directly. It invokes the executable, locally or through remoting, like any other operator.
+12. The GUI is one component library with two hosts: Blazor Hybrid for the executable and server-side Blazor for the web solution. WebAssembly is excluded. gui is a surface module alongside abi, cli and powershell.
 
 ## Why the split
 
@@ -61,8 +69,24 @@ It also means a capability is testable before any user interface exists.
 
 A web solution that can remote into every node holds credentials that reach the whole cluster. That makes the web host a high-value target and it must be treated as one: its own identity rather than a shared operator account, least privilege on each node, and every remote invocation audited through xmip-core-audit like any other operator action. Inheriting mature authentication does not mean inheriting a safe deployment.
 
+## The command
+
+Clauses 8 and 9. Bash cannot call a C ABI. It can execute a binary and read what comes back, and that is the whole of it. PowerShell can P/Invoke into a native library, so it could reach xmip-core-abi directly, and that is precisely why it must not. A PowerShell surface with a path bash does not have would be able to express things bash cannot, and the two would drift. That is the BizTalk Administration Console and its PowerShell provider again, for the same reason.
+
+So one binary, and both shells drive it.
+
+The cost is that PowerShell operators are handed text where they expect objects. Clause 10 pays it: the text is JSON, and the module turns it into objects on arrival. This is how az, gh and kubectl settle the same argument, and it keeps one code path rather than two.
+
+The binary is called xmip. The repository and the crate are xmip-core-cli under ADR-0011, but ADR-0011 governs module names, not the name of a command a person types at a prompt. A command is one word.
+
+## The GUI
+
+Clause 12. Blazor is what turns two requirements into one. A Razor class library holds the components, Blazor Hybrid hosts them in the executable, and server-side Blazor hosts them on the web. The executable and the web solution are then literally the same screens. They cannot drift, because there is nothing to keep in step.
+
+The render mode is not a preference. A web solution has to reach many nodes; reaching them means PowerShell Remoting or SSH; and a browser sandbox can do neither. WebAssembly cannot satisfy clause 6, so the web solution runs server-side. That is a constraint falling out of an earlier decision rather than a fresh choice.
+
+gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-acme-gui, on the same terms as the other three: their licence, their support, no approval.
+
 ## Open
 
-**What observe yields.** Whether a follow mode streams events or samples, what happens when a consumer falls behind, and whether the CLI is the thing that streams or merely subscribes to something that does.
-
-**Naming.** Whether the executable and the web solution are surface modules open to any provider, a single ui surface with two hosts, or Xmip-only artifacts outside the provider pattern. ADR-0011 covers the mechanics either way. The decision is whether a vendor may ship their own.
+**Backpressure.** Clause 10 settles what a follow mode emits and says nothing about what happens when a consumer cannot keep up. Dropping is consistent with clause 5, since observation is lossy by design and says so. Which samples are dropped, and whether the consumer is told it missed some, is not settled. A monitor that silently skips is worse than one that admits a gap.
