@@ -48,6 +48,13 @@ temp/
 .env.*
 *.local
 
+# Sibling Xmip repositories, if anyone clones them here anyway.
+# Xmip-Git clones beside this repository, not into it, but a wrong
+# -DestinationPath should not be able to put thirty repositories into your
+# working tree unnoticed.
+xmip-repositories/
+**/xmip-repositories/
+
 # Editors and IDEs
 .vscode/
 .idea/
