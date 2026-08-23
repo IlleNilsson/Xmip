@@ -33,6 +33,8 @@ function Xmip-Git {
         [ValidateSet('Https', 'Ssh')]
         [string] $Transport = 'Https',
 
+        [switch] $ModulesOnly,
+
         [switch] $PassThru
     )
 
@@ -77,7 +79,7 @@ function Xmip-Git {
     }
 
     function Get-RepositoryNames {
-        param([Parameter(Mandatory)] $Manifest)
+        param([Parameter(Mandatory)] $Manifest, [switch] $ModulesOnly)
         $names = [Collections.Generic.List[string]]::new()
         $explicit = @(Get-PropertyValue $Manifest 'repositories' @())
 
@@ -93,7 +95,11 @@ function Xmip-Git {
                 if ($name) { $names.Add($name) }
             }
 
-            foreach ($group in @(Get-PropertyValue $Manifest 'technologyGroups' @())) {
+            # ModulesOnly stops at the modules themselves. The technology groups
+            # expand to the implementations, most of which are declared and not
+            # yet created, so cloning them is a long walk for a lot of ABSENT.
+            $technologyGroups = if ($ModulesOnly) { @() } else { @(Get-PropertyValue $Manifest 'technologyGroups' @()) }
+            foreach ($group in $technologyGroups) {
                 $parent = if ($group -is [System.Array]) { [string]$group[0] } else { [string](Get-PropertyValue $group 'parent') }
                 $technologies = if ($group -is [System.Array]) { @($group[2]) } else { @(Get-PropertyValue $group 'technologies' @()) }
                 foreach ($technology in $technologies) {
@@ -146,7 +152,7 @@ function Xmip-Git {
     $owner = [string](Get-PropertyValue $manifest 'owner')
     if (-not $owner) { throw 'Manifest owner is missing.' }
 
-    $repositoryNames = @(Get-RepositoryNames -Manifest $manifest)
+    $repositoryNames = @(Get-RepositoryNames -Manifest $manifest -ModulesOnly:$ModulesOnly)
     if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
     $operation = switch ($PSCmdlet.ParameterSetName) {
@@ -185,9 +191,22 @@ function Xmip-Git {
                 $statusValue = 'existing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
-                Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
-                Write-Host "CLONED: $repositoryName"
-                $statusValue = 'cloned'
+                try {
+                    Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
+                    Write-Host "CLONED: $repositoryName"
+                    $statusValue = 'cloned'
+                }
+                catch {
+                    # A declared repository that has not been created yet is the
+                    # normal state of this manifest, not a failure. Most of what
+                    # is declared carries maturity "reserved", so one absent
+                    # repository must not stop the rest of the clone.
+                    if (Test-Path -LiteralPath $repositoryPath) {
+                        Remove-Item -LiteralPath $repositoryPath -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                    Write-Warning "ABSENT: $repositoryName"
+                    $statusValue = 'absent'
+                }
             }
             else { $statusValue = 'skipped' }
         }
@@ -209,9 +228,17 @@ function Xmip-Git {
         elseif ($operation -eq 'Pull') {
             if ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
                 Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune') | Out-Host
-                Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
-                Write-Host "PULLED: $repositoryName"
-                $statusValue = 'pulled'
+                try {
+                    Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
+                    Write-Host "PULLED: $repositoryName"
+                    $statusValue = 'pulled'
+                }
+                catch {
+                    # A fast-forward that will not fast-forward is a fact about
+                    # one repository, not a reason to stop visiting the rest.
+                    Write-Warning "PULL FAILED: $repositoryName"
+                    $statusValue = 'failed'
+                }
             }
             else { $statusValue = 'skipped' }
         }
