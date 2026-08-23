@@ -1,6 +1,7 @@
 pub mod contracts;
 pub mod disposition;
 pub mod journey_model;
+pub mod route;
 pub mod transport;
 pub mod transport_technology;
 pub mod vertical_slice;
@@ -19,6 +20,11 @@ pub use journey_model::{
     create_initial_message_with_treatment, create_metadata_only_message, ExecutionProfile, Journey,
     JourneyMessageRef, JourneyState, Message, MessageCreationSource, MessageDurability,
     MessagePriority, MessageTreatment, StreamRef,
+};
+
+pub use route::{
+    never_satisfiable, publish, Dispatch, Evaluation, NeverFires, Predicate, Promoted, Routing,
+    Subscription, Test, Value,
 };
 
 pub use transport_technology::{
