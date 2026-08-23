@@ -127,6 +127,14 @@ impl FileTransport {
     }
 }
 
+/// Build a file URI from a path.
+///
+/// A file URI uses forward slashes on every platform, so a Windows path has to
+/// be normalised. file:///C:/drop/x.edi, never file:///C:\\drop\\x.edi.
+fn file_uri(path: &std::path::Path) -> String {
+    format!("file:///{}", path.display().to_string().replace(char::from(92), "/"))
+}
+
 impl Transport for FileTransport {
     fn name(&self) -> &'static str {
         "file"
@@ -153,7 +161,7 @@ impl Transport for FileTransport {
             }
             let bytes = fs::read(&path).map_err(|e| classify("reading a dropped file", &e))?;
             arrived.push(Arrived {
-                origin_uri: format!("file:///{}", path.display()),
+                origin_uri: file_uri(&path),
                 bytes,
             });
         }
@@ -367,6 +375,13 @@ mod tests {
 
         assert_eq!(arrived.bytes, b"hello over tcp");
         assert!(arrived.origin_uri.starts_with("tcp://127.0.0.1:"));
+    }
+
+    #[test]
+    fn a_file_uri_uses_forward_slashes_on_every_platform() {
+        let uri = file_uri(std::path::Path::new("C:\\drop\\partner-x\\order.edi"));
+        assert!(!uri.contains(char::from(92)), "a file URI must not contain a backslash: {uri}");
+        assert!(uri.starts_with("file:///"));
     }
 
     #[test]
