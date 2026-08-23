@@ -1,0 +1,94 @@
+[workspace]
+members = [
+    ".",
+    "crates/xmip-module-abi",
+    "crates/xmip-module-api",
+    "crates/xmip-configuration",
+    "crates/xmip-runtime",
+    "crates/xmip-service",
+    "crates/xmip-host",
+    "crates/xmip-persistence",
+    "crates/xmip-tracking",
+    "crates/xmip-cli",
+    "crates/xmip-handler-file",
+    "crates/xmip-exclusiveness",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.1"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/IlleNilsson/Xmip"
+
+[workspace.dependencies]
+prost = "0.14.3"
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.9"
+uuid = { version = "1", features = ["v4", "serde"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-native-certs = "0.8"
+
+[package]
+# The platform repository is Xmip, so its primary crate is xmip.
+# cratePolicy.primaryCrateMatchesRepository requires that, and xmip-core is a
+# separate repository and a different thing. The library keeps the name
+# xmip_core so every use xmip_core:: in the workspace is untouched.
+name = "xmip"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "xmip_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "xmip-tiny-device"
+path = "src/main.rs"
+
+[features]
+default = ["server-profile"]
+
+# Build profiles. A build profile decides what is compiled in, and
+# runtime-profiles.md says profile selection happens at build and packaging
+# time. Three are shipped. Any other composition of the capabilities below is
+# a custom build, which that document calls a purpose-compiled runtime.
+server-profile = ["sqlite-store", "prost-codec", "dynamic-modules", "tls"]
+desktop-profile = ["sqlite-store", "prost-codec", "dynamic-modules", "tls"]
+tiny-profile = ["minimal-runtime", "prost-codec"]
+
+# desktop-profile is the same composition as server-profile today. What will
+# separate them is an interactive host and a local GUI host, and neither
+# exists yet. The name is declared so packaging has a stable target and so the
+# difference lands in a decided place when it arrives.
+
+# tiny-profile replaces iot-profile and embedded-profile, which were identical
+# to each other and to this.
+
+# Deployment profiles are deliberately absent. IoT device, edge node, single
+# server, cluster, cloud node and hybrid select modules, and module selection
+# is configuration. deployment-profiles.md: a deployment profile selects
+# modules and does not redefine Xmip. That belongs in TOML, not here.
+
+# Capabilities. A custom build composes these directly.
+minimal-runtime = []
+sqlite-store = ["dep:rusqlite"]
+prost-codec = ["dep:prost"]
+dynamic-modules = []
+
+# TLS is a capability, not a profile. tiny-profile leaves it out on purpose:
+# a purpose-compiled telemetry forwarder should not pay for a stack it never
+# opens. rustls is pure Rust; its crypto provider is ring, chosen over
+# aws-lc-rs because it cross-compiles to arm64 with less pain.
+tls = ["dep:rustls", "dep:rustls-native-certs"]
+[dependencies]
+prost = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+serde.workspace = true
+toml.workspace = true
+uuid.workspace = true
+rustls = { workspace = true, optional = true }
+rustls-native-certs = { workspace = true, optional = true }
