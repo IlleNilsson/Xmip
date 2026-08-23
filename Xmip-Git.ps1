@@ -28,7 +28,10 @@ function Xmip-Git {
         [string] $Push,
 
         [string] $ManifestPath = $script:XmipGitDefaultManifestPath,
-        [string] $DestinationPath = (Join-Path (Get-Location) 'xmip-repositories'),
+        # Beside the script's repository, not inside it. The natural place to run
+        # this from is the repository that holds it, and cloning thirty siblings
+        # into your own working tree is not what anyone means by -Clone.
+        [string] $DestinationPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'xmip-repositories'),
 
         [ValidateSet('Https', 'Ssh')]
         [string] $Transport = 'Https',
