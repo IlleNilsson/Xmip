@@ -1,6 +1,39 @@
 pub mod contracts;
 pub mod disposition;
 pub mod journey_model;
+pub mod route;
+pub mod transport;
+pub mod transport_technology;
+pub mod vertical_slice;
+
+pub use contracts::{
+    ContentCreatedMessage, ContentHandler, ContentHandlerInvocation, ContentHandlerResult,
+    ContentOperation, ContentPropertySelector, ContentSelector, ContentSelectorSegment,
+    DemotedProperty, DemotionTarget, ExecutionHostKind, ExtensionEntrypoint, ExtensionManifest,
+    HandlerInvocation, HandlerResult, HandlerStatus, Module, ModuleCapability, ModuleEntrypoint,
+    ModuleIdentity, ModuleKind, ModuleManifest, PromotedProperty, SelectorEvaluation,
+    TransportHandler, XmipModule,
+};
+
+pub use journey_model::{
+    append_message_to_journey, create_derived_message, create_initial_message,
+    create_initial_message_with_treatment, create_metadata_only_message, ExecutionProfile, Journey,
+    JourneyMessageRef, JourneyState, Message, MessageCreationSource, MessageDurability,
+    MessagePriority, MessageTreatment, StreamRef,
+};
+
+pub use route::{
+    never_satisfiable, publish, Dispatch, Evaluation, NeverFires, Predicate, Promoted, Routing,
+    Subscription, Test, Value,
+};
+
+pub use transport_technology::{
+    core_transport_tree, depends_on, family_of, file_transport_tree, ip_transport_tree,
+    TransportEventKind, TransportTechnology, TransportTechnologyFamily, TransportTechnologyLayer,
+};
+pub mod contracts;
+pub mod disposition;
+pub mod journey_model;
 pub mod transport;
 pub mod transport_technology;
 pub mod vertical_slice;
