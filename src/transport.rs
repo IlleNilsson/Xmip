@@ -491,11 +491,17 @@ impl Transport for HttpTransport {
     }
 
     fn send(&self, target: &str, bytes: &[u8]) -> Result<()> {
-        let rest = target.strip_prefix("http://").ok_or_else(|| {
-            protocol_error(format!(
-                "an http target must begin with http:// — got {target}"
-            ))
-        })?;
+        let (secure, rest) = match target.strip_prefix("https://") {
+            Some(rest) => (true, rest),
+            None => match target.strip_prefix("http://") {
+                Some(rest) => (false, rest),
+                None => {
+                    return Err(protocol_error(format!(
+                        "an http target must begin with http:// or https:// — got {target}"
+                    )))
+                }
+            },
+        };
         let (authority, path) = match rest.find('/') {
             Some(cut) => (&rest[..cut], &rest[cut..]),
             None => (rest, "/"),
@@ -505,52 +511,128 @@ impl Transport for HttpTransport {
                 "an http target with no host — got {target}"
             )));
         }
-        let address = with_default_port(authority, 80);
+        let address = with_default_port(authority, if secure { 443 } else { 80 });
 
-        let mut stream =
+        let tcp =
             TcpStream::connect(&address).map_err(|e| classify("connecting to the server", &e))?;
-        let request = format!(
-            "POST {path} HTTP/1.1\r\n\
-             Host: {authority}\r\n\
-             Content-Type: application/octet-stream\r\n\
-             Content-Length: {}\r\n\
-             Connection: close\r\n\r\n",
-            bytes.len()
-        );
-        stream
-            .write_all(request.as_bytes())
-            .map_err(|e| classify("writing the request head", &e))?;
-        stream
-            .write_all(bytes)
-            .map_err(|e| classify("writing the request body", &e))?;
-        stream
-            .flush()
-            .map_err(|e| classify("flushing the request", &e))?;
 
-        let mut reader = BufReader::new(stream);
-        let mut status = String::new();
-        reader
-            .read_line(&mut status)
-            .map_err(|e| classify("reading the status line", &e))?;
-        let code: u16 = status
-            .split_whitespace()
-            .nth(1)
-            .and_then(|c| c.parse().ok())
-            .ok_or_else(|| {
-                protocol_error(format!("a status line Xmip cannot read: {}", status.trim()))
-            })?;
-
-        if (200..300).contains(&code) {
-            Ok(())
-        } else {
-            // 5xx is the server's problem and may well pass on a second attempt.
-            // 4xx is ours and will not, with two documented exceptions.
-            Err(TransportError {
-                message: format!("the server answered {code}"),
-                retryable: code >= 500 || code == 408 || code == 429,
-            })
+        if secure {
+            #[cfg(feature = "tls")]
+            {
+                let guarded = tls_client(host_of(authority), tcp)?;
+                return exchange(guarded, authority, path, bytes);
+            }
+            #[cfg(not(feature = "tls"))]
+            {
+                drop(tcp);
+                return Err(protocol_error(
+                    "https was asked for and this build has no tls feature compiled in",
+                ));
+            }
         }
+
+        exchange(tcp, authority, path, bytes)
     }
+}
+
+/// Write a request and read back the status, over anything that reads and writes.
+///
+/// Split out so plaintext and TLS take the same path. A protocol implemented
+/// twice is a protocol that behaves two ways.
+fn exchange<S: Read + Write>(mut stream: S, authority: &str, path: &str, bytes: &[u8]) -> Result<()> {
+    let request = format!(
+        "POST {path} HTTP/1.1\r\n\
+         Host: {authority}\r\n\
+         Content-Type: application/octet-stream\r\n\
+         Content-Length: {}\r\n\
+         Connection: close\r\n\r\n",
+        bytes.len()
+    );
+    stream
+        .write_all(request.as_bytes())
+        .map_err(|e| classify("writing the request head", &e))?;
+    stream
+        .write_all(bytes)
+        .map_err(|e| classify("writing the request body", &e))?;
+    stream
+        .flush()
+        .map_err(|e| classify("flushing the request", &e))?;
+
+    let mut reader = BufReader::new(stream);
+    let mut status = String::new();
+    reader
+        .read_line(&mut status)
+        .map_err(|e| classify("reading the status line", &e))?;
+    let code: u16 = status
+        .split_whitespace()
+        .nth(1)
+        .and_then(|c| c.parse().ok())
+        .ok_or_else(|| {
+            protocol_error(format!("a status line Xmip cannot read: {}", status.trim()))
+        })?;
+
+    if (200..300).contains(&code) {
+        Ok(())
+    } else {
+        // 5xx is the server's problem and may well pass on a second attempt.
+        // 4xx is ours and will not, with two documented exceptions.
+        Err(TransportError {
+            message: format!("the server answered {code}"),
+            retryable: code >= 500 || code == 408 || code == 429,
+        })
+    }
+}
+
+/// The host without its port, and without the brackets an IPv6 literal carries.
+#[cfg(feature = "tls")]
+fn host_of(authority: &str) -> &str {
+    if let Some(close) = authority.rfind(']') {
+        return &authority[1..close];
+    }
+    match authority.rfind(':') {
+        Some(colon) => &authority[..colon],
+        None => authority,
+    }
+}
+
+/// Wrap a connection in TLS, verified against the operating system trust store.
+///
+/// The native store rather than a bundled root list, because the organisations
+/// Xmip is aimed at run internal certificate authorities and expect their own
+/// certificates to work without waiting for Xmip to ship a new root bundle.
+#[cfg(feature = "tls")]
+fn tls_client(
+    host: &str,
+    tcp: TcpStream,
+) -> Result<rustls::StreamOwned<rustls::ClientConnection, TcpStream>> {
+    use std::sync::Arc;
+
+    let mut roots = rustls::RootCertStore::empty();
+    let loaded = rustls_native_certs::load_native_certs();
+    for certificate in loaded.certs {
+        // One unparsable certificate is not a reason to refuse every other
+        // certificate in the store.
+        let _ = roots.add(certificate);
+    }
+    if roots.is_empty() {
+        return Err(protocol_error(
+            "the operating system trust store held no usable certificates",
+        ));
+    }
+
+    let provider = Arc::new(rustls::crypto::ring::default_provider());
+    let config = rustls::ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+        .map_err(|e| protocol_error(format!("selecting tls versions: {e}")))?
+        .with_root_certificates(roots)
+        .with_no_client_auth();
+
+    let name = rustls::pki_types::ServerName::try_from(host.to_string())
+        .map_err(|_| protocol_error(format!("a server name tls cannot use: {host}")))?;
+    let connection = rustls::ClientConnection::new(Arc::new(config), name)
+        .map_err(|e| protocol_error(format!("starting the tls session: {e}")))?;
+
+    Ok(rustls::StreamOwned::new(connection, tcp))
 }
 
 // ---------------------------------------------------------------------------
