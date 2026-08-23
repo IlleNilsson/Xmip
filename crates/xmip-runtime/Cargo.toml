@@ -8,4 +8,4 @@ repository.workspace = true
 [dependencies]
 serde.workspace = true
 uuid.workspace = true
-xmip-core = { path = "../.." }
+xmip = { path = "../.." }
