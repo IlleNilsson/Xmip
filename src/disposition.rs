@@ -38,7 +38,7 @@ impl Action {
 pub struct Arrival {
     pub receive_location: &'static str,
     pub transport: &'static str,
-    pub origin_uri: &'static str,
+    pub origin_uri: String,
     pub bytes: usize,
     pub action: Action,
     pub identity: Identity,
@@ -176,7 +176,7 @@ pub fn admit(a: &Arrival) -> (Disposition, Option<Journey>) {
 
     // Step 13: Journey creation. Only now, and only once.
     let (journey, message) =
-        create_initial_message_with_treatment(a.origin_uri, business_treatment());
+        create_initial_message_with_treatment(a.origin_uri.clone(), business_treatment());
     step("13", "journey created", "one Journey for this interchange");
     println!(
         "      journey {}   message {}   state {:?}",
