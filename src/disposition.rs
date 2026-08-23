@@ -38,7 +38,7 @@ impl Action {
 pub struct Arrival {
     pub receive_location: &'static str,
     pub transport: &'static str,
-    pub origin_uri: &'static str,
+    pub origin_uri: String,
     pub bytes: usize,
     pub action: Action,
     pub identity: Identity,
