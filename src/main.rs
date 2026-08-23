@@ -187,9 +187,8 @@ fn main() {
     }
 
     println!("\nWhat Xmip kept");
-    for (uri, what) in kept.iter() {
-        let short = uri.rsplit('/').next().unwrap_or(uri);
-        println!("  {short:<20} {what}");
+    for (n, (uri, what)) in kept.iter().enumerate() {
+        println!("  {}  {what:<28} {uri}", n + 1);
     }
 
     fs::remove_dir_all(&dir).ok();
