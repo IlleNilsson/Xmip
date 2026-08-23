@@ -33,8 +33,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: IoT profile check
-        run: cargo check --workspace --no-default-features --features iot-profile
+      - name: Tiny profile check
+        run: cargo check --workspace --no-default-features --features tiny-profile
 
-      - name: Embedded profile check
-        run: cargo check --workspace --no-default-features --features embedded-profile
+      - name: Server profile check
+        run: cargo check --workspace --no-default-features --features server-profile
+
+      - name: Desktop profile check
+        run: cargo check --workspace --no-default-features --features desktop-profile
