@@ -7,7 +7,7 @@
 # Keys follow ADR-0011: shortest singular form.
 
 schemaVersion = "2.0.0"
-architectureVersion = "0.9.0"
+architectureVersion = "0.10.0"
 minimumScriptVersion = "1.4.0"
 name = "Xmip Architecture"
 owner = "IlleNilsson"
@@ -568,3 +568,16 @@ dependency = ["xmip-core"]
 [provider.core.module.migrate.implementation.tibco-businessworks]
 [provider.core.module.migrate.implementation.webmethods]
 
+[provider.core.module.schedule]
+description = "Time-driven triggers for processes, commands, and receive and send actions."
+domain = "Platform"
+role = "platform-service"
+maturity = "planned"
+dependency = ["xmip-core", "xmip-core-exclusiveness"]
+
+[provider.core.module.diagnose]
+description = "Operational diagnosis: connectivity, name resolution, certificates and firewall reachability."
+domain = "Operations"
+role = "operational-capability"
+maturity = "planned"
+dependency = ["xmip-core"]
