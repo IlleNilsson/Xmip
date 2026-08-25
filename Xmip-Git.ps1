@@ -1,7 +1,7 @@
 #requires -PSEdition Core
 #requires -Version 7.6.3
 
-$script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'xmip-architecture.json'
+$script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'architecture.json'
 
 function Xmip-Git {
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Clone')]
