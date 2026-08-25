@@ -170,6 +170,47 @@ What is added is *what is kept*, which the specification does not say: nothing b
 authorization, the Stream after it, and the Message after Validation fails. Retention is
 deliberately asymmetric with identity — authorized sender, keep; unauthorized, do not.
 
+## Amendment, 2026-08-26: `Dismissed` is a terminal state
+
+`Dismiss` was a command with nowhere to land. A dismissed Journey was recorded
+as `Failed`, so an operator's deliberate decision was indistinguishable from
+the fault it was responding to.
+
+**`JourneyState` gains a `Dismissed` terminal variant.** Dismissal is not
+recorded outside the state.
+
+Three reasons, in the order they carried weight:
+
+**It was in the design before it was lost.** The earliest Xmip design — the
+`_origins` export, recovered 2026-08-26 — defined four runtime lanes: Receive,
+Process, Send and **Void**, with `Receive → Void` and `Receive → Process → Void`
+as valid flows. Void is a terminal path for work that deliberately does not go
+out, reachable from both a processed and an unprocessed Message, and separate
+from failure. So the distinction existed from the beginning and was dropped in
+translation. That makes this a recovery rather than an invention, which is a
+much easier thing to be confident about.
+
+**Every failure count is otherwise wrong.** If dismissal is `Failed`, then the
+failure rate on any dashboard is inflated by every deliberate intervention, and
+the more competently an estate is operated the worse its numbers look. A metric
+that punishes correct operator behaviour will be worked around rather than
+fixed.
+
+**The alternative puts one terminal outcome somewhere else.** Recording
+dismissal only as an audited disposition means a Journey's own state never says
+what became of it, and anything reading `JourneyState` has to join against the
+audit record to find out. Two of the three terminal outcomes would live in the
+enum and the third somewhere else, which is the kind of asymmetry that is
+correct once and misread forever.
+
+Terminal is now `Completed`, `Failed` or `Dismissed`. `src/journey_model.rs`
+carries `is_terminal()` and `is_incomplete()`, the second covering `Failed` and
+`Dismissed` together, because most reporting wants "stopped without finishing"
+and only some of it needs to know which.
+
+This resolves conflict 2 in `runtime-model.md` section 23. `Created` remains
+absent for the reason recorded there: a Journey exists only after Validation.
+
 ## Open
 
 - **"An accepted Xmip Message shall never disappear" versus retention.** Per

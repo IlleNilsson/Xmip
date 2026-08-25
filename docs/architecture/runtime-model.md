@@ -826,8 +826,9 @@ Xmip creates a Journey for every unauthenticated connection attempt, which is
 both a liability and a denial-of-service surface. Section 4 states the result.
 
 **2. Journey states — two different enums.**
-v1.0 named seven operational states. `journey_model.rs` implements six, and
-ADR-0013 clause 7 records the code.
+v1.0 named seven operational states. `journey_model.rs` implemented six when
+this conflict was written and implements seven now; ADR-0013 clause 7 records
+the code.
 
 *Resolved:* the code. The mapping, and the two that had no equivalent:
 
@@ -839,7 +840,7 @@ ADR-0013 clause 7 records the code.
 | Waiting | `Waiting` | |
 | Dead | `Failed` | |
 | Completed | `Completed` | |
-| Dismissed | — | **see below** |
+| Dismissed | `Dismissed` | added 2026-08-26; see below |
 | — | `Recovering` | a Retry in flight, which v1.0 could not express |
 
 `Dismissed` is the loss, and it is real: Dismiss is a command in section 13 with
@@ -848,8 +849,13 @@ one that simply Failed. Either `JourneyState` gains a `Dismissed` terminal
 variant, or dismissal is recorded outside the state as an audited disposition.
 **Not decided here — it needs a ruling and belongs in ADR-0013.**
 
-*New evidence, 2026-08-26.* The `_origins` design export defines four runtime
-lanes — Receive, Process (optional), Send and **Void** — with four valid flows:
+***Resolved 2026-08-26: `JourneyState` gains a `Dismissed` terminal variant.***
+The ruling and its reasoning are in the ADR-0013 amendment; `is_terminal()` now
+covers `Completed`, `Failed` and `Dismissed`. What follows is the evidence that
+decided it.
+
+The `_origins` design export defines four runtime lanes — Receive, Process
+(optional), Send and **Void** — with four valid flows:
 
 ```text
 Receive → Send
@@ -864,15 +870,13 @@ failure path — failure is a separate concern in that model, as it is in this
 one.
 
 That is the earliest Xmip design, and it had somewhere for a Message to end
-without delivery and without failure from the beginning. Which argues for the
-first option: `JourneyState` gains a `Dismissed` terminal variant, because the
-distinction was intended before it was lost, rather than being invented now to
-patch a gap.
+without delivery and without failure from the beginning. The distinction was
+intended before it was lost, which made this a recovery rather than an
+invention.
 
-**Still needs the ruling, and still belongs in ADR-0013.** This paragraph adds
-evidence, not a decision. The lane vocabulary itself is not adopted: Receive,
-Process and Send are capabilities in the current model, not lanes, and only Void
-names something the model lacks.
+The lane vocabulary itself is not adopted: Receive, Process and Send are
+capabilities in the current model, not lanes, and only Void named something the
+model lacked.
 
 **3. What happens when no Subscription matches.**
 v1.0 and Baseline-Current both said the Journey becomes Dead with a Routing

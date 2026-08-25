@@ -960,16 +960,10 @@ reason = "Pins channel = stable for every machine and for CI."
 path = "docs/architecture/repository-model.md"
 reason = "Why the estate is shaped this way. Replaces five documents and specification sections 9 to 15."
 
-[[move]]
-from = "docs/architecture/identity-by-technology.md"
-to = "xmip-core-authenticate"
-path = "docs/identity-by-technology.md"
-reason = """
-Where identity lives per technology, against the standards that define it, for
-every transport, representation and logic technology in architecture.toml.
-Belongs with the capability that has to implement it. RFC numbers verified
-against rfc-editor.org and the IETF Datatracker on 2026-08-25.
-"""
+# The identity-by-technology.md move lived here until 2026-08-26. It is in
+# section 3 now, with the rest of the moves. Two [[move]] entries for one file
+# is how Distribute ends up racing itself, and tests/Allocation.Tests.ps1
+# caught it on the first run.
 
 # ===========================================================================
 # 8. Superseded — delete these, the replacement is written
@@ -1023,8 +1017,18 @@ why = "Note: allocation.toml recorded this at docs/ and it is at docs/architectu
 
 [[superseded]]
 path = "docs/Xmip-Architecture-Specification-v1.1.md"
-replacedBy = "docs/Xmip-Architecture-Specification-v1.2.md"
-why = "Strict subset. 36 diff lines, every one an addition in v1.2."
+replacedBy = "docs/architecture/runtime-model.md and docs/architecture/repository-model.md"
+why = """
+Strict subset of v1.2 — 36 diff lines, every one an addition there.
+
+Pointed at v1.2 until 2026-08-26, which was true when written and stopped being
+useful the moment v1.2 was itself consolidated away. A supersession chain is
+only as good as its last link: follow this one and you arrived at a file that
+no longer exists, with nothing to say where it went.
+
+**Name the surviving document, not the next one along.** When a replacement is
+superseded, every entry pointing at it needs updating in the same change.
+"""
 
 [[superseded]]
 path = "docs/planning/github-repository-inventory-*.md"
