@@ -559,6 +559,16 @@ function New-XmipGitHubRepository {
         has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
     }
 
+    # The template is a Rust crate: Cargo.toml, src/lib.rs and a Rust workflow.
+    # A module that is not a Rust crate must not be generated from it, or a
+    # PowerShell module arrives holding a Cargo.toml. ADR-0014 clause 14.
+    $primaryCrate = Get-PropertyValue $Repository 'primaryCrate' ([pscustomobject]@{})
+    $language = [string](Get-PropertyValue $primaryCrate 'language' 'rust')
+    if ($Template -and $language -ine 'rust') {
+        Write-Warning "$name is language '$language', not rust. Creating it empty rather than from the Rust template; it needs its own scaffolding."
+        $Template = ''
+    }
+
     # A repository generated from the template starts with the licence, the
     # workflow and the layout every Xmip repository is supposed to have. A
     # blank one starts with nothing and someone has to remember to add them.

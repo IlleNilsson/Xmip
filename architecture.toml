@@ -7,7 +7,7 @@
 # Keys follow ADR-0011: shortest singular form.
 
 schemaVersion = "2.0.0"
-architectureVersion = "0.12.0"
+architectureVersion = "0.14.0"
 minimumScriptVersion = "1.5.0"
 name = "Xmip Architecture"
 owner = "IlleNilsson"
@@ -585,26 +585,17 @@ dependency = ["xmip-core"]
 # have created a repository for them. Descriptions taken from what the crates
 # contain, not from what their names suggest.
 
+# The Xmip Service and the Xmip Host Service are both here. They are one idea
+# and never move independently: the Service builds the execution tree, the Host
+# Service executes a host process plan, and runtime owns both types. Separate
+# repositories for 10 KB that always change together would be ceremony.
+# ADR-0018.
 [provider.core.module.runtime]
-description = "Runtime node composition: capability registry, module registry, execution tree and host process plans."
+description = "The Xmip Service and the Xmip Host Services it spawns: configuration, execution tree, startup validation, host process plans, capability and module registries."
 domain = "Platform"
 role = "platform-service"
 maturity = "planned"
-dependency = ["xmip-core", "xmip-core-abi"]
-
-[provider.core.module.service]
-description = "Service lifecycle: startup phases, the startup plan and the state a running Xmip service is in."
-domain = "Platform"
-role = "platform-service"
-maturity = "planned"
-dependency = ["xmip-core", "xmip-core-runtime"]
-
-[provider.core.module.host]
-description = "Host processes, their state, and verification of dynamically loaded modules before they run."
-domain = "Platform"
-role = "platform-service"
-maturity = "planned"
-dependency = ["xmip-core", "xmip-core-runtime"]
+dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-resilience"]
 
 [provider.core.module.persist]
 description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication."
