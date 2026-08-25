@@ -4,8 +4,6 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
-Amended the same day, to record the language of each surface, the single command that sits under all of them, and the Blazor hosting decision. Clauses 7 to 12 are the amendment.
-
 ## Context
 
 Xmip has a runtime and no way to look at it. The manifest already declares the four observation capabilities, xmip-core-event, xmip-core-observe, xmip-core-report and xmip-core-audit, and the three surfaces, abi, cli and powershell. What it does not have is anything an operator sits in front of.
@@ -22,16 +20,18 @@ The same console reached into the MessageBox directly. That is why parts of it w
 
 1. Rust is the language of the runtime. Everything in the message path is Rust.
 2. The operator surfaces are written in .NET 11, both the executable and the web solution.
-3. The operator surfaces are clients of abi, cli and powershell. They get no privileged path, no direct store access and no private endpoint. Anything a surface can do is a thing the command line can already do.
+3. The operator surfaces are clients of the xmip executable. Nothing outside the runtime calls the ABI: not the PowerShell module, not the GUI, not a .NET surface. A surface gets no privileged path, no direct store access and no private endpoint. Anything a surface can do is a thing the command line can already do.
 4. Observation never sits in the message path. observe consumes events. It is not a step that must succeed for a Message to proceed.
 5. Observation is lossy by design and says so. report and audit are the durable records. observe is a sample of what is happening now.
 6. Remote operation is carried by existing shell remoting: PowerShell Remoting over WinRM or SSH, and the CLI over SSH. Xmip defines no bespoke remote control protocol.
-7. The runtime is Rust. abi is Rust, as the binding crate over the C header that ADR-0012 made normative. cli is bash. powershell is PowerShell. The GUI is .NET 11 Blazor.
+7. The runtime is Rust. abi is Rust, as the binding crate over the C header that ADR-0012 made normative. cli is Rust: one cross-platform executable that bash and PowerShell both drive, which is why there is no bash module and no bash repository. powershell is PowerShell Core, cross-platform, and Windows PowerShell is not supported. The GUI is .NET 11 Blazor.
 8. There is one command-line executable. It is written in Rust, produced by xmip-core-cli, and it is called xmip.
 9. Every operator surface goes through that executable. The PowerShell module invokes it. It does not call the ABI. There is exactly one path from an operator to the runtime.
 10. The executable emits JSON. A follow mode emits JSON Lines, one object per line, so it streams down a pipe, over SSH and through a remoting session without becoming a different mechanism. The PowerShell module shapes that JSON into objects.
 11. The GUI never reaches the runtime directly. It invokes the executable, locally or through remoting, like any other operator.
-12. The GUI is one component library with two hosts: Blazor Hybrid for the executable and server-side Blazor for the web solution. WebAssembly is excluded. gui is a surface module alongside abi, cli and powershell.
+12. The GUI is one component library with two hosts: Blazor Hybrid for the desktop application and server-side Blazor for the web solution. Both live in xmip-core-gui. The desktop host is .NET MAUI, so every operator surface runs on Windows, macOS and Linux; WPF and WinForms are excluded because they are Windows only. WebAssembly is excluded because a browser sandbox cannot satisfy clause 6. gui is a surface module alongside abi, cli and powershell.
+13. The operations live in xmip-core-cli. Every operator action is implemented once, in a library, and the xmip binary is argument parsing and JSON formatting over it. Clause 3 then holds by construction rather than by discipline: a surface cannot do what the command line cannot, because there is nothing else for it to call.
+14. A module that is not a Rust crate carries a language key in the manifest. powershell and gui are not crates, and the crate policy assumes Rust. ADR-0011 governs module and repository names; it governs neither the name of a command a person types nor the names of .NET projects.
 
 ## Why the split
 
@@ -81,7 +81,9 @@ The binary is called xmip. The repository and the crate are xmip-core-cli under 
 
 ## The GUI
 
-Clause 12. Blazor is what turns two requirements into one. A Razor class library holds the components, Blazor Hybrid hosts them in the executable, and server-side Blazor hosts them on the web. The executable and the web solution are then literally the same screens. They cannot drift, because there is nothing to keep in step.
+Clause 12. Blazor is what turns two requirements into one. A Razor class library holds the components, Blazor Hybrid hosts them in the desktop application and server-side Blazor hosts them on the web. The two are then literally the same screens. They cannot drift, because there is nothing to keep in step.
+
+MAUI hosts the desktop application because every other decision in Xmip is cross-platform and this one should not be the exception: PowerShell Core runs everywhere, ADR-0015 packages for Windows, Linux and macOS, and the command is a Rust binary. WPF with a BlazorWebView is the better-trodden path and it is Windows only, which would make the desktop application the one surface an operator on Linux cannot run.
 
 The render mode is not a preference. A web solution has to reach many nodes; reaching them means PowerShell Remoting or SSH; and a browser sandbox can do neither. WebAssembly cannot satisfy clause 6, so the web solution runs server-side. That is a constraint falling out of an earlier decision rather than a fresh choice.
 
@@ -90,3 +92,4 @@ gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-ac
 ## Open
 
 **Backpressure.** Clause 10 settles what a follow mode emits and says nothing about what happens when a consumer cannot keep up. Dropping is consistent with clause 5, since observation is lossy by design and says so. Which samples are dropped, and whether the consumer is told it missed some, is not settled. A monitor that silently skips is worse than one that admits a gap.
+
