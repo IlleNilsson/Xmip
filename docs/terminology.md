@@ -26,6 +26,21 @@ When a person writes or says **Process** without qualification and the meaning
 is not clear, the correct response is to ask whether they mean **System
 Process** or **Xmip Process**.
 
+## PowerShell
+
+Two names one letter apart, for two different products:
+
+| Term | Meaning |
+| --- | --- |
+| **Windows PowerShell** | A proper noun: version 5.1, on .NET Framework, shipped with Windows and not updated. Xmip does not run on it. |
+| **PowerShell** | Version 7 and later, Core edition, cross-platform, installed and updated separately. What Xmip requires. |
+| **PowerShell on Windows** | PowerShell 7 running on a Windows machine. A deployment, not a product. |
+
+"Windows PowerShell users" and "PowerShell users on Windows" are different
+populations, and the second is much larger and updates much faster. Say which
+you mean. `#requires -PSEdition Core` is the line between them, and it is
+enforced rather than advised — ADR-0021.
+
 ## Definition and Instance
 
 | Term | Meaning |

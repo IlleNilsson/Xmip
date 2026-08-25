@@ -1,6 +1,13 @@
 # Prerequisites for a machine that runs or builds Xmip.
 #
-# The script applies, this file decides.
+# This file decides; Xmip-Prerequisite applies it.
+#
+# ADR-0021: current platforms only. Every entry tracks the current stable
+# release rather than pinning a version, which is why these declare a channel
+# and a floor rather than a target. The floor states what would break; it does
+# not freeze anything. Xmip integrates with ancient systems — see
+# architecture/identity-by-technology.md, where the protocols go back to the
+# 1970s — but it does not run on them.
 #
 # PowerShell runs on Windows, Linux and macOS, so a prerequisite is declared
 # per operating system and per package manager. A key under an operating system
@@ -30,7 +37,16 @@ include = ["developer"]
 role = "operator"
 probe = "pwsh --version"
 minimum = "7.6"
-note = "Xmip scripts declare #requires -PSEdition Core and -Version 7.6. If the script is running, this is already satisfied, so it is reported rather than installed. Install-XmipPrerequisite.ps1 alone requires only 7.0, because a bootstrap script that refuses to run on the version it is meant to upgrade is no use."
+channel = "stable"
+note = """
+The one prerequisite Xmip cannot install for you, because the tooling is
+written in it. Every entry point declares #requires -PSEdition Core and
+-Version 7.6, so a machine below the floor is refused by PowerShell itself,
+by name and version. If Xmip-Prerequisite is running at all, this is already
+satisfied, so it is reported rather than installed.
+
+Windows PowerShell 5.1 and PowerShell 6 are not supported. ADR-0021.
+"""
 
 [prerequisite.powershell.windows]
 winget = "Microsoft.PowerShell"
@@ -54,6 +70,38 @@ apt = "git"
 dnf = "git"
 zypper = "git"
 pacman = "git"
+
+[prerequisite.pester]
+role = "developer"
+source = "psgallery"
+id = "Pester"
+channel = "stable"
+minimum = "6.0"
+note = """
+Latest stable, no pinned version — the same rule as Rust. Pester 6 requires
+PowerShell 7.4 or later, which the 7.6 floor above already guarantees.
+
+The minimum is 6.0 rather than a specific build because Pester 6 changed how
+discovery works: it now discovers and runs per file, where 5 discovered every
+file first. That is invisible for isolated tests and is the sort of thing worth
+stating a floor for.
+
+Windows ships Pester 3 in the system module path and PowerShell autoloads the
+first Pester it finds, so the old one wins unless told otherwise. Pester 3 has
+no -Output parameter and does not understand BeforeAll or -Because, so tests/
+fails to run at all rather than reporting anything useful:
+
+    Import-Module Pester -MinimumVersion 6.0.0 -Force
+
+Installing needs -SkipPublisherCheck, because the Pester 3 already in the
+module path carries a different Microsoft signature.
+
+The tests use the classic Should -Be syntax. Pester 6 adds a Should-* family
+(note the dash) and the old syntax still ships and still works, so both are
+valid and can be mixed while migrating. When Xmip commits to the new style,
+$config.Should.DisableV5 = $true makes the old syntax throw so it cannot be
+used by accident.
+"""
 
 [prerequisite.pstoml]
 role = "operator"

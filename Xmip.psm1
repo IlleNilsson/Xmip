@@ -299,9 +299,16 @@ function Test-XmipManifest($Manifest) {
     }
 }
 
-# The two commands. Dot-sourced rather than duplicated, so they see the
-# manifest reader above and the module is the single thing anyone imports.
+# The commands. Dot-sourced rather than duplicated, so they see the manifest
+# reader above and the module is the single thing anyone imports.
+#
+# Xmip-Prerequisite is here despite the bootstrap look of it: this module loads
+# without PSToml, because Get-XmipManifest imports PSToml when called rather
+# than at import time. So a bare machine can import the module and ask what it
+# is missing. PowerShell itself is the only prerequisite Xmip cannot install,
+# and #requires states that floor.
+. (Join-Path $PSScriptRoot 'Xmip-Prerequisite.ps1')
 . (Join-Path $PSScriptRoot 'Xmip-Estate.ps1')
 . (Join-Path $PSScriptRoot 'Xmip-Git.ps1')
 
-Export-ModuleMember -Function 'Xmip-Estate', 'Xmip-Git', 'Get-XmipManifest', 'Test-XmipManifest', 'Expand-XmipEstate'
+Export-ModuleMember -Function 'Xmip-Prerequisite', 'Xmip-Estate', 'Xmip-Git', 'Get-XmipManifest', 'Test-XmipManifest', 'Expand-XmipEstate'

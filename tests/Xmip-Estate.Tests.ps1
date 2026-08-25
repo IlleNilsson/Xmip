@@ -47,9 +47,16 @@ Describe 'Xmip-Estate' {
         $script | Should -Match 'SupportsShouldProcess'
     }
 
-    It 'never deletes a repository' {
+    It 'never issues a DELETE, however the estate drifts' {
         $script = Get-Content (Join-Path $script:Root 'Xmip-Estate.ps1') -Raw
-        $script | Should -Not -Match "Method\s+DELETE|'DELETE'"
+        # The call site, not the ValidateSet. Invoke-GitHubApi declares DELETE as
+        # a legal verb so the helper stays general; what must never appear is
+        # anything actually invoking it. Matching the declaration was the first
+        # version of this test and it failed on its own scaffolding.
+        $script | Should -Not -Match 'Invoke-GitHubApi\s+DELETE' `
+            -Because 'Xmip-Estate reconciles; it does not remove repositories'
+        $script | Should -Not -Match 'Method\s*=\s*.DELETE.' `
+            -Because 'nor by building the request by hand'
     }
 
     It 'does not use remote-tracking submodule updates' {
@@ -63,18 +70,60 @@ Describe 'Xmip-Estate' {
 Describe 'The module is the entry point' {
     It 'exports both commands and the reader' {
         $exported = (Get-Module Xmip).ExportedFunctions.Keys
-        foreach ($name in 'Xmip-Estate', 'Xmip-Git', 'Get-XmipManifest') {
+        foreach ($name in 'Xmip-Estate', 'Xmip-Git', 'Xmip-Prerequisite', 'Get-XmipManifest') {
             $exported | Should -Contain $name
         }
     }
 
     It 'declares Core and 7.6 on every entry point' {
-        # Install-XmipPrerequisite.ps1 is deliberately excluded: a bootstrap
-        # script that refuses to run on the version it upgrades is no use.
-        foreach ($file in 'Xmip.psm1', 'Xmip-Estate.ps1', 'Xmip-Git.ps1') {
+        foreach ($file in 'Xmip.psm1', 'Xmip-Estate.ps1', 'Xmip-Git.ps1', 'Xmip-Prerequisite.ps1') {
             $head = (Get-Content (Join-Path $script:Root $file) -TotalCount 3) -join "`n"
             $head | Should -Match '#requires -PSEdition Core'
             $head | Should -Match '#requires -Version 7\.6'
         }
+    }
+}
+
+Describe 'ADR-0021: current platforms only, enforced' {
+    BeforeAll {
+        Import-Module PSToml -ErrorAction Stop
+        $script:Prereq = ConvertFrom-Toml -InputObject (Get-Content (Join-Path $script:Root 'prerequisite.toml') -Raw -Encoding utf8)
+    }
+
+    It 'declares a minimum for every platform the ADR names' {
+        foreach ($name in 'powershell', 'dotnet', 'pester', 'git') {
+            [string]$script:Prereq.prerequisite.$name.minimum |
+                Should -Not -BeNullOrEmpty -Because "ADR-0021 makes $name a floor, not a preference"
+        }
+    }
+
+    It 'keeps the manifest floor and the #requires floor in step' {
+        # The one that drifts silently: prerequisite.toml says 7.6 while an
+        # entry point still says 7.2, and nothing notices.
+        $declared = [string]$script:Prereq.prerequisite.powershell.minimum
+        foreach ($file in 'Xmip.psm1', 'Xmip-Estate.ps1', 'Xmip-Git.ps1', 'Xmip-Prerequisite.ps1') {
+            $head = (Get-Content (Join-Path $script:Root $file) -TotalCount 3) -join "`n"
+            $head | Should -Match ([regex]::Escape("#requires -Version $declared")) `
+                -Because "$file must state the same floor as prerequisite.toml"
+        }
+    }
+
+    It 'tracks channels rather than pinning versions' {
+        $toolchain = Get-Content (Join-Path $script:Root 'rust-toolchain.toml') -Raw
+        $toolchain | Should -Match 'channel\s*=\s*"stable"'
+        $toolchain | Should -Not -Match 'channel\s*=\s*"1\.' -Because 'ADR-0021 forbids a pinned toolchain'
+    }
+
+    It 'requires the Core edition, which excludes Windows PowerShell 5.1' {
+        foreach ($file in 'Xmip.psm1', 'Xmip-Estate.ps1', 'Xmip-Git.ps1', 'Xmip-Prerequisite.ps1') {
+            $head = (Get-Content (Join-Path $script:Root $file) -TotalCount 3) -join "`n"
+            $head | Should -Match '#requires -PSEdition Core'
+        }
+    }
+
+    It 'fails rather than reports when a floor is not met' {
+        $script = Get-Content (Join-Path $script:Root 'Xmip-Prerequisite.ps1') -Raw
+        $script | Should -Match 'Write-Error' -Because 'an unmet floor must be an error, not a warning'
+        $script | Should -Match "'outdated'" -Because 'a version below the floor needs its own status'
     }
 }
