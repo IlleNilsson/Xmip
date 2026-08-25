@@ -157,7 +157,7 @@ And `resilience` has no plugin surface in practice, despite six declared impleme
 | **B. Create `abi` only** | it is needed by the boundary; the other two are undesigned |
 
 **Lean: B.** Do not create repositories for capabilities whose traits are unsettled — see 6.
-Run `Xmip-Estate.ps1` with `-WhatIf` first regardless.
+Run `Sync-XmipEstate.ps1` with `-WhatIf` first regardless.
 
 ## 11. `xmip-module-api` and `xmip-module-abi` still exist
 
@@ -177,9 +177,52 @@ could not before.
 
 ---
 
+# Configuration
+
+## 12. The node configuration format
+
+Two shapes are in the tree and they disagree. `[[modules]]` in the node TOML
+against the Ansible template in `deploy/ansible/roles/xmip_node/templates/`,
+which composes a different structure.
+
+The `_origins` design export, mined 2026-08-26, proposed a third — and it is
+the most complete of the three, so it belongs in the comparison rather than in
+the bin:
+
+```text
+template.xmip.toml   reusable definitions
+cluster.xmip.toml    the artifacts the whole cluster runs
+xmip.toml            the node slice: what runs here
+```
+
+with the rule that a node slice declares *placement*, and templates and cluster
+files declare *definition*.
+
+| option | effect |
+|---|---|
+| **A. Flat node TOML with `[[modules]]`** | simplest; every node file repeats what the cluster already knows |
+| **B. Ansible template composes it** | node files are generated, not authored; couples configuration shape to one deployment tool |
+| **C. Three-file split, per the origin design** | definition and placement separate cleanly; three files to keep in step, and a resolution order to specify |
+
+**Lean: C, but not by importing it.** The separation is right — a cluster-wide
+definition repeated in forty node files is forty places to drift — and it is
+what `xmip-core-configure` and desired state in `deployment-model.md` are
+already reaching for. What C does not yet have is a resolution order: when the
+cluster file and the node slice disagree, one of them wins, and nothing says
+which.
+
+**Explicitly not decided by finding it written down.** It arrived in an early
+ChatGPT draft alongside the Artifact vocabulary and a Rust-only claim, both
+rejected. Adopting one side of an open question because a draft happened to
+answer it is how a question gets closed without being decided.
+
+Recorded here rather than acted on. `_origins/` is deleted; git holds it.
+
+---
+
 # Governance
 
-## 12. Succession
+## 13. Succession
 
 AGPL protects the code. The name, the GitHub account, the manifest registry and conformance
 have no successor. Everything currently depends on one personal account.

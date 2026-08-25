@@ -188,7 +188,76 @@ thing that watches must not be able to stop the thing it watches.
 `xmip-core-report` is the historical counterpart: observation answers *what is
 happening*, reporting answers *what happened over a period*.
 
-## 7. Ownership
+## 7. Addressing: naming a thing across the estate
+
+Correlation (section 4) answers *which Message*. It does not answer *which
+component*, and six subsystems need that second answer: logs, traces, metrics,
+retention, operations and reports all have to name the thing they are about, and
+policy has to be scoped to it.
+
+The scope hierarchy is:
+
+```text
+installation  →  cluster  →  node  →  module  →  action
+```
+
+Effective policy resolves down that path, most specific winning — which is the
+same resolution the audit directive already uses in section 2, stated once here
+so that metrics, tracing and retention can use it too rather than each inventing
+a scope of its own.
+
+**The written form is an Xmip URI**, RFC 3986 compliant:
+
+```text
+xmip://[userinfo@][host][:port]/path?query#fragment
+```
+
+with two defaults that make the common case short:
+
+- **Omitted userinfo** means the caller's identity.
+- **Omitted host** means estate-wide rather than a particular node.
+
+So `xmip:///transport/ftp?phase=receive` addresses the FTP transport across
+every node, as whoever is asking.
+
+Two things this is not. It is **not a transport** — nothing is sent to an
+`xmip://` address, and it does not compete with the gRPC inter-cluster protocol.
+And it is **not a replacement for trace context**: a Trace carries standard
+correlation identifiers, and the URI names the component the span belongs to.
+They answer different halves of the same question.
+
+Recovered from the `_origins` design export, 2026-08-26, where it was the only
+addressing model Xmip had written down anywhere.
+
+## 8. Reports
+
+`xmip-core-report` answers *what happened over a period*. Four reports, and the
+split between mandatory and optional is the point:
+
+**Mandatory:**
+
+| Report | Answers |
+| --- | --- |
+| Firewall and Operations | every TCP and UDP port, every UNC path a file-based Location touches, and every protocol exposed — inbound and outbound |
+| Identity and Isolation Compliance | every identity context, its class, where it runs, and every isolation rule evaluated with its result |
+
+**Optional:** Performance and Capacity, and Artifact End-to-End Drill-Down.
+
+The two mandatory reports are mandatory because of who needs them and when. A
+security review board asks for the firewall report before Xmip is permitted onto
+a network, and an auditor asks for the compliance report after something has
+gone wrong. Neither population knows to ask for a report by name, and a report
+that must be requested before it exists is a report nobody has.
+
+**Both are derived, never authored.** The firewall report is computable from the
+Receive and Send Locations plus their transport configuration; the compliance
+report is computable from identity contexts and the ADR-0022 isolation rules.
+A hand-written network document describes what someone believed the estate did
+when they wrote it, which is the failure mode this replaces.
+
+Recovered from the `_origins` design export, 2026-08-26.
+
+## 9. Ownership
 
 `xmip-core-audit` owns the audit record model, lifecycle phases, severity,
 policy definition and resolution, envelopes, buffering and back-pressure,
@@ -199,7 +268,7 @@ persistence contracts, and query contracts.
 its own audit persistence — the moment two exist, no query can answer a question
 that spans both.
 
-## 8. The invariant
+## 10. The invariant
 
 > Every Xmip action is auditable. What is recorded is determined by the
 > effective policy, from Xmip scope down to the individual action, lifecycle

@@ -35,6 +35,34 @@ The laws that hold everywhere:
 `runtime-model.md` owns those; they are repeated here because the profiles are
 where people expect them to be negotiable, and they are not.
 
+### Build targets
+
+The range above is where Xmip is deployed. This is what it is compiled for:
+
+| Target | Notes |
+| --- | --- |
+| Windows x64 | |
+| Linux x64 | |
+| macOS, Apple silicon and x64 | developer machines primarily |
+| Linux ARM64 | Raspberry Pi class and upward, and most edge hardware |
+| Industrial and defence hardware | the constrained case; see below |
+
+ARM and the industrial targets are the two that change decisions rather than
+just adding a build. Both push toward the purpose-compiled runtime of section 2
+rather than the dynamic one: an edge device with 512 MB of RAM does not want a
+Module loader and a TOML parser it will never use, and a defence deployment
+frequently cannot accept a runtime that loads code at all.
+
+**This is a breadth statement, not a currency one.** ADR-0021 governs which
+*versions* of a platform Xmip tracks and says to track the current one.
+Nothing here reopens that: an ARM64 build is a current Rust stable build for a
+different architecture, and Xmip integrating with hardware from the 1970s over
+Modbus still does not mean Xmip runs on it.
+
+Recovered from the `_origins` design export, 2026-08-26. The target list existed
+nowhere else, and ARM and industrial hardware are exactly the two nobody adds
+retroactively without regret.
+
 ## 2. Two ways to build the runtime
 
 **Server runtime** — the full runtime. Dynamic Modules, TOML configuration,
@@ -122,6 +150,36 @@ The rules:
 6. Inbound and outbound permissions are explicit.
 7. Edge deployments use the smallest practical permission and isolation
    footprint.
+
+### Security profiles
+
+The seven rules above describe mechanisms. A **security profile** says how
+strictly an estate applies them, and is declared once per cluster.
+
+| Profile | For | Means |
+| --- | --- | --- |
+| `standard` | small estates, internal traffic | process isolation per identity context; violations block startup |
+| `enterprise` | multi-tenant or partner-facing | the above, plus mandatory Service Identity separation per runtime role |
+| `regulated` | government, defence, healthcare, finance | the above, plus node-level isolation for `highAssurance` identity contexts, fail-closed everywhere, and mandatory compliance reporting |
+
+Three properties are worth stating plainly, because each is a place a profile
+system usually goes soft:
+
+**A profile only tightens.** There is no profile that relaxes a rule, and no
+setting that switches one off. `standard` is the floor and it already blocks
+startup on an identity-isolation violation (ADR-0022 clause 5). The profiles
+above it add constraints; none removes one.
+
+**Fail-closed is what `regulated` buys.** Where a lower profile may degrade —
+an unreachable audit sink, a certificate that cannot be checked right now — the
+regulated profile stops. An estate that selects `regulated` has decided that not
+running is preferable to running unobserved, and the runtime must be able to act
+on that decision rather than log its regret.
+
+**The profile is declared, not inferred.** Xmip does not guess that an estate is
+regulated because it sees Kerberos. Recovered from the `_origins` design export,
+2026-08-26; the source called this out and it is right — an inferred security
+posture is one nobody has agreed to.
 
 ## 5. Service Identity
 

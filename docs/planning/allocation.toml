@@ -238,268 +238,220 @@ note = "Arguably belongs in xmip-core-abi with the Rust binding. Listed in [revi
 # 3. Documents that follow their module
 # ===========================================================================
 
-[[move]]
-from = "docs/Xmip-Routing-Architecture.md"
-to = "xmip-core-route"
-path = "docs/architecture.md"
-reason = "One architecture document per module repository, named the same everywhere, so you always know where to look."
-
-[[move]]
-from = "docs/architecture/publication-subscription-runtime.md"
-to = "xmip-core-route"
-path = "docs/publication-subscription.md"
-
-[[move]]
-from = "docs/architecture/xmip-subscription.md"
-to = "xmip-core-route"
-path = "docs/subscription.md"
-reason = "The xmip- prefix says nothing inside an xmip repository."
-
-[[move]]
-from = "docs/Xmip-Audit-Architecture.md"
-to = "xmip-core-audit"
-path = "docs/architecture.md"
-
-[[move]]
-from = "docs/architecture/audit-and-correlation.md"
-to = "xmip-core-audit"
-path = "docs/correlation.md"
-
-[[move]]
-from = "docs/architecture/audit-directive.md"
-to = "xmip-core-audit"
-path = "docs/directive.md"
-
-[[move]]
-from = "docs/Xmip-Exclusiveness-Architecture.md"
-to = "xmip-core-exclusiveness"
-path = "docs/architecture.md"
-
-[[move]]
-from = "docs/Xmip-Observer-Architecture.md"
-to = "xmip-core-observe"
-path = "docs/architecture.md"
-reason = "Observer is the retired term; the module is observe. Content needs the same rename inside."
+# Rewritten 2026-08-26. The previous version of this section was written before
+# the ADR-0020 consolidation and had rotted in two directions at once: eleven
+# entries pointed at files that no longer existed, and sixteen pointed at files
+# that still existed but whose content had since been folded into the six
+# architecture documents.
+#
+# Running it would have scattered sixteen pre-consolidation documents across
+# sixteen repositories, turning one consolidation into forty-three.
+#
+# Only two documents genuinely belong to another repository today. Everything
+# else is either one of the six, or waiting to be merged into one of the six —
+# see section 3b, which is a plan and not an instruction: Invoke-Distribute
+# reads [[move]] and [[decision]] only.
 
 [[move]]
 from = "docs/architecture/module-abi-specification.md"
 to = "xmip-core-abi"
 path = "docs/specification.md"
-reason = "The prose ABI specification. It belongs beside the header it specifies."
+reason = """
+The prose ABI specification. It belongs beside the header it specifies, and
+include/xmip_module.h moves to the same repository in section 2.
+"""
 
 [[move]]
-from = "docs/architecture/module-loading.md"
-to = "xmip-core-abi"
-path = "docs/loading.md"
-reason = "Loading is what the ABI is for."
+from = "docs/architecture/identity-by-technology.md"
+to = "xmip-core-authenticate"
+path = "docs/identity-by-technology.md"
+reason = """
+Where identity lives per technology, against the standards that define it, for
+every transport, representation and logic technology in architecture.toml.
+Belongs with the capability that has to implement it. RFC numbers verified
+against rfc-editor.org and the IETF Datatracker on 2026-08-25.
 
-[[move]]
-from = "docs/module-loading.md"
-to = "xmip-core-abi"
-path = "docs/loading-duplicate.md"
-reason = "Same filename exists twice, here and under docs/architecture/. Both move so the duplicate is visible in one place, then one of them dies. See [review]."
+Note for whoever runs this: README.md links to this file at its current path,
+and tests/Documentation.Tests.ps1 fails when a README link does not resolve.
+Update the link in the same commit as the move.
+"""
 
-[[move]]
-from = "docs/architecture/message-contracts-and-validation.md"
-to = "xmip-core-contract"
-path = "docs/validation.md"
+# ===========================================================================
+# 3b. Documents waiting to be consolidated
+# ===========================================================================
+#
+# ADR-0020: one document per subject, where it resides in the structure, no
+# versions in filenames. docs/architecture/ holds thirty-one files against a
+# target of six.
+#
+# Each entry below names the document it merges into. None of them is verified
+# as already-merged — verified = false means exactly that, and nothing here
+# should be deleted until someone has read both and confirmed the content
+# survived. That check is the work; this table is only the list.
+#
+# These are inert to Invoke-Distribute by design. A file that is about to be
+# merged must not first be moved to another repository.
 
-[[move]]
-from = "docs/architecture/message-disposition.md"
-to = "xmip-core-message"
-path = "docs/disposition.md"
+[[consolidate]]
+into = "docs/architecture/runtime-model.md"
+verified = false
+reason = """
+The runtime cluster: what Xmip does between arrival and disposition. Fifteen
+documents under docs/architecture/ plus three at docs/ root, roughly 1,300
+lines, written across three vocabularies.
+"""
+paths = [
+  "docs/architecture/artifact-model.md",
+  "docs/architecture/business-process-runtime.md",
+  "docs/architecture/communication-layering.md",
+  "docs/architecture/definition-instance-model.md",
+  "docs/architecture/definition-instance-namespace.md",
+  "docs/architecture/foundations.md",
+  "docs/architecture/message-contracts-and-validation.md",
+  "docs/architecture/message-disposition.md",
+  "docs/architecture/message-runtime-context.md",
+  "docs/architecture/process-and-transform-assignment-rules.md",
+  "docs/architecture/protocol-landscape.md",
+  "docs/architecture/publication-subscription-runtime.md",
+  "docs/architecture/xmip-process.md",
+  "docs/architecture/xmip-send.md",
+  "docs/architecture/xmip-subscription.md",
+  "docs/Xmip-Routing-Architecture.md",
+  "docs/Xmip-Exclusiveness-Architecture.md",
+  "docs/process-instances.md",
+]
 
-[[move]]
-from = "docs/architecture/message-runtime-context.md"
-to = "xmip-core-context"
-path = "docs/architecture.md"
+[[consolidate]]
+into = "docs/architecture/repository-model.md"
+verified = false
+reason = """
+How the estate is arranged, and how one repository is arranged inside itself.
+The Blueprint is 554 lines and predates schema 2.0, where the TOML tree path is
+the repository name.
+"""
+paths = [
+  "docs/architecture/feature-folder-convention.md",
+  "docs/Xmip-Repository-Creation-Blueprint.md",
+]
 
-[[move]]
-from = "docs/architecture/communication-layering.md"
-to = "xmip-core-transport"
-path = "docs/layering.md"
+[[consolidate]]
+into = "architecture.toml"
+verified = false
+reason = """
+The handler-era lineage documents. They enumerate the technology tree in prose,
+which the manifest now holds as data — and ADR-0011 retired 'handler' as a
+repository-name segment, so every name in them is wrong twice over.
 
-[[move]]
-from = "docs/architecture/protocol-landscape.md"
-to = "xmip-core-transport"
-path = "docs/landscape.md"
-reason = "The survey of protocols the transport module is expected to reach."
+A document that lists what a manifest declares is a second source of truth that
+is wrong within a week. If any of these carries reasoning the manifest cannot
+hold, that reasoning goes to repository-model.md and the file still dies.
+"""
+paths = [
+  "docs/architecture/handler-lineage.md",
+  "docs/architecture/handler-specification-map.md",
+  "docs/architecture/handler-taxonomy.md",
+  "docs/architecture/industrial-iot-handler-lineage.md",
+  "docs/architecture/platform-lineage.md",
+  "docs/architecture/queue-handler-lineage.md",
+  "docs/architecture/tcp-handler-lineage.md",
+  "docs/content-handlers.md",
+]
 
-[[move]]
-from = "docs/architecture/xmip-send.md"
-to = "xmip-core-send"
-path = "docs/architecture.md"
+[[consolidate]]
+into = "docs/governance/rust-style.md"
+verified = false
+reason = """
+How the Rust here is written, which is governance rather than architecture, and
+the exact counterpart of powershell-style.md. The target does not exist yet;
+this is the entry that creates it. It should end with a section 6 naming what
+enforces it — cargo fmt and clippy already do, so unlike the PowerShell rules
+it starts enforced.
+"""
+paths = ["docs/architecture/rust-runtime-guidelines.md"]
 
-[[move]]
-from = "docs/architecture/xmip-process.md"
-to = "xmip-core-process"
-path = "docs/architecture.md"
+[[consolidate]]
+into = "docs/governance/engineering-methodology.md"
+verified = false
+reason = """
+SACE: how the work is done, not what is built. Governance. The rename drops the
+Xmip- prefix, which says nothing inside the Xmip repository, and the version
+suffix, which is what git history is for.
+"""
+paths = ["docs/Xmip-Engineering-Methodology-SACE.md"]
 
-[[move]]
-from = "docs/architecture/business-process-runtime.md"
-to = "xmip-core-process"
-path = "docs/runtime.md"
-
-[[move]]
-from = "docs/process-instances.md"
-to = "xmip-core-process"
-path = "docs/instances.md"
-
-[[move]]
-from = "docs/architecture/definition-instance-model.md"
-to = "xmip-core-process"
-path = "docs/definition-instance.md"
-reason = "Definition versus instance is the process lifecycle question."
-
-[[move]]
-from = "docs/architecture/definition-instance-namespace.md"
-to = "xmip-core-process"
-path = "docs/definition-instance-namespace.md"
-
-[[move]]
-from = "docs/architecture/database-selection.md"
-to = "xmip-core-persist"
-path = "docs/database-selection.md"
-reason = "Selects the RocksDB-style engine deliberately. Do not let anyone tidy this away."
-
-[[move]]
-from = "docs/architecture/desired-state-configuration.md"
-to = "xmip-core-configure"
-path = "docs/desired-state.md"
-
-[[move]]
-from = "docs/architecture/runtime-modularity.md"
-to = "xmip-core-runtime"
-path = "docs/modularity.md"
-
-[[move]]
-from = "docs/architecture/runtime-roles-and-isolation.md"
-to = "xmip-core-runtime"
-path = "docs/roles-and-isolation.md"
-
-[[move]]
-from = "docs/architecture/service-identities.md"
-to = "xmip-core-runtime"
-path = "docs/service-identities.md"
-reason = "The accounts an Xmip Service and its Host Services run as, not Actor identity. xmip-core-identify is the other thing."
+[[review]]
+path = "docs/handler-implementation-plan.md"
+question = """
+Planning note or superseded? It plans an implementation order for handlers, in
+the retired vocabulary. If the order still holds it belongs in docs/planning/;
+if architecture.toml maturity now expresses it, it is superseded.
+"""
 
 # ===========================================================================
 # 4. Documents that stay
 # ===========================================================================
 
+# Rewritten 2026-08-26 as rules rather than an inventory. The previous version
+# named sixty-one files individually, of which about twenty no longer existed —
+# docs/glossary.md, docs/architecture/kernel-boundary.md, docs/data/*,
+# docs/ux/*, docs/vision/*, the four specifications and the rest. An enumerated
+# keep-list is a second copy of the directory tree, and a second copy is wrong
+# as soon as the first one moves.
+#
+# A rule that says 'everything under docs/decisions stays' cannot go stale when
+# ADR-0022 is written. That is the whole reason to state it this way.
+
 [[keep]]
 path = "docs/decisions/*"
-count = 15
-reason = "Every ADR. A decision is platform-wide even when its subject is one module, and a scattered decision record is no record."
+reason = """
+Every ADR, twenty-one of them today. A decision is platform-wide even when its
+subject is one module, and a decision record scattered across forty-three
+repositories is not a record.
+"""
 
 [[keep]]
-path = "docs/glossary.md"
-reason = "One vocabulary or none."
-
-[[keep]]
-path = "docs/terminology.md"
-reason = "Same. See [review]: it overlaps glossary.md and one of them should probably go."
-
-[[keep]]
-path = "docs/Xmip-Architecture-Specification-v1.0.md"
-[[keep]]
-path = "docs/Xmip-Architecture-Specification-v1.1.md"
-[[keep]]
-path = "docs/Xmip-Architecture-Specification-v1.2.md"
-[[keep]]
-path = "docs/Xmip-Architecture-Baseline-Current.md"
-reason = "The normative specification and its history. Four files, see [review]."
-
-[[keep]]
-path = "docs/Xmip-Engineering-Methodology-SACE.md"
-reason = "How the work is done, not what is built."
-
-[[keep]]
-path = "docs/Xmip-Repository-Creation-Blueprint.md"
-reason = "Describes the repository estate. The root owns the estate."
-
-[[keep]]
-path = "docs/repository-model.md"
-[[keep]]
-path = "docs/crate-boundaries.md"
-[[keep]]
-path = "docs/architecture/repository-architecture.md"
-[[keep]]
-path = "docs/architecture/repository-structure.md"
-[[keep]]
-path = "docs/architecture/repository-and-crate-plan.md"
-reason = "Five documents about how repositories are arranged. All root. See [review]: five is too many."
-
-[[keep]]
-path = "docs/architecture/foundations.md"
-[[keep]]
-path = "docs/architecture/modularity.md"
-[[keep]]
-path = "docs/architecture/kernel-boundary.md"
-[[keep]]
-path = "docs/architecture/platform-lineage.md"
-[[keep]]
-path = "docs/architecture/platform-system-definition.md"
-[[keep]]
-path = "docs/architecture/feature-folder-convention.md"
-[[keep]]
-path = "docs/architecture/rust-runtime-guidelines.md"
-[[keep]]
-path = "docs/architecture/retired-terms-cleanup.md"
-[[keep]]
-path = "docs/architecture/glossary.md"
-reason = "Platform-wide architecture. Note glossary.md exists twice, here and in docs/. See [review]."
-
-[[keep]]
-path = "docs/architecture/data-flow.md"
-[[keep]]
-path = "docs/architecture/artifact-model.md"
-reason = "Cross-module: both describe the path a Stream takes through everything."
-
-[[keep]]
-path = "docs/architecture/deployment-profiles.md"
-[[keep]]
-path = "docs/architecture/runtime-profiles.md"
-[[keep]]
-path = "docs/architecture/installer.md"
-reason = "Packaging and profiles, ADR-0015. The root builds the artefacts."
-
-[[keep]]
-path = "docs/architecture/process-and-transform-assignment-rules.md"
-reason = "Spans process and transform. Neither owns it."
-
-[[keep]]
-path = "docs/data/data-model.md"
-[[keep]]
-path = "docs/data/privacy.md"
-[[keep]]
-path = "docs/governance/architectural-change-permission.md"
-[[keep]]
-path = "docs/governance/release-model.md"
-[[keep]]
-path = "docs/operations/roles.md"
-[[keep]]
-path = "docs/operations/workflows.md"
-[[keep]]
-path = "docs/ux/personas.md"
-[[keep]]
-path = "docs/ux/principles.md"
-[[keep]]
-path = "docs/ux/user-flows.md"
-[[keep]]
-path = "docs/vision/problem.md"
-[[keep]]
-path = "docs/vision/roadmap.md"
-[[keep]]
-path = "docs/vision/value-proposition.md"
-[[keep]]
-path = "docs/disaster-recovery.md"
-reason = "Governance, operations, vision, UX, data policy. Platform-level, all of it."
+path = "docs/governance/*"
+reason = """
+How the work is governed: architectural-change-permission, release-model and
+powershell-style. Governance binds every repository, so it lives in the one
+that owns the estate. rust-style.md joins them per section 3b.
+"""
 
 [[keep]]
 path = "docs/planning/*"
-count = 6
-reason = "Working notes about the estate itself, including the repository inventories. See [review]: the inventories are now generated by Xmip-Estate and may be stale by definition."
+reason = """
+Working notes about the estate itself, including this file. Explicitly not
+authoritative — README.md says so, and that is what keeps them useful.
+"""
+
+[[keep]]
+path = "docs/terminology.md"
+reason = """
+One vocabulary or none. The overlapping glossary.md at both docs/ and
+docs/architecture/ is gone; section 8 records why.
+"""
+
+[[keep]]
+path = "docs/architecture/runtime-model.md"
+[[keep]]
+path = "docs/architecture/repository-model.md"
+[[keep]]
+path = "docs/architecture/module-model.md"
+[[keep]]
+path = "docs/architecture/deployment-model.md"
+[[keep]]
+path = "docs/architecture/observability-model.md"
+reason = """
+Five of the six documents ADR-0020 allows. Each answers one question about the
+platform as a whole, so each belongs to the repository that is the platform as
+a whole. The sixth, identity-by-technology.md, is the exception and moves —
+section 3 says why.
+
+These five are named individually rather than as docs/architecture/* on
+purpose: the directory currently holds thirty-one files, and a wildcard here
+would quietly keep the twenty-five that section 3b is trying to remove. When 3b
+is empty, this becomes docs/architecture/* and the exception list disappears.
+"""
 
 # ===========================================================================
 # 5. Root furniture
@@ -565,10 +517,225 @@ path = "deploy/ansible/roles/xmip_node/templates/xmip-node.toml.j2"
 path = "deploy/dsc/xmip-node.dsc.yaml"
 reason = "Manifest, estate tooling, packaging and deployment. The root composes; this is what composing needs."
 
-[[keep]]
+[[remove]]
 path = "_origins/*"
 count = 8
-reason = "Where Xmip came from, including the IP document. Historical, and the one place a docx belongs."
+reason = """
+Mined and removed 2026-08-26. Ruling: 'that was early drafts made in ChatGPT,
+just take what is missing, if it is valid. Then just delete the _origins
+directory. It will be in the Git history.'
+
+The valid material has been taken into the documents listed in section 5b.
+git holds the originals. Delete the directory.
+
+The lesson is worth keeping even though the folder is not: the previous entry
+read 'Historical, and the one place a docx belongs', and that word — historical
+— is why nothing in here was read during the consolidation. A folder labelled
+as provenance is a folder nobody greps.
+"""
+
+# ===========================================================================
+# 5b. Origin material — what was taken, and what was not
+# ===========================================================================
+#
+# Found 2026-08-26 after 'check _origins, it is old and maybe stale'. It was
+# both: written in the retired Artifact and Handler vocabulary, asserting a
+# Rust-only runtime and the pre-ADR-0011 crate names — and simultaneously the
+# only record of nine pieces of live design.
+#
+# TAKEN:
+#
+#   Identity classes and context isolation  ADR-0022 (new)
+#   Security profiles                       deployment-model.md section 4
+#   Build targets, ARM and industrial       deployment-model.md section 1
+#   The Xmip URI and scope hierarchy        observability-model.md section 7
+#   Mandatory and optional reports          observability-model.md section 8
+#   Delivery semantics                      runtime-model.md section 15
+#   The Void lane                           runtime-model.md section 23, as
+#                                           evidence for the open Dismissed
+#                                           ruling — not decided, ADR-0013 owns it
+#
+# ALREADY PRESENT, nothing taken:
+#
+#   'Routing creates no new Messages; Assignment and Transformation do'
+#       runtime-model.md line 50 states it already.
+#   Lease-based claim, checkpointed recovery
+#       ADR-0017 already has ExclusiveLease, ResourceClaim and RecoveryLease.
+#       Only the delivery-semantics half was missing.
+#
+# REJECTED, and why:
+#
+#   Rust-only implementation
+#       Contradicted by the estate. xmip-core-powershell and xmip-core-gui
+#       declare primaryLanguage and are not Rust crates — ADR-0014 clause 14.
+#   xmip-interface, xmip-core, xmip-cli as crate names
+#       ADR-0011 and schema 2.0. The manifest tree path is the name now.
+#   Artifact as the primary runtime noun
+#       Superseded by Stream, Message, Section and Journey. 'Artifact' survives
+#       only in its ordinary build sense.
+#   transportHandler, contentHandler, intentHandler, contractHandler
+#       ADR-0011: handler is a runtime role, never a repository-name segment,
+#       and the four-way split is capability repositories now.
+#   'Core semantics may not be forked or reimplemented'
+#       Cannot be adopted. Xmip is AGPL-3.0-or-later, which grants exactly the
+#       right to modify and redistribute that this sentence withholds. A
+#       licence and a wish, and the licence is the one that binds. Flagged
+#       rather than silently dropped, because it was written on purpose.
+#   template.xmip.toml, cluster.xmip.toml, node xmip.toml
+#       Not rejected on merit — it is direct input to the open node
+#       configuration question ([[modules]] against the Ansible template), and
+#       adopting one side of an open question by importing it from a draft is
+#       how an open question gets closed without being decided. Recorded in
+#       docs/planning/open-problems.md instead.
+#
+# The entries below are what was found, kept as the record of where each item
+# came from. They are inert to Invoke-Distribute.
+
+[[unmined]]
+subject = "The Xmip URI"
+source = "_origins/Xmip_Current_State_Specification.md section 12"
+detail = """
+xmip://[userinfo@][host][:port]/path?query#fragment, stated RFC 3986 compliant.
+Omitted userinfo means the caller's identity; omitted host means cluster-wide.
+It is the addressing scheme for logging, tracing, metrics, tracking, operations
+and reports — six subsystems with no other addressing model written down.
+"""
+candidate = "docs/architecture/observability-model.md, and an ADR: a URI scheme is a public contract."
+
+[[unmined]]
+subject = "Identity classes and identity-context isolation"
+source = "_origins/Xmip_Current_State_Specification.md section 8"
+detail = """
+Four identity classes — highAssurance, federated, sharedSecret, anonymous — and
+the isolation rules that use them:
+
+  - Different identity contexts must not share a host process.
+  - The regulated profile enforces node-level isolation for highAssurance.
+  - A violation blocks artifact startup, and is logged and reported.
+
+Kerberos identity context is defined as domain, service principal, delegation
+scope and delegation allow-list, with constrained and unconstrained delegation
+being distinct contexts that must not co-reside.
+
+ADR-0019 settled which identity wins. This settles which identities may run
+beside each other, which is a different question and is unanswered today.
+"""
+candidate = "ADR-0019 and ADR-0017. Isolation that blocks startup is exclusiveness."
+
+[[unmined]]
+subject = "Security profiles"
+source = "_origins/Xmip_Current_State_Specification.md section 9"
+detail = """
+standard, enterprise, regulated. Regulated means strict isolation, fail-closed,
+and mandatory compliance reporting. deployment-model.md has node profiles and
+roles; it has no security profile, and fail-closed is a runtime behaviour that
+has to be designed rather than declared.
+"""
+candidate = "docs/architecture/deployment-model.md"
+
+[[unmined]]
+subject = "The Void lane"
+source = "_origins/Xmip_Current_State_Specification.md section 5"
+detail = """
+Four runtime lanes — Receive, Process (optional), Send, Void — with four valid
+flows: Receive to Send, Receive to Process to Send, Receive to Void, and
+Receive to Process to Void.
+
+Void is a terminal lane for a Message that is deliberately not sent. That is
+very likely the answer to the open question in runtime-model.md section 21
+about Dismissed having no JourneyState variant: the origin model already had
+somewhere for a Message to end without delivery and without failure.
+"""
+candidate = "docs/architecture/runtime-model.md, and it closes an open problem rather than adding one."
+
+[[unmined]]
+subject = "Mandatory reports"
+source = "_origins/Xmip_Current_State_Specification.md section 13"
+detail = """
+Two mandatory: the Firewall & Operations Report, and the Identity & Isolation
+Compliance Report. Two optional: Performance & Capacity, and Artifact
+End-to-End Drill-Down.
+
+The firewall report enumerates TCP and UDP ports, UNC paths for file-based
+locations, and protocol exposure — which is derivable from the Receive and Send
+Locations, and is the document a security team asks for before Xmip is allowed
+onto a network.
+"""
+candidate = "docs/architecture/observability-model.md, with xmip-core-report owning production."
+
+[[unmined]]
+subject = "Message creationInstance metadata"
+source = "_origins/Xmip_Current_State_Specification.md section 6"
+detail = """
+Every Message records how it came to exist: type (port, assignment or
+transformation), name, nodeName, clusterName and a UTC timestamp. Together with
+'routing never creates new messages; only transformation and assignment do',
+this is the provenance rule for the immutable Message model.
+"""
+candidate = "docs/architecture/runtime-model.md. Check first whether src/ already carries it under another name."
+
+[[unmined]]
+subject = "Service bus delivery and sequential sources"
+source = "_origins/Xmip_Current_State_Specification.md section 10"
+detail = """
+Durable queues, restart recoverable, exactly-once where possible and
+at-least-once where the external system limits it. Sequential sources use a
+durable claim model, lease-based locking and checkpointed recovery.
+
+'It is not a lock, it is runtime exclusiveness' was the correction that
+produced ADR-0017. Lease-based locking with checkpointed recovery is the
+mechanism that phrasing implies and ADR-0017 does not yet specify.
+"""
+candidate = "ADR-0017, and xmip-core-resilience."
+
+[[unmined]]
+subject = "Offline-first build governance"
+source = "_origins/Xmip_Current_State_Specification.md sections 15 and 16"
+detail = """
+Local build is canonical; CI is advisory. Git is the system of record.
+Contributions are moderated. Extensions may be commercial or open source, but
+core semantics may not be forked or reimplemented.
+
+The last clause is a licensing position and Xmip is AGPL-3.0-or-later. Whether
+'may not be reimplemented' is enforceable, aspirational, or in tension with the
+licence is a question for a human, not for this file.
+"""
+candidate = "docs/governance/release-model.md, and CONTRIBUTING.md. The licence clause needs a decision."
+
+[[unmined]]
+subject = "Build targets"
+source = "_origins/Xmip_Current_State_Specification.md section 15"
+detail = """
+Windows, Linux, macOS, ARM including Raspberry Pi, and industrial and defense
+hardware. deployment-model.md does not name a target list, and ADR-0021 is
+about platform currency rather than platform breadth. ARM and industrial
+hardware are the two that change build and packaging decisions.
+"""
+candidate = "docs/architecture/deployment-model.md and ADR-0015."
+
+[[review]]
+path = "_origins/Xmip_Complete_Specification_v0.1.md"
+question = """
+Not yet read. Sibling to Current_State_Specification and may hold reasoning the
+current-state export deliberately dropped — its own header says it excludes
+historical reasoning. Read before section 5b is considered complete.
+"""
+
+[[review]]
+path = "_origins/Xmip_Full_Prompt_Detailed.md"
+question = """
+Not yet read. Matches on the same identity and service-bus terms, so it holds
+at least some of the same material. Read for anything section 5b missed.
+"""
+
+[[review]]
+path = "_origins/Xmip_C4_Architecture_Document_0.0.2.docx"
+question = """
+Three C4 documents, 0.0.0 through 0.0.2, unread — nothing in this repository
+reads docx. C4 is a diagram notation, so these may hold the only container and
+component diagrams Xmip has. Read 0.0.2; the older two are what git history is
+for, except that these predate the repository.
+"""
 
 # ===========================================================================
 # 6. Remove
@@ -1013,25 +1180,30 @@ reason = "Zero bytes. ADR-0020 clause 7."
 
 
 [count]
-# Verified against the tree of a3b001e871: every one of the 183 tracked files
-# appears exactly once. No file is unallocated and no entry names a file that
-# does not exist.
-files = 183
-keep = 108        # 79 named, 29 under the three wildcards below
-move = 51
-remove = 14
-reviewOnly = 0    # all eleven answered 2026-08-25, see section 7
+# Removed 2026-08-26.
+#
+# This block used to assert: 183 files, keep 108, move 51, remove 14, and
+# 'every one of the 183 tracked files appears exactly once. No file is
+# unallocated and no entry names a file that does not exist.'
+#
+# Every one of those numbers was false by the time anyone read it. The last
+# line was the worst: twenty-seven move entries named files that did not exist
+# or had been consolidated away, which is precisely what it claimed could not
+# happen. A hand-maintained count is a second copy of the tree, and a second
+# copy is wrong the moment the first one moves — the same failure the keep
+# inventory in section 4 had, for the same reason.
+#
+# Counting by hand is replaced by tests/Allocation.Tests.ps1, which checks the
+# claims this block used to make and fails when they stop being true:
+#
+#   - every [[move]] and [[superseded]] path exists on disk
+#   - every [[move]] destination is a repository in architecture.toml
+#   - no path appears in two sections
+#   - nothing under docs/ is unaccounted for
+#
+# Section 4 is now rules rather than an inventory, so 'every file appears
+# exactly once' is no longer the invariant. The invariant is that nothing is
+# *unaccounted for*, and a rule accounts for a directory without naming it.
 
-entries = { keep = 82, move = 51, remove = 14, decision = 11, superseded = 10 }
-wildcard = { "docs/decisions/*" = 19, "docs/planning/*" = 6, "_origins/*" = 8 }
-
-note = """
-Counts revised overnight 2026-08-25. [review] became [decision]: all eleven
-answered, so nothing is unallocated any more. Three files created after the map
-was drawn were added to [keep]. [superseded] is a separate list of ten files
-whose replacement is written and which the sandbox could not delete.
-
-The file count of 183 is against a3b001e871 and is now historical: the tree has
-moved since. Re-verify before running Xmip-Git -Distribute.
-"""
+verifiedBy = "tests/Allocation.Tests.ps1"
 

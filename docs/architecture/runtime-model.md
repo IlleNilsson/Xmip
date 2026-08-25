@@ -11,7 +11,13 @@ v1.2 were about the estate rather than the runtime and are now in
 `repository-model.md`. Their history is in git.
 
 Where those documents conflicted with each other or with an accepted ADR, the
-conflict is resolved in section 21 rather than silently. Four were substantive.
+conflict is resolved in section 23 rather than silently.
+
+It also absorbs the live content of the pre-ADR-0020 documents in
+`docs/architecture/` — the Definition/Instance model, the Process model, and
+the validation gates — which described subjects the four specifications never
+covered. Those documents conflicted too, and those conflicts are in section 23
+as well.
 
 ## 1. Purpose
 
@@ -368,7 +374,7 @@ tests, and what ADR-0013 clause 7 records.
 
 Earlier drafts named a different set — Created, Running, Paused, Waiting, Dead,
 Completed, Dismissed. The mapping, and what happened to the two that had no
-equivalent, is in section 21.
+equivalent, is in section 23.
 
 **A Failed Journey** cannot continue automatically. Causes include Transport
 Handler, Content Handler, Contract, Process, Send Location, response and
@@ -443,6 +449,43 @@ policy, and two of them compound multiplicatively.
 
 Once configured retries are exhausted the Journey fails, and an operator may
 retry later. The same primitives supervise Host Services, per ADR-0018.
+
+### Delivery semantics
+
+Retry raises the question retry always raises, and it needs answering here
+rather than per transport.
+
+**Xmip is exactly-once where the endpoint permits it, and at-least-once
+everywhere else.** Which one applies is a property of the endpoint, not a
+setting, and Xmip does not offer a switch that promises otherwise.
+
+Internally, exactly-once holds: the durable claim of ADR-0017 means one runtime
+owns a unit of work, execution checkpoints in `xmip-core-persist` mean a
+recovered Journey resumes rather than restarts, and Messages are immutable so a
+resumed Journey cannot half-produce one.
+
+Externally it depends on what the far side supports. A queue with
+acknowledgement and a deduplication window can be delivered to exactly once. An
+FTP `PUT` cannot: the connection may drop after the bytes land and before the
+server answers, and no amount of Xmip correctness tells the two cases apart.
+
+The rule that follows, and the reason this is stated at all:
+
+> **Where Xmip cannot guarantee exactly-once, it guarantees at-least-once and
+> says so.** It never silently degrades to at-most-once by treating an
+> unacknowledged send as delivered.
+
+At-most-once — losing a Message to avoid duplicating it — is never a default. An
+integration platform that quietly drops work is worse than one that occasionally
+repeats it, because a duplicate is visible and a loss is not.
+
+The effective guarantee per Send Location is derivable from its transport, and
+belongs in the operations reporting of `observability-model.md`: an operator
+should be able to ask which of their endpoints can duplicate, and get a list
+rather than an opinion.
+
+Recovered from the `_origins` design export, 2026-08-26, where the
+exactly-once/at-least-once split was stated and had been carried nowhere since.
 
 ## 16. Audit, retention and archiving
 
@@ -586,7 +629,185 @@ and Artifacts. A Receive Location selects, by reference: Transport Handler,
 Content Handler, Contract, accepted identities and mechanisms, authorization,
 interaction type, response behaviour, and audit and retention policy.
 
-## 21. Conflicts resolved
+### Validation gates
+
+The `Validation` step in section 5 is the receive gate. It is not the only
+one. Validation belongs at every meaningful boundary where Xmip can decide
+whether a Message may continue:
+
+```text
+receive / Stream boundary          deserialize boundary
+transform boundary                 Process input
+Process output                     pre-serialization boundary
+outgoing representation boundary   (optional)
+```
+
+Each is a gate: **a Message failing a required gate must not continue through
+that passage as if it were valid**, and the outcome is audited. Validation is
+not required after every runtime activity — only where a boundary is crossed.
+
+**Promotion and Publication are not validation gates.** Promotion extracts
+values into context; Publication offers a Message for Routing. Neither asserts
+anything about correctness, and treating them as gates forces work Xmip may
+not need to do.
+
+What can be checked depends on what is knowable. At the Stream boundary Xmip
+may not know the internal structure at all, and validation uses envelope and
+identity only — sender and service identity, certificate, source address,
+Receive Location and Port, content type, subject, file name and attributes,
+headers, metadata. After deserialization it may check structure, required
+fields, data types, allowed values, schema rules and domain constraints.
+
+> **Structured validation must happen before serialization.** Xmip cannot
+> validate serialized bytes as structured message data.
+
+After serialization only representation checks remain: that a serialized form
+exists, that content type and encoding are assigned, that destination contract
+metadata and send identity requirements are present. Those are outgoing
+representation checks, and calling them validation is how a system ends up
+believing it validated something it did not.
+
+Every validation gate participates in audit, carrying correlation and
+sub-correlation references, the event name and purpose, node, address and
+service identity, start and end time, and outcome. A failure records its reason
+as metadata. **Validation logs and traces never store payloads** — where the
+Message itself must be kept, that is retention's job, per section 16.
+
+## 21. Definition and Instance
+
+Every configurable Xmip object exists twice, and the two must not be confused.
+
+A **Definition** is configured intent, declared in TOML. It describes what
+should happen and references the module capability needed to realise it. A
+Definition does not execute.
+
+An **Instance** is the runtime execution of a Definition, created when the
+kernel binds it to loaded module code satisfying the required contracts:
+
+```text
+Definition + Module Instance + Validated Contracts + Runtime Context
+    = Instance
+```
+
+An Instance is active, not a passive record. It is responsible for starting,
+executing its capability, ending successfully or unsuccessfully, and reporting
+its due audit — at start including why it started, during execution when
+something meaningful happens, and at completion with the outcome.
+
+**"Artifact" is a collective noun for prose, not a name in code.** This
+document says "Artifacts" when it means all of them at once. Type names, TOML
+keys and log fields use the concrete concept: `ReceivePortDefinition`,
+`ProcessInstance`, `SubscriptionDefinition`. There is no `ArtifactDefinition`
+type, and no AD/AI/MD/MI acronyms outside a diagram.
+
+### Identity survives implementation
+
+**Identity belongs to the Definition and its runtime lineage, not to the
+module implementation or the transport technology.**
+
+```text
+OrdersInbound
+    version 1 -> xmip-core-transport-http
+    version 2 -> xmip-core-transport-mqtt
+```
+
+`OrdersInbound` is the same Receive Location throughout. Newer Instances use
+the new module after restart or redeployment. Lineage, audit, retention and
+deployment history must therefore never be anchored to the concrete
+implementation technology — that is precisely what makes a transport
+replaceable.
+
+### Startup
+
+```text
+ 1. Load kernel configuration.
+ 2. Load configured module declarations.
+ 3. Load available modules.
+ 4. Create Module Instances.
+ 5. Load TOML Definitions.
+ 6. Resolve concept categories and configured module references.
+ 7. Validate Definitions against required capability contracts.
+ 8. Bind Definitions to compatible Module Instances.
+ 9. Create Instances.
+10. Validate topology references between Instances.
+11. Start eligible receive, schedule and runtime entry points.
+```
+
+A configuration error is therefore a startup failure, not a first-message
+failure. Steps 7 and 10 exist so that a Receive Location naming a Send Port
+that does not exist is refused before a Stream ever arrives.
+
+## 22. The Xmip Process
+
+An **Xmip Process** is a Definition started by a Subscription. It is not an
+operating-system process, and it is not a human workflow unless that workflow
+is represented by Xmip configuration and runtime state.
+
+A Process may validate, promote, assign, transform, execute Extensions, use
+other Xmip concepts, publish, send requests, wait for responses, resume,
+time out, complete, fail or cancel. **It does not receive external Streams
+directly and does not deliver to external targets directly** — those are
+Receive and Send concerns.
+
+Assignment belongs to a Process alone. Transformation may happen in a Receive
+Port, a Process or a Send Port. Section 10 states the same rule from the Send
+side.
+
+### Process State belongs to the cluster
+
+**A Process Instance must not use thread, host process or node memory as its
+source of truth.** Its state is persisted through cluster persistence and
+holds what is needed to continue after a wait, a timeout, a host restart, a
+node restart, a node failure, a failover or a recovery.
+
+> Execution ownership may move between valid nodes. The state does not move,
+> because it already belongs to the cluster.
+
+That is the whole reason a waiting Process is not a long-running thread. A
+Process waiting three days for a response occupies no thread and survives
+every restart in between.
+
+### Stages
+
+A **Stage** is a named phase inside a Process Instance. **Stages are not
+required to be linear.** A Process may move forward, wait, resume, branch,
+revisit earlier logic, or reach different outcomes depending on the messages,
+timeouts and decisions it meets.
+
+### Starting and resuming
+
+> A Subscription decides when work **starts**.
+> A Correlation Rule decides when waiting work **resumes**.
+
+A Subscription Instance may correlate an incoming Message to a waiting Process
+Instance. Where the correlation and the wait condition both match, Xmip
+resumes that Instance from persisted state.
+
+### Execution scope
+
+```text
+None   Transactional   BusinessProcess
+```
+
+`ExecutionScope` describes execution semantics and applies whether the work
+happens inside a Process or in a publish/subscribe path. When a scope ends,
+Xmip must produce an explicit outcome — a published Message, a sent Message,
+completed work, a failure, or placement in the DMQ. **The end of an execution
+scope is always audited.**
+
+### Process outcome
+
+```text
+Completed   CompletedWithWarnings   Failed   Cancelled   TimedOut   Abandoned
+```
+
+**How this relates to `JourneyState` is not yet decided.** A Process is one
+step inside a Journey rather than the Journey itself, so the two vocabularies
+are probably distinct with a mapping between them — but the Process model has
+only just been written down, and inventing the mapping in the same breath
+would be guessing. Recorded in section 23 with the other open questions.
+
+## 23. Conflicts resolved
 
 Four substantive disagreements existed between the four source documents and
 the accepted ADRs. Recording them because each was load-bearing, and because a
@@ -626,6 +847,32 @@ no state to land in, so a dismissed Journey is currently indistinguishable from
 one that simply Failed. Either `JourneyState` gains a `Dismissed` terminal
 variant, or dismissal is recorded outside the state as an audited disposition.
 **Not decided here — it needs a ruling and belongs in ADR-0013.**
+
+*New evidence, 2026-08-26.* The `_origins` design export defines four runtime
+lanes — Receive, Process (optional), Send and **Void** — with four valid flows:
+
+```text
+Receive → Send
+Receive → Process → Send
+Receive → Void
+Receive → Process → Void
+```
+
+Void is a terminal lane for work that deliberately does not go out. It is
+reached from both a processed and an unprocessed Message, and it is not the
+failure path — failure is a separate concern in that model, as it is in this
+one.
+
+That is the earliest Xmip design, and it had somewhere for a Message to end
+without delivery and without failure from the beginning. Which argues for the
+first option: `JourneyState` gains a `Dismissed` terminal variant, because the
+distinction was intended before it was lost, rather than being invented now to
+patch a gap.
+
+**Still needs the ruling, and still belongs in ADR-0013.** This paragraph adds
+evidence, not a decision. The lane vocabulary itself is not adopted: Receive,
+Process and Send are capabilities in the current model, not lanes, and only Void
+names something the model lacks.
 
 **3. What happens when no Subscription matches.**
 v1.0 and Baseline-Current both said the Journey becomes Dead with a Routing
@@ -670,7 +917,73 @@ now `xmip-core-audit` for the authoritative record and `xmip-core-retain` for
 what it shows — the split survives, the name did not. All Module names in the
 source documents predate ADR-0011 and are `xmip-core-*` here.
 
-## 22. Governing principles
+### From the pre-ADR-0020 architecture documents
+
+Six more disagreements surfaced when those 25 documents were read against each
+other and against this one. Four were ruled; two were defects.
+
+**6. Whether "Artifact" is a legal umbrella term.**
+`artifact-model.md` mandated `ArtifactDefinition` / `ArtifactInstance` and an
+AD/AI/MD/MI acronym convention. `definition-instance-model.md` explicitly
+forbade it — *"Xmip shall not use a generic parent term such as Artifact"*.
+
+*Resolved:* by scope rather than by winner. Artifact is a collective noun in
+prose and diagrams; code, TOML keys and log fields use the concrete concept.
+Section 21 states the rule. Both documents were half right: a document needs a
+word for "all of them", and a log field needs to say which one.
+
+**7. Send retry order.**
+Section 10 retries the active Send Location and then fails over.
+`xmip-send.md` moved to the next Send Location on any error and retried the
+whole ordered list once all had failed.
+
+*Resolved:* section 10. Retry the location, then fail over. Failover-first
+sends every message through the backup the moment the primary is merely slow,
+which converts a latency problem into a routing change and hides the fault.
+Endpoint affinity is worth more than shaving one attempt, and a transient blip
+is the common case.
+
+**8. Whether one Message may be published more than once.**
+Section 9 calls a Publication *"one event, one identity, immutable"*.
+`message-runtime-context.md` published a Message repeatedly, each time with
+richer context after deserialization, transformation or promotion.
+
+*Resolved:* both, without contradiction. **A re-publication is a new
+Publication** — its own event, its own identity, its own immutable record,
+carrying more context than the one before. The recursion lives in the sequence
+of Publications, not inside any one of them, so *a Journey is a line, not a
+tree* still holds. What remains to be named is the link from a Publication to
+the one that caused it, which is the same identifier question as conflict 5.
+
+**9. Process outcome versus Journey state.** `Xmip.Process.Outcome` has six
+values, `JourneyState` has six, they share two names, and no document states
+the relationship.
+
+*Open, deliberately.* The Process model reached this document only now, and a
+mapping invented at the same time as the model it maps would be a guess
+wearing a table. A Process is one step inside a Journey rather than the Journey
+itself, which argues for two vocabularies and an explicit mapping — but that is
+a ruling for ADR-0013, next to `Dismissed`, not a paragraph here.
+
+**10. Whether SFTP belongs to the FTP family.** `handler-lineage.md` and
+`protocol-landscape.md` derived SFTP from FTP; `handler-taxonomy.md` said it
+does not.
+
+*Resolved as a defect in the first two.* SFTP is the SSH File Transfer
+Protocol. It shares a purpose with FTP and nothing else — not the wire
+protocol, not the port, not the security model, not the command set. FTPS is
+FTP with TLS and does belong to the family. Grouping SFTP with FTP is the
+error that leads to configuration screens with an "FTP mode" dropdown
+containing something that is not FTP.
+
+**11. Whether Node.js is a target module technology.** `artifact-model.md` and
+`foundations.md` said explicitly not; `feature-folder-convention.md` listed it
+among supported languages.
+
+*Resolved as a defect in the third.* Node.js and JavaScript server solutions
+are not a target module technology.
+
+## 24. Governing principles
 
 1. Streams and Messages are immutable.
 2. Receive Locations receive Streams; Receive Ports create Messages;
@@ -694,7 +1007,7 @@ source documents predate ADR-0011 and are `xmip-core-*` here.
     bypasses the security path.
 15. Xmip never parses content from an unauthorized sender.
 
-## 23. Design goal
+## 25. Design goal
 
 Xmip shall make every Journey understandable, auditable, retryable, replayable
 and dismissible, from the first received Stream until completion or intentional
