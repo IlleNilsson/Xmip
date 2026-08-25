@@ -34,6 +34,36 @@ Feature branches
                 -> Xmip Linear release
 ```
 
+## Current practice, and when it ends
+
+**Until the first Linear release, work commits directly to Continuum.**
+
+This is a deliberate exception to the branch mapping above, not an oversight.
+The project has one contributor, nothing outside the repository depends on it,
+and no repository other than `Xmip` yet holds content. A pull request in that
+situation is a review of one's own work by oneself, which costs time and
+catches nothing.
+
+The exception ends at the **first Linear release**. From that point the mapping
+above is mandatory: development branches, a pull request, then Continuum or a
+Linear branch. Nothing goes straight to `main`.
+
+The reason for the trigger being the first Linear release rather than a date or
+a feeling: a Linear release is the first moment something exists that a change
+to Continuum can break, and review is worth paying for exactly when there is
+something to protect.
+
+**A second trigger may arrive first, and should be honoured if it does.** Once
+the module repositories hold content and are mounted as submodules per
+ADR-0016, a change in `Xmip` can break a repository that a different working
+copy depends on. That is also something to protect, and it may happen before
+any Linear release exists.
+
+Until then, the discipline that replaces review is the one already in force:
+`cargo fmt`, `cargo clippy -D warnings` and `Invoke-Pester ./tests` before every
+commit, and the architectural change permission recorded in
+`architectural-change-permission.md`.
+
 ## Rules
 
 1. `main` is Xmip Continuum.
@@ -43,6 +73,9 @@ Feature branches
 5. Linear must be reproducible.
 6. Documentation-first architecture decisions may enter Continuum before implementation.
 7. A Linear release must not redefine the architecture independently of Continuum.
+8. Until the first Linear release exists, commits may go directly to Continuum.
+   After it, they may not: development branch, pull request, then Continuum or
+   Linear.
 
 ## Intent
 
