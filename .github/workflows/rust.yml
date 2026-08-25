@@ -1,10 +1,17 @@
 name: Rust
 
+# One workflow. There were four, two of them both called Rust CI running
+# different jobs, which is why two checks disagreed on every pull request.
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   workspace:
@@ -16,12 +23,23 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
-      - name: Cargo check workspace
-        run: cargo check --workspace
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
 
-      - name: Cargo test workspace
-        run: cargo test --workspace
+      - name: Formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Check
+        run: cargo check --workspace --all-targets --locked
+
+      - name: Test
+        run: cargo test --workspace --locked
 
   profiles:
     name: Profile checks
@@ -33,11 +51,14 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Tiny profile check
-        run: cargo check --workspace --no-default-features --features tiny-profile
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
 
-      - name: Server profile check
-        run: cargo check --workspace --no-default-features --features server-profile
+      - name: Tiny profile
+        run: cargo check --workspace --no-default-features --features tiny-profile --locked
 
-      - name: Desktop profile check
-        run: cargo check --workspace --no-default-features --features desktop-profile
+      - name: Server profile
+        run: cargo check --workspace --no-default-features --features server-profile --locked
+
+      - name: Desktop profile
+        run: cargo check --workspace --no-default-features --features desktop-profile --locked
