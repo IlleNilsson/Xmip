@@ -11,7 +11,9 @@ Use these terms instead:
 | Term | Meaning |
 | --- | --- |
 | **System Process** | An operating system process managed by Windows, Linux, macOS, or another host operating system. |
-| **Host Process** | A System Process started by Xmip to host one or more Modules and, when required, execute Extensions. |
+| **Xmip Service** | The master long-running service on a node. One per node, started by the operating system. It reads the configuration, builds and validates the execution tree, then registers, starts and supervises the Xmip Host Services. It is never in the message path: no Stream, Message or Journey passes through it. |
+| **Xmip Host Service** | A long-running service registered and started by the Xmip Service to host one or more Modules and, when required, execute Extensions. Many per node. It does the work — Receive Locations, Xmip Processes, Send Locations — and holds exclusiveness over what it is working on. Its service name and description are generated from configuration when it is registered, so an operator reading the service list can tell what each one does. |
+| **Host Process** | The System Process an Xmip Host Service runs as. The service is the registered, managed thing; the process is what the operating system schedules. |
 | **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 

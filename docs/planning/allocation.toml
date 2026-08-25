@@ -38,9 +38,7 @@ planned = [
 ]
 
 fromOrphanCrate = [
-    "xmip-core-runtime",   # crates/xmip-runtime       capability and module registry, execution tree
-    "xmip-core-service",   # crates/xmip-service       startup phases and service state
-    "xmip-core-host",      # crates/xmip-host          host processes, dynamic module verification
+    "xmip-core-runtime",   # crates/xmip-runtime + -service + -host, ADR-0018
     "xmip-core-persist",   # crates/xmip-persistence   RuntimeStore, checkpoints, recovery, leases
     "xmip-core-configure", # crates/xmip-configuration parses declared configuration
 ]
@@ -154,23 +152,21 @@ path = "Cargo.toml"
 
 [[move]]
 from = "crates/xmip-service/src/lib.rs"
-to = "xmip-core-service"
-path = "src/lib.rs"
-
-[[move]]
-from = "crates/xmip-service/Cargo.toml"
-to = "xmip-core-service"
-path = "Cargo.toml"
+to = "xmip-core-runtime"
+path = "src/service.rs"
+reason = "The Xmip Service. Folded into runtime, which already owns ExecutionTree and StartupValidationReport. ADR-0018."
 
 [[move]]
 from = "crates/xmip-host/src/lib.rs"
-to = "xmip-core-host"
-path = "src/lib.rs"
+to = "xmip-core-runtime"
+path = "src/host.rs"
+reason = "The Xmip Host Service. Folded into runtime, which already owns HostProcessPlan and HostBitness."
 
-[[move]]
-from = "crates/xmip-host/Cargo.toml"
-to = "xmip-core-host"
-path = "Cargo.toml"
+[[remove]]
+path = "crates/xmip-service/Cargo.toml"
+[[remove]]
+path = "crates/xmip-host/Cargo.toml"
+reason = "Absorbed into xmip-core-runtime. Two crates that never move independently do not need two manifests."
 
 [[move]]
 from = "crates/xmip-persistence/src/lib.rs"
@@ -383,9 +379,9 @@ path = "docs/roles-and-isolation.md"
 
 [[move]]
 from = "docs/architecture/service-identities.md"
-to = "xmip-core-service"
-path = "docs/identities.md"
-reason = "Service accounts the daemon runs as, not Actor identity. xmip-core-identify is the other thing."
+to = "xmip-core-runtime"
+path = "docs/service-identities.md"
+reason = "The accounts an Xmip Service and its Host Services run as, not Actor identity. xmip-core-identify is the other thing."
 
 # ===========================================================================
 # 4. Documents that stay
@@ -662,11 +658,11 @@ question = "Kept as the root demo binary above. But ADR-0014 says there is one x
 # does not exist.
 files = 183
 keep = 105        # 76 named, 29 under the three wildcards below
-move = 53
-remove = 12
+move = 51
+remove = 14
 reviewOnly = 13   # handler-file 3, handler documents 8, forge 2
 
-entries = { keep = 79, move = 53, remove = 12, review = 11 }
+entries = { keep = 79, move = 51, remove = 14, review = 11 }
 wildcard = { "docs/decisions/*" = 15, "docs/planning/*" = 6, "_origins/*" = 8 }
 
 note = "Several [review] entries also appear under keep or move: they have a provisional home and a question about it. Only the 13 above have no allocation at all until you answer."
