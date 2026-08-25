@@ -1,6 +1,6 @@
 # Xmip Architecture Reconciler v1
 
-`Set-XmipArchitecture.ps1` remains the public entry point. The implementation is divided by responsibility under `scripts/architecture/Modules`.
+`Xmip-Estate.ps1` remains the public entry point. The implementation is divided by responsibility under `scripts/architecture/Modules`.
 
 ## Modules
 

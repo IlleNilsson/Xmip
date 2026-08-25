@@ -29,8 +29,8 @@ include = ["developer"]
 [prerequisite.powershell]
 role = "operator"
 probe = "pwsh --version"
-minimum = "7.0"
-note = "Xmip scripts declare #requires -PSEdition Core. If the script is running, this is already satisfied, so it is reported rather than installed."
+minimum = "7.6"
+note = "Xmip scripts declare #requires -PSEdition Core and -Version 7.6. If the script is running, this is already satisfied, so it is reported rather than installed. Install-XmipPrerequisite.ps1 alone requires only 7.0, because a bootstrap script that refuses to run on the version it is meant to upgrade is no use."
 
 [prerequisite.powershell.windows]
 winget = "Microsoft.PowerShell"
@@ -64,8 +64,9 @@ note = "Reads the Xmip TOML manifests. PowerShell has no built-in TOML parser. O
 [prerequisite.rust]
 role = "developer"
 probe = "rustup --version"
+channel = "stable"
 component = ["rustfmt", "clippy"]
-note = "CI runs cargo fmt --check and clippy with -D warnings, so both components are required rather than optional."
+note = "Latest stable, no pinned version. rust-toolchain.toml at the repository root is what actually selects it, so rustup uses the same compiler for a developer machine and for CI. This entry installs rustup; the toolchain file chooses the toolchain. CI runs cargo fmt --check and clippy with -D warnings, so both components are required rather than optional."
 
 [prerequisite.rust.windows]
 winget = "Rustlang.Rustup"
@@ -102,7 +103,9 @@ pacman = "base-devel"
 role = "developer"
 optional = true
 probe = "dotnet --version"
-note = "For the Blazor surfaces in ADR-0014. .NET 11 is preview until 10 November 2026. The winget identifier for preview SDKs is not verified here; released ones are versioned, such as Microsoft.DotNet.SDK.9."
+minimum = "11.0"
+channel = "preview"
+note = "For the Blazor surfaces in ADR-0014. Latest preview until .NET 11 reaches stable on 10 November 2026, latest stable from then on: set channel to stable and change the winget identifier to Microsoft.DotNet.SDK.11 on that date. The winget identifier for preview SDKs is not verified here; released ones are versioned, such as Microsoft.DotNet.SDK.9."
 
 [prerequisite.dotnet.windows]
 winget = "Microsoft.DotNet.SDK.Preview"

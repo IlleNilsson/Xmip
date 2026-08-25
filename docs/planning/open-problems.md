@@ -157,7 +157,7 @@ And `resilience` has no plugin surface in practice, despite six declared impleme
 | **B. Create `abi` only** | it is needed by the boundary; the other two are undesigned |
 
 **Lean: B.** Do not create repositories for capabilities whose traits are unsettled — see 6.
-Run `Set-XmipArchitecture.ps1` with `-WhatIf` first regardless.
+Run `Xmip-Estate.ps1` with `-WhatIf` first regardless.
 
 ## 11. `xmip-module-api` and `xmip-module-abi` still exist
 

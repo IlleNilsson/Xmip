@@ -24,7 +24,6 @@ impl Default for FileTransportHandler {
                 capabilities: vec![ModuleCapability {
                     capability: "transport:file".to_string(),
                     execution_host: ExecutionHostKind::NativeRust,
-                    low_latency_capable: false,
                     trusted_required: true,
                 }],
                 entrypoint: ModuleEntrypoint {

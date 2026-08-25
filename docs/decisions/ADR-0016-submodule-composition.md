@@ -2,7 +2,7 @@
 
 - Status: Proposed
 - Date: 2026-08-25
-- Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Set-XmipArchitecture.ps1`
+- Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Xmip-Estate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
 
 ## Context
@@ -53,9 +53,9 @@ TOML tree exactly, so a reader who knows one knows the other. The submodule
 
 **3. Composition is gated by existence, not by maturity.**
 
-`maturity` decides whether `Set-XmipArchitecture` creates a repository. It has
+`maturity` decides whether `Xmip-Estate` creates a repository. It has
 nothing to say about pinning: you cannot pin what does not exist, and anything
-that does exist is worth pinning. `Set-XmipSubmodule.ps1` reports the absent
+that does exist is worth pinning. `Sync-XmipSubmodule.ps1` reports the absent
 ones and carries on.
 
 **4. How Cargo sees `modules/` is UNRESOLVED and blocks the rest.**
@@ -120,9 +120,9 @@ should be marked superseded rather than deleted.
 - A fresh `git clone` of `Xmip` gets source and manifest and no submodules.
   `git submodule update --init` is an explicit act, and `--recursive` reaches
   the implementations.
-- `Set-XmipSubmodule.ps1` replaces `Invoke-SynchronizeSubmodules`. That
+- `Sync-XmipSubmodule.ps1` replaces `Invoke-SynchronizeSubmodules`. That
   function and its schema-1 `repositories[]` reader come out of
-  `Set-XmipArchitecture.ps1`.
+  `Xmip-Estate.ps1`.
 - `.gitmodules.planned` is deleted. It planned nothing.
 - Level two waits. Zero of the 268 implementation repositories exist, so
   today's run pins modules only.

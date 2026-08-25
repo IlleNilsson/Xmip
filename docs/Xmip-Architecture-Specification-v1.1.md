@@ -223,7 +223,7 @@ Submodule commits are pinned by the parent repository. Reconciliation must not u
 
 ## 14. Desired-state reconciliation
 
-`Set-XmipArchitecture.ps1` reconciles actual state with `architecture.toml`.
+`Xmip-Estate.ps1` reconciles actual state with `architecture.toml`.
 
 Plan mode is read-only. Apply mode is explicit. The script reports:
 

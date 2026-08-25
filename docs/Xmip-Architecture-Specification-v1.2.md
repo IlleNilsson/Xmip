@@ -249,7 +249,7 @@ Every repository has one primary Rust crate whose name matches the repository na
 
 ## 15. Desired-state reconciliation
 
-`Set-XmipArchitecture.ps1` reconciles actual state with `architecture.toml`.
+`Xmip-Estate.ps1` reconciles actual state with `architecture.toml`.
 
 Plan mode is read-only. Apply mode is explicit. The script reports:
 

@@ -9,7 +9,7 @@ pub struct RuntimeNode {
     pub cluster_name: String,
     pub node_name: String,
     pub roles: Vec<NodeRole>,
-    pub host_processes: Vec<HostProcessPlan>,
+    pub host_services: Vec<HostServicePlan>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,20 +22,42 @@ pub enum NodeRole {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct HostProcessPlan {
+pub struct HostServicePlan {
     pub host_type: String,
     pub trusted: bool,
     pub bitness: HostBitness,
-    pub low_latency: bool,
     pub modules: Vec<ModuleManifest>,
     pub verified_extensions: Vec<ExtensionManifest>,
 }
 
+/// Execution width of the Host Service.
+///
+/// Classical variants are the address width of the process. `Qubit` carries a
+/// count, because quantum hardware is described by how many qubits it offers
+/// rather than by a single width — a 127-qubit processor is not the same
+/// target as a 20-qubit one, and a Host Service that needs 100 cannot run on
+/// the smaller.
+///
+/// Quantum execution is reachable today through providers such as Azure
+/// Quantum, on real hardware or on a simulator. Xmip carries the shape now so
+/// that a Host Service can declare the requirement, whether or not this node
+/// can satisfy it.
+///
+/// A width this node cannot provide is a configuration error. It is caught at
+/// validate-startup and returned, not discovered at spawn time — a Host Service
+/// asking for a card that is not in the machine, or for more qubits than the
+/// machine has, should fail before anything starts.
+///
+/// The count is u64 rather than u128 because TOML integers are 64-bit signed,
+/// so a wider type could hold a value the manifest cannot express. u64 tops
+/// out around 9.2e18 qubits, which is not a limit anyone will meet.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum HostBitness {
     Bit32,
     Bit64,
+    Bit128,
+    Qubit(u64),
     Native,
 }
 
@@ -53,20 +75,19 @@ impl ModuleRegistry {
         &self.manifests
     }
 
-    pub fn plan_host_processes(&self, cluster_name: &str, node_name: &str) -> RuntimeNode {
+    pub fn plan_host_services(&self, cluster_name: &str, node_name: &str) -> RuntimeNode {
         RuntimeNode {
             cluster_name: cluster_name.to_string(),
             node_name: node_name.to_string(),
             roles: vec![NodeRole::Operational, NodeRole::Executing],
-            host_processes: self
+            host_services: self
                 .manifests
                 .iter()
                 .cloned()
-                .map(|module| HostProcessPlan {
+                .map(|module| HostServicePlan {
                     host_type: format!("{}-host", module.identity.kind.kind_name()),
                     trusted: module.capabilities.iter().any(|c| c.trusted_required),
                     bitness: HostBitness::Native,
-                    low_latency: module.capabilities.iter().any(|c| c.low_latency_capable),
                     modules: vec![module],
                     verified_extensions: Vec::new(),
                 })
