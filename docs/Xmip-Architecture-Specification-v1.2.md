@@ -2,7 +2,7 @@
 
 Status: Architecture baseline
 
-This specification and `xmip-architecture.json` are the authoritative desired state for Xmip.
+This specification and `architecture.toml` are the authoritative desired state for Xmip.
 
 ## 1. Purpose
 
@@ -249,7 +249,7 @@ Every repository has one primary Rust crate whose name matches the repository na
 
 ## 15. Desired-state reconciliation
 
-`Set-XmipArchitecture.ps1` reconciles actual state with `xmip-architecture.json`.
+`Set-XmipArchitecture.ps1` reconciles actual state with `architecture.toml`.
 
 Plan mode is read-only. Apply mode is explicit. The script reports:
 

@@ -16,7 +16,7 @@ Every repository has one primary Rust crate whose name matches the repository na
 
 Before a repository or crate is created:
 
-1. Its responsibility and classification must exist in `xmip-architecture.json`.
+1. Its responsibility and classification must exist in `architecture.toml`.
 2. Its dependencies must be explicit and acyclic.
 3. Representation, Contract, Path, Transport and Logic responsibilities must remain separate.
 4. The architecture specification and manifest must agree.

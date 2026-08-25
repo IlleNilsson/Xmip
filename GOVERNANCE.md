@@ -4,7 +4,7 @@ Xmip is a centrally governed architecture and software project.
 
 ## Authority
 
-The authoritative architecture is defined by the current architecture specification, `xmip-architecture.json`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
+The authoritative architecture is defined by the current architecture specification, `architecture.toml`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
 
 ## Decision process
 
@@ -38,7 +38,7 @@ Xmip is licensed under the GNU Affero General Public License, version 3 or later
 
 The license is chosen so that Xmip source remains free and so that modifications are returned to the community, including when a modified version is made available to users over a network rather than distributed as software.
 
-`xmip-architecture.json` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
+`architecture.toml` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
 
 Contributions are accepted under the same license. The license governs the freedoms attached to the source; it does not replace the contribution and review process defined in this document.
 
