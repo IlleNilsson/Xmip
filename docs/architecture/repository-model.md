@@ -173,7 +173,7 @@ repository useless on its own.
 
 ## 8. Reconciliation
 
-`Xmip-Estate` reconciles the live estate against `architecture.toml`. It is
+`Sync-XmipEstate` reconciles the live estate against `architecture.toml`. It is
 remote only: nothing is cloned and nothing is built.
 
 An operation switch means do it. `-WhatIf` means do not. There is no `-Apply`
@@ -187,11 +187,43 @@ drift, and missing or unexpected submodules.
 
 **It never deletes a repository.** Nothing in the tooling does.
 
-`Xmip-Git` owns the local working copies: clone, pull, status, branch, push,
+`Sync-XmipRepository` owns the local working copies: clone, pull, status, branch, push,
 and `-Distribute`, which executes `docs/planning/allocation.toml` to put every
 document and source file in the repository that owns it.
 
-## 9. Sequence
+## 9. Source layout inside a repository
+
+Organise by **deployable capability**, never by technical layer. The same
+shape repeats at every level — repository, module, feature — so a developer
+opening any part of Xmip recognises what they are looking at.
+
+```text
+feature/
+├── contracts/        the public shape: traits, types, the capability surface
+├── runtime/          behaviour
+├── configuration/    how it is configured and bound
+├── preservation/     what it persists and how it is recovered
+├── observability/    audit, logs, traces, metrics
+└── tests/
+```
+
+**Use only what the feature needs.** A small feature is `contracts/`,
+`runtime/`, `tests/` and nothing else; an empty `preservation/` directory is
+noise pretending to be structure.
+
+Do not organise around `controllers`, `services`, `repositories`, `models`,
+`utils` or `helpers` unless one of those genuinely names a capability. Those
+names describe how a framework thinks, not what Xmip does, and a `utils`
+directory is where cohesion goes to die.
+
+The convention is language-independent. A `xmip-core-powershell` module and a
+Rust crate hold the same shape for the same reason.
+
+The outcome to aim at: opening any feature answers, without asking anyone,
+what capability it provides and where its contracts, behaviour, persistence,
+observability and tests live.
+
+## 10. Sequence
 
 One component at a time, and the order is not arbitrary:
 

@@ -1,4 +1,4 @@
-Describe 'Xmip-Estate optional manifest properties' {
+Describe 'Sync-XmipEstate optional manifest properties' {
     It 'does not require minimumScriptVersion' {
         $manifest = [pscustomobject]@{
             schemaVersion = '1.2.0'

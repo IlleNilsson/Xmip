@@ -102,6 +102,7 @@ dependency = []
   description = "HTTP Web API for addressing Xmip Streams, Messages and Journeys."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
+  maturity = "planned"
   dependency = ["xmip-core"]
 
   [xmip.core.stream]

@@ -1,123 +1,213 @@
 # Xmip
 
-Xmip is a cross-platform messaging and integration platform built around immutable Streams, immutable Messages, long-running Journeys, modular capabilities and implied Contracts.
+A cross-platform messaging and integration platform, built around immutable
+Streams, immutable Messages, long-running Journeys, modular capabilities and
+implied Contracts.
 
-This repository is the integration and architecture repository. Purpose-specific repositories are created and reconciled from [`architecture.toml`](architecture.toml) and referenced as Git submodules where defined.
+This repository is the root of the estate: the manifest that names every Xmip
+repository, the architecture record, and the PowerShell module that reconciles
+both against reality.
 
-## Authoritative architecture
+---
 
-The current architecture baseline is:
+## Requirements
 
-- [`docs/Xmip-Architecture-Specification-v1.2.md`](docs/Xmip-Architecture-Specification-v1.2.md)
-- [`architecture.toml`](architecture.toml)
-- [`Xmip-Estate.ps1`](Xmip-Estate.ps1)
+Xmip tracks current platforms and does not carry compatibility with superseded
+ones — [ADR-0021](docs/decisions/ADR-0021-current-platforms-only.md).
 
-Architecture changes must update the specification and manifest together.
+| | Required | Notes |
+| --- | --- | --- |
+| PowerShell | **7.6+, Core edition** | Windows PowerShell 5.1 will not work, and is not meant to |
+| git | 2.40+ | |
+| Rust | latest stable | pinned by channel in `rust-toolchain.toml`, not by version |
+| Pester | 6+ | developers only, for `tests/` |
+| .NET | 11 | optional, for the Blazor surfaces |
 
-## Runtime lifecycle
+PowerShell is the one prerequisite Xmip cannot install for you, because the
+tooling is written in it. Everything else `Install-XmipPrerequisite` reports
+and can install.
 
-```text
-Incoming Stream
-    -> Transport identification
-    -> Transport authentication
-    -> Transport authorization
-    -> Message creation
-    -> Default promotion
-    -> Optional message identification
-    -> Optional message authentication
-    -> Optional message authorization
-    -> Contract implication
-    -> Optional deserialization
-    -> Validation
-    -> Journey creation
-```
+---
 
-Transport security is completed before Message creation. A Journey begins only after required validation succeeds.
+## Set up
 
-## Core vocabulary
-
-**Stream**  
-Immutable data received by or produced within Xmip.
-
-**Message**  
-An immutable Xmip object containing one or more immutable sections. Each accepted incoming Stream becomes a section with its own identifier.
-
-**Message Context**  
-Metadata and promoted values available to configuration, routing and processing.
-
-**Journey**  
-The execution context and lineage of related Messages and actions after required validation has succeeded.
-
-**Contract**  
-A schema, profile, standard or code used to imply and evaluate structural expectations. A Contract does not execute itself.
-
-**Artifact Definition**  
-TOML configuration describing intended Xmip behaviour.
-
-**Artifact Instance**  
-An Artifact Definition bound at runtime to loaded module code satisfying Xmip contracts.
-
-## Contract implication
-
-Xmip does not merely select a Contract by name.
-
-```text
-Receive Configuration
-+ Incoming Stream
-+ Message Context
-    -> Implied Contract
-    -> Evaluation and validation
-```
-
-`xmip-core-contract` owns Contract implication, evaluation coordination and results. Technology repositories implement specific Contract technologies such as XML Schema and JSON Schema.
-
-## Representation, Contract and Path
-
-These responsibilities are independent:
-
-- **Message representation:** XML, JSON, CSV, HL7 ER7, binary and similar forms.
-- **Contract:** XML Schema, JSON Schema, FHIR profiles, HL7 profiles and custom code.
-- **Path:** XPath, JSONPath, dot paths, indexes, JSON Pointer and FHIRPath.
-
-FHIR is a Contract and domain-standard family represented through XML or JSON. SOAP is an envelope/protocol concern, not a generic Message representation.
-
-## Send security responsibility
-
-A Send Location presents configured identity material such as credentials, certificates, tokens and claims. The external receiver performs identification, authentication and authorization.
-
-## Repository classification
-
-```text
-Foundation   Things Xmip is
-Capabilities Things Xmip does
-Technology   How a capability is implemented
-Operations   Running and governing Xmip
-Platform     Platform-wide runtime services
-```
-
-Technology repositories are direct children of their common capability repository and become first-party Git submodules according to the manifest.
-
-Receive and Send own orchestration. Direction-neutral transport implementations are named `xmip-<provider>-transport-<standard>`; content representations `xmip-<provider>-message-<standard>`; method and operation semantics `xmip-<provider>-logic-<standard>`. Xmip publishes its own as `xmip-core-*`. Handler is a runtime role, not a repository prefix.
-
-Each repository has one primary Rust crate with the same lowercase hyphenated name as the repository unless an explicit architecture decision states otherwise.
-
-## Reconcile the architecture
-
-Plan mode is read-only:
+### 1. Get PowerShell 7.6 or later
 
 ```powershell
-./Xmip-Estate.ps1 -IncludeReserved
+winget install Microsoft.PowerShell        # Windows
+brew install powershell                    # macOS
 ```
 
-Apply the desired state explicitly:
+Check with `$PSVersionTable.PSVersion`. Anything below 7.6, or an edition other
+than `Core`, and nothing below will run.
+
+### 2. Clone and load the module
 
 ```powershell
-./Xmip-Estate.ps1 `
-  -IncludeReserved `
-  -Apply `
-  -CreateRepositories `
-  -ConfigureRepositories `
-  -SynchronizeSubmodules
+git clone https://github.com/IlleNilsson/Xmip.git
+cd Xmip
+
+Import-Module .\Xmip
 ```
 
-The script reports missing, unexpected, deprecated, retired and misconfigured items. It never deletes repositories automatically.
+### 3. Make it available everywhere
+
+```powershell
+Install-XmipModule
+```
+
+This links `Xmip` into your per-user module directory — a junction on
+Windows, so no elevation and no Developer Mode. It is a link, not a copy, so
+edits in the repository are live in the next session.
+
+From then on, in any console and any directory:
+
+```powershell
+Import-Module Xmip
+```
+
+### 4. Install what the machine is missing
+
+```powershell
+Install-XmipPrerequisite -Role operator            # report what is missing
+Install-XmipPrerequisite -Role developer -Install  # install it
+```
+
+Reporting is the default; `-Install` acts and `-WhatIf` shows what it would do.
+It never elevates: where a prerequisite needs administrative rights it prints
+the command and stops, because a setup script that silently runs elevated
+installers is the thing an estate blocks.
+
+Roles are cumulative and declared in
+[`prerequisite.toml`](prerequisite.toml):
+
+| Role | For | Adds |
+| --- | --- | --- |
+| `operator` | running Xmip | PowerShell, git, PSToml |
+| `developer` | building it | Rust, a linker, Pester, optionally .NET |
+| `build` | producing releases | everything above |
+
+A prerequisite below its declared floor is reported as `outdated` and the
+command **fails** rather than warning, so CI notices.
+
+### 5. Check it works
+
+```powershell
+Get-Command -Module Xmip
+Get-XmipManifest -Path .\architecture.toml | Select-Object -ExpandProperty repositories | Measure-Object
+```
+
+Developers, additionally:
+
+```powershell
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+Invoke-Pester .\tests -Output Detailed
+```
+
+---
+
+## Commands
+
+Every command supports `-WhatIf`. An operation switch means do it; `-WhatIf`
+means do not. There is no plan mode and no `-Apply`: reporting is the default
+and needs no ceremony to reach.
+
+| Command | Does |
+| --- | --- |
+| `Install-XmipModule` | Links this module onto `PSModulePath`. Run once. |
+| `Install-XmipPrerequisite` | Reports and installs what a machine needs. |
+| `Sync-XmipEstate` | Reconciles GitHub with `architecture.toml`. Remote only — nothing is cloned or built. |
+| `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
+| `Get-XmipManifest` | Reads `architecture.toml` and flattens the estate. |
+| `Test-XmipManifest` | Validates naming, crates, maturity and dependencies. |
+| `Get-XmipRepositoryRoot` | Finds the repository by walking up to `architecture.toml`. |
+
+### Reconcile the estate
+
+```powershell
+Sync-XmipEstate                       # report drift, change nothing
+Sync-XmipEstate -Create -WhatIf       # what would be created
+Sync-XmipEstate -Create               # create the missing repositories
+Sync-XmipEstate -Configure            # description, topics, features
+Sync-XmipEstate -Report               # write .xmip-work/architecture-report.json
+```
+
+`-Create` skips repositories whose `maturity` is `reserved` unless you pass
+`-IncludeReserved`. **Nothing ever deletes a repository.**
+
+`-Create` and `-Configure` need a GitHub token, from `-GitHubToken` or
+`$env:GITHUB_TOKEN`. A classic token with `repo` scope: fine-grained tokens
+cannot create user-account repositories.
+
+### Work with the repositories
+
+```powershell
+Sync-XmipRepository -Clone -ModulesOnly    # the 43 modules, beside this repository
+Sync-XmipRepository -Status                # what is dirty, ahead, behind
+Sync-XmipRepository -Pull
+Sync-XmipRepository -Branch -Create feature/thing
+Sync-XmipRepository -Push feature/thing
+Sync-XmipRepository -Distribute -WhatIf    # execute docs/planning/allocation.toml
+```
+
+Clones land *beside* this repository, in `../xmip-repositories`, not inside it.
+
+---
+
+## Where things are
+
+```text
+architecture.toml     the estate: every repository, named by its position in the tree
+prerequisite.toml     what a machine needs, per role and per operating system
+rust-toolchain.toml   channel = stable
+
+Xmip/                 the PowerShell module
+crates/  src/         Rust
+tests/                Pester
+deploy/               Ansible and DSC node configuration
+docs/                 see below
+```
+
+### Documentation
+
+One document per subject, and no versions in filenames —
+[ADR-0020](docs/decisions/ADR-0020-documentation-structure.md).
+
+| Document | Answers |
+| --- | --- |
+| [`docs/terminology.md`](docs/terminology.md) | what every Xmip word means |
+| [`architecture/runtime-model.md`](docs/architecture/runtime-model.md) | what Xmip does at runtime |
+| [`architecture/repository-model.md`](docs/architecture/repository-model.md) | why the estate is shaped this way |
+| [`architecture/module-model.md`](docs/architecture/module-model.md) | the module boundary, loading and isolation |
+| [`architecture/deployment-model.md`](docs/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
+| [`architecture/observability-model.md`](docs/architecture/observability-model.md) | audit, logs, traces, retention, observation |
+| [`architecture/identity-by-technology.md`](docs/architecture/identity-by-technology.md) | where identity lives, per protocol, against the standards |
+| [`docs/decisions/`](docs/decisions) | every architectural decision and why |
+
+Two documents in `docs/architecture/` are in transit and are listed so the
+tests can tell the difference between "in transit" and "forgotten":
+
+| Document | Status |
+| --- | --- |
+| [`architecture/protocol-landscape.md`](docs/architecture/protocol-landscape.md) | held: names 21 protocols `architecture.toml` does not, and is the only record of them |
+| [`architecture/module-abi-specification.md`](docs/architecture/module-abi-specification.md) | moving to `xmip-core-abi` with `include/xmip_module.h` |
+| [`governance/powershell-style.md`](docs/governance/powershell-style.md) | how the PowerShell here is written |
+| [`governance/release-model.md`](docs/governance/release-model.md) | Continuum, Linear, and how work reaches them |
+
+`docs/planning/` is working notes and is explicitly **not** authoritative.
+
+---
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and
+[GOVERNANCE.md](GOVERNANCE.md). Established architectural decisions need
+explicit permission before they change —
+[architectural-change-permission.md](docs/governance/architectural-change-permission.md).
+
+Until the first Linear release, work commits directly to `main`. After it,
+development branch and pull request. The reasoning, and the trigger, are in
+[release-model.md](docs/governance/release-model.md).
+
+Licensed [AGPL-3.0-or-later](LICENSE).

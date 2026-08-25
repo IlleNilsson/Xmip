@@ -262,6 +262,34 @@ two identities are overwhelmingly the relaying ones.
 
 ---
 
+## 6. Implementation specifications
+
+Identity is one thing a transport specification governs. The specification a
+Module implements against is another, and it belongs beside it:
+
+| Module | Implements against |
+| --- | --- |
+| `xmip-core-transport-file` | Platform file-system behaviour and the Rust file-system APIs |
+| `xmip-core-transport-tcp` | IETF RFC 9293 |
+| `xmip-core-transport-http` | IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 specifications. Depends on `xmip-core-transport-tcp` |
+| `xmip-core-transport-websocket` | IETF RFC 6455 and applicable extensions. Depends on `xmip-core-transport-http` |
+| `xmip-core-transport-mllp` | MLLP framing over TCP. Depends on `xmip-core-transport-tcp` |
+| `xmip-core-contract-json-schema` | JSON Schema specifications and vocabularies |
+| `xmip-core-contract-xml-schema` | W3C XML Schema specifications |
+
+Representation and Path collaborators stay separate repositories:
+`xmip-core-message-json` with `xmip-core-path-json-pointer`,
+`xmip-core-message-xml` with `xmip-core-path-xpath`. Logic sits apart again:
+`xmip-core-logic-http-api`, `xmip-core-logic-soap`, `xmip-core-logic-grpc`.
+SOAP may use HTTP, XML and WSDL without becoming any of them; gRPC may use
+HTTP and Protocol Buffers while keeping its own operation semantics.
+
+> **Protocol compliance is claimed only after conformance evidence exists.**
+> Implementing against a specification and conforming to it are different
+> statements, and only the second is a promise.
+
+---
+
 ## Provenance
 
 RFC numbers were verified against `rfc-editor.org` and the IETF Datatracker on
