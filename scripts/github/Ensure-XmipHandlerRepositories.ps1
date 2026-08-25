@@ -1,5 +1,5 @@
 # This script is intentionally retired.
-# Repository desired state is owned by xmip-architecture.json.
+# Repository desired state is owned by architecture.json.
 
 throw @'
 Ensure-XmipHandlerRepositories.ps1 is retired by ADR-0005.

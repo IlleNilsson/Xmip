@@ -1,7 +1,7 @@
 #requires -Version 7.2
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [string] $ManifestPath = (Join-Path $PSScriptRoot 'xmip-architecture.json'),
+    [string] $ManifestPath = (Join-Path $PSScriptRoot 'architecture.json'),
     [string] $WorkingDirectory = (Join-Path $PSScriptRoot '.xmip-work'),
     [string] $GitHubToken = $env:GITHUB_TOKEN,
     [string] $GitHubApiBaseUri = 'https://api.github.com',
@@ -14,7 +14,7 @@ param(
     [switch] $PushChanges,
     [switch] $IncludeReserved,
     [switch] $WriteReport,
-    [string] $ReportPath = (Join-Path $WorkingDirectory 'xmip-architecture-report.json'),
+    [string] $ReportPath = (Join-Path $WorkingDirectory 'architecture-report.json'),
     [switch] $PassThru
 )
 

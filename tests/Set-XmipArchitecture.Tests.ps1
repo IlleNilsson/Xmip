@@ -2,7 +2,7 @@
 
 Describe 'Set-XmipArchitecture manifest compatibility' {
     It 'accepts the current compact manifest structure' {
-        $manifest = Get-Content (Join-Path $PSScriptRoot '..' 'xmip-architecture.json') -Raw | ConvertFrom-Json -Depth 100
+        $manifest = Get-Content (Join-Path $PSScriptRoot '..' 'architecture.json') -Raw | ConvertFrom-Json -Depth 100
         @($manifest.commonRepositories).Count | Should -BeGreaterThan 0
         @($manifest.commonRepositories[0]).Count | Should -BeGreaterOrEqual 5
         @($manifest.technologyGroups).Count | Should -BeGreaterThan 0
