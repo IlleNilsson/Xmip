@@ -66,7 +66,7 @@ fn main() {
     let edi = pick(&arrived, "order-1001.edi");
     let fhir = pick(&arrived, "bundle-2002.json");
 
-    let arrivals = vec![
+    let arrivals = [
         // No identity at all. Xmip never learns who this is.
         Arrival {
             receive_location: "drop/anonymous",

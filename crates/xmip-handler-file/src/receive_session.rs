@@ -34,9 +34,7 @@ impl<S: ExclusivenessStore> FileReceiveSession<S> {
     #[must_use]
     pub fn new(
         store: Arc<S>,
-        cluster_name: impl Into<String>,
-        node_name: impl Into<String>,
-        host_process_name: impl Into<String>,
+        owner: ExclusiveOwner,
         resource_key: impl Into<String>,
         acquire_timeout: Duration,
         lease_duration: Duration,
@@ -51,7 +49,7 @@ impl<S: ExclusivenessStore> FileReceiveSession<S> {
                     scope: ExclusivenessScope::Resource,
                     key: resource_key.into(),
                 },
-                owner: ExclusiveOwner::new(cluster_name, node_name, host_process_name),
+                owner,
                 requested_at,
                 acquire_timeout,
                 lease_duration,
@@ -105,9 +103,7 @@ mod tests {
     ) -> FileReceiveSession<InMemoryExclusivenessStore> {
         FileReceiveSession::new(
             store,
-            "cluster-a",
-            "node-a",
-            host,
+            ExclusiveOwner::new("cluster-a", "node-a", host),
             "file:///incoming/orders",
             Duration::from_secs(30),
             Duration::from_secs(5),

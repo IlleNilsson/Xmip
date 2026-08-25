@@ -1,0 +1,661 @@
+# Xmip allocation map.
+#
+# Every tracked file in Xmip@a3b001e871 has exactly one entry below. Nothing is
+# implicit: a file is kept, moved, or removed, and each says why.
+#
+#   [keep]    stays in Xmip. The root is the manifest, the record, the
+#             assembly and the tooling that composes the rest.
+#   [move]    goes to the repository that owns the thing it describes or
+#             implements. Follows the code, per your call.
+#   [remove]  handler-era tooling that ADR-0010 and ADR-0011 left behind.
+#   [review]  I could not decide honestly. Eleven questions. Read these.
+#
+# Counts at the bottom. Read [review] first; the rest is mechanical.
+
+schemaVersion = "1.0.0"
+source = "IlleNilsson/Xmip"
+sourceCommit = "a3b001e871"
+generated = "2026-08-25"
+
+# ===========================================================================
+# 1. Repositories this map needs that do not exist yet
+# ===========================================================================
+#
+# Seven were already planned. Seven more come from the orphan crates, named
+# to ADR-0011: shortest singular form, verb where the module does something.
+# The names are a proposal. Say so if any of them is wrong.
+
+[create]
+planned = [
+    "xmip-core-abi",
+    "xmip-core-api",
+    "xmip-core-transport",
+    "xmip-core-logic",
+    "xmip-core-migrate",
+    "xmip-core-schedule",
+    "xmip-core-diagnose",
+]
+
+fromOrphanCrate = [
+    "xmip-core-runtime",   # crates/xmip-runtime       hosts and drives modules
+    "xmip-core-service",   # crates/xmip-service       OS service and daemon
+    "xmip-core-host",      # crates/xmip-host          process hosting
+    "xmip-core-persist",   # crates/xmip-persistence   verb, matches retain and archive
+    "xmip-core-track",     # crates/xmip-tracking      verb, matches audit and observe
+    "xmip-core-configure", # crates/xmip-configuration verb, matches promote and demote
+    "xmip-core-cli",       # crates/xmip-cli           the xmip binary, ADR-0014
+]
+
+# xmip-core-transport-file is needed by crates/xmip-handler-file but is a
+# level-two repository and none of those exist yet. Held in [review].
+
+# ===========================================================================
+# 2. Rust
+# ===========================================================================
+
+[[move]]
+from = "src/route.rs"
+to = "xmip-core-route"
+path = "src/lib.rs"
+reason = "The MessageBox. 28 KB, 20 tests, the largest single piece of real behaviour in the tree."
+
+[[move]]
+from = "src/transport.rs"
+to = "xmip-core-transport"
+path = "src/lib.rs"
+reason = "Five protocols and TLS. 35 KB. Repository does not exist yet."
+
+[[move]]
+from = "src/transport_technology.rs"
+to = "xmip-core-transport"
+path = "src/technology.rs"
+reason = "Same module. The transport_ prefix goes: inside xmip-core-transport it says nothing."
+
+[[move]]
+from = "src/journey_model.rs"
+to = "xmip-core-journey"
+path = "src/lib.rs"
+reason = "ADR-0013. The _model suffix goes for the same reason."
+
+[[move]]
+from = "src/contracts.rs"
+to = "xmip-core-contract"
+path = "src/lib.rs"
+reason = "Singular, per ADR-0011."
+
+[[move]]
+from = "src/disposition.rs"
+to = "xmip-core-message"
+path = "src/disposition.rs"
+reason = "A disposition is the outcome of handling a Message. docs/architecture/message-disposition.md agrees."
+
+[[move]]
+from = "crates/xmip-exclusiveness/src/lib.rs"
+to = "xmip-core-exclusiveness"
+path = "src/lib.rs"
+reason = "9 KB, the largest of the crates. Name already matches."
+
+[[move]]
+from = "crates/xmip-exclusiveness/Cargo.toml"
+to = "xmip-core-exclusiveness"
+path = "Cargo.toml"
+reason = "Package renamed xmip-exclusiveness to xmip-core-exclusiveness."
+
+[[move]]
+from = "crates/xmip-module-abi/src/lib.rs"
+to = "xmip-core-abi"
+path = "src/lib.rs"
+reason = "ADR-0012. The module- infix is dropped; every module is a module."
+
+[[move]]
+from = "crates/xmip-module-abi/Cargo.toml"
+to = "xmip-core-abi"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-module-api/src/lib.rs"
+to = "xmip-core-api"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-module-api/Cargo.toml"
+to = "xmip-core-api"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-runtime/src/lib.rs"
+to = "xmip-core-runtime"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-runtime/src/capability_registry.rs"
+to = "xmip-core-runtime"
+path = "src/capability_registry.rs"
+
+[[move]]
+from = "crates/xmip-runtime/src/execution_tree.rs"
+to = "xmip-core-runtime"
+path = "src/execution_tree.rs"
+
+[[move]]
+from = "crates/xmip-runtime/Cargo.toml"
+to = "xmip-core-runtime"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-service/src/lib.rs"
+to = "xmip-core-service"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-service/Cargo.toml"
+to = "xmip-core-service"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-host/src/lib.rs"
+to = "xmip-core-host"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-host/Cargo.toml"
+to = "xmip-core-host"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-persistence/src/lib.rs"
+to = "xmip-core-persist"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-persistence/Cargo.toml"
+to = "xmip-core-persist"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-tracking/src/lib.rs"
+to = "xmip-core-track"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-tracking/Cargo.toml"
+to = "xmip-core-track"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-configuration/src/lib.rs"
+to = "xmip-core-configure"
+path = "src/lib.rs"
+
+[[move]]
+from = "crates/xmip-configuration/Cargo.toml"
+to = "xmip-core-configure"
+path = "Cargo.toml"
+
+[[move]]
+from = "crates/xmip-cli/src/main.rs"
+to = "xmip-core-cli"
+path = "src/main.rs"
+
+[[move]]
+from = "crates/xmip-cli/Cargo.toml"
+to = "xmip-core-cli"
+path = "Cargo.toml"
+
+[[keep]]
+path = "src/lib.rs"
+reason = "Becomes the assembly: re-exports the module crates so xmip stays one import for anyone who wants the whole platform."
+
+[[keep]]
+path = "src/main.rs"
+reason = "The demo binary that proves the assembly runs. ADR-0014 says one xmip binary; this is where it grows up."
+
+[[keep]]
+path = "src/vertical_slice.rs"
+reason = "An end-to-end slice across several modules. It belongs to no single one, which is exactly what an integration test is."
+
+[[keep]]
+path = "Cargo.toml"
+reason = "Workspace root. Members become modules/* path dependencies."
+
+[[keep]]
+path = "Cargo.lock"
+reason = "One lock for the assembly."
+
+[[keep]]
+path = "include/xmip_module.h"
+reason = "Normative C header, ADR-0012."
+note = "Arguably belongs in xmip-core-abi with the Rust binding. Listed in [review]."
+
+# ===========================================================================
+# 3. Documents that follow their module
+# ===========================================================================
+
+[[move]]
+from = "docs/Xmip-Routing-Architecture.md"
+to = "xmip-core-route"
+path = "docs/architecture.md"
+reason = "One architecture document per module repository, named the same everywhere, so you always know where to look."
+
+[[move]]
+from = "docs/architecture/publication-subscription-runtime.md"
+to = "xmip-core-route"
+path = "docs/publication-subscription.md"
+
+[[move]]
+from = "docs/architecture/xmip-subscription.md"
+to = "xmip-core-route"
+path = "docs/subscription.md"
+reason = "The xmip- prefix says nothing inside an xmip repository."
+
+[[move]]
+from = "docs/Xmip-Audit-Architecture.md"
+to = "xmip-core-audit"
+path = "docs/architecture.md"
+
+[[move]]
+from = "docs/architecture/audit-and-correlation.md"
+to = "xmip-core-audit"
+path = "docs/correlation.md"
+
+[[move]]
+from = "docs/architecture/audit-directive.md"
+to = "xmip-core-audit"
+path = "docs/directive.md"
+
+[[move]]
+from = "docs/Xmip-Exclusiveness-Architecture.md"
+to = "xmip-core-exclusiveness"
+path = "docs/architecture.md"
+
+[[move]]
+from = "docs/Xmip-Observer-Architecture.md"
+to = "xmip-core-observe"
+path = "docs/architecture.md"
+reason = "Observer is the retired term; the module is observe. Content needs the same rename inside."
+
+[[move]]
+from = "docs/architecture/module-abi-specification.md"
+to = "xmip-core-abi"
+path = "docs/specification.md"
+reason = "The prose ABI specification. It belongs beside the header it specifies."
+
+[[move]]
+from = "docs/architecture/module-loading.md"
+to = "xmip-core-abi"
+path = "docs/loading.md"
+reason = "Loading is what the ABI is for."
+
+[[move]]
+from = "docs/module-loading.md"
+to = "xmip-core-abi"
+path = "docs/loading-duplicate.md"
+reason = "Same filename exists twice, here and under docs/architecture/. Both move so the duplicate is visible in one place, then one of them dies. See [review]."
+
+[[move]]
+from = "docs/architecture/message-contracts-and-validation.md"
+to = "xmip-core-contract"
+path = "docs/validation.md"
+
+[[move]]
+from = "docs/architecture/message-disposition.md"
+to = "xmip-core-message"
+path = "docs/disposition.md"
+
+[[move]]
+from = "docs/architecture/message-runtime-context.md"
+to = "xmip-core-context"
+path = "docs/architecture.md"
+
+[[move]]
+from = "docs/architecture/communication-layering.md"
+to = "xmip-core-transport"
+path = "docs/layering.md"
+
+[[move]]
+from = "docs/architecture/protocol-landscape.md"
+to = "xmip-core-transport"
+path = "docs/landscape.md"
+reason = "The survey of protocols the transport module is expected to reach."
+
+[[move]]
+from = "docs/architecture/xmip-send.md"
+to = "xmip-core-send"
+path = "docs/architecture.md"
+
+[[move]]
+from = "docs/architecture/xmip-process.md"
+to = "xmip-core-process"
+path = "docs/architecture.md"
+
+[[move]]
+from = "docs/architecture/business-process-runtime.md"
+to = "xmip-core-process"
+path = "docs/runtime.md"
+
+[[move]]
+from = "docs/process-instances.md"
+to = "xmip-core-process"
+path = "docs/instances.md"
+
+[[move]]
+from = "docs/architecture/definition-instance-model.md"
+to = "xmip-core-process"
+path = "docs/definition-instance.md"
+reason = "Definition versus instance is the process lifecycle question."
+
+[[move]]
+from = "docs/architecture/definition-instance-namespace.md"
+to = "xmip-core-process"
+path = "docs/definition-instance-namespace.md"
+
+[[move]]
+from = "docs/architecture/database-selection.md"
+to = "xmip-core-persist"
+path = "docs/database-selection.md"
+reason = "Selects the RocksDB-style engine deliberately. Do not let anyone tidy this away."
+
+[[move]]
+from = "docs/architecture/desired-state-configuration.md"
+to = "xmip-core-configure"
+path = "docs/desired-state.md"
+
+[[move]]
+from = "docs/architecture/runtime-modularity.md"
+to = "xmip-core-runtime"
+path = "docs/modularity.md"
+
+[[move]]
+from = "docs/architecture/runtime-roles-and-isolation.md"
+to = "xmip-core-runtime"
+path = "docs/roles-and-isolation.md"
+
+[[move]]
+from = "docs/architecture/service-identities.md"
+to = "xmip-core-service"
+path = "docs/identities.md"
+reason = "Service accounts the daemon runs as, not Actor identity. xmip-core-identify is the other thing."
+
+# ===========================================================================
+# 4. Documents that stay
+# ===========================================================================
+
+[[keep]]
+path = "docs/decisions/*"
+count = 15
+reason = "Every ADR. A decision is platform-wide even when its subject is one module, and a scattered decision record is no record."
+
+[[keep]]
+path = "docs/glossary.md"
+reason = "One vocabulary or none."
+
+[[keep]]
+path = "docs/terminology.md"
+reason = "Same. See [review]: it overlaps glossary.md and one of them should probably go."
+
+[[keep]]
+path = "docs/Xmip-Architecture-Specification-v1.0.md"
+[[keep]]
+path = "docs/Xmip-Architecture-Specification-v1.1.md"
+[[keep]]
+path = "docs/Xmip-Architecture-Specification-v1.2.md"
+[[keep]]
+path = "docs/Xmip-Architecture-Baseline-Current.md"
+reason = "The normative specification and its history. Four files, see [review]."
+
+[[keep]]
+path = "docs/Xmip-Engineering-Methodology-SACE.md"
+reason = "How the work is done, not what is built."
+
+[[keep]]
+path = "docs/Xmip-Repository-Creation-Blueprint.md"
+reason = "Describes the repository estate. The root owns the estate."
+
+[[keep]]
+path = "docs/repository-model.md"
+[[keep]]
+path = "docs/crate-boundaries.md"
+[[keep]]
+path = "docs/architecture/repository-architecture.md"
+[[keep]]
+path = "docs/architecture/repository-structure.md"
+[[keep]]
+path = "docs/architecture/repository-and-crate-plan.md"
+reason = "Five documents about how repositories are arranged. All root. See [review]: five is too many."
+
+[[keep]]
+path = "docs/architecture/foundations.md"
+[[keep]]
+path = "docs/architecture/modularity.md"
+[[keep]]
+path = "docs/architecture/kernel-boundary.md"
+[[keep]]
+path = "docs/architecture/platform-lineage.md"
+[[keep]]
+path = "docs/architecture/platform-system-definition.md"
+[[keep]]
+path = "docs/architecture/feature-folder-convention.md"
+[[keep]]
+path = "docs/architecture/rust-runtime-guidelines.md"
+[[keep]]
+path = "docs/architecture/retired-terms-cleanup.md"
+[[keep]]
+path = "docs/architecture/glossary.md"
+reason = "Platform-wide architecture. Note glossary.md exists twice, here and in docs/. See [review]."
+
+[[keep]]
+path = "docs/architecture/data-flow.md"
+[[keep]]
+path = "docs/architecture/artifact-model.md"
+reason = "Cross-module: both describe the path a Stream takes through everything."
+
+[[keep]]
+path = "docs/architecture/deployment-profiles.md"
+[[keep]]
+path = "docs/architecture/runtime-profiles.md"
+[[keep]]
+path = "docs/architecture/installer.md"
+reason = "Packaging and profiles, ADR-0015. The root builds the artefacts."
+
+[[keep]]
+path = "docs/architecture/process-and-transform-assignment-rules.md"
+reason = "Spans process and transform. Neither owns it."
+
+[[keep]]
+path = "docs/data/data-model.md"
+[[keep]]
+path = "docs/data/privacy.md"
+[[keep]]
+path = "docs/governance/architectural-change-permission.md"
+[[keep]]
+path = "docs/governance/release-model.md"
+[[keep]]
+path = "docs/operations/roles.md"
+[[keep]]
+path = "docs/operations/workflows.md"
+[[keep]]
+path = "docs/ux/personas.md"
+[[keep]]
+path = "docs/ux/principles.md"
+[[keep]]
+path = "docs/ux/user-flows.md"
+[[keep]]
+path = "docs/vision/problem.md"
+[[keep]]
+path = "docs/vision/roadmap.md"
+[[keep]]
+path = "docs/vision/value-proposition.md"
+[[keep]]
+path = "docs/disaster-recovery.md"
+reason = "Governance, operations, vision, UX, data policy. Platform-level, all of it."
+
+[[keep]]
+path = "docs/planning/*"
+count = 6
+reason = "Working notes about the estate itself, including the repository inventories. See [review]: the inventories are now generated by Set-XmipArchitecture and may be stale by definition."
+
+# ===========================================================================
+# 5. Root furniture
+# ===========================================================================
+
+[[keep]]
+path = "README.md"
+[[keep]]
+path = "LICENSE"
+[[keep]]
+path = "CONTRIBUTING.md"
+[[keep]]
+path = "GOVERNANCE.md"
+[[keep]]
+path = "SECURITY.md"
+[[keep]]
+path = "ROADMAP.md"
+[[keep]]
+path = ".gitignore"
+[[keep]]
+path = "architecture.json"
+[[keep]]
+path = "architecture.toml"
+[[keep]]
+path = "prerequisite.toml"
+[[keep]]
+path = "Set-XmipArchitecture.ps1"
+[[keep]]
+path = "Xmip-Git.ps1"
+[[keep]]
+path = "Install-XmipPrerequisite.ps1"
+[[keep]]
+path = ".github/workflows/rust.yml"
+[[keep]]
+path = ".github/ci-trigger.md"
+[[keep]]
+path = "assets/brand/xmip-logo.png"
+[[keep]]
+path = "scripts/architecture/Modules/Xmip.Manifest.psm1"
+[[keep]]
+path = "scripts/architecture/Modules/Xmip.Reporting.psm1"
+[[keep]]
+path = "scripts/architecture/Tests/Xmip.Manifest.Tests.ps1"
+[[keep]]
+path = "scripts/architecture/README.md"
+[[keep]]
+path = "scripts/create-canary-manifest.ps1"
+[[keep]]
+path = "tests/Set-XmipArchitecture.Tests.ps1"
+[[keep]]
+path = "tests/Set-XmipArchitecture.StrictMode.Tests.ps1"
+[[keep]]
+path = "install/install-local.ps1"
+[[keep]]
+path = "install/install-local.sh"
+[[keep]]
+path = "deploy/ansible/roles/xmip_node/defaults/main.yml"
+[[keep]]
+path = "deploy/ansible/roles/xmip_node/tasks/main.yml"
+[[keep]]
+path = "deploy/ansible/roles/xmip_node/templates/xmip-node.toml.j2"
+[[keep]]
+path = "deploy/dsc/xmip-node.dsc.yaml"
+reason = "Manifest, estate tooling, packaging and deployment. The root composes; this is what composing needs."
+
+[[keep]]
+path = "_origins/*"
+count = 8
+reason = "Where Xmip came from, including the IP document. Historical, and the one place a docx belongs."
+
+# ===========================================================================
+# 6. Remove
+# ===========================================================================
+
+[[remove]]
+path = "scripts/git/Add-XmipCommonNestedSubmodules.ps1"
+[[remove]]
+path = "scripts/git/Add-XmipNestedSubmoduleFamilies.ps1"
+[[remove]]
+path = "scripts/git/Add-XmipSubmodules-CoreNetwork.ps1"
+[[remove]]
+path = "scripts/git/Add-XmipSubmodules-DataStorageEnterprise.ps1"
+[[remove]]
+path = "scripts/git/Add-XmipSubmodules-IndustrialEnergy.ps1"
+[[remove]]
+path = "scripts/git/Add-XmipSubmodules-QueueBusinessHealthcare.ps1"
+[[remove]]
+path = "scripts/git/New-XmipFamilyRepositories.ps1"
+reason = "Seven scripts that wire xmip-handler-* submodules by hardcoded family. Same generation as docs/submodules, which went yesterday. Set-XmipSubmodule.ps1 derives all of it from the manifest instead."
+
+[[remove]]
+path = "scripts/github/Ensure-XmipHandlerRepositories.ps1"
+reason = "Creates handler repositories that ADR-0011 renamed out of existence."
+
+[[remove]]
+path = "tools/Initialize-XmipHandlerCrates.ps1"
+reason = "Scaffolds xmip-handler-* crates. Same."
+
+[[remove]]
+path = "runtime/main/README.md"
+reason = "A stub README under an otherwise empty runtime/ that nothing references. crates/xmip-runtime is the real thing."
+
+# ===========================================================================
+# 7. Review — I could not decide these honestly
+# ===========================================================================
+
+[[review]]
+path = "crates/xmip-handler-file/src/lib.rs, Cargo.toml"
+question = "This is a file transport handler under the retired naming. Its home is xmip-core-transport-file, a level-two repository, and none of the 268 exist. Fold it into xmip-core-transport as an implementation module for now, or create the first level-two repository for it?"
+
+[[review]]
+path = "include/xmip_module.h"
+question = "The normative C header. Keep it in the root beside the assembly, or move it to xmip-core-abi beside the Rust binding it defines? I lean abi, but the root is what packages it."
+
+[[review]]
+path = "docs/content-handlers.md, docs/handler-implementation-plan.md, docs/architecture/handler-taxonomy.md, handler-lineage.md, handler-specification-map.md, tcp-handler-lineage.md, queue-handler-lineage.md, industrial-iot-handler-lineage.md"
+question = "Eight handler-era documents I held back yesterday. The lineage files look like the thinking that produced the manifest's implementation lists. Salvage the taxonomy into xmip-core-transport and drop the rest, or keep all eight as history?"
+
+[[review]]
+path = "docs/decisions/ADR-0004-handler-universe.md"
+question = "Superseded by ADR-0010. An ADR is never deleted, but it should say so. Add a Superseded-by header, or leave the record silent?"
+
+[[review]]
+path = "docs/glossary.md and docs/architecture/glossary.md"
+question = "Two glossaries, plus docs/terminology.md. Three vocabularies is worse than none. Which one is real?"
+
+[[review]]
+path = "docs/module-loading.md and docs/architecture/module-loading.md"
+question = "The same filename twice. Both are mapped to xmip-core-abi so the collision is in one place; one of them then has to go. Are they the same document?"
+
+[[review]]
+path = "docs/Xmip-Architecture-Specification-v1.0.md, v1.1.md, v1.2.md, Xmip-Architecture-Baseline-Current.md"
+question = "Four specification documents. Is v1.2 current and the rest history, or is Baseline-Current the live one? If git holds the history, three of these are duplicates."
+
+[[review]]
+path = "docs/repository-model.md, crate-boundaries.md, architecture/repository-architecture.md, repository-structure.md, repository-and-crate-plan.md"
+question = "Five documents describing how repositories and crates are arranged, written before architecture.toml existed. The manifest is now the answer. Consolidate to one, or keep them as reasoning?"
+
+[[review]]
+path = "docs/planning/github-repository-inventory-*.md"
+question = "Three hand-written repository inventories. Set-XmipArchitecture generates architecture-report.json from the live estate. Delete these as stale by construction?"
+
+[[review]]
+path = "forge/module-rules.md, forge/xmip-technology-tree.md"
+question = "Two files under forge/, which is otherwise empty and which nothing references. Is forge a live idea or a dead one? The technology tree overlaps architecture.toml directly."
+
+[[review]]
+path = "src/main.rs"
+question = "Kept as the root demo binary above. But ADR-0014 says there is one xmip binary and crates/xmip-cli is moving to xmip-core-cli. Should main.rs go there and the root keep no binary at all?"
+
+# ===========================================================================
+
+[count]
+# Verified against the tree of a3b001e871: every one of the 183 tracked files
+# appears exactly once. No file is unallocated and no entry names a file that
+# does not exist.
+files = 183
+keep = 105        # 76 named, 29 under the three wildcards below
+move = 55
+remove = 10
+reviewOnly = 13   # handler-file 3, handler documents 8, forge 2
+
+entries = { keep = 79, move = 55, remove = 10, review = 11 }
+wildcard = { "docs/decisions/*" = 15, "docs/planning/*" = 6, "_origins/*" = 8 }
+
+note = "Several [review] entries also appear under keep or move: they have a provisional home and a question about it. Only the 13 above have no allocation at all until you answer."
