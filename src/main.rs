@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use xmip_core::disposition::{admit, Action, Arrival, Identity};
+use xmip_core::disposition::{admit, Action, Alignment, Arrival, Identity, OnMisalignment};
 use xmip_core::transport::{Arrived, FileTransport, Transport};
 
 /// A directory standing in for a partner drop.
@@ -74,7 +74,10 @@ fn main() {
             origin_uri: "file:///drop/anonymous/a-1.dat".to_string(),
             bytes: 1204,
             action: Action::Send,
-            identity: Identity::Absent,
+            transport_identity: Identity::Absent,
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Err("not attempted"),
             authorization: Err("not attempted"),
             message_creation: Err("not attempted"),
@@ -90,7 +93,10 @@ fn main() {
             origin_uri: "https://partner-y.example/xmip/post".to_string(),
             bytes: 3310,
             action: Action::Post,
-            identity: Identity::Presented("certificate CN=partner-y"),
+            transport_identity: Identity::Presented("certificate CN=partner-y"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Err("certificate expired"),
             authorization: Err("not attempted"),
             message_creation: Err("not attempted"),
@@ -106,7 +112,10 @@ fn main() {
             origin_uri: "https://partner-z.example/xmip/post".to_string(),
             bytes: 880,
             action: Action::Post,
-            identity: Identity::Presented("jwt sub=partner-z"),
+            transport_identity: Identity::Presented("jwt sub=partner-z"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Ok("signature and issuer verified"),
             authorization: Err("may not post to this Receive Location"),
             message_creation: Err("not attempted"),
@@ -123,7 +132,10 @@ fn main() {
             origin_uri: edi.origin_uri.clone(),
             bytes: edi.bytes.len(),
             action: Action::Poll,
-            identity: Identity::Implied("party:partner-x"),
+            transport_identity: Identity::Implied("party:partner-x"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Ok("path, permissions and source verified"),
             authorization: Ok("poll allowed"),
             message_creation: Err("not deserializable as edi-x12, envelope ends early"),
@@ -139,7 +151,10 @@ fn main() {
             origin_uri: "https://partner-x.example/xmip/post".to_string(),
             bytes: 2210,
             action: Action::Post,
-            identity: Identity::Presented("jwt sub=partner-x"),
+            transport_identity: Identity::Presented("jwt sub=partner-x"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Ok("signature and issuer verified"),
             authorization: Ok("post allowed"),
             message_creation: Ok("msg created from fhir bundle"),
@@ -155,7 +170,10 @@ fn main() {
             origin_uri: "file:///drop/partner-x/f-6.json".to_string(),
             bytes: 1990,
             action: Action::Poll,
-            identity: Identity::Implied("party:partner-x"),
+            transport_identity: Identity::Implied("party:partner-x"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Ok("path, permissions and source verified"),
             authorization: Ok("poll allowed"),
             message_creation: Ok("msg created from fhir bundle"),
@@ -164,6 +182,28 @@ fn main() {
             subscriptions: &[],
             can_respond: false,
         },
+        // The relaying VAN. One authenticated connection carrying traffic for
+        // forty senders: the transport identity is the VAN, the message
+        // identity is the counterparty the Journey is actually for, and they
+        // disagree on purpose. ADR-0019 clause 7.
+        Arrival {
+            receive_location: "as2/van",
+            transport: "as2",
+            origin_uri: "https://van.example/as2/receive".to_string(),
+            bytes: 5120,
+            action: Action::Post,
+            transport_identity: Identity::Presented("certificate CN=van-operator"),
+            authentication: Ok("S/MIME signature and certificate chain verified"),
+            authorization: Ok("post allowed"),
+            message_creation: Ok("msg created from edi-x12 interchange"),
+            message_identity: Identity::Presented("isa06=PARTNER-Q"),
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
+            contract: "edi-x12 -> xmip-core-contract-edi-x12",
+            validation: Ok("ok"),
+            subscriptions: &["process:order-flow"],
+            can_respond: true,
+        },
         // A real file, the whole way through.
         Arrival {
             receive_location: "drop/partner-x",
@@ -171,7 +211,10 @@ fn main() {
             origin_uri: fhir.origin_uri.clone(),
             bytes: fhir.bytes.len(),
             action: Action::Poll,
-            identity: Identity::Implied("party:partner-x"),
+            transport_identity: Identity::Implied("party:partner-x"),
+            message_identity: Identity::Absent,
+            alignment: Alignment::None,
+            on_misalignment: OnMisalignment::Accept,
             authentication: Ok("path, permissions and source verified"),
             authorization: Ok("poll allowed"),
             message_creation: Ok("msg created from fhir bundle"),

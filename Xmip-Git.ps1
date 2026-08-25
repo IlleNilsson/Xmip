@@ -27,6 +27,19 @@ function Xmip-Git {
         [ValidateNotNullOrEmpty()]
         [string] $Push,
 
+        # Executes docs/planning/allocation.toml: puts every document and every
+        # source file in the repository that owns it. Local only. It stages and
+        # commits in each working copy and pushes nothing, so the whole estate
+        # can be read before any of it leaves the machine.
+        [Parameter(Mandatory, ParameterSetName = 'Distribute')]
+        [switch] $Distribute,
+
+        [Parameter(ParameterSetName = 'Distribute')]
+        [string] $AllocationPath = (Join-Path $PSScriptRoot 'docs/planning/allocation.toml'),
+
+        [Parameter(ParameterSetName = 'Distribute')]
+        [string] $SourcePath = $PSScriptRoot,
+
         [string] $ManifestPath = $script:XmipGitDefaultManifestPath,
         # Beside the script's repository, not inside it. The natural place to run
         # this from is the repository that holds it, and cloning thirty siblings
@@ -137,6 +150,101 @@ function Xmip-Git {
 
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "Required command 'git' was not found." }
     if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) { throw "Manifest not found: $ManifestPath" }
+
+    function Invoke-Distribute {
+        param(
+            [Parameter(Mandatory)] [string] $Allocation,
+            [Parameter(Mandatory)] [string] $Source,
+            [Parameter(Mandatory)] [string] $Destination
+        )
+
+        if (-not (Test-Path -LiteralPath $Allocation -PathType Leaf)) {
+            throw "Allocation map not found: $Allocation"
+        }
+        Import-Module PSToml -ErrorAction Stop
+        $map = Get-Content -LiteralPath $Allocation -Raw -Encoding utf8 | ConvertFrom-Toml
+
+        # A move entry and a decision entry that carries a destination are the
+        # same instruction wearing two names. Read both or the eleven answered
+        # questions do nothing.
+        $planned = [Collections.Generic.List[object]]::new()
+        foreach ($entry in @(Get-PropertyValue $map 'move' @())) {
+            $planned.Add([pscustomobject]@{
+                    From = [string](Get-PropertyValue $entry 'from')
+                    To = [string](Get-PropertyValue $entry 'to')
+                    Path = [string](Get-PropertyValue $entry 'path')
+                    Source = 'move'
+                })
+        }
+        foreach ($entry in @(Get-PropertyValue $map 'decision' @())) {
+            $to = [string](Get-PropertyValue $entry 'to')
+            if (-not $to) { continue }
+            $planned.Add([pscustomobject]@{
+                    From = [string](Get-PropertyValue $entry 'path')
+                    To = $to
+                    Path = [string](Get-PropertyValue $entry 'newPath')
+                    Source = "decision $([string](Get-PropertyValue $entry 'question'))"
+                })
+        }
+
+        $results = [Collections.Generic.List[object]]::new()
+        $touched = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+        foreach ($item in $planned) {
+            $outcome = 'moved'
+            $from = Join-Path $Source $item.From
+            $repository = Join-Path $Destination $item.To
+            $target = Join-Path $repository ($item.Path ? $item.Path : (Split-Path -Leaf $item.From))
+
+            if (-not (Test-Path -LiteralPath $from)) { $outcome = 'source-missing' }
+            elseif (-not (Test-Path -LiteralPath $repository -PathType Container)) { $outcome = 'repository-absent' }
+            elseif (Test-Path -LiteralPath $target) { $outcome = 'target-exists' }
+
+            if ($outcome -eq 'moved' -and $PSCmdlet.ShouldProcess("$($item.From) -> $($item.To)/$($item.Path)", 'Distribute')) {
+                $directory = Split-Path -Parent $target
+                if ($directory) { New-Item -ItemType Directory -Force -Path $directory | Out-Null }
+
+                # A cross-repository move cannot keep history: git mv is
+                # in-repository only, and rewriting 51 files through
+                # filter-repo would cost more than it returns while Xmip's own
+                # history still holds every one of them. Copy, add, and remove
+                # from the source. The past stays findable where it happened.
+                Copy-Item -LiteralPath $from -Destination $target -Force
+                Invoke-Git -At $repository -Arguments @('add', '--', $item.Path) | Out-Null
+                # --force because git rm refuses a locally modified file, and
+                # the copy into the target is already made by this point.
+                Invoke-Git -At $Source -Arguments @('rm', '--quiet', '--force', '--', $item.From) | Out-Null
+                [void] $touched.Add($item.To)
+            }
+
+            $results.Add([pscustomobject]@{
+                    from = $item.From; to = $item.To; path = $item.Path
+                    origin = $item.Source; outcome = $outcome
+                })
+        }
+
+        foreach ($repository in $touched) {
+            $at = Join-Path $Destination $repository
+            if ($PSCmdlet.ShouldProcess($repository, 'Commit adopted files')) {
+                Invoke-Git -At $at -Arguments @('commit', '--quiet', '-m',
+                    'Adopt the files this repository owns, per Xmip allocation.toml') | Out-Null
+            }
+        }
+
+        $byOutcome = $results | Group-Object outcome | ForEach-Object { "$($_.Name): $($_.Count)" }
+        Write-Host "Distribute completed. Planned: $($results.Count); $($byOutcome -join '; '); Repositories committed: $($touched.Count)."
+        Write-Host 'Nothing was pushed. Review each repository, then Xmip-Git -Push <branch>.'
+        Write-Host 'Xmip itself is left with the removals staged and uncommitted, on purpose: the source repository is the one worth reading before it changes.'
+        return $results
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'Distribute') {
+        if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "Required command 'git' was not found." }
+        $distributed = Invoke-Distribute -Allocation $AllocationPath -Source $SourcePath `
+            -Destination ([IO.Path]::GetFullPath($DestinationPath))
+        if ($PassThru) { $distributed }
+        return
+    }
 
     $manifest = Get-XmipManifest $ManifestPath
     $owner = [string](Get-PropertyValue $manifest 'owner')

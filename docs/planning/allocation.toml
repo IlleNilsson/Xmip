@@ -603,67 +603,435 @@ path = "runtime/main/README.md"
 reason = "A stub README under an otherwise empty runtime/ that nothing references. crates/xmip-runtime is the real thing."
 
 # ===========================================================================
-# 7. Review — I could not decide these honestly
+# 7. Decisions — the eleven questions, answered 2026-08-25
 # ===========================================================================
+#
+# Decided while you slept, on the standing instruction that Xmip
+# specifications take precedence and the competition is worth looking at.
+# Every one is reversible: git holds all of it. Three of them changed my
+# recommendation once I read the files rather than their names — 7, 6 and 10.
 
-[[review]]
-path = "crates/xmip-handler-file/src/lib.rs, Cargo.toml"
-question = "This is a file transport handler under the retired naming. Its home is xmip-core-transport-file, a level-two repository, and none of the 268 exist. Fold it into xmip-core-transport as an implementation module for now, or create the first level-two repository for it?"
+[[decision]]
+question = 1
+path = "crates/xmip-handler-file"
+decision = "Fold into xmip-core-transport as an implementation module."
+to = "xmip-core-transport"
+newPath = "src/file.rs"
+reason = """
+ADR-0016 creates a repository when a thing earns one, and 249 implementations
+are declared while none exist. Creating the first level-two repository for a
+demo file handler sets the precedent on the weakest possible case. ADR-0017
+already settled the shape of the answer for exclusiveness: several modules
+within one repository. Promote it to xmip-core-transport-file when there is a
+second consumer or a separate release cadence, which is how Camel treats
+camel-file inside camel-components rather than as its own artifact.
+"""
 
-[[review]]
+[[decision]]
+question = 2
 path = "include/xmip_module.h"
-question = "The normative C header. Keep it in the root beside the assembly, or move it to xmip-core-abi beside the Rust binding it defines? I lean abi, but the root is what packages it."
+decision = "Move to xmip-core-abi."
+to = "xmip-core-abi"
+newPath = "include/xmip_module.h"
+reason = """
+ADR-0012 makes the header the normative boundary and names xmip-core-abi as
+the binding crate. A header and the binding that must match it cannot live in
+different repositories and stay in step — drift between them is the exact
+failure an ABI exists to prevent. Packaging is a build concern and the root
+consumes abi as a submodule, so the assembly still gets the header.
+"""
 
-[[review]]
-path = "docs/content-handlers.md, docs/handler-implementation-plan.md, docs/architecture/handler-taxonomy.md, handler-lineage.md, handler-specification-map.md, tcp-handler-lineage.md, queue-handler-lineage.md, industrial-iot-handler-lineage.md"
-question = "Eight handler-era documents I held back yesterday. The lineage files look like the thinking that produced the manifest's implementation lists. Salvage the taxonomy into xmip-core-transport and drop the rest, or keep all eight as history?"
+[[decision]]
+question = 3
+path = "eight handler-era documents"
+decision = "Salvage the taxonomy and the four lineage files; drop the other two."
+to = "xmip-core-transport"
+newPath = "docs/technology-lineage.md"
+reason = """
+handler-taxonomy.md and the four *-lineage.md files are the reasoning that
+produced the implementation lists now in architecture.toml. That reasoning is
+the expensive part and it belongs beside the module that owns the
+technologies. content-handlers.md and handler-implementation-plan.md are a
+plan for a design ADR-0010 and ADR-0011 retired, and a plan for a retired
+design is not history, it is a trap.
+"""
+drop = ["docs/content-handlers.md", "docs/handler-implementation-plan.md"]
 
-[[review]]
+[[decision]]
+question = 4
 path = "docs/decisions/ADR-0004-handler-universe.md"
-question = "Superseded by ADR-0010. An ADR is never deleted, but it should say so. Add a Superseded-by header, or leave the record silent?"
+decision = "Keep, with a Superseded-by header naming ADR-0010."
+reason = """
+An ADR is a record, never a deletion. But a superseded record that does not
+say so is worse than no record: the next reader finds it, believes it, and
+implements a retired design. Standard Nygard practice, and what MADR and the
+Arc42 templates both do.
+"""
 
-[[review]]
-path = "docs/glossary.md and docs/architecture/glossary.md"
-question = "Two glossaries, plus docs/terminology.md. Three vocabularies is worse than none. Which one is real?"
+[[decision]]
+question = 5
+path = "the three vocabularies"
+decision = "docs/terminology.md survives. Migrate what architecture/glossary.md has that it lacks, then delete both glossaries."
+reason = """
+terminology.md is the only one aligned with current decisions — it already
+carries Xmip Service and Xmip Host Service from ADR-0018. docs/glossary.md is
+zero bytes. architecture/glossary.md is 363 lines built on Interchange, which
+ADR-0013 replaced with Journey, but it holds six sections terminology.md does
+not have and should: Definition versus Instance, Handler versus Extension,
+Kernel, Section, Failure Persistence, and Retired terms. Retired terms is the
+natural home for Interchange itself, alongside Adapter, Plugin and Enabler.
+"""
+migrate = ["Definition versus Instance", "Handler versus Extension", "Kernel", "Section", "Failure Persistence", "Retired terms"]
+remove = ["docs/glossary.md", "docs/architecture/glossary.md"]
 
-[[review]]
+[[decision]]
+question = 6
 path = "docs/module-loading.md and docs/architecture/module-loading.md"
-question = "The same filename twice. Both are mapped to xmip-core-abi so the collision is in one place; one of them then has to go. Are they the same document?"
+decision = "Not the same document. Both survive, both are renamed."
+reason = """
+Eighty-seven differing lines, and they are about different subjects wearing
+the same filename. The root one is the execution thread and the runtime
+boundary: a module entrypoint runs on the calling thread unless Xmip
+schedules otherwise. That is ABI. The architecture one is startup discovery,
+Handlers and Extensions. That is runtime. Naming both module-loading.md is
+what made them look like duplicates.
+"""
+rename = [
+    { from = "docs/module-loading.md", to = "xmip-core-abi", newPath = "docs/execution-model.md" },
+    { from = "docs/architecture/module-loading.md", to = "xmip-core-runtime", newPath = "docs/startup-discovery.md" },
+]
+follows = "The runtime one still says Handler throughout and needs an ADR-0011 pass before it is trustworthy."
 
-[[review]]
-path = "docs/Xmip-Architecture-Specification-v1.0.md, v1.1.md, v1.2.md, Xmip-Architecture-Baseline-Current.md"
-question = "Four specification documents. Is v1.2 current and the rest history, or is Baseline-Current the live one? If git holds the history, three of these are duplicates."
+[[decision]]
+question = 7
+path = "the four specification documents"
+decision = "They are not versions of each other. Split by subject, not by number."
+reason = """
+This is the one that changed once I read them. v1.0 is 595 lines with 23
+sections that appear in none of the others: Journey states, Journey control,
+Replay, Receive model, Send model, Resilience, Artifacts, Configuration,
+Content tree, Contract tree. v1.2 is 263 lines and is really about the
+estate — classification, naming, maturity, dependency rules. v1.1 is a strict
+subset of v1.2, 36 diff lines, all additions. Baseline-Current is a third
+genre again: 16 sections of agreed decisions from a review.
 
-[[review]]
-path = "docs/repository-model.md, crate-boundaries.md, architecture/repository-architecture.md, repository-structure.md, repository-and-crate-plan.md"
-question = "Five documents describing how repositories and crates are arranged, written before architecture.toml existed. The manifest is now the answer. Consolidate to one, or keep them as reasoning?"
+Deleting three and keeping one would have thrown away the substantive runtime
+architecture and kept the filing rules. The version numbers actively misled
+here, which is the argument for dropping them from filenames: git carries
+versions, and a version in a filename guarantees this recurs.
+"""
+plan = [
+    { action = "compose", target = "docs/architecture/runtime-model.md", from = ["Specification-v1.0 runtime sections", "Baseline-Current runtime decisions"] },
+    { action = "compose", target = "docs/architecture/repository-model.md", from = ["Specification-v1.2 sections 9-15", "the five repository documents of question 8"] },
+    { action = "remove", target = "docs/Xmip-Architecture-Specification-v1.1.md", why = "strict subset of v1.2" },
+]
 
-[[review]]
+[[decision]]
+question = 8
+path = "the five repository documents"
+decision = "Consolidate into docs/architecture/repository-model.md with v1.2. Keep the reasoning, drop the inventories."
+reason = """
+architecture.toml is now the answer to what the estate contains, so any
+document that lists repositories is a second source of truth and will be
+wrong within a week. What the manifest cannot hold is why — why the estate is
+shaped this way, why a technology implementation is level two, why a crate
+name matches its repository. That reasoning is worth one document.
+"""
+
+[[decision]]
+question = 9
 path = "docs/planning/github-repository-inventory-*.md"
-question = "Three hand-written repository inventories. Xmip-Estate generates architecture-report.json from the live estate. Delete these as stale by construction?"
+decision = "Delete all three."
+reason = """
+Stale by construction. Xmip-Estate reads the live estate, and tonight it
+found something no hand-written inventory did: 42 repositories exist, not the
+43 the manifest names, because xmip-core-webapi was renamed in the manifest
+and never on GitHub. An inventory that cannot catch that is not an asset.
+"""
 
-[[review]]
-path = "forge/module-rules.md, forge/xmip-technology-tree.md"
-question = "Two files under forge/, which is otherwise empty and which nothing references. Is forge a live idea or a dead one? The technology tree overlaps architecture.toml directly."
+[[decision]]
+question = 10
+path = "forge/"
+decision = "Delete both files. Flag: say if forge is a live idea."
+reason = """
+Nothing in the repository references forge, neither file has been touched
+since 21 July, and xmip-technology-tree.md is 118 lines describing a
+technology tree that architecture.toml now holds with 249 implementations.
+module-rules.md is 13 lines. If forge means something planned that has not
+been written down, this is the wrong call and git will give them back — but
+a directory nothing references is dead until someone says otherwise.
+"""
+flag = true
 
-[[review]]
+[[decision]]
+question = 11
 path = "src/main.rs"
-question = "Kept as the root demo binary above. But ADR-0014 says there is one xmip binary and crates/xmip-cli is moving to xmip-core-cli. Should main.rs go there and the root keep no binary at all?"
+decision = "Move to xmip-core-cli. The root keeps no binary."
+to = "xmip-core-cli"
+newPath = "src/main.rs"
+reason = """
+ADR-0014 says there is one xmip binary. A demo binary in the root is the kind
+of thing that eventually ships by accident, and the root has a clear job
+without one: the manifest, the record, the assembly and the tooling that
+composes the rest.
+"""
 
 # ===========================================================================
+
+# Created after the map was drawn. All three stay in the root: the root is the
+# manifest, the record, the assembly and the tooling that composes the rest.
+
+[[keep]]
+path = "Xmip.psm1"
+reason = "The shared manifest reader and the only import. Xmip-Estate and Xmip-Git are dot-sourced into it."
+
+[[keep]]
+path = "rust-toolchain.toml"
+reason = "Pins channel = stable for every machine and for CI."
+
+[[keep]]
+path = "docs/architecture/repository-model.md"
+reason = "Why the estate is shaped this way. Replaces five documents and specification sections 9 to 15."
+
+[[move]]
+from = "docs/architecture/identity-by-technology.md"
+to = "xmip-core-authenticate"
+path = "docs/identity-by-technology.md"
+reason = """
+Where identity lives per technology, against the standards that define it, for
+every transport, representation and logic technology in architecture.toml.
+Belongs with the capability that has to implement it. RFC numbers verified
+against rfc-editor.org and the IETF Datatracker on 2026-08-25.
+"""
+
+# ===========================================================================
+# 8. Superseded — delete these, the replacement is written
+# ===========================================================================
+#
+# Written overnight 2026-08-25. The sandbox cannot delete through the mount,
+# so these are listed rather than removed. Every one has a named replacement
+# that already exists; git holds the originals.
+
+[[superseded]]
+path = "docs/glossary.md"
+replacedBy = "docs/terminology.md"
+why = "Zero bytes. It was never anything."
+
+[[superseded]]
+path = "docs/architecture/glossary.md"
+replacedBy = "docs/terminology.md"
+why = """
+363 lines under the Interchange vocabulary ADR-0013 retired. Six sections were
+worth keeping and are now in terminology.md: Definition versus Instance,
+Handler versus Extension, Message, Section, Audit, Failure Persistence and
+Retired terms. Kernel and the Interchange family are recorded as open
+questions there rather than silently translated, because Interchange is a tree
+and ADR-0013 clause 5 says a Journey is not.
+"""
+
+[[superseded]]
+path = "docs/repository-model.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "Pre-ADR-0011 names and a submodules/platform/handlers/ layout ADR-0016 rejected."
+
+[[superseded]]
+path = "docs/crate-boundaries.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "53 lines, now section 6."
+
+[[superseded]]
+path = "docs/architecture/repository-architecture.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "Classification, naming and maturity, now sections 1 to 3. Its plan/apply mode stopped existing on 2026-08-25."
+
+[[superseded]]
+path = "docs/architecture/repository-structure.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "Note: allocation.toml recorded this at docs/ and it is at docs/architecture/."
+
+[[superseded]]
+path = "docs/architecture/repository-and-crate-plan.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "Note: allocation.toml recorded this at docs/ and it is at docs/architecture/."
+
+[[superseded]]
+path = "docs/Xmip-Architecture-Specification-v1.1.md"
+replacedBy = "docs/Xmip-Architecture-Specification-v1.2.md"
+why = "Strict subset. 36 diff lines, every one an addition in v1.2."
+
+[[superseded]]
+path = "docs/planning/github-repository-inventory-*.md"
+replacedBy = "Xmip-Estate"
+why = "Stale by construction. Decision 9."
+
+[[superseded]]
+path = "forge/module-rules.md, forge/xmip-technology-tree.md"
+replacedBy = "architecture.toml"
+why = "Decision 10. Flagged: say if forge is a live idea and this reverses."
+
+# Composed 2026-08-25. runtime-model.md carries all 25 sections of v1.0, all 16
+# of Baseline-Current, sections 1-8 of v1.2, and the Actor model from ADR-0007,
+# ADR-0008 and ADR-0009, which none of the four specifications mentioned and
+# which merging them alone would therefore have dropped.
+#
+# Five substantive conflicts are resolved in its section 21 rather than
+# silently: Message and Journey creation, the two Journey state enums, zero
+# Subscription matches, one ABI versus one per Module, and whether the
+# interchange identifier is stable across generations.
+
+[[keep]]
+path = "docs/architecture/runtime-model.md"
+reason = "The architecture specification. Composed 2026-08-25 from v1.0, v1.2 sections 1-8 and Baseline-Current, with four substantive conflicts resolved in its section 20 rather than silently."
+
+[[superseded]]
+path = "docs/Xmip-Architecture-Specification-v1.0.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "595 lines, the substantive runtime architecture. All 25 sections carried across or resolved as a conflict."
+
+[[superseded]]
+path = "docs/Xmip-Architecture-Specification-v1.2.md"
+replacedBy = "docs/architecture/runtime-model.md and docs/architecture/repository-model.md"
+why = "Sections 1-8 are runtime and went to the first. Sections 9-15 are the estate and went to the second."
+
+[[superseded]]
+path = "docs/Xmip-Architecture-Baseline-Current.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "431 lines. Its reassignment of Message and Journey creation is now the model; three of its statements lost to later ADRs and are recorded in section 20."
+
+# Consolidated 2026-08-25 per ADR-0020: one document per subject.
+[[superseded]]
+path = "docs/architecture/kernel-boundary.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Everything it attributed to 'the Kernel' is what xmip-core-runtime owns."
+
+[[superseded]]
+path = "docs/architecture/modularity.md"
+replacedBy = "docs/architecture/module-model.md and docs/architecture/deployment-model.md"
+why = "Boundary to the first, footprint profiles to the second."
+
+[[superseded]]
+path = "docs/architecture/runtime-modularity.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Loadable binary model, manifest and isolation."
+
+[[superseded]]
+path = "docs/architecture/module-loading.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Startup discovery and registration. Its implementation-status section was planning and is dropped: a status list in an architecture document rots by design."
+
+[[superseded]]
+path = "docs/module-loading.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Execution thread and the layered ABI boundary. Not a duplicate of the file above despite the shared name — 87 differing lines, different subjects."
+
+[[superseded]]
+path = "docs/architecture/platform-system-definition.md"
+replacedBy = "docs/architecture/module-model.md"
+
+[[superseded]]
+path = "docs/architecture/deployment-profiles.md"
+replacedBy = "docs/architecture/deployment-model.md"
+
+[[superseded]]
+path = "docs/architecture/runtime-profiles.md"
+replacedBy = "docs/architecture/deployment-model.md"
+why = "Server versus purpose-compiled."
+
+[[superseded]]
+path = "docs/architecture/runtime-roles-and-isolation.md"
+replacedBy = "docs/architecture/deployment-model.md"
+why = "Executor, Reader, Writer, and the trust and isolation rules."
+
+[[superseded]]
+path = "docs/architecture/installer.md"
+replacedBy = "docs/architecture/deployment-model.md"
+
+[[superseded]]
+path = "docs/architecture/database-selection.md"
+replacedBy = "docs/architecture/deployment-model.md"
+why = "Described the same two databases as installer.md in almost the same words."
+
+[[superseded]]
+path = "docs/architecture/service-identities.md"
+replacedBy = "docs/architecture/deployment-model.md"
+
+[[superseded]]
+path = "docs/architecture/desired-state-configuration.md"
+replacedBy = "docs/architecture/deployment-model.md"
+
+[[superseded]]
+path = "docs/disaster-recovery.md"
+replacedBy = "docs/architecture/deployment-model.md"
+why = "Recovery. Its Interchange vocabulary is translated to Journey."
+
+[[superseded]]
+path = "docs/Xmip-Audit-Architecture.md"
+replacedBy = "docs/architecture/observability-model.md"
+why = "Lifecycle, severity, policy hierarchy, back-pressure."
+
+[[superseded]]
+path = "docs/architecture/audit-and-correlation.md"
+replacedBy = "docs/architecture/observability-model.md"
+why = "The Logs / Traces / Tracking split and the correlation footprint."
+
+[[superseded]]
+path = "docs/architecture/audit-directive.md"
+replacedBy = "docs/architecture/observability-model.md"
+
+[[superseded]]
+path = "docs/Xmip-Observer-Architecture.md"
+replacedBy = "docs/architecture/observability-model.md"
+why = "Health states, worst-state propagation, near-real-time rule."
+
+[[superseded]]
+path = "docs/architecture/retired-terms-cleanup.md"
+replacedBy = "docs/terminology.md"
+why = "Eleven lines. terminology.md has a Retired terms table."
+
+[[keep]]
+path = "docs/architecture/module-model.md"
+reason = "The module boundary, loading, ABI layering and isolation. Replaces six documents and retires the word Kernel."
+
+[[keep]]
+path = "docs/architecture/deployment-model.md"
+reason = "Profiles, runtime roles, trust and isolation, Service Identity, installation, the two databases, desired state and recovery. Replaces eight."
+
+[[keep]]
+path = "docs/architecture/observability-model.md"
+reason = "Audit, logs, traces, retention and observation. Replaces four."
+
+[[keep]]
+path = "docs/decisions/ADR-0020-documentation-structure.md"
+reason = "One document per subject, no versions in filenames, and the six-document architecture structure."
+
+# Twelve zero-byte files. ADR-0020 clause 7: an empty file is a promise
+# nobody made and a search result that wastes a reader.
+
+[[remove]]
+path = "docs/architecture/data-flow.md, docs/data/data-model.md, docs/data/privacy.md, docs/operations/roles.md, docs/operations/workflows.md, docs/ux/personas.md, docs/ux/principles.md, docs/ux/user-flows.md, docs/vision/problem.md, docs/vision/roadmap.md, docs/vision/value-proposition.md"
+reason = "Zero bytes. ADR-0020 clause 7."
+
 
 [count]
 # Verified against the tree of a3b001e871: every one of the 183 tracked files
 # appears exactly once. No file is unallocated and no entry names a file that
 # does not exist.
 files = 183
-keep = 105        # 76 named, 29 under the three wildcards below
+keep = 108        # 79 named, 29 under the three wildcards below
 move = 51
 remove = 14
-reviewOnly = 13   # handler-file 3, handler documents 8, forge 2
+reviewOnly = 0    # all eleven answered 2026-08-25, see section 7
 
-entries = { keep = 79, move = 51, remove = 14, review = 11 }
-wildcard = { "docs/decisions/*" = 15, "docs/planning/*" = 6, "_origins/*" = 8 }
+entries = { keep = 82, move = 51, remove = 14, decision = 11, superseded = 10 }
+wildcard = { "docs/decisions/*" = 19, "docs/planning/*" = 6, "_origins/*" = 8 }
 
-note = "Several [review] entries also appear under keep or move: they have a provisional home and a question about it. Only the 13 above have no allocation at all until you answer."
+note = """
+Counts revised overnight 2026-08-25. [review] became [decision]: all eleven
+answered, so nothing is unallocated any more. Three files created after the map
+was drawn were added to [keep]. [superseded] is a separate list of ten files
+whose replacement is written and which the sandbox could not delete.
+
+The file count of 183 is against a3b001e871 and is now historical: the tree has
+moved since. Re-verify before running Xmip-Git -Distribute.
+"""
 
