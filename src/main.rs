@@ -43,7 +43,10 @@ fn main() {
     let dir = drop_directory();
     let transport = FileTransport::new(&dir);
     transport
-        .send("order-1001.edi", b"ISA*00*          *00*          *ZZ*PARTNERX")
+        .send(
+            "order-1001.edi",
+            b"ISA*00*          *00*          *ZZ*PARTNERX",
+        )
         .expect("dropping the edi file");
     transport
         .send(

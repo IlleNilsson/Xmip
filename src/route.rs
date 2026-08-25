@@ -171,12 +171,29 @@ impl Promoted {
 #[serde(rename_all = "kebab-case")]
 pub enum Predicate {
     /// The property was promoted at all, whatever it says.
-    Exists { property: String },
-    Equals { property: String, value: Value },
-    NotEquals { property: String, value: Value },
-    GreaterThan { property: String, value: Value },
-    LessThan { property: String, value: Value },
-    StartsWith { property: String, prefix: String },
+    Exists {
+        property: String,
+    },
+    Equals {
+        property: String,
+        value: Value,
+    },
+    NotEquals {
+        property: String,
+        value: Value,
+    },
+    GreaterThan {
+        property: String,
+        value: Value,
+    },
+    LessThan {
+        property: String,
+        value: Value,
+    },
+    StartsWith {
+        property: String,
+        prefix: String,
+    },
     /// Every condition holds. An empty all holds, which is how a Subscription
     /// says "everything published here".
     All(Vec<Predicate>),
@@ -281,19 +298,17 @@ impl Predicate {
                 None => Test::Fail(nothing_promoted(property)),
             },
 
-            Predicate::Equals { property, value } => {
-                compare(promoted, property, value, |actual| {
-                    if actual == value {
-                        Test::Pass
-                    } else {
-                        Test::Fail(format!(
-                            "{property} is {}, not {}",
-                            actual.show(),
-                            value.show()
-                        ))
-                    }
-                })
-            }
+            Predicate::Equals { property, value } => compare(promoted, property, value, |actual| {
+                if actual == value {
+                    Test::Pass
+                } else {
+                    Test::Fail(format!(
+                        "{property} is {}, not {}",
+                        actual.show(),
+                        value.show()
+                    ))
+                }
+            }),
 
             Predicate::NotEquals { property, value } => {
                 compare(promoted, property, value, |actual| {
@@ -306,26 +321,34 @@ impl Predicate {
             }
 
             Predicate::GreaterThan { property, value } => {
-                compare(promoted, property, value, |actual| match order(actual, value) {
-                    Some(std::cmp::Ordering::Greater) => Test::Pass,
-                    Some(_) => Test::Fail(format!(
-                        "{property} is {}, which is not over {}",
-                        actual.show(),
-                        value.show()
-                    )),
-                    None => Test::Fail(format!("{property} cannot be ordered against a boolean")),
+                compare(promoted, property, value, |actual| {
+                    match order(actual, value) {
+                        Some(std::cmp::Ordering::Greater) => Test::Pass,
+                        Some(_) => Test::Fail(format!(
+                            "{property} is {}, which is not over {}",
+                            actual.show(),
+                            value.show()
+                        )),
+                        None => {
+                            Test::Fail(format!("{property} cannot be ordered against a boolean"))
+                        }
+                    }
                 })
             }
 
             Predicate::LessThan { property, value } => {
-                compare(promoted, property, value, |actual| match order(actual, value) {
-                    Some(std::cmp::Ordering::Less) => Test::Pass,
-                    Some(_) => Test::Fail(format!(
-                        "{property} is {}, which is not under {}",
-                        actual.show(),
-                        value.show()
-                    )),
-                    None => Test::Fail(format!("{property} cannot be ordered against a boolean")),
+                compare(promoted, property, value, |actual| {
+                    match order(actual, value) {
+                        Some(std::cmp::Ordering::Less) => Test::Pass,
+                        Some(_) => Test::Fail(format!(
+                            "{property} is {}, which is not under {}",
+                            actual.show(),
+                            value.show()
+                        )),
+                        None => {
+                            Test::Fail(format!("{property} cannot be ordered against a boolean"))
+                        }
+                    }
                 })
             }
 
@@ -681,9 +704,11 @@ mod tests {
 
         // Lexicographically "1500" is less than "900", which is the wrong
         // answer, and the reason the type belongs on the Subscription.
-        assert!(!Predicate::greater_than("Amount", Value::Text("900".into()))
-            .test(&orders())
-            .passed());
+        assert!(
+            !Predicate::greater_than("Amount", Value::Text("900".into()))
+                .test(&orders())
+                .passed()
+        );
     }
 
     #[test]
@@ -691,11 +716,9 @@ mod tests {
         let promoted = Promoted::new().set("OrderNo", "0012345");
 
         assert_eq!(promoted.get("OrderNo"), Some("0012345"));
-        assert!(
-            Predicate::equals("OrderNo", Value::Text("0012345".into()))
-                .test(&promoted)
-                .passed()
-        );
+        assert!(Predicate::equals("OrderNo", Value::Text("0012345".into()))
+            .test(&promoted)
+            .passed());
     }
 
     #[test]
