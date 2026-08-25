@@ -1,14 +1,13 @@
 #requires -Version 7.2
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [string] $ManifestPath = (Join-Path $PSScriptRoot 'architecture.json'),
+    [string] $ManifestPath = (Join-Path $PSScriptRoot 'architecture.toml'),
     [string] $WorkingDirectory = (Join-Path $PSScriptRoot '.xmip-work'),
     [string] $GitHubToken = $env:GITHUB_TOKEN,
     [string] $GitHubApiBaseUri = 'https://api.github.com',
     [switch] $Apply,
     [switch] $CreateRepositories,
     [switch] $ConfigureRepositories,
-    [switch] $SynchronizeSubmodules,
     [switch] $GenerateMetadata,
     [switch] $CommitChanges,
     [switch] $PushChanges,
@@ -20,7 +19,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ScriptVersion = [version]'1.4.0'
+$ScriptVersion = [version]'1.5.0'
 
 function Write-Step([string] $Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 
@@ -259,15 +258,183 @@ function Expand-XmipManifest($Source) {
     return $Source
 }
 
+# ---------------------------------------------------------------------------
+# Schema 2.0. The tree is the data: a repository name is derived from its
+# position, so a name cannot drift from the structure that owns it.
+#
+#   platform.xmip-core                                    -> xmip-core
+#   provider.core.module.transport                        -> xmip-core-transport
+#   provider.core.module.transport.implementation.kafka   -> xmip-core-transport-kafka
+#
+# The tree is flattened into the same repository shape schema 1 produced, so
+# everything downstream is untouched by which file it came from.
+#
+# ConvertFrom-Toml has returned a dictionary in one version and an object in
+# the next. Which one it is should not be a thing this script has an opinion
+# about, so it never asks directly.
+# ---------------------------------------------------------------------------
+
+function Get-TomlKey($Node) {
+    if ($null -eq $Node) { return @() }
+    if ($Node -is [System.Collections.IDictionary]) { return @($Node.Keys) }
+    return @($Node.PSObject.Properties.Name)
+}
+
+function Get-TomlValue($Node, [Parameter(Mandatory)] [string] $Name, $Default = $null) {
+    if ($null -eq $Node) { return $Default }
+    if ($Node -is [System.Collections.IDictionary]) {
+        if ($Node.Contains($Name) -and $null -ne $Node[$Name]) { return $Node[$Name] }
+        return $Default
+    }
+    $property = $Node.PSObject.Properties[$Name]
+    if ($null -eq $property -or $null -eq $property.Value) { return $Default }
+    return $property.Value
+}
+
+function New-XmipRepositoryEntry {
+    param(
+        [Parameter(Mandatory)] [string] $Name,
+        [Parameter(Mandatory)] [string] $Description,
+        [Parameter(Mandatory)] [string] $Domain,
+        [Parameter(Mandatory)] [string] $Role,
+        [Parameter(Mandatory)] [string] $Maturity,
+        [string[]] $Dependencies = @(),
+        [Parameter(Mandatory)] $Default,
+        [Parameter(Mandatory)] $Crate,
+        [string] $Language,
+        [string[]] $Topics = @()
+    )
+
+    $topicList = @(@(Get-TomlValue $Default 'repositoryTopics' @('xmip')) + $Topics |
+            ForEach-Object { [string]$_ } |
+            Where-Object { $_ } |
+            Select-Object -Unique)
+
+    return [pscustomobject]@{
+        name = $Name
+        description = $Description
+        architecturalDomain = $Domain
+        repositoryRole = $Role
+        maturity = $Maturity
+        dependencies = @($Dependencies)
+        primaryCrate = [pscustomobject]@{
+            name = $Name
+            # A module carrying its own language is not a Rust crate. powershell
+            # and gui are the two, per ADR-0014 clause 14.
+            language = if ($Language) { $Language } else { [string](Get-TomlValue $Crate 'language' 'rust') }
+            edition = [string](Get-TomlValue $Crate 'edition' '2021')
+            license = [string](Get-TomlValue $Crate 'license' (Get-TomlValue $Default 'license' 'NOASSERTION'))
+        }
+        github = [pscustomobject]@{
+            visibility = [string](Get-TomlValue $Default 'visibility' 'public')
+            autoInitialize = [bool](Get-TomlValue $Default 'autoInitialize' $true)
+            hasIssues = [bool](Get-TomlValue $Default 'hasIssues' $true)
+            hasProjects = [bool](Get-TomlValue $Default 'hasProjects' $false)
+            hasWiki = [bool](Get-TomlValue $Default 'hasWiki' $false)
+            topics = $topicList
+        }
+        # Composition is Set-XmipSubmodule.ps1's job now, ADR-0016. This script
+        # creates and configures repositories and says nothing about how they
+        # are mounted.
+        submodule = [pscustomobject]@{ enabled = $false }
+    }
+}
+
+function Expand-XmipManifestFromTree($Source) {
+    $default = Get-TomlValue $Source 'default' ([pscustomobject]@{})
+    $crate = Get-TomlValue $Source 'crate' ([pscustomobject]@{})
+    $fallbackMaturity = [string](Get-TomlValue $default 'maturity' 'reserved')
+    $repositories = [Collections.Generic.List[object]]::new()
+
+    foreach ($name in (Get-TomlKey (Get-TomlValue $Source 'platform' $null) | Sort-Object)) {
+        $node = Get-TomlValue (Get-TomlValue $Source 'platform' $null) $name
+        $repositories.Add((New-XmipRepositoryEntry `
+            -Name $name `
+            -Description ([string](Get-TomlValue $node 'description' "Xmip platform repository $name.")) `
+            -Domain ([string](Get-TomlValue $node 'domain' 'Foundation')) `
+            -Role ([string](Get-TomlValue $node 'role' 'common-architecture')) `
+            -Maturity ([string](Get-TomlValue $node 'maturity' $fallbackMaturity)) `
+            -Dependencies @(Get-TomlValue $node 'dependency' @()) `
+            -Default $default -Crate $crate `
+            -Language ([string](Get-TomlValue $node 'language' '')) `
+            -Topics @('foundation')))
+    }
+
+    $providers = Get-TomlValue $Source 'provider' $null
+    foreach ($providerName in (Get-TomlKey $providers | Sort-Object)) {
+        $modules = Get-TomlValue (Get-TomlValue $providers $providerName) 'module' $null
+
+        foreach ($moduleName in (Get-TomlKey $modules | Sort-Object)) {
+            $module = Get-TomlValue $modules $moduleName
+            $moduleRepository = "xmip-$providerName-$moduleName"
+            $domain = [string](Get-TomlValue $module 'domain' 'Capabilities')
+
+            $repositories.Add((New-XmipRepositoryEntry `
+                -Name $moduleRepository `
+                -Description ([string](Get-TomlValue $module 'description' "Xmip $moduleName module.")) `
+                -Domain $domain `
+                -Role ([string](Get-TomlValue $module 'role' 'common-capability')) `
+                -Maturity ([string](Get-TomlValue $module 'maturity' $fallbackMaturity)) `
+                -Dependencies @(Get-TomlValue $module 'dependency' @()) `
+                -Default $default -Crate $crate `
+                -Language ([string](Get-TomlValue $module 'language' '')) `
+                -Topics @($domain.ToLowerInvariant())))
+
+            $implementations = Get-TomlValue $module 'implementation' $null
+            foreach ($standard in (Get-TomlKey $implementations | Sort-Object)) {
+                $implementation = Get-TomlValue $implementations $standard
+                $implementationRepository = "$moduleRepository-$standard"
+
+                $repositories.Add((New-XmipRepositoryEntry `
+                    -Name $implementationRepository `
+                    -Description ([string](Get-TomlValue $implementation 'description' "$standard implementation of $moduleRepository.")) `
+                    -Domain 'Technology' `
+                    -Role 'technology-implementation' `
+                    -Maturity ([string](Get-TomlValue $implementation 'maturity' $fallbackMaturity)) `
+                    -Dependencies (@($moduleRepository) + @(Get-TomlValue $implementation 'dependency' @())) `
+                    -Default $default -Crate $crate `
+                    -Language ([string](Get-TomlValue $implementation 'language' '')) `
+                    -Topics @('technology', $moduleName, $standard)))
+            }
+        }
+    }
+
+    if ($repositories.Count -eq 0) {
+        throw 'The manifest tree produced no repositories. Is it schema 2.0?'
+    }
+
+    $result = [pscustomobject]@{}
+    foreach ($key in (Get-TomlKey $Source)) {
+        $result | Add-Member -NotePropertyName $key -NotePropertyValue (Get-TomlValue $Source $key) -Force
+    }
+    $result | Add-Member -NotePropertyName repositories -NotePropertyValue @($repositories.ToArray()) -Force
+    return $result
+}
+
 function Get-XmipManifest([string] $Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         throw "Manifest not found: $Path"
     }
-    $source = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -Depth 100
-    $minimumScriptVersion = Get-PropertyValue $source 'minimumScriptVersion'
+
+    $isToml = [IO.Path]::GetExtension($Path) -ieq '.toml'
+
+    if ($isToml) {
+        if (-not (Get-Module -ListAvailable -Name PSToml)) {
+            throw 'Reading a TOML manifest needs PSToml. Run Install-XmipPrerequisite.ps1 -Role developer, or Install-Module PSToml -Scope CurrentUser.'
+        }
+        Import-Module PSToml -ErrorAction Stop
+        $source = Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Toml
+    }
+    else {
+        $source = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -Depth 100
+    }
+
+    $minimumScriptVersion = Get-TomlValue $source 'minimumScriptVersion' $null
     if ($minimumScriptVersion -and $ScriptVersion -lt [version]$minimumScriptVersion) {
         throw "Manifest requires script version $minimumScriptVersion; current version is $ScriptVersion."
     }
+
+    if ($isToml) { return Expand-XmipManifestFromTree $source }
     return Expand-XmipManifest $source
 }
 
@@ -359,7 +526,6 @@ function New-TransactionReport($Manifest, $Actual) {
         operations = [ordered]@{
             created = 0
             configured = 0
-            submodulesAdded = 0
             metadataWritten = 0
             commits = 0
             pushes = 0
@@ -372,7 +538,8 @@ function New-XmipGitHubRepository {
     param(
         [Parameter(Mandatory)] $Repository,
         [Parameter(Mandatory)] [string] $Owner,
-        [Parameter(Mandatory)] [ValidateSet('User','Organization')] [string] $OwnerType
+        [Parameter(Mandatory)] [ValidateSet('User','Organization')] [string] $OwnerType,
+        [string] $Template
     )
 
     $name = [string](Get-PropertyValue $Repository 'name')
@@ -386,15 +553,42 @@ function New-XmipGitHubRepository {
         throw "Visibility 'internal' is not valid for user-owned repository '$name'."
     }
 
+    $settings = [ordered]@{
+        has_issues = [bool](Get-PropertyValue $github 'hasIssues' $true)
+        has_projects = [bool](Get-PropertyValue $github 'hasProjects' $false)
+        has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
+    }
+
+    # A repository generated from the template starts with the licence, the
+    # workflow and the layout every Xmip repository is supposed to have. A
+    # blank one starts with nothing and someone has to remember to add them.
+    if ($Template) {
+        if ($Template -notmatch '^[^/]+/[^/]+$') {
+            throw "Template must be owner/name, not '$Template'."
+        }
+
+        $body = [ordered]@{
+            owner = $Owner
+            name = $name
+            description = $description
+            include_all_branches = $false
+            private = ($visibility -eq 'private')
+        }
+
+        $created = Invoke-GitHubApi POST "/repos/$Template/generate" $body
+
+        # generate takes none of the feature switches, so they follow.
+        $null = Invoke-GitHubApi PATCH "/repos/$Owner/$name" $settings
+        return $created
+    }
+
     $body = [ordered]@{
         name = $name
         description = $description
         private = ($visibility -eq 'private')
         auto_init = [bool](Get-PropertyValue $github 'autoInitialize' $true)
-        has_issues = [bool](Get-PropertyValue $github 'hasIssues' $true)
-        has_projects = [bool](Get-PropertyValue $github 'hasProjects' $false)
-        has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
     }
+    foreach ($key in $settings.Keys) { $body[$key] = $settings[$key] }
     if ($OwnerType -eq 'Organization') { $body.visibility = $visibility }
 
     $path = if ($OwnerType -eq 'Organization') { "/orgs/$Owner/repos" } else { '/user/repos' }
@@ -424,6 +618,21 @@ function Invoke-CreateRepositories {
         if ($currentLogin -ine $owner) {
             throw "Authenticated GitHub user '$currentLogin' cannot create repositories for '$owner'."
         }
+    }
+
+    # crate.template in schema 2.0, cratePolicy.template in schema 1.
+    $template = [string](Get-TomlValue (Get-TomlValue $Manifest 'crate' $null) 'template' `
+        ([string](Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' '')))
+
+    if ($template) {
+        $templateInfo = Invoke-GitHubApi GET "/repos/$template"
+        if (-not [bool](Get-PropertyValue $templateInfo 'is_template' $false)) {
+            throw "'$template' is not marked as a template repository. Enable Settings, Template repository on it, or clear crate.template to create blank repositories."
+        }
+        Write-Step "Creating from template $template"
+    }
+    else {
+        Write-Warning 'No crate.template in the manifest. Repositories will be created blank, with no licence, workflow or layout.'
     }
 
     $desired = @{}
@@ -457,7 +666,7 @@ function Invoke-CreateRepositories {
         }
 
         Write-Step "Creating repository $owner/$name"
-        $created = New-XmipGitHubRepository -Repository $repository -Owner $owner -OwnerType $ownerType
+        $created = New-XmipGitHubRepository -Repository $repository -Owner $owner -OwnerType $ownerType -Template $template
         $createdName = [string](Get-PropertyValue $created 'name')
         if ($createdName -ine $name) {
             throw "GitHub returned repository '$createdName' while creating '$name'."
@@ -474,136 +683,14 @@ function Invoke-CreateRepositories {
     }
 }
 
-function Get-RepositoryCloneUrl {
-    param([Parameter(Mandatory)] [string] $Owner, [Parameter(Mandatory)] [string] $Name)
-    return "https://github.com/$Owner/$Name.git"
-}
-
-function Ensure-ParentRepositoryCheckout {
-    param(
-        [Parameter(Mandatory)] [string] $Owner,
-        [Parameter(Mandatory)] [string] $ParentName
-    )
-
-    $path = Join-Path $WorkingDirectory $ParentName
-    if (Test-Path -LiteralPath (Join-Path $path '.git')) {
-        Invoke-Native git @('fetch','--all','--prune') $path
-        Invoke-Native git @('checkout','main') $path
-        Invoke-Native git @('pull','--ff-only') $path
-    }
-    elseif (Test-Path -LiteralPath $path) {
-        throw "Working path exists but is not a Git repository: $path"
-    }
-    else {
-        New-Item -ItemType Directory -Force -Path $WorkingDirectory | Out-Null
-        Invoke-Native git @('clone',(Get-RepositoryCloneUrl $Owner $ParentName),$path)
-    }
-    return $path
-}
-
-function Invoke-SynchronizeSubmodules {
-    param(
-        [Parameter(Mandatory)] $Manifest,
-        [Parameter(Mandatory)] [System.Collections.IDictionary] $Report
-    )
-
-    $owner = [string](Get-PropertyValue $Manifest 'owner')
-    $repositories = @(Get-PropertyValue $Manifest 'repositories' @())
-    $groups = @{}
-
-    foreach ($repository in $repositories) {
-        $submodule = Get-PropertyValue $repository 'submodule' ([pscustomobject]@{ enabled = $false })
-        if (-not [bool](Get-PropertyValue $submodule 'enabled' $false)) { continue }
-
-        $name = [string](Get-PropertyValue $repository 'name')
-        $parent = [string](Get-PropertyValue $submodule 'parentRepository' (Get-PropertyValue $repository 'parent'))
-        $path = [string](Get-PropertyValue $submodule 'path')
-        if (-not $parent) { throw "Submodule parent is missing for '$name'." }
-        if (-not $path) { throw "Submodule path is missing for '$name'." }
-
-        $parentExists = Test-GitHubRepositoryExists -Owner $owner -Name $parent
-        if (-not $parentExists.Exists) { throw "Parent repository '$owner/$parent' does not exist." }
-        $childExists = Test-GitHubRepositoryExists -Owner $owner -Name $name
-        if (-not $childExists.Exists) { throw "Child repository '$owner/$name' does not exist." }
-
-        if (-not $groups.ContainsKey($parent)) {
-            $groups[$parent] = [Collections.Generic.List[object]]::new()
-        }
-        $groups[$parent].Add([pscustomobject]@{ Name = $name; Path = $path })
-    }
-
-    foreach ($parent in @($groups.Keys | Sort-Object)) {
-        $checkout = Ensure-ParentRepositoryCheckout -Owner $owner -ParentName $parent
-        $changed = $false
-
-        foreach ($entry in @($groups[$parent].ToArray() | Sort-Object Path)) {
-            $relativePath = [string]$entry.Path
-            $name = [string]$entry.Name
-            $expectedUrl = Get-RepositoryCloneUrl -Owner $owner -Name $name
-            $occupiedPath = Join-Path $checkout $relativePath
-            $moduleName = $relativePath -replace '\\','/'
-            $registeredUrl = ''
-
-            $configOutput = & git -C $checkout config --file .gitmodules --get "submodule.$moduleName.url" 2>$null
-            if ($LASTEXITCODE -eq 0) { $registeredUrl = [string]($configOutput | Select-Object -First 1) }
-
-            if ($registeredUrl) {
-                if ($registeredUrl -ne $expectedUrl) {
-                    if (-not $PSCmdlet.ShouldProcess("$parent:$relativePath", "Correct submodule URL to $expectedUrl")) {
-                        $Report.operations.skipped++
-                        continue
-                    }
-                    Invoke-Native git @('config','--file','.gitmodules',"submodule.$moduleName.url",$expectedUrl) $checkout
-                    Invoke-Native git @('submodule','sync','--',$relativePath) $checkout
-                    $changed = $true
-                }
-                Invoke-Native git @('submodule','update','--init','--recursive','--',$relativePath) $checkout
-                continue
-            }
-
-            if (Test-Path -LiteralPath $occupiedPath) {
-                $items = @(Get-ChildItem -LiteralPath $occupiedPath -Force -ErrorAction SilentlyContinue)
-                if ($items.Count -gt 0) {
-                    throw "Submodule path '$parent/$relativePath' is occupied by ordinary files."
-                }
-            }
-
-            if (-not $PSCmdlet.ShouldProcess("$parent:$relativePath", "Add submodule $owner/$name")) {
-                $Report.operations.skipped++
-                continue
-            }
-
-            Invoke-Native git @('submodule','add',$expectedUrl,$relativePath) $checkout
-            $Report.operations.submodulesAdded++
-            $changed = $true
-        }
-
-        if ($changed) {
-            Invoke-Native git @('add','.gitmodules','modules') $checkout
-            if ($CommitChanges) {
-                $status = @(Invoke-Native git @('status','--porcelain') $checkout -CaptureOutput)
-                if ($status.Count -gt 0) {
-                    Invoke-Native git @('commit','-m','Synchronize Xmip technology submodules') $checkout
-                    $Report.operations.commits++
-                }
-            }
-            if ($PushChanges) {
-                if (-not $CommitChanges) { throw '-PushChanges requires -CommitChanges.' }
-                Invoke-Native git @('push','origin','main') $checkout
-                $Report.operations.pushes++
-            }
-        }
-    }
-}
-
-if ($Apply -and -not ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata)) {
+if ($Apply -and -not ($CreateRepositories -or $ConfigureRepositories -or $GenerateMetadata)) {
     throw '-Apply requires at least one reconciliation operation switch.'
 }
-if (-not $Apply -and ($CreateRepositories -or $ConfigureRepositories -or $SynchronizeSubmodules -or $GenerateMetadata -or $CommitChanges -or $PushChanges)) {
+if (-not $Apply -and ($CreateRepositories -or $ConfigureRepositories -or $GenerateMetadata -or $CommitChanges -or $PushChanges)) {
     throw 'Reconciliation operation switches require -Apply.'
 }
 if ($PushChanges -and -not $CommitChanges) { throw '-PushChanges requires -CommitChanges.' }
-if ($SynchronizeSubmodules -or $CommitChanges -or $PushChanges) { Assert-Command git }
+if ($CommitChanges -or $PushChanges) { Assert-Command git }
 
 $manifest = Get-XmipManifest $ManifestPath
 Test-XmipManifest $manifest
@@ -617,9 +704,6 @@ foreach ($name in $report.unexpected) { Write-Warning "UNEXPECTED: $name" }
 if ($Apply) {
     if ($CreateRepositories) {
         Invoke-CreateRepositories -Manifest $manifest -Report $report
-    }
-    if ($SynchronizeSubmodules) {
-        Invoke-SynchronizeSubmodules -Manifest $manifest -Report $report
     }
     if ($ConfigureRepositories -or $GenerateMetadata) {
         throw 'Configure and metadata operations remain blocked in this stabilization build.'
