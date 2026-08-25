@@ -15,6 +15,7 @@
 schemaVersion = "1.0.0"
 source = "IlleNilsson/Xmip"
 sourceCommit = "a3b001e871"
+revised = "2026-08-25, after api became webapi and xmip-tracking was recognised as audit"
 generated = "2026-08-25"
 
 # ===========================================================================
@@ -28,7 +29,7 @@ generated = "2026-08-25"
 [create]
 planned = [
     "xmip-core-abi",
-    "xmip-core-api",
+    "xmip-core-webapi",
     "xmip-core-transport",
     "xmip-core-logic",
     "xmip-core-migrate",
@@ -37,14 +38,26 @@ planned = [
 ]
 
 fromOrphanCrate = [
-    "xmip-core-runtime",   # crates/xmip-runtime       hosts and drives modules
-    "xmip-core-service",   # crates/xmip-service       OS service and daemon
-    "xmip-core-host",      # crates/xmip-host          process hosting
-    "xmip-core-persist",   # crates/xmip-persistence   verb, matches retain and archive
-    "xmip-core-track",     # crates/xmip-tracking      verb, matches audit and observe
-    "xmip-core-configure", # crates/xmip-configuration verb, matches promote and demote
-    "xmip-core-cli",       # crates/xmip-cli           the xmip binary, ADR-0014
+    "xmip-core-runtime",   # crates/xmip-runtime       capability and module registry, execution tree
+    "xmip-core-service",   # crates/xmip-service       startup phases and service state
+    "xmip-core-host",      # crates/xmip-host          host processes, dynamic module verification
+    "xmip-core-persist",   # crates/xmip-persistence   RuntimeStore, checkpoints, recovery, leases
+    "xmip-core-configure", # crates/xmip-configuration parses declared configuration
 ]
+
+# Surfaces named in surface with no module, so nothing would have created a
+# repository for them. ADR-0014 clauses 7, 12, 13 and 14.
+fromSurface = [
+    "xmip-core-cli",        # the xmip executable and the operations library
+    "xmip-core-powershell", # PowerShell Core module, cross-platform
+    "xmip-core-gui",        # .NET 11 Blazor, MAUI desktop and server-side web
+]
+
+# No xmip-core-track. crates/xmip-tracking is an early xmip-core-audit under
+# BizTalk vocabulary: JourneyStarted, JourneyCompleted and Fault against the
+# Begin, Finished and Failure that audit already declares, and TrackingSink
+# against audit.implementation.elasticsearch and .file. ADR-0014 names four
+# observation capabilities, and a fifth would contradict it.
 
 # xmip-core-transport-file is needed by crates/xmip-handler-file but is a
 # level-two repository and none of those exist yet. Held in [review].
@@ -106,21 +119,18 @@ from = "crates/xmip-module-abi/src/lib.rs"
 to = "xmip-core-abi"
 path = "src/lib.rs"
 reason = "ADR-0012. The module- infix is dropped; every module is a module."
+warning = "Do not copy it. The crate still defines ModuleAbiKind with five variants, which ADR-0012 clause 5 removes. It predates the ADR that governs it, so xmip-core-abi wants writing against xmip_module.h."
 
 [[move]]
 from = "crates/xmip-module-abi/Cargo.toml"
 to = "xmip-core-abi"
 path = "Cargo.toml"
 
-[[move]]
-from = "crates/xmip-module-api/src/lib.rs"
-to = "xmip-core-api"
-path = "src/lib.rs"
-
-[[move]]
-from = "crates/xmip-module-api/Cargo.toml"
-to = "xmip-core-api"
-path = "Cargo.toml"
+[[remove]]
+path = "crates/xmip-module-api/src/lib.rs"
+[[remove]]
+path = "crates/xmip-module-api/Cargo.toml"
+reason = "Seven lines of re-exports over xmip-abi. ADR-0012 clause 10 already retires it: the binding crate is xmip-core-abi and it replaces both xmip-module-abi and xmip-module-api. Nothing to move."
 
 [[move]]
 from = "crates/xmip-runtime/src/lib.rs"
@@ -174,12 +184,13 @@ path = "Cargo.toml"
 
 [[move]]
 from = "crates/xmip-tracking/src/lib.rs"
-to = "xmip-core-track"
+to = "xmip-core-audit"
 path = "src/lib.rs"
+reason = "TrackingEvent and TrackingSink are audit under the retired name. Renaming the types is part of the move, not a follow-up."
 
 [[move]]
 from = "crates/xmip-tracking/Cargo.toml"
-to = "xmip-core-track"
+to = "xmip-core-audit"
 path = "Cargo.toml"
 
 [[move]]
@@ -651,11 +662,12 @@ question = "Kept as the root demo binary above. But ADR-0014 says there is one x
 # does not exist.
 files = 183
 keep = 105        # 76 named, 29 under the three wildcards below
-move = 55
-remove = 10
+move = 53
+remove = 12
 reviewOnly = 13   # handler-file 3, handler documents 8, forge 2
 
-entries = { keep = 79, move = 55, remove = 10, review = 11 }
+entries = { keep = 79, move = 53, remove = 12, review = 11 }
 wildcard = { "docs/decisions/*" = 15, "docs/planning/*" = 6, "_origins/*" = 8 }
 
 note = "Several [review] entries also appear under keep or move: they have a provisional home and a question about it. Only the 13 above have no allocation at all until you answer."
+
