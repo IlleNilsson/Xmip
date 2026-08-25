@@ -2,7 +2,17 @@
 
 ## Status
 
-Superseded by ADR-0005 when ADR-0005 is accepted.
+Superseded by ADR-0010.
+
+ADR-0010 replaced the handler universe with the contract and transport
+repository boundaries, and ADR-0011 retired `handler` as a repository-name
+segment. This record is kept because the reasoning below produced the
+technology lists that architecture.toml now carries, but nothing in it is
+current. Do not implement from it.
+
+The previous header read "Superseded by ADR-0005 when ADR-0005 is accepted",
+which was conditional, never resolved, and named an ADR about refactor
+discipline rather than the one that actually replaced this.
 
 ## Decision
 

@@ -9,7 +9,7 @@
 # Keys follow ADR-0011: shortest singular form.
 
 schemaVersion = "2.0.0"
-architectureVersion = "0.14.0"
+architectureVersion = "0.15.0"
 minimumScriptVersion = "1.5.0"
 name = "Xmip Architecture"
 owner = "IlleNilsson"
@@ -17,7 +17,7 @@ surface = ["abi", "cli", "gui", "powershell"]
 
 [powershellRuntime]
 edition = "Core"
-version = "7.6.3"
+version = "7.6"
 versionPolicy = "minimum"
 crossPlatform = true
 windowsPowerShellSupported = false
@@ -146,6 +146,12 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-context"]
     [xmip.core.transport.amqp]
     dependency = ["xmip-core-transport-tcp"]
+    [xmip.core.transport.as2]
+    description = "AS2: EDI over HTTP with S/MIME signing and encryption and signed MDN receipts. RFC 4130."
+    dependency = ["xmip-core-transport-http", "xmip-core-message-multipart", "xmip-core-authenticate-certificate"]
+    [xmip.core.transport.as4]
+    description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
+    dependency = ["xmip-core-transport-http", "xmip-core-logic-soap", "xmip-core-authenticate-certificate"]
     [xmip.core.transport.ftp]
     description = "FTP and FTPS transport implementation."
     dependency = ["xmip-core-transport-tcp"]
@@ -458,7 +464,7 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.party]
-  description = "Xmip Party model and associations."
+  description = "Xmip Party model, associations, and the identities a Party is recognised by on receive and presents on send. ADR-0019."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   dependency = ["xmip-core"]

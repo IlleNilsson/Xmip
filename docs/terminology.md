@@ -1,12 +1,17 @@
 # Xmip terminology
 
-Xmip terminology shall avoid ambiguous words in code, configuration, documentation, and diagnostics.
+Xmip uses one term for one concept, in code, configuration, documentation and
+diagnostics.
+
+This is the only vocabulary. `docs/glossary.md` was empty and is deleted.
+`docs/architecture/glossary.md` was 363 lines written under the Interchange
+vocabulary that ADR-0013 replaced; everything in it that survives is below, and
+the file is deleted. If a term is not here, it is not defined.
 
 ## Process terminology
 
-The bare word **Process** is ambiguous in Xmip and should not be used alone unless the surrounding context makes the meaning unavoidable.
-
-Use these terms instead:
+The bare word **Process** is ambiguous in Xmip and should not be used alone
+unless the surrounding context makes the meaning unavoidable.
 
 | Term | Meaning |
 | --- | --- |
@@ -17,37 +22,207 @@ Use these terms instead:
 | **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
-When a person writes or says **Process** without qualification and the meaning is not clear, the correct response is to ask whether they mean **System Process** or **Xmip Process**.
+When a person writes or says **Process** without qualification and the meaning
+is not clear, the correct response is to ask whether they mean **System
+Process** or **Xmip Process**.
 
-## Module terminology
+## Definition and Instance
 
-A **Module** is compiled code loaded during Xmip Service startup according to configuration.
+| Term | Meaning |
+| --- | --- |
+| **Definition** | A named Xmip configuration object declared in TOML. It declares what may exist and how it is configured. A Definition describes what a node may handle; it does not process a message by itself. |
+| **Instance** | The runtime execution of a Definition, created when the runtime uses that Definition to handle a specific Message, Stream, action or execution scope. An Instance is auditable, and traceable and trackable according to policy. |
 
-A Module may provide capabilities such as:
+Definition means configured in TOML. Instance means running, or previously run.
+The pairing is mechanical and the names are formed the same way every time:
 
-- Transport Handler
-- Content Handler
-- Logic Handler
-- Store Provider
-- Management Module
+```text
+ReceivePortDefinition        -> ReceivePortInstance
+ReceiveLocationDefinition    -> ReceiveLocationInstance
+SubscriptionDefinition       -> SubscriptionInstance
+ProcessDefinition            -> ProcessInstance
+SendPortDefinition           -> SendPortInstance
+SendLocationDefinition       -> SendLocationInstance
+ContractDefinition           -> (evaluated, not instantiated)
+```
 
-Modules are discovered, verified, loaded, and registered during startup as far as configuration and available metadata allow.
+A Definition may declare a name, kind-specific configuration, a Handler
+reference and Handler configuration where applicable, runtime-affecting
+configuration values, contracts or contract references, security requirements,
+and tracing and tracking settings.
 
-## Extension terminology
+Runtime persistence records Instance state, outcome, failure, retry and
+recovery information. Configuration declares what may exist; persistence
+records what did happen.
 
-An **Extension** is code referenced by an artifact and executed when needed.
+## Module, Handler and Extension
 
-Extensions are verified during startup as far as possible, but they are not loaded during startup unless Xmip later defines a specific preloading policy.
+A **Module** is compiled code loaded during Xmip Host Service startup according
+to configuration, ABI-verified per ADR-0012. A Module may declare Handlers and
+Extensions.
 
-## Startup rule
+A **Handler** is a technology-specific trait implemented by a Module, called by
+the runtime through a stable boundary. HTTP, FTP, SFTP, Kafka, File, CANBUS,
+FHIR and HL7 are Handlers.
 
-Xmip Service startup builds a validated execution tree from configuration.
+An **Extension** is a utility capability declared by a Module and executed when
+an artifact references it. Extensions are verified during startup but not
+loaded, unless Xmip later defines a preloading policy. .NET, Java, Python, Go,
+Rust, C/C++, PowerShell, Bash and company-specific utilities are Extensions.
 
-The tree identifies:
+The distinction is purpose, not mechanism:
 
-- Modules to load during startup.
-- Xmip Processes to start.
-- Xmip Subprocesses and their required Modules.
-- Extensions to verify but not load.
+| | Handler | Extension |
+| --- | --- | --- |
+| Purpose | technology | utility |
+| Binds Xmip to | communication, protocol, format, transport | reusable executable capability |
+| Loaded | at startup | on reference |
 
-Xmip cannot own every incorrect decision made in configuration or code, but it should mitigate predictable mistakes through validation, diagnostics, warnings, and clear failure boundaries.
+`handler` is **not** a repository-name segment — ADR-0011 retired it there, and
+`xmip-core-transport-ftp` is the repository that ships the FTP Handler. Handler
+remains correct as the name of the runtime role. The two rules are not in
+conflict and are frequently misread as if they were.
+
+A Module may provide Transport Handler, Content Handler, Logic Handler, Store
+Provider or Management Module capabilities.
+
+## Identity, Party and direction
+
+A **Party** is an actor Xmip recognises, per ADR-0007 and ADR-0008. It holds
+the identities it is recognised by and the identities Xmip presents when
+reaching it. One registry, both directions.
+
+| Term | Meaning |
+| --- | --- |
+| **Transport identity** | Who opened the connection. Read before Message creation. Mandatory. |
+| **Message identity** | On whose behalf the content was produced. Requires the Message to exist. Optional, and absent for most representations. |
+| **Implied identity** | An identity nothing presented, evidenced by circumstance — path, permissions, source address. Still authenticated, against that evidence. |
+| **Alignment** | Whether the two identities must resolve to the same Party. `none`, `relaxed` or `strict`, per Receive Location. |
+
+A **Receive Location** declares a closed set of mechanisms and Parties it
+accepts; anything else is refused at authentication rather than attempted. A
+**Send Location** presents a configured identity, inherited up through Send
+Port and Send Port Group to the Sending Process where it is not set.
+
+On receive Xmip is the server and the counterparty is the producer. On send
+Xmip is the client and the counterparty is the consumer. The two never infer
+from each other: ADR-0006 for send, ADR-0019 for receive and for everything
+both share.
+
+Authentication always precedes authorization. **Anonymous is an authenticated
+outcome, not a skipped gate** — the claim is "nobody", it is verified as such,
+and authorization then decides whether nobody may post here.
+
+## Message and Section
+
+A **Message** is an immutable processing unit. It has a message id, metadata,
+and one or more Sections.
+
+A **Section** is a stream contained within a Message, with a section id,
+metadata and a stream reference. Sections may reuse stream references when the
+content is unchanged.
+
+A new Message is created when Xmip performs an operation that produces a new
+message state, such as assignment or transformation. **Routing alone does not
+create a new Message.**
+
+## Audit and Failure Persistence
+
+**Audit** is the persistent accountability record of Xmip actions and outcomes.
+Failures are always audited. These lifecycle events are always audited and are
+not optional:
+
+- entry into Xmip
+- leaving Xmip
+- assigned
+- transformed
+- passed on
+- picked up
+- sent
+- failure
+
+Audit policy may add successful actions beyond these. It may not remove them.
+
+**Failure Persistence** is mandatory and is part of auditability. When a failure
+occurs, Xmip persists the Message in its failure-time state: message id,
+message metadata, section metadata, stream references or stored streams as
+policy requires, Instance context, failure reason, failure classification, time
+of failure, and the runtime place where the failure occurred.
+
+It exists so Xmip can inspect, report, recover, retry, move to the Xmip DMQ, or
+explain what failed and why.
+
+## Startup
+
+Xmip Service startup builds a validated execution tree from configuration. The
+tree identifies the Modules to load, the Xmip Processes to start, the Xmip
+Subprocesses and their required Modules, and the Extensions to verify but not
+load. ADR-0018 specifies the nine phases and which of the two services owns
+each.
+
+Xmip cannot own every incorrect decision made in configuration or code, but it
+mitigates predictable mistakes through validation, diagnostics, warnings and
+clear failure boundaries.
+
+## Retired terms
+
+| Retired | Use instead |
+| --- | --- |
+| **Adapter** | Handler. |
+| **Plugin** | Module, Handler or Extension, depending on the exact meaning. |
+| **Artifact** | The explicit Definition or Instance name. |
+| **Enabler** | The explicit Definition or Instance name. |
+| **Tracking** | Split, not renamed. The accountability record is **Audit** (`xmip-core-audit`); storing the actual Message for inspection and replay is **retention** (`xmip-core-retain`). `crates/xmip-tracking` was an early `xmip-core-audit` under BizTalk vocabulary, and ADR-0014 names four observation capabilities where a fifth would contradict it. See `architecture/observability-model.md`. |
+| **Kernel** | `xmip-core-runtime`, or "the runtime". Six documents used Kernel for the stable runtime core. There is no Kernel repository and there will not be one — ADR-0018 folded service and host into `xmip-core-runtime` — and the word collides with the operating system kernel in a product that discusses System Processes constantly. |
+
+## Open
+
+One term is deliberately not resolved above.
+
+**The Interchange family.** Half decided, and the deciding record was found
+after this note was first written.
+
+`architecture/glossary.md` described a *tree*: a root interchange per incoming
+Message, a **child interchange with a new id** per transformation or
+assignment, and the persisted history of everything sprung from the original.
+
+**ADR-0008 contradicts that and wins**, being Accepted: Assignment and
+Transformation create "a new message form with a new messageId and the **same**
+interchangeId". So the identifier is **stable** across every generation
+descended from one reception. It is a correlation identifier, not a chain, and
+generation is tracked by message id.
+
+It is also not Journey renamed. ADR-0013 clause 5 is explicit that a Journey is
+one line of execution, **not** a tree, with one Journey per matched
+Subscription — so one reception with three matched Subscriptions has three
+Journey ids and, per ADR-0008, one interchange identifier across all of them.
+
+So Interchange named a third axis that neither ADR-0013 nor this document
+covers — the generation lineage of Messages, where routing creates no new
+generation but assignment and transformation do:
+
+```text
+Publication              one event, one identity, immutable
+  └── Journey            one per matched Subscription   (ADR-0013)
+        └── Message      generation 1 -> 2 -> 3         (unnamed)
+```
+
+Interchange History also carried retention semantics nothing else does: the
+history is persisted until every Message sprung from the incoming Message has
+left Xmip or reached a terminal outcome, at a detail level set in TOML —
+metadata only, stream references, selected Sections, full message states or
+full payloads — and must be recoverable and viewable under retention and
+security policy while it is active. That is a real requirement with no current
+home.
+
+What remains open is only the **name**, since "Interchange" is retired. A stable
+identifier spanning one reception and all its descendants is exactly what
+ADR-0013 calls a **Publication** — "one event, one identity, immutable". They
+may well be the same identifier under two names, which would remove the concept
+rather than rename it.
+
+Recommendation: test whether `interchangeId` and the Publication identity are
+the same thing. If they are, say so and delete one. If they are not, name the
+remaining axis **Generation** and say what a Publication cannot express. Either
+way the retention semantics belong to `xmip-core-retain`, which ADR-0013
+clause 2 already made the owner of retained Streams. Not decided.

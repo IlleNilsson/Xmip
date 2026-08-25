@@ -1,6 +1,6 @@
 # ADR-0016: Submodule composition
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-25
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Xmip-Estate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
@@ -55,7 +55,7 @@ TOML tree exactly, so a reader who knows one knows the other. The submodule
 
 `maturity` decides whether `Xmip-Estate` creates a repository. It has
 nothing to say about pinning: you cannot pin what does not exist, and anything
-that does exist is worth pinning. `Sync-XmipSubmodule.ps1` reports the absent
+that does exist is worth pinning. `Xmip-Git -Submodule` reports the absent
 ones and carries on.
 
 **4. How Cargo sees `modules/` is UNRESOLVED and blocks the rest.**
@@ -120,21 +120,26 @@ should be marked superseded rather than deleted.
 - A fresh `git clone` of `Xmip` gets source and manifest and no submodules.
   `git submodule update --init` is an explicit act, and `--recursive` reaches
   the implementations.
-- `Sync-XmipSubmodule.ps1` replaces `Invoke-SynchronizeSubmodules`. That
-  function and its schema-1 `repositories[]` reader come out of
-  `Xmip-Estate.ps1`.
+- Composition belongs to `Xmip-Git`, not to a script of its own.
+  `Invoke-SynchronizeSubmodules` and its schema-1 `repositories[]` reader are
+  out of `Xmip-Estate`. The intermediate `Sync-XmipSubmodule.ps1` existed for
+  one day and was deleted on 2026-08-25: the command that clones, pulls and
+  branches the estate is already the command that should mount it, and a
+  second script reading the same manifest is a second thing to keep in step.
 - `.gitmodules.planned` is deleted. It planned nothing.
-- Level two waits. Zero of the 268 implementation repositories exist, so
-  today's run pins modules only.
+- Level two waits. Zero of the 249 implementation repositories exist, so
+  today's run pins the 42 modules only.
 - `crates/` still carries pre-ADR-0011 names (`xmip-module-abi`,
   `xmip-handler-file`, `xmip-module-api`) against manifest names
-  (`xmip-core-abi`, `xmip-core-transport-file`, `xmip-core-api`). Submodules do
-  not fix that and it is not this ADR's business, but it is the same drift and
-  wants its own decision.
+  (`xmip-core-abi`, `xmip-core-transport`, `xmip-core-api`). Submodules do not
+  fix that and it is not this ADR's business. `docs/planning/allocation.toml`
+  now decides each of them: `xmip-handler-file` folds into
+  `xmip-core-transport` as an implementation module rather than becoming the
+  first level-two repository.
 
 ## Alternatives considered
 
-**One flat `.gitmodules` in the root pinning all 304 repositories.** One file
+**One flat `.gitmodules` in the root pinning all 292 repositories.** One file
 to read, and `--recursive` becomes unnecessary. Rejected: it puts the root in
 charge of what a module contains, which is exactly the coupling the tree
 removes, and it makes every clone of a module repository useless on its own.
@@ -144,5 +149,6 @@ removes, and it makes every clone of a module repository useless on its own.
 turns the root red for something the root did not do.
 
 **Keep `Invoke-SynchronizeSubmodules` and teach it schema 2.0.** Rejected: it
-is entangled with repository creation and reporting inside a 641-line script.
-Composition is a separate job and reads better as one.
+is entangled with repository creation and reporting. Composition is a
+separate job from reconciliation, and it reads better beside the other git
+operations than beside the GitHub API calls.

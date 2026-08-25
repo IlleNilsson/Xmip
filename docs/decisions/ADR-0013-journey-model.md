@@ -68,6 +68,15 @@ absent verification.
 `poll` inverts who initiates: Xmip fetches, the caller sends nothing, and identity is
 therefore almost always implied.
 
+### Identity is ADR-0019's
+
+Identity travels on the transport, on the message, or on both; the line between them, the
+per-layer authorization, and the alignment policy when they disagree are all specified in
+**ADR-0019**. They were written here first and moved once they outgrew a record about
+disposition. `docs/architecture/identity-by-technology.md` sorts the estate by that rule.
+
+What remains below is what this ADR is for: what Xmip *keeps* at each point of refusal.
+
 ## Decision
 
 ### 1. Disposition of a refused Stream
@@ -144,6 +153,14 @@ enum JourneyState { Active, Waiting, Suspended, Recovering, Completed, Failed }
 `Completed` and `Failed` are terminal. `Suspended` and `Recovering` are the
 operator-recoverable path. This ADR records the existing enum rather than proposing another.
 
+### 8. Both identities are kept, and disagreement is configured
+
+Specified in ADR-0019 clauses 6 and 7. Recorded here only because it changes disposition:
+`onMisalignment = "quarantine"` sends the Message to the Xmip DMQ carrying both identities
+and the alignment result, which is a fifth route into the DMQ that clause 4 did not
+anticipate. `onMisalignment = "reject"` refuses at message authorization, and the Message is
+stored under retention policy exactly as clause 3 stores a Validation failure.
+
 ## What this adds
 
 `message-disposition.md` says Reject means Xmip does not take ownership and no Xmip Message is
@@ -171,6 +188,7 @@ deliberately asymmetric with identity — authorized sender, keep; unauthorized,
   people. `Failed` covers both.
 - **Ordering.** Whether Journeys from one Publication may run concurrently. Independence
   suggests yes; an ordered Send Port would need otherwise.
+- ~~Which identity is authoritative when both exist and disagree.~~ **Answered in ADR-0019 clause 7.**
 
 ## Provenance
 

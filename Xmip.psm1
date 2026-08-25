@@ -6,8 +6,9 @@
 
 .DESCRIPTION
     Shared by Xmip-Estate.ps1 and Xmip-Git.ps1. Both need to know what the
-    estate is, and two copies of that knowledge would drift the way
-    architecture.toml and architecture.json already have.
+    estate is, and two copies of that knowledge drift — which is exactly what
+    architecture.toml and architecture.json did before the JSON one was
+    deleted.
 
     The tree is the data. xmip.core.transport.ftp is xmip-core-transport-ftp:
     dots become hyphens and nothing else happens.
@@ -17,6 +18,13 @@
 # so the reader has to own the number; a copy inside Xmip-Estate's body was
 # invisible from here and the check silently had nothing to compare against.
 $script:XmipVersion = [version]'1.6.0'
+
+# The manifest schema this module understands. Major is the compatibility
+# boundary: 2.x is the tree-is-the-name schema, and a 3.0 manifest will mean
+# something this reader does not know. Refusing it is the whole point of the
+# field — declaring a version nothing checks is worse than declaring none,
+# because it looks like a guarantee.
+$script:XmipSchemaMajor = 2
 
 Set-StrictMode -Version 3.0
 
@@ -33,135 +41,6 @@ function Get-PropertyValue {
 function ConvertTo-Array($Value) {
     if ($null -eq $Value) { return @() }
     return @($Value)
-}
-
-function Convert-CommonRepository($Item, $Defaults) {
-    if ($Item -is [System.Array]) {
-        return [pscustomobject]@{
-            name = [string]$Item[0]
-            description = [string]$Item[1]
-            architecturalDomain = [string]$Item[2]
-            repositoryRole = [string]$Item[3]
-            maturity = [string](Get-PropertyValue $Defaults 'maturity' 'reserved')
-            dependencies = @($Item[4])
-        }
-    }
-    return [pscustomobject]@{
-        name = [string](Get-PropertyValue $Item 'name')
-        description = [string](Get-PropertyValue $Item 'description')
-        architecturalDomain = [string](Get-PropertyValue $Item 'architecturalDomain')
-        repositoryRole = [string](Get-PropertyValue $Item 'repositoryRole')
-        maturity = [string](Get-PropertyValue $Item 'maturity' (Get-PropertyValue $Defaults 'maturity' 'reserved'))
-        dependencies = @(Get-PropertyValue $Item 'dependencies' @())
-    }
-}
-
-function Convert-TechnologyGroup($Group) {
-    if ($Group -is [System.Array]) {
-        return [pscustomobject]@{
-            parent = [string]$Group[0]
-            dependencies = @($Group[1])
-            technologies = @($Group[2])
-        }
-    }
-    return [pscustomobject]@{
-        parent = [string](Get-PropertyValue $Group 'parent')
-        dependencies = @(Get-PropertyValue $Group 'dependencies' @())
-        technologies = @(Get-PropertyValue $Group 'technologies' @())
-    }
-}
-
-function Expand-XmipManifest($Source) {
-    $existing = @(Get-PropertyValue $Source 'repositories' @())
-    if ($existing.Count -gt 0) { return $Source }
-
-    $defaults = Get-PropertyValue $Source 'defaults' ([pscustomobject]@{})
-    $cratePolicy = Get-PropertyValue $Source 'cratePolicy' ([pscustomobject]@{})
-    $repositories = [Collections.Generic.List[object]]::new()
-
-    foreach ($raw in @(Get-PropertyValue $Source 'commonRepositories' @())) {
-        $item = Convert-CommonRepository $raw $defaults
-        $domain = [string]$item.architecturalDomain
-        $repositories.Add([pscustomobject]@{
-            name = $item.name
-            description = $item.description
-            architecturalDomain = $domain
-            repositoryRole = $item.repositoryRole
-            maturity = $item.maturity
-            dependencies = @($item.dependencies)
-            primaryCrate = [pscustomobject]@{
-                name = $item.name
-                language = [string](Get-PropertyValue $cratePolicy 'language' 'rust')
-                edition = [string](Get-PropertyValue $cratePolicy 'edition' '2024')
-                license = [string](Get-PropertyValue $cratePolicy 'license' (Get-PropertyValue $defaults 'license' 'NOASSERTION'))
-            }
-            github = [pscustomobject]@{
-                visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
-                autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
-                hasIssues = [bool](Get-PropertyValue $defaults 'hasIssues' $true)
-                hasProjects = [bool](Get-PropertyValue $defaults 'hasProjects' $false)
-                hasWiki = [bool](Get-PropertyValue $defaults 'hasWiki' $false)
-                topics = @('xmip', $domain.ToLowerInvariant())
-            }
-            submodule = [pscustomobject]@{ enabled = $false }
-        })
-    }
-
-    foreach ($rawGroup in @(Get-PropertyValue $Source 'technologyGroups' @())) {
-        $group = Convert-TechnologyGroup $rawGroup
-        $capability = $group.parent -replace '^xmip-',''
-        foreach ($rawTechnology in @($group.technologies)) {
-            $technology = if ($rawTechnology -is [string]) {
-                [pscustomobject]@{ name = $rawTechnology }
-            }
-            else {
-                $rawTechnology
-            }
-            $technologyName = [string](Get-PropertyValue $technology 'name')
-            $repositoryName = "$($group.parent)-$technologyName"
-            $technologyDependencies = @($group.dependencies) + @(Get-PropertyValue $technology 'dependencies' @())
-            $technologyDependencies = @(
-                $technologyDependencies |
-                    ForEach-Object { [string]$_ } |
-                    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-                    Select-Object -Unique
-            )
-            $repositories.Add([pscustomobject]@{
-                name = $repositoryName
-                description = [string](Get-PropertyValue $technology 'description' "$technologyName implementation of $($group.parent).")
-                architecturalDomain = 'Technology'
-                repositoryRole = 'technology-implementation'
-                maturity = [string](Get-PropertyValue $technology 'maturity' (Get-PropertyValue $defaults 'maturity' 'reserved'))
-                capability = $capability
-                technology = $technologyName
-                parent = $group.parent
-                dependencies = @($technologyDependencies)
-                primaryCrate = [pscustomobject]@{
-                    name = [string](Get-PropertyValue $technology 'crateName' $repositoryName)
-                    language = [string](Get-PropertyValue $cratePolicy 'language' 'rust')
-                    edition = [string](Get-PropertyValue $technology 'crateEdition' (Get-PropertyValue $cratePolicy 'edition' '2024'))
-                    license = [string](Get-PropertyValue $cratePolicy 'license' (Get-PropertyValue $defaults 'license' 'NOASSERTION'))
-                }
-                github = [pscustomobject]@{
-                    visibility = [string](Get-PropertyValue $defaults 'visibility' 'public')
-                    autoInitialize = [bool](Get-PropertyValue $defaults 'autoInitialize' $true)
-                    hasIssues = [bool](Get-PropertyValue $defaults 'hasIssues' $true)
-                    hasProjects = [bool](Get-PropertyValue $defaults 'hasProjects' $false)
-                    hasWiki = [bool](Get-PropertyValue $defaults 'hasWiki' $false)
-                    topics = @('xmip','technology',$capability,$technologyName)
-                }
-                submodule = [pscustomobject]@{
-                    enabled = $true
-                    parentRepository = $group.parent
-                    path = [string](Get-PropertyValue $technology 'submodulePath' "modules/$technologyName")
-                    revision = Get-PropertyValue $technology 'revision'
-                }
-            })
-        }
-    }
-
-    $Source | Add-Member -NotePropertyName repositories -NotePropertyValue @($repositories.ToArray()) -Force
-    return $Source
 }
 
 function Get-TomlKey($Node) {
@@ -336,26 +215,43 @@ function Get-XmipManifest([string] $Path) {
         throw "Manifest not found: $Path"
     }
 
-    $isToml = [IO.Path]::GetExtension($Path) -ieq '.toml'
-
-    if ($isToml) {
-        if (-not (Get-Module -ListAvailable -Name PSToml)) {
-            throw 'Reading a TOML manifest needs PSToml. Run Install-XmipPrerequisite.ps1 -Role developer, or Install-Module PSToml -Scope CurrentUser.'
-        }
-        Import-Module PSToml -ErrorAction Stop
-        $source = Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Toml
+    # TOML only. architecture.json was schema 1 and is deleted; keeping a
+    # fallback would keep a second reader alive for a file that no longer
+    # exists, which is how the two drifted in the first place.
+    if ([IO.Path]::GetExtension($Path) -ine '.toml') {
+        throw "The manifest must be TOML: $Path"
     }
-    else {
-        $source = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -Depth 100
+    if (-not (Get-Module -ListAvailable -Name PSToml)) {
+        throw 'Reading a TOML manifest needs PSToml. Run Install-XmipPrerequisite.ps1 -Role developer, or Install-Module PSToml -Scope CurrentUser.'
     }
+    Import-Module PSToml -ErrorAction Stop
+    $source = Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Toml
 
+    # Two gates, and they fail in opposite directions.
+    #
+    # minimumScriptVersion: the manifest needs a newer reader than this one.
+    # schemaVersion:        the manifest is shaped in a way this reader does
+    #                       not understand.
+    #
+    # A newer minor schema is accepted deliberately: 2.1 may add keys, and a
+    # reader that ignores keys it does not know still reads the estate
+    # correctly. A newer major is refused, because it may have moved something
+    # this reader would then silently misread.
     $minimumScriptVersion = Get-TomlValue $source 'minimumScriptVersion' $null
     if ($minimumScriptVersion -and $script:XmipVersion -lt [version]$minimumScriptVersion) {
         throw "Manifest requires script version $minimumScriptVersion; current version is $script:XmipVersion."
     }
 
-    if ($isToml) { return Expand-XmipManifestFromTree $source }
-    return Expand-XmipManifest $source
+    $schemaVersion = [string](Get-TomlValue $source 'schemaVersion' '')
+    if (-not $schemaVersion) {
+        throw "The manifest declares no schemaVersion: $Path"
+    }
+    $schemaMajor = [int](($schemaVersion -split '\.')[0])
+    if ($schemaMajor -ne $script:XmipSchemaMajor) {
+        throw "The manifest is schema $schemaVersion; this module reads schema $($script:XmipSchemaMajor).x. $(if ($schemaMajor -gt $script:XmipSchemaMajor) { 'Update the module.' } else { 'The manifest predates the tree schema and must be migrated.' })"
+    }
+
+    return Expand-XmipManifestFromTree $source
 }
 
 function Test-XmipManifest($Manifest) {
