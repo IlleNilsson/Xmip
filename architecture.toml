@@ -7,8 +7,8 @@
 # Keys follow ADR-0011: shortest singular form.
 
 schemaVersion = "2.0.0"
-architectureVersion = "0.11.0"
-minimumScriptVersion = "1.4.0"
+architectureVersion = "0.12.0"
+minimumScriptVersion = "1.5.0"
 name = "Xmip Architecture"
 owner = "IlleNilsson"
 surface = ["abi", "cli", "gui", "powershell"]
@@ -53,7 +53,7 @@ rule = ["Foundation repositories must not depend on Technology repositories.", "
 
 [handler]
 separationRequired = true
-rules = ["Receive and Send own orchestration, ports, groups and locations; they do not own technology implementation repositories.", "Transport implementation repositories are direction-neutral and declare whether they support receive, send or both.", "Transport handlers must not own message serialization semantics.", "Content handlers must be reusable across compatible transports.", "Content deserialization occurs only when an artifact action requires structured content.", "Pass-through processing must avoid unnecessary deserialization and serialization.", "Logic handlers define method or operation semantics for method-oriented protocols.", "Credential and identity presentation is a security responsibility, not a transport technology.", "Handler is a runtime module role and is not a repository-name prefix."]
+rules = ["Receive and Send own orchestration, ports, groups and locations; they do not own technology implementation repositories.", "Transport implementation repositories are direction-neutral and declare whether they support receive, send or both.", "Transport handlers must not own message serialization semantics.", "Content handlers must be reusable across compatible transports.", "Content deserialization occurs only when an artifact action requires structured content.", "Pass-through processing must avoid unnecessary deserialization and serialization.", "Logic handlers define method or operation semantics for method-oriented protocols.", "Credential and identity presentation is a security responsibility, not a transport technology.", "Handler is a runtime module role and is not a repository-name prefix.", "Transport implementation repositories declare whether they are exclusive by default: those addressing a discrete claimable artefact are, those addressing a query, queue or connection are not, and either can be overridden by configuration."]
 
 [handler.repositoryModel]
 transport = "xmip-<provider>-transport-<standard>"
@@ -539,17 +539,17 @@ dependency = ["xmip-core"]
 [provider.core.module.resilience.implementation.timeout]
 
 [provider.core.module.exclusiveness]
-description = "Scoped exclusiveness and locking capability."
+description = "Scoped exclusiveness for Receive Locations, Processes and Send Locations: one holder of a collidable resource at a time, released by lease expiry when a holder dies."
 domain = "Platform"
 role = "platform-service"
-dependency = ["xmip-core"]
-[provider.core.module.exclusiveness.implementation.consul]
-[provider.core.module.exclusiveness.implementation.database]
-[provider.core.module.exclusiveness.implementation.etcd]
-[provider.core.module.exclusiveness.implementation.file-lock]
-[provider.core.module.exclusiveness.implementation.local]
-[provider.core.module.exclusiveness.implementation.redis]
-[provider.core.module.exclusiveness.implementation.zookeeper]
+maturity = "planned"
+dependency = ["xmip-core", "xmip-core-persist"]
+# No implementation repositories. Exclusiveness is an internal Xmip concern
+# and has nothing to do with protocols. Process scope is served by the
+# in-memory store inside the module; Cluster scope is a lease in
+# xmip-core-persist, which Xmip already requires. Consul, etcd, redis,
+# zookeeper and file locks were five external coordinators nobody asked for.
+# ADR-0017.
 
 [provider.core.module.migrate]
 description = "Reads a source platform's configuration and produces Xmip artifacts, with a report of what has no equivalent."
