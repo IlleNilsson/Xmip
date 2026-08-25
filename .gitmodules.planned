@@ -1,7 +1,0 @@
-# Superseded Xmip submodule plan.
-#
-# Technology repositories are declared in xmip-architecture.json and are added as
-# pinned submodules of their owning capability repository by Set-XmipArchitecture.ps1.
-#
-# This file intentionally contains no handler entries. The former xmip-handler-*
-# plan conflicted with the direction-neutral xmip-transport-* architecture.
