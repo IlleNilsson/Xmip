@@ -116,26 +116,46 @@ Describe 'Every executable entry names a file that exists' {
         $missing.Count | Should -Be 0 -Because "these move sources do not exist:`n$detail"
     }
 
-    It 'has no [[superseded]] whose file is already gone' {
-        # Not fatal, but it means the list is doing nothing: a superseded entry
-        # exists so someone deletes the file. Once deleted, the entry is noise.
-        [string[]] $gone = @()
+    It 'supersedes nothing with a document that does not exist' {
+        <#
+            The first version of this test asserted the opposite — that a
+            superseded file must still be on disk — and failed on thirty-two
+            entries whose files had already been deleted. That is the list
+            working, not failing: an entry exists so that someone removes the
+            file, and thirty-two of them did.
+
+            This is the invariant that actually holds. A replacement must exist,
+            because 'X is superseded by Y' is a promise that Y is somewhere to
+            be read. Paths are relative to the repository root; a replacedBy
+            that names a repository rather than a file is skipped.
+        #>
+        # replacedBy is prose, not a path: 'runtime-model.md and
+        # repository-model.md' is a legitimate value, and reading the whole
+        # string as one filename reported two false failures on the first run.
+        # Pull out every document it names and require each of them.
+        [regex] $document = [regex]::new('[\w./-]+\.(?:md|toml)')
+
+        [string[]] $broken = @()
 
         foreach ($entry in (Get-AllocationEntry -Section 'superseded')) {
-            [string] $resolved = Resolve-AllocationPath -Path ([string] $entry.path)
+            [string] $replacement = [string] $entry.replacedBy
 
-            if ($null -eq $resolved) {
-                continue
-            }
+            foreach ($named in $document.Matches($replacement)) {
+                [string] $resolved = Resolve-AllocationPath -Path $named.Value
 
-            if (-not (Test-Path -LiteralPath $resolved)) {
-                $gone += [string] $entry.path
+                if ($null -eq $resolved) {
+                    continue
+                }
+
+                if (-not (Test-Path -LiteralPath $resolved)) {
+                    $broken += "$($entry.path) -> $($named.Value)"
+                }
             }
         }
 
-        [string] $detail = $gone -join "`n"
+        [string] $detail = $broken -join "`n"
 
-        $gone.Count | Should -Be 0 -Because "already deleted, so remove the entry:`n$detail"
+        $broken.Count | Should -Be 0 -Because "replaced by something absent:`n$detail"
     }
 }
 

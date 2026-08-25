@@ -183,7 +183,7 @@ One document per subject, and no versions in filenames —
 | [`architecture/deployment-model.md`](docs/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
 | [`architecture/observability-model.md`](docs/architecture/observability-model.md) | audit, logs, traces, retention, observation |
 | [`architecture/identity-by-technology.md`](docs/architecture/identity-by-technology.md) | where identity lives, per protocol, against the standards |
-| [`docs/decisions/`](docs/decisions) | every architectural decision and why |
+| [`docs/decisions/`](docs/decisions) | **every decision, read as one document** — by subject, not by number |
 
 Two documents in `docs/architecture/` are in transit and are listed so the
 tests can tell the difference between "in transit" and "forgotten":

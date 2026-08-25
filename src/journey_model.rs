@@ -9,6 +9,15 @@ pub struct Journey {
     pub messages: Vec<JourneyMessageRef>,
 }
 
+/// The operational state of a Journey.
+///
+/// Three of these are terminal — `Completed`, `Failed` and `Dismissed` — and
+/// the distinction between the last two is the whole reason `Dismissed`
+/// exists. A Journey that failed hit something it could not get past. A
+/// Journey that was dismissed was stopped by an operator who decided it should
+/// not continue. Collapsing them means the operator's decision is
+/// indistinguishable from the fault it was responding to, and every count of
+/// failures is inflated by every deliberate intervention.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum JourneyState {
@@ -18,6 +27,34 @@ pub enum JourneyState {
     Recovering,
     Completed,
     Failed,
+    /// Terminated by an operator through the Dismiss command. Terminal, and
+    /// deliberately not a kind of `Failed`. See ADR-0013.
+    Dismissed,
+}
+
+impl JourneyState {
+    /// Whether the Journey has stopped for good.
+    ///
+    /// `Suspended` is not terminal: an operator suspended it and an operator
+    /// can resume it. `Recovering` is not terminal either — a Retry is in
+    /// flight.
+    #[must_use]
+    pub fn is_terminal(&self) -> bool {
+        matches!(
+            self,
+            JourneyState::Completed | JourneyState::Failed | JourneyState::Dismissed
+        )
+    }
+
+    /// Whether the Journey stopped without completing its work.
+    ///
+    /// Both `Failed` and `Dismissed` answer yes, which is what most reporting
+    /// wants. Use the variant itself when the difference between a fault and a
+    /// decision matters, because that difference is why they are separate.
+    #[must_use]
+    pub fn is_incomplete(&self) -> bool {
+        matches!(self, JourneyState::Failed | JourneyState::Dismissed)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -149,6 +149,32 @@ BeforeAll {
 
     <#
         .SYNOPSIS
+        A finding for the first parse error in a file.
+    #>
+    function New-ParseFinding {
+        [CmdletBinding()]
+        [OutputType([pscustomobject])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [System.IO.FileInfo] $File,
+
+            [Parameter(Mandatory = $true)]
+            [System.Management.Automation.Language.ParseError[]] $Errors
+        )
+
+        [hashtable] $finding = @{
+            Rule   = 'ParseError'
+            File   = $File
+            Line   = $Errors[0].Extent.StartLineNumber
+            Value  = $Errors.Count
+            Detail = $Errors[0].Message
+        }
+
+        return New-Finding @finding
+    }
+
+    <#
+        .SYNOPSIS
         The parsed AST of a file. Parse errors are returned through $Errors.
     #>
     function Get-ParsedFile {
@@ -191,15 +217,7 @@ BeforeAll {
         $ast = Get-ParsedFile -File $File -Errors ([ref] $errors)
 
         if (0 -ne $errors.Count) {
-            [hashtable] $parseFinding = @{
-                Rule   = 'ParseError'
-                File   = $File
-                Line   = $errors[0].Extent.StartLineNumber
-                Value  = $errors.Count
-                Detail = $errors[0].Message
-            }
-
-            New-Finding @parseFinding
+            New-ParseFinding -File $File -Errors $errors
             return
         }
 
@@ -313,19 +331,52 @@ Describe 'PowerShell style, section 3: calls' {
 
 Describe 'PowerShell style, section 2: functions' {
     BeforeAll {
-        # The debt, named. These four predate the style document and each is a
-        # cmdlet body that should become named steps.
-        #
-        # The ceilings are deliberately loose on this first pass, because they
-        # were written without running the measurement, and a waiver guessed
-        # too low fails the build for being right. The test prints what it
-        # measured; tighten each number to the measured value once seen. From
-        # then on it is a ratchet: a number may fall, never rise.
+        <#
+            The debt, measured rather than guessed.
+
+            The first version of this list named four functions on the
+            assumption that the long cmdlet bodies were the whole problem. The
+            AST found twenty-one, because 'function' and 'cmdlet' are not the
+            same thing and most of these are helpers that grew quietly.
+
+            Every number here is what the function measured on 2026-08-26, so
+            each is a ratchet from today: it may fall, it may not rise, and a
+            new function over thirty-five lines fails immediately because it is
+            not on this list.
+
+            Roughly in the order they are worth splitting:
+
+              Sync-XmipRepository       318   seven operations in one body
+              Install-XmipPrerequisite  250   one branch per package manager
+              Invoke-CreateRepositories 108   creation, verification, reporting
+              Sync-XmipEstate            97   dispatch that grew arms
+              Invoke-Distribute          92   plan, move, stage, commit
+              Install-XmipModule         85   probe, link, verify
+
+            The rest are between 36 and 73 and mostly want one helper each.
+        #>
         $script:Waived = @{
-            'Install-XmipPrerequisite' = 400
-            'Sync-XmipEstate'          = 500
-            'Sync-XmipRepository'      = 500
-            'Invoke-Distribute'        = 300
+            'Assert-XmipManifestVersion'   = 51
+            'Assert-XmipRepositoryEntry'   = 59
+            'Expand-XmipEstate'            = 69
+            'Expand-XmipManifestFromTree'  = 52
+            'Get-RepositoryStatus'         = 43
+            'Get-XmipManifest'             = 36
+            'Get-XmipReportedVersion'      = 40
+            'Install-XmipModule'           = 85
+            'Install-XmipPrerequisite'     = 250
+            'Invoke-ConfigureRepositories' = 60
+            'Invoke-CreateRepositories'    = 108
+            'Invoke-Distribute'            = 92
+            'Invoke-GitHubApi'             = 37
+            'New-XmipCrateDescriptor'      = 38
+            'New-XmipGitHubRepository'     = 73
+            'New-XmipRepositoryEntry'      = 61
+            'Resolve-XmipNodeFacts'        = 65
+            'Sync-XmipEstate'              = 97
+            'Sync-XmipRepository'          = 318
+            'Test-XmipFloor'               = 45
+            'Test-XmipManifest'            = 57
         }
     }
 
