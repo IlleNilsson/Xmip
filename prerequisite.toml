@@ -1,6 +1,6 @@
 # Prerequisites for a machine that runs or builds Xmip.
 #
-# This file decides; Xmip-Prerequisite applies it.
+# This file decides; Install-XmipPrerequisite applies it.
 #
 # ADR-0021: current platforms only. Every entry tracks the current stable
 # release rather than pinning a version, which is why these declare a channel
@@ -42,7 +42,7 @@ note = """
 The one prerequisite Xmip cannot install for you, because the tooling is
 written in it. Every entry point declares #requires -PSEdition Core and
 -Version 7.6, so a machine below the floor is refused by PowerShell itself,
-by name and version. If Xmip-Prerequisite is running at all, this is already
+by name and version. If Install-XmipPrerequisite is running at all, this is already
 satisfied, so it is reported rather than installed.
 
 Windows PowerShell 5.1 and PowerShell 6 are not supported. ADR-0021.

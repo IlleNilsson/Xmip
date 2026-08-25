@@ -80,7 +80,7 @@ the compatibility documentation.
 
 **PowerShell is the one prerequisite Xmip cannot install for you**, because the
 tooling is written in it. Everything else — git, Rust, the linker, PSToml,
-Pester, .NET — `Xmip-Prerequisite` reports and can install.
+Pester, .NET — `Install-XmipPrerequisite` reports and can install.
 
 **A newer major version is refused, not guessed at.** `Get-XmipManifest` accepts
 schema 2.x and refuses 3.0, because a major bump may have moved something the

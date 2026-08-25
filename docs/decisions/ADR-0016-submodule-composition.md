@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-25
-- Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Xmip-Estate.ps1`
+- Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
 
 ## Context
@@ -53,9 +53,9 @@ TOML tree exactly, so a reader who knows one knows the other. The submodule
 
 **3. Composition is gated by existence, not by maturity.**
 
-`maturity` decides whether `Xmip-Estate` creates a repository. It has
+`maturity` decides whether `Sync-XmipEstate` creates a repository. It has
 nothing to say about pinning: you cannot pin what does not exist, and anything
-that does exist is worth pinning. `Xmip-Git -Submodule` reports the absent
+that does exist is worth pinning. `Sync-XmipRepository -Submodule` reports the absent
 ones and carries on.
 
 **4. How Cargo sees `modules/` is UNRESOLVED and blocks the rest.**
@@ -120,9 +120,9 @@ should be marked superseded rather than deleted.
 - A fresh `git clone` of `Xmip` gets source and manifest and no submodules.
   `git submodule update --init` is an explicit act, and `--recursive` reaches
   the implementations.
-- Composition belongs to `Xmip-Git`, not to a script of its own.
+- Composition belongs to `Sync-XmipRepository`, not to a script of its own.
   `Invoke-SynchronizeSubmodules` and its schema-1 `repositories[]` reader are
-  out of `Xmip-Estate`. The intermediate `Sync-XmipSubmodule.ps1` existed for
+  out of `Sync-XmipEstate`. The intermediate `Sync-XmipSubmodule.ps1` existed for
   one day and was deleted on 2026-08-25: the command that clones, pulls and
   branches the estate is already the command that should mount it, and a
   second script reading the same manifest is a second thing to keep in step.
