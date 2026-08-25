@@ -10,7 +10,7 @@ The current architecture baseline is:
 
 - [`docs/Xmip-Architecture-Specification-v1.2.md`](docs/Xmip-Architecture-Specification-v1.2.md)
 - [`architecture.toml`](architecture.toml)
-- [`Set-XmipArchitecture.ps1`](Set-XmipArchitecture.ps1)
+- [`Xmip-Estate.ps1`](Xmip-Estate.ps1)
 
 Architecture changes must update the specification and manifest together.
 
@@ -106,13 +106,13 @@ Each repository has one primary Rust crate with the same lowercase hyphenated na
 Plan mode is read-only:
 
 ```powershell
-./Set-XmipArchitecture.ps1 -IncludeReserved
+./Xmip-Estate.ps1 -IncludeReserved
 ```
 
 Apply the desired state explicitly:
 
 ```powershell
-./Set-XmipArchitecture.ps1 `
+./Xmip-Estate.ps1 `
   -IncludeReserved `
   -Apply `
   -CreateRepositories `

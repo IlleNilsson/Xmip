@@ -25,7 +25,7 @@ function Test-XmipManifestCompatibility {
     if ($Manifest.minimumScriptVersion) {
         $minimumScriptVersion = [version]$Manifest.minimumScriptVersion
         if ($script:ScriptVersion -lt $minimumScriptVersion) {
-            throw "Manifest requires Set-XmipArchitecture.ps1 $minimumScriptVersion or newer. Current script version: $script:ScriptVersion."
+            throw "Manifest requires Xmip-Estate.ps1 $minimumScriptVersion or newer. Current script version: $script:ScriptVersion."
         }
     }
 

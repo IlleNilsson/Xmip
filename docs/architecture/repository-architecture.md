@@ -2,7 +2,7 @@
 
 `architecture.toml` is the authoritative desired state for Xmip repositories and their future Git submodule relationships.
 
-`Set-XmipArchitecture.ps1` reconciles GitHub and local parent repositories with that manifest. It is intended to be run repeatedly and remain idempotent.
+`Xmip-Estate.ps1` reconciles GitHub and local parent repositories with that manifest. It is intended to be run repeatedly and remain idempotent.
 
 ## Classification
 
@@ -59,7 +59,7 @@ Deprecated and retired repositories are reported on every run. They are excluded
 ## Plan mode
 
 ```powershell
-./Set-XmipArchitecture.ps1 `
+./Xmip-Estate.ps1 `
   -ManifestPath ./architecture.json `
   -IncludeReserved
 ```
@@ -67,7 +67,7 @@ Deprecated and retired repositories are reported on every run. They are excluded
 ## Apply desired state
 
 ```powershell
-./Set-XmipArchitecture.ps1 `
+./Xmip-Estate.ps1 `
   -ManifestPath ./architecture.json `
   -IncludeReserved `
   -Apply `

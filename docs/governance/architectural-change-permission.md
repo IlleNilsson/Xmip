@@ -18,7 +18,7 @@ Corrections that restore conformance to an already approved decision do not requ
 
 ## Locked application to the architecture reconciler
 
-`Set-XmipArchitecture.ps1` uses the GitHub REST API directly for remote repository discovery, creation, and configuration.
+`Xmip-Estate.ps1` uses the GitHub REST API directly for remote repository discovery, creation, and configuration.
 
 It must not depend on GitHub CLI (`gh` or `gh.exe`).
 

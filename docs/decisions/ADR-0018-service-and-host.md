@@ -119,6 +119,25 @@ list of forty Modules nobody will read.
 the host.** `xmip-host --host orders`. Otherwise `ps` and Task Manager show
 identical entries and the BizTalk complaint returns intact.
 
+**10a. Latency is bought with isolation, and the currency is process hops.** A
+Journey whose receive, process and send all run in one Host Service crosses no
+process boundary. Split across three Host Services it pays serialisation, a
+copy and a context switch at every hop, and it is no longer low latency
+whatever anybody labels it.
+
+So there is no `low_latency` flag on a Host Service and no `low_latency_capable`
+on a Module. Neither was ever a property of the thing it was attached to. What
+exists instead is the role combination already in
+`runtime-roles-and-isolation.md`: a host configured as Reader, Executor *and*
+Writer runs a whole Journey without a hop, and a host configured as Reader only
+cannot.
+
+The trade is real and belongs to the operator, not to a boolean. One Host
+Service doing everything is the fastest and shares a process between an
+untrusted transport and the routing it feeds. Three Host Services isolate that
+and cost three hops. Which is right depends on the workload, which is why
+BizTalk separated hosts by workload in the first place.
+
 **11. Supervision is `xmip-core-resilience`, by configuration.** Restarting a
 dead Host Service is retry with backoff. Giving up and reporting the node
 degraded is a circuit breaker. Waiting for drain is a timeout. Not restarting

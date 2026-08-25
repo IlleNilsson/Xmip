@@ -22,7 +22,6 @@ pub enum ModuleKind {
 pub struct ModuleCapability {
     pub capability: String,
     pub execution_host: ExecutionHostKind,
-    pub low_latency_capable: bool,
     pub trusted_required: bool,
 }
 

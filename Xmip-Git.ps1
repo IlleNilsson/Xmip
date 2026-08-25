@@ -1,7 +1,7 @@
 #requires -PSEdition Core
-#requires -Version 7.6.3
+#requires -Version 7.6
 
-$script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'architecture.json'
+$script:XmipGitDefaultManifestPath = Join-Path $PSScriptRoot 'architecture.toml'
 
 function Xmip-Git {
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Clone')]
@@ -83,36 +83,23 @@ function Xmip-Git {
 
     function Get-RepositoryNames {
         param([Parameter(Mandatory)] $Manifest, [switch] $ModulesOnly)
-        $names = [Collections.Generic.List[string]]::new()
-        $explicit = @(Get-PropertyValue $Manifest 'repositories' @())
 
-        if ($explicit.Count -gt 0) {
-            foreach ($repository in $explicit) {
-                $name = [string](Get-PropertyValue $repository 'name')
-                if ($name) { $names.Add($name) }
-            }
-        }
-        else {
-            foreach ($repository in @(Get-PropertyValue $Manifest 'commonRepositories' @())) {
-                $name = if ($repository -is [System.Array]) { [string]$repository[0] } else { [string](Get-PropertyValue $repository 'name') }
-                if ($name) { $names.Add($name) }
-            }
-
-            # ModulesOnly stops at the modules themselves. The technology groups
-            # expand to the implementations, most of which are declared and not
-            # yet created, so cloning them is a long walk for a lot of ABSENT.
-            $technologyGroups = if ($ModulesOnly) { @() } else { @(Get-PropertyValue $Manifest 'technologyGroups' @()) }
-            foreach ($group in $technologyGroups) {
-                $parent = if ($group -is [System.Array]) { [string]$group[0] } else { [string](Get-PropertyValue $group 'parent') }
-                $technologies = if ($group -is [System.Array]) { @($group[2]) } else { @(Get-PropertyValue $group 'technologies' @()) }
-                foreach ($technology in $technologies) {
-                    $technologyName = if ($technology -is [string]) { $technology } else { [string](Get-PropertyValue $technology 'name') }
-                    if ($parent -and $technologyName) { $names.Add("$parent-$technologyName") }
-                }
-            }
+        # The manifest is one flat list now: Expand-XmipEstate has already
+        # walked the tree. Role is what separates a module from one of its
+        # technology implementations, and -ModulesOnly stops at the modules,
+        # because the implementations are mostly declared and not yet created
+        # and cloning them is a long walk for a lot of ABSENT.
+        $repositories = @(Get-PropertyValue $Manifest 'repositories' @())
+        if ($ModulesOnly) {
+            $repositories = @($repositories | Where-Object {
+                    [string](Get-PropertyValue $_ 'repositoryRole') -ne 'technology-implementation'
+                })
         }
 
-        @($names | Sort-Object -Unique)
+        @($repositories |
+                ForEach-Object { [string](Get-PropertyValue $_ 'name') } |
+                Where-Object { $_ } |
+                Sort-Object -Unique)
     }
 
     function Get-RepositoryStatus {
@@ -151,7 +138,7 @@ function Xmip-Git {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "Required command 'git' was not found." }
     if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) { throw "Manifest not found: $ManifestPath" }
 
-    $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json -Depth 100
+    $manifest = Get-XmipManifest $ManifestPath
     $owner = [string](Get-PropertyValue $manifest 'owner')
     if (-not $owner) { throw 'Manifest owner is missing.' }
 

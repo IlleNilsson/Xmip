@@ -1,14 +1,16 @@
 use xmip_module_api::ModuleManifest;
-use xmip_runtime::{HostBitness, HostProcessPlan};
+use xmip_runtime::{HostBitness, HostServicePlan};
 
+/// The registered, supervised thing. The System Process it runs as is the
+/// Host Process; this is the service. ADR-0018.
 #[derive(Clone, Debug)]
-pub struct HostProcess {
-    pub plan: HostProcessPlan,
-    pub state: HostProcessState,
+pub struct HostService {
+    pub plan: HostServicePlan,
+    pub state: HostServiceState,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum HostProcessState {
+pub enum HostServiceState {
     Planned,
     Starting,
     Running,
@@ -16,28 +18,27 @@ pub enum HostProcessState {
     Failed(String),
 }
 
-impl HostProcess {
-    pub fn from_manifest(manifest: ModuleManifest, trusted: bool, low_latency: bool) -> Self {
+impl HostService {
+    pub fn from_manifest(manifest: ModuleManifest, trusted: bool) -> Self {
         Self {
-            plan: HostProcessPlan {
+            plan: HostServicePlan {
                 host_type: format!("{}-host", manifest.identity.name),
                 trusted,
                 bitness: HostBitness::Native,
-                low_latency,
                 modules: vec![manifest],
                 verified_extensions: Vec::new(),
             },
-            state: HostProcessState::Planned,
+            state: HostServiceState::Planned,
         }
     }
 
     pub fn start(&mut self) {
-        self.state = HostProcessState::Starting;
-        self.state = HostProcessState::Running;
+        self.state = HostServiceState::Starting;
+        self.state = HostServiceState::Running;
     }
 
     pub fn stop(&mut self) {
-        self.state = HostProcessState::Stopped;
+        self.state = HostServiceState::Stopped;
     }
 }
 
