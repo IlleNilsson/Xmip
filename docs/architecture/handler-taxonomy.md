@@ -24,7 +24,7 @@ The prefix `xmip-handler-` is retired for repositories.
 
 Transport implementations are direction-neutral. Each implementation declares receive, send or bidirectional support.
 
-The authoritative transport list is in `xmip-architecture.json`. The initial implementation wave is:
+The authoritative transport list is in `architecture.toml`. The initial implementation wave is:
 
 ```text
 xmip-transport-file

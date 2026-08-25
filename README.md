@@ -2,14 +2,14 @@
 
 Xmip is a cross-platform messaging and integration platform built around immutable Streams, immutable Messages, long-running Journeys, modular capabilities and implied Contracts.
 
-This repository is the integration and architecture repository. Purpose-specific repositories are created and reconciled from [`xmip-architecture.json`](xmip-architecture.json) and referenced as Git submodules where defined.
+This repository is the integration and architecture repository. Purpose-specific repositories are created and reconciled from [`architecture.toml`](architecture.toml) and referenced as Git submodules where defined.
 
 ## Authoritative architecture
 
 The current architecture baseline is:
 
-- [`docs/Xmip-Architecture-Specification-v1.2.md`](docs/Xmip-Architecture-Specification-v1.1.md)
-- [`xmip-architecture.json`](xmip-architecture.json)
+- [`docs/Xmip-Architecture-Specification-v1.2.md`](docs/Xmip-Architecture-Specification-v1.2.md)
+- [`architecture.toml`](architecture.toml)
 - [`Set-XmipArchitecture.ps1`](Set-XmipArchitecture.ps1)
 
 Architecture changes must update the specification and manifest together.

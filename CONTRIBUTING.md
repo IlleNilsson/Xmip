@@ -16,7 +16,7 @@ A contribution must first identify:
 - compatibility and migration implications;
 - the verification approach.
 
-Repository placement is governed by [`xmip-architecture.json`](xmip-architecture.json). New repositories, dependencies and technology implementations must fit the classification and dependency rules in that manifest.
+Repository placement is governed by [`architecture.toml`](architecture.toml). New repositories, dependencies and technology implementations must fit the classification and dependency rules in that manifest.
 
 ## Change scope
 

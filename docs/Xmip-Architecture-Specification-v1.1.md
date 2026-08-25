@@ -2,7 +2,7 @@
 
 Status: Architecture baseline
 
-This specification and `xmip-architecture.json` are the authoritative desired state for Xmip.
+This specification and `architecture.toml` are the authoritative desired state for Xmip.
 
 ## 1. Purpose
 
@@ -223,7 +223,7 @@ Submodule commits are pinned by the parent repository. Reconciliation must not u
 
 ## 14. Desired-state reconciliation
 
-`Set-XmipArchitecture.ps1` reconciles actual state with `xmip-architecture.json`.
+`Set-XmipArchitecture.ps1` reconciles actual state with `architecture.toml`.
 
 Plan mode is read-only. Apply mode is explicit. The script reports:
 
