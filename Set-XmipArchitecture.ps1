@@ -605,6 +605,67 @@ function New-XmipGitHubRepository {
     return Invoke-GitHubApi POST $path $body
 }
 
+function Invoke-ConfigureRepositories {
+    <#
+        Repository settings only: description, topics and the feature switches.
+        All of it is the GitHub API, so nothing is cloned and nothing is built.
+        Crate content — Cargo.toml, lib.rs — is a different job needing a
+        working tree.
+
+        Idempotent by construction. Run it whenever the manifest changes and it
+        reconciles what drifted, including repositories created before a
+        setting existed.
+    #>
+    param(
+        [Parameter(Mandatory)] $Manifest,
+        [Parameter(Mandatory)] [System.Collections.IDictionary] $Report
+    )
+
+    if (-not $GitHubToken) {
+        throw '-ConfigureRepositories requires -GitHubToken or GITHUB_TOKEN.'
+    }
+
+    $owner = [string](Get-PropertyValue $Manifest 'owner')
+    $missing = [Collections.Generic.HashSet[string]]::new(
+        [string[]]@($Report.missing), [StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
+        $name = [string](Get-PropertyValue $repository 'name')
+
+        # Nothing to configure on a repository that does not exist.
+        if ($missing.Contains($name)) { continue }
+
+        $github = Get-PropertyValue $repository 'github' ([pscustomobject]@{})
+        $topics = @(ConvertTo-Array (Get-PropertyValue $github 'topics' @()) |
+                ForEach-Object { ([string]$_).ToLowerInvariant() } |
+                Where-Object { $_ -match '^[a-z0-9][a-z0-9-]{0,49}$' } |
+                Select-Object -Unique)
+
+        $settings = [ordered]@{
+            description = [string](Get-PropertyValue $repository 'description')
+            has_issues = [bool](Get-PropertyValue $github 'hasIssues' $true)
+            has_projects = [bool](Get-PropertyValue $github 'hasProjects' $false)
+            has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
+        }
+
+        if (-not $PSCmdlet.ShouldProcess("$owner/$name", 'Configure repository')) {
+            $Report.operations.skipped++
+            continue
+        }
+
+        Write-Step "Configuring $owner/$name"
+        $null = Invoke-GitHubApi PATCH "/repos/$owner/$name" $settings
+
+        # Topics are their own endpoint and replace wholesale, which is what
+        # makes the manifest authoritative rather than additive.
+        if ($topics.Count) {
+            $null = Invoke-GitHubApi PUT "/repos/$owner/$name/topics" ([ordered]@{ names = $topics })
+        }
+
+        $Report.operations.configured++
+    }
+}
+
 function Invoke-CreateRepositories {
     param(
         [Parameter(Mandatory)] $Manifest,
@@ -715,8 +776,11 @@ if ($Apply) {
     if ($CreateRepositories) {
         Invoke-CreateRepositories -Manifest $manifest -Report $report
     }
-    if ($ConfigureRepositories -or $GenerateMetadata) {
-        throw 'Configure and metadata operations remain blocked in this stabilization build.'
+    if ($ConfigureRepositories) {
+        Invoke-ConfigureRepositories -Manifest $manifest -Report $report
+    }
+    if ($GenerateMetadata) {
+        throw 'Metadata generation remains blocked in this stabilization build.'
     }
 }
 else {
