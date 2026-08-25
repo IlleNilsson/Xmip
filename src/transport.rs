@@ -83,7 +83,12 @@ fn classify(context: &str, error: &std::io::Error) -> TransportError {
     use std::io::ErrorKind::*;
     let retryable = matches!(
         error.kind(),
-        Interrupted | WouldBlock | TimedOut | ConnectionReset | ConnectionAborted | ConnectionRefused
+        Interrupted
+            | WouldBlock
+            | TimedOut
+            | ConnectionReset
+            | ConnectionAborted
+            | ConnectionRefused
     );
     TransportError {
         message: format!("{context}: {error}"),
@@ -251,7 +256,10 @@ impl Transport for FileTransport {
 /// converted rather than printed. `char::from(92)` is a backslash, written this
 /// way to keep the escape out of the literal.
 fn file_uri(path: &std::path::Path) -> String {
-    format!("file:///{}", path.display().to_string().replace(char::from(92), "/"))
+    format!(
+        "file:///{}",
+        path.display().to_string().replace(char::from(92), "/")
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -367,8 +375,7 @@ impl Transport for UdpTransport {
     }
 
     fn receive(&self) -> Result<Vec<Arrived>> {
-        let socket =
-            UdpSocket::bind(&self.bind).map_err(|e| classify("binding the socket", &e))?;
+        let socket = UdpSocket::bind(&self.bind).map_err(|e| classify("binding the socket", &e))?;
         let mut buffer = vec![0u8; self.max_datagram];
         let (read, peer) = socket
             .recv_from(&mut buffer)
@@ -381,8 +388,8 @@ impl Transport for UdpTransport {
     }
 
     fn send(&self, target: &str, bytes: &[u8]) -> Result<()> {
-        let socket = UdpSocket::bind("0.0.0.0:0")
-            .map_err(|e| classify("binding the sending socket", &e))?;
+        let socket =
+            UdpSocket::bind("0.0.0.0:0").map_err(|e| classify("binding the sending socket", &e))?;
         socket
             .send_to(bytes, target)
             .map_err(|e| classify("sending a datagram", &e))?;
@@ -539,7 +546,12 @@ impl Transport for HttpTransport {
 ///
 /// Split out so plaintext and TLS take the same path. A protocol implemented
 /// twice is a protocol that behaves two ways.
-fn exchange<S: Read + Write>(mut stream: S, authority: &str, path: &str, bytes: &[u8]) -> Result<()> {
+fn exchange<S: Read + Write>(
+    mut stream: S,
+    authority: &str,
+    path: &str,
+    bytes: &[u8],
+) -> Result<()> {
     let request = format!(
         "POST {path} HTTP/1.1\r\n\
          Host: {authority}\r\n\
@@ -919,7 +931,10 @@ mod tests {
     #[test]
     fn file_receive_is_empty_when_the_directory_is_absent() {
         let t = FileTransport::new(std::env::temp_dir().join("xmip-definitely-not-here"));
-        assert!(t.receive().expect("absent directory is not a failure").is_empty());
+        assert!(t
+            .receive()
+            .expect("absent directory is not a failure")
+            .is_empty());
     }
 
     #[test]
@@ -1024,7 +1039,10 @@ mod tests {
     #[test]
     fn a_default_port_is_added_only_when_one_is_missing() {
         assert_eq!(with_default_port("example.com", 80), "example.com:80");
-        assert_eq!(with_default_port("example.com:8080", 80), "example.com:8080");
+        assert_eq!(
+            with_default_port("example.com:8080", 80),
+            "example.com:8080"
+        );
         assert_eq!(with_default_port("[::1]", 80), "[::1]:80");
         assert_eq!(with_default_port("[::1]:8080", 80), "[::1]:8080");
     }
