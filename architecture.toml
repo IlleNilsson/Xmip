@@ -158,10 +158,12 @@ dependency = []
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.http]
     dependency = ["xmip-core-transport-tcp"]
+    specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.mllp]
     dependency = ["xmip-core-transport-tcp"]
+    specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.pop3]
@@ -174,6 +176,7 @@ dependency = []
     dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.websocket]
     dependency = ["xmip-core-transport-http"]
+    specification = "IETF RFC 6455, with the applicable extension documents"
     [xmip.core.transport.activemq]
     [xmip.core.transport.aws-kinesis]
     [xmip.core.transport.aws-sns]
@@ -184,6 +187,7 @@ dependency = []
     [xmip.core.transport.azure-service-bus]
     [xmip.core.transport.can-bus]
     [xmip.core.transport.file]
+    specification = "Platform file-system behaviour and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
     [xmip.core.transport.google-pub-sub]
     [xmip.core.transport.ibm-mq]
@@ -205,7 +209,9 @@ dependency = []
     [xmip.core.transport.smb]
     [xmip.core.transport.sqlite]
     [xmip.core.transport.tcp]
+    specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
+    specification = "IETF RFC 768"
     [xmip.core.transport.unix-socket]
 
   [xmip.core.journey]

@@ -16,6 +16,14 @@ Implementation must not silently replace an agreed approach with a different one
 
 Corrections that restore conformance to an already approved decision do not require a new architectural decision. They still require normal review through a pull request.
 
+## Estate changes are atomic
+
+A repository may be added, removed or renamed only through a change that updates the manifest, the affected architecture documents and the affected decision records **together, in one change**.
+
+Not because ceremony is good, but because these three drift apart silently and in a particular order: the manifest is edited because something has to work today, the documents are left for later, and later does not come. `architecture.toml` then describes an estate the documents do not, and neither of them is wrong enough to notice.
+
+`tests/Allocation.Tests.ps1` catches part of this — a move whose destination is not a declared repository fails — but it cannot see a repository that was renamed while a document went on using the old name. That part is a human obligation, which is why it is written here rather than left to the tooling.
+
 ## Locked application to the architecture reconciler
 
 `Sync-XmipEstate.ps1` uses the GitHub REST API directly for remote repository discovery, creation, and configuration.

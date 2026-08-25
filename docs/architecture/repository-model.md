@@ -128,6 +128,42 @@ Path implementations address materialised content. Contract implementations
 evaluate the applicable Stream, Message or materialised structure without
 absorbing either of the other two.
 
+## 5b. What a technology repository implements
+
+A technology repository implements somebody else's specification, and the
+manifest says which:
+
+```toml
+[xmip.core.transport.tcp]
+specification = "IETF RFC 9293"
+
+[xmip.core.transport.http]
+dependency = ["xmip-core-transport-tcp"]
+specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
+```
+
+It sits beside `dependency` because it answers the neighbouring question. The
+dependency says HTTP is built on TCP; the specification says which HTTP.
+Together they are what somebody picking up an unimplemented repository needs
+before they write a line — and the alternative is that each implementer decides
+privately which document they are working from, which is how two transports end
+up disagreeing about framing.
+
+**Compliance is claimed only after conformance evidence exists.** Naming a
+specification here is a statement of intent, not a claim of conformance. The
+distinction matters because integration buyers read compliance claims as
+warranties, and a half-implemented RFC that says it implements the RFC is worse
+than one that says nothing.
+
+Most repositories have no `specification`, and that is correct: a capability
+implements an Xmip contract rather than an external standard, and vendor
+technologies have documentation rather than specifications. The field is for
+where a normative external document exists.
+
+Recovered from `handler-specification-map.md` during the ADR-0020
+consolidation, 2026-08-26. It was the only record of which RFC each transport
+implements, and it had been classified for deletion.
+
 ## 6. Crates
 
 Every repository has one primary Rust crate whose name matches the repository

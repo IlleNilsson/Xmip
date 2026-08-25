@@ -334,28 +334,65 @@ paths = [
   "docs/Xmip-Repository-Creation-Blueprint.md",
 ]
 
-[[consolidate]]
-into = "architecture.toml"
-verified = false
-reason = """
-The handler-era lineage documents. They enumerate the technology tree in prose,
-which the manifest now holds as data — and ADR-0011 retired 'handler' as a
-repository-name segment, so every name in them is wrong twice over.
+# Worked through 2026-08-26. This group was one entry claiming eight documents
+# were superseded handler-era prose. Reading them found four that were, one
+# that was mostly, one filed under the wrong subject, and two carrying live
+# design — one of which existed nowhere else.
+#
+# Recorded as a caution: the group was written from filenames. Six of the eight
+# have 'handler' or 'lineage' in the name, and that was enough to classify all
+# eight together without opening them.
 
-A document that lists what a manifest declares is a second source of truth that
-is wrong within a week. If any of these carries reasoning the manifest cannot
-hold, that reasoning goes to repository-model.md and the file still dies.
+[[superseded]]
+path = "docs/architecture/handler-taxonomy.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = """
+Repository families are sections 2 and 5. Its two remaining pieces were placed
+2026-08-26 rather than dropped:
+
+The note that FTP covers FTP and FTPS modes while SFTP stays a separate
+SSH-based transport is runtime-model.md section 23 conflict 10, which was
+already resolved in this document's favour — SFTP shares a purpose with FTP and
+nothing else, not the wire protocol, port, security model or command set.
+
+The rule that a repository may be added, removed or renamed only through a
+change updating manifest, documents and decision records together is now in
+governance/architectural-change-permission.md, where an atomicity obligation on
+people belongs.
 """
-paths = [
-  "docs/architecture/handler-lineage.md",
-  "docs/architecture/handler-specification-map.md",
-  "docs/architecture/handler-taxonomy.md",
-  "docs/architecture/industrial-iot-handler-lineage.md",
-  "docs/architecture/platform-lineage.md",
-  "docs/architecture/queue-handler-lineage.md",
-  "docs/architecture/tcp-handler-lineage.md",
-  "docs/content-handlers.md",
-]
+
+[[superseded]]
+path = "docs/architecture/platform-lineage.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = """
+Not a lineage document at all, despite the filename that got it grouped with
+them. It is the execution order — stream first, interpretation second, pub/sub
+third, Process or Send Port fourth — which is runtime-model.md sections 5 to
+10.
+
+Verified before deletion: the one clause worth losing sleep over, that a Send
+Port completes when one of its Send Locations succeeds, is stated in section
+10 along with the retry and failover behaviour around it.
+"""
+
+[[superseded]]
+path = "docs/architecture/handler-specification-map.md"
+replacedBy = "architecture.toml and docs/architecture/repository-model.md"
+why = """
+The only record of which external specification each transport implements. Not
+superseded when it was classified — it became superseded on 2026-08-26, when
+the content was moved rather than deleted.
+
+The specifications are now a `specification` field on the repository itself,
+beside `dependency`, which answers the neighbouring question: dependency says
+HTTP is built on TCP, specification says which HTTP. RFC 9293 for TCP, RFC 9110
+for HTTP, RFC 6455 for WebSocket, RFC 768 for UDP, MLLP framing for MLLP, and
+platform file-system behaviour for file.
+
+repository-model.md section 5b documents the field and carries the rule this
+document closed with: compliance is claimed only after conformance evidence
+exists. Naming a specification is intent, not a warranty.
+"""
 
 [[consolidate]]
 into = "docs/governance/rust-style.md"
@@ -964,6 +1001,56 @@ reason = "Why the estate is shaped this way. Replaces five documents and specifi
 # section 3 now, with the rest of the moves. Two [[move]] entries for one file
 # is how Distribute ends up racing itself, and tests/Allocation.Tests.ps1
 # caught it on the first run.
+
+[[superseded]]
+path = "docs/architecture/handler-lineage.md"
+replacedBy = "docs/architecture/module-model.md"
+why = """
+Section 7, Handler lineage. Family, base component id, derived-from component
+ids and supported technologies as manifest metadata, and 'this is not
+source-code inheritance' stated in both.
+"""
+
+[[superseded]]
+path = "docs/architecture/tcp-handler-lineage.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Section 7, the TCP family row. Every shared concept it lists is there."
+
+[[superseded]]
+path = "docs/architecture/queue-handler-lineage.md"
+replacedBy = "docs/architecture/module-model.md"
+why = """
+Section 7, the Queue family row: queue, topic, subject, stream and partition
+identity, consumer group, durable subscription, acknowledgement, visibility
+timeout, offset, cursor, dead-letter, competing consumers, ordering.
+"""
+
+[[superseded]]
+path = "docs/architecture/industrial-iot-handler-lineage.md"
+replacedBy = "docs/architecture/module-model.md"
+why = """
+Section 7, the Industrial and IoT family row, together with the UDP note that
+follows it — a UDP Module needing reliability, ordering, de-duplication,
+acknowledgement, replay or persistence declares and implements those itself and
+may not assume the runtime supplies them.
+"""
+
+[[superseded]]
+path = "docs/content-handlers.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = """
+Merged 2026-08-26 into section 9: Content Selectors with their four segment
+kinds and three evaluation modes, and promotion and demotion as a pair.
+
+**This one was nearly lost.** It was grouped with the handler-era documents on
+the strength of its filename and marked for deletion as prose the manifest had
+replaced. It is not prose the manifest replaced. The selector language existed
+in no other document, runtime-model.md carried a two-line stub of it, and
+demotion — the send-side counterpart to promotion — was written down here and
+nowhere else.
+
+Read before classifying. The name is not the contents.
+"""
 
 # ===========================================================================
 # 8. Superseded — delete these, the replacement is written
