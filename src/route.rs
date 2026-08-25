@@ -252,10 +252,6 @@ impl Predicate {
         Predicate::Any(parts)
     }
 
-    pub fn not(inner: Predicate) -> Self {
-        Predicate::Not(Box::new(inner))
-    }
-
     /// Everything published here, with no condition at all.
     pub fn everything() -> Self {
         Predicate::All(Vec::new())
@@ -395,6 +391,17 @@ impl Predicate {
                 }
             }
         }
+    }
+}
+
+/// `!predicate`. Written as the standard operator rather than an inherent
+/// constructor, which would shadow `std::ops::Not::not` and read worse at
+/// every call site.
+impl std::ops::Not for Predicate {
+    type Output = Predicate;
+
+    fn not(self) -> Predicate {
+        Predicate::Not(Box::new(self))
     }
 }
 
@@ -763,10 +770,7 @@ mod tests {
     fn not_excludes() {
         let filter = Predicate::all(vec![
             Predicate::exists("MessageType"),
-            Predicate::not(Predicate::equals(
-                "Customer",
-                Value::Text("ACME-0042".into()),
-            )),
+            !Predicate::equals("Customer", Value::Text("ACME-0042".into())),
         ]);
 
         assert_eq!(
@@ -811,7 +815,7 @@ mod tests {
         let filter = Predicate::all(vec![
             Predicate::any(vec![
                 Predicate::exists("A"),
-                Predicate::not(Predicate::equals("B", Value::Integer(1))),
+                !Predicate::equals("B", Value::Integer(1)),
             ]),
             Predicate::starts_with("C", "x"),
         ]);
