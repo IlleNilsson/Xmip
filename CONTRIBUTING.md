@@ -30,6 +30,16 @@ Xmip PowerShell scripts require PowerShell Core 7.6.3 or newer and must remain c
 
 Use advanced functions and native PowerShell parameter sets. Mutating commands should support `ShouldProcess` where practical.
 
+## Commit messages
+
+**Short and precise.** A subject line that says what changed, and a body only
+when the reason is not obvious from the diff.
+
+The reasoning belongs in the decision record, not the commit. An ADR is read on
+purpose; a commit message is read while looking for something else.
+
+Nobody gets credit for length.
+
 ## Pull requests
 
 A pull request should state:
