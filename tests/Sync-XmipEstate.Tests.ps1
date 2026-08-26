@@ -147,7 +147,10 @@ Describe 'ADR-0021: current platforms only, enforced' {
         $toolchain | Should -Not -Match 'channel\s*=\s*"1\.' -Because 'ADR-0021 forbids a pinned toolchain'
     }
 
-    It 'requires the Core edition, which excludes Windows PowerShell 5.1' {
+    It 'declares the Core edition on every entry point' {
+        # Core is the edition PowerShell 7 reports. The requirement is positive
+        # — this edition — rather than a statement about any other product.
+        # ADR-0021 covers what it consequently rules out.
         foreach ($file in $script:EntryPoints) {
             $head = (Get-Content (Join-Path $script:ModuleRoot $file) -TotalCount 3) -join "`n"
             $head | Should -Match '#requires -PSEdition Core'

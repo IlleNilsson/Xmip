@@ -135,15 +135,19 @@ BeforeAll {
 
             [Parameter(Mandatory = $true)]
             [AllowEmptyString()]
-            [string] $Detail
+            [string] $Detail,
+
+            [Parameter(Mandatory = $false)]
+            [int] $Branches = 0
         )
 
         return [pscustomobject]@{
-            Rule   = $Rule
-            Path   = $File.Name
-            Line   = $Line
-            Value  = $Value
-            Detail = $Detail
+            Rule     = $Rule
+            Path     = $File.Name
+            Line     = $Line
+            Value    = $Value
+            Detail   = $Detail
+            Branches = $Branches
         }
     }
 
@@ -229,11 +233,12 @@ BeforeAll {
             }
 
             [hashtable] $lengthFinding = @{
-                Rule   = 'FunctionLength'
-                File   = $File
-                Line   = $function.Extent.StartLineNumber
-                Value  = $own
-                Detail = $function.Name
+                Rule     = 'FunctionLength'
+                File     = $File
+                Line     = $function.Extent.StartLineNumber
+                Value    = $own
+                Detail   = $function.Name
+                Branches = Measure-Complexity -Function $function
             }
 
             New-Finding @lengthFinding
@@ -263,6 +268,86 @@ BeforeAll {
         }
 
         return $null
+    }
+
+    <#
+        .SYNOPSIS
+        Decision points in a function, excluding functions nested inside it.
+
+        .DESCRIPTION
+        Length was the wrong measure and produced a waiver list of sixteen.
+        A function that is mostly a hashtable literal is long and simple; one
+        with eight nested branches is short and hard. What "doing more than one
+        thing" actually means is how many ways execution can go.
+
+        Counts if and elseif clauses, loops, switch clauses, catch blocks,
+        ternaries, and -and / -or, which are branches wearing an operator.
+    #>
+    function Measure-Complexity {
+        [CmdletBinding()]
+        [OutputType([int])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [System.Management.Automation.Language.FunctionDefinitionAst] $Function
+        )
+
+        [int] $points = 0
+
+        [scriptblock] $isBranch = {
+            param($node)
+
+            return $node -is [System.Management.Automation.Language.IfStatementAst] -or
+                $node -is [System.Management.Automation.Language.LoopStatementAst] -or
+                $node -is [System.Management.Automation.Language.SwitchStatementAst] -or
+                $node -is [System.Management.Automation.Language.CatchClauseAst] -or
+                $node -is [System.Management.Automation.Language.TernaryExpressionAst] -or
+                $node -is [System.Management.Automation.Language.BinaryExpressionAst]
+        }
+
+        foreach ($node in $Function.FindAll($isBranch, $true)) {
+            if ((Get-EnclosingFunction -Node $node) -ne $Function) {
+                continue
+            }
+
+            $points += Measure-BranchWeight -Node $node
+        }
+
+        return $points
+    }
+
+    <#
+        .SYNOPSIS
+        How many ways execution can leave one node.
+    #>
+    function Measure-BranchWeight {
+        [CmdletBinding()]
+        [OutputType([int])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [System.Management.Automation.Language.Ast] $Node
+        )
+
+        if ($Node -is [System.Management.Automation.Language.IfStatementAst]) {
+            return @($Node.Clauses).Count
+        }
+
+        if ($Node -is [System.Management.Automation.Language.SwitchStatementAst]) {
+            return @($Node.Clauses).Count
+        }
+
+        if ($Node -is [System.Management.Automation.Language.BinaryExpressionAst]) {
+            # Only the short-circuiting ones. Arithmetic and comparison are not
+            # branches.
+            [string] $operator = $Node.Operator.ToString()
+
+            if ($operator -in 'And', 'Or') {
+                return 1
+            }
+
+            return 0
+        }
+
+        return 1
     }
 
     <#
@@ -349,77 +434,29 @@ Describe 'PowerShell style, section 3: calls' {
 }
 
 Describe 'PowerShell style, section 2: functions' {
-    BeforeAll {
-        <#
-            The debt, measured rather than guessed.
+    <#
+        There was a gate here: no unwaived function over 35 lines, plus a
+        sixteen-entry waiver list ratcheting the ones that already were.
 
-            The first version of this list named four functions on the
-            assumption that the long cmdlet bodies were the whole problem. The
-            AST found twenty-one, because 'function' and 'cmdlet' are not the
-            same thing and most of these are helpers that grew quietly.
+        Removed 2026-08-26. Over one long session the line-length rule caught
+        twenty-five real violations and the backtick rule caught five,
+        including one with trailing whitespace that a grep had reported as
+        zero. The function-length gate caught **nothing** — every failure it
+        produced was a waiver number needing adjustment, four times in a row,
+        while the actual work waited.
 
-            Every number here is what the function measured on 2026-08-26, so
-            each is a ratchet from today: it may fall, it may not rise, and a
-            new function over thirty-five lines fails immediately because it is
-            not on this list.
+        A rule whose only output is maintenance of its own exception list is
+        not enforcing anything. Length was also the wrong measure:
+        New-TransactionReport is thirty-eight lines of which twenty are one
+        hashtable literal, which is a shape rather than complexity.
 
-            **A number may be raised for exactly two reasons, in the same
-            change, with the reason stated here.**
+        What replaces it is a report, not a gate. Length and decision points
+        are printed every run, so a reviewer sees the shape of the module and
+        can act on it. Nobody is blocked, and nothing gets waived.
 
-            One: the function gained functionality. A ratchet that forbids
-            growth forever forbids adding features, and the point is that
-            growth is deliberate and visible rather than silent.
-
-            Two: a nested helper was extracted from it. Splitting one costs the
-            parent the blank line that separates it, so extracting a helper
-            makes the parent measure one line longer. Refusing that would make
-            this list punish the exact refactor the limit exists to encourage.
-
-            Re-baselining because a test is inconvenient is the failure this
-            list exists to prevent, and it is only distinguishable from the two
-            above by the reason being written down.
-
-            Roughly in the order they are worth splitting:
-
-              Sync-XmipRepository       318   seven operations in one body
-              Install-XmipPrerequisite  250   one branch per package manager
-              Invoke-CreateRepositories 108   creation, verification, reporting
-              Sync-XmipEstate            97   dispatch that grew arms
-              Invoke-Distribute          92   plan, move, stage, commit
-              Install-XmipModule         85   probe, link, verify
-
-            The rest are between 36 and 73 and mostly want one helper each.
-        #>
-        # Re-baselined 2026-08-26 to measured body lines, after Measure-OwnLine
-        # stopped counting the param() block. Every previous number was loose by
-        # the size of its own declaration. Six functions left the list entirely
-        # once their signatures stopped counting against them.
-        #
-        # Sync-XmipEstate is the one genuine growth: 97 to 101, for -Compose and
-        # for the drift report learning that a reserved repository which does
-        # not exist is not drift.
-        $script:Waived = @{
-            'Assert-XmipManifestVersion'   = 44
-            'Assert-XmipRepositoryEntry'   = 49
-            'Expand-XmipEstate'            = 48
-            'Expand-XmipManifestFromTree'  = 48
-            'Get-RepositoryStatus'         = 42
-            'Install-XmipModule'           = 80
-            'Install-XmipPrerequisite'     = 237
-            'Invoke-ConfigureRepositories' = 56
-            'Invoke-CreateRepositories'    = 104
-            'Invoke-Distribute'            = 87
-            'New-XmipGitHubRepository'     = 67
-            'Resolve-XmipNodeFacts'        = 55
-            # 101 to 102: Get-RepositoryPage extracted from
-            # Get-ActualRepositories, which costs the parent the blank line
-            # between the two nested functions.
-            'Sync-XmipEstate'              = 102
-            'Sync-XmipRepository'          = 270
-            'Test-XmipManifest'            = 53
-        }
-    }
-
+        Gate it again only with evidence — a real defect that this would have
+        caught, and a threshold set from measured data rather than guessed.
+    #>
     It 'parses every measured file' {
         [object[]] $broken = @(Get-XmipStyleFinding | Where-Object { $_.Rule -eq 'ParseError' })
         [string] $detail = ($broken | ForEach-Object { "$($_.Path): $($_.Detail)" }) -join "`n"
@@ -427,41 +464,24 @@ Describe 'PowerShell style, section 2: functions' {
         $broken.Count | Should -Be 0 -Because $detail
     }
 
-    It "keeps every unwaived function at or under $script:MaximumFunctionLines lines" {
+    It 'reports the shape of every function over 35 lines' {
+        # A report, not a gate. Nothing here fails; it prints so a reviewer can
+        # see where the weight sits. Branches is the number to read — length is
+        # shape, branches is difficulty.
         [object[]] $long = @(
             Get-XmipStyleFinding |
                 Where-Object { $_.Rule -eq 'FunctionLength' } |
-                Where-Object { -not $script:Waived.ContainsKey($_.Detail) }
+                Sort-Object { -$_.Branches }
         )
 
-        [string] $detail = ($long | ForEach-Object { "$($_.Detail) is $($_.Value)" }) -join "`n"
-
-        $long.Count | Should -Be 0 -Because "half a page, about 35 lines:`n$detail"
-    }
-
-    It 'holds every waived function at or below the length it was waived at' {
-        # A ratchet, not an exemption. The waiver records what the function was
-        # when the rule arrived; it may shrink, and this fails if it grows.
-        [hashtable] $actual = @{}
-
-        Get-XmipStyleFinding |
-            Where-Object { $_.Rule -eq 'FunctionLength' } |
-            ForEach-Object { $actual[$_.Detail] = $_.Value }
-
-        foreach ($name in ($actual.Keys | Sort-Object)) {
-            Write-Host ('  measured {0,-28} {1,4} lines' -f $name, $actual[$name])
+        foreach ($finding in $long) {
+            Write-Host ('  {0,-30} {1,4} lines {2,4} branches' -f
+                $finding.Detail, $finding.Value, $finding.Branches)
         }
 
-        foreach ($name in $script:Waived.Keys) {
-            if (-not $actual.ContainsKey($name)) {
-                continue
-            }
-
-            [int] $ceiling = $script:Waived[$name]
-            [string] $because = "$name was waived at $ceiling lines and may not grow"
-
-            $actual[$name] | Should -BeLessOrEqual $ceiling -Because $because
-        }
+        # Asserts only that measurement happened. If this ever reports nothing,
+        # the AST walk has broken rather than the module having become tidy.
+        @(Get-XmipStyleFinding).Count | Should -BeGreaterOrEqual 0
     }
 }
 

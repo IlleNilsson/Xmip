@@ -335,6 +335,21 @@ counts only what is missing *and* declared beyond `reserved`, and summarises the
 rest in one line. Reporting all of them printed 293 warnings to surface one
 action, which is a report nobody reads.
 
+**Unexpected repositories are reported, and are not automatically wrong.** A
+repository in the `xmip-` namespace that the manifest does not declare is
+usually one of two things: something created deliberately and not yet declared,
+or something left behind under a name the manifest has since changed. The report
+names it and stops — deciding which it is needs a person, and the two responses
+are opposites.
+
+The owner's repositories outside the `xmip-` namespace are not the estate's
+business and are never reported.
+
+*Until 2026-08-26 this number was the literal `@()`. Nothing could have been
+reported, because the estate only ever asked GitHub about names the manifest
+already knew — so a repository under a superseded name was invisible by
+construction, and every run said "0 unexpected" truthfully and uselessly.*
+
 An operation switch means do it. `-WhatIf` means do not. There is no `-Apply`
 and no plan mode — git does not work that way and neither should this. With no
 operation switch at all it reports and stops, which is the safe default and

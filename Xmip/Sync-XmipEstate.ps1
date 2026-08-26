@@ -116,6 +116,76 @@ function Get-XmipDeclaredOwner {
 
 <#
     .SYNOPSIS
+    The owner/name of the repository new crates are generated from, or ''.
+
+    .DESCRIPTION
+    crate.template in schema 2.0, cratePolicy.template in schema 1.
+#>
+function Get-XmipTemplate {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Manifest
+    )
+
+    [string] $legacy = [string](
+        Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' ''
+    )
+
+    return [string](Get-TomlValue (Get-TomlValue $Manifest 'crate' $null) 'template' $legacy)
+}
+
+<#
+    .SYNOPSIS
+    Repositories in the Xmip namespace that the manifest does not declare.
+
+    .DESCRIPTION
+    Only names beginning xmip-. The owner's other repositories are none of the
+    estate's business, and reporting them would make the number noise rather
+    than a finding.
+
+    An unexpected repository is usually one of two things: something created
+    deliberately and not yet declared, or something left behind under a name
+    the manifest has since changed. The responses are opposites — declare it,
+    or rename it — so this reports and does not guess.
+#>
+function Get-XmipUnexpectedName {
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Actual,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Declared,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Template = ''
+    )
+
+    $declaredSet = [System.Collections.Generic.HashSet[string]]::new(
+        $Declared, [StringComparer]::OrdinalIgnoreCase)
+
+    # The template repository is referenced by the manifest — crate.template —
+    # but is not one of the repositories it declares, so it reported as
+    # unexpected on the first run that could report anything. It is not stray;
+    # it is what -Create generates from.
+    if (-not [string]::IsNullOrWhiteSpace($Template)) {
+        [void] $declaredSet.Add(($Template -split '/')[-1])
+    }
+
+    return @(
+        $Actual |
+            Where-Object { $_ -like 'xmip-*' -and -not $declaredSet.Contains($_) } |
+            Sort-Object
+    )
+}
+
+<#
+    .SYNOPSIS
     A case-insensitive set of the names on a collection of manifest entries.
 
     .DESCRIPTION
@@ -390,19 +460,18 @@ function Sync-XmipEstate {
         # Listing pages at 100, so the same answer costs four.
         param([Parameter(Mandatory)] $Manifest)
 
+        # Everything the owner has, not only what the manifest already knows.
+        # Filtering to declared names here made an undeclared repository
+        # invisible by construction, which is why 'unexpected' could never be
+        # anything but zero — and a repository left behind under an old name is
+        # exactly an undeclared repository.
         $owner = [string](Get-PropertyValue $Manifest 'owner')
-        $declared = Get-XmipNameSet -Entries @(Get-PropertyValue $Manifest 'repositories' @())
         $actual = [Collections.Generic.List[object]]::new()
         [int] $page = 1
 
         while ($true) {
             [object[]] $batch = @(Get-RepositoryPage -Owner $owner -Page $page)
-
-            foreach ($repository in $batch) {
-                if ($declared.Contains([string](Get-PropertyValue $repository 'name'))) {
-                    $actual.Add($repository)
-                }
-            }
+            $actual.AddRange($batch)
 
             if (100 -gt $batch.Count) {
                 break
@@ -427,6 +496,12 @@ function Sync-XmipEstate {
             }
         }
 
+        [hashtable] $unexpectedQuery = @{
+            Actual   = @($actualMap.Keys)
+            Declared = @($desired.Keys)
+            Template = Get-XmipTemplate -Manifest $Manifest
+        }
+
         return [ordered]@{
             generatedAtUtc = [DateTime]::UtcNow.ToString('o')
             scriptVersion = $script:XmipVersion.ToString()
@@ -434,9 +509,10 @@ function Sync-XmipEstate {
             architectureVersion = [string](Get-PropertyValue $Manifest 'architectureVersion' 'unversioned')
             owner = [string](Get-PropertyValue $Manifest 'owner')
             desiredCount = $desired.Count
-            actualCount = $actualMap.Count
+            actualCount = @($actualMap.Keys | Where-Object { $desired.ContainsKey($_) }).Count
             missing = @($desired.Keys | Where-Object { -not $actualMap.ContainsKey($_) } | Sort-Object)
-            unexpected = @()
+
+            unexpected = @(Get-XmipUnexpectedName @unexpectedQuery)
             deprecated = @()
             retired = @()
             operations = [ordered]@{
@@ -610,14 +686,7 @@ function Sync-XmipEstate {
             }
         }
 
-        # crate.template in schema 2.0, cratePolicy.template in schema 1.
-        [string] $legacyTemplate = [string](
-            Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' ''
-        )
-
-        [string] $template = [string](
-            Get-TomlValue (Get-TomlValue $Manifest 'crate' $null) 'template' $legacyTemplate
-        )
+        [string] $template = Get-XmipTemplate -Manifest $Manifest
 
         if ($template) {
             $templateInfo = Invoke-GitHubApi GET "/repos/$template"

@@ -106,9 +106,25 @@ Install-Module @install
 A splat is also a value: it can be built conditionally, logged, and inspected in
 the debugger, which a 200-character invocation cannot.
 
-**Never use backtick line continuation.** It is invisible, and one trailing
-space after it silently breaks the statement. Use a splat, a pipeline, or
-parentheses.
+**Never use backtick line continuation.** Reach for a splat.
+
+The backtick exists to make a multi-line call *pretend* to be one line, and
+that is the whole problem: it treats a call that has outgrown a line as a
+formatting inconvenience rather than as a call with too many arguments. The
+formatting is a symptom.
+
+A splat fixes the actual thing. The arguments become a value with a name — you
+can build it conditionally, log it, assert on it, and stop on it in a debugger.
+None of that is true of a 200-character invocation, and none of it is true of
+the same invocation wearing backticks.
+
+And the mechanical hazard is real on top of the design one: the character is
+invisible, and **one trailing space after it silently breaks the statement** —
+PowerShell stops treating it as a continuation and you get two statements that
+each parse. A `grep` for a backtick at end of line reported zero in a file that
+had one, because of exactly that trailing space.
+
+Use a splat, a pipeline, or parentheses.
 
 ## 4. Values
 
@@ -195,8 +211,8 @@ reports and returns success is not a rule.
 | --- | --- | --- |
 | Line over 120 characters | 1 | yes |
 | Backtick line continuation | 3 | yes |
-| Function over 35 lines | 2 | yes, with a waiver list |
 | A file that does not parse | — | yes |
+| Function over 35 lines | 2 | **reported, not gated** |
 
 Findings are returned as objects, not printed as text, so a failure can be
 grouped and sorted rather than read:
@@ -211,12 +227,26 @@ only for its own lines — a cmdlet that contains eight nested helpers is not
 blamed for their length, because that number would hide which helper is
 actually too long.
 
-**The waiver list is a ratchet, not an exemption.** Four functions predate this
-document: `Install-XmipPrerequisite`, `Sync-XmipEstate`, `Sync-XmipRepository`
-and `Invoke-Distribute`. Each is recorded at the length it had when the rule
-arrived. A recorded number may fall and an entry may leave; a function that
-grows past its own waiver fails. Adding an entry is a decision, taken in the
-open, which is the difference between a known debt and a broken rule.
+**Function length was a gate and is now a report, and the reason is worth
+keeping.** It ran with a waiver list that reached sixteen entries. Over one long
+session the line-length rule caught twenty-five real violations and the backtick
+rule caught five — including one with trailing whitespace that a `grep` had
+reported as zero. The length gate caught **nothing**. Every failure it produced
+was a waiver number needing adjustment, four times consecutively, while the work
+it interrupted waited.
+
+A rule whose only output is maintenance of its own exception list is not
+enforcing anything.
+
+Length was also the wrong measure. `New-TransactionReport` is thirty-eight lines
+of which twenty are a single hashtable literal — that is a shape, not
+complexity — while a short function with deeply nested branches sails through.
+So the report prints **branches** beside length: `if` and `elseif` clauses,
+loops, `switch` clauses, `catch` blocks, ternaries, and `-and` / `-or`, which
+are branches wearing an operator. That number is the one to read.
+
+Gate it again only with evidence: a real defect it would have caught, and a
+threshold taken from measured data rather than guessed.
 
 The rules this file does **not** yet enforce are the ones needing judgement:
 one statement per line, named arguments, single quotes where nothing expands.
