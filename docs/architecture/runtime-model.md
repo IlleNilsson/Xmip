@@ -35,8 +35,8 @@ Xmip is:
 
 **Stream** — immutable data received by, or produced within, Xmip.
 
-**Message** — an immutable processing unit with a message id, metadata and one
-or more Sections. An XML, JSON, CSV, EDI, HL7 or FHIR instance, or text or
+**Message** — a processing unit over immutable content, with a message id,
+accumulating metadata, and one or more Sections. An XML, JSON, CSV, EDI, HL7 or FHIR instance, or text or
 binary payload, may be *represented* by a Message. **A representation is not a
 Contract.**
 
@@ -52,11 +52,34 @@ Message.**
 
 ## 3. Immutability
 
-Streams and Messages are never modified. Assignment and Transformation create
-new immutable artifacts when information changes.
+**The Stream is immutable. The Message and the Journey are not.**
 
-A Journey appends execution history, audit events and lineage. Its historical
-record is never rewritten.
+A Stream is never modified, ever. What arrived is what is kept, byte for byte,
+and that is what makes replay, audit and preservation mean anything.
+
+A **Message** accumulates. Context, promoted properties, validation results,
+Contract metadata, execution history — all of it grows as the Message is
+handled. What does not change is the content it refers to: its Sections point
+at Streams, and those Streams stay exactly as they were.
+
+A **Journey** accumulates too: execution history, audit events, lineage. Its
+historical record is appended to, never rewritten.
+
+**Content changes only through Assignment or Transformation**, and those create
+a new Stream and a new Message generation rather than editing anything. So there
+are two distinct things happening and they are easy to conflate:
+
+```text
+metadata changes   the same Message, carrying more
+content changes    a new Stream, a new Message generation
+```
+
+*Corrected 2026-08-26. This section read "Streams and Messages are never
+modified", which is true of Streams and false of Messages — a Message that
+could not accumulate context could not carry promoted properties or validation
+results at all. The error was load-bearing: it kept being read back as evidence
+that Messages are immutable envelopes, which sent the same question round more
+than once.*
 
 ### Nothing executes on arrival
 
@@ -435,6 +458,24 @@ audit references, failure reason, timestamps, artifact identities and
 subscription evaluation metadata. That metadata is the point: when nothing
 matched, the operator's question is "what were the promoted properties, and
 which Subscription nearly matched?" — not "what was in the body".
+
+### Duplicates are a business decision
+
+**A Stream may be published into Xmip twice, and Xmip accepts it twice.** Two
+Streams, two Messages, two sets of Journeys, all correct. Xmip does not own the
+consequences of a client sending the same thing more than once.
+
+Two identical byte sequences are not the same event. A retry and a genuine
+resubmission look the same on the wire, and only the domain knows whether the
+second invoice is a duplicate or a correction. A platform that deduplicates has
+guessed, and it will be wrong silently.
+
+So a Process decides. A duplicate is not refused at a gate — it authenticates,
+validates, becomes a Message and gets Journeys — and a Process that recognises
+it stops the Journey as `Dismissed`, not `Failed`. See ADR-0013 clause 4c.
+
+Where a transport's own specification defines duplicate semantics, the transport
+Module honours them. That is conformance, not judgement.
 
 ### Subscription Instances form a chain
 
@@ -1237,9 +1278,10 @@ are not a target module technology.
 
 ## 24. Governing principles
 
-1. Streams and Messages are immutable.
+1. Streams are immutable. Messages and Journeys accumulate context and history;
+   their content does not change without a new generation.
 2. Receive Locations receive Streams; Receive Ports create Messages;
-   Publication offers them; Routing decides where they go; Journeys carry them.
+   Publication offers them; Routing decides where they go; Journeys record them.
 3. Failures before Publication are audited receive failures, not Dead Journeys.
 4. Transport, Content and Contract are independent concerns.
 5. Every Publication is audited.

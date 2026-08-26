@@ -321,8 +321,8 @@ doing the same work pay three hops. The role combination in
 Rust's guarantees are part of the runtime design, not an implementation
 detail:
 
-- Message values are immutable after creation; changed content creates a new
-  Message.
+- Stream values are immutable, always. Changed content creates a new Stream and
+  a new Message generation; accumulated context does not.
 - **Runtime stages pass work by ownership.** A stage receives a Message,
   persists state where replay requires it, creates an outcome, and hands
   ownership of that outcome to the next stage.

@@ -63,6 +63,19 @@ pub struct JourneyMessageRef {
     pub stream_id: Uuid,
 }
 
+/// A processing unit over immutable content.
+///
+/// **The Stream is immutable. The Message is not.** Context, promoted
+/// properties, validation results and execution history accumulate here as the
+/// Message is handled. What never changes is the content it refers to.
+///
+/// Content changes only through Assignment or Transformation, which create a
+/// new Stream and a new generation rather than editing anything.
+///
+/// `journey_id` is a known defect, recorded in ADR-0013 clause 4b: a Message is
+/// published and *then* subscribers open Journeys over it, so one Message may
+/// have several. A single journey identity here cannot express that. Journeys
+/// reference Messages, never the reverse.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Message {
     pub journey_id: Uuid,
@@ -75,6 +88,10 @@ pub struct Message {
     pub durability: MessageDurability,
 }
 
+/// A reference to a Stream, which is always immutable.
+///
+/// `immutable` is therefore always true and carries no information. It reads as
+/// though a mutable Stream were possible; nothing in Xmip permits one.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StreamRef {
     pub stream_id: Uuid,
