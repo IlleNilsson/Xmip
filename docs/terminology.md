@@ -167,6 +167,30 @@ of failure, and the runtime place where the failure occurred.
 It exists so Xmip can inspect, report, recover, retry, move to the Xmip DMQ, or
 explain what failed and why.
 
+## XmipToDo
+
+The durable work store on a node. **One per node**, embedded, and written only
+by the node that owns it.
+
+Every Stream, Message and Journey lives in it until completion or retention, and
+is archived before either. Selecting work is a query over state; completing work
+is a state transition. That makes it a queue in every sense that matters —
+durable, survives restart, ordered where ordering is configured — while being no
+kind of message broker.
+
+**The comparison is BizTalk's MessageBox, and so is the warning.** BizTalk's was
+one shared SQL database holding every message and subscription for the whole
+group, which made it the contention point the entire product was eventually
+tuned around. A XmipToDo is per node, so there is no shared write path to
+contend for and nothing to partition later.
+
+It is not a broker, and Xmip requires none. `xmip-core-transport-rabbitmq`,
+`-msmq`, `-kafka` and `-ibm-mq` are integration targets — things Xmip talks to
+on somebody's behalf — not infrastructure it runs on.
+
+Engine and layout are in `architecture/deployment-model.md` section 7; the
+execution model it implements is `architecture/runtime-model.md` section 3.
+
 ## Xmip DMQ
 
 **Dead Message Queue.** Where an accepted Message goes when **no Subscription

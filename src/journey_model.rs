@@ -142,9 +142,9 @@ pub fn create_initial_message_with_treatment(
     stream_uri: impl Into<String>,
     treatment: MessageTreatment,
 ) -> (Journey, Message) {
-    let journey_id = Uuid::new_v4();
-    let message_id = Uuid::new_v4();
-    let stream_id = Uuid::new_v4();
+    let journey_id = Uuid::now_v7();
+    let message_id = Uuid::now_v7();
+    let stream_id = Uuid::now_v7();
 
     let message = Message {
         journey_id,
@@ -181,9 +181,9 @@ pub fn create_derived_message(
 ) -> Message {
     Message {
         journey_id: previous.journey_id,
-        message_id: Uuid::new_v4(),
+        message_id: Uuid::now_v7(),
         stream_ref: StreamRef {
-            stream_id: Uuid::new_v4(),
+            stream_id: Uuid::now_v7(),
             uri: stream_uri.into(),
             immutable: true,
         },
@@ -201,7 +201,7 @@ pub fn create_metadata_only_message(
 ) -> Message {
     Message {
         journey_id: previous.journey_id,
-        message_id: Uuid::new_v4(),
+        message_id: Uuid::now_v7(),
         stream_ref: previous.stream_ref.clone(),
         generation: previous.generation + 1,
         created_by,

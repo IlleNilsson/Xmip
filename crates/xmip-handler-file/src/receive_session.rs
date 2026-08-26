@@ -43,7 +43,7 @@ impl<S: ExclusivenessStore> FileReceiveSession<S> {
         Self {
             store,
             request: ExclusiveRequest {
-                task_id: Uuid::new_v4(),
+                task_id: Uuid::now_v7(),
                 action: ExclusiveAction::Receive,
                 boundary: ExclusivenessBoundary {
                     scope: ExclusivenessScope::Resource,

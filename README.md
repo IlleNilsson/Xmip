@@ -190,7 +190,6 @@ tests can tell the difference between "in transit" and "forgotten":
 
 | Document | Status |
 | --- | --- |
-| [`architecture/protocol-landscape.md`](docs/architecture/protocol-landscape.md) | held: names 21 protocols `architecture.toml` does not, and is the only record of them |
 | [`architecture/module-abi-specification.md`](docs/architecture/module-abi-specification.md) | moving to `xmip-core-abi` with `include/xmip_module.h` |
 | [`governance/powershell-style.md`](docs/governance/powershell-style.md) | how the PowerShell here is written |
 | [`governance/release-model.md`](docs/governance/release-model.md) | Continuum, Linear, and how work reaches them |
