@@ -64,65 +64,123 @@ fromSurface = [
 # 2. Rust
 # ===========================================================================
 
-[[move]]
-from = "src/route.rs"
-to = "xmip-core-route"
-path = "src/lib.rs"
-reason = "The MessageBox. 28 KB, 20 tests, the largest single piece of real behaviour in the tree."
+# Rewritten 2026-08-26. This section was written when every module repository
+# was an empty template. Thirty of the forty-two now contain working Rust, so
+# half of what follows was a move into an occupied destination — which
+# Invoke-Distribute reports as target-exists and skips, silently, having said
+# "Distribute completed".
+#
+# The estate holds two implementations of the same domain and neither is simply
+# newer. src/journey_model.rs has the current vocabulary — Active, Suspended,
+# Recovering, Dismissed — plus MessageTreatment and generation.
+# xmip-core-journey has the retired v1.0 vocabulary and also JourneyEntry and
+# the previous-journey link, which the root has never had.
+#
+# So a [[move]] is only correct where the destination is empty. Everything else
+# is a [[merge]], which is a judgement per file and inert to Invoke-Distribute
+# by design — a merge must not be performed by a tool that can only overwrite.
+#
+# No Cargo.toml moves survive. Every module already has one, current, with
+# edition 2024 and dependencies pinned to the estate. The root crates' manifests
+# are older in every respect.
 
 [[move]]
 from = "src/transport.rs"
 to = "xmip-core-transport"
 path = "src/lib.rs"
-reason = "Five protocols and TLS. 35 KB. Repository does not exist yet."
+reason = "Five protocols and TLS. xmip-core-transport is one of the ten empty stubs, so this lands cleanly."
 
 [[move]]
 from = "src/transport_technology.rs"
 to = "xmip-core-transport"
 path = "src/technology.rs"
-reason = "Same module. The transport_ prefix goes: inside xmip-core-transport it says nothing."
-
-[[move]]
-from = "src/journey_model.rs"
-to = "xmip-core-journey"
-path = "src/lib.rs"
-reason = "ADR-0013. The _model suffix goes for the same reason."
-
-[[move]]
-from = "src/contracts.rs"
-to = "xmip-core-contract"
-path = "src/lib.rs"
-reason = "Singular, per ADR-0011."
+reason = "Same module, empty destination. The transport_ prefix goes: inside xmip-core-transport it says nothing."
 
 [[move]]
 from = "src/disposition.rs"
 to = "xmip-core-message"
 path = "src/disposition.rs"
-reason = "A disposition is the outcome of handling a Message. docs/architecture/message-disposition.md agrees."
+reason = """
+A disposition is the outcome of handling a Message. xmip-core-message has
+content, but no disposition.rs — a new filename in an occupied repository, so
+the move is clean and the merge question does not arise.
+"""
 
-[[move]]
+[[merge]]
+from = "src/route.rs"
+into = "xmip-core-route"
+reason = """
+Both sides are real. src/route.rs is the largest single piece of behaviour in
+the tree — publication, subscription matching as a pure function, declines that
+explain themselves, and the four stated differences from BizTalk's MessageBox.
+xmip-core-route has its own implementation.
+
+Read both before either is touched. The root version's doc comment is the
+better statement of intent and should survive whatever happens to the code.
+"""
+
+[[merge]]
+from = "src/journey_model.rs"
+into = "xmip-core-journey"
+reason = """
+The sharpest conflict in the estate, and the one to do first.
+
+Root: JourneyState is Active, Waiting, Suspended, Recovering, Completed,
+Failed, Dismissed — the vocabulary runtime-model.md section 23 settled. Also
+MessageTreatment, generation, MessageCreationSource.
+
+Module: JourneyState is Created, Running, Paused, Waiting, Dead, Completed,
+Dismissed — the v1.0 set that section 23 explicitly retired. But it also has
+JourneyEntry and parent_journey_id, and the second of those answers an open
+question the root never addressed. ADR-0013 clause 4b renames it
+previous_journey_id and keeps it.
+
+So: the module's structure, the root's vocabulary. Neither wholesale.
+"""
+
+[[merge]]
+from = "src/contracts.rs"
+into = "xmip-core-contract"
+reason = """
+Root contracts.rs holds the Content Selector language — ContentOperation,
+ContentSelectorSegment, SelectorEvaluation, DemotionTarget — which is live
+design and more complete than any document. xmip-core-contract has its own
+content.
+
+Note the destination is probably wrong. contracts.rs is the module ABI surface,
+not Contract evaluation: ADR-0012 makes xmip-core-abi the boundary, and
+ContentHandler, TransportHandler and ModuleManifest belong there. Settle the
+destination before merging anything.
+"""
+
+[[merge]]
 from = "crates/xmip-exclusiveness/src/lib.rs"
-to = "xmip-core-exclusiveness"
-path = "src/lib.rs"
-reason = "9 KB, the largest of the crates. Name already matches."
+into = "xmip-core-exclusiveness"
+reason = """
+Both sides exist. The root crate holds ExclusivenessScope, ExclusiveAction,
+ExclusiveOwner, ExclusiveLease and the store trait that ADR-0017 quotes as
+already correct. The module has its own.
 
-[[move]]
-from = "crates/xmip-exclusiveness/Cargo.toml"
-to = "xmip-core-exclusiveness"
-path = "Cargo.toml"
-reason = "Package renamed xmip-exclusiveness to xmip-core-exclusiveness."
+ADR-0017 clauses 10 to 15 landed after both were written — the nine task states,
+LeaseLost as distinct from Failed, the acquisition timeout, and the boundary
+that xmip-core-exclusiveness never executes the work it coordinates. Whichever
+side survives has to gain those, so this is a rewrite against the record rather
+than a copy of either.
+"""
 
-[[move]]
-from = "crates/xmip-module-abi/src/lib.rs"
-to = "xmip-core-abi"
-path = "src/lib.rs"
-reason = "ADR-0012. The module- infix is dropped; every module is a module."
-warning = "Do not copy it. The crate still defines ModuleAbiKind with five variants, which ADR-0012 clause 5 removes. It predates the ADR that governs it, so xmip-core-abi wants writing against xmip_module.h."
+[[remove]]
+path = "crates/xmip-module-abi/src/lib.rs"
+[[remove]]
+path = "crates/xmip-module-abi/Cargo.toml"
+reason = """
+Was a [[move]] into xmip-core-abi carrying its own warning not to use it: the
+crate still defines ModuleAbiKind, which ADR-0012 clause 5 removes, and it
+predates the record that governs it.
 
-[[move]]
-from = "crates/xmip-module-abi/Cargo.toml"
-to = "xmip-core-abi"
-path = "Cargo.toml"
+Moving a file the map tells you not to trust just relocates the problem.
+xmip-core-abi is written against include/xmip_module.h, which is what the
+warning already recommended and what ADR-0012 makes normative.
+"""
 
 [[remove]]
 path = "crates/xmip-module-api/src/lib.rs"
@@ -146,11 +204,6 @@ to = "xmip-core-runtime"
 path = "src/execution_tree.rs"
 
 [[move]]
-from = "crates/xmip-runtime/Cargo.toml"
-to = "xmip-core-runtime"
-path = "Cargo.toml"
-
-[[move]]
 from = "crates/xmip-service/src/lib.rs"
 to = "xmip-core-runtime"
 path = "src/service.rs"
@@ -172,42 +225,39 @@ reason = "Absorbed into xmip-core-runtime. Two crates that never move independen
 from = "crates/xmip-persistence/src/lib.rs"
 to = "xmip-core-persist"
 path = "src/lib.rs"
+reason = "xmip-core-persist is an empty stub, so this lands cleanly."
 
-[[move]]
-from = "crates/xmip-persistence/Cargo.toml"
-to = "xmip-core-persist"
-path = "Cargo.toml"
-
-[[move]]
+[[merge]]
 from = "crates/xmip-tracking/src/lib.rs"
-to = "xmip-core-audit"
-path = "src/lib.rs"
-reason = "TrackingEvent and TrackingSink are audit under the retired name. Renaming the types is part of the move, not a follow-up."
+into = "xmip-core-audit"
+reason = """
+TrackingEvent and TrackingSink are audit under the retired name, and renaming
+the types is part of the work rather than a follow-up. But xmip-core-audit has
+its own implementation, so this is a merge and not a move.
 
-[[move]]
-from = "crates/xmip-tracking/Cargo.toml"
-to = "xmip-core-audit"
-path = "Cargo.toml"
+observability-model.md is the record to write against: Tracking is one of the
+five things and the only one that holds payloads.
+"""
 
 [[move]]
 from = "crates/xmip-configuration/src/lib.rs"
 to = "xmip-core-configure"
 path = "src/lib.rs"
-
-[[move]]
-from = "crates/xmip-configuration/Cargo.toml"
-to = "xmip-core-configure"
-path = "Cargo.toml"
+reason = "xmip-core-configure is an empty stub."
 
 [[move]]
 from = "crates/xmip-cli/src/main.rs"
 to = "xmip-core-cli"
 path = "src/main.rs"
+reason = """
+xmip-core-cli is an empty stub holding src/lib.rs, so main.rs lands beside it
+without collision.
 
-[[move]]
-from = "crates/xmip-cli/Cargo.toml"
-to = "xmip-core-cli"
-path = "Cargo.toml"
+ADR-0014 clause 13 is the shape to build toward: every operator action lives in
+a library and the binary is argument parsing and JSON over it. And per the
+2026-08-26 amendment, that library calls the ABI — the CLI is one client of
+four, not the path the others go through.
+"""
 
 [[keep]]
 path = "src/lib.rs"
@@ -978,7 +1028,10 @@ reason = "A stub README under an otherwise empty runtime/ that nothing reference
 
 [[decision]]
 question = 1
-path = "crates/xmip-handler-file"
+# The crate's source file, not the crate directory. Named the directory until
+# 2026-08-26, which Invoke-Distribute turned into `git rm` without -r partway
+# through a run — after eleven other moves had already been made.
+path = "crates/xmip-handler-file/src/lib.rs"
 decision = "Fold into xmip-core-transport as an implementation module."
 to = "xmip-core-transport"
 newPath = "src/file.rs"

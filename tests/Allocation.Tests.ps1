@@ -93,6 +93,24 @@ BeforeAll {
 }
 
 Describe 'Every executable entry names a file that exists' {
+    It 'has no [[merge]] whose source is missing' {
+        # A merge names two implementations of one thing. If the source is gone
+        # the merge already happened, or the entry was never true.
+        [string[]] $missing = @()
+
+        foreach ($entry in (Get-AllocationEntry -Section 'merge')) {
+            [string] $resolved = Resolve-AllocationPath -Path ([string] $entry.from)
+
+            if ($null -ne $resolved -and -not (Test-Path -LiteralPath $resolved)) {
+                $missing += [string] $entry.from
+            }
+        }
+
+        [string] $detail = $missing -join "`n"
+
+        $missing.Count | Should -Be 0 -Because "these merge sources do not exist:`n$detail"
+    }
+
     It 'has no [[move]] whose source is missing' {
         # The failure this catches by name: eleven entries pointing at
         # Xmip-Audit-Architecture.md, module-loading.md, database-selection.md
@@ -187,6 +205,7 @@ Describe 'No file is claimed twice' {
 
         [hashtable] $sections = @{
             move        = 'from'
+            merge       = 'from'
             superseded  = 'path'
             remove      = 'path'
             consolidate = 'paths'
