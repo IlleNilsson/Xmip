@@ -1,15 +1,15 @@
 [workspace]
+# Six members left on 2026-08-26: configuration, runtime, service, host,
+# persistence and cli were distributed to the repositories that own them and
+# their manifests removed with them. module-abi and module-api are retired by
+# ADR-0012 clause 10.
+#
+# What remains is what has not been merged yet. tracking merges into
+# xmip-core-audit, exclusiveness into xmip-core-exclusiveness, and
+# handler-file folds into xmip-core-transport as src/file.rs.
 members = [
     ".",
-    "crates/xmip-module-abi",
-    "crates/xmip-module-api",
-    "crates/xmip-configuration",
-    "crates/xmip-runtime",
-    "crates/xmip-service",
-    "crates/xmip-host",
-    "crates/xmip-persistence",
     "crates/xmip-tracking",
-    "crates/xmip-cli",
     "crates/xmip-handler-file",
     "crates/xmip-exclusiveness",
 ]
@@ -32,9 +32,6 @@ rustls-native-certs = "0.8"
 
 [package]
 # The platform repository is Xmip, so its primary crate is xmip.
-# cratePolicy.primaryCrateMatchesRepository requires that, and xmip-core is a
-# separate repository and a different thing. The library keeps the name
-# xmip_core so every use xmip_core:: in the workspace is untouched.
 name = "xmip"
 version.workspace = true
 edition.workspace = true
@@ -42,12 +39,13 @@ license.workspace = true
 repository.workspace = true
 
 [lib]
-name = "xmip_core"
+# Was xmip_core, kept that way so every `use xmip_core::` in the workspace
+# stayed untouched. That was convenience, and it collided: modules/foundation/
+# core is also xmip-core, so two different crates were importable under one
+# identifier. Harmless while they never met, and this crate is becoming the
+# assembly that depends on the other one.
+name = "xmip"
 path = "src/lib.rs"
-
-[[bin]]
-name = "xmip-tiny-device"
-path = "src/main.rs"
 
 [features]
 default = ["server-profile"]
