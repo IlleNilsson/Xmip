@@ -45,6 +45,24 @@ pub use xmip_abi::{ ... };
 
 Re-exporting Rust types means a module author compiles against Xmip source. That pulls every implementer into Rust, and because Xmip is AGPL-3.0-or-later it pulls their module into AGPL with it. Xmip's position is that a third party brings their own licence and their own support. A boundary that only works by linking Xmip code cannot deliver that.
 
+## Amendment, 2026-08-26: the boundary faces both ways
+
+This record was written about Modules plugging **in**. `xmip-core-abi` is also
+the interface Xmip is driven **from outside** — configuration, runtime,
+observing, eventing, auditing — and ADR-0014 now has `cli`, `powershell` and
+`gui` as its clients.
+
+Everything below still holds: one C header, `#[repr(C)]` function pointers, no
+`dyn Trait` across it, no unwinding, ownership and error representation
+specified rather than conventional. Those properties are what make it usable by
+a .NET surface through P/Invoke at all.
+
+**What changes is who it must stay stable for.** Clause 6 versions each core
+module's trait independently, which was sized for module authors. An operator
+surface is a second audience with its own compatibility expectations, and the
+two now share one header. That needs a versioning answer this record did not
+have to give when the boundary faced one direction.
+
 ## Decision
 
 1. The normative module boundary is a written ABI specification and a C header. Not a Rust crate.

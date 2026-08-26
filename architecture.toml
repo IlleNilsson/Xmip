@@ -92,7 +92,7 @@ repositoryRole = "common-architecture"
 dependency = []
 
   [xmip.core.abi]
-  description = "Module boundary specification, C header and language bindings."
+  description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings. Used by cli, powershell and gui, and the boundary loadable Modules plug into."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "planned"
@@ -753,18 +753,18 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-abi", "xmip-core-runtime"]
 
   [xmip.core.powershell]
-  description = "PowerShell module driving the xmip executable and shaping its JSON into objects."
+  description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
   maturity = "planned"
   primaryLanguage = "powershell"
-  dependency = ["xmip-core-cli"]
+  dependency = ["xmip-core-abi"]
 
   [xmip.core.gui]
-  description = "Blazor component library with two hosts: Hybrid in the desktop application and server-side on the web."
+  description = "Blazor component library over the Xmip ABI, with two hosts: .NET 11 MAUI on the desktop and .NET 11 Blazor on the web."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
   maturity = "planned"
   primaryLanguage = "dotnet"
-  dependency = ["xmip-core-cli"]
+  dependency = ["xmip-core-abi"]
 

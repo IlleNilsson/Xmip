@@ -292,6 +292,7 @@ You have a word. This gives you the decision that governs it.
 | Concept | Decided by |
 | --- | --- |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
+| ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
