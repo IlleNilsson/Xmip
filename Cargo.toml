@@ -4,15 +4,18 @@
 # their manifests removed with them. module-abi and module-api are retired by
 # ADR-0012 clause 10.
 #
-# What remains is what has not been merged yet. tracking merges into
-# xmip-core-audit, exclusiveness into xmip-core-exclusiveness, and
-# handler-file folds into xmip-core-transport as src/file.rs.
-members = [
-    ".",
-    "crates/xmip-tracking",
-    "crates/xmip-handler-file",
-    "crates/xmip-exclusiveness",
-]
+# Nothing but the root. crates/ is gone: every crate either moved to the
+# repository that owns it or was redundant where it stood. tracking was audit
+# under a retired name, exclusiveness has another solution, and handler-file
+# duplicated the FileTransport that xmip-core-transport now holds.
+members = ["."]
+
+# Every module is its own repository and builds on its own. Without this, cargo
+# in modules/foundation/journey walks up, finds this file, and absorbs the crate
+# into a workspace it has no relationship with — which is exactly the coupling
+# separate repositories exist to avoid. Open problem 19.
+exclude = ["modules"]
+
 resolver = "2"
 
 [workspace.package]
