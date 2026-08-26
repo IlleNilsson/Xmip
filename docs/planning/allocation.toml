@@ -229,10 +229,11 @@ reason = "Workspace root. Members become modules/* path dependencies."
 path = "Cargo.lock"
 reason = "One lock for the assembly."
 
-[[keep]]
-path = "include/xmip_module.h"
-reason = "Normative C header, ADR-0012."
-note = "Arguably belongs in xmip-core-abi with the Rust binding. Listed in [review]."
+# include/xmip_module.h was [[keep]] here with a note saying it arguably
+# belonged in xmip-core-abi. Decision 2 in section 7 answered that and moves it.
+# The keep entry stayed behind and contradicted the decision — inert, because
+# Invoke-Distribute reads [[move]] and [[decision]] only, but a file cannot be
+# both kept and moved and have the map mean anything.
 
 # ===========================================================================
 # 3. Documents that follow their module
