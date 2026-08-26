@@ -72,9 +72,17 @@ Describe 'Sync-XmipEstate' {
     }
 
     It 'does not use remote-tracking submodule updates' {
+        # The call site, not the prose. 'submodule.+--remote' matched a comment
+        # saying the code never does this, which is the same false positive the
+        # DELETE test above was written to avoid. A real use passes --remote as
+        # a quoted git argument.
+        [string] $because = 'ADR-0016: parents pin commits, they do not track a branch'
+
         foreach ($file in 'Sync-XmipEstate.ps1', 'Sync-XmipRepository.ps1') {
             $script = Get-Content (Join-Path $script:ModuleRoot $file) -Raw
-            $script | Should -Not -Match 'submodule.+--remote'
+
+            $script | Should -Not -Match "'--remote'" -Because $because
+            $script | Should -Not -Match '"--remote"' -Because $because
         }
     }
 }

@@ -18,8 +18,22 @@ replaced, and a `-Apply` mode that no longer exists. Their history is in git.
 
 ## 1. Classification
 
-Five architectural domains. The domain is metadata: it explains a repository,
-it does not place it on disk.
+Five architectural domains. The domain **explains** a repository and does not
+**name** it — `xmip-core-transport-ftp`, never `xmip-technology-transport-ftp`,
+per ADR-0011.
+
+It does place it on disk, and that is not a contradiction. The name is one
+thing, the navigable tree is another: `Sync-XmipEstate -Compose` mounts a module
+at `modules/<domain>/<leaf>`, so `xmip-core-journey` appears at
+`modules/foundation/journey`. Section 7 has the shape.
+
+That layout is for human navigation only. Cargo dependencies define the
+technical graph, and nothing reads a folder name to decide anything.
+
+*Corrected 2026-08-26. This paragraph read "it does not place it on disk", which
+contradicted section 14 of `Xmip-Repository-Creation-Blueprint.md` — the
+owner's own layout, grouped by domain. The scoping error was mine: ADR-0011 is
+about names.*
 
 | Domain | What it holds | Examples |
 | --- | --- | --- |
@@ -250,8 +264,28 @@ ABI buys, and the reason to pay for it.
 
 ## 7. Composition
 
-ADR-0016 governs. The submodule hierarchy mirrors capability ownership, so a
-repository owns what it contains:
+ADR-0016 governs, and `Sync-XmipEstate -Compose` performs it. **The filesystem
+hierarchy and the submodules are one thing** — wiring the submodules is what
+produces the tree, and `git clone --recursive` reproduces it for everyone else.
+
+Two levels. Depth two mounts under `Xmip`, grouped by architectural domain,
+which is the layout in section 14 of `Xmip-Repository-Creation-Blueprint.md`:
+
+```text
+Xmip/
+└── modules/
+    ├── foundation/
+    │   ├── core   journey   message   stream   party   event   abi
+    ├── capabilities/
+    │   ├── transport   route   process   transform   contract   path
+    ├── operations/
+    │   ├── audit   observe   report   retain   archive   cli   powershell
+    └── platform/
+        └── runtime   configure   persist   resilience   exclusiveness
+```
+
+Depth three mounts inside its own parent capability, ungrouped, because at that
+level the parent *is* the grouping:
 
 ```text
 xmip-core-path/
@@ -260,6 +294,12 @@ xmip-core-path/
     ├── json-pointer/
     └── index/
 ```
+
+The mount name is the last segment of the repository name and the owner is the
+name minus that segment, so both are computed from the manifest rather than
+configured. Grouping exists at depth two only: `capabilities/` has fifteen
+entries and would be a wall without it, while `xmip-core-transport` has one kind
+of child and needs none.
 
 A fresh `git clone` of `Xmip` gets source and manifest and no submodules.
 `git submodule update --init` is an explicit act and `--recursive` reaches the
@@ -280,8 +320,20 @@ repository useless on its own.
 
 ## 8. Reconciliation
 
-`Sync-XmipEstate` reconciles the live estate against `architecture.toml`. It is
-remote only: nothing is cloned and nothing is built.
+`Sync-XmipEstate` reconciles the estate against `architecture.toml`, on GitHub
+and on disk:
+
+```powershell
+Sync-XmipEstate -Create      # remote: create what the manifest names and GitHub lacks
+Sync-XmipEstate -Configure   # remote: description, topics, features
+Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
+```
+
+**A reserved repository that does not exist is not drift.** It is section 3
+working — the manifest is the design and creation follows need. The report
+counts only what is missing *and* declared beyond `reserved`, and summarises the
+rest in one line. Reporting all of them printed 293 warnings to surface one
+action, which is a report nobody reads.
 
 An operation switch means do it. `-WhatIf` means do not. There is no `-Apply`
 and no plan mode — git does not work that way and neither should this. With no

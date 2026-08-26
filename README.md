@@ -117,7 +117,7 @@ and needs no ceremony to reach.
 | --- | --- |
 | `Install-XmipModule` | Links this module onto `PSModulePath`. Run once. |
 | `Install-XmipPrerequisite` | Reports and installs what a machine needs. |
-| `Sync-XmipEstate` | Reconciles GitHub with `architecture.toml`. Remote only — nothing is cloned or built. |
+| `Sync-XmipEstate` | Reconciles the estate with `architecture.toml` — creates and configures on GitHub, composes the submodule hierarchy locally. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Get-XmipManifest` | Reads `architecture.toml` and flattens the estate. |
 | `Test-XmipManifest` | Validates naming, crates, maturity and dependencies. |
@@ -130,8 +130,19 @@ Sync-XmipEstate                       # report drift, change nothing
 Sync-XmipEstate -Create -WhatIf       # what would be created
 Sync-XmipEstate -Create               # create the missing repositories
 Sync-XmipEstate -Configure            # description, topics, features
+Sync-XmipEstate -Compose              # wire the submodule hierarchy locally
 Sync-XmipEstate -Report               # write .xmip-work/architecture-report.json
 ```
+
+`-Compose` mounts every repository that exists at its place in the tree —
+`modules/<domain>/<leaf>` for a module, `modules/<leaf>` inside its parent for
+an implementation. The filesystem hierarchy and the submodules are the same
+thing, so `git clone --recursive` reproduces it. It never uses
+`git submodule update --remote`; parents pin commits deliberately, per
+ADR-0016.
+
+A reserved repository that does not exist is not reported as drift. That is the
+design, not a gap.
 
 `-Create` skips repositories whose `maturity` is `reserved` unless you pass
 `-IncludeReserved`. **Nothing ever deletes a repository.**

@@ -37,8 +37,16 @@ one step to the parser and twenty to the reader.
 
 ## 2. Functions
 
-**A function fits on half a page — about 30 lines.** Longer means it is doing
-more than one thing, and the fix is naming the parts rather than scrolling.
+**A function fits on half a page — about 30 lines of body.** Longer means it is
+doing more than one thing, and the fix is naming the parts rather than
+scrolling.
+
+**Of body.** The `param()` block below costs four lines per parameter, so a
+three-parameter function spends fourteen lines before it does anything. Counting
+that against the limit set this rule fighting the next one, and the next one
+always won. `Xmip.Style.Tests.ps1` subtracts the parameter block, and a doc
+comment above a nested function counts against whichever function encloses it —
+which is why the pure helpers in `Sync-XmipEstate.ps1` sit at file scope.
 
 **Full `param()` block, always.** Never the inline `function Foo($a, $b)` form,
 which cannot carry attributes and hides what is mandatory.

@@ -1,0 +1,126 @@
+[submodule "modules/foundation/core"]
+	path = modules/foundation/core
+	url = https://github.com/IlleNilsson/xmip-core.git
+[submodule "modules/foundation/abi"]
+	path = modules/foundation/abi
+	url = https://github.com/IlleNilsson/xmip-core-abi.git
+[submodule "modules/operations/archive"]
+	path = modules/operations/archive
+	url = https://github.com/IlleNilsson/xmip-core-archive.git
+[submodule "modules/capabilities/assign"]
+	path = modules/capabilities/assign
+	url = https://github.com/IlleNilsson/xmip-core-assign.git
+[submodule "modules/operations/audit"]
+	path = modules/operations/audit
+	url = https://github.com/IlleNilsson/xmip-core-audit.git
+[submodule "modules/capabilities/authenticate"]
+	path = modules/capabilities/authenticate
+	url = https://github.com/IlleNilsson/xmip-core-authenticate.git
+[submodule "modules/capabilities/authorize"]
+	path = modules/capabilities/authorize
+	url = https://github.com/IlleNilsson/xmip-core-authorize.git
+[submodule "modules/operations/cli"]
+	path = modules/operations/cli
+	url = https://github.com/IlleNilsson/xmip-core-cli.git
+[submodule "modules/foundation/cluster"]
+	path = modules/foundation/cluster
+	url = https://github.com/IlleNilsson/xmip-core-cluster.git
+[submodule "modules/platform/configure"]
+	path = modules/platform/configure
+	url = https://github.com/IlleNilsson/xmip-core-configure.git
+[submodule "modules/foundation/context"]
+	path = modules/foundation/context
+	url = https://github.com/IlleNilsson/xmip-core-context.git
+[submodule "modules/capabilities/contract"]
+	path = modules/capabilities/contract
+	url = https://github.com/IlleNilsson/xmip-core-contract.git
+[submodule "modules/capabilities/demote"]
+	path = modules/capabilities/demote
+	url = https://github.com/IlleNilsson/xmip-core-demote.git
+[submodule "modules/operations/diagnose"]
+	path = modules/operations/diagnose
+	url = https://github.com/IlleNilsson/xmip-core-diagnose.git
+[submodule "modules/foundation/event"]
+	path = modules/foundation/event
+	url = https://github.com/IlleNilsson/xmip-core-event.git
+[submodule "modules/platform/exclusiveness"]
+	path = modules/platform/exclusiveness
+	url = https://github.com/IlleNilsson/xmip-core-exclusiveness.git
+[submodule "modules/operations/gui"]
+	path = modules/operations/gui
+	url = https://github.com/IlleNilsson/xmip-core-gui.git
+[submodule "modules/capabilities/identify"]
+	path = modules/capabilities/identify
+	url = https://github.com/IlleNilsson/xmip-core-identify.git
+[submodule "modules/foundation/journey"]
+	path = modules/foundation/journey
+	url = https://github.com/IlleNilsson/xmip-core-journey.git
+[submodule "modules/capabilities/logic"]
+	path = modules/capabilities/logic
+	url = https://github.com/IlleNilsson/xmip-core-logic.git
+[submodule "modules/foundation/message"]
+	path = modules/foundation/message
+	url = https://github.com/IlleNilsson/xmip-core-message.git
+[submodule "modules/capabilities/migrate"]
+	path = modules/capabilities/migrate
+	url = https://github.com/IlleNilsson/xmip-core-migrate.git
+[submodule "modules/foundation/node"]
+	path = modules/foundation/node
+	url = https://github.com/IlleNilsson/xmip-core-node.git
+[submodule "modules/operations/observe"]
+	path = modules/operations/observe
+	url = https://github.com/IlleNilsson/xmip-core-observe.git
+[submodule "modules/foundation/party"]
+	path = modules/foundation/party
+	url = https://github.com/IlleNilsson/xmip-core-party.git
+[submodule "modules/capabilities/path"]
+	path = modules/capabilities/path
+	url = https://github.com/IlleNilsson/xmip-core-path.git
+[submodule "modules/platform/persist"]
+	path = modules/platform/persist
+	url = https://github.com/IlleNilsson/xmip-core-persist.git
+[submodule "modules/operations/powershell"]
+	path = modules/operations/powershell
+	url = https://github.com/IlleNilsson/xmip-core-powershell.git
+[submodule "modules/capabilities/prepare"]
+	path = modules/capabilities/prepare
+	url = https://github.com/IlleNilsson/xmip-core-prepare.git
+[submodule "modules/capabilities/process"]
+	path = modules/capabilities/process
+	url = https://github.com/IlleNilsson/xmip-core-process.git
+[submodule "modules/capabilities/promote"]
+	path = modules/capabilities/promote
+	url = https://github.com/IlleNilsson/xmip-core-promote.git
+[submodule "modules/capabilities/receive"]
+	path = modules/capabilities/receive
+	url = https://github.com/IlleNilsson/xmip-core-receive.git
+[submodule "modules/operations/report"]
+	path = modules/operations/report
+	url = https://github.com/IlleNilsson/xmip-core-report.git
+[submodule "modules/platform/resilience"]
+	path = modules/platform/resilience
+	url = https://github.com/IlleNilsson/xmip-core-resilience.git
+[submodule "modules/operations/retain"]
+	path = modules/operations/retain
+	url = https://github.com/IlleNilsson/xmip-core-retain.git
+[submodule "modules/capabilities/route"]
+	path = modules/capabilities/route
+	url = https://github.com/IlleNilsson/xmip-core-route.git
+[submodule "modules/platform/runtime"]
+	path = modules/platform/runtime
+	url = https://github.com/IlleNilsson/xmip-core-runtime.git
+[submodule "modules/platform/schedule"]
+	path = modules/platform/schedule
+	url = https://github.com/IlleNilsson/xmip-core-schedule.git
+[submodule "modules/capabilities/send"]
+	path = modules/capabilities/send
+	url = https://github.com/IlleNilsson/xmip-core-send.git
+[submodule "modules/foundation/stream"]
+	path = modules/foundation/stream
+	url = https://github.com/IlleNilsson/xmip-core-stream.git
+[submodule "modules/capabilities/transform"]
+	path = modules/capabilities/transform
+	url = https://github.com/IlleNilsson/xmip-core-transform.git
+[submodule "modules/capabilities/transport"]
+	path = modules/capabilities/transport
+	url = https://github.com/IlleNilsson/xmip-core-transport.git
