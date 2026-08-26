@@ -30,6 +30,58 @@ Xmip PowerShell scripts require PowerShell Core 7.6.3 or newer and must remain c
 
 Use advanced functions and native PowerShell parameter sets. Mutating commands should support `ShouldProcess` where practical.
 
+## Submodules
+
+Xmip mounts every module as a submodule under `modules/<domain>/<leaf>`. Four
+facts explain every surprise:
+
+- **A submodule is a commit, not a branch.** `Xmip` records "at this path, this
+  commit". Nothing tracks a branch.
+- **They clone detached.** No branch is checked out, so a commit made without
+  checking one out is reachable from nothing.
+- **Pushing the parent does not push the children.** `push.recurseSubmodules
+  check` refuses a parent push whose gitlink names an unpushed commit.
+- **`git checkout -- .` restores from the index, not from HEAD.** Use
+  `git checkout HEAD -- .` to discard staged changes too.
+
+**Getting a working estate**
+
+```powershell
+git clone --recursive https://github.com/IlleNilsson/Xmip.git
+git submodule update --init --recursive   # after any pull
+git config push.recurseSubmodules check   # once, per clone
+```
+
+**Seeing what is going on**
+
+```powershell
+git submodule status                              # commit, path, branch
+git submodule foreach --quiet 'git status --short' # what is dirty, where
+```
+
+A leading `+` in `git submodule status` means the working copy is not on the
+commit the parent pins.
+
+**Changing something in a module**
+
+```powershell
+cd modules/foundation/core
+git checkout main          # detached otherwise, and the commit goes nowhere
+git add -A; git commit -m "..."; git push origin main
+
+cd ../../..
+git add -A; git commit -m "Pin core: ..."; git push origin main
+```
+
+Two commits in two repositories, child first. Always.
+
+**Estate commands**
+
+```powershell
+Sync-XmipEstate -Compose   # mount, move and skip deprecated
+Sync-XmipEstate -Cargo     # dependency revs from the submodule pins
+```
+
 ## Commit messages
 
 **Short and precise.** A subject line that says what changed, and a body only
