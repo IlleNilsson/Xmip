@@ -1,9 +1,18 @@
+//! What has not yet moved to the repository that owns it.
+//!
+//! transport, transport_technology and disposition left on 2026-08-26 —
+//! `docs/planning/allocation.toml` records where each went. contracts, route
+//! and journey_model are `[[merge]]` entries: the destination repository has
+//! its own implementation, and reconciling the two is a judgement per file
+//! rather than a move.
+//!
+//! When those three are merged this file becomes the assembly, re-exporting
+//! the module crates so `xmip` stays one import for anyone who wants the whole
+//! platform.
+
 pub mod contracts;
-pub mod disposition;
 pub mod journey_model;
 pub mod route;
-pub mod transport;
-pub mod transport_technology;
 pub mod vertical_slice;
 
 pub use contracts::{
@@ -27,7 +36,3 @@ pub use route::{
     Subscription, Test, Value,
 };
 
-pub use transport_technology::{
-    core_transport_tree, depends_on, family_of, file_transport_tree, ip_transport_tree,
-    TransportEventKind, TransportTechnology, TransportTechnologyFamily, TransportTechnologyLayer,
-};
