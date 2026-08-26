@@ -99,10 +99,10 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.webapi]
-  description = "HTTP Web API for addressing Xmip Streams, Messages and Journeys."
+  description = "Deprecated. Use xmip-core-logic-http-api over xmip-core-transport-http."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "deprecated"
   dependency = ["xmip-core"]
 
   [xmip.core.stream]

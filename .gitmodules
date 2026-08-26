@@ -124,6 +124,3 @@
 [submodule "modules/capabilities/transport"]
 	path = modules/capabilities/transport
 	url = https://github.com/IlleNilsson/xmip-core-transport.git
-[submodule "modules/operations/webapi"]
-	path = modules/operations/webapi
-	url = https://github.com/IlleNilsson/xmip-core-webapi.git

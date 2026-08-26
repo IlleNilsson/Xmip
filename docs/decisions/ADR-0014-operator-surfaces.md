@@ -16,6 +16,52 @@ BizTalk is the warning. Its Administration Console was simultaneously the live m
 
 The same console reached into the MessageBox directly. That is why parts of it were never scriptable, and why what the console could do and what the PowerShell provider could do drifted apart.
 
+## Amendment, 2026-08-26: xmip-core-webapi is deprecated
+
+`xmip-core-webapi` was declared in `architecture.toml` as *"HTTP Web API for
+addressing Xmip Streams, Messages and Journeys"*, created on GitHub, and mounted
+as a submodule — with no architecture document describing it and no decision
+record authorising it. It is now `maturity = "deprecated"`.
+
+**It contradicted clauses 3 and 6 of this record.** An HTTP API for addressing
+Xmip's own Streams, Messages and Journeys is a private endpoint and a second
+path from an operator to the runtime, which clause 3 forbids in its first
+sentence, and it is a bespoke remote control protocol, which clause 6 forbids by
+name.
+
+**The capability already exists.** `xmip-core-logic-http-api` over
+`xmip-core-transport-http` is the Web API, and `[logic]` in the manifest reads
+*"**Expose** and invoke method-oriented protocol operations"* — serving an HTTP
+API was always in scope there. `webapi` duplicated it at module level, in a
+different domain, distinguished only by plane: integration versus management.
+Management is the one this record rules out.
+
+**The case that could have justified it does not exist.** A Blazor WebAssembly
+GUI cannot invoke an executable and would need an HTTP endpoint. But
+`xmip-core-gui` declares *"two hosts: Hybrid in the desktop application and
+server-side on the web"* — neither is WebAssembly, both run where they can call
+the `xmip` executable, and both already declare `dependency =
+["xmip-core-cli"]`. The manifest had answered the question before anyone asked
+it.
+
+**How it survived.** It was `xmip-core-api`, renamed to `webapi` to stop it
+colliding with `xmip-core-abi`. The rename made it look deliberate — an
+ambiguous name someone might have questioned became a specific one that reads
+like a decision. Nobody asked whether it should exist, including the assistant
+that created it on GitHub on 2026-08-26 and cemented it.
+
+**If a management surface over HTTP is ever wanted**, the answer is not a
+module. It is an ordinary Xmip artifact: a Receive Location on
+`transport-http` with `logic-http-api`, using the Composite interaction pattern
+in `runtime-model.md` section 11, routing to Processes. Xmip operated through
+its own message model, with identity, authorisation, audit and Journeys applying
+to management operations for free.
+
+That carries a real hazard, named in `open-problems.md` problem 16 as the
+tempting wrong answer: an estate that reconfigures itself through its own
+message flow has no configuration anyone can read. It needs deciding, not
+building.
+
 ## Decision
 
 1. Rust is the language of the runtime. Everything in the message path is Rust.
