@@ -16,6 +16,76 @@ BizTalk is the warning. Its Administration Console was simultaneously the live m
 
 The same console reached into the MessageBox directly. That is why parts of it were never scriptable, and why what the console could do and what the PowerShell provider could do drifted apart.
 
+## Amendment, 2026-08-26: the ABI is the interface into Xmip
+
+**Supersedes clauses 3, 9 and 13.**
+
+`xmip-core-abi` is **the interface into Xmip** — configuration, runtime,
+observing, eventing, auditing and the rest. It is not only the boundary that
+loadable Modules plug into.
+
+**Its clients are every operator surface:**
+
+```text
+xmip-core-cli          the xmip executable
+xmip-core-powershell   the PowerShell module
+xmip-core-gui          .NET 11 MAUI, the desktop GUI
+xmip-core-gui          .NET 11 Blazor, the web GUI
+```
+
+All four go to the ABI. None of them goes through another surface to get there.
+
+### What this replaces
+
+Clause 3 said *"Nothing outside the runtime calls the ABI: not the PowerShell
+module, not the GUI, not a .NET surface."* Clause 9 said the PowerShell module
+*"does not call the ABI"*. Clause 13 put the operations in `xmip-core-cli` so
+that clause 3 held by construction.
+
+That arrangement made the CLI a chokepoint: every capability any surface needed
+had to be expressible as a command first, and every other surface was a client
+of a *program* rather than of a contract. The PowerShell module's job became
+scraping JSON out of a subprocess.
+
+### What holds instead
+
+**The guarantee survives and gets stronger.** Clause 13's real value was
+*implemented once* — one definition of what an operator can do, so surfaces
+cannot drift the way the BizTalk console and its PowerShell provider did. That
+now sits at the ABI, which ADR-0012 already made a **normative, versioned
+contract with a written specification**. A Rust library inside one executable
+was never that.
+
+**One path becomes one contract.** Clause 3's intent — no surface gets a
+privileged route, no private endpoint, no direct store access — is unchanged.
+What changed is where the single route runs: through the ABI rather than through
+the `xmip` binary.
+
+**The CLI stops being special.** It is now one client among four, and a
+capability no longer has to be a command before it can be a screen.
+
+### Consequences, recorded rather than discovered
+
+**The .NET surfaces P/Invoke a C ABI.** `xmip_module.h` is C (ADR-0012), so
+`powershell` and `gui` carry native libraries per platform and per
+architecture — Windows, Linux, macOS, x64 and arm64. ADR-0015 packages the node
+and does not yet cover a PowerShell module shipping native binaries.
+
+**The runtime loads in-process.** A PowerShell session calling the ABI is a
+host process holding runtime state. ADR-0022 clause 3 says different identity
+contexts must not share a host process, and an operator session now has one.
+That needs settling before anything ships.
+
+**The ABI serves two audiences.** Module authors plug *in*; operator surfaces
+drive *from outside*. One header, two consumers, different stability
+expectations — a versioning question ADR-0012 did not have to answer when the
+boundary faced one way.
+
+**Remoting is unaffected in principle.** PowerShell Remoting still carries the
+session over WinRM or SSH, so Xmip still designs no authentication for its own
+control plane. What crosses is now an ABI call on the remote machine rather than
+a command run there.
+
 ## Amendment, 2026-08-26: xmip-core-webapi is deprecated
 
 `xmip-core-webapi` was declared in `architecture.toml` as *"HTTP Web API for
