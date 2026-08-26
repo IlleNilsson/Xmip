@@ -158,19 +158,28 @@ ContentHandler, TransportHandler and ModuleManifest belong there. Settle the
 destination before merging anything.
 """
 
-[[merge]]
-from = "crates/xmip-exclusiveness/src/lib.rs"
-into = "xmip-core-exclusiveness"
+[[remove]]
+path = "crates/xmip-exclusiveness/src/lib.rs"
+[[remove]]
+path = "crates/xmip-exclusiveness/Cargo.toml"
 reason = """
-Both sides exist. The root crate holds ExclusivenessScope, ExclusiveAction,
-ExclusiveOwner, ExclusiveLease and the store trait that ADR-0017 quotes as
-already correct. The module has its own.
+Removed 2026-08-26: exclusiveness has another solution, and this crate is not
+it. xmip-core-exclusiveness keeps the trait boundary — Exclusiveness::acquire
+returning a boxed ExclusiveLease with renew and release.
 
-ADR-0017 clauses 10 to 15 landed after both were written — the nine task states,
-LeaseLost as distinct from Failed, the acquisition timeout, and the boundary
-that xmip-core-exclusiveness never executes the work it coordinates. Whichever
-side survives has to gain those, so this is a rewrite against the record rather
-than a copy of either.
+**What goes with it, recorded because git holds it and nobody will look.** This
+crate had a working acquisition queue: ExclusivenessStore with request, poll,
+renew and release; an in-memory store keyed by ExclusivenessBoundary; and
+expire_and_promote, which drops an expired holder, promotes the next queued
+request, and skips any whose acquire_timeout has passed.
+
+That is ADR-0017 clause 13 fairness and clause 14 acquisition timeout, already
+implemented, while the same clauses were being argued about as open questions
+on the morning it was deleted. AcquireOutcome::Queued { position } and TimedOut
+are both there.
+
+If the other solution needs any of that shape, it is in the history of this
+repository rather than lost.
 """
 
 [[remove]]
@@ -232,16 +241,32 @@ to = "xmip-core-persist"
 path = "src/lib.rs"
 reason = "xmip-core-persist is an empty stub, so this lands cleanly."
 
-[[merge]]
-from = "crates/xmip-tracking/src/lib.rs"
-into = "xmip-core-audit"
+[[remove]]
+path = "crates/xmip-tracking/src/lib.rs"
+[[remove]]
+path = "crates/xmip-tracking/Cargo.toml"
 reason = """
-TrackingEvent and TrackingSink are audit under the retired name, and renaming
-the types is part of the work rather than a follow-up. But xmip-core-audit has
-its own implementation, so this is a merge and not a move.
+Was a [[merge]] into xmip-core-audit. Read on 2026-08-26: there is nothing to
+merge. Tracking resides under audit, and xmip-core-audit already covers every
+part of it, better.
 
-observability-model.md is the record to write against: Tracking is one of the
-five things and the only one that holds payloads.
+  TrackingEvent.event_id                  -> AuditId
+  cluster_name, node_name                 -> ExecutionScope
+  journey_id, message_id                  -> ExecutionScope
+  TrackingSink                            -> AuditSink
+
+And audit has what tracking never did: AuditPolicy deciding record or suppress,
+Severity and ExecutionPhase. That is observability-model.md's rule that what is
+recorded is determined by the effective policy, which a sink alone cannot
+express.
+
+**What is genuinely missing is in neither.** Tracking is the one of the five
+that holds payloads, and no payload storage exists in xmip-core-audit or here.
+Deleting this does not lose it, because it was never written.
+
+TrackingAction's fourteen named actions are worth a look before this goes —
+AuditRecord.action is an open String, and the vocabulary of what Xmip tracks is
+a real thing even if it is not an enum.
 """
 
 [[moved]]
@@ -1040,13 +1065,22 @@ reason = "A stub README under an otherwise empty runtime/ that nothing reference
 
 [[decision]]
 question = 1
-# The crate's source file, not the crate directory. Named the directory until
-# 2026-08-26, which Invoke-Distribute turned into `git rm` without -r partway
-# through a run — after eleven other moves had already been made.
-path = "crates/xmip-handler-file/src/lib.rs"
-decision = "Fold into xmip-core-transport as an implementation module."
-to = "xmip-core-transport"
-newPath = "src/file.rs"
+path = "crates/xmip-handler-file"
+decision = "Deleted 2026-08-26. xmip-core-transport already has FileTransport."
+reason = """
+Was: fold into xmip-core-transport as src/file.rs. Overtaken by the
+distribution the same day — src/transport.rs moved into xmip-core-transport and
+it already carries FileTransport, direction-neutral per ADR-0010 and shaped
+against XmipTransportVtable in include/xmip_module.h.
+
+So the fold would have added a second file transport beside the one that just
+arrived, written against xmip-module-api, which ADR-0012 clause 10 retires.
+
+Also the entry that broke a Distribute run: it named the crate directory rather
+than a file, so `git rm` without -r threw after eleven other moves had already
+been made. Invoke-Distribute now validates the whole plan before performing any
+of it.
+"""
 reason = """
 ADR-0016 creates a repository when a thing earns one, and 249 implementations
 are declared while none exist. Creating the first level-two repository for a
