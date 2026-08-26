@@ -167,6 +167,62 @@ of failure, and the runtime place where the failure occurred.
 It exists so Xmip can inspect, report, recover, retry, move to the Xmip DMQ, or
 explain what failed and why.
 
+## Xmip DMQ
+
+**Dead Message Queue.** Where an accepted Message goes when **no Subscription
+matched it**.
+
+The expansion was written down for the first time on 2026-08-26. Every document
+in the repository used the abbreviation and none defined it, including this one,
+which had been using it in the definition above.
+
+**It is not a dead letter queue, and the resemblance is the problem.** Everyone
+arriving from BizTalk, MSMQ, RabbitMQ or Kafka reads three letters ending in Q
+and expects the place where failures land. In Xmip it is not:
+
+| | Goes to the DMQ |
+| --- | --- |
+| Accepted Message, no Subscription matched | **yes** |
+| Journey failed | no — the Journey is `Failed` and its Message stays with it |
+| Stream rejected at the receive boundary | no — no Message was created to queue |
+| Journey dismissed by an operator | no — `Dismissed`, per ADR-0013 |
+
+So the DMQ answers one question: *this arrived, Xmip took ownership, and nothing
+wanted it.* That is a routing problem, usually a missing or mistyped
+Subscription, and it is fixed by adding the Subscription and replaying — not by
+the failure-triage path that a dead letter queue implies.
+
+The Message is preserved with its receive context, validation results,
+correlation and trace references, audit references, failure reason, timestamps,
+artifact identities and subscription evaluation metadata. That last one is why
+the queue is useful: the operator's question is which Subscription nearly
+matched, not what was in the body.
+
+**It is the only queue of its kind.** There is no Dismissed Journey Queue and no
+Failed Journey Queue, because a Journey in a terminal state is not homeless — it
+is persisted, it holds its execution position, and it is found by query rather
+than by being filed somewhere. ADR-0013 records why.
+
+The practical difference is what replay does:
+
+- **From the DMQ** — *re-publish*. Add the missing Subscription and match again
+  against the Message **with the context it already accumulated**. This is not
+  a re-receive: envelope context, promoted properties and validation results
+  are preserved and reused, and what changed is the Subscription set.
+- **From a terminal Journey** — *resume*, from the last checkpoint before it
+  stopped, restoring the Journey position **together with the Message
+  generation current at that position**.
+
+Both halves matter in both cases. A Journey accumulates execution history,
+lineage, the Subscription Instance chain and checkpoints; a Message accumulates
+receive context, promoted properties, validation results and its generation
+lineage. Neither story replays without the other — and because Transformation
+and Assignment create new Messages, a Journey position is meaningless without
+knowing which generation it referred to.
+
+The tension with retention — "an accepted Message shall never disappear" against
+policy-driven expiry — is an open question in ADR-0013 and is not settled here.
+
 ## Startup
 
 Xmip Service startup builds a validated execution tree from configuration. The

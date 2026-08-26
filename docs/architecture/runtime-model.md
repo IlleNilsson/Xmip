@@ -283,6 +283,37 @@ subscription evaluation metadata. That metadata is the point: when nothing
 matched, the operator's question is "what were the promoted properties, and
 which Subscription nearly matched?" — not "what was in the body".
 
+### Subscription Instances form a chain
+
+A Subscription Instance is one evaluation that came out true, and it becomes
+part of the Message's history. Because a Process may publish back into Xmip,
+those instances **form a chain, much like a call stack**: this publication
+happened because that Subscription matched, which happened because an earlier
+Process published, which happened because an earlier Subscription matched.
+
+The chain is what makes a Journey explainable after the fact. Without it, a
+Message that arrived somewhere unexpected has no answer to "how did it get
+here" beyond a list of things that happened near each other in time.
+
+**Nothing currently bounds the chain**, and it is worth naming that plainly: a
+Process that publishes a Message which matches a Subscription that starts the
+same Process is a loop, and the runtime has no depth limit, no cycle detection
+and no budget. This is not a hypothetical failure — it is the classic way an
+integration platform takes itself down, and it is recorded as an open problem
+rather than left implied.
+
+### Promotion has no counterpart for Transformation
+
+**There is no separate concept of transformed properties.** Promotion extracts
+values into runtime context; Transformation changes content. When a
+Transformation makes new values worth routing on, they are promoted, using the
+same mechanism as any other promotion.
+
+This is stated because the symmetry is tempting and wrong. A second property
+namespace fed by Transformation would mean Subscription evaluation had two
+places to look, and the first question about any promoted property would become
+"which kind is it".
+
 ### Path
 
 Format-native Path technologies are expected and supported: XPath, JSONPath,

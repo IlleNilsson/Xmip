@@ -11,7 +11,13 @@
     disagrees with the status in the record itself.
 #>
 
+# How many decision records state their provenance. A floor, not a target: it
+# may rise and may not fall. At file scope because Pester discovers test names
+# before it runs BeforeAll.
+[int] $script:ProvenanceFloor = 1
+
 BeforeAll {
+    [int] $script:ProvenanceFloor = 1
     $script:Root = Join-Path $PSScriptRoot '..'
     $script:DecisionRoot = Join-Path $script:Root 'docs/decisions'
     $script:IndexPath = Join-Path $script:DecisionRoot 'README.md'
@@ -230,6 +236,41 @@ Describe 'The concept index still matches the records' {
         [string] $detail = $stale -join "`n"
 
         $stale.Count | Should -Be 0 -Because "the index claims these and the records do not say them:`n$detail"
+    }
+}
+
+Describe 'Decisions say where they came from' {
+    It "carries a Provenance section on at least $script:ProvenanceFloor records" {
+        <#
+            An inverse ratchet: this number may rise and may not fall.
+
+            Generated text has no tell. It is fluent and authoritative whether
+            it transcribes a ruling or fills a gap, so a reader cannot recover
+            the difference from the prose — and that is how four documents each
+            called a version of the specification turned out to be four
+            different documents.
+
+            A Provenance section names which clauses are the owner's. It is
+            what makes the rest of a record safe to consolidate, because a
+            later reader knows which lines may not be quietly rewritten to
+            resolve a conflict.
+
+            One record has one today. governance/architectural-change-permission.md
+            says every record should. Raise the floor as they are written.
+        #>
+        [string[]] $with = @()
+
+        foreach ($record in $script:Records) {
+            [string] $text = Get-Content -LiteralPath $record.FullName -Raw
+
+            if ($text -match '(?m)^##\s*Provenance\s*$') {
+                $with += $record.Name
+            }
+        }
+
+        Write-Host "  $($with.Count) of $($script:Records.Count) records state their provenance"
+
+        $with.Count | Should -BeGreaterOrEqual $script:ProvenanceFloor
     }
 }
 

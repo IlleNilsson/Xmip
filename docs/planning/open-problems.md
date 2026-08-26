@@ -177,9 +177,50 @@ could not before.
 
 ---
 
+# Runtime safety
+
+## 13. Nothing bounds a publication chain
+
+A Process may publish back into Xmip. A Subscription may start a Process. So a
+Process that publishes a Message matching a Subscription that starts the same
+Process is a loop, and today the runtime has no depth limit, no cycle detection
+and no execution budget.
+
+Recovered from `message-runtime-context.md` during the ADR-0020 consolidation,
+2026-08-26, where it sat as two of six unanswered questions: how are
+Subscription Instance chains bounded, and how are repeated publication chains
+controlled. Neither was ever answered.
+
+This is the classic way an integration platform takes itself down, and it does
+it at three in the morning with a message that looked ordinary.
+
+| option | effect |
+|---|---|
+| **A. Depth limit on the Subscription Instance chain** | simple, cheap, catches the direct case; a long legitimate chain and a loop look identical near the limit |
+| **B. Cycle detection over artifact identities** | precise — the same Subscription firing twice for one lineage is the actual signal; needs the chain persisted and walked on every publication |
+| **C. Execution budget per originating Message** | covers loops and runaway fan-out together, in one number an operator can reason about; the number is arbitrary until someone has production data |
+| **D. Publication generation counter with a ceiling** | cheapest to implement, and it is A wearing a different name |
+
+**Lean: A now, B later, C eventually.** A is one integer on the chain and can
+ship with the chain itself. B is the correct answer and needs the chain to be
+persisted and cheap to walk, which is a `xmip-core-persist` question. C is what
+an operator actually wants — "this Message has cost enough" — but the budget
+number is unguessable before there is traffic to measure.
+
+Whichever wins, the failure must name the cycle, not just refuse: the operator
+needs the Subscription and the Process that formed the loop, or they are
+reading configuration files at three in the morning.
+
+**Also unanswered from the same document**, and smaller: what exactly is
+preserved, what exactly is recovered, the canonical representation of Message
+content at each lifecycle stage, and whether a Message Contract is a first-class
+Artifact Definition or a module-provided validation capability.
+
+---
+
 # Configuration
 
-## 12. The node configuration format
+## 14. The node configuration format
 
 Two shapes are in the tree and they disagree. `[[modules]]` in the node TOML
 against the Ansible template in `deploy/ansible/roles/xmip_node/templates/`,
@@ -222,7 +263,7 @@ Recorded here rather than acted on. `_origins/` is deleted; git holds it.
 
 # Governance
 
-## 13. Succession
+## 15. Succession
 
 AGPL protects the code. The name, the GitHub account, the manifest registry and conformance
 have no successor. Everything currently depends on one personal account.

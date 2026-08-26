@@ -339,7 +339,7 @@ and Schedule
 delivery semantics
 ([`runtime-model.md`](../architecture/runtime-model.md) section 15), and the node
 configuration format
-([`open-problems.md`](../planning/open-problems.md) problem 12).
+([`open-problems.md`](../planning/open-problems.md) problem 14).
 
 ---
 
