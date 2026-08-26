@@ -746,11 +746,12 @@ dependency = []
 # a command a person types, nor .NET project names.
 
   [xmip.core.cli]
-  description = "The xmip executable and every operator action it implements. One path from an operator to the runtime."
+  description = ".NET 11 xmip executable over the Xmip ABI. Every operator action, implemented once."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
   maturity = "planned"
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-runtime"]
+  primaryLanguage = "dotnet"
+  dependency = ["xmip-core-abi"]
 
   [xmip.core.powershell]
   description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
