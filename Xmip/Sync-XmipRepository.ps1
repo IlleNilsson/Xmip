@@ -4,6 +4,36 @@
 # Resolved per call rather than at load: the repository is found by looking
 # for architecture.toml, and the module may be loaded from outside it.
 
+<#
+    .SYNOPSIS
+    Whether a file is untouched scaffolding from the repository template.
+
+    .DESCRIPTION
+    The template's src/lib.rs says, in as many words, to replace it once the
+    repository's responsibility is accepted. A file saying that is not content
+    and must not stop a distribution.
+
+    Deliberately narrow. It matches the template's own sentence rather than
+    guessing from length or emptiness, so a real file can never be mistaken for
+    a stub and overwritten.
+#>
+function Test-XmipTemplateStub {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $false
+    }
+
+    [string] $text = Get-Content -LiteralPath $Path -Raw
+
+    return $text -match 'Replace this template documentation'
+}
+
 function Sync-XmipRepository {
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Clone')]
     param(
@@ -223,6 +253,20 @@ function Sync-XmipRepository {
                 })
         }
 
+        # Validate the whole plan before performing any of it. This moves files
+        # across repository boundaries and cannot be rolled back, so a bad entry
+        # must stop the run at nothing done rather than at eleven done.
+        [string[]] $directories = @(
+            $planned |
+                Where-Object { Test-Path -LiteralPath (Join-Path $Source $_.From) -PathType Container } |
+                ForEach-Object { $_.From }
+        )
+
+        if (0 -lt $directories.Count) {
+            [string] $detail = $directories -join ', '
+            throw "Distribute moves files, not directories. Name the file: $detail"
+        }
+
         $results = [Collections.Generic.List[object]]::new()
         $touched = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
@@ -248,7 +292,14 @@ function Sync-XmipRepository {
 
             if (-not (Test-Path -LiteralPath $from)) { $outcome = 'source-missing' }
             elseif (-not (Test-Path -LiteralPath $repository -PathType Container)) { $outcome = 'repository-absent' }
-            elseif (Test-Path -LiteralPath $target) { $outcome = 'target-exists' }
+            elseif (Test-Path -LiteralPath $target) {
+                # Every module carries a four-line src/lib.rs from the template,
+                # so a target existing does not mean a target with content in
+                # it. Refusing there made the tool careful about the wrong
+                # thing: four real moves would have reported target-exists and
+                # been skipped, against a placeholder that says "replace this".
+                $outcome = if (Test-XmipTemplateStub -Path $target) { 'moved' } else { 'target-exists' }
+            }
 
             [string] $move = '{0} -> {1}/{2}' -f $item.From, $item.To, $item.Path
 
