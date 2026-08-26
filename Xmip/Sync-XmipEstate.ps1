@@ -20,11 +20,236 @@
     Import-Module ./Xmip.psm1
     Sync-XmipEstate -Create -Configure -WhatIf
 #>
+<#
+    .SYNOPSIS
+    The path a repository mounts at inside its owner, or '' if it has none.
+
+    .DESCRIPTION
+    Two levels, per ADR-0016 and section 14 of the repository creation
+    blueprint.
+
+    Depth two mounts under Xmip, grouped by architectural domain, because that
+    layout exists for human navigation:
+
+        xmip-core-transport   ->  modules/capabilities/transport
+        xmip-core-journey     ->  modules/foundation/journey
+
+    Depth three mounts inside its own parent capability, ungrouped, because at
+    that level the parent is the grouping:
+
+        xmip-core-transport-kafka  ->  modules/kafka
+
+    The name is the TOML tree path with dots as hyphens, so the mount name is
+    the last segment and the owner is the name minus that segment.
+#>
+function Get-XmipMountPath {
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Repository,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Declared
+    )
+
+    [string] $name = [string](Get-PropertyValue $Repository 'name')
+    [string] $owner = Get-XmipDeclaredOwner -Name $name -Declared $Declared
+    [string] $leaf = $name
+
+    if ('' -ne $owner) {
+        $leaf = $name.Substring($owner.Length + 1)
+    }
+    elseif ($name.StartsWith('xmip-', [StringComparison]::OrdinalIgnoreCase)) {
+        $leaf = $name.Substring(5)
+    }
+
+    # xmip-core is both a repository and the prefix every module carries, so a
+    # module resolves to it. Modules mount under the estate root regardless —
+    # ADR-0016 shows Xmip pinning modules/transport directly.
+    if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
+        [string] $domain = [string](Get-PropertyValue $Repository 'architecturalDomain' 'Capabilities')
+        return [pscustomobject]@{ Owner = ''; Mount = "modules/$($domain.ToLowerInvariant())/$leaf" }
+    }
+
+    return [pscustomobject]@{ Owner = $owner; Mount = "modules/$leaf" }
+}
+
+<#
+    .SYNOPSIS
+    The longest declared repository name that this one sits beneath, or ''.
+
+    .DESCRIPTION
+    Splitting a name on '-' does not work: a segment may itself contain
+    hyphens, so xmip-core-transport-can-bus splits into five and yields a leaf
+    of 'bus' owned by 'xmip-core-transport-can'. Both are wrong and neither
+    exists. The manifest is its own index — the owner is the longest declared
+    name this one is prefixed by.
+#>
+function Get-XmipDeclaredOwner {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Declared
+    )
+
+    [string] $owner = ''
+
+    foreach ($candidate in $Declared) {
+        if (-not $Name.StartsWith("$candidate-", [StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
+
+        if ($candidate.Length -gt $owner.Length) {
+            $owner = $candidate
+        }
+    }
+
+    return $owner
+}
+
+<#
+    .SYNOPSIS
+    A case-insensitive set of the names on a collection of manifest entries.
+
+    .DESCRIPTION
+    Get-ActualRepositories returns GitHub repository objects, not names.
+    Declaring the caller's parameter [string[]] coerced them to type names and
+    matched nothing, which reported every repository as waiting on creation.
+#>
+function Get-XmipNameSet {
+    [CmdletBinding()]
+    [OutputType([System.Collections.Generic.HashSet[string]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [object[]] $Entries
+    )
+
+    $names = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($entry in @(ConvertTo-Array $Entries)) {
+        [void] $names.Add([string](Get-PropertyValue $entry 'name'))
+    }
+
+    return $names
+}
+
+<#
+    .SYNOPSIS
+    What can be composed now, what is mounted, and what is waiting.
+
+    .DESCRIPTION
+    Pure: reads the manifest and the disk, decides nothing about git. Returns
+    ready as objects carrying Name and Mount, plus counts for the rest.
+
+    Only repositories that exist remotely can be pinned, and a depth-three
+    repository needs its parent composed first — repository-model.md section 7.
+#>
+function Get-XmipComposePlan {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Manifest,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [object[]] $Actual,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Root
+    )
+
+    $exists = Get-XmipNameSet -Entries $Actual
+    [string[]] $declared = @(
+        Get-PropertyValue $Manifest 'repositories' @() |
+            ForEach-Object { [string](Get-PropertyValue $_ 'name') }
+    )
+
+    $ready = [System.Collections.Generic.List[object]]::new()
+    [int] $mounted = 0
+    [int] $waiting = 0
+
+    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
+        [string] $name = [string](Get-PropertyValue $repository 'name')
+        $mount = Get-XmipMountPath -Repository $repository -Declared $declared
+
+        # Waiting: not created yet, or owned by a module that must itself be
+        # composed first. Level two follows level one.
+        if (-not $exists.Contains($name) -or ('' -ne $mount.Owner)) {
+            $waiting++
+            continue
+        }
+
+        if (Test-Path -LiteralPath (Join-Path $Root $mount.Mount)) {
+            $mounted++
+            continue
+        }
+
+        $ready.Add([pscustomobject]@{ Name = $name; Mount = $mount.Mount })
+    }
+
+    return @{ ready = @($ready.ToArray()); mounted = $mounted; waiting = $waiting }
+}
+
+<#
+    .SYNOPSIS
+    Splits missing repositories into actionable drift and expected absence.
+
+    .DESCRIPTION
+    A reserved repository that does not exist is not drift — repository-model.md
+    section 3 says the manifest is the design and creation follows need.
+    Reporting all of them printed 293 warnings to surface one action.
+#>
+function Split-XmipDrift {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Manifest,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Missing
+    )
+
+    [hashtable] $maturityOf = @{}
+
+    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
+        [string] $name = [string](Get-PropertyValue $repository 'name')
+        $maturityOf[$name] = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+    }
+
+    $actionable = [System.Collections.Generic.List[object]]::new()
+    $expected = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($name in $Missing) {
+        [string] $maturity = [string] $maturityOf[$name]
+
+        if ($maturity -eq 'reserved') {
+            $expected.Add($name)
+            continue
+        }
+
+        $actionable.Add([pscustomobject]@{ Name = $name; Maturity = $maturity })
+    }
+
+    return @{ actionable = @($actionable.ToArray()); expected = @($expected.ToArray()) }
+}
+
 function Sync-XmipEstate {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [switch] $Create,
         [switch] $Configure,
+        [switch] $Compose,
         [switch] $IncludeReserved,
         [switch] $Report,
         [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.toml'),
@@ -143,18 +368,49 @@ function Sync-XmipEstate {
         return [pscustomobject]@{ Exists = $true; Repository = $repository }
     }
 
+    function Get-RepositoryPage {
+        # /user/repos with a token includes private repositories. The anonymous
+        # /users/<owner>/repos does not, so an unauthenticated run can report a
+        # private repository as missing.
+        param([Parameter(Mandatory)] [string] $Owner, [Parameter(Mandatory)] [int] $Page)
+
+        [string] $path = if ($GitHubToken) {
+            "/user/repos?per_page=100&affiliation=owner&page=$Page"
+        }
+        else {
+            "/users/$Owner/repos?per_page=100&page=$Page"
+        }
+
+        return @(Invoke-GitHubApi GET $path)
+    }
+
     function Get-ActualRepositories {
+        # One request per declared repository was 336 requests and about three
+        # minutes before anything appeared, which made every command feel dead.
+        # Listing pages at 100, so the same answer costs four.
         param([Parameter(Mandatory)] $Manifest)
 
         $owner = [string](Get-PropertyValue $Manifest 'owner')
+        $declared = Get-XmipNameSet -Entries @(Get-PropertyValue $Manifest 'repositories' @())
         $actual = [Collections.Generic.List[object]]::new()
-        foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
-            $name = [string](Get-PropertyValue $repository 'name')
-            $result = Test-GitHubRepositoryExists -Owner $owner -Name $name
-            if ($result.Exists) {
-                $actual.Add($result.Repository)
+        [int] $page = 1
+
+        while ($true) {
+            [object[]] $batch = @(Get-RepositoryPage -Owner $owner -Page $page)
+
+            foreach ($repository in $batch) {
+                if ($declared.Contains([string](Get-PropertyValue $repository 'name'))) {
+                    $actual.Add($repository)
+                }
             }
+
+            if (100 -gt $batch.Count) {
+                break
+            }
+
+            $page++
         }
+
         return @($actual.ToArray())
     }
 
@@ -478,21 +734,79 @@ function Sync-XmipEstate {
 
 
 
+    function Invoke-Compose {
+        # Short on purpose: the plan is computed at file scope, so this only
+        # performs it. ShouldProcess is why it cannot move out with the rest.
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory = $true)]
+            $Manifest,
+
+            [Parameter(Mandatory = $true)]
+            [AllowEmptyCollection()]
+            [object[]] $Actual
+        )
+
+        Assert-Command 'git'
+
+        [string] $root = Get-XmipRepositoryRoot
+        [string] $owner = [string](Get-PropertyValue $Manifest 'owner')
+        $plan = Get-XmipComposePlan -Manifest $Manifest -Actual $Actual -Root $root
+        [int] $added = 0
+
+        foreach ($item in @($plan.ready)) {
+            if (-not $PSCmdlet.ShouldProcess("$($item.Mount) -> $($item.Name)", 'Add submodule')) {
+                continue
+            }
+
+            [string] $url = "https://github.com/$owner/$($item.Name).git"
+            [string[]] $arguments = @('submodule', 'add', '--', $url, $item.Mount)
+
+            Invoke-Native -FilePath 'git' -Arguments $arguments -At $root | Out-Null
+            Write-Host "COMPOSED: $($item.Mount)"
+            $added++
+        }
+
+        [string] $summary = 'Compose: {0} added, {1} already mounted, {2} waiting on creation' -f
+            $added, $plan.mounted, $plan.waiting
+
+        Write-Step $summary
+
+        if (0 -lt $added) {
+            Write-Step 'Review .gitmodules, then commit. Nothing was pushed.'
+        }
+    }
+
     # No operation switch means report only. That is the safe default and it
     # needs no ceremony to reach.
-    $operating = $Create -or $Configure
+    $operating = $Create -or $Configure -or $Compose
 
     $manifest = Get-XmipManifest $ManifestPath
     Test-XmipManifest $manifest
     $actual = @(Get-ActualRepositories -Manifest $manifest)
     $drift = New-TransactionReport $manifest $actual
+    $split = Split-XmipDrift -Manifest $manifest -Missing @($drift.missing)
 
-    Write-Step "Drift: $($drift.missing.Count) missing, $($drift.unexpected.Count) unexpected"
-    foreach ($name in $drift.missing) { Write-Warning "MISSING: $name" }
-    foreach ($name in $drift.unexpected) { Write-Warning "UNEXPECTED: $name" }
+    Write-Step "Drift: $($split.actionable.Count) missing, $($drift.unexpected.Count) unexpected"
+
+    foreach ($entry in @($split.actionable)) {
+        Write-Warning "MISSING: $($entry.Name)  ($($entry.Maturity))"
+    }
+
+    foreach ($name in $drift.unexpected) {
+        Write-Warning "UNEXPECTED: $name"
+    }
+
+    if (0 -lt $split.expected.Count) {
+        [string] $note = '{0} reserved and not created, as designed. -IncludeReserved overrides.' -f
+            $split.expected.Count
+
+        Write-Step $note
+    }
 
     if ($Create) { Invoke-CreateRepositories -Manifest $manifest -Report $drift }
     if ($Configure) { Invoke-ConfigureRepositories -Manifest $manifest -Report $drift }
+    if ($Compose) { Invoke-Compose -Manifest $manifest -Actual $actual }
     if (-not $operating) { Write-Step 'Reporting only; no operation selected.' }
 
     if ($Report) {

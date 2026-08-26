@@ -267,6 +267,21 @@ BeforeAll {
 
     <#
         .SYNOPSIS
+        How many lines an AST node spans, inclusive of both ends.
+    #>
+    function Measure-Extent {
+        [CmdletBinding()]
+        [OutputType([int])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [System.Management.Automation.Language.Ast] $Ast
+        )
+
+        return $Ast.Extent.EndLineNumber - $Ast.Extent.StartLineNumber + 1
+    }
+
+    <#
+        .SYNOPSIS
         A function's own line count, excluding functions nested inside it.
 
         .DESCRIPTION
@@ -282,24 +297,28 @@ BeforeAll {
             [System.Management.Automation.Language.FunctionDefinitionAst] $Function
         )
 
-        [int] $total = $Function.Extent.EndLineNumber - $Function.Extent.StartLineNumber + 1
+        [int] $total = Measure-Extent -Ast $Function
         [int] $nested = 0
 
-        foreach ($child in $Function.FindAll($script:IsFunctionAst, $true)) {
-            if ($child -eq $Function) {
-                continue
-            }
+        # The declaration is not the function. powershell-style.md section 2
+        # requires one parameter per line, a blank line between, a type on each
+        # and [Parameter()] on its own line — four lines per parameter before
+        # any code exists. Counting that against a 35-line limit meant the two
+        # rules fought, and the param() rule always won.
+        if ($null -ne $Function.Body.ParamBlock) {
+            $total -= Measure-Extent -Ast $Function.Body.ParamBlock
+        }
 
+        foreach ($child in $Function.FindAll($script:IsFunctionAst, $true)) {
             # Only direct children. Walking the parent chain to the first
             # enclosing function is exact; a fixed number of .Parent hops is a
-            # guess about how the parser nests blocks and breaks when it is
-            # wrong. A grandchild is already inside its own parent's extent,
-            # and subtracting both would count it twice.
-            if ((Get-EnclosingFunction -Node $child) -ne $Function) {
+            # guess about how the parser nests blocks. A grandchild is already
+            # inside its own parent's extent, so subtracting both double-counts.
+            if ($child -eq $Function -or (Get-EnclosingFunction -Node $child) -ne $Function) {
                 continue
             }
 
-            $nested += $child.Extent.EndLineNumber - $child.Extent.StartLineNumber + 1
+            $nested += Measure-Extent -Ast $child
         }
 
         return [Math]::Max(0, $total - $nested)
@@ -344,6 +363,22 @@ Describe 'PowerShell style, section 2: functions' {
             new function over thirty-five lines fails immediately because it is
             not on this list.
 
+            **A number may be raised for exactly two reasons, in the same
+            change, with the reason stated here.**
+
+            One: the function gained functionality. A ratchet that forbids
+            growth forever forbids adding features, and the point is that
+            growth is deliberate and visible rather than silent.
+
+            Two: a nested helper was extracted from it. Splitting one costs the
+            parent the blank line that separates it, so extracting a helper
+            makes the parent measure one line longer. Refusing that would make
+            this list punish the exact refactor the limit exists to encourage.
+
+            Re-baselining because a test is inconvenient is the failure this
+            list exists to prevent, and it is only distinguishable from the two
+            above by the reason being written down.
+
             Roughly in the order they are worth splitting:
 
               Sync-XmipRepository       318   seven operations in one body
@@ -355,28 +390,33 @@ Describe 'PowerShell style, section 2: functions' {
 
             The rest are between 36 and 73 and mostly want one helper each.
         #>
+        # Re-baselined 2026-08-26 to measured body lines, after Measure-OwnLine
+        # stopped counting the param() block. Every previous number was loose by
+        # the size of its own declaration. Six functions left the list entirely
+        # once their signatures stopped counting against them.
+        #
+        # Sync-XmipEstate is the one genuine growth: 97 to 101, for -Compose and
+        # for the drift report learning that a reserved repository which does
+        # not exist is not drift.
         $script:Waived = @{
-            'Assert-XmipManifestVersion'   = 51
-            'Assert-XmipRepositoryEntry'   = 59
-            'Expand-XmipEstate'            = 69
-            'Expand-XmipManifestFromTree'  = 52
-            'Get-RepositoryStatus'         = 43
-            'Get-XmipManifest'             = 36
-            'Get-XmipReportedVersion'      = 40
-            'Install-XmipModule'           = 85
-            'Install-XmipPrerequisite'     = 250
-            'Invoke-ConfigureRepositories' = 60
-            'Invoke-CreateRepositories'    = 108
-            'Invoke-Distribute'            = 92
-            'Invoke-GitHubApi'             = 37
-            'New-XmipCrateDescriptor'      = 38
-            'New-XmipGitHubRepository'     = 73
-            'New-XmipRepositoryEntry'      = 61
-            'Resolve-XmipNodeFacts'        = 65
-            'Sync-XmipEstate'              = 97
-            'Sync-XmipRepository'          = 318
-            'Test-XmipFloor'               = 45
-            'Test-XmipManifest'            = 57
+            'Assert-XmipManifestVersion'   = 44
+            'Assert-XmipRepositoryEntry'   = 49
+            'Expand-XmipEstate'            = 48
+            'Expand-XmipManifestFromTree'  = 48
+            'Get-RepositoryStatus'         = 42
+            'Install-XmipModule'           = 80
+            'Install-XmipPrerequisite'     = 237
+            'Invoke-ConfigureRepositories' = 56
+            'Invoke-CreateRepositories'    = 104
+            'Invoke-Distribute'            = 87
+            'New-XmipGitHubRepository'     = 67
+            'Resolve-XmipNodeFacts'        = 55
+            # 101 to 102: Get-RepositoryPage extracted from
+            # Get-ActualRepositories, which costs the parent the blank line
+            # between the two nested functions.
+            'Sync-XmipEstate'              = 102
+            'Sync-XmipRepository'          = 270
+            'Test-XmipManifest'            = 53
         }
     }
 
