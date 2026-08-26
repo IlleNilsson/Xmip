@@ -64,6 +64,11 @@ fromSurface = [
 # 2. Rust
 # ===========================================================================
 
+# [[moved]] is past tense: performed on 2026-08-26 and kept for the reasons
+# rather than the instruction. Invoke-Distribute reads [[move]] and
+# [[decision]], so these no longer plan anything — and the Allocation tests stop
+# reporting a source as missing when its absence is the point.
+#
 # Rewritten 2026-08-26. This section was written when every module repository
 # was an empty template. Thirty of the forty-two now contain working Rust, so
 # half of what follows was a move into an occupied destination — which
@@ -84,19 +89,19 @@ fromSurface = [
 # edition 2024 and dependencies pinned to the estate. The root crates' manifests
 # are older in every respect.
 
-[[move]]
+[[moved]]
 from = "src/transport.rs"
 to = "xmip-core-transport"
 path = "src/lib.rs"
 reason = "Five protocols and TLS. xmip-core-transport is one of the ten empty stubs, so this lands cleanly."
 
-[[move]]
+[[moved]]
 from = "src/transport_technology.rs"
 to = "xmip-core-transport"
 path = "src/technology.rs"
 reason = "Same module, empty destination. The transport_ prefix goes: inside xmip-core-transport it says nothing."
 
-[[move]]
+[[moved]]
 from = "src/disposition.rs"
 to = "xmip-core-message"
 path = "src/disposition.rs"
@@ -188,28 +193,28 @@ path = "crates/xmip-module-api/src/lib.rs"
 path = "crates/xmip-module-api/Cargo.toml"
 reason = "Seven lines of re-exports over xmip-abi. ADR-0012 clause 10 already retires it: the binding crate is xmip-core-abi and it replaces both xmip-module-abi and xmip-module-api. Nothing to move."
 
-[[move]]
+[[moved]]
 from = "crates/xmip-runtime/src/lib.rs"
 to = "xmip-core-runtime"
 path = "src/lib.rs"
 
-[[move]]
+[[moved]]
 from = "crates/xmip-runtime/src/capability_registry.rs"
 to = "xmip-core-runtime"
 path = "src/capability_registry.rs"
 
-[[move]]
+[[moved]]
 from = "crates/xmip-runtime/src/execution_tree.rs"
 to = "xmip-core-runtime"
 path = "src/execution_tree.rs"
 
-[[move]]
+[[moved]]
 from = "crates/xmip-service/src/lib.rs"
 to = "xmip-core-runtime"
 path = "src/service.rs"
 reason = "The Xmip Service. Folded into runtime, which already owns ExecutionTree and StartupValidationReport. ADR-0018."
 
-[[move]]
+[[moved]]
 from = "crates/xmip-host/src/lib.rs"
 to = "xmip-core-runtime"
 path = "src/host.rs"
@@ -221,7 +226,7 @@ path = "crates/xmip-service/Cargo.toml"
 path = "crates/xmip-host/Cargo.toml"
 reason = "Absorbed into xmip-core-runtime. Two crates that never move independently do not need two manifests."
 
-[[move]]
+[[moved]]
 from = "crates/xmip-persistence/src/lib.rs"
 to = "xmip-core-persist"
 path = "src/lib.rs"
@@ -239,13 +244,13 @@ observability-model.md is the record to write against: Tracking is one of the
 five things and the only one that holds payloads.
 """
 
-[[move]]
+[[moved]]
 from = "crates/xmip-configuration/src/lib.rs"
 to = "xmip-core-configure"
 path = "src/lib.rs"
 reason = "xmip-core-configure is an empty stub."
 
-[[move]]
+[[moved]]
 from = "crates/xmip-cli/src/main.rs"
 to = "xmip-core-cli"
 path = "src/main.rs"
@@ -303,7 +308,7 @@ reason = "One lock for the assembly."
 # see section 3b, which is a plan and not an instruction: Invoke-Distribute
 # reads [[move]] and [[decision]] only.
 
-[[move]]
+[[moved]]
 from = "docs/architecture/module-abi-specification.md"
 to = "xmip-core-abi"
 path = "docs/specification.md"
@@ -312,7 +317,7 @@ The prose ABI specification. It belongs beside the header it specifies, and
 include/xmip_module.h moves to the same repository in section 2.
 """
 
-[[move]]
+[[moved]]
 from = "docs/architecture/identity-by-technology.md"
 to = "xmip-core-authenticate"
 path = "docs/identity-by-technology.md"
