@@ -213,6 +213,46 @@ function Get-XmipNameSet {
 
 <#
     .SYNOPSIS
+    The commit each submodule is pinned at, by repository name.
+
+    .DESCRIPTION
+    git ls-tree reads the gitlink, which is the commit the superproject pins —
+    not whatever the working copy happens to be sitting on.
+
+    This is what lets a Cargo git dependency be derived rather than maintained.
+    The estate is otherwise wired twice, by .gitmodules and by hand-written rev
+    values, and the two drift silently: xmip-core has a new commit today and
+    every module still builds against the old SHA.
+#>
+function Get-XmipPinnedCommit {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $MountOf
+    )
+
+    [hashtable] $pinned = @{}
+
+    foreach ($name in $MountOf.Keys) {
+        [string] $mount = [string] $MountOf[$name]
+        [string[]] $arguments = @('ls-tree', 'HEAD', '--', $mount)
+        [string[]] $output = @(Invoke-Native -FilePath 'git' -Arguments $arguments -At $Root -CaptureOutput)
+
+        # 160000 commit <sha>\t<path>
+        if (0 -lt $output.Count -and $output[0] -match '^\d+\s+commit\s+([0-9a-f]{40})') {
+            $pinned[$name] = $Matches[1]
+        }
+    }
+
+    return $pinned
+}
+
+<#
+    .SYNOPSIS
     Where each repository is currently mounted, by repository name.
 
     .DESCRIPTION
@@ -382,12 +422,123 @@ function Split-XmipDrift {
     return @{ actionable = @($actionable.ToArray()); expected = @($expected.ToArray()) }
 }
 
+<#
+    .SYNOPSIS
+    What a module's Cargo.toml should say, against what it says.
+
+    .DESCRIPTION
+    Two things are reconciled, both derived rather than maintained.
+
+    **The crate name is the repository name.** architecture.toml sets
+    primaryCrateMatchesRepository, and every module currently disagrees —
+    modules/foundation/message builds `xmip-message` where the repository is
+    `xmip-core-message`. Pre-ADR-0011 names that nothing has caught up with.
+
+    **A dependency rev is the commit the superproject pins.** Otherwise the
+    estate is wired twice and the two wirings drift without anyone noticing.
+
+    Returns one finding per line that needs changing. Nothing is written here.
+#>
+function Get-XmipCrateFinding {
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $MountOf,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $PinnedAt
+    )
+
+    foreach ($name in ($MountOf.Keys | Sort-Object)) {
+        [string] $file = Join-Path $Root (Join-Path $MountOf[$name] 'Cargo.toml')
+
+        if (-not (Test-Path -LiteralPath $file)) {
+            continue
+        }
+
+        [string[]] $lines = @(Get-Content -LiteralPath $file)
+
+        for ([int] $index = 0; $index -lt $lines.Count; $index++) {
+            $finding = Test-XmipCrateLine -Line $lines[$index] -Expected $name -PinnedAt $PinnedAt
+
+            if ($null -eq $finding) {
+                continue
+            }
+
+            $finding | Add-Member -NotePropertyName File -NotePropertyValue $file
+            $finding | Add-Member -NotePropertyName Line -NotePropertyValue ($index + 1)
+            $finding | Add-Member -NotePropertyName Module -NotePropertyValue $name
+            $finding
+        }
+    }
+}
+
+<#
+    .SYNOPSIS
+    Whether one Cargo.toml line disagrees with the estate, and what it should be.
+#>
+function Test-XmipCrateLine {
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string] $Line,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Expected,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $PinnedAt
+    )
+
+    if ($Line -match '^\s*name\s*=\s*"(xmip[^"]*)"') {
+        if ($Matches[1] -ceq $Expected) {
+            return $null
+        }
+
+        return [pscustomobject]@{
+            Rule = 'CrateName'
+            Was  = $Matches[1]
+            Is   = $Expected
+            New  = "name = `"$Expected`""
+        }
+    }
+
+    # xmip-core = { git = "...", rev = "..." }
+    if ($Line -notmatch '^\s*(xmip[\w-]*)\s*=\s*\{.*\brev\s*=\s*"([0-9a-f]+)"') {
+        return $null
+    }
+
+    [string] $dependency = $Matches[1]
+    [string] $rev = $Matches[2]
+    [string] $should = [string] $PinnedAt[$dependency]
+
+    if ([string]::IsNullOrEmpty($should) -or $rev -ceq $should) {
+        return $null
+    }
+
+    return [pscustomobject]@{
+        Rule = 'DependencyRev'
+        Was  = "$dependency $($rev.Substring(0, 7))"
+        Is   = "$dependency $($should.Substring(0, 7))"
+        New  = $Line -replace '\brev\s*=\s*"[0-9a-f]+"', "rev = `"$should`""
+    }
+}
+
 function Sync-XmipEstate {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [switch] $Create,
         [switch] $Configure,
         [switch] $Compose,
+        # Not -Crate. One letter from -Create on the same cmdlet, where a typo
+        # would create repositories instead of rewriting Cargo.toml.
+        [switch] $Cargo,
         [switch] $IncludeReserved,
         [switch] $Report,
         [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.toml'),
@@ -931,9 +1082,57 @@ function Sync-XmipEstate {
         }
     }
 
+    function Invoke-Cargo {
+        # Rewrites nothing that is already right, so it is safe to run twice.
+        [CmdletBinding()]
+        param()
+
+        Assert-Command 'git'
+
+        [string] $root = Get-XmipRepositoryRoot
+        [hashtable] $mountOf = Get-XmipMountedPath -Root $root
+        [hashtable] $pinnedAt = Get-XmipPinnedCommit -Root $root -MountOf $mountOf
+
+        [hashtable] $edits = @{}
+        [int] $names = 0
+        [int] $revs = 0
+
+        foreach ($finding in @(Get-XmipCrateFinding -Root $root -MountOf $mountOf -PinnedAt $pinnedAt)) {
+            Write-Host ('  {0,-28} {1} -> {2}' -f $finding.Module, $finding.Was, $finding.Is)
+
+            if (-not $edits.ContainsKey($finding.File)) {
+                $edits[$finding.File] = @{}
+            }
+
+            $edits[$finding.File][$finding.Line] = $finding.New
+
+            if ($finding.Rule -eq 'CrateName') { $names++ } else { $revs++ }
+        }
+
+        foreach ($file in $edits.Keys) {
+            if (-not $PSCmdlet.ShouldProcess($file, 'Rewrite Cargo.toml')) {
+                continue
+            }
+
+            [string[]] $lines = @(Get-Content -LiteralPath $file)
+
+            foreach ($line in $edits[$file].Keys) {
+                $lines[$line - 1] = $edits[$file][$line]
+            }
+
+            Set-Content -LiteralPath $file -Value $lines -Encoding utf8NoBOM
+        }
+
+        Write-Step "Crate: $names names, $revs dependency revs, in $($edits.Count) files"
+
+        if (0 -lt $edits.Count) {
+            Write-Step 'Each module is its own repository. Commit and push them individually.'
+        }
+    }
+
     # No operation switch means report only. That is the safe default and it
     # needs no ceremony to reach.
-    $operating = $Create -or $Configure -or $Compose
+    $operating = $Create -or $Configure -or $Compose -or $Cargo
 
     $manifest = Get-XmipManifest $ManifestPath
     Test-XmipManifest $manifest
@@ -961,6 +1160,7 @@ function Sync-XmipEstate {
     if ($Create) { Invoke-CreateRepositories -Manifest $manifest -Report $drift }
     if ($Configure) { Invoke-ConfigureRepositories -Manifest $manifest -Report $drift }
     if ($Compose) { Invoke-Compose -Manifest $manifest -Actual $actual }
+    if ($Cargo) { Invoke-Cargo }
     if (-not $operating) { Write-Step 'Reporting only; no operation selected.' }
 
     if ($Report) {
