@@ -128,6 +128,77 @@ Path implementations address materialised content. Contract implementations
 evaluate the applicable Stream, Message or materialised structure without
 absorbing either of the other two.
 
+### Split on a base protocol, not on a resemblance
+
+A repository is a protocol. **Depend on another protocol only where that other
+protocol independently exists and more than one thing builds on it.**
+
+TCP qualifies: HTTP, FTP, MLLP, AMQP and SMTP all sit on it, and it was
+specified, implemented and standardised without reference to any of them. So do
+UDP, HTTP and CAN bus. Those dependencies are declared, and they are real.
+
+What does not qualify is a layer extracted because two protocols resemble each
+other. Modbus RTU and Modbus TCP share function codes — but there is no
+standalone Modbus application layer that anyone specifies or implements on its
+own, and nothing outside Modbus would ever consume one. The same is true of
+DICOM's DIMSE, of BACnet's services, and of most industrial protocols, which
+are internally layered without any of those layers being reusable.
+
+**Extracting a shared layer that only one family consumes is code reuse wearing
+architecture's clothes.** It buys a saving for exactly one consumer and pays a
+repository, a release cadence, a version-negotiation surface and a boundary to
+maintain. ADR-0012 rejected per-module ABIs on the same arithmetic.
+
+The consequence when two things genuinely diverge: they become **sibling
+protocols, not one protocol plus an extracted core.** If DICOMweb is wanted, it
+is `xmip-core-transport-dicomweb` depending on `xmip-core-transport-http` — a
+separate protocol that happens to speak HTTP, which is what it actually is. If
+Modbus RTU and Modbus TCP ever need separating, they separate into two
+protocols, neither of them a base for the other.
+
+`xmip-core-logic-*` is not a counterexample. A Logic repository exists where the
+operation model is genuinely portable across wires that were not designed for
+it — HTTP APIs over HTTP/1.1, /2 and /3; Matter over Thread, Wi-Fi or Ethernet.
+That is a different situation from one protocol being tidy inside itself.
+
+Recorded 2026-08-26. The assistant proposed splitting DICOM, Modbus and BACnet
+into transport and logic pairs on the test *"the same operations appear over
+more than one wire"*. The owner rejected it: that test asks whether reuse is
+possible, not whether a base protocol exists, and the two are not the same
+question.
+
+### What a Stream carries does not decide which capability moves it
+
+A transport moves Streams. **The subject matter of those Streams is a message
+and contract concern, never a transport one.**
+
+`xmip-core-transport-modbus` carries device register values.
+`xmip-core-transport-dhcp` carries address leases.
+`xmip-core-transport-mdns` carries service announcements. None of them carries
+an invoice, and all three are transports, because moving the bytes is the same
+job regardless of what the bytes mean.
+
+This is worth stating because the wrong instinct is strong and sounds
+principled: *"nobody receives a business message over DHCP, so DHCP is not a
+transport."* The premise smuggles in that a Message must be a business
+document. It need not. On an industrial edge node, *a new device appeared with
+this vendor class* is the event the estate exists to react to — and it arrives
+as a Stream over a transport, like everything else.
+
+The test is mechanical: **does it move bytes between Xmip and an endpoint?**
+If yes, it is a transport, and what those bytes mean is decided further along
+by the representation, Contract and Path technologies.
+
+Recorded 2026-08-26 after the assistant argued the wrong way on it, and the
+owner overruled. The reasoning is here rather than in the commit message
+because the same instinct will recur every time a protocol arrives whose
+payload is not obviously business data.
+
+There is a real distinction nearby, and it is not this one: a runtime that
+*uses* a discovery protocol to locate an endpoint and bind a Receive Location
+to it is doing self-configuration, not transport. Same protocol, different
+feature. See `docs/planning/open-problems.md`.
+
 ## 5b. What a technology repository implements
 
 A technology repository implements somebody else's specification, and the

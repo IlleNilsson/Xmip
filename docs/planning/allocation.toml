@@ -303,7 +303,6 @@ of what went where.
 """
 paths = [
   "docs/Xmip-Routing-Architecture.md",
-  "docs/Xmip-Exclusiveness-Architecture.md",
   "docs/process-instances.md",
 ]
 
@@ -391,6 +390,97 @@ replacedBy = "docs/architecture/runtime-model.md"
 why = "Section 10. Its failover-then-retry-all ordering is conflict C2, ruled the other way in section 23.7: retry the Send Location, then fail over."
 
 [[superseded]]
+path = "docs/Xmip-Exclusiveness-Architecture.md"
+replacedBy = "docs/decisions/ADR-0017-exclusiveness.md and docs/architecture/runtime-model.md"
+why = """
+Marked 'Frozen architectural baseline'. ADR-0017 was written past it without
+citation, which is how a frozen principle gets replaced by accident rather than
+by decision.
+
+Absorbed 2026-08-26 into ADR-0017 clauses 10 to 15, in its own words rather
+than paraphrased: the responsibility list, the boundary statement that
+xmip-exclusiveness never executes the work it coordinates, the nine task states,
+the fairness rule, and the acquisition timeout from the frozen principle.
+
+Its 'durably queued' language was the last surviving trace of the queue-driven
+execution model, which is now restored to runtime-model.md section 3 as the
+XmipToDo. Clause 15 reconciles it with clause 5a: everything is already queued,
+so 'nobody queues' means no second queue for lease acquisition.
+
+LeaseLost is the state worth having recovered. It is not Failed, and the
+difference decides whether a retry is safe.
+"""
+
+[[superseded]]
+path = "docs/architecture/protocol-landscape.md"
+replacedBy = "architecture.toml and docs/architecture/module-model.md"
+why = """
+Held back through two consolidation passes because its taxonomy was absorbed
+into module-model.md section 6 while its **catalogue** was not — it named
+protocols that the manifest had never heard of, and deleting it would have
+deleted the only record they were intended.
+
+Twenty repositories added to architecture.toml on 2026-08-26, at which point
+the catalogue was in the manifest and the document had nothing left to hold.
+
+Transports: bacnet, bluetooth, canopen, coap, dds, dicom, ethernet-ip, j1939,
+lorawan, matter, mdns, nats-jetstream, obd-ii, peppol, profinet, redpanda,
+snmp, ssdp, syslog, thread, zigbee. Messages: edi-tradacoms, ubl.
+
+Six were classified as not needing a repository and the owner overruled that on
+2026-08-26. Four of those overrules were right on precedent and two are
+recorded as disagreements rather than settled:
+
+**J1939, OBD-II, CANopen — the owner was right.** They were called protocols
+carried on CAN rather than transports. But transport-http depends on
+transport-tcp and is its own repository, so a protocol above a transport is
+already a transport here. Declared with a dependency on can-bus, exactly as
+http declares one on tcp.
+
+**Peppol — the owner was right.** Called AS4 plus UBL, both covered. That
+misses SMP and SML lookup, which is Peppol-specific, is neither transport nor
+document format, and is the part an implementer actually has to build.
+
+**NATS JetStream — reasonable either way.** Called a mode of NATS. It is a
+different API surface with durable streams and its own delivery guarantees,
+which is a different implementation whatever it is called.
+
+**Syslog — reasonable, and the two are not the same thing.**
+xmip-core-audit-syslog **emits** audit records to a syslog sink.
+xmip-core-transport-syslog **receives** syslog as integration input. Same
+protocol, opposite directions, different repositories. Worth watching that
+nobody merges them on the strength of the shared name.
+
+**Redpanda — the objection was aimed at the wrong thing.** The complaint was
+that a separate repository duplicates the Kafka implementation to carry a
+vendor name. The answer to that is a declared dependency, not a refused
+repository: transport-redpanda depends on transport-kafka and carries the
+delta, exactly as nats-jetstream depends on nats. Objection withdrawn,
+dependency added.
+
+**mDNS, SSDP, DNS and DHCP — the assistant argued this wrongly and the owner
+was right.** The argument made was that they carry no business message.
+
+That premise is false, and the repository already contained its own
+counter-example: transport-modbus carries device register values, and nobody
+claims Modbus is not a transport because register values are not invoices.
+**What a Stream carries does not decide which capability moves it.** On an
+industrial edge node, 'a new device appeared with this vendor class' is the
+event the estate exists to react to.
+
+The rule is now stated in repository-model.md section 5, because the same wrong
+instinct will recur every time a protocol arrives whose payload is not
+obviously business data.
+
+There is a real distinction nearby and it is a different feature: a runtime
+that *uses* discovery to locate an endpoint and bind a Receive Location to it
+is doing self-configuration, not transport. That is open-problems.md problem
+16, and it is a decision record when it happens — it changes what a Definition
+means, because the set of Receive Location Instances stops being known at
+startup.
+"""
+
+[[superseded]]
 path = "docs/architecture/communication-layering.md"
 replacedBy = "docs/architecture/module-model.md"
 why = "Section 6, the five communication layers, with the rule that not every technology is IP-based."
@@ -465,17 +555,16 @@ document closed with: compliance is claimed only after conformance evidence
 exists. Naming a specification is intent, not a warranty.
 """
 
-[[consolidate]]
-into = "docs/governance/rust-style.md"
-verified = false
-reason = """
-How the Rust here is written, which is governance rather than architecture, and
-the exact counterpart of powershell-style.md. The target does not exist yet;
-this is the entry that creates it. It should end with a section 6 naming what
-enforces it — cargo fmt and clippy already do, so unlike the PowerShell rules
-it starts enforced.
-"""
-paths = ["docs/architecture/rust-runtime-guidelines.md"]
+# A docs/governance/rust-style.md entry stood here, proposing to move
+# rust-runtime-guidelines.md into a counterpart of powershell-style.md.
+#
+# Withdrawn 2026-08-26: module-model.md section 12, 'What the runtime relies on
+# Rust for', already carries the rules — immutability, ownership handoff,
+# channels, Result over panic, traits at boundaries, no unsafe in the core
+# runtime. A second home for them would have been the duplication ADR-0020
+# exists to prevent, proposed inside the file that tracks the consolidation.
+#
+# The document is retired below rather than moved.
 
 [[consolidate]]
 into = "docs/governance/engineering-methodology.md"

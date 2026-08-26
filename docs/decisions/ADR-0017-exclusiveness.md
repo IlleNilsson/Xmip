@@ -181,6 +181,83 @@ support, no approval.
 lease. `RecoveryLease` in `xmip-core-persist` is the same idea under a second
 name and folds into it. Two lease types in two modules is how they drift.
 
+## Absorbed from the frozen baseline, 2026-08-26
+
+`docs/Xmip-Exclusiveness-Architecture.md` was marked *"Frozen architectural
+baseline"* and this record was written past it without citation. Its clauses are
+taken here in its own words, and the document retires.
+
+**10. What `xmip-core-exclusiveness` owns.** Verbatim:
+
+> - acquisition queues;
+> - atomic acquisition and release;
+> - leases and renewal;
+> - fairness;
+> - acquisition timeout;
+> - ownership transitions.
+
+**11. The boundary.** Verbatim, and it is the clause this record most needed:
+
+> Receive, Xmip Process and Send declare the requirement and execute only after
+> acquisition. `xmip-exclusiveness` never executes their work.
+
+Coordination and execution are separate. Nothing runs inside the coordinator
+because it happened to be holding the thing.
+
+**12. Task states.** Nine, verbatim:
+
+```text
+Requested
+Queued
+Acquired
+Executing
+Succeeded
+TimedOut
+LeaseLost
+Failed
+Cancelled
+```
+
+`LeaseLost` is not `Failed`, and the difference decides whether a retry is safe.
+A task that failed did something wrong. A task that lost its lease may have
+completed its work and merely stopped being the owner — retrying that blindly is
+how duplicates are made.
+
+**13. Fairness.** Verbatim:
+
+> The default is first eligible queued task first. Priority may affect
+> eligibility but must not cause permanent starvation.
+
+**14. Acquisition timeout.** From the frozen principle, verbatim:
+
+> Receive, Xmip Process and Send may require exclusive execution at Cluster,
+> Node, Process or Resource scope. When exclusiveness is unavailable, Xmip
+> durably queues the task until exclusiveness is acquired or the configured
+> acquisition timeout is reached.
+
+The acquisition timeout is a configured value on the task. It is not the lease
+duration and not the renewal interval, both of which are operational settings in
+Consequences below.
+
+**15. Clause 5a, reconciled.** *"Nobody queues"* was written before the XmipToDo
+was recorded in `runtime-model.md` section 3, and read against clause 14 it now
+looks like a contradiction. It is not.
+
+Every Stream, Message and Journey is **already** durably queued — that is the
+execution model, not a feature of exclusiveness. Clause 5a means there is **no
+second queue for lease acquisition**: a holder does not block on a lease. Clause
+14's *durably queued* is the work item sitting in the queue it was always in,
+with a configured limit on how long it stays eligible.
+
+What clause 13 adds on top of that is order of eligibility, which clause 5a did
+not have and did not intend to deny.
+
+**Exclusiveness is not ordering**, and clause 13 is not an ordering mechanism.
+Exclusiveness says one holder at a time and nothing about sequence; ordering is
+declared on the artifact and enforced by queue discipline, per
+`runtime-model.md` section 3. Fairness governs who acquires next among tasks
+already eligible. It does not make a sequence.
+
 ## Consequences
 
 - `xmip-core-exclusiveness` gains a dependency on `xmip-core-persist`. Both are

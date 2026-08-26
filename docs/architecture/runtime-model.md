@@ -58,6 +58,159 @@ new immutable artifacts when information changes.
 A Journey appends execution history, audit events and lineage. Its historical
 record is never rewritten.
 
+### Nothing executes on arrival
+
+**Every Stream, Message and Journey is durably queued until it completes or
+retention applies, and is archived before either.** Xmip is queue-driven end to
+end. Arrival enqueues; it does not execute.
+
+The reason is stated best plainly: **you never know when the hardware has time.**
+A receive burst does not get to decide how much CPU exists, an edge device does
+not get to assume it can keep up, and a node that is saturated must be allowed
+to fall behind rather than fail. A queue is what converts "too much work right
+now" into "work that takes longer", which is the difference between a slow
+estate and a broken one.
+
+Three consequences that are otherwise surprising:
+
+**Backpressure is the normal state, not an incident.** A growing queue means
+the estate is absorbing more than it can process this second, which is what it
+is for. Alerting on queue depth alone reports weather.
+
+**Ordering is a property of the queue, not of the code.** Anything needing
+sequential processing gets it from queue discipline, never from work happening
+to be executed in the order it arrived. See *Exclusiveness is not ordering*
+below — they are constantly confused and are not the same guarantee.
+
+**Durability precedes execution.** A Message is on disk before anything acts on
+it, which is what makes replay from a checkpoint meaningful and what makes
+"an accepted Message shall never disappear" achievable rather than aspirational.
+
+### The XmipToDo
+
+The queue has a name: **the XmipToDo**, and there is **one per node**.
+
+BizTalk called its equivalent the MessageBox, and it is the right comparison for
+the same reason it is the right warning. The MessageBox was a shared SQL
+database holding every message and every subscription for the whole group, and
+it was where BizTalk went to die under load — every scale-out story ended in
+"add another MessageBox and partition across them", which is an admission that
+the design put a cluster-wide write hotspot at the centre of the runtime.
+
+**A XmipToDo belongs to one node and is written only by that node.** There is no
+shared write path, so there is nothing to contend for and nothing to partition
+later. It falls out of `deployment-model.md` section 7 rather than being an
+extra decision: an *embedded* store is per-node by definition.
+
+It also means the smallest deployment is coherent. A purpose-compiled runtime on
+a sensor gateway has a XmipToDo, no cluster, no broker, and the same execution
+model as a forty-node estate.
+
+Two things this costs, and they are real:
+
+**Work does not move by itself.** A Message in node A's XmipToDo is node A's
+work. Distributing across nodes is now an explicit act rather than a consequence
+of everyone reading one table, and how that act happens is not yet designed.
+
+**Cluster-scope exclusiveness needs somewhere shared to live.** ADR-0017 clause
+8 puts the lease in `xmip-core-persist` — which is per-node. A lease that must be
+visible cluster-wide cannot live only in the holder's own store, so either
+`Cluster` scope has a different home from `Node` and `Process` scope, or nodes
+agree by some other means.
+
+Both are recorded in `docs/planning/open-problems.md`.
+
+### The queue is the store, not a broker
+
+**Xmip has no message broker and needs none.** The XmipToDo is not a component.
+It is the shape of the persistence model:
+
+```text
+Stream written to runtime persistence
+    Message record created, referencing that Stream
+        Journey record created when the Message reaches a Receive Port
+```
+
+Each of those carries state. Selecting work is a query over state, and
+completing work is a state transition. That is a queue in every sense that
+matters — durable, ordered where ordering is configured, survives restart — and
+it is MSMQ, MQ Series or RabbitMQ in none of them.
+
+This is the same argument ADR-0017 clause 8 made about exclusiveness. Xmip
+already requires a durable store; making it also require somebody else's broker
+would mean depending on another system's cluster to answer a question about its
+own. The engine choice in `deployment-model.md` section 7 follows from this and
+not the other way round: high write volume, read by key, replay from a known
+state *is* the access pattern of a work queue, which is why runtime persistence
+is a RocksDB-style embedded key/value store.
+
+**The manifest will mislead someone about this.** `xmip-core-transport-msmq`,
+`-rabbitmq`, `-kafka`, `-ibm-mq` and a dozen more exist — as **integration
+targets**, things Xmip talks to on somebody else's behalf. None of them is
+infrastructure Xmip runs on. An estate can use Xmip with no broker anywhere,
+and a purpose-compiled runtime on a small device does exactly that.
+
+### Exclusiveness is not ordering
+
+Two different guarantees, routinely treated as one:
+
+**Exclusiveness** says *one holder at a time*. It says nothing whatever about
+which item that holder takes, or in what sequence. ADR-0017 owns it.
+
+**Ordering** says *these items are processed in this sequence*. It is declared
+on the artifact, not inherited from exclusiveness.
+
+The relationship is one-way. **Exclusiveness is necessary for ordering and does
+not provide it** — two concurrent processors reorder work by definition, so
+ordering requires exclusiveness first; but a single holder taking items in
+whatever sequence it likes is perfectly exclusive and completely unordered.
+
+Ordering needs three things exclusiveness does not supply:
+
+**An order key.** Ordered *by what*? Global ordering across a Receive Location
+serialises everything and destroys throughput. What is almost always wanted is
+ordering **per key** — per trading partner, per device, per account — so that
+unrelated sequences run in parallel while each sequence stays intact. The key is
+configured; there is no useful default.
+
+**In-sequence selection.** The holder takes the next item for that key, not the
+next available item. That is a different query against the XmipToDo, and it is
+why ordering is a queue property.
+
+**A failure policy, which nobody thinks about until it happens.** When an
+ordered item fails, either the sequence blocks behind it — order preserved,
+head-of-line blocking, one bad Message stops a partner's traffic until an
+operator intervenes — or it is set aside and the sequence continues, which
+breaks the ordering that was the point. Both are defensible; **neither is a
+default that can be chosen silently**, because the first surprises an operator
+with a stall and the second surprises them with reordering.
+
+### Execution style
+
+An artifact declares how its work runs:
+
+```text
+Sequential    one at a time, in order, per order key
+Parallel      many at once, no ordering guarantee
+Concurrent    many in flight, interleaved, no ordering guarantee
+```
+
+**Sequential enforcement is state-based and durable.** The sequence position
+lives in the XmipToDo, not in the memory of whatever is currently running it. A
+node that dies mid-sequence loses nothing: the position is on disk, another node
+takes the exclusiveness and continues from it. Enforcing order through in-memory
+state would mean a restart either replays or skips, and neither is acceptable
+for something whose entire purpose is that the order held.
+
+Recovered 2026-08-26 from the `_origins` design export, where the execution
+styles and the durability rule were recorded and had been carried into none of
+the consolidated documents.
+
+This is not new. It was recorded in the earliest architecture, carried in
+`Xmip-Exclusiveness-Architecture.md` — which is why that document speaks of
+tasks being *durably queued* — and was dropped from every consolidated
+document. Restored 2026-08-26 after the owner noticed its absence.
+
 ## 4. Actors and Communication Domains
 
 Xmip is not fundamentally an integration engine. Its responsibility is to move

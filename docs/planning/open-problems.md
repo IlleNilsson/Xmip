@@ -218,6 +218,89 @@ Artifact Definition or a module-provided validation capability.
 
 ---
 
+# The XmipToDo
+
+## 17. How does work reach another node?
+
+A XmipToDo is per node and written only by its owner, which is what removes the
+shared write path BizTalk's MessageBox never escaped. The cost is that a Message
+in node A's XmipToDo is node A's work, and nothing moves it.
+
+That is fine for an estate where each node owns its own Receive Locations. It is
+not fine when a Receive node should hand processing to an Executing node, which
+`deployment-model.md` node capabilities explicitly anticipate.
+
+| option | effect |
+|---|---|
+| **A. Nodes hand off over the Xmip node-to-node protocol** | explicit, auditable, and the Journey records the hop. Needs that protocol to exist — see problem 18 |
+| **B. Receive nodes write directly into the target node's XmipToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
+| **C. Work stays where it lands; placement decides at receive time** | no movement at all. Requires the receive-side configuration to know the whole topology, and a saturated node cannot shed load |
+
+**Lean: A.** B is the BizTalk shape wearing a different name. C is defensible
+for edge estates where the device that receives is the device that processes,
+and it is probably right for the purpose-compiled runtime — but it cannot be the
+only answer for a server cluster.
+
+## 18. Where does a Cluster-scope exclusiveness lease live?
+
+ADR-0017 clause 8 puts leases in `xmip-core-persist`. Per-node embedded
+persistence serves `Process` and `Node` scope perfectly, and cannot serve
+`Cluster` scope — a lease visible only in the holder's own store proves nothing
+to anyone else.
+
+| option | effect |
+|---|---|
+| **A. One node holds the cluster lease store** | simple; that node is now a single point of failure and a shared write path for exactly the thing that must not have one |
+| **B. Consensus among nodes** | correct and honest about the problem. It is also a distributed-consensus implementation, which ADR-0017 spent its entire argument avoiding |
+| **C. Cluster scope requires an external store, declared as such** | the five coordinators ADR-0017 removed, readmitted for one narrow purpose and only when Cluster scope is actually used |
+| **D. Cluster scope is not offered** | Node scope and resource-native claims cover more than expected — the file case is already handled by claiming the artefact itself |
+
+**Lean: D first, C as the escape hatch.** ADR-0017 clause 2 already says a
+transport addressing a discrete claimable artefact claims the artefact, and that
+claim is cluster-wide without any lease at all. The remaining need for true
+Cluster scope may be small enough to make B's cost absurd. Worth counting the
+real cases before building anything.
+
+---
+
+# Capabilities
+
+## 16. Can a Receive Location bind to a discovered endpoint?
+
+**Not a filing question.** `mdns`, `ssdp`, `dns` and `dhcp` are transports and
+that is settled — `repository-model.md` section 5 explains why what a Stream
+carries does not decide which capability moves it. Receiving an mDNS
+announcement as a Stream that becomes a Message is transport, plainly.
+
+The open question is the other feature, which uses the same protocols and is
+not transport at all: **the runtime using discovery to find an endpoint and
+bind a Receive Location to it.**
+
+Today a Receive Location is configured with an address. On an edge or
+industrial node the address is frequently not knowable in advance — the PLC,
+the camera, the sensor gateway appears on the network and announces itself.
+Configuration that requires a fixed address cannot express that.
+
+| option | effect |
+|---|---|
+| **A. Nothing. Addresses stay static** | works for every estate where someone can write the address down. Rules out the edge case Xmip explicitly targets |
+| **B. A Receive Location may declare a discovery predicate instead of an address** | *bind to whatever announces service type `_opcua._tcp` on this subnet*. Expressive, and it makes the set of Receive Location Instances change at runtime |
+| **C. Discovery produces Messages; a Process creates the binding** | uses only what exists — an mDNS announcement is a Message, a Process reacts. No new configuration model, and the estate becomes self-modifying, which is worse |
+
+**Lean: B, and it is a decision record when it happens.** It changes what a
+Definition means: today a Receive Location Definition yields a known set of
+Instances at startup, and under B the set is discovered and mutable. That
+touches the Definition and Instance model in `runtime-model.md` section 21, the
+execution tree built at startup in ADR-0018, and identity — an endpoint that
+announced itself has claimed nothing, so ADR-0022's classes apply as
+`anonymous` until something proves otherwise.
+
+C deserves naming because it will look attractive: it needs no new concepts.
+That is exactly its problem — an estate that reconfigures itself through its own
+message flow has no configuration anyone can read.
+
+---
+
 # Configuration
 
 ## 14. The node configuration format

@@ -121,6 +121,8 @@ dependency = []
     [xmip.core.message.binary]
     [xmip.core.message.csv]
     [xmip.core.message.edi-edifact]
+    [xmip.core.message.edi-tradacoms]
+    specification = "GS1 UK TRADACOMS"
     [xmip.core.message.edi-x12]
     [xmip.core.message.fixed-width]
     [xmip.core.message.form-urlencoded]
@@ -130,6 +132,8 @@ dependency = []
     [xmip.core.message.protobuf]
     [xmip.core.message.text]
     [xmip.core.message.toml]
+    [xmip.core.message.ubl]
+    specification = "OASIS Universal Business Language"
     [xmip.core.message.xml]
     [xmip.core.message.yaml]
 
@@ -179,6 +183,108 @@ dependency = []
     specification = "IETF RFC 6455, with the applicable extension documents"
     [xmip.core.transport.activemq]
     [xmip.core.transport.aws-kinesis]
+    [xmip.core.transport.bacnet]
+    specification = "ASHRAE 135, also ISO 16484-5"
+    [xmip.core.transport.bluetooth]
+    specification = "Bluetooth SIG Core Specification"
+    [xmip.core.transport.canopen]
+    dependency = ["xmip-core-transport-can-bus"]
+    specification = "CiA 301"
+    [xmip.core.transport.coap]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "IETF RFC 7252"
+    [xmip.core.transport.cotp]
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "IETF RFC 1006, ISO transport over TCP, TPKT and COTP"
+    [xmip.core.transport.dds]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "OMG Data Distribution Service, RTPS over UDP"
+    [xmip.core.transport.dhcp]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "IETF RFC 2131, with DHCPv6 in RFC 8415"
+    [xmip.core.transport.dicom]
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "NEMA PS3, DIMSE upper layer over TCP"
+    [xmip.core.transport.dnp3]
+    dependency = ["xmip-core-transport-tcp", "xmip-core-transport-serial"]
+    specification = "IEEE 1815"
+    [xmip.core.transport.dns]
+    dependency = ["xmip-core-transport-udp", "xmip-core-transport-tcp"]
+    specification = "IETF RFC 1035, dynamic update RFC 2136, zone transfer over TCP"
+    [xmip.core.transport.ethercat]
+    dependency = ["xmip-core-transport-ethernet"]
+    specification = "IEC 61158 Type 12, IEC 61784-2 communication profile CPF 12"
+    exclusive = "node"
+    [xmip.core.transport.ethernet]
+    specification = "IEEE 802.3, raw Layer 2 frames below IP"
+    exclusive = "node"
+    [xmip.core.transport.ethernet-ip]
+    dependency = ["xmip-core-transport-tcp", "xmip-core-transport-udp"]
+    specification = "ODVA Common Industrial Protocol over Ethernet"
+    [xmip.core.transport.hart]
+    dependency = ["xmip-core-transport-serial"]
+    specification = "FieldComm Group HART, IEC 61784-1 communication profile CPF 9"
+    [xmip.core.transport.iec-60870-5-104]
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "IEC 60870-5-104"
+    [xmip.core.transport.iec-61850]
+    dependency = ["xmip-core-transport-cotp", "xmip-core-transport-ethernet"]
+    specification = "IEC 61850. MMS over COTP, GOOSE and Sampled Values on raw Ethernet"
+    [xmip.core.transport.io-link]
+    specification = "IEC 61131-9, single-drop digital communication interface"
+    [xmip.core.transport.iso-tp]
+    dependency = ["xmip-core-transport-can-bus"]
+    specification = "ISO 15765-2, segmentation for payloads larger than a CAN frame"
+    [xmip.core.transport.j1939]
+    dependency = ["xmip-core-transport-can-bus"]
+    specification = "SAE J1939"
+    [xmip.core.transport.knx]
+    specification = "EN 50090, also ISO/IEC 14543-3"
+    [xmip.core.transport.lorawan]
+    specification = "LoRa Alliance LoRaWAN"
+    [xmip.core.transport.m-bus]
+    dependency = ["xmip-core-transport-serial"]
+    specification = "EN 13757, wired metering bus"
+    [xmip.core.transport.mdns]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "IETF RFC 6762, with DNS-SD in RFC 6763"
+    [xmip.core.transport.obd-ii]
+    dependency = ["xmip-core-transport-iso-tp"]
+    specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
+    [xmip.core.transport.peppol]
+    dependency = ["xmip-core-transport-as4"]
+    specification = "OpenPeppol transport infrastructure, SMP and SML lookup"
+    [xmip.core.transport.profinet]
+    dependency = ["xmip-core-transport-ethernet"]
+    specification = "IEC 61158 and IEC 61784. Real-time classes bypass IP"
+    [xmip.core.transport.s7comm]
+    dependency = ["xmip-core-transport-cotp"]
+    specification = "Siemens S7 communication over ISO-on-TCP. Vendor protocol, no public standard"
+    [xmip.core.transport.secs-gem]
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "SEMI E5 SECS-II, E30 GEM, E37 HSMS"
+    [xmip.core.transport.uds]
+    dependency = ["xmip-core-transport-iso-tp"]
+    specification = "ISO 14229, unified diagnostic services"
+    [xmip.core.transport.wireless-hart]
+    specification = "IEC 62591"
+    [xmip.core.transport.wireless-m-bus]
+    specification = "EN 13757-4"
+    [xmip.core.transport.redpanda]
+    dependency = ["xmip-core-transport-kafka"]
+    specification = "Apache Kafka wire protocol, with Redpanda admin extensions"
+    [xmip.core.transport.snmp]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "IETF SNMPv3, RFC 3411 through RFC 3418"
+    [xmip.core.transport.ssdp]
+    dependency = ["xmip-core-transport-udp"]
+    specification = "UPnP Device Architecture, Simple Service Discovery Protocol"
+    [xmip.core.transport.syslog]
+    specification = "IETF RFC 5424, over UDP or TCP"
+    [xmip.core.transport.thread]
+    specification = "Thread Group Thread, IPv6 over IEEE 802.15.4"
+    [xmip.core.transport.zigbee]
+    specification = "Connectivity Standards Alliance Zigbee"
     [xmip.core.transport.aws-sns]
     [xmip.core.transport.aws-sqs]
     [xmip.core.transport.azure-blob]
@@ -198,6 +304,9 @@ dependency = []
     [xmip.core.transport.mysql]
     [xmip.core.transport.named-pipe]
     [xmip.core.transport.nats]
+    [xmip.core.transport.nats-jetstream]
+    dependency = ["xmip-core-transport-nats"]
+    specification = "NATS JetStream, durable streams and consumers over NATS"
     [xmip.core.transport.nfs]
     [xmip.core.transport.opc-ua]
     [xmip.core.transport.oracle]
@@ -259,6 +368,8 @@ dependency = []
     dependency = ["xmip-core-transport-http", "xmip-core-message-protobuf", "xmip-core-contract-protobuf"]
     [xmip.core.logic.http-api]
     dependency = ["xmip-core-transport-http", "xmip-core-contract-openapi"]
+    [xmip.core.logic.matter]
+    specification = "Connectivity Standards Alliance Matter"
     [xmip.core.logic.soap]
     dependency = ["xmip-core-transport-http", "xmip-core-message-xml", "xmip-core-contract-wsdl"]
 

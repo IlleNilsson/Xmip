@@ -42,7 +42,7 @@ pub fn startup_validation_event(
     detail: impl Into<String>,
 ) -> TrackingEvent {
     TrackingEvent {
-        event_id: Uuid::new_v4(),
+        event_id: Uuid::now_v7(),
         cluster_name: cluster_name.into(),
         node_name: node_name.into(),
         journey_id: None,
@@ -62,7 +62,7 @@ pub fn journey_event(
     detail: impl Into<String>,
 ) -> TrackingEvent {
     TrackingEvent {
-        event_id: Uuid::new_v4(),
+        event_id: Uuid::now_v7(),
         cluster_name: cluster_name.into(),
         node_name: node_name.into(),
         journey_id: Some(journey_id),

@@ -250,7 +250,7 @@ mod tests {
         now: SystemTime,
     ) -> ExclusiveRequest {
         ExclusiveRequest {
-            task_id: Uuid::new_v4(),
+            task_id: Uuid::now_v7(),
             action,
             boundary: ExclusivenessBoundary {
                 scope: ExclusivenessScope::Resource,
