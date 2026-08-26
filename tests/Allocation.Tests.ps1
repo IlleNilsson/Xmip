@@ -25,12 +25,12 @@
 # At file scope rather than in BeforeAll: Pester discovers test names before it
 # runs BeforeAll, and a name interpolating a BeforeAll variable reads as
 # 'no more than  files'.
-[int] $script:ExtraCeiling = 18
+[int] $script:ExtraCeiling = 2
 
 BeforeAll {
     $script:Root = Join-Path $PSScriptRoot '..'
     $script:AllocationPath = Join-Path $script:Root 'docs/planning/allocation.toml'
-    [int] $script:ExtraCeiling = 18
+    [int] $script:ExtraCeiling = 2
 
     Import-Module PSToml -ErrorAction Stop
     Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force

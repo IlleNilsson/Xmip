@@ -114,7 +114,7 @@ Describe 'README lists every document that exists' {
         # new unlisted document is still caught immediately, which is the case
         # this test was written for.
         $unlisted.Count |
-            Should -BeLessOrEqual 16 -Because "ADR-0020 is one document per subject; unlisted: $detail"
+            Should -BeLessOrEqual 0 -Because "ADR-0020 is one document per subject; unlisted: $detail"
     }
 }
 

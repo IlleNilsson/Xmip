@@ -296,26 +296,12 @@ Update the link in the same commit as the move.
 into = "docs/architecture/runtime-model.md"
 verified = false
 reason = """
-The runtime cluster: what Xmip does between arrival and disposition. Fifteen
-documents under docs/architecture/ plus three at docs/ root, roughly 1,300
-lines, written across three vocabularies.
+The three at docs/ root, still to be read. The docs/architecture/ half of this
+group was verified and retired on 2026-08-26 — see the superseded entries below
+and docs/planning/architecture-consolidation.md section 6 for the full mapping
+of what went where.
 """
 paths = [
-  "docs/architecture/artifact-model.md",
-  "docs/architecture/business-process-runtime.md",
-  "docs/architecture/communication-layering.md",
-  "docs/architecture/definition-instance-model.md",
-  "docs/architecture/definition-instance-namespace.md",
-  "docs/architecture/foundations.md",
-  "docs/architecture/message-contracts-and-validation.md",
-  "docs/architecture/message-disposition.md",
-  "docs/architecture/message-runtime-context.md",
-  "docs/architecture/process-and-transform-assignment-rules.md",
-  "docs/architecture/protocol-landscape.md",
-  "docs/architecture/publication-subscription-runtime.md",
-  "docs/architecture/xmip-process.md",
-  "docs/architecture/xmip-send.md",
-  "docs/architecture/xmip-subscription.md",
   "docs/Xmip-Routing-Architecture.md",
   "docs/Xmip-Exclusiveness-Architecture.md",
   "docs/process-instances.md",
@@ -325,14 +311,99 @@ paths = [
 into = "docs/architecture/repository-model.md"
 verified = false
 reason = """
-How the estate is arranged, and how one repository is arranged inside itself.
 The Blueprint is 554 lines and predates schema 2.0, where the TOML tree path is
 the repository name.
 """
-paths = [
-  "docs/architecture/feature-folder-convention.md",
-  "docs/Xmip-Repository-Creation-Blueprint.md",
-]
+paths = ["docs/Xmip-Repository-Creation-Blueprint.md"]
+
+# ---------------------------------------------------------------------------
+# Verified and retired 2026-08-26.
+#
+# docs/planning/architecture-consolidation.md had already read all of these and
+# recorded where each one's content went. Spot-checked before trusting it,
+# because a previous pass's 'verified' has been wrong twice tonight:
+#
+#   repository-model.md section 9   the feature/ source layout tree      confirmed
+#   module-model.md section 6       five communication layers, CANBUS
+#                                   is not below TCP or UDP              confirmed
+#   module-model.md section 12      the Rust rules                       confirmed
+#   runtime-model.md section 22     the Xmip Process, cluster state,
+#                                   stages, ExecutionScope               confirmed
+#
+# The mapping table in architecture-consolidation.md section 6 is the record of
+# where each document's content now lives. Delete that file when section 3b is
+# empty; until then it is the only account of this merge.
+# ---------------------------------------------------------------------------
+
+[[superseded]]
+path = "docs/architecture/artifact-model.md"
+replacedBy = "docs/architecture/runtime-model.md and docs/architecture/module-model.md"
+why = "Definition and Instance, artifact identity surviving implementation change. runtime-model.md section 21, module-model.md section 1."
+
+[[superseded]]
+path = "docs/architecture/foundations.md"
+replacedBy = "docs/architecture/runtime-model.md and docs/architecture/module-model.md"
+why = "Same subject as artifact-model.md, said twice. Section 21 and module-model.md section 1."
+
+[[superseded]]
+path = "docs/architecture/definition-instance-model.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 21. Its objection to 'Artifact' as an umbrella term is conflict C1, ruled on in section 23.6: a collective noun in prose, never in code, TOML or logs."
+
+[[superseded]]
+path = "docs/architecture/definition-instance-namespace.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Twenty lines, a strict subset of definition-instance-model.md."
+
+[[superseded]]
+path = "docs/architecture/xmip-process.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 22, the Xmip Process. Process State belongs to cluster persistence, so execution ownership may move between nodes without the state moving."
+
+[[superseded]]
+path = "docs/architecture/business-process-runtime.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 22: Process Stage, Process Outcome and ExecutionScope. The Outcome-versus-JourneyState mismatch is conflict C5 and remains open in ADR-0013, beside Dismissed."
+
+[[superseded]]
+path = "docs/architecture/message-contracts-and-validation.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 20, the validation gates, and the rule that structured validation happens before serialization because only representation checks remain after it."
+
+[[superseded]]
+path = "docs/architecture/process-and-transform-assignment-rules.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 10. Its 'same interchangeId' is retired vocabulary, resolved in section 23 conflict 5."
+
+[[superseded]]
+path = "docs/architecture/publication-subscription-runtime.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 9. Its repeated-publication model is conflict C4, ruled on in section 23.8: a re-publication is a new Publication, so a Journey stays a line."
+
+[[superseded]]
+path = "docs/architecture/xmip-subscription.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 9, publication and routing."
+
+[[superseded]]
+path = "docs/architecture/xmip-send.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = "Section 10. Its failover-then-retry-all ordering is conflict C2, ruled the other way in section 23.7: retry the Send Location, then fail over."
+
+[[superseded]]
+path = "docs/architecture/communication-layering.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Section 6, the five communication layers, with the rule that not every technology is IP-based."
+
+[[superseded]]
+path = "docs/architecture/feature-folder-convention.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = "Section 9, source layout inside a repository. Its Node.js listing is conflict C6, ruled a defect: Node.js is not a target module technology."
+
+[[superseded]]
+path = "docs/architecture/rust-runtime-guidelines.md"
+replacedBy = "docs/architecture/module-model.md"
+why = "Section 12, what the runtime relies on Rust for. Immutability, ownership handoff, channels, Result over panic, traits at boundaries, no unsafe in the core runtime."
 
 # Worked through 2026-08-26. This group was one entry claiming eight documents
 # were superseded handler-era prose. Reading them found four that were, one
@@ -1033,6 +1104,45 @@ Section 7, the Industrial and IoT family row, together with the UDP note that
 follows it — a UDP Module needing reliability, ordering, de-duplication,
 acknowledgement, replay or persistence declares and implements those itself and
 may not assume the runtime supplies them.
+"""
+
+[[superseded]]
+path = "docs/architecture/message-disposition.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = """
+Accept and Reject, ownership, and the Xmip DMQ as final disposition. Section 9
+already carries all of it, including the DMQ preservation list — receive
+context, validation results, correlation and trace references, audit
+references, failure reason, timestamps, artifact identities and subscription
+evaluation metadata — word for word.
+
+Its strongest line, 'an accepted Xmip Message shall never disappear', is an
+open question in ADR-0013 rather than a settled rule, because retention ages
+things out. That tension is recorded there and is not lost with this file.
+"""
+
+[[superseded]]
+path = "docs/architecture/message-runtime-context.md"
+replacedBy = "docs/architecture/runtime-model.md"
+why = """
+Stream to ownership to publication to subscription, and the validation gates
+along it. Sections 5 to 10 carry the lifecycle, and section 22 carries the
+serialization rule — structured validation before serialization, representation
+checks only after.
+
+Three things it held that section 9 did not, added 2026-08-26 rather than
+dropped:
+
+Subscription Instances form a chain like a call stack, which is what makes a
+Journey explainable after the fact.
+
+Nothing bounds that chain. A Process publishing a Message that matches a
+Subscription starting the same Process is a loop with no depth limit, no cycle
+detection and no budget. That was two of this document's six unanswered
+questions and is now open-problems.md problem 13, with options.
+
+There is no separate concept of transformed properties — a negative rule, and
+the kind that only gets written down once somebody has been tempted.
 """
 
 [[superseded]]

@@ -211,6 +211,63 @@ and only some of it needs to know which.
 This resolves conflict 2 in `runtime-model.md` section 23. `Created` remains
 absent for the reason recorded there: a Journey exists only after Validation.
 
+### There is no Dismissed queue
+
+The follow-on question was whether a dismissed Journey lands somewhere — a DJQ
+for Journeys, or a DMQ reinterpreted as Dismissed rather than Dead.
+
+**Neither. Dismissal is a state, not a destination.** The Xmip DMQ stays what it
+is: Dead Message Queue, holding accepted Messages that no Subscription matched.
+
+**A queue holds what is homeless.** A Message in the DMQ has no Journey. Nothing
+owns it, nothing knows where it was, because it never went anywhere — so it
+needs a place to be kept. A dismissed Journey is not homeless. It exists, it is
+terminal, it is persisted, and it knows its last checkpoint.
+
+**Replay is what settles it, and replay needs both halves.**
+
+A Journey accumulates a story: execution history, audit events, lineage, the
+Subscription Instance chain, checkpoints, state transitions, retry history. A
+Message accumulates one too: envelope and receive context, promoted properties,
+validation results, Contract metadata, section metadata, stream references, and
+its generation lineage.
+
+**Neither story is sufficient alone.** Because Messages are immutable and
+Transformation and Assignment create new ones, a Journey's execution position
+implies a *particular Message generation* — resuming needs to know both where
+the Journey was and what it was holding at the time. And a Message without its
+Journey has no account of what has already been attempted on its behalf.
+
+So replay operates on the pair. The two cases differ in what the pair contains,
+not in whether both halves are needed:
+
+| | Replay means |
+| --- | --- |
+| DMQ Message | **re-publish** — re-run Subscription matching against the Message *with the context it already accumulated*. Not a re-receive: the envelope context, promoted properties and validation results are preserved and reused. What changed is the Subscription set. |
+| Dismissed or Failed Journey | **resume** — from the last checkpoint before it stopped, restoring the Journey position together with the Message generation current at that position. |
+
+One queue holding both would put one operator verb over two meanings, and the
+operator would have to know which kind of thing they were looking at before they
+could know what the button did.
+
+**What this obliges the runtime to keep.** A DMQ entry preserves the Message's
+accumulated context, which the preservation list above already requires. A
+checkpoint preserves the Journey position *and* a reference to the Message
+generation at that point — and that second part is the one most likely to be
+built wrong, because it is easy to persist a position and assume the current
+Message will do.
+
+**A dismissal queue could only ever hold Journeys, and then it is redundant.**
+One Message may have several Journeys, one per matched Subscription. Dismissing
+one must not queue a Message that the others are still working on — so it cannot
+be Message-level. And once it is Journey-level, `Dismissed` and `Failed` are
+structurally identical: both terminal, both holding a position, both resumable.
+A DJQ would need an FJQ beside it, where one query serves both — terminal
+Journeys, filtered by state.
+
+So: **one queue, for Messages that never lived.** Everything else is a Journey
+in a terminal state, found by query and resumed from its checkpoint.
+
 ## Open
 
 - **"An accepted Xmip Message shall never disappear" versus retention.** Per
