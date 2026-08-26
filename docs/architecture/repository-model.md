@@ -40,8 +40,24 @@ about names.*
 | **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
 | **Capabilities** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
-| **Operations** | running and governing Xmip | audit, observe, report, retain, archive, CLI, PowerShell, GUI |
+| **Operations** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
 | **Platform** | platform-wide runtime services | `xmip-core-abi`, `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience`, `xmip-core-exclusiveness` |
+
+**The test between Capabilities and Operations is the message path.** If a
+Journey waits for it, it is a Capability. `xmip-core-retain` moved on
+2026-08-26 for that reason: `disposition.rs` calls it at a gate — *"Stream, by
+xmip-core-retain"* when Message creation is refused, *"Message, by
+xmip-core-retain"* when validation fails — so nothing proceeds until retention
+has taken it.
+
+`audit`, `observe` and `report` stay in Operations because ADR-0014 clause 4
+says observation never sits in the message path. `archive` stays too: it moves
+*already-retained* data on a schedule, and no Journey waits for it.
+
+`retain` had been classified by the company it kept rather than by what it does,
+and its `xmip-core-event` dependency was the tell — eventing is for the
+asynchronous family it was sitting with, not for something called synchronously
+at a gate.
 
 Every Technology repository is a direct child of exactly one Capability
 repository. That is what makes the name computable from the tree, and the tree

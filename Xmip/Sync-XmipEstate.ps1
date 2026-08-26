@@ -213,6 +213,47 @@ function Get-XmipNameSet {
 
 <#
     .SYNOPSIS
+    Where each repository is currently mounted, by repository name.
+
+    .DESCRIPTION
+    Reads .gitmodules. A repository whose architecturalDomain changes gets a new
+    computed mount path, and without this the old mount is invisible: -Compose
+    only ever added, so a moved module stayed where it was until someone ran
+    git mv by hand.
+#>
+function Get-XmipMountedPath {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root
+    )
+
+    [hashtable] $mounted = @{}
+    [string] $file = Join-Path $Root '.gitmodules'
+
+    if (-not (Test-Path -LiteralPath $file)) {
+        return $mounted
+    }
+
+    [string] $path = ''
+
+    foreach ($line in (Get-Content -LiteralPath $file)) {
+        if ($line -match '^\s*path\s*=\s*(.+?)\s*$') {
+            $path = $Matches[1]
+            continue
+        }
+
+        if ($line -match '^\s*url\s*=\s*.+/([^/]+?)(\.git)?\s*$') {
+            $mounted[$Matches[1]] = $path
+        }
+    }
+
+    return $mounted
+}
+
+<#
+    .SYNOPSIS
     What can be composed now, what is mounted, and what is waiting.
 
     .DESCRIPTION
@@ -244,11 +285,23 @@ function Get-XmipComposePlan {
     )
 
     $ready = [System.Collections.Generic.List[object]]::new()
+    $misplaced = [System.Collections.Generic.List[object]]::new()
+    [hashtable] $where = Get-XmipMountedPath -Root $Root
     [int] $mounted = 0
     [int] $waiting = 0
+    [int] $retiredCount = 0
 
     foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
         [string] $name = [string](Get-PropertyValue $repository 'name')
+        [string] $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+
+        # A deprecated or retired repository still exists on GitHub, so without
+        # this it gets mounted straight back after someone removes it.
+        if ($maturity -in 'deprecated', 'retired') {
+            $retiredCount++
+            continue
+        }
+
         $mount = Get-XmipMountPath -Repository $repository -Declared $declared
 
         # Waiting: not created yet, or owned by a module that must itself be
@@ -258,15 +311,30 @@ function Get-XmipComposePlan {
             continue
         }
 
-        if (Test-Path -LiteralPath (Join-Path $Root $mount.Mount)) {
+        [string] $current = [string] $where[$name]
+
+        if ($current -eq $mount.Mount) {
             $mounted++
+            continue
+        }
+
+        # Mounted, but not where the manifest now says. Move rather than add:
+        # adding would leave two mounts of one repository.
+        if (-not [string]::IsNullOrEmpty($current)) {
+            $misplaced.Add([pscustomobject]@{ Name = $name; From = $current; Mount = $mount.Mount })
             continue
         }
 
         $ready.Add([pscustomobject]@{ Name = $name; Mount = $mount.Mount })
     }
 
-    return @{ ready = @($ready.ToArray()); mounted = $mounted; waiting = $waiting }
+    return @{
+        ready     = @($ready.ToArray())
+        misplaced = @($misplaced.ToArray())
+        mounted   = $mounted
+        waiting   = $waiting
+        retired   = $retiredCount
+    }
 }
 
 <#
@@ -836,8 +904,25 @@ function Sync-XmipEstate {
             $added++
         }
 
-        [string] $summary = 'Compose: {0} added, {1} already mounted, {2} waiting on creation' -f
-            $added, $plan.mounted, $plan.waiting
+        [int] $moved = 0
+
+        foreach ($item in @($plan.misplaced)) {
+            [string] $what = '{0}: {1} -> {2}' -f $item.Name, $item.From, $item.Mount
+
+            if (-not $PSCmdlet.ShouldProcess($what, 'Move submodule')) {
+                continue
+            }
+
+            Invoke-Native -FilePath 'git' -Arguments @('mv', $item.From, $item.Mount) -At $root |
+                Out-Null
+
+            Write-Host "MOVED: $what"
+            $moved++
+        }
+
+        [string] $summary =
+            'Compose: {0} added, {1} moved, {2} already mounted, {3} waiting, {4} deprecated' -f
+            $added, $moved, $plan.mounted, $plan.waiting, $plan.retired
 
         Write-Step $summary
 
