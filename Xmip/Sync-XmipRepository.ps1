@@ -221,10 +221,24 @@ function Sync-XmipRepository {
         $results = [Collections.Generic.List[object]]::new()
         $touched = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
+        # A composed estate keeps its working copies as submodules inside this
+        # repository, so a repository name resolves to modules/<domain>/<leaf>
+        # rather than to a sibling clone. Without this, Distribute writes into
+        # ../xmip-repositories and the submodule that owns the file never sees
+        # it.
+        [hashtable] $mountOf = Get-XmipMountedPath -Root $Source
+
         foreach ($item in $planned) {
             $outcome = 'moved'
             $from = Join-Path $Source $item.From
-            $repository = Join-Path $Destination $item.To
+            [string] $mount = [string] $mountOf[$item.To]
+
+            $repository = if ([string]::IsNullOrEmpty($mount)) {
+                Join-Path $Destination $item.To
+            }
+            else {
+                Join-Path $Source $mount
+            }
             $target = Join-Path $repository ($item.Path ? $item.Path : (Split-Path -Leaf $item.From))
 
             if (-not (Test-Path -LiteralPath $from)) { $outcome = 'source-missing' }
