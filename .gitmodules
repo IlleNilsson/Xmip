@@ -101,7 +101,7 @@
 	path = modules/platform/resilience
 	url = https://github.com/IlleNilsson/xmip-core-resilience.git
 [submodule "modules/operations/retain"]
-	path = modules/operations/retain
+	path = modules/capabilities/retain
 	url = https://github.com/IlleNilsson/xmip-core-retain.git
 [submodule "modules/capabilities/route"]
 	path = modules/capabilities/route

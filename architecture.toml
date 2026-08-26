@@ -632,10 +632,10 @@ dependency = []
     [xmip.core.report.sql]
 
   [xmip.core.retain]
-  description = "Retention-policy functionality."
-  architecturalDomain = "Operations"
-  repositoryRole = "operational-capability"
-  dependency = ["xmip-core", "xmip-core-event"]
+  description = "Holds what a gate refused and what policy says to keep. In the message path: a Journey waits for it."
+  architecturalDomain = "Capabilities"
+  repositoryRole = "common-capability"
+  dependency = ["xmip-core", "xmip-core-persist"]
     [xmip.core.retain.azure-blob]
     [xmip.core.retain.file]
     [xmip.core.retain.gcs]
