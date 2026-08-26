@@ -1,95 +1,107 @@
 [workspace]
-# Six members left on 2026-08-26: configuration, runtime, service, host,
-# persistence and cli were distributed to the repositories that own them and
-# their manifests removed with them. module-abi and module-api are retired by
-# ADR-0012 clause 10.
-#
-# Nothing but the root. crates/ is gone: every crate either moved to the
-# repository that owns it or was redundant where it stood. tracking was audit
-# under a retired name, exclusiveness has another solution, and handler-file
-# duplicated the FileTransport that xmip-core-transport now holds.
+# Nothing but the root. Every module is its own repository and its own workspace
+# root; `exclude` keeps cargo inside modules/ from walking up, finding this file
+# and absorbing a crate into a workspace it has no relationship with. That is
+# exactly the coupling separate repositories exist to avoid. Open problem 19.
 members = ["."]
-
-# Every module is its own repository and builds on its own. Without this, cargo
-# in modules/foundation/journey walks up, finds this file, and absorbs the crate
-# into a workspace it has no relationship with — which is exactly the coupling
-# separate repositories exist to avoid. Open problem 19.
 exclude = ["modules"]
-
 resolver = "2"
 
-[workspace.package]
+[package]
+# The platform repository is Xmip, so its primary crate is xmip. It holds no
+# behaviour of its own: contracts, journey_model, route and vertical_slice went
+# to the repositories that own them on 2026-08-26. What is left is the assembly.
+name = "xmip"
 version = "0.1.1"
 edition = "2021"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/IlleNilsson/Xmip"
-
-[workspace.dependencies]
-prost = "0.14.3"
-rusqlite = { version = "0.37", features = ["bundled"] }
-serde = { version = "1", features = ["derive"] }
-toml = "0.9"
-uuid = { version = "1", features = ["v4", "v7", "serde"] }
-rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
-rustls-native-certs = "0.8"
-
-[package]
-# The platform repository is Xmip, so its primary crate is xmip.
-name = "xmip"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
+description = "The Xmip platform, assembled from its modules."
 
 [lib]
-# Was xmip_core, kept that way so every `use xmip_core::` in the workspace
-# stayed untouched. That was convenience, and it collided: modules/foundation/
-# core is also xmip-core, so two different crates were importable under one
-# identifier. Harmless while they never met, and this crate is becoming the
-# assembly that depends on the other one.
 name = "xmip"
 path = "src/lib.rs"
 
 [features]
 default = ["server-profile"]
 
-# Build profiles. A build profile decides what is compiled in, and
-# runtime-profiles.md says profile selection happens at build and packaging
-# time. Three are shipped. Any other composition of the capabilities below is
-# a custom build, which that document calls a purpose-compiled runtime.
-server-profile = ["sqlite-store", "prost-codec", "dynamic-modules", "tls"]
-desktop-profile = ["sqlite-store", "prost-codec", "dynamic-modules", "tls"]
-tiny-profile = ["minimal-runtime", "prost-codec"]
-
-# desktop-profile is the same composition as server-profile today. What will
-# separate them is an interactive host and a local GUI host, and neither
-# exists yet. The name is declared so packaging has a stable target and so the
-# difference lands in a decided place when it arrives.
-
-# tiny-profile replaces iot-profile and embedded-profile, which were identical
-# to each other and to this.
-
+# A build profile decides what is compiled in. Selection happens at build and
+# packaging time; any other composition of the modules below is a custom build,
+# which runtime-profiles.md calls a purpose-compiled runtime.
+#
 # Deployment profiles are deliberately absent. IoT device, edge node, single
-# server, cluster, cloud node and hybrid select modules, and module selection
-# is configuration. deployment-profiles.md: a deployment profile selects
-# modules and does not redefine Xmip. That belongs in TOML, not here.
+# server, cluster, cloud node and hybrid select modules at run time, and module
+# selection is configuration. That belongs in TOML, not here.
+server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "exclusiveness", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform"]
 
-# Capabilities. A custom build composes these directly.
-minimal-runtime = []
-sqlite-store = ["dep:rusqlite"]
-prost-codec = ["dep:prost"]
-dynamic-modules = []
+# The same composition as server-profile today. What will separate them is an
+# interactive host and a local GUI host, and neither exists yet. The name is
+# declared so packaging has a stable target and the difference lands somewhere
+# decided when it arrives.
+desktop-profile = ["server-profile"]
 
-# TLS is a capability, not a profile. tiny-profile leaves it out on purpose:
-# a purpose-compiled telemetry forwarder should not pay for a stack it never
-# opens. rustls is pure Rust; its crypto provider is ring, chosen over
-# aws-lc-rs because it cross-compiles to arm64 with less pain.
-tls = ["dep:rustls", "dep:rustls-native-certs"]
+# Replaces iot-profile and embedded-profile, which were identical to each other
+# and to this. Empty on purpose: the modules a forwarder cannot do without are
+# not optional, so what makes a build tiny is everything it leaves out.
+tiny-profile = []
+
+archive = ["dep:xmip-archive"]
+assign = ["dep:xmip-assign"]
+audit = ["dep:xmip-audit"]
+authenticate = ["dep:xmip-authenticate"]
+authorize = ["dep:xmip-authorize"]
+cluster = ["dep:xmip-cluster"]
+contract = ["dep:xmip-contract"]
+demote = ["dep:xmip-demote"]
+event = ["dep:xmip-event"]
+exclusiveness = ["dep:xmip-exclusiveness"]
+identify = ["dep:xmip-identify"]
+node = ["dep:xmip-node"]
+observe = ["dep:xmip-observe"]
+party = ["dep:xmip-party"]
+path = ["dep:xmip-path"]
+persist = ["dep:xmip-persist"]
+prepare = ["dep:xmip-prepare"]
+process = ["dep:xmip-process"]
+promote = ["dep:xmip-promote"]
+report = ["dep:xmip-report"]
+resilience = ["dep:xmip-resilience"]
+retain = ["dep:xmip-retain"]
+transform = ["dep:xmip-transform"]
+
 [dependencies]
-prost = { workspace = true, optional = true }
-rusqlite = { workspace = true, optional = true }
-serde.workspace = true
-toml.workspace = true
-uuid.workspace = true
-rustls = { workspace = true, optional = true }
-rustls-native-certs = { workspace = true, optional = true }
+xmip-abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xmip-core-abi", branch = "main" }
+xmip-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", optional = true }
+xmip-assign = { package = "xmip-core-assign", git = "https://github.com/IlleNilsson/xmip-core-assign", branch = "main", optional = true }
+xmip-audit = { package = "xmip-core-audit", git = "https://github.com/IlleNilsson/xmip-core-audit", branch = "main", optional = true }
+xmip-authenticate = { package = "xmip-core-authenticate", git = "https://github.com/IlleNilsson/xmip-core-authenticate", branch = "main", optional = true }
+xmip-authorize = { package = "xmip-core-authorize", git = "https://github.com/IlleNilsson/xmip-core-authorize", branch = "main", optional = true }
+xmip-cluster = { package = "xmip-core-cluster", git = "https://github.com/IlleNilsson/xmip-core-cluster", branch = "main", optional = true }
+xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main" }
+xmip-context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
+xmip-contract = { package = "xmip-core-contract", git = "https://github.com/IlleNilsson/xmip-core-contract", branch = "main", optional = true }
+xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
+xmip-demote = { package = "xmip-core-demote", git = "https://github.com/IlleNilsson/xmip-core-demote", branch = "main", optional = true }
+xmip-event = { package = "xmip-core-event", git = "https://github.com/IlleNilsson/xmip-core-event", branch = "main", optional = true }
+xmip-exclusiveness = { package = "xmip-core-exclusiveness", git = "https://github.com/IlleNilsson/xmip-core-exclusiveness", branch = "main", optional = true }
+xmip-identify = { package = "xmip-core-identify", git = "https://github.com/IlleNilsson/xmip-core-identify", branch = "main", optional = true }
+xmip-journey = { package = "xmip-core-journey", git = "https://github.com/IlleNilsson/xmip-core-journey", branch = "main" }
+xmip-message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
+xmip-node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/xmip-core-node", branch = "main", optional = true }
+xmip-observe = { package = "xmip-core-observe", git = "https://github.com/IlleNilsson/xmip-core-observe", branch = "main", optional = true }
+xmip-party = { package = "xmip-core-party", git = "https://github.com/IlleNilsson/xmip-core-party", branch = "main", optional = true }
+xmip-path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main", optional = true }
+xmip-persist = { package = "xmip-core-persist", git = "https://github.com/IlleNilsson/xmip-core-persist", branch = "main", optional = true }
+xmip-prepare = { package = "xmip-core-prepare", git = "https://github.com/IlleNilsson/xmip-core-prepare", branch = "main", optional = true }
+xmip-process = { package = "xmip-core-process", git = "https://github.com/IlleNilsson/xmip-core-process", branch = "main", optional = true }
+xmip-promote = { package = "xmip-core-promote", git = "https://github.com/IlleNilsson/xmip-core-promote", branch = "main", optional = true }
+xmip-receive = { package = "xmip-core-receive", git = "https://github.com/IlleNilsson/xmip-core-receive", branch = "main" }
+xmip-report = { package = "xmip-core-report", git = "https://github.com/IlleNilsson/xmip-core-report", branch = "main", optional = true }
+xmip-resilience = { package = "xmip-core-resilience", git = "https://github.com/IlleNilsson/xmip-core-resilience", branch = "main", optional = true }
+xmip-retain = { package = "xmip-core-retain", git = "https://github.com/IlleNilsson/xmip-core-retain", branch = "main", optional = true }
+xmip-route = { package = "xmip-core-route", git = "https://github.com/IlleNilsson/xmip-core-route", branch = "main" }
+xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main" }
+xmip-send = { package = "xmip-core-send", git = "https://github.com/IlleNilsson/xmip-core-send", branch = "main" }
+xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
+xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }
+xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
