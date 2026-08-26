@@ -463,7 +463,7 @@ function Get-XmipCrateFinding {
         [string[]] $lines = @(Get-Content -LiteralPath $file)
 
         for ([int] $index = 0; $index -lt $lines.Count; $index++) {
-            $finding = Test-XmipCrateLine -Line $lines[$index] -Expected $name -PinnedAt $PinnedAt
+            $finding = Test-XmipCrateLine -Line $lines[$index] -PinnedAt $PinnedAt
 
             if ($null -eq $finding) {
                 continue
@@ -490,24 +490,14 @@ function Test-XmipCrateLine {
         [string] $Line,
 
         [Parameter(Mandatory = $true)]
-        [string] $Expected,
-
-        [Parameter(Mandatory = $true)]
         [hashtable] $PinnedAt
     )
 
-    if ($Line -match '^\s*name\s*=\s*"(xmip[^"]*)"') {
-        if ($Matches[1] -ceq $Expected) {
-            return $null
-        }
-
-        return [pscustomobject]@{
-            Rule = 'CrateName'
-            Was  = $Matches[1]
-            Is   = $Expected
-            New  = "name = `"$Expected`""
-        }
-    }
+    # Crate names are deliberately not reconciled. repository-model.md section 6
+    # grants the exception: the crate drops the first-party provider segment, so
+    # xmip-core-message builds xmip-message. Renaming forty crates to satisfy a
+    # naming policy costs forty repositories, every use statement, and a
+    # permanent xmip_core_ prefix on every import, and buys nothing that works.
 
     # xmip-core = { git = "...", rev = "..." }
     if ($Line -notmatch '^\s*(xmip[\w-]*)\s*=\s*\{.*\brev\s*=\s*"([0-9a-f]+)"') {
@@ -1094,7 +1084,6 @@ function Sync-XmipEstate {
         [hashtable] $pinnedAt = Get-XmipPinnedCommit -Root $root -MountOf $mountOf
 
         [hashtable] $edits = @{}
-        [int] $names = 0
         [int] $revs = 0
 
         foreach ($finding in @(Get-XmipCrateFinding -Root $root -MountOf $mountOf -PinnedAt $pinnedAt)) {
@@ -1106,7 +1095,7 @@ function Sync-XmipEstate {
 
             $edits[$finding.File][$finding.Line] = $finding.New
 
-            if ($finding.Rule -eq 'CrateName') { $names++ } else { $revs++ }
+            $revs++
         }
 
         foreach ($file in $edits.Keys) {
@@ -1123,7 +1112,7 @@ function Sync-XmipEstate {
             Set-Content -LiteralPath $file -Value $lines -Encoding utf8NoBOM
         }
 
-        Write-Step "Crate: $names names, $revs dependency revs, in $($edits.Count) files"
+        Write-Step "Cargo: $revs dependency revs in $($edits.Count) files"
 
         if (0 -lt $edits.Count) {
             Write-Step 'Each module is its own repository. Commit and push them individually.'

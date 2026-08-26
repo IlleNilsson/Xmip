@@ -268,7 +268,21 @@ implements, and it had been classified for deletion.
 ## 6. Crates
 
 Every repository has one primary Rust crate whose name matches the repository
-name, unless an accepted architecture decision defines an exception. ADR-0014
+name, unless an accepted architecture decision defines an exception.
+
+**The exception, recorded 2026-08-26: a first-party crate drops the `core`
+provider segment.** `xmip-core-message` builds the crate `xmip-message`.
+
+`core` exists to keep repositories distinct inside one GitHub namespace, which
+Cargo already does by crate name — `xmip-message` is unambiguous, and a third
+party's `xmip-acme-message` still does not collide. Keeping it would put
+`xmip_core_` on the front of every import in the estate, permanently, to satisfy
+a naming rule rather than to prevent a collision.
+
+The forty crates are already named this way, so this makes the estate consistent
+today instead of after forty repository commits and a rewrite of every `use`
+statement. `Sync-XmipEstate -Cargo` therefore reconciles dependency revisions
+and leaves names alone. ADR-0014
 clause 14 defines the exceptions that exist: a module carrying its own language
 is not a Rust crate, which is why `xmip-core-powershell` and `xmip-core-gui`
 declare `primaryLanguage` and do not pretend otherwise.
