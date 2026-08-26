@@ -193,15 +193,20 @@ One document per subject, and no versions in filenames —
 | [`architecture/module-model.md`](docs/architecture/module-model.md) | the module boundary, loading and isolation |
 | [`architecture/deployment-model.md`](docs/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
 | [`architecture/observability-model.md`](docs/architecture/observability-model.md) | audit, logs, traces, retention, observation |
-| [`architecture/identity-by-technology.md`](docs/architecture/identity-by-technology.md) | where identity lives, per protocol, against the standards |
 | [`docs/decisions/`](docs/decisions) | **every decision, read as one document** — by subject, not by number |
 
-Two documents in `docs/architecture/` are in transit and are listed so the
-tests can tell the difference between "in transit" and "forgotten":
+Two documents now live with the repository that owns them, reachable through the
+submodules:
 
-| Document | Status |
+| Document | Where |
 | --- | --- |
-| [`architecture/module-abi-specification.md`](docs/architecture/module-abi-specification.md) | moving to `xmip-core-abi` with `include/xmip_module.h` |
+| identity, per protocol, against the standards | `modules/capabilities/authenticate/docs/` |
+| the normative ABI specification | `modules/foundation/abi/docs/` |
+
+Governance:
+
+| Document | Answers |
+| --- | --- |
 | [`governance/powershell-style.md`](docs/governance/powershell-style.md) | how the PowerShell here is written |
 | [`governance/release-model.md`](docs/governance/release-model.md) | Continuum, Linear, and how work reaches them |
 
