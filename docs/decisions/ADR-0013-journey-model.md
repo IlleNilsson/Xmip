@@ -123,6 +123,72 @@ artifact identities and subscription evaluation metadata.
 That metadata is the point. When nothing matched, the operator's question is "what were the
 promoted properties, and which Subscription nearly matched?" — not "what was in the body".
 
+### 4b. A Journey names the Journey before it, and a Message names none
+
+Two corrections recorded 2026-08-26, both about which record owns the link.
+
+**A Journey carries `previous_journey_id`.** When a Process splits a Message, or
+publishes back into Xmip, the Journeys that follow reference the one they came
+from. `runtime-model.md` section 23 conflict 8 left this open — *"what remains
+to be named is the link from a Publication to the one that caused it"* — and
+this names it.
+
+It is called *previous*, not *parent*. Parent implies containment and reads as
+a contradiction of clause 5's *a Journey is a line, not a tree*. It is not one:
+**each Journey is a line; the relationships between Journeys form a chain.**
+Several Journeys may share one previous Journey, which is simply what happens
+when one Publication matches several Subscriptions.
+
+`journey` unqualified always means the current Journey.
+
+**A Message carries no `journey_id`.** Both implementations have one today —
+`src/journey_model.rs` and `modules/foundation/message` — and it is backwards.
+A Message is published; *then* subscribers pick it up and open Journeys. A
+Message owning a single Journey identity cannot be picked up twice, which
+contradicts clause 5 directly. Journeys reference Messages, never the reverse.
+
+**Known limit.** `previous_journey_id` names the causing Journey, not the
+causing event. A Journey that publishes twice leaves a successor able to say
+*which Journey* started it and not *which publication within it*. That is the
+identifier question in section 23 conflict 5 and it stays open.
+
+### 4c. Xmip does not deduplicate. A Process decides
+
+**A Stream may be published into Xmip twice, and Xmip accepts it twice.** Two
+Streams, two Messages, two sets of Journeys, all correct. Xmip does not own the
+consequences of a client sending the same thing more than once.
+
+**Two identical byte sequences are not the same event.** A retry and a genuine
+resubmission are indistinguishable at the wire. Only the domain knows whether
+the second invoice is a duplicate or a correction, so a platform that
+deduplicates has guessed — and it will be wrong in one direction silently,
+which is the worse direction.
+
+So duplicate detection is a **business decision**, and business decisions
+belong in an Xmip Process.
+
+This is the inbound counterpart to the delivery semantics in
+`runtime-model.md` section 15. That clause says what Xmip promises when
+*sending*: exactly-once where the endpoint permits, at-least-once otherwise.
+This says what Xmip promises a client *sending in*: nothing, deliberately.
+
+**It is also where `Dismissed` earns its place.** A duplicate is not refused at
+a gate — it authenticates, it validates, it is a perfectly good Message, and it
+gets Journeys. A Process then decides *this one has already been handled*. That
+outcome is neither `Completed` nor `Failed`, and collapsing it into `Failed`
+would make every duplicate read as an error.
+
+**Two consequences.**
+
+A Process needs to query prior Messages and Journeys — by promoted property,
+correlation or business key — to decide *already seen*. History lookup is a
+first-class Process capability and the Process model does not yet provide one.
+
+Protocol-level deduplication is not this. Where a transport's specification
+defines duplicate semantics — a Kafka idempotent producer, an AS2 message-id, a
+JMSMessageID — the transport Module honours them, because that is conformance
+rather than judgement. Same word, two layers.
+
 ### 5. A Publication produces zero, one or N Journeys
 
 ```text

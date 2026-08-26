@@ -304,7 +304,9 @@ You have a word. This gives you the decision that governs it.
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
+| Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |

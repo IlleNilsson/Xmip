@@ -198,23 +198,28 @@ function Sync-XmipRepository {
         # A move entry and a decision entry that carries a destination are the
         # same instruction wearing two names. Read both or the eleven answered
         # questions do nothing.
+        # Get-TomlValue, not Get-PropertyValue. ConvertFrom-Toml returns an
+        # IDictionary, whose keys are not PSObject properties, so
+        # Get-PropertyValue returned @() for both sections. Distribute planned
+        # nothing and reported "completed" — the same defect that made
+        # -IncludeOptional permanently false.
         $planned = [Collections.Generic.List[object]]::new()
-        foreach ($entry in @(Get-PropertyValue $map 'move' @())) {
+        foreach ($entry in @(Get-TomlValue $map 'move' @())) {
             $planned.Add([pscustomobject]@{
-                    From = [string](Get-PropertyValue $entry 'from')
-                    To = [string](Get-PropertyValue $entry 'to')
-                    Path = [string](Get-PropertyValue $entry 'path')
+                    From = [string](Get-TomlValue $entry 'from')
+                    To = [string](Get-TomlValue $entry 'to')
+                    Path = [string](Get-TomlValue $entry 'path')
                     Source = 'move'
                 })
         }
-        foreach ($entry in @(Get-PropertyValue $map 'decision' @())) {
-            $to = [string](Get-PropertyValue $entry 'to')
+        foreach ($entry in @(Get-TomlValue $map 'decision' @())) {
+            $to = [string](Get-TomlValue $entry 'to')
             if (-not $to) { continue }
             $planned.Add([pscustomobject]@{
-                    From = [string](Get-PropertyValue $entry 'path')
+                    From = [string](Get-TomlValue $entry 'path')
                     To = $to
-                    Path = [string](Get-PropertyValue $entry 'newPath')
-                    Source = "decision $([string](Get-PropertyValue $entry 'question'))"
+                    Path = [string](Get-TomlValue $entry 'newPath')
+                    Source = "decision $([string](Get-TomlValue $entry 'question'))"
                 })
         }
 

@@ -348,9 +348,9 @@ or may represent a Journey over time, waiting for information, decisions,
 replies, timeouts or other Events.
 
 **A Journey continues regardless of routing, processing, waiting, retries or
-elapsed time.** Messages are immutable and reference immutable Streams;
-Assignment and Transformation create new Messages, and new Streams only when
-content changes. Work continues until it leaves Xmip and the departure has been
+elapsed time.** Messages accumulate context and reference immutable Streams;
+Assignment and Transformation create new Message generations, and new Streams
+only when content changes. Work continues until it leaves Xmip and the departure has been
 audited.
 
 What must be persisted to resume safely:

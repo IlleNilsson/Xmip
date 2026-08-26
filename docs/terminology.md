@@ -130,7 +130,7 @@ and authorization then decides whether nobody may post here.
 
 ## Message and Section
 
-A **Message** is an immutable processing unit. It has a message id, metadata,
+A **Message** is a processing unit over immutable content. It has a message id, metadata,
 and one or more Sections.
 
 A **Section** is a stream contained within a Message, with a section id,

@@ -29,13 +29,33 @@ Audit all significant actions
 
 ## Message immutability
 
-Messages are immutable.
+**Amended 2026-08-26. The Stream is immutable. The Message is not.**
 
-If assignment changes message state, Xmip creates a new message.
+This section read *"Messages are immutable"* without qualification, and that is
+false in a way that mattered: a Message that could not accumulate could not
+carry promoted properties, validation results or execution history at all —
+which is most of what a Message is for.
 
-If transformation changes message content, Xmip creates a new message.
+**Content is immutable. Context accumulates.**
 
-The new message keeps lineage through the interchange.
+A Message's Sections point at Streams, and a Stream is never modified. What
+grows is everything around the content: context, promoted properties, Contract
+metadata, validation results, execution history.
+
+Content changes only through Assignment or Transformation, and those create a
+new Stream and a new Message generation rather than editing anything. So:
+
+```text
+metadata changes   the same Message, carrying more
+content changes    a new Stream, a new Message generation
+```
+
+The new generation keeps lineage to the one before it. *"Through the
+interchange"* below is retired vocabulary — ADR-0013 replaced Interchange with
+Journey, and `runtime-model.md` section 23 conflict 5 records that the
+generation link, not a shared interchange identifier, is what carries lineage.
+
+`runtime-model.md` section 3 holds the full statement.
 
 ## Interchange lifecycle
 
