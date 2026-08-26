@@ -16,6 +16,57 @@ BizTalk is the warning. Its Administration Console was simultaneously the live m
 
 The same console reached into the MessageBox directly. That is why parts of it were never scriptable, and why what the console could do and what the PowerShell provider could do drifted apart.
 
+## Amendment, 2026-08-26: every user-interfacing module is .NET 11
+
+**Supersedes clauses 7 and 8 where they say the CLI is Rust.**
+
+Clause 2 already said *"the operator surfaces are written in .NET 11, both the
+executable and the web solution"*. Clauses 7 and 8 said the executable is Rust.
+Both were accepted, in one record, contradicting each other.
+
+The rule:
+
+```text
+xmip-core-cli          .NET 11      the xmip executable
+xmip-core-powershell   PowerShell   which runs on .NET
+xmip-core-gui          .NET 11      MAUI desktop and Blazor web
+xmip-core-abi          Rust         the exception
+```
+
+**`xmip-core-abi` is the exception because it is not a surface.** It is the
+binding over the normative C header, and it sits on the runtime's side of the
+boundary. Everything a person touches is .NET 11; the thing they touch it
+through is Rust.
+
+**Why it settles the right way.** Clause 2's reasoning was always the stronger
+one: *"the operator surfaces are .NET because that is where the operators are.
+The people replacing BizTalk are .NET people, running Windows, already holding
+PowerShell."* A Rust binary would have been the odd surface out, and clause 7
+justified it by the CLI being what everything else went through — which the ABI
+amendment below has since retired.
+
+**Consequences.**
+
+`xmip-core-cli` is not a Rust crate. It carries `primaryLanguage = "dotnet"`,
+and the crate policy does not apply to it — ADR-0014 clause 14 already covers
+that shape for `powershell` and `gui`.
+
+**All three surfaces P/Invoke the same C ABI, and all three are .NET.**
+PowerShell Core runs on .NET, so one binding assembly serves all of them.
+Writing those declarations three times would mean three things that must agree
+about struct layout, calling convention and lifetimes — which is the drift an
+ABI exists to prevent. ADR-0012 clause 2 already frames bindings as
+conveniences over the normative header, so the .NET binding belongs beside the
+Rust one in `xmip-core-abi`.
+
+`crates/xmip-cli/src/main.rs` was distributed to `modules/operations/cli` on
+this date on the assumption it was a Rust crate. It is Rust in a .NET
+repository and does not belong there.
+
+**.NET 11 reaches GA on 10 November 2026**, so all three need a preview SDK
+until then. ADR-0021 permits tracking a preview provided the date it becomes
+stable is recorded, and `prerequisite.toml` records it.
+
 ## Amendment, 2026-08-26: the ABI is the interface into Xmip
 
 **Supersedes clauses 3, 9 and 13.**

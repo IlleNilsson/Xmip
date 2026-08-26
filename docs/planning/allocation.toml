@@ -262,6 +262,13 @@ ADR-0014 clause 13 is the shape to build toward: every operator action lives in
 a library and the binary is argument parsing and JSON over it. And per the
 2026-08-26 amendment, that library calls the ABI — the CLI is one client of
 four, not the path the others go through.
+
+**Wrong destination, discovered the same day.** ADR-0014 was amended to say
+every user-interfacing module is .NET 11, with xmip-core-abi the only
+exception. So this is Rust sitting in a .NET repository.
+
+Read it before deleting it. The command surface it implements is the
+specification of what an operator can do, whatever language reimplements it.
 """
 
 [[keep]]
