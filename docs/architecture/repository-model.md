@@ -41,7 +41,7 @@ about names.*
 | **Capabilities** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operations** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
-| **Platform** | platform-wide runtime services | `xmip-core-abi`, `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience`, `xmip-core-exclusiveness` |
+| **Platform** | platform-wide runtime services | `xmip-core-abi`, `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience` |
 
 **The test between Capabilities and Operations is the message path.** If a
 Journey waits for it, it is a Capability. `xmip-core-retain` moved on
@@ -311,7 +311,7 @@ Xmip/
     ├── operations/
     │   ├── audit   observe   report   retain   archive   cli   powershell
     └── platform/
-        └── runtime   configure   persist   resilience   exclusiveness
+        └── runtime   configure   persist   resilience
 ```
 
 Depth three mounts inside its own parent capability, ungrouped, because at that

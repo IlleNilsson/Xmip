@@ -50,8 +50,6 @@ pub use xmip_contract;
 pub use xmip_demote;
 #[cfg(feature = "event")]
 pub use xmip_event;
-#[cfg(feature = "exclusiveness")]
-pub use xmip_exclusiveness;
 #[cfg(feature = "identify")]
 pub use xmip_identify;
 #[cfg(feature = "node")]

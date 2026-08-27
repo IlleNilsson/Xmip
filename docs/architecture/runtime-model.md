@@ -102,7 +102,7 @@ is for. Alerting on queue depth alone reports weather.
 
 **Ordering is a property of the queue, not of the code.** Anything needing
 sequential processing gets it from queue discipline, never from work happening
-to be executed in the order it arrived. See *Exclusiveness is not ordering*
+to be executed in the order it arrived. See *A claim is not ordering*
 below — they are constantly confused and are not the same guarantee.
 
 **Durability precedes execution.** A Message is on disk before anything acts on
@@ -129,19 +129,20 @@ It also means the smallest deployment is coherent. A purpose-compiled runtime on
 a sensor gateway has a ToDo, no cluster, no broker, and the same execution
 model as a forty-node estate.
 
-Two things this costs, and they are real:
+One thing this costs, and it is real:
 
 **Work does not move by itself.** A Message in node A's ToDo is node A's
 work. Distributing across nodes is now an explicit act rather than a consequence
-of everyone reading one table, and how that act happens is not yet designed.
+of everyone reading one table, and how that act happens is not yet designed. It
+is recorded in `docs/planning/open-problems.md`.
 
-**Cluster-scope exclusiveness needs somewhere shared to live.** ADR-0017 clause
-8 puts the lease in `xmip-core-persist` — which is per-node. A lease that must be
-visible cluster-wide cannot live only in the holder's own store, so either
-`Cluster` scope has a different home from `Node` and `Process` scope, or nodes
-agree by some other means.
-
-Both are recorded in `docs/planning/open-problems.md`.
+*It used to cost two.* The second was cluster-wide exclusiveness, which needed
+somewhere shared to live and had nowhere — a lease in per-node persistence
+proves nothing to another node. ADR-0024 removed the cost by removing the
+lease: a claim taken at the endpoint is cluster-wide already, because the
+endpoint is one thing however many nodes are asking. The shared write path that
+was missing turned out to be the partner's storage, and it was never Xmip's to
+build.
 
 ### The queue is the store, not a broker
 
@@ -159,7 +160,7 @@ completing work is a state transition. That is a queue in every sense that
 matters — durable, ordered where ordering is configured, survives restart — and
 it is MSMQ, MQ Series or RabbitMQ in none of them.
 
-This is the same argument ADR-0017 clause 8 made about exclusiveness. Xmip
+This is the same argument ADR-0024 makes about claiming an artefact. Xmip
 already requires a durable store; making it also require somebody else's broker
 would mean depending on another system's cluster to answer a question about its
 own. The engine choice in `deployment-model.md` section 7 follows from this and
@@ -173,22 +174,23 @@ targets**, things Xmip talks to on somebody else's behalf. None of them is
 infrastructure Xmip runs on. An estate can use Xmip with no broker anywhere,
 and a purpose-compiled runtime on a small device does exactly that.
 
-### Exclusiveness is not ordering
+### A claim is not ordering
 
 Two different guarantees, routinely treated as one:
 
-**Exclusiveness** says *one holder at a time*. It says nothing whatever about
-which item that holder takes, or in what sequence. ADR-0017 owns it.
+**A claim** says *one holder at a time*. It says nothing whatever about which
+item that holder takes, or in what sequence. ADR-0024 owns it, and the holder is
+established at the endpoint rather than by a lease inside Xmip.
 
 **Ordering** says *these items are processed in this sequence*. It is declared
-on the artifact, not inherited from exclusiveness.
+on the artifact, not inherited from the claim.
 
-The relationship is one-way. **Exclusiveness is necessary for ordering and does
-not provide it** — two concurrent processors reorder work by definition, so
-ordering requires exclusiveness first; but a single holder taking items in
+The relationship is one-way. **A claim is necessary for ordering and does not
+provide it** — two concurrent processors reorder work by definition, so ordering
+requires exclusive possession first; but a single holder taking items in
 whatever sequence it likes is perfectly exclusive and completely unordered.
 
-Ordering needs three things exclusiveness does not supply:
+Ordering needs three things a claim does not supply:
 
 **An order key.** Ordered *by what*? Global ordering across a Receive Location
 serialises everything and destroys throughput. What is almost always wanted is
@@ -221,7 +223,7 @@ Concurrent    many in flight, interleaved, no ordering guarantee
 **Sequential enforcement is state-based and durable.** The sequence position
 lives in the ToDo, not in the memory of whatever is currently running it. A
 node that dies mid-sequence loses nothing: the position is on disk, another node
-takes the exclusiveness and continues from it. Enforcing order through in-memory
+takes the claim and continues from it. Enforcing order through in-memory
 state would mean a restart either replays or skips, and neither is acceptable
 for something whose entire purpose is that the order held.
 
@@ -230,7 +232,7 @@ styles and the durability rule were recorded and had been carried into none of
 the consolidated documents.
 
 This is not new. It was recorded in the earliest architecture, carried in
-`Xmip-Exclusiveness-Architecture.md` — which is why that document speaks of
+`Xmip-Exclusiveness-Architecture.md`, retired with ADR-0017 — which is why it speaks of
 tasks being *durably queued* — and was dropped from every consolidated
 document. Restored 2026-08-26 after the owner noticed its absence.
 

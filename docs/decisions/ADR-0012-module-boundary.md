@@ -32,7 +32,7 @@ The foundation is sound. It is `#[repr(C)]`, it is versioned, and it loads throu
 
 Three things no longer fit.
 
-**Five kinds cannot describe seventeen traits.** Each core module owns its own trait and loads its own implementations. `xmip-core-transform-xslt`, `xmip-core-path-xpath`, `xmip-core-authenticate-oauth2` and `xmip-core-exclusiveness-redis` are none of Transport, Content, Logic, Store or Management. `StoreProvider` and `ManagementModule` correspond to no current module. The enum is vocabulary from an earlier model.
+**Five kinds cannot describe seventeen traits.** Each core module owns its own trait and loads its own implementations. `xmip-core-transform-xslt`, `xmip-core-path-xpath`, `xmip-core-authenticate-oauth2` and `xmip-core-identify-jwt` are none of Transport, Content, Logic, Store or Management. `StoreProvider` and `ManagementModule` correspond to no current module. The enum is vocabulary from an earlier model.
 
 **One global version cannot carry seventeen contracts.** `XMIP_MODULE_ABI_VERSION` is a single number for the whole platform. Seventeen traits will evolve at different rates. Under one number, any change to any trait invalidates every module in the system — which makes independent runtime upgrade of a sub-module impossible, and that is the property the repository and sub-module split exists to provide.
 

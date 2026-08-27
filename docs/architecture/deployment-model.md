@@ -318,7 +318,7 @@ faster than 1 kHz and cares about insertion order must use it, or ordering
 within a millisecond is random.
 
 Recorded 2026-08-26, and applied: `Cargo.toml` carries the `v7` feature and all
-ten generation sites in `journey_model.rs`, `xmip-exclusiveness`,
+ten generation sites in `journey_model.rs`,
 `xmip-tracking` and `xmip-handler-file` call `Uuid::now_v7()`.
 
 The `v4` feature stays enabled deliberately. It is the right choice for an
@@ -379,10 +379,19 @@ Xmip Service starts
 ```
 
 **Recovery is cluster-scoped.** Any capable node may resume work if it can
-satisfy the required capabilities and acquire the lease. **The same Journey must
-never be recovered by two nodes at once** — that is exclusiveness, and ADR-0017
-owns the lease mechanics: taken by a node, released by completion immediately or
-by expiry only on failure, and nobody queues.
+satisfy the required capabilities. **The same Journey must never be recovered by
+two nodes at once**, and how that is guaranteed is **open**.
+
+ADR-0017 answered it with a cluster-wide lease and ADR-0024 retired that record:
+a lease in per-node persistence proves nothing to another node, which is why
+`ExclusiveScope::Cluster` was never servable. ADR-0024's answer — claim the
+artefact at the endpoint — settles arrivals and settles nothing here, because a
+Journey mid-flight is Xmip's own state and has no endpoint to claim it at.
+
+This is the same open problem as *work does not move by itself* in
+`runtime-model.md` section 3: a Message in node A's ToDo is node A's work, and
+moving it is an explicit act nobody has designed. Recovery is that act under a
+different name.
 
 Xmip cannot own every bad decision in configuration or custom code, but it
 mitigates avoidable loss:

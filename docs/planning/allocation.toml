@@ -167,6 +167,13 @@ Removed 2026-08-26: exclusiveness has another solution, and this crate is not
 it. xmip-core-exclusiveness keeps the trait boundary — Exclusiveness::acquire
 returning a boxed ExclusiveLease with renew and release.
 
+*2026-08-27: that boundary is retired too.* ADR-0024 replaced the whole idea
+with ResourceClaim in xmip-core-transport — the endpoint's own atomic claim,
+which is cluster-wide because the endpoint is one thing however many nodes are
+asking. The queue, the fairness and the acquisition timeout recorded below went
+with it. Nothing needs queueing for an artefact: a node that finds one claimed
+takes the next one.
+
 **What goes with it, recorded because git holds it and nobody will look.** This
 crate had a working acquisition queue: ExclusivenessStore with request, poll,
 renew and release; an in-memory store keyed by ExclusivenessBoundary; and

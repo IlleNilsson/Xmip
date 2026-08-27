@@ -2,7 +2,7 @@
 
 - Status: Accepted, with open questions recorded at the end
 - Date: 2026-08-25
-- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0017 (exclusiveness)
+- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint)
 
 ## Context
 
@@ -35,7 +35,8 @@ principle as ADR-0014 clause 4 holds for observation, and for the same reason.
 Registered with the service manager, started and stopped by name, supervised by
 the operating system. Many per node. Each hosts its configured Modules and does
 the work: Receive Locations, Xmip Processes, Send Locations. Each holds
-exclusiveness over what it is working on, per ADR-0017.
+the claim on what it is working on, per ADR-0024 — taken at the endpoint rather
+than from a lease store inside Xmip.
 
 **4. Startup is nine phases, split between the two.**
 
@@ -65,8 +66,9 @@ clear error rather than as four half-started services.
 
 **5. Losing the master must not stop the node.** The Xmip Service is a
 supervisor, not a participant. When it dies, Host Services keep receiving,
-processing and sending, and keep renewing their exclusiveness. What is lost is
-supervision and reconfiguration, not work.
+processing and sending, and keep their claims — which are held at the endpoint
+and owe the master nothing. What is lost is supervision and reconfiguration, not
+work.
 
 **6. The master re-attaches; it does not re-spawn.** On restart it enumerates
 the services it registered, adopts those already running, and starts only what
@@ -150,7 +152,7 @@ instead of to messages.
 ```
 drain      the master tells Host Services to stop accepting new work
 finish     in-flight Journeys complete or checkpoint
-release    exclusiveness released explicitly, immediately, not by expiry
+release    claims released at the endpoint explicitly, not left to expire
 exit       Host Services stop, the master stops last
 ```
 

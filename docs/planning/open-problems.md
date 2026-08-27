@@ -241,15 +241,26 @@ for edge estates where the device that receives is the device that processes,
 and it is probably right for the purpose-compiled runtime — but it cannot be the
 only answer for a server cluster.
 
-## 18. Where does a Cluster-scope exclusiveness lease live?
+## 18. Where does a Cluster-scope exclusiveness lease live? — **Resolved**
 
-ADR-0017 clause 8 puts leases in `xmip-core-persist`. Per-node embedded
-persistence serves `Process` and `Node` scope perfectly, and cannot serve
-`Cluster` scope — a lease visible only in the holder's own store proves nothing
-to anyone else.
+*Resolved 2026-08-27 by ADR-0024, and by dissolving the question rather than
+answering it.*
 
-| option | effect |
-|---|---|
+There is no cluster-scope lease to place because there is no lease.
+`xmip-core-exclusiveness` is retired and `ResourceClaim` in
+`xmip-core-transport` replaces it: the endpoint's own atomic claim is
+cluster-wide already, because the endpoint is one thing however many nodes are
+asking, and the shared write path it needs is the partner's storage rather than
+Xmip's.
+
+All four options recorded here shared one assumption — that Xmip had to keep
+the fact. It did not; the fact already had an owner.
+
+Two nodes on a lockless protocol (FTP, SFTP, IMAP) is what remains, and
+ADR-0024 clause 6 makes it a placement question: run one of them. The shape of
+that placement is undecided and belongs with Host Services.
+
+---|---|
 | **A. One node holds the cluster lease store** | simple; that node is now a single point of failure and a shared write path for exactly the thing that must not have one |
 | **B. Consensus among nodes** | correct and honest about the problem. It is also a distributed-consensus implementation, which ADR-0017 spent its entire argument avoiding |
 | **C. Cluster scope requires an external store, declared as such** | the five coordinators ADR-0017 removed, readmitted for one narrow purpose and only when Cluster scope is actually used |

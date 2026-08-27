@@ -87,7 +87,7 @@ the resource:** a discrete claimable artefact is, a query or queue or connection
 is not. Leases live in `xmip-core-persist`, which Xmip already requires — no
 Consul, etcd, Redis or ZooKeeper.
 
-→ [Exclusiveness, in full](ADR-0017-exclusiveness.md)
+→ [Exclusiveness, in full](ADR-0017-exclusiveness.md) — **superseded by [ADR-0024](ADR-0024-resource-claim-replaces-exclusiveness.md)**
 
 ---
 
@@ -312,7 +312,7 @@ You have a word. This gives you the decision that governs it.
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
-| Claim, claimable artefact | [Exclusiveness](ADR-0017-exclusiveness.md) |
+| Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -322,7 +322,7 @@ You have a word. This gives you the decision that governs it.
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
-| Exclusiveness, leases, renewal | [Exclusiveness](ADR-0017-exclusiveness.md) |
+| Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -384,13 +384,14 @@ nowhere else.
 | [0014](ADR-0014-operator-surfaces.md) | The operator surfaces and their language | |
 | [0015](ADR-0015-packaging.md) | Packaging and distribution | |
 | [0016](ADR-0016-submodule-composition.md) | Submodule composition | |
-| [0017](ADR-0017-exclusiveness.md) | Exclusiveness | |
+| [0017](ADR-0017-exclusiveness.md) | Exclusiveness | Superseded by 0024 |
 | [0018](ADR-0018-service-and-host.md) | The Service and the Host Services | |
 | [0019](ADR-0019-identity-parties-and-direction.md) | Identity, Parties and the two directions | |
 | [0020](ADR-0020-documentation-structure.md) | One document per subject | |
 | [0021](ADR-0021-current-platforms-only.md) | Current platforms only | |
 | [0022](ADR-0022-identity-classes-and-runtime-isolation.md) | Identity classes and runtime isolation | |
 | [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later, and no second licence | |
+| [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint, not a lease inside Xmip | Supersedes 0017 |
 
 ---
 

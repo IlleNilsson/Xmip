@@ -665,18 +665,14 @@ dependency = []
     [xmip.core.resilience.retry]
     [xmip.core.resilience.timeout]
 
-  [xmip.core.exclusiveness]
-  description = "Scoped exclusiveness for Receive Locations, Processes and Send Locations: one holder of a collidable resource at a time, released by lease expiry when a holder dies."
-  architecturalDomain = "Platform"
-  repositoryRole = "platform-service"
-  maturity = "planned"
-  dependency = ["xmip-core", "xmip-core-persist"]
-# No implementation repositories. Exclusiveness is an internal Xmip concern
-# and has nothing to do with protocols. Process scope is served by the
-# in-memory store inside the module; Cluster scope is a lease in
-# xmip-core-persist, which Xmip already requires. Consul, etcd, redis,
-# zookeeper and file locks were five external coordinators nobody asked for.
-# ADR-0017.
+# xmip.core.exclusiveness is retired. ADR-0024.
+#
+# It held a lease inside Xmip and could never say where a cluster-wide one
+# would live: per-node persistence proves nothing to another node, and every
+# external coordinator that could have held it makes Xmip depend on somebody
+# else's cluster to answer a question about its own. ResourceClaim in
+# xmip-core-transport replaces it — the endpoint's own atomic claim, which is
+# cluster-wide because the endpoint is one thing however many nodes are asking.
 
   [xmip.core.migrate]
   description = "Reads a source platform's configuration and produces Xmip artifacts, with a report of what has no equivalent."
@@ -700,7 +696,7 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "planned"
-  dependency = ["xmip-core", "xmip-core-exclusiveness"]
+  dependency = ["xmip-core", "xmip-core-transport"]
 
   [xmip.core.diagnose]
   description = "Operational diagnosis: connectivity, name resolution, certificates and firewall reachability."
