@@ -13,6 +13,7 @@ BeforeAll {
         'Sync-XmipRepository.ps1'
         'Install-XmipPrerequisite.ps1'
         'Install-XmipModule.ps1'
+        'Publish-XmipChange.ps1'
     )
 
     Import-Module (Join-Path $script:ModuleRoot 'Xmip.psd1') -Force
