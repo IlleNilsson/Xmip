@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
 .SYNOPSIS
@@ -40,9 +40,9 @@ function Get-XmipStatus {
             Every module that has something uncommitted, what it is, and whether
             it looks like source or like build output.
 
-            Objects out, not text. `Get-XmipStatus | Where-Object Suspicious`
-            answers "is anything about to commit a target directory again"
-            without parsing anything.
+            Objects out, not text, so
+            `Get-XmipStatus | Where-Object Suspicious` answers "is anything
+            about to commit a target directory again" without parsing anything.
 
         .PARAMETER Short
             One line per module rather than one per file. Mirrors
@@ -337,7 +337,8 @@ function Publish-XmipChange {
             $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
 
             if (-not $All -and -not (Test-Path -LiteralPath $manifest)) {
-                Write-Host "SKIPPED. $module has no Cargo.toml, so nothing here can verify it." -ForegroundColor DarkGray
+                $why = "SKIPPED. $module has no Cargo.toml, so nothing here can verify it."
+                Write-Host $why -ForegroundColor DarkGray
                 $skipped.Add($module)
 
                 continue
@@ -755,8 +756,8 @@ function Publish-XmipPin {
     }
 }
 
-# `xmip-git` reads the way the estate is talked about, and `Publish-XmipChange`
-# reads the way PowerShell is talked about. An alias is how both are true at
+# The estate talks about `xmip-git`; PowerShell talks about
+# `Publish-XmipChange`. An alias is how both are true at
 # once: Xmip is not an approved verb, so a *function* by that name warns on
 # import and disappears from `Get-Command -Verb`, while an alias is exempt and
 # costs nothing.

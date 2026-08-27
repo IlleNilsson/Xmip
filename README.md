@@ -17,7 +17,7 @@ ones — [ADR-0021](docs/decisions/ADR-0021-current-platforms-only.md).
 
 | | Required | Notes |
 | --- | --- | --- |
-| PowerShell | **7.6+, Core edition** | Windows PowerShell 5.1 will not work, and is not meant to |
+| PowerShell | **7.6.5+, Core edition** | Windows PowerShell 5.1 will not work, and is not meant to |
 | git | 2.40+ | |
 | Rust | latest stable | pinned by channel in `rust-toolchain.toml`, not by version |
 | Pester | 6+ | developers only, for `tests/` |
@@ -31,14 +31,14 @@ and can install.
 
 ## Set up
 
-### 1. Get PowerShell 7.6 or later
+### 1. Get PowerShell 7.6.5 or later
 
 ```powershell
 winget install Microsoft.PowerShell        # Windows
 brew install powershell                    # macOS
 ```
 
-Check with `$PSVersionTable.PSVersion`. Anything below 7.6, or an edition other
+Check with `$PSVersionTable.PSVersion`. Anything below 7.6.5, or an edition other
 than `Core`, and nothing below will run.
 
 ### 2. Clone and load the module

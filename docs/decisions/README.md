@@ -243,7 +243,7 @@ require it.
 ### Current platforms only
 
 Xmip tracks the current stable release of every platform it depends on and
-carries no compatibility with superseded ones. PowerShell 7.6 Core, .NET 11,
+carries no compatibility with superseded ones. PowerShell 7.6.5 Core, .NET 11,
 latest stable Rust, Pester 6.
 
 **The version numbers are not the decision** — they will be history soon enough.

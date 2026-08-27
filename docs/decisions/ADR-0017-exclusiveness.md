@@ -1,6 +1,6 @@
 # ADR-0017: Exclusiveness
 
-- Status: **Superseded by ADR-0024**
+- Status: Superseded by ADR-0024
 - Date: 2026-08-25
 - Superseded: 2026-08-27
 - Related: ADR-0013 (Journey model), ADR-0016 (submodule composition)

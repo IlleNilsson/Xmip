@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
     Dot-sourced by Xmip.psm1. Style: docs/governance/powershell-style.md

@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
     README.md is the front door. It was stale for weeks — pointing at a deleted

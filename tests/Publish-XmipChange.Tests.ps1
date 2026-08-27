@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
     The file that lands the estate had no tests, and it is the one that keeps
@@ -25,14 +25,17 @@ BeforeAll {
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
     $script:ManifestPath = Join-Path $script:ModuleRoot 'Xmip.psd1'
 
+    # Every copy first, then one import.
+    #
+    # Pester runs the whole tests/ directory in one session and several files
+    # import this module. Two loaded copies make InModuleScope throw "Multiple
+    # script or manifest modules named 'Xmip' are currently loaded" — which
+    # reads as a broken test and is a dirty session.
+    Get-Module -Name Xmip -All | Remove-Module -Force -ErrorAction SilentlyContinue
     Import-Module $script:ManifestPath -Force
 
     $script:Manifest = Import-PowerShellDataFile -Path $script:ManifestPath
     $script:Module = Get-Module -Name Xmip
-}
-
-AfterAll {
-    Remove-Module -Name Xmip -Force -ErrorAction SilentlyContinue
 }
 
 Describe 'What the module says it exports' {
@@ -60,7 +63,11 @@ Describe 'What the module says it exports' {
             $script:Module.ExportedAliases.Keys |
                 Should -Contain $name -Because "$name is in AliasesToExport"
 
-            $target = $script:Module.ExportedAliases[$name].ResolvedCommandName
+            # Definition, not ResolvedCommandName. The latter is empty for an
+            # alias exported from a module: resolution happens against the
+            # caller's session state, and the alias object carries only the
+            # name it was defined with.
+            $target = $script:Module.ExportedAliases[$name].Definition
             $script:Module.ExportedFunctions.Keys |
                 Should -Contain $target -Because "$name points at $target"
         }
