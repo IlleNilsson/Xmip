@@ -10,7 +10,7 @@
 
 @{
     RootModule           = 'Xmip.psm1'
-    ModuleVersion        = '1.6.0'
+    ModuleVersion        = '1.7.0'
     GUID                 = 'a4f1e6c2-9b73-4d58-8e21-5c7a3f0d94b6'
     Author               = 'Ilian Nilsson'
     CompanyName          = 'Xmip'
@@ -22,13 +22,18 @@
     PowerShellVersion    = '7.6'
     CompatiblePSEditions = @('Core')
 
-    # PSToml reads architecture.toml and prerequisite.toml. PowerShell has no
-    # built-in TOML parser.
+    # Two modules from the gallery, both declared in prerequisite.toml:
     #
-    # Deliberately not RequiredModules: that would make PSToml a hard import-time
-    # dependency, and Install-XmipPrerequisite exists precisely to be runnable on
-    # a machine that does not have it yet. Get-XmipManifest imports it when a
-    # manifest is actually read, and says how to get it when it is missing.
+    #   PSToml     reads architecture.toml and prerequisite.toml. PowerShell has
+    #              no built-in TOML parser.
+    #   posh-git   reads git state as objects. Ahead and behind counts are not
+    #              in `git status --porcelain`, so Get-XmipStatus would
+    #              otherwise answer a narrower question than the prompt does.
+    #
+    # Deliberately not RequiredModules: that would make both hard import-time
+    # dependencies, and Install-XmipPrerequisite exists precisely to be runnable
+    # on a machine that does not have them yet. Each is imported at the point it
+    # is actually needed, and says how to get it when it is missing.
     RequiredModules      = @()
 
     FunctionsToExport    = @(
@@ -40,6 +45,8 @@
         'Get-XmipRepositoryRoot'
         'Test-XmipManifest'
         'Expand-XmipEstate'
+        'Publish-XmipChange'
+        'Get-XmipStatus'
     )
 
     CmdletsToExport      = @()
