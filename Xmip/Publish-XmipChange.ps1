@@ -326,9 +326,23 @@ function Publish-XmipChange {
     # is recoverable — fix and run again — and it is the only order that can
     # work at all.
     $landed = [System.Collections.Generic.List[string]]::new()
+    $skipped = [System.Collections.Generic.List[string]]::new()
 
     foreach ($module in $ordered) {
         if (-not $NoVerify) {
+            # Nothing here can verify a module with no Cargo.toml — cli is
+            # .NET 11, gui and powershell carry their own languages under
+            # ADR-0014 clause 14. Left alone rather than landed unverified, and
+            # -All is how you say land it anyway.
+            $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
+
+            if (-not $All -and -not (Test-Path -LiteralPath $manifest)) {
+                Write-Host "SKIPPED. $module has no Cargo.toml, so nothing here can verify it." -ForegroundColor DarkGray
+                $skipped.Add($module)
+
+                continue
+            }
+
             $failed = @(Test-XmipModule -RepositoryRoot $RepositoryRoot -Module @($module) -All:$All)
 
             if ($failed.Count -gt 0) {
@@ -366,8 +380,13 @@ function Publish-XmipChange {
 
     Publish-XmipPin -RepositoryRoot $RepositoryRoot
 
+    if ($skipped.Count -gt 0) {
+        Write-Host "SKIPPED, unverifiable here: $($skipped -join ', ')" -ForegroundColor DarkGray
+    }
+
     [PSCustomObject]@{
         Landed   = $landed.ToArray()
+        Skipped  = $skipped.ToArray()
         Verified = -not $NoVerify
     }
 }
@@ -578,10 +597,17 @@ function Test-XmipModule {
         $manifest = Join-Path -Path $path -ChildPath 'Cargo.toml'
 
         if (-not (Test-Path -LiteralPath $manifest)) {
-            $note = if ($All) { 'landing anyway' } else { 'nothing here can test it' }
-            Write-Host "== $module (no Cargo.toml, $note)" -ForegroundColor DarkGray
-
-            if (-not $All) { $module }
+            # Reported, never returned.
+            #
+            # This function returns modules that *failed*, and returning one
+            # that could not be tested made the caller stop the entire run on
+            # modules/operations/cli — which is .NET 11 and has no Cargo.toml by
+            # design. Cannot be verified here and did not fail are different
+            # answers, and only one of them should halt the estate.
+            #
+            # Whether an unverifiable module lands is the caller's decision, and
+            # -All is where it is made.
+            Write-Host "== $module (no Cargo.toml, nothing here can test it)" -ForegroundColor DarkGray
 
             continue
         }
