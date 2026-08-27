@@ -3,18 +3,6 @@
 version = 4
 
 [[package]]
-name = "anyhow"
-version = "1.0.102"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
-
-[[package]]
-name = "bitflags"
-version = "2.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
-
-[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -33,28 +21,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "foldhash"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
-
-[[package]]
 name = "futures-core"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e3450815272ef58cec6d564423f6e755e25379b217b0bc688e295ba24df6b1d"
+checksum = "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
 
 [[package]]
 name = "futures-task"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "037711b3d59c33004d3856fbdc83b99d4ff37a24768fa1be9ce3538a1cde4393"
+checksum = "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd"
 
 [[package]]
 name = "futures-util"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "389ca41296e6190b48053de0321d02a77f32f8a5d2461dd38762c0593805c6d6"
+checksum = "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -64,24 +46,13 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0de51e6874e94e7bf76d726fc5d13ba782deca734ff60d5bb2fb2607c7406555"
+checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
 dependencies = [
  "cfg-if",
  "libc",
  "r-efi",
- "wasip2",
- "wasip3",
-]
-
-[[package]]
-name = "hashbrown"
-version = "0.15.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
-dependencies = [
- "foldhash",
 ]
 
 [[package]]
@@ -91,70 +62,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
-name = "heck"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
-
-[[package]]
-name = "id-arena"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
-
-[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
- "hashbrown 0.17.1",
- "serde",
- "serde_core",
+ "hashbrown",
 ]
 
 [[package]]
-name = "itoa"
-version = "1.0.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
-
-[[package]]
 name = "js-sys"
-version = "0.3.99"
+version = "0.3.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "142bc4740e452c1e57ade0cbc129f139c9093e354346f0872ef985f4f5cf5f11"
+checksum = "0e0c1080212aad755ea003d18543e8768dd432c48819efd73a7bf1e39b7a5a3a"
 dependencies = [
  "cfg-if",
  "futures-util",
- "once_cell",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "leb128fmt"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
-
-[[package]]
 name = "libc"
-version = "0.2.186"
+version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
-
-[[package]]
-name = "log"
-version = "0.4.30"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
-
-[[package]]
-name = "memchr"
-version = "2.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
+checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "once_cell"
@@ -169,29 +101,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
-name = "prettyplease"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
-dependencies = [
- "proc-macro2",
- "syn",
-]
-
-[[package]]
 name = "proc-macro2"
-version = "1.0.106"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
+checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
 ]
@@ -204,21 +126,15 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
-
-[[package]]
-name = "semver"
-version = "1.0.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "serde"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
+checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
  "serde_derive",
@@ -226,35 +142,22 @@ dependencies = [
 
 [[package]]
 name = "serde_core"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad"
+checksum = "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
+checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
-]
-
-[[package]]
-name = "serde_json"
-version = "1.0.150"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
-dependencies = [
- "itoa",
- "memchr",
- "serde",
- "serde_core",
- "zmij",
+ "syn 3.0.4",
 ]
 
 [[package]]
@@ -274,9 +177,20 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "syn"
-version = "2.0.117"
+version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
+checksum = "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
+name = "syn"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -309,18 +223,18 @@ dependencies = [
 
 [[package]]
 name = "toml_parser"
-version = "1.1.2+spec-1.1.0"
+version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
+checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
 dependencies = [
- "winnow 1.0.3",
+ "winnow 1.0.4",
 ]
 
 [[package]]
 name = "toml_writer"
-version = "1.1.1+spec-1.1.0"
+version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
+checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "unicode-ident"
@@ -329,45 +243,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
-name = "unicode-xid"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
-
-[[package]]
 name = "uuid"
-version = "1.23.2"
+version = "1.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d258b83ceec21034727ecee8c382cfa6c3e133699b0742c64571814fb420c9f7"
+checksum = "b5772d71c9be8a8a6ac2117d949c5b224c1b72241bb611d9a3012edcf8af7812"
 dependencies = [
  "getrandom",
  "js-sys",
+ "serde_core",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "wasip2"
-version = "1.0.3+wasi-0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20064672db26d7cdc89c7798c48a0fdfac8213434a1186e5ef29fd560ae223d6"
-dependencies = [
- "wit-bindgen 0.57.1",
-]
-
-[[package]]
-name = "wasip3"
-version = "0.4.0+wasi-0.3.0-rc-2026-01-06"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5428f8bf88ea5ddc08faddef2ac4a67e390b88186c703ce6dbd955e1c145aca5"
-dependencies = [
- "wit-bindgen 0.51.0",
-]
-
-[[package]]
 name = "wasm-bindgen"
-version = "0.2.122"
+version = "0.2.127"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ed04576f974d2b2fba0f38c51dbc5518011e38c36bf1143164be765528fd409"
+checksum = "1b70935747edd64d89de3efa29d73789b806c15798f8e7dca4d8ac356b50ce70"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -378,9 +269,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.122"
+version = "0.2.127"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "916151b09da36bd82f6615cbf3a419e2f0ba23a03c6160e8e92eb6bd4aa1dec6"
+checksum = "77775f8f3f7217702089053b94958f8f54061a3f663417df76e19cbdcca29bc1"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -388,58 +279,24 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.122"
+version = "0.2.127"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "299047362ccbfce148b67ab7e73349f77748e00c8296f9542adfad2ad82c5c5e"
+checksum = "e11d33f857dc2fb11b8bc75aee111aa9cbeb12cd9f25efd3d4c2a3dd4e235284"
 dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.122"
+version = "0.2.127"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a929b2c61f11ba3e9bc35b50c1f25cb38e0e892c0c231ae2b8cf78d5dad4437"
+checksum = "7ef64dbcc55df09c7e5a46182d181c2cfa3e925f3da937ea764728b4bbb9dcbf"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "wasm-encoder"
-version = "0.244.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "990065f2fe63003fe337b932cfb5e3b80e0b4d0f5ff650e6985b1048f62c8319"
-dependencies = [
- "leb128fmt",
- "wasmparser",
-]
-
-[[package]]
-name = "wasm-metadata"
-version = "0.244.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb0e353e6a2fbdc176932bbaab493762eb1255a7900fe0fea1a2f96c296cc909"
-dependencies = [
- "anyhow",
- "indexmap",
- "wasm-encoder",
- "wasmparser",
-]
-
-[[package]]
-name = "wasmparser"
-version = "0.244.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47b807c72e1bac69382b3a6fb3dbe8ea4c0ed87ff5629b8685ae6b9a611028fe"
-dependencies = [
- "bitflags",
- "hashbrown 0.15.5",
- "indexmap",
- "semver",
 ]
 
 [[package]]
@@ -450,103 +307,9 @@ checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
 
 [[package]]
 name = "winnow"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0592e1c9d151f854e6fd382574c3a0855250e1d9b2f99d9281c6e6391af352f1"
-
-[[package]]
-name = "wit-bindgen"
-version = "0.51.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
-dependencies = [
- "wit-bindgen-rust-macro",
-]
-
-[[package]]
-name = "wit-bindgen"
-version = "0.57.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
-
-[[package]]
-name = "wit-bindgen-core"
-version = "0.51.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea61de684c3ea68cb082b7a88508a8b27fcc8b797d738bfc99a82facf1d752dc"
-dependencies = [
- "anyhow",
- "heck",
- "wit-parser",
-]
-
-[[package]]
-name = "wit-bindgen-rust"
-version = "0.51.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7c566e0f4b284dd6561c786d9cb0142da491f46a9fbed79ea69cdad5db17f21"
-dependencies = [
- "anyhow",
- "heck",
- "indexmap",
- "prettyplease",
- "syn",
- "wasm-metadata",
- "wit-bindgen-core",
- "wit-component",
-]
-
-[[package]]
-name = "wit-bindgen-rust-macro"
-version = "0.51.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c0f9bfd77e6a48eccf51359e3ae77140a7f50b1e2ebfe62422d8afdaffab17a"
-dependencies = [
- "anyhow",
- "prettyplease",
- "proc-macro2",
- "quote",
- "syn",
- "wit-bindgen-core",
- "wit-bindgen-rust",
-]
-
-[[package]]
-name = "wit-component"
-version = "0.244.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2"
-dependencies = [
- "anyhow",
- "bitflags",
- "indexmap",
- "log",
- "serde",
- "serde_derive",
- "serde_json",
- "wasm-encoder",
- "wasm-metadata",
- "wasmparser",
- "wit-parser",
-]
-
-[[package]]
-name = "wit-parser"
-version = "0.244.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecc8ac4bc1dc3381b7f59c34f00b67e18f910c2c0f50015669dde7def656a736"
-dependencies = [
- "anyhow",
- "id-arena",
- "indexmap",
- "log",
- "semver",
- "serde",
- "serde_derive",
- "serde_json",
- "unicode-xid",
- "wasmparser",
-]
+checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
 
 [[package]]
 name = "xmip"
@@ -592,15 +355,16 @@ dependencies = [
 [[package]]
 name = "xmip-core"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core?branch=main#ac579cd3804804ff47cff79b96157d817ed059c5"
+source = "git+https://github.com/IlleNilsson/xmip-core?branch=main#a2e6dbaba253758169abb2d9d59cfda5c8a685f6"
 dependencies = [
+ "serde",
  "uuid",
 ]
 
 [[package]]
 name = "xmip-core-abi"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-abi?branch=main#51c82366507aa4cb386b79c64912072e0b894bb1"
+source = "git+https://github.com/IlleNilsson/xmip-core-abi?branch=main#561e9d8703505e5f8b8adf71f55525521073be51"
 dependencies = [
  "serde",
  "xmip-core",
@@ -609,12 +373,12 @@ dependencies = [
 [[package]]
 name = "xmip-core-archive"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-archive?branch=main#68a4cf4fe1c93ce9de3eef00636a1a09ae3126e3"
+source = "git+https://github.com/IlleNilsson/xmip-core-archive?branch=main#959ef6d5d174218f866f1507d85db5c97b68aa04"
 
 [[package]]
 name = "xmip-core-assign"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-assign?branch=main#1e183f0f288cf404df139737399eca35af795e41"
+source = "git+https://github.com/IlleNilsson/xmip-core-assign?branch=main#a65baac6bf2945c1ad48aa52824cb05cc8f2593c"
 dependencies = [
  "xmip-core-context",
 ]
@@ -622,7 +386,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-audit"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-audit?branch=main#cf5cc3a90ff0df3e8b83476ba833cd2b6ab151a9"
+source = "git+https://github.com/IlleNilsson/xmip-core-audit?branch=main#3c037724b27406aa9565a91c5e27c0c30cf4b429"
 dependencies = [
  "xmip-core",
 ]
@@ -630,7 +394,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-authenticate"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-authenticate?branch=main#9d96a11d3f9a2558fd691576b4d43222f7710563"
+source = "git+https://github.com/IlleNilsson/xmip-core-authenticate?branch=main#3e7272f5b259c4462e96c3187dad8e57ea217c40"
 dependencies = [
  "xmip-core-party",
 ]
@@ -638,7 +402,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-authorize"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-authorize?branch=main#1300b09db94ec3580e75cc341e45e788814b883b"
+source = "git+https://github.com/IlleNilsson/xmip-core-authorize?branch=main#dfeef501934d27ad3e1194ed26a6985fd09618c5"
 dependencies = [
  "xmip-core-party",
 ]
@@ -646,7 +410,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-cluster"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-cluster?branch=main#e7d470dda3e401ac8f45a4b1f6e2f609969871e3"
+source = "git+https://github.com/IlleNilsson/xmip-core-cluster?branch=main#a17c90e161a650ac3adf4b9cb5956bcf7ab114f2"
 dependencies = [
  "xmip-core",
  "xmip-core-node",
@@ -655,7 +419,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-configure"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-configure?branch=main#f9b2dd57b5d538f4e68b977bca22b3a3da69e19d"
+source = "git+https://github.com/IlleNilsson/xmip-core-configure?branch=main#2212685417a11c85a774d328413ed55caf9079e1"
 dependencies = [
  "serde",
  "toml",
@@ -665,12 +429,12 @@ dependencies = [
 [[package]]
 name = "xmip-core-context"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-context?branch=main#b5fcc9f6b780141f579749066bcfb6b9862e496c"
+source = "git+https://github.com/IlleNilsson/xmip-core-context?branch=main#4cf55ac62dd581e50b23e9f09316de9a6f46d841"
 
 [[package]]
 name = "xmip-core-contract"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-contract?branch=main#f9aa3c5b713e2420a8c92d165cd26b0f26618e41"
+source = "git+https://github.com/IlleNilsson/xmip-core-contract?branch=main#e56ef6223d0a8692e5b1ba60d7490127b017ee72"
 dependencies = [
  "xmip-core-stream",
 ]
@@ -678,7 +442,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-demote"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-demote?branch=main#49bf897b7e69cb90893d5dac1dcc32b3e7a5b67d"
+source = "git+https://github.com/IlleNilsson/xmip-core-demote?branch=main#a50d1fdffb0676c848af1a5285946d1bbca0e64c"
 dependencies = [
  "xmip-core-context",
  "xmip-core-contract",
@@ -688,7 +452,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-event"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-event?branch=main#8fe727d3ecdff3433c821ee8b4b58901a63d1d4a"
+source = "git+https://github.com/IlleNilsson/xmip-core-event?branch=main#20312590f334239a6adac20b0339e0353652de2f"
 dependencies = [
  "xmip-core",
 ]
@@ -696,12 +460,12 @@ dependencies = [
 [[package]]
 name = "xmip-core-exclusiveness"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-exclusiveness?branch=main#9b108511978561ef235be515e4c10ffe31d5c8fb"
+source = "git+https://github.com/IlleNilsson/xmip-core-exclusiveness?branch=main#55380bd299a4547b17adcdef83f138674eab3459"
 
 [[package]]
 name = "xmip-core-identify"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-identify?branch=main#7258365ecddb8c3ca59b30df352035d87c732a63"
+source = "git+https://github.com/IlleNilsson/xmip-core-identify?branch=main#9dad8737a533d777ef9e443985bfbde813b18695"
 dependencies = [
  "xmip-core-party",
 ]
@@ -709,7 +473,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-journey"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-journey?branch=main#9430df1aca217c871696449e81510e60893217da"
+source = "git+https://github.com/IlleNilsson/xmip-core-journey?branch=main#e222e5147bc9232ba53f61491cc59217f727562f"
 dependencies = [
  "xmip-core",
 ]
@@ -717,7 +481,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-message"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-message?branch=main#486a3b5b2860dd6e6973d6a6434ee477a7b51923"
+source = "git+https://github.com/IlleNilsson/xmip-core-message?branch=main#1d12bc1ca53e287d17718f99ec7764f4d1f25924"
 dependencies = [
  "serde",
  "xmip-core",
@@ -728,7 +492,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-node"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-node?branch=main#8cbeb356cd6e756880e3b15c8a1f61d387616a6d"
+source = "git+https://github.com/IlleNilsson/xmip-core-node?branch=main#1747eecd49b9814c305458ad6db2348aecd255e8"
 dependencies = [
  "xmip-core",
 ]
@@ -736,7 +500,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-observe"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-observe?branch=main#5d1e02ba8c3d1319c7272a55c50f5ab540c5624f"
+source = "git+https://github.com/IlleNilsson/xmip-core-observe?branch=main#a6244e02751f989ac6934f2995b75cccd31a2ba0"
 dependencies = [
  "xmip-core",
 ]
@@ -744,7 +508,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-party"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-party?branch=main#1adb86bf2304692e1bff3751cf86a4c934e2d4f0"
+source = "git+https://github.com/IlleNilsson/xmip-core-party?branch=main#a56aafd871e359e8d3e05763d059a54e79b23a39"
 dependencies = [
  "xmip-core",
 ]
@@ -752,7 +516,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-path"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-path?branch=main#2afe977d4e8cfad156883dbcfad1786c474eb9b2"
+source = "git+https://github.com/IlleNilsson/xmip-core-path?branch=main#27bf0e2c7ff337d0bcaf235f96f3f8a4f5874eaa"
 dependencies = [
  "xmip-core-contract",
 ]
@@ -760,7 +524,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-persist"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-persist?branch=main#741779a7b1735105b73fa51362a87bef439eee17"
+source = "git+https://github.com/IlleNilsson/xmip-core-persist?branch=main#c2d925772e4d2815a509787735eba50777f375d9"
 dependencies = [
  "serde",
  "uuid",
@@ -769,7 +533,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-prepare"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-prepare?branch=main#fdaa125450903789f8746f07d87a4a76bf66e70c"
+source = "git+https://github.com/IlleNilsson/xmip-core-prepare?branch=main#1fbd961c4aec2f4258ac57a578d03f1f8cac1dfa"
 dependencies = [
  "xmip-core-stream",
 ]
@@ -777,7 +541,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-process"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-process?branch=main#62ee82dd5093ae29e06ccfcf2295f80f73f74df6"
+source = "git+https://github.com/IlleNilsson/xmip-core-process?branch=main#11baabd48907f7d591bb2b23f554ae30270ec57e"
 dependencies = [
  "xmip-core-message",
 ]
@@ -785,7 +549,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-promote"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-promote?branch=main#a4cc3874193bdeb6b0bb6d2b75f1c2bdb0afb33c"
+source = "git+https://github.com/IlleNilsson/xmip-core-promote?branch=main#fe78c982ba68c197baf8de4378129d03c75a725c"
 dependencies = [
  "xmip-core-context",
  "xmip-core-contract",
@@ -795,7 +559,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-receive"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-receive?branch=main#d7ca31cee6dfaa524b19b0f86c2dac2a980832b6"
+source = "git+https://github.com/IlleNilsson/xmip-core-receive?branch=main#584cb0b9b2b9e02002d70b9e2aebc96d1debc0fa"
 dependencies = [
  "xmip-core",
  "xmip-core-stream",
@@ -804,7 +568,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-report"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-report?branch=main#08b250eac188edc43ca3ddfcba31f48a66ace15e"
+source = "git+https://github.com/IlleNilsson/xmip-core-report?branch=main#120808e955717b259188f9fae92c9bff01c2cfc0"
 dependencies = [
  "xmip-core",
 ]
@@ -812,17 +576,17 @@ dependencies = [
 [[package]]
 name = "xmip-core-resilience"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-resilience?branch=main#ff7c70cb15211c7c357641347259a28f4688e368"
+source = "git+https://github.com/IlleNilsson/xmip-core-resilience?branch=main#49ab5f48632a2071dedbe5893b955c9609cdd7f9"
 
 [[package]]
 name = "xmip-core-retain"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-retain?branch=main#f89be30a22169e8d77af4d42b0487815be3e7c15"
+source = "git+https://github.com/IlleNilsson/xmip-core-retain?branch=main#d048e306258d00700786a4340f12a52a96414f24"
 
 [[package]]
 name = "xmip-core-route"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-route?branch=main#cb3c72a0b1bf7e99386a1783038f46a1e46927da"
+source = "git+https://github.com/IlleNilsson/xmip-core-route?branch=main#e3ea6b1f703e69d2bacf2077b61fd4047181c788"
 dependencies = [
  "serde",
  "xmip-core-context",
@@ -831,7 +595,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-runtime"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-runtime?branch=main#618542cecf3f8c5c1ca03e80712cd31e25a49cc8"
+source = "git+https://github.com/IlleNilsson/xmip-core-runtime?branch=main#2f095b0c620ab24579d8555d211b29c73cc364c3"
 dependencies = [
  "serde",
  "xmip-core",
@@ -846,7 +610,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-send"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-send?branch=main#c8a299b89c9bec45a1afb1dfcbf31b8a9c402c8b"
+source = "git+https://github.com/IlleNilsson/xmip-core-send?branch=main#e84b41163bf848e0d73edad1eeea4e90b409f97a"
 dependencies = [
  "xmip-core",
  "xmip-core-message",
@@ -856,7 +620,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-stream"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-stream?branch=main#8914b4c946dc3b05a908117c31b98cce2c139fba"
+source = "git+https://github.com/IlleNilsson/xmip-core-stream?branch=main#a848f74bc4bbc4f9c3d86d28b8fd46b3c0828ba0"
 dependencies = [
  "xmip-core",
 ]
@@ -864,7 +628,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-transform"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-transform?branch=main#d3358d01f2895c78f95604b8b19f710518982b11"
+source = "git+https://github.com/IlleNilsson/xmip-core-transform?branch=main#d6f1c3e0372f2eb8e900023dc4f65f482975919f"
 dependencies = [
  "xmip-core-contract",
  "xmip-core-message",
@@ -873,13 +637,7 @@ dependencies = [
 [[package]]
 name = "xmip-core-transport"
 version = "0.1.0"
-source = "git+https://github.com/IlleNilsson/xmip-core-transport?branch=main#2721ccc7ff534a78460dac7dc81fbfccc60a8823"
+source = "git+https://github.com/IlleNilsson/xmip-core-transport?branch=main#ea018d4c72c00fbbf25a6e3441ea25b1397d9d35"
 dependencies = [
  "serde",
 ]
-
-[[package]]
-name = "zmij"
-version = "1.0.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
