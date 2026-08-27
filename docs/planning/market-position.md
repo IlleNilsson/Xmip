@@ -101,23 +101,15 @@ of them is ours to write, in a language with no incumbent library for any of it.
 
 ## What this forces
 
-### The licence needs its own decision
+### The licence costs adoption, knowingly
 
-Enterprise legal teams reject AGPL as policy. That is the consistent finding, not
-a matter of persuasion.
+Enterprise legal teams reject AGPL as policy. That is the consistent finding, and
+it is a real cost that ADR-0023 accepts on purpose: dual licensing would remove
+the objection, and the right that makes dual licensing possible is the same right
+that makes relicensing possible. Mirth Connect is the worked example of what that
+right gets used for.
 
-**Dual licensing is the proven answer and it is not a licence exception.**
-Grafana, Mattermost, Bitwarden and Nextcloud all ship AGPL alongside a commercial
-licence. Offering a second licence takes nothing away from anyone who accepts the
-first.
-
-ADR-0012 clause 9 refuses an exception for `include/xmip_module.h` and gives a
-sound reason: Xmip does not undertake to resolve anyone's licensing position.
-That reasoning is about the *boundary*. Whether Xmip as a whole is dual licensed
-is a different question that has never been asked, and it was settled by
-accident as a side effect of the boundary decision.
-
-**Open. Deserves an ADR.**
+Settled. Not open.
 
 ### The largest product gap is not in the runtime
 
