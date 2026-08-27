@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-two decisions, read as one document.
+Twenty-three decisions, read as one document.
 
 Every decision has a number. The number is an identifier for machines, for
 citations in code comments, and for filenames — it is not how anyone
@@ -275,6 +275,18 @@ suspects it is hallucinating, it must say so before continuing.
 
 → [Pre-alpha refactor discipline, in full](ADR-0005-pre-alpha-refactor-discipline.md)
 
+### AGPL-3.0-or-later, and no second licence
+
+One licence, and no commercial one. A platform that cannot be relicensed cannot
+be closed, and holding the right to grant a second licence is the same right
+that makes closing it possible. Mirth Connect went commercial-only in March
+2025; Xmip gives up the ability to do that.
+
+No contributor licence agreement is needed, because there is no second licence
+to grant. Some buyers will refuse Xmip on licence grounds alone, knowingly.
+
+→ [AGPL-3.0-or-later, in full](ADR-0023-licensing-model.md)
+
 ### Memory lives in the repository
 
 Xmip's project memory is stored in the repository, never in conversation
@@ -325,6 +337,7 @@ You have a word. This gives you the decision that governs it.
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
+| Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -377,6 +390,7 @@ nowhere else.
 | [0020](ADR-0020-documentation-structure.md) | One document per subject | |
 | [0021](ADR-0021-current-platforms-only.md) | Current platforms only | |
 | [0022](ADR-0022-identity-classes-and-runtime-isolation.md) | Identity classes and runtime isolation | |
+| [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later, and no second licence | |
 
 ---
 
