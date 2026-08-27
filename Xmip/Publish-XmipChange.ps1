@@ -538,12 +538,20 @@ function Test-XmipModule {
             # Dependencies track main, so the lock is re-resolved or the test
             # runs against whatever was current when anyone last built.
             & cargo update 2>&1 | Out-Null
-            & cargo test
+
+            # Captured, not emitted. This function returns the modules that
+            # failed; a native command left to write into the pipeline makes
+            # every line of its output a return value, and the caller reads
+            # cargo's passing tests as the list of failures.
+            $output = & cargo test 2>&1
             $passed = $LASTEXITCODE -eq 0
         }
         finally {
             Pop-Location
         }
+
+        # Information stream, so it reaches the console and any redirect.
+        $output | ForEach-Object { Write-Host $_ }
 
         if (-not $passed) {
             $module

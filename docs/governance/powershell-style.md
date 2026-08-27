@@ -208,16 +208,34 @@ with `*>`.** No `Start-Transcript`, no `-LogPath` parameter, no logging
 framework. PowerShell already has redirection and it works on any command.
 
 ```powershell
-& { ... } *>&1 | Tee-Object -FilePath D:\Repos\land.log
+& { ... } 6>&1 5>&1 4>&1 3>&1 2>&1 | Tee-Object -FilePath D:\Repos\land.log
 ```
 
-`*>&1` merges every stream — Success, Error, Warning, Verbose, Debug and
-Information — into Success so it can be piped. `Write-Host` writes to
-Information, so it is carried too. `Tee-Object` then puts it on the console
-*and* in the file, which is the point: watch it run, and still have something
-to hand over afterwards. `*>` alone writes only the file and leaves the
-operator staring at nothing. See
-[about_Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection).
+There are six redirectable streams, and a seventh that cannot be redirected:
+
+| # | Stream | Written by |
+| --- | --- | --- |
+| 1 | Success | `Write-Output` |
+| 2 | Error | `Write-Error`, and a native command's stderr |
+| 3 | Warning | `Write-Warning` |
+| 4 | Verbose | `Write-Verbose` |
+| 5 | Debug | `Write-Debug` |
+| 6 | Information | `Write-Information`, **`Write-Host`** |
+| — | Progress | `Write-Progress` — no redirection exists |
+
+**Only Success can be redirected *into*.** `n>&1` is the only merge direction
+PowerShell has, so anything `Tee-Object` is expected to see must be merged into
+Success first — one operator per stream, and each one is easy to forget.
+
+`Write-Host` writing to Information rather than Success is the trap: a script
+that reports its progress with `Write-Host` produces a log that looks complete
+and contains none of it, unless `6>&1` is there.
+
+`*>` is not this. It sends every stream to a *file* and nothing to the console,
+which leaves the operator watching an empty terminal while the log fills up.
+Useful for an unattended run and wrong for a run somebody is watching.
+
+See [about_Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection).
 
 **A script that builds its own log file is a script that decided for its
 caller.** It writes where it wants, it names the file what it wants, and it
