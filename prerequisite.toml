@@ -36,12 +36,12 @@ include = ["developer"]
 [prerequisite.powershell]
 role = "operator"
 probe = "pwsh --version"
-minimum = "7.6"
+minimum = "7.6.5"
 channel = "stable"
 note = """
 The one prerequisite Xmip cannot install for you, because the tooling is
 written in it. Every entry point declares #requires -PSEdition Core and
--Version 7.6, so a machine below the floor is refused by PowerShell itself,
+-Version 7.6.5, so a machine below the floor is refused by PowerShell itself,
 by name and version. If Install-XmipPrerequisite is running at all, this is already
 satisfied, so it is reported rather than installed.
 
@@ -79,7 +79,7 @@ channel = "stable"
 minimum = "6.0"
 note = """
 Latest stable, no pinned version — the same rule as Rust. Pester 6 requires
-PowerShell 7.4 or later, which the 7.6 floor above already guarantees.
+PowerShell 7.4 or later, which the 7.6.5 floor above already guarantees.
 
 The minimum is 6.0 rather than a specific build because Pester 6 changed how
 discovery works: it now discovers and runs per file, where 5 discovered every

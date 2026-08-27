@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 # Dot-sourced by Xmip.psm1, which supplies Get-TomlValue, Get-TomlKey and
 # Write-Step. Import-Module ./Xmip.psm1 rather than running this file directly.

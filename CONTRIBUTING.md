@@ -26,7 +26,7 @@ Changes to the architecture baseline must update all authoritative representatio
 
 ## PowerShell tooling
 
-Xmip PowerShell scripts require PowerShell Core 7.6.3 or newer and must remain cross-platform.
+Xmip PowerShell scripts require PowerShell Core 7.6.5 or newer and must remain cross-platform.
 
 Use advanced functions and native PowerShell parameter sets. Mutating commands should support `ShouldProcess` where practical.
 

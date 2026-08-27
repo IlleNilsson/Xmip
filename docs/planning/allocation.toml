@@ -111,9 +111,11 @@ content, but no disposition.rs — a new filename in an occupied repository, so
 the move is clean and the merge question does not arise.
 """
 
-[[merge]]
+[[merged]]
 from = "src/route.rs"
 into = "xmip-core-route"
+on = "2026-08-27"
+outcome = "Done. The root implementation survived; the module's was replaced."
 reason = """
 Both sides are real. src/route.rs is the largest single piece of behaviour in
 the tree — publication, subscription matching as a pure function, declines that
@@ -124,9 +126,16 @@ Read both before either is touched. The root version's doc comment is the
 better statement of intent and should survive whatever happens to the code.
 """
 
-[[merge]]
+[[merged]]
 from = "src/journey_model.rs"
 into = "xmip-core-journey"
+on = "2026-08-27"
+outcome = """
+Done, and as planned: the module's structure with the root's vocabulary.
+Message, MessageTreatment, generation and MessageCreationSource went to
+xmip-core-message rather than to journey, because they were never Journey
+concerns — the file carried two subjects under one name.
+"""
 reason = """
 The sharpest conflict in the estate, and the one to do first.
 
@@ -143,9 +152,19 @@ previous_journey_id and keeps it.
 So: the module's structure, the root's vocabulary. Neither wholesale.
 """
 
-[[merge]]
+[[merged]]
 from = "src/contracts.rs"
-into = "xmip-core-contract"
+into = "four repositories, not one"
+on = "2026-08-27"
+outcome = """
+Done, and the warning below was right: the destination *was* wrong. It did not
+merge into xmip-core-contract. It split four ways to the repositories that
+actually own each part, the module ABI surface going to xmip-core-abi exactly
+as this entry predicted.
+
+Worth keeping as a record of the file working: an entry that says "settle the
+destination before merging anything" stopped a wrong merge.
+"""
 reason = """
 Root contracts.rs holds the Content Selector language — ContentOperation,
 ContentSelectorSegment, SelectorEvaluation, DemotionTarget — which is live
@@ -1087,8 +1106,9 @@ Also the entry that broke a Distribute run: it named the crate directory rather
 than a file, so `git rm` without -r threw after eleven other moves had already
 been made. Invoke-Distribute now validates the whole plan before performing any
 of it.
-"""
-reason = """
+
+*The reasoning this replaced, kept because that is what this file is for:*
+
 ADR-0016 creates a repository when a thing earns one, and 249 implementations
 are declared while none exist. Creating the first level-two repository for a
 demo file handler sets the precedent on the weakest possible case. ADR-0017

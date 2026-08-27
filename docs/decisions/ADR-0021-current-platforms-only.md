@@ -52,7 +52,7 @@ Concretely, at the time of writing:
 
 | | Xmip requires | Explicitly not supported |
 | --- | --- | --- |
-| PowerShell | 7.6 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
+| PowerShell | 7.6.5 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
 | .NET | 11 | 8, 9, 10 |
 | Rust | latest stable, via `rust-toolchain.toml` | any pinned older toolchain |
 | Pester | 6 or later | 3, 5 |
@@ -74,7 +74,7 @@ does not freeze anything.
 ### Corollaries
 
 **A version floor is a real refusal.** `#requires -PSEdition Core` and
-`#requires -Version 7.6` are not advisory. A machine below the floor is told so
+`#requires -Version 7.6.5` are not advisory. A machine below the floor is told so
 by PowerShell, by name and version, and nothing runs. That error message *is*
 the compatibility documentation.
 

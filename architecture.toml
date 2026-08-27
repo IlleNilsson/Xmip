@@ -17,7 +17,7 @@ surface = ["abi", "cli", "gui", "powershell"]
 
 [powershellRuntime]
 edition = "Core"
-version = "7.6"
+version = "7.6.5"
 versionPolicy = "minimum"
 crossPlatform = true
 windowsPowerShellSupported = false

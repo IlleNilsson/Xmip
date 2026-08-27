@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
     docs/governance/powershell-style.md states the rules. This file is what

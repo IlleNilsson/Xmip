@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6
+#requires -Version 7.6.5
 
 <#
     docs/decisions/README.md reads the twenty-two decision records as one
