@@ -32,7 +32,7 @@ default = ["server-profile"]
 # Deployment profiles are deliberately absent. IoT device, edge node, single
 # server, cluster, cloud node and hybrid select modules at run time, and module
 # selection is configuration. That belongs in TOML, not here.
-server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "exclusiveness", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform"]
+server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform"]
 
 # The same composition as server-profile today. What will separate them is an
 # interactive host and a local GUI host, and neither exists yet. The name is
@@ -54,7 +54,6 @@ cluster = ["dep:xmip-cluster"]
 contract = ["dep:xmip-contract"]
 demote = ["dep:xmip-demote"]
 event = ["dep:xmip-event"]
-exclusiveness = ["dep:xmip-exclusiveness"]
 identify = ["dep:xmip-identify"]
 node = ["dep:xmip-node"]
 observe = ["dep:xmip-observe"]
@@ -83,7 +82,6 @@ xmip-contract = { package = "xmip-core-contract", git = "https://github.com/Ille
 xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
 xmip-demote = { package = "xmip-core-demote", git = "https://github.com/IlleNilsson/xmip-core-demote", branch = "main", optional = true }
 xmip-event = { package = "xmip-core-event", git = "https://github.com/IlleNilsson/xmip-core-event", branch = "main", optional = true }
-xmip-exclusiveness = { package = "xmip-core-exclusiveness", git = "https://github.com/IlleNilsson/xmip-core-exclusiveness", branch = "main", optional = true }
 xmip-identify = { package = "xmip-core-identify", git = "https://github.com/IlleNilsson/xmip-core-identify", branch = "main", optional = true }
 xmip-journey = { package = "xmip-core-journey", git = "https://github.com/IlleNilsson/xmip-core-journey", branch = "main" }
 xmip-message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }

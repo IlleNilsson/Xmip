@@ -1,8 +1,23 @@
 # ADR-0017: Exclusiveness
 
-- Status: Accepted
+- Status: **Superseded by ADR-0024**
 - Date: 2026-08-25
+- Superseded: 2026-08-27
 - Related: ADR-0013 (Journey model), ADR-0016 (submodule composition)
+
+> **Kept for the record, not for guidance.** ADR-0024 retires
+> `xmip-core-exclusiveness` and replaces it with `ResourceClaim` in
+> `xmip-core-transport`: a claim taken at the endpoint is cluster-wide without
+> a lease, because the endpoint is one thing however many nodes are asking.
+>
+> What survives, carried into ADR-0024 rather than left here: clause 3 (the
+> artefact, not the location), clause 3b (the `ResourceClaim` shape, which this
+> record specified and never implemented) and clause 3c (FTP, SFTP and IMAP
+> have no claim, and renaming at claim time does not give them one).
+>
+> What failed is clause 8. It put leases in `xmip-core-persist`, which is per
+> node, leaving `ExclusiveScope::Cluster` declarable and unservable — open
+> problem 18, now dissolved rather than answered.
 
 ## Context
 

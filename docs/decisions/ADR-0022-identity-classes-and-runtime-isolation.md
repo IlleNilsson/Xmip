@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-26
-- Related: ADR-0017 (exclusiveness), ADR-0019 (identity, Parties and direction),
+- Related: ADR-0019 (identity, Parties and direction),
   ADR-0009 (security roles versus Actor capabilities), ADR-0014 (operator surfaces)
 
 ## Context
@@ -104,9 +104,15 @@ Report. That report is mandatory rather than optional, because the population it
 matters to — auditors, security review boards — is exactly the population that
 will not think to ask for it by name.
 
-This makes ADR-0017 the enforcement mechanism: co-residency is a runtime
-exclusiveness question, and exclusiveness already owns "these two things may not
-run at once."
+*Amended 2026-08-27.* This named ADR-0017 as the enforcement mechanism, on the
+grounds that co-residency is "these two things may not run at once" and
+exclusiveness already owned that sentence. ADR-0024 retired exclusiveness, and
+the reassignment is a correction rather than a loss: **co-residency is decided
+before anything starts, not contended for at runtime.** Which identity contexts
+may share a host process is answered when the execution tree is built, by the
+planner in `xmip-core-runtime`, and a Host Service that should not exist is
+never spawned. A lease would have been enforcing a decision that was already
+made.
 
 ## Consequences
 

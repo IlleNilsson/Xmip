@@ -30,7 +30,7 @@ the word went.
 Every architectural action is auditable: Receive, Prepare, Contract resolution,
 validation, Path execution, Promotion, Demotion, Routing, Assignment,
 Transformation, Process, Send, authentication, authorization, resilience,
-exclusiveness, persistence, observation, reporting and external Event delivery.
+persistence, observation, reporting and external Event delivery.
 
 **Audit is not placed before or after the execution chain. It is available
 throughout it.**

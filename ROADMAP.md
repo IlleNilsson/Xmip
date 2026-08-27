@@ -37,7 +37,7 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 - Local IPC and inter-node HTTP/2 communication.
 - Durable execution state and disaster recovery.
 - Scheduling, priorities, overload handling and capability-aware failover.
-- Resilience and scoped exclusiveness services.
+- Resilience, and artefact claims at the endpoint (ADR-0024).
 
 ## 5. Handler ecosystem
 
