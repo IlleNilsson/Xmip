@@ -128,6 +128,44 @@ Authentication always precedes authorization. **Anonymous is an authenticated
 outcome, not a skipped gate** — the claim is "nobody", it is verified as such,
 and authorization then decides whether nobody may post here.
 
+## Arrival and Departure
+
+**Arrivals are handled by Receive Locations. Departures are handled by Send
+Locations.** The words are chosen to read as one board: an operator watching an
+estate is watching things come in and things go out, and the two halves are
+deliberately symmetric so that neither needs its own vocabulary.
+
+A Stream **arrives** three ways:
+
+| | |
+| --- | --- |
+| **Pushed** | something connects and sends it. HTTP, SOAP, gRPC, AS2, MLLP. |
+| **Detected** | Xmip is watching and it appears. A folder, a queue, a table, an inbox. |
+| **Scheduled** | a timer fires and Xmip goes and fetches it. Xmip is the client. |
+
+A Message **departs** three ways, and they are not the same three:
+
+| | |
+| --- | --- |
+| **Pushed** | Xmip connects and sends it. |
+| **Collected** | Xmip holds it and something comes and gets it. |
+| **Scheduled** | a timer fires and Xmip sends what has accumulated. |
+
+**A Stream can arrive by being detected; a Message cannot depart by being
+detected**, because nothing outside Xmip is watching on Xmip's behalf. What
+replaces it is collection — and the difference matters operationally, not just
+grammatically. A pushed departure fails at Xmip and is Xmip's to retry; a
+collected one waits, and its failure mode is nobody turning up. Reported as one
+number, an unreachable partner and an idle one look identical.
+
+Between the two sits the **ToDo**, which holds every Stream, Message and Journey
+until *every* departure is settled. A Journey with two destinations reached and
+one awaiting collection is unfinished, and the ToDo is the only place that state
+can live without lying about it in one direction or the other.
+
+How a Stream arrived is separate from how its identity was established — see
+*Identity, Party and direction* above, and ADR-0019 clause 8.
+
 ## Message and Section
 
 A **Message** is a processing unit over immutable content. It has a message id, metadata,
@@ -167,7 +205,7 @@ of failure, and the runtime place where the failure occurred.
 It exists so Xmip can inspect, report, recover, retry, move to the Xmip DMQ, or
 explain what failed and why.
 
-## XmipToDo
+## ToDo
 
 The durable work store on a node. **One per node**, embedded, and written only
 by the node that owns it.
@@ -181,7 +219,7 @@ kind of message broker.
 **The comparison is BizTalk's MessageBox, and so is the warning.** BizTalk's was
 one shared SQL database holding every message and subscription for the whole
 group, which made it the contention point the entire product was eventually
-tuned around. A XmipToDo is per node, so there is no shared write path to
+tuned around. A ToDo is per node, so there is no shared write path to
 contend for and nothing to partition later.
 
 It is not a broker, and Xmip requires none. `xmip-core-transport-rabbitmq`,

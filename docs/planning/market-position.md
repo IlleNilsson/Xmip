@@ -121,7 +121,7 @@ declares them .NET 11 and `xmip-template-dotnet` now exists, so the obstacle is
 work rather than a decision.
 
 **Judgement, not fact:** this gap is wider than any runtime feature currently
-open, including XmipToDo.
+open, including ToDo.
 
 ## What to say out loud
 

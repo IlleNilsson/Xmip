@@ -242,10 +242,49 @@ Two degenerate cases close the rule:
   identity — implied, and authenticated as such. A partner drop folder is not
   an absence of identity.
 
+### 8. A Stream arrives three ways, and an identity is established three ways
+
+A Stream gets into Xmip by being **pushed** (something connects and sends it),
+**detected** (Xmip is watching a folder, a queue, a table, and it appears) or
+**scheduled** (a timer fires and Xmip goes and fetches it). All three are
+arrivals and all three run the same gates. Only the first has a caller.
+
+Independently of that, an identity is established by being **passed** (the
+sender presented it), **inferred** (the configuration says so — this folder,
+this schedule, this credential Xmip used to go and get it) or **detected** (read
+out of what arrived — `ISA06`, a signature, an envelope).
+
+**Both are recorded, and neither implies the other.** A pushed Stream can yield
+a detected identity: a partner posts an X12 interchange over plain HTTP and the
+only name anywhere is inside the envelope. A scheduled pickup can only ever
+yield an inferred identity, because there was nobody there to pass anything —
+and the credential in play was Xmip's own, which proves something about Xmip and
+nothing about the source.
+
+This is provenance, not strength. **Inferred is not weak by definition and
+passed is not strong by definition:** a drop folder reachable only over a
+dedicated line says more than a bearer token pasted into a header. Strength is
+the mechanism's class and assurance, which are ADR-0022's.
+
+Both values are declared by the module that did the work and are never
+configurable, for the reason ADR-0022 clause 1 gives about class: an operator who
+could relabel an inferred identity as passed would have relabelled away the only
+thing the record is for. When a Journey is disputed, *was it proven* answers
+whether the claim held; this answers why there was a claim at all, and a record
+with only the first cannot tell a forged certificate from a folder that anyone on
+the network could write to.
+
 ## Consequences
 
 - `xmip-core-party` owns the Party and its identities, and gains a reason to
   exist beyond "model and associations".
+- The identity vocabulary — mechanism, layer, class, assurance, purpose, and
+  clause 8's two — lives in `xmip-core`. `xmip-core-identify`, `-authenticate`
+  and `-authorize` depend on it and **never on `xmip-core-party`**, which is what
+  `architecture.toml` already said. The gates answer with a `PartyId`; resolving
+  the Party happens elsewhere. Proving a credential and knowing whose it is are
+  different questions, and a gate able to see the answer to the second would
+  eventually decide something with it.
 - `xmip-core-authenticate` resolves a presented credential to a Party.
   `xmip-core-authorize` decides what that Party may do, and owns alignment
   evaluation.

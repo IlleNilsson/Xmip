@@ -6,11 +6,17 @@
     What forty-two repositories need instead of `git status` and `git push`.
 
 .DESCRIPTION
-    Two commands, named and parameterised to read like the git underneath them.
+    Three commands, named and parameterised to read like the git underneath
+    them.
 
         Get-XmipStatus                  git status, across the estate
         Publish-XmipChange -m '...'     git add, commit and push, in dependency
                                         order, having tested first
+        Publish-XmipPin                 move the superproject's gitlinks
+
+    `xmip-git` and `xgit` are aliases for the second. The estate talks about
+    "Xmip-Git"; PowerShell requires an approved verb. An alias is how both are
+    satisfied, and it is what aliases are for.
 
     Neither asks the caller to know anything git would not have asked. The
     dependency order is read out of the manifests, because it is already written
@@ -181,6 +187,21 @@ function Publish-XmipChange {
             Land without testing, like `git commit --no-verify`. For a change no
             compiler can check.
 
+        .PARAMETER Pin
+            Move the superproject's gitlinks and push, and do nothing else.
+
+            The repair path. A run that stopped halfway leaves modules on origin
+            and the superproject still pointing at where they were, which reads
+            as a dirty working tree that `git add` cannot explain. This is
+            `git submodule update` in the other direction.
+
+            There is deliberately no `-Commit` without `-Push`. Dependencies
+            track `branch = "main"` under ADR-0005, so a module that is committed
+            and not pushed is a module the next one in the order will test
+            against the *previous* published version — passing or failing for a
+            reason that is not in the working tree. git can separate the two
+            because git has no such rule; here the pair is one operation.
+
         .PARAMETER RepositoryRoot
             The Xmip working tree.
 
@@ -192,14 +213,19 @@ function Publish-XmipChange {
 
         .EXAMPLE
             Publish-XmipChange -m 'Fix a typo in the README' -NoVerify
+
+        .EXAMPLE
+            xmip-git -m 'Arrivals and departures'
+
+        .EXAMPLE
+            xgit -Pin
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Position = 0)]
         [Alias('m')]
-        [ValidateNotNullOrEmpty()]
-        [string] $Message,
+        [string] $Message = 'Pin the estate',
 
         [Parameter()]
         [switch] $All,
@@ -208,12 +234,21 @@ function Publish-XmipChange {
         [switch] $NoVerify,
 
         [Parameter()]
+        [switch] $Pin,
+
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string] $RepositoryRoot = (Get-XmipRepositoryRoot)
     )
 
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
+
+    if ($Pin) {
+        Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
+
+        return
+    }
 
     # Not $all. PowerShell variable names are case-insensitive, so that name
     # overwrites the -All switch parameter and the next call hands an array to
@@ -249,7 +284,7 @@ function Publish-XmipChange {
 
     if ($status.Count -eq 0) {
         Write-Host 'Only the platform repository has changes.' -ForegroundColor Cyan
-        Publish-XmipPin -RepositoryRoot $RepositoryRoot -Count 0 -Message $Message
+        Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
         return [PSCustomObject]@{ Landed = @(); Verified = $false }
     }
@@ -297,10 +332,25 @@ function Publish-XmipChange {
                 if ($landed.Count -gt 0) {
                     Write-Host "Already landed: $($landed -join ', ')" -ForegroundColor Yellow
                     Write-Host 'Fix this one and run again; the rest will be skipped as clean.'
+
+                    # Pin what did land, before returning.
+                    #
+                    # Without this, a failure halfway leaves the superproject
+                    # holding gitlinks to commits that are no longer what those
+                    # modules are on — one dirty submodule entry per module that
+                    # succeeded. Stopping the run is right; leaving the estate
+                    # unpinned is not, because the pin describes what is on
+                    # origin and those modules *are* on origin.
+                    Publish-XmipPin -RepositoryRoot $RepositoryRoot
                 }
                 else {
-                    Write-Host 'Nothing landed. The estate is exactly as it was.'
+                    Write-Host 'Nothing landed this run.'
                 }
+
+                # Either way. A previous run may have left gitlinks stale, and
+                # those modules are on origin whether or not this run added to
+                # them. Publish-XmipPin no-ops when there is nothing to pin.
+                Publish-XmipPin -RepositoryRoot $RepositoryRoot
 
                 return [PSCustomObject]@{ Landed = $landed.ToArray(); Verified = $true }
             }
@@ -313,7 +363,7 @@ function Publish-XmipChange {
         $result | ForEach-Object { $landed.Add($_) }
     }
 
-    Publish-XmipPin -RepositoryRoot $RepositoryRoot -Count $landed.Count
+    Publish-XmipPin -RepositoryRoot $RepositoryRoot
 
     [PSCustomObject]@{
         Landed   = $landed.ToArray()
@@ -605,14 +655,19 @@ function Publish-XmipPin {
     <#
         .SYNOPSIS
             Moves the superproject's gitlinks to where the modules now are.
+
+        .DESCRIPTION
+            Counts what it is actually pinning rather than being told. The two
+            numbers are not the same and the difference is the bug this was
+            written to stop: a run that lands six modules and fails on the
+            seventh leaves six stale gitlinks, and a later run that lands
+            nothing still has six to pin. Told "nothing landed", the pin would
+            skip; asked "what is dirty", it does the right thing either way.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
         [string] $RepositoryRoot,
-
-        [Parameter(Mandatory)]
-        [int] $Count,
 
         [Parameter()]
         [string] $Message
@@ -624,18 +679,28 @@ function Publish-XmipPin {
 
     & git -C $RepositoryRoot add -A
 
-    $staged = & git -C $RepositoryRoot status --porcelain
+    $staged = @(& git -C $RepositoryRoot status --porcelain)
 
-    if ([string]::IsNullOrWhiteSpace(($staged -join ''))) {
+    if ($staged.Count -eq 0) {
         Write-Host 'Estate already pinned.' -ForegroundColor DarkGray
         return
     }
 
-    $noun = if ($Count -eq 1) { 'module' } else { 'modules' }
+    # A gitlink shows as a path with no extension under modules/. Everything
+    # else staged here is the platform repository's own content.
+    $pins = @(
+        $staged |
+            ForEach-Object { $_.Substring(3) } |
+            Where-Object { $_ -like 'modules/*' }
+    )
 
+    $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
+
+    # Nothing under modules/ means the platform repository changed on its own,
+    # and the caller's message is what describes that. Anything else is a pin.
     $subject =
-        if ($Count -eq 0 -and $Message) { $Message }
-        else { "Pin $Count $noun" }
+        if ($pins.Count -eq 0 -and $Message) { $Message }
+        else { "Pin $($pins.Count) $noun" }
 
     & git -C $RepositoryRoot commit -m $subject --quiet
     & git -C $RepositoryRoot push origin main --quiet
@@ -644,10 +709,18 @@ function Publish-XmipPin {
         throw 'Pushing the estate failed. The modules are landed; only the pin is missing.'
     }
 
-    if ($Count -eq 0) {
+    if ($pins.Count -eq 0) {
         Write-Host 'Platform repository landed.' -ForegroundColor Green
     }
     else {
-        Write-Host "Pinned $Count $noun." -ForegroundColor Green
+        Write-Host "Pinned $($pins.Count) $noun." -ForegroundColor Green
     }
 }
+
+# `xmip-git` reads the way the estate is talked about, and `Publish-XmipChange`
+# reads the way PowerShell is talked about. An alias is how both are true at
+# once: Xmip is not an approved verb, so a *function* by that name warns on
+# import and disappears from `Get-Command -Verb`, while an alias is exempt and
+# costs nothing.
+Set-Alias -Name xmip-git -Value Publish-XmipChange
+Set-Alias -Name xgit -Value Publish-XmipChange
