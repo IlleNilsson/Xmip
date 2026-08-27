@@ -22,6 +22,12 @@
     dependency order is read out of the manifests, because it is already written
     there and making a person supply it is how the estate grows gray hairs.
 
+    Colour is decoration, never the message. Every line that reports an outcome
+    says it in words first — OK, FAILED, REFUSED, NOTE — because a reader who
+    does not separate red from green is otherwise reading an unlabelled result,
+    and so is anyone piping this to a file. -ForegroundColor stays as a second
+    channel for those it helps.
+
     Style: docs/governance/powershell-style.md
 #>
 
@@ -292,7 +298,7 @@ function Publish-XmipChange {
     $suspect = @($status | Where-Object Suspicious)
 
     if ($suspect.Count -gt 0) {
-        Write-Host 'Refusing. These have changes that look like build output:' -ForegroundColor Red
+        Write-Host 'REFUSED. These have changes that look like build output:' -ForegroundColor Red
         $suspect | ForEach-Object { Write-Host "  $($_.Module)" }
         Write-Host ''
         Write-Host 'Get-XmipStatus | Where-Object Suspicious    shows which files.'
@@ -327,29 +333,24 @@ function Publish-XmipChange {
 
             if ($failed.Count -gt 0) {
                 Write-Host ''
-                Write-Host "Stopping at $module." -ForegroundColor Red
+                Write-Host "FAILED. Stopping at $module." -ForegroundColor Red
 
                 if ($landed.Count -gt 0) {
-                    Write-Host "Already landed: $($landed -join ', ')" -ForegroundColor Yellow
+                    Write-Host "  landed before it: $($landed -join ', ')" -ForegroundColor Yellow
                     Write-Host 'Fix this one and run again; the rest will be skipped as clean.'
-
-                    # Pin what did land, before returning.
-                    #
-                    # Without this, a failure halfway leaves the superproject
-                    # holding gitlinks to commits that are no longer what those
-                    # modules are on — one dirty submodule entry per module that
-                    # succeeded. Stopping the run is right; leaving the estate
-                    # unpinned is not, because the pin describes what is on
-                    # origin and those modules *are* on origin.
-                    Publish-XmipPin -RepositoryRoot $RepositoryRoot
                 }
                 else {
                     Write-Host 'Nothing landed this run.'
                 }
 
-                # Either way. A previous run may have left gitlinks stale, and
-                # those modules are on origin whether or not this run added to
-                # them. Publish-XmipPin no-ops when there is nothing to pin.
+                # Once, either way.
+                #
+                # Stopping the run is right; leaving the estate unpinned is not,
+                # because the pin describes what is on origin and the modules
+                # that landed *are* on origin. And a previous run may have left
+                # gitlinks stale whether or not this one added to them, so this
+                # is not conditional on $landed. Publish-XmipPin no-ops when
+                # there is nothing to pin.
                 Publish-XmipPin -RepositoryRoot $RepositoryRoot
 
                 return [PSCustomObject]@{ Landed = $landed.ToArray(); Verified = $true }
@@ -520,10 +521,20 @@ function Sort-XmipModuleDependency {
     while ($waiting.Count -gt 0) {
         $ready = @(
             $waiting | Where-Object {
+                # Named, not $PSItem. Each nested pipeline rebinds $_ *and*
+                # $PSItem — they are the same variable — so the inner
+                # Where-Object's $PSItem is the resolved dependency, never the
+                # module being tested. Written as `$_ -ne $PSItem` it compared a
+                # value with itself, filtered out every blocker, and made every
+                # module look ready. The sort then emitted its input order,
+                # which is alphabetical, and authenticate was tested before the
+                # identify and context it depends on.
+                $module = $_
+
                 $blockers = @(
-                    $needs[$_] |
+                    $needs[$module] |
                         ForEach-Object { $package[$_] } |
-                        Where-Object { $_ -and $_ -ne $PSItem -and $waiting.Contains($_) }
+                        Where-Object { $_ -and $_ -ne $module -and $waiting.Contains($_) }
                 )
 
                 $blockers.Count -eq 0
@@ -634,7 +645,7 @@ function Submit-XmipModule {
         $branch = (& git -C $path branch --show-current) -join ''
 
         if ([string]::IsNullOrWhiteSpace($branch)) {
-            Write-Host "   detached HEAD, checking out main" -ForegroundColor Yellow
+            Write-Host "   NOTE: detached HEAD, checking out main" -ForegroundColor Yellow
             & git -C $path checkout main
         }
 
@@ -646,7 +657,7 @@ function Submit-XmipModule {
             throw "Pushing $module failed. Anything before it is already on origin; fix this and run again."
         }
 
-        Write-Host "   landed" -ForegroundColor Green
+        Write-Host "   OK, landed" -ForegroundColor Green
         $module
     }
 }
@@ -679,20 +690,21 @@ function Publish-XmipPin {
 
     & git -C $RepositoryRoot add -A
 
-    $staged = @(& git -C $RepositoryRoot status --porcelain)
+    # What is staged, not what is dirty. `git status --porcelain` reports a
+    # submodule as modified when the only change is an untracked file *inside*
+    # it — content the superproject cannot stage and has no business committing.
+    # Counting those meant committing nothing, printing git's "no changes added
+    # to commit" at the operator, and calling it a pin.
+    $staged = @(& git -C $RepositoryRoot diff --cached --name-only)
 
     if ($staged.Count -eq 0) {
         Write-Host 'Estate already pinned.' -ForegroundColor DarkGray
         return
     }
 
-    # A gitlink shows as a path with no extension under modules/. Everything
-    # else staged here is the platform repository's own content.
-    $pins = @(
-        $staged |
-            ForEach-Object { $_.Substring(3) } |
-            Where-Object { $_ -like 'modules/*' }
-    )
+    # A gitlink is a path under modules/. Everything else staged here is the
+    # platform repository's own content.
+    $pins = @($staged | Where-Object { $_ -like 'modules/*' })
 
     $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
 
@@ -710,10 +722,10 @@ function Publish-XmipPin {
     }
 
     if ($pins.Count -eq 0) {
-        Write-Host 'Platform repository landed.' -ForegroundColor Green
+        Write-Host 'OK. Platform repository landed.' -ForegroundColor Green
     }
     else {
-        Write-Host "Pinned $($pins.Count) $noun." -ForegroundColor Green
+        Write-Host "OK. Pinned $($pins.Count) $noun." -ForegroundColor Green
     }
 }
 
