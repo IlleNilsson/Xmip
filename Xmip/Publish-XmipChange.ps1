@@ -94,17 +94,16 @@ function Get-XmipStatus {
             continue
         }
 
-        # posh-git separates staged from unstaged, and calls untracked files
-        # Working.Added. Both matter here: `add -A` will take all of them.
-        # The array subexpression wraps the whole pipeline, not just the
-        # addition. Sort-Object emits a scalar for one item and nothing for
-        # none, and under StrictMode neither has a Count.
-        $files = @(
-            @($git.Index.Added) + @($git.Index.Modified) + @($git.Index.Deleted) +
-            @($git.Working.Added) + @($git.Working.Modified) + @($git.Working.Deleted) |
-                Where-Object { $_ } |
-                Sort-Object -Unique
-        )
+        # posh-git for what porcelain does not have — branch, ahead, behind —
+        # and porcelain for the files.
+        #
+        # Not both from posh-git. Get-GitStatus disables file status for
+        # repositories it judges large and still answers HasWorking: False, so
+        # its Index and Working sets read as "clean" when they mean "not
+        # counted". On 2026-08-27 that hid two modified modules and cost three
+        # rounds of a red build.
+        $changed = @(& git -C $path status --porcelain | Where-Object { $_ })
+        $files = @($changed | ForEach-Object { $_.Substring(3).Trim('"') } | Sort-Object -Unique)
 
         $behind = $git.BehindBy -gt 0
 
@@ -127,11 +126,13 @@ function Get-XmipStatus {
             continue
         }
 
-        foreach ($file in $files) {
+        foreach ($line in $changed) {
+            $file = $line.Substring(3).Trim('"')
+
             [PSCustomObject]@{
                 Module     = $module
                 Branch     = $git.Branch
-                State      = Get-XmipFileState -Status $git -Path $file
+                State      = $line.Substring(0, 2)
                 Path       = $file
                 Suspicious = [bool] (Test-XmipBuildOutput -Path $file)
             }
@@ -153,8 +154,11 @@ function Publish-XmipChange {
             manifest already declares its dependencies, so the order comes from
             there.
 
-            **Nothing lands unless everything passes.** A half-landed estate is
-            worse than an unlanded one, for the same reason.
+            **Each module is tested and landed before the next is tested.**
+            Dependencies resolve against `main`, so a module cannot be verified
+            against a sibling that is still only local. A failure halfway leaves
+            the earlier ones landed and says so; that is recoverable, and no
+            other order works at all.
 
             **Build output is refused rather than committed.** On 2026-08-27 a
             hand-run loop pushed 105 files of `target/` to xmip-core: it checked
@@ -269,29 +273,50 @@ function Publish-XmipChange {
     Write-Host "Landing $($ordered.Count) module(s), dependencies first:" -ForegroundColor Cyan
     $ordered | ForEach-Object { Write-Host "  $_" }
 
-    $failed = @(
-        if ($NoVerify) { @() }
-        else { Test-XmipModule -RepositoryRoot $RepositoryRoot -Module $ordered -All:$All }
-    )
+    # Test and land one module at a time, in order.
+    #
+    # Not test-everything-then-land-everything. Dependencies resolve against
+    # `main`, so a module cannot be tested against a sibling that is still only
+    # local — it would resolve the published version and fail for a reason that
+    # is not there. The dependency has to be on origin first, which means
+    # landing happens between tests rather than after all of them.
+    #
+    # The cost is that a failure halfway leaves the earlier modules landed. That
+    # is recoverable — fix and run again — and it is the only order that can
+    # work at all.
+    $landed = [System.Collections.Generic.List[string]]::new()
 
-    if ($failed.Count -gt 0) {
-        Write-Host ''
-        Write-Host 'Refusing. These did not pass:' -ForegroundColor Red
-        $failed | ForEach-Object { Write-Host "  $_" }
-        Write-Host ''
-        Write-Host 'Nothing landed. The estate is exactly as it was.'
+    foreach ($module in $ordered) {
+        if (-not $NoVerify) {
+            $failed = @(Test-XmipModule -RepositoryRoot $RepositoryRoot -Module @($module) -All:$All)
 
-        return
+            if ($failed.Count -gt 0) {
+                Write-Host ''
+                Write-Host "Stopping at $module." -ForegroundColor Red
+
+                if ($landed.Count -gt 0) {
+                    Write-Host "Already landed: $($landed -join ', ')" -ForegroundColor Yellow
+                    Write-Host 'Fix this one and run again; the rest will be skipped as clean.'
+                }
+                else {
+                    Write-Host 'Nothing landed. The estate is exactly as it was.'
+                }
+
+                return [PSCustomObject]@{ Landed = $landed.ToArray(); Verified = $true }
+            }
+        }
+
+        $result = @(
+            Submit-XmipModule -RepositoryRoot $RepositoryRoot -Module @($module) -Message $Message
+        )
+
+        $result | ForEach-Object { $landed.Add($_) }
     }
-
-    $landed = @(
-        Submit-XmipModule -RepositoryRoot $RepositoryRoot -Module $ordered -Message $Message
-    )
 
     Publish-XmipPin -RepositoryRoot $RepositoryRoot -Count $landed.Count
 
     [PSCustomObject]@{
-        Landed   = $landed
+        Landed   = $landed.ToArray()
         Verified = -not $NoVerify
     }
 }
@@ -331,37 +356,6 @@ or, on its own:
     }
 
     Import-Module -Name posh-git -ErrorAction Stop
-}
-
-function Get-XmipFileState {
-    <#
-        .SYNOPSIS
-            Two characters, index then working tree, as git prints them.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [psobject] $Status,
-
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    $index =
-        if ($Status.Index.Added -contains $Path) { 'A' }
-        elseif ($Status.Index.Modified -contains $Path) { 'M' }
-        elseif ($Status.Index.Deleted -contains $Path) { 'D' }
-        else { ' ' }
-
-    # posh-git puts untracked files in Working.Added, which git prints as ??.
-    $working =
-        if ($Status.Working.Added -contains $Path) { '?' }
-        elseif ($Status.Working.Modified -contains $Path) { 'M' }
-        elseif ($Status.Working.Deleted -contains $Path) { 'D' }
-        else { ' ' }
-
-    "$index$working"
 }
 
 function Test-XmipBuildOutput {
@@ -413,12 +407,17 @@ function Sort-XmipModuleDependency {
 
         .DESCRIPTION
             Reads each manifest's package name and its Xmip dependencies, then
-            walks depth first. A module whose dependencies are all outside the
-            set being landed comes first; everything else follows what it needs.
+            repeatedly takes every module whose dependencies are already placed.
 
-            A cycle is reported rather than silently broken. Cargo would refuse
-            it anyway, and a quiet arbitrary order here would turn a manifest
-            error into a mysterious build failure.
+            Iterative rather than a recursive walk. The recursive version
+            depended on a nested function seeing the parent's collections
+            through PowerShell's scope rules, and silently emitted one module
+            out of three — the kind of failure that looks like a smaller change
+            set rather than like a bug.
+
+            A cycle is reported rather than quietly broken. Cargo would refuse
+            it anyway, and an arbitrary order here would turn a manifest error
+            into a mysterious build failure.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -434,22 +433,22 @@ function Sort-XmipModuleDependency {
     $package = @{}
     $needs = @{}
 
-    foreach ($module in $Module) {
-        $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
+    foreach ($name in $Module) {
+        $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$name/Cargo.toml"
 
         if (-not (Test-Path -LiteralPath $manifest)) {
             # No manifest, no declared dependencies. Lands whenever.
-            $needs[$module] = @()
+            $needs[$name] = @()
             continue
         }
 
         $text = Get-Content -LiteralPath $manifest -Raw
 
         if ($text -match '(?m)^name\s*=\s*"(?<name>[^"]+)"') {
-            $package[$Matches['name']] = $module
+            $package[$Matches['name']] = $name
         }
 
-        $needs[$module] = @(
+        $needs[$name] = @(
             [regex]::Matches($text, '(?m)^\s*(?<alias>xmip[a-z0-9-]*)\s*=\s*\{(?<body>[^}]*)\}') |
                 ForEach-Object {
                     $body = $_.Groups['body'].Value
@@ -464,38 +463,34 @@ function Sort-XmipModuleDependency {
         )
     }
 
-    $ordered = [System.Collections.Generic.List[string]]::new()
-    $state = @{}
+    $placed = [System.Collections.Generic.List[string]]::new()
+    $waiting = [System.Collections.Generic.List[string]]::new()
+    $Module | ForEach-Object { $waiting.Add($_) }
 
-    function Add-XmipModuleInOrder {
-        param([string] $Current, [string[]] $Trail)
+    while ($waiting.Count -gt 0) {
+        $ready = @(
+            $waiting | Where-Object {
+                $blockers = @(
+                    $needs[$_] |
+                        ForEach-Object { $package[$_] } |
+                        Where-Object { $_ -and $_ -ne $PSItem -and $waiting.Contains($_) }
+                )
 
-        if ($state[$Current] -eq 'done') { return }
-
-        if ($state[$Current] -eq 'walking') {
-            $cycle = ($Trail + $Current) -join ' -> '
-            throw "The manifests declare a dependency cycle: $cycle"
-        }
-
-        $state[$Current] = 'walking'
-
-        foreach ($dependency in $needs[$Current]) {
-            $inSet = $package[$dependency]
-
-            if ($inSet -and $inSet -ne $Current) {
-                Add-XmipModuleInOrder -Current $inSet -Trail ($Trail + $Current)
+                $blockers.Count -eq 0
             }
+        )
+
+        if ($ready.Count -eq 0) {
+            throw "The manifests declare a dependency cycle among: $($waiting -join ', ')"
         }
 
-        $state[$Current] = 'done'
-        $ordered.Add($Current)
+        foreach ($name in $ready) {
+            $placed.Add($name)
+            [void] $waiting.Remove($name)
+        }
     }
 
-    foreach ($module in $Module) {
-        Add-XmipModuleInOrder -Current $module -Trail @()
-    }
-
-    $ordered
+    $placed
 }
 
 function Test-XmipModule {
