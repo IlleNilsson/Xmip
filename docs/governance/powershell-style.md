@@ -203,6 +203,33 @@ top of every entry point.
 -ErrorAction Stop` or `throw`, so `$?` is false and CI notices. A rule that
 reports and returns success is not a rule.
 
+**A script writes to the streams. Capturing them is the caller's business,
+with `*>`.** No `Start-Transcript`, no `-LogPath` parameter, no logging
+framework. PowerShell already has redirection and it works on any command.
+
+```powershell
+& { ... } *>&1 | Tee-Object -FilePath D:\Repos\land.log
+```
+
+`*>&1` merges every stream — Success, Error, Warning, Verbose, Debug and
+Information — into Success so it can be piped. `Write-Host` writes to
+Information, so it is carried too. `Tee-Object` then puts it on the console
+*and* in the file, which is the point: watch it run, and still have something
+to hand over afterwards. `*>` alone writes only the file and leaves the
+operator staring at nothing. See
+[about_Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection).
+
+**A script that builds its own log file is a script that decided for its
+caller.** It writes where it wants, it names the file what it wants, and it
+still cannot be redirected somewhere else without a parameter nobody asked for.
+
+**A native command's output goes through the streams too**, so it lands in the
+same redirect:
+
+```powershell
+& git -C $Directory @Arguments 2>&1 | ForEach-Object { Write-Host "     git| $_" }
+```
+
 ## 6. What this is enforced by
 
 `tests/Xmip.Style.Tests.ps1`, over `Xmip/` and `tests/`. It fails on:
