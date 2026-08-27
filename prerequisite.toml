@@ -109,6 +109,21 @@ source = "psgallery"
 id = "PSToml"
 note = "Reads the Xmip TOML manifests. PowerShell has no built-in TOML parser. Operating system independent, so it carries no per-system table."
 
+[prerequisite.poshgit]
+role = "operator"
+source = "psgallery"
+id = "posh-git"
+note = """
+Reads git state as typed objects rather than as text. Get-XmipStatus and
+Publish-XmipChange use Get-GitStatus, which returns Branch, AheadBy, BehindBy
+and the Index and Working sets already separated — the ahead-and-behind counts
+in particular are not in `git status --porcelain`, so parsing that text answers
+a narrower question than the prompt in front of you already shows.
+
+It also supplies the prompt that shows it. Operating system independent, so it
+carries no per-system table.
+"""
+
 [prerequisite.rust]
 role = "developer"
 probe = "rustup --version"

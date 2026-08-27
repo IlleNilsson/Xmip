@@ -21,7 +21,7 @@ Set-StrictMode -Version Latest
 # One version for the whole module. The reader enforces minimumScriptVersion, so
 # the reader owns the number; a copy inside Sync-XmipEstate's body was invisible
 # from here and the check silently had nothing to compare against.
-[version] $script:XmipVersion = [version]::Parse('1.6.0')
+[version] $script:XmipVersion = [version]::Parse('1.7.0')
 
 # The manifest schema this module understands. Major is the compatibility
 # boundary: 2.x is the tree-is-the-name schema, and a 3.0 manifest will mean
@@ -836,6 +836,7 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Install-XmipPrerequisite.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipRepository.ps1')
+. (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')
 
 [string[]] $script:XmipExport = @(
     'Install-XmipPrerequisite'
@@ -846,6 +847,8 @@ function Test-XmipManifest {
     'Expand-XmipEstate'
     'Get-XmipRepositoryRoot'
     'Install-XmipModule'
+    'Publish-XmipChange'
+    'Get-XmipStatus'
 )
 
 Export-ModuleMember -Function $script:XmipExport
