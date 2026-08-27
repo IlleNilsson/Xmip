@@ -21,72 +21,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
-name = "bytes"
-version = "1.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
-
-[[package]]
-name = "cc"
-version = "1.2.64"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad887fd958be91b5098c0248def011f4523ab786cd411be668777e55063501f"
-dependencies = [
- "find-msvc-tools",
- "shlex",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
-name = "core-foundation"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2a6cd9ae233e7f62ba4e9353e81a88df7fc8a5987b8d445b4d90c879bd156f6"
-dependencies = [
- "core-foundation-sys",
- "libc",
-]
-
-[[package]]
-name = "core-foundation-sys"
-version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
-
-[[package]]
-name = "either"
-version = "1.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e"
-
-[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
-
-[[package]]
-name = "fallible-iterator"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acce4a10f12dc2fb14a218589d4f1f62ef011b2d0cc4b3cb1bba8e94da14649"
-
-[[package]]
-name = "fallible-streaming-iterator"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
-
-[[package]]
-name = "find-msvc-tools"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
 name = "foldhash"
@@ -120,17 +64,6 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
-dependencies = [
- "cfg-if",
- "libc",
- "wasi",
-]
-
-[[package]]
-name = "getrandom"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0de51e6874e94e7bf76d726fc5d13ba782deca734ff60d5bb2fb2607c7406555"
@@ -158,15 +91,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
-name = "hashlink"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7382cf6263419f2d8df38c55d7da83da5c18aef87fc7a7fc1fb1e344edfe14c1"
-dependencies = [
- "hashbrown 0.15.5",
-]
-
-[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -188,15 +112,6 @@ dependencies = [
  "hashbrown 0.17.1",
  "serde",
  "serde_core",
-]
-
-[[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-dependencies = [
- "either",
 ]
 
 [[package]]
@@ -230,17 +145,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
-name = "libsqlite3-sys"
-version = "0.35.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f"
-dependencies = [
- "cc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
 name = "log"
 version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -259,22 +163,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "openssl-probe"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
-
-[[package]]
-name = "pkg-config"
-version = "0.3.33"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f132c84eca552bf34cab8ec81f1c1dcc229b811638f9d283dceabe58c5569e"
 
 [[package]]
 name = "prettyplease"
@@ -296,29 +188,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prost"
-version = "0.14.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2ea70524a2f82d518bce41317d0fae74151505651af45faf1ffbd6fd33f0568"
-dependencies = [
- "bytes",
- "prost-derive",
-]
-
-[[package]]
-name = "prost-derive"
-version = "0.14.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27c6023962132f4b30eb4c172c91ce92d933da334c59c23cddee82358ddafb0b"
-dependencies = [
- "anyhow",
- "itertools",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -334,116 +203,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
-name = "ring"
-version = "0.17.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
-dependencies = [
- "cc",
- "cfg-if",
- "getrandom 0.2.17",
- "libc",
- "untrusted",
- "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "rusqlite"
-version = "0.37.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "165ca6e57b20e1351573e3729b958bc62f0e48025386970b6e4d29e7a7e71f3f"
-dependencies = [
- "bitflags",
- "fallible-iterator",
- "fallible-streaming-iterator",
- "hashlink",
- "libsqlite3-sys",
- "smallvec",
-]
-
-[[package]]
-name = "rustls"
-version = "0.23.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
-dependencies = [
- "once_cell",
- "ring",
- "rustls-pki-types",
- "rustls-webpki",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "rustls-native-certs"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dab5152771c58876a2146916e53e35057e1a4dfa2b9df0f0305b07f611fdea4d"
-dependencies = [
- "openssl-probe",
- "rustls-pki-types",
- "schannel",
- "security-framework",
-]
-
-[[package]]
-name = "rustls-pki-types"
-version = "1.15.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f4925028c7eb5d1fcdaf196971378ed9d2c1c4efc7dc5d011256f76c99c0a96"
-dependencies = [
- "zeroize",
-]
-
-[[package]]
-name = "rustls-webpki"
-version = "0.103.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
-dependencies = [
- "ring",
- "rustls-pki-types",
- "untrusted",
-]
-
-[[package]]
 name = "rustversion"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
-
-[[package]]
-name = "schannel"
-version = "0.1.29"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91c1b7e4904c873ef0710c1f407dde2e6287de2bebc1bbbf7d430bb7cbffd939"
-dependencies = [
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "security-framework"
-version = "3.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7f4bc775c73d9a02cde8bf7b2ec4c9d12743edf609006c7facc23998404cd1d"
-dependencies = [
- "bitflags",
- "core-foundation",
- "core-foundation-sys",
- "libc",
- "security-framework-sys",
-]
-
-[[package]]
-name = "security-framework-sys"
-version = "2.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
-dependencies = [
- "core-foundation-sys",
- "libc",
-]
 
 [[package]]
 name = "semver"
@@ -504,28 +267,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "shlex"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
-
-[[package]]
 name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
-
-[[package]]
-name = "smallvec"
-version = "1.15.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
-
-[[package]]
-name = "subtle"
-version = "2.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
@@ -590,34 +335,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
-name = "untrusted"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
-
-[[package]]
 name = "uuid"
 version = "1.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d258b83ceec21034727ecee8c382cfa6c3e133699b0742c64571814fb420c9f7"
 dependencies = [
- "getrandom 0.4.2",
+ "getrandom",
  "js-sys",
- "serde_core",
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "vcpkg"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "wasi"
-version = "0.11.1+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasip2"
@@ -715,94 +441,6 @@ dependencies = [
  "indexmap",
  "semver",
 ]
-
-[[package]]
-name = "windows-link"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
-
-[[package]]
-name = "windows-sys"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
-dependencies = [
- "windows-targets",
-]
-
-[[package]]
-name = "windows-sys"
-version = "0.61.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
-dependencies = [
- "windows-link",
-]
-
-[[package]]
-name = "windows-targets"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
-dependencies = [
- "windows_aarch64_gnullvm",
- "windows_aarch64_msvc",
- "windows_i686_gnu",
- "windows_i686_gnullvm",
- "windows_i686_msvc",
- "windows_x86_64_gnu",
- "windows_x86_64_gnullvm",
- "windows_x86_64_msvc",
-]
-
-[[package]]
-name = "windows_aarch64_gnullvm"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
-
-[[package]]
-name = "windows_aarch64_msvc"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
-
-[[package]]
-name = "windows_i686_gnu"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
-
-[[package]]
-name = "windows_i686_gnullvm"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
-
-[[package]]
-name = "windows_i686_msvc"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
-
-[[package]]
-name = "windows_x86_64_gnu"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
-
-[[package]]
-name = "windows_x86_64_gnullvm"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
-
-[[package]]
-name = "windows_x86_64_msvc"
-version = "0.52.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "winnow"
@@ -914,20 +552,331 @@ dependencies = [
 name = "xmip"
 version = "0.1.1"
 dependencies = [
- "prost",
- "rusqlite",
- "rustls",
- "rustls-native-certs",
- "serde",
- "toml",
+ "xmip-core",
+ "xmip-core-abi",
+ "xmip-core-archive",
+ "xmip-core-assign",
+ "xmip-core-audit",
+ "xmip-core-authenticate",
+ "xmip-core-authorize",
+ "xmip-core-cluster",
+ "xmip-core-configure",
+ "xmip-core-context",
+ "xmip-core-contract",
+ "xmip-core-demote",
+ "xmip-core-event",
+ "xmip-core-exclusiveness",
+ "xmip-core-identify",
+ "xmip-core-journey",
+ "xmip-core-message",
+ "xmip-core-node",
+ "xmip-core-observe",
+ "xmip-core-party",
+ "xmip-core-path",
+ "xmip-core-persist",
+ "xmip-core-prepare",
+ "xmip-core-process",
+ "xmip-core-promote",
+ "xmip-core-receive",
+ "xmip-core-report",
+ "xmip-core-resilience",
+ "xmip-core-retain",
+ "xmip-core-route",
+ "xmip-core-runtime",
+ "xmip-core-send",
+ "xmip-core-stream",
+ "xmip-core-transform",
+ "xmip-core-transport",
+]
+
+[[package]]
+name = "xmip-core"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core?branch=main#ac579cd3804804ff47cff79b96157d817ed059c5"
+dependencies = [
  "uuid",
 ]
 
 [[package]]
-name = "zeroize"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
+name = "xmip-core-abi"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-abi?branch=main#51c82366507aa4cb386b79c64912072e0b894bb1"
+dependencies = [
+ "serde",
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-archive"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-archive?branch=main#68a4cf4fe1c93ce9de3eef00636a1a09ae3126e3"
+
+[[package]]
+name = "xmip-core-assign"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-assign?branch=main#1e183f0f288cf404df139737399eca35af795e41"
+dependencies = [
+ "xmip-core-context",
+]
+
+[[package]]
+name = "xmip-core-audit"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-audit?branch=main#cf5cc3a90ff0df3e8b83476ba833cd2b6ab151a9"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-authenticate"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-authenticate?branch=main#9d96a11d3f9a2558fd691576b4d43222f7710563"
+dependencies = [
+ "xmip-core-party",
+]
+
+[[package]]
+name = "xmip-core-authorize"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-authorize?branch=main#1300b09db94ec3580e75cc341e45e788814b883b"
+dependencies = [
+ "xmip-core-party",
+]
+
+[[package]]
+name = "xmip-core-cluster"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-cluster?branch=main#e7d470dda3e401ac8f45a4b1f6e2f609969871e3"
+dependencies = [
+ "xmip-core",
+ "xmip-core-node",
+]
+
+[[package]]
+name = "xmip-core-configure"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-configure?branch=main#f9b2dd57b5d538f4e68b977bca22b3a3da69e19d"
+dependencies = [
+ "serde",
+ "toml",
+ "xmip-core-abi",
+]
+
+[[package]]
+name = "xmip-core-context"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-context?branch=main#b5fcc9f6b780141f579749066bcfb6b9862e496c"
+
+[[package]]
+name = "xmip-core-contract"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-contract?branch=main#f9aa3c5b713e2420a8c92d165cd26b0f26618e41"
+dependencies = [
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-demote"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-demote?branch=main#49bf897b7e69cb90893d5dac1dcc32b3e7a5b67d"
+dependencies = [
+ "xmip-core-context",
+ "xmip-core-contract",
+ "xmip-core-path",
+]
+
+[[package]]
+name = "xmip-core-event"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-event?branch=main#8fe727d3ecdff3433c821ee8b4b58901a63d1d4a"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-exclusiveness"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-exclusiveness?branch=main#9b108511978561ef235be515e4c10ffe31d5c8fb"
+
+[[package]]
+name = "xmip-core-identify"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-identify?branch=main#7258365ecddb8c3ca59b30df352035d87c732a63"
+dependencies = [
+ "xmip-core-party",
+]
+
+[[package]]
+name = "xmip-core-journey"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-journey?branch=main#9430df1aca217c871696449e81510e60893217da"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-message"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-message?branch=main#486a3b5b2860dd6e6973d6a6434ee477a7b51923"
+dependencies = [
+ "serde",
+ "xmip-core",
+ "xmip-core-context",
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-node"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-node?branch=main#8cbeb356cd6e756880e3b15c8a1f61d387616a6d"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-observe"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-observe?branch=main#5d1e02ba8c3d1319c7272a55c50f5ab540c5624f"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-party"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-party?branch=main#1adb86bf2304692e1bff3751cf86a4c934e2d4f0"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-path"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-path?branch=main#2afe977d4e8cfad156883dbcfad1786c474eb9b2"
+dependencies = [
+ "xmip-core-contract",
+]
+
+[[package]]
+name = "xmip-core-persist"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-persist?branch=main#741779a7b1735105b73fa51362a87bef439eee17"
+dependencies = [
+ "serde",
+ "uuid",
+]
+
+[[package]]
+name = "xmip-core-prepare"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-prepare?branch=main#fdaa125450903789f8746f07d87a4a76bf66e70c"
+dependencies = [
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-process"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-process?branch=main#62ee82dd5093ae29e06ccfcf2295f80f73f74df6"
+dependencies = [
+ "xmip-core-message",
+]
+
+[[package]]
+name = "xmip-core-promote"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-promote?branch=main#a4cc3874193bdeb6b0bb6d2b75f1c2bdb0afb33c"
+dependencies = [
+ "xmip-core-context",
+ "xmip-core-contract",
+ "xmip-core-path",
+]
+
+[[package]]
+name = "xmip-core-receive"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-receive?branch=main#d7ca31cee6dfaa524b19b0f86c2dac2a980832b6"
+dependencies = [
+ "xmip-core",
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-report"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-report?branch=main#08b250eac188edc43ca3ddfcba31f48a66ace15e"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-resilience"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-resilience?branch=main#ff7c70cb15211c7c357641347259a28f4688e368"
+
+[[package]]
+name = "xmip-core-retain"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-retain?branch=main#f89be30a22169e8d77af4d42b0487815be3e7c15"
+
+[[package]]
+name = "xmip-core-route"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-route?branch=main#cb3c72a0b1bf7e99386a1783038f46a1e46927da"
+dependencies = [
+ "serde",
+ "xmip-core-context",
+]
+
+[[package]]
+name = "xmip-core-runtime"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-runtime?branch=main#618542cecf3f8c5c1ca03e80712cd31e25a49cc8"
+dependencies = [
+ "serde",
+ "xmip-core",
+ "xmip-core-abi",
+ "xmip-core-configure",
+ "xmip-core-context",
+ "xmip-core-journey",
+ "xmip-core-message",
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-send"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-send?branch=main#c8a299b89c9bec45a1afb1dfcbf31b8a9c402c8b"
+dependencies = [
+ "xmip-core",
+ "xmip-core-message",
+ "xmip-core-stream",
+]
+
+[[package]]
+name = "xmip-core-stream"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-stream?branch=main#8914b4c946dc3b05a908117c31b98cce2c139fba"
+dependencies = [
+ "xmip-core",
+]
+
+[[package]]
+name = "xmip-core-transform"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-transform?branch=main#d3358d01f2895c78f95604b8b19f710518982b11"
+dependencies = [
+ "xmip-core-contract",
+ "xmip-core-message",
+]
+
+[[package]]
+name = "xmip-core-transport"
+version = "0.1.0"
+source = "git+https://github.com/IlleNilsson/xmip-core-transport?branch=main#2721ccc7ff534a78460dac7dc81fbfccc60a8823"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "zmij"
