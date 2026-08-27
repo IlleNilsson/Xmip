@@ -239,7 +239,7 @@ The acquisition timeout is a configured value on the task. It is not the lease
 duration and not the renewal interval, both of which are operational settings in
 Consequences below.
 
-**15. Clause 5a, reconciled.** *"Nobody queues"* was written before the XmipToDo
+**15. Clause 5a, reconciled.** *"Nobody queues"* was written before the ToDo
 was recorded in `runtime-model.md` section 3, and read against clause 14 it now
 looks like a contradiction. It is not.
 

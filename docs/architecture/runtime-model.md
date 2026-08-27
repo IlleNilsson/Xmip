@@ -109,9 +109,9 @@ below — they are constantly confused and are not the same guarantee.
 it, which is what makes replay from a checkpoint meaningful and what makes
 "an accepted Message shall never disappear" achievable rather than aspirational.
 
-### The XmipToDo
+### The ToDo
 
-The queue has a name: **the XmipToDo**, and there is **one per node**.
+The queue has a name: **the ToDo**, and there is **one per node**.
 
 BizTalk called its equivalent the MessageBox, and it is the right comparison for
 the same reason it is the right warning. The MessageBox was a shared SQL
@@ -120,18 +120,18 @@ it was where BizTalk went to die under load — every scale-out story ended in
 "add another MessageBox and partition across them", which is an admission that
 the design put a cluster-wide write hotspot at the centre of the runtime.
 
-**A XmipToDo belongs to one node and is written only by that node.** There is no
+**A ToDo belongs to one node and is written only by that node.** There is no
 shared write path, so there is nothing to contend for and nothing to partition
 later. It falls out of `deployment-model.md` section 7 rather than being an
 extra decision: an *embedded* store is per-node by definition.
 
 It also means the smallest deployment is coherent. A purpose-compiled runtime on
-a sensor gateway has a XmipToDo, no cluster, no broker, and the same execution
+a sensor gateway has a ToDo, no cluster, no broker, and the same execution
 model as a forty-node estate.
 
 Two things this costs, and they are real:
 
-**Work does not move by itself.** A Message in node A's XmipToDo is node A's
+**Work does not move by itself.** A Message in node A's ToDo is node A's
 work. Distributing across nodes is now an explicit act rather than a consequence
 of everyone reading one table, and how that act happens is not yet designed.
 
@@ -145,7 +145,7 @@ Both are recorded in `docs/planning/open-problems.md`.
 
 ### The queue is the store, not a broker
 
-**Xmip has no message broker and needs none.** The XmipToDo is not a component.
+**Xmip has no message broker and needs none.** The ToDo is not a component.
 It is the shape of the persistence model:
 
 ```text
@@ -197,7 +197,7 @@ unrelated sequences run in parallel while each sequence stays intact. The key is
 configured; there is no useful default.
 
 **In-sequence selection.** The holder takes the next item for that key, not the
-next available item. That is a different query against the XmipToDo, and it is
+next available item. That is a different query against the ToDo, and it is
 why ordering is a queue property.
 
 **A failure policy, which nobody thinks about until it happens.** When an
@@ -219,7 +219,7 @@ Concurrent    many in flight, interleaved, no ordering guarantee
 ```
 
 **Sequential enforcement is state-based and durable.** The sequence position
-lives in the XmipToDo, not in the memory of whatever is currently running it. A
+lives in the ToDo, not in the memory of whatever is currently running it. A
 node that dies mid-sequence loses nothing: the position is on disk, another node
 takes the exclusiveness and continues from it. Enforcing order through in-memory
 state would mean a restart either replays or skips, and neither is acceptable
@@ -856,6 +856,18 @@ xmip-core-authorize     determines what the proven identity may do
 xmip-core-party         provides stakeholder context and connects identities,
                         permissions and Endpoints
 ```
+
+**The first three depend on `xmip-core` and never on `xmip-core-party`.** The
+gates answer with a `PartyId` and the Party is resolved elsewhere, so no gate
+can read a Party's identities, associations or permissions even by accident.
+The identity vocabulary they share — mechanism, layer, class, assurance,
+purpose — therefore lives in `xmip-core` rather than with the Party that holds
+identities configured under it.
+
+This is not packaging tidiness. Proving a credential and knowing whose it is are
+different questions, and a gate able to see the answer to the second would
+eventually decide something with it. ADR-0019 clause 4 says the same in
+prose: **a Party is a shortcut to an Identity, not a permission.**
 
 All access through Xmip follows this path. **Development uses permissive
 configuration; it does not bypass security.** A developer installation

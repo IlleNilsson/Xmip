@@ -492,7 +492,7 @@ the fairness rule, and the acquisition timeout from the frozen principle.
 
 Its 'durably queued' language was the last surviving trace of the queue-driven
 execution model, which is now restored to runtime-model.md section 3 as the
-XmipToDo. Clause 15 reconciles it with clause 5a: everything is already queued,
+ToDo. Clause 15 reconciles it with clause 5a: everything is already queued,
 so 'nobody queues' means no second queue for lease acquisition.
 
 LeaseLost is the state worth having recovered. It is not Failed, and the

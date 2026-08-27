@@ -218,13 +218,13 @@ Artifact Definition or a module-provided validation capability.
 
 ---
 
-# The XmipToDo
+# The ToDo
 
 ## 17. How does work reach another node?
 
-A XmipToDo is per node and written only by its owner, which is what removes the
+A ToDo is per node and written only by its owner, which is what removes the
 shared write path BizTalk's MessageBox never escaped. The cost is that a Message
-in node A's XmipToDo is node A's work, and nothing moves it.
+in node A's ToDo is node A's work, and nothing moves it.
 
 That is fine for an estate where each node owns its own Receive Locations. It is
 not fine when a Receive node should hand processing to an Executing node, which
@@ -233,7 +233,7 @@ not fine when a Receive node should hand processing to an Executing node, which
 | option | effect |
 |---|---|
 | **A. Nodes hand off over the Xmip node-to-node protocol** | explicit, auditable, and the Journey records the hop. Needs that protocol to exist — see problem 18 |
-| **B. Receive nodes write directly into the target node's XmipToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
+| **B. Receive nodes write directly into the target node's ToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
 | **C. Work stays where it lands; placement decides at receive time** | no movement at all. Requires the receive-side configuration to know the whole topology, and a saturated node cannot shed load |
 
 **Lean: A.** B is the BizTalk shape wearing a different name. C is defensible
