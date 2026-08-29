@@ -151,6 +151,82 @@ Describe 'Test-XmipBuildOutput' {
     }
 }
 
+Describe 'Resolve-XmipCommitSubject' {
+    # 2026-08-29. Two commits landed under "Pin 1 module" while carrying an ADR,
+    # a test file and a documentation change. Two defects, one symptom:
+    #
+    #   the subject rule used $Message only when NO gitlink was staged, so any
+    #   commit that also moved a gitlink discarded it;
+    #
+    #   and both call sites invoked Publish-XmipPin with no -Message at all, so
+    #   on the ordinary path there was nothing to discard in the first place.
+    #
+    # The second is why fixing only the first would have changed nothing.
+
+    It 'keeps the message when the platform repository changed too' {
+        InModuleScope Xmip {
+            $staged = @(
+                '.gitmodules'
+                'docs/decisions/ADR-0024-resource-claim-replaces-exclusiveness.md'
+                'modules/platform/exclusiveness'
+                'tests/Sync-XmipEstate.Tests.ps1'
+            )
+
+            Resolve-XmipCommitSubject -Staged $staged -Message 'Unmount exclusiveness' |
+                Should -Be 'Unmount exclusiveness' -Because 'three of the four are not gitlinks'
+        }
+    }
+
+    It 'calls it a pin when gitlinks are all there is' {
+        InModuleScope Xmip {
+            $staged = @('modules/foundation/core', 'modules/capabilities/route')
+
+            Resolve-XmipCommitSubject -Staged $staged -Message 'Arrivals and departures' |
+                Should -Be 'Pin 2 modules' -Because 'no author intent is recorded by a gitlink move'
+        }
+    }
+
+    It 'agrees on the noun for one' {
+        InModuleScope Xmip {
+            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message 'x' |
+                Should -Be 'Pin 1 module'
+        }
+    }
+
+    It 'uses the message when nothing under modules/ is staged' {
+        InModuleScope Xmip {
+            Resolve-XmipCommitSubject -Staged @('src/lib.rs') -Message 'Record the departure' |
+                Should -Be 'Record the departure'
+        }
+    }
+
+    It 'falls back to the pin subject when there is no message' {
+        InModuleScope Xmip {
+            Resolve-XmipCommitSubject -Staged @('src/lib.rs') -Message '' |
+                Should -Be 'Pin 0 modules'
+        }
+    }
+}
+
+Describe 'Publish-XmipPin is given what it needs' {
+    It 'is passed -Message everywhere it is called' {
+        # The half of the defect a fixture cannot see. Resolve-XmipCommitSubject
+        # can be correct and the message still never arrive.
+        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
+
+        [string[]] $calls = @(
+            [regex]::Matches($source, 'Publish-XmipPin\s+-RepositoryRoot[^\r\n]*') |
+                ForEach-Object { $_.Value }
+        )
+
+        $calls.Count | Should -BeGreaterThan 0 -Because 'the pin is called from somewhere'
+
+        foreach ($call in $calls) {
+            $call | Should -Match '-Message' -Because "this call drops the operator's message: $call"
+        }
+    }
+}
+
 Describe 'Sort-XmipModuleDependency' {
     BeforeAll {
         # A three-module estate on disk: c depends on b, b depends on a. The
