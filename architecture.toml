@@ -46,8 +46,31 @@ primaryLanguage = "rust"
 edition = "2021"
 primaryCrateMatchesRepository = true
 license = "AGPL-3.0-or-later"
-template = "IlleNilsson/xmip-template"
 automaticVerification = false
+
+# One template per language, keyed by primaryLanguage.
+#
+# Was a single `template = "IlleNilsson/xmip-template"`. That repository was
+# renamed to xmip-template-rust on 2026-08-27 and xmip-template-dotnet was
+# created beside it, and this key was not updated — so `-Create` posted to a
+# repository that no longer exists, and the drift check exempted a name nothing
+# has while reporting both real templates as unexpected.
+#
+# A table rather than a string because the estate has two languages and will
+# have more. ADR-0014 clause 14: gui and powershell carry their own.
+[crate.template]
+rust = "IlleNilsson/xmip-template-rust"
+dotnet = "IlleNilsson/xmip-template-dotnet"
+
+# Repositories that existed, were retired, and are archived rather than deleted.
+#
+# Without this a retirement reports as drift forever, and a warning that is
+# always there is a warning nobody reads. The reason is required: an entry with
+# no reason is indistinguishable from a repository somebody forgot to declare.
+[[retired]]
+name = "xmip-core-exclusiveness"
+on = "2026-08-27"
+reason = "ADR-0024. ResourceClaim in xmip-core-transport replaces it. Archived rather than deleted because ADR-0017 is part of the record."
 
 [policy]
 acyclic = true

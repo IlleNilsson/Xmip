@@ -165,3 +165,57 @@ Describe 'ADR-0021: current platforms only, enforced' {
         $script | Should -Match "'outdated'" -Because 'a version below the floor needs its own status'
     }
 }
+
+Describe 'The estate is more than its modules' {
+    BeforeAll {
+        Import-Module PSToml -ErrorAction Stop
+
+        $script:Architecture = ConvertFrom-Toml -InputObject (
+            Get-Content (Join-Path $script:Root 'architecture.toml') -Raw -Encoding utf8
+        )
+    }
+
+    It 'declares a template for every language a module can be written in' {
+        # The defect this catches, on 2026-08-27: crate.template was one string
+        # naming xmip-template, which had been renamed to xmip-template-rust
+        # that morning. Repository creation posted to a URL that 404s, and the
+        # drift check exempted a name nothing has while reporting both real
+        # templates as unexpected.
+        $templates = $script:Architecture.crate.template
+
+        $templates | Should -Not -BeNullOrEmpty
+        $templates.Keys | Should -Contain 'rust'
+        $templates.Keys | Should -Contain 'dotnet'
+    }
+
+    It 'names every template as owner/name' {
+        foreach ($language in $script:Architecture.crate.template.Keys) {
+            [string] $name = $script:Architecture.crate.template.$language
+
+            $name | Should -Match '^[^/]+/[^/]+$' -Because "$language must be owner/name"
+        }
+    }
+
+    It 'gives every retired repository a reason' {
+        # An entry with no reason is indistinguishable from a repository
+        # somebody forgot to declare, which is the thing drift exists to find.
+        foreach ($entry in @($script:Architecture.retired)) {
+            [string] $name = $entry.name
+
+            $name | Should -Not -BeNullOrEmpty
+            $entry.reason | Should -Not -BeNullOrEmpty -Because "$name needs a reason"
+            $entry.on | Should -Not -BeNullOrEmpty -Because "$name needs a date"
+        }
+    }
+
+    It 'does not declare a retired repository as a live module' {
+        # Retired and declared at once means the drift check would call it
+        # missing and the retirement list would call it expected.
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $live = @($manifest.repositories.name)
+
+        foreach ($entry in @($script:Architecture.retired)) {
+            $live | Should -Not -Contain $entry.name -Because "$($entry.name) is retired"
+        }
+    }
+}
