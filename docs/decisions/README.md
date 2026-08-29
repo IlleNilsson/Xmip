@@ -321,6 +321,7 @@ You have a word. This gives you the decision that governs it.
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
+| Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
@@ -392,6 +393,7 @@ nowhere else.
 | [0022](ADR-0022-identity-classes-and-runtime-isolation.md) | Identity classes and runtime isolation | |
 | [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later, and no second licence | |
 | [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint, not a lease inside Xmip | Supersedes 0017 |
+| [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | Refines 0018 phase 6 |
 
 ---
 
