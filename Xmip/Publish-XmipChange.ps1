@@ -292,7 +292,16 @@ function Publish-XmipChange {
         Write-Host 'Only the platform repository has changes.' -ForegroundColor Cyan
         Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
-        return [PSCustomObject]@{ Landed = @(); Verified = $false }
+        # Landed is empty and that is correct: it counts modules and no module
+        # changed. Platform says the run did something, because `Landed {}` and
+        # `Verified False` on their own read as a failed run — which is how a
+        # successful landing was reported as nothing happening on 2026-08-29.
+        return [PSCustomObject]@{
+            Landed   = @()
+            Skipped  = @()
+            Platform = $true
+            Verified = $false
+        }
     }
 
     $suspect = @($status | Where-Object Suspicious)
@@ -366,9 +375,19 @@ function Publish-XmipChange {
                 # gitlinks stale whether or not this one added to them, so this
                 # is not conditional on $landed. Publish-XmipPin no-ops when
                 # there is nothing to pin.
-                Publish-XmipPin -RepositoryRoot $RepositoryRoot
+                #
+                # -Message, because this stages the platform repository too. Its
+                # absence here is what discarded the operator's message on
+                # 2026-08-29: the subject rule was only half the defect, and the
+                # other half was never passing the subject in.
+                Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
-                return [PSCustomObject]@{ Landed = $landed.ToArray(); Verified = $true }
+                return [PSCustomObject]@{
+                    Landed   = $landed.ToArray()
+                    Skipped  = $skipped.ToArray()
+                    Platform = $true
+                    Verified = $true
+                }
             }
         }
 
@@ -379,7 +398,7 @@ function Publish-XmipChange {
         $result | ForEach-Object { $landed.Add($_) }
     }
 
-    Publish-XmipPin -RepositoryRoot $RepositoryRoot
+    Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
     if ($skipped.Count -gt 0) {
         Write-Host "SKIPPED, unverifiable here: $($skipped -join ', ')" -ForegroundColor DarkGray
@@ -388,6 +407,7 @@ function Publish-XmipChange {
     [PSCustomObject]@{
         Landed   = $landed.ToArray()
         Skipped  = $skipped.ToArray()
+        Platform = $true
         Verified = -not $NoVerify
     }
 }
@@ -689,6 +709,50 @@ function Submit-XmipModule {
     }
 }
 
+function Resolve-XmipCommitSubject {
+    <#
+        .SYNOPSIS
+            The subject line for a superproject commit, from what is staged.
+
+        .DESCRIPTION
+            **A pin is a commit that contains nothing but gitlinks.** That is the
+            whole rule, and the test is what else is staged rather than how many
+            gitlinks there are.
+
+            The defect this replaces, on 2026-08-29: the condition was
+            `$pins.Count -eq 0 -and $Message`, so the caller's message was used
+            only when *no* gitlink was staged. Two commits went in under "Pin 1
+            module" while carrying an ADR, a test file and a documentation
+            change, because each also moved one gitlink. The message a person
+            typed was discarded by a rule about a file they did not name.
+
+            A commit that moves gitlinks *and* changes the platform repository
+            takes the caller's message: the gitlinks are incidental to what the
+            person did, and `git show --stat` says so anyway. Only a commit that
+            is gitlinks and nothing else has no author's intent to record.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [string[]] $Staged,
+
+        [Parameter()]
+        [string] $Message
+    )
+
+    $pins = @($Staged | Where-Object { $_ -like 'modules/*' })
+
+    if ($pins.Count -ne $Staged.Count -and $Message) {
+        return $Message
+    }
+
+    $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
+
+    return "Pin $($pins.Count) $noun"
+}
+
 function Publish-XmipPin {
     <#
         .SYNOPSIS
@@ -729,17 +793,10 @@ function Publish-XmipPin {
         return
     }
 
-    # A gitlink is a path under modules/. Everything else staged here is the
-    # platform repository's own content.
     $pins = @($staged | Where-Object { $_ -like 'modules/*' })
-
     $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
 
-    # Nothing under modules/ means the platform repository changed on its own,
-    # and the caller's message is what describes that. Anything else is a pin.
-    $subject =
-        if ($pins.Count -eq 0 -and $Message) { $Message }
-        else { "Pin $($pins.Count) $noun" }
+    $subject = Resolve-XmipCommitSubject -Staged $staged -Message $Message
 
     & git -C $RepositoryRoot commit -m $subject --quiet
     & git -C $RepositoryRoot push origin main --quiet
@@ -748,11 +805,18 @@ function Publish-XmipPin {
         throw 'Pushing the estate failed. The modules are landed; only the pin is missing.'
     }
 
+    # Three outcomes, because there are three. Reporting "Pinned 1 module" over a
+    # commit that also carried an ADR and a test file is how the wrong subject
+    # went unnoticed for two commits: the line printed at the operator agreed
+    # with the line written into git, and both were wrong.
     if ($pins.Count -eq 0) {
         Write-Host 'OK. Platform repository landed.' -ForegroundColor Green
     }
-    else {
+    elseif ($staged.Count -eq $pins.Count) {
         Write-Host "OK. Pinned $($pins.Count) $noun." -ForegroundColor Green
+    }
+    else {
+        Write-Host "OK. Platform repository landed, $($pins.Count) $noun pinned." -ForegroundColor Green
     }
 }
 
