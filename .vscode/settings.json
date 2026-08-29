@@ -11,6 +11,7 @@
     "git.detectSubmodulesLimit": 100,
 
     "git.openRepositoryInParentFolders": "never",
+    "git.repositoryScanMaxDepth": 4,
     "scm.alwaysShowRepositories": true,
 
     // 43 repositories times target/ is a large number of files nobody wants
