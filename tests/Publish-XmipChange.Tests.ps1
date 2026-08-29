@@ -208,6 +208,90 @@ Describe 'Resolve-XmipCommitSubject' {
     }
 }
 
+Describe 'Get-XmipBuildableFeature' {
+    BeforeAll {
+        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-feat-$([guid]::NewGuid())"
+        New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
+
+        $script:Manifest = Join-Path $script:Fixture 'Cargo.toml'
+        Set-Content -LiteralPath $script:Manifest -Value @'
+[package]
+name = "xmip-core-example"
+
+[features]
+default = ["server"]
+server = []
+tls = ["dep:rustls"]
+uuid-v7 = ["dep:uuid"]
+
+[dependencies]
+rustls = { version = "0.23", optional = true }
+'@
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'names every declared feature except default' {
+        # default is what cargo build already does.
+        InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
+            $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
+
+            $features | Should -Contain 'server'
+            $features | Should -Contain 'tls'
+            $features | Should -Contain 'uuid-v7' -Because 'a hyphenated feature is still a feature'
+            $features | Should -Not -Contain 'default'
+        }
+    }
+
+    It 'leaves out a feature known not to build' {
+        # The list is shrink-only. An entry here is why a feature is unchecked,
+        # and removing it is what fixing the feature looks like.
+        InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
+            $script:XmipUnbuildableFeature['modules/nowhere'] = @('tls')
+
+            try {
+                $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
+
+                $features | Should -Not -Contain 'tls'
+                $features | Should -Contain 'server' -Because 'one broken feature must not stop the rest'
+            }
+            finally {
+                $script:XmipUnbuildableFeature.Remove('modules/nowhere')
+            }
+        }
+    }
+
+    It 'says nothing for a manifest with no features table' {
+        InModuleScope Xmip -Parameters @{ Fixture = $script:Fixture } {
+            $bare = Join-Path $Fixture 'bare.toml'
+            Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
+
+            @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'modules/nowhere').Count |
+                Should -Be 0
+        }
+    }
+
+    It 'excuses only what is written down, and writes down why' {
+        # Both entries are real and dated. An undocumented exception is a waiver
+        # list wearing a ratchet's clothes.
+        InModuleScope Xmip {
+            $script:XmipUnbuildableFeature.Keys | Should -Contain 'modules/capabilities/transport'
+            $script:XmipUnbuildableFeature.Keys | Should -Contain 'modules/platform/runtime'
+
+            $script:XmipUnbuildableFeature['modules/platform/runtime'] |
+                Should -Contain 'dynamic-loading'
+        }
+
+        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
+
+        foreach ($feature in 'tls', 'dynamic-loading') {
+            $source | Should -Match "$([regex]::Escape($feature))\s" -Because "$feature needs its reason in the source"
+        }
+    }
+}
+
 Describe 'Publish-XmipPin is given what it needs' {
     It 'is passed -Message everywhere it is called' {
         # The half of the defect a fixture cannot see. Resolve-XmipCommitSubject

@@ -594,10 +594,84 @@ function Sort-XmipModuleDependency {
     $placed
 }
 
+# Features whose code does not compile, and the module that owns each.
+#
+# A shrink-only list, the same instrument as the file-length ratchet in
+# Rust.Style.Tests.ps1 and for the same reason: a waiver list absorbs new
+# entries and its maintenance becomes the work, while this can only be emptied.
+# Adding to it is a decision somebody has to argue for; removing is just fixing
+# the feature.
+#
+# Both entries were found on 2026-08-29, the day --all-features was first run:
+#
+#   tls               http/tls.rs calls rustls::crypto::ring::default_provider()
+#                     and Cargo.toml asks for rustls with default features, so
+#                     the ring provider is configured out.
+#   dynamic-loading   host.rs imports validate_module_abi, ModuleAbiDescriptor
+#                     and XMIP_MODULE_ENTRYPOINT. xmip-core-abi defines none of
+#                     the three; ADR-0025 clause 5 says what it should define.
+$script:XmipUnbuildableFeature = @{
+    'modules/capabilities/transport' = @('tls')
+    'modules/platform/runtime'       = @('dynamic-loading')
+}
+
+<#
+    .SYNOPSIS
+    Every feature a module declares, less the ones known not to build.
+
+    .DESCRIPTION
+    `cargo build --all-features` is all-or-nothing, so one broken feature would
+    mean the module cannot be checked at all. Naming the features instead keeps
+    every other one verified while the two exceptions are outstanding.
+#>
+function Get-XmipBuildableFeature {
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $ManifestPath,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Module
+    )
+
+    [string] $manifest = Get-Content -LiteralPath $ManifestPath -Raw
+
+    # The [features] table, to the next table header or the end.
+    if ($manifest -notmatch '(?ms)^\[features\]\s*$(.*?)(?=^\[|\z)') {
+        return @()
+    }
+
+    [string[]] $declared = @(
+        $Matches[1] -split "`n" |
+            ForEach-Object { if ($_ -match '^\s*([A-Za-z0-9_-]+)\s*=') { $Matches[1] } }
+    )
+
+    [string[]] $skip = @($script:XmipUnbuildableFeature[$Module])
+
+    # `default` is what cargo build already does, so naming it adds nothing.
+    return @($declared | Where-Object { $_ -ne 'default' -and $skip -notcontains $_ })
+}
+
 function Test-XmipModule {
     <#
         .SYNOPSIS
-            Runs each module's own tests. Returns the ones that failed.
+            Runs each module's own tests, then builds every feature it declares.
+            Returns the ones that failed.
+
+        .DESCRIPTION
+            **`cargo test` compiles the default feature set and nothing else**,
+            so a module behind a feature flag is never seen by a compiler. Three
+            files reached the estate that way and none had ever compiled:
+            `technology.rs`, which was moved into a repository and never
+            declared; `disposition.rs`, which imported two modules that had left
+            for other repositories; and `host.rs`, whose `mod dynamic` is gated
+            on `dynamic-loading`.
+
+            All three were found by hand, one at a time, months apart. Building
+            the declared features would have caught each on the day it was
+            written.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -648,6 +722,19 @@ function Test-XmipModule {
             # cargo's passing tests as the list of failures.
             $output = & cargo test 2>&1
             $passed = $LASTEXITCODE -eq 0
+
+            # Only when the tests passed. A module that fails its tests is
+            # already failing, and a second wall of compiler output buries the
+            # error the operator has to read.
+            if ($passed) {
+                [string[]] $features = Get-XmipBuildableFeature -ManifestPath $manifest -Module $module
+
+                if ($features.Count -gt 0) {
+                    $output += "   building $($features.Count) declared feature(s): $($features -join ', ')"
+                    $output += & cargo build --features ($features -join ',') 2>&1
+                    $passed = $LASTEXITCODE -eq 0
+                }
+            }
         }
         finally {
             Pop-Location
