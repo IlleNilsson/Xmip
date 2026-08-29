@@ -30,6 +30,10 @@ BeforeAll {
         counted separately.
 
         .DESCRIPTION
+        `modules/` and `template/`. The template is Rust that the estate ships
+        and that every new repository is generated from, so a rule it does not
+        obey is a rule every new repository starts out breaking.
+
         `target/` is build output and is excluded: it holds generated sources
         that nobody wrote and that would dominate any measurement.
     #>
@@ -38,9 +42,11 @@ BeforeAll {
         [OutputType([PSCustomObject])]
         param()
 
-        $modules = Join-Path $script:Root 'modules'
+        $roots = @('modules', 'template') |
+            ForEach-Object { Join-Path $script:Root $_ } |
+            Where-Object { Test-Path -LiteralPath $_ }
 
-        Get-ChildItem -LiteralPath $modules -Recurse -Filter '*.rs' -File |
+        Get-ChildItem -LiteralPath $roots -Recurse -Filter '*.rs' -File |
             Where-Object { $_.FullName -notmatch '[\\/]target[\\/]' } |
             ForEach-Object {
                 $lines = @(Get-Content -LiteralPath $_.FullName)

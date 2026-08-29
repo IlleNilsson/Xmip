@@ -58,6 +58,11 @@ automaticVerification = false
 #
 # A table rather than a string because the estate has two languages and will
 # have more. ADR-0014 clause 14: gui and powershell carry their own.
+#
+# `owner/name` because that is what the GitHub generate API takes. Each is also
+# a submodule of this repository at `template/<language>`, so the templates are
+# in the estate rather than beside it — a template nobody clones with the estate
+# is a template that drifts from what it is supposed to produce.
 [crate.template]
 rust = "IlleNilsson/xmip-template-rust"
 dotnet = "IlleNilsson/xmip-template-dotnet"
