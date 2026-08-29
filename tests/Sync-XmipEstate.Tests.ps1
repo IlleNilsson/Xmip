@@ -244,6 +244,45 @@ Describe 'The estate is more than its modules' {
         }
     }
 
+    It 'gives every repository a mount point of its own' {
+        # Raised on 2026-08-29: mount names are the last segment of the
+        # repository name, and the estate declares `file` four times, `sql` four
+        # times and `party` four times. It looks like a collision waiting for
+        # the protocol and contract modules to arrive.
+        #
+        # It is not, because a depth-three module mounts inside its parent
+        # capability's repository rather than inside Xmip — `modules/file` in
+        # xmip-core-transport and `modules/file` in xmip-core-audit are two
+        # paths in two repositories. The leaf namespace is per-parent.
+        #
+        # Nothing guaranteed that. It held for 334 repositories by construction
+        # and by luck in equal measure, and the construction is invisible in the
+        # tree, which is why it was reported as a bug by someone reading the
+        # tree. This is the guarantee.
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+
+        $mounts = & (Get-Module Xmip) {
+            param($Repositories, $Declared)
+
+            foreach ($repository in $Repositories) {
+                $path = Get-XmipMountPath -Repository $repository -Declared $Declared
+
+                [pscustomobject]@{
+                    Name = $repository.name
+                    At   = "$($path.Owner)/$($path.Mount)"
+                }
+            }
+        } $manifest.repositories @($manifest.repositories.name)
+
+        $shared = @($mounts | Group-Object At | Where-Object Count -gt 1)
+
+        [string] $detail = (
+            $shared | ForEach-Object { "$($_.Name): $($_.Group.Name -join ', ')" }
+        ) -join "`n"
+
+        $shared.Count | Should -Be 0 -Because "two repositories cannot share one mount:`n$detail"
+    }
+
     It 'mounts nothing the manifest does not declare' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the

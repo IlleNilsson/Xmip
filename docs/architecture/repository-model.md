@@ -27,8 +27,31 @@ thing, the navigable tree is another: `Sync-XmipEstate -Compose` mounts a module
 at `modules/<domain>/<leaf>`, so `xmip-core-journey` appears at
 `modules/foundation/journey`. Section 7 has the shape.
 
-That layout is for human navigation only. Cargo dependencies define the
-technical graph, and nothing reads a folder name to decide anything.
+**A leaf is not unique across the estate, and does not need to be.** The estate
+declares `file` four times — under transport, audit, retain and archive — and
+`sql` and `party` four times each. They do not collide because **a depth-three
+module mounts inside its parent capability's repository, not inside Xmip**:
+
+```text
+xmip-core-transport-file  ->  modules/file   a submodule of xmip-core-transport
+xmip-core-audit-file      ->  modules/file   a submodule of xmip-core-audit
+```
+
+Two paths in two repositories. The leaf namespace is per-parent, so it is the
+parent that makes it unique, and a parent has no two children with one name.
+
+That property held across 334 declared repositories before anything enforced it,
+and it is invisible from the tree — which is why it was reported as a bug by
+someone reading the tree, on 2026-08-29. `Sync-XmipEstate.Tests.ps1` now asserts
+that no two repositories resolve to one mount, so the next name that would break
+it fails a test rather than a clone.
+
+That layout is for human navigation. Cargo dependencies define the technical
+graph, and **no runtime behaviour reads a folder name**. Two tests do —
+`Rust.Style.Tests.ps1` takes a file's crate from its path, and the mount test
+above — because both are about names and have nothing else to read. This
+paragraph previously said nothing read a folder name at all, which stopped being
+true the moment the first of those was written.
 
 *Corrected 2026-08-26. This paragraph read "it does not place it on disk", which
 contradicted section 14 of `Xmip-Repository-Creation-Blueprint.md` — the
