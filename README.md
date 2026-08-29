@@ -208,6 +208,7 @@ Governance:
 | Document | Answers |
 | --- | --- |
 | [`governance/powershell-style.md`](docs/governance/powershell-style.md) | how the PowerShell here is written |
+| [`governance/rust-style.md`](docs/governance/rust-style.md) | where the Rust here lives, and why length is not the measure |
 | [`governance/release-model.md`](docs/governance/release-model.md) | Continuum, Linear, and how work reaches them |
 
 `docs/planning/` is working notes and is explicitly **not** authoritative.

@@ -123,17 +123,64 @@ function Get-XmipDeclaredOwner {
 #>
 function Get-XmipTemplate {
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $true)]
         $Manifest
     )
 
-    [string] $legacy = [string](
-        Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' ''
+    $crate = Get-TomlValue $Manifest 'crate' $null
+    $declared = Get-TomlValue $crate 'template' $null
+
+    # A string in schema 2.0 before 2026-08-27, and in cratePolicy in schema 1.
+    # Both meant "the Rust template", because there was only one.
+    if ($declared -is [string]) {
+        return @{ rust = $declared }
+    }
+
+    if ($null -eq $declared) {
+        [string] $legacy = [string](
+            Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' ''
+        )
+
+        if ([string]::IsNullOrWhiteSpace($legacy)) {
+            return @{}
+        }
+
+        return @{ rust = $legacy }
+    }
+
+    $templates = @{}
+
+    foreach ($language in (Get-TomlKey -Node $declared)) {
+        $templates[$language] = [string](Get-TomlValue $declared $language '')
+    }
+
+    return $templates
+}
+
+<#
+    .SYNOPSIS
+    Repositories the manifest says were retired.
+
+    .DESCRIPTION
+    Archived rather than deleted, so they are still on GitHub and would
+    otherwise report as drift for as long as they exist. A warning that is
+    always there is a warning nobody reads.
+#>
+function Get-XmipRetiredName {
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Manifest
     )
 
-    return [string](Get-TomlValue (Get-TomlValue $Manifest 'crate' $null) 'template' $legacy)
+    return @(
+        @(Get-TomlValue $Manifest 'retired' @()) |
+            ForEach-Object { [string](Get-TomlValue $_ 'name' '') } |
+            Where-Object { $_ }
+    )
 }
 
 <#
@@ -163,18 +210,34 @@ function Get-XmipUnexpectedName {
         [string[]] $Declared,
 
         [Parameter(Mandatory = $false)]
-        [string] $Template = ''
+        [AllowEmptyCollection()]
+        [string[]] $Template = @(),
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyCollection()]
+        [string[]] $Retired = @()
     )
 
     $declaredSet = [System.Collections.Generic.HashSet[string]]::new(
         $Declared, [StringComparer]::OrdinalIgnoreCase)
 
-    # The template repository is referenced by the manifest — crate.template —
-    # but is not one of the repositories it declares, so it reported as
-    # unexpected on the first run that could report anything. It is not stray;
-    # it is what -Create generates from.
-    if (-not [string]::IsNullOrWhiteSpace($Template)) {
-        [void] $declaredSet.Add(($Template -split '/')[-1])
+    # The template repositories are referenced by the manifest — crate.template
+    # — but are not repositories it declares, so they reported as unexpected on
+    # the first run that could report anything. They are not stray; they are
+    # what -Create generates from.
+    #
+    # Plural since 2026-08-27: one per language, and the estate has two.
+    foreach ($name in $Template) {
+        if (-not [string]::IsNullOrWhiteSpace($name)) {
+            [void] $declaredSet.Add(($name -split '/')[-1])
+        }
+    }
+
+    # Retired repositories are archived rather than deleted, so they stay
+    # visible. Reporting them forever would train a reader to ignore the
+    # warning that also reports real drift.
+    foreach ($name in $Retired) {
+        [void] $declaredSet.Add($name)
     }
 
     return @(
@@ -708,7 +771,8 @@ function Sync-XmipEstate {
         [hashtable] $unexpectedQuery = @{
             Actual   = @($actualMap.Keys)
             Declared = @($desired.Keys)
-            Template = Get-XmipTemplate -Manifest $Manifest
+            Template = @((Get-XmipTemplate -Manifest $Manifest).Values)
+            Retired  = @(Get-XmipRetiredName -Manifest $Manifest)
         }
 
         return [ordered]@{
@@ -740,7 +804,7 @@ function Sync-XmipEstate {
             [Parameter(Mandatory)] $Repository,
             [Parameter(Mandatory)] [string] $Owner,
             [Parameter(Mandatory)] [ValidateSet('User','Organization')] [string] $OwnerType,
-            [string] $Template
+            [hashtable] $Template = @{}
         )
 
         $name = [string](Get-PropertyValue $Repository 'name')
@@ -760,25 +824,28 @@ function Sync-XmipEstate {
             has_wiki = [bool](Get-PropertyValue $github 'hasWiki' $false)
         }
 
-        # The template is a Rust crate: Cargo.toml, src/lib.rs and a Rust workflow.
-        # A module that is not a Rust crate must not be generated from it, or a
-        # PowerShell module arrives holding a Cargo.toml. ADR-0014 clause 14.
+        # One template per language. A module generated from the wrong one
+        # arrives holding a Cargo.toml it will never build. ADR-0014 clause 14.
         $primaryCrate = Get-PropertyValue $Repository 'primaryCrate' ([pscustomobject]@{})
         $language = [string](Get-PropertyValue $primaryCrate 'language' 'rust')
-        if ($Template -and $language -ine 'rust') {
-            [string] $warning = "$name is language '$language', not rust. Creating it empty rather " +
-                'than from the Rust template; it needs its own scaffolding.'
+        [string] $chosen = ''
+
+        if ($Template.ContainsKey($language)) {
+            $chosen = [string] $Template[$language]
+        }
+        elseif ($Template.Count -gt 0) {
+            [string] $warning = "$name is language '$language', which crate.template does not " +
+                'cover. Creating it empty; it needs its own scaffolding.'
 
             Write-Warning $warning
-            $Template = ''
         }
 
         # A repository generated from the template starts with the licence, the
         # workflow and the layout every Xmip repository is supposed to have. A
         # blank one starts with nothing and someone has to remember to add them.
-        if ($Template) {
-            if ($Template -notmatch '^[^/]+/[^/]+$') {
-                throw "Template must be owner/name, not '$Template'."
+        if ($chosen) {
+            if ($chosen -notmatch '^[^/]+/[^/]+$') {
+                throw "Template must be owner/name, not '$chosen'."
             }
 
             $body = [ordered]@{
@@ -789,7 +856,7 @@ function Sync-XmipEstate {
                 private = ($visibility -eq 'private')
             }
 
-            $created = Invoke-GitHubApi POST "/repos/$Template/generate" $body
+            $created = Invoke-GitHubApi POST "/repos/$chosen/generate" $body
 
             # generate takes none of the feature switches, so they follow.
             $null = Invoke-GitHubApi PATCH "/repos/$Owner/$name" $settings
@@ -895,26 +962,30 @@ function Sync-XmipEstate {
             }
         }
 
-        [string] $template = Get-XmipTemplate -Manifest $Manifest
+        [hashtable] $template = Get-XmipTemplate -Manifest $Manifest
 
-        if ($template) {
-            $templateInfo = Invoke-GitHubApi GET "/repos/$template"
-
-            if (-not [bool](Get-PropertyValue $templateInfo 'is_template' $false)) {
-                [string] $message = "'$template' is not marked as a template repository. Enable " +
-                    'Settings, Template repository on it, or clear crate.template to create blank ' +
-                    'repositories.'
-
-                throw $message
-            }
-
-            Write-Step "Creating from template $template"
-        }
-        else {
+        if ($template.Count -eq 0) {
             [string] $warning = 'No crate.template in the manifest. Repositories will be created ' +
                 'blank, with no licence, workflow or layout.'
 
             Write-Warning $warning
+        }
+
+        # Every declared template, checked before anything is created. One that
+        # has been renamed or unmarked fails here rather than on the first
+        # repository that needed it.
+        foreach ($language in @($template.Keys | Sort-Object)) {
+            [string] $name = $template[$language]
+            $templateInfo = Invoke-GitHubApi GET "/repos/$name"
+
+            if (-not [bool](Get-PropertyValue $templateInfo 'is_template' $false)) {
+                [string] $message = "'$name' is not marked as a template repository. Enable " +
+                    'Settings, Template repository on it, or remove it from crate.template.'
+
+                throw $message
+            }
+
+            Write-Step "Template for $language`: $name"
         }
 
         $desired = @{}
