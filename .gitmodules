@@ -124,3 +124,9 @@
 [submodule "modules/capabilities/transport"]
 	path = modules/capabilities/transport
 	url = https://github.com/IlleNilsson/xmip-core-transport.git
+[submodule "template/rust"]
+	path = template/rust
+	url = https://github.com/IlleNilsson/xmip-template-rust.git
+[submodule "template/dotnet"]
+	path = template/dotnet
+	url = https://github.com/IlleNilsson/xmip-template-dotnet.git

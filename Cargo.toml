@@ -4,7 +4,7 @@
 # and absorbing a crate into a workspace it has no relationship with. That is
 # exactly the coupling separate repositories exist to avoid. Open problem 19.
 members = ["."]
-exclude = ["modules"]
+exclude = ["modules", "template"]
 resolver = "2"
 
 [package]

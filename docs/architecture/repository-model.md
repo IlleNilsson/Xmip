@@ -303,16 +303,31 @@ which is the layout in section 14 of `Xmip-Repository-Creation-Blueprint.md`:
 
 ```text
 Xmip/
-└── modules/
-    ├── foundation/
-    │   ├── core   journey   message   stream   party   event   abi
-    ├── capabilities/
-    │   ├── transport   route   process   transform   contract   path
-    ├── operations/
-    │   ├── audit   observe   report   retain   archive   cli   powershell
-    └── platform/
-        └── runtime   configure   persist   resilience
+├── modules/
+│   ├── foundation/
+│   │   ├── core   journey   message   stream   party   event   abi
+│   ├── capabilities/
+│   │   ├── transport   route   process   transform   contract   path
+│   ├── operations/
+│   │   ├── audit   observe   report   retain   archive   cli   powershell
+│   └── platform/
+│       └── runtime   configure   persist   resilience
+└── template/
+    ├── rust     what a Rust module repository is generated from
+    └── dotnet   what a .NET one is
 ```
+
+**The templates are submodules of the estate, not neighbours of it.** They sat
+beside `Xmip/` until 2026-08-29, which meant cloning the estate did not get
+them, nothing measured them, and a rename could break repository creation
+without anything noticing — which it did. Under `template/` they are surveyed by
+`Get-XmipStatus`, landed by `Publish-XmipChange` and measured by the Rust style
+rule like anything else.
+
+They are **not** under `modules/`: a module is something Xmip loads at runtime,
+and a template is never loaded by anything. `crate.template` in
+`architecture.toml` names them by `owner/name` for the GitHub API; the path is
+`template/<language>`.
 
 Depth three mounts inside its own parent capability, ungrouped, because at that
 level the parent *is* the grouping:

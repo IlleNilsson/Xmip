@@ -57,7 +57,11 @@ gate**, for the reason above.
 
 ## 4. What this is enforced by
 
-`tests/Rust.Style.Tests.ps1`, over `modules/*/*/src/**/*.rs`:
+`tests/Rust.Style.Tests.ps1`, over `modules/**/*.rs` and `template/**/*.rs`.
+
+**The template is measured too.** Every new repository is generated from it, so
+a rule the template does not obey is a rule every new repository starts out
+breaking.
 
 | Rule | Section | Enforced |
 | --- | --- | --- |
