@@ -13,7 +13,21 @@
 //!                    Message              -> xmip-core-message
 //! route.rs           publication          -> xmip-core-route
 //! vertical_slice.rs  arrival              -> xmip-core-runtime
+//! disposition.rs     nothing              -> deleted on 2026-08-29
 //! ```
+//!
+//! `disposition.rs` travelled with `journey_model.rs` into xmip-core-message,
+//! was never declared in its `lib.rs`, and so never compiled once — it still
+//! imported `crate::journey_model` and `crate::vertical_slice`, which by then
+//! were two repositories away. It was a `println!` walkthrough of the lifecycle
+//! written before the lifecycle had types. Every part of it now exists as code
+//! a compiler checks: `Identity` as `Established` and `Presented`, `Arrival` as
+//! `StreamArrival`, `Alignment` and `OnMisalignment` in xmip-core-context with
+//! `AlignmentResult` on top, the gate walk as `xmip_runtime::arrive`, and
+//! `Disposition` as `Arrived`. Its one unduplicated part, the table of what Xmip
+//! keeps at each refusal, is ADR-0013 clauses 1 to 3 — stated there first and
+//! more fully. Two statements of one rule, one of which cannot be compiled, is
+//! the arrangement where the wrong one is believed.
 //!
 //! The re-exports below the fold are behind features and a build profile
 //! selects a set of them. The ones above are always present: without them
