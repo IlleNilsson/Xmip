@@ -66,7 +66,14 @@ xmip-repositories/
 **/xmip-repositories/
 
 # Editors and IDEs
-.vscode/
+#
+# .vscode/settings.json is the exception and is committed on purpose. The estate
+# is 43 submodules and VS Code stops detecting them at 10 by default, silently —
+# no error, no warning, the repositories simply are not in the Source Control
+# view. A setting every person has to discover for themselves is a setting most
+# of them will not have.
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo

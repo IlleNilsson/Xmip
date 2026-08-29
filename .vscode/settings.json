@@ -1,0 +1,31 @@
+{
+    // The estate is 43 submodules. VS Code stops detecting them at 10 by
+    // default and says nothing about it, so the Source Control view shows an
+    // apparently arbitrary subset while the rest are present on disk, in
+    // .gitmodules and in HEAD. Nothing errors, which is why it reads as
+    // repositories going missing rather than as a setting.
+    //
+    // Raised well above the current count so adding the next module does not
+    // bring the same silence back.
+    "git.detectSubmodules": true,
+    "git.detectSubmodulesLimit": 100,
+
+    "git.openRepositoryInParentFolders": "never",
+    "scm.alwaysShowRepositories": true,
+
+    // 43 repositories times target/ is a large number of files nobody wants
+    // watched, indexed, or offered in Quick Open.
+    "files.watcherExclude": {
+        "**/target/**": true,
+        "**/bin/**": true,
+        "**/obj/**": true
+    },
+    "search.exclude": {
+        "**/target": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}
