@@ -79,14 +79,22 @@ genuinely doing too much.
 
 ### The ratchet, and why it is not a waiver list
 
-Three files exceed the gate today and are recorded in the test with their
-current size:
+One file exceeds the gate today and is recorded in the test with its current
+size:
 
 ```text
-foundation/core/src/identity.rs        705
-capabilities/route/src/lib.rs          680
 platform/runtime/src/arrival.rs        440
 ```
+
+Two came off on 2026-08-29, and neither removal needed an argument:
+
+```text
+foundation/core/src/identity.rs   705  ->  seven files, largest 240
+capabilities/route/src/lib.rs     680  ->  six files, largest 274
+```
+
+`route/lib.rs` had the split written into it already, as banner comments naming
+five sections. The comments were doing a file's job.
 
 **A ratchet may only shrink.** The test fails if any of them grows, and fails if
 a file not on the list exceeds the gate. Removing an entry is the only edit that

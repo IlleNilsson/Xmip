@@ -77,9 +77,15 @@ BeforeAll {
     # This is not a waiver list. A waiver list absorbs new violations and its
     # own maintenance becomes the work, which is what retired the PowerShell
     # function-length gate.
+    # Two entries came off on 2026-08-29 and neither needed a decision:
+    #
+    #   foundation/core/src/identity.rs   705 -> seven files, largest 240
+    #   capabilities/route/src/lib.rs     680 -> six files, largest 274
+    #
+    # Which is the whole difference from a waiver list. A waiver absorbs the
+    # violation and stays; a ratchet entry is a debt with the size written on
+    # it, and the only edit that needs no reason is deleting one.
     $script:Ratchet = @{
-        'modules/foundation/core/src/identity.rs' = 705
-        'modules/capabilities/route/src/lib.rs'   = 680
         'modules/platform/runtime/src/arrival.rs' = 440
     }
 
