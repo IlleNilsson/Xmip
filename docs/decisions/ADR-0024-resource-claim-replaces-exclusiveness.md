@@ -130,8 +130,15 @@ lease expiry was invented to provide, obtained without inventing it.
 ## Consequences
 
 - `xmip-core-exclusiveness` is removed from `architecture.toml`, from the root
-  `Cargo.toml` features and dependencies, and from `server-profile`. The
+  `Cargo.toml` features and dependencies, from `server-profile`, and from
+  `.gitmodules` — it was mounted at `modules/platform/exclusiveness`. The
   repository is archived rather than deleted; ADR-0017 is part of the record.
+
+  *The submodule was added to this list on 2026-08-29, two days late. The first
+  four were done together and the estate still checked out a module the manifest
+  said was retired, because retiring a repository and unmounting it are separate
+  actions and only one of them was written down. A retirement that names every
+  place but one is how the one becomes permanent.*
 - `xmip-core-schedule` depended on `xmip-core-exclusiveness`. It depends on
   `xmip-core-transport` instead: a schedule that fires and finds the artefact
   already claimed moves on, which is the same behaviour with nothing to
