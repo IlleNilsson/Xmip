@@ -67,6 +67,9 @@ breaking.
 | --- | --- | --- |
 | File over 400 lines before `#[cfg(test)]` | 1, 2 | yes, with a ratchet |
 | Function length | 3 | **warned by clippy, never gated** |
+| A filename repeating its crate | 5 | yes |
+| `mod.rs` | 5 | yes |
+| A repeated name covering two subjects | 5 | reported, judged by people |
 | One subject per file | 1 | reviewed by people |
 
 **400 is taken from measurement, not chosen.** On 2026-08-27 the estate's
@@ -97,11 +100,53 @@ is to fix the file.
 *`arrival.rs` is on that list because of work done on 2026-08-27, in the same
 session that wrote this document. It is recorded rather than excused.*
 
-## 5. What this does not enforce
+## 5. A file is named for what it defines, in the estate's own words
 
-Naming, module layout beyond file length, whether a `struct` should have been
-three, and whether a trait earns its existence. Those need judgement and are
-reviewed by people.
+Section 1 says a file has one subject. This says what to call it.
+
+**The name comes from `terminology.md` or a decision record.** Not invented at
+the keyboard. `Arriving` and `Departing` live in `direction.rs` because ADR-0019
+is *Identity, Parties and the two directions* and `terminology.md` files them
+under *Identity, Party and direction* — so an operator, a decision record and a
+source file all use one word for one thing.
+
+**A name may repeat across crates when the subject is the same.** The module
+path qualifies it, exactly as `std::fmt::Error` and `std::io::Error` coexist.
+`xmip_core::direction` is the vocabulary and `xmip_transport::direction` is
+which directions one implementation supports; they are the same subject at two
+levels and both deserve the documented word. A uniqueness rule would force one
+of them to a word the documentation does not have, which is worse than the
+repeat.
+
+**A name may not cover two subjects.** This is the rule that was actually being
+broken. Three files were called `identity.rs`:
+
+```text
+foundation/core/src/identity.rs      Purpose, Arriving, Departing, Mechanism...
+foundation/context/src/identity.rs   Verified, AuthenticatedIdentity, Alignment
+foundation/party/src/identity.rs     Identity
+```
+
+The vocabulary, the outcome of the gates, and a Party's identity. One name,
+three subjects, and only the third earns it.
+
+**A filename does not repeat its crate.** `transport/src/transport.rs` inside
+`xmip-core-transport` spends its name saying where it already is. It holds the
+trait every protocol implements, so it is `protocol.rs`.
+
+**A name that its own file contradicts is the worst case**, because the file
+argues with itself. `runtime/src/receive.rs` opened with *"What a Message
+generation is, and the three treatments an artifact declares"* while a whole
+crate called `xmip-core-receive` existed elsewhere. It is `generation.rs`.
+
+**No `mod.rs`.** `http.rs` beside `http/`, not `http/mod.rs`. The 2018 form puts
+the module's name in the tab bar instead of five identical tabs.
+
+## 6. What this does not enforce
+
+Module layout beyond file length, whether a `struct` should have been three, and
+whether a trait earns its existence. Those need judgement and are reviewed by
+people.
 
 Listing them here as enforced when they are not is the failure mode
 `powershell-style.md` section 6 already had once — it named its own test file

@@ -132,6 +132,66 @@ Describe 'Rust style, section 1: a file has one subject' {
     }
 }
 
+Describe 'Rust style, section 5: a file is named for what it defines' {
+    BeforeAll {
+        # The crate a file belongs to, taken from the path rather than from
+        # Cargo.toml: modules/<domain>/<crate>/src/... . Reading the manifest
+        # would be more correct and would also make this test depend on 43 of
+        # them being parseable, which is a different test's job.
+        $script:Named = $script:Files | ForEach-Object {
+            $parts = $_.Path -split '/'
+
+            [PSCustomObject]@{
+                Path  = $_.Path
+                Name  = [IO.Path]::GetFileNameWithoutExtension($_.Path)
+                Crate = if ($parts.Count -ge 3) { $parts[2] } else { $parts[0] }
+            }
+        }
+    }
+
+    It 'has no file whose name repeats its crate' {
+        # transport/src/transport.rs inside xmip-core-transport spent its name
+        # saying where it already was.
+        $stutter = @($script:Named | Where-Object { $_.Name -eq $_.Crate })
+
+        [string] $detail = ($stutter | ForEach-Object { $_.Path }) -join "`n"
+
+        $stutter.Count | Should -Be 0 -Because "these repeat their crate:`n$detail"
+    }
+
+    It 'uses no mod.rs' {
+        # http.rs beside http/, not http/mod.rs. Five tabs called mod.rs is
+        # what the 2018 form exists to stop.
+        $legacy = @($script:Named | Where-Object { $_.Name -eq 'mod' })
+
+        [string] $detail = ($legacy | ForEach-Object { $_.Path }) -join "`n"
+
+        $legacy.Count | Should -Be 0 -Because "these use the pre-2018 form:`n$detail"
+    }
+
+    It 'reports every name used by more than one file' {
+        # Not an assertion, and deliberately not one. Section 5 permits a repeat
+        # when the subject is the same — xmip_core::direction and
+        # xmip_transport::direction are both direction — and forbids it when it
+        # is not. No test can tell those apart, so this prints them and a person
+        # decides.
+        #
+        # The case that set the rule: three files called identity.rs holding the
+        # vocabulary, the outcome of the gates, and a Party's identity.
+        $repeated = $script:Named |
+            Where-Object { $_.Name -ne 'lib' } |
+            Group-Object Name |
+            Where-Object Count -gt 1
+
+        foreach ($group in $repeated) {
+            Write-Host ("  {0}" -f $group.Name)
+            $group.Group | ForEach-Object { Write-Host "      $($_.Path)" }
+        }
+
+        $script:Named.Count | Should -BeGreaterThan 0 -Because 'the estate has Rust in it'
+    }
+}
+
 Describe 'Rust style, section 2: tests are measured separately' {
     It 'reports the shape of the ten largest files' {
         # Not an assertion. The same reporting Xmip.Style.Tests.ps1 does for
