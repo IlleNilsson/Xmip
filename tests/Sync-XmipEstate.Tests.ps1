@@ -173,6 +173,15 @@ Describe 'The estate is more than its modules' {
         $script:Architecture = ConvertFrom-Toml -InputObject (
             Get-Content (Join-Path $script:Root 'architecture.toml') -Raw -Encoding utf8
         )
+
+        # What the estate actually checks out, read from .gitmodules rather than
+        # from the manifest. The two tests below compare them, and a comparison
+        # of the manifest against itself would pass while a clone disagreed.
+        $script:Mounted = @(
+            Get-Content (Join-Path $script:Root '.gitmodules') |
+                Where-Object { $_ -match '^\s*url\s*=' } |
+                ForEach-Object { ($_ -split '/')[-1].Trim() -replace '\.git$' }
+        )
     }
 
     It 'declares a template for every language a module can be written in' {
@@ -216,6 +225,38 @@ Describe 'The estate is more than its modules' {
 
         foreach ($entry in @($script:Architecture.retired)) {
             $live | Should -Not -Contain $entry.name -Because "$($entry.name) is retired"
+        }
+    }
+
+    It 'does not mount a retired repository as a submodule' {
+        # The defect this catches, on 2026-08-29: ADR-0024 retired
+        # xmip-core-exclusiveness and it was taken out of the manifest, the root
+        # Cargo.toml features and dependencies, and server-profile — and left in
+        # .gitmodules. Every clone of the estate went on checking out a module
+        # the manifest said was gone, and nothing failed, because a submodule
+        # nobody depends on still builds.
+        #
+        # Retiring a repository and unmounting it are separate actions. The test
+        # above reads the manifest against itself and cannot see the second one.
+        foreach ($entry in @($script:Architecture.retired)) {
+            $script:Mounted |
+                Should -Not -Contain $entry.name -Because "$($entry.name) is retired and still mounted"
+        }
+    }
+
+    It 'mounts nothing the manifest does not declare' {
+        # The other direction, and the reason the first was survivable for two
+        # days: a submodule is only visible to somebody who lists them, and the
+        # estate is 43 of them.
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+
+        [string[]] $declared = @($manifest.repositories.name) + @(
+            $script:Architecture.crate.template.Values |
+                ForEach-Object { ($_ -split '/')[-1] }
+        )
+
+        foreach ($name in $script:Mounted) {
+            $declared | Should -Contain $name -Because "$name is checked out and nothing declares it"
         }
     }
 }

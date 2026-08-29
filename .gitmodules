@@ -43,9 +43,6 @@
 [submodule "modules/foundation/event"]
 	path = modules/foundation/event
 	url = https://github.com/IlleNilsson/xmip-core-event.git
-[submodule "modules/platform/exclusiveness"]
-	path = modules/platform/exclusiveness
-	url = https://github.com/IlleNilsson/xmip-core-exclusiveness.git
 [submodule "modules/operations/gui"]
 	path = modules/operations/gui
 	url = https://github.com/IlleNilsson/xmip-core-gui.git
