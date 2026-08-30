@@ -32,6 +32,21 @@ tells you nothing about which branch was taken.
 
 **Four spaces, never tabs. Lines no longer than 120 characters.**
 
+120 is a **strict recommendation**, not a law. It is gated because gating it has
+paid — over one long session it caught twenty-five real violations, including
+one with trailing whitespace a grep had reported as clean — and because almost
+nothing legitimately needs the width. A line that genuinely does, such as a URL
+or a fixture string that cannot be broken without changing what it tests, is
+allowed to exceed it and says why in a comment beside it. There are none today.
+
+**Ask before breaking it.** The exception is agreed first and the reason written
+into the code afterwards, never the other way round — `rust-style.md` makes the
+argument in full, and it applies to an assistant more strictly than to anyone
+else.
+
+`rust-style.md` makes the same argument about file length: neither is a rule
+good code never breaks, both are rules good code breaks knowingly.
+
 **Blank line between logical steps.** A wall of twenty consecutive statements is
 one step to the parser and twenty to the reader.
 
@@ -151,6 +166,27 @@ null elements rather than a boolean. Null on the left is always a comparison.
 **Test emptiness explicitly.** `[string]::IsNullOrWhiteSpace($x)` rather than
 `-not $x`, which is true for `0`, `''`, `$false` and an empty array alike.
 
+**A loop variable is never a parameter.** Also correctness rather than taste,
+and gated.
+
+```powershell
+param([string[]] $Module)
+
+foreach ($module in $Module) { ... }    # one variable, two meanings
+foreach ($name in $Module)   { ... }    # two variables
+```
+
+Variable names are case-insensitive, so `$module` and `$Module` are the same
+storage. The loop still runs — the enumerator was taken before the first
+assignment — but every read inside the body is ambiguous, and the array the
+caller passed is gone after the first iteration.
+
+Both `Test-XmipModule` and `Submit-XmipModule` were written this way and neither
+misbehaved visibly, because `Join-Path`, `Write-Host` and `ShouldProcess` all
+accept an array and do something plausible with one. It surfaced on 2026-08-29
+only when the variable reached a `[string]` parameter, which refused it. The
+second instance was in the function that commits and pushes the estate.
+
 **Explicit `return`.** PowerShell's implicit output is real and useful; it is
 also how a stray expression ends up in a function's return value. Say what comes
 back.
@@ -256,8 +292,16 @@ same redirect:
 | --- | --- | --- |
 | Line over 120 characters | 1 | yes |
 | Backtick line continuation | 3 | yes |
+| A loop variable that is a parameter | 4 | yes |
 | A file that does not parse | — | yes |
 | Function over 35 lines | 2 | **reported, not gated** |
+
+**This table is checked.** Every gating test in `Xmip.Style.Tests.ps1` must have
+a row here, and the count is asserted. The loop-variable rule was gated on
+2026-08-29 and went undocumented, because the only checks on this document were
+that it names the test file and states the line length — neither of which any
+new rule would touch. A document that describes what is enforced has to fail
+when it stops doing so.
 
 Findings are returned as objects, not printed as text, so a failure can be
 grouped and sorted rather than read:

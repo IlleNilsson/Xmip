@@ -687,8 +687,14 @@ function Test-XmipModule {
         [switch] $All
     )
 
-    foreach ($module in $Module) {
-        $path = Join-Path -Path $RepositoryRoot -ChildPath $module
+    # $name, not $module. PowerShell variable names are case-insensitive, so
+    # `foreach ($module in $Module)` iterates a parameter using the parameter's
+    # own variable — one variable, two meanings. It survived because Join-Path
+    # and Write-Host both accept an array and quietly do something reasonable
+    # with it. The first strongly typed [string] parameter it was handed to
+    # refused, on 2026-08-29, which is the only reason anyone found out.
+    foreach ($name in $Module) {
+        $path = Join-Path -Path $RepositoryRoot -ChildPath $name
         $manifest = Join-Path -Path $path -ChildPath 'Cargo.toml'
 
         if (-not (Test-Path -LiteralPath $manifest)) {
@@ -702,36 +708,59 @@ function Test-XmipModule {
             #
             # Whether an unverifiable module lands is the caller's decision, and
             # -All is where it is made.
-            Write-Host "== $module (no Cargo.toml, nothing here can test it)" -ForegroundColor DarkGray
+            Write-Host "== $name (no Cargo.toml, nothing here can test it)" -ForegroundColor DarkGray
 
             continue
         }
 
-        Write-Host "== $module" -ForegroundColor Cyan
+        Write-Host "== $name" -ForegroundColor Cyan
 
         Push-Location -LiteralPath $path
 
         try {
             # Dependencies track main, so the lock is re-resolved or the test
             # runs against whatever was current when anyone last built.
+            #
+            # Announced, because this is the slow step and it used to be a
+            # silent one. Fourteen git dependencies means fourteen fetches from
+            # GitHub, and on 2026-08-30 that looked like a hung run for three
+            # minutes: the module header was printed, then nothing, because
+            # cargo's output is captured and only written when the module is
+            # done. A prompt from git for credentials would appear on the
+            # console and never in the log at all.
+            Write-Host '   resolving dependencies...' -ForegroundColor DarkGray
             & cargo update 2>&1 | Out-Null
 
-            # Captured, not emitted. This function returns the modules that
-            # failed; a native command left to write into the pipeline makes
-            # every line of its output a return value, and the caller reads
-            # cargo's passing tests as the list of failures.
-            $output = & cargo test 2>&1
+            Write-Host '   testing...' -ForegroundColor DarkGray
+
+            # Written as it arrives, and still returning nothing.
+            #
+            # Emitting matters: this function returns the modules that failed,
+            # and a native command left to write into the pipeline makes every
+            # line of its output a return value, so the caller reads cargo's
+            # passing tests as the list of failures.
+            #
+            # Capturing it and printing afterwards solved that and created a
+            # worse one. On 2026-08-30 a rebuild of fourteen git dependencies
+            # showed nothing for five minutes — not in the log, not on the
+            # console, because the output was in a variable. A slow run and a
+            # hung one were the same picture, and the only way to tell them
+            # apart was to wait and find out.
+            #
+            # Write-Host inside ForEach-Object gives both: each line appears
+            # when cargo emits it, and the block returns nothing.
+            & cargo test 2>&1 | ForEach-Object { Write-Host $_ }
             $passed = $LASTEXITCODE -eq 0
 
             # Only when the tests passed. A module that fails its tests is
             # already failing, and a second wall of compiler output buries the
             # error the operator has to read.
             if ($passed) {
-                [string[]] $features = Get-XmipBuildableFeature -ManifestPath $manifest -Module $module
+                [string[]] $features = Get-XmipBuildableFeature -ManifestPath $manifest -Module $name
 
                 if ($features.Count -gt 0) {
-                    $output += "   building $($features.Count) declared feature(s): $($features -join ', ')"
-                    $output += & cargo build --features ($features -join ',') 2>&1
+                    Write-Host "   building $($features.Count) declared feature(s): $($features -join ', ')" -ForegroundColor DarkGray
+                    & cargo build --features ($features -join ',') 2>&1 | ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
                 }
             }
@@ -740,11 +769,8 @@ function Test-XmipModule {
             Pop-Location
         }
 
-        # Information stream, so it reaches the console and any redirect.
-        $output | ForEach-Object { Write-Host $_ }
-
         if (-not $passed) {
-            $module
+            $name
         }
     }
 }
@@ -768,10 +794,10 @@ function Submit-XmipModule {
         [string] $Message
     )
 
-    foreach ($module in $Module) {
-        $path = Join-Path -Path $RepositoryRoot -ChildPath $module
+    foreach ($name in $Module) {
+        $path = Join-Path -Path $RepositoryRoot -ChildPath $name
 
-        if (-not $PSCmdlet.ShouldProcess($module, 'commit and push')) {
+        if (-not $PSCmdlet.ShouldProcess($name, 'commit and push')) {
             continue
         }
 
@@ -783,16 +809,28 @@ function Submit-XmipModule {
             & git -C $path checkout main
         }
 
+        # Each step announced before it runs, not after.
+        #
+        # The first attempt at this put one line before the push and learned
+        # nothing, because the run was stalling in `git add -A` — which walks
+        # the entire working tree and stats every file under an ignored
+        # target/. A trace after the slow step reports only the steps that
+        # finished, which is the opposite of what a stall needs.
+        Write-Host "   staging $name..." -ForegroundColor DarkGray
         & git -C $path add -A
+
+        Write-Host '   committing...' -ForegroundColor DarkGray
         & git -C $path commit -m $Message --quiet
+
+        Write-Host '   pushing to origin...' -ForegroundColor DarkGray
         & git -C $path push origin main --quiet
 
         if ($LASTEXITCODE -ne 0) {
-            throw "Pushing $module failed. Anything before it is already on origin; fix this and run again."
+            throw "Pushing $name failed. Anything before it is already on origin; fix this and run again."
         }
 
         Write-Host "   OK, landed" -ForegroundColor Green
-        $module
+        $name
     }
 }
 

@@ -77,17 +77,28 @@ BeforeAll {
     # This is not a waiver list. A waiver list absorbs new violations and its
     # own maintenance becomes the work, which is what retired the PowerShell
     # function-length gate.
-    # Two entries came off on 2026-08-29 and neither needed a decision:
+    # Length is a strict recommendation, not an absolute. A file that must be
+    # longer may be longer, and says why here; the reason is the cost that keeps
+    # it rare, and it is required — an entry with no reason is indistinguishable
+    # from a file nobody got round to splitting.
+    #
+    # An entry may still only grow by being edited deliberately, which is what
+    # separates this from a waiver list that absorbs whatever arrives.
+    #
+    # Two entries came off on 2026-08-29 and neither needed an argument:
     #
     #   foundation/core/src/identity.rs   705 -> seven files, largest 240
     #   capabilities/route/src/lib.rs     680 -> six files, largest 274
+    # Empty, and that is the intended state.
     #
-    # Which is the whole difference from a waiver list. A waiver absorbs the
-    # violation and stays; a ratchet entry is a debt with the size written on
-    # it, and the only edit that needs no reason is deleting one.
-    $script:Ratchet = @{
-        'modules/platform/runtime/src/arrival.rs' = 440
-    }
+    # The last entry was arrival.rs at 440, whose reason I wrote for myself
+    # after the fact — the exact thing rust-style.md now forbids. Rather than
+    # ask the owner to bless a justification written backwards, the file was
+    # split on 2026-08-30: the lifecycle stayed and the outcome types moved to
+    # outcome.rs, leaving 347 and 113.
+    #
+    # An entry here needs the owner's agreement first and the reason second.
+    $script:Ratchet = @{ }
 
     $script:Files = @(Get-XmipRustFile)
 }
@@ -116,9 +127,24 @@ Describe 'Rust style, section 1: a file has one subject' {
                 continue
             }
 
-            [string] $because = "$path is on the ratchet at $($script:Ratchet[$path]); a ratchet only shrinks"
+            [int] $allowed = $script:Ratchet[$path].Lines
+            [string] $because = "$path is recorded at $allowed lines; growing past it is a deliberate edit"
 
-            $file.Code | Should -BeLessOrEqual $script:Ratchet[$path] -Because $because
+            $file.Code | Should -BeLessOrEqual $allowed -Because $because
+        }
+    }
+
+    It 'gives every recorded exception a reason' {
+        # Length is a strict recommendation. Breaking it is allowed and costs a
+        # sentence, which is what keeps it rare — the same instrument as
+        # [[retired]] in architecture.toml, where a reason is required because
+        # an entry without one cannot be told from an oversight.
+        foreach ($path in $script:Ratchet.Keys) {
+            $script:Ratchet[$path].Reason |
+                Should -Not -BeNullOrEmpty -Because "$path exceeds the recommendation and must say why"
+
+            ($script:Ratchet[$path].Reason).Length |
+                Should -BeGreaterThan 30 -Because "$path needs a reason, not a word"
         }
     }
 
@@ -245,6 +271,7 @@ Describe 'The style document describes what is enforced' {
             [string] $relative = ($path -replace '^modules/', '')
 
             $script:Document | Should -Match ([regex]::Escape($relative))
+            $script:Document | Should -Match 'strict recommendation'
         }
     }
 }
