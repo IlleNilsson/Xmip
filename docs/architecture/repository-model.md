@@ -290,25 +290,31 @@ implements, and it had been classified for deletion.
 
 ## 6. Crates
 
-Every repository has one primary Rust crate whose name matches the repository
-name, unless an accepted architecture decision defines an exception.
+Every Rust repository has one primary crate whose Cargo package name matches
+the repository name. The first-party provider segment remains part of that
+package identity:
 
-**The exception, recorded 2026-08-26: a first-party crate drops the `core`
-provider segment.** `xmip-core-message` builds the crate `xmip-message`.
+```text
+xmip-core-message     repository and Cargo package
+xmip-core-transport   repository and Cargo package
+```
 
-`core` exists to keep repositories distinct inside one GitHub namespace, which
-Cargo already does by crate name — `xmip-message` is unambiguous, and a third
-party's `xmip-acme-message` still does not collide. Keeping it would put
-`xmip_core_` on the front of every import in the estate, permanently, to satisfy
-a naming rule rather than to prevent a collision.
+A dependent crate may use a shorter local dependency key without changing the
+package identity:
 
-The forty crates are already named this way, so this makes the estate consistent
-today instead of after forty repository commits and a rewrite of every `use`
-statement. `Sync-XmipEstate -Cargo` therefore reconciles dependency revisions
-and leaves names alone. ADR-0014
-clause 14 defines the exceptions that exist: a module carrying its own language
-is not a Rust crate, which is why `xmip-core-powershell` and `xmip-core-gui`
-declare `primaryLanguage` and do not pretend otherwise.
+```toml
+xmip-message = { package = "xmip-core-message", git = "..." }
+```
+
+That keeps imports readable while repository, package, diagnostics and release
+metadata still name the same owned component. The manifest's
+`primaryCrateMatchesRepository = true` rule is therefore literal; there is no
+first-party naming exception.
+
+Repositories whose declared `primaryLanguage` is not Rust do not invent a
+Cargo package. ADR-0014 clause 14 governs those surfaces:
+`xmip-core-cli` and `xmip-core-gui` are .NET 11, and
+`xmip-core-powershell` is PowerShell.
 
 Platform foundation stays together while the architecture is settling.
 Loadable modules can separate later precisely because they depend on published
