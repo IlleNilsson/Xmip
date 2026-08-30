@@ -433,6 +433,66 @@ Describe 'PowerShell style, section 3: calls' {
     }
 }
 
+Describe 'PowerShell style: a loop variable is not a parameter' {
+    It 'never iterates a parameter using the parameter itself' {
+        <#
+            The defect, on 2026-08-29, in Test-XmipModule:
+
+                param([string[]] $Module)
+                foreach ($module in $Module) { ... }
+
+            PowerShell variable names are case-insensitive, so those are one
+            variable holding two meanings. It ran for weeks because Join-Path
+            and Write-Host both accept an array and do something reasonable
+            with it. The first strongly typed [string] parameter it was passed
+            to refused — "cannot convert value to type System.String" — and
+            that error was the only reason anyone found out.
+
+            A gate rather than a report, unlike function length. There is no
+            legitimate reason to write it, so there is nothing to waive.
+        #>
+        [object[]] $shadowed = @(
+            foreach ($file in Get-MeasuredFile -At $script:Root) {
+                $errors = $null
+                $ast = Get-ParsedFile -File $file -Errors ([ref] $errors)
+
+                if ($errors) { continue }
+
+                foreach ($function in $ast.FindAll(
+                        { $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {
+
+                    [string[]] $parameters = @(
+                        $function.Body.ParamBlock.Parameters.Name.VariablePath.UserPath
+                    )
+
+                    if ($parameters.Count -eq 0) { continue }
+
+                    foreach ($loop in $function.FindAll(
+                            { $args[0] -is [System.Management.Automation.Language.ForEachStatementAst] }, $true)) {
+
+                        [string] $variable = $loop.Variable.VariablePath.UserPath
+
+                        if ($parameters -contains $variable) {
+                            [PSCustomObject]@{
+                                Path     = $file.Name
+                                Function = $function.Name
+                                Variable = $variable
+                                Line     = $loop.Extent.StartLineNumber
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        [string] $detail = (
+            $shadowed | ForEach-Object { "$($_.Path):$($_.Line) $($_.Function) iterates `$$($_.Variable) into itself" }
+        ) -join "`n"
+
+        $shadowed.Count | Should -Be 0 -Because "a loop variable must not be a parameter:`n$detail"
+    }
+}
+
 Describe 'PowerShell style, section 2: functions' {
     <#
         There was a gate here: no unwaived function over 35 lines, plus a
@@ -500,5 +560,32 @@ Describe 'The style document describes what is enforced' {
         [string] $style = Get-Content -LiteralPath $path -Raw
 
         $style | Should -Match ([string] $script:MaximumLineLength)
+    }
+
+    It 'has a row for every gate this file applies' {
+        <#
+            The two tests above check that the document names this file and
+            states the line length. Neither is touched by adding a rule, so the
+            loop-variable gate was added on 2026-08-29 and documented nowhere,
+            and this Describe passed while its own claim was false.
+
+            A gate is an `It` that asserts `Should -Be 0` — the shape every
+            gate here uses, and the shape no report uses. Counting them against
+            the rows marked `yes` in section 6 cannot say the rows are *right*,
+            but it fails the moment a gate is added without one, which is the
+            drift that actually happened.
+        #>
+        [string] $source = Get-Content -LiteralPath $PSCommandPath -Raw
+
+        [int] $gates = ([regex]::Matches($source, 'Should\s+-Be\s+0\s')).Count
+
+        [string] $style = Get-Content -Raw -LiteralPath (
+            Join-Path $script:Root 'docs/governance/powershell-style.md'
+        )
+
+        # Rows of the enforcement table whose last column is a bare "yes".
+        [int] $rows = ([regex]::Matches($style, '(?m)^\|[^|]+\|[^|]+\|\s*yes\s*\|')).Count
+
+        $rows | Should -Be $gates -Because "section 6 lists $rows gates and this file applies $gates"
     }
 }
