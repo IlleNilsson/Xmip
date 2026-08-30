@@ -492,10 +492,9 @@ function Split-XmipDrift {
     .DESCRIPTION
     Two things are reconciled, both derived rather than maintained.
 
-    **The crate name is the repository name.** architecture.toml sets
-    primaryCrateMatchesRepository, and every module currently disagrees —
-    modules/foundation/message builds `xmip-message` where the repository is
-    `xmip-core-message`. Pre-ADR-0011 names that nothing has caught up with.
+    **The Cargo package name is the repository name.** architecture.toml sets
+    primaryCrateMatchesRepository. A dependency may use a shorter local key,
+    such as `xmip-message`, while its package remains `xmip-core-message`.
 
     **A dependency rev is the commit the superproject pins.** Otherwise the
     estate is wired twice and the two wirings drift without anyone noticing.
@@ -556,11 +555,9 @@ function Test-XmipCrateLine {
         [hashtable] $PinnedAt
     )
 
-    # Crate names are deliberately not reconciled. repository-model.md section 6
-    # grants the exception: the crate drops the first-party provider segment, so
-    # xmip-core-message builds xmip-message. Renaming forty crates to satisfy a
-    # naming policy costs forty repositories, every use statement, and a
-    # permanent xmip_core_ prefix on every import, and buys nothing that works.
+    # Cargo package identity is validated against the repository by the estate
+    # manifest and template. A shorter dependency key is only a local alias; the
+    # package remains, for example, xmip-core-message.
 
     # xmip-core = { git = "...", rev = "..." }
     if ($Line -notmatch '^\s*(xmip[\w-]*)\s*=\s*\{.*\brev\s*=\s*"([0-9a-f]+)"') {
