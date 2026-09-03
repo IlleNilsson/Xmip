@@ -281,10 +281,22 @@ carries. Nothing in it is current — do not implement from it.
 ### The operator surfaces and their language
 
 Rust is the language of the runtime; everything in the message path is Rust. The
-operator surfaces — an executable and a web solution — are .NET 11, and both are
-**clients of the `xmip` executable**. Nothing outside the runtime calls the ABI:
-not PowerShell, not the GUI, not a .NET surface. Anything a surface can do, the
-command line can already do.
+operator surfaces are .NET 11 — the `xmip` executable, the PowerShell module, a
+MAUI desktop GUI and a Blazor web GUI.
+
+**All four P/Invoke the same C ABI, and none of them goes through another
+surface to get there.** `xmip-core-abi` is the interface *into* Xmip —
+configuration, runtime, observing, eventing, auditing — and not only the
+boundary loadable Modules plug into. The amendment of 2026-08-26 put it there,
+superseding the original clauses that made every surface a client of the `xmip`
+executable: that made the CLI a chokepoint, where a capability had to be a
+command before it could be a screen, and left the PowerShell module scraping
+JSON out of a subprocess.
+
+The guarantee that mattered survives and is stronger. One definition of what an
+operator can do, so surfaces cannot drift the way the BizTalk console and its
+PowerShell provider did — now held by a normative versioned contract with a
+written specification rather than by a Rust library inside one executable.
 
 Observation never sits in the message path and is lossy by design; `report` and
 `audit` are the durable records. Remote operation rides existing shell remoting
