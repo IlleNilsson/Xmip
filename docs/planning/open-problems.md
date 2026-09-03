@@ -392,6 +392,42 @@ here on 2026-09-03, with the other two consequences it left loose.
 fails them. C is the tidiest and it defeats the point: an operator surface that
 only runs on the server is a shell prompt with extra steps.
 
+## 22. Nothing starts Xmip on a device
+
+`deployment-model.md` section 6 says the installer registers the Xmip Service
+**where services exist**, and section 8 says a configured node has the service
+**registered and running where services are supported**. Both sentences are
+carefully true and neither says what happens where they do not.
+
+A Meadow-class board has no service manager. There is no SCM, no systemd, no
+launchd — the runtime *is* what the board runs, and it is entered from reset
+rather than started by anything. ADR-0018 gives the Xmip Service nine startup
+phases and a supervisor that registers and deregisters Host Services by name,
+and on a microcontroller there is nobody to register with and nobody to
+supervise it in turn.
+
+Filed 2026-09-03, when `registration.rs` landed and had to name the case it
+does not handle. `ServiceManager::None` is that name. The three platforms
+that do have a service manager are answered; this is the fourth deployment
+target the owner named — cloud, on-prem, computer, device — and it is the one
+with no answer.
+
+| option | effect |
+|---|---|
+| **A. The runtime is the entry point; supervision is the hardware watchdog** | honest about the platform: reset is the only restart a board has. Host Services stop being separate processes and become tasks, so ADR-0018 clause 3 means something different here than on a server |
+| **B. A tiny supervisor task inside the firmware** | keeps ADR-0018 shape — something registers and restarts the rest — at the cost of writing a scheduler Xmip does not otherwise need |
+| **C. Devices run the purpose-compiled runtime and no Service concept at all** | `deployment-model.md` section 2 already has the purpose-compiled runtime, and this says the Service is a server idea. Cleanest, and it makes one word mean two things across the range |
+
+**Lean: A, and it needs ADR-0018 amended rather than reinterpreted.** The
+watchdog is what actually restarts a stuck board and pretending otherwise buys
+nothing. What A costs is that *Host Service* stops meaning a registered
+operating system service and starts meaning a supervised unit of work, which
+is a terminology change and terminology.md does not permit that quietly.
+
+C is the tempting one and should be resisted for the reason the deployment
+model already gives: **the runtime semantics are identical on all of them.**
+A device that has no Service has different semantics, not fewer modules.
+
 ---
 
 # Suggested order
