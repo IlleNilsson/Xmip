@@ -326,6 +326,12 @@ The decision is the rule that produced them, which is why `prerequisite.toml`
 and `rust-toolchain.toml` express channels rather than pins. A floor states what
 would break; it does not freeze anything.
 
+**And the rule itself has an end.** Latest anywhere and everywhere is a
+design-phase policy, right because nothing depends on Xmip yet. It expires at
+the first Linear release — the same trigger `release-model.md` uses to end its
+own design-phase exception, for the same reason. See the amendment of
+2026-09-03.
+
 → [Current platforms only, in full](ADR-0021-current-platforms-only.md)
 
 ### The operator boundary, and what a measurement is
