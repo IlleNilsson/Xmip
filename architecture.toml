@@ -48,6 +48,33 @@ primaryCrateMatchesRepository = true
 license = "AGPL-3.0-or-later"
 automaticVerification = false
 
+# The .NET counterpart of [crate]. ADR-0021: current platforms only, which for
+# a build target means the latest — and .NET 11 is preview until it goes stable
+# on 2026-11-10, which prerequisite.toml already records.
+#
+# Declared here because it was previously written in three places and checked in
+# none: the template's Directory.Build.props, and a <TargetFramework> in each of
+# the two surface projects. Three copies of a version number is three chances to
+# be on a different one.
+[project]
+primaryLanguage = "dotnet"
+targetFramework = "net11.0"
+sdk = "preview"
+
+# An assembly is loaded by something, and when that something owns the runtime,
+# it decides the target. The estate builds with the latest SDK either way.
+#
+# pwsh 7.6.5 hosts .NET 10 and carries its own runtime. A net11.0 build of the
+# PowerShell module compiles cleanly and is then refused at Import-Module with
+# "Could not load file or assembly 'System.Runtime, Version=11.0.0.0'", because
+# an assembly cannot load into a runtime older than it targets. Re-proved
+# 2026-09-03 rather than taken from the comment that claimed it.
+#
+# This follows pwsh upward. When pwsh hosts .NET 11, this line moves and the
+# exception disappears.
+hostedTargetFramework = "net10.0"
+hostedBy = "powershell"
+
 # One template per language, keyed by primaryLanguage.
 #
 # Was a single `template = "IlleNilsson/xmip-template"`. That repository was

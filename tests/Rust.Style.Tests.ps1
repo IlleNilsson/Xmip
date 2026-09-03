@@ -322,3 +322,100 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
         $wrong.Count | Should -Be 0 -Because $because
     }
 }
+
+Describe 'ADR-0021: the .NET surfaces are on the latest target' {
+    BeforeAll {
+        [string] $script:Root = Join-Path $PSScriptRoot '..'
+
+        Import-Module PSToml -ErrorAction Stop
+
+        [hashtable] $script:Toml =
+            Get-Content -LiteralPath (Join-Path $script:Root 'architecture.toml') -Raw |
+                ConvertFrom-Toml
+
+        [hashtable] $script:Policy = $script:Toml.project
+
+        # Every .NET project the estate ships, plus the template every new
+        # repository is generated from. obj/ and bin/ hold generated manifests.
+        [System.IO.FileInfo[]] $script:Csproj = @(
+            Get-ChildItem -Path $script:Root -Filter '*.csproj' -Recurse -File |
+                Where-Object { $_.FullName -notmatch '[\/](obj|bin)[\/]' } |
+                Sort-Object FullName
+        )
+
+        <#
+            .SYNOPSIS
+            The target framework in force for a project file.
+
+            .DESCRIPTION
+            A project may set it or inherit it from a Directory.Build.props
+            beside or above it — the template does the second, deliberately,
+            because two manifests that must agree eventually stop agreeing.
+            Returns '' when neither states one.
+        #>
+        function Get-TargetFramework {
+            [CmdletBinding()]
+            [OutputType([string])]
+            param(
+                [Parameter(Mandatory = $true)]
+                [System.IO.FileInfo] $File
+            )
+
+            [string] $text = Get-Content -LiteralPath $File.FullName -Raw
+
+            if ($text -match '<TargetFramework>([^<]+)</TargetFramework>') {
+                return $Matches[1]
+            }
+
+            [System.IO.DirectoryInfo] $folder = $File.Directory
+
+            while ($null -ne $folder) {
+                [string] $props = Join-Path $folder.FullName 'Directory.Build.props'
+
+                if (Test-Path -LiteralPath $props) {
+                    [string] $shared = Get-Content -LiteralPath $props -Raw
+
+                    if ($shared -match '<TargetFramework>([^<]+)</TargetFramework>') {
+                        return $Matches[1]
+                    }
+                }
+
+                $folder = $folder.Parent
+            }
+
+            return ''
+        }
+    }
+
+    It 'declares a target framework in the manifest' {
+        [string]::IsNullOrWhiteSpace($script:Policy.targetFramework) | Should -BeFalse
+    }
+
+    It 'gives every project the target the manifest declares' {
+        # The exception is declared, not assumed. A project under the module
+        # named by hostedBy is loaded by a host that owns the runtime — pwsh
+        # runs .NET 10 and refuses a net11.0 assembly at Import-Module — so it
+        # targets hostedTargetFramework. Everything else takes the latest.
+        [string[]] $wrong = @()
+
+        foreach ($file in $script:Csproj) {
+            [string] $where = $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
+            [bool] $hosted = $where -match "[\\/]$($script:Policy.hostedBy)[\\/]"
+
+            [string] $expected = if ($hosted) {
+                $script:Policy.hostedTargetFramework
+            }
+            else {
+                $script:Policy.targetFramework
+            }
+
+            [string] $actual = Get-TargetFramework -File $file
+
+            if ($actual -ne $expected) {
+                $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
+            }
+        }
+
+        $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
+    }
+}
