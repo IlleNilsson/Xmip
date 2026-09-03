@@ -592,7 +592,7 @@ function Sync-XmipEstate {
         [switch] $IncludeReserved,
         [switch] $Report,
         [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.toml'),
-        [string] $WorkingDirectory = (Join-Path (Get-XmipRepositoryRoot) '.xmip-work'),
+        [string] $WorkingDirectory = (Join-Path (Get-XmipRepositoryRoot) '.ai-work'),
         [string] $ReportPath,
         [string] $GitHubToken = $env:GITHUB_TOKEN,
         [string] $GitHubApiBaseUri = 'https://api.github.com',
