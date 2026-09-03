@@ -336,6 +336,64 @@ Four of its items were still true, and this register is where they belong:
 
 ---
 
+# The operator surfaces
+
+## 20. An operator session is a host process, and nobody has said which
+
+ADR-0014's amendment of 2026-08-26 made every operator surface a client of
+the ABI, loaded in-process. So a PowerShell session calling it holds runtime
+state, which makes it a host process — and ADR-0022 clause 3 says different
+identity contexts must not share one.
+
+The amendment recorded this in one sentence and left it: *that needs settling
+before anything ships*. It was never filed here, so the register did not carry
+it while two records were written on top of it. ADR-0027 adds a second reason
+and settles nothing.
+
+An operator is a person with a Kerberos ticket, or a service account, or a
+shared secret in a script. The node they are operating runs identity contexts
+of its own. Whether the session may sit beside them is exactly the question
+ADR-0022 exists to answer, and it does not answer this one.
+
+| option | effect |
+|---|---|
+| **A. The session is its own identity context, always isolated** | simple, and honest about what a session is; an operator surface can never run inside a Host Service, so a local GUI is a separate process |
+| **B. The session inherits the context it authenticated as** | matches what an operator expects; makes co-residency depend on who is logged in, which is the property ADR-0022 says must be derived and never configured |
+| **C. The surface holds no runtime state; it talks to the Xmip Service** | dissolves the question by reversing the amendment, and reintroduces the chokepoint the amendment removed |
+
+**Lean: A, and it is close.** ADR-0022 derives a class from *how an identity is
+proven*, and a session proves the operator, not the node. B is what people will
+assume and it makes an isolation rule depend on a login. C is the one to argue
+about properly, because it is the only one that questions the amendment rather
+than working under it.
+
+## 21. Packaging does not cover a surface that ships native libraries
+
+The .NET surfaces P/Invoke a C ABI, so `powershell` and `gui` carry native
+libraries per platform and per architecture — Windows, Linux, macOS, x64 and
+arm64, and arm64 is not optional under ADR-0015.
+
+ADR-0015 packages the **node**: MSI through winget, `.deb` and `.rpm`, an OCI
+image, a portable archive. A PowerShell module is none of those. It is
+installed from a gallery or a file share, by someone who is not installing
+Xmip, onto a machine that may not have it.
+
+Recorded by ADR-0014's amendment in one line — *ADR-0015 packages the node and
+does not yet cover a PowerShell module shipping native binaries* — and filed
+here on 2026-09-03, with the other two consequences it left loose.
+
+| option | effect |
+|---|---|
+| **A. One module carrying every runtime identifier** | one artefact, works offline, and every operator downloads five platforms to use one |
+| **B. A meta-module with per-platform packages** | what .NET tooling already does; needs a gallery that resolves them, which an air-gapped estate does not have |
+| **C. The surface requires a local Xmip install and loads its libraries** | nothing to package; makes the PowerShell module useless on an administrator workstation, which is where it is most wanted |
+
+**Lean: A, revisit if size becomes real.** Air gaps are a stated target and B
+fails them. C is the tidiest and it defeats the point: an operator surface that
+only runs on the server is a shell prompt with extra steps.
+
+---
+
 # Suggested order
 
 Rewritten 2026-08-30. The previous list was complete fossils — create
@@ -343,6 +401,12 @@ xmip-core-abi (exists), fix main.rs (deleted), orphaned tests (gone) — which
 is what an order costs when nothing retires its entries.
 
 ```text
+0. Verify the .NET modules            Test-XmipModule looks for a Cargo.toml, so
+                                       cli, powershell and gui are skipped and
+                                       land only under -All, unverified. ADR-0014
+                                       puts all four surfaces in .NET, so this
+                                       gate has to grow before the operator
+                                       boundary carries weight
 1. The GUI                             market-position.md calls this the widest
                                        gap; the repository is empty and ADR-0014
                                        has already decided its shape. The

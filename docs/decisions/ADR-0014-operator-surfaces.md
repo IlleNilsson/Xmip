@@ -4,6 +4,14 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+The versioning question the 2026-08-26 amendment left open — one header, two
+audiences, different stability expectations — is answered by ADR-0027: a second
+header, `xmip_operate.h`, versioned apart from the module boundary.
+
+The identity consequence the same amendment recorded is **not** answered. A
+surface holding runtime state in-process is a host process with an identity
+context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
+
 ## In brief
 
 - Theme: Operating Xmip

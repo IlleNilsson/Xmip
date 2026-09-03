@@ -4,6 +4,11 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+Amended by ADR-0027, which puts a second header beside this one for the audience
+that drives Xmip from outside, versioned apart, and renames `XmipNode` to
+`XmipValue` in sections 10 and 11 of `xmip_module.h` so the word is free for the
+machine an operator points at.
+
 ## In brief
 
 - Theme: Modules and the boundary
