@@ -933,6 +933,25 @@ function Publish-XmipPin {
     $staged = @(& git -C $RepositoryRoot diff --cached --name-only)
 
     if ($staged.Count -eq 0) {
+        # Committed is not pushed. On 2026-08-30 a rebase left the pin commit
+        # in place with a clean tree; this branch said 'already pinned' and
+        # returned, and the estate sat one commit ahead of a remote that had
+        # never seen it. Nothing to commit still means everything to push.
+        [string] $ahead = (& git -C $RepositoryRoot rev-list --count '@{upstream}..HEAD') -join ''
+
+        if ($ahead -ne '0' -and -not [string]::IsNullOrWhiteSpace($ahead)) {
+            Write-Host "   pushing $ahead committed pin(s) to origin..." -ForegroundColor DarkGray
+            & git -C $RepositoryRoot push origin main --quiet
+
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Pushing the estate failed. The pin is committed; only the push is missing.'
+            }
+
+            Write-Host 'OK. Estate pushed.' -ForegroundColor Green
+
+            return
+        }
+
         Write-Host 'Estate already pinned.' -ForegroundColor DarkGray
         return
     }
