@@ -67,7 +67,8 @@ commit, and the architectural change permission recorded in
 Formatting stopped depending on anyone remembering that on 2026-09-03:
 `Publish-XmipChange` runs `cargo fmt --check` per module and refuses to land one
 that fails. Twenty-five of thirty-eight crates were unformatted when that gate
-was written, all of them landed green. Clippy is not gated there yet.
+was written, all of them landed green. Clippy joined it on 2026-09-04, every
+warning an error, once the five crates that warned were clean.
 
 ## Rules
 

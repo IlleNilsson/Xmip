@@ -971,6 +971,24 @@ function Test-XmipModule {
                 }
             }
 
+            # Clippy, with every warning an error. Gated on 2026-09-04, once
+            # the estate was clean: five crates warned, eight distinct issues,
+            # seven mechanical and one real — a function taking two ids that
+            # were already on the Message it was handed. Gating it with a
+            # waiver on day one is how a gate becomes a waiver list.
+            if ($passed) {
+                Write-Host '   checking lints...' -ForegroundColor DarkGray
+
+                & cargo clippy --all-targets -- -D warnings 2>&1 | ForEach-Object { Write-Host $_ }
+                $passed = $LASTEXITCODE -eq 0
+
+                if (-not $passed) {
+                    [string] $hint = '   FAILED lints. Run: cargo clippy --all-targets'
+
+                    Write-Host $hint -ForegroundColor Red
+                }
+            }
+
             # Only when the tests passed. A module that fails its tests is
             # already failing, and a second wall of compiler output buries the
             # error the operator has to read.
