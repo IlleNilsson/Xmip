@@ -64,6 +64,11 @@ Until then, the discipline that replaces review is the one already in force:
 commit, and the architectural change permission recorded in
 `architectural-change-permission.md`.
 
+Formatting stopped depending on anyone remembering that on 2026-09-03:
+`Publish-XmipChange` runs `cargo fmt --check` per module and refuses to land one
+that fails. Twenty-five of thirty-eight crates were unformatted when that gate
+was written, all of them landed green. Clippy is not gated there yet.
+
 ## Rules
 
 1. `main` is Xmip Continuum.
