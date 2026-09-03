@@ -64,3 +64,8 @@ and scratch file an assistant produces goes there and nowhere else — logs as
 `.ai-interaction/land.log`, runnable sequences as `.ai-interaction/*.ps1`. The
 assistant's reach is this repository; nothing above `D:\Repos\Xmip` is its
 business.
+
+`.xmip-work/` is not yours: `Sync-XmipEstate -Report` writes it, and an
+operator with no assistant anywhere still produces it. Two scratch folders,
+two authors, and the owner ruled on 2026-08-31 that they stay separate — a
+merged folder would name an author that was not there.
