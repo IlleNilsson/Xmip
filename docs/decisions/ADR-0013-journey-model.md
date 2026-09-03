@@ -6,6 +6,23 @@ Proposed. Records the runtime lifecycle from `docs/Xmip-Architecture-Specificati
 section 2, and extends `docs/architecture/message-disposition.md` with disposition at each
 point of refusal.
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: Message disposition and the Journey
+- Name: The Journey model
+- Order: 2
+- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; DMQ; Journey, Journey states; Publication, Subscription matching
+
+A Journey is a line, not a tree: a Publication produces one Journey per matched
+Subscription, and zero matches means no Journey at all. A Journey exists only
+after Validation. Every point of refusal has a defined disposition, so nothing
+accepted disappears silently.
+
+Terminal states are `Completed`, `Failed` and `Dismissed` — the last added
+2026-08-26 so that an operator's deliberate stop is distinguishable from a
+fault.
+
 ## Context
 
 The runtime cannot be written without knowing what happens at each refusal. "A Stream arrives

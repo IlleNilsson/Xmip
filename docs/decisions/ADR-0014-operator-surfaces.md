@@ -4,6 +4,25 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+## In brief
+
+- Theme: Operating Xmip
+- Subject: The operator surfaces and their language
+- Name: The operator surfaces
+- Order: 1
+- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, the `xmip` executable; Observation, and why it is lossy; Remote operation, WinRM, SSH
+
+Rust is the language of the runtime; everything in the message path is Rust. The
+operator surfaces — an executable and a web solution — are .NET 11, and both are
+**clients of the `xmip` executable**. Nothing outside the runtime calls the ABI:
+not PowerShell, not the GUI, not a .NET surface. Anything a surface can do, the
+command line can already do.
+
+Observation never sits in the message path and is lossy by design; `report` and
+`audit` are the durable records. Remote operation rides existing shell remoting
+— PowerShell Remoting over WinRM or SSH, and the CLI over SSH. Xmip defines no
+bespoke remote control protocol.
+
 ## Context
 
 Xmip has a runtime and no way to look at it. The manifest already declares the four observation capabilities, xmip-core-event, xmip-core-observe, xmip-core-report and xmip-core-audit, and the three surfaces, abi, cli and powershell. What it does not have is anything an operator sits in front of.

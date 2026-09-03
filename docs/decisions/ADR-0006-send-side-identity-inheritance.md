@@ -4,6 +4,18 @@
 
 Accepted.
 
+## In brief
+
+- Theme: Identity and security
+- Subject: Send-side identity is resolved independently
+- Name: Send-side identity inheritance
+- Order: 2
+- Concepts: Send Location, Send Port
+
+What Xmip presents outward is resolved without reference to what it
+authenticated inbound. A Send Location may carry its own identity; where it has
+none, it inherits from its parent Send Port.
+
 ## Decision
 
 Xmip send-side execution must resolve the identity exposed to the target independently of receive-side identity.

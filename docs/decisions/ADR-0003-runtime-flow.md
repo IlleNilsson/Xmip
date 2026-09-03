@@ -4,6 +4,20 @@
 
 Accepted.
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: Runtime flow
+- Name: Runtime flow
+- Order: 1
+- Concepts: Promotion, promoted properties; Stream-first
+
+Xmip's flow is stream-first, security-aware, transformable, promotable,
+auditable and interchange-tracked. Transformation and promotion happen *before*
+subscription or orchestration decisions when the incoming Stream requires it,
+because orchestration and subscription need metadata and promoted properties to
+know what to do.
+
 ## Decision
 
 Xmip runtime flow is stream-first, security-aware, transformable, promotable, auditable, and interchange-tracked.

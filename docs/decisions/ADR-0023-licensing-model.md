@@ -4,6 +4,22 @@
 - Date: 2026-08-27
 - Related: ADR-0012 (the module boundary)
 
+## In brief
+
+- Theme: How the work is done
+- Subject: AGPL-3.0-or-later, and no second licence
+- Name: AGPL-3.0-or-later
+- Order: 3
+- Concepts: Licence, AGPL, dual licensing, CLA
+
+One licence, and no commercial one. A platform that cannot be relicensed cannot
+be closed, and holding the right to grant a second licence is the same right
+that makes closing it possible. Mirth Connect went commercial-only in March
+2025; Xmip gives up the ability to do that.
+
+No contributor licence agreement is needed, because there is no second licence
+to grant. Some buyers will refuse Xmip on licence grounds alone, knowingly.
+
 ## Context
 
 Every Xmip repository is AGPL-3.0-or-later. That was settled early and has never

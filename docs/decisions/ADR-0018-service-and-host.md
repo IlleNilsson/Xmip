@@ -4,6 +4,19 @@
 - Date: 2026-08-25
 - Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint)
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: One Service per node, and it stays out of the message path
+- Name: The Service and the Host Services
+- Order: 5
+- Concepts: Host Service; Service, the Xmip Service
+
+The Xmip Service is the master and the only thing the operating system starts.
+It reads the node configuration, builds and validates the execution tree, then
+supervises the Xmip Host Services. **No Stream, Message or Journey passes
+through it.** It loads no Modules and executes no Extensions.
+
 ## Context
 
 `terminology.md` defined System Process, Host Process, Xmip Process and Xmip

@@ -4,6 +4,18 @@
 - Date: 2026-08-25
 - Related: ADR-0011 (naming), ADR-0016 (composition)
 
+## In brief
+
+- Theme: How the work is done
+- Subject: One document per subject, no versions in filenames
+- Name: The documentation structure
+- Order: 1
+- Concepts: Documentation, one document per subject
+
+A subject has exactly one document. If two describe the same subject, one is
+wrong and you cannot tell which by looking. Versions belong in git history, not
+in filenames. Architecture is six documents.
+
 ## Context
 
 `docs/` held 110 markdown files. Twelve were empty. The rest included four

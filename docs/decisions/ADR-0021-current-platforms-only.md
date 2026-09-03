@@ -4,6 +4,23 @@
 - Date: 2026-08-25
 - Related: ADR-0012 (module boundary), ADR-0015 (packaging), ADR-0020 (documentation structure)
 
+## In brief
+
+- Theme: Operating Xmip
+- Subject: Current platforms only
+- Name: Current platforms only
+- Order: 3
+- Concepts: Pester, PowerShell, .NET, Rust versions; Version floors, channels
+
+Xmip tracks the current stable release of every platform it depends on and
+carries no compatibility with superseded ones. PowerShell 7.6.5 Core, .NET 11,
+latest stable Rust, Pester 6.
+
+**The version numbers are not the decision** — they will be history soon enough.
+The decision is the rule that produced them, which is why `prerequisite.toml`
+and `rust-toolchain.toml` express channels rather than pins. A floor states what
+would break; it does not freeze anything.
+
 ## Context
 
 Xmip is new. Nothing depends on it, no customer is mid-migration, and there is

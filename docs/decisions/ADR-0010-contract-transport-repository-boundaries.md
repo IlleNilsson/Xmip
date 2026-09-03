@@ -8,6 +8,23 @@ Renumbered from ADR-0005, which collided with ADR-0005 pre-alpha refactor discip
 
 The repository naming patterns in clauses 3, 6, 7, 8 and 9 are superseded by ADR-0011. Every other decision in this ADR stands.
 
+## In brief
+
+- Theme: Modules and the boundary
+- Subject: Contract, transport and representation stay separate
+- Name: Contract and transport boundaries
+- Order: 2
+- Concepts: Handler, a runtime role and not a name; Transport, direction-neutral
+
+`receive` and `send` own orchestration. A separate `transport` capability owns
+direction-neutral transport contracts, and each transport implementation
+declares whether it supports receive, send or both. Content representation is
+its own family. **Handler is a runtime module role and never a repository-name
+prefix.**
+
+— written before the `xmip-core-*` rename, so read the names as
+`xmip-core-receive` and so on.
+
 ## Context
 
 The architecture manifest, accepted handler taxonomy and existing Rust crates describe incompatible repository models.

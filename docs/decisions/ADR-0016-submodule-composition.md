@@ -5,6 +5,18 @@
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
 
+## In brief
+
+- Theme: The shape of the estate
+- Subject: Submodule composition mirrors ownership
+- Name: Submodule composition
+- Order: 2
+- Concepts: Submodules
+
+Two levels, each owned by the repository that pins it. `Xmip` pins
+`modules/transport`; `xmip-core-transport` pins `modules/kafka`. A parent pins
+commits, and reconciliation never uses `git submodule update --remote`.
+
 ## Context
 
 `architecture.toml` schema 2.0 makes the tree the data. A repository name is

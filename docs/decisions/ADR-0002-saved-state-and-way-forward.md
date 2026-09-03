@@ -4,6 +4,17 @@
 
 Accepted.
 
+## In brief
+
+- Theme: How the work is done
+- Subject: Memory lives in the repository
+- Name: Saved state and way forward
+- Order: 4
+
+Xmip's project memory is stored in the repository, never in conversation
+history. Every significant decision becomes an artifact. This document exists
+because of that rule.
+
 ## Decision
 
 Xmip project memory shall be stored in the repository, not in conversation history.

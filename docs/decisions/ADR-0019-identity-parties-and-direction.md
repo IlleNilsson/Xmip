@@ -6,6 +6,23 @@
   domain model), ADR-0008 (Xmip entities as actors), ADR-0009 (security roles
   versus actor capabilities), ADR-0013 (disposition and the Journey model)
 
+## In brief
+
+- Theme: Identity and security
+- Subject: Identity, Parties and the two directions
+- Name: Identity, Parties and direction
+- Order: 1
+- Concepts: Alignment, misalignment; Authentication, authorization, and their order; Kerberos; Party; Receive Location, Receive Port
+
+A Receive Location declares a **closed set** of identities and mechanisms it
+accepts; anything else is refused at authentication and is not attempted
+against the others. Authentication precedes authorization. A Send Location
+presents its configured identity outward. A Party holds identities in both
+directions.
+
+Where transport identity and message identity disagree, the model is DMARC's:
+**alignment, not precedence**.
+
 ## Context
 
 Three things were true at once and none of them fitted together.
