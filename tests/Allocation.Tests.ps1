@@ -36,7 +36,16 @@ BeforeAll {
     Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
     [string] $text = Get-Content -LiteralPath $script:AllocationPath -Raw -Encoding utf8
-    $script:Allocation = ConvertFrom-Toml -InputObject $text
+    $script:Allocation = ConvertFrom-Toml -InputObject $text -ErrorAction Stop
+
+    if ($null -eq $script:Allocation) {
+        # Without this, a parse failure surfaces as six tests each saying
+        # 'cannot call a method on a null-valued expression' — which is what
+        # happened on 2026-08-30, when two orphaned reason keys cost a
+        # diagnosis round that one honest message would have saved.
+        throw ('allocation.toml did not parse; every test below reads it, ' +
+            'so nothing else matters until it does.')
+    }
 
     <#
         .SYNOPSIS
@@ -93,6 +102,39 @@ BeforeAll {
 }
 
 Describe 'Every executable entry names a file that exists' {
+    It 'has no [[keep]] whose file is gone' {
+        # The one section nothing tested, and the one that rotted worst: on
+        # 2026-08-30 fourteen [[keep]] entries named files renamed or deleted
+        # months earlier — Xmip-Git.ps1, architecture.json, the scripts/ tree.
+        # A keep is a promise that the file is wanted; a keep naming nothing
+        # is the ledger lying in the one direction nobody checks.
+        [string[]] $missing = @()
+
+        foreach ($entry in (Get-AllocationEntry -Section 'keep')) {
+            [string] $path = [string] $entry.path
+
+            if ($path.Contains('*')) {
+                # Wildcard keeps are deliberate — docs/decisions/* keeps a
+                # directory's contents. Test-Path globs them.
+                if (-not (Test-Path -Path (Join-Path $script:Root $path))) {
+                    $missing += $path
+                }
+
+                continue
+            }
+
+            [string] $resolved = Resolve-AllocationPath -Path $path
+
+            if ($null -ne $resolved -and -not (Test-Path -LiteralPath $resolved)) {
+                $missing += $path
+            }
+        }
+
+        [string] $detail = $missing -join "`n"
+
+        $missing.Count | Should -Be 0 -Because "these keeps name nothing:`n$detail"
+    }
+
     It 'has no [[merge]] whose source is missing' {
         # A merge names two implementations of one thing. If the source is gone
         # the merge already happened, or the entry was never true.

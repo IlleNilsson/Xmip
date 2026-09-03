@@ -375,17 +375,55 @@ already holding. C matters only once someone else wants the name.
 
 ---
 
+## 19. What `must-remember.md` still knew when it was retired
+
+Carried in on 2026-08-30, when that file was deleted. Most of it had gone
+false — it said the submodules were planned when 43 were real, that no module
+loading existed when ADR-0025 had landed, that no identity implementation
+existed when the three gates did. A next-steps list that is mostly wrong is
+worse than none, because it is trusted exactly when nobody is checking.
+
+Four of its items were still true, and this register is where they belong:
+
+- **Journey replay end to end.** RocksDB and SQLite stores exist; the replay
+  model over them is not implemented, and interchange history is not yet
+  queryable. Related to problem 17 and to ADR-0024's open consequence on
+  Journey recovery across nodes.
+- **Cluster coordination.** No inter-node protocol, no failover execution.
+  ADR-0024 dissolved the lease half; the placement half is ADR-0025's clause 6
+  question and ADR-0018's Host Services, still undesigned between nodes.
+- **A typed configuration loader.** `xmip-core-configure` exists;
+  full validation against what the manifests declare does not — problem 14 is
+  the format half of this.
+- **The management plane.** `webapi` and `gui` are empty repositories,
+  `powershell` carries a README. ADR-0014 decided their shape; nothing yet
+  implements it.
+
+---
+
 # Suggested order
 
+Rewritten 2026-08-30. The previous list was complete fossils — create
+xmip-core-abi (exists), fix main.rs (deleted), orphaned tests (gone) — which
+is what an order costs when nothing retires its entries.
+
 ```text
-1. main.rs module list                one command, decides problem 2
-2. Delete the eight orphaned tests    build goes green
-3. cratePolicy edition to 2021        manifest tells the truth
-4. Consolidate into xmip-core-abi     now verifiable
-5. Create xmip-core-abi repository
-6. State the logic trait              decides problem 6, then 10
-7. Organisation and second owner      independent of all the above
+1. The GUI and the PowerShell module   market-position.md calls this the widest
+                                       gap; both repositories are empty and
+                                       ADR-0014 has already decided their shape
+2. Protocol implementations            file, http, tcp, udp, smtp exist in the
+                                       transport crate; 79 technology
+                                       repositories are declared and empty
+3. Journey replay end to end           problem 19, and the half of ADR-0024
+                                       that stayed open
+4. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
+                                       says where it belongs, not what it is
+5. xmip-core-webapi                    declared, mounted nowhere, one orphan
+                                       gitdir — decide it lives or retire it
+6. Cross-compilation                   four declared targets, verified on host
+                                       only
+7. Organisation and second owner       problem 15, independent of all the above
 ```
 
-Problems 4, 5, 7, 8 and 9 are naming judgements with no deadline. They cost nothing to leave
-open and should not block the build work.
+Problems 4, 5, 7, 8 and 9 remain naming judgements with no deadline. They cost
+nothing to leave open and should not block the build work.

@@ -114,6 +114,54 @@ the runtime role — a Module declares Handlers — and the repository that ship
 the FTP Handler is `xmip-core-transport-ftp`. These two rules are constantly
 misread as if they were one rule contradicting itself.
 
+### The grammar of a name
+
+The whole namespace as one tree — the grammar, not the inventory. Folded in
+from `docs/planning/naming-hierarchy.md` on 2026-08-30, because a grammar is
+this document's subject and not a plan.
+
+```text
+xmip
+│
+├── Xmip                                   the platform itself — outside the pattern
+├── .github                                organisation defaults — outside the pattern
+│
+├── xmip-<single token>                    PLATFORM LEVEL
+│   └── xmip-core                          foundation contracts, identifiers, shared types
+│                                          no provider, implements nothing
+│
+├── xmip-template-<language>               scaffolding, one per language a module
+│                                          can be written in — rust, dotnet
+│
+└── xmip-<provider>-<module>[-<standard>]  THE MODULE NAMESPACE
+    │
+    ├── provider = core ─────────────────  Xmip ships, hosts and supports it
+    │   │
+    │   ├── <module>                       xmip-core-path            the module itself
+    │   │
+    │   └── <module>-<standard>            xmip-core-path-xpath      Xmip's implementation
+    │
+    └── provider = anyone else ──────────  their licence, their support, no approval needed
+        │
+        ├── surface module                 xmip-acme-abi
+        │   (abi, cli, powershell)         xmip-acme-cli
+        │                                  nothing external to name — stops here
+        │
+        └── standard-keyed module          xmip-saxon-transform-xslt
+            (everything else)              xmip-bosch-transport-can-bus
+                                           standard is REQUIRED
+```
+
+Two things the tree states that prose keeps losing. A provider's surface
+modules stop at the module because there is no external standard to name —
+ADR-0012 clause 11. Everyone else's modules *must* carry the standard, because
+`xmip-acme-transform` claims a capability while `xmip-acme-transform-xslt`
+claims an implementation of something nameable, and only the second can be
+held to anything.
+
+*The planning file drew `xmip-template` as a single platform-level repository;
+that was true until 2026-08-27, when it became one template per language.*
+
 ## 3. Maturity
 
 Repository existence is independent of implementation maturity:

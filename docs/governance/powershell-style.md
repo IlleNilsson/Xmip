@@ -30,14 +30,20 @@ if ([string]::IsNullOrWhiteSpace($Text)) {
 The collapsed form cannot hold a breakpoint, and a debugger stepping through it
 tells you nothing about which branch was taken.
 
-**Four spaces, never tabs. Lines no longer than 120 characters.**
+**Four spaces, never tabs. Lines no longer than 100 characters.**
 
-120 is a **strict recommendation**, not a law. It is gated because gating it has
-paid — over one long session it caught twenty-five real violations, including
-one with trailing whitespace a grep had reported as clean — and because almost
-nothing legitimately needs the width. A line that genuinely does, such as a URL
+100 is a **strict recommendation**, not a law, and it was 120 until 2026-08-30
+— a longer leash than the owner wanted, corrected by the owner: code shall be
+readable. It is gated because gating it has paid — over one long session it
+caught twenty-five real violations, including one with trailing whitespace a
+grep had reported as clean. A line that genuinely needs the width, such as a URL
 or a fixture string that cannot be broken without changing what it tests, is
-allowed to exceed it and says why in a comment beside it. There are none today.
+allowed to exceed it and says why in a comment beside it.
+
+The 89 lines that sat between 101 and 120 when the limit moved are recorded in
+a per-file ratchet in the test — counted debt, not permission. Each file's
+number may only shrink, and rustfmt already holds the Rust side to the same
+width by default.
 
 **Ask before breaking it.** The exception is agreed first and the reason written
 into the code afterwards, never the other way round — `rust-style.md` makes the
@@ -103,7 +109,7 @@ Test-XmipFloor $name $found $minimum
 Test-XmipFloor -Name $name -Found $found -Minimum $minimum
 ```
 
-**Splat when a call would exceed 120 characters**, or when it takes more than
+**Splat when a call would exceed 100 characters**, or when it takes more than
 about four arguments.
 
 ```powershell
@@ -290,7 +296,7 @@ same redirect:
 
 | Rule | Section | Enforced |
 | --- | --- | --- |
-| Line over 120 characters | 1 | yes |
+| Line over 100 characters | 1 | yes, with a per-file ratchet |
 | Backtick line continuation | 3 | yes |
 | A loop variable that is a parameter | 4 | yes |
 | A file that does not parse | — | yes |

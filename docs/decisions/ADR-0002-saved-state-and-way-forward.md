@@ -21,6 +21,12 @@ docs/planning/must-remember.md
 .gitmodules.planned
 ```
 
+*Historical. Two of the four anchors have since been retired:
+`.gitmodules.planned` became the real `.gitmodules` when the 43 repositories
+were created, and `must-remember.md` was deleted on 2026-08-30 after most of it
+went false — its surviving items are `docs/planning/open-problems.md`
+problem 19. The first two anchors stand.*
+
 ## Current direction
 
 Xmip is a distributed integration platform system.

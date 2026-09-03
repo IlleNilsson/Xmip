@@ -13,6 +13,24 @@ Previously defined Xmip entities are Actors when they communicate, publish, subs
 
 They are not removed or renamed away. They gain actor semantics.
 
+## The mapping, in one table
+
+Folded in from `docs/planning/artifact-actor-mapping.md` on 2026-08-30 — the
+table said in nine lines what the examples below say in prose, and a mapping
+belongs in the record that decided it.
+
+```text
+Receive Location -> Actor reporting to Receive Port
+Receive Port     -> Actor owning received message until ownership transfer
+Process          -> Actor that may orchestrate, assign, transform, publish or subscribe
+Send Port Group  -> Actor grouping related send ports
+Send Port        -> Actor owning send-side preparation and delivery decisions
+Send Location    -> Actor performing actual target delivery
+Handler          -> Actor when executing or reporting capabilities
+Node             -> Actor inside Cluster
+Cluster          -> Actor inside a larger domain
+```
+
 ## Examples
 A Receive Location is an Actor that receives external input and reports to its parent Receive Port.
 

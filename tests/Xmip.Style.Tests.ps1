@@ -21,12 +21,12 @@
 # Declared at file scope, not in BeforeAll: Pester discovers test names before
 # it runs BeforeAll, and a name that interpolates a variable set in BeforeAll
 # reads as 'at or under  characters' in the output.
-[int] $script:MaximumLineLength = 120
+[int] $script:MaximumLineLength = 100
 [int] $script:MaximumFunctionLines = 35
 
 BeforeAll {
     $script:Root = Join-Path $PSScriptRoot '..'
-    [int] $script:MaximumLineLength = 120
+    [int] $script:MaximumLineLength = 100
     [int] $script:MaximumFunctionLines = 35
 
     # Named once: both the file walk and the nesting calculation ask the same
@@ -411,11 +411,66 @@ BeforeAll {
 }
 
 Describe 'PowerShell style, section 1: layout' {
-    It "keeps every line at or under $script:MaximumLineLength characters" {
-        [object[]] $long = @(Get-XmipStyleFinding | Where-Object { $_.Rule -eq 'LineLength' })
-        [string] $detail = ($long | ForEach-Object { "$($_.Path):$($_.Line) is $($_.Value)" }) -join "`n"
+    BeforeAll {
+        <#
+            The line ratchet. 120 was a longer leash than the owner wanted;
+            the recommendation is 100, set on 2026-08-30, and 89 existing
+            lines sat in the 101-120 band when it was set. Sixteen were
+            written the same week by the same assistant and were fixed rather
+            than recorded, which left 73.
 
-        $long.Count | Should -Be 0 -Because "these lines are too long:`n$detail"
+            Same instrument as the Rust file-length ratchet: each entry is a
+            file's recorded count of lines over the limit, it may only
+            shrink, a file not listed must be clean, and deleting an entry is
+            the goal. Fixing lines in a listed file means lowering its number
+            in the same change — that is the ratchet ratcheting.
+        #>
+        $script:LineRatchet = @{
+            'Install-XmipPrerequisite.ps1' = 7
+            'Publish-XmipChange.ps1'       = 6
+            'Sync-XmipEstate.ps1'          = 9
+            'Sync-XmipRepository.ps1'      = 20
+            'Xmip.psm1'                    = 20
+            'Decisions.Tests.ps1'          = 1
+            'Documentation.Tests.ps1'      = 5
+            'Publish-XmipChange.Tests.ps1' = 2
+            'Sync-XmipEstate.Tests.ps1'    = 6
+        }
+    }
+
+    It "keeps every line at or under $script:MaximumLineLength characters, less recorded debt" {
+        [object[]] $long = @(Get-XmipStyleFinding | Where-Object { $_.Rule -eq 'LineLength' })
+
+        foreach ($group in ($long | Group-Object Path)) {
+            [int] $allowed = 0
+
+            if ($script:LineRatchet.ContainsKey($group.Name)) {
+                $allowed = $script:LineRatchet[$group.Name]
+            }
+
+            [string] $detail = (
+                $group.Group | ForEach-Object { "$($_.Path):$($_.Line) is $($_.Value)" }
+            ) -join "`n"
+
+            $group.Count |
+                Should -BeLessOrEqual $allowed -Because "over the recorded debt:`n$detail"
+        }
+    }
+
+    It 'records no more debt than a file still has' {
+        # The shrinking half. A fixed line lowers the recorded number in the
+        # same change, and a clean file loses its entry — otherwise the
+        # ratchet is a waiver list with a flattering name.
+        [object[]] $long = @(Get-XmipStyleFinding | Where-Object { $_.Rule -eq 'LineLength' })
+
+        foreach ($name in $script:LineRatchet.Keys) {
+            [int] $actual = @($long | Where-Object { $_.Path -eq $name }).Count
+
+            [string] $because =
+                "$name changed; move its entry to $actual, or remove it at zero"
+
+            $actual | Should -Be $script:LineRatchet[$name] -Because $because
+        }
     }
 }
 
@@ -458,8 +513,10 @@ Describe 'PowerShell style: a loop variable is not a parameter' {
 
                 if ($errors) { continue }
 
-                foreach ($function in $ast.FindAll(
-                        { $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {
+                [type] $functionAst =
+                    [System.Management.Automation.Language.FunctionDefinitionAst]
+
+                foreach ($function in $ast.FindAll({ $args[0] -is $functionAst }, $true)) {
 
                     [string[]] $parameters = @(
                         $function.Body.ParamBlock.Parameters.Name.VariablePath.UserPath
@@ -467,8 +524,10 @@ Describe 'PowerShell style: a loop variable is not a parameter' {
 
                     if ($parameters.Count -eq 0) { continue }
 
-                    foreach ($loop in $function.FindAll(
-                            { $args[0] -is [System.Management.Automation.Language.ForEachStatementAst] }, $true)) {
+                    [type] $loopAst =
+                        [System.Management.Automation.Language.ForEachStatementAst]
+
+                    foreach ($loop in $function.FindAll({ $args[0] -is $loopAst }, $true)) {
 
                         [string] $variable = $loop.Variable.VariablePath.UserPath
 
@@ -486,7 +545,9 @@ Describe 'PowerShell style: a loop variable is not a parameter' {
         )
 
         [string] $detail = (
-            $shadowed | ForEach-Object { "$($_.Path):$($_.Line) $($_.Function) iterates `$$($_.Variable) into itself" }
+            $shadowed | ForEach-Object {
+                "$($_.Path):$($_.Line) $($_.Function) iterates `$$($_.Variable) into itself"
+            }
         ) -join "`n"
 
         $shadowed.Count | Should -Be 0 -Because "a loop variable must not be a parameter:`n$detail"
@@ -586,6 +647,7 @@ Describe 'The style document describes what is enforced' {
         # Rows of the enforcement table whose last column is a bare "yes".
         [int] $rows = ([regex]::Matches($style, '(?m)^\|[^|]+\|[^|]+\|\s*yes\s*\|')).Count
 
-        $rows | Should -Be $gates -Because "section 6 lists $rows gates and this file applies $gates"
+        $rows |
+            Should -Be $gates -Because "section 6 lists $rows gates and this file applies $gates"
     }
 }

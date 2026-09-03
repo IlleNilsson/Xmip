@@ -773,7 +773,7 @@ dependency = []
   description = ".NET 11 xmip executable over the Xmip ABI. Every operator action, implemented once."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "scaffolded"
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
 
@@ -781,7 +781,7 @@ dependency = []
   description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "scaffolded"
   primaryLanguage = "powershell"
   dependency = ["xmip-core-abi"]
 

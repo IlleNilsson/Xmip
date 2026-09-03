@@ -226,7 +226,7 @@ function Publish-XmipChange {
         .EXAMPLE
             xgit -Pin
     #>
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     [OutputType([PSCustomObject])]
     param(
         [Parameter(Position = 0)]
@@ -602,18 +602,17 @@ function Sort-XmipModuleDependency {
 # Adding to it is a decision somebody has to argue for; removing is just fixing
 # the feature.
 #
-# Both entries were found on 2026-08-29, the day --all-features was first run:
+# Empty, and that is the intended state — the same as the Rust file-length
+# ratchet, emptied the same week.
 #
-#   tls               http/tls.rs calls rustls::crypto::ring::default_provider()
-#                     and Cargo.toml asks for rustls with default features, so
-#                     the ring provider is configured out.
-#   dynamic-loading   host.rs imports validate_module_abi, ModuleAbiDescriptor
-#                     and XMIP_MODULE_ENTRYPOINT. xmip-core-abi defines none of
-#                     the three; ADR-0025 clause 5 says what it should define.
-$script:XmipUnbuildableFeature = @{
-    'modules/capabilities/transport' = @('tls')
-    'modules/platform/runtime'       = @('dynamic-loading')
-}
+# Both entries were found on 2026-08-29, the day declared features were first
+# built, and both came off on 2026-08-30: tls needed rustls's ring feature
+# enabled in transport's Cargo.toml, and dynamic-loading needed ADR-0025
+# clause 5 — xmip-core-abi exporting the loading surface its own header always
+# defined. Each had never compiled, from the day it was written.
+#
+# A new entry needs the owner's agreement first and its reason written here.
+$script:XmipUnbuildableFeature = @{ }
 
 <#
     .SYNOPSIS
@@ -756,11 +755,22 @@ function Test-XmipModule {
             # already failing, and a second wall of compiler output buries the
             # error the operator has to read.
             if ($passed) {
-                [string[]] $features = Get-XmipBuildableFeature -ManifestPath $manifest -Module $name
+                # @() around the call, not only inside the callee. A function
+                # that returns @() emits nothing, so its caller receives $null
+                # and [string[]] keeps it null — .Count then throws under
+                # StrictMode. Found 2026-08-30, the first time a module with no
+                # features table met an empty exception list.
+                [string[]] $features =
+                    @(Get-XmipBuildableFeature -ManifestPath $manifest -Module $name)
 
                 if ($features.Count -gt 0) {
-                    Write-Host "   building $($features.Count) declared feature(s): $($features -join ', ')" -ForegroundColor DarkGray
-                    & cargo build --features ($features -join ',') 2>&1 | ForEach-Object { Write-Host $_ }
+                    [string] $listed = $features -join ', '
+                    [string] $note = "   building $($features.Count) declared feature(s): $listed"
+
+                    Write-Host $note -ForegroundColor DarkGray
+
+                    & cargo build --features ($features -join ',') 2>&1 |
+                        ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
                 }
             }
@@ -780,7 +790,7 @@ function Submit-XmipModule {
         .SYNOPSIS
             Commits and pushes each module, in the order given.
     #>
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     [OutputType([string])]
     param(
         [Parameter(Mandatory)]
@@ -796,6 +806,15 @@ function Submit-XmipModule {
 
     foreach ($name in $Module) {
         $path = Join-Path -Path $RepositoryRoot -ChildPath $name
+
+        # Before ShouldProcess, deliberately. Twice — 2026-08-29 and again the
+        # next morning — a run froze between cargo's last line and 'staging',
+        # and everything in that gap was silent. Xmip's own rule about arrivals
+        # applies to its tooling: every gate says it is being asked. If this
+        # prints and 'staging' does not, the stall is ShouldProcess or the
+        # branch check, and the operator's console has the prompt the log
+        # cannot show.
+        Write-Host "   landing $name..." -ForegroundColor DarkGray
 
         if (-not $PSCmdlet.ShouldProcess($name, 'commit and push')) {
             continue
@@ -891,7 +910,7 @@ function Publish-XmipPin {
             nothing still has six to pin. Told "nothing landed", the pin would
             skip; asked "what is dirty", it does the right thing either way.
     #>
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     param(
         [Parameter(Mandatory)]
         [string] $RepositoryRoot,

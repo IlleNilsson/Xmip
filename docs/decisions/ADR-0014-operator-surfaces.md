@@ -256,6 +256,23 @@ The render mode is not a preference. A web solution has to reach many nodes; rea
 
 gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-acme-gui, on the same terms as the other three: their licence, their support, no approval.
 
+## Amendment, 2026-08-30: the SDK and the target framework are two rulings
+
+Stated by the owner when a net11.0 build of the PowerShell module met the shell
+it exists for: **PowerShell 7.6.5 hosts .NET 10, and that is fine. C# is
+compiled with the .NET 11 preview SDK.**
+
+The 2026-08-26 amendment said ".NET 11" and meant one thing; it is two. The
+*toolchain* is the .NET 11 preview SDK, estate-wide, pinned in every
+`global.json`. The *target framework* is owned by whoever loads the assembly:
+an executable owns its runtime and targets net11.0 — the cli — while a binary
+PowerShell module loads into pwsh and targets what the platform pwsh
+(ADR-0021, 7.6.5) hosts, which is net10.0 today and follows pwsh upward.
+
+Found the honest way: the module was built net11.0 to the letter of the earlier
+amendment, and `Import-Module` refused it. A rule that produces an assembly its
+own platform cannot load was a rule stated with one word too few.
+
 ## Open
 
 **Backpressure.** Clause 10 settles what a follow mode emits and says nothing about what happens when a consumer cannot keep up. Dropping is consistent with clause 5, since observation is lossy by design and says so. Which samples are dropped, and whether the consumer is told it missed some, is not settled. A monitor that silently skips is worse than one that admits a gap.
