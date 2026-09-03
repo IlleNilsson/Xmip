@@ -125,12 +125,28 @@ Run `Sync-XmipEstate.ps1` with `-WhatIf` first regardless.
 
 # Runtime safety
 
-## 13. Nothing bounds a publication chain
+## 13. Nothing bounds a publication chain — **option A landed**
+
+*Option A landed 2026-09-03 as ADR-0026. B and C stay open, which is what
+the lean below said would happen.*
+
+Every Journey carries a depth, a node configures a ceiling, and
+`Journey::following` — the only way a chain grows — refuses the link that
+would pass it, naming the Subscription and the Xmip Process rather than a
+number. It was cheap because the chain did not exist yet: `following` was
+called nowhere outside its own tests, so nothing publishes back into Xmip and
+nothing can loop today. The bound shipped with the chain, exactly as the lean
+said to do it.
+
+What is still true below: a depth limit cannot tell a loop from a long
+legitimate chain, cycle detection needs the chain persisted and cheap to walk,
+and an execution budget needs traffic to measure. The trailing paragraph is
+untouched by ADR-0026.
 
 A Process may publish back into Xmip. A Subscription may start a Process. So a
 Process that publishes a Message matching a Subscription that starts the same
-Process is a loop, and today the runtime has no depth limit, no cycle detection
-and no execution budget.
+Process is a loop. Before ADR-0026 the runtime had no depth limit, no cycle
+detection and no execution budget; it now has the first of the three.
 
 Recovered from `message-runtime-context.md` during the ADR-0020 consolidation,
 2026-08-26, where it sat as two of six unanswered questions: how are
