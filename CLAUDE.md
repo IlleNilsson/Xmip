@@ -65,7 +65,15 @@ and scratch file an assistant produces goes there and nowhere else — logs as
 assistant's reach is this repository; nothing above `D:\Repos\Xmip` is its
 business.
 
-`.xmip-work/` is not yours: `Sync-XmipEstate -Report` writes it, and an
-operator with no assistant anywhere still produces it. Two scratch folders,
-two authors, and the owner ruled on 2026-08-31 that they stay separate — a
-merged folder would name an author that was not there.
+`.ai-work/` is not yours either: `Sync-XmipEstate -Report` writes it. The
+assistant argued the two folders had different authors and deserved different
+prefixes; the owner heard the argument and ruled otherwise on 2026-08-31 —
+machine-generated working output is `.ai-*`, whichever machinery wrote it.
+The folders stay separate; the prefix does not. Write to `.ai-interaction/`,
+never to `.ai-work/`.
+
+`.local-work/` is the third of the untracked family and also not yours:
+device-local state for building or running Xmip on this machine — a target
+choice, a local node configuration. Nothing writes it yet; it is reserved so
+the first thing that does has a home. The three together: `.ai-interaction/`
+is who, `.ai-work/` is what machinery, `.local-work/` is where.

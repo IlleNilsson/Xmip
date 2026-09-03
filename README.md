@@ -131,7 +131,7 @@ Sync-XmipEstate -Create -WhatIf       # what would be created
 Sync-XmipEstate -Create               # create the missing repositories
 Sync-XmipEstate -Configure            # description, topics, features
 Sync-XmipEstate -Compose              # wire the submodule hierarchy locally
-Sync-XmipEstate -Report               # write .xmip-work/architecture-report.json
+Sync-XmipEstate -Report               # write .ai-work/architecture-report.json
 ```
 
 `-Compose` mounts every repository that exists at its place in the tree —
