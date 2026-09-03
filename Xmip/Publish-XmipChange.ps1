@@ -356,14 +356,22 @@ function Publish-XmipChange {
 
     foreach ($module in $ordered) {
         if (-not $NoVerify) {
-            # Nothing here can verify a module with no Cargo.toml — cli is
-            # .NET 11, gui and powershell carry their own languages under
-            # ADR-0014 clause 14. Left alone rather than landed unverified, and
-            # -All is how you say land it anyway.
+            # A module is verifiable if it has a Cargo.toml or a project file.
+            #
+            # This used to be Cargo.toml alone, which skipped every .NET surface
+            # ADR-0014 defines — cli, powershell and gui — and left them to land
+            # under -All, unverified. Test-XmipModule builds and tests a .NET
+            # module now, so the skip belongs only to a module with neither.
             $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
+            $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
 
-            if (-not $All -and -not (Test-Path -LiteralPath $manifest)) {
-                $why = "SKIPPED. $module has no Cargo.toml, so nothing here can verify it."
+            [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or @(
+                Get-ChildItem -Path $modulePath -Filter '*.csproj' -Recurse -File |
+                    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
+            ).Count -gt 0
+
+            if (-not $All -and -not $verifiable) {
+                $why = "SKIPPED. $module has no Cargo.toml and no project to verify."
                 Write-Host $why -ForegroundColor DarkGray
                 $skipped.Add($module)
 
@@ -670,6 +678,158 @@ function Get-XmipBuildableFeature {
     return @($declared | Where-Object { $_ -ne 'default' -and $skip -notcontains $_ })
 }
 
+function Test-XmipDotnetModule {
+    <#
+        .SYNOPSIS
+            Builds a .NET module and runs whatever tests it carries. True when
+            everything passed.
+
+        .DESCRIPTION
+            ADR-0014 puts all four operator surfaces in .NET, and until
+            2026-09-03 this file could verify none of them: it looked for a
+            a `Cargo.toml`, found none, and said so. So `cli`, `powershell` and
+            `gui` were skipped and landed only under `-All`, which means
+            unverified — a third of the surface area outside the gate, on the
+            day the PowerShell module gained eighteen tests nothing would run.
+
+            Two kinds of test, because the estate has both. A Pester file under
+            `tests/` runs over a built module, which is what a PowerShell
+            surface needs. A `*.Tests.csproj` is `dotnet test`. A
+            module with neither still builds, and building is the weakest
+            verification that is still verification — reported as such rather
+            than counted as passing tests.
+
+        .PARAMETER Path
+            The module's working tree.
+
+        .PARAMETER Name
+            The module path, for reporting.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    [System.IO.FileInfo[]] $project = @(
+        Get-ChildItem -Path $Path -Filter '*.csproj' -Recurse -File |
+            Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
+    )
+
+    # Built into a temporary directory, never into the project's own bin/.
+    #
+    # A loaded binary module locks its own assembly, and a PowerShell module is
+    # loaded by whoever is using it. On 2026-09-03 this gate reported
+    # xmip-core-powershell as failing when nothing was wrong with it: the
+    # owner's terminal, open since the previous day, held
+    # bin/Debug/net10.0/Xmip.PowerShell.dll and MSBuild gave up after ten
+    # retries. A gate that an operator's open session can fail is not a gate,
+    # and the first instinct — close the terminal — is the wrong fix.
+    #
+    # Verifying is not delivering. Nothing here needs bin/ to be current.
+    [string] $stamp = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
+    [string] $output = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-verify-$stamp"
+
+    foreach ($csproj in $project) {
+        Write-Host "   building $($csproj.Name)..." -ForegroundColor DarkGray
+
+        [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
+
+        & dotnet build $csproj.FullName --output $into --verbosity quiet --nologo 2>&1 |
+            ForEach-Object { Write-Host $_ }
+
+        if ($LASTEXITCODE -ne 0) {
+            return $false
+        }
+    }
+
+    [System.IO.FileInfo[]] $suite = @(
+        $project | Where-Object { $_.Name -like '*.Tests.csproj' }
+    )
+
+    foreach ($csproj in $suite) {
+        Write-Host "   dotnet test $($csproj.Name)..." -ForegroundColor DarkGray
+
+        & dotnet test $csproj.FullName --verbosity quiet --nologo 2>&1 |
+            ForEach-Object { Write-Host $_ }
+
+        if ($LASTEXITCODE -ne 0) {
+            return $false
+        }
+    }
+
+    return (Test-XmipPesterSuite -Path $Path -Name $Name -Built ($project.Count -gt 0))
+}
+
+function Test-XmipPesterSuite {
+    <#
+        .SYNOPSIS
+            Runs a module's Pester suite, if it has one. True when it passed or
+            there was nothing to run.
+
+        .DESCRIPTION
+            Separate from its caller because Pester's result object needs
+            handling that has nothing to do with building, and because a module
+            with no suite at all is a report rather than a failure.
+
+        .PARAMETER Path
+            The module's working tree.
+
+        .PARAMETER Name
+            The module path, for reporting.
+
+        .PARAMETER Built
+            Whether anything was compiled. Only decides what is said when there
+            is no suite: nothing built and nothing tested is worth flagging.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Name,
+
+        [Parameter(Mandatory)]
+        [bool] $Built
+    )
+
+    [string] $tests = Join-Path -Path $Path -ChildPath 'tests'
+
+    [System.IO.FileInfo[]] $suite = @()
+
+    if (Test-Path -LiteralPath $tests) {
+        $suite = @(Get-ChildItem -Path $tests -Filter '*.Tests.ps1' -Recurse -File)
+    }
+
+    if ($suite.Count -eq 0) {
+        [string] $said = if ($Built) { 'builds; no tests to run' } else { 'nothing to build or test' }
+
+        Write-Host "   $said" -ForegroundColor DarkGray
+
+        return $Built
+    }
+
+    Write-Host "   running $($suite.Count) Pester file(s)..." -ForegroundColor DarkGray
+
+    $result = Invoke-Pester -Path $tests -PassThru -Output None
+
+    [string] $tally = "   $($result.PassedCount) passed, $($result.FailedCount) failed"
+
+    Write-Host $tally -ForegroundColor DarkGray
+
+    foreach ($failure in $result.Failed) {
+        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
+    }
+
+    return ($result.FailedCount -eq 0)
+}
+
 function Test-XmipModule {
     <#
         .SYNOPSIS
@@ -714,17 +874,36 @@ function Test-XmipModule {
         $manifest = Join-Path -Path $path -ChildPath 'Cargo.toml'
 
         if (-not (Test-Path -LiteralPath $manifest)) {
-            # Reported, never returned.
+            # No Cargo.toml is not the end of the question any more.
             #
-            # This function returns modules that *failed*, and returning one
-            # that could not be tested made the caller stop the entire run on
-            # modules/operations/cli — which is .NET 11 and has no Cargo.toml by
-            # design. Cannot be verified here and did not fail are different
-            # answers, and only one of them should halt the estate.
+            # ADR-0014 puts every operator surface in .NET, so this branch used
+            # to skip a third of them: cli, powershell and gui reported "nothing
+            # here can test it" and landed only under -All, unverified. It said
+            # that on the day the PowerShell module gained eighteen tests.
             #
-            # Whether an unverifiable module lands is the caller's decision, and
-            # -All is where it is made.
-            Write-Host "== $name (no Cargo.toml, nothing here can test it)" -ForegroundColor DarkGray
+            # Reported, never returned, still holds for a module with neither a
+            # Cargo.toml nor a project: this function returns modules that
+            # *failed*, and returning one that could not be tested made the
+            # caller stop the entire run. Cannot be verified here and did not
+            # fail are different answers, and only one should halt the estate.
+            [bool] $dotnet = @(
+                Get-ChildItem -Path $path -Filter '*.csproj' -Recurse -File |
+                    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
+            ).Count -gt 0
+
+            if (-not $dotnet) {
+                [string] $why = "== $name (no Cargo.toml and no project, nothing can test it)"
+
+                Write-Host $why -ForegroundColor DarkGray
+
+                continue
+            }
+
+            Write-Host "== $name (.NET)" -ForegroundColor Cyan
+
+            if (-not (Test-XmipDotnetModule -Path $path -Name $name)) {
+                $name
+            }
 
             continue
         }
