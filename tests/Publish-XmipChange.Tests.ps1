@@ -252,10 +252,12 @@ rustls = { version = "0.23", optional = true }
             $script:XmipUnbuildableFeature['modules/nowhere'] = @('tls')
 
             try {
-                $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
+                $features =
+                    Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
 
                 $features | Should -Not -Contain 'tls'
-                $features | Should -Contain 'server' -Because 'one broken feature must not stop the rest'
+                $features |
+                    Should -Contain 'server' -Because 'one broken feature must not stop the rest'
             }
             finally {
                 $script:XmipUnbuildableFeature.Remove('modules/nowhere')
@@ -273,21 +275,19 @@ rustls = { version = "0.23", optional = true }
         }
     }
 
-    It 'excuses only what is written down, and writes down why' {
-        # Both entries are real and dated. An undocumented exception is a waiver
-        # list wearing a ratchet's clothes.
+    It 'has an empty exception list, which is the intended state' {
+        # The list began with tls and dynamic-loading on 2026-08-29, the day
+        # declared features were first built, and both came off on 2026-08-30 —
+        # tls by enabling rustls's ring feature, dynamic-loading by ADR-0025
+        # clause 5 giving xmip-core-abi the surface its header always defined.
+        #
+        # This asserts the emptiness deliberately. A new entry fails here, and
+        # it should: the entry needs the owner's agreement and a written reason,
+        # and editing this test alongside it is where the second half is proven.
         InModuleScope Xmip {
-            $script:XmipUnbuildableFeature.Keys | Should -Contain 'modules/capabilities/transport'
-            $script:XmipUnbuildableFeature.Keys | Should -Contain 'modules/platform/runtime'
+            [string] $because = 'an unbuildable feature needs the owner''s agreement, recorded'
 
-            $script:XmipUnbuildableFeature['modules/platform/runtime'] |
-                Should -Contain 'dynamic-loading'
-        }
-
-        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
-
-        foreach ($feature in 'tls', 'dynamic-loading') {
-            $source | Should -Match "$([regex]::Escape($feature))\s" -Because "$feature needs its reason in the source"
+            @($script:XmipUnbuildableFeature.Keys).Count | Should -Be 0 -Because $because
         }
     }
 }

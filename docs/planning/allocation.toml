@@ -327,14 +327,6 @@ path = "src/lib.rs"
 reason = "Becomes the assembly: re-exports the module crates so xmip stays one import for anyone who wants the whole platform."
 
 [[keep]]
-path = "src/main.rs"
-reason = "The demo binary that proves the assembly runs. ADR-0014 says one xmip binary; this is where it grows up."
-
-[[keep]]
-path = "src/vertical_slice.rs"
-reason = "An end-to-end slice across several modules. It belongs to no single one, which is exactly what an integration test is."
-
-[[keep]]
 path = "Cargo.toml"
 reason = "Workspace root. Members become modules/* path dependencies."
 
@@ -406,28 +398,29 @@ Update the link in the same commit as the move.
 # These are inert to Invoke-Distribute by design. A file that is about to be
 # merged must not first be moved to another repository.
 
-[[consolidate]]
-into = "docs/architecture/runtime-model.md"
-verified = false
-reason = """
-The three at docs/ root, still to be read. The docs/architecture/ half of this
-group was verified and retired on 2026-08-26 — see the superseded entries below
-and docs/planning/architecture-consolidation.md section 6 for the full mapping
-of what went where.
-"""
-paths = [
-  "docs/Xmip-Routing-Architecture.md",
-  "docs/process-instances.md",
-]
+[[moved]]
+path = "docs/Xmip-Routing-Architecture.md"
+to = "xmip-core-route"
+at = "docs/routing-architecture.md"
+why = """
+A [[consolidate]] into runtime-model.md was pending here, unverified. The file
+went to the repository that owns routing instead, which is the better answer:
+the model stays estate-level and the frozen baseline lives with its subject.
+Resolved 2026-08-30."""
 
-[[consolidate]]
-into = "docs/architecture/repository-model.md"
-verified = false
-reason = """
-The Blueprint is 554 lines and predates schema 2.0, where the TOML tree path is
-the repository name.
-"""
-paths = ["docs/Xmip-Repository-Creation-Blueprint.md"]
+[[moved]]
+path = "docs/process-instances.md"
+to = "xmip-core-process"
+at = "docs/process-instances.md"
+why = "Same resolution as the routing baseline, same date."
+
+[[moved]]
+path = "docs/Xmip-Repository-Creation-Blueprint.md"
+to = "Xmip"
+at = "docs/governance/repository-creation-blueprint.md"
+why = """
+The pending [[consolidate]] wanted it merged into repository-model.md. It is
+governance — a procedure, not a model — and went there instead."""
 
 # ---------------------------------------------------------------------------
 # Verified and retired 2026-08-26.
@@ -783,17 +776,15 @@ path = "ROADMAP.md"
 [[keep]]
 path = ".gitignore"
 [[keep]]
-path = "architecture.json"
-[[keep]]
 path = "architecture.toml"
 [[keep]]
 path = "prerequisite.toml"
 [[keep]]
-path = "Xmip-Estate.ps1"
+path = "Xmip/Sync-XmipEstate.ps1"
 [[keep]]
-path = "Xmip-Git.ps1"
+path = "Xmip/Publish-XmipChange.ps1"
 [[keep]]
-path = "Install-XmipPrerequisite.ps1"
+path = "Xmip/Install-XmipPrerequisite.ps1"
 [[keep]]
 path = ".github/workflows/rust.yml"
 [[keep]]
@@ -801,19 +792,9 @@ path = ".github/ci-trigger.md"
 [[keep]]
 path = "assets/brand/xmip-logo.png"
 [[keep]]
-path = "scripts/architecture/Modules/Xmip.Manifest.psm1"
+path = "tests/Sync-XmipEstate.Tests.ps1"
 [[keep]]
-path = "scripts/architecture/Modules/Xmip.Reporting.psm1"
-[[keep]]
-path = "scripts/architecture/Tests/Xmip.Manifest.Tests.ps1"
-[[keep]]
-path = "scripts/architecture/README.md"
-[[keep]]
-path = "scripts/create-canary-manifest.ps1"
-[[keep]]
-path = "tests/Xmip-Estate.Tests.ps1"
-[[keep]]
-path = "tests/Xmip-Estate.StrictMode.Tests.ps1"
+path = "tests/Sync-XmipEstate.StrictMode.Tests.ps1"
 [[keep]]
 path = "install/install-local.ps1"
 [[keep]]
@@ -1273,7 +1254,7 @@ composes the rest.
 # manifest, the record, the assembly and the tooling that composes the rest.
 
 [[keep]]
-path = "Xmip.psm1"
+path = "Xmip/Xmip.psm1"
 reason = "The shared manifest reader and the only import. Xmip-Estate and Xmip-Git are dot-sourced into it."
 
 [[keep]]
@@ -1624,3 +1605,55 @@ reason = "Zero bytes. ADR-0020 clause 7."
 
 verifiedBy = "tests/Allocation.Tests.ps1"
 
+
+# ---------------------------------------------------------------------------
+# Planning directory consolidation, 2026-08-30. Every file below was read in
+# full before this was written; where content survived, the entry names where.
+# ---------------------------------------------------------------------------
+
+[[superseded]]
+path = "docs/planning/architecture-consolidation.md"
+replacedBy = "docs/planning/allocation.toml"
+why = """
+Its own header: working notes, delete when the consolidation is done. It was
+written when docs/architecture/ held 31 documents; it holds five models. The
+outcome its section 6 recorded is this file's superseded entries."""
+
+[[superseded]]
+path = "docs/planning/creation-sequence.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = """
+Written before ADR-0011 renamed everything — xmip-message-json,
+xmip-handler-file, xmip-logic-http-api. Its live rules (architecture before
+implementation, one crate per repository, scaffold is not implementation) are
+repository-model.md sections 3, 6 and 10 and ADR-0005."""
+
+[[superseded]]
+path = "docs/planning/repository-refactor-purpose.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = """
+Described the landscape to be built: xmip-handler-*, a separate xmip-runtime.
+The refactor it planned completed on 2026-08-26 and built something better
+than it described."""
+
+[[superseded]]
+path = "docs/planning/artifact-actor-mapping.md"
+replacedBy = "docs/decisions/ADR-0008-xmip-entities-as-actors.md"
+why = "The nine-line table folded into the record that decided it, verbatim."
+
+[[superseded]]
+path = "docs/planning/must-remember.md"
+replacedBy = "docs/planning/open-problems.md"
+why = """
+A next-steps list that had gone mostly false: it said the submodules were
+planned when 43 were real, that no module loading existed when ADR-0025 had
+landed. Its four surviving items are open-problems.md problem 19, and
+ADR-0002's state anchor carries a retirement note."""
+
+[[superseded]]
+path = "docs/planning/naming-hierarchy.md"
+replacedBy = "docs/architecture/repository-model.md"
+why = """
+The grammar of a name is section 2's subject. The tree folded in there, with
+its one stale branch corrected — it drew xmip-template as a single repository,
+which was true until the day the templates split by language."""

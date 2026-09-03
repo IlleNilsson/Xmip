@@ -1,5 +1,26 @@
 # Where Xmip stands
 
+## The position
+
+Stated by the owner, 2026-08-30. Everything below this section is evidence;
+this is the claim the evidence serves.
+
+**Xmip is the replacement for BizTalk, MuleSoft and their kind. On-premises
+first, cloud-installable.**
+
+Each word carries weight. *Replacement*, not migration target: the vocabulary
+is deliberately BizTalk's — Receive Locations, Send Ports, promoted properties
+— so twenty years of operator knowledge transfers rather than expires, minus
+the parts BizTalk got wrong, each recorded in a decision with its reason.
+*On-premises first*: the deployment model's primary shapes are the single
+server and the on-prem cluster, because the estates Xmip is for cannot move —
+law, latency, air gaps, other people's data. *Cloud-installable*, not cloud
+native and not cloud hosted: a cloud node is one more place a node runs
+(`deployment-model.md`), never a dependency, and nothing in Xmip phones
+anywhere to work. Section 2 below is why this position is open at all:
+Microsoft's path is to the cloud only, and every competitor sentence in
+section 4 leads with a hosted service.
+
 Surveyed 2026-08-27. Every date below is published and checkable; every
 judgement is marked as one. Re-check the dates rather than trusting this
 document once they start passing.
