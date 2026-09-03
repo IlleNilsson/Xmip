@@ -70,7 +70,10 @@ commit, and the architectural change permission recorded in
 2. Continuum is the source of current project truth.
 3. Linear releases are cut from Continuum.
 4. Continuum may evolve.
-5. Linear must be reproducible.
+5. Linear must be reproducible. Continuum tracks channels under ADR-0021; a
+   Linear release pins what it was built with and publishes those versions.
+   A release that resolves `channel = "stable"` at build time is not
+   reproducible, and the two records disagreed about that until 2026-09-03.
 6. Documentation-first architecture decisions may enter Continuum before implementation.
 7. A Linear release must not redefine the architecture independently of Continuum.
 8. Until the first Linear release exists, commits may go directly to Continuum.

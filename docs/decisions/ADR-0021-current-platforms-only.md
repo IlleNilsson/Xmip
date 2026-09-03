@@ -21,6 +21,12 @@ The decision is the rule that produced them, which is why `prerequisite.toml`
 and `rust-toolchain.toml` express channels rather than pins. A floor states what
 would break; it does not freeze anything.
 
+**And the rule itself has an end.** Latest anywhere and everywhere is a
+design-phase policy, right because nothing depends on Xmip yet. It expires at
+the first Linear release — the same trigger `release-model.md` uses to end its
+own design-phase exception, for the same reason. See the amendment of
+2026-09-03.
+
 ## Context
 
 Xmip is new. Nothing depends on it, no customer is mid-migration, and there is
@@ -124,6 +130,62 @@ not.
   estate on a frozen image — the answer is a purpose-compiled runtime pinned at
   build time per `deployment-model.md`, not a compatibility branch in the
   mainline.
+
+## Amendment, 2026-09-03: this rule has an end, and it is the first Linear release
+
+**Latest anywhere and everywhere is a design-phase rule.** It is right now and it
+becomes wrong the day Xmip is public. Recorded because the record above does not
+say so, and a rule with no stated end is applied forever by whoever inherits it.
+
+The Context section already gives the reason without drawing the conclusion:
+*nothing depends on it, no customer is mid-migration, and there is no installed
+base to protect.* All three stop being true on the same day.
+
+### The trigger is the one the release model already uses
+
+`release-model.md` ends its own design-phase exception — committing straight to
+Continuum — at the **first Linear release**, and gives the reason: *a Linear
+release is the first moment something exists that a change to Continuum can
+break.* The same sentence is the reason this rule ends there. One trigger, two
+practices, and nobody has to decide twice.
+
+### What ends, and what does not
+
+**Tracking a preview ends.** The *realistic rather than hostile* section above
+justifies this policy by saying the burden it places on an adopter is one they
+already carry. That test passes for current stable and **fails for a preview**:
+installing a preview SDK to run a production integration platform is not
+something anyone is already doing. .NET 11 reaching stable on 2026-11-10 removes
+the instance; it does not remove the rule.
+
+**Tracking current stable does not end.** Carrying compatibility with superseded
+platforms is what ossified BizTalk, and that argument is not about phase. What
+changes is that "current" acquires a published window instead of meaning
+whatever shipped this morning.
+
+### Continuum tracks, Linear pins
+
+`release-model.md` rule 5 says **Linear must be reproducible**, and a release
+that resolves `channel = "stable"` at build time is not. The two records have
+disagreed since both were written and nothing had to reconcile them, because no
+Linear release exists.
+
+The reconciliation, stated here so it is not discovered during a release:
+Continuum tracks channels, and a Linear release **pins what it was built with**
+and publishes it. That is not a compatibility branch — the mainline still moves
+— it is a release naming its own inputs, which is what reproducible means.
+
+### What is not decided here
+
+The supported-platform matrix a public Xmip publishes: how many versions back,
+for how long, and what a security fix means for a superseded one. That belongs
+to the release it constrains and cannot be usefully answered now. This amendment
+records only that **the current rule expires rather than continuing by
+default**, and names the moment.
+
+*Raised by the owner, 2026-09-03: latest anywhere and everywhere is intended
+because we are in a design phase, and will be obsolete if Xmip reaches a
+public.*
 
 ## Alternatives considered
 
