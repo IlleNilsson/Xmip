@@ -262,3 +262,63 @@ Describe 'The style document describes what is enforced' {
         }
     }
 }
+
+Describe 'ADR-0021: one edition, and the manifest knows which' {
+    BeforeAll {
+        [string] $script:Root = Join-Path $PSScriptRoot '..'
+
+        Import-Module PSToml -ErrorAction Stop
+
+        [hashtable] $script:Manifest =
+            Get-Content -LiteralPath (Join-Path $script:Root 'architecture.toml') -Raw |
+                ConvertFrom-Toml
+
+        [string] $script:Declared = $script:Manifest.crate.edition
+
+        # Every crate the estate ships: the modules, the template every new
+        # repository is generated from, and the platform crate that assembles
+        # them. target/ is build output and holds vendored manifests that
+        # nobody here wrote.
+        [System.IO.FileInfo[]] $script:Crate = @(
+            Get-ChildItem -Path $script:Root -Filter 'Cargo.toml' -Recurse -File |
+                Where-Object { $_.FullName -notmatch '[\/]target[\/]' } |
+                Sort-Object FullName
+        )
+    }
+
+    It 'declares an edition in the manifest' {
+        # The manifest is where the estate says what its crates are. A crate
+        # policy that names no edition cannot be checked against anything.
+        [string]::IsNullOrWhiteSpace($script:Declared) | Should -BeFalse
+    }
+
+    It 'gives every crate the edition the manifest declares' {
+        # On 2026-09-03 the manifest said 2021 and thirty-eight of thirty-nine
+        # crates were 2024. It had been "corrected" to 2021 that same day, on
+        # the grounds that it matched the root Cargo.toml — which it did, and
+        # which was the only crate it matched.
+        #
+        # Open problem 3 was closed twice on that reading. This is what stops
+        # it being closed a third time: the manifest is checked against the
+        # estate, not against one crate.
+        [string[]] $wrong = @()
+
+        foreach ($file in $script:Crate) {
+            [string] $text = Get-Content -LiteralPath $file.FullName -Raw
+
+            if ($text -notmatch '(?m)^edition\s*=\s*"([^"]+)"') {
+                continue
+            }
+
+            if ($Matches[1] -ne $script:Declared) {
+                [string] $where = $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
+
+                $wrong += "$where is $($Matches[1])"
+            }
+        }
+
+        [string] $because = "the manifest declares $($script:Declared):`n$($wrong -join "`n")"
+
+        $wrong.Count | Should -Be 0 -Because $because
+    }
+}
