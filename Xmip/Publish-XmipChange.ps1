@@ -947,6 +947,30 @@ function Test-XmipModule {
             & cargo test 2>&1 | ForEach-Object { Write-Host $_ }
             $passed = $LASTEXITCODE -eq 0
 
+            # rust-style.md says CI runs cargo fmt --check. It does, in a
+            # workflow triggered by hand, which is not the path code lands on.
+            #
+            # On 2026-09-03 twenty-five of thirty-eight crates were unformatted
+            # — 266 diffs — because the move to edition 2024 changed how
+            # rustfmt orders imports and nobody re-ran it. Every one of those
+            # landed green. A rule enforced only where nobody goes is not a
+            # rule, which is the argument powershell-style.md already makes
+            # about reporting and returning success.
+            #
+            # Checked rather than applied: a gate that rewrites the working
+            # tree mid-landing decides for the operator what their commit
+            # contains.
+            if ($passed) {
+                Write-Host '   checking format...' -ForegroundColor DarkGray
+
+                & cargo fmt --check 2>&1 | ForEach-Object { Write-Host $_ }
+                $passed = $LASTEXITCODE -eq 0
+
+                if (-not $passed) {
+                    Write-Host '   FAILED format. Run: cargo fmt' -ForegroundColor Red
+                }
+            }
+
             # Only when the tests passed. A module that fails its tests is
             # already failing, and a second wall of compiler output buries the
             # error the operator has to read.

@@ -65,6 +65,7 @@ breaking.
 
 | Rule | Section | Enforced |
 | --- | --- | --- |
+| Formatting | — | yes, by `Publish-XmipChange` at landing |
 | File over 400 lines before `#[cfg(test)]` | 1, 2 | yes, with a ratchet |
 | Function length | 3 | **warned by clippy, never gated** |
 | A filename repeating its crate | 5 | yes |
