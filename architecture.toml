@@ -816,7 +816,7 @@ dependency = []
   description = "Blazor component library over the Xmip ABI, with two hosts: .NET 11 MAUI on the desktop and .NET 11 Blazor on the web."
   architecturalDomain = "Operations"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "scaffolded"
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
 
