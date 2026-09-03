@@ -21,7 +21,7 @@ Set-StrictMode -Version Latest
 # One version for the whole module. The reader enforces minimumScriptVersion, so
 # the reader owns the number; a copy inside Sync-XmipEstate's body was invisible
 # from here and the check silently had nothing to compare against.
-[version] $script:XmipVersion = [version]::Parse('1.12.0')
+[version] $script:XmipVersion = [version]::Parse('1.13.0')
 
 # The manifest schema this module understands. Major is the compatibility
 # boundary: 2.x is the tree-is-the-name schema, and a 3.0 manifest will mean
