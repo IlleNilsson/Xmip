@@ -3,6 +3,8 @@
 - Status: Accepted, with open questions recorded at the end
 - Date: 2026-08-25
 - Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint)
+- Read by: ADR-0027 clause 4, which makes the execution tree this record builds
+  the one scope tree everything observable is addressed against
 
 ## In brief
 

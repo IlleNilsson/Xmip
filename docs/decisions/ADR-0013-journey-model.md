@@ -169,6 +169,13 @@ causing event. A Journey that publishes twice leaves a successor able to say
 *which Journey* started it and not *which publication within it*. That is the
 identifier question in section 23 conflict 5 and it stays open.
 
+*Half closed by ADR-0026 on 2026-09-03.* A caused Journey now also carries a
+`cause` — the Subscription that matched and the Xmip Process it started — so a
+successor names the event as well as the Journey. What is still open is telling
+two identical publications within one Journey apart. The same record gives every
+Journey a `depth` and a ceiling, because this clause describes the chain and
+nothing bounded it.
+
 ### 4c. Xmip does not deduplicate. A Process decides
 
 **A Stream may be published into Xmip twice, and Xmip accepts it twice.** Two

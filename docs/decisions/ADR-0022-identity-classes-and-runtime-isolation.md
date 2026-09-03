@@ -1,6 +1,10 @@
 # ADR-0022: Identity classes and runtime isolation
 
 - Status: Accepted
+- Open against it: clause 3 is unsettled for the operator surfaces. ADR-0014's
+  amendment made a surface hold runtime state in-process, so an operator session
+  is a host process with an identity context; ADR-0027 adds a second reason to
+  settle it and settles nothing. Open problem 20.
 - Date: 2026-08-26
 - Related: ADR-0019 (identity, Parties and direction),
   ADR-0009 (security roles versus Actor capabilities), ADR-0014 (operator surfaces)
