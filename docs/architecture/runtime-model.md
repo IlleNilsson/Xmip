@@ -491,12 +491,18 @@ The chain is what makes a Journey explainable after the fact. Without it, a
 Message that arrived somewhere unexpected has no answer to "how did it get
 here" beyond a list of things that happened near each other in time.
 
-**Nothing currently bounds the chain**, and it is worth naming that plainly: a
-Process that publishes a Message which matches a Subscription that starts the
-same Process is a loop, and the runtime has no depth limit, no cycle detection
-and no budget. This is not a hypothetical failure — it is the classic way an
-integration platform takes itself down, and it is recorded as an open problem
-rather than left implied.
+**The chain is bounded by a ceiling on its depth**, and it is worth saying
+what that does and does not catch. A Process that publishes a Message which
+matches a Subscription that starts the same Process is a loop, and it is the
+classic way an integration platform takes itself down. Every Journey carries
+a depth, a node configures a ceiling, and the constructor that makes a caused
+Journey refuses the link that would pass it — naming the Subscription and the
+Process rather than a number. ADR-0026.
+
+**This is a depth limit and not cycle detection.** Near the ceiling a loop and
+a long legitimate chain look identical. Cycle detection over artifact
+identities is the better answer, and an execution budget per originating
+Message is what an operator ultimately wants; both stay open problems.
 
 ### Promotion has no counterpart for Transformation
 

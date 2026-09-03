@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-five decisions, read as one document.
+Twenty-six decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -110,6 +110,32 @@ claim time. Two nodes on a lockless protocol is then a placement question,
 answered by running one of them.
 
 → [A claim at the endpoint, in full](ADR-0024-resource-claim-replaces-exclusiveness.md)
+
+### Nothing bounded a publication chain, and now something does
+
+A Process may publish back into Xmip and a Subscription may start a Process, so
+a Process that publishes a Message matching a Subscription that starts the same
+Process is a loop. Neither half is wrong on its own, which is why nothing
+catches it.
+
+Every Journey carries a **depth**: zero when it arrived from outside Xmip, one
+more than its predecessor when a Publication caused it. A **ceiling** is
+configured per node, and `Journey::following` — **the only way a chain grows** —
+refuses the link that would pass it. A runtime cannot get round the bound by
+taking another path, because there is no other path.
+
+The refusal names the **Subscription and the Xmip Process** that would have
+formed the next link, because an operator at three in the morning needs the pair
+that made the loop and not a number. It is a value, not a panic: declining to
+start the next Journey does not lose the Message, and what happens to it is a
+disposition like any other.
+
+This is a depth limit and **not cycle detection**. It cannot tell a loop from a
+long legitimate chain. Cycle detection over artifact identities is the better
+answer and it needs the chain persisted and cheap to walk, which is a
+`xmip-core-persist` question nobody has answered.
+
+→ [Bounding a publication chain, in full](ADR-0026-bounding-a-publication-chain.md)
 
 ---
 
@@ -366,6 +392,7 @@ You have a word. This gives you the decision that governs it.
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
+| Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
@@ -373,6 +400,7 @@ You have a word. This gives you the decision that governs it.
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
+| Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
@@ -431,3 +459,4 @@ is nowhere else.
 | [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later | |
 | [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint | supersedes ADR-0017 |
 | [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | refines ADR-0018 phase 6 |
+| [0026](ADR-0026-bounding-a-publication-chain.md) | Bounding a publication chain | |
