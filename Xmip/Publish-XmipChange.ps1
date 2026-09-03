@@ -250,15 +250,14 @@ function Publish-XmipChange {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    if ($Pin) {
-        Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
-
-        return
-    }
-
     # Not $all. PowerShell variable names are case-insensitive, so that name
     # overwrites the -All switch parameter and the next call hands an array to
     # a [switch].
+    #
+    # Read before the -Pin branch, not after. -Pin is the repair path and it
+    # pins whatever the gitlinks say, so it can publish an unpushed module
+    # exactly as the landing path could. Asking what the estate looks like is
+    # the first thing either path needs.
     $estate = @(Get-XmipStatus -RepositoryRoot $RepositoryRoot -Short)
 
     # The platform repository is landed by the pin step rather than as a
@@ -267,12 +266,30 @@ function Publish-XmipChange {
     $status = @($estate | Where-Object { $_.Module -ne '.' -and $_.Changed -gt 0 })
 
     # Ahead means committed and not pushed — from an interrupted run, usually.
-    # Landing continues; this only says so, because it is the difference
-    # between "nothing happened" and "the last run stopped halfway".
-    $unpushed = @($estate | Where-Object { $_.Changed -eq 0 -and $_.AheadBy -gt 0 })
+    #
+    # This used to warn and carry on, and carrying on is what made it a defect:
+    # the pin step stages every moved gitlink whether or not this run landed the
+    # module, so the estate was pinned to commits origin had never seen. Pushed
+    # first, before anything can pin them. See Publish-XmipUnpushed.
+    # Modules only. The platform repository being ahead is Publish-XmipPin's
+    # own case and it has a branch for it — pushing the superproject here would
+    # take that decision away from the step whose commit it is.
+    $unpushed = @(
+        $estate | Where-Object { $_.Module -ne '.' -and $_.Changed -eq 0 -and $_.AheadBy -gt 0 }
+    )
 
     foreach ($module in $unpushed) {
         Write-Warning "$($module.Module) is $($module.AheadBy) commit(s) ahead of origin and has nothing uncommitted."
+    }
+
+    if ($unpushed.Count -gt 0) {
+        Publish-XmipUnpushed -RepositoryRoot $RepositoryRoot -Module @($unpushed.Module)
+    }
+
+    if ($Pin) {
+        Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
+
+        return
     }
 
     $stale = @($estate | Where-Object { $_.BehindBy -gt 0 })
@@ -782,6 +799,69 @@ function Test-XmipModule {
         if (-not $passed) {
             $name
         }
+    }
+}
+
+function Publish-XmipUnpushed {
+    <#
+        .SYNOPSIS
+            Pushes modules that are committed and not on origin.
+
+        .DESCRIPTION
+            A module can be committed without being pushed — an interrupted
+            run, or an operator who committed by hand. Nothing is uncommitted,
+            so the landing loop passes it by, and then `Publish-XmipPin` stages
+            every moved gitlink with `git add -A` and pins it anyway.
+
+            **That publishes a superproject commit naming a module commit origin
+            has never seen.** A fresh clone cannot check the estate out at all:
+            `git submodule update` asks origin for a commit that is not there.
+
+            It happened on 2026-09-03. Nine modules had their tracked build
+            output removed in one pass, eight of them had no other change, and
+            the run warned about all eight and pinned all eight. The warning was
+            correct and nothing acted on it, which `powershell-style.md` names
+            exactly: a rule that reports and returns success is not a rule.
+
+            Pushing rather than refusing, because the commits already exist and
+            completing them is the same thing the tool does for every other
+            module. It does not test them: this pushes what an operator already
+            committed, and testing is the landing path's business for the
+            commits it makes itself.
+
+        .PARAMETER RepositoryRoot
+            The Xmip working tree.
+
+        .PARAMETER Module
+            The module paths to push, relative to the root.
+    #>
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [string[]] $Module
+    )
+
+    foreach ($name in $Module) {
+        [string] $path = Join-Path -Path $RepositoryRoot -ChildPath $name
+
+        Write-Host "   pushing $name, committed and not on origin..." -ForegroundColor DarkGray
+
+        if (-not $PSCmdlet.ShouldProcess($name, 'push')) {
+            continue
+        }
+
+        & git -C $path push origin HEAD:main --quiet
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Pushing $name failed. The estate must not pin a commit origin does not have."
+        }
+
+        Write-Output $name
     }
 }
 

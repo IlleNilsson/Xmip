@@ -441,3 +441,76 @@ Describe 'Publish-XmipChange' {
             Should -Contain 'm'
     }
 }
+
+Describe 'A module the estate is about to pin is on origin first' {
+    BeforeAll {
+        [string] $script:Source = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1'
+        )
+
+        [System.Management.Automation.Language.Ast] $script:Ast =
+            [System.Management.Automation.Language.Parser]::ParseInput(
+                $script:Source, [ref] $null, [ref] $null
+            )
+    }
+
+    It 'acts on the unpushed set rather than only warning about it' {
+        # 2026-09-03. Eight modules were committed with nothing uncommitted,
+        # the run warned about all eight, and Publish-XmipPin staged every
+        # moved gitlink with `git add -A` and pinned them. The superproject
+        # went to origin naming eight commits origin did not have, so a fresh
+        # clone could not check the estate out.
+        #
+        # The warning was right and nothing acted on it. powershell-style.md
+        # section 5: a rule that reports and returns success is not a rule.
+        $script:Source | Should -Match 'Publish-XmipUnpushed -RepositoryRoot'
+    }
+
+    It 'pushes them before the first call that can pin' {
+        # Order is the whole fix. Pushing after a pin leaves the same broken
+        # commit on origin for as long as it takes the push to finish, and
+        # leaves it forever if the push fails.
+        [int] $push = $script:Source.IndexOf('Publish-XmipUnpushed -RepositoryRoot')
+        [int] $pin = $script:Source.IndexOf('Publish-XmipPin -RepositoryRoot')
+
+        $push | Should -BeGreaterThan 0 -Because 'the unpushed set must be pushed somewhere'
+        $pin | Should -BeGreaterThan 0 -Because 'the pin must still happen'
+        $push | Should -BeLessThan $pin -Because 'pushing after pinning fixes nothing'
+    }
+
+    It 'refuses to continue when such a push fails' {
+        # Throwing, not warning. A failed push here is the one condition that
+        # produces the unclonable estate this whole Describe is about.
+        [System.Management.Automation.Language.FunctionDefinitionAst] $function =
+            $script:Ast.Find({
+                param($node)
+
+                $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+                $node.Name -eq 'Publish-XmipUnpushed'
+            }, $true)
+
+        $function | Should -Not -BeNullOrEmpty -Because 'the function has to exist'
+
+        [bool] $throws = $null -ne $function.Find({
+            param($node)
+
+            $node -is [System.Management.Automation.Language.ThrowStatementAst]
+        }, $true)
+
+        $throws | Should -BeTrue
+    }
+
+    It 'completes a commit rather than making one' {
+        # It completes a commit the operator already made. Making one here
+        # would land untested work under a message nobody wrote.
+        [System.Management.Automation.Language.FunctionDefinitionAst] $function =
+            $script:Ast.Find({
+                param($node)
+
+                $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+                $node.Name -eq 'Publish-XmipUnpushed'
+            }, $true)
+
+        $function.Extent.Text | Should -Not -Match 'git -C \$path commit'
+    }
+}
