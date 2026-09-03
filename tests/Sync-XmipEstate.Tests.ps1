@@ -60,6 +60,15 @@ Describe 'Sync-XmipEstate' {
         $script | Should -Match 'SupportsShouldProcess'
     }
 
+    It 'can create one named repository instead of the whole estate' {
+        # -Create without -Only makes every missing repository the manifest
+        # declares - 200+ with the technology children. Added 2026-08-31 so
+        # xmip-core-transport-file could be created without its 200 siblings.
+        # -Only, not -Name: the loop-variable gate refused -Name on sight.
+        (Get-Command -Name Sync-XmipEstate).Parameters.Keys |
+            Should -Contain 'Only' -Because 'creating one repository must not require creating all'
+    }
+
     It 'never issues a DELETE, however the estate drifts' {
         $script = Get-Content (Join-Path $script:ModuleRoot 'Sync-XmipEstate.ps1') -Raw
         # The call site, not the ValidateSet. Invoke-GitHubApi declares DELETE as

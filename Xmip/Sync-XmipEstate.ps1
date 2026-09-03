@@ -591,6 +591,15 @@ function Sync-XmipEstate {
         [switch] $Cargo,
         [switch] $IncludeReserved,
         [switch] $Report,
+        # Restrict -Create to these repository names. Without it, -Create makes
+        # every repository the manifest declares and GitHub lacks - which is
+        # 200+ once the technology children are counted, and nobody has ever
+        # wanted them all at once. Names must be declared in the manifest;
+        # anything else is refused, not guessed at. Not -Name: three loops in
+        # this function iterate $name, and a loop variable is never a
+        # parameter - the gate that enforces it caught this parameter's first
+        # spelling.
+        [string[]] $Only = @(),
         [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.toml'),
         [string] $WorkingDirectory = (Join-Path (Get-XmipRepositoryRoot) '.ai-work'),
         [string] $ReportPath,
@@ -990,7 +999,21 @@ function Sync-XmipEstate {
             $desired[[string](Get-PropertyValue $repository 'name')] = $repository
         }
 
+        if ($Only.Count -gt 0) {
+            foreach ($wanted in $Only) {
+                if (-not $desired.ContainsKey($wanted)) {
+                    throw "-Only '$wanted' is not declared in the manifest; " +
+                        'nothing is created by guess.'
+                }
+            }
+        }
+
         foreach ($name in @($Report.missing)) {
+            if ($Only.Count -gt 0 -and $Only -notcontains $name) {
+                $Report.operations.skipped++
+                continue
+            }
+
             $repository = $desired[$name]
             if ($null -eq $repository) { throw "Missing repository definition for '$name'." }
 
