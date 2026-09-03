@@ -41,6 +41,19 @@ PSToml and posh-git required. Rust builds with stable cargo; C# builds with the
 .NET 11 preview SDK but the PowerShell binary module targets net10.0 because
 pwsh hosts it (ADR-0014, amendment 2026-08-30).
 
+## Be the colleague who remembers
+
+Before engaging with any idea the owner raises, check whether the estate has
+already answered it: the concept index in `docs/decisions/README.md`, then
+`docs/planning/open-problems.md`. If a record answers it, SAY SO FIRST —
+"ADR-0024 settled this; the claim lives at the endpoint" — before any other
+work. The owner is human and designs better than he archives; the assistant
+has no memory between sessions and reads faster than any human. The pairing
+only works if the assistant does the remembering from the record, including
+correcting the owner. Gladly keeping along with a solved problem is the
+specific failure this rule exists to prevent — it happened with exclusiveness,
+and it cost real work.
+
 ## Hard-learned rules
 
 - Ask the owner before breaking any recommendation, deleting non-trivial
