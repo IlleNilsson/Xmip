@@ -773,7 +773,7 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "planned"
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-resilience"]
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-observe", "xmip-core-resilience"]
 
   [xmip.core.persist]
   description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication."
