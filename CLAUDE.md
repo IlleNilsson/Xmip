@@ -59,8 +59,8 @@ pwsh hosts it (ADR-0014, amendment 2026-08-30).
 
 ## The assistant's working area
 
-`AI-Interaction/` at the repository root, git-ignored. Every log, run script
+`.ai-interaction/` at the repository root, git-ignored. Every log, run script
 and scratch file an assistant produces goes there and nowhere else — logs as
-`AI-Interaction/land.log`, runnable sequences as `AI-Interaction/*.ps1`. The
+`.ai-interaction/land.log`, runnable sequences as `.ai-interaction/*.ps1`. The
 assistant's reach is this repository; nothing above `D:\Repos\Xmip` is its
 business.
