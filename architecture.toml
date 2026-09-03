@@ -43,7 +43,7 @@ Platform = "Platform-wide runtime services."
 
 [crate]
 primaryLanguage = "rust"
-edition = "2021"
+edition = "2024"
 primaryCrateMatchesRepository = true
 license = "AGPL-3.0-or-later"
 automaticVerification = false

@@ -13,7 +13,7 @@ resolver = "2"
 # to the repositories that own them on 2026-08-26. What is left is the assembly.
 name = "xmip"
 version = "0.1.1"
-edition = "2021"
+edition = "2024"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/IlleNilsson/Xmip"
 description = "The Xmip platform, assembled from its modules."
