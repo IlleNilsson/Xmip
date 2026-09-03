@@ -4,6 +4,22 @@
 
 Accepted.
 
+## In brief
+
+- Theme: The shape of the estate
+- Subject: One naming rule for the whole namespace
+- Name: Module and repository naming
+- Order: 1
+- Concepts: Handler, a runtime role and not a name; Naming, modules and repositories
+
+```text
+xmip-<provider>-<module>-<standard>
+```
+
+Shortest singular form, a verb where the module does something, the recognised
+standard name for a technology. In `architecture.toml` the TOML tree path **is**
+the name — dots become hyphens and nothing else happens.
+
 ## Context
 
 Three naming rules were in force at once and they disagreed.

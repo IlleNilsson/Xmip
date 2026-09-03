@@ -3,6 +3,19 @@
 ## Status
 Accepted.
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: Existing entities gained Actor semantics
+- Name: Entities as Actors
+- Order: 4
+- Concepts: Actor; Receive Location, Receive Port
+
+Xmip's entities became Actors when they communicate, publish, subscribe, own
+work, report status or transfer responsibility. Nothing was renamed or removed
+to make this true. A Receive Location is an Actor that receives external input
+and reports to its parent Receive Port.
+
 ## Context
 ADR-0007 introduced Actors and Communication Domains as the recursive communication model for Xmip.
 

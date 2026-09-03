@@ -5,6 +5,24 @@
 - Related: ADR-0019 (identity, Parties and direction),
   ADR-0009 (security roles versus Actor capabilities), ADR-0014 (operator surfaces)
 
+## In brief
+
+- Theme: Identity and security
+- Subject: Identity classes, and who may run beside whom
+- Name: Identity classes and runtime isolation
+- Order: 3
+- Concepts: Anonymous, federated, highAssurance, sharedSecret; Delegation, constrained and unconstrained; Identity context, co-residency; Kerberos; Regulated, enterprise, standard profiles
+
+Four classes — `highAssurance`, `federated`, `sharedSecret`, `anonymous` —
+derived from *how an identity is proven*, never configured. **Different identity
+contexts must not share a host process.** Constrained and unconstrained Kerberos
+delegation are distinct contexts even for the same principal. The `regulated`
+profile isolates `highAssurance` at the node. A violation blocks startup.
+
+*Identity, Parties and the two directions* settles which identity wins. This
+settles which identities may co-reside, which is a different question with a
+worse failure mode.
+
 ## Context
 
 ADR-0019 answered *which identity wins* when transport and message disagree. It

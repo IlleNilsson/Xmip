@@ -5,6 +5,28 @@
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary)
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: A claim at the endpoint, not a lease inside Xmip
+- Name: A claim at the endpoint
+- Order: 7
+- Concepts: Claim, claimable artefact; Exclusiveness, leases, renewal (retired)
+- Note: supersedes ADR-0017
+
+`xmip-core-exclusiveness` is retired — the module, the repository, the four
+scopes, the lease and its renewal. `ResourceClaim` in `xmip-core-transport`
+replaces it, and it answers a question the lease could not: **a lease knew what
+Xmip was doing; a claim knows what everyone is doing.** A file another process
+holds open includes a producer still writing it, and no amount of Xmip-internal
+bookkeeping sees that.
+
+A Receive Location claims the individual artefact, never the location it polls.
+Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
+the type, and what those need is a stability check rather than a rename at
+claim time. Two nodes on a lockless protocol is then a placement question,
+answered by running one of them.
+
 ## Context
 
 ADR-0017 answered "how does Xmip stop two nodes taking the same file" by

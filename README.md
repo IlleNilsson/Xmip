@@ -122,6 +122,8 @@ and needs no ceremony to reach.
 | `Get-XmipManifest` | Reads `architecture.toml` and flattens the estate. |
 | `Test-XmipManifest` | Validates naming, crates, maturity and dependencies. |
 | `Get-XmipRepositoryRoot` | Finds the repository by walking up to `architecture.toml`. |
+| `Get-XmipDecisionRecord` | Reads `docs/decisions/` and returns what each record declares about itself. |
+| `New-XmipDecisionIndex` | Generates `docs/decisions/README.md` from the records. `-Save` writes it. |
 
 ### Reconcile the estate
 

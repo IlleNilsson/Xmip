@@ -3,6 +3,18 @@
 ## Status
 Accepted.
 
+## In brief
+
+- Theme: Identity and security
+- Subject: Security roles are not Actor capabilities
+- Name: Security roles versus Actor capabilities
+- Order: 4
+- Concepts: Security roles
+
+Two separate concepts that look alike and are constantly conflated. A security
+role is what a human or Service Identity is permitted to do. An Actor capability
+is what a runtime entity is able to do. Neither implies the other.
+
 ## Decision
 
 Xmip security roles and actor capabilities are separate concepts.

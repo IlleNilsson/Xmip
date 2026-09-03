@@ -4,6 +4,24 @@
 - Date: 2026-08-29
 - Related: ADR-0018 (the Xmip Service and the Host Service), ADR-0012 (the module boundary), ADR-0022 (identity contexts and host processes)
 
+## In brief
+
+- Theme: Modules and the boundary
+- Subject: When a Module loads, and what decides it
+- Name: When a Module loads
+- Order: 3
+- Concepts: Delay-load, eager and delayed Modules
+- Note: refines ADR-0018 phase 6
+
+Load timing is configuration, per Module. The default comes from
+`architecturalDomain`, which every repository already declares in
+`architecture.toml`: Foundation, Capabilities and Platform load **eager**
+because they are on the path a Message travels, and Operations load **delayed**
+because they observe the path rather than carry it. Nothing new to declare.
+
+**Load timing is not placement.** ADR-0022 decides which host process a Module
+is loaded into; this decides when. Neither constrains the other.
+
 ## Context
 
 ADR-0018 clause 4 gives startup nine phases and puts `load-modules` at phase 6,

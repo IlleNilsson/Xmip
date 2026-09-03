@@ -3,6 +3,19 @@
 ## Status
 Accepted.
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: Everything that communicates is an Actor
+- Name: The Communication Domain model
+- Order: 3
+- Concepts: Actor; Communication Domain
+
+A recursive Communication Domain model. An Actor is any entity that can
+communicate; a Domain is an Actor that contains other Actors; every Domain
+follows the same communication rules. The recursion is the point — a Node, a
+Receive Port and a Receive Location obey one set of rules, not three.
+
 ## Context
 Xmip is not fundamentally an integration engine. Its primary responsibility is to move authenticated, authorized, immutable information between communicating actors. The same communication pattern appears recursively across organizations, companies, fleets, ships, departments, applications, systems, devices and sensors.
 

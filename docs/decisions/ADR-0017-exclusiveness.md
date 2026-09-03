@@ -19,6 +19,24 @@
 > node, leaving `ExclusiveScope::Cluster` declarable and unservable — open
 > problem 18, now dissolved rather than answered.
 
+## In brief
+
+- Theme: What Xmip is at runtime
+- Subject: Exclusiveness, which is not locking
+- Name: Exclusiveness
+- Order: 6
+
+A lock protects a critical section and callers block on it. Runtime
+exclusiveness decides *which running instance owns a unit of work* — nobody
+blocks, a node that doesn't get it goes and finds other work, and it is held by
+renewal, so a runtime that stops being live stops being the owner.
+
+Receive Locations, Processes and Send Locations are treated alike. **The
+transport declares whether it is exclusive by default, and the default follows
+the resource:** a discrete claimable artefact is, a query or queue or connection
+is not. Leases live in `xmip-core-persist`, which Xmip already requires — no
+Consul, etcd, Redis or ZooKeeper.
+
 ## Context
 
 Exclusiveness is an internal Xmip concern. A Receive Location polling a

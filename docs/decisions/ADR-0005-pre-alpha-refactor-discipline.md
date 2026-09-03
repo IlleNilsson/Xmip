@@ -4,6 +4,20 @@
 
 Accepted.
 
+## In brief
+
+- Theme: How the work is done
+- Subject: Pre-alpha refactor discipline
+- Name: Pre-alpha refactor discipline
+- Order: 2
+- Concepts: Refactoring freely, pre-alpha
+
+Code may be moved, split, renamed and reshaped aggressively where that improves
+correctness, modularity or alignment with the specification. **When the
+implementation conflicts with the specification, the implementation is wrong.**
+And where the assistant is unsure, disagrees, drifts from the specification or
+suspects it is hallucinating, it must say so before continuing.
+
 ## Decision
 
 Xmip is in pre-alpha. Code may be moved, split, renamed, and reshaped aggressively when that improves correctness, modularity, loadability, or alignment with the original specification.

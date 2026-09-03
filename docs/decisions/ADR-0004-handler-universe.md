@@ -14,6 +14,21 @@ The previous header read "Superseded by ADR-0005 when ADR-0005 is accepted",
 which was conditional, never resolved, and named an ADR about refactor
 discipline rather than the one that actually replaced this.
 
+## In brief
+
+- Theme: The shape of the estate
+- Subject: The handler universe
+- Name: The handler universe
+- Order: 4
+
+Organised handler support by technology, protocol and industry space, across
+integration, business, cloud, healthcare, industrial, energy, finance,
+logistics, government, database, file, network, messaging and device.
+
+**Superseded by *Contract, transport and representation stay separate*.** Kept
+because its reasoning produced the technology lists `architecture.toml` now
+carries. Nothing in it is current — do not implement from it.
+
 ## Decision
 
 Xmip shall organize handler support by technology, protocol, and industry space.

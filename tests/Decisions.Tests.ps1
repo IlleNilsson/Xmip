@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    docs/decisions/README.md reads the twenty-two decision records as one
+    docs/decisions/README.md reads every decision record as one
     document, grouped by subject, because nobody remembers what a number means.
 
     An index nobody maintains is worse than no index: it is believed. These
@@ -309,17 +309,78 @@ Describe 'The index agrees with the records about status' {
             [bool] $recordSaysSuperseded = $status -eq 'Superseded'
             [bool] $indexSaysSuperseded = $row -match 'superseded'
 
-            # ADR-0001 is the deliberate exception: it still reads Accepted
-            # while ADR-0011 has replaced it in practice, and the index flags
-            # that discrepancy rather than hiding it. Remove this skip when the
-            # status in the record is corrected.
-            if ($number -eq '0001') {
-                continue
-            }
-
             [string] $because = "ADR-$number says '$status'; the index row says: $row"
 
             $indexSaysSuperseded | Should -Be $recordSaysSuperseded -Because $because
+        }
+    }
+}
+
+Describe 'The index is generated, not written' {
+    BeforeAll {
+        Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
+
+        [PSCustomObject[]] $script:Declared = @(
+            Get-XmipDecisionRecord -DecisionRoot $script:DecisionRoot
+        )
+
+        [string[]] $script:Theme = @(
+            'What Xmip is at runtime'
+            'Identity and security'
+            'Modules and the boundary'
+            'The shape of the estate'
+            'Operating Xmip'
+            'How the work is done'
+        )
+    }
+
+    It 'matches what New-XmipDecisionIndex produces' {
+        # The whole point of the generator. A hand edit to README.md fails
+        # here, which is the only way to stop the copies drifting again —
+        # the previous index carried a section admitting they had.
+        [string] $generated = New-XmipDecisionIndex -DecisionRoot $script:DecisionRoot
+        [string] $committed = Get-Content -LiteralPath $script:IndexPath -Raw
+
+        [string] $because = 'run: New-XmipDecisionIndex -Save'
+
+        $generated | Should -Be $committed -Because $because
+    }
+
+    It 'reads a complete In brief from every record' {
+        foreach ($entry in $script:Declared) {
+            [string] $because = "ADR-$($entry.Number) is missing part of its In brief"
+
+            [string]::IsNullOrWhiteSpace($entry.Theme) | Should -BeFalse -Because $because
+            [string]::IsNullOrWhiteSpace($entry.Subject) | Should -BeFalse -Because $because
+            [string]::IsNullOrWhiteSpace($entry.Name) | Should -BeFalse -Because $because
+            $entry.Order | Should -BeGreaterThan 0 -Because $because
+            [string]::IsNullOrWhiteSpace($entry.Prose) | Should -BeFalse -Because $because
+        }
+    }
+
+    It 'places every record in one of the six themes' {
+        # A theme the generator does not know is a record that renders
+        # nowhere, and a silently absent entry is what this file exists to
+        # prevent.
+        foreach ($entry in $script:Declared) {
+            [string] $because = "ADR-$($entry.Number) declares theme '$($entry.Theme)'"
+
+            $script:Theme | Should -Contain $entry.Theme -Because $because
+        }
+    }
+
+    It 'gives each record its own place in its theme' {
+        foreach ($name in $script:Theme) {
+            [PSCustomObject[]] $inTheme = @(
+                $script:Declared | Where-Object { $_.Theme -eq $name }
+            )
+
+            [int[]] $order = @($inTheme | ForEach-Object { $_.Order })
+            [int] $distinct = @($order | Sort-Object -Unique).Count
+
+            [string] $because = "'$name' has $($order.Count) records at $distinct positions"
+
+            $distinct | Should -Be $order.Count -Because $because
         }
     }
 }

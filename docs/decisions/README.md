@@ -1,6 +1,11 @@
 # What Xmip has decided
 
-Twenty-three decisions, read as one document.
+Twenty-five decisions, read as one document.
+
+**Generated from the records by `New-XmipDecisionIndex`.** Every summary
+below is the `## In brief` section of the record it links to, so the two
+cannot disagree. Edit a record and regenerate; an edit made here is lost.
+`tests/Decisions.Tests.ps1` regenerates and fails when this file differs.
 
 Every decision has a number. The number is an identifier for machines, for
 citations in code comments, and for filenames — it is not how anyone
@@ -8,17 +13,17 @@ understands anything, so it does not appear in this document until the last
 section, which exists only to turn a citation back into a subject.
 
 Read this front to back to know what Xmip has decided. Use the
-[concept index](#concept-index) when you have a word and want the decision that
-governs it.
+[concept index](#concept-index) when you have a word and want the decision
+that governs it.
 
-Each entry states the decision, not the reasoning behind it — the reasoning is
-in the record, one link away.
+Each entry states the decision, not the reasoning behind it — the reasoning
+is in the record, one link away.
 
-**Where the rest lives.** These are decisions. The six architecture documents in
-[`../architecture/`](../architecture) describe the system as it currently
-stands, and [`../terminology.md`](../terminology.md) defines every Xmip word. A
-decision says *what was chosen and why*; an architecture document says *what is
-true now*.
+**Where the rest lives.** These are decisions. The five architecture
+documents in [`../architecture/`](../architecture) describe the system as it
+currently stands, and [`../terminology.md`](../terminology.md) defines every
+Xmip word. A decision says *what was chosen and why*; an architecture
+document says *what is true now*.
 
 ---
 
@@ -88,6 +93,23 @@ is not. Leases live in `xmip-core-persist`, which Xmip already requires — no
 Consul, etcd, Redis or ZooKeeper.
 
 → [Exclusiveness, in full](ADR-0017-exclusiveness.md) — **superseded by [ADR-0024](ADR-0024-resource-claim-replaces-exclusiveness.md)**
+
+### A claim at the endpoint, not a lease inside Xmip
+
+`xmip-core-exclusiveness` is retired — the module, the repository, the four
+scopes, the lease and its renewal. `ResourceClaim` in `xmip-core-transport`
+replaces it, and it answers a question the lease could not: **a lease knew what
+Xmip was doing; a claim knows what everyone is doing.** A file another process
+holds open includes a producer still writing it, and no amount of Xmip-internal
+bookkeeping sees that.
+
+A Receive Location claims the individual artefact, never the location it polls.
+Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
+the type, and what those need is a stability check rather than a rename at
+claim time. Two nodes on a lockless protocol is then a placement question,
+answered by running one of them.
+
+→ [A claim at the endpoint, in full](ADR-0024-resource-claim-replaces-exclusiveness.md)
 
 ---
 
@@ -160,9 +182,23 @@ declares whether it supports receive, send or both. Content representation is
 its own family. **Handler is a runtime module role and never a repository-name
 prefix.**
 
-→ [Contract and transport boundaries, in full](ADR-0010-contract-transport-repository-boundaries.md)
 — written before the `xmip-core-*` rename, so read the names as
 `xmip-core-receive` and so on.
+
+→ [Contract and transport boundaries, in full](ADR-0010-contract-transport-repository-boundaries.md)
+
+### When a Module loads, and what decides it
+
+Load timing is configuration, per Module. The default comes from
+`architecturalDomain`, which every repository already declares in
+`architecture.toml`: Foundation, Capabilities and Platform load **eager**
+because they are on the path a Message travels, and Operations load **delayed**
+because they observe the path rather than carry it. Nothing new to declare.
+
+**Load timing is not placement.** ADR-0022 decides which host process a Module
+is loaded into; this decides when. Neither constrains the other.
+
+→ [When a Module loads, in full](ADR-0025-when-a-module-loads.md)
 
 ---
 
@@ -193,11 +229,12 @@ commits, and reconciliation never uses `git submodule update --remote`.
 Names are derived from rules rather than chosen. The original scheme was
 `xmip-handler-<technology-or-family>`.
 
-⚠ **Replaced in practice by *One naming rule for the whole namespace***, which
-retired `handler` as a name segment — but this record still reads `Accepted`.
-The status is stale and should be corrected.
+**Superseded by *One naming rule for the whole namespace***, which retired
+`handler` as a name segment. Kept because the rule it states — a name is
+derived, never chosen — survived the scheme that expressed it, and ADR-0011
+is that same rule with the segment removed.
 
-→ [The original naming rules, in full](ADR-0001-repository-naming-rules.md)
+→ [The original naming rules, in full](ADR-0001-repository-naming-rules.md) — **superseded by [ADR-0011](ADR-0011-module-naming.md)**
 
 ### The handler universe
 
@@ -209,7 +246,7 @@ logistics, government, database, file, network, messaging and device.
 because its reasoning produced the technology lists `architecture.toml` now
 carries. Nothing in it is current — do not implement from it.
 
-→ [The handler universe, in full](ADR-0004-handler-universe.md)
+→ [The handler universe, in full](ADR-0004-handler-universe.md) — **superseded by [ADR-0010](ADR-0010-contract-transport-repository-boundaries.md)**
 
 ---
 
@@ -315,13 +352,12 @@ You have a word. This gives you the decision that governs it.
 | Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
-| Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
+| Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
+| Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
-| Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
-| Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
@@ -329,16 +365,17 @@ You have a word. This gives you the decision that governs it.
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
-| Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
+| Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
+| Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
-| Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -349,13 +386,13 @@ You have a word. This gives you the decision that governs it.
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 
-Concepts with **no decision recorded yet**, and where they live instead: Event
-and Schedule
-([`runtime-model.md`](../architecture/runtime-model.md) section 17), the Xmip URI
-([`observability-model.md`](../architecture/observability-model.md) section 7),
-delivery semantics
-([`runtime-model.md`](../architecture/runtime-model.md) section 15), and the node
-configuration format
+Concepts with **no decision recorded yet**, and where they live instead:
+Event and Schedule
+([`runtime-model.md`](../architecture/runtime-model.md) section 17), the Xmip
+URI ([`observability-model.md`](../architecture/observability-model.md)
+section 7), delivery semantics
+([`runtime-model.md`](../architecture/runtime-model.md) section 15), and the
+node configuration format
 ([`open-problems.md`](../planning/open-problems.md) problem 14).
 
 ---
@@ -364,13 +401,13 @@ configuration format
 
 Code comments, commit messages and the records themselves cite each other by
 number. This turns one back into a subject. It is the only place in this
-document where a number is the thing you look at, and it is here so that it is
-nowhere else.
+document where a number is the thing you look at, and it is here so that it
+is nowhere else.
 
 | | Subject | |
 | --- | --- | --- |
-| [0001](ADR-0001-repository-naming-rules.md) | Repository naming, first attempt | ⚠ replaced in practice by 0011 |
-| [0002](ADR-0002-saved-state-and-way-forward.md) | Memory lives in the repository | |
+| [0001](ADR-0001-repository-naming-rules.md) | The original naming rules | superseded by 0011 |
+| [0002](ADR-0002-saved-state-and-way-forward.md) | Saved state and way forward | |
 | [0003](ADR-0003-runtime-flow.md) | Runtime flow | |
 | [0004](ADR-0004-handler-universe.md) | The handler universe | superseded by 0010 |
 | [0005](ADR-0005-pre-alpha-refactor-discipline.md) | Pre-alpha refactor discipline | |
@@ -381,46 +418,16 @@ nowhere else.
 | [0010](ADR-0010-contract-transport-repository-boundaries.md) | Contract and transport boundaries | |
 | [0011](ADR-0011-module-naming.md) | Module and repository naming | |
 | [0012](ADR-0012-module-boundary.md) | The module boundary | |
-| [0013](ADR-0013-journey-model.md) | Message disposition and the Journey model | **Proposed** |
-| [0014](ADR-0014-operator-surfaces.md) | The operator surfaces and their language | |
+| [0013](ADR-0013-journey-model.md) | The Journey model | **Proposed** |
+| [0014](ADR-0014-operator-surfaces.md) | The operator surfaces | |
 | [0015](ADR-0015-packaging.md) | Packaging and distribution | |
 | [0016](ADR-0016-submodule-composition.md) | Submodule composition | |
-| [0017](ADR-0017-exclusiveness.md) | Exclusiveness | Superseded by 0024 |
+| [0017](ADR-0017-exclusiveness.md) | Exclusiveness | superseded by 0024 |
 | [0018](ADR-0018-service-and-host.md) | The Service and the Host Services | |
-| [0019](ADR-0019-identity-parties-and-direction.md) | Identity, Parties and the two directions | |
-| [0020](ADR-0020-documentation-structure.md) | One document per subject | |
+| [0019](ADR-0019-identity-parties-and-direction.md) | Identity, Parties and direction | |
+| [0020](ADR-0020-documentation-structure.md) | The documentation structure | |
 | [0021](ADR-0021-current-platforms-only.md) | Current platforms only | |
 | [0022](ADR-0022-identity-classes-and-runtime-isolation.md) | Identity classes and runtime isolation | |
-| [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later, and no second licence | |
-| [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint, not a lease inside Xmip | Supersedes 0017 |
-| [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | Refines 0018 phase 6 |
-
----
-
-## What this document cannot do
-
-**The summaries above are copies, not views.** Markdown has no transclusion —
-it is not in CommonMark, GitHub implements none of it, and the proposals have
-been left to third parties for a decade. HTML is no better: the mechanism was
-HTML Imports and it is a discontinued draft, removed from browsers. So there is
-no way to make this document *show* the records rather than restate them.
-
-That means the same fact lives in two places, which ADR-0020 forbids, in the
-document that indexes ADR-0020. It is a knowing exception and it should not be
-a permanent one.
-
-`tests/Decisions.Tests.ps1` limits the damage. It fails when a decision exists
-that this document does not mention, when a link here does not resolve, when a
-status here disagrees with the record, and when the concept index claims a word
-that the record it points at no longer contains. That last one catches the
-likeliest drift — a term renamed while the index goes on advertising it. What
-no test can check is whether a summary is still a fair account of the decision.
-Only a reader can, so change a record and read what it says here.
-
-**The proper fix, when it is worth the afternoon:** each record grows an
-`## In brief` section and declares its own theme and concepts, and a
-`New-XmipDecisionIndex` cmdlet generates this file from the twenty-two records.
-A test regenerates and fails if the committed copy differs. The index becomes a
-build artefact, the records become the single source, and this section is
-deleted — the same argument as the firewall report in `observability-model.md`,
-which is derived and never authored, for the same reason.
+| [0023](ADR-0023-licensing-model.md) | AGPL-3.0-or-later | |
+| [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint | supersedes ADR-0017 |
+| [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | refines ADR-0018 phase 6 |

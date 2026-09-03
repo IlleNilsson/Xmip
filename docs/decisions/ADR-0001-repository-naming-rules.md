@@ -2,7 +2,22 @@
 
 ## Status
 
-Accepted.
+Superseded by ADR-0011.
+
+## In brief
+
+- Theme: The shape of the estate
+- Subject: Repository naming, first attempt
+- Name: The original naming rules
+- Order: 3
+
+Names are derived from rules rather than chosen. The original scheme was
+`xmip-handler-<technology-or-family>`.
+
+**Superseded by *One naming rule for the whole namespace***, which retired
+`handler` as a name segment. Kept because the rule it states — a name is
+derived, never chosen — survived the scheme that expressed it, and ADR-0011
+is that same rule with the segment removed.
 
 ## Decision
 

@@ -2,57 +2,19 @@
 
 Options per problem, with a lean. Nothing here is decided.
 
----
+**A problem keeps its number for life.** The numbers are cited from outside
+this file — ADR-0024 cites 18, ADR-0014 cites 16, ADR-0002 and
+`allocation.toml` cite 19 — so renumbering would silently repoint a citation at
+someone else's problem. Sections are ordered so the numbers ascend; they are
+not renumbered to make them.
 
-# Blocking now
+There is no problem 12, and nothing is missing. A renumbering pass moved its
+subject to 14 and Succession to 15 while the register was still small enough
+for that to be safe. It is not any more, which is what the paragraph above is
+for.
 
-## 1. Eight orphaned tests hold the build red
-
-Every `.rs` file in `tests/` imports `xmip_linear_kernel`, the crate's pre-narrowing name.
-They reference modules `src/lib.rs` does not publish. One, `xmip_message_model`, names a
-module that no longer exists in `src/` at all.
-
-| option | effect | cost |
-|---|---|---|
-| **A. Delete all eight** | build green today | loses nothing that currently runs; git keeps the history |
-| **B. Move to `attic/`** | build green, files stay visible | a folder of code that compiles against nothing |
-| **C. Restore them** | keeps the coverage | must publish ~40 modules from `lib.rs`; one test is unfixable regardless |
-
-**Lean: A.** Eleven unit tests inside `journey_model`, `transport_technology` and
-`vertical_slice` still run and cover the live architecture. B only makes sense if you want to
-read the old design without `git log`.
-
-## 2. Roughly forty files in `src/` are published by nothing
-
-`src/lib.rs` exposes four modules — `contracts`, `journey_model`, `transport_technology`,
-`vertical_slice`. `src/` holds about forty-five files.
-
-**First, one command**, because it decides everything:
-
-```powershell
-Select-String -Path src\main.rs -Pattern '^\s*(pub )?mod ' | ForEach-Object { $_.Line }
-```
-
-| if main.rs... | then | option |
-|---|---|---|
-| declares them | they are live, owned by the binary | leave, or move the shared ones into the library |
-| does not | forty files compile in nothing | **A.** delete · **B.** move to `attic/` · **C.** publish incrementally from `lib.rs`, fixing as you go |
-
-**Lean: B if orphaned.** Deleting forty files of design work outright is harsher than parking
-them. Moving them out of `src/` stops them reading as live code, which is the actual harm.
-
-## 3. Edition mismatch
-
-`cratePolicy` says edition 2024. The workspace `Cargo.toml` says 2021. Toolchain is 1.94.1,
-so both are available.
-
-| option | effect |
-|---|---|
-| **A. Move the workspace to 2024** | matches stated policy; a real migration with borrow-checker and prelude changes |
-| **B. Change `cratePolicy` to 2021** | one-line honesty fix; policy follows reality |
-
-**Lean: B now, A later.** Do not attempt an edition migration while the build is red. Make
-the manifest tell the truth today, migrate deliberately once green.
+**Resolved problems stay**, at the end, with what resolved them. A register
+that deletes its answers cannot be told from one nobody has read.
 
 ---
 
@@ -159,22 +121,6 @@ And `resilience` has no plugin surface in practice, despite six declared impleme
 **Lean: B.** Do not create repositories for capabilities whose traits are unsettled — see 6.
 Run `Sync-XmipEstate.ps1` with `-WhatIf` first regardless.
 
-## 11. `xmip-module-api` and `xmip-module-abi` still exist
-
-`xmip-module-api` re-exports `xmip_core::contracts::*`, which is what pulls implementers into
-Rust and into AGPL by linkage. `xmip-module-abi` still carries `ModuleAbiKind`, removed by
-clause 5 of ADR-0012. Its package is named `xmip-abi`, disagreeing with its directory and
-with `cratePolicy.primaryCrateMatchesRepository`.
-
-| option | effect |
-|---|---|
-| **A. Consolidate into `xmip-core-abi` now** | one crate, correct name, boundary matches the header |
-| **B. Wait for the first real module** | avoids churn, but the contradiction stays in the tree |
-
-**Lean: A, once the build is green.** Blast radius is small — two consumers,
-`xmip-handler-file` and `xmip-host`. And you can now verify it with `cargo build`, which you
-could not before.
-
 ---
 
 # Runtime safety
@@ -215,100 +161,6 @@ reading configuration files at three in the morning.
 preserved, what exactly is recovered, the canonical representation of Message
 content at each lifecycle stage, and whether a Message Contract is a first-class
 Artifact Definition or a module-provided validation capability.
-
----
-
-# The ToDo
-
-## 17. How does work reach another node?
-
-A ToDo is per node and written only by its owner, which is what removes the
-shared write path BizTalk's MessageBox never escaped. The cost is that a Message
-in node A's ToDo is node A's work, and nothing moves it.
-
-That is fine for an estate where each node owns its own Receive Locations. It is
-not fine when a Receive node should hand processing to an Executing node, which
-`deployment-model.md` node capabilities explicitly anticipate.
-
-| option | effect |
-|---|---|
-| **A. Nodes hand off over the Xmip node-to-node protocol** | explicit, auditable, and the Journey records the hop. Needs that protocol to exist — see problem 18 |
-| **B. Receive nodes write directly into the target node's ToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
-| **C. Work stays where it lands; placement decides at receive time** | no movement at all. Requires the receive-side configuration to know the whole topology, and a saturated node cannot shed load |
-
-**Lean: A.** B is the BizTalk shape wearing a different name. C is defensible
-for edge estates where the device that receives is the device that processes,
-and it is probably right for the purpose-compiled runtime — but it cannot be the
-only answer for a server cluster.
-
-## 18. Where does a Cluster-scope exclusiveness lease live? — **Resolved**
-
-*Resolved 2026-08-27 by ADR-0024, and by dissolving the question rather than
-answering it.*
-
-There is no cluster-scope lease to place because there is no lease.
-`xmip-core-exclusiveness` is retired and `ResourceClaim` in
-`xmip-core-transport` replaces it: the endpoint's own atomic claim is
-cluster-wide already, because the endpoint is one thing however many nodes are
-asking, and the shared write path it needs is the partner's storage rather than
-Xmip's.
-
-All four options recorded here shared one assumption — that Xmip had to keep
-the fact. It did not; the fact already had an owner.
-
-Two nodes on a lockless protocol (FTP, SFTP, IMAP) is what remains, and
-ADR-0024 clause 6 makes it a placement question: run one of them. The shape of
-that placement is undecided and belongs with Host Services.
-
----|---|
-| **A. One node holds the cluster lease store** | simple; that node is now a single point of failure and a shared write path for exactly the thing that must not have one |
-| **B. Consensus among nodes** | correct and honest about the problem. It is also a distributed-consensus implementation, which ADR-0017 spent its entire argument avoiding |
-| **C. Cluster scope requires an external store, declared as such** | the five coordinators ADR-0017 removed, readmitted for one narrow purpose and only when Cluster scope is actually used |
-| **D. Cluster scope is not offered** | Node scope and resource-native claims cover more than expected — the file case is already handled by claiming the artefact itself |
-
-**Lean: D first, C as the escape hatch.** ADR-0017 clause 2 already says a
-transport addressing a discrete claimable artefact claims the artefact, and that
-claim is cluster-wide without any lease at all. The remaining need for true
-Cluster scope may be small enough to make B's cost absurd. Worth counting the
-real cases before building anything.
-
----
-
-# Capabilities
-
-## 16. Can a Receive Location bind to a discovered endpoint?
-
-**Not a filing question.** `mdns`, `ssdp`, `dns` and `dhcp` are transports and
-that is settled — `repository-model.md` section 5 explains why what a Stream
-carries does not decide which capability moves it. Receiving an mDNS
-announcement as a Stream that becomes a Message is transport, plainly.
-
-The open question is the other feature, which uses the same protocols and is
-not transport at all: **the runtime using discovery to find an endpoint and
-bind a Receive Location to it.**
-
-Today a Receive Location is configured with an address. On an edge or
-industrial node the address is frequently not knowable in advance — the PLC,
-the camera, the sensor gateway appears on the network and announces itself.
-Configuration that requires a fixed address cannot express that.
-
-| option | effect |
-|---|---|
-| **A. Nothing. Addresses stay static** | works for every estate where someone can write the address down. Rules out the edge case Xmip explicitly targets |
-| **B. A Receive Location may declare a discovery predicate instead of an address** | *bind to whatever announces service type `_opcua._tcp` on this subnet*. Expressive, and it makes the set of Receive Location Instances change at runtime |
-| **C. Discovery produces Messages; a Process creates the binding** | uses only what exists — an mDNS announcement is a Message, a Process reacts. No new configuration model, and the estate becomes self-modifying, which is worse |
-
-**Lean: B, and it is a decision record when it happens.** It changes what a
-Definition means: today a Receive Location Definition yields a known set of
-Instances at startup, and under B the set is discovered and mutable. That
-touches the Definition and Instance model in `runtime-model.md` section 21, the
-execution tree built at startup in ADR-0018, and identity — an endpoint that
-announced itself has claimed nothing, so ADR-0022's classes apply as
-`anonymous` until something proves otherwise.
-
-C deserves naming because it will look attractive: it needs no new concepts.
-That is exactly its problem — an estate that reconfigures itself through its own
-message flow has no configuration anyone can read.
 
 ---
 
@@ -375,6 +227,71 @@ already holding. C matters only once someone else wants the name.
 
 ---
 
+# Capabilities
+
+## 16. Can a Receive Location bind to a discovered endpoint?
+
+**Not a filing question.** `mdns`, `ssdp`, `dns` and `dhcp` are transports and
+that is settled — `repository-model.md` section 5 explains why what a Stream
+carries does not decide which capability moves it. Receiving an mDNS
+announcement as a Stream that becomes a Message is transport, plainly.
+
+The open question is the other feature, which uses the same protocols and is
+not transport at all: **the runtime using discovery to find an endpoint and
+bind a Receive Location to it.**
+
+Today a Receive Location is configured with an address. On an edge or
+industrial node the address is frequently not knowable in advance — the PLC,
+the camera, the sensor gateway appears on the network and announces itself.
+Configuration that requires a fixed address cannot express that.
+
+| option | effect |
+|---|---|
+| **A. Nothing. Addresses stay static** | works for every estate where someone can write the address down. Rules out the edge case Xmip explicitly targets |
+| **B. A Receive Location may declare a discovery predicate instead of an address** | *bind to whatever announces service type `_opcua._tcp` on this subnet*. Expressive, and it makes the set of Receive Location Instances change at runtime |
+| **C. Discovery produces Messages; a Process creates the binding** | uses only what exists — an mDNS announcement is a Message, a Process reacts. No new configuration model, and the estate becomes self-modifying, which is worse |
+
+**Lean: B, and it is a decision record when it happens.** It changes what a
+Definition means: today a Receive Location Definition yields a known set of
+Instances at startup, and under B the set is discovered and mutable. That
+touches the Definition and Instance model in `runtime-model.md` section 21, the
+execution tree built at startup in ADR-0018, and identity — an endpoint that
+announced itself has claimed nothing, so ADR-0022's classes apply as
+`anonymous` until something proves otherwise.
+
+C deserves naming because it will look attractive: it needs no new concepts.
+That is exactly its problem — an estate that reconfigures itself through its own
+message flow has no configuration anyone can read.
+
+---
+
+# The ToDo
+
+## 17. How does work reach another node?
+
+A ToDo is per node and written only by its owner, which is what removes the
+shared write path BizTalk's MessageBox never escaped. The cost is that a Message
+in node A's ToDo is node A's work, and nothing moves it.
+
+That is fine for an estate where each node owns its own Receive Locations. It is
+not fine when a Receive node should hand processing to an Executing node, which
+`deployment-model.md` node capabilities explicitly anticipate.
+
+| option | effect |
+|---|---|
+| **A. Nodes hand off over the Xmip node-to-node protocol** | explicit, auditable, and the Journey records the hop. Needs that protocol to exist — see problem 18 |
+| **B. Receive nodes write directly into the target node's ToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
+| **C. Work stays where it lands; placement decides at receive time** | no movement at all. Requires the receive-side configuration to know the whole topology, and a saturated node cannot shed load |
+
+**Lean: A.** B is the BizTalk shape wearing a different name. C is defensible
+for edge estates where the device that receives is the device that processes,
+and it is probably right for the purpose-compiled runtime — but it cannot be the
+only answer for a server cluster.
+
+---
+
+# Carried in from must-remember.md
+
 ## 19. What `must-remember.md` still knew when it was retired
 
 Carried in on 2026-08-30, when that file was deleted. Most of it had gone
@@ -427,3 +344,141 @@ is what an order costs when nothing retires its entries.
 
 Problems 4, 5, 7, 8 and 9 remain naming judgements with no deadline. They cost
 nothing to leave open and should not block the build work.
+
+---
+
+# Resolved
+
+Kept because a problem and its answer are one document. Each says what resolved
+it and when. Nothing below is work.
+
+## 1. Eight orphaned tests hold the build red — **Resolved**
+
+*Resolved by option A before 2026-08-30, recorded here 2026-09-03.*
+
+`tests/` holds no `.rs` file. The eight went with the crate move of 2026-08-26
+that emptied `src/`, and the Suggested order recorded them gone on 2026-08-30.
+This entry did not move with it, so the register went on opening with a red
+build for four days after the build was green.
+
+
+Every `.rs` file in `tests/` imports `xmip_linear_kernel`, the crate's pre-narrowing name.
+They reference modules `src/lib.rs` does not publish. One, `xmip_message_model`, names a
+module that no longer exists in `src/` at all.
+
+| option | effect | cost |
+|---|---|---|
+| **A. Delete all eight** | build green today | loses nothing that currently runs; git keeps the history |
+| **B. Move to `attic/`** | build green, files stay visible | a folder of code that compiles against nothing |
+| **C. Restore them** | keeps the coverage | must publish ~40 modules from `lib.rs`; one test is unfixable regardless |
+
+**Lean: A.** Eleven unit tests inside `journey_model`, `transport_technology` and
+`vertical_slice` still run and cover the live architecture. B only makes sense if you want to
+read the old design without `git log`.
+
+## 2. Roughly forty files in `src/` are published by nothing — **Resolved**
+
+*Resolved 2026-08-26 by neither option, recorded here 2026-09-03.*
+
+`src/` holds one file. The forty went to the repositories that own them rather
+than to `attic/`, and `src/lib.rs` names every destination in its own header.
+The command this problem opens with cannot be run: `src/main.rs` is deleted,
+which answers the question it was meant to ask.
+
+
+`src/lib.rs` exposes four modules — `contracts`, `journey_model`, `transport_technology`,
+`vertical_slice`. `src/` holds about forty-five files.
+
+**First, one command**, because it decides everything:
+
+```powershell
+Select-String -Path src\main.rs -Pattern '^\s*(pub )?mod ' | ForEach-Object { $_.Line }
+```
+
+| if main.rs... | then | option |
+|---|---|---|
+| declares them | they are live, owned by the binary | leave, or move the shared ones into the library |
+| does not | forty files compile in nothing | **A.** delete · **B.** move to `attic/` · **C.** publish incrementally from `lib.rs`, fixing as you go |
+
+**Lean: B if orphaned.** Deleting forty files of design work outright is harsher than parking
+them. Moving them out of `src/` stops them reading as live code, which is the actual harm.
+
+## 3. Edition mismatch — **Resolved**
+
+*Resolved by option B, recorded here 2026-09-03.*
+
+`architecture.toml` and the workspace `Cargo.toml` both say edition 2021. The
+manifest key is `[crate]`; `cratePolicy` appears nowhere in its history, so the
+name below was already wrong when it was written.
+
+Option A — the migration to 2024 — is undone and unfiled. It is a migration
+rather than a mismatch, and it needs its own entry the day someone wants it.
+
+
+`cratePolicy` says edition 2024. The workspace `Cargo.toml` says 2021. Toolchain is 1.94.1,
+so both are available.
+
+| option | effect |
+|---|---|
+| **A. Move the workspace to 2024** | matches stated policy; a real migration with borrow-checker and prelude changes |
+| **B. Change `cratePolicy` to 2021** | one-line honesty fix; policy follows reality |
+
+**Lean: B now, A later.** Do not attempt an edition migration while the build is red. Make
+the manifest tell the truth today, migrate deliberately once green.
+
+## 11. `xmip-module-api` and `xmip-module-abi` still exist — **Resolved**
+
+*Resolved by option A, recorded here 2026-09-03.*
+
+`crates/` does not exist. Both crates are gone and `xmip-core-abi` is real —
+seven files at `modules/foundation/abi`, with the specification beside them.
+What remains are citations inside ADR-0012 and ADR-0016, and those are correct
+as they stand: a record says what was true when it was written.
+
+
+`xmip-module-api` re-exports `xmip_core::contracts::*`, which is what pulls implementers into
+Rust and into AGPL by linkage. `xmip-module-abi` still carries `ModuleAbiKind`, removed by
+clause 5 of ADR-0012. Its package is named `xmip-abi`, disagreeing with its directory and
+with `cratePolicy.primaryCrateMatchesRepository`.
+
+| option | effect |
+|---|---|
+| **A. Consolidate into `xmip-core-abi` now** | one crate, correct name, boundary matches the header |
+| **B. Wait for the first real module** | avoids churn, but the contradiction stays in the tree |
+
+**Lean: A, once the build is green.** Blast radius is small — two consumers,
+`xmip-handler-file` and `xmip-host`. And you can now verify it with `cargo build`, which you
+could not before.
+
+## 18. Where does a Cluster-scope exclusiveness lease live? — **Resolved**
+
+*Resolved 2026-08-27 by ADR-0024, and by dissolving the question rather than
+answering it.*
+
+There is no cluster-scope lease to place because there is no lease.
+`xmip-core-exclusiveness` is retired and `ResourceClaim` in
+`xmip-core-transport` replaces it: the endpoint's own atomic claim is
+cluster-wide already, because the endpoint is one thing however many nodes are
+asking, and the shared write path it needs is the partner's storage rather than
+Xmip's.
+
+All four options recorded here shared one assumption — that Xmip had to keep
+the fact. It did not; the fact already had an owner.
+
+Two nodes on a lockless protocol (FTP, SFTP, IMAP) is what remains, and
+ADR-0024 clause 6 makes it a placement question: run one of them. The shape of
+that placement is undecided and belongs with Host Services.
+The four options as they were recorded:
+
+| option | effect |
+|---|---|
+| **A. One node holds the cluster lease store** | simple; that node is now a single point of failure and a shared write path for exactly the thing that must not have one |
+| **B. Consensus among nodes** | correct and honest about the problem. It is also a distributed-consensus implementation, which ADR-0017 spent its entire argument avoiding |
+| **C. Cluster scope requires an external store, declared as such** | the five coordinators ADR-0017 removed, readmitted for one narrow purpose and only when Cluster scope is actually used |
+| **D. Cluster scope is not offered** | Node scope and resource-native claims cover more than expected — the file case is already handled by claiming the artefact itself |
+
+**Lean: D first, C as the escape hatch.** ADR-0017 clause 2 already says a
+transport addressing a discrete claimable artefact claims the artefact, and that
+claim is cluster-wide without any lease at all. The remaining need for true
+Cluster scope may be small enough to make B's cost absurd. Worth counting the
+real cases before building anything.

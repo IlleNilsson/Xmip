@@ -4,6 +4,20 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+## In brief
+
+- Theme: Operating Xmip
+- Subject: Packaging and distribution
+- Name: Packaging and distribution
+- Order: 2
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI
+
+Packaging covers the node; Modules are out of scope. MSI via WiX, published
+through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
+release. A portable archive for people who want no installer at all. x86-64 and
+arm64 on both — **arm64 is not optional**, because the IoT and embedded profiles
+require it.
+
 ## Context
 
 install/install-local.ps1 and install-local.sh create a directory layout and write a node configuration. They install no binary, and they say so: the message they print is that a layout was initialized. deploy/ carries an Ansible role and a DSC configuration, which are the fleet layer and call something underneath them.

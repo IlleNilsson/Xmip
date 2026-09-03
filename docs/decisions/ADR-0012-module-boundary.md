@@ -4,6 +4,22 @@
 
 Accepted. Implementation follows in separate reviewed changes.
 
+## In brief
+
+- Theme: Modules and the boundary
+- Subject: The module boundary is a C ABI, not a Rust crate
+- Name: The module boundary
+- Order: 1
+- Concepts: ABI, C header, `xmip_module.h`
+
+The normative boundary is a written specification and a C header. Rust bindings
+are a convenience and a module author is never obliged to use them —
+conformance is judged against the specification. The interface is a `repr(C)`
+table of `extern "C"` function pointers. **`dyn Trait` never crosses the
+boundary**, because Rust trait objects have no stable layout and passing one
+across a toolchain change is undefined behaviour. Ownership, lifetime and error
+representation are specified, not left to convention.
+
 ## Context
 
 `crates/xmip-module-abi` defines the loading boundary today:
