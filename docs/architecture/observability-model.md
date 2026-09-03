@@ -163,8 +163,16 @@ persistence failure that risks losing required evidence.
 ## 6. Observation
 
 `xmip-core-observe` produces near-real-time, navigable traffic and health data
-for the whole installation, navigable from installation through Clusters, Nodes,
-Parties and Endpoints.
+for the whole installation, navigable down the scope tree in section 7 —
+installation, Cluster, Node, Host Service, and the Receive Locations, Xmip
+Processes and Send Locations beneath it.
+
+**Party and Endpoint are a second axis, not levels in that tree.** A Party is
+reachable through many Endpoints on many Nodes, so it filters across the tree
+rather than sitting in it, and observation is navigable both ways. This
+paragraph named Parties and Endpoints as though they were containment until
+2026-09-03, which put two different hierarchies in one document — see ADR-0027
+clause 4.
 
 ```text
 Green    healthy and active
@@ -195,16 +203,27 @@ component*, and six subsystems need that second answer: logs, traces, metrics,
 retention, operations and reports all have to name the thing they are about, and
 policy has to be scoped to it.
 
-The scope hierarchy is:
+The scope hierarchy is one tree, and it is the **execution tree** the Xmip
+Service already builds and validates at startup under ADR-0018:
 
 ```text
-installation  →  cluster  →  node  →  module  →  action
+installation → cluster → node → host service → receive location
+                                             │ xmip process
+                                             └ send location
 ```
 
 Effective policy resolves down that path, most specific winning — which is the
 same resolution the audit directive already uses in section 2, stated once here
 so that metrics, tracing and retention can use it too rather than each inventing
 a scope of its own.
+
+**One tree, because there was briefly more than one.** This read
+`installation → cluster → node → module → action` while section 6 named Parties
+and Endpoints, and below the node those are different shapes. Naming the
+execution tree settles it against something that exists in code rather than
+against a diagram: a Module is loaded *into* a Host Service and an action
+happens *in* a Location or a Process, so neither was a level of containment in
+its own right. ADR-0027 clause 4.
 
 **The written form is an Xmip URI**, RFC 3986 compliant:
 

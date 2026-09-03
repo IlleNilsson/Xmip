@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-six decisions, read as one document.
+Twenty-seven decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -328,6 +328,39 @@ would break; it does not freeze anything.
 
 → [Current platforms only, in full](ADR-0021-current-platforms-only.md)
 
+### The operator boundary, and what a measurement is
+
+`xmip_module.h` is the boundary things plug **into**. There was never one to
+drive Xmip **from outside**, which is why `xmip`, the PowerShell module and the
+GUI could only answer questions about themselves: `abi`, `status` and `probe`
+all describe the binding, and not one of them talks to a running Xmip.
+
+**`xmip_operate.h` is the second boundary**, beside the first and versioned
+apart from it, sharing only the primitives — `XmipStr`, `XmipStatus` and the
+reader and writer pair. Above those the two have nothing in common: a Module
+implements a table Xmip calls; a surface calls functions Xmip implements.
+
+It carries four things an operator needs. **Health** as
+observability-model.md already defines it, green through red, worst state
+winning upward, every state drilling to its evidence. **Measurement**, which is
+never a bare number: a scope, the thing counted, its unit and the window it
+covers, because a Stream at a Receive Location and a Journey in a Process are
+not the same quantity and Xmip does not pretend they are. **Reports**, the
+historical counterpart. And **configuration** read, validated and reloaded —
+never authored, because the node configuration format is still an open question
+and a boundary that picks one closes it by accident.
+
+**Scope is one tree, and it is the execution tree** ADR-0018 already builds and
+validates at startup. A Party is a filter across that tree rather than a level
+in it, because a Party is reachable through many endpoints on many nodes.
+
+**Nothing here asks the hot path.** The runtime publishes snapshots and the
+boundary reads them, which is section 6's rule — the thing that watches must
+not be able to stop the thing it watches — stated as a property of the boundary
+rather than as an aspiration in a document.
+
+→ [The operator boundary, in full](ADR-0027-the-operator-boundary.md)
+
 ---
 
 ## 6. How the work is done
@@ -399,6 +432,7 @@ You have a word. This gives you the decision that governs it.
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
+| Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
@@ -408,6 +442,7 @@ You have a word. This gives you the decision that governs it.
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
@@ -423,17 +458,21 @@ You have a word. This gives you the decision that governs it.
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
 Event and Schedule
-([`runtime-model.md`](../architecture/runtime-model.md) section 17), the Xmip
-URI ([`observability-model.md`](../architecture/observability-model.md)
-section 7), delivery semantics
+([`runtime-model.md`](../architecture/runtime-model.md) section 17),
+delivery semantics
 ([`runtime-model.md`](../architecture/runtime-model.md) section 15), and the
 node configuration format
 ([`open-problems.md`](../planning/open-problems.md) problem 14).
+
+The Xmip URI left this list on 2026-09-03: ADR-0027 clause 3 makes it the
+addressing form of the operator boundary, which is the record it never had.
 
 ---
 
@@ -472,3 +511,4 @@ is nowhere else.
 | [0024](ADR-0024-resource-claim-replaces-exclusiveness.md) | A claim at the endpoint | supersedes ADR-0017 |
 | [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | refines ADR-0018 phase 6 |
 | [0026](ADR-0026-bounding-a-publication-chain.md) | Bounding a publication chain | |
+| [0027](ADR-0027-the-operator-boundary.md) | The operator boundary | |
