@@ -328,9 +328,11 @@ Four of its items were still true, and this register is where they belong:
 - **A typed configuration loader.** `xmip-core-configure` exists;
   full validation against what the manifests declare does not — problem 14 is
   the format half of this.
-- **The management plane.** `webapi` and `gui` are empty repositories,
-  `powershell` carries a README. ADR-0014 decided their shape; nothing yet
-  implements it.
+- **The management plane.** `webapi` and `gui` are empty repositories.
+  `powershell` no longer is — three cmdlets over the ABI and eighteen tests
+  since 2026-09-03, seven of which hold the C# binding to `xmip_module.h`
+  itself. ADR-0014 decided the shape of all of them; one of the four now has
+  something behind it.
 
 ---
 
@@ -341,9 +343,13 @@ xmip-core-abi (exists), fix main.rs (deleted), orphaned tests (gone) — which
 is what an order costs when nothing retires its entries.
 
 ```text
-1. The GUI and the PowerShell module   market-position.md calls this the widest
-                                       gap; both repositories are empty and
-                                       ADR-0014 has already decided their shape
+1. The GUI                             market-position.md calls this the widest
+                                       gap; the repository is empty and ADR-0014
+                                       has already decided its shape. The
+                                       PowerShell module came off this line on
+                                       2026-09-03: three cmdlets over the ABI
+                                       and eighteen tests, seven of them holding
+                                       the binding to xmip_module.h
 2. Protocol implementations            file, http, tcp, udp, smtp exist in the
                                        transport crate; 79 technology
                                        repositories are declared and empty
