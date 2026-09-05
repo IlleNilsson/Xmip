@@ -86,13 +86,15 @@ time, for all protocols and contracts.* The scenario drives a small `RoundTrip`
 adapter — send a payload, get back what returned or why it could not — and each
 transport implements that adapter however its own shape demands, so the scenario
 is one thing over all of them and a new transport is a new adapter, not a new
-test. File was first — self-contained, no port to coordinate; **tcp, http and
-smtp joined 2026-09-05**, each ping-ponging over a real loopback connection
-(bind, send from a second thread, accept one, compare) and each carrying both
-the bytes and text contracts whole. **udp is the one still out**: it binds a
-fresh socket inside every receive and never reports the address, so the sender
-cannot learn where to aim — it joins once the transport can report its bound
-address, the way tcp, http and smtp already do. Clause 5 governs them all.
+test. File was first — self-contained, no port to coordinate; **tcp, http, smtp
+and udp joined 2026-09-05**, each ping-ponging over a real loopback connection
+(bind, send from a second thread, receive, compare) and each carrying both the
+bytes and text contracts whole. udp needed `UdpTransport` to report its bound
+address first — it bound a fresh socket per receive and the sender could not
+learn where to aim; that landed the same day, giving udp the bind/receive split
+tcp already had. **Every transport the estate implements is now in the matrix.**
+The transports declared but not yet built (websocket and the rest) join by
+adding an adapter, no change to the scenario. Clause 5 governs them all.
 
 ### 4. A verdict is health
 
