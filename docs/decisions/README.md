@@ -369,7 +369,7 @@ rather than as an aspiration in a document.
 
 ### The Playground exercises everything, all the time
 
-**`xmip-core-playground` exercises Xmip continuously.** It spawns Development
+**`xmip-test-playground` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualisation — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched

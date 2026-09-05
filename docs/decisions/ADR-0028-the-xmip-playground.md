@@ -14,7 +14,7 @@
 - Order: 5
 - Concepts: Playground, exercise, verdict; Development node
 
-**`xmip-core-playground` exercises Xmip continuously.** It spawns Development
+**`xmip-test-playground` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualisation — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
@@ -49,10 +49,17 @@ and nothing to count. The Playground is what counts.
 
 ## Decision
 
-### 1. One repository, `xmip-core-playground`
+### 1. One repository, `xmip-test-playground`
 
 Operations domain, an operational capability. The name is the owner's and the
 proper noun is **Xmip Playground**, in terminology.md.
+
+**The provider segment is `test`, not `core`** — the owner's call, 2026-09-05,
+renamed the same day it was created. `core` is what Xmip is; `test` is what
+exercises it, and it is a namespace another provider may join with a playground
+of their own, `xmip-<theirs>-playground`, under the estate's rules unchanged.
+The `xmip.test` root is reserved: there is no `xmip-test` crate, only what sits
+beneath it.
 
 ### 2. It spawns processes
 
@@ -94,7 +101,7 @@ rather than felt as a complaint.
 
 ## Consequences
 
-- `xmip-core-playground` is declared in `architecture.toml` and created through
+- `xmip-test-playground` is declared in `architecture.toml` and created through
   `Sync-XmipEstate`, from the Rust template, mounted at
   `modules/operations/playground`.
 - **Xmip Playground** is a term in terminology.md.

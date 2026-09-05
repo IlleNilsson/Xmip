@@ -759,13 +759,6 @@ dependency = []
   repositoryRole = "operational-capability"
   maturity = "planned"
   dependency = ["xmip-core"]
-
-  [xmip.core.playground]
-  description = "The Xmip Playground: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
-  architecturalDomain = "Operations"
-  repositoryRole = "operational-capability"
-  maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-runtime", "xmip-core-transport", "xmip-core-observe", "xmip-core-configure"]
 # Platform services. These existed as crates with no module, so nothing would
 # have created a repository for them. Descriptions taken from what the crates
 # contain, not from what their names suggest.
@@ -827,3 +820,23 @@ dependency = []
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
 
+
+# A second provider. `core` is Xmip's own; `test` is the namespace for what
+# exercises Xmip, and it is deliberately not Xmip's alone — another provider
+# drops its own playground module beside this one, xmip-<theirs>-playground,
+# and the estate's rules apply to it unchanged. Named by the owner, 2026-09-05,
+# to invite exactly that. The root is reserved: there is no xmip-test crate,
+# only what sits beneath it.
+[xmip.test]
+description = "What exercises Xmip. A provider namespace others may join."
+architecturalDomain = "Operations"
+repositoryRole = "operational-capability"
+maturity = "reserved"
+dependency = []
+
+  [xmip.test.playground]
+  description = "The Xmip Playground: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
+  architecturalDomain = "Operations"
+  repositoryRole = "operational-capability"
+  maturity = "scaffolded"
+  dependency = ["xmip-core", "xmip-core-runtime", "xmip-core-transport", "xmip-core-observe", "xmip-core-configure"]
