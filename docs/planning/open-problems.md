@@ -432,42 +432,60 @@ A device that has no Service has different semantics, not fewer modules.
 
 # Suggested order
 
-Rewritten 2026-08-30. The previous list was complete fossils — create
-xmip-core-abi (exists), fix main.rs (deleted), orphaned tests (gone) — which
-is what an order costs when nothing retires its entries.
+Rewritten 2026-09-05. The 2026-08-30 list had gone stale the way its own
+predecessor did: its first two entries — the .NET verification gate and the
+GUI — were both done, and two of the session's largest pieces, the operator
+boundary and configuration editing, were nowhere on it. An order nobody
+retires entries from stops being an order.
+
+**Done since the last rewrite, and off the list:**
+
+- **The .NET verification gate.** `Test-XmipDotnetModule` builds and tests
+  every `.csproj`; `cli`, `powershell` and `gui` land verified, no `-All`.
+- **The GUI, both hosts.** One `Xmip.Gui` component library; a Blazor web host
+  (monitoring) and a MAUI desktop host (monitoring and configuration), ADR-0014.
+  Health tree, severity shading, pause and resume.
+- **The operator boundary.** `xmip_operate.h`, ADR-0027: health, measurement,
+  pause, resume, and the `xmip_start_v1` / `xmip_validate_v1` lifecycle exports.
+- **Node configuration read and validated.** `xmip-core-configure` parses it,
+  the runtime validates it (startup phases 1–3), `xmip_validate_v1` checks a
+  document without applying it — the desktop editor's Validate.
 
 ```text
-0. Verify the .NET modules            Test-XmipModule looks for a Cargo.toml, so
-                                       cli, powershell and gui are skipped and
-                                       land only under -All, unverified. ADR-0014
-                                       puts all four surfaces in .NET, so this
-                                       gate has to grow before the operator
-                                       boundary carries weight
-1. The GUI                             market-position.md calls this the widest
-                                       gap; the repository is empty and ADR-0014
-                                       has already decided its shape. The
-                                       PowerShell module came off this line on
-                                       2026-09-03: three cmdlets over the ABI
-                                       and eighteen tests, seven of them holding
-                                       the binding to xmip_module.h
-2. Protocol implementations            file, http, tcp, udp, smtp exist in the
+1. Run a node for real                 the runtime does startup phases 1-3 —
+                                       read, build, validate. Phases 4-9 (start
+                                       the host services, load modules, accept
+                                       work) turn edge-01's rows from yellow to
+                                       green, make the throughput cards real,
+                                       and are what the Playground needs to
+                                       exercise anything. Blocked on the
+                                       vocabulary question below
+2. The desktop configuration editor    xmip_validate_v1 exists; the editor
+                                       screen — open a node TOML, edit as
+                                       fields, Validate, Save — does not.
+                                       Desktop and DSC author; web only watches
+3. Protocol implementations            file, http, tcp, udp, smtp exist in the
                                        transport crate; 79 technology
                                        repositories are declared and empty
-3. Journey replay end to end           problem 19, and the half of ADR-0024
+4. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
-4. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
+5. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
                                        says where it belongs, not what it is
-5. xmip-core-webapi                    declared, mounted nowhere, one orphan
+6. xmip-core-webapi                    declared, mounted nowhere, one orphan
                                        gitdir — decide it lives or retire it
-6. Cross-compilation                   four declared targets, verified on host
+7. Cross-compilation                   four declared targets, verified on host
                                        only
-7. Organisation and second owner       problem 15, independent of all the above
-8. The Xmip Playground                 ADR-0028; spawns Development nodes and
-                                       exercises every transport and contract
-                                       continuously. Named 2026-09-05. Needs
-                                       ADR-0018 phases 4-9 to run anything, so
-                                       it grows with the runtime
+8. Organisation and second owner       problem 15, independent of all the above
 ```
+
+**A decision blocks item 1.** The owner raised, 2026-09-05, that "Process" is
+overloaded three ways — the Xmip Service that rules a node, the Host Service
+that does the work, and the Xmip Process a Subscription starts. terminology.md
+records a different split (Service rules, Host Service works, Xmip Process is
+the integration process). The runtime's startup code names things after the
+record. Before phases 4-9 name more of them, the record and the owner's model
+have to agree. Not yet filed as a numbered problem because it is a terminology
+correction, not an open design question — but it must be settled first.
 
 Problems 4, 5, 7, 8 and 9 remain naming judgements with no deadline. They cost
 nothing to leave open and should not block the build work.
