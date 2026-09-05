@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-seven decisions, read as one document.
+Twenty-eight decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -367,6 +367,26 @@ rather than as an aspiration in a document.
 
 → [The operator boundary, in full](ADR-0027-the-operator-boundary.md)
 
+### The Playground exercises everything, all the time
+
+**`xmip-core-playground` exercises Xmip continuously.** It spawns Development
+nodes as System Processes on one machine — no virtualisation — and drives every
+transport and every content contract through them: a Receive Location for each
+transport fed with generated Streams for each contract, a Send Location watched
+for what arrives, and a **verdict per (transport, contract) pair** — arrived,
+routed, delivered, contract held — published as health on its own scope. The
+pair that breaks turns red on the same page as everything else, and is named.
+
+It is a **node role, not a test suite**. `NodeRole::Development` already exists
+beside Operational, Monitoring and Executing; a Playground node is a Development
+node and the role is the isolation — it never touches a production node.
+
+It is also **the source of real measurement**: Streams in, Journeys through,
+Messages out, per stage and per pair, into the snapshot the operator boundary
+reads. Until it runs, a throughput card shows a dash.
+
+→ [The Xmip Playground, in full](ADR-0028-the-xmip-playground.md)
+
 ---
 
 ## 6. How the work is done
@@ -432,6 +452,7 @@ You have a word. This gives you the decision that governs it.
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| Development node | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
@@ -451,6 +472,7 @@ You have a word. This gives you the decision that governs it.
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
@@ -518,3 +540,4 @@ is nowhere else.
 | [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | refines ADR-0018 phase 6 |
 | [0026](ADR-0026-bounding-a-publication-chain.md) | Bounding a publication chain | |
 | [0027](ADR-0027-the-operator-boundary.md) | The operator boundary | |
+| [0028](ADR-0028-the-xmip-playground.md) | The Xmip Playground | |
