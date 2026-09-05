@@ -52,7 +52,7 @@ function Get-XmipHistory {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-playground-history.toml'
+        $Path = Join-Path ([System.IO.Path]::GetTempPath()) 'playground-history.toml'
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {
