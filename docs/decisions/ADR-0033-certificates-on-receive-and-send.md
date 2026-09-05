@@ -55,25 +55,26 @@ The gate and `Acceptance` are unchanged; what is new is the transport growing a
 **server TLS** path and **client-certificate** presentation, and two concrete
 `Authenticator`s (`mutual-tls`, `certificate`) that surface what was proven.
 
-### 1a. Identify, authenticate and authorize stay three stages
+### 1a. Identification, Authentication, Authorization stay three stages
 
 A certificate touches all three, and they are not the same question — the estate
-keeps them in three capabilities and this work keeps that line:
+keeps them in three capabilities and this work keeps that line (ADR-0019):
 
-- **Identify** (`xmip-core-identify`) — *who is claimed.* The certificate's
+- **Identification** (`xmip-core-identify`) — *who is claimed.* The certificate's
   subject or SAN is a claimed identity, a [`Presented`] value. Extracting it is
   not proving it.
-- **Authenticate** (`xmip-core-authenticate`) — *does the claim hold.* The TLS
+- **Authentication** (`xmip-core-authenticate`) — *does the claim hold.* The TLS
   handshake or the certificate chain proves the subject cryptographically →
   `Verified::Proven`. This is the substrate the server-TLS work in clause 1
   builds.
-- **Authorize** (`xmip-core-authorize`) — *what may that proven party do.*
+- **Authorization** (`xmip-core-authorize`) — *what may that proven party do.*
   Whether it may use this Receive or Send Location, this operation. A proven
   identity is not a permission (ADR-0009).
 
-A cert that identifies but does not authenticate is a claim, not a caller; a
-caller that authenticates but is not authorized is refused with the reason. The
-three never collapse into one check.
+A certificate that is identified but not authenticated is a claim, not a caller;
+a caller that is authenticated but not authorized is refused with the reason. The
+three never collapse into one check, and this holds for every mechanism, not just
+certificates.
 
 ### 2. Provisioning prioritises ACME (Let's Encrypt)
 

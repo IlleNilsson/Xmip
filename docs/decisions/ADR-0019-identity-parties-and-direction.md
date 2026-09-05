@@ -326,35 +326,38 @@ the network could write to.
   down that hierarchy, so a fleet certificate authenticates a ship, is not
   decided here.
 
-## Amendment, 2026-09-05: identity is three stages, not two
+## Amendment, 2026-09-05: identity is three stages — Identification, Authentication, Authorization
 
 This record paired *authentication and authorization*; identity is **three**
 stages, and the estate is three capabilities to match. The owner's articulation,
-2026-09-05: *identify, authenticate the identity, check if the identity may do
-what it claims — authorization.*
+2026-09-05: *Identification, Authentication, Authorization* — identify the
+claimed identity, authenticate that identity, then check whether the identity may
+do what it claims.
 
-1. **Identify** (`xmip-core-identify`) — determine the *claimed* identity: a
-   certificate subject, an `ISA06`, an OAuth `sub`. A claim, extracted, nothing
-   proven. This is a stage of its own, not the front of authentication.
-2. **Authenticate** (`xmip-core-authenticate`) — prove the claim holds: the TLS
+1. **Identification** (`xmip-core-identify`) — determine the *claimed* identity:
+   a certificate subject, an `ISA06`, an OAuth `sub`. A claim, extracted, nothing
+   proven. A stage of its own, not the front of Authentication.
+2. **Authentication** (`xmip-core-authenticate`) — prove the claim holds: the TLS
    handshake, the certificate chain, the shared secret. Only now is there a
    caller rather than a claim. Authentication runs only for a declared mechanism
    (the closed set above).
-3. **Authorize** (`xmip-core-authorize`) — decide whether that proven identity
-   may do what it is asking. A proven identity is not a permission (ADR-0009).
+3. **Authorization** (`xmip-core-authorize`) — decide whether that proven
+   identity may do what it is asking. A proven identity is not a permission
+   (ADR-0009).
 
 The order is fixed and the stages never collapse: a claim that is not proven is
 not a caller; a caller that is not authorized is refused with the reason. Where
 clause text says "authentication precedes authorization", read the full chain:
-**identify precedes authenticate precedes authorize.**
+**Identification precedes Authentication precedes Authorization.**
 
 **The three stages are the invariant; the security technology is not.** A
 certificate, mutual-TLS, Let's Encrypt/ACME, OAuth, OIDC, Kerberos, a password,
-an API key, an EDI interchange id — each is a *mechanism* behind Authenticate,
-with its claim extracted by Identify and its permissions decided by Authorize.
-Xmip keeps to Identify → Authenticate → Authorize whatever the mechanism is.
-Adding a security technology adds a mechanism module (ADR-0010, one per
-technology); it never adds, removes, reorders or merges a stage. The pipeline
-does not bend to a mechanism, and a mechanism that would need it to is refused
-rather than accommodated. This is what makes the twenty-eight declared mechanisms
-a list of plug-ins rather than twenty-eight different identity models.
+an API key, an EDI interchange id — each is a *mechanism* behind Authentication,
+with its claim extracted by Identification and its permissions decided by
+Authorization. Xmip keeps to Identification → Authentication → Authorization
+whatever the mechanism is. Adding a security technology adds a mechanism module
+(ADR-0010, one per technology); it never adds, removes, reorders or merges a
+stage. The pipeline does not bend to a mechanism, and a mechanism that would
+need it to is refused rather than accommodated. This is what makes the
+twenty-eight declared mechanisms a list of plug-ins rather than twenty-eight
+different identity models.
