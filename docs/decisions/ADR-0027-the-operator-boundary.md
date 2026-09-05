@@ -221,6 +221,18 @@ Renamed now, while one crate and two surfaces consume it and ADR-0005 still
 permits reshaping freely. After the operator boundary ships, the collision is in
 two normative headers and every module author has read both.
 
+## Amendment, 2026-09-05: three states, no fourth
+
+`XMIP_HEALTH_UNREACHABLE` is removed from `xmip_operate.h`. The owner's call:
+common terminology, Green, Yellow and Red. A node that does not answer is
+**Red**, with "no answer" as its evidence — a surface aggregating a cluster
+says that about the node it could not reach, and an operator reads it the way
+they read every other red.
+
+Clause 8's reasoning stands unchanged: the surface is still the only thing
+that can tell a node that did not answer from one that claims to be well. What
+changed is the word it uses for the first, not the fact that it knows.
+
 ## Consequences
 
 - `xmip-core-abi` gains `include/xmip_operate.h`, the Rust side of it, and a
