@@ -411,7 +411,17 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
 
             [string] $actual = Get-TargetFramework -File $file
 
-            if ($actual -ne $expected) {
+            # A platform suffix is the version, not a different version. A MAUI
+            # Windows app must target net11.0-windows10.0.19041.0 — the suffix
+            # is required by the framework, not drift from it — so the declared
+            # target is a prefix the actual one must start with. net11.0 still
+            # refuses net10.0. Added when the desktop host landed, 2026-09-05.
+            [string] $suffix = "$expected-"
+            [bool] $ok =
+                $actual -eq $expected -or
+                $actual.StartsWith($suffix, [System.StringComparison]::Ordinal)
+
+            if (-not $ok) {
                 $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
             }
         }
