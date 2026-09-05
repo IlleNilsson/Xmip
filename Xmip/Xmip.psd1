@@ -10,7 +10,7 @@
 
 @{
     RootModule           = 'Xmip.psm1'
-    ModuleVersion        = '1.18.0'
+    ModuleVersion        = '1.19.0'
     GUID                 = 'a4f1e6c2-9b73-4d58-8e21-5c7a3f0d94b6'
     Author               = 'Ilian Nilsson'
     CompanyName          = 'Xmip'
@@ -50,6 +50,7 @@
         'Get-XmipStatus'
         'Get-XmipDecisionRecord'
         'New-XmipDecisionIndex'
+        'Get-XmipHistory'
     )
 
     CmdletsToExport      = @()
