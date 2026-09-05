@@ -106,13 +106,31 @@ standard-library only) and framing. **Every transport the estate implements is
 now in the matrix.** The transports declared but not yet built join by adding an
 adapter, no change to the scenario. Clause 5 governs them all.
 
-### 4. A verdict is health
+### 4. A verdict is health, per stage
 
-Per pair: green when Streams arrived, were routed, were delivered and the
-contract held; red when any of those failed, with the failure as evidence;
-yellow when the pair was exercised and something was slow or degraded. Scope
-`xmip:///<playground-node>/exercise/<transport>/<contract>`, so the GUI shows
-it where it shows everything else.
+Each round is expanded across the message path — **Receive, Process, Send** — so
+the verdict is per `(stage, transport, contract)`, scope
+`xmip:///<node>/<stage>/<transport>/<contract>`. The stage is the first segment
+under the node, so the landing page's Receive/Process/Send cards light up and an
+operator drills stage → transport → contract to the failing leaf. Green when the
+stage delivered; red when it failed, with the failure as evidence; yellow when
+it has failed before and passes now. Receive counts a Stream in, Process a
+Journey through, Send a Message out — the three the stage cards count.
+
+### 4a. The world does not run green: injected faults
+
+Loopback never fails, so a Playground of nothing but loopback proves the
+transports work and proves nothing about the monitoring. So the Playground
+injects the faults a real integration suffers, on all three stages, of four
+kinds an operator triages by: **transport** (reset, timeout, port in use, lost
+datagram), **addressing** (unresolved host, no route, rejected recipient),
+**authentication** (rejected certificate, denied credentials, an expired token —
+including Let's Encrypt certificate lifecycle faults, which cover only public
+HTTP domain-validated certs and so are one source among several, never the whole
+authentication story) and **contract** (content that fails its schema). Firing
+is deterministic per (stage, pair, round), so a run reproduces and a test can
+assert it; rates are low, so the board is mostly green with faults surfacing over
+time. `file`'s transport path carries no fault, one transport that stays green.
 
 ### 5. The far end is Xmip
 
