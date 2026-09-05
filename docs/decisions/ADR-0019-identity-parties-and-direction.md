@@ -325,3 +325,25 @@ the network could write to.
   organisation, company, fleet, department, device. Whether identity inherits
   down that hierarchy, so a fleet certificate authenticates a ship, is not
   decided here.
+
+## Amendment, 2026-09-05: identity is three stages, not two
+
+This record paired *authentication and authorization*; identity is **three**
+stages, and the estate is three capabilities to match. The owner's articulation,
+2026-09-05: *identify, authenticate the identity, check if the identity may do
+what it claims — authorization.*
+
+1. **Identify** (`xmip-core-identify`) — determine the *claimed* identity: a
+   certificate subject, an `ISA06`, an OAuth `sub`. A claim, extracted, nothing
+   proven. This is a stage of its own, not the front of authentication.
+2. **Authenticate** (`xmip-core-authenticate`) — prove the claim holds: the TLS
+   handshake, the certificate chain, the shared secret. Only now is there a
+   caller rather than a claim. Authentication runs only for a declared mechanism
+   (the closed set above).
+3. **Authorize** (`xmip-core-authorize`) — decide whether that proven identity
+   may do what it is asking. A proven identity is not a permission (ADR-0009).
+
+The order is fixed and the stages never collapse: a claim that is not proven is
+not a caller; a caller that is not authorized is refused with the reason. Where
+clause text says "authentication precedes authorization", read the full chain:
+**identify precedes authenticate precedes authorize.**
