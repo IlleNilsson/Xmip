@@ -74,12 +74,21 @@ other Host Service.
 The **pingpong test** is a single integration test whose subject is every
 transport the estate declares by every content contract it declares — not a
 test per protocol or per contract, but one test across the whole matrix at
-once. Its scenario is a round trip: send a payload, catch it, check it came
-back whole. It runs on a Schedule and never stops; each round folds into a
-running tally per pair, so a pair is judged by its record over time rather than
-its last round, and one failure among thousands stays visible until a round
-passes again. A pair not exercised in the last window is stale, and the
-snapshot shows staleness.
+once. Its scenario is a round trip: send an actual Stream, catch it, check it
+came back whole **and** that the contract holds over what arrived — a pair is
+delivered only if both are true, which is the difference between testing a
+transport and testing an integration. It runs on a Schedule and never stops;
+each round folds into a running tally per pair, so a pair is judged by its
+record over time rather than its last round, and one failure among thousands
+stays visible until a round passes again. A pair not exercised in the last
+window is stale, and the snapshot shows staleness.
+
+The contract axis is real, not a byte comparison: bytes (no structural claim),
+text (UTF-8), json (well-formed, via a real parser), xml (well-formed) and html
+(markup), each a `Contract` in the estate's own trait so that when the
+`xmip-core-message-*` and `xmip-core-contract-*` modules land, the probe
+validates against those instead — a move, not a rewrite. A malformed Stream is a
+violation, red with the parser's own reason, not a pass.
 
 Named by the owner, 2026-09-05: *the pingpong test, an integration test over
 time, for all protocols and contracts.* The scenario drives a small `RoundTrip`
