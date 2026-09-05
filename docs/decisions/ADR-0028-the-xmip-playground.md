@@ -82,9 +82,14 @@ passes again. A pair not exercised in the last window is stale, and the
 snapshot shows staleness.
 
 Named by the owner, 2026-09-05: *the pingpong test, an integration test over
-time, for all protocols and contracts.* The first implementation runs the file
-transport — self-contained, no port to coordinate — over the bytes and text
-contracts; ADR-0028 clause 5 governs the socket transports as they join.
+time, for all protocols and contracts.* The scenario drives a small `RoundTrip`
+adapter — send a payload, get back what returned or why it could not — and each
+transport implements that adapter however its own shape demands, so the scenario
+is one thing over all of them and a new transport is a new adapter, not a new
+test. File was first — self-contained, no port to coordinate; **tcp joined
+2026-09-05**, ping-ponging over a real loopback socket (bind, connect from a
+second thread, accept one, compare). The remaining socket transports (udp, http,
+smtp) join by adding their adapter; clause 5 governs them all.
 
 ### 4. A verdict is health
 
