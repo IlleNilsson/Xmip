@@ -152,16 +152,16 @@ Describe 'Test-XmipBuildOutput' {
 }
 
 Describe 'Resolve-XmipCommitSubject' {
-    # 2026-08-29. Two commits landed under "Pin 1 module" while carrying an ADR,
-    # a test file and a documentation change. Two defects, one symptom:
+    # The owner's call, 2026-09-05: a superproject log full of "Pin 1 module" is
+    # not correct. One land carries one message; it belongs on the superproject
+    # commit as much as the module commit, so the estate's log reads what
+    # changed. The message wins whenever there is one — a pin that changes only
+    # gitlinks says the same thing the module said. "Pin N module" survives only
+    # as the fallback for a pin with no message, the shape outside a land.
     #
-    #   the subject rule used $Message only when NO gitlink was staged, so any
-    #   commit that also moved a gitlink discarded it;
-    #
-    #   and both call sites invoked Publish-XmipPin with no -Message at all, so
-    #   on the ordinary path there was nothing to discard in the first place.
-    #
-    # The second is why fixing only the first would have changed nothing.
+    # This reverses the 2026-08-29 rule, which used the message only when the
+    # commit also touched a platform-repository file. That rule left a
+    # module-only land — the common case — under a generic "Pin 1 module".
 
     It 'keeps the message when the platform repository changed too' {
         InModuleScope Xmip {
@@ -173,23 +173,23 @@ Describe 'Resolve-XmipCommitSubject' {
             )
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Unmount exclusiveness' |
-                Should -Be 'Unmount exclusiveness' -Because 'three of the four are not gitlinks'
+                Should -Be 'Unmount exclusiveness'
         }
     }
 
-    It 'calls it a pin when gitlinks are all there is' {
+    It 'keeps the message even when gitlinks are all there is' {
         InModuleScope Xmip {
             $staged = @('modules/foundation/core', 'modules/capabilities/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Arrivals and departures' |
-                Should -Be 'Pin 2 modules' -Because 'no author intent is recorded by a gitlink move'
+                Should -Be 'Arrivals and departures' -Because 'the land carried a message'
         }
     }
 
-    It 'agrees on the noun for one' {
+    It 'keeps the message for a single-module land' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message 'x' |
-                Should -Be 'Pin 1 module'
+            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message 'Record the departure' |
+                Should -Be 'Record the departure'
         }
     }
 
@@ -202,8 +202,15 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'falls back to the pin subject when there is no message' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('src/lib.rs') -Message '' |
-                Should -Be 'Pin 0 modules'
+            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message '' |
+                Should -Be 'Pin 1 module'
+        }
+    }
+
+    It 'names the count in the fallback when there is no message' {
+        InModuleScope Xmip {
+            Resolve-XmipCommitSubject -Staged @('modules/foundation/core', 'modules/capabilities/route') -Message '' |
+                Should -Be 'Pin 2 modules'
         }
     }
 }
