@@ -462,6 +462,11 @@ is what an order costs when nothing retires its entries.
 6. Cross-compilation                   four declared targets, verified on host
                                        only
 7. Organisation and second owner       problem 15, independent of all the above
+8. The Xmip Playground                 ADR-0028; spawns Development nodes and
+                                       exercises every transport and contract
+                                       continuously. Named 2026-09-05. Needs
+                                       ADR-0018 phases 4-9 to run anything, so
+                                       it grows with the runtime
 ```
 
 Problems 4, 5, 7, 8 and 9 remain naming judgements with no deadline. They cost
