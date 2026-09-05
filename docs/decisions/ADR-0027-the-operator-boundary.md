@@ -221,6 +221,28 @@ Renamed now, while one crate and two surfaces consume it and ADR-0005 still
 permits reshaping freely. After the operator boundary ships, the collision is in
 two normative headers and every module author has read both.
 
+## Amendment, 2026-09-05: the lifecycle exports, and who authors
+
+Clause 9 said configuration is read, validated and reloaded — never authored —
+and left where authoring happens implicit. The desktop editor made it concrete
+(ADR-0014: the desktop host configures, the web host only watches, DSC deploys
+at scale), and two runtime exports carry it:
+
+- `xmip_start_v1(path)` reads a saved node configuration, validates it, and
+  publishes what it planned as health. It takes a filesystem path — a saved
+  file — because starting a node runs what is on disk.
+- `xmip_validate_v1(configuration, …)` takes the configuration **text** the
+  editor is holding, validates it, and publishes nothing. This is clause 9's
+  "validate a proposed document without applying it": the editor's Validate
+  button, checking a document before it is saved, against the same runtime that
+  would start it. The report crosses as UTF-8, one problem per line.
+
+Both are separate exported symbols, not entries in the `XmipOperate` table an
+observer holds — an observer watches, a configurer acts, and the table stays
+the watcher's. Authoring itself is still not on the boundary: the editor writes
+the TOML file directly, and validation is the only configuration act the
+runtime performs for it. Header section 6.
+
 ## Amendment, 2026-09-05: three states, no fourth
 
 `XMIP_HEALTH_UNREACHABLE` is removed from `xmip_operate.h`. The owner's call:
