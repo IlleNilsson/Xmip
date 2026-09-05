@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-two decisions, read as one document.
+Thirty-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -183,6 +183,17 @@ role is what a human or Service Identity is permitted to do. An Actor capability
 is what a runtime entity is able to do. Neither implies the other.
 
 → [Security roles versus Actor capabilities, in full](ADR-0009-security-roles-vs-actor-capabilities.md)
+
+### Certificate identity is the first mechanism built, provisioned by ACME
+
+**Certificate identity is the first authentication mechanism Xmip implements,
+on both directions: a Receive Location verifies the certificate a caller
+presents, and a Send Location presents one. And provisioning those certificates
+prioritises ACME — Let's Encrypt — among the identity protocols.** Twenty-eight
+mechanisms are declared and none is built (the survey, 2026-09-05); this picks
+the order, starting with certificates.
+
+→ [Certificates on Receive and Send, in full](ADR-0033-certificates-on-receive-and-send.md)
 
 ---
 
@@ -481,6 +492,7 @@ You have a word. This gives you the decision that governs it.
 | --- | --- |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
 | ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| ACME, Let's Encrypt | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Activity, recent items | [Recent activity](ADR-0032-recent-activity.md) |
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -489,6 +501,7 @@ You have a word. This gives you the decision that governs it.
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
@@ -596,3 +609,4 @@ is nowhere else.
 | [0030](ADR-0030-prefix-external-names.md) | Prefix external names, not internal ones | |
 | [0031](ADR-0031-configuration-is-toml-json-is-transport.md) | Configuration is TOML; JSON is transport | |
 | [0032](ADR-0032-recent-activity.md) | Recent activity | |
+| [0033](ADR-0033-certificates-on-receive-and-send.md) | Certificates on Receive and Send | |
