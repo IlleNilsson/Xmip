@@ -10,12 +10,11 @@ function Get-XmipHistory {
 
         .DESCRIPTION
             The CLI's history surface, ADR-0029. The Xmip Playground (and, later,
-            a running node) publishes its throughput over time as a JSON file —
-            transport, never configuration, per the estate rule that JSON lives
-            in memory or on the wire and TOML configures. This reads that file
-            and emits one object per point, so an operator without a browser sees
-            the same curve the UI draws, and can pipe it to Format-Table,
-            Export-Csv or a chart.
+            a running node) publishes its throughput over time as a TOML file —
+            on disk the estate is TOML, and JSON is reserved for memory and the
+            wire. This reads that file and emits one object per point, so an
+            operator without a browser sees the same curve the UI draws, and can
+            pipe it to Format-Table, Export-Csv or a chart.
 
             It reads a file and computes nothing: the history is what the
             producer retained, the same as the operator boundary (ADR-0027
@@ -53,7 +52,7 @@ function Get-XmipHistory {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-playground-history.json'
+        $Path = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-playground-history.toml'
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {
@@ -61,9 +60,9 @@ function Get-XmipHistory {
         return
     }
 
-    $document = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    Import-Module PSToml -ErrorAction Stop
 
-    [string[]] $kinds = if ($Counted) { @($Counted) } else { @('streams', 'messages', 'bytes') }
+    $document = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
 
     [long] $sinceNanos = if ($PSBoundParameters.ContainsKey('Since')) {
         [DateTimeOffset]::new($Since).ToUnixTimeMilliseconds() * 1000000
@@ -72,24 +71,22 @@ function Get-XmipHistory {
         [long]::MinValue
     }
 
-    foreach ($kind in $kinds) {
-        if (-not ($document.series.PSObject.Properties.Name -contains $kind)) {
+    foreach ($point in $document.points) {
+        if ($Counted -and $point.counted -ne $Counted) {
             continue
         }
 
-        foreach ($point in $document.series.$kind) {
-            if ([long] $point.observedUnixNanos -lt $sinceNanos) {
-                continue
-            }
+        if ([long] $point.observed_unix_nanos -lt $sinceNanos) {
+            continue
+        }
 
-            [long] $millis = [long] ($point.observedUnixNanos / 1000000)
+        [long] $millis = [long] ($point.observed_unix_nanos / 1000000)
 
-            [PSCustomObject]@{
-                Node     = $document.node
-                Counted  = $kind
-                Value    = [long] $point.value
-                Observed = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime
-            }
+        [PSCustomObject]@{
+            Node     = $document.node
+            Counted  = $point.counted
+            Value    = [long] $point.value
+            Observed = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime
         }
     }
 }

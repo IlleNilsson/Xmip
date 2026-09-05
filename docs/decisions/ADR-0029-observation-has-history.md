@@ -69,10 +69,12 @@ A surface with no history to show says so, as it does for a missing snapshot.
 
 ### 5. The Playground writes history to a file
 
-Until a runtime retains it, the Playground appends each tick's point to a
-history file beside its snapshot, and the file surface reads the tail. The file
-is JSON (transport, not configuration) and bounded the same way — the writer
-keeps the last N lines.
+Until a runtime retains it, the Playground writes its snapshot and its history
+to files beside each other, and the file surface reads them. The files are
+**TOML**: on disk the estate is TOML, and JSON is reserved for what lives in
+memory or on the wire (the owner's rule, 2026-09-05 — the same reason
+`architecture.json` was deleted for `architecture.toml`). They are bounded the
+same way the in-memory series is: the writer keeps the last N points.
 
 ## Consequences
 
