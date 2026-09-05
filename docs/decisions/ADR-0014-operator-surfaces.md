@@ -316,3 +316,21 @@ own platform cannot load was a rule stated with one word too few.
 
 **Backpressure.** Clause 10 settles what a follow mode emits and says nothing about what happens when a consumer cannot keep up. Dropping is consistent with clause 5, since observation is lossy by design and says so. Which samples are dropped, and whether the consumer is told it missed some, is not settled. A monitor that silently skips is worse than one that admits a gap.
 
+
+## Amendment, 2026-09-05: the desktop GUI runs what a browser cannot
+
+Both GUIs read the same operator surface, but they are not interchangeable, and
+the reason is the browser's sandbox. **The desktop GUI executes commands a
+browser cannot** — it reads and writes the node configuration TOML files on
+disk, loads the native runtime library, and asks it to validate or start a node
+(`xmip_validate_v1`, `xmip_start_v1`). None of that is available to a page in a
+browser: no local file it did not receive over the wire, no native library, no
+process control.
+
+So the split in clause form: the **web GUI monitors** — it reads snapshots and
+nothing else, which a sandbox can do safely. The **desktop GUI monitors and
+configures** — configuration is on the desktop precisely because configuring a
+node means touching the disk and the runtime, which only an unsandboxed process
+can. This is not a preference about where a screen lives; it is what each host is
+physically able to do. The owner's point, 2026-09-05: *the GUI shall be able to
+execute commands that a browser can't.*
