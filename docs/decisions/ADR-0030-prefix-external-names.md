@@ -52,6 +52,13 @@ and no one else. These drop the prefix:
   `XmipSnapshot` inside `xmip-core-observe`; it is `Snapshot`.
 - Internal configuration **sections and keys**, which sit under a context that
   already says Xmip.
+- **Dependency aliases.** A crate is `xmip-core-<x>` on crates.io (external), but
+  a module referring to it aliases it bare in its `Cargo.toml` — `observe`,
+  `transport`, `stream` — so the code reads `use observe::Snapshot`, not
+  `use xmip_observe::…`. The package name stays external; the local name does
+  not carry the prefix. The one exception is `xmip-core`, aliased **`xcore`**:
+  bare `core` is the language's own crate and would shadow `use core::…` in the
+  no_std modules.
 
 ### 3. The test is collision, not tidiness
 
