@@ -1160,21 +1160,21 @@ function Resolve-XmipCommitSubject {
             The subject line for a superproject commit, from what is staged.
 
         .DESCRIPTION
-            **A pin is a commit that contains nothing but gitlinks.** That is the
-            whole rule, and the test is what else is staged rather than how many
-            gitlinks there are.
+            **The caller's message wins whenever there is one.** A land carries
+            one message and it belongs on both commits it produces — the module's
+            and the superproject's — so the estate's own `git log` reads what
+            changed rather than "Pin 1 module".
 
-            The defect this replaces, on 2026-08-29: the condition was
-            `$pins.Count -eq 0 -and $Message`, so the caller's message was used
-            only when *no* gitlink was staged. Two commits went in under "Pin 1
-            module" while carrying an ADR, a test file and a documentation
-            change, because each also moved one gitlink. The message a person
-            typed was discarded by a rule about a file they did not name.
+            The owner's call, 2026-09-05: a superproject log full of "Pin 1
+            module" is not correct. The earlier rule (2026-08-29) used the
+            message only when the commit also changed a platform-repository file,
+            on the reasoning that a pure gitlink move records no author intent.
+            But the intent is the message the person typed at the land, and the
+            module already committed it — the superproject should say the same
+            thing, not a generic count.
 
-            A commit that moves gitlinks *and* changes the platform repository
-            takes the caller's message: the gitlinks are incidental to what the
-            person did, and `git show --stat` says so anyway. Only a commit that
-            is gitlinks and nothing else has no author's intent to record.
+            "Pin N module" remains the fallback for a pin with no message at all,
+            which is how `Publish-XmipPin` is called outside a land.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -1187,12 +1187,11 @@ function Resolve-XmipCommitSubject {
         [string] $Message
     )
 
-    $pins = @($Staged | Where-Object { $_ -like 'modules/*' })
-
-    if ($pins.Count -ne $Staged.Count -and $Message) {
+    if ($Message) {
         return $Message
     }
 
+    $pins = @($Staged | Where-Object { $_ -like 'modules/*' })
     $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
 
     return "Pin $($pins.Count) $noun"
