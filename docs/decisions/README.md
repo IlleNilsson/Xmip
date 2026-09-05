@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-one decisions, read as one document.
+Thirty-two decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -418,6 +418,17 @@ holds numbers and states for watching.
 
 → [Observation has history, in full](ADR-0029-observation-has-history.md)
 
+### An operator drills past the counts to the individual items
+
+**Beside health and throughput, the operator boundary publishes a bounded list
+of the recent individual items — the Streams that arrived, the Messages that
+were sent, the Journeys that ran.** Drilling down reaches not just a redder
+number but the actual items behind it. It is **recent activity**, not retention:
+a short, published, bounded list for watching, never the full Message for replay
+(that stays `xmip-core-retain`'s).
+
+→ [Recent activity, in full](ADR-0032-recent-activity.md)
+
 ---
 
 ## 6. How the work is done
@@ -470,6 +481,7 @@ You have a word. This gives you the decision that governs it.
 | --- | --- |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
 | ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Activity, recent items | [Recent activity](ADR-0032-recent-activity.md) |
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -522,6 +534,7 @@ You have a word. This gives you the decision that governs it.
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
+| Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
@@ -582,3 +595,4 @@ is nowhere else.
 | [0029](ADR-0029-observation-has-history.md) | Observation has history | |
 | [0030](ADR-0030-prefix-external-names.md) | Prefix external names, not internal ones | |
 | [0031](ADR-0031-configuration-is-toml-json-is-transport.md) | Configuration is TOML; JSON is transport | |
+| [0032](ADR-0032-recent-activity.md) | Recent activity | |
