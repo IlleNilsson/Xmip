@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-nine decisions, read as one document.
+Thirty-one decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -274,6 +274,25 @@ carries. Nothing in it is current — do not implement from it.
 
 → [The handler universe, in full](ADR-0004-handler-universe.md) — **superseded by [ADR-0010](ADR-0010-contract-transport-repository-boundaries.md)**
 
+### The `xmip` prefix belongs where a name meets the outside world
+
+**A name carries the `xmip`/`Xmip` prefix when, and only when, it is external —
+when it lives in a namespace shared with the world and could collide there.
+Internal names drop it: inside the estate it is known to be Xmip, so the prefix
+is noise.** ADR-0011 fixed this for repositories and crates; this record states
+the principle behind it and extends it to everything else that gets named.
+
+→ [Prefix external names, not internal ones, in full](ADR-0030-prefix-external-names.md)
+
+### What Xmip configures itself in, and what it moves data in
+
+**Xmip configures itself in TOML and never in JSON. JSON is for transport —
+content in memory or on the wire — and never for configuration.** The estate's
+own files on disk are TOML; JSON that appears does so as data being carried or
+validated, not as a file Xmip reads its settings from.
+
+→ [Configuration is TOML; JSON is transport, in full](ADR-0031-configuration-is-toml-json-is-transport.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -461,6 +480,7 @@ You have a word. This gives you the decision that governs it.
 | Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
+| Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -480,6 +500,7 @@ You have a word. This gives you the decision that governs it.
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
+| Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
@@ -487,6 +508,7 @@ You have a word. This gives you the decision that governs it.
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
@@ -503,6 +525,7 @@ You have a word. This gives you the decision that governs it.
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
+| Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 
@@ -557,3 +580,5 @@ is nowhere else.
 | [0027](ADR-0027-the-operator-boundary.md) | The operator boundary | |
 | [0028](ADR-0028-the-xmip-playground.md) | The Xmip Playground | |
 | [0029](ADR-0029-observation-has-history.md) | Observation has history | |
+| [0030](ADR-0030-prefix-external-names.md) | Prefix external names, not internal ones | |
+| [0031](ADR-0031-configuration-is-toml-json-is-transport.md) | Configuration is TOML; JSON is transport | |
