@@ -347,3 +347,14 @@ The order is fixed and the stages never collapse: a claim that is not proven is
 not a caller; a caller that is not authorized is refused with the reason. Where
 clause text says "authentication precedes authorization", read the full chain:
 **identify precedes authenticate precedes authorize.**
+
+**The three stages are the invariant; the security technology is not.** A
+certificate, mutual-TLS, Let's Encrypt/ACME, OAuth, OIDC, Kerberos, a password,
+an API key, an EDI interchange id — each is a *mechanism* behind Authenticate,
+with its claim extracted by Identify and its permissions decided by Authorize.
+Xmip keeps to Identify → Authenticate → Authorize whatever the mechanism is.
+Adding a security technology adds a mechanism module (ADR-0010, one per
+technology); it never adds, removes, reorders or merges a stage. The pipeline
+does not bend to a mechanism, and a mechanism that would need it to is refused
+rather than accommodated. This is what makes the twenty-eight declared mechanisms
+a list of plug-ins rather than twenty-eight different identity models.
