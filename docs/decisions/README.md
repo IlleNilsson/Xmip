@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Twenty-eight decisions, read as one document.
+Twenty-nine decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -387,6 +387,18 @@ reads. Until it runs, a throughput card shows a dash.
 
 → [The Xmip Playground, in full](ADR-0028-the-xmip-playground.md)
 
+### The operator boundary reads observation over time, not only its latest
+
+**An operator reads history, not only the present.** ADR-0027's boundary reads
+the latest snapshot; this record adds a **bounded series over time** beside it,
+so every surface — the ABI, the CLI, the web UI and the desktop GUI — can show
+how a scope's health and throughput moved, not just where they are now. It is
+**monitoring history**, distinct from message retention (ADR-0013,
+observability-model.md): retention holds the actual Message for replay; this
+holds numbers and states for watching.
+
+→ [Observation has history, in full](ADR-0029-observation-has-history.md)
+
 ---
 
 ## 6. How the work is done
@@ -460,6 +472,7 @@ You have a word. This gives you the decision that governs it.
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
@@ -468,6 +481,7 @@ You have a word. This gives you the decision that governs it.
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
+| Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -481,6 +495,7 @@ You have a word. This gives you the decision that governs it.
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
@@ -541,3 +556,4 @@ is nowhere else.
 | [0026](ADR-0026-bounding-a-publication-chain.md) | Bounding a publication chain | |
 | [0027](ADR-0027-the-operator-boundary.md) | The operator boundary | |
 | [0028](ADR-0028-the-xmip-playground.md) | The Xmip Playground | |
+| [0029](ADR-0029-observation-has-history.md) | Observation has history | |
