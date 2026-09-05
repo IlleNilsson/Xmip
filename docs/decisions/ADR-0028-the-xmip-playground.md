@@ -69,13 +69,22 @@ process isolation is what the operating system provides, and it is what
 Development nodes get. A process that hangs is killed and restarted like any
 other Host Service.
 
-### 3. Every transport, every contract, continuously
+### 3. One test, over everything, over time
 
-The matrix is every transport the estate declares by every content contract it
-declares. Each pair has a Receive Location, a generator, a Send Location and a
-watcher. Generation never stops while the Playground runs; a pair not exercised
-in the last window is a pair whose verdict has gone stale, and the snapshot
-shows staleness.
+The **pingpong test** is a single integration test whose subject is every
+transport the estate declares by every content contract it declares — not a
+test per protocol or per contract, but one test across the whole matrix at
+once. Its scenario is a round trip: send a payload, catch it, check it came
+back whole. It runs on a Schedule and never stops; each round folds into a
+running tally per pair, so a pair is judged by its record over time rather than
+its last round, and one failure among thousands stays visible until a round
+passes again. A pair not exercised in the last window is stale, and the
+snapshot shows staleness.
+
+Named by the owner, 2026-09-05: *the pingpong test, an integration test over
+time, for all protocols and contracts.* The first implementation runs the file
+transport — self-contained, no port to coordinate — over the bytes and text
+contracts; ADR-0028 clause 5 governs the socket transports as they join.
 
 ### 4. A verdict is health
 
