@@ -188,7 +188,9 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message for a single-module land' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message 'Record the departure' |
+            $staged = @('modules/foundation/core')
+
+            Resolve-XmipCommitSubject -Staged $staged -Message 'Record the departure' |
                 Should -Be 'Record the departure'
         }
     }
@@ -209,7 +211,9 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'names the count in the fallback when there is no message' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('modules/foundation/core', 'modules/capabilities/route') -Message '' |
+            $staged = @('modules/foundation/core', 'modules/capabilities/route')
+
+            Resolve-XmipCommitSubject -Staged $staged -Message '' |
                 Should -Be 'Pin 2 modules'
         }
     }
