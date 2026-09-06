@@ -4,7 +4,8 @@
 - Date: 2026-09-05
 - Related: ADR-0019 (identity, parties, direction), ADR-0022 (identity classes),
   ADR-0010 (contract and transport boundaries), ADR-0028 (the Playground's
-  injected faults)
+  injected faults), ADR-0034 (provisioning versus usage — this record is the
+  *usage* half; provisioning, including where Let's Encrypt fits, is there)
 
 ## In brief
 

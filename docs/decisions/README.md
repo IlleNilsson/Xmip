@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-three decisions, read as one document.
+Thirty-four decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -194,6 +194,16 @@ mechanisms are declared and none is built (the survey, 2026-09-05); this picks
 the order, starting with certificates.
 
 → [Certificates on Receive and Send, in full](ADR-0033-certificates-on-receive-and-send.md)
+
+### Where a certificate comes from is a separate, per-deployment question
+
+**Using a certificate and obtaining one are two different concerns. Usage —
+mutual-TLS on Receive and Send — is uniform everywhere. Provisioning — how the
+certificate arrives — is plural, and the source is chosen per deployment.**
+Let's Encrypt is one provisioning source, for the public edge; it is not usage,
+not the pipeline, and not universal.
+
+→ [Certificate provisioning versus usage, in full](ADR-0034-certificate-provisioning-versus-usage.md)
 
 ---
 
@@ -536,6 +546,7 @@ You have a word. This gives you the decision that governs it.
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
+| Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -546,6 +557,7 @@ You have a word. This gives you the decision that governs it.
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
+| source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
@@ -610,3 +622,4 @@ is nowhere else.
 | [0031](ADR-0031-configuration-is-toml-json-is-transport.md) | Configuration is TOML; JSON is transport | |
 | [0032](ADR-0032-recent-activity.md) | Recent activity | |
 | [0033](ADR-0033-certificates-on-receive-and-send.md) | Certificates on Receive and Send | |
+| [0034](ADR-0034-certificate-provisioning-versus-usage.md) | Certificate provisioning versus usage | |
