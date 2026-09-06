@@ -492,18 +492,43 @@ function Test-XmipBuildOutput {
 function Get-XmipDeclaredModule {
     <#
         .SYNOPSIS
-            Every submodule path in .gitmodules, in file order.
+            Every submodule path in .gitmodules, in file order, nested included.
+
+        .DESCRIPTION
+            A Technology repository (repository-model.md) is a submodule of its
+            parent Capability, so its path lives in *that* repository's
+            .gitmodules, not the estate root's. Reading only the root left every
+            such module — a content contract, a transport, an archive target —
+            outside the pipeline: not tested, not landed, not pinned.
+
+            So this recurses. For each declared path it emits the path, then, if
+            that submodule has a .gitmodules of its own, its nested paths with the
+            parent prefixed, so a Technology reads as its full path from the
+            estate root. Pre-order: a parent precedes its children, which keeps
+            the root order the caller had and appends the nested after each.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory)]
-        [string] $RepositoryRoot
+        [string] $RepositoryRoot,
+
+        # The parent submodule's path, prefixed onto nested entries. Empty at the
+        # estate root; set only by the recursion.
+        [Parameter()]
+        [string] $Prefix = ''
     )
 
-    $modulesFile = Join-Path -Path $RepositoryRoot -ChildPath '.gitmodules'
+    $relative = if ($Prefix) { "$Prefix/.gitmodules" } else { '.gitmodules' }
+    $modulesFile = Join-Path -Path $RepositoryRoot -ChildPath $relative
 
     if (-not (Test-Path -LiteralPath $modulesFile)) {
+        # A submodule with no submodules of its own is the ordinary case; only
+        # the estate root is required to have one.
+        if ($Prefix) {
+            return
+        }
+
         throw "No .gitmodules under $RepositoryRoot. Is that the Xmip working tree?"
     }
 
@@ -512,8 +537,48 @@ function Get-XmipDeclaredModule {
         Pattern = '^\s*path\s*=\s*(?<path>.+)$'
     }
 
-    Select-String @matchParams |
-        ForEach-Object { $_.Matches[0].Groups['path'].Value.Trim() }
+    $paths = @(
+        Select-String @matchParams |
+            ForEach-Object { $_.Matches[0].Groups['path'].Value.Trim() }
+    )
+
+    foreach ($path in $paths) {
+        $full = if ($Prefix) { "$Prefix/$path" } else { $path }
+        $full
+        Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot -Prefix $full
+    }
+}
+
+function Get-XmipNestedParent {
+    <#
+        .SYNOPSIS
+            Declared submodules that themselves mount submodules, deepest first.
+
+        .DESCRIPTION
+            A Technology lands in its own repository, but the gitlink to it lives
+            in its parent Capability's repository, not the superproject. The
+            parent has to record and push that gitlink before the superproject can
+            pin the parent. These are those parents, ordered deepest first so a
+            chain of nesting pins from the bottom up.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot
+    )
+
+    $declared = @(Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot)
+
+    $parents = @(
+        $declared | Where-Object {
+            $candidate = $_
+            @($declared | Where-Object { $_ -like "$candidate/*" }).Count -gt 0
+        }
+    )
+
+    $parents |
+        Sort-Object -Property @{ Expression = { ($_ -split '/').Count }; Descending = $true }
 }
 
 function Sort-XmipModuleDependency {
@@ -1221,6 +1286,35 @@ function Publish-XmipPin {
 
     if (-not $PSCmdlet.ShouldProcess('the estate', 'pin and push')) {
         return
+    }
+
+    # Nested first. A Technology's gitlink lives in its parent Capability's
+    # repository, not here, so that parent has to record and push the moved
+    # gitlink before the superproject can pin the parent. Deepest first, so a
+    # chain of nesting settles from the bottom up; then the superproject below
+    # sees each parent's own gitlink move and pins that.
+    foreach ($parent in @(Get-XmipNestedParent -RepositoryRoot $RepositoryRoot)) {
+        $parentPath = Join-Path -Path $RepositoryRoot -ChildPath $parent
+        & git -C $parentPath add -A
+
+        # Staged, not dirty — the same reason the superproject uses below: an
+        # untracked file inside a grandchild reads as modified but is not the
+        # parent's to commit.
+        $nested = @(& git -C $parentPath diff --cached --name-only)
+
+        if ($nested.Count -eq 0) {
+            continue
+        }
+
+        Write-Host "   pinning nested in $parent..." -ForegroundColor DarkGray
+        $subject = Resolve-XmipCommitSubject -Staged $nested -Message $Message
+        & git -C $parentPath commit -m $subject --quiet
+        & git -C $parentPath push origin main --quiet
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Pinning nested modules in $parent failed. " +
+                'The technology is on origin; only its gitlink is missing.'
+        }
     }
 
     & git -C $RepositoryRoot add -A

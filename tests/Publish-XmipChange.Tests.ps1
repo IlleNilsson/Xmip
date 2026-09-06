@@ -422,6 +422,87 @@ xmip-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = 
     }
 }
 
+Describe 'Get-XmipDeclaredModule sees nested submodules' {
+    BeforeAll {
+        # A depth-three estate on disk: the root mounts a capability and a
+        # foundation module; the capability mounts a technology of its own. The
+        # .gitmodules files are real because the discovery reads them with a
+        # regex, and a mock would test the mock. This is the shape that was
+        # invisible before — a Technology's path lives in its parent's
+        # .gitmodules, never the root's.
+        $script:Nest = Join-Path ([IO.Path]::GetTempPath()) "xmip-nest-$([guid]::NewGuid())"
+
+        $files = @{
+            '.gitmodules' = @'
+[submodule "modules/capabilities/contract"]
+	path = modules/capabilities/contract
+	url = https://example.invalid/contract
+[submodule "modules/foundation/core"]
+	path = modules/foundation/core
+	url = https://example.invalid/core
+'@
+            'modules/capabilities/contract/.gitmodules' = @'
+[submodule "modules/csv"]
+	path = modules/csv
+	url = https://example.invalid/contract-csv
+'@
+        }
+
+        foreach ($relative in $files.Keys) {
+            $target = Join-Path $script:Nest $relative
+            New-Item -Path (Split-Path $target) -ItemType Directory -Force | Out-Null
+            Set-Content -LiteralPath $target -Value $files[$relative]
+        }
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Nest -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'emits the nested module as its full path from the estate root' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
+            param($Root)
+
+            $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
+
+            $declared | Should -Contain 'modules/capabilities/contract'
+            $declared | Should -Contain 'modules/capabilities/contract/modules/csv'
+            $declared | Should -Contain 'modules/foundation/core'
+        }
+    }
+
+    It 'places a parent before its child' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
+            param($Root)
+
+            $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
+
+            $declared.IndexOf('modules/capabilities/contract') |
+                Should -BeLessThan $declared.IndexOf('modules/capabilities/contract/modules/csv')
+        }
+    }
+
+    It 'does not throw over a submodule that mounts nothing' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
+            param($Root)
+
+            # modules/foundation/core has no .gitmodules of its own; the ordinary
+            # case must be silent, not an error.
+            { Get-XmipDeclaredModule -RepositoryRoot $Root } | Should -Not -Throw
+        }
+    }
+
+    It 'names the nesting parent, and only the parent' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
+            param($Root)
+
+            $parents = @(Get-XmipNestedParent -RepositoryRoot $Root)
+
+            $parents | Should -Be @('modules/capabilities/contract')
+        }
+    }
+}
+
 Describe 'Publish-XmipPin' {
     It 'counts what it is pinning rather than being told' {
         # Being told "nothing landed" is what made it skip, leaving 18 stale
