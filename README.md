@@ -156,7 +156,7 @@ cannot create user-account repositories.
 ### Work with the repositories
 
 ```powershell
-Sync-XmipRepository -Clone -ModulesOnly    # the 43 modules, beside this repository
+Sync-XmipRepository -Clone -ModulesOnly    # every module, beside this repository
 Sync-XmipRepository -Status                # what is dirty, ahead, behind
 Sync-XmipRepository -Pull
 Sync-XmipRepository -Branch -Create feature/thing
@@ -176,7 +176,8 @@ prerequisite.toml     what a machine needs, per role and per operating system
 rust-toolchain.toml   channel = stable
 
 Xmip/                 the PowerShell module
-crates/  src/         Rust
+modules/              the Rust modules, mounted as git submodules
+src/                  this repository's own Rust facade
 tests/                Pester
 deploy/               Ansible and DSC node configuration
 docs/                 see below

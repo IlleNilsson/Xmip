@@ -104,6 +104,11 @@ name = "xmip-core-exclusiveness"
 on = "2026-08-27"
 reason = "ADR-0024. ResourceClaim in xmip-core-transport replaces it. Archived rather than deleted because ADR-0017 is part of the record."
 
+[[retired]]
+name = "xmip-core-webapi"
+on = "2026-09-06"
+reason = "ADR-0014 amendment 2026-08-26. The web API belongs to the Logic axis (xmip-core-logic-http-api over xmip-core-transport-http), not a module of its own; it was declared, mounted nowhere, and deprecated. Retired rather than deleted because the amendment is part of the record; may return with the Logic axis."
+
 [policy]
 acyclic = true
 rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "Operations consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
@@ -151,13 +156,6 @@ dependency = []
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "planned"
-  dependency = ["xmip-core"]
-
-  [xmip.core.webapi]
-  description = "Deprecated. Use xmip-core-logic-http-api over xmip-core-transport-http."
-  architecturalDomain = "Operations"
-  repositoryRole = "common-architecture"
-  maturity = "deprecated"
   dependency = ["xmip-core"]
 
   [xmip.core.stream]
