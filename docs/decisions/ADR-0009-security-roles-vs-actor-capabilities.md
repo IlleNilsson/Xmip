@@ -99,12 +99,15 @@ node's job, described by the **Executor** *node role* (Reader / Writer /
 Executor, `deployment-model.md`), not something a person is granted. The two were
 one letter apart and one idea apart; only the node role remains.
 
-**Shown, not yet enforced.** The desktop (Xmip.Operations) carries a role
-picker — Observer / Operator / Developer — and offers only what the role allows:
-an Observer sees Monitor, an Operator also sees Configure. The web surface, being
-monitoring only (ADR-0014), shows a fixed **Observer** badge. This makes the
-concept visible and shapes what is on offer; it does not yet gate on a proven
-identity.
+**Shown and assigned, not yet identity-gated.** The role is **assigned, never
+chosen in the UI** — a person cannot promote themselves. The desktop
+(Xmip.Operations) reads its role from configuration (`Xmip:Role`, defaulting to
+Observer so a missing value grants nothing) and shows it as a read-only badge; it
+offers Configure only to an Operator and up, and an Observer who reaches
+`/configure` directly is sent back to Monitor. The web surface, being monitoring
+only (ADR-0014), is always Observer. This makes the concept real — an Observer
+cannot configure — with the assigned role standing in until a proven identity
+gates it (ADR-0022/ADR-0027).
 
 **Not yet enforced.** No surface gates on role today — a surface holding runtime
 state in-process is a host process, and ADR-0022 clause 3 with the identity
