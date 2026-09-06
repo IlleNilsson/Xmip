@@ -61,8 +61,8 @@ Xmip Service:
 1  read-configuration      the node's configuration, whole
 2  build-execution-tree    what this node is supposed to be
 3  validate-startup        fail here, before anything is registered or started
-4  plan-system-processes   which Host Services, with what character and Modules
-5  start-system-processes  register what is missing, start in configured order
+4  plan-host-services      which Host Services, with what character and Modules
+5  start-host-services     register what is missing, start in configured order
 ```
 
 Xmip Host Service, each within itself:
@@ -213,3 +213,17 @@ membership, node role, capability and load may all bear on which Host Services
 a given node should run. Deferred deliberately: the node-local case is settled
 and sufficient to build against, and the cluster-wide case needs its own
 decision rather than an assumption made here.
+
+## Amendment, 2026-09-06: phases 4-5 renamed to host-services
+
+The startup phases 4 and 5 were named `plan-system-processes` /
+`start-system-processes`, and the code mirrored them
+(`StartupPhase::PlanSystemProcesses`, `XmipServiceState::ReadyToStartSystemProcesses`).
+That carried the exact "Process" overload the owner flagged: terminology.md is
+explicit that a Host Service is **not** a System Process (a Host Process is the
+operating-system process a Host Service runs as). ADR-0035 settled that
+terminology.md arbitrates such a collision, so the phases are renamed to
+`plan-host-services` / `start-host-services` — they plan and start **Host
+Services**, which is what phase 3's tree already validated. The state and phase
+enums in `service.rs` were renamed to match. No behaviour changed; the names now
+say what the phases do.
