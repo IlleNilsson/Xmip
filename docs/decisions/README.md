@@ -147,16 +147,17 @@ archive owner's decision, not Xmip's.**
 
 → [Xmip retains and archives, it does not delete, in full](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)
 
-### Health names a mood, in four states, and the worst does not roll up
+### Health names a mood, not a colour, and the worst does not roll up
 
-the rollup; a leaf's mood does not propagate
+Holding the rollup; a leaf's mood does not propagate
 
 **Health is a mood, not a colour — it names what a human gets out of a thread,
 process, node or cluster (the resource under load, not the machine) and what to
-do when results stop. A surface paints it. Five leaf moods, worsening: `Fine`
-(results flowing), `Working` (handling the load), `Stressed` (strained — change
-the load), `Exhausted` (spent — replace the hardware), `Done` (blocked or failed
-— the pain: a cert, a password, a folder). And a leaf's mood does not propagate:
+do when results stop. A surface paints it. The leaf moods, worsening: `Fine`
+(results flowing), `Paused` (a deliberate hold — an operator is working on it),
+`Working` (handling the load), `Stressed` (strained — change the load),
+`Exhausted` (spent — replace the hardware), `Done` (blocked or failed — the pain:
+a cert, a password, a folder). And a leaf's mood does not propagate:
 in a perfect world everything is `Fine`, and the moment anything below is not,
 the parent is displeased and reports `Holding` — drill in. A parent is only ever
 `Fine` or `Holding`; `Fine` up the tree still means every leaf beneath is
@@ -611,13 +612,12 @@ You have a word. This gives you the decision that governs it.
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
-| Fine, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
+| Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
 | Health as a mood | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
-| Holding | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |

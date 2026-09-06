@@ -177,15 +177,19 @@ clause 4.
 Health is a **mood**, not a colour (ADR-0041): it names what a human gets out of
 a thread, process, node or cluster — the resource under load, not the machine —
 and tells an operator what to do when results are not flowing. A surface paints
-it. Five **leaf** moods, worsening:
+it. The **leaf** moods, worsening:
 
 ```text
 Fine       results flowing, at ease
+Paused     a deliberate hold — an operator is working on it
 Working    handling the load
 Stressed   strained — change the load
 Exhausted  spent — replace the hardware
 Done       blocked or failed — the pain (a cert, a password, a folder)
 ```
+
+A paused scope reads `Paused`, not `Stressed`: an operator holding a Location down
+is working on it deliberately, which is not strain.
 
 **A leaf's mood does not propagate.** In a perfect world everything is `Fine`;
 the moment anything below is not, the parent is displeased and reports the rollup
@@ -193,7 +197,7 @@ mood **`Holding`** — drill in. So a parent is only ever `Fine` or `Holding`; t
 leaf carries the real mood, and an operator drills down through the `Holding`
 scopes to the one that is costing them. `Fine` up the tree still means every leaf
 beneath is `Fine`. Every mood drills down to the evidence behind it. (The GUIs
-paint Fine green, Working blue, Stressed yellow, Exhausted burnt, Done red,
+paint Fine green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
 Holding orange; the colour is the surface's, the mood is the model's.)
 
 **Observation is deliberately near-real-time, not synchronous.** Receive,
