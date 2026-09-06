@@ -155,13 +155,21 @@ sweeps, dropped claims) so the board is realistic rather than uniformly green;
 Every roll honours two limits, one `Budget` shared by all scenarios rather than
 per-scenario knobs. A **maximum time** is a wall-clock ceiling: when it is
 reached the roll stops, whatever the round count — `XMIP_PLAYGROUND_MAX_SECONDS`.
-A **factor on time** scales the interval between rounds against real time:
-`1.0` mimics real time — one round per real second, the rate an operator
-watches — and retracting it below one plays the same rounds out in less
-wall-clock time, raising it above one slows them down — `XMIP_PLAYGROUND_TIME_FACTOR`.
 The ceiling is checked between rounds, so a long tick runs to completion rather
 than being cut mid-round; the maximum bounds how long a run lasts, not how long
-a single round may take.
+a single round takes.
+
+A **factor on time** stretches a **simulated clock** against real time:
+`1.0` mimics real time — one simulated second per real second — and *retracting*
+it below one runs simulated time faster than real, so a long horizon plays out in
+a short run. Fifteen real minutes over three simulated years is `MAX_SECONDS=900`
+with `TIME_FACTOR ≈ 9.5e-6` (900 real seconds ÷ three years) —
+`XMIP_PLAYGROUND_TIME_FACTOR`. The round cadence stays real; the factor stretches
+*simulated* time, not the wait between rounds. Scenarios that age on a clock —
+the secretary's retention lifecycle, kept 90 days, archived two years, then
+purged — read simulated elapsed from the `Budget`, so an operator watches records
+born, cross into the archive, and fall out of it over a horizon far longer than
+the run. Rate- and latency-based scenarios ignore it; they answer in real time.
 
 ### 4. A verdict is health, per stage
 
