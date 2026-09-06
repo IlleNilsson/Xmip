@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-six decisions, read as one document.
+Thirty-seven decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -335,6 +335,17 @@ gate does not require.
 
 → [The Playground is optional scaffolding, in full](ADR-0036-playground-is-optional-scaffolding.md)
 
+### A message-carrying error type is declared once, not per crate
+
+**Thirteen crates hand-rolled the identical error boilerplate — a
+`{ message: String }` struct, a `Display` that writes the message, an empty
+`Error` impl. That is now one macro in `xmip-core`: `declare_error!`, and
+`declare_retryable_error!` for the two that also carry a `retryable` flag.** The
+estate already centralises shared types in `foundation/core` (`Severity`,
+`Mechanism`, the id types); these errors were the anomaly.
+
+→ [One error declaration, in full](ADR-0037-one-error-declaration.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -537,6 +548,7 @@ You have a word. This gives you the decision that governs it.
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
+| consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -545,6 +557,7 @@ You have a word. This gives you the decision that governs it.
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
+| Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -582,6 +595,7 @@ You have a word. This gives you the decision that governs it.
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
+| shared declaration | [One error declaration](ADR-0037-one-error-declaration.md) |
 | source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
@@ -652,3 +666,4 @@ is nowhere else.
 | [0034](ADR-0034-certificate-provisioning-versus-usage.md) | Certificate provisioning versus usage | |
 | [0035](ADR-0035-overloaded-words-stay-qualified.md) | Overloaded words stay qualified | |
 | [0036](ADR-0036-playground-is-optional-scaffolding.md) | The Playground is optional scaffolding | |
+| [0037](ADR-0037-one-error-declaration.md) | One error declaration | |
