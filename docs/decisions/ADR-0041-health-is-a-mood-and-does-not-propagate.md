@@ -89,7 +89,8 @@ The dashboard softens; the gate does not.
 - The Playground publishes moods (`fine`/`paused`/`working`/`stressed`/
   `exhausted`/`done`/`holding`) as its state, and its board and terminal readout
   read as moods.
-- A paused scope reads `Paused`, not `Stressed`: a deliberate hold is not strain.
+- A scope an operator has paused is in the `Paused` state, not `Stressed`: a
+  deliberate hold is not strain. The mood is a state the scope is in.
 - observability-model §6 is corrected to the mood set and the non-propagating
   rollup; ADR-0027's three-state amendment is superseded here.
 - A node that does not answer is `Done` at that node, with "no answer" as its

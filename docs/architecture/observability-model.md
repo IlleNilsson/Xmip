@@ -188,8 +188,9 @@ Exhausted  spent — replace the hardware
 Done       blocked or failed — the pain (a cert, a password, a folder)
 ```
 
-A paused scope reads `Paused`, not `Stressed`: an operator holding a Location down
-is working on it deliberately, which is not strain.
+A scope an operator has paused is in the `Paused` state, not `Stressed`: holding a
+Location down deliberately is not strain. The mood is a state the scope is in, not
+the scope itself.
 
 **A leaf's mood does not propagate.** In a perfect world everything is `Fine`;
 the moment anything below is not, the parent is displeased and reports the rollup
