@@ -397,6 +397,10 @@ dependency = []
     [xmip.core.contract.csv]
     maturity = "scaffolded"
     [xmip.core.contract.dotnet]
+    description = "Content contracts authored as .NET modules over the Xmip ABI — the .NET counterpart of the Rust contract technologies."
+    primaryLanguage = "dotnet"
+    maturity = "planned"
+    dependency = ["xmip-core-abi"]
     [xmip.core.contract.fhir]
     [xmip.core.contract.fixed-width]
     [xmip.core.contract.go]
