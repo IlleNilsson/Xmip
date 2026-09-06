@@ -99,6 +99,13 @@ node's job, described by the **Executor** *node role* (Reader / Writer /
 Executor, `deployment-model.md`), not something a person is granted. The two were
 one letter apart and one idea apart; only the node role remains.
 
+**Shown, not yet enforced.** The desktop (Xmip.Operations) carries a role
+picker — Observer / Operator / Developer — and offers only what the role allows:
+an Observer sees Monitor, an Operator also sees Configure. The web surface, being
+monitoring only (ADR-0014), shows a fixed **Observer** badge. This makes the
+concept visible and shapes what is on offer; it does not yet gate on a proven
+identity.
+
 **Not yet enforced.** No surface gates on role today — a surface holding runtime
 state in-process is a host process, and ADR-0022 clause 3 with the identity
 question ADR-0027 flags as *blocking shipping* must be settled before a role is
