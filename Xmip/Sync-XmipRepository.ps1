@@ -88,13 +88,9 @@ function Sync-XmipRepository {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    function Get-PropertyValue {
-        param([AllowNull()] $Object, [Parameter(Mandatory)] [string] $Name, $Default = $null)
-        if ($null -eq $Object) { return $Default }
-        $property = $Object.PSObject.Properties[$Name]
-        if ($null -eq $property -or $null -eq $property.Value) { return $Default }
-        $property.Value
-    }
+    # Get-PropertyValue is the module's, from Xmip.psm1 — this script is dot-sourced
+    # into that scope, so the local copy that used to shadow it was pure redundancy
+    # (removed 2026-09-06).
 
     function Invoke-Git {
         param([Parameter(Mandatory)] [string[]] $Arguments, [string] $At = '')
