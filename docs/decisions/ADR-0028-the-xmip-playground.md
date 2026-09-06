@@ -150,6 +150,19 @@ Each injects its own pressure (faults, latency spikes, dropped transfers, missed
 sweeps, dropped claims) so the board is realistic rather than uniformly green;
 `file` is left clean in every one.
 
+### 3b. Two time limits bound any roll
+
+Every roll honours two limits, one `Budget` shared by all scenarios rather than
+per-scenario knobs. A **maximum time** is a wall-clock ceiling: when it is
+reached the roll stops, whatever the round count — `XMIP_PLAYGROUND_MAX_SECONDS`.
+A **factor on time** scales the interval between rounds against real time:
+`1.0` mimics real time — one round per real second, the rate an operator
+watches — and retracting it below one plays the same rounds out in less
+wall-clock time, raising it above one slows them down — `XMIP_PLAYGROUND_TIME_FACTOR`.
+The ceiling is checked between rounds, so a long tick runs to completion rather
+than being cut mid-round; the maximum bounds how long a run lasts, not how long
+a single round may take.
+
 ### 4. A verdict is health, per stage
 
 Each round is expanded across the message path — **Receive, Process, Send** — so
