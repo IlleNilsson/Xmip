@@ -35,9 +35,10 @@ red for the cluster; one has to drill down through the yellows to find the red
 ones.*
 
 And the states were named as colours — Green, Yellow, Red — which fixed the
-rendering into the model. The owner's correction: *Health is a mood — Fine,
-Average, Holding, Done. It is not colours.* A colour is how a surface shows a
-mood, not what the mood is.
+rendering into the model. The owner's correction: *Health is a mood. It is not
+colours.* He first named the moods, then complemented them — the set landed as
+`Fine`, `Working`, `Stressed`, `Exhausted`, `Done`, with `Holding` the rollup.
+A colour is how a surface shows a mood, not what the mood is.
 
 This revises ADR-0027's 2026-09-05 amendment, which fixed three states and named
 them as colours. The owner set both in motion; this records where they land.
@@ -93,7 +94,8 @@ The dashboard softens; the gate does not.
 ## Provenance
 
 Both moves are the owner's, 2026-09-06: *the worst must not propagate to the
-cluster — drill through to find it*, and *Health is a mood: Fine, Average,
-Holding, Done, not colours*. The rollup-cap mechanism, the leaf-versus-rollup
-split for validation, and the colour-in-the-GUI-only framing are the assistant's
+cluster — drill through to find it*, and *Health is a mood, not colours* — the
+moods complemented to `Fine`, `Working`, `Stressed`, `Exhausted`, `Done`, with
+`Holding` the rollup. The rollup-cap mechanism, the leaf-versus-rollup split for
+validation, and the colour-in-the-GUI-only framing are the assistant's
 drafting of it, on the instruction to write it down.

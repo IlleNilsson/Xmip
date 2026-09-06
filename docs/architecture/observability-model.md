@@ -202,7 +202,7 @@ measurements, snapshots and persisted outcomes asynchronously — the same
 reasoning as ADR-0014 clause 4 and the same reasoning as the audit channel: the
 thing that watches must not be able to stop the thing it watches.
 
-> Find the Done so it can be solved. Find the Average so it can be corrected
+> Find the Done so it can be solved. Find the Stressed so it can be corrected
 > before it becomes Done.
 
 `xmip-core-report` is the historical counterpart: observation answers *what is
