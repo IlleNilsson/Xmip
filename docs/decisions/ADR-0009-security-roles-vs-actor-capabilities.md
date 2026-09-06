@@ -26,7 +26,6 @@ Xmip user/security roles remain:
 ```text
 Observer
 Operator
-Executer
 Developer
 ```
 
@@ -91,8 +90,14 @@ Mapped to the operator surfaces (ADR-0014):
 | Desktop **Configure** | no | yes |
 
 The roles are cumulative in what they may read and do: Observer watches;
-Operator also configures; Executer also runs work; Developer also builds. Each
-includes the watching the one before it can do.
+Operator also configures; Developer also builds. Each includes what the one
+before it can do.
+
+The set is three — **Observer, Operator, Developer** — the owner's wording,
+2026-09-06. The former **Executer** security role is retired: running work is a
+node's job, described by the **Executor** *node role* (Reader / Writer /
+Executor, `deployment-model.md`), not something a person is granted. The two were
+one letter apart and one idea apart; only the node role remains.
 
 **Not yet enforced.** No surface gates on role today — a surface holding runtime
 state in-process is a host process, and ADR-0022 clause 3 with the identity

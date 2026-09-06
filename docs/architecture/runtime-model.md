@@ -309,7 +309,7 @@ Two dimensions that read alike and are not:
 
 | | Describes | Examples |
 | --- | --- | --- |
-| **Security role** | what a user or security principal may do in Xmip | Developer, Operator, Executer |
+| **Security role** | what a user or security principal may do in Xmip | Observer, Operator, Developer |
 | **Actor capability** | what an Actor can do in communication and runtime execution | Publish, Subscribe, OwnMessage, Report, Command, Execute, Route, Transform, Send, Receive |
 
 A Receive Port has the capability `OwnMessage`. A person has the role
