@@ -48,6 +48,16 @@ archive is a handoff: once an item is in the archive store, Xmip's
 responsibility for it is discharged. It does not later revisit the archive to
 remove anything.
 
+### 2a. Archiving is a configured ability, not a command
+
+Archiving is *configured*, never commanded. A node or process declares it — which
+archive store, which format (`parquet`, `s3`, `sql`, …), and the retention
+windows — in its configuration, and the runtime enacts that declaration by age.
+There is no operator or runtime command to "archive"; it is an ability set under
+Configure (an Operator's surface, ADR-0009), like retention itself, not an action
+like pause. The `archive` capability and its format technologies are what a
+configuration selects among.
+
 ### 3. Deletion belongs to the archive owner
 
 Whether, when and how archived data is deleted is decided by whoever owns the
