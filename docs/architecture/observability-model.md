@@ -174,15 +174,23 @@ paragraph named Parties and Endpoints as though they were containment until
 2026-09-03, which put two different hierarchies in one document — see ADR-0027
 clause 4.
 
+Health is a **mood**, not a colour (ADR-0041): it names how a scope is doing, and
+a surface paints it. Four moods, worsening:
+
 ```text
-Green    healthy and active
-Yellow   degraded, or correctable before it becomes red
-Red      failing
+Fine     healthy and active
+Average  degraded, or correctable
+Holding  the rollup mood — something below is Done; attention, drill in
+Done     failing
 ```
 
-**Health propagates upward using the worst active state**, so an installation
-showing green means every endpoint beneath it is green. Every state drills down
-to the evidence behind it.
+**The worst does not propagate.** `Done` is a leaf's mood; any scope above a
+`Done` leaf reports `Holding`, so one fault deep in the tree cannot carry the
+cluster to `Done` — an operator drills down through the `Holding` and `Average`
+scopes to the `Done` itself. `Fine` still propagates as the strong guarantee it
+was: `Fine` at a scope means every leaf beneath it is `Fine`. Every mood drills
+down to the evidence behind it. (The GUIs paint Fine green, Average yellow,
+Holding orange, Done red; the colour is the surface's, the mood is the model's.)
 
 **Observation is deliberately near-real-time, not synchronous.** Receive,
 Process and Send execution must never wait for it. It consumes lightweight
@@ -190,8 +198,8 @@ measurements, snapshots and persisted outcomes asynchronously — the same
 reasoning as ADR-0014 clause 4 and the same reasoning as the audit channel: the
 thing that watches must not be able to stop the thing it watches.
 
-> Find the red so it can be solved. Find the yellow so it can be corrected
-> before it becomes red.
+> Find the Done so it can be solved. Find the Average so it can be corrected
+> before it becomes Done.
 
 `xmip-core-report` is the historical counterpart: observation answers *what is
 happening*, reporting answers *what happened over a period*.
