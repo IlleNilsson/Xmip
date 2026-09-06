@@ -121,16 +121,32 @@ Journey through, Send a Message out — the three the stage cards count.
 
 Loopback never fails, so a Playground of nothing but loopback proves the
 transports work and proves nothing about the monitoring. So the Playground
-injects the faults a real integration suffers, on all three stages, of four
-kinds an operator triages by: **transport** (reset, timeout, port in use, lost
-datagram), **addressing** (unresolved host, no route, rejected recipient),
-**authentication** (rejected certificate, denied credentials, an expired token —
-including Let's Encrypt certificate lifecycle faults, which cover only public
-HTTP domain-validated certs and so are one source among several, never the whole
-authentication story) and **contract** (content that fails its schema). Firing
-is deterministic per (stage, pair, round), so a run reproduces and a test can
-assert it; rates are low, so the board is mostly green with faults surfacing over
-time. `file`'s transport path carries no fault, one transport that stays green.
+injects the faults a real integration suffers, on all three stages, of three
+transport-and-content kinds an operator triages by: **transport** (reset,
+timeout, port in use, lost datagram), **addressing** (unresolved host, no route,
+rejected recipient) and **contract** (content that fails its schema). Firing is
+deterministic per (stage, pair, round), so a run reproduces and a test can assert
+it; rates are low, so the board is mostly green with faults surfacing over time.
+`file`'s transport path carries no fault, one transport that stays green.
+Identity faults are their own axis — clause 4b.
+
+### 4b. Receive runs the identity pipeline; Send presents identity
+
+A Receive Location does not only receive bytes: it **identifies** who is claimed,
+**authenticates** the claim, and **authorizes** what it may do — the invariant
+pipeline of ADR-0019, in that order. A Send Location **presents** an identity to
+the far end (ADR-0033). The Playground exercises this by driving the estate's
+real gates — `identify_transport`, `authenticate`, `authorize` — with stand-in
+implementors over mutual-TLS, so a fault is a genuine `Refusal` or
+`Decision::Denied`, not a fabricated string. Each Receive step publishes as a
+child scope `.../receive/<transport>/<contract>/{identification,authentication,
+authorization}`, and Send as `.../send/<transport>/<contract>/identity`, so an
+operator drills past the transport verdict into the identity step that failed.
+The pipeline stops at the first failing step; the rest report *not reached*.
+Identity faults — a rejected or expired certificate, a Let's Encrypt renewal
+pending, a party not permitted — live with the pipeline, not in the transport
+fault plan, and `file` is exempt here too. Identity children do not double-count
+throughput: a Stream is received once, not once per identity step.
 
 ### 5. The far end is Xmip
 
