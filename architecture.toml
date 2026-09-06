@@ -708,6 +708,9 @@ dependency = []
     [xmip.core.archive.azure-blob]
     [xmip.core.archive.file]
     [xmip.core.archive.gcs]
+    [xmip.core.archive.parquet]
+    description = "Parquet archive target: retained items written as Apache Parquet files. A xmip-core-archive technology."
+    maturity = "scaffolded"
     [xmip.core.archive.s3]
     [xmip.core.archive.sql]
 
