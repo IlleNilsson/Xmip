@@ -430,6 +430,61 @@ A device that has no Service has different semantics, not fewer modules.
 
 ---
 
+## 23. Recovery is decided but undemonstrated, and unbuilt below the contracts
+
+A power cut during a Playground run on 2026-09-06 asked the plain question: what
+survives a shutdown, a network drop, or an attached device going away. The model
+is decided and recorded; almost none of it is built, and nothing demonstrates it.
+
+**Decided (recorded, coherent).** *Durability precedes execution*
+(`runtime-model.md`): nothing runs on arrival, every Stream, Message and Journey
+is written to per-node persistence before anything acts on it, so an accepted
+Message cannot be lost to a crash. A non-terminal Journey resumes from its last
+checkpoint, position and Message generation together (ADR-0013). Exactly-once is
+internal — one runtime owns a unit of work by the durable claim (ADR-0024),
+checkpoints bound reprocessing — so delivery is at-least-once and edge effects
+must be idempotent (`DeduplicationRecord`). A dropped connection is a transport
+error over already-durable state, retried under `resilience`. An inbound claim is
+an atomic rename, so a schedule finds an artefact claimed-or-gone and moves on.
+
+**Built (thin).** `xmip-core-persist` is types and a trait only —
+`DurableRecordIdentity`, `DurableExecutionCheckpoint`, `DurableJourneyState`,
+`RecoveryLease`, `DeduplicationRecord`, the `RuntimeStore` trait — with **no
+backend implementing it**. `schedule` is a stub; `resilience` is types. So
+recovery is not executable today: the contracts exist, the durable store behind
+them does not.
+
+**Open (recorded as open).** Cross-node Journey recovery is left open by ADR-0024
+— a Journey mid-flight in node A's ToDo is node A's work, and moving it to node B
+when A dies ("work does not move by itself", Problem 17) is undesigned. A device
+mount that vanishes after a claim-rename but before completion is the same gap in
+the attached-device case. Single-node restart recovers; failover does not.
+
+**Undemonstrated.** The Playground is a harness — in-memory scenario state,
+temp dirs rebuilt each run — so a power cut just re-rolls it and it proves
+nothing about recovery. A **blackout** scenario (kill a node mid-Journey,
+restart, assert resume from checkpoint with no loss and no double-effect) is the
+missing proof, and it only becomes real once a `RuntimeStore` backend exists.
+
+| option | effect |
+|---|---|
+| **A. Build a minimal file-backed `RuntimeStore`, then the blackout scenario** | makes recovery executable and demonstrable at the smallest cost; the file backend is also the on-device default |
+| **B. Blackout scenario against an in-memory store first** | proves the resume *logic* now, but not durability across a real process death — the thing the power cut actually tested |
+| **C. Leave until the runtime queue reaches persistence** | honest sequencing, but recovery stays prose until then |
+
+**Lean: A**, small and it unblocks the demonstration.
+
+**Disaster & Recovery is a separate, later concern** — this problem is *runtime*
+recovery (a node coming back to its own durable state). D&R is *host* recovery:
+standing a node's operating system, dependencies and configuration back up on
+new hardware, to be done with **DSC and Ansible** as the provisioning surface,
+not by anything inside the runtime. Parked deliberately; recorded here so the two
+are not conflated when D&R is taken up.
+
+Filed 2026-09-06, prompted by a power cut mid-test.
+
+---
+
 # Suggested order
 
 Rewritten 2026-09-05. The 2026-08-30 list had gone stale the way its own
