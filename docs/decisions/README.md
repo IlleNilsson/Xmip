@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-seven decisions, read as one document.
+Thirty-eight decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -346,6 +346,16 @@ estate already centralises shared types in `foundation/core` (`Severity`,
 
 → [One error declaration, in full](ADR-0037-one-error-declaration.md)
 
+### Xmip has no product i18n; globalization lives only where it parses data
+
+**Xmip is an integration platform, not an end-user application, so it carries no
+product internationalisation — no translated UI, no localised messages. English
+throughout code, logs, health, documentation and scope URIs. Globalization
+matters only at the data boundary, where Xmip parses or formats a partner's data,
+and there the locale is the partner's declared convention, never the server's.**
+
+→ [Locale-neutral internally, in full](ADR-0038-locale-neutral-internally.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -559,6 +569,7 @@ You have a word. This gives you the decision that governs it.
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
@@ -567,6 +578,7 @@ You have a word. This gives you the decision that governs it.
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
+| locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
@@ -601,6 +613,7 @@ You have a word. This gives you the decision that governs it.
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
@@ -667,3 +680,4 @@ is nowhere else.
 | [0035](ADR-0035-overloaded-words-stay-qualified.md) | Overloaded words stay qualified | |
 | [0036](ADR-0036-playground-is-optional-scaffolding.md) | The Playground is optional scaffolding | |
 | [0037](ADR-0037-one-error-declaration.md) | One error declaration | |
+| [0038](ADR-0038-locale-neutral-internally.md) | Locale-neutral internally | |
