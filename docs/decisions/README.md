@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty decisions, read as one document.
+Forty-one decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -146,6 +146,19 @@ passes. It never deletes. Once archived, what becomes of the archive is the
 archive owner's decision, not Xmip's.**
 
 → [Xmip retains and archives, it does not delete, in full](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)
+
+### Health names a mood, in four states, and the worst does not roll up
+
+propagate the worst
+
+**Health is a mood, not a colour — it names how a scope is doing, and a surface
+paints it however it likes. Four moods, worsening: `Fine`, `Average`, `Holding`,
+`Done`. And the worst does not propagate: `Done` is a leaf's mood, and any scope
+above a `Done` leaf reports `Holding` — attention, drill in — so one fault deep
+in the tree cannot carry the whole cluster to `Done`. `Fine` up the tree still
+means every leaf beneath is `Fine`.**
+
+→ [Health is a mood and does not propagate, in full](ADR-0041-health-is-a-mood-and-does-not-propagate.md)
 
 ---
 
@@ -594,8 +607,10 @@ You have a word. This gives you the decision that governs it.
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| Fine, Average, Holding, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
+| Health as a mood | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
@@ -635,6 +650,7 @@ You have a word. This gives you the decision that governs it.
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Retention | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
+| rollup does not | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
@@ -716,3 +732,4 @@ is nowhere else.
 | [0038](ADR-0038-locale-neutral-internally.md) | Locale-neutral internally | |
 | [0039](ADR-0039-a-module-may-bring-a-versioned-runtime.md) | A Module may bring a versioned runtime | |
 | [0040](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) | Xmip retains and archives, it does not delete | |
+| [0041](ADR-0041-health-is-a-mood-and-does-not-propagate.md) | Health is a mood and does not propagate | |
