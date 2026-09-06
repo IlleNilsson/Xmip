@@ -133,8 +133,10 @@ Send this host actually does. Three facts an operator can act on, rather than a
 list of forty Modules nobody will read.
 
 **10. Every Host Service runs the same executable, so the command line carries
-the host.** `xmip-host --host orders`. Otherwise `ps` and Task Manager show
-identical entries and the BizTalk complaint returns intact.
+the host.** `xmip host --host orders` (one executable with a `host` subcommand,
+as `registration.rs` invokes it — not a separate `xmip-host` binary). Otherwise
+`ps` and Task Manager show identical entries and the BizTalk complaint returns
+intact.
 
 **10a. Latency is bought with isolation, and the currency is process hops.** A
 Journey whose receive, process and send all run in one Host Service crosses no
