@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-nine decisions, read as one document.
+Forty decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -136,6 +136,16 @@ answer and it needs the chain persisted and cheap to walk, which is a
 `xmip-core-persist` question nobody has answered.
 
 → [Bounding a publication chain, in full](ADR-0026-bounding-a-publication-chain.md)
+
+### Retention ends at archiving; deleting data is not Xmip's responsibility
+
+**Xmip gets data, transforms it, waits for business decisions, and sends one or
+more outputs. For the data it holds, it does exactly two things over time: it
+**retains** it while it is live, and **archives** it when its retention window
+passes. It never deletes. Once archived, what becomes of the archive is the
+archive owner's decision, not Xmip's.**
+
+→ [Xmip retains and archives, it does not delete, in full](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)
 
 ---
 
@@ -563,6 +573,7 @@ You have a word. This gives you the decision that governs it.
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -602,6 +613,7 @@ You have a word. This gives you the decision that governs it.
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -621,6 +633,7 @@ You have a word. This gives you the decision that governs it.
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Retention | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -632,6 +645,7 @@ You have a word. This gives you the decision that governs it.
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -701,3 +715,4 @@ is nowhere else.
 | [0037](ADR-0037-one-error-declaration.md) | One error declaration | |
 | [0038](ADR-0038-locale-neutral-internally.md) | Locale-neutral internally | |
 | [0039](ADR-0039-a-module-may-bring-a-versioned-runtime.md) | A Module may bring a versioned runtime | |
+| [0040](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) | Xmip retains and archives, it does not delete | |

@@ -125,9 +125,10 @@ leaf. Named in the shortest singular form, the owner's convention:
   cannot hold a megabyte, and that real ceiling shows as red with no injection.
   Peak memory is roughly twice the size per pair, pairs run one at a time; true
   multi-gigabyte without that doubling wants a streaming round trip, queued.
-- **secretary** — retention and archiving: keep, archive and purge by age,
-  driving the estate's real `RetentionPolicy` and `ArchiveStore` over a logical
-  clock; a missed sweep under pressure surfaces as a retention leak.
+- **secretary** — retention and archiving: retain, then archive by age, driving
+  the estate's real `RetentionPolicy` and `ArchiveStore` over a logical clock; a
+  missed sweep under pressure surfaces as a retention leak. There is no third
+  act — Xmip retains and archives, it does not delete (ADR-0040).
 - **claim** — exclusive pickup: a dropped item is read by exactly one holder,
   under real thread contention, across the **execution style** it declares —
   Sequential, Parallel, Concurrent (runtime-model.md). Sequential additionally
@@ -166,9 +167,9 @@ a short run. Fifteen real minutes over three simulated years is `MAX_SECONDS=900
 with `TIME_FACTOR ≈ 9.5e-6` (900 real seconds ÷ three years) —
 `XMIP_PLAYGROUND_TIME_FACTOR`. The round cadence stays real; the factor stretches
 *simulated* time, not the wait between rounds. Scenarios that age on a clock —
-the secretary's retention lifecycle, kept 90 days, archived two years, then
-purged — read simulated elapsed from the `Budget`, so an operator watches records
-born, cross into the archive, and fall out of it over a horizon far longer than
+the secretary's retention lifecycle, retained 90 days then archived — read
+simulated elapsed from the `Budget`, so an operator watches records born, live
+out their retention, and cross into the archive over a horizon far longer than
 the run. Rate- and latency-based scenarios ignore it; they answer in real time.
 
 ### 4. A verdict is health, per stage
