@@ -138,6 +138,13 @@ leaf. Named in the shortest singular form, the owner's convention:
   duplicate-pickup bug. It runs over the file substrate; **no protocol is named
   in the code** (the owner's rule) — any other pollable transport joins by adding
   a `RoundTrip` adapter, which is when SFTP, FTPS and FTP get this exercise.
+- **daily** — a day's backlog drained as fast as possible: many files arrive at
+  once and a node clears what its capacity allows. When arrivals outpace it the
+  backlog climbs and the scenario escalates as an operator would — first a
+  **tweak** (raise the node's concurrency), then, if that only slows the rise,
+  **add a node** to share the backlog through the claim. The board shows the
+  backlog climb, names the action taken, and shows it fall. The backlog is real
+  files on disk, so the queue depth is a real count.
 
 Each injects its own pressure (faults, latency spikes, dropped transfers, missed
 sweeps, dropped claims) so the board is realistic rather than uniformly green;
