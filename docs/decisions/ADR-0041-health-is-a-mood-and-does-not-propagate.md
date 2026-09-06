@@ -11,15 +11,19 @@
 - Subject: Health names a mood, in four states, and the worst does not roll up
 - Name: Health is a mood and does not propagate
 - Order: 12
-- Concepts: Health as a mood; Fine, Average, Holding, Done; rollup does not
-  propagate the worst
+- Concepts: Health as a mood; Fine, Working, Stressed, Exhausted, Done; Holding
+  the rollup; a leaf's mood does not propagate
 
-**Health is a mood, not a colour — it names how a scope is doing, and a surface
-paints it however it likes. Four moods, worsening: `Fine`, `Average`, `Holding`,
-`Done`. And the worst does not propagate: `Done` is a leaf's mood, and any scope
-above a `Done` leaf reports `Holding` — attention, drill in — so one fault deep
-in the tree cannot carry the whole cluster to `Done`. `Fine` up the tree still
-means every leaf beneath is `Fine`.**
+**Health is a mood, not a colour — it names what a human gets out of a thread,
+process, node or cluster (the resource under load, not the machine) and what to
+do when results stop. A surface paints it. Five leaf moods, worsening: `Fine`
+(results flowing), `Working` (handling the load), `Stressed` (strained — change
+the load), `Exhausted` (spent — replace the hardware), `Done` (blocked or failed
+— the pain: a cert, a password, a folder). And a leaf's mood does not propagate:
+in a perfect world everything is `Fine`, and the moment anything below is not,
+the parent is displeased and reports `Holding` — drill in. A parent is only ever
+`Fine` or `Holding`; `Fine` up the tree still means every leaf beneath is
+`Fine`.**
 
 ## Context
 
@@ -40,24 +44,28 @@ them as colours. The owner set both in motion; this records where they land.
 
 ## Decision
 
-### 1. Health is a mood, in four states
+### 1. Health is a mood — what a human gets from the resource
 
-`Health` is `Fine`, `Average`, `Holding`, `Done`, in worsening order. The word is
-the model; a surface renders it — the desktop and web GUIs paint `Fine` green,
-`Average` yellow, `Holding` orange, `Done` red, and that mapping lives in the
-GUI's stylesheet, nowhere else.
+`Health` is not the machine's state; it is what a human gets out of the resource
+under load. Five leaf moods, worsening: `Fine` (results flowing), `Working`
+(handling the load), `Stressed` (strained — the operator's action is to change
+the load), `Exhausted` (spent — the action is to replace the hardware), `Done`
+(blocked or failed — the one thing to fix: a cert to renew, a password, a missing
+folder). Each mood is *actionable*: it either says results are fine or points at
+what to change. The word is the model; a surface renders it — the GUIs paint Fine
+green, Working blue, Stressed yellow, Exhausted burnt, Done red, and that mapping
+lives in the stylesheet, nowhere else.
 
-### 2. The worst does not propagate
+### 2. A leaf's mood does not propagate
 
-A `Done` is the mood of the leaf that owns the fault. Every scope *above* that
-leaf — transport, scenario, node, cluster — reports `Holding`, the rollup mood:
-something below needs attention, drill in. So the worst a single `Done` among
-thousands can do to the cluster is turn it `Holding`, and an operator drills down
-through the `Holding` and `Average` scopes to the `Done` itself.
-
-`Holding` is a rollup mood: a leaf is `Fine`, `Average` or `Done`; an aggregating
-scope is `Fine`, `Average` or `Holding`. `Fine` still propagates as the strong
-guarantee it was — `Fine` at a scope means every leaf beneath it is `Fine`.
+In a perfect world everything is `Fine`. The moment anything below a scope is not
+`Fine`, that parent is displeased and reports `Holding` — the rollup mood:
+drill in. So a parent — transport, scenario, node, cluster — is only ever `Fine`
+or `Holding`; the leaf that owns the trouble carries the real mood, and an
+operator drills down through the `Holding` scopes to it. The worst a single
+trouble among thousands can do to the cluster is turn it `Holding`. `Fine` still
+propagates as the strong guarantee it was — `Fine` at a scope means every leaf
+beneath it is `Fine`.
 
 ### 3. Validation still reads the leaves
 
@@ -70,10 +78,11 @@ The dashboard softens; the gate does not.
 
 - `xmip-core-observe` owns the four-mood `Health` and the capping rollup in
   `Snapshot::worst`. `Done` is never returned for a scope above the leaf.
-- `xmip-core-abi` and `xmip_operate.h` carry four wire values, `FINE=0`,
-  `AVERAGE=1`, `HOLDING=2`, `DONE=3`, and the header calls them moods.
-- The GUIs render the mood to a colour, adding orange for `Holding`; the mapping
-  is theirs alone.
+- `xmip-core-abi` and `xmip_operate.h` carry six wire values, `FINE=0`,
+  `WORKING=1`, `STRESSED=2`, `EXHAUSTED=3`, `DONE=4`, `HOLDING=5`, and the header
+  calls them moods.
+- The GUIs render each mood to a colour (Working blue, Stressed yellow, Exhausted
+  burnt, Holding orange, …); the mapping is theirs alone.
 - The Playground publishes moods (`fine`/`average`/`holding`/`done`) as its
   state, and its board and terminal readout read as moods.
 - observability-model §6 is corrected to four moods and the non-propagating
