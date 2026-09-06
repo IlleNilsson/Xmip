@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-eight decisions, read as one document.
+Thirty-nine decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -246,6 +246,20 @@ because they observe the path rather than carry it. Nothing new to declare.
 is loaded into; this decides when. Neither constrains the other.
 
 → [When a Module loads, in full](ADR-0025-when-a-module-loads.md)
+
+### Hosting a Module written in a managed language may require loading its
+
+runtime, and that is accepted
+
+**The module boundary is a C ABI, so a Module may be written in any language that
+can produce or call a stable C entry point — Rust, C, C++, and equally .NET, Java
+or Python (module-model.md). A Module written in a managed language needs its
+language runtime present to run. Xmip accepts loading that runtime, and the
+runtime is versioned: the Module declares which runtime and which version it
+needs, and the node provides it. A native Module brings no runtime; a managed one
+brings the runtime as a dependency.**
+
+→ [A Module may bring a versioned runtime, in full](ADR-0039-a-module-may-bring-a-versioned-runtime.md)
 
 ---
 
@@ -577,14 +591,17 @@ You have a word. This gives you the decision that governs it.
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
+| managed Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
+| native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -604,6 +621,7 @@ You have a word. This gives you the decision that governs it.
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
+| runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
@@ -681,3 +699,4 @@ is nowhere else.
 | [0036](ADR-0036-playground-is-optional-scaffolding.md) | The Playground is optional scaffolding | |
 | [0037](ADR-0037-one-error-declaration.md) | One error declaration | |
 | [0038](ADR-0038-locale-neutral-internally.md) | Locale-neutral internally | |
+| [0039](ADR-0039-a-module-may-bring-a-versioned-runtime.md) | A Module may bring a versioned runtime | |
