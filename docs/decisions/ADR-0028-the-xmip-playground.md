@@ -106,6 +106,35 @@ standard-library only) and framing. **Every transport the estate implements is
 now in the matrix.** The transports declared but not yet built join by adding an
 adapter, no change to the scenario. Clause 5 governs them all.
 
+### 3a. More than one scenario over the same adapters
+
+Pingpong is the first scenario, not the only one. Each scenario asks a different
+question of the same estate over the same [`RoundTrip`] adapters, and publishes
+under its own subtree of `xmip:///playground`, merged into one snapshot so the
+rollup covers them all and an operator drills scenario → detail → the failing
+leaf. Named in the shortest singular form, the owner's convention:
+
+- **pingpong** — did it arrive whole and hold its contract, across the stages.
+- **furious** — did it arrive in time: round-trip latency against a per-transport
+  budget, judged on the p50/p99 of recent rounds (cold-start rounds skipped).
+- **load** — a megabyte per pair: did it arrive byte-for-byte and still validate
+  at size, and at what throughput. A UDP datagram cannot hold a megabyte, and
+  that real ceiling shows as red with no injection.
+- **secretary** — retention and archiving: keep, archive and purge by age,
+  driving the estate's real `RetentionPolicy` and `ArchiveStore` over a logical
+  clock; a missed sweep under pressure surfaces as a retention leak.
+
+Each injects its own pressure (faults, latency spikes, dropped transfers, missed
+sweeps) so the board is realistic rather than uniformly green; `file` is left
+clean in every one.
+
+**Queued:** **claim** — the exclusive single-reader test for the pollable
+file-transfer transports (FILE, SFTP, FTPS, FTP): a file dropped for pickup is
+read by exactly one reader across competing threads, processes and nodes
+(ADR-0024, the claim at the endpoint). It waits on the SFTP, FTPS and FTP
+adapters — only FILE is implemented today — and is built when all four exist
+(the owner's call, 2026-09-06). The name is settled.
+
 ### 4. A verdict is health, per stage
 
 Each round is expanded across the message path — **Receive, Process, Send** — so
