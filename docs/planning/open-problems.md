@@ -443,7 +443,7 @@ retires entries from stops being an order.
 - **The .NET verification gate.** `Test-XmipDotnetModule` builds and tests
   every `.csproj`; `cli`, `powershell` and `gui` land verified, no `-All`.
 - **The GUI, both hosts.** One `Xmip.Gui` component library; a Blazor web host
-  (monitoring) and a MAUI desktop host (monitoring and configuration), ADR-0014.
+  (monitoring) and the MAUI desktop host Xmip.Operations (monitoring and configuration), ADR-0014.
   Health tree, severity shading, pause and resume.
 - **The operator boundary.** `xmip_operate.h`, ADR-0027: health, measurement,
   pause, resume, and the `xmip_start_v1` / `xmip_validate_v1` lifecycle exports.
