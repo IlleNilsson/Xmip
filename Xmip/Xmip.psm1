@@ -364,7 +364,14 @@ function New-XmipRepositoryEntry {
 
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
-        [string[]] $Topics
+        [string[]] $Topics,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $Mount = '',
+
+        [Parameter(Mandatory = $false)]
+        [bool] $Optional = $false
     )
 
     [hashtable] $crateArguments = @{
@@ -381,6 +388,8 @@ function New-XmipRepositoryEntry {
         repositoryRole      = $Role
         maturity            = $Maturity
         dependencies        = @($Dependencies)
+        mount               = $Mount
+        optional            = $Optional
         primaryCrate        = New-XmipCrateDescriptor @crateArguments
         github              = New-XmipGitHubDescriptor -Default $Default -Topics $Topics
         submodule           = [pscustomobject]@{ enabled = $false }
@@ -451,6 +460,10 @@ function Resolve-XmipNodeFacts {
         Dependencies = $dependency
         Language     = [string](Get-TomlValue -Node $Node -Name 'primaryLanguage' -Default '')
         Topics       = $topics
+        # Declared, not derived: an explicit mount overrides the computed path,
+        # and optional marks a repository the estate builds without. ADR-0036.
+        Mount        = [string](Get-TomlValue -Node $Node -Name 'mount' -Default '')
+        Optional     = [bool](Get-TomlValue -Node $Node -Name 'optional' -Default $false)
     }
 }
 
@@ -529,6 +542,8 @@ function Expand-XmipEstate {
             Dependencies = $facts.Dependencies
             Language     = $facts.Language
             Topics       = $facts.Topics
+            Mount        = $facts.Mount
+            Optional     = $facts.Optional
             Default      = $Default
             Crate        = $Crate
         }

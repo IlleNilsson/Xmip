@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-five decisions, read as one document.
+Thirty-six decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -324,6 +324,17 @@ first word this governs; the same three moves handle the next.
 
 → [Overloaded words stay qualified, in full](ADR-0035-overloaded-words-stay-qualified.md)
 
+### A repository may declare its mount and mark itself optional
+
+**The Playground is its own repository (`xmip-test-playground`), and it is not a
+capability the runtime loads — it is what exercises Xmip. So it mounts at the
+estate root as `tests/playground`, not under `modules/`, and it is declared
+optional: the estate builds and runs without it.** Two new manifest keys carry
+this: `mount` overrides the computed path, `optional` marks a repository the core
+gate does not require.
+
+→ [The Playground is optional scaffolding, in full](ADR-0036-playground-is-optional-scaffolding.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -544,6 +555,7 @@ You have a word. This gives you the decision that governs it.
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
+| Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
@@ -551,6 +563,7 @@ You have a word. This gives you the decision that governs it.
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
@@ -573,6 +586,7 @@ You have a word. This gives you the decision that governs it.
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
@@ -637,3 +651,4 @@ is nowhere else.
 | [0033](ADR-0033-certificates-on-receive-and-send.md) | Certificates on Receive and Send | |
 | [0034](ADR-0034-certificate-provisioning-versus-usage.md) | Certificate provisioning versus usage | |
 | [0035](ADR-0035-overloaded-words-stay-qualified.md) | Overloaded words stay qualified | |
+| [0036](ADR-0036-playground-is-optional-scaffolding.md) | The Playground is optional scaffolding | |

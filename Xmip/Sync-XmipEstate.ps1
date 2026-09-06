@@ -55,6 +55,16 @@ function Get-XmipMountPath {
     )
 
     [string] $name = [string](Get-PropertyValue $Repository 'name')
+
+    # An explicit mount wins over the computed path. Almost nothing declares one
+    # — the domain-grouped `modules/<domain>/<leaf>` below is right for a module.
+    # A repository that is not a module (the Playground is test scaffolding, not
+    # a capability the runtime loads) mounts where it says. ADR-0036.
+    [string] $declaredMount = [string](Get-PropertyValue $Repository 'mount' '')
+    if ('' -ne $declaredMount) {
+        return [pscustomobject]@{ Owner = ''; Mount = $declaredMount }
+    }
+
     [string] $owner = Get-XmipDeclaredOwner -Name $name -Declared $Declared
     [string] $leaf = $name
 

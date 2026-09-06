@@ -150,7 +150,7 @@ rather than felt as a complaint.
 
 - `xmip-test-playground` is declared in `architecture.toml` and created through
   `Sync-XmipEstate`, from the Rust template, mounted at
-  `modules/operations/playground`.
+  `tests/playground`.
 - **Xmip Playground** is a term in terminology.md.
 - Phases four to nine of startup (ADR-0018) — actually starting processes,
   loading Modules, accepting work — are what the Playground needs first and
