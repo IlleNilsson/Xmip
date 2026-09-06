@@ -196,7 +196,7 @@ progress.
 |---|---|---|
 | Transport | `Transport` (`transport/src/protocol.rs`) | `file`, `tcp`, `http`, `smtp` in the capability |
 | Contract | `Contract` (`contract/src/lib.rs`) | `contract/modules/csv/` |
-| Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
+| Xmip Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
 
 - **Repository model:** `docs/architecture/repository-model.md`
 - **What to build and in what order:** `docs/planning/open-problems.md`

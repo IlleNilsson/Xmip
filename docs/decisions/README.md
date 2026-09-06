@@ -604,6 +604,7 @@ You have a word. This gives you the decision that governs it.
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
