@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Thirty-four decisions, read as one document.
+Thirty-five decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -314,6 +314,16 @@ validated, not as a file Xmip reads its settings from.
 
 → [Configuration is TOML; JSON is transport, in full](ADR-0031-configuration-is-toml-json-is-transport.md)
 
+### A word that means several things is qualified, never rewritten
+
+**A word that collides — with the world and inside Xmip — is not remedied by
+inventing a new one. It is remedied by three things already the estate's habit:
+always use the qualified form, let `docs/terminology.md` arbitrate which sense is
+meant, and gate new unqualified uses with a ratchet test.** "Process" is the
+first word this governs; the same three moves handle the next.
+
+→ [Overloaded words stay qualified, in full](ADR-0035-overloaded-words-stay-qualified.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -537,6 +547,7 @@ You have a word. This gives you the decision that governs it.
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
+| Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -549,6 +560,7 @@ You have a word. This gives you the decision that governs it.
 | Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
+| qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -561,6 +573,7 @@ You have a word. This gives you the decision that governs it.
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
@@ -623,3 +636,4 @@ is nowhere else.
 | [0032](ADR-0032-recent-activity.md) | Recent activity | |
 | [0033](ADR-0033-certificates-on-receive-and-send.md) | Certificates on Receive and Send | |
 | [0034](ADR-0034-certificate-provisioning-versus-usage.md) | Certificate provisioning versus usage | |
+| [0035](ADR-0035-overloaded-words-stay-qualified.md) | Overloaded words stay qualified | |
