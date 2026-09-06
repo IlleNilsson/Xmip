@@ -117,9 +117,14 @@ leaf. Named in the shortest singular form, the owner's convention:
 - **pingpong** — did it arrive whole and hold its contract, across the stages.
 - **furious** — did it arrive in time: round-trip latency against a per-transport
   budget, judged on the p50/p99 of recent rounds (cold-start rounds skipped).
-- **load** — a megabyte per pair: did it arrive byte-for-byte and still validate
-  at size, and at what throughput. A UDP datagram cannot hold a megabyte, and
-  that real ceiling shows as red with no injection.
+- **load** — a large payload per pair (a megabyte by default, **gigabytes** on
+  demand): did it arrive byte-for-byte and, below a parse ceiling, still validate
+  at size; and at what throughput. Above the ceiling the structural contract is
+  not parsed — a gigabyte parse allocates a second copy and proves nothing the
+  byte check does not — so the claim is byte integrity at scale. A UDP datagram
+  cannot hold a megabyte, and that real ceiling shows as red with no injection.
+  Peak memory is roughly twice the size per pair, pairs run one at a time; true
+  multi-gigabyte without that doubling wants a streaming round trip, queued.
 - **secretary** — retention and archiving: keep, archive and purge by age,
   driving the estate's real `RetentionPolicy` and `ArchiveStore` over a logical
   clock; a missed sweep under pressure surfaces as a retention leak.
