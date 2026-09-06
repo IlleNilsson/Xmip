@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.6.5
 
 # Wording, not length. The estate's names are settled (docs/terminology.md);
 # this test keeps a settled-but-overloaded word from drifting back into
