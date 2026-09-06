@@ -128,17 +128,20 @@ leaf. Named in the shortest singular form, the owner's convention:
 - **secretary** — retention and archiving: keep, archive and purge by age,
   driving the estate's real `RetentionPolicy` and `ArchiveStore` over a logical
   clock; a missed sweep under pressure surfaces as a retention leak.
+- **claim** — exclusive pickup: a dropped item is read by exactly one holder,
+  under real thread contention, across the **execution style** it declares —
+  Sequential, Parallel, Concurrent (runtime-model.md). Sequential additionally
+  keeps order per key. The claim is the estate's (ADR-0024), taken by atomically
+  creating a lock (`create_new`/`O_EXCL`, which is exclusive under concurrency
+  where a rename to a per-reader name is not). Under pressure the atomic claim is
+  dropped and a second reader takes the same item — a `Contended` red, the
+  duplicate-pickup bug. It runs over the file substrate; **no protocol is named
+  in the code** (the owner's rule) — any other pollable transport joins by adding
+  a `RoundTrip` adapter, which is when SFTP, FTPS and FTP get this exercise.
 
 Each injects its own pressure (faults, latency spikes, dropped transfers, missed
-sweeps) so the board is realistic rather than uniformly green; `file` is left
-clean in every one.
-
-**Queued:** **claim** — the exclusive single-reader test for the pollable
-file-transfer transports (FILE, SFTP, FTPS, FTP): a file dropped for pickup is
-read by exactly one reader across competing threads, processes and nodes
-(ADR-0024, the claim at the endpoint). It waits on the SFTP, FTPS and FTP
-adapters — only FILE is implemented today — and is built when all four exist
-(the owner's call, 2026-09-06). The name is settled.
+sweeps, dropped claims) so the board is realistic rather than uniformly green;
+`file` is left clean in every one.
 
 ### 4. A verdict is health, per stage
 
