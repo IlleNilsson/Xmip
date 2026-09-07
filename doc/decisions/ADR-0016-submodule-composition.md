@@ -14,7 +14,7 @@
 - Concepts: Submodules
 
 Two levels, each owned by the repository that pins it. `Xmip` pins
-`modules/transport`; `xmip-core-transport` pins `modules/kafka`. A parent pins
+`module/transport`; `xmip-core-transport` pins `module/kafka`. A parent pins
 commits, and reconciliation never uses `git submodule update --remote`.
 
 ## Context
@@ -49,8 +49,8 @@ Three things already in `main` disagree with that:
 **1. Two levels, each owned by the repository that pins.**
 
 ```
-Xmip                     modules/transport   -> xmip-core-transport
-xmip-core-transport      modules/kafka       -> xmip-core-transport-kafka
+Xmip                     module/transport   -> xmip-core-transport
+xmip-core-transport      module/kafka       -> xmip-core-transport-kafka
 ```
 
 A `.gitmodules` file belongs to the repository doing the pinning. The root
@@ -59,7 +59,7 @@ standards. Recursion is git's job, not the manifest's.
 
 **2. The path is the manifest key, not the repository name.**
 
-`modules/transport`, not `modules/xmip-core-transport`. The path mirrors the
+`module/transport`, not `module/xmip-core-transport`. The path mirrors the
 TOML tree exactly, so a reader who knows one knows the other. The submodule
 *name* stays the full repository name, which is what `git config` keys on.
 
@@ -70,7 +70,7 @@ nothing to say about pinning: you cannot pin what does not exist, and anything
 that does exist is worth pinning. `Sync-XmipRepository -Submodule` reports the absent
 ones and carries on.
 
-**4. How Cargo sees `modules/` is UNRESOLVED and blocks the rest.**
+**4. How Cargo sees `module/` is UNRESOLVED and blocks the rest.**
 
 Two decisions taken separately turn out to contradict each other.
 
@@ -78,7 +78,7 @@ Two decisions taken separately turn out to contradict each other.
 
 ```toml
 [workspace]
-exclude = ["modules"]
+exclude = ["module"]
 ```
 
 *Path dependencies through submodules* was chosen so a recursive clone builds
@@ -86,7 +86,7 @@ with no publishing step:
 
 ```toml
 [dependencies]
-xmip-core-route = { path = "modules/route" }
+xmip-core-route = { path = "module/route" }
 ```
 
 These pull opposite ways. A path dependency means the root cannot compile
@@ -95,7 +95,7 @@ submodule breaks the root — precisely what the exclusion was meant to prevent.
 
 Resolve it one of two ways, and this ADR is not final until it is:
 
-- **Path dependencies win.** `modules/*` become workspace members, CI checks
+- **Path dependencies win.** `module/*` become workspace members, CI checks
   out with `--recurse-submodules`, the exclusion goes. The assembly always
   builds; root CI is slower and coupled to thirty-six repositories.
 - **Independence wins.** Module crates are consumed as versioned dependencies

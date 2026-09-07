@@ -1,10 +1,10 @@
 [workspace]
 # Nothing but the root. Every module is its own repository and its own workspace
-# root; `exclude` keeps cargo inside modules/ from walking up, finding this file
+# root; `exclude` keeps cargo inside module/ from walking up, finding this file
 # and absorbing a crate into a workspace it has no relationship with. That is
 # exactly the coupling separate repositories exist to avoid. Open problem 19.
 members = ["."]
-exclude = ["modules", "template"]
+exclude = ["module", "template"]
 resolver = "2"
 
 [package]

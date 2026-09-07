@@ -32,7 +32,7 @@ defaultBranch = "main"
 license = "AGPL-3.0-or-later"
 maturity = "reserved"
 repositoryTopics = ["xmip"]
-submoduleRoot = "modules"
+submoduleRoot = "module"
 
 [classification]
 Foundation = "Things Xmip is."
@@ -846,7 +846,7 @@ dependency = []
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # Test scaffolding, not a capability the runtime loads: it mounts at the estate
-  # root rather than under modules/, and it is optional — the estate builds and
+  # root rather than under module/, and it is optional — the estate builds and
   # runs without it. ADR-0036.
   mount = "test/playground"
   optional = true

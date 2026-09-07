@@ -380,7 +380,7 @@ Later stores may include PostgreSQL, SQL Server, RocksDB, object storage and cus
 ## 14. Main Xmip submodule layout
 
 ```text
-modules/
+module/
     foundation/
         core
         module-foundation

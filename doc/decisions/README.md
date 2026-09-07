@@ -308,7 +308,7 @@ the name — dots become hyphens and nothing else happens.
 ### Submodule composition mirrors ownership
 
 Two levels, each owned by the repository that pins it. `Xmip` pins
-`modules/transport`; `xmip-core-transport` pins `modules/kafka`. A parent pins
+`module/transport`; `xmip-core-transport` pins `module/kafka`. A parent pins
 commits, and reconciliation never uses `git submodule update --remote`.
 
 → [Submodule composition, in full](ADR-0016-submodule-composition.md)
@@ -370,7 +370,7 @@ first word this governs; the same three moves handle the next.
 
 **The Playground is its own repository (`xmip-test-playground`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `test/playground`, not under `modules/`, and it is declared
+estate root as `test/playground`, not under `module/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.

@@ -328,7 +328,7 @@ reason = "Becomes the assembly: re-exports the module crates so xmip stays one i
 
 [[keep]]
 path = "Cargo.toml"
-reason = "Workspace root. Members become modules/* path dependencies."
+reason = "Workspace root. Members become module/* path dependencies."
 
 [[keep]]
 path = "Cargo.lock"

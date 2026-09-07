@@ -168,7 +168,7 @@ Describe 'Resolve-XmipCommitSubject' {
             $staged = @(
                 '.gitmodules'
                 'doc/decisions/ADR-0024-resource-claim-replaces-exclusiveness.md'
-                'modules/platform/exclusiveness'
+                'module/platform/exclusiveness'
                 'test/Sync-XmipEstate.Tests.ps1'
             )
 
@@ -179,7 +179,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message even when gitlinks are all there is' {
         InModuleScope Xmip {
-            $staged = @('modules/foundation/core', 'modules/capabilities/route')
+            $staged = @('module/foundation/core', 'module/capabilities/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Arrivals and departures' |
                 Should -Be 'Arrivals and departures' -Because 'the land carried a message'
@@ -188,14 +188,14 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message for a single-module land' {
         InModuleScope Xmip {
-            $staged = @('modules/foundation/core')
+            $staged = @('module/foundation/core')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Record the departure' |
                 Should -Be 'Record the departure'
         }
     }
 
-    It 'uses the message when nothing under modules/ is staged' {
+    It 'uses the message when nothing under module/ is staged' {
         InModuleScope Xmip {
             Resolve-XmipCommitSubject -Staged @('src/lib.rs') -Message 'Record the departure' |
                 Should -Be 'Record the departure'
@@ -204,14 +204,14 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'falls back to the pin subject when there is no message' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('modules/foundation/core') -Message '' |
+            Resolve-XmipCommitSubject -Staged @('module/foundation/core') -Message '' |
                 Should -Be 'Pin 1 module'
         }
     }
 
     It 'names the count in the fallback when there is no message' {
         InModuleScope Xmip {
-            $staged = @('modules/foundation/core', 'modules/capabilities/route')
+            $staged = @('module/foundation/core', 'module/capabilities/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message '' |
                 Should -Be 'Pin 2 modules'
@@ -247,7 +247,7 @@ rustls = { version = "0.23", optional = true }
     It 'names every declared feature except default' {
         # default is what cargo build already does.
         InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
-            $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
+            $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'module/nowhere'
 
             $features | Should -Contain 'server'
             $features | Should -Contain 'tls'
@@ -260,18 +260,18 @@ rustls = { version = "0.23", optional = true }
         # The list is shrink-only. An entry here is why a feature is unchecked,
         # and removing it is what fixing the feature looks like.
         InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
-            $script:XmipUnbuildableFeature['modules/nowhere'] = @('tls')
+            $script:XmipUnbuildableFeature['module/nowhere'] = @('tls')
 
             try {
                 $features =
-                    Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'modules/nowhere'
+                    Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'module/nowhere'
 
                 $features | Should -Not -Contain 'tls'
                 $features |
                     Should -Contain 'server' -Because 'one broken feature must not stop the rest'
             }
             finally {
-                $script:XmipUnbuildableFeature.Remove('modules/nowhere')
+                $script:XmipUnbuildableFeature.Remove('module/nowhere')
             }
         }
     }
@@ -281,7 +281,7 @@ rustls = { version = "0.23", optional = true }
             $bare = Join-Path $Fixture 'bare.toml'
             Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
 
-            @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'modules/nowhere').Count |
+            @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'module/nowhere').Count |
                 Should -Be 0
         }
     }
@@ -330,20 +330,20 @@ Describe 'Sort-XmipModuleDependency' {
         $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-sort-$([guid]::NewGuid())"
 
         $modules = @{
-            'modules/foundation/a' = @'
+            'module/foundation/a' = @'
 [package]
 name = "xmip-core-a"
 
 [dependencies]
 '@
-            'modules/foundation/b' = @'
+            'module/foundation/b' = @'
 [package]
 name = "xmip-core-b"
 
 [dependencies]
 xmip-a = { package = "xmip-core-a", git = "https://example.invalid/a", branch = "main" }
 '@
-            'modules/foundation/c' = @'
+            'module/foundation/c' = @'
 [package]
 name = "xmip-core-c"
 
@@ -359,9 +359,9 @@ xmip-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = 
         }
 
         $script:Given = @(
-            'modules/foundation/c'
-            'modules/foundation/a'
-            'modules/foundation/b'
+            'module/foundation/c'
+            'module/foundation/a'
+            'module/foundation/b'
         )
     }
 
@@ -391,10 +391,10 @@ xmip-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = 
 
             $ordered = @(Sort-XmipModuleDependency -RepositoryRoot $Root -Module $Given)
 
-            $ordered.IndexOf('modules/foundation/a') |
-                Should -BeLessThan $ordered.IndexOf('modules/foundation/b')
-            $ordered.IndexOf('modules/foundation/b') |
-                Should -BeLessThan $ordered.IndexOf('modules/foundation/c')
+            $ordered.IndexOf('module/foundation/a') |
+                Should -BeLessThan $ordered.IndexOf('module/foundation/b')
+            $ordered.IndexOf('module/foundation/b') |
+                Should -BeLessThan $ordered.IndexOf('module/foundation/c')
         }
     }
 
@@ -405,10 +405,10 @@ xmip-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = 
             param($Root)
 
             $ordered = @(
-                Sort-XmipModuleDependency -RepositoryRoot $Root -Module @('modules/foundation/c')
+                Sort-XmipModuleDependency -RepositoryRoot $Root -Module @('module/foundation/c')
             )
 
-            $ordered | Should -Be @('modules/foundation/c')
+            $ordered | Should -Be @('module/foundation/c')
         }
     }
 
@@ -434,16 +434,16 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
         $files = @{
             '.gitmodules' = @'
-[submodule "modules/capabilities/contract"]
-	path = modules/capabilities/contract
+[submodule "module/capabilities/contract"]
+	path = module/capabilities/contract
 	url = https://example.invalid/contract
-[submodule "modules/foundation/core"]
-	path = modules/foundation/core
+[submodule "module/foundation/core"]
+	path = module/foundation/core
 	url = https://example.invalid/core
 '@
-            'modules/capabilities/contract/.gitmodules' = @'
-[submodule "modules/csv"]
-	path = modules/csv
+            'module/capabilities/contract/.gitmodules' = @'
+[submodule "module/csv"]
+	path = module/csv
 	url = https://example.invalid/contract-csv
 '@
         }
@@ -465,9 +465,9 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
-            $declared | Should -Contain 'modules/capabilities/contract'
-            $declared | Should -Contain 'modules/capabilities/contract/modules/csv'
-            $declared | Should -Contain 'modules/foundation/core'
+            $declared | Should -Contain 'module/capabilities/contract'
+            $declared | Should -Contain 'module/capabilities/contract/module/csv'
+            $declared | Should -Contain 'module/foundation/core'
         }
     }
 
@@ -477,8 +477,8 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
-            $declared.IndexOf('modules/capabilities/contract') |
-                Should -BeLessThan $declared.IndexOf('modules/capabilities/contract/modules/csv')
+            $declared.IndexOf('module/capabilities/contract') |
+                Should -BeLessThan $declared.IndexOf('module/capabilities/contract/module/csv')
         }
     }
 
@@ -486,7 +486,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
         InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
             param($Root)
 
-            # modules/foundation/core has no .gitmodules of its own; the ordinary
+            # module/foundation/core has no .gitmodules of its own; the ordinary
             # case must be silent, not an error.
             { Get-XmipDeclaredModule -RepositoryRoot $Root } | Should -Not -Throw
         }
@@ -498,7 +498,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $parents = @(Get-XmipNestedParent -RepositoryRoot $Root)
 
-            $parents | Should -Be @('modules/capabilities/contract')
+            $parents | Should -Be @('module/capabilities/contract')
         }
     }
 }

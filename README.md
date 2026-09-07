@@ -137,7 +137,7 @@ Sync-XmipEstate -Report               # write .ai-work/architecture-report.json
 ```
 
 `-Compose` mounts every repository that exists at its place in the tree —
-`modules/<domain>/<leaf>` for a module, `modules/<leaf>` inside its parent for
+`module/<domain>/<leaf>` for a module, `module/<leaf>` inside its parent for
 an implementation. The filesystem hierarchy and the submodules are the same
 thing, so `git clone --recursive` reproduces it. It never uses
 `git submodule update --remote`; parents pin commits deliberately, per
@@ -176,7 +176,7 @@ prerequisite.toml     what a machine needs, per role and per operating system
 rust-toolchain.toml   channel = stable
 
 Xmip/                 the PowerShell module
-modules/              the Rust modules, mounted as git submodules
+module/              the Rust modules, mounted as git submodules
 src/                  this repository's own Rust facade
 test/                Pester
 deploy/               Ansible and DSC node configuration
@@ -203,8 +203,8 @@ submodules:
 
 | Document | Where |
 | --- | --- |
-| identity, per protocol, against the standards | `modules/capabilities/authenticate/doc/` |
-| the normative ABI specification | `modules/foundation/abi/doc/` |
+| identity, per protocol, against the standards | `module/capabilities/authenticate/doc/` |
+| the normative ABI specification | `module/foundation/abi/doc/` |
 
 Governance:
 

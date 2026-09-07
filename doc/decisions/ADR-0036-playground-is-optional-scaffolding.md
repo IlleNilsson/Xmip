@@ -15,7 +15,7 @@
 
 **The Playground is its own repository (`xmip-test-playground`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `test/playground`, not under `modules/`, and it is declared
+estate root as `test/playground`, not under `module/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.
@@ -24,7 +24,7 @@ gate does not require.
 
 The owner, 2026-09-06: the Playground *should be in its own repository, mounted
 as an optional submodule.* It was already its own repository, but mounted at
-`modules/operations/playground` — the domain-grouped path `Get-XmipMountPath`
+`module/operations/playground` — the domain-grouped path `Get-XmipMountPath`
 computes from `architecturalDomain`. That path says "a module the runtime loads
 under Operations", which the Playground is not: it spawns nodes and drives every
 transport and contract through them (ADR-0028). Its provider namespace is already
@@ -35,11 +35,11 @@ wrong thing.
 
 ### 1. Mount is declared when computing it is wrong
 
-`Get-XmipMountPath` computes `modules/<domain>/<leaf>` for a module, which is
+`Get-XmipMountPath` computes `module/<domain>/<leaf>` for a module, which is
 right for a capability. A repository that is not a capability may declare
 `mount`, and the declared value wins. The Playground declares
 `mount = "test/playground"`: the estate root, beside the estate's own tests,
-not under `modules/`. This is the first non-`modules/` submodule mount, and the
+not under `module/`. This is the first non-`module/` submodule mount, and the
 mechanism is general — any future non-module repository uses the same key.
 
 ### 2. Optional is declared, and recorded now

@@ -224,7 +224,7 @@ bundled databases:
 xmip/
     bin/
     config/
-    modules/
+    module/
     data/
         persistence-rocksdb/
         management.sqlite
