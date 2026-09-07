@@ -383,9 +383,9 @@ Xmip/
 ├── module/
 │   ├── foundation/
 │   │   ├── core   journey   message   stream   party   event   abi
-│   ├── capabilities/
+│   ├── capability/
 │   │   ├── transport   route   process   transform   contract   path
-│   ├── operations/
+│   ├── operation/
 │   │   ├── audit   observe   report   retain   archive   cli   powershell
 │   └── platform/
 │       └── runtime   configure   persist   resilience
@@ -419,7 +419,7 @@ xmip-core-path/
 
 The mount name is the last segment of the repository name and the owner is the
 name minus that segment, so both are computed from the manifest rather than
-configured. Grouping exists at depth two only: `capabilities/` has fifteen
+configured. Grouping exists at depth two only: `capability/` has eighteen
 entries and would be a wall without it, while `xmip-core-transport` has one kind
 of child and needs none.
 
