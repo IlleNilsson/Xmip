@@ -214,6 +214,7 @@ dependency = []
     description = "FTP and FTPS transport implementation."
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.http]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
@@ -228,10 +229,12 @@ dependency = []
     [xmip.core.transport.sftp]
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.smtp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.webdav]
     dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.websocket]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-http"]
     specification = "IETF RFC 6455, with the applicable extension documents"
     [xmip.core.transport.activemq]
@@ -346,6 +349,7 @@ dependency = []
     [xmip.core.transport.azure-service-bus]
     [xmip.core.transport.can-bus]
     [xmip.core.transport.file]
+    maturity = "scaffolded"
     specification = "Platform file-system behaviour and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
     [xmip.core.transport.google-pub-sub]
@@ -371,8 +375,10 @@ dependency = []
     [xmip.core.transport.smb]
     [xmip.core.transport.sqlite]
     [xmip.core.transport.tcp]
+    maturity = "scaffolded"
     specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
+    maturity = "scaffolded"
     specification = "IETF RFC 768"
     [xmip.core.transport.unix-socket]
 
@@ -407,6 +413,7 @@ dependency = []
     [xmip.core.contract.graphql-schema]
     [xmip.core.contract.java]
     [xmip.core.contract.json-schema]
+    maturity = "scaffolded"
     [xmip.core.contract.openapi]
     [xmip.core.contract.protobuf]
     [xmip.core.contract.python]
@@ -415,6 +422,7 @@ dependency = []
     [xmip.core.contract.sql]
     [xmip.core.contract.wsdl]
     [xmip.core.contract.xml-schema]
+    maturity = "scaffolded"
 
   [xmip.core.logic]
   description = "Method and operation semantics layered over transport and message representation."
