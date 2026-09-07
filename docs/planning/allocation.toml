@@ -790,7 +790,7 @@ path = ".github/workflows/rust.yml"
 [[keep]]
 path = ".github/ci-trigger.md"
 [[keep]]
-path = "assets/brand/xmip-logo.png"
+path = "asset/brand/xmip-logo.png"
 [[keep]]
 path = "tests/Sync-XmipEstate.Tests.ps1"
 [[keep]]
