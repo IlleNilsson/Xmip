@@ -419,6 +419,9 @@ dependency = []
     [xmip.core.contract.python]
     [xmip.core.contract.regex]
     maturity = "scaffolded"
+    [xmip.core.contract.schematron]
+    description = "Schematron content contract: business rules over XML, the way Peppol, UBL, ISO 20022 and HL7 CDA state them. A xmip-core-contract technology."
+    maturity = "scaffolded"
     [xmip.core.contract.rust]
     [xmip.core.contract.sql]
     [xmip.core.contract.wsdl]
