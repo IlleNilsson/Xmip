@@ -556,13 +556,13 @@ it and when. Nothing below is work.
 
 *Resolved by option A before 2026-08-30, recorded here 2026-09-03.*
 
-`tests/` holds no `.rs` file. The eight went with the crate move of 2026-08-26
+`test/` holds no `.rs` file. The eight went with the crate move of 2026-08-26
 that emptied `src/`, and the Suggested order recorded them gone on 2026-08-30.
 This entry did not move with it, so the register went on opening with a red
 build for four days after the build was green.
 
 
-Every `.rs` file in `tests/` imports `xmip_linear_kernel`, the crate's pre-narrowing name.
+Every `.rs` file in `test/` imports `xmip_linear_kernel`, the crate's pre-narrowing name.
 They reference modules `src/lib.rs` does not publish. One, `xmip_message_model`, names a
 module that no longer exists in `src/` at all.
 

@@ -15,7 +15,7 @@
 
 **The Playground is its own repository (`xmip-test-playground`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `tests/playground`, not under `modules/`, and it is declared
+estate root as `test/playground`, not under `modules/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.
@@ -38,7 +38,7 @@ wrong thing.
 `Get-XmipMountPath` computes `modules/<domain>/<leaf>` for a module, which is
 right for a capability. A repository that is not a capability may declare
 `mount`, and the declared value wins. The Playground declares
-`mount = "tests/playground"`: the estate root, beside the estate's own tests,
+`mount = "test/playground"`: the estate root, beside the estate's own tests,
 not under `modules/`. This is the first non-`modules/` submodule mount, and the
 mechanism is general — any future non-module repository uses the same key.
 
@@ -62,9 +62,9 @@ are added; the repository, its name, and its dependencies are untouched.
 - `architecture.toml` gains `mount` and `optional` on `[xmip.test.playground]`;
   `Resolve-XmipNodeFacts`, `Expand-XmipEstate` and `New-XmipRepositoryEntry` carry
   them onto the manifest, and `Get-XmipMountPath` honours `mount`.
-- `.gitmodules` mounts the submodule at `tests/playground`; the working tree moves
+- `.gitmodules` mounts the submodule at `test/playground`; the working tree moves
   there by `git mv`.
-- ADR-0028's path reference is updated to `tests/playground`.
+- ADR-0028's path reference is updated to `test/playground`.
 - No module repository changes: this is a superproject move plus the resolver.
 
 ## Provenance

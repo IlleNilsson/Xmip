@@ -240,7 +240,7 @@ Describe 'The style document describes what is enforced' {
     }
 
     It 'names this file as the thing that enforces it' {
-        $script:Document | Should -Match 'tests/Rust\.Style\.Tests\.ps1'
+        $script:Document | Should -Match 'test/Rust\.Style\.Tests\.ps1'
     }
 
     It 'states the same gate this file enforces' {

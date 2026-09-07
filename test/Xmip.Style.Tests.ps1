@@ -76,7 +76,7 @@ BeforeAll {
         )
 
         [string] $module = Join-Path $At 'Xmip'
-        [string] $tests = Join-Path $At 'tests'
+        [string] $tests = Join-Path $At 'test'
 
         return @(
             Get-ChildItem -Path $module -File -Include '*.ps1', '*.psm1' -Recurse

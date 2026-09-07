@@ -5,7 +5,7 @@ Forty-one decisions, read as one document.
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
 cannot disagree. Edit a record and regenerate; an edit made here is lost.
-`tests/Decisions.Tests.ps1` regenerates and fails when this file differs.
+`test/Decisions.Tests.ps1` regenerates and fails when this file differs.
 
 Every decision has a number. The number is an identifier for machines, for
 citations in code comments, and for filenames — it is not how anyone
@@ -370,7 +370,7 @@ first word this governs; the same three moves handle the next.
 
 **The Playground is its own repository (`xmip-test-playground`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `tests/playground`, not under `modules/`, and it is declared
+estate root as `test/playground`, not under `modules/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.

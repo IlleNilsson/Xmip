@@ -848,6 +848,6 @@ dependency = []
   # Test scaffolding, not a capability the runtime loads: it mounts at the estate
   # root rather than under modules/, and it is optional — the estate builds and
   # runs without it. ADR-0036.
-  mount = "tests/playground"
+  mount = "test/playground"
   optional = true
   dependency = ["xmip-core", "xmip-core-runtime", "xmip-core-transport", "xmip-core-observe", "xmip-core-configure"]

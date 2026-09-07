@@ -292,7 +292,7 @@ same redirect:
 
 ## 6. What this is enforced by
 
-`tests/Xmip.Style.Tests.ps1`, over `Xmip/` and `tests/`. It fails on:
+`test/Xmip.Style.Tests.ps1`, over `Xmip/` and `test/`. It fails on:
 
 | Rule | Section | Enforced |
 | --- | --- | --- |
