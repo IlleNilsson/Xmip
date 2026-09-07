@@ -28,7 +28,7 @@ compiled and no repository is created.
 
 ### 1. The base you implement
 
-`Transport` (`modules/capabilities/transport/src/protocol.rs`) — five methods,
+`Transport` (`module/capabilities/transport/src/protocol.rs`) — five methods,
 and nothing in it names a protocol:
 
 ```rust
@@ -48,7 +48,7 @@ protocol-agnostic).
 ### 2. Create the repository and module
 
 The repository is `xmip-core-transport-<name>`; it mounts as a submodule at
-`modules/<name>` **inside the transport capability**, and it **depends on the
+`module/<name>` **inside the transport capability**, and it **depends on the
 capability, never the reverse** (`repository-model.md`).
 
 1. **Declare it** in `architecture.toml` under `[xmip.core.transport.<name>]`,
@@ -56,7 +56,7 @@ capability, never the reverse** (`repository-model.md`).
 2. **Create the GitHub repo.** `gh repo create xmip-core-transport-<name> --public`
    — run this yourself; the assistant is blocked from creating repositories.
 3. **Scaffold** from the working template — copy the layout of
-   `modules/capabilities/contract/modules/csv/` (Cargo.toml, `src/lib.rs`,
+   `module/capabilities/contract/module/csv/` (Cargo.toml, `src/lib.rs`,
    README, `rust-toolchain.toml`, LICENSE, tests). In `Cargo.toml`:
    ```toml
    [package]
@@ -73,8 +73,8 @@ capability, never the reverse** (`repository-model.md`).
 
 ```bash
 # inside the transport capability repo
-git -C modules/capabilities/transport submodule add \
-    https://github.com/<you>/xmip-core-transport-<name> modules/<name>
+git -C module/capabilities/transport submodule add \
+    https://github.com/<you>/xmip-core-transport-<name> module/<name>
 
 # from the estate root
 Import-Module ./Xmip/Xmip.psd1 -Force
@@ -95,12 +95,12 @@ timed, sized and fault-injected — not a new test, a new adapter.
 ## Part B — A new contract
 
 Identical shape to a transport, against a different base. **`csv` is the
-reference implementation** — read `modules/capabilities/contract/modules/csv/`
+reference implementation** — read `module/capabilities/contract/module/csv/`
 before starting; your module is that module with the format changed.
 
 ### The base you implement
 
-`Contract` (`modules/capabilities/contract/src/lib.rs`):
+`Contract` (`module/capabilities/contract/src/lib.rs`):
 
 ```rust
 pub trait Contract: Send + Sync {
@@ -118,7 +118,7 @@ false so an operator sees *what* failed.
 
 Exactly as Part A, substituting `contract` for `transport`:
 
-- repo `xmip-core-contract-<name>`, mounted at `modules/<name>` inside the
+- repo `xmip-core-contract-<name>`, mounted at `module/<name>` inside the
   contract capability;
 - `Cargo.toml` depends on `contract = { package = "xmip-core-contract", … }`
   (and `stream`, for the `Stream` type);
@@ -138,7 +138,7 @@ compile — you describe a node's work, and the runtime enacts it.
 
 ### What a process is made of
 
-From `modules/platform/configure/src/lib.rs`:
+From `module/platform/configure/src/lib.rs`:
 
 - **`XmipProcessConfiguration`** — `name`, `start`, `execution_style`,
   `required_modules`, `xmip_subprocesses`, `extensions`.
@@ -195,7 +195,7 @@ progress.
 | Thing | Base trait / type | Reference implementation |
 |---|---|---|
 | Transport | `Transport` (`transport/src/protocol.rs`) | `file`, `tcp`, `http`, `smtp` in the capability |
-| Contract | `Contract` (`contract/src/lib.rs`) | `contract/modules/csv/` |
+| Contract | `Contract` (`contract/src/lib.rs`) | `contract/module/csv/` |
 | Xmip Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
 
 - **Repository model:** `doc/architecture/repository-model.md`

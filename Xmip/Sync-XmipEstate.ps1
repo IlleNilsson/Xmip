@@ -31,13 +31,13 @@
     Depth two mounts under Xmip, grouped by architectural domain, because that
     layout exists for human navigation:
 
-        xmip-core-transport   ->  modules/capabilities/transport
-        xmip-core-journey     ->  modules/foundation/journey
+        xmip-core-transport   ->  module/capabilities/transport
+        xmip-core-journey     ->  module/foundation/journey
 
     Depth three mounts inside its own parent capability, ungrouped, because at
     that level the parent is the grouping:
 
-        xmip-core-transport-kafka  ->  modules/kafka
+        xmip-core-transport-kafka  ->  module/kafka
 
     The name is the TOML tree path with dots as hyphens, so the mount name is
     the last segment and the owner is the name minus that segment.
@@ -57,7 +57,7 @@ function Get-XmipMountPath {
     [string] $name = [string](Get-PropertyValue $Repository 'name')
 
     # An explicit mount wins over the computed path. Almost nothing declares one
-    # — the domain-grouped `modules/<domain>/<leaf>` below is right for a module.
+    # — the domain-grouped `module/<domain>/<leaf>` below is right for a module.
     # A repository that is not a module (the Playground is test scaffolding, not
     # a capability the runtime loads) mounts where it says. ADR-0036.
     [string] $declaredMount = [string](Get-PropertyValue $Repository 'mount' '')
@@ -77,13 +77,13 @@ function Get-XmipMountPath {
 
     # xmip-core is both a repository and the prefix every module carries, so a
     # module resolves to it. Modules mount under the estate root regardless —
-    # ADR-0016 shows Xmip pinning modules/transport directly.
+    # ADR-0016 shows Xmip pinning module/transport directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
         [string] $domain = [string](Get-PropertyValue $Repository 'architecturalDomain' 'Capabilities')
-        return [pscustomobject]@{ Owner = ''; Mount = "modules/$($domain.ToLowerInvariant())/$leaf" }
+        return [pscustomobject]@{ Owner = ''; Mount = "module/$($domain.ToLowerInvariant())/$leaf" }
     }
 
-    return [pscustomobject]@{ Owner = $owner; Mount = "modules/$leaf" }
+    return [pscustomobject]@{ Owner = $owner; Mount = "module/$leaf" }
 }
 
 <#

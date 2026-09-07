@@ -159,7 +159,7 @@ when one Publication matches several Subscriptions.
 `journey` unqualified always means the current Journey.
 
 **A Message carries no `journey_id`.** Both implementations have one today —
-`src/journey_model.rs` and `modules/foundation/message` — and it is backwards.
+`src/journey_model.rs` and `module/foundation/message` — and it is backwards.
 A Message is published; *then* subscribers pick it up and open Journeys. A
 Message owning a single Journey identity cannot be picked up twice, which
 contradicts clause 5 directly. Journeys reference Messages, never the reverse.

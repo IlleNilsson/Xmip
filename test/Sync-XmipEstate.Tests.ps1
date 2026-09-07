@@ -260,8 +260,8 @@ Describe 'The estate is more than its modules' {
         # the protocol and contract modules to arrive.
         #
         # It is not, because a depth-three module mounts inside its parent
-        # capability's repository rather than inside Xmip — `modules/file` in
-        # xmip-core-transport and `modules/file` in xmip-core-audit are two
+        # capability's repository rather than inside Xmip — `module/file` in
+        # xmip-core-transport and `module/file` in xmip-core-audit are two
         # paths in two repositories. The leaf namespace is per-parent.
         #
         # Nothing guaranteed that. It held for 334 repositories by construction

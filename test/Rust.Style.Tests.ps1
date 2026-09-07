@@ -30,7 +30,7 @@ BeforeAll {
         counted separately.
 
         .DESCRIPTION
-        `modules/` and `template/`. The template is Rust that the estate ships
+        `module/` and `template/`. The template is Rust that the estate ships
         and that every new repository is generated from, so a rule it does not
         obey is a rule every new repository starts out breaking.
 
@@ -42,7 +42,7 @@ BeforeAll {
         [OutputType([PSCustomObject])]
         param()
 
-        $roots = @('modules', 'template') |
+        $roots = @('module', 'template') |
             ForEach-Object { Join-Path $script:Root $_ } |
             Where-Object { Test-Path -LiteralPath $_ }
 
@@ -154,7 +154,7 @@ Describe 'Rust style, section 1: a file has one subject' {
 Describe 'Rust style, section 5: a file is named for what it defines' {
     BeforeAll {
         # The crate a file belongs to, taken from the path rather than from
-        # Cargo.toml: modules/<domain>/<crate>/src/... . Reading the manifest
+        # Cargo.toml: module/<domain>/<crate>/src/... . Reading the manifest
         # would be more correct and would also make this test depend on 43 of
         # them being parseable, which is a different test's job.
         $script:Named = $script:Files | ForEach-Object {
@@ -255,7 +255,7 @@ Describe 'The style document describes what is enforced' {
             # Both sets of parentheses are load-bearing. Without the inner pair
             # PowerShell reads the comma as an argument separator and hands
             # Escape two arguments, which has no overload.
-            [string] $relative = ($path -replace '^modules/', '')
+            [string] $relative = ($path -replace '^module/', '')
 
             $script:Document | Should -Match ([regex]::Escape($relative))
             $script:Document | Should -Match 'strict recommendation'

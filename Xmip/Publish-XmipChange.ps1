@@ -1256,7 +1256,7 @@ function Resolve-XmipCommitSubject {
         return $Message
     }
 
-    $pins = @($Staged | Where-Object { $_ -like 'modules/*' })
+    $pins = @($Staged | Where-Object { $_ -like 'module/*' })
     $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
 
     return "Pin $($pins.Count) $noun"
@@ -1350,7 +1350,7 @@ function Publish-XmipPin {
         return
     }
 
-    $pins = @($staged | Where-Object { $_ -like 'modules/*' })
+    $pins = @($staged | Where-Object { $_ -like 'module/*' })
     $noun = if ($pins.Count -eq 1) { 'module' } else { 'modules' }
 
     $subject = Resolve-XmipCommitSubject -Staged $staged -Message $Message

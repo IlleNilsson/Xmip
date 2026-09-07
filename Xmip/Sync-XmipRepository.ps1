@@ -267,7 +267,7 @@ function Sync-XmipRepository {
         $touched = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
         # A composed estate keeps its working copies as submodules inside this
-        # repository, so a repository name resolves to modules/<domain>/<leaf>
+        # repository, so a repository name resolves to module/<domain>/<leaf>
         # rather than to a sibling clone. Without this, Distribute writes into
         # ../xmip-repositories and the submodule that owns the file never sees
         # it.

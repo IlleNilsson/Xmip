@@ -631,7 +631,7 @@ the manifest tell the truth today, migrate deliberately once green.
 *Resolved by option A, recorded here 2026-09-03.*
 
 `crates/` does not exist. Both crates are gone and `xmip-core-abi` is real —
-seven files at `modules/foundation/abi`, with the specification beside them.
+seven files at `module/foundation/abi`, with the specification beside them.
 What remains are citations inside ADR-0012 and ADR-0016, and those are correct
 as they stand: a record says what was true when it was written.
 

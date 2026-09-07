@@ -1,125 +1,125 @@
 [submodule "modules/foundation/core"]
-	path = modules/foundation/core
+	path = module/foundation/core
 	url = https://github.com/IlleNilsson/xmip-core.git
 [submodule "modules/foundation/abi"]
-	path = modules/foundation/abi
+	path = module/foundation/abi
 	url = https://github.com/IlleNilsson/xmip-core-abi.git
 [submodule "modules/operations/archive"]
-	path = modules/operations/archive
+	path = module/operations/archive
 	url = https://github.com/IlleNilsson/xmip-core-archive.git
 [submodule "modules/capabilities/assign"]
-	path = modules/capabilities/assign
+	path = module/capabilities/assign
 	url = https://github.com/IlleNilsson/xmip-core-assign.git
 [submodule "modules/operations/audit"]
-	path = modules/operations/audit
+	path = module/operations/audit
 	url = https://github.com/IlleNilsson/xmip-core-audit.git
 [submodule "modules/capabilities/authenticate"]
-	path = modules/capabilities/authenticate
+	path = module/capabilities/authenticate
 	url = https://github.com/IlleNilsson/xmip-core-authenticate.git
 [submodule "modules/capabilities/authorize"]
-	path = modules/capabilities/authorize
+	path = module/capabilities/authorize
 	url = https://github.com/IlleNilsson/xmip-core-authorize.git
 [submodule "modules/operations/cli"]
-	path = modules/operations/cli
+	path = module/operations/cli
 	url = https://github.com/IlleNilsson/xmip-core-cli.git
 [submodule "modules/foundation/cluster"]
-	path = modules/foundation/cluster
+	path = module/foundation/cluster
 	url = https://github.com/IlleNilsson/xmip-core-cluster.git
 [submodule "modules/platform/configure"]
-	path = modules/platform/configure
+	path = module/platform/configure
 	url = https://github.com/IlleNilsson/xmip-core-configure.git
 [submodule "modules/foundation/context"]
-	path = modules/foundation/context
+	path = module/foundation/context
 	url = https://github.com/IlleNilsson/xmip-core-context.git
 [submodule "modules/capabilities/contract"]
-	path = modules/capabilities/contract
+	path = module/capabilities/contract
 	url = https://github.com/IlleNilsson/xmip-core-contract.git
 [submodule "modules/capabilities/demote"]
-	path = modules/capabilities/demote
+	path = module/capabilities/demote
 	url = https://github.com/IlleNilsson/xmip-core-demote.git
 [submodule "modules/operations/diagnose"]
-	path = modules/operations/diagnose
+	path = module/operations/diagnose
 	url = https://github.com/IlleNilsson/xmip-core-diagnose.git
 [submodule "modules/foundation/event"]
-	path = modules/foundation/event
+	path = module/foundation/event
 	url = https://github.com/IlleNilsson/xmip-core-event.git
 [submodule "modules/operations/gui"]
-	path = modules/operations/gui
+	path = module/operations/gui
 	url = https://github.com/IlleNilsson/xmip-core-gui.git
 [submodule "modules/capabilities/identify"]
-	path = modules/capabilities/identify
+	path = module/capabilities/identify
 	url = https://github.com/IlleNilsson/xmip-core-identify.git
 [submodule "modules/foundation/journey"]
-	path = modules/foundation/journey
+	path = module/foundation/journey
 	url = https://github.com/IlleNilsson/xmip-core-journey.git
 [submodule "modules/capabilities/logic"]
-	path = modules/capabilities/logic
+	path = module/capabilities/logic
 	url = https://github.com/IlleNilsson/xmip-core-logic.git
 [submodule "modules/foundation/message"]
-	path = modules/foundation/message
+	path = module/foundation/message
 	url = https://github.com/IlleNilsson/xmip-core-message.git
 [submodule "modules/capabilities/migrate"]
-	path = modules/capabilities/migrate
+	path = module/capabilities/migrate
 	url = https://github.com/IlleNilsson/xmip-core-migrate.git
 [submodule "modules/foundation/node"]
-	path = modules/foundation/node
+	path = module/foundation/node
 	url = https://github.com/IlleNilsson/xmip-core-node.git
 [submodule "modules/operations/observe"]
-	path = modules/operations/observe
+	path = module/operations/observe
 	url = https://github.com/IlleNilsson/xmip-core-observe.git
 [submodule "modules/foundation/party"]
-	path = modules/foundation/party
+	path = module/foundation/party
 	url = https://github.com/IlleNilsson/xmip-core-party.git
 [submodule "modules/capabilities/path"]
-	path = modules/capabilities/path
+	path = module/capabilities/path
 	url = https://github.com/IlleNilsson/xmip-core-path.git
 [submodule "modules/platform/persist"]
-	path = modules/platform/persist
+	path = module/platform/persist
 	url = https://github.com/IlleNilsson/xmip-core-persist.git
 [submodule "modules/operations/powershell"]
-	path = modules/operations/powershell
+	path = module/operations/powershell
 	url = https://github.com/IlleNilsson/xmip-core-powershell.git
 [submodule "modules/capabilities/prepare"]
-	path = modules/capabilities/prepare
+	path = module/capabilities/prepare
 	url = https://github.com/IlleNilsson/xmip-core-prepare.git
 [submodule "modules/capabilities/process"]
-	path = modules/capabilities/process
+	path = module/capabilities/process
 	url = https://github.com/IlleNilsson/xmip-core-process.git
 [submodule "modules/capabilities/promote"]
-	path = modules/capabilities/promote
+	path = module/capabilities/promote
 	url = https://github.com/IlleNilsson/xmip-core-promote.git
 [submodule "modules/capabilities/receive"]
-	path = modules/capabilities/receive
+	path = module/capabilities/receive
 	url = https://github.com/IlleNilsson/xmip-core-receive.git
 [submodule "modules/operations/report"]
-	path = modules/operations/report
+	path = module/operations/report
 	url = https://github.com/IlleNilsson/xmip-core-report.git
 [submodule "modules/platform/resilience"]
-	path = modules/platform/resilience
+	path = module/platform/resilience
 	url = https://github.com/IlleNilsson/xmip-core-resilience.git
 [submodule "modules/capabilities/retain"]
-	path = modules/capabilities/retain
+	path = module/capabilities/retain
 	url = https://github.com/IlleNilsson/xmip-core-retain.git
 [submodule "modules/capabilities/route"]
-	path = modules/capabilities/route
+	path = module/capabilities/route
 	url = https://github.com/IlleNilsson/xmip-core-route.git
 [submodule "modules/platform/runtime"]
-	path = modules/platform/runtime
+	path = module/platform/runtime
 	url = https://github.com/IlleNilsson/xmip-core-runtime.git
 [submodule "modules/platform/schedule"]
-	path = modules/platform/schedule
+	path = module/platform/schedule
 	url = https://github.com/IlleNilsson/xmip-core-schedule.git
 [submodule "modules/capabilities/send"]
-	path = modules/capabilities/send
+	path = module/capabilities/send
 	url = https://github.com/IlleNilsson/xmip-core-send.git
 [submodule "modules/foundation/stream"]
-	path = modules/foundation/stream
+	path = module/foundation/stream
 	url = https://github.com/IlleNilsson/xmip-core-stream.git
 [submodule "modules/capabilities/transform"]
-	path = modules/capabilities/transform
+	path = module/capabilities/transform
 	url = https://github.com/IlleNilsson/xmip-core-transform.git
 [submodule "modules/capabilities/transport"]
-	path = modules/capabilities/transport
+	path = module/capabilities/transport
 	url = https://github.com/IlleNilsson/xmip-core-transport.git
 [submodule "template/rust"]
 	path = template/rust

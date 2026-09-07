@@ -24,8 +24,8 @@ per ADR-0011.
 
 It does place it on disk, and that is not a contradiction. The name is one
 thing, the navigable tree is another: `Sync-XmipEstate -Compose` mounts a module
-at `modules/<domain>/<leaf>`, so `xmip-core-journey` appears at
-`modules/foundation/journey`. Section 7 has the shape.
+at `module/<domain>/<leaf>`, so `xmip-core-journey` appears at
+`module/foundation/journey`. Section 7 has the shape.
 
 **A leaf is not unique across the estate, and does not need to be.** The estate
 declares `file` four times — under transport, audit, retain and archive — and
@@ -33,8 +33,8 @@ declares `file` four times — under transport, audit, retain and archive — an
 module mounts inside its parent capability's repository, not inside Xmip**:
 
 ```text
-xmip-core-transport-file  ->  modules/file   a submodule of xmip-core-transport
-xmip-core-audit-file      ->  modules/file   a submodule of xmip-core-audit
+xmip-core-transport-file  ->  module/file   a submodule of xmip-core-transport
+xmip-core-audit-file      ->  module/file   a submodule of xmip-core-audit
 ```
 
 Two paths in two repositories. The leaf namespace is per-parent, so it is the
@@ -380,7 +380,7 @@ which is the layout in section 14 of `Xmip-Repository-Creation-Blueprint.md`:
 
 ```text
 Xmip/
-├── modules/
+├── module/
 │   ├── foundation/
 │   │   ├── core   journey   message   stream   party   event   abi
 │   ├── capabilities/
@@ -401,7 +401,7 @@ without anything noticing — which it did. Under `template/` they are surveyed 
 `Get-XmipStatus`, landed by `Publish-XmipChange` and measured by the Rust style
 rule like anything else.
 
-They are **not** under `modules/`: a module is something Xmip loads at runtime,
+They are **not** under `module/`: a module is something Xmip loads at runtime,
 and a template is never loaded by anything. `crate.template` in
 `architecture.toml` names them by `owner/name` for the GitHub API; the path is
 `template/<language>`.
@@ -411,7 +411,7 @@ level the parent *is* the grouping:
 
 ```text
 xmip-core-path/
-└── modules/
+└── module/
     ├── xpath/
     ├── json-pointer/
     └── index/

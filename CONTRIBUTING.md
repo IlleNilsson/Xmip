@@ -32,7 +32,7 @@ Use advanced functions and native PowerShell parameter sets. Mutating commands s
 
 ## Submodules
 
-Xmip mounts every module as a submodule under `modules/<domain>/<leaf>`. Four
+Xmip mounts every module as a submodule under `module/<domain>/<leaf>`. Four
 facts explain every surprise:
 
 - **A submodule is a commit, not a branch.** `Xmip` records "at this path, this
@@ -65,7 +65,7 @@ commit the parent pins.
 **Changing something in a module**
 
 ```powershell
-cd modules/foundation/core
+cd module/foundation/core
 git checkout main          # detached otherwise, and the commit goes nowhere
 git add -A; git commit -m "..."; git push origin main
 
