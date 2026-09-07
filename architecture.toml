@@ -394,6 +394,7 @@ dependency = []
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.contract.edi-edifact]
+    maturity = "scaffolded"
     [xmip.core.contract.edi-x12]
     [xmip.core.contract.hl7-v2]
     [xmip.core.contract.asyncapi]
@@ -409,6 +410,7 @@ dependency = []
     dependency = ["xmip-core-abi"]
     [xmip.core.contract.fhir]
     [xmip.core.contract.fixed-width]
+    maturity = "scaffolded"
     [xmip.core.contract.go]
     [xmip.core.contract.graphql-schema]
     [xmip.core.contract.java]
