@@ -61,19 +61,19 @@ about names.*
 | Domain | What it holds | Examples |
 | --- | --- | --- |
 | **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
-| **Capabilities** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
+| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
-| **Operations** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
+| **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
 | **Platform** | platform-wide runtime services | `xmip-core-abi`, `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience` |
 
-**The test between Capabilities and Operations is the message path.** If a
+**The test between Capability and Operation is the message path.** If a
 Journey waits for it, it is a Capability. `xmip-core-retain` moved on
 2026-08-26 for that reason: `disposition.rs` calls it at a gate — *"Stream, by
 xmip-core-retain"* when Message creation is refused, *"Message, by
 xmip-core-retain"* when validation fails — so nothing proceeds until retention
 has taken it.
 
-`audit`, `observe` and `report` stay in Operations because ADR-0014 clause 4
+`audit`, `observe` and `report` stay in Operation because ADR-0014 clause 4
 says observation never sits in the message path. `archive` stays too: it moves
 *already-retained* data on a schedule, and no Journey waits for it.
 
@@ -90,7 +90,7 @@ Two corrections against earlier drafts. **Service and Host are not separate
 platform repositories** — ADR-0018 folded both into `xmip-core-runtime`, which
 already owns `ExecutionTree`, `HostServicePlan` and `HostBitness`; ten
 kilobytes that always change together do not need three repositories, three CI
-pipelines and three submodule mounts. **Tracking is not an Operations
+pipelines and three submodule mounts. **Tracking is not an Operation
 repository** — it is Audit under BizTalk vocabulary, and ADR-0014 names four
 observation capabilities where a fifth would contradict it.
 
@@ -185,7 +185,7 @@ The graph must be acyclic. Beyond that:
 - Technology sibling dependencies require explicit architectural
   justification, and must be declared in the manifest. HTTP on TCP and SOAP on
   HTTP are real and are declared; they are not inferred.
-- Operations consume public contracts and events, never implementation
+- Operation repositories consume public contracts and events, never implementation
   internals.
 - Platform services must not depend on specific technology implementations.
 

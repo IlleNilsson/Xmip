@@ -98,7 +98,7 @@ ABI exists to prevent. ADR-0012 clause 2 already frames bindings as
 conveniences over the normative header, so the .NET binding belongs beside the
 Rust one in `xmip-core-abi`.
 
-`crates/xmip-cli/src/main.rs` was distributed to `module/operations/cli` on
+`crates/xmip-cli/src/main.rs` was distributed to `module/operation/cli` on
 this date on the assumption it was a Rust crate. It is Rust in a .NET
 repository and does not belong there.
 

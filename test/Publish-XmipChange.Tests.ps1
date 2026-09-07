@@ -179,7 +179,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message even when gitlinks are all there is' {
         InModuleScope Xmip {
-            $staged = @('module/foundation/core', 'module/capabilities/route')
+            $staged = @('module/foundation/core', 'module/capability/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Arrivals and departures' |
                 Should -Be 'Arrivals and departures' -Because 'the land carried a message'
@@ -211,7 +211,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'names the count in the fallback when there is no message' {
         InModuleScope Xmip {
-            $staged = @('module/foundation/core', 'module/capabilities/route')
+            $staged = @('module/foundation/core', 'module/capability/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message '' |
                 Should -Be 'Pin 2 modules'
@@ -434,14 +434,14 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
         $files = @{
             '.gitmodules' = @'
-[submodule "module/capabilities/contract"]
-	path = module/capabilities/contract
+[submodule "module/capability/contract"]
+	path = module/capability/contract
 	url = https://example.invalid/contract
 [submodule "module/foundation/core"]
 	path = module/foundation/core
 	url = https://example.invalid/core
 '@
-            'module/capabilities/contract/.gitmodules' = @'
+            'module/capability/contract/.gitmodules' = @'
 [submodule "module/csv"]
 	path = module/csv
 	url = https://example.invalid/contract-csv
@@ -465,8 +465,8 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
-            $declared | Should -Contain 'module/capabilities/contract'
-            $declared | Should -Contain 'module/capabilities/contract/module/csv'
+            $declared | Should -Contain 'module/capability/contract'
+            $declared | Should -Contain 'module/capability/contract/module/csv'
             $declared | Should -Contain 'module/foundation/core'
         }
     }
@@ -477,8 +477,8 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
-            $declared.IndexOf('module/capabilities/contract') |
-                Should -BeLessThan $declared.IndexOf('module/capabilities/contract/module/csv')
+            $declared.IndexOf('module/capability/contract') |
+                Should -BeLessThan $declared.IndexOf('module/capability/contract/module/csv')
         }
     }
 
@@ -498,7 +498,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $parents = @(Get-XmipNestedParent -RepositoryRoot $Root)
 
-            $parents | Should -Be @('module/capabilities/contract')
+            $parents | Should -Be @('module/capability/contract')
         }
     }
 }

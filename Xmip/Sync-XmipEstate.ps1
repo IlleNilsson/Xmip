@@ -31,7 +31,7 @@
     Depth two mounts under Xmip, grouped by architectural domain, because that
     layout exists for human navigation:
 
-        xmip-core-transport   ->  module/capabilities/transport
+        xmip-core-transport   ->  module/capability/transport
         xmip-core-journey     ->  module/foundation/journey
 
     Depth three mounts inside its own parent capability, ungrouped, because at
@@ -79,7 +79,7 @@ function Get-XmipMountPath {
     # module resolves to it. Modules mount under the estate root regardless —
     # ADR-0016 shows Xmip pinning module/transport directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
-        [string] $domain = [string](Get-PropertyValue $Repository 'architecturalDomain' 'Capabilities')
+        [string] $domain = [string](Get-PropertyValue $Repository 'architecturalDomain' 'Capability')
         return [pscustomobject]@{ Owner = ''; Mount = "module/$($domain.ToLowerInvariant())/$leaf" }
     }
 
