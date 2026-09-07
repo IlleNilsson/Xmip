@@ -442,8 +442,8 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 	url = https://example.invalid/core
 '@
             'module/capability/contract/.gitmodules' = @'
-[submodule "module/csv"]
-	path = module/csv
+[submodule "xmip-core-contract-csv"]
+	path = csv
 	url = https://example.invalid/contract-csv
 '@
         }
@@ -466,7 +466,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
             $declared | Should -Contain 'module/capability/contract'
-            $declared | Should -Contain 'module/capability/contract/module/csv'
+            $declared | Should -Contain 'module/capability/contract/csv'
             $declared | Should -Contain 'module/foundation/core'
         }
     }
@@ -478,7 +478,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
             $declared = @(Get-XmipDeclaredModule -RepositoryRoot $Root)
 
             $declared.IndexOf('module/capability/contract') |
-                Should -BeLessThan $declared.IndexOf('module/capability/contract/module/csv')
+                Should -BeLessThan $declared.IndexOf('module/capability/contract/csv')
         }
     }
 

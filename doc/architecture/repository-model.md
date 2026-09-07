@@ -406,15 +406,17 @@ and a template is never loaded by anything. `crate.template` in
 `architecture.toml` names them by `owner/name` for the GitHub API; the path is
 `template/<language>`.
 
-Depth three mounts inside its own parent capability, ungrouped, because at that
-level the parent *is* the grouping:
+Depth three mounts directly inside its own parent capability, because at that
+level the parent *is* the grouping, and inside a module repository everything
+is the module — a `module/` directory there would say nothing (ADR-0016,
+amended 2026-09-07):
 
 ```text
 xmip-core-path/
-└── module/
-    ├── xpath/
-    ├── json-pointer/
-    └── index/
+├── src/
+├── xpath/
+├── json-pointer/
+└── index/
 ```
 
 The mount name is the last segment of the repository name and the owner is the

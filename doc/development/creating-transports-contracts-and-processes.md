@@ -48,15 +48,16 @@ protocol-agnostic).
 ### 2. Create the repository and module
 
 The repository is `xmip-core-transport-<name>`; it mounts as a submodule at
-`module/<name>` **inside the transport capability**, and it **depends on the
-capability, never the reverse** (`repository-model.md`).
+`<name>` **directly inside the transport capability's repository** (ADR-0016,
+amended 2026-09-07), and it **depends on the capability, never the reverse**
+(`repository-model.md`).
 
 1. **Declare it** in `architecture.toml` under `[xmip.core.transport.<name>]`,
    with a `maturity` (`reserved` → `planned` → `scaffolded` → `supported`).
 2. **Create the GitHub repo.** `gh repo create xmip-core-transport-<name> --public`
    — run this yourself; the assistant is blocked from creating repositories.
 3. **Scaffold** from the working template — copy the layout of
-   `module/capability/contract/module/csv/` (Cargo.toml, `src/lib.rs`,
+   `module/capability/contract/csv/` (Cargo.toml, `src/lib.rs`,
    README, `rust-toolchain.toml`, LICENSE, tests). In `Cargo.toml`:
    ```toml
    [package]
@@ -74,7 +75,7 @@ capability, never the reverse** (`repository-model.md`).
 ```bash
 # inside the transport capability repo
 git -C module/capability/transport submodule add \
-    https://github.com/<you>/xmip-core-transport-<name> module/<name>
+    https://github.com/<you>/xmip-core-transport-<name> <name>
 
 # from the estate root
 Import-Module ./Xmip/Xmip.psd1 -Force
@@ -95,7 +96,7 @@ timed, sized and fault-injected — not a new test, a new adapter.
 ## Part B — A new contract
 
 Identical shape to a transport, against a different base. **`csv` is the
-reference implementation** — read `module/capability/contract/module/csv/`
+reference implementation** — read `module/capability/contract/csv/`
 before starting; your module is that module with the format changed.
 
 ### The base you implement
@@ -118,8 +119,8 @@ false so an operator sees *what* failed.
 
 Exactly as Part A, substituting `contract` for `transport`:
 
-- repo `xmip-core-contract-<name>`, mounted at `module/<name>` inside the
-  contract capability;
+- repo `xmip-core-contract-<name>`, mounted at `<name>` directly inside the
+  contract capability's repository;
 - `Cargo.toml` depends on `contract = { package = "xmip-core-contract", … }`
   (and `stream`, for the `Stream` type);
 - declare `[xmip.core.contract.<name>]` in `architecture.toml`;
@@ -195,7 +196,7 @@ progress.
 | Thing | Base trait / type | Reference implementation |
 |---|---|---|
 | Transport | `Transport` (`transport/src/protocol.rs`) | `file`, `tcp`, `http`, `smtp` in the capability |
-| Contract | `Contract` (`contract/src/lib.rs`) | `contract/module/csv/` |
+| Contract | `Contract` (`contract/src/lib.rs`) | `contract/csv/` |
 | Xmip Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
 
 - **Repository model:** `doc/architecture/repository-model.md`

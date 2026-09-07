@@ -34,10 +34,11 @@
         xmip-core-transport   ->  module/capability/transport
         xmip-core-journey     ->  module/foundation/journey
 
-    Depth three mounts inside its own parent capability, ungrouped, because at
-    that level the parent is the grouping:
+    Depth three mounts directly inside its own parent capability, because at
+    that level the parent is the grouping and everything in that repository is
+    the module (ADR-0016, amended 2026-09-07):
 
-        xmip-core-transport-kafka  ->  module/kafka
+        xmip-core-transport-kafka  ->  kafka
 
     The name is the TOML tree path with dots as hyphens, so the mount name is
     the last segment and the owner is the name minus that segment.
@@ -83,7 +84,7 @@ function Get-XmipMountPath {
         return [pscustomobject]@{ Owner = ''; Mount = "module/$($domain.ToLowerInvariant())/$leaf" }
     }
 
-    return [pscustomobject]@{ Owner = $owner; Mount = "module/$leaf" }
+    return [pscustomobject]@{ Owner = $owner; Mount = $leaf }
 }
 
 <#

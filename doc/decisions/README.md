@@ -308,7 +308,7 @@ the name — dots become hyphens and nothing else happens.
 ### Submodule composition mirrors ownership
 
 Two levels, each owned by the repository that pins it. `Xmip` pins
-`module/transport`; `xmip-core-transport` pins `module/kafka`. A parent pins
+`module/transport`; `xmip-core-transport` pins `kafka`. A parent pins
 commits, and reconciliation never uses `git submodule update --remote`.
 
 → [Submodule composition, in full](ADR-0016-submodule-composition.md)

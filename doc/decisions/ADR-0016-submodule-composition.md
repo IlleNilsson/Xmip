@@ -2,6 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-08-25
+- Amended: 2026-09-07, decision 1 — a technology mounts directly under its
+  parent, `csv`, not `module/csv`
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
 
@@ -14,7 +16,7 @@
 - Concepts: Submodules
 
 Two levels, each owned by the repository that pins it. `Xmip` pins
-`module/transport`; `xmip-core-transport` pins `module/kafka`. A parent pins
+`module/transport`; `xmip-core-transport` pins `kafka`. A parent pins
 commits, and reconciliation never uses `git submodule update --remote`.
 
 ## Context
@@ -50,8 +52,16 @@ Three things already in `main` disagree with that:
 
 ```
 Xmip                     module/transport   -> xmip-core-transport
-xmip-core-transport      module/kafka       -> xmip-core-transport-kafka
+xmip-core-transport      kafka              -> xmip-core-transport-kafka
 ```
+
+*Amended 2026-09-07.* The second line read `module/kafka`. Inside a module
+repository everything is the module, so a `module/` directory there says
+nothing: `xmip-core-contract/csv` is the CSV contract the way
+`xmip-core-contract/src` is its source. The owner ruled the directory out on
+2026-09-07, when the contract and archive repositories held one technology
+each and the layout was cheap to change. The root keeps `module/`, because at
+the root the word separates modules from `doc/`, `test/` and `template/`.
 
 A `.gitmodules` file belongs to the repository doing the pinning. The root
 never reaches past its own children; a module repository composes its own
