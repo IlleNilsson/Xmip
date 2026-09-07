@@ -418,6 +418,7 @@ dependency = []
     [xmip.core.contract.protobuf]
     [xmip.core.contract.python]
     [xmip.core.contract.regex]
+    maturity = "scaffolded"
     [xmip.core.contract.rust]
     [xmip.core.contract.sql]
     [xmip.core.contract.wsdl]
