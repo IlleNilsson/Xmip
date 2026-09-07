@@ -88,7 +88,7 @@ stating a floor for.
 
 Windows ships Pester 3 in the system module path and PowerShell autoloads the
 first Pester it finds, so the old one wins unless told otherwise. Pester 3 has
-no -Output parameter and does not understand BeforeAll or -Because, so tests/
+no -Output parameter and does not understand BeforeAll or -Because, so test/
 fails to run at all rather than reporting anything useful:
 
     Import-Module Pester -MinimumVersion 6.0.0 -Force

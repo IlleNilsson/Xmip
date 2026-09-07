@@ -20,7 +20,7 @@ ones — [ADR-0021](doc/decisions/ADR-0021-current-platforms-only.md).
 | PowerShell | **7.6.5+, Core edition** | Windows PowerShell 5.1 will not work, and is not meant to |
 | git | 2.40+ | |
 | Rust | latest stable | pinned by channel in `rust-toolchain.toml`, not by version |
-| Pester | 6+ | developers only, for `tests/` |
+| Pester | 6+ | developers only, for `test/` |
 | .NET | 11 | optional, for the Blazor surfaces |
 
 PowerShell is the one prerequisite Xmip cannot install for you, because the
@@ -178,7 +178,7 @@ rust-toolchain.toml   channel = stable
 Xmip/                 the PowerShell module
 modules/              the Rust modules, mounted as git submodules
 src/                  this repository's own Rust facade
-tests/                Pester
+test/                Pester
 deploy/               Ansible and DSC node configuration
 doc/                 see below
 ```

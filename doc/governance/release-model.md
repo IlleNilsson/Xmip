@@ -60,7 +60,7 @@ copy depends on. That is also something to protect, and it may happen before
 any Linear release exists.
 
 Until then, the discipline that replaces review is the one already in force:
-`cargo fmt`, `cargo clippy -D warnings` and `Invoke-Pester ./tests` before every
+`cargo fmt`, `cargo clippy -D warnings` and `Invoke-Pester ./test` before every
 commit, and the architectural change permission recorded in
 `architectural-change-permission.md`.
 

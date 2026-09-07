@@ -27,7 +27,7 @@ BeforeAll {
 
     # Every copy first, then one import.
     #
-    # Pester runs the whole tests/ directory in one session and several files
+    # Pester runs the whole test/ directory in one session and several files
     # import this module. Two loaded copies make InModuleScope throw "Multiple
     # script or manifest modules named 'Xmip' are currently loaded" — which
     # reads as a broken test and is a dirty session.
@@ -169,7 +169,7 @@ Describe 'Resolve-XmipCommitSubject' {
                 '.gitmodules'
                 'doc/decisions/ADR-0024-resource-claim-replaces-exclusiveness.md'
                 'modules/platform/exclusiveness'
-                'tests/Sync-XmipEstate.Tests.ps1'
+                'test/Sync-XmipEstate.Tests.ps1'
             )
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Unmount exclusiveness' |

@@ -26,7 +26,7 @@ rewrite.
 
 `#[cfg(test)] mod tests` at the foot of the file is idiomatic Rust and stays.
 Tests beside what they test get read and get updated; tests in a distant
-`tests/` directory rot.
+`test/` directory rot.
 
 So **the gate counts the lines above `#[cfg(test)]`**. A file that is 200 lines
 of code and 300 lines of tests is a well-tested file, not a long one, and a
@@ -57,7 +57,7 @@ gate**, for the reason above.
 
 ## 4. What this is enforced by
 
-`tests/Rust.Style.Tests.ps1`, over `modules/**/*.rs` and `template/**/*.rs`.
+`test/Rust.Style.Tests.ps1`, over `modules/**/*.rs` and `template/**/*.rs`.
 
 **The template is measured too.** Every new repository is generated from it, so
 a rule the template does not obey is a rule every new repository starts out

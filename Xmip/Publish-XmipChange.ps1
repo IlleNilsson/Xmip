@@ -758,7 +758,7 @@ function Test-XmipDotnetModule {
             day the PowerShell module gained eighteen tests nothing would run.
 
             Two kinds of test, because the estate has both. A Pester file under
-            `tests/` runs over a built module, which is what a PowerShell
+            `test/` runs over a built module, which is what a PowerShell
             surface needs. A `*.Tests.csproj` is `dotnet test`. A
             module with neither still builds, and building is the weakest
             verification that is still verification — reported as such rather

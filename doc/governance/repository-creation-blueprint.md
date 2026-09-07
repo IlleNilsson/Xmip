@@ -31,7 +31,7 @@ xmip-<module>/
         xmip-<module>-abi            stable external binary boundary, when required
         xmip-<module>-cli            CLI command contribution, when required
         xmip-<module>-powershell     PowerShell command contribution, when required
-    tests/
+    test/
 ```
 
 The ABI crate belongs to its Module. It must expose only stable data and operations required across process, language or dynamic-loading boundaries. Native Rust-to-Rust collaboration uses ordinary crate dependencies and traits.

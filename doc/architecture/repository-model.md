@@ -500,11 +500,11 @@ feature/
 ├── configuration/    how it is configured and bound
 ├── preservation/     what it persists and how it is recovered
 ├── observability/    audit, logs, traces, metrics
-└── tests/
+└── test/
 ```
 
 **Use only what the feature needs.** A small feature is `contracts/`,
-`runtime/`, `tests/` and nothing else; an empty `preservation/` directory is
+`runtime/`, `test/` and nothing else; an empty `preservation/` directory is
 noise pretending to be structure.
 
 Do not organise around `controllers`, `services`, `repositories`, `models`,

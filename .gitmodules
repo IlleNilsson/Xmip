@@ -128,5 +128,5 @@
 	path = template/dotnet
 	url = https://github.com/IlleNilsson/xmip-template-dotnet.git
 [submodule "tests/playground"]
-	path = tests/playground
+	path = test/playground
 	url = https://github.com/IlleNilsson/xmip-test-playground
