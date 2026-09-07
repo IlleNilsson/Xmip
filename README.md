@@ -203,7 +203,7 @@ submodules:
 
 | Document | Where |
 | --- | --- |
-| identity, per protocol, against the standards | `module/capabilities/authenticate/doc/` |
+| identity, per protocol, against the standards | `module/capability/authenticate/doc/` |
 | the normative ABI specification | `module/foundation/abi/doc/` |
 
 Governance:

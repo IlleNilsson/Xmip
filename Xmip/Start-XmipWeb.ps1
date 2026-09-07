@@ -46,7 +46,7 @@ function Start-XmipWeb {
     )
 
     [string] $root = Get-XmipRepositoryRoot
-    [string] $project = Join-Path $root 'module/operations/gui/src/Xmip.Gui.Web'
+    [string] $project = Join-Path $root 'module/operation/gui/src/Xmip.Gui.Web'
     [string] $exe = Join-Path $project 'bin/Debug/net11.0/Xmip.Gui.Web.exe'
     [string] $kestrel = "--Kestrel:Endpoints:Http:Url=$Url"
 

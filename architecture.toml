@@ -111,7 +111,7 @@ reason = "ADR-0014 amendment 2026-08-26. The web API belongs to the Logic axis (
 
 [policy]
 acyclic = true
-rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "Operations consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
+rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "Operation repositories consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
 
 [handler]
 separationRequired = true
@@ -198,7 +198,7 @@ dependency = []
 
   [xmip.core.transport]
   description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "planned"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-context"]
@@ -384,7 +384,7 @@ dependency = []
 
   [xmip.core.contract]
   description = "Common Contract implication, evaluation and result functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.contract.edi-edifact]
@@ -418,7 +418,7 @@ dependency = []
 
   [xmip.core.logic]
   description = "Method and operation semantics layered over transport and message representation."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "planned"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-contract"]
@@ -433,7 +433,7 @@ dependency = []
 
   [xmip.core.path]
   description = "Common path-expression and addressing functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context"]
     [xmip.core.path.dot]
@@ -447,7 +447,7 @@ dependency = []
 
   [xmip.core.prepare]
   description = "Stream preparation stages usable before Message creation, during processing and before Send."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream"]
     [xmip.core.prepare.base64]
@@ -473,7 +473,7 @@ dependency = []
 
   [xmip.core.transform]
   description = "Common Contract-aware transformation functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-contract", "xmip-core-path"]
     [xmip.core.transform.c]
@@ -496,25 +496,25 @@ dependency = []
 
   [xmip.core.assign]
   description = "Common Path-based assignment functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.promote]
   description = "Common Path-based promotion into Message Context."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.demote]
   description = "Common Path-based demotion into Message or artifact configuration."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.identify]
   description = "Common transport-level and message-level identification functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.identify.api-key]
@@ -539,7 +539,7 @@ dependency = []
 
   [xmip.core.authenticate]
   description = "Common transport-level and message-level authentication functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.api-key]
@@ -563,7 +563,7 @@ dependency = []
 
   [xmip.core.authorize]
   description = "Common transport-level and message-level authorization functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.abac]
@@ -583,13 +583,13 @@ dependency = []
 
   [xmip.core.receive]
   description = "Common Receive Port and Receive Location functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-transport"]
 
   [xmip.core.route]
   description = "Common publication, subscription and routing functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-journey"]
     [xmip.core.route.content]
@@ -603,7 +603,7 @@ dependency = []
 
   [xmip.core.process]
   description = "Common Process execution functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-journey"]
     [xmip.core.process.bash]
@@ -623,7 +623,7 @@ dependency = []
 
   [xmip.core.send]
   description = "Common Send Port, Send Group and Send Location functionality."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-transport"]
 
@@ -653,7 +653,7 @@ dependency = []
 
   [xmip.core.audit]
   description = "Configurable Begin, Execute, Finished and Failure audit functionality."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.audit.elasticsearch]
@@ -668,7 +668,7 @@ dependency = []
 
   [xmip.core.observe]
   description = "Near-real-time operational observation functionality."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.observe.etw]
@@ -679,7 +679,7 @@ dependency = []
 
   [xmip.core.report]
   description = "Reportable Xmip data and report production functionality."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.report.csv]
@@ -691,7 +691,7 @@ dependency = []
 
   [xmip.core.retain]
   description = "Holds what a gate refused and what policy says to keep. In the message path: a Journey waits for it."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-persist"]
     [xmip.core.retain.azure-blob]
@@ -702,7 +702,7 @@ dependency = []
 
   [xmip.core.archive]
   description = "Archive functionality."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.archive.azure-blob]
@@ -737,7 +737,7 @@ dependency = []
 
   [xmip.core.migrate]
   description = "Reads a source platform's configuration and produces Xmip artifacts, with a report of what has no equivalent."
-  architecturalDomain = "Capabilities"
+  architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "planned"
   dependency = ["xmip-core"]
@@ -761,7 +761,7 @@ dependency = []
 
   [xmip.core.diagnose]
   description = "Operational diagnosis: connectivity, name resolution, certificates and firewall reachability."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "planned"
   dependency = ["xmip-core"]
@@ -804,7 +804,7 @@ dependency = []
 
   [xmip.core.cli]
   description = ".NET 11 xmip executable over the Xmip ABI. Every operator action, implemented once."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "dotnet"
@@ -812,7 +812,7 @@ dependency = []
 
   [xmip.core.powershell]
   description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "powershell"
@@ -820,7 +820,7 @@ dependency = []
 
   [xmip.core.gui]
   description = "Blazor component library over the Xmip ABI, with two hosts: .NET 11 MAUI on the desktop and .NET 11 Blazor on the web."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "dotnet"
@@ -835,14 +835,14 @@ dependency = []
 # only what sits beneath it.
 [xmip.test]
 description = "What exercises Xmip. A provider namespace others may join."
-architecturalDomain = "Operations"
+architecturalDomain = "Operation"
 repositoryRole = "operational-capability"
 maturity = "reserved"
 dependency = []
 
   [xmip.test.playground]
   description = "The Xmip Playground: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
-  architecturalDomain = "Operations"
+  architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # Test scaffolding, not a capability the runtime loads: it mounts at the estate

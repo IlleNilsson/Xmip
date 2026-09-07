@@ -28,7 +28,7 @@ compiled and no repository is created.
 
 ### 1. The base you implement
 
-`Transport` (`module/capabilities/transport/src/protocol.rs`) — five methods,
+`Transport` (`module/capability/transport/src/protocol.rs`) — five methods,
 and nothing in it names a protocol:
 
 ```rust
@@ -56,7 +56,7 @@ capability, never the reverse** (`repository-model.md`).
 2. **Create the GitHub repo.** `gh repo create xmip-core-transport-<name> --public`
    — run this yourself; the assistant is blocked from creating repositories.
 3. **Scaffold** from the working template — copy the layout of
-   `module/capabilities/contract/module/csv/` (Cargo.toml, `src/lib.rs`,
+   `module/capability/contract/module/csv/` (Cargo.toml, `src/lib.rs`,
    README, `rust-toolchain.toml`, LICENSE, tests). In `Cargo.toml`:
    ```toml
    [package]
@@ -73,7 +73,7 @@ capability, never the reverse** (`repository-model.md`).
 
 ```bash
 # inside the transport capability repo
-git -C module/capabilities/transport submodule add \
+git -C module/capability/transport submodule add \
     https://github.com/<you>/xmip-core-transport-<name> module/<name>
 
 # from the estate root
@@ -95,12 +95,12 @@ timed, sized and fault-injected — not a new test, a new adapter.
 ## Part B — A new contract
 
 Identical shape to a transport, against a different base. **`csv` is the
-reference implementation** — read `module/capabilities/contract/module/csv/`
+reference implementation** — read `module/capability/contract/module/csv/`
 before starting; your module is that module with the format changed.
 
 ### The base you implement
 
-`Contract` (`module/capabilities/contract/src/lib.rs`):
+`Contract` (`module/capability/contract/src/lib.rs`):
 
 ```rust
 pub trait Contract: Send + Sync {

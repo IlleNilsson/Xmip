@@ -5,22 +5,22 @@
 	path = module/foundation/abi
 	url = https://github.com/IlleNilsson/xmip-core-abi.git
 [submodule "modules/operations/archive"]
-	path = module/operations/archive
+	path = module/operation/archive
 	url = https://github.com/IlleNilsson/xmip-core-archive.git
 [submodule "modules/capabilities/assign"]
-	path = module/capabilities/assign
+	path = module/capability/assign
 	url = https://github.com/IlleNilsson/xmip-core-assign.git
 [submodule "modules/operations/audit"]
-	path = module/operations/audit
+	path = module/operation/audit
 	url = https://github.com/IlleNilsson/xmip-core-audit.git
 [submodule "modules/capabilities/authenticate"]
-	path = module/capabilities/authenticate
+	path = module/capability/authenticate
 	url = https://github.com/IlleNilsson/xmip-core-authenticate.git
 [submodule "modules/capabilities/authorize"]
-	path = module/capabilities/authorize
+	path = module/capability/authorize
 	url = https://github.com/IlleNilsson/xmip-core-authorize.git
 [submodule "modules/operations/cli"]
-	path = module/operations/cli
+	path = module/operation/cli
 	url = https://github.com/IlleNilsson/xmip-core-cli.git
 [submodule "modules/foundation/cluster"]
 	path = module/foundation/cluster
@@ -32,76 +32,76 @@
 	path = module/foundation/context
 	url = https://github.com/IlleNilsson/xmip-core-context.git
 [submodule "modules/capabilities/contract"]
-	path = module/capabilities/contract
+	path = module/capability/contract
 	url = https://github.com/IlleNilsson/xmip-core-contract.git
 [submodule "modules/capabilities/demote"]
-	path = module/capabilities/demote
+	path = module/capability/demote
 	url = https://github.com/IlleNilsson/xmip-core-demote.git
 [submodule "modules/operations/diagnose"]
-	path = module/operations/diagnose
+	path = module/operation/diagnose
 	url = https://github.com/IlleNilsson/xmip-core-diagnose.git
 [submodule "modules/foundation/event"]
 	path = module/foundation/event
 	url = https://github.com/IlleNilsson/xmip-core-event.git
 [submodule "modules/operations/gui"]
-	path = module/operations/gui
+	path = module/operation/gui
 	url = https://github.com/IlleNilsson/xmip-core-gui.git
 [submodule "modules/capabilities/identify"]
-	path = module/capabilities/identify
+	path = module/capability/identify
 	url = https://github.com/IlleNilsson/xmip-core-identify.git
 [submodule "modules/foundation/journey"]
 	path = module/foundation/journey
 	url = https://github.com/IlleNilsson/xmip-core-journey.git
 [submodule "modules/capabilities/logic"]
-	path = module/capabilities/logic
+	path = module/capability/logic
 	url = https://github.com/IlleNilsson/xmip-core-logic.git
 [submodule "modules/foundation/message"]
 	path = module/foundation/message
 	url = https://github.com/IlleNilsson/xmip-core-message.git
 [submodule "modules/capabilities/migrate"]
-	path = module/capabilities/migrate
+	path = module/capability/migrate
 	url = https://github.com/IlleNilsson/xmip-core-migrate.git
 [submodule "modules/foundation/node"]
 	path = module/foundation/node
 	url = https://github.com/IlleNilsson/xmip-core-node.git
 [submodule "modules/operations/observe"]
-	path = module/operations/observe
+	path = module/operation/observe
 	url = https://github.com/IlleNilsson/xmip-core-observe.git
 [submodule "modules/foundation/party"]
 	path = module/foundation/party
 	url = https://github.com/IlleNilsson/xmip-core-party.git
 [submodule "modules/capabilities/path"]
-	path = module/capabilities/path
+	path = module/capability/path
 	url = https://github.com/IlleNilsson/xmip-core-path.git
 [submodule "modules/platform/persist"]
 	path = module/platform/persist
 	url = https://github.com/IlleNilsson/xmip-core-persist.git
 [submodule "modules/operations/powershell"]
-	path = module/operations/powershell
+	path = module/operation/powershell
 	url = https://github.com/IlleNilsson/xmip-core-powershell.git
 [submodule "modules/capabilities/prepare"]
-	path = module/capabilities/prepare
+	path = module/capability/prepare
 	url = https://github.com/IlleNilsson/xmip-core-prepare.git
 [submodule "modules/capabilities/process"]
-	path = module/capabilities/process
+	path = module/capability/process
 	url = https://github.com/IlleNilsson/xmip-core-process.git
 [submodule "modules/capabilities/promote"]
-	path = module/capabilities/promote
+	path = module/capability/promote
 	url = https://github.com/IlleNilsson/xmip-core-promote.git
 [submodule "modules/capabilities/receive"]
-	path = module/capabilities/receive
+	path = module/capability/receive
 	url = https://github.com/IlleNilsson/xmip-core-receive.git
 [submodule "modules/operations/report"]
-	path = module/operations/report
+	path = module/operation/report
 	url = https://github.com/IlleNilsson/xmip-core-report.git
 [submodule "modules/platform/resilience"]
 	path = module/platform/resilience
 	url = https://github.com/IlleNilsson/xmip-core-resilience.git
 [submodule "modules/capabilities/retain"]
-	path = module/capabilities/retain
+	path = module/capability/retain
 	url = https://github.com/IlleNilsson/xmip-core-retain.git
 [submodule "modules/capabilities/route"]
-	path = module/capabilities/route
+	path = module/capability/route
 	url = https://github.com/IlleNilsson/xmip-core-route.git
 [submodule "modules/platform/runtime"]
 	path = module/platform/runtime
@@ -110,16 +110,16 @@
 	path = module/platform/schedule
 	url = https://github.com/IlleNilsson/xmip-core-schedule.git
 [submodule "modules/capabilities/send"]
-	path = module/capabilities/send
+	path = module/capability/send
 	url = https://github.com/IlleNilsson/xmip-core-send.git
 [submodule "modules/foundation/stream"]
 	path = module/foundation/stream
 	url = https://github.com/IlleNilsson/xmip-core-stream.git
 [submodule "modules/capabilities/transform"]
-	path = module/capabilities/transform
+	path = module/capability/transform
 	url = https://github.com/IlleNilsson/xmip-core-transform.git
 [submodule "modules/capabilities/transport"]
-	path = module/capabilities/transport
+	path = module/capability/transport
 	url = https://github.com/IlleNilsson/xmip-core-transport.git
 [submodule "template/rust"]
 	path = template/rust

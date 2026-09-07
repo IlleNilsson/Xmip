@@ -22,7 +22,7 @@ that deletes its answers cannot be told from one nobody has read.
 
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations
 
-"Capabilities" means *things Xmip does*, and these do things — but nothing about them is
+"Capability" means *things Xmip does*, and these do things — but nothing about them is
 pluggable, so they have no vendor and no trait to implement.
 
 | option | effect |

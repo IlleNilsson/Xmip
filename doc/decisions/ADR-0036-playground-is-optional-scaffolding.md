@@ -24,7 +24,7 @@ gate does not require.
 
 The owner, 2026-09-06: the Playground *should be in its own repository, mounted
 as an optional submodule.* It was already its own repository, but mounted at
-`module/operations/playground` — the domain-grouped path `Get-XmipMountPath`
+`module/operation/playground` — the domain-grouped path `Get-XmipMountPath`
 computes from `architecturalDomain`. That path says "a module the runtime loads
 under Operations", which the Playground is not: it spawns nodes and drives every
 transport and contract through them (ADR-0028). Its provider namespace is already
