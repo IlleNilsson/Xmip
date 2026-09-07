@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0011 (naming), ADR-0012 (module boundary), ADR-0026 (retry and
-  the resilience distinction), docs/governance/rust-style.md
+  the resilience distinction), doc/governance/rust-style.md
 
 ## In brief
 

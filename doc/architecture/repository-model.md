@@ -8,10 +8,10 @@ that lists repositories is a second source of truth that will be wrong within a
 week. This document holds only what the manifest cannot: the reasoning.
 
 It replaces five documents written before `architecture.toml` existed —
-`docs/repository-model.md`, `docs/crate-boundaries.md`,
-`docs/architecture/repository-architecture.md`,
-`docs/architecture/repository-structure.md` and
-`docs/architecture/repository-and-crate-plan.md` — together with sections 9 to
+`doc/repository-model.md`, `doc/crate-boundaries.md`,
+`doc/architecture/repository-architecture.md`,
+`doc/architecture/repository-structure.md` and
+`doc/architecture/repository-and-crate-plan.md` — together with sections 9 to
 15 of the architecture specification. All five used pre-ADR-0011 names
 (`xmip-abi`, `xmip-service`, `xmip-host`), a submodule layout ADR-0016
 replaced, and a `-Apply` mode that no longer exists. Their history is in git.
@@ -117,7 +117,7 @@ misread as if they were one rule contradicting itself.
 ### The grammar of a name
 
 The whole namespace as one tree — the grammar, not the inventory. Folded in
-from `docs/planning/naming-hierarchy.md` on 2026-08-30, because a grammar is
+from `doc/planning/naming-hierarchy.md` on 2026-08-30, because a grammar is
 this document's subject and not a plan.
 
 ```text
@@ -298,7 +298,7 @@ payload is not obviously business data.
 There is a real distinction nearby, and it is not this one: a runtime that
 *uses* a discovery protocol to locate an endpoint and bind a Receive Location
 to it is doing self-configuration, not transport. Same protocol, different
-feature. See `docs/planning/open-problems.md`.
+feature. See `doc/planning/open-problems.md`.
 
 ## 5b. What a technology repository implements
 
@@ -484,7 +484,7 @@ drift, and missing or unexpected submodules.
 **It never deletes a repository.** Nothing in the tooling does.
 
 `Sync-XmipRepository` owns the local working copies: clone, pull, status, branch, push,
-and `-Distribute`, which executes `docs/planning/allocation.toml` to put every
+and `-Distribute`, which executes `doc/planning/allocation.toml` to put every
 document and source file in the repository that owns it.
 
 ## 9. Source layout inside a repository

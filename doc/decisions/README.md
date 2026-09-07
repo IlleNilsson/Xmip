@@ -360,7 +360,7 @@ validated, not as a file Xmip reads its settings from.
 
 **A word that collides — with the world and inside Xmip — is not remedied by
 inventing a new one. It is remedied by three things already the estate's habit:
-always use the qualified form, let `docs/terminology.md` arbitrate which sense is
+always use the qualified form, let `doc/terminology.md` arbitrate which sense is
 meant, and gate new unqualified uses with a ratchet test.** "Process" is the
 first word this governs; the same three moves handle the next.
 

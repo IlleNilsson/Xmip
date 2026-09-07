@@ -216,7 +216,7 @@ name and folds into it. Two lease types in two modules is how they drift.
 
 ## Absorbed from the frozen baseline, 2026-08-26
 
-`docs/Xmip-Exclusiveness-Architecture.md` was marked *"Frozen architectural
+`doc/Xmip-Exclusiveness-Architecture.md` was marked *"Frozen architectural
 baseline"* and this record was written past it without citation. Its clauses are
 taken here in its own words, and the document retires.
 

@@ -359,18 +359,18 @@ reason = "One lock for the assembly."
 # reads [[move]] and [[decision]] only.
 
 [[moved]]
-from = "docs/architecture/module-abi-specification.md"
+from = "doc/architecture/module-abi-specification.md"
 to = "xmip-core-abi"
-path = "docs/specification.md"
+path = "doc/specification.md"
 reason = """
 The prose ABI specification. It belongs beside the header it specifies, and
 include/xmip_module.h moves to the same repository in section 2.
 """
 
 [[moved]]
-from = "docs/architecture/identity-by-technology.md"
+from = "doc/architecture/identity-by-technology.md"
 to = "xmip-core-authenticate"
-path = "docs/identity-by-technology.md"
+path = "doc/identity-by-technology.md"
 reason = """
 Where identity lives per technology, against the standards that define it, for
 every transport, representation and logic technology in architecture.toml.
@@ -387,7 +387,7 @@ Update the link in the same commit as the move.
 # ===========================================================================
 #
 # ADR-0020: one document per subject, where it resides in the structure, no
-# versions in filenames. docs/architecture/ holds thirty-one files against a
+# versions in filenames. doc/architecture/ holds thirty-one files against a
 # target of six.
 #
 # Each entry below names the document it merges into. None of them is verified
@@ -399,9 +399,9 @@ Update the link in the same commit as the move.
 # merged must not first be moved to another repository.
 
 [[moved]]
-path = "docs/Xmip-Routing-Architecture.md"
+path = "doc/Xmip-Routing-Architecture.md"
 to = "xmip-core-route"
-at = "docs/routing-architecture.md"
+at = "doc/routing-architecture.md"
 why = """
 A [[consolidate]] into runtime-model.md was pending here, unverified. The file
 went to the repository that owns routing instead, which is the better answer:
@@ -409,15 +409,15 @@ the model stays estate-level and the frozen baseline lives with its subject.
 Resolved 2026-08-30."""
 
 [[moved]]
-path = "docs/process-instances.md"
+path = "doc/process-instances.md"
 to = "xmip-core-process"
-at = "docs/process-instances.md"
+at = "doc/process-instances.md"
 why = "Same resolution as the routing baseline, same date."
 
 [[moved]]
-path = "docs/Xmip-Repository-Creation-Blueprint.md"
+path = "doc/Xmip-Repository-Creation-Blueprint.md"
 to = "Xmip"
-at = "docs/governance/repository-creation-blueprint.md"
+at = "doc/governance/repository-creation-blueprint.md"
 why = """
 The pending [[consolidate]] wanted it merged into repository-model.md. It is
 governance — a procedure, not a model — and went there instead."""
@@ -425,7 +425,7 @@ governance — a procedure, not a model — and went there instead."""
 # ---------------------------------------------------------------------------
 # Verified and retired 2026-08-26.
 #
-# docs/planning/architecture-consolidation.md had already read all of these and
+# doc/planning/architecture-consolidation.md had already read all of these and
 # recorded where each one's content went. Spot-checked before trusting it,
 # because a previous pass's 'verified' has been wrong twice tonight:
 #
@@ -442,63 +442,63 @@ governance — a procedure, not a model — and went there instead."""
 # ---------------------------------------------------------------------------
 
 [[superseded]]
-path = "docs/architecture/artifact-model.md"
-replacedBy = "docs/architecture/runtime-model.md and docs/architecture/module-model.md"
+path = "doc/architecture/artifact-model.md"
+replacedBy = "doc/architecture/runtime-model.md and doc/architecture/module-model.md"
 why = "Definition and Instance, artifact identity surviving implementation change. runtime-model.md section 21, module-model.md section 1."
 
 [[superseded]]
-path = "docs/architecture/foundations.md"
-replacedBy = "docs/architecture/runtime-model.md and docs/architecture/module-model.md"
+path = "doc/architecture/foundations.md"
+replacedBy = "doc/architecture/runtime-model.md and doc/architecture/module-model.md"
 why = "Same subject as artifact-model.md, said twice. Section 21 and module-model.md section 1."
 
 [[superseded]]
-path = "docs/architecture/definition-instance-model.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/definition-instance-model.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 21. Its objection to 'Artifact' as an umbrella term is conflict C1, ruled on in section 23.6: a collective noun in prose, never in code, TOML or logs."
 
 [[superseded]]
-path = "docs/architecture/definition-instance-namespace.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/definition-instance-namespace.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Twenty lines, a strict subset of definition-instance-model.md."
 
 [[superseded]]
-path = "docs/architecture/xmip-process.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/xmip-process.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 22, the Xmip Process. Process State belongs to cluster persistence, so execution ownership may move between nodes without the state moving."
 
 [[superseded]]
-path = "docs/architecture/business-process-runtime.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/business-process-runtime.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 22: Process Stage, Process Outcome and ExecutionScope. The Outcome-versus-JourneyState mismatch is conflict C5 and remains open in ADR-0013, beside Dismissed."
 
 [[superseded]]
-path = "docs/architecture/message-contracts-and-validation.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/message-contracts-and-validation.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 20, the validation gates, and the rule that structured validation happens before serialization because only representation checks remain after it."
 
 [[superseded]]
-path = "docs/architecture/process-and-transform-assignment-rules.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/process-and-transform-assignment-rules.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 10. Its 'same interchangeId' is retired vocabulary, resolved in section 23 conflict 5."
 
 [[superseded]]
-path = "docs/architecture/publication-subscription-runtime.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/publication-subscription-runtime.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 9. Its repeated-publication model is conflict C4, ruled on in section 23.8: a re-publication is a new Publication, so a Journey stays a line."
 
 [[superseded]]
-path = "docs/architecture/xmip-subscription.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/xmip-subscription.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 9, publication and routing."
 
 [[superseded]]
-path = "docs/architecture/xmip-send.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/xmip-send.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "Section 10. Its failover-then-retry-all ordering is conflict C2, ruled the other way in section 23.7: retry the Send Location, then fail over."
 
 [[superseded]]
-path = "docs/Xmip-Exclusiveness-Architecture.md"
-replacedBy = "docs/decisions/ADR-0017-exclusiveness.md and docs/architecture/runtime-model.md"
+path = "doc/Xmip-Exclusiveness-Architecture.md"
+replacedBy = "doc/decisions/ADR-0017-exclusiveness.md and doc/architecture/runtime-model.md"
 why = """
 Marked 'Frozen architectural baseline'. ADR-0017 was written past it without
 citation, which is how a frozen principle gets replaced by accident rather than
@@ -519,8 +519,8 @@ difference decides whether a retry is safe.
 """
 
 [[superseded]]
-path = "docs/architecture/protocol-landscape.md"
-replacedBy = "architecture.toml and docs/architecture/module-model.md"
+path = "doc/architecture/protocol-landscape.md"
+replacedBy = "architecture.toml and doc/architecture/module-model.md"
 why = """
 Held back through two consolidation passes because its taxonomy was absorbed
 into module-model.md section 6 while its **catalogue** was not — it named
@@ -588,18 +588,18 @@ startup.
 """
 
 [[superseded]]
-path = "docs/architecture/communication-layering.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/communication-layering.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Section 6, the five communication layers, with the rule that not every technology is IP-based."
 
 [[superseded]]
-path = "docs/architecture/feature-folder-convention.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/architecture/feature-folder-convention.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = "Section 9, source layout inside a repository. Its Node.js listing is conflict C6, ruled a defect: Node.js is not a target module technology."
 
 [[superseded]]
-path = "docs/architecture/rust-runtime-guidelines.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/rust-runtime-guidelines.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Section 12, what the runtime relies on Rust for. Immutability, ownership handoff, channels, Result over panic, traits at boundaries, no unsafe in the core runtime."
 
 # Worked through 2026-08-26. This group was one entry claiming eight documents
@@ -612,8 +612,8 @@ why = "Section 12, what the runtime relies on Rust for. Immutability, ownership 
 # eight together without opening them.
 
 [[superseded]]
-path = "docs/architecture/handler-taxonomy.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/architecture/handler-taxonomy.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = """
 Repository families are sections 2 and 5. Its two remaining pieces were placed
 2026-08-26 rather than dropped:
@@ -630,8 +630,8 @@ people belongs.
 """
 
 [[superseded]]
-path = "docs/architecture/platform-lineage.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/platform-lineage.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = """
 Not a lineage document at all, despite the filename that got it grouped with
 them. It is the execution order — stream first, interpretation second, pub/sub
@@ -644,8 +644,8 @@ Port completes when one of its Send Locations succeeds, is stated in section
 """
 
 [[superseded]]
-path = "docs/architecture/handler-specification-map.md"
-replacedBy = "architecture.toml and docs/architecture/repository-model.md"
+path = "doc/architecture/handler-specification-map.md"
+replacedBy = "architecture.toml and doc/architecture/repository-model.md"
 why = """
 The only record of which external specification each transport implements. Not
 superseded when it was classified — it became superseded on 2026-08-26, when
@@ -662,7 +662,7 @@ document closed with: compliance is claimed only after conformance evidence
 exists. Naming a specification is intent, not a warranty.
 """
 
-# A docs/governance/rust-style.md entry stood here, proposing to move
+# A doc/governance/rust-style.md entry stood here, proposing to move
 # rust-runtime-guidelines.md into a counterpart of powershell-style.md.
 #
 # Withdrawn 2026-08-26: module-model.md section 12, 'What the runtime relies on
@@ -674,20 +674,20 @@ exists. Naming a specification is intent, not a warranty.
 # The document is retired below rather than moved.
 
 [[consolidate]]
-into = "docs/governance/engineering-methodology.md"
+into = "doc/governance/engineering-methodology.md"
 verified = false
 reason = """
 SACE: how the work is done, not what is built. Governance. The rename drops the
 Xmip- prefix, which says nothing inside the Xmip repository, and the version
 suffix, which is what git history is for.
 """
-paths = ["docs/Xmip-Engineering-Methodology-SACE.md"]
+paths = ["doc/Xmip-Engineering-Methodology-SACE.md"]
 
 [[review]]
-path = "docs/handler-implementation-plan.md"
+path = "doc/handler-implementation-plan.md"
 question = """
 Planning note or superseded? It plans an implementation order for handlers, in
-the retired vocabulary. If the order still holds it belongs in docs/planning/;
+the retired vocabulary. If the order still holds it belongs in doc/planning/;
 if architecture.toml maturity now expresses it, it is superseded.
 """
 
@@ -697,16 +697,16 @@ if architecture.toml maturity now expresses it, it is superseded.
 
 # Rewritten 2026-08-26 as rules rather than an inventory. The previous version
 # named sixty-one files individually, of which about twenty no longer existed —
-# docs/glossary.md, docs/architecture/kernel-boundary.md, docs/data/*,
-# docs/ux/*, docs/vision/*, the four specifications and the rest. An enumerated
+# doc/glossary.md, doc/architecture/kernel-boundary.md, doc/data/*,
+# doc/ux/*, doc/vision/*, the four specifications and the rest. An enumerated
 # keep-list is a second copy of the directory tree, and a second copy is wrong
 # as soon as the first one moves.
 #
-# A rule that says 'everything under docs/decisions stays' cannot go stale when
+# A rule that says 'everything under doc/decisions stays' cannot go stale when
 # ADR-0022 is written. That is the whole reason to state it this way.
 
 [[keep]]
-path = "docs/decisions/*"
+path = "doc/decisions/*"
 reason = """
 Every ADR, twenty-one of them today. A decision is platform-wide even when its
 subject is one module, and a decision record scattered across forty-three
@@ -714,7 +714,7 @@ repositories is not a record.
 """
 
 [[keep]]
-path = "docs/governance/*"
+path = "doc/governance/*"
 reason = """
 How the work is governed: architectural-change-permission, release-model and
 powershell-style. Governance binds every repository, so it lives in the one
@@ -722,39 +722,39 @@ that owns the estate. rust-style.md joins them per section 3b.
 """
 
 [[keep]]
-path = "docs/planning/*"
+path = "doc/planning/*"
 reason = """
 Working notes about the estate itself, including this file. Explicitly not
 authoritative — README.md says so, and that is what keeps them useful.
 """
 
 [[keep]]
-path = "docs/terminology.md"
+path = "doc/terminology.md"
 reason = """
-One vocabulary or none. The overlapping glossary.md at both docs/ and
-docs/architecture/ is gone; section 8 records why.
+One vocabulary or none. The overlapping glossary.md at both doc/ and
+doc/architecture/ is gone; section 8 records why.
 """
 
 [[keep]]
-path = "docs/architecture/runtime-model.md"
+path = "doc/architecture/runtime-model.md"
 [[keep]]
-path = "docs/architecture/repository-model.md"
+path = "doc/architecture/repository-model.md"
 [[keep]]
-path = "docs/architecture/module-model.md"
+path = "doc/architecture/module-model.md"
 [[keep]]
-path = "docs/architecture/deployment-model.md"
+path = "doc/architecture/deployment-model.md"
 [[keep]]
-path = "docs/architecture/observability-model.md"
+path = "doc/architecture/observability-model.md"
 reason = """
 Five of the six documents ADR-0020 allows. Each answers one question about the
 platform as a whole, so each belongs to the repository that is the platform as
 a whole. The sixth, identity-by-technology.md, is the exception and moves —
 section 3 says why.
 
-These five are named individually rather than as docs/architecture/* on
+These five are named individually rather than as doc/architecture/* on
 purpose: the directory currently holds thirty-one files, and a wildcard here
 would quietly keep the twenty-five that section 3b is trying to remove. When 3b
-is empty, this becomes docs/architecture/* and the exception list disappears.
+is empty, this becomes doc/architecture/* and the exception list disappears.
 """
 
 # ===========================================================================
@@ -878,7 +878,7 @@ as provenance is a folder nobody greps.
 #       configuration question ([[modules]] against the Ansible template), and
 #       adopting one side of an open question by importing it from a draft is
 #       how an open question gets closed without being decided. Recorded in
-#       docs/planning/open-problems.md instead.
+#       doc/planning/open-problems.md instead.
 #
 # The entries below are what was found, kept as the record of where each item
 # came from. They are inert to Invoke-Distribute.
@@ -892,7 +892,7 @@ Omitted userinfo means the caller's identity; omitted host means cluster-wide.
 It is the addressing scheme for logging, tracing, metrics, tracking, operations
 and reports — six subsystems with no other addressing model written down.
 """
-candidate = "docs/architecture/observability-model.md, and an ADR: a URI scheme is a public contract."
+candidate = "doc/architecture/observability-model.md, and an ADR: a URI scheme is a public contract."
 
 [[unmined]]
 subject = "Identity classes and identity-context isolation"
@@ -923,7 +923,7 @@ and mandatory compliance reporting. deployment-model.md has node profiles and
 roles; it has no security profile, and fail-closed is a runtime behaviour that
 has to be designed rather than declared.
 """
-candidate = "docs/architecture/deployment-model.md"
+candidate = "doc/architecture/deployment-model.md"
 
 [[unmined]]
 subject = "The Void lane"
@@ -938,7 +938,7 @@ very likely the answer to the open question in runtime-model.md section 21
 about Dismissed having no JourneyState variant: the origin model already had
 somewhere for a Message to end without delivery and without failure.
 """
-candidate = "docs/architecture/runtime-model.md, and it closes an open problem rather than adding one."
+candidate = "doc/architecture/runtime-model.md, and it closes an open problem rather than adding one."
 
 [[unmined]]
 subject = "Mandatory reports"
@@ -953,7 +953,7 @@ locations, and protocol exposure — which is derivable from the Receive and Sen
 Locations, and is the document a security team asks for before Xmip is allowed
 onto a network.
 """
-candidate = "docs/architecture/observability-model.md, with xmip-core-report owning production."
+candidate = "doc/architecture/observability-model.md, with xmip-core-report owning production."
 
 [[unmined]]
 subject = "Message creationInstance metadata"
@@ -964,7 +964,7 @@ transformation), name, nodeName, clusterName and a UTC timestamp. Together with
 'routing never creates new messages; only transformation and assignment do',
 this is the provenance rule for the immutable Message model.
 """
-candidate = "docs/architecture/runtime-model.md. Check first whether src/ already carries it under another name."
+candidate = "doc/architecture/runtime-model.md. Check first whether src/ already carries it under another name."
 
 [[unmined]]
 subject = "Service bus delivery and sequential sources"
@@ -992,7 +992,7 @@ The last clause is a licensing position and Xmip is AGPL-3.0-or-later. Whether
 'may not be reimplemented' is enforceable, aspirational, or in tension with the
 licence is a question for a human, not for this file.
 """
-candidate = "docs/governance/release-model.md, and CONTRIBUTING.md. The licence clause needs a decision."
+candidate = "doc/governance/release-model.md, and CONTRIBUTING.md. The licence clause needs a decision."
 
 [[unmined]]
 subject = "Build targets"
@@ -1003,7 +1003,7 @@ hardware. deployment-model.md does not name a target list, and ADR-0021 is
 about platform currency rather than platform breadth. ARM and industrial
 hardware are the two that change build and packaging decisions.
 """
-candidate = "docs/architecture/deployment-model.md and ADR-0015."
+candidate = "doc/architecture/deployment-model.md and ADR-0015."
 
 [[review]]
 path = "_origins/Xmip_Complete_Specification_v0.1.md"
@@ -1047,7 +1047,7 @@ path = "scripts/git/Add-XmipSubmodules-IndustrialEnergy.ps1"
 path = "scripts/git/Add-XmipSubmodules-QueueBusinessHealthcare.ps1"
 [[remove]]
 path = "scripts/git/New-XmipFamilyRepositories.ps1"
-reason = "Seven scripts that wire xmip-handler-* submodules by hardcoded family. Same generation as docs/submodules, which went yesterday. Sync-XmipSubmodule.ps1 derives all of it from the manifest instead."
+reason = "Seven scripts that wire xmip-handler-* submodules by hardcoded family. Same generation as doc/submodules, which went yesterday. Sync-XmipSubmodule.ps1 derives all of it from the manifest instead."
 
 [[remove]]
 path = "scripts/github/Ensure-XmipHandlerRepositories.ps1"
@@ -1118,7 +1118,7 @@ question = 3
 path = "eight handler-era documents"
 decision = "Salvage the taxonomy and the four lineage files; drop the other two."
 to = "xmip-core-transport"
-newPath = "docs/technology-lineage.md"
+newPath = "doc/technology-lineage.md"
 reason = """
 handler-taxonomy.md and the four *-lineage.md files are the reasoning that
 produced the implementation lists now in architecture.toml. That reasoning is
@@ -1127,11 +1127,11 @@ technologies. content-handlers.md and handler-implementation-plan.md are a
 plan for a design ADR-0010 and ADR-0011 retired, and a plan for a retired
 design is not history, it is a trap.
 """
-drop = ["docs/content-handlers.md", "docs/handler-implementation-plan.md"]
+drop = ["doc/content-handlers.md", "doc/handler-implementation-plan.md"]
 
 [[decision]]
 question = 4
-path = "docs/decisions/ADR-0004-handler-universe.md"
+path = "doc/decisions/ADR-0004-handler-universe.md"
 decision = "Keep, with a Superseded-by header naming ADR-0010."
 reason = """
 An ADR is a record, never a deletion. But a superseded record that does not
@@ -1143,10 +1143,10 @@ Arc42 templates both do.
 [[decision]]
 question = 5
 path = "the three vocabularies"
-decision = "docs/terminology.md survives. Migrate what architecture/glossary.md has that it lacks, then delete both glossaries."
+decision = "doc/terminology.md survives. Migrate what architecture/glossary.md has that it lacks, then delete both glossaries."
 reason = """
 terminology.md is the only one aligned with current decisions — it already
-carries Xmip Service and Xmip Host Service from ADR-0018. docs/glossary.md is
+carries Xmip Service and Xmip Host Service from ADR-0018. doc/glossary.md is
 zero bytes. architecture/glossary.md is 363 lines built on Interchange, which
 ADR-0013 replaced with Journey, but it holds six sections terminology.md does
 not have and should: Definition versus Instance, Handler versus Extension,
@@ -1154,11 +1154,11 @@ Kernel, Section, Failure Persistence, and Retired terms. Retired terms is the
 natural home for Interchange itself, alongside Adapter, Plugin and Enabler.
 """
 migrate = ["Definition versus Instance", "Handler versus Extension", "Kernel", "Section", "Failure Persistence", "Retired terms"]
-remove = ["docs/glossary.md", "docs/architecture/glossary.md"]
+remove = ["doc/glossary.md", "doc/architecture/glossary.md"]
 
 [[decision]]
 question = 6
-path = "docs/module-loading.md and docs/architecture/module-loading.md"
+path = "doc/module-loading.md and doc/architecture/module-loading.md"
 decision = "Not the same document. Both survive, both are renamed."
 reason = """
 Eighty-seven differing lines, and they are about different subjects wearing
@@ -1169,8 +1169,8 @@ Handlers and Extensions. That is runtime. Naming both module-loading.md is
 what made them look like duplicates.
 """
 rename = [
-    { from = "docs/module-loading.md", to = "xmip-core-abi", newPath = "docs/execution-model.md" },
-    { from = "docs/architecture/module-loading.md", to = "xmip-core-runtime", newPath = "docs/startup-discovery.md" },
+    { from = "doc/module-loading.md", to = "xmip-core-abi", newPath = "doc/execution-model.md" },
+    { from = "doc/architecture/module-loading.md", to = "xmip-core-runtime", newPath = "doc/startup-discovery.md" },
 ]
 follows = "The runtime one still says Handler throughout and needs an ADR-0011 pass before it is trustworthy."
 
@@ -1193,15 +1193,15 @@ here, which is the argument for dropping them from filenames: git carries
 versions, and a version in a filename guarantees this recurs.
 """
 plan = [
-    { action = "compose", target = "docs/architecture/runtime-model.md", from = ["Specification-v1.0 runtime sections", "Baseline-Current runtime decisions"] },
-    { action = "compose", target = "docs/architecture/repository-model.md", from = ["Specification-v1.2 sections 9-15", "the five repository documents of question 8"] },
-    { action = "remove", target = "docs/Xmip-Architecture-Specification-v1.1.md", why = "strict subset of v1.2" },
+    { action = "compose", target = "doc/architecture/runtime-model.md", from = ["Specification-v1.0 runtime sections", "Baseline-Current runtime decisions"] },
+    { action = "compose", target = "doc/architecture/repository-model.md", from = ["Specification-v1.2 sections 9-15", "the five repository documents of question 8"] },
+    { action = "remove", target = "doc/Xmip-Architecture-Specification-v1.1.md", why = "strict subset of v1.2" },
 ]
 
 [[decision]]
 question = 8
 path = "the five repository documents"
-decision = "Consolidate into docs/architecture/repository-model.md with v1.2. Keep the reasoning, drop the inventories."
+decision = "Consolidate into doc/architecture/repository-model.md with v1.2. Keep the reasoning, drop the inventories."
 reason = """
 architecture.toml is now the answer to what the estate contains, so any
 document that lists repositories is a second source of truth and will be
@@ -1212,7 +1212,7 @@ name matches its repository. That reasoning is worth one document.
 
 [[decision]]
 question = 9
-path = "docs/planning/github-repository-inventory-*.md"
+path = "doc/planning/github-repository-inventory-*.md"
 decision = "Delete all three."
 reason = """
 Stale by construction. Xmip-Estate reads the live estate, and tonight it
@@ -1262,7 +1262,7 @@ path = "rust-toolchain.toml"
 reason = "Pins channel = stable for every machine and for CI."
 
 [[keep]]
-path = "docs/architecture/repository-model.md"
+path = "doc/architecture/repository-model.md"
 reason = "Why the estate is shaped this way. Replaces five documents and specification sections 9 to 15."
 
 # The identity-by-technology.md move lived here until 2026-08-26. It is in
@@ -1271,8 +1271,8 @@ reason = "Why the estate is shaped this way. Replaces five documents and specifi
 # caught it on the first run.
 
 [[superseded]]
-path = "docs/architecture/handler-lineage.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/handler-lineage.md"
+replacedBy = "doc/architecture/module-model.md"
 why = """
 Section 7, Handler lineage. Family, base component id, derived-from component
 ids and supported technologies as manifest metadata, and 'this is not
@@ -1280,13 +1280,13 @@ source-code inheritance' stated in both.
 """
 
 [[superseded]]
-path = "docs/architecture/tcp-handler-lineage.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/tcp-handler-lineage.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Section 7, the TCP family row. Every shared concept it lists is there."
 
 [[superseded]]
-path = "docs/architecture/queue-handler-lineage.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/queue-handler-lineage.md"
+replacedBy = "doc/architecture/module-model.md"
 why = """
 Section 7, the Queue family row: queue, topic, subject, stream and partition
 identity, consumer group, durable subscription, acknowledgement, visibility
@@ -1294,8 +1294,8 @@ timeout, offset, cursor, dead-letter, competing consumers, ordering.
 """
 
 [[superseded]]
-path = "docs/architecture/industrial-iot-handler-lineage.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/industrial-iot-handler-lineage.md"
+replacedBy = "doc/architecture/module-model.md"
 why = """
 Section 7, the Industrial and IoT family row, together with the UDP note that
 follows it — a UDP Module needing reliability, ordering, de-duplication,
@@ -1304,8 +1304,8 @@ may not assume the runtime supplies them.
 """
 
 [[superseded]]
-path = "docs/architecture/message-disposition.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/message-disposition.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = """
 Accept and Reject, ownership, and the Xmip DMQ as final disposition. Section 9
 already carries all of it, including the DMQ preservation list — receive
@@ -1319,8 +1319,8 @@ things out. That tension is recorded there and is not lost with this file.
 """
 
 [[superseded]]
-path = "docs/architecture/message-runtime-context.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/architecture/message-runtime-context.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = """
 Stream to ownership to publication to subscription, and the validation gates
 along it. Sections 5 to 10 carry the lifecycle, and section 22 carries the
@@ -1343,8 +1343,8 @@ the kind that only gets written down once somebody has been tempted.
 """
 
 [[superseded]]
-path = "docs/content-handlers.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/content-handlers.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = """
 Merged 2026-08-26 into section 9: Content Selectors with their four segment
 kinds and three evaluation modes, and promotion and demotion as a pair.
@@ -1368,13 +1368,13 @@ Read before classifying. The name is not the contents.
 # that already exists; git holds the originals.
 
 [[superseded]]
-path = "docs/glossary.md"
-replacedBy = "docs/terminology.md"
+path = "doc/glossary.md"
+replacedBy = "doc/terminology.md"
 why = "Zero bytes. It was never anything."
 
 [[superseded]]
-path = "docs/architecture/glossary.md"
-replacedBy = "docs/terminology.md"
+path = "doc/architecture/glossary.md"
+replacedBy = "doc/terminology.md"
 why = """
 363 lines under the Interchange vocabulary ADR-0013 retired. Six sections were
 worth keeping and are now in terminology.md: Definition versus Instance,
@@ -1385,33 +1385,33 @@ and ADR-0013 clause 5 says a Journey is not.
 """
 
 [[superseded]]
-path = "docs/repository-model.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/repository-model.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = "Pre-ADR-0011 names and a submodules/platform/handlers/ layout ADR-0016 rejected."
 
 [[superseded]]
-path = "docs/crate-boundaries.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/crate-boundaries.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = "53 lines, now section 6."
 
 [[superseded]]
-path = "docs/architecture/repository-architecture.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/architecture/repository-architecture.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = "Classification, naming and maturity, now sections 1 to 3. Its plan/apply mode stopped existing on 2026-08-25."
 
 [[superseded]]
-path = "docs/architecture/repository-structure.md"
-replacedBy = "docs/architecture/repository-model.md"
-why = "Note: allocation.toml recorded this at docs/ and it is at docs/architecture/."
+path = "doc/architecture/repository-structure.md"
+replacedBy = "doc/architecture/repository-model.md"
+why = "Note: allocation.toml recorded this at doc/ and it is at doc/architecture/."
 
 [[superseded]]
-path = "docs/architecture/repository-and-crate-plan.md"
-replacedBy = "docs/architecture/repository-model.md"
-why = "Note: allocation.toml recorded this at docs/ and it is at docs/architecture/."
+path = "doc/architecture/repository-and-crate-plan.md"
+replacedBy = "doc/architecture/repository-model.md"
+why = "Note: allocation.toml recorded this at doc/ and it is at doc/architecture/."
 
 [[superseded]]
-path = "docs/Xmip-Architecture-Specification-v1.1.md"
-replacedBy = "docs/architecture/runtime-model.md and docs/architecture/repository-model.md"
+path = "doc/Xmip-Architecture-Specification-v1.1.md"
+replacedBy = "doc/architecture/runtime-model.md and doc/architecture/repository-model.md"
 why = """
 Strict subset of v1.2 — 36 diff lines, every one an addition there.
 
@@ -1425,7 +1425,7 @@ superseded, every entry pointing at it needs updating in the same change.
 """
 
 [[superseded]]
-path = "docs/planning/github-repository-inventory-*.md"
+path = "doc/planning/github-repository-inventory-*.md"
 replacedBy = "Xmip-Estate"
 why = "Stale by construction. Decision 9."
 
@@ -1445,135 +1445,135 @@ why = "Decision 10. Flagged: say if forge is a live idea and this reverses."
 # interchange identifier is stable across generations.
 
 [[keep]]
-path = "docs/architecture/runtime-model.md"
+path = "doc/architecture/runtime-model.md"
 reason = "The architecture specification. Composed 2026-08-25 from v1.0, v1.2 sections 1-8 and Baseline-Current, with four substantive conflicts resolved in its section 20 rather than silently."
 
 [[superseded]]
-path = "docs/Xmip-Architecture-Specification-v1.0.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/Xmip-Architecture-Specification-v1.0.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "595 lines, the substantive runtime architecture. All 25 sections carried across or resolved as a conflict."
 
 [[superseded]]
-path = "docs/Xmip-Architecture-Specification-v1.2.md"
-replacedBy = "docs/architecture/runtime-model.md and docs/architecture/repository-model.md"
+path = "doc/Xmip-Architecture-Specification-v1.2.md"
+replacedBy = "doc/architecture/runtime-model.md and doc/architecture/repository-model.md"
 why = "Sections 1-8 are runtime and went to the first. Sections 9-15 are the estate and went to the second."
 
 [[superseded]]
-path = "docs/Xmip-Architecture-Baseline-Current.md"
-replacedBy = "docs/architecture/runtime-model.md"
+path = "doc/Xmip-Architecture-Baseline-Current.md"
+replacedBy = "doc/architecture/runtime-model.md"
 why = "431 lines. Its reassignment of Message and Journey creation is now the model; three of its statements lost to later ADRs and are recorded in section 20."
 
 # Consolidated 2026-08-25 per ADR-0020: one document per subject.
 [[superseded]]
-path = "docs/architecture/kernel-boundary.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/kernel-boundary.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Everything it attributed to 'the Kernel' is what xmip-core-runtime owns."
 
 [[superseded]]
-path = "docs/architecture/modularity.md"
-replacedBy = "docs/architecture/module-model.md and docs/architecture/deployment-model.md"
+path = "doc/architecture/modularity.md"
+replacedBy = "doc/architecture/module-model.md and doc/architecture/deployment-model.md"
 why = "Boundary to the first, footprint profiles to the second."
 
 [[superseded]]
-path = "docs/architecture/runtime-modularity.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/runtime-modularity.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Loadable binary model, manifest and isolation."
 
 [[superseded]]
-path = "docs/architecture/module-loading.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/module-loading.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Startup discovery and registration. Its implementation-status section was planning and is dropped: a status list in an architecture document rots by design."
 
 [[superseded]]
-path = "docs/module-loading.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/module-loading.md"
+replacedBy = "doc/architecture/module-model.md"
 why = "Execution thread and the layered ABI boundary. Not a duplicate of the file above despite the shared name — 87 differing lines, different subjects."
 
 [[superseded]]
-path = "docs/architecture/platform-system-definition.md"
-replacedBy = "docs/architecture/module-model.md"
+path = "doc/architecture/platform-system-definition.md"
+replacedBy = "doc/architecture/module-model.md"
 
 [[superseded]]
-path = "docs/architecture/deployment-profiles.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/deployment-profiles.md"
+replacedBy = "doc/architecture/deployment-model.md"
 
 [[superseded]]
-path = "docs/architecture/runtime-profiles.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/runtime-profiles.md"
+replacedBy = "doc/architecture/deployment-model.md"
 why = "Server versus purpose-compiled."
 
 [[superseded]]
-path = "docs/architecture/runtime-roles-and-isolation.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/runtime-roles-and-isolation.md"
+replacedBy = "doc/architecture/deployment-model.md"
 why = "Executor, Reader, Writer, and the trust and isolation rules."
 
 [[superseded]]
-path = "docs/architecture/installer.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/installer.md"
+replacedBy = "doc/architecture/deployment-model.md"
 
 [[superseded]]
-path = "docs/architecture/database-selection.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/database-selection.md"
+replacedBy = "doc/architecture/deployment-model.md"
 why = "Described the same two databases as installer.md in almost the same words."
 
 [[superseded]]
-path = "docs/architecture/service-identities.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/service-identities.md"
+replacedBy = "doc/architecture/deployment-model.md"
 
 [[superseded]]
-path = "docs/architecture/desired-state-configuration.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/architecture/desired-state-configuration.md"
+replacedBy = "doc/architecture/deployment-model.md"
 
 [[superseded]]
-path = "docs/disaster-recovery.md"
-replacedBy = "docs/architecture/deployment-model.md"
+path = "doc/disaster-recovery.md"
+replacedBy = "doc/architecture/deployment-model.md"
 why = "Recovery. Its Interchange vocabulary is translated to Journey."
 
 [[superseded]]
-path = "docs/Xmip-Audit-Architecture.md"
-replacedBy = "docs/architecture/observability-model.md"
+path = "doc/Xmip-Audit-Architecture.md"
+replacedBy = "doc/architecture/observability-model.md"
 why = "Lifecycle, severity, policy hierarchy, back-pressure."
 
 [[superseded]]
-path = "docs/architecture/audit-and-correlation.md"
-replacedBy = "docs/architecture/observability-model.md"
+path = "doc/architecture/audit-and-correlation.md"
+replacedBy = "doc/architecture/observability-model.md"
 why = "The Logs / Traces / Tracking split and the correlation footprint."
 
 [[superseded]]
-path = "docs/architecture/audit-directive.md"
-replacedBy = "docs/architecture/observability-model.md"
+path = "doc/architecture/audit-directive.md"
+replacedBy = "doc/architecture/observability-model.md"
 
 [[superseded]]
-path = "docs/Xmip-Observer-Architecture.md"
-replacedBy = "docs/architecture/observability-model.md"
+path = "doc/Xmip-Observer-Architecture.md"
+replacedBy = "doc/architecture/observability-model.md"
 why = "Health states, worst-state propagation, near-real-time rule."
 
 [[superseded]]
-path = "docs/architecture/retired-terms-cleanup.md"
-replacedBy = "docs/terminology.md"
+path = "doc/architecture/retired-terms-cleanup.md"
+replacedBy = "doc/terminology.md"
 why = "Eleven lines. terminology.md has a Retired terms table."
 
 [[keep]]
-path = "docs/architecture/module-model.md"
+path = "doc/architecture/module-model.md"
 reason = "The module boundary, loading, ABI layering and isolation. Replaces six documents and retires the word Kernel."
 
 [[keep]]
-path = "docs/architecture/deployment-model.md"
+path = "doc/architecture/deployment-model.md"
 reason = "Profiles, runtime roles, trust and isolation, Service Identity, installation, the two databases, desired state and recovery. Replaces eight."
 
 [[keep]]
-path = "docs/architecture/observability-model.md"
+path = "doc/architecture/observability-model.md"
 reason = "Audit, logs, traces, retention and observation. Replaces four."
 
 [[keep]]
-path = "docs/decisions/ADR-0020-documentation-structure.md"
+path = "doc/decisions/ADR-0020-documentation-structure.md"
 reason = "One document per subject, no versions in filenames, and the six-document architecture structure."
 
 # Twelve zero-byte files. ADR-0020 clause 7: an empty file is a promise
 # nobody made and a search result that wastes a reader.
 
 [[remove]]
-path = "docs/architecture/data-flow.md, docs/data/data-model.md, docs/data/privacy.md, docs/operations/roles.md, docs/operations/workflows.md, docs/ux/personas.md, docs/ux/principles.md, docs/ux/user-flows.md, docs/vision/problem.md, docs/vision/roadmap.md, docs/vision/value-proposition.md"
+path = "doc/architecture/data-flow.md, doc/data/data-model.md, doc/data/privacy.md, doc/operations/roles.md, doc/operations/workflows.md, doc/ux/personas.md, doc/ux/principles.md, doc/ux/user-flows.md, doc/vision/problem.md, doc/vision/roadmap.md, doc/vision/value-proposition.md"
 reason = "Zero bytes. ADR-0020 clause 7."
 
 
@@ -1597,7 +1597,7 @@ reason = "Zero bytes. ADR-0020 clause 7."
 #   - every [[move]] and [[superseded]] path exists on disk
 #   - every [[move]] destination is a repository in architecture.toml
 #   - no path appears in two sections
-#   - nothing under docs/ is unaccounted for
+#   - nothing under doc/ is unaccounted for
 #
 # Section 4 is now rules rather than an inventory, so 'every file appears
 # exactly once' is no longer the invariant. The invariant is that nothing is
@@ -1612,16 +1612,16 @@ verifiedBy = "tests/Allocation.Tests.ps1"
 # ---------------------------------------------------------------------------
 
 [[superseded]]
-path = "docs/planning/architecture-consolidation.md"
-replacedBy = "docs/planning/allocation.toml"
+path = "doc/planning/architecture-consolidation.md"
+replacedBy = "doc/planning/allocation.toml"
 why = """
 Its own header: working notes, delete when the consolidation is done. It was
-written when docs/architecture/ held 31 documents; it holds five models. The
+written when doc/architecture/ held 31 documents; it holds five models. The
 outcome its section 6 recorded is this file's superseded entries."""
 
 [[superseded]]
-path = "docs/planning/creation-sequence.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/planning/creation-sequence.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = """
 Written before ADR-0011 renamed everything — xmip-message-json,
 xmip-handler-file, xmip-logic-http-api. Its live rules (architecture before
@@ -1629,21 +1629,21 @@ implementation, one crate per repository, scaffold is not implementation) are
 repository-model.md sections 3, 6 and 10 and ADR-0005."""
 
 [[superseded]]
-path = "docs/planning/repository-refactor-purpose.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/planning/repository-refactor-purpose.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = """
 Described the landscape to be built: xmip-handler-*, a separate xmip-runtime.
 The refactor it planned completed on 2026-08-26 and built something better
 than it described."""
 
 [[superseded]]
-path = "docs/planning/artifact-actor-mapping.md"
-replacedBy = "docs/decisions/ADR-0008-xmip-entities-as-actors.md"
+path = "doc/planning/artifact-actor-mapping.md"
+replacedBy = "doc/decisions/ADR-0008-xmip-entities-as-actors.md"
 why = "The nine-line table folded into the record that decided it, verbatim."
 
 [[superseded]]
-path = "docs/planning/must-remember.md"
-replacedBy = "docs/planning/open-problems.md"
+path = "doc/planning/must-remember.md"
+replacedBy = "doc/planning/open-problems.md"
 why = """
 A next-steps list that had gone mostly false: it said the submodules were
 planned when 43 were real, that no module loading existed when ADR-0025 had
@@ -1651,8 +1651,8 @@ landed. Its four surviving items are open-problems.md problem 19, and
 ADR-0002's state anchor carries a retirement note."""
 
 [[superseded]]
-path = "docs/planning/naming-hierarchy.md"
-replacedBy = "docs/architecture/repository-model.md"
+path = "doc/planning/naming-hierarchy.md"
+replacedBy = "doc/architecture/repository-model.md"
 why = """
 The grammar of a name is section 2's subject. The tree folded in there, with
 its one stale branch corrected — it drew xmip-template as a single repository,

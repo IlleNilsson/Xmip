@@ -84,12 +84,12 @@ Describe 'README links resolve' {
 }
 
 Describe 'README lists every document that exists' {
-    It 'links to every document under docs/architecture' {
+    It 'links to every document under doc/architecture' {
         # The reverse direction, and the one that was missing. Checking that
         # every link resolves catches a deleted file; it says nothing about a
-        # file nobody linked. docs/architecture/ reached 31 documents against
+        # file nobody linked. doc/architecture/ reached 31 documents against
         # ADR-0020's six that way, and the README looked correct throughout.
-        [string] $directory = Join-Path $script:Root 'docs/architecture'
+        [string] $directory = Join-Path $script:Root 'doc/architecture'
         [string[]] $present = @(
             Get-ChildItem -Path $directory -Filter '*.md' -File |
                 ForEach-Object { $_.Name } |

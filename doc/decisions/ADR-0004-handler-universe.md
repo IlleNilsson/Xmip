@@ -48,7 +48,7 @@ xmip-handler-<technology-or-family>
 Every handler must be visible in:
 
 ```text
-docs/architecture/handler-taxonomy.md
+doc/architecture/handler-taxonomy.md
 src/handler_taxonomy.rs or src/handler_universe.rs
 .gitmodules.planned
 ```

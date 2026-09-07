@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0013 (the Journey model), ADR-0028 (the Xmip Playground),
-  docs/architecture/observability-model.md, `xmip-core-retain`
+  doc/architecture/observability-model.md, `xmip-core-retain`
 
 ## In brief
 

@@ -28,7 +28,7 @@
     and so is anyone piping this to a file. -ForegroundColor stays as a second
     channel for those it helps.
 
-    Style: docs/governance/powershell-style.md
+    Style: doc/governance/powershell-style.md
 #>
 
 function Get-XmipStatus {

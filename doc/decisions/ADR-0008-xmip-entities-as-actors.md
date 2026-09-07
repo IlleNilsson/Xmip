@@ -28,7 +28,7 @@ They are not removed or renamed away. They gain actor semantics.
 
 ## The mapping, in one table
 
-Folded in from `docs/planning/artifact-actor-mapping.md` on 2026-08-30 — the
+Folded in from `doc/planning/artifact-actor-mapping.md` on 2026-08-30 — the
 table said in nine lines what the examples below say in prose, and a mapping
 belongs in the record that decided it.
 

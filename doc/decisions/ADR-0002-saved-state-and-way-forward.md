@@ -26,16 +26,16 @@ Every significant decision shall be captured as a project artifact.
 The project source of truth is now:
 
 ```text
-docs/decisions/
-docs/architecture/
-docs/planning/must-remember.md
+doc/decisions/
+doc/architecture/
+doc/planning/must-remember.md
 .gitmodules.planned
 ```
 
 *Historical. Two of the four anchors have since been retired:
 `.gitmodules.planned` became the real `.gitmodules` when the 43 repositories
 were created, and `must-remember.md` was deleted on 2026-08-30 after most of it
-went false — its surviving items are `docs/planning/open-problems.md`
+went false — its surviving items are `doc/planning/open-problems.md`
 problem 19. The first two anchors stand.*
 
 ## Current direction

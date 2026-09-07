@@ -14,7 +14,7 @@ Where those documents conflicted with each other or with an accepted ADR, the
 conflict is resolved in section 23 rather than silently.
 
 It also absorbs the live content of the pre-ADR-0020 documents in
-`docs/architecture/` — the Definition/Instance model, the Process model, and
+`doc/architecture/` — the Definition/Instance model, the Process model, and
 the validation gates — which described subjects the four specifications never
 covered. Those documents conflicted too, and those conflicts are in section 23
 as well.
@@ -134,7 +134,7 @@ One thing this costs, and it is real:
 **Work does not move by itself.** A Message in node A's ToDo is node A's
 work. Distributing across nodes is now an explicit act rather than a consequence
 of everyone reading one table, and how that act happens is not yet designed. It
-is recorded in `docs/planning/open-problems.md`.
+is recorded in `doc/planning/open-problems.md`.
 
 *It used to cost two.* The second was cluster-wide exclusiveness, which needed
 somewhere shared to live and had nowhere — a lease in per-node persistence

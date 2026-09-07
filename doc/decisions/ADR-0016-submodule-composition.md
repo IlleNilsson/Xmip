@@ -41,7 +41,7 @@ Three things already in `main` disagree with that:
 3. `modules/` was occupied by sixteen README files under the abandoned .NET
    taxonomy (`modules/ip/tcp/http/Xmip.Handler.Soap/`), while also being the
    value of `default.submoduleRoot`. Cleared in `a3b001e` along with
-   `handlers/`, `docs/submodules/` and `.gitmodules.planned` — sixty-nine
+   `handlers/`, `doc/submodules/` and `.gitmodules.planned` — sixty-nine
    files in all.
 
 ## Decision
@@ -114,7 +114,7 @@ and nothing moves under them.
 **6. `modules/` is cleared before anything is mounted. Done.**
 
 Sixty-nine files removed in `a3b001e`: `modules/` (16), `handlers/` (35),
-`docs/submodules/` (11), `docs/architecture/handler-submodules-*.md` (6) and
+`doc/submodules/` (11), `doc/architecture/handler-submodules-*.md` (6) and
 `.gitmodules.planned`. Every leaf under `handlers/` was checked against the
 199 implementation entries in `architecture.toml` first; the only six that did
 not match were aliases of entries that do exist — `apache-kafka` for `kafka`,
@@ -144,7 +144,7 @@ should be marked superseded rather than deleted.
 - `crates/` still carries pre-ADR-0011 names (`xmip-module-abi`,
   `xmip-handler-file`, `xmip-module-api`) against manifest names
   (`xmip-core-abi`, `xmip-core-transport`, `xmip-core-api`). Submodules do not
-  fix that and it is not this ADR's business. `docs/planning/allocation.toml`
+  fix that and it is not this ADR's business. `doc/planning/allocation.toml`
   now decides each of them: `xmip-handler-file` folds into
   `xmip-core-transport` as an implementation module rather than becoming the
   first level-two repository.

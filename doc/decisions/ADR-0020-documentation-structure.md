@@ -18,7 +18,7 @@ in filenames. Architecture is six documents.
 
 ## Context
 
-`docs/` held 110 markdown files. Twelve were empty. The rest included four
+`doc/` held 110 markdown files. Twelve were empty. The rest included four
 architecture specifications that were not versions of each other, three
 vocabularies, five documents on repository layout, six on the module boundary,
 eight on deployment, four on auditing, and three hand-written inventories of a
@@ -61,7 +61,7 @@ about FTP does not live in the root because FTP does not.
 ### 4. The structure
 
 ```text
-docs/
+doc/
   terminology.md                    the vocabulary. One term, one concept.
   architecture/
     runtime-model.md                what Xmip does at runtime
@@ -98,8 +98,8 @@ identity manual.
 
 ### 7. An empty file is not a placeholder
 
-Twelve zero-byte files existed under `docs/data/`, `docs/operations/`,
-`docs/ux/` and `docs/vision/`. An empty file is a promise nobody made and a
+Twelve zero-byte files existed under `doc/data/`, `doc/operations/`,
+`doc/ux/` and `doc/vision/`. An empty file is a promise nobody made and a
 search result that wastes a reader's time. **Delete them.** The directory
 structure can be recreated in the second it takes, when there is something to
 put in it.
@@ -109,8 +109,8 @@ put in it.
 - 110 documents become roughly 30: six architecture documents, terminology,
   twenty ADRs, two governance documents, and the planning notes.
 - Everything technology-specific leaves the root for the repository that owns
-  it, per `docs/planning/allocation.toml`.
-- `docs/planning/*` is explicitly non-authoritative. It is where thinking is
+  it, per `doc/planning/allocation.toml`.
+- `doc/planning/*` is explicitly non-authoritative. It is where thinking is
   allowed to be duplicated and contradictory, which is what it is for.
 - A reader who finds a document can trust it is the current one, because there
   is no other.
@@ -125,7 +125,7 @@ directly. The four specifications would still all exist.
 different hat, and it makes the newest file look authoritative even when it is a
 narrow addendum — which is exactly the trap `v1.2` set.
 
-**One document per repository, no `docs/` in the root at all.** Rejected for
+**One document per repository, no `doc/` in the root at all.** Rejected for
 now: the root genuinely owns cross-cutting subjects — the runtime model spans
 every module — and pushing those into any one module repository would make that
 repository the de facto root.

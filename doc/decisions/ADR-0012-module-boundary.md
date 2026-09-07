@@ -154,7 +154,7 @@ The existing `module_kind` values disappear. `xmip-handler-file`, the one concre
 
 ## The specification
 
-Written. It is `docs/architecture/module-abi-specification.md`, with the header at `include/xmip_module.h`.
+Written. It is `doc/architecture/module-abi-specification.md`, with the header at `include/xmip_module.h`.
 
 It covers the universal boundary — primitives, status codes, the descriptor, streams, the host table, the module handle, the entrypoint and the vtable header — and four trait tables: transport, message, path and contract. Those four are creation wave one.
 

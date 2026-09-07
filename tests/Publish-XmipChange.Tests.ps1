@@ -140,7 +140,7 @@ Describe 'Test-XmipBuildOutput' {
             foreach ($path in @(
                     'src/lib.rs'
                     'Cargo.toml'
-                    'docs/decisions/ADR-0019.md'
+                    'doc/decisions/ADR-0019.md'
                     'README.md'
                     'src/bin/main.rs'
                 )) {
@@ -167,7 +167,7 @@ Describe 'Resolve-XmipCommitSubject' {
         InModuleScope Xmip {
             $staged = @(
                 '.gitmodules'
-                'docs/decisions/ADR-0024-resource-claim-replaces-exclusiveness.md'
+                'doc/decisions/ADR-0024-resource-claim-replaces-exclusiveness.md'
                 'modules/platform/exclusiveness'
                 'tests/Sync-XmipEstate.Tests.ps1'
             )

@@ -2,28 +2,28 @@
 
 Xmip is a Rust, cross-platform Messaging & Integration Platform — the
 replacement for BizTalk, MuleSoft and their kind. On-premises first,
-cloud-installable. `docs/planning/market-position.md` opens with the position;
-`docs/terminology.md` is the vocabulary and its words are chosen, not casual.
+cloud-installable. `doc/planning/market-position.md` opens with the position;
+`doc/terminology.md` is the vocabulary and its words are chosen, not casual.
 
 ## Read before writing
 
 The estate is governed by its own records, and they are current:
 
-- `docs/decisions/README.md` — the ADR index. ADR-0011 names things, ADR-0012
+- `doc/decisions/README.md` — the ADR index. ADR-0011 names things, ADR-0012
   is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
   ADR-0025 module loading. Do not contradict an accepted record; propose a new
   one or an amendment, and let the owner decide.
-- `docs/architecture/` — five models. `repository-model.md` explains why 43
+- `doc/architecture/` — five models. `repository-model.md` explains why 43
   submodules mount where they do.
-- `docs/governance/rust-style.md` and `powershell-style.md` — enforced by
+- `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
   `tests/*.Tests.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
   production lines; a file is named for what it defines; a loop variable is
   never a parameter. **Length rules are strict recommendations: breaking one
   requires the owner's agreement FIRST, then the recorded reason.** An
   assistant follows that absolutely.
-- `docs/planning/open-problems.md` — what is open and in what order. Problem
+- `doc/planning/open-problems.md` — what is open and in what order. Problem
   19 and the Suggested order section are the queue.
-- `docs/planning/allocation.toml` — the ledger of what moved where. Tested by
+- `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
   `tests/Allocation.Tests.ps1`; keep it true when files move.
 
 ## How work lands
@@ -44,8 +44,8 @@ pwsh hosts it (ADR-0014, amendment 2026-08-30).
 ## Be the colleague who remembers
 
 Before engaging with any idea the owner raises, check whether the estate has
-already answered it: the concept index in `docs/decisions/README.md`, then
-`docs/planning/open-problems.md`. If a record answers it, SAY SO FIRST —
+already answered it: the concept index in `doc/decisions/README.md`, then
+`doc/planning/open-problems.md`. If a record answers it, SAY SO FIRST —
 "ADR-0024 settled this; the claim lives at the endpoint" — before any other
 work. The owner is human and designs better than he archives; the assistant
 has no memory between sessions and reads faster than any human. The pairing

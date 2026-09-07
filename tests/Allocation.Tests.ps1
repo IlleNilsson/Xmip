@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    docs/planning/allocation.toml is the plan for moving every document and
+    doc/planning/allocation.toml is the plan for moving every document and
     source file into the repository that owns it. Sync-XmipRepository -Distribute
     executes it.
 
@@ -16,7 +16,7 @@
     tests are what that block should have been.
 #>
 
-# A ratchet, not a target. docs/architecture holds thirty-one files against
+# A ratchet, not a target. doc/architecture holds thirty-one files against
 # ADR-0020's six; asserting six today would fail on day one, and a test that is
 # always red is a test nobody reads. Lower this as allocation.toml section 3b
 # is worked through — it may fall and may not rise, so the consolidation cannot
@@ -29,7 +29,7 @@
 
 BeforeAll {
     $script:Root = Join-Path $PSScriptRoot '..'
-    $script:AllocationPath = Join-Path $script:Root 'docs/planning/allocation.toml'
+    $script:AllocationPath = Join-Path $script:Root 'doc/planning/allocation.toml'
     [int] $script:ExtraCeiling = 0
 
     Import-Module PSToml -ErrorAction Stop
@@ -114,7 +114,7 @@ Describe 'Every executable entry names a file that exists' {
             [string] $path = [string] $entry.path
 
             if ($path.Contains('*')) {
-                # Wildcard keeps are deliberate — docs/decisions/* keeps a
+                # Wildcard keeps are deliberate — doc/decisions/* keeps a
                 # directory's contents. Test-Path globs them.
                 if (-not (Test-Path -Path (Join-Path $script:Root $path))) {
                     $missing += $path
@@ -280,7 +280,7 @@ Describe 'No file is claimed twice' {
 
 Describe 'ADR-0020: six architecture documents' {
     It "holds no more than $script:ExtraCeiling files beyond the six" {
-        [string] $architecture = Join-Path $script:Root 'docs/architecture'
+        [string] $architecture = Join-Path $script:Root 'doc/architecture'
 
         [string[]] $allowed = @(
             'runtime-model.md'
@@ -298,7 +298,7 @@ Describe 'ADR-0020: six architecture documents' {
 
         [string[]] $extra = @($actual | Where-Object { $_ -notin $allowed })
 
-        Write-Host "  docs/architecture holds $($extra.Count) files beyond the six"
+        Write-Host "  doc/architecture holds $($extra.Count) files beyond the six"
 
         [string] $detail = ($extra | Sort-Object) -join "`n"
         [string] $because = "waiting on allocation.toml section 3b:`n$detail"
@@ -313,7 +313,7 @@ Describe 'ADR-0020: six architecture documents' {
         # Five, not six. identity-by-technology.md is the sixth and it moves to
         # xmip-core-authenticate per allocation.toml section 3, so requiring it
         # here would fail the moment Distribute succeeds.
-        [string] $architecture = Join-Path $script:Root 'docs/architecture'
+        [string] $architecture = Join-Path $script:Root 'doc/architecture'
 
         [string[]] $required = @(
             'runtime-model.md'
