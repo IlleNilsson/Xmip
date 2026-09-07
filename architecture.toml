@@ -453,11 +453,14 @@ dependency = []
     [xmip.core.path.dot]
     [xmip.core.path.fhirpath]
     [xmip.core.path.index]
+    maturity = "scaffolded"
     [xmip.core.path.json-pointer]
+    maturity = "scaffolded"
     [xmip.core.path.jsonpath]
     [xmip.core.path.predicate]
     [xmip.core.path.regex]
     [xmip.core.path.xpath]
+    maturity = "scaffolded"
 
   [xmip.core.prepare]
   description = "Stream preparation stages usable before Message creation, during processing and before Send."
