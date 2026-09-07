@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-one decisions, read as one document.
+Forty-two decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -288,6 +288,24 @@ needs, and the node provides it. A native Module brings no runtime; a managed on
 brings the runtime as a dependency.**
 
 → [A Module may bring a versioned runtime, in full](ADR-0039-a-module-may-bring-a-versioned-runtime.md)
+
+### What a contract technology claims, where its versions live, and
+
+who may author one
+  contract languages
+
+**Every contract technology makes two claims. Well-formedness is a given: a
+Stream that reaches the contract is checked for being what it says it is — JSON
+that parses, XML that is well-formed, a sound EDIFACT interchange, text — every
+time, with no configuration. Conformance is also a given once the contract is
+named: a Receive or Send Location that refers to a contract with a schema,
+pattern, layout, rules or message type bound has every Stream validated against
+it, and each departure is reported with where it happened and what refused it.
+Versions of a contract language live together in that technology's repository.
+A contract may be authored in any of the estate's declared languages; there is
+no JavaScript.**
+
+→ [A contract holds well-formedness always and conformance when named, in full](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)
 
 ---
 
@@ -584,6 +602,8 @@ You have a word. This gives you the decision that governs it.
 
 | Concept | Decided by |
 | --- | --- |
+| a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
+| a contract version | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
 | ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | ACME, Let's Encrypt | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
@@ -601,6 +621,7 @@ You have a word. This gives you the decision that governs it.
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
+| conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
@@ -672,6 +693,7 @@ You have a word. This gives you the decision that governs it.
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
@@ -737,3 +759,4 @@ is nowhere else.
 | [0039](ADR-0039-a-module-may-bring-a-versioned-runtime.md) | A Module may bring a versioned runtime | |
 | [0040](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) | Xmip retains and archives, it does not delete | |
 | [0041](ADR-0041-health-is-a-mood-and-does-not-propagate.md) | Health is a mood and does not propagate | |
+| [0042](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) | A contract holds well-formedness always and conformance when named | |
