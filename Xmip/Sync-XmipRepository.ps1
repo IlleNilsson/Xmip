@@ -58,7 +58,7 @@ function Sync-XmipRepository {
         [ValidateNotNullOrEmpty()]
         [string] $Push,
 
-        # Executes docs/planning/allocation.toml: puts every document and every
+        # Executes doc/planning/allocation.toml: puts every document and every
         # source file in the repository that owns it. Local only. It stages and
         # commits in each working copy and pushes nothing, so the whole estate
         # can be read before any of it leaves the machine.
@@ -66,7 +66,7 @@ function Sync-XmipRepository {
         [switch] $Distribute,
 
         [Parameter(ParameterSetName = 'Distribute')]
-        [string] $AllocationPath = (Join-Path (Get-XmipRepositoryRoot) 'docs/planning/allocation.toml'),
+        [string] $AllocationPath = (Join-Path (Get-XmipRepositoryRoot) 'doc/planning/allocation.toml'),
 
         [Parameter(ParameterSetName = 'Distribute')]
         [string] $SourcePath = ((Get-XmipRepositoryRoot)),

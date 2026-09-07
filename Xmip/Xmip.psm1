@@ -13,7 +13,7 @@
     The tree is the data. xmip.core.transport.ftp is xmip-core-transport-ftp:
     dots become hyphens and nothing else happens.
 
-    Style: docs/governance/powershell-style.md
+    Style: doc/governance/powershell-style.md
 #>
 
 Set-StrictMode -Version Latest

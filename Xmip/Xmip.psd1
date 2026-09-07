@@ -63,7 +63,7 @@
             Tags         = @('xmip', 'integration', 'estate', 'devops')
             LicenseUri   = 'https://www.gnu.org/licenses/agpl-3.0.html'
             ProjectUri   = 'https://github.com/IlleNilsson/Xmip'
-            ReleaseNotes = 'See docs/decisions for the record of what changed and why.'
+            ReleaseNotes = 'See doc/decisions for the record of what changed and why.'
         }
     }
 }

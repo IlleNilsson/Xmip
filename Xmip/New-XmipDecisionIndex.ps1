@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Generates docs/decisions/README.md from the decision records.
+    Generates doc/decisions/README.md from the decision records.
 
 .DESCRIPTION
     The index used to be written by hand, and it admitted so in a closing
@@ -28,7 +28,7 @@
     said twenty-two, and there were twenty-five — and two records had no entry at
     all. All four numbers came from the same cause.
 
-    Style: docs/governance/powershell-style.md
+    Style: doc/governance/powershell-style.md
 #>
 
 # The six themes, in reading order. This is the index's own shape rather than
@@ -210,7 +210,7 @@ function Get-XmipDecisionRecord {
     )
 
     if ([string]::IsNullOrWhiteSpace($DecisionRoot)) {
-        $DecisionRoot = Join-Path (Get-XmipRepositoryRoot) 'docs/decisions'
+        $DecisionRoot = Join-Path (Get-XmipRepositoryRoot) 'doc/decisions'
     }
 
     [System.IO.FileInfo[]] $file = @(
@@ -542,7 +542,7 @@ function New-XmipIndexClosing {
 function New-XmipDecisionIndex {
     <#
         .SYNOPSIS
-            Builds docs/decisions/README.md from the records.
+            Builds doc/decisions/README.md from the records.
 
         .DESCRIPTION
             Returns the index as text. Reporting is the default and needs no
@@ -576,7 +576,7 @@ function New-XmipDecisionIndex {
     $ErrorActionPreference = 'Stop'
 
     if ([string]::IsNullOrWhiteSpace($DecisionRoot)) {
-        $DecisionRoot = Join-Path (Get-XmipRepositoryRoot) 'docs/decisions'
+        $DecisionRoot = Join-Path (Get-XmipRepositoryRoot) 'doc/decisions'
     }
 
     [PSCustomObject[]] $record = @(Get-XmipDecisionRecord -DecisionRoot $DecisionRoot)

@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    docs/governance/powershell-style.md states the rules. This file is what
+    doc/governance/powershell-style.md states the rules. This file is what
     makes them rules rather than preferences.
 
     Everything here is measured with the PowerShell parser or with PowerShell's
@@ -608,7 +608,7 @@ Describe 'PowerShell style, section 2: functions' {
 
 Describe 'The style document describes what is enforced' {
     It 'names this file as the thing that enforces it' {
-        [string] $path = Join-Path $script:Root 'docs/governance/powershell-style.md'
+        [string] $path = Join-Path $script:Root 'doc/governance/powershell-style.md'
         [string] $style = Get-Content -LiteralPath $path -Raw
 
         # The failure that prompted this test: section 6 named a file that did
@@ -617,7 +617,7 @@ Describe 'The style document describes what is enforced' {
     }
 
     It 'states the same line length this file enforces' {
-        [string] $path = Join-Path $script:Root 'docs/governance/powershell-style.md'
+        [string] $path = Join-Path $script:Root 'doc/governance/powershell-style.md'
         [string] $style = Get-Content -LiteralPath $path -Raw
 
         $style | Should -Match ([string] $script:MaximumLineLength)
@@ -641,7 +641,7 @@ Describe 'The style document describes what is enforced' {
         [int] $gates = ([regex]::Matches($source, 'Should\s+-Be\s+0\s')).Count
 
         [string] $style = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'docs/governance/powershell-style.md'
+            Join-Path $script:Root 'doc/governance/powershell-style.md'
         )
 
         # Rows of the enforcement table whose last column is a bare "yes".

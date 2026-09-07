@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0016 (submodule composition), ADR-0028 (the Xmip Playground),
-  ADR-0011 (module and repository naming), docs/architecture/repository-model.md
+  ADR-0011 (module and repository naming), doc/architecture/repository-model.md
 
 ## In brief
 

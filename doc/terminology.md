@@ -3,8 +3,8 @@
 Xmip uses one term for one concept, in code, configuration, documentation and
 diagnostics.
 
-This is the only vocabulary. `docs/glossary.md` was empty and is deleted.
-`docs/architecture/glossary.md` was 363 lines written under the Interchange
+This is the only vocabulary. `doc/glossary.md` was empty and is deleted.
+`doc/architecture/glossary.md` was 363 lines written under the Interchange
 vocabulary that ADR-0013 replaced; everything in it that survives is below, and
 the file is deleted. If a term is not here, it is not defined.
 

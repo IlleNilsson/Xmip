@@ -1,6 +1,6 @@
 #Requires -Version 7.6.5
 
-# Wording, not length. The estate's names are settled (docs/terminology.md);
+# Wording, not length. The estate's names are settled (doc/terminology.md);
 # this test keeps a settled-but-overloaded word from drifting back into
 # ambiguity. ADR-0035.
 #
@@ -16,7 +16,7 @@
 # do), not a concept left ambiguous, so it does not count.
 
 BeforeAll {
-    $script:DocsRoot = (Resolve-Path (Join-Path $PSScriptRoot '..' 'docs')).Path
+    $script:DocsRoot = (Resolve-Path (Join-Path $PSScriptRoot '..' 'doc')).Path
 
     # Built in pieces so each rule is legible and no line runs long.
     $mtn = '(?<!["`*])'                                       # not a mention, before

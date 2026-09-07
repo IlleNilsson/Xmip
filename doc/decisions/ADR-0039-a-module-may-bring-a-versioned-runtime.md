@@ -4,7 +4,7 @@
 - Date: 2026-09-06
 - Related: ADR-0012 (the module boundary), ADR-0018 (the Xmip Service and the Host
   Service), ADR-0022 (identity contexts and host processes), ADR-0025 (when a
-  Module loads), docs/architecture/module-model.md
+  Module loads), doc/architecture/module-model.md
 
 ## In brief
 

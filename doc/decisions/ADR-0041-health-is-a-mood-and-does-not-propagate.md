@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0027 (the operator boundary, amendment 2026-09-05 "three states,
-  no fourth"), ADR-0028 (the Playground), docs/architecture/observability-model.md
+  no fourth"), ADR-0028 (the Playground), doc/architecture/observability-model.md
 
 ## In brief
 

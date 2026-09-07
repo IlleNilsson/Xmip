@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    docs/governance/rust-style.md states the rules. This file is what makes them
+    doc/governance/rust-style.md states the rules. This file is what makes them
     rules rather than preferences.
 
     Only one thing is gated: how long a file's production code is. Function
@@ -236,7 +236,7 @@ Describe 'Rust style, section 2: tests are measured separately' {
 
 Describe 'The style document describes what is enforced' {
     BeforeAll {
-        $script:Document = Get-Content (Join-Path $script:Root 'docs/governance/rust-style.md') -Raw
+        $script:Document = Get-Content (Join-Path $script:Root 'doc/governance/rust-style.md') -Raw
     }
 
     It 'names this file as the thing that enforces it' {

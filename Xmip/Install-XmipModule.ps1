@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    Dot-sourced by Xmip.psm1. Style: docs/governance/powershell-style.md
+    Dot-sourced by Xmip.psm1. Style: doc/governance/powershell-style.md
 #>
 
 function Get-XmipUserModulePath {

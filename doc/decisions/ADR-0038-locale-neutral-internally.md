@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0021 (current platforms), ADR-0031 (configuration is TOML),
-  docs/architecture/market-position.md
+  doc/architecture/market-position.md
 
 ## In brief
 

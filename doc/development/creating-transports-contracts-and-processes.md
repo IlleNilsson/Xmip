@@ -1,8 +1,8 @@
 # Creating transports, contracts and processes
 
 A task-oriented guide for a developer adding to Xmip. It assumes you have read
-`docs/architecture/repository-model.md` (why modules mount where they do) and
-`docs/governance/rust-style.md` (the rules the tests enforce).
+`doc/architecture/repository-model.md` (why modules mount where they do) and
+`doc/governance/rust-style.md` (the rules the tests enforce).
 
 ## The mental model: two are code, one is configuration
 
@@ -198,8 +198,8 @@ progress.
 | Contract | `Contract` (`contract/src/lib.rs`) | `contract/modules/csv/` |
 | Xmip Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
 
-- **Repository model:** `docs/architecture/repository-model.md`
-- **What to build and in what order:** `docs/planning/open-problems.md`
+- **Repository model:** `doc/architecture/repository-model.md`
+- **What to build and in what order:** `doc/planning/open-problems.md`
 - **How work lands:** `CLAUDE.md`, "How work lands"; the pipeline is
   `Xmip/Publish-XmipChange.ps1`
 - **Testing a transport or contract for real:** the Playground, ADR-0028

@@ -105,7 +105,7 @@ Healthcare interoperability was $4.8B in 2025 and is projected past $7.5B by
 | 2028-01-01 | Germany: all companies. Belgium adds continuous transaction reporting, likely 5-corner. |
 | 2030 | ViDA: EN 16931 structured invoices and near-real-time cross-border B2B reporting. |
 
-Peppol runs on **AS4**. `xmip-core-authenticate/docs/identity-by-technology.md`
+Peppol runs on **AS4**. `xmip-core-authenticate/doc/identity-by-technology.md`
 added `xmip-core-transport-as2` and `xmip-core-transport-as4` to the manifest and
 recorded them as absent. That was the right call before there was a timetable;
 there is now a legislated one.

@@ -13,7 +13,7 @@ both against reality.
 ## Requirements
 
 Xmip tracks current platforms and does not carry compatibility with superseded
-ones — [ADR-0021](docs/decisions/ADR-0021-current-platforms-only.md).
+ones — [ADR-0021](doc/decisions/ADR-0021-current-platforms-only.md).
 
 | | Required | Notes |
 | --- | --- | --- |
@@ -122,8 +122,8 @@ and needs no ceremony to reach.
 | `Get-XmipManifest` | Reads `architecture.toml` and flattens the estate. |
 | `Test-XmipManifest` | Validates naming, crates, maturity and dependencies. |
 | `Get-XmipRepositoryRoot` | Finds the repository by walking up to `architecture.toml`. |
-| `Get-XmipDecisionRecord` | Reads `docs/decisions/` and returns what each record declares about itself. |
-| `New-XmipDecisionIndex` | Generates `docs/decisions/README.md` from the records. `-Save` writes it. |
+| `Get-XmipDecisionRecord` | Reads `doc/decisions/` and returns what each record declares about itself. |
+| `New-XmipDecisionIndex` | Generates `doc/decisions/README.md` from the records. `-Save` writes it. |
 
 ### Reconcile the estate
 
@@ -161,7 +161,7 @@ Sync-XmipRepository -Status                # what is dirty, ahead, behind
 Sync-XmipRepository -Pull
 Sync-XmipRepository -Branch -Create feature/thing
 Sync-XmipRepository -Push feature/thing
-Sync-XmipRepository -Distribute -WhatIf    # execute docs/planning/allocation.toml
+Sync-XmipRepository -Distribute -WhatIf    # execute doc/planning/allocation.toml
 ```
 
 Clones land *beside* this repository, in `../xmip-repositories`, not inside it.
@@ -180,47 +180,47 @@ modules/              the Rust modules, mounted as git submodules
 src/                  this repository's own Rust facade
 tests/                Pester
 deploy/               Ansible and DSC node configuration
-docs/                 see below
+doc/                 see below
 ```
 
 ### Documentation
 
 One document per subject, and no versions in filenames —
-[ADR-0020](docs/decisions/ADR-0020-documentation-structure.md).
+[ADR-0020](doc/decisions/ADR-0020-documentation-structure.md).
 
 | Document | Answers |
 | --- | --- |
-| [`docs/terminology.md`](docs/terminology.md) | what every Xmip word means |
-| [`architecture/runtime-model.md`](docs/architecture/runtime-model.md) | what Xmip does at runtime |
-| [`architecture/repository-model.md`](docs/architecture/repository-model.md) | why the estate is shaped this way |
-| [`architecture/module-model.md`](docs/architecture/module-model.md) | the module boundary, loading and isolation |
-| [`architecture/deployment-model.md`](docs/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
-| [`architecture/observability-model.md`](docs/architecture/observability-model.md) | audit, logs, traces, retention, observation |
-| [`docs/decisions/`](docs/decisions) | **every decision, read as one document** — by subject, not by number |
+| [`doc/terminology.md`](doc/terminology.md) | what every Xmip word means |
+| [`architecture/runtime-model.md`](doc/architecture/runtime-model.md) | what Xmip does at runtime |
+| [`architecture/repository-model.md`](doc/architecture/repository-model.md) | why the estate is shaped this way |
+| [`architecture/module-model.md`](doc/architecture/module-model.md) | the module boundary, loading and isolation |
+| [`architecture/deployment-model.md`](doc/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
+| [`architecture/observability-model.md`](doc/architecture/observability-model.md) | audit, logs, traces, retention, observation |
+| [`doc/decisions/`](doc/decisions) | **every decision, read as one document** — by subject, not by number |
 
 Two documents now live with the repository that owns them, reachable through the
 submodules:
 
 | Document | Where |
 | --- | --- |
-| identity, per protocol, against the standards | `modules/capabilities/authenticate/docs/` |
-| the normative ABI specification | `modules/foundation/abi/docs/` |
+| identity, per protocol, against the standards | `modules/capabilities/authenticate/doc/` |
+| the normative ABI specification | `modules/foundation/abi/doc/` |
 
 Governance:
 
 | Document | Answers |
 | --- | --- |
-| [`governance/powershell-style.md`](docs/governance/powershell-style.md) | how the PowerShell here is written |
-| [`governance/rust-style.md`](docs/governance/rust-style.md) | where the Rust here lives, and why length is not the measure |
-| [`governance/release-model.md`](docs/governance/release-model.md) | Continuum, Linear, and how work reaches them |
+| [`governance/powershell-style.md`](doc/governance/powershell-style.md) | how the PowerShell here is written |
+| [`governance/rust-style.md`](doc/governance/rust-style.md) | where the Rust here lives, and why length is not the measure |
+| [`governance/release-model.md`](doc/governance/release-model.md) | Continuum, Linear, and how work reaches them |
 
 Development:
 
 | Document | Answers |
 | --- | --- |
-| [`development/creating-transports-contracts-and-processes.md`](docs/development/creating-transports-contracts-and-processes.md) | how a developer adds a transport, a contract or a process |
+| [`development/creating-transports-contracts-and-processes.md`](doc/development/creating-transports-contracts-and-processes.md) | how a developer adds a transport, a contract or a process |
 
-`docs/planning/` is working notes and is explicitly **not** authoritative.
+`doc/planning/` is working notes and is explicitly **not** authoritative.
 
 ---
 
@@ -229,10 +229,10 @@ Development:
 Read [CONTRIBUTING.md](CONTRIBUTING.md) and
 [GOVERNANCE.md](GOVERNANCE.md). Established architectural decisions need
 explicit permission before they change —
-[architectural-change-permission.md](docs/governance/architectural-change-permission.md).
+[architectural-change-permission.md](doc/governance/architectural-change-permission.md).
 
 Until the first Linear release, work commits directly to `main`. After it,
 development branch and pull request. The reasoning, and the trigger, are in
-[release-model.md](docs/governance/release-model.md).
+[release-model.md](doc/governance/release-model.md).
 
 Licensed [AGPL-3.0-or-later](LICENSE).

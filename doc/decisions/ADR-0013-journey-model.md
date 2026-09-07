@@ -2,8 +2,8 @@
 
 ## Status
 
-Proposed. Records the runtime lifecycle from `docs/Xmip-Architecture-Specification-v1.2.md`
-section 2, and extends `docs/architecture/message-disposition.md` with disposition at each
+Proposed. Records the runtime lifecycle from `doc/Xmip-Architecture-Specification-v1.2.md`
+section 2, and extends `doc/architecture/message-disposition.md` with disposition at each
 point of refusal.
 
 ## In brief
@@ -90,7 +90,7 @@ therefore almost always implied.
 Identity travels on the transport, on the message, or on both; the line between them, the
 per-layer authorization, and the alignment policy when they disagree are all specified in
 **ADR-0019**. They were written here first and moved once they outgrew a record about
-disposition. `docs/architecture/identity-by-technology.md` sorts the estate by that rule.
+disposition. `doc/architecture/identity-by-technology.md` sorts the estate by that rule.
 
 What remains below is what this ADR is for: what Xmip *keeps* at each point of refusal.
 

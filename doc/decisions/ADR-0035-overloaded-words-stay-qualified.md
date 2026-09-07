@@ -4,7 +4,7 @@
 - Date: 2026-09-06
 - Related: ADR-0011 (module and repository naming), ADR-0018 (the Service and the
   Host Services — the senses "Process" collides on), ADR-0030 (prefix external
-  names, not internal ones), docs/terminology.md
+  names, not internal ones), doc/terminology.md
 
 ## In brief
 
@@ -16,7 +16,7 @@
 
 **A word that collides — with the world and inside Xmip — is not remedied by
 inventing a new one. It is remedied by three things already the estate's habit:
-always use the qualified form, let `docs/terminology.md` arbitrate which sense is
+always use the qualified form, let `doc/terminology.md` arbitrate which sense is
 meant, and gate new unqualified uses with a ratchet test.** "Process" is the
 first word this governs; the same three moves handle the next.
 
@@ -25,7 +25,7 @@ first word this governs; the same three moves handle the next.
 The owner, 2026-09-06: *the naming is settled; it is conflicting, as so many
 words are in the world, not only within Xmip. Any suggestions on how to remedy
 that?* The word in hand is "Process", which names three different things —
-`docs/terminology.md` already separates them: an operating system's **System
+`doc/terminology.md` already separates them: an operating system's **System
 Process**, the master **Xmip Service** and its worker **Xmip Host Service**
 (each running as a **Host Process**), and an integration **Xmip Process** defined
 in configuration. The glossary already bans the bare word and already carries the
@@ -48,7 +48,7 @@ does not. The generic operating-system sense stays lowercase, "process". The
 estate already capitalises its domain terms (Stream, Message, Journey); this
 extends that discipline to every collision.
 
-### 2. `docs/terminology.md` is the arbiter
+### 2. `doc/terminology.md` is the arbiter
 
 When two readings are possible, the glossary decides. Each sense of an overloaded
 word has its own entry and its own qualified name there, and the "Process
@@ -58,7 +58,7 @@ at the record, not by debate.
 ### 3. A ratchet gates new unqualified uses
 
 `tests/Terminology.Tests.ps1` freezes the count of bare, unqualified "Process"
-across `docs/` at its present value and forbids growth — the same instrument as
+across `doc/` at its present value and forbids growth — the same instrument as
 the line-length ratchet in `Rust.Style.Tests.ps1`, pointed at prose. A lint
 cannot judge whether a given historical use reads clearly, so the test does not
 force the existing uses to be rewritten; it forbids a new one, and every edit to

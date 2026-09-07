@@ -186,7 +186,7 @@ is in the request envelope, readable before deserialization. A WS-Security
 header inside a SOAP envelope is message, because reading it means parsing the
 body, and Xmip does not parse content from an unauthorized sender.
 
-`docs/architecture/identity-by-technology.md` sorts the whole estate by this
+`doc/architecture/identity-by-technology.md` sorts the whole estate by this
 rule, per transport and per representation, against the standards.
 
 ### 6. Where both exist, both are recorded and neither is discarded
