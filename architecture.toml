@@ -203,7 +203,9 @@ dependency = []
   maturity = "planned"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-context"]
     [xmip.core.transport.amqp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
+    specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
     [xmip.core.transport.as2]
     description = "AS2: EDI over HTTP with S/MIME signing and encryption and signed MDN receipts. RFC 4130."
     dependency = ["xmip-core-transport-http", "xmip-core-message-multipart", "xmip-core-authenticate-certificate"]
@@ -211,22 +213,30 @@ dependency = []
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
     dependency = ["xmip-core-transport-http", "xmip-core-logic-soap", "xmip-core-authenticate-certificate"]
     [xmip.core.transport.ftp]
+    maturity = "scaffolded"
     description = "FTP and FTPS transport implementation."
     dependency = ["xmip-core-transport-tcp"]
+    specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
+    specification = "IETF RFC 3501: select, search, fetch, flag deleted, expunge, append"
     [xmip.core.transport.mllp]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
+    specification = "OASIS MQTT 3.1.1, QoS 0 and 1"
     [xmip.core.transport.pop3]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
+    specification = "IETF RFC 1939, receive only; the maildrop lock is the native claim"
     [xmip.core.transport.sftp]
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.smtp]
@@ -250,6 +260,7 @@ dependency = []
     dependency = ["xmip-core-transport-can-bus"]
     specification = "CiA 301"
     [xmip.core.transport.coap]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
     specification = "IETF RFC 7252"
     [xmip.core.transport.cotp]
@@ -265,11 +276,13 @@ dependency = []
     dependency = ["xmip-core-transport-tcp"]
     specification = "NEMA PS3, DIMSE upper layer over TCP"
     [xmip.core.transport.dnp3]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp", "xmip-core-transport-serial"]
-    specification = "IEEE 1815"
+    specification = "IEEE 1815: link frames with CRC, transport segments, unconfirmed user data over TCP"
     [xmip.core.transport.dns]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp", "xmip-core-transport-tcp"]
-    specification = "IETF RFC 1035, dynamic update RFC 2136, zone transfer over TCP"
+    specification = "IETF RFC 1035, dynamic update RFC 2136 carrying TXT payloads, EDNS RFC 6891"
     [xmip.core.transport.ethercat]
     dependency = ["xmip-core-transport-ethernet"]
     specification = "IEC 61158 Type 12, IEC 61784-2 communication profile CPF 12"
@@ -284,8 +297,9 @@ dependency = []
     dependency = ["xmip-core-transport-serial"]
     specification = "FieldComm Group HART, IEC 61784-1 communication profile CPF 9"
     [xmip.core.transport.iec-60870-5-104]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
-    specification = "IEC 60870-5-104"
+    specification = "IEC 60870-5-104: APCI, STARTDT and TESTFR, I frames acknowledged one at a time"
     [xmip.core.transport.iec-61850]
     dependency = ["xmip-core-transport-cotp", "xmip-core-transport-ethernet"]
     specification = "IEC 61850. MMS over COTP, GOOSE and Sampled Values on raw Ethernet"
@@ -339,7 +353,9 @@ dependency = []
     dependency = ["xmip-core-transport-udp"]
     specification = "UPnP Device Architecture, Simple Service Discovery Protocol"
     [xmip.core.transport.syslog]
-    specification = "IETF RFC 5424, over UDP or TCP"
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-udp", "xmip-core-transport-tcp"]
+    specification = "IETF RFC 5424, over UDP or TCP with RFC 6587 octet counting"
     [xmip.core.transport.thread]
     specification = "Thread Group Thread, IPv6 over IEEE 802.15.4"
     [xmip.core.transport.zigbee]
@@ -360,6 +376,9 @@ dependency = []
     [xmip.core.transport.google-pub-sub]
     [xmip.core.transport.ibm-mq]
     [xmip.core.transport.kafka]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C"
     [xmip.core.transport.modbus]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
@@ -369,6 +388,9 @@ dependency = []
     [xmip.core.transport.mysql]
     [xmip.core.transport.named-pipe]
     [xmip.core.transport.nats]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "NATS client protocol, core at-most-once"
     [xmip.core.transport.nats-jetstream]
     dependency = ["xmip-core-transport-nats"]
     specification = "NATS JetStream, durable streams and consumers over NATS"
@@ -378,6 +400,9 @@ dependency = []
     [xmip.core.transport.postgresql]
     [xmip.core.transport.rabbitmq]
     [xmip.core.transport.redis-streams]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "Redis Streams over RESP2: XADD, XRANGE, XREAD"
     [xmip.core.transport.s3]
     [xmip.core.transport.serial]
     maturity = "scaffolded"
@@ -406,10 +431,16 @@ dependency = []
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
     [xmip.core.contract.edi-x12]
+    maturity = "scaffolded"
+    specification = "ASC X12 interchange, group and transaction set envelopes; every version in this repository"
     [xmip.core.contract.hl7-v2]
     maturity = "scaffolded"
     [xmip.core.contract.asyncapi]
+    maturity = "scaffolded"
+    specification = "AsyncAPI 2.x and 3.x in JSON; YAML is the next layer"
     [xmip.core.contract.avro]
+    maturity = "scaffolded"
+    specification = "Apache Avro 1.11 schema, binary encoding and object container file"
     [xmip.core.contract.c]
     maturity = "scaffolded"
     primaryLanguage = "c"
@@ -431,13 +462,19 @@ dependency = []
     maturity = "scaffolded"
     primaryLanguage = "go"
     [xmip.core.contract.graphql-schema]
+    maturity = "scaffolded"
+    specification = "GraphQL specification October 2021: the document grammar, held at the root to a schema"
     [xmip.core.contract.java]
     maturity = "scaffolded"
     primaryLanguage = "java"
     [xmip.core.contract.json-schema]
     maturity = "scaffolded"
     [xmip.core.contract.openapi]
+    maturity = "scaffolded"
+    specification = "OpenAPI 3.x and Swagger 2.0 in JSON; YAML is the next layer"
     [xmip.core.contract.protobuf]
+    maturity = "scaffolded"
+    specification = "Protocol Buffers wire format and the proto3 language, imports not followed"
     [xmip.core.contract.python]
     maturity = "scaffolded"
     primaryLanguage = "python"
@@ -451,6 +488,8 @@ dependency = []
     primaryLanguage = "rust"
     [xmip.core.contract.sql]
     [xmip.core.contract.wsdl]
+    maturity = "scaffolded"
+    specification = "WSDL 1.1 and 2.0, every reference landing"
     [xmip.core.contract.xml-schema]
     maturity = "scaffolded"
 
