@@ -446,15 +446,18 @@ dependency = []
   description = "Method and operation semantics layered over transport and message representation."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-contract"]
     [xmip.core.logic.grpc]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-http", "xmip-core-message-protobuf", "xmip-core-contract-protobuf"]
     [xmip.core.logic.http-api]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-http", "xmip-core-contract-openapi"]
     [xmip.core.logic.matter]
     specification = "Connectivity Standards Alliance Matter"
     [xmip.core.logic.soap]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-http", "xmip-core-message-xml", "xmip-core-contract-wsdl"]
 
   [xmip.core.path]
