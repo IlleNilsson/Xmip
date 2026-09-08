@@ -10,3 +10,16 @@ management_path = "{{ xmip_install_root }}/data/management.sqlite"
 
 [modules]
 load_from = "{{ xmip_install_root }}/modules"
+# The technologies this node carries and which of them start. Rendered from
+# xmip_modules in the role's defaults; a playbook overrides the list for a
+# node that carries less.
+present = [
+{% for module in xmip_modules %}
+  "{{ module.name }}",
+{% endfor %}
+]
+started = [
+{% for module in xmip_modules if module.start %}
+  "{{ module.name }}",
+{% endfor %}
+]
