@@ -241,6 +241,8 @@ dependency = []
     [xmip.core.transport.activemq]
     [xmip.core.transport.aws-kinesis]
     [xmip.core.transport.bacnet]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-udp"]
     specification = "ASHRAE 135, also ISO 16484-5"
     [xmip.core.transport.bluetooth]
     specification = "Bluetooth SIG Core Specification"
@@ -349,6 +351,8 @@ dependency = []
     [xmip.core.transport.azure-event-hubs]
     [xmip.core.transport.azure-service-bus]
     [xmip.core.transport.can-bus]
+    maturity = "scaffolded"
+    specification = "ISO 11898, classical CAN frames; SocketCAN on Linux, an in-process loopback bus everywhere"
     [xmip.core.transport.file]
     maturity = "scaffolded"
     specification = "Platform file-system behaviour and the Rust standard library file APIs"
@@ -357,6 +361,9 @@ dependency = []
     [xmip.core.transport.ibm-mq]
     [xmip.core.transport.kafka]
     [xmip.core.transport.modbus]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "Modbus Application Protocol V1.1b3 and Modbus Messaging on TCP/IP V1.0b"
     [xmip.core.transport.msmq]
     [xmip.core.transport.mssql]
     [xmip.core.transport.mysql]
@@ -373,6 +380,8 @@ dependency = []
     [xmip.core.transport.redis-streams]
     [xmip.core.transport.s3]
     [xmip.core.transport.serial]
+    maturity = "scaffolded"
+    specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
     [xmip.core.transport.smb]
     [xmip.core.transport.sqlite]
     [xmip.core.transport.tcp]
