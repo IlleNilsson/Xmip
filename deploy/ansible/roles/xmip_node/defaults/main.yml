@@ -19,6 +19,10 @@ xmip_modules:
   - { name: xmip-core-transport-smtp, start: false }
   - { name: xmip-core-transport-websocket, start: false }
   - { name: xmip-core-transport-mllp, start: false }
+  - { name: xmip-core-transport-modbus, start: false }
+  - { name: xmip-core-transport-bacnet, start: false }
+  - { name: xmip-core-transport-serial, start: false }
+  - { name: xmip-core-transport-can-bus, start: false }
   # Contracts
   - { name: xmip-core-contract-csv, start: true }
   - { name: xmip-core-contract-json-schema, start: true }
