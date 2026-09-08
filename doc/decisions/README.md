@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-two decisions, read as one document.
+Forty-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -306,6 +306,20 @@ A contract may be authored in any of the estate's declared languages; there is
 no JavaScript.**
 
 → [A contract holds well-formedness always and conformance when named, in full](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)
+
+### What the Logic capability is, in one sentence, and why it is not
+
+process
+
+**A Logic technology turns a Stream that arrived on a transport into a named
+operation with typed arguments, and an operation's result back into a Stream,
+using a contract to type both. SOAP does it with a WSDL, the HTTP API with an
+OpenAPI document, gRPC with a protobuf service. Transport moves the bytes,
+process orders the work, contract types the content; Logic owns the method —
+which operation a Stream asks for, what its arguments are, and how an answer
+or a fault travels back on the same reply channel.**
+
+→ [Logic is the method, in full](ADR-0043-logic-is-the-method.md)
 
 ---
 
@@ -641,11 +655,13 @@ You have a word. This gives you the decision that governs it.
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
+| Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | managed Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
@@ -658,8 +674,10 @@ You have a word. This gives you the decision that governs it.
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
+| operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| outcome | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
@@ -689,6 +707,7 @@ You have a word. This gives you the decision that governs it.
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
+| the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
@@ -760,3 +779,4 @@ is nowhere else.
 | [0040](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) | Xmip retains and archives, it does not delete | |
 | [0041](ADR-0041-health-is-a-mood-and-does-not-propagate.md) | Health is a mood and does not propagate | |
 | [0042](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) | A contract holds well-formedness always and conformance when named | |
+| [0043](ADR-0043-logic-is-the-method.md) | Logic is the method | |

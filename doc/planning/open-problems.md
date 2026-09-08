@@ -50,21 +50,6 @@ and support burden permanently.
 to avoid: it puts a judgement back into the name, which is exactly what the manifest exists
 to prevent.
 
-## 6. `logic` has three implementations and an unclear trait
-
-Smallest capability with a plugin surface. Arrived via PR #32 and has not been stress-tested.
-
-**The test:** state the trait in one sentence. If it can't be stated without describing
-`process`, it isn't a capability.
-
-| option | effect |
-|---|---|
-| **A. Fold into `process`** | one fewer module; `process` gains method semantics |
-| **B. Keep and define the trait** | needs the one-sentence answer first |
-
-**Lean: run the test before choosing.** This is the module most likely to be a feature
-wearing module clothes.
-
 ## 7. The Operations tier is five near-identical modules
 
 `audit` 9, `report` 6, `observe` 5, `retain` 5, `archive` 5 — and their technology lists
@@ -649,6 +634,21 @@ with `cratePolicy.primaryCrateMatchesRepository`.
 **Lean: A, once the build is green.** Blast radius is small — two consumers,
 `xmip-handler-file` and `xmip-host`. And you can now verify it with `cargo build`, which you
 could not before.
+
+## 6. `logic` has three implementations and an unclear trait — **Resolved**
+
+*Resolved 2026-09-08 by ADR-0043, option B: the sentence was written and it
+names process nowhere.*
+
+A Logic technology turns a Stream that arrived on a transport into a named
+operation with typed arguments, and an operation's result back into a Stream,
+using a contract to type both. `xmip-core-logic` holds the trait, four methods
+in both directions; `soap`, `http-api` and `grpc` implement it, each its own
+repository under it.
+
+The question as it was recorded: state the trait in one sentence; if it cannot
+be stated without describing `process`, fold it into `process`. Options were A,
+fold, and B, keep and define. The lean was to run the test first; it was run.
 
 ## 18. Where does a Cluster-scope exclusiveness lease live? — **Resolved**
 
