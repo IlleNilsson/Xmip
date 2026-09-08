@@ -490,6 +490,10 @@ retires entries from stops being an order.
 - **Node configuration read and validated.** `xmip-core-configure` parses it,
   the runtime validates it (startup phases 1–3), `xmip_validate_v1` checks a
   document without applying it — the desktop editor's Validate.
+- **The desktop configuration editor.** `Xmip.Operations` opens a node TOML,
+  edits cluster, execution style, processes and locations as fields, and has
+  Validate, Save and Start node (ADR-0014, amendment 2026-09-05). This entry
+  stood as undone until 2026-09-08 while the screen existed; retired then.
 
 ```text
 1. Run a node for real                 the runtime does startup phases 1-3 —
@@ -500,22 +504,20 @@ retires entries from stops being an order.
                                        and are what the Playground needs to
                                        exercise anything. Blocked on the
                                        vocabulary question below
-2. The desktop configuration editor    xmip_validate_v1 exists; the editor
-                                       screen — open a node TOML, edit as
-                                       fields, Validate, Save — does not.
-                                       Desktop and DSC author; web only watches
-3. Protocol implementations            file, http, tcp, udp, smtp exist in the
-                                       transport crate; 79 technology
-                                       repositories are declared and empty
-4. Journey replay end to end           problem 19, and the half of ADR-0024
+2. Protocol implementations            twenty-four transports and twenty-three
+                                       contracts each in their own repository
+                                       (2026-09-08); sixty transport
+                                       repositories, the sql contract and every
+                                       route technology still declared and empty
+3. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
-5. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
+4. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
                                        says where it belongs, not what it is
-6. xmip-core-webapi                    declared, mounted nowhere, one orphan
+5. xmip-core-webapi                    declared, mounted nowhere, one orphan
                                        gitdir — decide it lives or retire it
-7. Cross-compilation                   four declared targets, verified on host
+6. Cross-compilation                   four declared targets, verified on host
                                        only
-8. Organisation and second owner       problem 15, independent of all the above
+7. Organisation and second owner       problem 15, independent of all the above
 ```
 
 **A decision blocks item 1.** The owner raised, 2026-09-05, that "Process" is

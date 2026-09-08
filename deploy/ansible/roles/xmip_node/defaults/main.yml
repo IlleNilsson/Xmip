@@ -23,6 +23,19 @@ xmip_modules:
   - { name: xmip-core-transport-bacnet, start: false }
   - { name: xmip-core-transport-serial, start: false }
   - { name: xmip-core-transport-can-bus, start: false }
+  - { name: xmip-core-transport-mqtt, start: false }
+  - { name: xmip-core-transport-nats, start: false }
+  - { name: xmip-core-transport-syslog, start: false }
+  - { name: xmip-core-transport-coap, start: false }
+  - { name: xmip-core-transport-ftp, start: false }
+  - { name: xmip-core-transport-pop3, start: false }
+  - { name: xmip-core-transport-redis-streams, start: false }
+  - { name: xmip-core-transport-dns, start: false }
+  - { name: xmip-core-transport-imap, start: false }
+  - { name: xmip-core-transport-amqp, start: false }
+  - { name: xmip-core-transport-iec-60870-5-104, start: false }
+  - { name: xmip-core-transport-dnp3, start: false }
+  - { name: xmip-core-transport-kafka, start: false }
   # Contracts
   - { name: xmip-core-contract-csv, start: true }
   - { name: xmip-core-contract-json-schema, start: true }
@@ -33,6 +46,13 @@ xmip_modules:
   - { name: xmip-core-contract-edi-edifact, start: false }
   - { name: xmip-core-contract-hl7-v2, start: false }
   - { name: xmip-core-contract-fhir, start: false }
+  - { name: xmip-core-contract-edi-x12, start: false }
+  - { name: xmip-core-contract-avro, start: false }
+  - { name: xmip-core-contract-graphql-schema, start: false }
+  - { name: xmip-core-contract-protobuf, start: false }
+  - { name: xmip-core-contract-wsdl, start: false }
+  - { name: xmip-core-contract-openapi, start: false }
+  - { name: xmip-core-contract-asyncapi, start: false }
   # Logic
   - { name: xmip-core-logic-http-api, start: true }
   - { name: xmip-core-logic-soap, start: false }
