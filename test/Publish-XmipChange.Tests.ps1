@@ -606,3 +606,44 @@ Describe 'A module the estate is about to pin is on origin first' {
         $function.Extent.Text | Should -Not -Match 'git -C \$path commit'
     }
 }
+
+Describe 'Test-XmipSelfVerifyingModule' {
+    # ADR-0042 decision 3 admits a contract module in C, Go, Java or Python,
+    # none of which this tool builds itself. Such a repository carries a
+    # verify.ps1 and its exit code is the verdict; this proves the tool reads
+    # that verdict rather than the script's chatter.
+    BeforeAll {
+        $script:Self = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-self-$([guid]::NewGuid())"
+        foreach ($case in @{ passes = 0; fails = 3 }.GetEnumerator()) {
+            $dir = Join-Path $script:Self $case.Key
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+            Set-Content -LiteralPath (Join-Path $dir 'verify.ps1') -Value "exit $($case.Value)"
+        }
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Self -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'passes a module whose verify.ps1 exits zero' {
+        InModuleScope Xmip -Parameters @{ Path = (Join-Path $script:Self 'passes') } {
+            param($Path)
+
+            Test-XmipSelfVerifyingModule -Path $Path -Name 'passes' | Should -BeTrue
+        }
+    }
+
+    It 'fails a module whose verify.ps1 exits non-zero' {
+        InModuleScope Xmip -Parameters @{ Path = (Join-Path $script:Self 'fails') } {
+            param($Path)
+
+            Test-XmipSelfVerifyingModule -Path $Path -Name 'fails' | Should -BeFalse
+        }
+    }
+
+    It 'counts a verify.ps1 as verifiable in the landing order' {
+        # The skip message names all three ways to be verifiable, so a reader
+        # of a SKIPPED line knows what would have made it land.
+        $script:Ast.Extent.Text | Should -Match 'no Cargo\.toml, no project and no verify\.ps1'
+    }
+}

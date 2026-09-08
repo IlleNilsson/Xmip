@@ -365,13 +365,21 @@ function Publish-XmipChange {
             $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
             $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
 
-            [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or @(
+            # A third way, 2026-09-07: a repository in a language the tool
+            # does not know — C, Go, Java, Python (ADR-0042 decision 3) —
+            # verifies itself through a verify.ps1 at its root, and its exit
+            # code is the verdict. The tool learns one convention rather than
+            # one toolchain per language.
+            $selfVerify = Join-Path -Path $modulePath -ChildPath 'verify.ps1'
+
+            [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
+                (Test-Path -LiteralPath $selfVerify) -or @(
                 Get-ChildItem -Path $modulePath -Filter '*.csproj' -Recurse -File |
                     Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
             ).Count -gt 0
 
             if (-not $All -and -not $verifiable) {
-                $why = "SKIPPED. $module has no Cargo.toml and no project to verify."
+                $why = "SKIPPED. $module has no Cargo.toml, no project and no verify.ps1 to verify."
                 Write-Host $why -ForegroundColor DarkGray
                 $skipped.Add($module)
 
@@ -830,6 +838,53 @@ function Test-XmipDotnetModule {
     return (Test-XmipPesterSuite -Path $Path -Name $Name -Built ($project.Count -gt 0))
 }
 
+function Test-XmipSelfVerifyingModule {
+    <#
+        .SYNOPSIS
+            Runs a module's own verify.ps1 and reports whether it passed.
+
+        .DESCRIPTION
+            ADR-0042 decision 3 admits a contract module in C, C++, Go, Java
+            or Python over the C ABI. Teaching this tool one toolchain per
+            language would put five build systems in one file; instead a
+            repository in such a language carries a verify.ps1 at its root
+            that builds and tests with whatever prerequisite.toml declares for
+            it, and its exit code is the verdict. The script runs in the
+            module's directory, in a fresh pwsh so it cannot lean on this
+            module's state, and every line it writes is shown as it arrives.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    [string] $script = Join-Path -Path $Path -ChildPath 'verify.ps1'
+
+    Write-Host "   verify.ps1..." -ForegroundColor DarkGray
+
+    Push-Location -LiteralPath $Path
+
+    try {
+        & pwsh -NoProfile -NonInteractive -File $script 2>&1 | ForEach-Object { Write-Host $_ }
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "   FAILED. $Name verify.ps1 exited $LASTEXITCODE." -ForegroundColor Red
+
+            return $false
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    return $true
+}
+
 function Test-XmipPesterSuite {
     <#
         .SYNOPSIS
@@ -956,8 +1011,24 @@ function Test-XmipModule {
                     Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
             ).Count -gt 0
 
+            $selfVerify = Join-Path -Path $path -ChildPath 'verify.ps1'
+
+            if (-not $dotnet -and (Test-Path -LiteralPath $selfVerify)) {
+                # A repository that verifies itself: its verify.ps1 builds and
+                # tests with whatever toolchain its language needs, declared in
+                # prerequisite.toml, and its exit code is the verdict.
+                Write-Host "== $name (verify.ps1)" -ForegroundColor Cyan
+
+                if (-not (Test-XmipSelfVerifyingModule -Path $path -Name $name)) {
+                    $name
+                }
+
+                continue
+            }
+
             if (-not $dotnet) {
-                [string] $why = "== $name (no Cargo.toml and no project, nothing can test it)"
+                [string] $why = "== $name (no Cargo.toml, no project and no verify.ps1, " +
+                    'nothing can test it)'
 
                 Write-Host $why -ForegroundColor DarkGray
 

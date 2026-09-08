@@ -178,3 +178,87 @@ brew = "dotnet-sdk"
 
 [prerequisite.dotnet.linux]
 fallback = "https://dot.net/v1/dotnet-install.sh"
+
+# ---------------------------------------------------------------------------
+# Contract languages. ADR-0042 decision 3: a contract may be authored in any
+# declared language over the C ABI (ADR-0012). Each language below is the
+# toolchain that builds and tests its xmip-core-contract-<language> repository,
+# and xgit runs that repository's verify.ps1 with it. Optional: a developer who
+# never touches that language need not carry it, but xgit skips what it cannot
+# verify and says so.
+
+[prerequisite.c]
+role = "developer"
+optional = true
+probe = "zig version"
+note = "One compiler for C and C++ on every platform: zig cc and zig c++ are clang with the platform libc bundled, so the c and cpp contract repositories, and the C shims of the java and python ones, build the same way on Windows, macOS and Linux with no Visual Studio, Xcode or gcc dependency. Chosen 2026-09-07 over a per-platform compiler because the build has to be one line in verify.ps1."
+
+[prerequisite.c.windows]
+winget = "zig.zig"
+
+[prerequisite.c.macos]
+brew = "zig"
+
+[prerequisite.c.linux]
+apt = "zig"
+dnf = "zig"
+pacman = "zig"
+fallback = "https://ziglang.org/download/"
+
+[prerequisite.go]
+role = "developer"
+optional = true
+probe = "go version"
+minimum = "1.22"
+note = "For xmip-core-contract-go: cgo exports the module entrypoint, built as a C shared library. cgo needs a C compiler, which is the zig entry above (CC=zig cc)."
+
+[prerequisite.go.windows]
+winget = "GoLang.Go"
+elevation = true
+note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation."
+
+[prerequisite.go.macos]
+brew = "go"
+
+[prerequisite.go.linux]
+apt = "golang-go"
+dnf = "golang"
+pacman = "go"
+
+[prerequisite.java]
+role = "developer"
+optional = true
+probe = "javac -version"
+minimum = "21"
+note = "For xmip-core-contract-java: a C shim hosts the JVM in-process through JNI and forwards the contract vtable (owner, 2026-09-07). The JDK supplies jni.h at build time and jvm at run time; the shim loads jvm dynamically, so nothing links against the JDK."
+
+[prerequisite.java.windows]
+winget = "Microsoft.OpenJDK.21"
+elevation = true
+note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation."
+
+[prerequisite.java.macos]
+brew = "openjdk@21"
+
+[prerequisite.java.linux]
+apt = "openjdk-21-jdk"
+dnf = "java-21-openjdk-devel"
+pacman = "jdk21-openjdk"
+
+[prerequisite.python]
+role = "developer"
+optional = true
+probe = "python --version"
+minimum = "3.12"
+note = "For xmip-core-contract-python: a C shim embeds CPython in-process and forwards the contract vtable (owner, 2026-09-07). Python.h at build time; the interpreter library at run time."
+
+[prerequisite.python.windows]
+winget = "Python.Python.3.13"
+
+[prerequisite.python.macos]
+brew = "python@3.13"
+
+[prerequisite.python.linux]
+apt = "python3-dev"
+dnf = "python3-devel"
+pacman = "python"
