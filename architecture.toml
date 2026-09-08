@@ -400,31 +400,43 @@ dependency = []
     [xmip.core.contract.asyncapi]
     [xmip.core.contract.avro]
     [xmip.core.contract.c]
+    maturity = "scaffolded"
+    primaryLanguage = "c"
     [xmip.core.contract.cpp]
+    maturity = "scaffolded"
+    primaryLanguage = "cpp"
     [xmip.core.contract.csv]
     maturity = "scaffolded"
     [xmip.core.contract.dotnet]
     description = "Content contracts authored as .NET modules over the Xmip ABI — the .NET counterpart of the Rust contract technologies."
     primaryLanguage = "dotnet"
-    maturity = "planned"
+    maturity = "scaffolded"
     dependency = ["xmip-core-abi"]
     [xmip.core.contract.fhir]
     [xmip.core.contract.fixed-width]
     maturity = "scaffolded"
     [xmip.core.contract.go]
+    maturity = "scaffolded"
+    primaryLanguage = "go"
     [xmip.core.contract.graphql-schema]
     [xmip.core.contract.java]
+    maturity = "scaffolded"
+    primaryLanguage = "java"
     [xmip.core.contract.json-schema]
     maturity = "scaffolded"
     [xmip.core.contract.openapi]
     [xmip.core.contract.protobuf]
     [xmip.core.contract.python]
+    maturity = "scaffolded"
+    primaryLanguage = "python"
     [xmip.core.contract.regex]
     maturity = "scaffolded"
     [xmip.core.contract.schematron]
     description = "Schematron content contract: business rules over XML, the way Peppol, UBL, ISO 20022 and HL7 CDA state them. A xmip-core-contract technology."
     maturity = "scaffolded"
     [xmip.core.contract.rust]
+    maturity = "scaffolded"
+    primaryLanguage = "rust"
     [xmip.core.contract.sql]
     [xmip.core.contract.wsdl]
     [xmip.core.contract.xml-schema]
