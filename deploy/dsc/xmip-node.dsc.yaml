@@ -36,4 +36,35 @@ resources:
 
               [modules]
               load_from = "/opt/xmip/modules"
-              '@ | Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8
+              '@ |              [modules]
+              load_from = "/opt/xmip/modules"
+
+              # The technologies this node carries, by repository name (ADR-0011),
+              # and which of them start. One name per module the estate has built,
+              # kept in step with architecture.toml maturity; trim for a node that
+              # carries less. The started set is what a plain HTTP and file node
+              # needs; the rest are present, stopped until a Location names them.
+              present = [
+                "xmip-core-transport-file", "xmip-core-transport-tcp",
+                "xmip-core-transport-udp", "xmip-core-transport-http",
+                "xmip-core-transport-smtp", "xmip-core-transport-websocket",
+                "xmip-core-transport-mllp",
+                "xmip-core-contract-csv", "xmip-core-contract-json-schema",
+                "xmip-core-contract-xml-schema", "xmip-core-contract-regex",
+                "xmip-core-contract-schematron", "xmip-core-contract-fixed-width",
+                "xmip-core-contract-edi-edifact", "xmip-core-contract-hl7-v2",
+                "xmip-core-contract-fhir",
+                "xmip-core-logic-http-api", "xmip-core-logic-soap", "xmip-core-logic-grpc",
+                "xmip-core-path-json-pointer", "xmip-core-path-xpath", "xmip-core-path-index",
+                "xmip-core-archive-parquet",
+              ]
+              started = [
+                "xmip-core-transport-file", "xmip-core-transport-tcp",
+                "xmip-core-transport-udp", "xmip-core-transport-http",
+                "xmip-core-contract-csv", "xmip-core-contract-json-schema",
+                "xmip-core-contract-xml-schema", "xmip-core-contract-regex",
+                "xmip-core-logic-http-api",
+                "xmip-core-path-json-pointer", "xmip-core-path-xpath", "xmip-core-path-index",
+                "xmip-core-archive-parquet",
+              ]
+              '@ | Set-Content| Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8

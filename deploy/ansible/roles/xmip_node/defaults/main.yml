@@ -4,3 +4,38 @@ xmip_node_name: local-xmip-node
 xmip_cluster_name: local-xmip-cluster
 xmip_persistence_engine: rocksdb
 xmip_management_engine: sqlite
+
+# The technologies this node loads, by repository name (ADR-0011), and whether
+# each starts. One entry per module the estate has built, kept in step with
+# architecture.toml maturity; a playbook overrides the list for a node that
+# carries less. Started by default: the transports and contracts a plain HTTP
+# and file node needs; the rest present but stopped until a Location names them.
+xmip_modules:
+  # Transports
+  - { name: xmip-core-transport-file, start: true }
+  - { name: xmip-core-transport-tcp, start: true }
+  - { name: xmip-core-transport-udp, start: true }
+  - { name: xmip-core-transport-http, start: true }
+  - { name: xmip-core-transport-smtp, start: false }
+  - { name: xmip-core-transport-websocket, start: false }
+  - { name: xmip-core-transport-mllp, start: false }
+  # Contracts
+  - { name: xmip-core-contract-csv, start: true }
+  - { name: xmip-core-contract-json-schema, start: true }
+  - { name: xmip-core-contract-xml-schema, start: true }
+  - { name: xmip-core-contract-regex, start: true }
+  - { name: xmip-core-contract-schematron, start: false }
+  - { name: xmip-core-contract-fixed-width, start: false }
+  - { name: xmip-core-contract-edi-edifact, start: false }
+  - { name: xmip-core-contract-hl7-v2, start: false }
+  - { name: xmip-core-contract-fhir, start: false }
+  # Logic
+  - { name: xmip-core-logic-http-api, start: true }
+  - { name: xmip-core-logic-soap, start: false }
+  - { name: xmip-core-logic-grpc, start: false }
+  # Paths
+  - { name: xmip-core-path-json-pointer, start: true }
+  - { name: xmip-core-path-xpath, start: true }
+  - { name: xmip-core-path-index, start: true }
+  # Archive, parquet the default (owner, 2026-09-07)
+  - { name: xmip-core-archive-parquet, start: true }

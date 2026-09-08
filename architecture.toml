@@ -220,6 +220,7 @@ dependency = []
     [xmip.core.transport.imap]
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.mllp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
@@ -397,6 +398,7 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.contract.edi-x12]
     [xmip.core.contract.hl7-v2]
+    maturity = "scaffolded"
     [xmip.core.contract.asyncapi]
     [xmip.core.contract.avro]
     [xmip.core.contract.c]
@@ -413,6 +415,7 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-abi"]
     [xmip.core.contract.fhir]
+    maturity = "scaffolded"
     [xmip.core.contract.fixed-width]
     maturity = "scaffolded"
     [xmip.core.contract.go]
