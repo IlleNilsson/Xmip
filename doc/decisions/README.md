@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-three decisions, read as one document.
+Forty-four decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -430,6 +430,17 @@ and there the locale is the partner's declared convention, never the server's.**
 
 → [Locale-neutral internally, in full](ADR-0038-locale-neutral-internally.md)
 
+### Where code two technologies both need lives, and where it never
+
+does
+
+**Code that two technologies both need lives in the crate both already
+depend on: their parent capability, or the technology they both ride on. A
+technology never copies a sibling's file. The playground's adapters follow
+the same rule through the playground's own shared modules.**
+
+→ [A technology shares through its capability, in full](ADR-0044-a-technology-shares-through-its-capability.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -637,6 +648,7 @@ You have a word. This gives you the decision that governs it.
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
+| copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -698,6 +710,7 @@ You have a word. This gives you the decision that governs it.
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
+| Shared code | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | shared declaration | [One error declaration](ADR-0037-one-error-declaration.md) |
 | source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
@@ -705,6 +718,8 @@ You have a word. This gives you the decision that governs it.
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
+| the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
+| the carrier technology | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
@@ -780,3 +795,4 @@ is nowhere else.
 | [0041](ADR-0041-health-is-a-mood-and-does-not-propagate.md) | Health is a mood and does not propagate | |
 | [0042](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) | A contract holds well-formedness always and conformance when named | |
 | [0043](ADR-0043-logic-is-the-method.md) | Logic is the method | |
+| [0044](ADR-0044-a-technology-shares-through-its-capability.md) | A technology shares through its capability | |
