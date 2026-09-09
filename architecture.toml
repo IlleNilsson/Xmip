@@ -71,9 +71,12 @@ sdk = "preview"
 # 2026-09-03 rather than taken from the comment that claimed it.
 #
 # This follows pwsh upward. When pwsh hosts .NET 11, this line moves and the
-# exception disappears.
+# exception disappears. abi is on the list since 2026-09-09 because the one
+# .NET binding (ADR-0014, amendment 2026-09-09) is loaded by the PowerShell
+# module as much as by the others, and a .NET 11 surface can reference a .NET
+# 10 library where the reverse would not hold.
 hostedTargetFramework = "net10.0"
-hostedBy = "powershell"
+hostedBy = ["powershell", "abi"]
 
 # One template per language, keyed by primaryLanguage.
 #
