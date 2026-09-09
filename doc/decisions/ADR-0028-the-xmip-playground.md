@@ -2,6 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-09-05
+- Amended: 2026-09-09, decision 3a — a seventh scenario, filing, drives every
+  archive technology the way pingpong drives every transport
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads)
@@ -129,6 +131,15 @@ leaf. Named in the shortest singular form, the owner's convention:
   the estate's real `RetentionPolicy` and `ArchiveStore` over a logical clock; a
   missed sweep under pressure surfaces as a retention leak. There is no third
   act — Xmip retains and archives, it does not delete (ADR-0040).
+- **filing** — *added 2026-09-09.* Does the archive hold what it was handed:
+  one probe item per contract filed through every archive technology on main
+  — parquet, sqlite, file, sql, postgresql, mssql, mysql, s3, azure-blob, gcs —
+  archived and restored, judged equal or not, under
+  `xmip:///playground/filing/<technology>/<contract>`. The secretary proves the
+  lifecycle over one store; filing proves every store. Each technology gets a
+  `Cabinet` adapter the way each transport gets a `RoundTrip`, so a new archive
+  technology is a new adapter, not a new scenario. Under pressure a filing is
+  skipped now and then and reported as a fault.
 - **claim** — exclusive pickup: a dropped item is read by exactly one holder,
   under real thread contention, across the **execution style** it declares —
   Sequential, Parallel, Concurrent (runtime-model.md). Sequential additionally
