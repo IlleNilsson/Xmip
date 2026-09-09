@@ -392,15 +392,18 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
     }
 
     It 'gives every project the target the manifest declares' {
-        # The exception is declared, not assumed. A project under the module
+        # The exception is declared, not assumed. A project under a module
         # named by hostedBy is loaded by a host that owns the runtime — pwsh
         # runs .NET 10 and refuses a net11.0 assembly at Import-Module — so it
-        # targets hostedTargetFramework. Everything else takes the latest.
+        # targets hostedTargetFramework, and so does the one .NET binding it
+        # loads (abi, ADR-0014 amendment 2026-09-09). Everything else takes
+        # the latest.
         [string[]] $wrong = @()
+        [string] $hosts = @($script:Policy.hostedBy) -join '|'
 
         foreach ($file in $script:Csproj) {
             [string] $where = $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
-            [bool] $hosted = $where -match "[\\/]$($script:Policy.hostedBy)[\\/]"
+            [bool] $hosted = $where -match "[\\/]($hosts)[\\/]"
 
             [string] $expected = if ($hosted) {
                 $script:Policy.hostedTargetFramework

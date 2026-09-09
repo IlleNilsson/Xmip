@@ -334,3 +334,42 @@ node means touching the disk and the runtime, which only an unsandboxed process
 can. This is not a preference about where a screen lives; it is what each host is
 physically able to do. The owner's point, 2026-09-05: *the GUI shall be able to
 execute commands that a browser can't.*
+
+## Amendment, 2026-09-09: the .NET binding is one project in xmip-core-abi
+
+The 2026-08-26 amendment made every surface a client of the ABI and recorded
+that *the .NET surfaces P/Invoke a C ABI*. By 2026-09-09 they did so three
+times: `xmip-core-cli` and `xmip-core-powershell` each carried a copy of the
+`xmip_module.h` binding and the probe, and `xmip-core-gui` bound
+`xmip_operate.h` on its own with its own `XmipStr`. Three bindings of one
+header is the drift ADR-0012 and this record exist to prevent, one header at a
+time.
+
+**The binding lives with the header.** architecture.toml already says so —
+`xmip-core-abi` is *C header, specification and language bindings* — and
+ADR-0044 says shared code goes up to what both already depend on. So
+`module/foundation/abi/dotnet/Xmip.Abi` is the one .NET binding: the module
+boundary (`XmipStr`, `XmipStatus`, the descriptor, host and module structs, the
+probe) and the operator boundary (`Operator` over `xmip_operate.h`, with the
+health, measurement and lifecycle calls, and the record types the GUI's
+`IOperatorSurface` returns). It targets .NET 10 because pwsh hosts .NET 10
+(amendment 2026-08-30) and a .NET 11 surface can reference a .NET 10 library;
+the reverse would not hold.
+
+**The three surfaces reference it by path inside the composed estate**
+(ADR-0016): `../../../../foundation/abi/dotnet/Xmip.Abi/Xmip.Abi.csproj`
+from each surface project. .NET has no `git = ..., branch = "main"`; a NuGet
+feed would be the equivalent and is not worth standing up for four consumers
+in one estate. A surface repository therefore builds inside the estate, which
+is where `xgit` builds it. This is the one place the estate's "each repository
+builds on its own" does not hold, and it is recorded here rather than
+discovered.
+
+**What it makes possible.** With the operator boundary bound once, the CLI and
+the PowerShell module gain what only the desktop GUI had: `xmip health` and
+`xmip validate`, `Get-XmipHealth` and `Test-XmipNodeConfiguration`, driving a
+node through `xmip_operate.h` rather than describing the binding (ADR-0027's
+complaint about `abi`, `status` and `probe`). A capability no longer has to be
+a screen before it can be a command, which is the 2026-08-26 amendment's
+promise the other way round.
+
