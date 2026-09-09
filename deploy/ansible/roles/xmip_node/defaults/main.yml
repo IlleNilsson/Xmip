@@ -52,6 +52,8 @@ xmip_modules:
   - { name: xmip-core-transport-s3, start: false }
   - { name: xmip-core-transport-azure-blob, start: false }
   - { name: xmip-core-transport-google-cloud-storage, start: false }
+  - { name: xmip-core-transport-mssql, start: false }
+  - { name: xmip-core-transport-mysql, start: false }
   # Contracts
   - { name: xmip-core-contract-csv, start: true }
   - { name: xmip-core-contract-json-schema, start: true }
@@ -85,3 +87,12 @@ xmip_modules:
   - { name: xmip-core-path-regex, start: false }
   # Archive, parquet the default (owner, 2026-09-07)
   - { name: xmip-core-archive-parquet, start: true }
+  - { name: xmip-core-archive-sqlite, start: false }
+  - { name: xmip-core-archive-file, start: false }
+  - { name: xmip-core-archive-sql, start: false }
+  - { name: xmip-core-archive-postgresql, start: false }
+  - { name: xmip-core-archive-mssql, start: false }
+  - { name: xmip-core-archive-mysql, start: false }
+  - { name: xmip-core-archive-s3, start: false }
+  - { name: xmip-core-archive-azure-blob, start: false }
+  - { name: xmip-core-archive-gcs, start: false }
