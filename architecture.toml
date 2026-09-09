@@ -403,7 +403,13 @@ dependency = []
     specification = "Modbus Application Protocol V1.1b3 and Modbus Messaging on TCP/IP V1.0b"
     [xmip.core.transport.msmq]
     [xmip.core.transport.mssql]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
     [xmip.core.transport.mysql]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-tcp"]
+    specification = "MySQL client/server protocol 4.1: handshake, native password, COM_QUERY text protocol"
     [xmip.core.transport.named-pipe]
     [xmip.core.transport.nats]
     maturity = "scaffolded"
@@ -829,21 +835,49 @@ dependency = []
   repositoryRole = "operational-capability"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.archive.azure-blob]
+    description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-azure-blob"]
+    specification = "Azure Blob Storage REST API, Shared Key authorisation, through the azure-blob transport client"
     [xmip.core.archive.file]
+    description = "File archive target: one item is one file under a directory, its metadata beside it. A xmip-core-archive technology."
+    maturity = "scaffolded"
     [xmip.core.archive.gcs]
+    description = "Google Cloud Storage archive target: one item is one object in a bucket. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-google-cloud-storage"]
+    specification = "Google Cloud Storage JSON API, bearer token, through the google-cloud-storage transport client"
     [xmip.core.archive.mssql]
-    description = "SQL Server archive target. A xmip-core-archive technology."
+    description = "SQL Server archive target: one item is one row of an archive table. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-mssql"]
+    specification = "T-SQL over TDS 7.4, through the mssql transport client"
     [xmip.core.archive.mysql]
-    description = "MySQL and MariaDB archive target. A xmip-core-archive technology."
+    description = "MySQL and MariaDB archive target: one item is one row of an archive table. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-mysql"]
+    specification = "SQL over the MySQL client/server protocol, through the mysql transport client"
     [xmip.core.archive.parquet]
     description = "Parquet archive target: retained items written as Apache Parquet files. The default archive technology (owner, 2026-09-07). A xmip-core-archive technology."
     maturity = "scaffolded"
     [xmip.core.archive.postgresql]
-    description = "PostgreSQL archive target. A xmip-core-archive technology."
+    description = "PostgreSQL archive target: one item is one row of an archive table. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-postgresql"]
+    specification = "SQL over the PostgreSQL frontend/backend protocol 3.0, through the postgresql transport client"
     [xmip.core.archive.s3]
+    description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-s3"]
+    specification = "Amazon S3 REST API, Signature Version 4, through the s3 transport client"
     [xmip.core.archive.sql]
+    description = "SQL script archive target: one item is one INSERT in a vendor-neutral script any database loads. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    specification = "ISO/IEC 9075 INSERT statements, one script per data type"
     [xmip.core.archive.sqlite]
     description = "SQLite archive target: one file, no server, the archive a single node keeps beside itself. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    specification = "SQLite 3 database file, one archive table"
 
   [xmip.core.resilience]
   description = "Retry, timeout, circuit-breaker, rate-limit, bulkhead and fallback capability."
