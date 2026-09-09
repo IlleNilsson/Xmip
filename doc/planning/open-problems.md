@@ -504,10 +504,10 @@ retires entries from stops being an order.
                                        and are what the Playground needs to
                                        exercise anything. Blocked on the
                                        vocabulary question below
-2. Protocol implementations            twenty-four transports and twenty-three
-                                       contracts each in their own repository
-                                       (2026-09-08); sixty transport
-                                       repositories, the sql contract and every
+2. Protocol implementations            forty transports, every contract and
+                                       every path each in their own repository
+                                       (2026-09-09); forty-four transport
+                                       repositories, nine archive and every
                                        route technology still declared and empty
 3. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
