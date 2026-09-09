@@ -114,7 +114,7 @@ Describe 'Every executable entry names a file that exists' {
             [string] $path = [string] $entry.path
 
             if ($path.Contains('*')) {
-                # Wildcard keeps are deliberate — doc/decisions/* keeps a
+                # Wildcard keeps are deliberate — doc/decision/* keeps a
                 # directory's contents. Test-Path globs them.
                 if (-not (Test-Path -Path (Join-Path $script:Root $path))) {
                     $missing += $path

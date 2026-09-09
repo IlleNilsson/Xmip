@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    doc/decisions/README.md reads every decision record as one
+    doc/decision/README.md reads every decision record as one
     document, grouped by subject, because nobody remembers what a number means.
 
     An index nobody maintains is worse than no index: it is believed. These
@@ -19,7 +19,7 @@
 BeforeAll {
     [int] $script:ProvenanceFloor = 1
     $script:Root = Join-Path $PSScriptRoot '..'
-    $script:DecisionRoot = Join-Path $script:Root 'doc/decisions'
+    $script:DecisionRoot = Join-Path $script:Root 'doc/decision'
     $script:IndexPath = Join-Path $script:DecisionRoot 'README.md'
     $script:Index = Get-Content -LiteralPath $script:IndexPath -Raw
 

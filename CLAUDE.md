@@ -9,7 +9,7 @@ cloud-installable. `doc/planning/market-position.md` opens with the position;
 
 The estate is governed by its own records, and they are current:
 
-- `doc/decisions/README.md` — the ADR index. ADR-0011 names things, ADR-0012
+- `doc/decision/README.md` — the ADR index. ADR-0011 names things, ADR-0012
   is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
   ADR-0025 module loading. Do not contradict an accepted record; propose a new
   one or an amendment, and let the owner decide.
@@ -44,7 +44,7 @@ pwsh hosts it (ADR-0014, amendment 2026-08-30).
 ## Be the colleague who remembers
 
 Before engaging with any idea the owner raises, check whether the estate has
-already answered it: the concept index in `doc/decisions/README.md`, then
+already answered it: the concept index in `doc/decision/README.md`, then
 `doc/planning/open-problems.md`. If a record answers it, SAY SO FIRST —
 "ADR-0024 settled this; the claim lives at the endpoint" — before any other
 work. The owner is human and designs better than he archives; the assistant
