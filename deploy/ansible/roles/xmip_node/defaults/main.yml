@@ -36,6 +36,22 @@ xmip_modules:
   - { name: xmip-core-transport-iec-60870-5-104, start: false }
   - { name: xmip-core-transport-dnp3, start: false }
   - { name: xmip-core-transport-kafka, start: false }
+  - { name: xmip-core-transport-cotp, start: false }
+  - { name: xmip-core-transport-s7comm, start: false }
+  - { name: xmip-core-transport-secs-gem, start: false }
+  - { name: xmip-core-transport-snmp, start: false }
+  - { name: xmip-core-transport-ssdp, start: false }
+  - { name: xmip-core-transport-mdns, start: false }
+  - { name: xmip-core-transport-dhcp, start: false }
+  - { name: xmip-core-transport-webdav, start: false }
+  - { name: xmip-core-transport-activemq, start: false }
+  - { name: xmip-core-transport-rabbitmq, start: false }
+  - { name: xmip-core-transport-nats-jetstream, start: false }
+  - { name: xmip-core-transport-redpanda, start: false }
+  - { name: xmip-core-transport-postgresql, start: false }
+  - { name: xmip-core-transport-s3, start: false }
+  - { name: xmip-core-transport-azure-blob, start: false }
+  - { name: xmip-core-transport-google-cloud-storage, start: false }
   # Contracts
   - { name: xmip-core-contract-csv, start: true }
   - { name: xmip-core-contract-json-schema, start: true }
@@ -53,6 +69,7 @@ xmip_modules:
   - { name: xmip-core-contract-wsdl, start: false }
   - { name: xmip-core-contract-openapi, start: false }
   - { name: xmip-core-contract-asyncapi, start: false }
+  - { name: xmip-core-contract-sql, start: false }
   # Logic
   - { name: xmip-core-logic-http-api, start: true }
   - { name: xmip-core-logic-soap, start: false }
@@ -61,5 +78,10 @@ xmip_modules:
   - { name: xmip-core-path-json-pointer, start: true }
   - { name: xmip-core-path-xpath, start: true }
   - { name: xmip-core-path-index, start: true }
+  - { name: xmip-core-path-dot, start: false }
+  - { name: xmip-core-path-jsonpath, start: false }
+  - { name: xmip-core-path-fhirpath, start: false }
+  - { name: xmip-core-path-predicate, start: false }
+  - { name: xmip-core-path-regex, start: false }
   # Archive, parquet the default (owner, 2026-09-07)
   - { name: xmip-core-archive-parquet, start: true }

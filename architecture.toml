@@ -243,12 +243,16 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.webdav]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.websocket]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-http"]
     specification = "IETF RFC 6455, with the applicable extension documents"
     [xmip.core.transport.activemq]
+    maturity = "scaffolded"
+    specification = "STOMP 1.2, the protocol ActiveMQ Classic and Artemis both listen on"
+    dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.aws-kinesis]
     [xmip.core.transport.bacnet]
     maturity = "scaffolded"
@@ -264,12 +268,14 @@ dependency = []
     dependency = ["xmip-core-transport-udp"]
     specification = "IETF RFC 7252"
     [xmip.core.transport.cotp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "IETF RFC 1006, ISO transport over TCP, TPKT and COTP"
     [xmip.core.transport.dds]
     dependency = ["xmip-core-transport-udp"]
     specification = "OMG Data Distribution Service, RTPS over UDP"
     [xmip.core.transport.dhcp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
     specification = "IETF RFC 2131, with DHCPv6 in RFC 8415"
     [xmip.core.transport.dicom]
@@ -319,6 +325,7 @@ dependency = []
     dependency = ["xmip-core-transport-serial"]
     specification = "EN 13757, wired metering bus"
     [xmip.core.transport.mdns]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
     specification = "IETF RFC 6762, with DNS-SD in RFC 6763"
     [xmip.core.transport.obd-ii]
@@ -331,9 +338,11 @@ dependency = []
     dependency = ["xmip-core-transport-ethernet"]
     specification = "IEC 61158 and IEC 61784. Real-time classes bypass IP"
     [xmip.core.transport.s7comm]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-cotp"]
     specification = "Siemens S7 communication over ISO-on-TCP. Vendor protocol, no public standard"
     [xmip.core.transport.secs-gem]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "SEMI E5 SECS-II, E30 GEM, E37 HSMS"
     [xmip.core.transport.uds]
@@ -344,12 +353,15 @@ dependency = []
     [xmip.core.transport.wireless-m-bus]
     specification = "EN 13757-4"
     [xmip.core.transport.redpanda]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-kafka"]
     specification = "Apache Kafka wire protocol, with Redpanda admin extensions"
     [xmip.core.transport.snmp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
     specification = "IETF SNMPv3, RFC 3411 through RFC 3418"
     [xmip.core.transport.ssdp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
     specification = "UPnP Device Architecture, Simple Service Discovery Protocol"
     [xmip.core.transport.syslog]
@@ -363,6 +375,9 @@ dependency = []
     [xmip.core.transport.aws-sns]
     [xmip.core.transport.aws-sqs]
     [xmip.core.transport.azure-blob]
+    maturity = "scaffolded"
+    specification = "Azure Blob Storage REST API, Shared Key authorisation"
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.azure-event-grid]
     [xmip.core.transport.azure-event-hubs]
     [xmip.core.transport.azure-service-bus]
@@ -373,6 +388,9 @@ dependency = []
     maturity = "scaffolded"
     specification = "Platform file-system behaviour and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
+    maturity = "scaffolded"
+    specification = "Google Cloud Storage JSON API, bearer token"
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.google-pub-sub]
     [xmip.core.transport.ibm-mq]
     [xmip.core.transport.kafka]
@@ -392,18 +410,28 @@ dependency = []
     dependency = ["xmip-core-transport-tcp"]
     specification = "NATS client protocol, core at-most-once"
     [xmip.core.transport.nats-jetstream]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-nats"]
     specification = "NATS JetStream, durable streams and consumers over NATS"
     [xmip.core.transport.nfs]
     [xmip.core.transport.opc-ua]
     [xmip.core.transport.oracle]
     [xmip.core.transport.postgresql]
+    maturity = "scaffolded"
+    specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow"
+    dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.rabbitmq]
+    maturity = "scaffolded"
+    specification = "AMQP 0-9-1, the RabbitMQ native protocol"
+    dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.redis-streams]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     specification = "Redis Streams over RESP2: XADD, XRANGE, XREAD"
     [xmip.core.transport.s3]
+    maturity = "scaffolded"
+    specification = "Amazon S3 REST API, Signature Version 4"
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.serial]
     maturity = "scaffolded"
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
@@ -487,6 +515,8 @@ dependency = []
     maturity = "scaffolded"
     primaryLanguage = "rust"
     [xmip.core.contract.sql]
+    maturity = "scaffolded"
+    specification = "ISO/IEC 9075 statement syntax, vendor-neutral; statement kinds bind as the conformance claim"
     [xmip.core.contract.wsdl]
     maturity = "scaffolded"
     specification = "WSDL 1.1 and 2.0, every reference landing"
@@ -517,14 +547,24 @@ dependency = []
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context"]
     [xmip.core.path.dot]
+    maturity = "scaffolded"
+    specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
     [xmip.core.path.fhirpath]
+    maturity = "scaffolded"
+    specification = "HL7 FHIRPath, the normative core over FHIR JSON"
     [xmip.core.path.index]
     maturity = "scaffolded"
     [xmip.core.path.json-pointer]
     maturity = "scaffolded"
     [xmip.core.path.jsonpath]
+    maturity = "scaffolded"
+    specification = "IETF RFC 9535"
     [xmip.core.path.predicate]
+    maturity = "scaffolded"
+    specification = "A boolean expression over structured content: comparisons, and, or, not, exists"
     [xmip.core.path.regex]
+    maturity = "scaffolded"
+    specification = "A regular expression over text: the first match or a named group reads, a match writes"
     [xmip.core.path.xpath]
     maturity = "scaffolded"
 
