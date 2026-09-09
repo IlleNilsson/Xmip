@@ -26,7 +26,7 @@ Every significant decision shall be captured as a project artifact.
 The project source of truth is now:
 
 ```text
-doc/decisions/
+doc/decision/
 doc/architecture/
 doc/planning/must-remember.md
 .gitmodules.planned

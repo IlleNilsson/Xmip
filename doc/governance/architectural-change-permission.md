@@ -32,7 +32,7 @@ One sentence, and it makes the rest of the document safe to consolidate — beca
 
 Be specific. "Drafted by an assistant, reviewed by the owner" says nothing. Name the clauses that are rulings, name the material that came from an earlier draft or another model, and name what was inferred to fill a gap. The inferred parts are the ones a future consolidation is allowed to correct.
 
-`test/Decisions.Tests.ps1` counts the records carrying a Provenance section. That count may rise and may not fall.
+`test/Decision.Tests.ps1` counts the records carrying a Provenance section. That count may rise and may not fall.
 
 ## Estate changes are atomic
 

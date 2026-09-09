@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-08-25
+- Amended: 2026-09-09 — `doc/decisions/` became `doc/decision/`: a folder is
+  named in the shortest singular form like everything else (ADR-0011); the
+  empty `doc/operations/` went
 - Related: ADR-0011 (naming), ADR-0016 (composition)
 
 ## In brief
@@ -70,7 +73,7 @@ doc/
     deployment-model.md             nodes, profiles, roles, installation, recovery
     observability-model.md          audit, correlation, tracing, observation
     identity-by-technology.md       identity per technology, against the standards
-  decisions/ADR-NNNN-*.md           the record. Never deleted, superseded in place.
+  decision/ADR-NNNN-*.md            the record. Never deleted, superseded in place.
   governance/*.md                   change permission and release model
   planning/*.md                     working notes, explicitly not authoritative
 ```

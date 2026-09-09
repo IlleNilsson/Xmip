@@ -498,7 +498,7 @@ why = "Section 10. Its failover-then-retry-all ordering is conflict C2, ruled th
 
 [[superseded]]
 path = "doc/Xmip-Exclusiveness-Architecture.md"
-replacedBy = "doc/decisions/ADR-0017-exclusiveness.md and doc/architecture/runtime-model.md"
+replacedBy = "doc/decision/ADR-0017-exclusiveness.md and doc/architecture/runtime-model.md"
 why = """
 Marked 'Frozen architectural baseline'. ADR-0017 was written past it without
 citation, which is how a frozen principle gets replaced by accident rather than
@@ -702,11 +702,11 @@ if architecture.toml maturity now expresses it, it is superseded.
 # keep-list is a second copy of the directory tree, and a second copy is wrong
 # as soon as the first one moves.
 #
-# A rule that says 'everything under doc/decisions stays' cannot go stale when
+# A rule that says 'everything under doc/decision stays' cannot go stale when
 # ADR-0022 is written. That is the whole reason to state it this way.
 
 [[keep]]
-path = "doc/decisions/*"
+path = "doc/decision/*"
 reason = """
 Every ADR, twenty-one of them today. A decision is platform-wide even when its
 subject is one module, and a decision record scattered across forty-three
@@ -1131,7 +1131,7 @@ drop = ["doc/content-handlers.md", "doc/handler-implementation-plan.md"]
 
 [[decision]]
 question = 4
-path = "doc/decisions/ADR-0004-handler-universe.md"
+path = "doc/decision/ADR-0004-handler-universe.md"
 decision = "Keep, with a Superseded-by header naming ADR-0010."
 reason = """
 An ADR is a record, never a deletion. But a superseded record that does not
@@ -1566,7 +1566,7 @@ path = "doc/architecture/observability-model.md"
 reason = "Audit, logs, traces, retention and observation. Replaces four."
 
 [[keep]]
-path = "doc/decisions/ADR-0020-documentation-structure.md"
+path = "doc/decision/ADR-0020-documentation-structure.md"
 reason = "One document per subject, no versions in filenames, and the six-document architecture structure."
 
 # Twelve zero-byte files. ADR-0020 clause 7: an empty file is a promise
@@ -1638,7 +1638,7 @@ than it described."""
 
 [[superseded]]
 path = "doc/planning/artifact-actor-mapping.md"
-replacedBy = "doc/decisions/ADR-0008-xmip-entities-as-actors.md"
+replacedBy = "doc/decision/ADR-0008-xmip-entities-as-actors.md"
 why = "The nine-line table folded into the record that decided it, verbatim."
 
 [[superseded]]

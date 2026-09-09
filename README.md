@@ -13,7 +13,7 @@ both against reality.
 ## Requirements
 
 Xmip tracks current platforms and does not carry compatibility with superseded
-ones — [ADR-0021](doc/decisions/ADR-0021-current-platforms-only.md).
+ones — [ADR-0021](doc/decision/ADR-0021-current-platforms-only.md).
 
 | | Required | Notes |
 | --- | --- | --- |
@@ -122,8 +122,8 @@ and needs no ceremony to reach.
 | `Get-XmipManifest` | Reads `architecture.toml` and flattens the estate. |
 | `Test-XmipManifest` | Validates naming, crates, maturity and dependencies. |
 | `Get-XmipRepositoryRoot` | Finds the repository by walking up to `architecture.toml`. |
-| `Get-XmipDecisionRecord` | Reads `doc/decisions/` and returns what each record declares about itself. |
-| `New-XmipDecisionIndex` | Generates `doc/decisions/README.md` from the records. `-Save` writes it. |
+| `Get-XmipDecisionRecord` | Reads `doc/decision/` and returns what each record declares about itself. |
+| `New-XmipDecisionIndex` | Generates `doc/decision/README.md` from the records. `-Save` writes it. |
 
 ### Reconcile the estate
 
@@ -186,7 +186,7 @@ doc/                 see below
 ### Documentation
 
 One document per subject, and no versions in filenames —
-[ADR-0020](doc/decisions/ADR-0020-documentation-structure.md).
+[ADR-0020](doc/decision/ADR-0020-documentation-structure.md).
 
 | Document | Answers |
 | --- | --- |
@@ -196,7 +196,7 @@ One document per subject, and no versions in filenames —
 | [`architecture/module-model.md`](doc/architecture/module-model.md) | the module boundary, loading and isolation |
 | [`architecture/deployment-model.md`](doc/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
 | [`architecture/observability-model.md`](doc/architecture/observability-model.md) | audit, logs, traces, retention, observation |
-| [`doc/decisions/`](doc/decisions) | **every decision, read as one document** — by subject, not by number |
+| [`doc/decision/`](doc/decision) | **every decision, read as one document** — by subject, not by number |
 
 Two documents now live with the repository that owns them, reachable through the
 submodules:
