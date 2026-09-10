@@ -155,7 +155,7 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
     BeforeAll {
         # The crate a file belongs to, taken from the path rather than from
         # Cargo.toml: module/<domain>/<crate>/src/... . Reading the manifest
-        # would be more correct and would also make this test depend on 43 of
+        # would be more correct and would also make this test depend on 44 of
         # them being parseable, which is a different test's job.
         $script:Named = $script:Files | ForEach-Object {
             $parts = $_.Path -split '/'

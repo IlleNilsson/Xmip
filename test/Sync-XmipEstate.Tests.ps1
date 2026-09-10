@@ -295,7 +295,7 @@ Describe 'The estate is more than its modules' {
     It 'mounts nothing the manifest does not declare' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the
-        # estate is 43 of them.
+        # estate is 44 of them.
         $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
         [string[]] $declared = @($manifest.repositories.name) + @(

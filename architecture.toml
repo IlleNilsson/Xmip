@@ -993,6 +993,11 @@ dependency = []
   maturity = "scaffolded"
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
+    [xmip.core.gui.vscode]
+    description = "The VS Code extension, the developer's face of the configuration tool: a TypeScript shell around a Rust language server that validates a node configuration through the ABI (ADR-0014, amendment 2026-09-10). A xmip-core-gui technology."
+    maturity = "scaffolded"
+    primaryLanguage = "rust"
+    dependency = ["xmip-core-abi"]
 
 
 # A second provider. `core` is Xmip's own; `test` is the namespace for what

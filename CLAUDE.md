@@ -13,7 +13,7 @@ The estate is governed by its own records, and they are current:
   is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
   ADR-0025 module loading. Do not contradict an accepted record; propose a new
   one or an amendment, and let the owner decide.
-- `doc/architecture/` — five models. `repository-model.md` explains why 43
+- `doc/architecture/` — five models. `repository-model.md` explains why 44
   submodules mount where they do.
 - `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
   `test/*.Tests.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
@@ -67,7 +67,7 @@ and it cost real work.
   record or the file itself.
 - Full paths when naming files to the owner.
 - The estate ends every session square: everything committed, everything
-  pushed, `git status` clean in all 43 submodules and the superproject.
+  pushed, `git status` clean in all 44 submodules and the superproject.
   `Get-XmipStatus` shows the whole estate at once.
 
 ## The assistant's working area

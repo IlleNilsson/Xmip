@@ -11,8 +11,11 @@
 # manifest does not declare at that maturity. The language bindings of the
 # contract capability (`primaryLanguage` set: c, cpp, go, java, python, rust,
 # dotnet) are how a contract is written in that language, not a technology a
-# Location names, and are not deployed. What starts by default is a smaller
-# set the deploy files own; the gate only asks that it is drawn from the list.
+# Location names, and are not deployed; nor is a technology of an operator
+# surface (gui's VS Code extension) — a surface has `primaryLanguage` itself
+# and its children drive a node from outside (ADR-0014). What starts by
+# default is a smaller set the deploy files own; the gate only asks that it
+# is drawn from the list.
 
 BeforeAll {
     $script:Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -25,6 +28,7 @@ BeforeAll {
     foreach ($capability in $manifest.xmip.core.Keys) {
         $node = $manifest.xmip.core[$capability]
         if ($node -isnot [System.Collections.IDictionary]) { continue }
+        if ($node.Contains('primaryLanguage')) { continue }
         foreach ($leaf in $node.Keys) {
             $technology = $node[$leaf]
             if ($technology -isnot [System.Collections.IDictionary]) { continue }

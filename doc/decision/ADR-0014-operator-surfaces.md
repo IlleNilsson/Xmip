@@ -373,3 +373,44 @@ complaint about `abi`, `status` and `probe`). A capability no longer has to be
 a screen before it can be a command, which is the 2026-08-26 amendment's
 promise the other way round.
 
+## Amendment, 2026-09-10: the configuration tool has two faces
+
+The desktop GUI's configuration half (amendment 2026-09-05) is one tool with
+two faces, for two kinds of people. **Operators** run the MAUI executable —
+screens, a health tree, Validate, Save and Start. **Developers** edit the same
+node configuration where they already are, in VS Code: a **VS Code
+extension** is the second face of the configuration tool, and it is a surface
+on the same terms as the other four. The owner, 2026-09-10: *the GUI
+configuration tool has to be represented as a MAUI executable and a VS Code
+extension. Operators are more likely to use the MAUI executable and
+developers the VS Code extension.*
+
+**It goes to the ABI, like every surface.** The extension is a TypeScript
+shell and nothing more: it starts a language server and shows what the server
+says. The server is a Rust binary, `xmip-lsp`, that loads the runtime's
+native library and calls `xmip_validate_v1` through `xmip_operate.h` — the
+same call the desktop GUI makes through `Xmip.Abi`. No surface goes through
+another surface to get there (amendment 2026-08-26): the extension does not
+run the `xmip` command, and the server does not link the runtime's crates
+directly, because the boundary is the C ABI and the estate has one route
+through it.
+
+**Repository.** `xmip-core-gui-vscode`, a technology of `xmip-core-gui`,
+mounted at `module/operation/gui/vscode`, Rust as its primary language because
+the server is the substance and the shell is thin. It ships what a developer
+wants from an editor: diagnostics on save from the runtime's own validation
+report, and a command to validate a document on demand. Anything the MAUI
+face does with the runtime beyond validation — start a node, pause a scope —
+stays on the desktop, where an operator is.
+
+**TypeScript and JavaScript live in the extension and nowhere else.** The
+owner, 2026-09-10: *keep TypeScript and JavaScript only to the VS Code
+extension; I do not want it anywhere else.* The estate had already refused
+the language twice — it is not a module technology (`module-model.md`,
+section 1) and not a contract language (ADR-0042) — and this closes the third
+door: no surface, tool, test or build step in any other repository is written
+in it. The extension carries it because VS Code's extension host runs nothing
+else, and the shell is kept to what that host requires: starting the server,
+passing the runtime's path, and showing what comes back. The moment a piece
+of logic could live in the Rust server instead, it does.
+
