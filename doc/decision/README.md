@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-four decisions, read as one document.
+Forty-five decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -577,6 +577,18 @@ a short, published, bounded list for watching, never the full Message for replay
 
 → [Recent activity, in full](ADR-0032-recent-activity.md)
 
+### What Xmip may assume about the internet, and how a test says it
+
+**Installation, operation and the runtime work with no internet at all.
+Packaging may happen online — a package is built where the world is
+reachable — and what it produces installs and runs where it is not. Every
+cluster and every node carries one switch, `online`, false unless the operator
+says otherwise, and a test that needs the internet reads that switch and stays
+silent without it: the estate's tests work offline, and only the ones that
+need the internet run online.**
+
+→ [Offline is the default, in full](ADR-0045-offline-is-the-default.md)
+
 ---
 
 ## 6. How the work is done
@@ -667,6 +679,7 @@ You have a word. This gives you the decision that governs it.
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| installing offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -686,10 +699,13 @@ You have a word. This gives you the decision that governs it.
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
+| Offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
+| online, the switch | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | outcome | [Logic is the method](ADR-0043-logic-is-the-method.md) |
+| packaging online | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
@@ -796,3 +812,4 @@ is nowhere else.
 | [0042](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) | A contract holds well-formedness always and conformance when named | |
 | [0043](ADR-0043-logic-is-the-method.md) | Logic is the method | |
 | [0044](ADR-0044-a-technology-shares-through-its-capability.md) | A technology shares through its capability | |
+| [0045](ADR-0045-offline-is-the-default.md) | Offline is the default | |

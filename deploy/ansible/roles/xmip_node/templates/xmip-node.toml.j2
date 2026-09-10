@@ -1,6 +1,9 @@
 [node]
 name = "{{ xmip_node_name }}"
 cluster = "{{ xmip_cluster_name }}"
+# ADR-0045: a node may assume no route to the internet unless the operator
+# says so; nothing at runtime reaches out.
+online = {{ xmip_online | default(false) | lower }}
 
 [storage]
 persistence_engine = "{{ xmip_persistence_engine }}"

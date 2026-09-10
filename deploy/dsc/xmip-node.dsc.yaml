@@ -27,6 +27,9 @@ resources:
               [node]
               name = "local-xmip-node"
               cluster = "local-xmip-cluster"
+              # ADR-0045: a node may assume no route to the internet unless
+              # the operator says so here; nothing at runtime reaches out.
+              online = false
 
               [storage]
               persistence_engine = "rocksdb"
