@@ -172,7 +172,7 @@ reserved  scaffolded  implemented  verified  supported  deprecated  retired
 
 The complete taxonomy is declared from the beginning. Maturity describes
 implementation and support state, not whether the repository belongs in the
-architecture. This is why 292 repositories are named and 43 exist: the manifest
+architecture. This is why 292 repositories are named and 44 exist: the manifest
 is the design, and creation follows need.
 
 ## 4. Dependency rules
