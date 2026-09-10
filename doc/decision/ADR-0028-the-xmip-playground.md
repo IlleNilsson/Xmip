@@ -4,6 +4,8 @@
 - Date: 2026-09-05
 - Amended: 2026-09-09, decision 3a — a seventh scenario, filing, drives every
   archive technology the way pingpong drives every transport
+- Amended: 2026-09-09, decisions 2 and 3a — difficulty: a stress level every
+  scenario runs at, an eighth scenario, storm, and nodes that are processes
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads)
@@ -140,6 +142,12 @@ leaf. Named in the shortest singular form, the owner's convention:
   `Cabinet` adapter the way each transport gets a `RoundTrip`, so a new archive
   technology is a new adapter, not a new scenario. Under pressure a filing is
   skipped now and then and reported as a fault.
+- **storm** — *added 2026-09-09.* Every transport by every contract at a stress
+  level, many pairs at once, harsh faults, the level's payloads cycling by
+  round — and its subject is the invariants that must survive that: a tick
+  finishes within its bound, every failure carries a reason, a red leaf
+  reaches the root, nothing panics. Pingpong proves the pair; storm proves the
+  playground and the estate under it do not lie when leaned on.
 - **claim** — exclusive pickup: a dropped item is read by exactly one holder,
   under real thread contention, across the **execution style** it declares —
   Sequential, Parallel, Concurrent (runtime-model.md). Sequential additionally
@@ -274,3 +282,56 @@ constantly activating receive locations, monitoring send, for all transport
 protocols and content contracts*, spinning processes with no virtualisation,
 called the Xmip Playground. Clauses 1 to 6 are the assistant's drafting of it,
 on the instruction to proceed.
+
+## Amendment, 2026-09-09: difficulty
+
+The owner: *incorporate higher difficulty, stress on all tests; we need about
+10–40 processes emulating nodes.*
+
+### The stress level
+
+Loopback never fails, one payload never surprises, one round at a time never
+contends. A **stress level** — `calm`, `realistic`, `harsh`, `brutal` — turns
+each of those up together, and every scenario takes the level rather than its
+own idea of hard: the fault rates (none, as written, tripled, at the ceiling of
+nine rounds in ten), the payload sizes (a few bytes; then the sizes protocols
+break on — a datagram's MTU either side, the UDP maximum, sixty-four kibibytes
+plus one, a mebibyte), how many pairs run at once (one, one, four, every core),
+how many rounds a test drives, and how many node processes a fleet spawns (one,
+three, ten, forty). `realistic` is what the runner ran at before the axis
+existed and is the default, so nothing changed quietly; `XMIP_PLAYGROUND_STRESS`
+sets it for a roll.
+
+### Every transport declares its ceiling
+
+A `RoundTrip` adapter answers `ceiling()`: the largest payload its protocol
+carries whole in one round, or none. Every adapter is judged on the edge
+payloads — empty, one byte, every byte value, a NUL run, high bytes, a CRLF
+storm, and the sizes above filled with a pattern a truncation or reorder would
+show: under the ceiling they come back whole, above it the adapter refuses with
+a reason, and no round exceeds three times the timeout. A ceiling is a fact
+about the protocol, written where it comes from; it is never set to make a test
+pass.
+
+### Tests at every level
+
+Every scenario keeps its calm tests and gains a `harsh` test over three
+transports for the level's rounds, asserting the scenario's own invariant under
+faults, contention and the edge payloads, and an ignored `brutal` test over the
+whole matrix for the runner to fire. The default suite stays a suite — minutes,
+not hours; the brutal runs are what a roll is for.
+
+### Nodes are processes, now
+
+Decision 2 said nodes run as System Processes, and until this day no scenario
+spawned one. The **fleet** does: `node`, a second binary, is one emulated node
+that runs the claim and daily scenarios over a directory the whole fleet shares
+and publishes its own snapshot under `xmip:///playground/node/<name>`; the
+fleet spawns the level's count of them, merges their snapshots each round, adds
+the cluster rollup the surface owes (ADR-0027 decision 8), and kills and
+restarts a node whose snapshot stops moving — a recorded yellow, never silent.
+Exclusive pickup and backlog draining are thereby contended by real processes,
+which is the property ADR-0024's claim exists to prove and a thread could only
+imitate. `XMIP_PLAYGROUND_NODES` or a harsh or brutal level puts the fleet on
+the board beside the in-process scenarios.
+
