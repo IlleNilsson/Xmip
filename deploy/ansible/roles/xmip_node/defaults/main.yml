@@ -4,6 +4,8 @@ xmip_node_name: local-xmip-node
 xmip_cluster_name: local-xmip-cluster
 xmip_persistence_engine: rocksdb
 xmip_management_engine: sqlite
+# ADR-0045: offline unless said. Set true per node that may reach out.
+xmip_online: false
 
 # The technologies this node loads, by repository name (ADR-0011), and whether
 # each starts. One entry per module the estate has built, kept in step with
