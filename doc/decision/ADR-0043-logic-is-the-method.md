@@ -85,3 +85,13 @@ are SOAP, Web API and gRPC repos?* and *so create the missing repos and
 modules.* The sentence was the assistant's proposal in answer, put to the owner
 before building; the trait's four methods and the consequences are the
 assistant's drafting of it.
+
+## Amendment, 2026-09-10: matter builds
+
+The consequence *`matter` stays declared and unbuilt under Logic* is
+withdrawn. The owner asked on 2026-09-10 for everything declared and not built
+to be sorted, and Matter fits the sentence as it stands: its interaction model
+names an operation as an endpoint, a cluster and a command, and types the
+arguments with the cluster's own data model in TLV. `xmip-core-logic-matter`
+implements the four methods over that, mounted beside `soap`, `http-api` and
+`grpc`, and reads its bytes through the transport the node gives it.

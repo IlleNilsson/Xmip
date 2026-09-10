@@ -187,11 +187,9 @@ dependency = []
     [xmip.core.message.multipart]
     [xmip.core.message.protobuf]
     [xmip.core.message.text]
-    [xmip.core.message.toml]
     [xmip.core.message.ubl]
     specification = "OASIS Universal Business Language"
     [xmip.core.message.xml]
-    [xmip.core.message.yaml]
 
   [xmip.core.context]
   description = "Message Context values and metadata."
@@ -532,7 +530,15 @@ dependency = []
     [xmip.core.contract.xml-schema]
     maturity = "scaffolded"
 
-  [xmip.core.logic]
+    # TOML and YAML are configuration formats, not messages; what the estate
+    # needs of them is a contract (ADR-0047, owner 2026-09-10).
+    [xmip.core.contract.toml]
+    description = "TOML contract: a document is well-formed TOML always, and conforms to a named layout — the tables and keys it must carry, with their types — when one is named. The contract a node configuration is checked against before configure reads it. A xmip-core-contract technology."
+    specification = "TOML v1.0.0"
+    [xmip.core.contract.yaml]
+    description = "YAML contract: a document is well-formed YAML always, and conforms to a named layout when one is named. A xmip-core-contract technology."
+    specification = "YAML 1.2"
+[xmip.core.logic]
   description = "Method and operation semantics layered over transport and message representation."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
