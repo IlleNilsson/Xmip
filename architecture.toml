@@ -175,6 +175,7 @@ dependency = []
   dependency = ["xmip-core"]
     [xmip.core.message.avro]
     [xmip.core.message.binary]
+    maturity = "scaffolded"
     [xmip.core.message.csv]
     [xmip.core.message.edi-edifact]
     [xmip.core.message.edi-tradacoms]
@@ -182,14 +183,20 @@ dependency = []
     [xmip.core.message.edi-x12]
     [xmip.core.message.fixed-width]
     [xmip.core.message.form-urlencoded]
+    maturity = "scaffolded"
     [xmip.core.message.hl7-er7]
     [xmip.core.message.json]
+    maturity = "scaffolded"
     [xmip.core.message.multipart]
+    maturity = "scaffolded"
     [xmip.core.message.protobuf]
     [xmip.core.message.text]
+    maturity = "scaffolded"
     [xmip.core.message.ubl]
+    maturity = "scaffolded"
     specification = "OASIS Universal Business Language"
     [xmip.core.message.xml]
+    maturity = "scaffolded"
 
   [xmip.core.context]
   description = "Message Context values and metadata."
@@ -208,9 +215,11 @@ dependency = []
     dependency = ["xmip-core-transport-tcp"]
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
     [xmip.core.transport.as2]
+    maturity = "scaffolded"
     description = "AS2: EDI over HTTP with S/MIME signing and encryption and signed MDN receipts. RFC 4130."
     dependency = ["xmip-core-transport-http", "xmip-core-message-multipart", "xmip-core-authenticate-certificate"]
     [xmip.core.transport.as4]
+    maturity = "scaffolded"
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
     dependency = ["xmip-core-transport-http", "xmip-core-logic-soap", "xmip-core-authenticate-certificate"]
     [xmip.core.transport.ftp]
@@ -301,6 +310,7 @@ dependency = []
     dependency = ["xmip-core-transport-tcp", "xmip-core-transport-udp"]
     specification = "ODVA Common Industrial Protocol over Ethernet"
     [xmip.core.transport.hart]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-serial"]
     specification = "FieldComm Group HART, IEC 61784-1 communication profile CPF 9"
     [xmip.core.transport.iec-60870-5-104]
@@ -313,6 +323,7 @@ dependency = []
     [xmip.core.transport.io-link]
     specification = "IEC 61131-9, single-drop digital communication interface"
     [xmip.core.transport.iso-tp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-can-bus"]
     specification = "ISO 15765-2, segmentation for payloads larger than a CAN frame"
     [xmip.core.transport.j1939]
@@ -375,6 +386,7 @@ dependency = []
     specification = "Connectivity Standards Alliance Zigbee"
     [xmip.core.transport.aws-sns]
     [xmip.core.transport.aws-sqs]
+    maturity = "scaffolded"
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
     specification = "Azure Blob Storage REST API, Shared Key authorisation"
@@ -444,6 +456,7 @@ dependency = []
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
     [xmip.core.transport.smb]
     [xmip.core.transport.sqlite]
+    maturity = "scaffolded"
     [xmip.core.transport.tcp]
     maturity = "scaffolded"
     specification = "IETF RFC 9293"
@@ -533,11 +546,18 @@ dependency = []
     # TOML and YAML are configuration formats, not messages; what the estate
     # needs of them is a contract (ADR-0047, owner 2026-09-10).
     [xmip.core.contract.toml]
+    maturity = "scaffolded"
     description = "TOML contract: a document is well-formed TOML always, and conforms to a named layout — the tables and keys it must carry, with their types — when one is named. The contract a node configuration is checked against before configure reads it. A xmip-core-contract technology."
     specification = "TOML v1.0.0"
     [xmip.core.contract.yaml]
+    maturity = "scaffolded"
     description = "YAML contract: a document is well-formed YAML always, and conforms to a named layout when one is named. A xmip-core-contract technology."
     specification = "YAML 1.2"
+    [xmip.core.contract.toon]
+    maturity = "scaffolded"
+    description = "TOON contract: Token-Oriented Object Notation, the compact tabular notation for the JSON data model — well-formed always, conformant to a named JSON Schema when one is named, the same schema the json-schema contract reads. A xmip-core-contract technology."
+    dependency = ["xmip-core-contract-json-schema"]
+    specification = "TOON specification, toonformat.dev"
 [xmip.core.logic]
   description = "Method and operation semantics layered over transport and message representation."
   architecturalDomain = "Capability"
@@ -731,13 +751,29 @@ dependency = []
   repositoryRole = "common-capability"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-journey"]
     [xmip.core.route.content]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-path", "xmip-core-path-dot", "xmip-core-path-jsonpath"]
     [xmip.core.route.context]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context"]
     [xmip.core.route.contract]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context"]
     [xmip.core.route.expression]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path", "xmip-core-path-predicate", "xmip-core-contract"]
     [xmip.core.route.header]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context"]
     [xmip.core.route.metadata]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message"]
     [xmip.core.route.party]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context"]
     [xmip.core.route.regex]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-message", "xmip-core-context"]
 
   [xmip.core.process]
   description = "Common Process execution functionality."
@@ -894,11 +930,17 @@ dependency = []
   repositoryRole = "platform-service"
   dependency = ["xmip-core"]
     [xmip.core.resilience.bulkhead]
+    maturity = "scaffolded"
     [xmip.core.resilience.circuit-breaker]
+    maturity = "scaffolded"
     [xmip.core.resilience.fallback]
+    maturity = "scaffolded"
     [xmip.core.resilience.rate-limit]
+    maturity = "scaffolded"
     [xmip.core.resilience.retry]
+    maturity = "scaffolded"
     [xmip.core.resilience.timeout]
+    maturity = "scaffolded"
 
 # xmip.core.exclusiveness is retired. ADR-0024.
 #

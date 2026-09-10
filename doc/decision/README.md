@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-eight decisions, read as one document.
+Forty-nine decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -487,6 +487,19 @@ the same rule through the playground's own shared modules.**
 
 → [A technology shares through its capability, in full](ADR-0044-a-technology-shares-through-its-capability.md)
 
+### Where a Capability crate's own source lives once its directory
+
+also holds the Technology repositories mounted under it
+
+**A directory that holds more than one kind of thing does not put its own
+source in `src`. `module/capability/transport` is eighty-four transport
+repositories and, beside them, the crate that defines what a transport is.
+The crate's source steps aside as `.src`, so the listing reads as the
+technologies it mounts and the one directory that is not a technology says
+so by its name. A crate that hosts nothing keeps `src`.**
+
+→ [A crate that hosts technologies keeps its source in `.src`, in full](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -685,6 +698,7 @@ You have a word. This gives you the decision that governs it.
 
 | Concept | Decided by |
 | --- | --- |
+| `.src` | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a contract version | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
@@ -714,6 +728,7 @@ You have a word. This gives you the decision that governs it.
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Development node | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| directory of many usages | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
@@ -728,6 +743,7 @@ You have a word. This gives you the decision that governs it.
 | Health as a mood | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
+| Host crate | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | installing offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
@@ -876,3 +892,4 @@ is nowhere else.
 | [0046](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) | A route technology is a source the filter reads | |
 | [0047](ADR-0047-a-message-technology-is-the-shape-of-content.md) | A message technology is the shape of content | |
 | [0048](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) | A resilience technology is a guard on the attempt | |
+| [0049](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) | A crate that hosts technologies keeps its source in `.src` | |

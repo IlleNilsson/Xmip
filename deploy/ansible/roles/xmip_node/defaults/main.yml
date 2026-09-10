@@ -98,3 +98,33 @@ xmip_modules:
   - { name: xmip-core-archive-s3, start: false }
   - { name: xmip-core-archive-azure-blob, start: false }
   - { name: xmip-core-archive-gcs, start: false }
+  - { name: xmip-core-route-content, start: false }
+  - { name: xmip-core-route-context, start: false }
+  - { name: xmip-core-route-contract, start: false }
+  - { name: xmip-core-route-expression, start: false }
+  - { name: xmip-core-route-header, start: false }
+  - { name: xmip-core-route-metadata, start: false }
+  - { name: xmip-core-route-party, start: false }
+  - { name: xmip-core-route-regex, start: false }
+  - { name: xmip-core-message-json, start: false }
+  - { name: xmip-core-message-multipart, start: false }
+  - { name: xmip-core-message-xml, start: false }
+  - { name: xmip-core-message-binary, start: false }
+  - { name: xmip-core-message-text, start: false }
+  - { name: xmip-core-message-form-urlencoded, start: false }
+  - { name: xmip-core-message-ubl, start: false }
+  - { name: xmip-core-contract-toml, start: false }
+  - { name: xmip-core-contract-toon, start: false }
+  - { name: xmip-core-contract-yaml, start: false }
+  - { name: xmip-core-transport-as2, start: false }
+  - { name: xmip-core-transport-as4, start: false }
+  - { name: xmip-core-transport-aws-sqs, start: false }
+  - { name: xmip-core-transport-hart, start: false }
+  - { name: xmip-core-transport-iso-tp, start: false }
+  - { name: xmip-core-transport-sqlite, start: false }
+  - { name: xmip-core-resilience-bulkhead, start: false }
+  - { name: xmip-core-resilience-circuit-breaker, start: false }
+  - { name: xmip-core-resilience-fallback, start: false }
+  - { name: xmip-core-resilience-rate-limit, start: false }
+  - { name: xmip-core-resilience-retry, start: false }
+  - { name: xmip-core-resilience-timeout, start: false }
