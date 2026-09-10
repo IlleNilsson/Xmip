@@ -66,12 +66,14 @@ read is a configuration mistake, not a decline.
 ### 3. Eight technologies, each its own repository
 
 Mounted directly under `xmip-core-route` (ADR-0016 as amended). `content`
-depends on `xmip-core-path` and the path technology the property names;
-`contract` on `xmip-core-contract`; `expression` on
-`xmip-core-path-predicate`; `party` on `xmip-core-party`. The rest read the
-Message and its context and depend on the capability alone. Shared reading —
-of headers, of the context's typed values — goes up into the capability
-(ADR-0044), never sideways.
+depends on `xmip-core-path` and the path technologies it drives, `dot` and
+`jsonpath`; `expression` on `xmip-core-path-predicate` and, for the reader it
+implements, `xmip-core-contract`. The rest read the Message and its context
+and depend on the capability, message and context alone: `contract` reads
+the section's binding and needs nothing from the contract crate, and `party`
+reads the party id the runtime promotes (`xmip.party`) and needs nothing from
+the party crate. The one rendering of a context value as filter text,
+`route::text_of`, lives in the capability (ADR-0044), never in a sibling.
 
 ## Consequences
 
