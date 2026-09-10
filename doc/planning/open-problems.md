@@ -80,7 +80,9 @@ C fails the test that a namer should not need global knowledge.
 
 ## 9. `resilience` and `exclusiveness` are alone in the Platform tier
 
-And `resilience` has no plugin surface in practice, despite six declared implementations.
+And `resilience` had no plugin surface in practice, despite six declared
+implementations — until ADR-0048 (2026-09-10) gave it the guard trait the six
+implement. The tier question below stays as it was.
 
 | option | effect |
 |---|---|
