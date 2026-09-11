@@ -179,6 +179,23 @@ brew = "dotnet-sdk"
 [prerequisite.dotnet.linux]
 fallback = "https://dot.net/v1/dotnet-install.sh"
 
+[prerequisite.node]
+role = "developer"
+optional = true
+probe = "node --version"
+minimum = "24.0"
+channel = "stable"
+note = "For the VS Code extension's TypeScript shell (ADR-0014, amendment 2026-09-10): npm compiles, lints and tests it under module/operation/gui/vscode/extension. The landing gate runs those steps where node is present and says so where it is not (ADR-0052)."
+
+[prerequisite.node.windows]
+winget = "OpenJS.NodeJS"
+
+[prerequisite.node.macos]
+brew = "node"
+
+[prerequisite.node.linux]
+apt = "nodejs"
+
 # ---------------------------------------------------------------------------
 # Contract languages. ADR-0042 decision 3: a contract may be authored in any
 # declared language over the C ABI (ADR-0012). Each language below is the

@@ -755,6 +755,65 @@ function Get-XmipBuildableFeature {
     return @($declared | Where-Object { $_ -ne 'default' -and $skip -notcontains $_ })
 }
 
+function Test-XmipExtensionShell {
+    <#
+        .SYNOPSIS
+            Compiles, lints and tests a VS Code extension's TypeScript shell.
+            True when everything passed, or when npm is absent and said so.
+
+        .DESCRIPTION
+            ADR-0052 clause 6: the shell is verified by the gate the way its
+            Rust is. Node is an optional developer prerequisite
+            (prerequisite.toml), so a machine without it lands the shell
+            unverified and is told, rather than being refused.
+
+        .PARAMETER Path
+            The extension directory, holding package.json.
+
+        .PARAMETER Name
+            The module path, for reporting.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+        [string] $note = "   NOTE $Name/extension not verified: npm is absent. " +
+            'Install-XmipPrerequisite -Role developer'
+
+        Write-Host $note -ForegroundColor Yellow
+
+        return $true
+    }
+
+    Push-Location -LiteralPath $Path
+
+    try {
+        foreach ($step in @('ci', 'run compile', 'run lint', 'test')) {
+            Write-Host "   npm $step..." -ForegroundColor DarkGray
+
+            & npm @($step -split ' ') 2>&1 | ForEach-Object { Write-Host $_ }
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "   FAILED npm $step" -ForegroundColor Red
+
+                return $false
+            }
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    return $true
+}
+
 function Test-XmipDotnetModule {
     <#
         .SYNOPSIS
@@ -1240,6 +1299,12 @@ function Test-XmipModule {
                         ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
                 }
+            }
+
+            if ($passed -and (Test-Path -LiteralPath (Join-Path $path 'extension/package.json'))) {
+                # The one Rust repository that also ships a TypeScript shell
+                # (ADR-0014, amendment 2026-09-10) is verified in both languages.
+                $passed = Test-XmipExtensionShell -Path (Join-Path $path 'extension') -Name $name
             }
         }
         finally {
