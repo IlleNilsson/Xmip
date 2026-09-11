@@ -289,7 +289,7 @@ dependency = []
     specification = "ASHRAE 135, also ISO 16484-5"
     [xmip.core.transport.bluetooth]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "Bluetooth transport: RFCOMM over L2CAP — a Stream is the information of one data link connection, opened with SABM, carried in UIH frames and closed with DISC; a loopback radio stands in for the controller. A xmip-core-transport technology."
     specification = "Bluetooth SIG Core Specification"
     [xmip.core.transport.canopen]
     maturity = "scaffolded"
@@ -306,7 +306,7 @@ dependency = []
     specification = "IETF RFC 1006, ISO transport over TCP, TPKT and COTP"
     [xmip.core.transport.dds]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "DDS transport: RTPS over UDP — DATA submessages carry a sample whole and DATA_FRAG submessages carry it in fragments reassembled by sequence number; a Location is a participant's unicast locator; an in-process reader stands in for the domain. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-udp"]
     specification = "OMG Data Distribution Service, RTPS over UDP"
     [xmip.core.transport.dhcp]
@@ -352,7 +352,7 @@ dependency = []
     specification = "IEC 60870-5-104: APCI, STARTDT and TESTFR, I frames acknowledged one at a time"
     [xmip.core.transport.iec-61850]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "IEC 61850 transport: MMS over ISO transport on TCP — initiate, a write and a read of a domain variable as an octet string, conclude — and GOOSE, the publisher's frame on raw Ethernet with a Stream as its data set. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-cotp", "xmip-core-transport-ethernet"]
     specification = "IEC 61850. MMS over COTP, GOOSE and Sampled Values on raw Ethernet"
     [xmip.core.transport.io-link]
@@ -371,15 +371,15 @@ dependency = []
     specification = "SAE J1939"
     [xmip.core.transport.knx]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "KNX transport: KNXnet/IP tunnelling over UDP — a connection, tunnelling requests acknowledged in sequence, cEMI L_Data frames to a group address; a Stream longer than one telegram travels as a sequence of extended frames; an in-process tunnelling server stands in for the interface. A xmip-core-transport technology."
     specification = "EN 50090, also ISO/IEC 14543-3"
     [xmip.core.transport.lorawan]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "LoRaWAN transport: the MAC frame — confirmed and unconfirmed data up and down, the frame counter, the FRMPayload under AES-128 and the CMAC MIC — a Stream longer than one frame travels as fragments on its own port; a loopback radio and network server stand in for the gateway. A xmip-core-transport technology."
     specification = "LoRa Alliance LoRaWAN"
     [xmip.core.transport.m-bus]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "M-Bus transport: EN 13757 wired metering over a serial line — short and long frames, SND_UD and REQ_UD2 answered by RSP_UD, a Stream as variable data records across as many telegrams as it takes; a loopback meter stands in for the line. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-serial"]
     specification = "EN 13757, wired metering bus"
     [xmip.core.transport.mdns]
@@ -389,7 +389,7 @@ dependency = []
     [xmip.core.transport.obd-ii]
     maturity = "scaffolded"
     description = "OBD-II transport: SAE J1979 over ISO-TP — mode 01 parameters and mode 09 vehicle information asked at the functional address 0x7DF and answered from 0x7E8; a Receive Location polls one, a Send Location answers one as the ECU. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus"]
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
     dependency = ["xmip-core-transport-as4"]
@@ -410,16 +410,18 @@ dependency = []
     [xmip.core.transport.uds]
     maturity = "scaffolded"
     description = "UDS transport: ISO 14229 diagnostics over ISO-TP — a Send Location writes a data identifier, by WriteDataByIdentifier or a download in TransferData blocks; a Receive Location serves one as an ECU would, and the bytes written to it arrive as a Stream. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus"]
     specification = "ISO 14229, unified diagnostic services"
     [xmip.core.transport.wireless-hart]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "WirelessHART transport: the HART command set in TDMA-framed DLPDUs over IEEE 802.15.4 — a Stream written and read in chunks through the device-specific commands hart defines, the network and transport layers around them; a loopback radio and its slots stand in for the gateway. A xmip-core-transport technology."
     specification = "IEC 62591"
+    dependency = ["xmip-core-transport-hart"]
     [xmip.core.transport.wireless-m-bus]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "Wireless M-Bus transport: EN 13757-4 over the air — the link layer frame of length, control, manufacturer, address and control information with a CRC per block, carrying the same records and the same meter as wired M-Bus; a loopback radio stands in for the receiver. A xmip-core-transport technology."
     specification = "EN 13757-4"
+    dependency = ["xmip-core-transport-m-bus"]
     [xmip.core.transport.redpanda]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-kafka"]
@@ -438,11 +440,11 @@ dependency = []
     specification = "IETF RFC 5424, over UDP or TCP with RFC 6587 octet counting"
     [xmip.core.transport.thread]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "Thread transport: IPv6 and UDP over IEEE 802.15.4 with 6LoWPAN — a Stream is one UDP datagram, whole in a frame or in FRAG1 and FRAGN fragments reassembled by datagram tag; a loopback radio stands in for the mesh. A xmip-core-transport technology."
     specification = "Thread Group Thread, IPv6 over IEEE 802.15.4"
     [xmip.core.transport.zigbee]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "Zigbee transport: APS framing over the network layer — a Stream is one APS data frame, or a fragmented transmission of numbered blocks acknowledged by the receiver; a loopback radio stands in for the coordinator. A xmip-core-transport technology."
     specification = "Connectivity Standards Alliance Zigbee"
     [xmip.core.transport.aws-sns]
     maturity = "scaffolded"
@@ -450,6 +452,7 @@ dependency = []
     dependency = ["xmip-core-transport-http", "xmip-core-transport-aws-sqs"]
     [xmip.core.transport.aws-sqs]
     maturity = "scaffolded"
+    dependency = ["xmip-core-transport-http", "xmip-core-transport-s3"]
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
     specification = "Azure Blob Storage REST API, Shared Key authorisation"
@@ -519,7 +522,7 @@ dependency = []
     description = "NFS transport: one file on an export is one Stream — NFS version 3 over ONC RPC on TCP, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.opc-ua]
     maturity = "scaffolded"
-    description = "Starter template for a Rust Xmip module repository."
+    description = "OPC UA transport: one node's value is one Stream — the binary encoding over TCP, a secure channel with security policy None, an anonymous session, a Read and a Write of a ByteString, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.oracle]
     maturity = "scaffolded"
     description = "Oracle transport: one row of a query is one Stream, a send is one INSERT; TNS and TTC against a listener, as mssql and mysql are built. A xmip-core-transport technology."
