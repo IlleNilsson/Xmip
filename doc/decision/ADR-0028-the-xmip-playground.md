@@ -321,6 +321,15 @@ faults, contention and the edge payloads, and an ignored `brutal` test over the
 whole matrix for the runner to fire. The default suite stays a suite — minutes,
 not hours; the brutal runs are what a roll is for.
 
+### The far end moved into the transport, 2026-09-11
+
+Clause 5 and *Every transport declares its ceiling* above are read through
+ADR-0051 since 2026-09-11: the dance that makes a transport its own far end,
+its ceiling and its refusals are written in the technology's crate as the
+capability's `Loopback`, and the Playground drives every transport through
+one adapter over it. "A new transport is a new adapter, not a new scenario"
+becomes "a new transport is its own loopback, and a line in the list".
+
 ### Nodes are processes, now
 
 Decision 2 said nodes run as System Processes, and until this day no scenario
