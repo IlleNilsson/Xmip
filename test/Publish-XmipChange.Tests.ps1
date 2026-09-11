@@ -326,7 +326,9 @@ Describe 'Sort-XmipModuleDependency' {
     BeforeAll {
         # A three-module estate on disk: c depends on b, b depends on a. The
         # manifests are real Cargo.toml files because the sort reads them with
-        # a regex, and a mock would test the mock.
+        # a regex, and a mock would test the mock. c aliases b as `b`, the way
+        # a technology names a sibling; the sort read only `xmip` aliases and
+        # landed ethercat before ethernet on 2026-09-11.
         $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-sort-$([guid]::NewGuid())"
 
         $modules = @{
@@ -348,7 +350,7 @@ xmip-a = { package = "xmip-core-a", git = "https://example.invalid/a", branch = 
 name = "xmip-core-c"
 
 [dependencies]
-xmip-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main" }
+b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main" }
 '@
         }
 
