@@ -213,7 +213,7 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
 
 Describe 'Rust style, section 2: tests are measured separately' {
     It 'reports the shape of the ten largest files' {
-        # Not an assertion. The same reporting Xmip.Style.Tests.ps1 does for
+        # Not an assertion. The same reporting Xmip.Style.Test.ps1 does for
         # PowerShell functions: the number is more useful printed than gated.
         $script:Files |
             Sort-Object Code -Descending |
@@ -240,7 +240,7 @@ Describe 'The style document describes what is enforced' {
     }
 
     It 'names this file as the thing that enforces it' {
-        $script:Document | Should -Match 'test/Rust\.Style\.Tests\.ps1'
+        $script:Document | Should -Match 'test/Rust\.Style\.Test\.ps1'
     }
 
     It 'states the same gate this file enforces' {

@@ -378,7 +378,7 @@ Belongs with the capability that has to implement it. RFC numbers verified
 against rfc-editor.org and the IETF Datatracker on 2026-08-25.
 
 Note for whoever runs this: README.md links to this file at its current path,
-and test/Documentation.Tests.ps1 fails when a README link does not resolve.
+and test/Documentation.Test.ps1 fails when a README link does not resolve.
 Update the link in the same commit as the move.
 """
 
@@ -792,9 +792,9 @@ path = ".github/ci-trigger.md"
 [[keep]]
 path = "asset/brand/xmip-logo.png"
 [[keep]]
-path = "test/Sync-XmipEstate.Tests.ps1"
+path = "test/Sync-XmipEstate.Test.ps1"
 [[keep]]
-path = "test/Sync-XmipEstate.StrictMode.Tests.ps1"
+path = "test/Sync-XmipEstate.StrictMode.Test.ps1"
 [[keep]]
 path = "install/install-local.ps1"
 [[keep]]
@@ -1267,7 +1267,7 @@ reason = "Why the estate is shaped this way. Replaces five documents and specifi
 
 # The identity-by-technology.md move lived here until 2026-08-26. It is in
 # section 3 now, with the rest of the moves. Two [[move]] entries for one file
-# is how Distribute ends up racing itself, and test/Allocation.Tests.ps1
+# is how Distribute ends up racing itself, and test/Allocation.Test.ps1
 # caught it on the first run.
 
 [[superseded]]
@@ -1591,7 +1591,7 @@ reason = "Zero bytes. ADR-0020 clause 7."
 # copy is wrong the moment the first one moves — the same failure the keep
 # inventory in section 4 had, for the same reason.
 #
-# Counting by hand is replaced by test/Allocation.Tests.ps1, which checks the
+# Counting by hand is replaced by test/Allocation.Test.ps1, which checks the
 # claims this block used to make and fails when they stop being true:
 #
 #   - every [[move]] and [[superseded]] path exists on disk
@@ -1603,7 +1603,7 @@ reason = "Zero bytes. ADR-0020 clause 7."
 # exactly once' is no longer the invariant. The invariant is that nothing is
 # *unaccounted for*, and a rule accounts for a directory without naming it.
 
-verifiedBy = "test/Allocation.Tests.ps1"
+verifiedBy = "test/Allocation.Test.ps1"
 
 
 # ---------------------------------------------------------------------------

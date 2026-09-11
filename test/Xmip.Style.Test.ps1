@@ -431,10 +431,10 @@ Describe 'PowerShell style, section 1: layout' {
             'Sync-XmipEstate.ps1'          = 8
             'Sync-XmipRepository.ps1'      = 20
             'Xmip.psm1'                    = 20
-            'Decision.Tests.ps1'          = 1
-            'Documentation.Tests.ps1'      = 5
-            'Publish-XmipChange.Tests.ps1' = 2
-            'Sync-XmipEstate.Tests.ps1'    = 6
+            'Decision.Test.ps1'          = 1
+            'Documentation.Test.ps1'      = 5
+            'Publish-XmipChange.Test.ps1' = 2
+            'Sync-XmipEstate.Test.ps1'    = 6
         }
     }
 
@@ -613,7 +613,7 @@ Describe 'The style document describes what is enforced' {
 
         # The failure that prompted this test: section 6 named a file that did
         # not exist, in a document about not letting rules decay.
-        $style | Should -Match 'Xmip\.Style\.Tests\.ps1'
+        $style | Should -Match 'Xmip\.Style\.Test\.ps1'
     }
 
     It 'states the same line length this file enforces' {

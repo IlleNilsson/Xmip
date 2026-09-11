@@ -56,6 +56,13 @@ good code never breaks, both are rules good code breaks knowingly.
 **Blank line between logical steps.** A wall of twenty consecutive statements is
 one step to the parser and twenty to the reader.
 
+**A file is named for what it defines, in the singular.** `Publish-XmipChange.ps1`
+defines that cmdlet; `test/Allocation.Test.ps1` is the allocation test. Pester
+discovers `*.Tests.ps1` by default, so the estate tells Pester its extension
+through `Get-XmipPesterConfiguration` — every run, the gate and `Invoke-XmipTest`
+alike — rather than bending its files to the tool. The owner's ruling,
+2026-09-11: the tool's convention is not the estate's.
+
 ## 2. Functions
 
 **A function fits on half a page — about 30 lines of body.** Longer means it is
@@ -65,7 +72,7 @@ scrolling.
 **Of body.** The `param()` block below costs four lines per parameter, so a
 three-parameter function spends fourteen lines before it does anything. Counting
 that against the limit set this rule fighting the next one, and the next one
-always won. `Xmip.Style.Tests.ps1` subtracts the parameter block, and a doc
+always won. `Xmip.Style.Test.ps1` subtracts the parameter block, and a doc
 comment above a nested function counts against whichever function encloses it —
 which is why the pure helpers in `Sync-XmipEstate.ps1` sit at file scope.
 
@@ -292,7 +299,7 @@ same redirect:
 
 ## 6. What this is enforced by
 
-`test/Xmip.Style.Tests.ps1`, over `Xmip/` and `test/`. It fails on:
+`test/Xmip.Style.Test.ps1`, over `Xmip/` and `test/`. It fails on:
 
 | Rule | Section | Enforced |
 | --- | --- | --- |
@@ -302,7 +309,7 @@ same redirect:
 | A file that does not parse | — | yes |
 | Function over 35 lines | 2 | **reported, not gated** |
 
-**This table is checked.** Every gating test in `Xmip.Style.Tests.ps1` must have
+**This table is checked.** Every gating test in `Xmip.Style.Test.ps1` must have
 a row here, and the count is asserted. The loop-variable rule was gated on
 2026-08-29 and went undocumented, because the only checks on this document were
 that it names the test file and states the line length — neither of which any
@@ -347,7 +354,7 @@ The rules this file does **not** yet enforce are the ones needing judgement:
 one statement per line, named arguments, single quotes where nothing expands.
 They are stated above and reviewed by people. Listing them here as enforced
 when they are not is the failure mode this section already had once —
-`Xmip.Style.Tests.ps1` was named here for some time before it existed.
+`Xmip.Style.Test.ps1` was named here for some time before it existed.
 
 Style that is only written down decays. ADR-0021 made that argument about
 version floors, and it applies equally here.

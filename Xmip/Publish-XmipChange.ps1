@@ -699,7 +699,7 @@ function Sort-XmipModuleDependency {
 # Features whose code does not compile, and the module that owns each.
 #
 # A shrink-only list, the same instrument as the file-length ratchet in
-# Rust.Style.Tests.ps1 and for the same reason: a waiver list absorbs new
+# Rust.Style.Test.ps1 and for the same reason: a waiver list absorbs new
 # entries and its maintenance becomes the work, while this can only be emptied.
 # Adding to it is a decision somebody has to argue for; removing is just fixing
 # the feature.
@@ -771,7 +771,7 @@ function Test-XmipDotnetModule {
 
             Two kinds of test, because the estate has both. A Pester file under
             `test/` runs over a built module, which is what a PowerShell
-            surface needs. A `*.Tests.csproj` is `dotnet test`. A
+            surface needs. A `*.Test.csproj` is `dotnet test`. A
             module with neither still builds, and building is the weakest
             verification that is still verification — reported as such rather
             than counted as passing tests.
@@ -824,8 +824,11 @@ function Test-XmipDotnetModule {
         }
     }
 
+    # `.Test.csproj`, singular, like every test file in the estate. The plural
+    # is tolerated until `Xmip.Abi.Tests` can be renamed: an editor's build
+    # host held its directory on 2026-09-11.
     [System.IO.FileInfo[]] $suite = @(
-        $project | Where-Object { $_.Name -like '*.Tests.csproj' }
+        $project | Where-Object { $_.Name -match '\.Tests?\.csproj$' }
     )
 
     foreach ($csproj in $suite) {
@@ -928,7 +931,7 @@ function Test-XmipPesterSuite {
     [System.IO.FileInfo[]] $suite = @()
 
     if (Test-Path -LiteralPath $tests) {
-        $suite = @(Get-ChildItem -Path $tests -Filter '*.Tests.ps1' -Recurse -File)
+        $suite = @(Get-ChildItem -Path $tests -Filter '*.Test.ps1' -Recurse -File)
     }
 
     if ($suite.Count -eq 0) {
@@ -941,7 +944,7 @@ function Test-XmipPesterSuite {
 
     Write-Host "   running $($suite.Count) Pester file(s)..." -ForegroundColor DarkGray
 
-    $result = Invoke-Pester -Path $tests -PassThru -Output None
+    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $tests)
 
     [string] $tally = "   $($result.PassedCount) passed, $($result.FailedCount) failed"
 
@@ -952,6 +955,92 @@ function Test-XmipPesterSuite {
     }
 
     return ($result.FailedCount -eq 0)
+}
+
+<#
+    .SYNOPSIS
+    How Pester is told to find the estate's tests.
+
+    .DESCRIPTION
+    A test file is named for what it defines, in the singular, like every
+    other file in the estate: `Allocation.Test.ps1` is the allocation test.
+    Pester's own discovery pattern is the plural `*.Tests.ps1`, so the estate
+    tells Pester its extension here rather than bending its files to the
+    tool (the owner's ruling, 2026-09-11). Every run goes through this, so
+    nothing discovers a different set.
+#>
+function Get-XmipPesterConfiguration {
+    [CmdletBinding()]
+    [OutputType('PesterConfiguration')]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path
+    )
+
+    $configuration = New-PesterConfiguration
+
+    $configuration.Run.Path = $Path
+    $configuration.Run.TestExtension = '.Test.ps1'
+    $configuration.Run.PassThru = $true
+    $configuration.Output.Verbosity = 'None'
+
+    return $configuration
+}
+
+function Invoke-XmipTest {
+    <#
+        .SYNOPSIS
+            Runs the estate's Pester suite under `test/`.
+
+        .DESCRIPTION
+            `Invoke-Pester -Path ./test` finds nothing since 2026-09-11:
+            the estate's test files carry the singular suffix `.Test.ps1` and
+            Pester looks for the plural. This is the one door: the same
+            configuration the landing gate uses, over the same directory.
+
+            The result is returned, not printed, so a caller reads
+            `PassedCount`, `FailedCount` and `Failed` like any other object.
+
+        .PARAMETER Path
+            The directory of tests. Defaults to `test/` under the repository
+            root this module was imported from.
+
+        .EXAMPLE
+            Invoke-XmipTest
+
+        .EXAMPLE
+            (Invoke-XmipTest).Failed | Format-Table ExpandedPath
+    #>
+    [CmdletBinding()]
+    [OutputType('Pester.Run')]
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string] $Path = (Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test')
+    )
+
+    # Strict mode off here, alone in this module, which sets it at module
+    # scope: Pester runs the tests in this scope's descendants, and they are
+    # written and run everywhere else in the console's default mode.
+    Set-StrictMode -Off
+    $ErrorActionPreference = 'Stop'
+
+    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $Path)
+
+    [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
+
+    if ($result.FailedCount -eq 0) {
+        Write-Host "OK $tally" -ForegroundColor Green
+    }
+    else {
+        Write-Host "FAILED $tally" -ForegroundColor Red
+    }
+
+    foreach ($failure in $result.Failed) {
+        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
+    }
+
+    return $result
 }
 
 function Test-XmipModule {

@@ -52,6 +52,7 @@
         'New-XmipDecisionIndex'
         'Get-XmipHistory'
         'Start-XmipWeb'
+        'Invoke-XmipTest'
     )
 
     CmdletsToExport      = @()

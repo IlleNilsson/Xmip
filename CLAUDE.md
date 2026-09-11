@@ -16,7 +16,7 @@ The estate is governed by its own records, and they are current:
 - `doc/architecture/` — five models. `repository-model.md` explains why 44
   submodules mount where they do.
 - `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
-  `test/*.Tests.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
+  `test/*.Test.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
   production lines; a file is named for what it defines; a loop variable is
   never a parameter. **Length rules are strict recommendations: breaking one
   requires the owner's agreement FIRST, then the recorded reason.** An
@@ -24,7 +24,7 @@ The estate is governed by its own records, and they are current:
 - `doc/planning/open-problems.md` — what is open and in what order. Problem
   19 and the Suggested order section are the queue.
 - `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
-  `test/Allocation.Tests.ps1`; keep it true when files move.
+  `test/Allocation.Test.ps1`; keep it true when files move.
 
 ## How work lands
 
@@ -35,7 +35,7 @@ One command tests and lands everything, dependency order, modules first:
 
 Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
 before anything depending on it can be verified — the tool handles the order.
-Run `Invoke-Pester -Path ./test` before landing anything non-trivial; the
+Run `Invoke-XmipTest` before landing anything non-trivial; the
 suite is ~96 tests and is the estate's memory of every past defect. pwsh 7.6.5,
 PSToml and posh-git required. Rust builds with stable cargo; C# builds with the
 .NET 11 preview SDK but the PowerShell binary module targets net10.0 because
