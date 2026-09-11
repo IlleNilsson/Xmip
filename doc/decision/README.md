@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty decisions, read as one document.
+Fifty-one decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -652,6 +652,20 @@ a short, published, bounded list for watching, never the full Message for replay
 
 → [Recent activity, in full](ADR-0032-recent-activity.md)
 
+### Where the dance that makes a transport its own counterparty is
+
+written, and who drives it
+
+**A transport that can be both ends of one exchange on this machine says so
+in its own crate, by implementing the capability's `Loopback` trait: stand
+up the far end, say where it listens, send from a fresh near end, take the
+one arrival, and declare the ceiling and the refusals that are facts about
+the protocol. The Playground drives every transport through one adapter over
+that trait and writes no dance of its own. A new transport is a `loopback()`
+constructor in its crate and one line in the Playground's list.**
+
+→ [A transport brings its own far end, in full](ADR-0051-a-transport-brings-its-own-far-end.md)
+
 ### What Xmip may assume about the internet, and how a test says it
 
 **Installation, operation and the runtime work with no internet at all.
@@ -754,6 +768,7 @@ You have a word. This gives you the decision that governs it.
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
+| far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Guard | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
@@ -775,6 +790,7 @@ You have a word. This gives you the decision that governs it.
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
+| Loopback | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | managed Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
@@ -784,6 +800,7 @@ You have a word. This gives you the decision that governs it.
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| near end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
@@ -834,6 +851,7 @@ You have a word. This gives you the decision that governs it.
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
+| the one adapter | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
@@ -914,3 +932,4 @@ is nowhere else.
 | [0048](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) | A resilience technology is a guard on the attempt | |
 | [0049](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) | A crate that hosts technologies keeps its source in `.src` | |
 | [0050](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) | An identity technology is one mechanism at one gate | |
+| [0051](ADR-0051-a-transport-brings-its-own-far-end.md) | A transport brings its own far end | |
