@@ -128,40 +128,40 @@ xmip_modules:
   - { name: xmip-core-resilience-rate-limit, start: false }
   - { name: xmip-core-resilience-retry, start: false }
   - { name: xmip-core-resilience-timeout, start: false }
+  - { name: xmip-core-transport-smb, start: false }
+  - { name: xmip-core-transport-oracle, start: false }
+  - { name: xmip-core-transport-zigbee, start: false }
+  - { name: xmip-core-transport-wireless-m-bus, start: false }
+  - { name: xmip-core-transport-wireless-hart, start: false }
+  - { name: xmip-core-transport-uds, start: false }
+  - { name: xmip-core-transport-thread, start: false }
+  - { name: xmip-core-transport-profinet, start: false }
+  - { name: xmip-core-transport-opc-ua, start: false }
+  - { name: xmip-core-transport-obd-ii, start: false }
+  - { name: xmip-core-transport-nfs, start: false }
+  - { name: xmip-core-transport-m-bus, start: false }
+  - { name: xmip-core-transport-lorawan, start: false }
+  - { name: xmip-core-transport-knx, start: false }
+  - { name: xmip-core-transport-j1939, start: false }
+  - { name: xmip-core-transport-io-link, start: false }
+  - { name: xmip-core-transport-iec-61850, start: false }
+  - { name: xmip-core-transport-google-pub-sub, start: false }
+  - { name: xmip-core-transport-ethernet-ip, start: false }
+  - { name: xmip-core-transport-ethernet, start: false }
+  - { name: xmip-core-transport-ethercat, start: false }
+  - { name: xmip-core-transport-dds, start: false }
+  - { name: xmip-core-transport-canopen, start: false }
+  - { name: xmip-core-transport-bluetooth, start: false }
+  - { name: xmip-core-transport-azure-service-bus, start: false }
+  - { name: xmip-core-transport-azure-event-hubs, start: false }
+  - { name: xmip-core-transport-azure-event-grid, start: false }
   - { name: xmip-core-transport-aws-kinesis, start: false }
   - { name: xmip-core-transport-aws-sns, start: false }
-  - { name: xmip-core-transport-azure-event-grid, start: false }
-  - { name: xmip-core-transport-azure-event-hubs, start: false }
-  - { name: xmip-core-transport-azure-service-bus, start: false }
-  - { name: xmip-core-transport-bluetooth, start: false }
-  - { name: xmip-core-transport-canopen, start: false }
-  - { name: xmip-core-transport-dds, start: false }
   - { name: xmip-core-transport-dicom, start: false }
-  - { name: xmip-core-transport-ethercat, start: false }
-  - { name: xmip-core-transport-ethernet, start: false }
-  - { name: xmip-core-transport-ethernet-ip, start: false }
-  - { name: xmip-core-transport-google-pub-sub, start: false }
   - { name: xmip-core-transport-ibm-mq, start: false }
-  - { name: xmip-core-transport-iec-61850, start: false }
-  - { name: xmip-core-transport-io-link, start: false }
-  - { name: xmip-core-transport-j1939, start: false }
-  - { name: xmip-core-transport-knx, start: false }
-  - { name: xmip-core-transport-lorawan, start: false }
-  - { name: xmip-core-transport-m-bus, start: false }
   - { name: xmip-core-transport-msmq, start: false }
   - { name: xmip-core-transport-named-pipe, start: false }
-  - { name: xmip-core-transport-nfs, start: false }
-  - { name: xmip-core-transport-obd-ii, start: false }
-  - { name: xmip-core-transport-opc-ua, start: false }
-  - { name: xmip-core-transport-oracle, start: false }
-  - { name: xmip-core-transport-profinet, start: false }
-  - { name: xmip-core-transport-smb, start: false }
-  - { name: xmip-core-transport-thread, start: false }
-  - { name: xmip-core-transport-uds, start: false }
   - { name: xmip-core-transport-unix-socket, start: false }
-  - { name: xmip-core-transport-wireless-hart, start: false }
-  - { name: xmip-core-transport-wireless-m-bus, start: false }
-  - { name: xmip-core-transport-zigbee, start: false }
   - { name: xmip-core-message-avro, start: false }
   - { name: xmip-core-message-csv, start: false }
   - { name: xmip-core-message-edi-edifact, start: false }

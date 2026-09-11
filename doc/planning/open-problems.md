@@ -509,8 +509,13 @@ retires entries from stops being an order.
 2. Protocol implementations            eighty-two of eighty-four transports,
                                        every contract, message, route, logic,
                                        resilience, path and archive technology
-                                       built (2026-09-11); sftp and peppol
-                                       remain, and the fifty-one identity
+                                       built (2026-09-11; twenty-seven of the
+                                       transports had been reported built
+                                       that morning over a template stub and
+                                       were built for real that afternoon).
+                                       Every transport is its own far end
+                                       (ADR-0051). sftp and peppol remain,
+                                       and the fifty-one identity
                                        technologies ADR-0050 sorts
 3. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
