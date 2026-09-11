@@ -321,6 +321,23 @@ faults, contention and the edge payloads, and an ignored `brutal` test over the
 whole matrix for the runner to fire. The default suite stays a suite — minutes,
 not hours; the brutal runs are what a roll is for.
 
+### The tests use half of what is free when they start, 2026-09-11
+
+The stress level sized `brutal` to every core and to forty node processes,
+`harsh` to ten. The owner ruled on 2026-09-11, watching a brutal roll: the
+tests may use half of the resources left when they start. A machine a quarter
+busy has three quarters free; the Playground takes half of that, three eighths
+of the machine, and the other half of what was free stays with whatever else
+the machine is doing — and that other work moves, so the measure is taken
+again before every round. `headroom.rs` reads processor time less what the
+roll and its fleet burn themselves — the Windows performance counters,
+`/proc/stat` on Linux, free assumed elsewhere — and every count that would
+take the whole machine is scaled to that budget, never below one: `brutal`
+drives pairs from the budgeted cores and spawns forty nodes' worth of budget,
+`harsh` four cores and ten nodes' worth. The fleet is sized when it is
+spawned; the pairs follow the budget round by round, and the roll prints the
+budget beside each round.
+
 ### The far end moved into the transport, 2026-09-11
 
 Clause 5 and *Every transport declares its ceiling* above are read through
