@@ -42,13 +42,13 @@ parent that makes it unique, and a parent has no two children with one name.
 
 That property held across 334 declared repositories before anything enforced it,
 and it is invisible from the tree — which is why it was reported as a bug by
-someone reading the tree, on 2026-08-29. `Sync-XmipEstate.Tests.ps1` now asserts
+someone reading the tree, on 2026-08-29. `Sync-XmipEstate.Test.ps1` now asserts
 that no two repositories resolve to one mount, so the next name that would break
 it fails a test rather than a clone.
 
 That layout is for human navigation. Cargo dependencies define the technical
 graph, and **no runtime behaviour reads a folder name**. Two tests do —
-`Rust.Style.Tests.ps1` takes a file's crate from its path, and the mount test
+`Rust.Style.Test.ps1` takes a file's crate from its path, and the mount test
 above — because both are about names and have nothing else to read. This
 paragraph previously said nothing read a folder name at all, which stopped being
 true the moment the first of those was written.

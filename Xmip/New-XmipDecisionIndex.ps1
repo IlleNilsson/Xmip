@@ -21,7 +21,7 @@
         - Note       anything the status cannot imply
 
     followed by the summary prose. The record is the source and this is a view
-    of it. `test/Decision.Tests.ps1` regenerates and fails when the committed
+    of it. `test/Decision.Test.ps1` regenerates and fails when the committed
     index differs, so the copy cannot drift the way the handwritten one did.
 
     Three counts disagreed on 2026-09-03 — the index said twenty-three, the test
@@ -33,7 +33,7 @@
 
 # The six themes, in reading order. This is the index's own shape rather than
 # any record's, which is why it lives here and not in a record. A record naming
-# a theme that is not one of these fails Decision.Tests.ps1.
+# a theme that is not one of these fails Decision.Test.ps1.
 [string[]] $script:XmipDecisionTheme = @(
     'What Xmip is at runtime'
     'Identity and security'
@@ -464,7 +464,7 @@ function New-XmipIndexPreamble {
         '**Generated from the records by `New-XmipDecisionIndex`.** Every summary'
         'below is the `## In brief` section of the record it links to, so the two'
         'cannot disagree. Edit a record and regenerate; an edit made here is lost.'
-        '`test/Decision.Tests.ps1` regenerates and fails when this file differs.'
+        '`test/Decision.Test.ps1` regenerates and fails when this file differs.'
         ''
         'Every decision has a number. The number is an identifier for machines, for'
         'citations in code comments, and for filenames — it is not how anyone'

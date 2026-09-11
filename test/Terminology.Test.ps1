@@ -4,7 +4,7 @@
 # this test keeps a settled-but-overloaded word from drifting back into
 # ambiguity. ADR-0035.
 #
-# The instrument is the ratchet from Rust.Style.Tests.ps1, pointed at prose
+# The instrument is the ratchet from Rust.Style.Test.ps1, pointed at prose
 # instead of lines: a frozen count that may fall and must never rise. It does
 # not judge whether a given bare use reads clearly — a lint cannot — so it does
 # not force the historical uses to be rewritten. It forbids a NEW unqualified

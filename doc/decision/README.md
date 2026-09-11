@@ -5,7 +5,7 @@ Fifty-one decisions, read as one document.
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
 cannot disagree. Edit a record and regenerate; an edit made here is lost.
-`test/Decision.Tests.ps1` regenerates and fails when this file differs.
+`test/Decision.Test.ps1` regenerates and fails when this file differs.
 
 Every decision has a number. The number is an identifier for machines, for
 citations in code comments, and for filenames — it is not how anyone

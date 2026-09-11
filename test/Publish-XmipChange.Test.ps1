@@ -169,7 +169,7 @@ Describe 'Resolve-XmipCommitSubject' {
                 '.gitmodules'
                 'doc/decision/ADR-0024-resource-claim-replaces-exclusiveness.md'
                 'module/platform/exclusiveness'
-                'test/Sync-XmipEstate.Tests.ps1'
+                'test/Sync-XmipEstate.Test.ps1'
             )
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Unmount exclusiveness' |

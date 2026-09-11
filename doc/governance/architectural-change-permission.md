@@ -32,7 +32,7 @@ One sentence, and it makes the rest of the document safe to consolidate — beca
 
 Be specific. "Drafted by an assistant, reviewed by the owner" says nothing. Name the clauses that are rulings, name the material that came from an earlier draft or another model, and name what was inferred to fill a gap. The inferred parts are the ones a future consolidation is allowed to correct.
 
-`test/Decision.Tests.ps1` counts the records carrying a Provenance section. That count may rise and may not fall.
+`test/Decision.Test.ps1` counts the records carrying a Provenance section. That count may rise and may not fall.
 
 ## Estate changes are atomic
 
@@ -40,7 +40,7 @@ A repository may be added, removed or renamed only through a change that updates
 
 Not because ceremony is good, but because these three drift apart silently and in a particular order: the manifest is edited because something has to work today, the documents are left for later, and later does not come. `architecture.toml` then describes an estate the documents do not, and neither of them is wrong enough to notice.
 
-`test/Allocation.Tests.ps1` catches part of this — a move whose destination is not a declared repository fails — but it cannot see a repository that was renamed while a document went on using the old name. That part is a human obligation, which is why it is written here rather than left to the tooling.
+`test/Allocation.Test.ps1` catches part of this — a move whose destination is not a declared repository fails — but it cannot see a repository that was renamed while a document went on using the old name. That part is a human obligation, which is why it is written here rather than left to the tooling.
 
 ## Locked application to the architecture reconciler
 

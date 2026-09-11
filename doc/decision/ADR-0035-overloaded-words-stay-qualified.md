@@ -57,9 +57,9 @@ at the record, not by debate.
 
 ### 3. A ratchet gates new unqualified uses
 
-`test/Terminology.Tests.ps1` freezes the count of bare, unqualified "Process"
+`test/Terminology.Test.ps1` freezes the count of bare, unqualified "Process"
 across `doc/` at its present value and forbids growth — the same instrument as
-the line-length ratchet in `Rust.Style.Tests.ps1`, pointed at prose. A lint
+the line-length ratchet in `Rust.Style.Test.ps1`, pointed at prose. A lint
 cannot judge whether a given historical use reads clearly, so the test does not
 force the existing uses to be rewritten; it forbids a new one, and every edit to
 an old record is the chance to qualify its uses and lower the ceiling. It counts
@@ -85,7 +85,7 @@ prefix the header supplies); the trait was the one place it had not been applied
 
 ## Consequences
 
-- `test/Terminology.Tests.ps1` joins the suite as the wording gate. The suite
+- `test/Terminology.Test.ps1` joins the suite as the wording gate. The suite
   is the estate's memory; ambiguity of a settled word is now a remembered defect.
 - The ceiling falls, never rises. Editing an old record to qualify its "Process"
   uses lowers it; the test then requires the lower number.

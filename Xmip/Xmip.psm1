@@ -872,6 +872,7 @@ function Test-XmipManifest {
     'New-XmipDecisionIndex'
     'Get-XmipHistory'
     'Start-XmipWeb'
+    'Invoke-XmipTest'
 )
 
 Export-ModuleMember -Function $script:XmipExport -Alias @('xmip-git', 'xgit')
