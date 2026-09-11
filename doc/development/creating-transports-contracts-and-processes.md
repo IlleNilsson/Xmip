@@ -28,7 +28,7 @@ compiled and no repository is created.
 
 ### 1. The base you implement
 
-`Transport` (`module/capability/transport/src/protocol.rs`) — five methods,
+`Transport` (`module/capability/transport/.src/protocol.rs`) — five methods,
 and nothing in it names a protocol:
 
 ```rust
@@ -101,7 +101,7 @@ before starting; your module is that module with the format changed.
 
 ### The base you implement
 
-`Contract` (`module/capability/contract/src/lib.rs`):
+`Contract` (`module/capability/contract/.src/lib.rs`):
 
 ```rust
 pub trait Contract: Send + Sync {
@@ -195,8 +195,8 @@ progress.
 
 | Thing | Base trait / type | Reference implementation |
 |---|---|---|
-| Transport | `Transport` (`transport/src/protocol.rs`) | `file`, `tcp`, `http`, `smtp` in the capability |
-| Contract | `Contract` (`contract/src/lib.rs`) | `contract/csv/` |
+| Transport | `Transport` (`transport/.src/protocol.rs`) | `file`, `tcp`, `http`, `smtp` in the capability |
+| Contract | `Contract` (`contract/.src/lib.rs`) | `contract/csv/` |
 | Xmip Process | `XmipProcessConfiguration` (`configure/src/lib.rs`) | a node configuration document |
 
 - **Repository model:** `doc/architecture/repository-model.md`
