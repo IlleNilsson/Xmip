@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-one decisions, read as one document.
+Fifty-two decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -666,6 +666,24 @@ constructor in its crate and one line in the Playground's list.**
 
 → [A transport brings its own far end, in full](ADR-0051-a-transport-brings-its-own-far-end.md)
 
+### What the `xmip` executable, the two GUIs, the PowerShell module
+
+and the VS Code extension have in common, and where that lives
+  chosen, never guessed; runtime discovery
+
+**Every operator surface reads the same operator boundary and shows the same
+tree of scopes, moods and evidence. What they share — the surface over the
+ABI, the snapshot surface, the scope tree and its rollup, how the runtime
+library is found, how a status is said in English, how a TOML document is
+read — is one .NET library, `Xmip.Surface`, beside the binding in
+`xmip-core-abi`, and every .NET surface is a thin face over it. A scope that
+is Holding says why on the spot: the worst leaf beneath it and that leaf's
+evidence, at the banner, at the tile, at the row. The web GUI monitors and
+does nothing else. Paused is a mood. The surface a host reads is chosen in
+its configuration, never guessed from a file in a temp directory.**
+
+→ [The operator surfaces share one model, in full](ADR-0052-the-operator-surfaces-share-one-model.md)
+
 ### What Xmip may assume about the internet, and how a test says it
 
 **Installation, operation and the runtime work with no internet at all.
@@ -776,6 +794,7 @@ You have a word. This gives you the decision that governs it.
 | Health as a mood | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Health, worst active state | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
+| Holding says why | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | Host crate | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | identifier | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
@@ -853,12 +872,15 @@ You have a word. This gives you the decision that governs it.
 | the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | the one adapter | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
+| the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
+| the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
 Event and Schedule
@@ -933,3 +955,4 @@ is nowhere else.
 | [0049](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) | A crate that hosts technologies keeps its source in `.src` | |
 | [0050](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) | An identity technology is one mechanism at one gate | |
 | [0051](ADR-0051-a-transport-brings-its-own-far-end.md) | A transport brings its own far end | |
+| [0052](ADR-0052-the-operator-surfaces-share-one-model.md) | The operator surfaces share one model | |
