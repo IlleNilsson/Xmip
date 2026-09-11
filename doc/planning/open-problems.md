@@ -506,11 +506,12 @@ retires entries from stops being an order.
                                        and are what the Playground needs to
                                        exercise anything. Blocked on the
                                        vocabulary question below
-2. Protocol implementations            forty-two transports, every contract,
-                                       path and archive technology each in its
-                                       own repository (2026-09-09); forty-two
-                                       transport repositories and every route
-                                       technology still declared and empty
+2. Protocol implementations            eighty-two of eighty-four transports,
+                                       every contract, message, route, logic,
+                                       resilience, path and archive technology
+                                       built (2026-09-11); sftp and peppol
+                                       remain, and the fifty-one identity
+                                       technologies ADR-0050 sorts
 3. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
 4. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6

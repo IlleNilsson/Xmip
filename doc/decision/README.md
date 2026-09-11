@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Forty-nine decisions, read as one document.
+Fifty decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -232,6 +232,22 @@ Let's Encrypt is one provisioning source, for the public edge; it is not usage,
 not the pipeline, and not universal.
 
 → [Certificate provisioning versus usage, in full](ADR-0034-certificate-provisioning-versus-usage.md)
+
+### What the fifty-one technologies under `identify`, `authenticate`
+
+and `authorize` are, and which trait each implements
+  mechanism; gate
+
+**ADR-0019 orders three gates — who is claimed, is the claim true, may this
+true identity do this — and the capabilities behind them already carry one
+trait each. An identity technology is one mechanism at one of those gates and
+nothing at the others. An identify technology reads one mechanism's claim out
+of an arrival or a Message and proves nothing. An authenticate technology
+verifies one mechanism's presented claim and resolves it to a Party. An
+authorize technology is one policy that decides an attempt at one layer.
+Nineteen, eighteen and fourteen of them, each its own repository.**
+
+→ [An identity technology is one mechanism at one gate, in full](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md)
 
 ---
 
@@ -713,6 +729,8 @@ You have a word. This gives you the decision that governs it.
 | attempt | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
+| authenticator | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
+| authorizer | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
@@ -745,7 +763,9 @@ You have a word. This gives you the decision that governs it.
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Host crate | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
+| identifier | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| Identity technology | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | installing offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
@@ -893,3 +913,4 @@ is nowhere else.
 | [0047](ADR-0047-a-message-technology-is-the-shape-of-content.md) | A message technology is the shape of content | |
 | [0048](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) | A resilience technology is a guard on the attempt | |
 | [0049](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) | A crate that hosts technologies keeps its source in `.src` | |
+| [0050](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) | An identity technology is one mechanism at one gate | |
