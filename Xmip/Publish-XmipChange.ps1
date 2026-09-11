@@ -637,8 +637,11 @@ function Sort-XmipModuleDependency {
             $package[$Matches['name']] = $name
         }
 
+        # Any alias: a technology names its sibling `ethernet` or `iso_tp`, not
+        # `xmip-...`. Matching only aliases that start with xmip landed
+        # ethercat before ethernet on 2026-09-11. What decides is the package.
         $needs[$name] = @(
-            [regex]::Matches($text, '(?m)^\s*(?<alias>xmip[a-z0-9-]*)\s*=\s*\{(?<body>[^}]*)\}') |
+            [regex]::Matches($text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
                 ForEach-Object {
                     $body = $_.Groups['body'].Value
 
@@ -648,7 +651,8 @@ function Sort-XmipModuleDependency {
                     else {
                         $_.Groups['alias'].Value
                     }
-                }
+                } |
+                Where-Object { $_ -like 'xmip*' }
         )
     }
 
