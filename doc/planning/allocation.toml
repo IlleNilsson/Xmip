@@ -92,19 +92,19 @@ fromSurface = [
 [[moved]]
 from = "src/transport.rs"
 to = "xmip-core-transport"
-path = "src/lib.rs"
+path = ".src/lib.rs"
 reason = "Five protocols and TLS. xmip-core-transport is one of the ten empty stubs, so this lands cleanly."
 
 [[moved]]
 from = "src/transport_technology.rs"
 to = "xmip-core-transport"
-path = "src/technology.rs"
+path = ".src/technology.rs"
 reason = "Same module, empty destination. The transport_ prefix goes: inside xmip-core-transport it says nothing."
 
 [[moved]]
 from = "src/disposition.rs"
 to = "xmip-core-message"
-path = "src/disposition.rs"
+path = ".src/disposition.rs"
 reason = """
 A disposition is the outcome of handling a Message. xmip-core-message has
 content, but no disposition.rs — a new filename in an occupied repository, so
@@ -323,8 +323,8 @@ specification of what an operator can do, whatever language reimplements it.
 """
 
 [[keep]]
-path = "src/lib.rs"
-reason = "Becomes the assembly: re-exports the module crates so xmip stays one import for anyone who wants the whole platform."
+path = ".src/lib.rs"
+reason = "Becomes the assembly: re-exports the module crates so xmip stays one import for anyone who wants the whole platform. Moved from src on 2026-09-11 (ADR-0049, amended): the root is a directory of many usages."
 
 [[keep]]
 path = "Cargo.toml"

@@ -20,7 +20,8 @@ description = "The Xmip platform, assembled from its modules."
 
 [lib]
 name = "xmip"
-path = "src/lib.rs"
+# A directory of many usages keeps its source aside (ADR-0049).
+path = ".src/lib.rs"
 
 [features]
 default = ["server-profile"]

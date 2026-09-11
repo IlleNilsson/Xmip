@@ -79,3 +79,33 @@ The rule is the owner's, 2026-09-10, quoted in Context. The scope — a crate
 with a `.gitmodules` of its own, and no other — and the decision to apply it
 after the batch in flight are the assistant's readings of *if it needs to be
 there* and of the owner's *after that*.
+
+## Amendment, 2026-09-11: any directory of many usages, not only a host
+
+The scope in clause 1 was too narrow. The owner's rule in Context names *a
+directory containing multiple usages*, and a `.gitmodules` is one way a
+directory comes to hold many things, not the only way. The rule applies to
+every crate whose directory holds, beside its own source, anything that is
+not the crate's manifest, licence, readme, toolchain file, build output or
+Cargo's own `tests`, `benches` and `examples`:
+
+- the platform repository itself, whose `xmip` assembly crate sat as `src`
+  beside `Xmip`, `asset`, `deploy`, `doc`, `install`, `module`, `template`
+  and `test`;
+- `module/foundation/abi`, whose source sat beside `docs`, `dotnet` and
+  `include`;
+- `module/operation/gui/vscode`, whose `xmip-lsp` source sat beside
+  `extension`;
+- `module/capability/process`, whose source sat beside `docs`.
+
+Each moves to `.src` with the same `[lib] path` — or `[[bin]] path` for
+`xmip-lsp` — as clause 1. A Technology repository, or any crate whose
+directory is its source and Cargo's conventions and nothing else, keeps `src`
+as before: `contract/c` beside its `tests` is one usage.
+
+The eleven Rust hosts of clause 2 moved on 2026-09-11 after the batch landed.
+`module/operation/gui` moves as soon as the editor holding its projects open
+lets go; the four above move in the same change as this amendment.
+
+The owner asked on 2026-09-11 to check the code base again after the eleven
+had moved, and these four are what that check found.
