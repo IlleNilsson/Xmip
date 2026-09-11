@@ -80,7 +80,7 @@ prefix-dropping wherever the bare word is ambiguous.
 overloaded — terminology names one sense — so ADR-0030 applies and the internal
 Rust name drops the prefix to `Module`. The C ABI type in `xmip_module.h` and the
 `Test-XmipModule` cmdlet keep the prefix: they are external. The crate already
-documents this split (`abi/src/descriptor.rs`: the Rust side does not repeat the
+documents this split (`abi/.src/descriptor.rs`: the Rust side does not repeat the
 prefix the header supplies); the trait was the one place it had not been applied.
 
 ## Consequences
