@@ -37,9 +37,10 @@ enough to start:
   Xmip has accepted it, it is the sender's; a Stream in flight does not
   survive a restart, and the sender's protocol says so.
 - A **Message** is what Xmip accepted the Stream as: immutable content with a
-  shape and, where one is named, a **Contract** that says whether it is right.
-  An accepted Message is on disk before anything acts on it and never
-  disappears.
+  shape. A **Contract** decides the acceptance: the content must be well-formed
+  always, and where a Contract is named it must conform to it, or the Stream
+  is refused and the sender is told where and why. An accepted Message is on
+  disk before anything acts on it and never disappears.
 - A **Journey** is the path a Message takes through Xmip, step by step, and
   it may take a long time. A Journey checkpoints and survives a restart.
 - **Receive, Process, Send** are the three stages of that path. The monitor is
@@ -333,10 +334,13 @@ surfaces and the Playground are what run today.
 - **A C ABI is the module boundary** ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)).
   A module implements a versioned table Xmip calls; a module may be written in
   any language that can implement one, and a third party's module is theirs.
-- **Durability precedes execution.** An accepted Message is on disk before
-  anything acts on it; a Journey checkpoints and survives a restart; an
-  abrupt stop loses nothing accepted, and a Stream not yet accepted is still
-  the sender's ([runtime-model.md](doc/architecture/runtime-model.md)).
+- **Durability precedes execution.** A Stream is accepted only when it is
+  well-formed and, where a Contract is named, conforms to it
+  ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md));
+  an accepted Message is on disk before anything acts on it; a Journey
+  checkpoints and survives a restart; an abrupt stop loses nothing accepted,
+  and a Stream not yet accepted is still the sender's
+  ([runtime-model.md](doc/architecture/runtime-model.md)).
 - **One repository per module**, forty-four today, five domains, mounted as
   submodules at `module/<domain>/<leaf>`, with dependency rules the manifest
   states and a test enforces: foundation never depends on a technology, a
