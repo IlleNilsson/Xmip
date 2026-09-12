@@ -104,10 +104,12 @@ function Start-XmipTest {
         .EXAMPLE
             (Start-XmipTest -Suite Estate).Failed | Format-Table ExpandedPath
     #>
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus', 'Pester.Run')]
     param(
-        [Parameter()]
+        # The sentence is "start the Playground's HeavyLoad": suite first, then
+        # the tests, and nothing else by position (the owner, 2026-09-12).
+        [Parameter(Position = 0)]
         [ValidateSet('Playground', 'Estate')]
         [string] $Suite = 'Playground',
 
@@ -115,7 +117,7 @@ function Start-XmipTest {
         [ValidateSet('Calm', 'Realistic', 'Harsh', 'Brutal')]
         [string] $Stress = 'Realistic',
 
-        [Parameter()]
+        [Parameter(Position = 1)]
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 

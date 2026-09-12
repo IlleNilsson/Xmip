@@ -46,6 +46,26 @@ Describe 'Start, Get and Stop, and nothing else' {
         Get-Command -Module Xmip -Name 'Invoke-XmipTest*' | Should -BeNullOrEmpty
     }
 
+    It 'reads "Start-XmipTest Playground HeavyLoad" as suite then test, nothing else by position' {
+        # 2026-09-12: typed positionally, the second word landed on -Stress.
+        $parameters = (Get-Command -Name Start-XmipTest).Parameters
+        [hashtable] $position = @{}
+
+        foreach ($name in $parameters.Keys) {
+            $attribute = $parameters[$name].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] } |
+                Select-Object -First 1
+
+            if ($null -ne $attribute -and $attribute.Position -ge 0) {
+                $position[$name] = $attribute.Position
+            }
+        }
+
+        $position.Keys | Sort-Object | Should -Be @('Suite', 'Test')
+        $position.Suite | Should -Be 0
+        $position.Test | Should -Be 1
+    }
+
     It 'offers the Playground and the estate suite, Playground first' {
         [string[]] $suites = @(
             (Get-Command -Name Start-XmipTest).Parameters['Suite'].Attributes |
