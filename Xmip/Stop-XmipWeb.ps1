@@ -18,7 +18,7 @@ function Stop-XmipWeb {
             Stop-XmipWeb
 
         .EXAMPLE
-            Get-XmipWeb | Where-Object Url -like '*5087' | Stop-XmipWeb
+            Get-XmipWeb | Where-Object -Property Url -Like -Value '*5087' | Stop-XmipWeb
     #>
     [CmdletBinding(
         SupportsShouldProcess,

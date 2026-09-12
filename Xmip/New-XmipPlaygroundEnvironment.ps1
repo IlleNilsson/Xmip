@@ -100,7 +100,7 @@ function Assert-XmipNodeName {
     [string[]] $twice = @(
         $Nodes |
             Group-Object { $_.ToLowerInvariant() } |
-            Where-Object Count -gt 1 |
+            Where-Object -Property Count -GT -Value 1 |
             ForEach-Object { $_.Group[0] }
     )
 

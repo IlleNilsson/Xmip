@@ -28,7 +28,8 @@ function Stop-XmipTestNode {
             Stop-XmipTestNode
 
         .EXAMPLE
-            Get-XmipTestNode | Where-Object Online | Stop-XmipTestNode -WhatIf
+            Get-XmipTestNode | Where-Object -Property Online -EQ -Value $true |
+                Stop-XmipTestNode -WhatIf
     #>
     [CmdletBinding(
         SupportsShouldProcess,

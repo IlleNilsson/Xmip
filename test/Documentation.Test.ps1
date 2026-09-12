@@ -118,13 +118,72 @@ Describe 'README lists every document that exists' {
     }
 }
 
+Describe 'Every argument is named' {
+    It 'passes no value to an Xmip command by position' {
+        # The owner, 2026-09-12: no shortcuts in a document. A reader who has
+        # never seen the command must be able to read every line; a value
+        # bound by position tells that reader nothing. The style document says
+        # the same of code (powershell-style.md, section 3).
+        [string[]] $files = @(
+            (Join-Path $script:Root 'README.md')
+            (Join-Path $script:Root 'test/playground/README.md')
+            (Get-ChildItem -Path (Join-Path $script:Root 'Xmip') -Filter '*.ps1' |
+                ForEach-Object { $_.FullName })
+        )
+        [string[]] $positional = @(
+            '(Start|Get|Stop|Install|Sync|Publish|Import|Test|New)-Xmip\w*\s+[^-|#\s]'
+            'Where-Object\s+[A-Za-z]\w*\s+-'
+        )
+        [string[]] $lines = @()
+
+        # What a reader copies: fenced or indented code in a document, and the
+        # .EXAMPLE blocks of a command's help. Prose that happens to begin with
+        # a command's name is not a command line.
+        foreach ($file in $files) {
+            [string] $name = Split-Path -Leaf $file
+            [bool] $script = $name -like '*.ps1'
+            [bool] $inside = $false
+            [int] $number = 0
+
+            foreach ($line in (Get-Content -LiteralPath $file)) {
+                $number++
+
+                if ($script) {
+                    if ($line -match '^\s*\.EXAMPLE') { $inside = $true; continue }
+                    if ($line -match '^\s*(\.[A-Z]+|#>)') { $inside = $false; continue }
+                }
+                elseif ($line -match '^\s*```') {
+                    $inside = -not $inside
+                    continue
+                }
+
+                [bool] $code = $inside -or (-not $script -and $line -match '^ {4}\S')
+
+                if (-not $code) {
+                    continue
+                }
+
+                foreach ($pattern in $positional) {
+                    if ($line -match "^\s*$pattern") {
+                        $lines += "${name}:${number}: $($line.Trim())"
+                    }
+                }
+            }
+        }
+
+        [string] $detail = $lines -join "`n"
+
+        $lines | Should -BeNullOrEmpty -Because "these lines bind a value by position:`n$detail"
+    }
+}
+
 Describe 'The setup procedure is present' {
     It 'shows how to load the module and put it on PSModulePath' {
         # A forward slash: the line is typed on Linux and macOS as often as on
         # Windows, and PowerShell reads it on all three (the owner, 2026-09-12).
-        $script:Readme | Should -Match 'Import-Module\s+\./Xmip'
+        $script:Readme | Should -Match 'Import-Module -Name \./Xmip'
         $script:Readme | Should -Match 'Install-XmipModule'
-        $script:Readme | Should -Match 'Import-Module Xmip'
+        $script:Readme | Should -Match 'Import-Module -Name Xmip'
     }
 
     It 'states the PowerShell floor that prerequisite.toml declares' {

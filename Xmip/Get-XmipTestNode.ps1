@@ -23,7 +23,7 @@ function Get-XmipTestNode {
             Get-XmipTestNode
 
         .EXAMPLE
-            Get-XmipTestNode -Name 'node-0*' | Where-Object Online
+            Get-XmipTestNode -Name 'node-0*' | Where-Object -Property Online -EQ -Value $true
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestNode')]

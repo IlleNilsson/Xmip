@@ -74,25 +74,29 @@ Xmip's own integration test, which needs no network and no other software.
    ```powershell
    git clone --recursive https://github.com/IlleNilsson/Xmip.git
    cd Xmip
-   Import-Module ./Xmip
-   Install-XmipModule          # once: links the module so any later shell finds it
-   Install-XmipPrerequisite -Role developer -Install   # Rust, a linker, Pester, .NET
+   Import-Module -Name ./Xmip
+   Install-XmipModule                                    # once: links the module so any later shell finds it
+   Install-XmipPrerequisite -Role developer -Install     # Rust, a linker, Pester, .NET
    ```
 
-   From then on, in any shell and any directory, `Import-Module Xmip` is
-   enough; the link is a junction on Windows and a symbolic link elsewhere,
+   From then on, in any shell and any directory, `Import-Module -Name Xmip`
+   is enough; the link is a junction on Windows and a symbolic link elsewhere,
    so edits in the repository are live in the next session.
 
 3. Start a test, watch it, stop it:
 
    ```powershell
-   Start-XmipTest Playground RoundTrip -Nodes alpha, beta -OnlineNodes alpha
+   Start-XmipTest -Suite Playground -Test RoundTrip -Nodes alpha, beta -OnlineNodes alpha
    Start-XmipWeb -Snapshot .local-work/playground/playground-snapshot.toml
-   Get-XmipTestStatus          # what runs, at what stress, with which nodes
-   Get-XmipTestResult | Where-Object State -ne fine
+   Get-XmipTestStatus                                    # what runs, at what stress, with which nodes
+   Get-XmipTestResult | Where-Object -Property State -NE -Value fine
    Stop-XmipTest
    Stop-XmipWeb
    ```
+
+   Every parameter is named, here and in every Xmip document; PowerShell
+   accepts the first two by position, but a line that names them reads the
+   same to a person who has never seen the command.
 
    The board at http://127.0.0.1:5087 shows the three stages, the cluster's
    mood and every node. `alpha` and `beta` are two simulated node processes;
@@ -159,7 +163,7 @@ time, at a stress you choose, with as many simulated node processes as you
 name; it is how the estate proves itself and how you can prove a machine:
 
 ```powershell
-Start-XmipTest Playground HeavyLoad, LowLatency -Stress Harsh -Nodes n1, n2, n3
+Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Nodes n1, n2, n3
 Get-XmipTestStatus
 Stop-XmipTest
 ```
@@ -185,8 +189,8 @@ because `pwsh` hosts it). One command tests and lands a change across every
 repository it touched, in dependency order, modules first:
 
 ```powershell
-Start-XmipTest -Suite Estate                 # the estate's own suite: ~150 tests, every past defect
-xgit -m 'short precise message'              # Publish-XmipChange: test, commit, push, pin
+Start-XmipTest -Suite Estate                          # the estate's own suite: every past defect
+Publish-XmipChange -Message 'short precise message'   # test, commit, push, pin; xgit is its alias
 ```
 
 `Start-XmipTest -Suite Estate -Test Rust.Style` runs one file. `cargo fmt`,
@@ -255,10 +259,11 @@ default and needs no ceremony.
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | the decision record and its index |
 
 ```powershell
-Sync-XmipEstate                       # report drift, change nothing
-Sync-XmipEstate -Create -WhatIf       # what would be created on GitHub
-Sync-XmipEstate -Compose              # wire the submodule hierarchy locally
-Sync-XmipRepository -Status           # what is dirty, ahead, behind
+Sync-XmipEstate                                       # report drift, change nothing
+Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
+Sync-XmipEstate -Compose                              # wire the submodule hierarchy locally
+Sync-XmipRepository -Status                           # what is dirty, ahead, behind
+Get-XmipStatus                                        # the whole estate at once
 ```
 
 `-Compose` mounts every repository at its place in the tree, so
