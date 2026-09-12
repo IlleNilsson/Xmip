@@ -265,6 +265,28 @@ That tradeoff was put and 11 was chosen. The consequence is recorded rather than
 
 The Xmip runtime is unaffected. It is Rust and does not wait for a .NET release.
 
+## Amendment, 2026-09-12: one scope surface, including the PowerShell provider
+
+The CLI, PowerShell module and GUI share `IOperatorSurface`, `ScopeTree`,
+`ScopeItem` and `ActivitySummary` from `xmip-core-abi`. They may render them
+differently; they may not redefine what a scope, counter or action means.
+
+PowerShell exposes the canonical scope tree as the `Xmip:` provider. It is an
+operational provider, not a read-only catalogue: `Set-Item` and the named
+lifecycle cmdlets can pause, resume, start, stop or restart a node, host
+service, process or location through the same scope operations the CLI uses.
+Every mutating cmdlet supports `-WhatIf`.
+
+The CLI exposes the corresponding `list`, `show`, `activity`, `pause`,
+`resume`, `start`, `stop` and `restart` commands. `activity --follow` consumes
+the shared change signal; neither shell polls the runtime to decorate its
+prompt.
+
+An operation the current runtime cannot perform returns Unsupported. A surface
+must not simulate lifecycle by changing health text: host-service start, stop
+and restart become effective only when ADR-0018's host-service phases exist.
+Pause and resume are effective now through the accepted operator table.
+
 ## Consequences
 
 ExecutionHostKind::DotNet already exists in contracts.rs. .NET was already a declared execution host, so nothing in the module model changes to accommodate this.
@@ -413,4 +435,3 @@ in it. The extension carries it because VS Code's extension host runs nothing
 else, and the shell is kept to what that host requires: starting the server,
 passing the runtime's path, and showing what comes back. The moment a piece
 of logic could live in the Rust server instead, it does.
-

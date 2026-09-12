@@ -140,7 +140,7 @@ What crosses is a scope, the thing counted, its unit and the window:
 
 ```text
 scope    an Xmip URI
-counted  streams | messages | journeys | bytes
+counted  streams | messages | journeys | bytes | retrying | failed
 unit     count | bytes
 window   the interval the value covers, and when it was taken
 ```
@@ -155,6 +155,19 @@ the estate refuses to conflate.
 Cluster and Node figures are **sums over that tree**, not a separate concept and
 not a separate call. That is what makes "throughput for every kind of thing"
 one mechanism rather than five.
+
+The common operational summary keeps those units honest while giving every
+surface the same five headings:
+
+```text
+Received   Streams at Receive Locations
+Processed  Journeys in Xmip Processes
+Sent       Messages at Send Locations
+Retrying   work currently awaiting another attempt
+Failed     unsuccessful outcomes in the measurement window
+```
+
+An unpublished figure is absent, never silently zero.
 
 ### 6. The boundary reads snapshots and never counts on demand
 
