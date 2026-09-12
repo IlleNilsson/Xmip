@@ -70,6 +70,51 @@ function ConvertTo-XmipTestName {
     return $Scenario
 }
 
+function Assert-XmipNodeName {
+    <#
+        .SYNOPSIS
+            The nodes a person named are well formed, distinct, and the online
+            ones are among them. Throws otherwise; a node is a process, and a
+            process is named once.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes = @(),
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $OnlineNodes = @()
+    )
+
+    [string[]] $every = @(@($Nodes) + @($OnlineNodes) | Where-Object { $null -ne $_ })
+
+    foreach ($name in $every) {
+        if ($name -notmatch '^[A-Za-z][A-Za-z0-9-]*$') {
+            throw "A node's name is letters, digits and hyphens, starting with a letter: not $name."
+        }
+    }
+
+    [string[]] $twice = @(
+        $Nodes |
+            Group-Object { $_.ToLowerInvariant() } |
+            Where-Object Count -gt 1 |
+            ForEach-Object { $_.Group[0] }
+    )
+
+    if ($twice.Count -gt 0) {
+        throw "A node is named once: $($twice -join ', ') appear more than once in -Nodes."
+    }
+
+    [string[]] $strangers = @($OnlineNodes | Where-Object { $_ -notin $Nodes })
+
+    if ($strangers.Count -gt 0) {
+        throw "-OnlineNodes names nodes -Nodes does not: $($strangers -join ', ')."
+    }
+}
+
 function New-XmipPlaygroundEnvironment {
     <#
         .SYNOPSIS
@@ -96,10 +141,14 @@ function New-XmipPlaygroundEnvironment {
         [string[]] $Test = @(),
 
         [Parameter()]
-        [Nullable[int]] $Nodes,
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes,
 
         [Parameter()]
-        [Nullable[int]] $OnlineNodes,
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $OnlineNodes,
 
         [Parameter()]
         [Nullable[timespan]] $Duration,
@@ -132,12 +181,20 @@ function New-XmipPlaygroundEnvironment {
         $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
     }
 
+    # Nodes are named, not numbered (the owner, 2026-09-12): a list of names is
+    # one process each; an empty list is no fleet at any level; nothing said
+    # leaves the level its own numbered fleet.
     if ($null -ne $Nodes) {
-        $environment.XMIP_PLAYGROUND_NODES = "$Nodes"
-    }
+        [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
+        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
 
-    if ($null -ne $OnlineNodes) {
-        $environment.XMIP_PLAYGROUND_ONLINE_NODES = "$OnlineNodes"
+        if ($Nodes.Count -eq 0) {
+            $environment.XMIP_PLAYGROUND_NODES = '0'
+        }
+        else {
+            $environment.XMIP_PLAYGROUND_NODE_NAMES = $Nodes -join ','
+            $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
+        }
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture
