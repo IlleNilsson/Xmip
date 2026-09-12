@@ -61,7 +61,6 @@
         'Start-XmipWeb'
         'Get-XmipWeb'
         'Stop-XmipWeb'
-        'Invoke-XmipTest'
     )
 
     # Table views for the playground and web objects, so Get-XmipTestStatus

@@ -10,10 +10,13 @@ function Start-XmipTest {
             call this.
 
         .DESCRIPTION
-            Xmip provides its tests as suites; the Playground is the first and,
-            today, the only one — a transport's or a contract's own suite joins
-            as another value of -Suite. Get-XmipTestStatus says what runs and
-            Stop-XmipTest ends it.
+            Xmip provides its tests as suites, and -Suite says which one runs.
+            Playground is a roll that runs detached until you stop it;
+            Get-XmipTestStatus says what runs and Stop-XmipTest ends it.
+            Estate is the Pester suite under test/, the estate's memory of every
+            past defect: it runs here and now, says OK or FAILED, and returns
+            the Pester result. A transport's or a contract's own suite joins as
+            another value.
 
             The Playground (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
@@ -32,7 +35,8 @@ function Start-XmipTest {
             is whose.
 
         .PARAMETER Suite
-            Which of Xmip's test suites to run. Playground, the only one today.
+            Which of Xmip's test suites to run: Playground (the default) or
+            Estate. The Playground parameters below belong to Playground alone.
 
         .PARAMETER Stress
             How hard: Calm, Realistic, Harsh or Brutal. Realistic is the roll's
@@ -68,9 +72,10 @@ function Start-XmipTest {
             Omit for a megabyte.
 
         .PARAMETER Path
-            Where the run writes: snapshot, history, activity, run record and
-            the roll's own log. Defaults to `.local-work/playground` under the
-            repository.
+            Playground: where the run writes — snapshot, history, activity,
+            run record and the roll's own log; defaults to
+            `.local-work/playground` under the repository. Estate: the
+            directory of Pester tests; defaults to test/ under the repository.
 
         .PARAMETER PassThru
             Return the Xmip.TestStatus object for the roll started.
@@ -83,12 +88,18 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+
+        .EXAMPLE
+            Start-XmipTest -Suite Estate
+
+        .EXAMPLE
+            (Start-XmipTest -Suite Estate).Failed | Format-Table ExpandedPath
     #>
     [CmdletBinding(SupportsShouldProcess)]
-    [OutputType('Xmip.TestStatus')]
+    [OutputType('Xmip.TestStatus', 'Pester.Run')]
     param(
         [Parameter()]
-        [ValidateSet('Playground')]
+        [ValidateSet('Playground', 'Estate')]
         [string] $Suite = 'Playground',
 
         [Parameter()]
@@ -127,6 +138,23 @@ function Start-XmipTest {
         [Parameter()]
         [switch] $PassThru
     )
+
+    if ($Suite -eq 'Estate') {
+        [string[]] $foreign = @(
+            $PSBoundParameters.Keys | Where-Object { $_ -in $script:XmipPlaygroundOnly }
+        )
+
+        if ($foreign.Count -gt 0) {
+            Write-Error "-$($foreign -join ', -') belong to the Playground suite, not Estate."
+            return
+        }
+
+        if (-not $PSCmdlet.ShouldProcess('the estate Pester suite', 'Start')) {
+            return
+        }
+
+        return Start-XmipEstateSuite -Path $Path
+    }
 
     $layout = Get-XmipPlaygroundLayout
 
@@ -204,6 +232,64 @@ function Start-XmipTest {
     if ($PassThru) {
         return Get-XmipTestStatus -Path $Path | Where-Object { $_.Id -eq $process.Id }
     }
+}
+
+# The parameters that mean something only to the Playground suite.
+[string[]] $script:XmipPlaygroundOnly = @(
+    'Stress', 'Scenario', 'Rounds', 'Duration', 'TimeFactor'
+    'Nodes', 'Online', 'LoadBytes', 'PassThru'
+)
+
+function Start-XmipEstateSuite {
+    <#
+        .SYNOPSIS
+            Runs the estate's Pester suite under test/ and returns the result.
+
+        .DESCRIPTION
+            `Invoke-Pester -Path ./test` finds nothing since 2026-09-11: the
+            estate's test files carry the singular suffix `.Test.ps1` and
+            Pester looks for the plural. Get-XmipPesterConfiguration tells it,
+            the same configuration the landing gate uses. The result is
+            returned, not printed, so a caller reads `PassedCount`,
+            `FailedCount` and `Failed` like any other object; the verdict is
+            said in words, OK or FAILED, with each failing test named.
+
+        .PARAMETER Path
+            The directory of tests. Defaults to test/ under the repository.
+    #>
+    [CmdletBinding()]
+    [OutputType('Pester.Run')]
+    param(
+        [Parameter()]
+        [string] $Path
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        $Path = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test'
+    }
+
+    # Strict mode off here, alone in this module, which sets it at module
+    # scope: Pester runs the tests in this scope's descendants, and they are
+    # written and run everywhere else in the console's default mode.
+    Set-StrictMode -Off
+    $ErrorActionPreference = 'Stop'
+
+    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $Path)
+
+    [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
+
+    if ($result.FailedCount -eq 0) {
+        Write-Host "OK $tally" -ForegroundColor Green
+    }
+    else {
+        Write-Host "FAILED $tally" -ForegroundColor Red
+    }
+
+    foreach ($failure in $result.Failed) {
+        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
+    }
+
+    return $result
 }
 
 function Get-XmipPlaygroundChoice {
