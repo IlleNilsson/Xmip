@@ -120,7 +120,7 @@ function Start-XmipTest {
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
             [string[]] $names = if ($fakeBoundParameters['Suite'] -eq 'Estate') {
-                [string] $root = Get-XmipRepositoryRoot -StartAt $PSScriptRoot
+                [string] $root = Get-XmipRepositoryRoot
                 Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
                     ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
             }
