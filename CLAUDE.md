@@ -62,7 +62,7 @@ and it cost real work.
 - Read a file before editing it; check a signature before calling it. Most of
   this repository's test suite exists because someone (usually an assistant)
   skipped that.
-- Say outcomes in words — OK, FAILED, REFUSED — never colour alone.
+- Say outcomes in words — OK, FAILED, REFUSED — never color alone.
 - Commit messages are short and precise; reasoning belongs in a decision
   record or the file itself.
 - Full paths when naming files to the owner.

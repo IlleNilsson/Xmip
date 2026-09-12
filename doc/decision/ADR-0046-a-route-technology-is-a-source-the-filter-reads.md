@@ -81,7 +81,7 @@ the party crate. The one rendering of a context value as filter text,
   declared and the crate had not taken up.
 - A property name with a colon now means something. No existing configuration
   carries one.
-- Problem 10's rule is honoured: the trait landed before any of the eight
+- Problem 10's rule is honored: the trait landed before any of the eight
   repositories was created.
 
 ## Provenance

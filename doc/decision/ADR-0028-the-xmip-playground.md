@@ -19,7 +19,7 @@
 - Concepts: Playground, exercise, verdict; Development node
 
 **`xmip-test-playground` exercises Xmip continuously.** It spawns Development
-nodes as System Processes on one machine — no virtualisation — and drives every
+nodes as System Processes on one machine — no virtualization — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
 for what arrives, and a **verdict per (transport, contract) pair** — arrived,
@@ -68,7 +68,7 @@ beneath it.
 ### 2. It spawns processes
 
 Nodes, generators and watchers run as System Processes on the machine the
-Playground runs on. Nothing is virtualised and nothing is containerised —
+Playground runs on. Nothing is virtualized and nothing is containerized —
 process isolation is what the operating system provides, and it is what
 Development nodes get. A process that hangs is killed and restarted like any
 other Host Service.
@@ -113,7 +113,7 @@ adapter, no change to the scenario. Clause 5 governs them all.
 ### 3a. More than one scenario, and two time limits
 
 Pingpong is the first scenario, not the only one; each asks a different
-question of the same estate over the same adapters, and every roll honours
+question of the same estate over the same adapters, and every roll honors
 a wall-clock maximum and a factor on simulated time. What the scenarios are
 and how the limits work is the Playground's own manual,
 `test/playground/README.md`, since 2026-09-12 (ADR-0020 clause 6: a record
@@ -150,7 +150,7 @@ A Receive Location does not only receive bytes: it **identifies** who is claimed
 pipeline of ADR-0019, in that order. A Send Location **presents** an identity to
 the far end (ADR-0033). The Playground exercises this by driving the estate's
 real gates — `identify_transport`, `authenticate`, `authorize` — with stand-in
-implementors over mutual-TLS, so a fault is a genuine `Refusal` or
+implementers over mutual-TLS, so a fault is a genuine `Refusal` or
 `Decision::Denied`, not a fabricated string. Each Receive step publishes as a
 child scope `.../receive/<transport>/<contract>/{identification,authentication,
 authorization}`, and Send as `.../send/<transport>/<contract>/identity`, so an
@@ -192,7 +192,7 @@ rather than felt as a complaint.
 
 **Containers or virtual machines per node.** Rejected by the owner: the
 Playground spins processes, and the operating system already isolates them.
-Virtualisation would add a dependency to the one tool whose job is to have none.
+Virtualization would add a dependency to the one tool whose job is to have none.
 
 **A test suite run at release.** What ROADMAP section 7 describes. Not rejected
 — it still happens — but it finds a regression at release rather than the hour
@@ -207,7 +207,7 @@ extra target when one is available.
 
 The requirement and the name are the owner's, 2026-09-05: *a test playground,
 constantly activating receive locations, monitoring send, for all transport
-protocols and content contracts*, spinning processes with no virtualisation,
+protocols and content contracts*, spinning processes with no virtualization,
 called the Xmip Playground. Clauses 1 to 6 are the assistant's drafting of it,
 on the instruction to proceed.
 

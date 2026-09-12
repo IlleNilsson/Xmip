@@ -101,25 +101,25 @@ A pull request should state:
 - implementation summary;
 - changed files;
 - verification performed;
-- known limitations or unverified runtime behaviour.
+- known limitations or unverified runtime behavior.
 
 A branch or commit is not considered completed work until a pull request exists. A pull request is not project history until it is merged.
 
-## Licence
+## License
 
 Xmip is licensed under the GNU Affero General Public License, version 3 or later.
 
-That licence grants the right to use, study, modify, redistribute and fork Xmip. This project does not restrict those rights and does not seek to.
+That license grants the right to use, study, modify, redistribute and fork Xmip. This project does not restrict those rights and does not seek to.
 
-What the licence asks in return is that modifications to Xmip itself remain available under the same terms, including when a modified version is offered to users over a network.
+What the license asks in return is that modifications to Xmip itself remain available under the same terms, including when a modified version is offered to users over a network.
 
 ## Extending Xmip
 
 Extensions do not require permission.
 
-Any organisation may implement Xmip traits and interfaces and publish modules under whatever licence it chooses. Those modules are the publisher’s work, the publisher’s support and the publisher’s responsibility. Xmip neither endorses nor maintains them.
+Any organization may implement Xmip traits and interfaces and publish modules under whatever license it chooses. Those modules are the publisher’s work, the publisher’s support and the publisher’s responsibility. Xmip neither endorses nor maintains them.
 
-The boundary is the trait, not the licence.
+The boundary is the trait, not the license.
 
 ## Contributions
 

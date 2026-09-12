@@ -241,7 +241,7 @@ condition governs the expression rather than following it. Where the value is a
 simple constant and the expression cannot fail, a default is fine. The rule
 bites when the default *computes* something.
 
-## 5. Behaviour
+## 5. Behavior
 
 **`Set-StrictMode -Version Latest` and `$ErrorActionPreference = 'Stop'`** at the
 top of every entry point.
@@ -354,7 +354,7 @@ are branches wearing an operator. That number is the one to read.
 Gate it again only with evidence: a real defect it would have caught, and a
 threshold taken from measured data rather than guessed.
 
-The rules this file does **not** yet enforce are the ones needing judgement:
+The rules this file does **not** yet enforce are the ones needing judgment:
 one statement per line, named arguments, single quotes where nothing expands.
 They are stated above and reviewed by people. Listing them here as enforced
 when they are not is the failure mode this section already had once —

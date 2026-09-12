@@ -14,7 +14,7 @@ Changes follow this order:
 Requirement -> Architecture -> Implementation -> Verification -> Commit -> Pull request -> Review -> Merge
 ```
 
-Architecture decisions are made before implementation when a change affects repository boundaries, contracts, message semantics, runtime behaviour, dependency direction or platform guarantees.
+Architecture decisions are made before implementation when a change affects repository boundaries, contracts, message semantics, runtime behavior, dependency direction or platform guarantees.
 
 ## Repository ownership
 

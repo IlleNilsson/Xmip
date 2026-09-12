@@ -11,7 +11,7 @@
 - Subject: A claim at the endpoint, not a lease inside Xmip
 - Name: A claim at the endpoint
 - Order: 7
-- Concepts: Claim, claimable artefact; Exclusiveness, leases, renewal (retired)
+- Concepts: Claim, claimable artifact; Exclusiveness, leases, renewal (retired)
 - Note: supersedes ADR-0017
 
 `xmip-core-exclusiveness` is retired — the module, the repository, the four
@@ -21,7 +21,7 @@ Xmip was doing; a claim knows what everyone is doing.** A file another process
 holds open includes a producer still writing it, and no amount of Xmip-internal
 bookkeeping sees that.
 
-A Receive Location claims the individual artefact, never the location it polls.
+A Receive Location claims the individual artifact, never the location it polls.
 Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
 the type, and what those need is a stability check rather than a rename at
 claim time. Two nodes on a lockless protocol is then a placement question,
@@ -65,8 +65,8 @@ is the whole answer rather than a companion to one:
 
 ```rust
 pub trait ResourceClaim: Send + Sync {
-    fn is_available(&self, artefact: &Artefact) -> Result<bool>;
-    fn claim(&self, artefact: &Artefact) -> Result<Claimed>;
+    fn is_available(&self, artifact: &Artifact) -> Result<bool>;
+    fn claim(&self, artifact: &Artifact) -> Result<Claimed>;
     fn release(&self, claimed: Claimed) -> Result<()>;
 }
 ```
@@ -94,7 +94,7 @@ file another process has open includes a producer still writing it, and no
 amount of Xmip-internal bookkeeping sees that. The mechanism that was supposed
 to be the safety net was blind to the most common cause of a half-read file.
 
-### 4. The artefact, not the location
+### 4. The artifact, not the location
 
 Carried unchanged from ADR-0017 clause 3, because it was right. A file Receive
 Location claims the individual file, never the directory it polls. Two nodes may
@@ -107,12 +107,12 @@ FTP, SFTP and IMAP have no locking. `NoNativeClaim` is that answer in the type
 rather than three stubs written per transport, one of which eventually returns
 something else.
 
-They are **not** made safe by renaming the artefact at claim time — ADR-0017
+They are **not** made safe by renaming the artifact at claim time — ADR-0017
 clause 3c, and it still holds. That puts a second mechanism in the one place
 nothing is supposed to move, to defend against a non-Xmip client polling the
 same directory, which no mechanism defends against anyway.
 
-What they need is a **stability check**: an artefact whose size and timestamp
+What they need is a **stability check**: an artifact whose size and timestamp
 are unchanged across two consecutive listings, or a producer that writes to a
 temporary name and renames on completion.
 
@@ -136,17 +136,17 @@ mechanisms to signal first. With one mechanism there is no ordering to get
 wrong:
 
 ```text
-1. Claim the artefact at the endpoint. Refused, move to the next artefact.
+1. Claim the artifact at the endpoint. Refused, move to the next artifact.
 2. Process.
 3. Consume: delete, rename or move, so it no longer matches the Receive
    Location's configuration and is never detected again.
 ```
 
-Nothing moves at claim time. The artefact is read where it lies.
+Nothing moves at claim time. The artifact is read where it lies.
 
 A node that dies mid-claim leaves nothing behind: the endpoint releases its own
 claim on its own terms — a closed handle, an expired blob lease, a rolled-back
-transaction — and the artefact is simply free again. That is the same property
+transaction — and the artifact is simply free again. That is the same property
 lease expiry was invented to provide, obtained without inventing it.
 
 ## Consequences
@@ -162,11 +162,11 @@ lease expiry was invented to provide, obtained without inventing it.
   actions and only one of them was written down. A retirement that names every
   place but one is how the one becomes permanent.*
 - `xmip-core-schedule` depended on `xmip-core-exclusiveness`. It depends on
-  `xmip-core-transport` instead: a schedule that fires and finds the artefact
-  already claimed moves on, which is the same behaviour with nothing to
+  `xmip-core-transport` instead: a schedule that fires and finds the artifact
+  already claimed moves on, which is the same behavior with nothing to
   coordinate.
 - `Transport` gains `claims()`, defaulting to `None`. A listening socket or a
-  broker topic has no artefact to claim and correctly answers nothing.
+  broker topic has no artifact to claim and correctly answers nothing.
 - Open problem 18 is closed. Not answered — **dissolved**. There is no
   cluster-scope lease to place because there is no lease.
 - `RecoveryLease` in `xmip-core-persist` stops being the second of two lease
@@ -175,13 +175,13 @@ lease expiry was invented to provide, obtained without inventing it.
 - **Journey recovery across nodes is left open, and this record does not close
   it.** `deployment-model.md` said the same Journey must never be recovered by
   two nodes at once and pointed at ADR-0017's cluster lease for the guarantee.
-  Claiming an artefact settles arrivals and settles nothing here: a Journey
+  Claiming an artifact settles arrivals and settles nothing here: a Journey
   mid-flight is Xmip's own state and has no endpoint to claim it at. It is the
   same problem as *work does not move by itself* — a Message in node A's ToDo is
   node A's work — under a second name, and it belongs with however that is
   eventually designed rather than with a lease reinstated for one case.
 - The acquisition queue, fairness and acquisition timeout of ADR-0017 clauses 13
-  and 14 go too. Nothing queues for an artefact: a node that finds one claimed
+  and 14 go too. Nothing queues for an artifact: a node that finds one claimed
   takes the next one, which is clause 4's point about not claiming the
   directory.
 

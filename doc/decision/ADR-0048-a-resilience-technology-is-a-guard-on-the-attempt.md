@@ -74,7 +74,7 @@ already declares.
   surface.
 - Problem 9's sentence about the plugin surface is no longer true; the
   problem's question about the tier stays open.
-- Problem 10's rule is honoured: the trait landed before any repository.
+- Problem 10's rule is honored: the trait landed before any repository.
 
 ## Provenance
 

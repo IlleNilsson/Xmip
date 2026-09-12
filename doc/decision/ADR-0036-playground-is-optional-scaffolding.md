@@ -61,7 +61,7 @@ are added; the repository, its name, and its dependencies are untouched.
 
 - `architecture.toml` gains `mount` and `optional` on `[xmip.test.playground]`;
   `Resolve-XmipNodeFacts`, `Expand-XmipEstate` and `New-XmipRepositoryEntry` carry
-  them onto the manifest, and `Get-XmipMountPath` honours `mount`.
+  them onto the manifest, and `Get-XmipMountPath` honors `mount`.
 - `.gitmodules` mounts the submodule at `test/playground`; the working tree moves
   there by `git mv`.
 - ADR-0028's path reference is updated to `test/playground`.

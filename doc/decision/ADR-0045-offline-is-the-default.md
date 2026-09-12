@@ -45,7 +45,7 @@ does so with no route to the internet. A transport that talks to a cloud
 service talks to the endpoint it is configured with, which may be on the other
 side of the world or on the same rack; the transport does not know and does not
 need to. Nothing resolves a public name, fetches a certificate, checks a
-licence or downloads a module at runtime. ADR-0034's provisioning — Let's
+license or downloads a module at runtime. ADR-0034's provisioning — Let's
 Encrypt, an ACME challenge — is the one online act, and it is provisioning,
 done before a node runs or beside it, never by the node's own path.
 

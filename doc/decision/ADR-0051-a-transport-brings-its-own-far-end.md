@@ -82,7 +82,7 @@ last of them.
 
 A technology's own round-trip test calls `loopback().round(payload)` rather
 than writing the dance a third time. What the test asserts beyond the round
-— the origin URI, the peer, a protocol's acknowledgement — stays the test's.
+— the origin URI, the peer, a protocol's acknowledgment — stays the test's.
 
 ### 5. Applied in waves
 

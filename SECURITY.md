@@ -11,7 +11,7 @@ Report the vulnerability to the project owner through a private GitHub security 
 - affected repository and version or commit;
 - affected platform and runtime;
 - reproduction conditions;
-- expected and observed behaviour;
+- expected and observed behavior;
 - likely impact;
 - suggested mitigation, when known.
 

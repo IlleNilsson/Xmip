@@ -86,7 +86,7 @@ The scope in clause 1 was too narrow. The owner's rule in Context names *a
 directory containing multiple usages*, and a `.gitmodules` is one way a
 directory comes to hold many things, not the only way. The rule applies to
 every crate whose directory holds, beside its own source, anything that is
-not the crate's manifest, licence, readme, toolchain file, build output or
+not the crate's manifest, license, readme, toolchain file, build output or
 Cargo's own `tests`, `benches` and `examples`:
 
 - the platform repository itself, whose `xmip` assembly crate sat as `src`
