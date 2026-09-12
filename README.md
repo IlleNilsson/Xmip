@@ -1,10 +1,10 @@
 # Xmip
 
-**The replacement for BizTalk, MuleSoft and their kind. On-premises first,
-cloud-installable.** A messaging and integration platform written in Rust,
-built around immutable Streams, immutable Messages, long-running Journeys,
-modular capabilities and implied Contracts. Licensed AGPL-3.0-or-later, with
-no second licence.
+**A messaging and integration platform that runs where your data is.
+On-premises first, cloud-installable.** Written in Rust, built around
+immutable Streams, immutable Messages, long-running Journeys, modular
+capabilities and implied Contracts. Licensed AGPL-3.0-or-later, with no
+second licence.
 
 It runs on Windows, Linux and macOS, on a single server, an on-premises
 cluster, a cloud node or a small device, and it works with no internet at all.
@@ -284,41 +284,40 @@ any language that can implement one.
 
 ## Chief Information Officers
 
-**The position.** BizTalk Server 2020 is the final version; Microsoft's
-migration path is to Azure only, and there is no first-party on-premises
-successor. Every competitor in the field, MuleSoft, Boomi, webMethods, SAP
-Integration Suite, sells a hosted service. Xmip is for the estate that cannot
-move: law, latency, an air gap, or data that is somebody else's. The dates,
-the sources and the honest counterweights are in
-[`doc/planning/market-position.md`](doc/planning/market-position.md).
+**What you get.** One platform that receives, processes and sends your
+organisation's data between the systems you run and the partners you deal
+with: files, queues, sockets, databases, cloud services, industrial and
+healthcare protocols, e-invoicing networks. It runs on the machines you
+choose, a single server, a cluster on your premises, a node in a cloud you
+pick, or a small device at the edge, on Windows, Linux or macOS, and it
+behaves the same on all of them.
 
-**What you keep.** Your data stays on your machines. Xmip installs and runs
-with no internet at all; a node is offline unless you configure it otherwise,
-and nothing in it reports anywhere. The vocabulary is deliberately BizTalk's,
-Receive Locations, Send Ports, promoted properties, so twenty years of operator
-knowledge transfers rather than expires, minus the parts BizTalk got wrong,
-each recorded with its reason.
+**What stays yours.** Your data stays on your machines. Xmip installs and
+runs with no internet at all; a node may reach out only when you have said so
+in its configuration, and nothing in it reports anywhere. Every accepted
+message is written to disk before anything acts on it, and nothing accepted is
+ever lost. Everything Xmip does is recorded in an audit that is separate from
+the live monitoring, so what happened is always answerable afterwards.
 
-**What it costs and what it cannot do to you.** Xmip is AGPL-3.0-or-later and
-there is no commercial licence, no dual licence and no contributor agreement
-that could enable one ([ADR-0023](doc/decision/ADR-0023-licensing-model.md)).
-That is a deliberate answer to what happened to Mirth Connect in 2025: a
-platform that cannot be relicensed cannot be taken away from you. Your legal
-team may reject AGPL as policy; that cost is known and accepted, and the
-record says so. A module you write against the C ABI is your own work.
+**What it costs, and what it cannot do to you.** Xmip is AGPL-3.0-or-later
+and there is no commercial licence, no dual licence and no contributor
+agreement that could ever enable one
+([ADR-0023](doc/decision/ADR-0023-licensing-model.md)). A platform that cannot
+be relicensed cannot be taken away from you or priced away from you later.
+Your legal team may reject AGPL as policy; that cost is known and accepted,
+and the record says so. A module you write against the C ABI is your own
+work, under your own terms.
 
-**Sovereignty.** Xmip is Swedish, on-premises-capable and source-available,
-in a market where European sovereignty requirements are now legislated, and
-where AS4 and Peppol e-invoicing mandates arrive in 2026 through 2030.
+**What you can require of it.** Three security profiles, `standard`,
+`enterprise` and `regulated`, decide how strictly identities are isolated and
+whether the runtime stops rather than run unobserved. Identity is proven per
+protocol against the published standards; certificates are the first
+mechanism built, provisioned by Let's Encrypt at a public edge and by your own
+authority everywhere else. It is Swedish and source-available, which matters
+where sovereignty is legislated, and it speaks the AS4 and Peppol e-invoicing
+protocols that European mandates require from 2026 onward.
 
-**Assurance.** Three security profiles, `standard`, `enterprise` and
-`regulated`, decide how strictly identities are isolated and whether the
-runtime fails closed rather than run unobserved. Audit is a durable record
-separate from observation. Certificate identity is the first authentication
-mechanism built, with Let's Encrypt among the provisioning sources at a public
-edge and none required off it.
-
-**Maturity, stated plainly.** Xmip has no stable release yet. `main` is the
+**Where it stands, plainly.** Xmip has no stable release yet. `main` is the
 Continuum, the evolving truth; a Linear release is a stabilised, reproducible,
 versioned line cut from it, and the first has not been cut
 ([release-model.md](doc/governance/release-model.md)). The manifest declares
@@ -328,36 +327,44 @@ repositories are declared, most of them protocol, contract and archive
 technologies; forty-four are built and mounted, and the runtime, the operator
 surfaces and the Playground are what run today.
 
+*Footnote.* Xmip is built to take over from the integration servers of the
+previous generation, whose vendors now sell hosted services only; its operator
+vocabulary is theirs on purpose, so existing knowledge transfers. The
+competitive position, the dates and the honest counterweights are in
+[`doc/planning/market-position.md`](doc/planning/market-position.md).
+
 ---
 
 ## Chief Engineering Officers
 
-**The architecture in one screen.**
+**What you get.**
 
-- **Rust in the message path**, everywhere. Correctness under concurrency,
-  throughput and the cost of a defect are decided there.
-- **A C ABI is the module boundary** ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)).
-  A module implements a versioned table Xmip calls; a module may be written in
-  any language that can implement one, and a third party's module is theirs.
-- **Durability precedes execution.** A Stream is accepted only when it is
+- **A runtime in Rust, in the whole message path.** Correctness under
+  concurrency, throughput and the cost of a defect are decided there, and
+  nothing in the path is garbage-collected or interpreted.
+- **A module boundary that is a C ABI**
+  ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)). A module implements
+  a versioned table the runtime calls. Your team can write a module in any
+  language that implements one, keep it in your own repository under your own
+  terms, and load it into a node without touching Xmip.
+- **Durability before execution.** A Stream is accepted only when it is
   well-formed and, where a Contract is named, conforms to it
-  ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md));
-  an accepted Message is on disk before anything acts on it; a Journey
+  ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)).
+  An accepted Message is on disk before anything acts on it; a Journey
   checkpoints and survives a restart; an abrupt stop loses nothing accepted,
   and a Stream not yet accepted is still the sender's
   ([runtime-model.md](doc/architecture/runtime-model.md)).
-- **One repository per module**, forty-four today, five domains, mounted as
-  submodules at `module/<domain>/<leaf>`, with dependency rules the manifest
-  states and a test enforces: foundation never depends on a technology, a
-  technology may depend on its capability, operations consume public
-  contracts only ([repository-model.md](doc/architecture/repository-model.md)).
-- **Four operator surfaces, one boundary.** The command line, the PowerShell
-  module and the two GUI hosts read the same snapshot through the same
-  library, so they cannot drift apart the way BizTalk's console and its
-  PowerShell provider did ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
+- **An estate you can read.** One repository per module, forty-four today in
+  five domains, mounted as submodules at `module/<domain>/<leaf>`; dependency
+  rules the manifest states and a test enforces: foundation never depends on
+  a technology, a technology may depend on its capability, operations consume
+  public contracts only ([repository-model.md](doc/architecture/repository-model.md)).
+- **Four operator surfaces that cannot disagree.** The command line, the
+  PowerShell module and the two GUI hosts read one published snapshot through
+  one shared library ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
   [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)).
-- **The thing that watches cannot stop the thing it watches.** Observation
-  reads published snapshots; it never asks the hot path for a number
+- **Monitoring that cannot slow the runtime.** Observation reads what the
+  runtime published; it never asks the hot path for a number
   ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)).
 - **Current platforms only.** Stable Rust, .NET 11, PowerShell 7.6.5 Core;
   nothing carries a superseded platform ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)).
@@ -379,9 +386,13 @@ defect that reached the operator's console, and says so in each test.
 
 **What is open.** [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
 lists what is undecided, in order, with the options and the lean for each. The
-largest product gap is not in the runtime: every competitor leads with a
-visual designer, and Xmip's monitor is the first screen an operator can look
-at, not yet a designer.
+monitor is the first screen an operator can look at; a visual designer is not
+built.
+
+*Footnote.* The designs Xmip replaces are named in the decision records where
+a choice was made against them, each with its reason;
+[`doc/planning/market-position.md`](doc/planning/market-position.md) holds
+the comparison as a whole.
 
 ---
 
