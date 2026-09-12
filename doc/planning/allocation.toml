@@ -1674,3 +1674,30 @@ exist. Its layout is repository-model.md section 7; its creation gate is
 section 10, in current terms; its owner-information and tooling notes were
 answered by Sync-XmipEstate. ADR-0020 clause 1: two documents on one subject,
 and this was the wrong one."""
+
+[[superseded]]
+path = "module/capability/route/doc/routing-architecture.md"
+replacedBy = "doc/architecture/runtime-model.md"
+why = """
+A 'frozen architectural baseline' for publish, subscribe, evaluate and dispatch
+that runtime-model.md sections 9 and 11 already state in current words; its
+module structure named four submodules that never existed, and its DMN clause
+was decided against by ADR-0043 (logic is the method). Moved into the route
+repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
+
+# Content moved on 2026-09-12, each file kept, each part now beside its subject
+# (ADR-0020 clause 3). Recorded here so the ledger says where a paragraph went:
+#   doc/development/creating-transports-contracts-and-processes.md
+#     parts A, B, C -> module/capability/transport/doc/adding-a-transport.md,
+#     module/capability/contract/doc/adding-a-contract.md,
+#     module/platform/configure/doc/node-configuration.md
+#   doc/architecture/observability-model.md
+#     section 8 -> module/operation/report/doc/reports.md
+#     section 2 record model, section 5 -> module/operation/audit/doc/audit-record.md
+#   doc/architecture/deployment-model.md
+#     section 7 UUIDv7 -> module/platform/persist/doc/record-identifier.md
+#   doc/architecture/runtime-model.md
+#     section 9 selectors -> module/capability/promote/doc/content-selector.md
+#     section 15 scope -> module/platform/resilience/README.md
+#   doc/decision/ADR-0028-the-xmip-playground.md
+#     3a, 3b and the difficulty amendment -> test/playground/README.md
