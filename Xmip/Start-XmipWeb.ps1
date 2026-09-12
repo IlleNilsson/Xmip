@@ -24,7 +24,7 @@ function Start-XmipWeb {
 
         .PARAMETER Snapshot
             The snapshot file to monitor. Bound from the pipeline, so a
-            Start-XmipPlayground -PassThru object names it.
+            Start-XmipTest -PassThru object names it.
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087. Use
@@ -42,7 +42,7 @@ function Start-XmipWeb {
             Start-XmipWeb
 
         .EXAMPLE
-            Start-XmipPlayground -Stress Harsh -PassThru | Start-XmipWeb
+            Start-XmipTest -Stress Harsh -PassThru | Start-XmipWeb
 
         .EXAMPLE
             Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/snapshot.toml

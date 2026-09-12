@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Default table views for the objects the playground and web cmdlets emit, so
-  Get-XmipPlayground reads at a glance and Format-List still shows everything.
+  Get-XmipTestStatus reads at a glance and Format-List still shows everything.
 -->
 <Configuration>
   <ViewDefinitions>
     <View>
-      <Name>Xmip.Playground</Name>
+      <Name>Xmip.TestStatus</Name>
       <ViewSelectedBy>
-        <TypeName>Xmip.Playground</TypeName>
+        <TypeName>Xmip.TestStatus</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
+          <TableColumnHeader><Label>Suite</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
@@ -24,6 +25,7 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
+              <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
@@ -38,9 +40,9 @@
       </TableControl>
     </View>
     <View>
-      <Name>Xmip.PlaygroundNode</Name>
+      <Name>Xmip.TestNode</Name>
       <ViewSelectedBy>
-        <TypeName>Xmip.PlaygroundNode</TypeName>
+        <TypeName>Xmip.TestNode</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -70,9 +72,9 @@
       </TableControl>
     </View>
     <View>
-      <Name>Xmip.PlaygroundResult</Name>
+      <Name>Xmip.TestResult</Name>
       <ViewSelectedBy>
-        <TypeName>Xmip.PlaygroundResult</TypeName>
+        <TypeName>Xmip.TestResult</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>

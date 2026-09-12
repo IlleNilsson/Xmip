@@ -855,19 +855,20 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'New-XmipDecisionIndex.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipHistory.ps1')
 
-# The Playground and the web monitor on this machine: Start, Get and Stop for
+# Xmip's test suites — the Playground is the first — and the web monitor on
+# this machine: Start, Get and Stop for
 # each of the roll, the emulated nodes and the web host, and Get for what a run
 # says. Nothing in the estate starts any of them on its own (owner, 2026-09-12).
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
-. (Join-Path $PSScriptRoot 'Read-XmipPlaygroundNodeCommandLine.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipPlayground.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlayground.ps1')
-. (Join-Path $PSScriptRoot 'Stop-XmipPlayground.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipPlaygroundNode.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundNode.ps1')
-. (Join-Path $PSScriptRoot 'Stop-XmipPlaygroundNode.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundResult.ps1')
+. (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
+. (Join-Path $PSScriptRoot 'Stop-XmipTest.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipTestNode.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTestNode.ps1')
+. (Join-Path $PSScriptRoot 'Stop-XmipTestNode.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTestResult.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipWeb.ps1')
@@ -887,13 +888,13 @@ function Test-XmipManifest {
     'Get-XmipDecisionRecord'
     'New-XmipDecisionIndex'
     'Get-XmipHistory'
-    'Start-XmipPlayground'
-    'Get-XmipPlayground'
-    'Stop-XmipPlayground'
-    'Start-XmipPlaygroundNode'
-    'Get-XmipPlaygroundNode'
-    'Stop-XmipPlaygroundNode'
-    'Get-XmipPlaygroundResult'
+    'Start-XmipTest'
+    'Get-XmipTestStatus'
+    'Stop-XmipTest'
+    'Start-XmipTestNode'
+    'Get-XmipTestNode'
+    'Stop-XmipTestNode'
+    'Get-XmipTestResult'
     'Start-XmipWeb'
     'Get-XmipWeb'
     'Stop-XmipWeb'

@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-function Read-XmipPlaygroundNodeCommandLine {
+function Read-XmipTestNodeCommandLine {
     <#
         .SYNOPSIS
             What a node process was started with, read back from its command
@@ -12,7 +12,7 @@ function Read-XmipPlaygroundNodeCommandLine {
             The node binary (test/playground/src/bin/node.rs) takes
             `--name --shared --stress --rounds --snapshot [--interval-ms]
             [--online]`. A running node carries nothing else that says what it
-            is, so Get-XmipPlaygroundNode reads this. Quoted arguments are one
+            is, so Get-XmipTestNode reads this. Quoted arguments are one
             token; the executable itself is dropped.
     #>
     [CmdletBinding()]

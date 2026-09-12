@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-function Stop-XmipPlaygroundNode {
+function Stop-XmipTestNode {
     <#
         .SYNOPSIS
             Stops emulated nodes: asks first through the fleet's stop file,
@@ -14,21 +14,21 @@ function Stop-XmipPlaygroundNode {
             and exits on its own when it appears — the orderly end, which lets
             it finish the round it is in. Nodes that have not left after five
             seconds are ended. The stop file is removed afterwards so the next
-            Start-XmipPlaygroundNode over the same directory is not stopped at
-            once. Takes Xmip.PlaygroundNode objects from Get-XmipPlaygroundNode
+            Start-XmipTestNode over the same directory is not stopped at
+            once. Takes Xmip.TestNode objects from Get-XmipTestNode
             on the pipeline, or -Name, or nothing for all.
 
         .PARAMETER Node
-            The nodes to stop, from Get-XmipPlaygroundNode.
+            The nodes to stop, from Get-XmipTestNode.
 
         .PARAMETER Name
             The names of the nodes to stop, wildcards allowed.
 
         .EXAMPLE
-            Stop-XmipPlaygroundNode
+            Stop-XmipTestNode
 
         .EXAMPLE
-            Get-XmipPlaygroundNode | Where-Object Online | Stop-XmipPlaygroundNode -WhatIf
+            Get-XmipTestNode | Where-Object Online | Stop-XmipTestNode -WhatIf
     #>
     [CmdletBinding(
         SupportsShouldProcess,
@@ -37,7 +37,7 @@ function Stop-XmipPlaygroundNode {
     [OutputType([void])]
     param(
         [Parameter(ParameterSetName = 'Object', ValueFromPipeline)]
-        [PSTypeName('Xmip.PlaygroundNode')]
+        [PSTypeName('Xmip.TestNode')]
         [PSObject[]] $Node,
 
         [Parameter(ParameterSetName = 'Name', Mandatory)]
@@ -63,7 +63,7 @@ function Stop-XmipPlaygroundNode {
             [string[]] $patterns = if ($named) { $Name } else { @('*') }
 
             foreach ($pattern in $patterns) {
-                $targets.AddRange([PSObject[]] @(Get-XmipPlaygroundNode -Name $pattern))
+                $targets.AddRange([PSObject[]] @(Get-XmipTestNode -Name $pattern))
             }
         }
 

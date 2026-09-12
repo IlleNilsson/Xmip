@@ -15,7 +15,7 @@ function New-XmipPlaygroundEnvironment {
             Only what the caller chose is set — an unset variable is the
             roll's own default, and a roll started by hand behaves the same.
             The three publish paths are always set, so a run lands where
-            Get-XmipPlaygroundResult and the web host look.
+            Get-XmipTestResult and the web host look.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]

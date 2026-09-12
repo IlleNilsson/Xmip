@@ -2,22 +2,27 @@
 
 Set-StrictMode -Version Latest
 
-function Start-XmipPlayground {
+function Start-XmipTest {
     <#
         .SYNOPSIS
-            Starts one roll of the Xmip Playground, detached, with the stress,
+            Starts one run of an Xmip test suite, detached, with the stress,
             scenarios, fleet and limits you choose. Nothing starts unless you
             call this.
 
         .DESCRIPTION
+            Xmip provides its tests as suites; the Playground is the first and,
+            today, the only one — a transport's or a contract's own suite joins
+            as another value of -Suite. Get-XmipTestStatus says what runs and
+            Stop-XmipTest ends it.
+
             The Playground (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
             a snapshot, a history and the recent activity as TOML files a
             monitor reads. This starts exactly one roll as a background
             process, hands it every switch through its own environment — your
             session's environment is untouched — and writes a run record beside
-            the snapshot so Get-XmipPlayground can say what is running and
-            Stop-XmipPlayground can end it, nodes first.
+            the snapshot so Get-XmipTestStatus can say what is running and
+            Stop-XmipTest can end it, nodes first.
 
             The roll and node binaries are built first, a no-op when they are
             current, so a roll never runs yesterday's scenarios. The roll's own
@@ -25,6 +30,9 @@ function Start-XmipPlayground {
             to `roll-<start time>.log` and `.err` under -Path, one line per
             round; the run record `roll-<pid>.toml` beside them says which log
             is whose.
+
+        .PARAMETER Suite
+            Which of Xmip's test suites to run. Playground, the only one today.
 
         .PARAMETER Stress
             How hard: Calm, Realistic, Harsh or Brutal. Realistic is the roll's
@@ -65,20 +73,24 @@ function Start-XmipPlayground {
             repository.
 
         .PARAMETER PassThru
-            Return the Xmip.Playground object for the roll started.
+            Return the Xmip.TestStatus object for the roll started.
 
         .EXAMPLE
-            Start-XmipPlayground -Stress Harsh -Scenario pingpong, load -Rounds 20
+            Start-XmipTest -Stress Harsh -Scenario pingpong, load -Rounds 20
 
         .EXAMPLE
-            Start-XmipPlayground -Stress Brutal -Nodes 20 -Online -PassThru | Start-XmipWeb
+            Start-XmipTest -Stress Brutal -Nodes 20 -Online -PassThru | Start-XmipWeb
 
         .EXAMPLE
-            Start-XmipPlayground -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
     #>
     [CmdletBinding(SupportsShouldProcess)]
-    [OutputType('Xmip.Playground')]
+    [OutputType('Xmip.TestStatus')]
     param(
+        [Parameter()]
+        [ValidateSet('Playground')]
+        [string] $Suite = 'Playground',
+
         [Parameter()]
         [ValidateSet('Calm', 'Realistic', 'Harsh', 'Brutal')]
         [string] $Stress = 'Realistic',
@@ -168,6 +180,7 @@ function Start-XmipPlayground {
     [bool] $boundFactor = $PSBoundParameters.ContainsKey('TimeFactor')
 
     $record = [ordered]@{
+        suite       = $Suite.ToLowerInvariant()
         pid         = $process.Id
         started     = $process.StartTime.ToString('o')
         stress      = $Stress.ToLowerInvariant()
@@ -189,7 +202,7 @@ function Start-XmipPlayground {
     Write-Verbose "started $what as pid $($process.Id); record at $recordPath"
 
     if ($PassThru) {
-        return Get-XmipPlayground -Path $Path | Where-Object { $_.Id -eq $process.Id }
+        return Get-XmipTestStatus -Path $Path | Where-Object { $_.Id -eq $process.Id }
     }
 }
 
