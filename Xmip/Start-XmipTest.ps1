@@ -62,13 +62,15 @@ function Start-XmipTest {
             simulated clock faster (the secretary ages on it).
 
         .PARAMETER Nodes
-            How many node processes the fleet spawns. 0 means no fleet at any
-            level. Omit for the level's own count: one, three, ten or forty,
-            scaled to the machine's headroom.
+            The nodes to simulate, by name — one process each, so
+            -Nodes alpha, beta, gamma is three node processes called that.
+            An empty list, @(), is no fleet at any level. Omit for the level's
+            own numbered fleet: one, three, ten or forty, scaled to the
+            machine's headroom.
 
         .PARAMETER OnlineNodes
-            How many of the fleet's nodes, counting from the first, may assume
-            a route to the internet (ADR-0045). None unless said.
+            Which of the named nodes may assume a route to the internet
+            (ADR-0045), by name. None unless said; each must be in -Nodes.
 
         .PARAMETER LoadBytes
             The load scenario's payload: a number or a size like 512mb or 2gb.
@@ -87,7 +89,8 @@ function Start-XmipTest {
             Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Rounds 20
 
         .EXAMPLE
-            Start-XmipTest -Stress Brutal -Nodes 20 -OnlineNodes 5 -PassThru | Start-XmipWeb
+            Start-XmipTest -Test HeavyLoad -Nodes alpha, beta, gamma -OnlineNodes alpha -PassThru |
+                Start-XmipWeb
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
@@ -142,12 +145,11 @@ function Start-XmipTest {
         [double] $TimeFactor,
 
         [Parameter()]
-        [ValidateRange(0, 200)]
-        [int] $Nodes,
+        [AllowEmptyCollection()]
+        [string[]] $Nodes,
 
         [Parameter()]
-        [ValidateRange(0, 200)]
-        [int] $OnlineNodes,
+        [string[]] $OnlineNodes = @(),
 
         [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
@@ -177,9 +179,13 @@ function Start-XmipTest {
         return Start-XmipEstateSuite -Path $Path -Test $Test
     }
 
-    if ($PSBoundParameters.ContainsKey('Nodes') -and $OnlineNodes -gt $Nodes) {
-        Write-Error "-OnlineNodes $OnlineNodes exceeds -Nodes $Nodes."
+    if ($OnlineNodes.Count -gt 0 -and -not $PSBoundParameters.ContainsKey('Nodes')) {
+        Write-Error '-OnlineNodes names nodes; name them all with -Nodes first.'
         return
+    }
+
+    if ($PSBoundParameters.ContainsKey('Nodes')) {
+        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
     }
 
     $layout = Get-XmipPlaygroundLayout
@@ -198,7 +204,11 @@ function Start-XmipTest {
 
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
-    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for"
+    [string] $with = if ($PSBoundParameters.ContainsKey('Nodes')) {
+        if ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
+    }
+    [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
+    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online"
 
     if (-not $PSCmdlet.ShouldProcess("the Xmip Playground in $Path", "Start a $what")) {
         return
@@ -239,8 +249,9 @@ function Start-XmipTest {
         stress      = $Stress.ToLowerInvariant()
         tests       = @($Test)
         rounds      = $Rounds
-        nodes       = if ($boundNodes) { $Nodes } else { -1 }
-        online      = $OnlineNodes
+        nodes       = if ($boundNodes) { @($Nodes) } else { @() }
+        fleet       = if ($boundNodes) { 'named' } else { 'level' }
+        online      = @($OnlineNodes)
         duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }
         snapshot    = $environment.XMIP_PLAYGROUND_SNAPSHOT

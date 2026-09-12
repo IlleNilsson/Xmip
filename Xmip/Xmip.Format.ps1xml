@@ -18,8 +18,8 @@
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
           <TableColumnHeader><Label>Tests</Label><Width>28</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>Nodes</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Nodes</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>16</Width></TableColumnHeader>
           <TableColumnHeader><Label>Worst</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -31,8 +31,8 @@
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><PropertyName>Nodes</PropertyName></TableColumnItem>
-              <TableColumnItem><PropertyName>OnlineNodes</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Worst</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

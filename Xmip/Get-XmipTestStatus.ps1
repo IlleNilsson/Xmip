@@ -68,6 +68,7 @@ function Get-XmipTestStatus {
         }
 
         [object[]] $mine = @($nodes | Where-Object { $_.Parent -eq $roll.Id })
+        [object[]] $online = @($mine | Where-Object { $_.Online })
 
         [PSCustomObject]@{
             PSTypeName  = 'Xmip.TestStatus'
@@ -77,8 +78,8 @@ function Get-XmipTestStatus {
             Stress      = if ($null -ne $record) { $record.stress } else { $null }
             Tests       = if ($null -ne $record) { @($record.tests) } else { @() }
             Rounds      = if ($null -ne $record) { [int] $record.rounds } else { 0 }
-            Nodes       = $mine.Count
-            OnlineNodes = @($mine | Where-Object { $_.Online }).Count
+            Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
+            OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
             Worst       = if ($null -ne $worst) { $worst.State } else { $null }
             Snapshot    = $snapshot
             Path        = if ($null -ne $record) { $Path } else { $null }
