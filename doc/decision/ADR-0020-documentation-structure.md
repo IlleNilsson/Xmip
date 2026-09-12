@@ -72,13 +72,16 @@ doc/
     module-model.md                 the module boundary, loading and isolation
     deployment-model.md             nodes, profiles, roles, installation, recovery
     observability-model.md          audit, correlation, tracing, observation
-    identity-by-technology.md       identity per technology, against the standards
   decision/ADR-NNNN-*.md            the record. Never deleted, superseded in place.
   governance/*.md                   change permission and release model
   planning/*.md                     working notes, explicitly not authoritative
 ```
 
-Six architecture documents. A seventh requires a reason that is not "this
+Five architecture documents in the root. The sixth, identity per technology
+against the standards, lives with the repository that owns its subject, at
+`module/capability/authenticate/doc/identity-by-technology.md`, by clause 3
+(`doc/planning/allocation.toml` records the move; the tree above was
+corrected on 2026-09-12). A further one requires a reason that is not "this
 document got long", because length is solved by sections.
 
 ### 5. `architecture.toml` is the estate, not a document

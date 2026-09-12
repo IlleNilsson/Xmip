@@ -39,8 +39,6 @@ resources:
 
               [modules]
               load_from = "/opt/xmip/modules"
-              '@ |              [modules]
-              load_from = "/opt/xmip/modules"
 
               # The technologies this node carries, by repository name (ADR-0011),
               # and which of them start. One name per module the estate has built,
@@ -169,4 +167,4 @@ resources:
                 "xmip-core-path-json-pointer", "xmip-core-path-xpath", "xmip-core-path-index",
                 "xmip-core-archive-parquet",
               ]
-              '@ | Set-Content| Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8
+              '@ | Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8

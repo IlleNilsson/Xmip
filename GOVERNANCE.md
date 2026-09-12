@@ -18,15 +18,12 @@ Architecture decisions are made before implementation when a change affects repo
 
 ## Repository ownership
 
-Each repository has a defined role in the Xmip classification model:
-
-- Foundation
-- Capabilities
-- Technology
-- Operations
-- Platform
-
-Repository responsibilities must remain narrow. Common capability repositories define reusable behaviour and contracts. Technology repositories implement a specific technology beneath the owning capability.
+Each repository has one role in the classification
+[`doc/architecture/repository-model.md`](doc/architecture/repository-model.md)
+defines in section 1, and `architecture.toml` declares it. Repository
+responsibilities must remain narrow: a capability repository defines reusable
+behavior and contracts; a technology repository implements one technology
+beneath its owning capability.
 
 ## Compatibility
 

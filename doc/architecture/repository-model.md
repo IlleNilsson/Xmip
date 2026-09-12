@@ -54,9 +54,9 @@ paragraph previously said nothing read a folder name at all, which stopped being
 true the moment the first of those was written.
 
 *Corrected 2026-08-26. This paragraph read "it does not place it on disk", which
-contradicted section 14 of `Xmip-Repository-Creation-Blueprint.md` — the
-owner's own layout, grouped by domain. The scoping error was mine: ADR-0011 is
-about names.*
+contradicted the owner's own layout, grouped by domain, then drawn in the
+repository creation blueprint (retired 2026-09-12; section 7 below is the
+layout's home). The scoping error was mine: ADR-0011 is about names.*
 
 | Domain | What it holds | Examples |
 | --- | --- | --- |
@@ -376,7 +376,8 @@ hierarchy and the submodules are one thing** — wiring the submodules is what
 produces the tree, and `git clone --recursive` reproduces it for everyone else.
 
 Two levels. Depth two mounts under `Xmip`, grouped by architectural domain,
-which is the layout in section 14 of `Xmip-Repository-Creation-Blueprint.md`:
+the owner's layout (first drawn in the repository creation blueprint under the
+names of its day; that document is retired and this section is its home):
 
 ```text
 Xmip/
@@ -534,3 +535,11 @@ One component at a time, and the order is not arbitrary:
 `xmip-core` goes first, because every other repository depends on its shared
 domain contracts, and a contract that changes after its dependants exist is
 paid for by all of them.
+
+A repository is created, not merely named, when all of this holds: it exists
+on origin; its README states its responsibility and its exclusions; its crate
+or project is named for the repository and declares its dependencies; it is
+registered in `architecture.toml` and, where it is mounted, in `Xmip`; and a
+clean recursive clone builds and tests. Until then it is a declaration, and
+`architecture.toml` says so through its maturity. (The gate of the retired
+creation blueprint, kept here in current terms.)
