@@ -26,7 +26,8 @@ function Stop-XmipTest {
             Stop-XmipTest
 
         .EXAMPLE
-            Get-XmipTestStatus | Where-Object Stress -eq brutal | Stop-XmipTest -WhatIf
+            Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |
+                Stop-XmipTest -WhatIf
     #>
     [CmdletBinding(
         SupportsShouldProcess,

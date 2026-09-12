@@ -89,14 +89,14 @@ function Start-XmipTest {
             Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Rounds 20
 
         .EXAMPLE
-            Start-XmipTest -Test HeavyLoad -Nodes alpha, beta, gamma -OnlineNodes alpha -PassThru |
+            Start-XmipTest -Suite Playground -Test HeavyLoad -Nodes a, b -OnlineNodes a -PassThru |
                 Start-XmipWeb
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Suite Playground -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
             Start-XmipTest -Suite Estate

@@ -42,7 +42,7 @@ function Start-XmipWeb {
             Start-XmipWeb
 
         .EXAMPLE
-            Start-XmipTest -Stress Harsh -PassThru | Start-XmipWeb
+            Start-XmipTest -Suite Playground -Stress Harsh -PassThru | Start-XmipWeb
 
         .EXAMPLE
             Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/snapshot.toml

@@ -35,7 +35,7 @@ function Get-XmipTestResult {
             Only the single worst record — highest severity, first by scope.
 
         .EXAMPLE
-            Get-XmipTestResult | Where-Object State -ne fine
+            Get-XmipTestResult | Where-Object -Property State -NE -Value fine
 
         .EXAMPLE
             Get-XmipTestResult -Test RoundTrip -Worst

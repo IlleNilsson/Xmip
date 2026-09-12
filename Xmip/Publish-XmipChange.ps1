@@ -215,7 +215,7 @@ function Publish-XmipChange {
             Publish-XmipChange -m 'Operate is the fourth purpose' -WhatIf
 
         .EXAMPLE
-            Publish-XmipChange 'Identities are configured per purpose'
+            Publish-XmipChange -Message 'Identities are configured per purpose'
 
         .EXAMPLE
             Publish-XmipChange -m 'Fix a typo in the README' -NoVerify
