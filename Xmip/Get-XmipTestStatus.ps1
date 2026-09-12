@@ -2,14 +2,15 @@
 
 Set-StrictMode -Version Latest
 
-function Get-XmipPlayground {
+function Get-XmipTestStatus {
     <#
         .SYNOPSIS
-            The Playground rolls running on this machine: one object per roll,
-            with what it was started with and how it stands.
+            The Xmip test runs on this machine: one object per run, with its
+            suite, what it was started with and how it stands.
 
         .DESCRIPTION
-            Reads the run records Start-XmipPlayground wrote under -Path and
+            The Playground is the one suite today, and a run of it is a roll.
+            Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
             started by hand (`cargo run --bin roll`) has no record and is
@@ -20,16 +21,16 @@ function Get-XmipPlayground {
 
         .PARAMETER Path
             Where the run records are. Defaults to the repository's
-            .local-work/playground folder, where Start-XmipPlayground writes.
+            .local-work/playground folder, where Start-XmipTest writes.
 
         .EXAMPLE
-            Get-XmipPlayground
+            Get-XmipTestStatus
 
         .EXAMPLE
-            Get-XmipPlayground | Format-List
+            Get-XmipTestStatus | Format-List
     #>
     [CmdletBinding()]
-    [OutputType('Xmip.Playground')]
+    [OutputType('Xmip.TestStatus')]
     param(
         [Parameter()]
         [string] $Path
@@ -50,7 +51,7 @@ function Get-XmipPlayground {
         return
     }
 
-    [object[]] $nodes = @(Get-XmipPlaygroundNode)
+    [object[]] $nodes = @(Get-XmipTestNode)
     Import-Module PSToml -ErrorAction Stop
 
     foreach ($roll in $rolls) {
@@ -64,11 +65,12 @@ function Get-XmipPlayground {
         [int] $fleet = @($nodes | Where-Object { $_.Parent -eq $roll.Id }).Count
         [string] $snapshot = if ($null -ne $record) { $record.snapshot } else { '' }
         $worst = if (Test-Path -LiteralPath $snapshot) {
-            Get-XmipPlaygroundResult -Path $snapshot -Worst
+            Get-XmipTestResult -Path $snapshot -Worst
         }
 
         [PSCustomObject]@{
-            PSTypeName = 'Xmip.Playground'
+            PSTypeName = 'Xmip.TestStatus'
+            Suite      = 'Playground'
             Id         = $roll.Id
             StartTime  = $roll.StartTime
             Stress     = if ($null -ne $record) { $record.stress } else { $null }

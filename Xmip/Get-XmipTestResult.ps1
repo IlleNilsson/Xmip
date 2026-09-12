@@ -2,14 +2,15 @@
 
 Set-StrictMode -Version Latest
 
-function Get-XmipPlaygroundResult {
+function Get-XmipTestResult {
     <#
         .SYNOPSIS
-            What a Playground run says now: one object per scope from the
-            snapshot it publishes — scenario, transport, contract, state and
-            the evidence.
+            What an Xmip test run says now: one object per scope from the
+            snapshot it publishes — suite, scenario, transport, contract, state
+            and the evidence.
 
         .DESCRIPTION
+            The Playground is the one suite today, and a run of it is a roll.
             Reads the snapshot TOML a roll writes after every round (ADR-0028
             clause 4: a verdict is health, per scope) and emits one object per
             record, with the scope split into what an operator filters on.
@@ -33,13 +34,13 @@ function Get-XmipPlaygroundResult {
             Only the single worst record — highest severity, first by scope.
 
         .EXAMPLE
-            Get-XmipPlaygroundResult | Where-Object State -ne fine
+            Get-XmipTestResult | Where-Object State -ne fine
 
         .EXAMPLE
-            Get-XmipPlaygroundResult -Scenario pingpong -Worst
+            Get-XmipTestResult -Scenario pingpong -Worst
     #>
     [CmdletBinding()]
-    [OutputType('Xmip.PlaygroundResult')]
+    [OutputType('Xmip.TestResult')]
     param(
         [Parameter()]
         [string] $Path,
@@ -74,7 +75,7 @@ function Get-XmipPlaygroundResult {
 
     [object[]] $results = @(
         foreach ($record in @($document.records)) {
-            $result = ConvertTo-XmipPlaygroundResult -Record $record -Root $root
+            $result = ConvertTo-XmipTestResult -Record $record -Root $root
 
             if ($PSBoundParameters.ContainsKey('Scenario') -and $result.Scenario -notin $Scenario) {
                 continue
@@ -101,14 +102,14 @@ function Get-XmipPlaygroundResult {
     return $results
 }
 
-function ConvertTo-XmipPlaygroundResult {
+function ConvertTo-XmipTestResult {
     <#
         .SYNOPSIS
-            One snapshot record as an Xmip.PlaygroundResult, its scope split
+            One snapshot record as an Xmip.TestResult, its scope split
             into scenario, node, transport and contract.
     #>
     [CmdletBinding()]
-    [OutputType('Xmip.PlaygroundResult')]
+    [OutputType('Xmip.TestResult')]
     param(
         [Parameter(Mandatory)]
         [PSObject] $Record,
@@ -136,7 +137,8 @@ function ConvertTo-XmipPlaygroundResult {
     [string] $contract = $rest -join '/'
 
     return [PSCustomObject]@{
-        PSTypeName = 'Xmip.PlaygroundResult'
+        PSTypeName = 'Xmip.TestResult'
+        Suite      = 'Playground'
         Scenario   = if ($segments.Count -ge 1) { $segments[0] } else { '' }
         Node       = $node
         Transport  = if ($segments.Count -ge 2) { $segments[1] } else { '' }

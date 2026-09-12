@@ -51,20 +51,20 @@
         'Get-XmipDecisionRecord'
         'New-XmipDecisionIndex'
         'Get-XmipHistory'
-        'Start-XmipPlayground'
-        'Get-XmipPlayground'
-        'Stop-XmipPlayground'
-        'Start-XmipPlaygroundNode'
-        'Get-XmipPlaygroundNode'
-        'Stop-XmipPlaygroundNode'
-        'Get-XmipPlaygroundResult'
+        'Start-XmipTest'
+        'Get-XmipTestStatus'
+        'Stop-XmipTest'
+        'Start-XmipTestNode'
+        'Get-XmipTestNode'
+        'Stop-XmipTestNode'
+        'Get-XmipTestResult'
         'Start-XmipWeb'
         'Get-XmipWeb'
         'Stop-XmipWeb'
         'Invoke-XmipTest'
     )
 
-    # Table views for the playground and web objects, so Get-XmipPlayground
+    # Table views for the playground and web objects, so Get-XmipTestStatus
     # reads at a glance.
     FormatsToProcess     = @('Xmip.Format.ps1xml')
 

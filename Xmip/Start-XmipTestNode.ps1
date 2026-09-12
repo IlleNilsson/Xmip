@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-function Start-XmipPlaygroundNode {
+function Start-XmipTestNode {
     <#
         .SYNOPSIS
             Starts emulated Xmip nodes by hand — as many as you say, at the
@@ -13,8 +13,8 @@ function Start-XmipPlaygroundNode {
             clause 2), running the claim and daily scenarios over a directory
             the whole set shares, so the contention is between real processes.
             Each publishes its own snapshot under -Path and writes its own
-            log beside it. The processes are detached; Get-XmipPlaygroundNode
-            lists them and Stop-XmipPlaygroundNode ends them.
+            log beside it. The processes are detached; Get-XmipTestNode
+            lists them and Stop-XmipTestNode ends them.
 
             A stale stop file in the shared directory would end every node in
             its first round, so it is removed first.
@@ -50,16 +50,16 @@ function Start-XmipPlaygroundNode {
             -Path.
 
         .PARAMETER PassThru
-            Return one Xmip.PlaygroundNode object per node started.
+            Return one Xmip.TestNode object per node started.
 
         .EXAMPLE
-            Start-XmipPlaygroundNode -Count 5 -Online
+            Start-XmipTestNode -Count 5 -Online
 
         .EXAMPLE
-            Start-XmipPlaygroundNode -Name edge -Count 2 -Stress Harsh -Rounds 100 -PassThru
+            Start-XmipTestNode -Name edge -Count 2 -Stress Harsh -Rounds 100 -PassThru
     #>
     [CmdletBinding(SupportsShouldProcess)]
-    [OutputType('Xmip.PlaygroundNode')]
+    [OutputType('Xmip.TestNode')]
     param(
         [Parameter()]
         [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
@@ -113,7 +113,7 @@ function Start-XmipPlaygroundNode {
     [string] $binary = Invoke-XmipPlaygroundBuild -Binary node
     New-Item -ItemType Directory -Path $Path, $Shared -Force | Out-Null
     Remove-Item -LiteralPath (Join-Path -Path $Shared -ChildPath 'stop') -Force -ErrorAction Ignore
-    [int] $first = 1 + @(Get-XmipPlaygroundNode -Name "$Name-*").Count
+    [int] $first = 1 + @(Get-XmipTestNode -Name "$Name-*").Count
 
     foreach ($ordinal in $first..($first + $Count - 1)) {
         [string] $nodeName = '{0}-{1:00}' -f $Name, $ordinal
@@ -140,7 +140,7 @@ function Start-XmipPlaygroundNode {
         Write-Verbose "started node $nodeName as pid $($process.Id)"
 
         if ($PassThru) {
-            ConvertTo-XmipPlaygroundNode -Process $process
+            ConvertTo-XmipTestNode -Process $process
         }
     }
 }

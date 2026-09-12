@@ -20,14 +20,35 @@ BeforeAll {
 }
 
 Describe 'Start, Get and Stop, and nothing else' {
-    It 'has exactly those verbs for the roll, the nodes and the web host' {
-        foreach ($noun in 'XmipPlayground', 'XmipPlaygroundNode', 'XmipWeb') {
+    It 'has exactly those verbs for the nodes and the web host' {
+        foreach ($noun in 'XmipTestNode', 'XmipWeb') {
             [string[]] $verbs = @(Get-Command -Module Xmip -Noun $noun | ForEach-Object { $_.Verb })
 
             [string[]] $sorted = @($verbs | Sort-Object)
 
             $sorted | Should -Be @('Get', 'Start', 'Stop') -Because "$noun is operated"
         }
+    }
+
+    It 'starts, reports and stops a test run under the names the owner chose' {
+        # 2026-09-12: Start-XmipTest, Get-XmipTestStatus and Stop-XmipTest — the
+        # Playground is one suite Xmip provides, and a transport's or a
+        # contract's suite may join it. Invoke-XmipTest, the Pester door, is
+        # the one other verb on the noun.
+        foreach ($name in 'Start-XmipTest', 'Get-XmipTestStatus', 'Stop-XmipTest') {
+            Get-Command -Module Xmip -Name $name | Should -Not -BeNullOrEmpty
+        }
+
+        [string[]] $verbs = @(Get-Command -Module Xmip -Noun XmipTest | ForEach-Object { $_.Verb })
+
+        @($verbs | Sort-Object) | Should -Be @('Invoke', 'Start', 'Stop')
+    }
+
+    It 'names the suite on everything it emits, Playground first' {
+        (Get-Command -Name Start-XmipTest).Parameters['Suite'].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } |
+            ForEach-Object { $_.ValidValues } |
+            Should -Contain 'Playground'
     }
 
     It 'rehearses every Start and Stop with -WhatIf' {
@@ -40,8 +61,8 @@ Describe 'Start, Get and Stop, and nothing else' {
         }
     }
 
-    It 'lets a Playground object name the snapshot a web monitor reads' {
-        # Start-XmipPlayground -PassThru | Start-XmipWeb: the property and the
+    It 'lets a test status object name the snapshot a web monitor reads' {
+        # Start-XmipTest -PassThru | Start-XmipWeb: the property and the
         # parameter share a name, and the parameter binds by it.
         $parameter = (Get-Command -Name Start-XmipWeb).Parameters['Snapshot']
         $binding = $parameter.Attributes |
@@ -131,7 +152,7 @@ Describe 'What a node was started with' {
             [string] $line = '"D:\a b\node.exe" --name node-03 --shared "D:\a b\shared" ' +
                 '--stress harsh --rounds 0 --snapshot "D:\a b\node-03.toml" ' +
                 '--interval-ms 500 --online true'
-            $flags = Read-XmipPlaygroundNodeCommandLine -CommandLine $line
+            $flags = Read-XmipTestNodeCommandLine -CommandLine $line
 
             $flags.Name | Should -Be 'node-03'
             $flags.Shared | Should -Be 'D:\a b\shared'
@@ -145,7 +166,7 @@ Describe 'What a node was started with' {
 
     It 'defaults the way the node binary does when a flag is absent' {
         InModuleScope Xmip {
-            $flags = Read-XmipPlaygroundNodeCommandLine -CommandLine 'node.exe --name n --rounds 3'
+            $flags = Read-XmipTestNodeCommandLine -CommandLine 'node.exe --name n --rounds 3'
 
             $flags.Interval | Should -Be ([timespan]::FromMilliseconds(250))
             $flags.Online | Should -BeFalse
@@ -185,7 +206,7 @@ observed_unix_nanos = 1789208338038783900
     }
 
     It 'splits a scope into scenario, node, transport and contract' {
-        [object[]] $results = @(Get-XmipPlaygroundResult -Path $script:Snapshot)
+        [object[]] $results = @(Get-XmipTestResult -Path $script:Snapshot)
 
         $results.Count | Should -Be 3
 
@@ -203,17 +224,17 @@ observed_unix_nanos = 1789208338038783900
     }
 
     It 'filters by scenario and by node, and names the worst' {
-        @(Get-XmipPlaygroundResult -Path $script:Snapshot -Scenario pingpong).Count | Should -Be 1
-        @(Get-XmipPlaygroundResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
-        (Get-XmipPlaygroundResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
+        @(Get-XmipTestResult -Path $script:Snapshot -Scenario pingpong).Count | Should -Be 1
+        @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
+        (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }
 
     It 'takes the directory the snapshot is in' {
-        @(Get-XmipPlaygroundResult -Path $TestDrive).Count | Should -Be 3
+        @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 3
     }
 
     It 'says where a snapshot should be when there is none' {
-        { Get-XmipPlaygroundResult -Path (Join-Path $TestDrive 'nowhere') -ErrorAction Stop } |
+        { Get-XmipTestResult -Path (Join-Path $TestDrive 'nowhere') -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*No snapshot*'
     }
 }
