@@ -10,7 +10,7 @@
 
 @{
     RootModule           = 'Xmip.psm1'
-    ModuleVersion        = '1.20.0'
+    ModuleVersion        = '1.21.0'
     GUID                 = 'a4f1e6c2-9b73-4d58-8e21-5c7a3f0d94b6'
     Author               = 'Ilian Nilsson'
     CompanyName          = 'Xmip'
@@ -51,9 +51,22 @@
         'Get-XmipDecisionRecord'
         'New-XmipDecisionIndex'
         'Get-XmipHistory'
+        'Start-XmipPlayground'
+        'Get-XmipPlayground'
+        'Stop-XmipPlayground'
+        'Start-XmipPlaygroundNode'
+        'Get-XmipPlaygroundNode'
+        'Stop-XmipPlaygroundNode'
+        'Get-XmipPlaygroundResult'
         'Start-XmipWeb'
+        'Get-XmipWeb'
+        'Stop-XmipWeb'
         'Invoke-XmipTest'
     )
+
+    # Table views for the playground and web objects, so Get-XmipPlayground
+    # reads at a glance.
+    FormatsToProcess     = @('Xmip.Format.ps1xml')
 
     CmdletsToExport      = @()
     VariablesToExport    = @()

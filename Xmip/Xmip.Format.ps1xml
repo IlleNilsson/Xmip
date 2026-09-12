@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default table views for the objects the playground and web cmdlets emit, so
+  Get-XmipPlayground reads at a glance and Format-List still shows everything.
+-->
+<Configuration>
+  <ViewDefinitions>
+    <View>
+      <Name>Xmip.Playground</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Playground</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Scenarios</Label><Width>28</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Nodes</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Worst</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Scenarios.Count -eq 0) { 'all' } else { $_.Scenarios -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Nodes</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Online</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Worst</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.PlaygroundNode</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.PlaygroundNode</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Parent</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Snapshot</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Online</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.Parent) { 'by hand' } else { $_.Parent }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Snapshot</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.PlaygroundResult</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.PlaygroundResult</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Scenario</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Node</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Transport</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Contract</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Sev</Label><Width>3</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Evidence</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Scenario</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Node</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Transport</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Contract</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Severity</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Evidence</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.Web</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Web</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Url</Label><Width>26</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Surface</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Snapshot</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Url</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Surface</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Snapshot</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>
