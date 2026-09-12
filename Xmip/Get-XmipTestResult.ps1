@@ -23,9 +23,10 @@ function Get-XmipTestResult {
             `playground-snapshot.toml`. Defaults to the running roll's, else
             `.local-work/playground` under the repository.
 
-        .PARAMETER Scenario
-            Only these scenarios: pingpong, furious, load, secretary, filing,
-            claim, daily, fleet, or a node's scenario.
+        .PARAMETER Test
+            Only these tests, by the names Start-XmipTest takes: RoundTrip,
+            LowLatency, HeavyLoad, Retention, Filing, ExclusiveClaim,
+            DailyBacklog; or fleet, for the fleet's own rollup.
 
         .PARAMETER Node
             Only records published by these fleet nodes, wildcards allowed.
@@ -37,7 +38,7 @@ function Get-XmipTestResult {
             Get-XmipTestResult | Where-Object State -ne fine
 
         .EXAMPLE
-            Get-XmipTestResult -Scenario pingpong -Worst
+            Get-XmipTestResult -Test RoundTrip -Worst
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]
@@ -46,7 +47,7 @@ function Get-XmipTestResult {
         [string] $Path,
 
         [Parameter()]
-        [string[]] $Scenario,
+        [string[]] $Test,
 
         [Parameter()]
         [SupportsWildcards()]
@@ -77,7 +78,7 @@ function Get-XmipTestResult {
         foreach ($record in @($document.records)) {
             $result = ConvertTo-XmipTestResult -Record $record -Root $root
 
-            if ($PSBoundParameters.ContainsKey('Scenario') -and $result.Scenario -notin $Scenario) {
+            if ($PSBoundParameters.ContainsKey('Test') -and $result.Test -notin $Test) {
                 continue
             }
 
@@ -135,11 +136,13 @@ function ConvertTo-XmipTestResult {
     [long] $millis = [long] ([long] $Record.observed_unix_nanos / 1000000)
     [string[]] $rest = @($segments | Select-Object -Skip 2)
     [string] $contract = $rest -join '/'
+    [string] $scenario = if ($segments.Count -ge 1) { $segments[0] } else { '' }
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestResult'
         Suite      = 'Playground'
-        Scenario   = if ($segments.Count -ge 1) { $segments[0] } else { '' }
+        Test       = ConvertTo-XmipTestName -Scenario $scenario
+        Scenario   = $scenario
         Node       = $node
         Transport  = if ($segments.Count -ge 2) { $segments[1] } else { '' }
         Contract   = $contract

@@ -43,9 +43,12 @@ function Start-XmipTest {
             own default. Harsh and Brutal spawn a fleet of node processes
             unless -Nodes says otherwise.
 
-        .PARAMETER Scenario
-            Which scenarios to drive: pingpong, furious, load, secretary,
-            filing, claim, daily. Omit for all seven.
+        .PARAMETER Test
+            Which tests of the suite to run; omit for the whole suite. The
+            Playground's are RoundTrip, LowLatency, HeavyLoad, Retention,
+            Filing, ExclusiveClaim and DailyBacklog. The estate's are its
+            Pester files by name: Allocation, Decision, Rust.Style, XmipTest
+            and the rest of test/. Tab completes either.
 
         .PARAMETER Rounds
             Run this many rounds and stop. Omit, or 0, to roll until stopped.
@@ -63,9 +66,9 @@ function Start-XmipTest {
             level. Omit for the level's own count: one, three, ten or forty,
             scaled to the machine's headroom.
 
-        .PARAMETER Online
-            Let the nodes assume a route to the internet (ADR-0045). Off
-            unless said.
+        .PARAMETER OnlineNodes
+            How many of the fleet's nodes, counting from the first, may assume
+            a route to the internet (ADR-0045). None unless said.
 
         .PARAMETER LoadBytes
             The load scenario's payload: a number or a size like 512mb or 2gb.
@@ -81,10 +84,13 @@ function Start-XmipTest {
             Return the Xmip.TestStatus object for the roll started.
 
         .EXAMPLE
-            Start-XmipTest -Stress Harsh -Scenario pingpong, load -Rounds 20
+            Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Rounds 20
 
         .EXAMPLE
-            Start-XmipTest -Stress Brutal -Nodes 20 -Online -PassThru | Start-XmipWeb
+            Start-XmipTest -Stress Brutal -Nodes 20 -OnlineNodes 5 -PassThru | Start-XmipWeb
+
+        .EXAMPLE
+            Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
             Start-XmipTest -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
@@ -107,8 +113,22 @@ function Start-XmipTest {
         [string] $Stress = 'Realistic',
 
         [Parameter()]
-        [ValidateSet('pingpong', 'furious', 'load', 'secretary', 'filing', 'claim', 'daily')]
-        [string[]] $Scenario = @(),
+        [ArgumentCompleter({
+            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+            [string[]] $names = if ($fakeBoundParameters['Suite'] -eq 'Estate') {
+                [string] $root = Get-XmipRepositoryRoot -StartAt $PSScriptRoot
+                Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
+                    ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
+            }
+            else {
+                'RoundTrip', 'LowLatency', 'HeavyLoad', 'Retention'
+                'Filing', 'ExclusiveClaim', 'DailyBacklog'
+            }
+
+            $names | Where-Object { $_ -like "$wordToComplete*" }
+        })]
+        [string[]] $Test = @(),
 
         [Parameter()]
         [ValidateRange(0, [int]::MaxValue)]
@@ -126,7 +146,8 @@ function Start-XmipTest {
         [int] $Nodes,
 
         [Parameter()]
-        [switch] $Online,
+        [ValidateRange(0, 200)]
+        [int] $OnlineNodes,
 
         [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
@@ -153,7 +174,12 @@ function Start-XmipTest {
             return
         }
 
-        return Start-XmipEstateSuite -Path $Path
+        return Start-XmipEstateSuite -Path $Path -Test $Test
+    }
+
+    if ($PSBoundParameters.ContainsKey('Nodes') -and $OnlineNodes -gt $Nodes) {
+        Write-Error "-OnlineNodes $OnlineNodes exceeds -Nodes $Nodes."
+        return
     }
 
     $layout = Get-XmipPlaygroundLayout
@@ -164,14 +190,13 @@ function Start-XmipTest {
 
     [hashtable] $choice = Get-XmipPlaygroundChoice -Bound $PSBoundParameters
     $choice.Stress = $Stress
-    $choice.Scenario = $Scenario
-    $choice.Online = $Online.IsPresent
+    $choice.Test = $Test
     $choice.Snapshot = Join-Path -Path $Path -ChildPath 'playground-snapshot.toml'
     $choice.History = Join-Path -Path $Path -ChildPath 'playground-history.toml'
     $choice.Activity = Join-Path -Path $Path -ChildPath 'playground-activity.toml'
     [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
 
-    [string] $of = if ($Scenario.Count -gt 0) { " of $($Scenario -join ', ')" } else { '' }
+    [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
     [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for"
 
@@ -212,10 +237,10 @@ function Start-XmipTest {
         pid         = $process.Id
         started     = $process.StartTime.ToString('o')
         stress      = $Stress.ToLowerInvariant()
-        scenarios   = @($Scenario | ForEach-Object { $_.ToLowerInvariant() })
+        tests       = @($Test)
         rounds      = $Rounds
         nodes       = if ($boundNodes) { $Nodes } else { -1 }
-        online      = $Online.IsPresent
+        online      = $OnlineNodes
         duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }
         snapshot    = $environment.XMIP_PLAYGROUND_SNAPSHOT
@@ -236,8 +261,8 @@ function Start-XmipTest {
 
 # The parameters that mean something only to the Playground suite.
 [string[]] $script:XmipPlaygroundOnly = @(
-    'Stress', 'Scenario', 'Rounds', 'Duration', 'TimeFactor'
-    'Nodes', 'Online', 'LoadBytes', 'PassThru'
+    'Stress', 'Rounds', 'Duration', 'TimeFactor'
+    'Nodes', 'OnlineNodes', 'LoadBytes', 'PassThru'
 )
 
 function Start-XmipEstateSuite {
@@ -256,16 +281,39 @@ function Start-XmipEstateSuite {
 
         .PARAMETER Path
             The directory of tests. Defaults to test/ under the repository.
+
+        .PARAMETER Test
+            The test files to run, by name without the suffix: Rust.Style runs
+            test/Rust.Style.Test.ps1. Omit for every file.
     #>
     [CmdletBinding()]
     [OutputType('Pester.Run')]
     param(
         [Parameter()]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Test = @()
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test'
+    }
+
+    $configuration = Get-XmipPesterConfiguration -Path $Path
+
+    if ($Test.Count -gt 0) {
+        [string[]] $files = @(
+            $Test | ForEach-Object { Join-Path -Path $Path -ChildPath "$_.Test.ps1" }
+        )
+        [string[]] $missing = @($files | Where-Object { -not (Test-Path -LiteralPath $_) })
+
+        if ($missing.Count -gt 0) {
+            throw "No such test: $($missing -join ', '). The tests are the *.Test.ps1 in $Path."
+        }
+
+        $configuration.Run.Path = $files
     }
 
     # Strict mode off here, alone in this module, which sets it at module
@@ -274,7 +322,7 @@ function Start-XmipEstateSuite {
     Set-StrictMode -Off
     $ErrorActionPreference = 'Stop'
 
-    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $Path)
+    $result = Invoke-Pester -Configuration $configuration
 
     [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
 
@@ -307,7 +355,7 @@ function Get-XmipPlaygroundChoice {
 
     [hashtable] $chosen = @{}
 
-    foreach ($name in 'Nodes', 'Duration', 'TimeFactor', 'LoadBytes') {
+    foreach ($name in 'Nodes', 'OnlineNodes', 'Duration', 'TimeFactor', 'LoadBytes') {
         if ($Bound.ContainsKey($name)) {
             $chosen[$name] = $Bound[$name]
         }

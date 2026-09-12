@@ -2,6 +2,74 @@
 
 Set-StrictMode -Version Latest
 
+# The Playground's tests by the names a person asks for them, and the scenario
+# the roll drives for each (test/playground/src/bin/roll.rs). The owner's shape,
+# 2026-09-12: Start-XmipTest -Suite Playground -Test HeavyLoad.
+[System.Collections.Specialized.OrderedDictionary] $script:XmipPlaygroundTest = [ordered]@{
+    RoundTrip      = 'pingpong'
+    LowLatency     = 'furious'
+    HeavyLoad      = 'load'
+    Retention      = 'secretary'
+    Filing         = 'filing'
+    ExclusiveClaim = 'claim'
+    DailyBacklog   = 'daily'
+}
+
+function ConvertTo-XmipPlaygroundScenario {
+    <#
+        .SYNOPSIS
+            The roll's scenario names for the tests a person named, in order.
+            Unknown names are an error naming the tests there are.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Test = @()
+    )
+
+    [string[]] $scenarios = @()
+
+    foreach ($name in $Test) {
+        [string] $known = $script:XmipPlaygroundTest.Keys | Where-Object { $_ -ieq $name }
+
+        if ([string]::IsNullOrEmpty($known)) {
+            [string] $names = $script:XmipPlaygroundTest.Keys -join ', '
+
+            throw "No Playground test is named $name. The tests are $names."
+        }
+
+        $scenarios += $script:XmipPlaygroundTest[$known]
+    }
+
+    return $scenarios
+}
+
+function ConvertTo-XmipTestName {
+    <#
+        .SYNOPSIS
+            The test a person knows for a scenario the roll published; the
+            scenario's own name when it is not one of the seven (a node's
+            record, the fleet's rollup).
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Scenario
+    )
+
+    foreach ($name in $script:XmipPlaygroundTest.Keys) {
+        if ($script:XmipPlaygroundTest[$name] -eq $Scenario) {
+            return $name
+        }
+    }
+
+    return $Scenario
+}
+
 function New-XmipPlaygroundEnvironment {
     <#
         .SYNOPSIS
@@ -25,13 +93,13 @@ function New-XmipPlaygroundEnvironment {
         [string] $Stress,
 
         [Parameter()]
-        [string[]] $Scenario = @(),
+        [string[]] $Test = @(),
 
         [Parameter()]
         [Nullable[int]] $Nodes,
 
         [Parameter()]
-        [bool] $Online = $false,
+        [Nullable[int]] $OnlineNodes,
 
         [Parameter()]
         [Nullable[timespan]] $Duration,
@@ -54,19 +122,22 @@ function New-XmipPlaygroundEnvironment {
 
     [hashtable] $environment = @{
         XMIP_PLAYGROUND_STRESS   = $Stress.ToLowerInvariant()
-        XMIP_ONLINE              = if ($Online) { 'true' } else { 'false' }
         XMIP_PLAYGROUND_SNAPSHOT = $Snapshot
         XMIP_PLAYGROUND_HISTORY  = $History
         XMIP_PLAYGROUND_ACTIVITY = $Activity
     }
 
-    if ($Scenario.Count -gt 0) {
-        [string[]] $names = @($Scenario | ForEach-Object { $_.ToLowerInvariant() })
-        $environment.XMIP_PLAYGROUND_SCENARIOS = $names -join ','
+    if ($Test.Count -gt 0) {
+        [string[]] $scenarios = ConvertTo-XmipPlaygroundScenario -Test $Test
+        $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
     }
 
     if ($null -ne $Nodes) {
         $environment.XMIP_PLAYGROUND_NODES = "$Nodes"
+    }
+
+    if ($null -ne $OnlineNodes) {
+        $environment.XMIP_PLAYGROUND_ONLINE_NODES = "$OnlineNodes"
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture

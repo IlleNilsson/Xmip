@@ -62,26 +62,27 @@ function Get-XmipTestStatus {
             $record = Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Toml
         }
 
-        [int] $fleet = @($nodes | Where-Object { $_.Parent -eq $roll.Id }).Count
         [string] $snapshot = if ($null -ne $record) { $record.snapshot } else { '' }
         $worst = if (Test-Path -LiteralPath $snapshot) {
             Get-XmipTestResult -Path $snapshot -Worst
         }
 
+        [object[]] $mine = @($nodes | Where-Object { $_.Parent -eq $roll.Id })
+
         [PSCustomObject]@{
-            PSTypeName = 'Xmip.TestStatus'
-            Suite      = 'Playground'
-            Id         = $roll.Id
-            StartTime  = $roll.StartTime
-            Stress     = if ($null -ne $record) { $record.stress } else { $null }
-            Scenarios  = if ($null -ne $record) { @($record.scenarios) } else { @() }
-            Rounds     = if ($null -ne $record) { [int] $record.rounds } else { 0 }
-            Nodes      = $fleet
-            Online     = if ($null -ne $record) { [bool] $record.online } else { $null }
-            Worst      = if ($null -ne $worst) { $worst.State } else { $null }
-            Snapshot   = $snapshot
-            Path       = if ($null -ne $record) { $Path } else { $null }
-            Log        = if ($null -ne $record) { $record.log } else { $null }
+            PSTypeName  = 'Xmip.TestStatus'
+            Suite       = 'Playground'
+            Id          = $roll.Id
+            StartTime   = $roll.StartTime
+            Stress      = if ($null -ne $record) { $record.stress } else { $null }
+            Tests       = if ($null -ne $record) { @($record.tests) } else { @() }
+            Rounds      = if ($null -ne $record) { [int] $record.rounds } else { 0 }
+            Nodes       = $mine.Count
+            OnlineNodes = @($mine | Where-Object { $_.Online }).Count
+            Worst       = if ($null -ne $worst) { $worst.State } else { $null }
+            Snapshot    = $snapshot
+            Path        = if ($null -ne $record) { $Path } else { $null }
+            Log         = if ($null -ne $record) { $record.log } else { $null }
         }
     }
 }
