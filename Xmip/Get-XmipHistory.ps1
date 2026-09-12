@@ -52,11 +52,11 @@ function Get-XmipHistory {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path ([System.IO.Path]::GetTempPath()) 'playground-history.toml'
+        $Path = Join-Path -Path (Get-XmipPlaygroundLayout).Area -ChildPath 'playground-history.toml'
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {
-        Write-Error "No history file at $Path. Is the playground rolling? (cargo run --bin roll)"
+        Write-Error "No history file at $Path. A roll writes one after its first round."
         return
     }
 

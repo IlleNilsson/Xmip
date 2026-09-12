@@ -5,20 +5,26 @@ Set-StrictMode -Version Latest
 function Start-XmipWeb {
     <#
         .SYNOPSIS
-            Starts the Xmip web monitoring UI and returns its address.
+            Starts the Xmip web monitor, detached, over the surface you name.
 
         .DESCRIPTION
-            The web surface is monitoring only (ADR-0014): it reads the operator
-            boundary — or, while there is no running node, the Playground's
-            snapshot — and shows the cluster, drill-down and history. This starts
-            it detached and hands back the URL, so an operator does not have to
-            remember the dotnet invocation or the Kestrel override.
+            The web surface is monitoring only (ADR-0014): it reads a snapshot
+            a roll or a node published and shows the cluster, the drill-down
+            and the history. This starts it as a background process and hands
+            it the address and, when given, the snapshot to read — the surface
+            is chosen on the command line, never guessed (ADR-0052 clause 3).
+            Without -Snapshot the host reads what its own xmip.gui.toml says.
 
             It launches the built executable when one is present and falls back
             to `dotnet run` from source otherwise. It binds to 127.0.0.1 by
             default rather than localhost, because a browser that cached HSTS for
             localhost from another app silently forces https and the plain-http
-            server then looks dead.
+            server then looks dead. Get-XmipWeb lists what is running and
+            Stop-XmipWeb ends it.
+
+        .PARAMETER Snapshot
+            The snapshot file to monitor. Bound from the pipeline, so a
+            Start-XmipPlayground -PassThru object names it.
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087. Use
@@ -29,35 +35,58 @@ function Start-XmipWeb {
             Run `dotnet run` from the project rather than the built executable —
             for development, when the source is newer than the last build.
 
+        .PARAMETER PassThru
+            Return the Xmip.Web object for the host started.
+
         .EXAMPLE
             Start-XmipWeb
 
         .EXAMPLE
-            Start-XmipWeb -Url http://0.0.0.0:5087
+            Start-XmipPlayground -Stress Harsh -PassThru | Start-XmipWeb
+
+        .EXAMPLE
+            Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/snapshot.toml
     #>
-    [CmdletBinding()]
-    [OutputType([System.Diagnostics.Process])]
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType('Xmip.Web')]
     param(
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $Snapshot,
+
         [Parameter()]
         [string] $Url = 'http://127.0.0.1:5087',
 
         [Parameter()]
-        [switch] $FromSource
+        [switch] $FromSource,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    [string] $root = Get-XmipRepositoryRoot
-    [string] $project = Join-Path $root 'module/operation/gui/src/Xmip.Gui.Web'
-    [string] $exe = Join-Path $project 'bin/Debug/net11.0/Xmip.Gui.Web.exe'
-    [string] $kestrel = "--Kestrel:Endpoints:Http:Url=$Url"
+    $layout = Get-XmipPlaygroundLayout
+    [string] $source = 'module/operation/gui/src/Xmip.Gui.Web'
+    [string] $project = Join-Path -Path $layout.Root -ChildPath $source
+    [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
 
-    if (-not $FromSource -and (Test-Path -LiteralPath $exe)) {
+    if (-not [string]::IsNullOrWhiteSpace($Snapshot)) {
+        [string] $full = [System.IO.Path]::GetFullPath($Snapshot)
+        $arguments += @('--Xmip:Surface=snapshot', "--Xmip:Snapshot=$full")
+    }
+
+    [string] $over = if ($arguments.Count -gt 1) { " over $Snapshot" } else { '' }
+
+    if (-not $PSCmdlet.ShouldProcess("the Xmip web monitor at $Url", "Start$over")) {
+        return
+    }
+
+    if (-not $FromSource -and (Test-Path -LiteralPath $layout.Web)) {
         $launch = @{
-            FilePath         = $exe
-            ArgumentList     = $kestrel
-            WorkingDirectory = Split-Path -Parent $exe
+            FilePath         = $layout.Web
+            ArgumentList     = $arguments
+            WorkingDirectory = Split-Path -Parent $layout.Web
+            WindowStyle      = 'Hidden'
             PassThru         = $true
         }
-        $process = Start-Process @launch
     }
     else {
         if (-not (Test-Path -LiteralPath $project)) {
@@ -65,14 +94,17 @@ function Start-XmipWeb {
             return
         }
 
-        [string[]] $arguments = @(
-            'run', '--project', $project, '--no-launch-profile', $kestrel
-        )
-        $process = Start-Process -FilePath 'dotnet' -ArgumentList $arguments -PassThru
+        $launch = @{
+            FilePath     = 'dotnet'
+            ArgumentList = @('run', '--project', $project, '--no-launch-profile') + $arguments
+            PassThru     = $true
+        }
     }
 
-    Write-Host "Xmip web monitor starting at $Url (pid $($process.Id))" -ForegroundColor Green
-    Write-Host 'Stop it with: Stop-Process -Id' $process.Id
+    $process = Start-Process @launch
+    Write-Verbose "web monitor starting at $Url as pid $($process.Id)"
 
-    $process
+    if ($PassThru) {
+        return ConvertTo-XmipWeb -Process $process
+    }
 }
