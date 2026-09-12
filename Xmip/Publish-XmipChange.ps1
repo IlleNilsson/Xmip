@@ -1046,62 +1046,6 @@ function Get-XmipPesterConfiguration {
     return $configuration
 }
 
-function Invoke-XmipTest {
-    <#
-        .SYNOPSIS
-            Runs the estate's Pester suite under `test/`.
-
-        .DESCRIPTION
-            `Invoke-Pester -Path ./test` finds nothing since 2026-09-11:
-            the estate's test files carry the singular suffix `.Test.ps1` and
-            Pester looks for the plural. This is the one door: the same
-            configuration the landing gate uses, over the same directory.
-
-            The result is returned, not printed, so a caller reads
-            `PassedCount`, `FailedCount` and `Failed` like any other object.
-
-        .PARAMETER Path
-            The directory of tests. Defaults to `test/` under the repository
-            root this module was imported from.
-
-        .EXAMPLE
-            Invoke-XmipTest
-
-        .EXAMPLE
-            (Invoke-XmipTest).Failed | Format-Table ExpandedPath
-    #>
-    [CmdletBinding()]
-    [OutputType('Pester.Run')]
-    param(
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string] $Path = (Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test')
-    )
-
-    # Strict mode off here, alone in this module, which sets it at module
-    # scope: Pester runs the tests in this scope's descendants, and they are
-    # written and run everywhere else in the console's default mode.
-    Set-StrictMode -Off
-    $ErrorActionPreference = 'Stop'
-
-    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $Path)
-
-    [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
-
-    if ($result.FailedCount -eq 0) {
-        Write-Host "OK $tally" -ForegroundColor Green
-    }
-    else {
-        Write-Host "FAILED $tally" -ForegroundColor Red
-    }
-
-    foreach ($failure in $result.Failed) {
-        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
-    }
-
-    return $result
-}
-
 function Test-XmipModule {
     <#
         .SYNOPSIS

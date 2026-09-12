@@ -898,7 +898,6 @@ function Test-XmipManifest {
     'Start-XmipWeb'
     'Get-XmipWeb'
     'Stop-XmipWeb'
-    'Invoke-XmipTest'
 )
 
 Export-ModuleMember -Function $script:XmipExport -Alias @('xmip-git', 'xgit')

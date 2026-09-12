@@ -35,7 +35,7 @@ One command tests and lands everything, dependency order, modules first:
 
 Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
 before anything depending on it can be verified — the tool handles the order.
-Run `Invoke-XmipTest` before landing anything non-trivial; the
+Run `Start-XmipTest -Suite Estate` before landing anything non-trivial; the
 suite is ~96 tests and is the estate's memory of every past defect. pwsh 7.6.5,
 PSToml and posh-git required. Rust builds with stable cargo; C# builds with the
 .NET 11 preview SDK but the PowerShell binary module targets net10.0 because

@@ -33,22 +33,32 @@ Describe 'Start, Get and Stop, and nothing else' {
     It 'starts, reports and stops a test run under the names the owner chose' {
         # 2026-09-12: Start-XmipTest, Get-XmipTestStatus and Stop-XmipTest — the
         # Playground is one suite Xmip provides, and a transport's or a
-        # contract's suite may join it. Invoke-XmipTest, the Pester door, is
-        # the one other verb on the noun.
+        # contract's suite may join it. He voted for Start, not Invoke: Invoke
+        # is for crossing a boundary — a language, a process, a computer — and
+        # a test run crosses none. The Pester door is -Suite Estate.
         foreach ($name in 'Start-XmipTest', 'Get-XmipTestStatus', 'Stop-XmipTest') {
             Get-Command -Module Xmip -Name $name | Should -Not -BeNullOrEmpty
         }
 
         [string[]] $verbs = @(Get-Command -Module Xmip -Noun XmipTest | ForEach-Object { $_.Verb })
 
-        @($verbs | Sort-Object) | Should -Be @('Invoke', 'Start', 'Stop')
+        @($verbs | Sort-Object) | Should -Be @('Start', 'Stop')
+        Get-Command -Module Xmip -Name 'Invoke-XmipTest*' | Should -BeNullOrEmpty
     }
 
-    It 'names the suite on everything it emits, Playground first' {
-        (Get-Command -Name Start-XmipTest).Parameters['Suite'].Attributes |
-            Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } |
-            ForEach-Object { $_.ValidValues } |
-            Should -Contain 'Playground'
+    It 'offers the Playground and the estate suite, Playground first' {
+        [string[]] $suites = @(
+            (Get-Command -Name Start-XmipTest).Parameters['Suite'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } |
+                ForEach-Object { $_.ValidValues }
+        )
+
+        $suites | Should -Be @('Playground', 'Estate')
+    }
+
+    It 'refuses Playground switches on the estate suite' {
+        { Start-XmipTest -Suite Estate -Stress Harsh -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*belong to the Playground suite*'
     }
 
     It 'rehearses every Start and Stop with -WhatIf' {
