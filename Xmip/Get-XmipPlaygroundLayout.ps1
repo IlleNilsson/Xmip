@@ -20,7 +20,7 @@ function Get-XmipPlaygroundLayout {
     [OutputType([PSCustomObject])]
     param()
 
-    [string] $root = Get-XmipRepositoryRoot -StartAt $PSScriptRoot
+    [string] $root = Get-XmipRepositoryRoot
     [string] $playground = Join-Path -Path $root -ChildPath 'test/playground'
     [string] $target = Join-Path -Path $playground -ChildPath 'target/debug'
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }

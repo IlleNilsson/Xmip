@@ -430,7 +430,7 @@ Describe 'PowerShell style, section 1: layout' {
             'Publish-XmipChange.ps1'       = 6
             'Sync-XmipEstate.ps1'          = 8
             'Sync-XmipRepository.ps1'      = 20
-            'Xmip.psm1'                    = 20
+            'Xmip.psm1'                    = 19
             'Decision.Test.ps1'          = 1
             'Documentation.Test.ps1'      = 5
             'Publish-XmipChange.Test.ps1' = 2

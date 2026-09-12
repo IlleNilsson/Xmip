@@ -92,6 +92,16 @@ Describe 'Start, Get and Stop, and nothing else' {
         $binding.ValueFromPipelineByPropertyName | Should -BeTrue
     }
 
+    It 'finds the repository from any directory, through where the module lives' {
+        # 2026-09-12: from his home directory every cmdlet threw "No
+        # architecture.toml found at or above". The module is a junction into
+        # the repository; its own location answers when the directory does not.
+        $manifest = Get-Item (Join-Path $script:Root 'architecture.toml')
+        [string] $expected = $manifest.Directory.FullName
+
+        Get-XmipRepositoryRoot -StartAt ([System.IO.Path]::GetTempPath()) | Should -Be $expected
+    }
+
     It 'names no automatic start anywhere in the module' {
         # The keeper is gone and nothing may grow back in its place: no module
         # file starts a roll, a node or the web host outside its Start-* door.

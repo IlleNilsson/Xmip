@@ -75,6 +75,45 @@ function Get-XmipRepositoryRoot {
         [string] $StartAt = ((Get-Location).Path)
     )
 
+    [string] $found = Find-XmipRepositoryRoot -StartAt $StartAt
+
+    if (-not [string]::IsNullOrEmpty($found)) {
+        return $found
+    }
+
+    # The module knows where it came from. Install-XmipModule links it onto
+    # PSModulePath by a junction or symbolic link whose target is inside the
+    # repository, so a cmdlet answers from any directory — the owner's shell
+    # at home included (2026-09-12) — and a copy elsewhere still says no.
+    $here = Get-Item -LiteralPath $PSScriptRoot -ErrorAction SilentlyContinue
+    [string] $origin = $PSScriptRoot
+
+    if ($null -ne $here -and -not [string]::IsNullOrEmpty($here.LinkTarget)) {
+        $origin = $here.LinkTarget
+    }
+
+    $found = Find-XmipRepositoryRoot -StartAt $origin
+
+    if (-not [string]::IsNullOrEmpty($found)) {
+        return $found
+    }
+
+    throw "No architecture.toml found at or above '$StartAt' or where this module lives ($origin)."
+}
+
+
+function Find-XmipRepositoryRoot {
+    <#
+        Walks up from one directory until architecture.toml appears; empty
+        when it never does. The search Get-XmipRepositoryRoot runs twice.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $StartAt
+    )
+
     [System.IO.DirectoryInfo] $directory = [System.IO.DirectoryInfo]::new($StartAt)
 
     while ($null -ne $directory) {
@@ -87,7 +126,7 @@ function Get-XmipRepositoryRoot {
         $directory = $directory.Parent
     }
 
-    throw "No architecture.toml found at or above '$StartAt'. Run this from inside the Xmip repository."
+    return ''
 }
 
 
