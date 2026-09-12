@@ -35,6 +35,7 @@ function Stop-XmipWeb {
     )
 
     begin {
+        $ErrorActionPreference = 'Stop'
         [System.Collections.Generic.List[int]] $targets = @()
     }
 

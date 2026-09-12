@@ -57,6 +57,8 @@ function Get-XmipTestResult {
         [switch] $Worst
     )
 
+    $ErrorActionPreference = 'Stop'
+
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = (Get-XmipPlaygroundLayout).Area
     }

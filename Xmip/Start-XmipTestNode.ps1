@@ -88,6 +88,7 @@ function Start-XmipTestNode {
         [switch] $PassThru
     )
 
+    $ErrorActionPreference = 'Stop'
     $layout = Get-XmipPlaygroundLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {

@@ -162,6 +162,10 @@ function Start-XmipTest {
         [switch] $PassThru
     )
 
+    # The first failure ends the call; a cascade of twenty errors after one
+    # missing piece is what the owner saw on 2026-09-12.
+    $ErrorActionPreference = 'Stop'
+
     if ($Suite -eq 'Estate') {
         [string[]] $foreign = @(
             $PSBoundParameters.Keys | Where-Object { $_ -in $script:XmipPlaygroundOnly }
@@ -327,13 +331,19 @@ function Start-XmipEstateSuite {
         $configuration.Run.Path = $files
     }
 
-    # Strict mode off here, alone in this module, which sets it at module
-    # scope: Pester runs the tests in this scope's descendants, and they are
-    # written and run everywhere else in the console's default mode.
-    Set-StrictMode -Off
-    $ErrorActionPreference = 'Stop'
+    # In its own runspace, never in this module's. The test files begin by
+    # removing Xmip and importing it afresh; run from inside the module they
+    # tore down the module that was running them, and every later call from
+    # the console found a hollow module (2026-09-12). A thread job shares the
+    # process, so the result comes back live, and its runspace is its own.
+    $job = Start-ThreadJob -ScriptBlock {
+        param($Configuration)
 
-    $result = Invoke-Pester -Configuration $configuration
+        Set-StrictMode -Off
+        Invoke-Pester -Configuration $Configuration
+    } -ArgumentList $configuration
+
+    $result = Receive-Job -Job $job -Wait -AutoRemoveJob
 
     [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
 

@@ -33,6 +33,7 @@ function Get-XmipTestNode {
         [string] $Name = '*'
     )
 
+    $ErrorActionPreference = 'Stop'
     $layout = Get-XmipPlaygroundLayout
 
     [System.Diagnostics.Process[]] $processes = @(
