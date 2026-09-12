@@ -4,7 +4,7 @@
 On-premises first, cloud-installable.** Written in Rust, built around
 immutable Streams, immutable Messages, long-running Journeys, modular
 capabilities and implied Contracts. Licensed AGPL-3.0-or-later, with no
-second licence.
+second license.
 
 It runs on Windows, Linux and macOS, on a single server, an on-premises
 cluster, a cloud node or a small device, and it works with no internet at all.
@@ -20,7 +20,7 @@ Read the section written for you:
 | You are | Read |
 | --- | --- |
 | new to Xmip, or to integration platforms | [Beginners](#beginners) |
-| running Xmip for an organisation | [Operators](#operators) |
+| running Xmip for an organization | [Operators](#operators) |
 | building Xmip, or a module for it | [Developers](#developers) |
 | deciding whether Xmip belongs in your estate | [Chief Information Officers](#chief-information-officers) |
 | answering for the engineering | [Chief Engineering Officers](#chief-engineering-officers) |
@@ -45,9 +45,12 @@ enough to start:
 - A **Journey** is the path a Message takes through Xmip, step by step, and
   it may take a long time. A Journey checkpoints and survives a restart.
 - **Receive, Process, Send** are the three stages of that path. The monitor is
-  organised around them.
-- **Health is a mood, not a colour.** Every scope says a word beside its dot:
-  Fine, Working, Stressed, Holding, Done.
+  organized around them.
+- **Every scope has a Status:** Fine, Working, Stressed, Holding, Done. A
+  Status names what an operator can do about it, and the worst one beneath a
+  scope says where to look. How a Status is presented, as a word, a color, a
+  shape, a sound, is the surface's choice; the Status itself is the same on
+  every surface.
 
 Nothing starts on its own. You start Xmip, you start a test, you start the
 monitor, and you stop them. The fastest way to see it move is the Playground,
@@ -100,7 +103,7 @@ Xmip's own integration test, which needs no network and no other software.
    same to a person who has never seen the command.
 
    The board at http://127.0.0.1:5087 shows the three stages, the cluster's
-   mood and every node. `alpha` and `beta` are two simulated node processes;
+   Status and every node. `alpha` and `beta` are two simulated node processes;
    `alpha` is allowed to assume the internet, `beta` is not.
 
 Every command that changes anything takes `-WhatIf` and does nothing but say
@@ -286,7 +289,7 @@ any language that can implement one.
 ## Chief Information Officers
 
 **What you get.** One platform that receives, processes and sends your
-organisation's data between the systems you run and the partners you deal
+organization's data between the systems you run and the partners you deal
 with: files, queues, sockets, databases, cloud services, industrial and
 healthcare protocols, e-invoicing networks. It runs on the machines you
 choose, a single server, a cluster on your premises, a node in a cloud you
@@ -301,7 +304,7 @@ ever lost. Everything Xmip does is recorded in an audit that is separate from
 the live monitoring, so what happened is always answerable afterwards.
 
 **What it costs, and what it cannot do to you.** Xmip is AGPL-3.0-or-later
-and there is no commercial licence, no dual licence and no contributor
+and there is no commercial license, no dual license and no contributor
 agreement that could ever enable one
 ([ADR-0023](doc/decision/ADR-0023-licensing-model.md)). A platform that cannot
 be relicensed cannot be taken away from you or priced away from you later.
@@ -319,7 +322,7 @@ where sovereignty is legislated, and it speaks the AS4 and Peppol e-invoicing
 protocols that European mandates require from 2026 onward.
 
 **Where it stands, plainly.** Xmip has no stable release yet. `main` is the
-Continuum, the evolving truth; a Linear release is a stabilised, reproducible,
+Continuum, the evolving truth; a Linear release is a stabilized, reproducible,
 versioned line cut from it, and the first has not been cut
 ([release-model.md](doc/governance/release-model.md)). The manifest declares
 the maturity of every one of the estate's repositories; planned is not built,
