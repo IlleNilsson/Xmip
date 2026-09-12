@@ -1359,12 +1359,16 @@ function Submit-XmipModule {
             continue
         }
 
-        # A submodule at a bare commit has no branch to push to.
+        # A submodule at a bare commit has no branch to push to. Main is put
+        # *here*, at the commit the superproject pinned: `checkout main` went
+        # to wherever the stale local main pointed — behind origin after a
+        # `git submodule update` — refused over the changed files, left HEAD
+        # detached, and the push of that stale main failed (2026-09-12, twice).
         $branch = (& git -C $path branch --show-current) -join ''
 
         if ([string]::IsNullOrWhiteSpace($branch)) {
-            Write-Host "   NOTE: detached HEAD, checking out main" -ForegroundColor Yellow
-            & git -C $path checkout main
+            Write-Host "   NOTE: detached HEAD, putting main here" -ForegroundColor Yellow
+            & git -C $path checkout -B main --quiet
         }
 
         # Each step announced before it runs, not after.

@@ -303,6 +303,20 @@ rustls = { version = "0.23", optional = true }
     }
 }
 
+Describe 'A detached submodule lands on a main put at its commit' {
+    It 'puts main here rather than checking out a stale main' {
+        # 2026-09-12, twice in one landing: after `git submodule update` the
+        # local main sat behind origin, `checkout main` was refused over the
+        # changed files, HEAD stayed detached, and the push of that stale main
+        # failed with the commit already made. `checkout -B main` puts main at
+        # the commit the superproject pinned, which is where it belongs.
+        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
+
+        $source | Should -Match 'git -C \$path checkout -B main'
+        $source | Should -Not -Match 'git -C \$path checkout main\b'
+    }
+}
+
 Describe 'Publish-XmipPin is given what it needs' {
     It 'is passed -Message everywhere it is called' {
         # The half of the defect a fixture cannot see. Resolve-XmipCommitSubject
