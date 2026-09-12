@@ -35,77 +35,12 @@ persistence, observation, reporting and external Event delivery.
 **Audit is not placed before or after the execution chain. It is available
 throughout it.**
 
-### Lifecycle
-
-Every audited action follows one of two shapes:
-
-```text
-Begin -> Execute -> Finished
-Begin -> Execute -> Failure
-```
-
-`Finished` and `Failure` are mutually exclusive for one execution attempt.
-
-### Severity, which is independent of phase
-
-```text
-Information   normal execution and successful completion
-Warning       recoverable, degraded or exceptional; execution may continue
-Error         failure, or a condition preventing continuation
-```
-
-```text
-Transform / Begin   / Information
-Transform / Execute / Information
-Transform / Finished/ Information
-
-Send      / Begin   / Information
-Send      / Execute / Warning
-Send      / Finished/ Warning
-
-Process   / Begin   / Information
-Process   / Execute / Error
-Process   / Failure / Error
-```
-
-### Policy
-
-Every action is auditable; effective policy decides what is *recorded*.
-
-```text
-Xmip -> Cluster -> Node -> Artifact type -> Artifact -> Action -> Phase -> Severity
-```
-
-**The most specific configured policy wins; unspecified settings inherit from
-the containing level.** Policy may set enabled or disabled, phase, severity,
-action type, artifact type, individual artifact, node, cluster, detail level,
-and sampling or throttling for high-volume Information records.
-
-That range is the point: detailed Path-execution auditing on one development
-artifact, and Error-only auditing on a high-volume production artifact, from one
-model.
-
-**Failures are always audited, and failure audit records are always persisted.**
-That is not policy-configurable.
-
-### The persistent audit directive
-
-Configured on a Definition — typically a Receive Location:
-
-> Audit this Receive Location, and every Message and every generation descended
-> from it.
-
-When active, audit intent is carried as **runtime metadata on the Message
-itself** and applies through receive, accept, assignment, transformation,
-process execution, subscription, pass-on, pickup, send, retry, failure and
-leaving Xmip.
-
-It is persistent runtime metadata. It is not a log setting, not a UI filter and
-not a diagnostic flag — those all evaporate at the wrong moment, which is why
-this is none of them.
-
-Mandatory audit remains regardless. The directive adds depth to configured
-flows; it cannot remove the floor.
+The record model — the two lifecycle shapes, severity independent of phase,
+the policy hierarchy in which the most specific configured level wins, and
+the persistent audit directive a Definition carries onto every descendant
+Message — is `xmip-core-audit`'s, and is written beside it:
+`module/operation/audit/doc/audit-record.md`. Two things are not policy:
+failures are always audited, and failure records are always persisted.
 
 ## 3. Audit must outlive what produced it
 
@@ -148,17 +83,10 @@ interaction.
 ## 5. Performance
 
 **Audit must not become the execution bottleneck.** Normal execution emits a
-small audit envelope onto a bounded asynchronous channel; `xmip-core-audit`
-batches and persists independently of the action that produced it.
-
-When capacity is exhausted, configured policy decides whether Xmip discards
-selected Information records, reduces detail, throttles or samples, blocks the
-audited action, or fails it.
-
-Warning and Error records normally require stronger delivery guarantees than
-Information. Some conditions are configurable as **non-suppressible**: audit
-subsystem failure, security-critical failure, configuration corruption, and
-persistence failure that risks losing required evidence.
+small envelope onto a bounded asynchronous channel and `xmip-core-audit`
+persists independently of the action that produced it; what happens when
+capacity is exhausted, and which conditions are never suppressible, is in
+`module/operation/audit/doc/audit-record.md`.
 
 ## 6. Observation
 
@@ -267,31 +195,11 @@ addressing model Xmip had written down anywhere.
 
 ## 8. Reports
 
-`xmip-core-report` answers *what happened over a period*. Four reports, and the
-split between mandatory and optional is the point:
-
-**Mandatory:**
-
-| Report | Answers |
-| --- | --- |
-| Firewall and Operations | every TCP and UDP port, every UNC path a file-based Location touches, and every protocol exposed — inbound and outbound |
-| Identity and Isolation Compliance | every identity context, its class, where it runs, and every isolation rule evaluated with its result |
-
-**Optional:** Performance and Capacity, and Artifact End-to-End Drill-Down.
-
-The two mandatory reports are mandatory because of who needs them and when. A
-security review board asks for the firewall report before Xmip is permitted onto
-a network, and an auditor asks for the compliance report after something has
-gone wrong. Neither population knows to ask for a report by name, and a report
-that must be requested before it exists is a report nobody has.
-
-**Both are derived, never authored.** The firewall report is computable from the
-Receive and Send Locations plus their transport configuration; the compliance
-report is computable from identity contexts and the ADR-0022 isolation rules.
-A hand-written network document describes what someone believed the estate did
-when they wrote it, which is the failure mode this replaces.
-
-Recovered from the `_origins` design export, 2026-08-26.
+`xmip-core-report` answers *what happened over a period*: four reports, two
+of them mandatory because a security review board and an auditor need them
+before they know to ask, and every one derived from configuration and
+records, never authored by hand. Which four, and how each is derived, is
+`module/operation/report/doc/reports.md`.
 
 ## 9. Ownership
 
