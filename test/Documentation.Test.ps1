@@ -120,7 +120,9 @@ Describe 'README lists every document that exists' {
 
 Describe 'The setup procedure is present' {
     It 'shows how to load the module and put it on PSModulePath' {
-        $script:Readme | Should -Match 'Import-Module\s+\.\\Xmip'
+        # A forward slash: the line is typed on Linux and macOS as often as on
+        # Windows, and PowerShell reads it on all three (the owner, 2026-09-12).
+        $script:Readme | Should -Match 'Import-Module\s+\./Xmip'
         $script:Readme | Should -Match 'Install-XmipModule'
         $script:Readme | Should -Match 'Import-Module Xmip'
     }
