@@ -63,6 +63,7 @@ function Start-XmipWeb {
         [switch] $PassThru
     )
 
+    $ErrorActionPreference = 'Stop'
     $layout = Get-XmipPlaygroundLayout
     [string] $source = 'module/operation/gui/src/Xmip.Gui.Web'
     [string] $project = Join-Path -Path $layout.Root -ChildPath $source

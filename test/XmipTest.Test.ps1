@@ -56,6 +56,17 @@ Describe 'Start, Get and Stop, and nothing else' {
         $suites | Should -Be @('Playground', 'Estate')
     }
 
+    It 'runs the estate suite in its own runspace, never in the module it tests' {
+        # 2026-09-12: these files begin by removing Xmip and importing it
+        # afresh. Run from inside the module, the suite tore down the module
+        # that was running it, and every later call from the console found a
+        # hollow module. A thread job keeps the runspace apart.
+        [string] $door = Get-Content -Raw (Join-Path $script:Root 'Xmip/Start-XmipTest.ps1')
+
+        $door | Should -Match 'Start-ThreadJob' -Because 'the suite removes the module it runs in'
+        $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
+    }
+
     It 'refuses Playground switches on the estate suite' {
         { Start-XmipTest -Suite Estate -Stress Harsh -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*belong to the Playground suite*'

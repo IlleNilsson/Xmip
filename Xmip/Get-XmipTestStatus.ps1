@@ -36,6 +36,7 @@ function Get-XmipTestStatus {
         [string] $Path
     )
 
+    $ErrorActionPreference = 'Stop'
     $layout = Get-XmipPlaygroundLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {

@@ -46,6 +46,7 @@ function Stop-XmipTestNode {
     )
 
     begin {
+        $ErrorActionPreference = 'Stop'
         [System.Collections.Generic.List[PSObject]] $targets = @()
     }
 

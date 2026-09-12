@@ -21,6 +21,7 @@ function Get-XmipWeb {
     [OutputType('Xmip.Web')]
     param()
 
+    $ErrorActionPreference = 'Stop'
     $layout = Get-XmipPlaygroundLayout
 
     [System.Diagnostics.Process[]] $hosts = @(
