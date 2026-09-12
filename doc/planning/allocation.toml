@@ -1657,3 +1657,20 @@ why = """
 The grammar of a name is section 2's subject. The tree folded in there, with
 its one stale branch corrected — it drew xmip-template as a single repository,
 which was true until the day the templates split by language."""
+
+# ---------------------------------------------------------------------------
+# Consolidation, 2026-09-12. The estate-wide survey of what sits in the wrong
+# repository; the entries below are the superproject's share of tier one.
+# ---------------------------------------------------------------------------
+
+[[superseded]]
+path = "doc/governance/repository-creation-blueprint.md"
+replacedBy = "doc/architecture/repository-model.md"
+why = """
+Written before ADR-0011, ADR-0012, ADR-0016 and ADR-0018: nine domains where
+the model has five, per-module ABIs where ADR-0012 has one, an MIT licence
+where ADR-0023 has AGPL, and twenty repositories under names that no longer
+exist. Its layout is repository-model.md section 7; its creation gate is
+section 10, in current terms; its owner-information and tooling notes were
+answered by Sync-XmipEstate. ADR-0020 clause 1: two documents on one subject,
+and this was the wrong one."""

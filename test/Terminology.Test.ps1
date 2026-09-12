@@ -31,7 +31,7 @@ BeforeAll {
             # Frozen 2026-09-06 at the count then present across docs. It may
             # fall, never rise. Qualify a new one (Xmip Process / Host Process /
             # System Process / Process Definition); do not raise this number.
-            Ceiling = 99
+            Ceiling = 97
         }
     )
 
