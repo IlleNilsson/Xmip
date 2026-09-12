@@ -51,7 +51,7 @@ affordable:
 
 - **.NET consumers move quickly.** The release cadence is annual, support
   windows are short and well published, and the ecosystem has been trained by a
-  decade of it. An organisation running .NET is already on a rapid path.
+  decade of it. An organization running .NET is already on a rapid path.
 - **PowerShell users on Windows move quickly too.** Note the distinction:
   *PowerShell on Windows* is PowerShell 7 running on a Windows machine, and
   those installations update through winget, the Store or the MSI on a fast

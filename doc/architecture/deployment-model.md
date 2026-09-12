@@ -45,12 +45,12 @@ The range above is where Xmip is deployed. This is what it is compiled for:
 | Linux x64 | |
 | macOS, Apple silicon and x64 | developer machines primarily |
 | Linux ARM64 | Raspberry Pi class and upward, and most edge hardware |
-| Industrial and defence hardware | the constrained case; see below |
+| Industrial and defense hardware | the constrained case; see below |
 
 ARM and the industrial targets are the two that change decisions rather than
 just adding a build. Both push toward the purpose-compiled runtime of section 2
 rather than the dynamic one: an edge device with 512 MB of RAM does not want a
-Module loader and a TOML parser it will never use, and a defence deployment
+Module loader and a TOML parser it will never use, and a defense deployment
 frequently cannot accept a runtime that loads code at all.
 
 **This is a breadth statement, not a currency one.** ADR-0021 governs which
@@ -77,7 +77,7 @@ selected Modules statically** instead of loading them.
 
 That is allowed where the target benefits from a smaller footprint, fewer
 files, simpler installation, stricter security, constrained hardware, offline
-deployment or deterministic behaviour.
+deployment or deterministic behavior.
 
 ```text
 Profile selection happens at build and packaging time.
@@ -121,7 +121,7 @@ preservation host, recovery coordinator and cluster coordinator are
 capabilities or operational responsibilities. They are implemented by Artifact
 Instances, Modules or profiles, and they do not extend the role model.
 
-Runtime roles are also **not human roles**. Monitorer, Operator, Developer,
+Runtime roles are also **not human roles**. Observer, Operator, Developer,
 Administrator and Architect are people. A scoped human role such as Edge
 Operator is a scoped Operator, not a new universal role. ADR-0009 is the general
 statement of this; here it applies to deployment.
@@ -141,7 +141,7 @@ isolation boundary what can it infect if compromised?
 
 The rules:
 
-1. A Reader cannot execute artifact behaviour.
+1. A Reader cannot execute artifact behavior.
 2. A Writer cannot load arbitrary Module code.
 3. An Executor cannot automatically affect another Executor.
 4. Untrusted Modules run isolated — separate process, container or sandbox.
@@ -160,7 +160,7 @@ strictly an estate applies them, and is declared once per cluster.
 | --- | --- | --- |
 | `standard` | small estates, internal traffic | process isolation per identity context; violations block startup |
 | `enterprise` | multi-tenant or partner-facing | the above, plus mandatory Service Identity separation per runtime role |
-| `regulated` | government, defence, healthcare, finance | the above, plus node-level isolation for `highAssurance` identity contexts, fail-closed everywhere, and mandatory compliance reporting |
+| `regulated` | government, defense, healthcare, finance | the above, plus node-level isolation for `highAssurance` identity contexts, fail-closed everywhere, and mandatory compliance reporting |
 
 Three properties are worth stating plainly, because each is a place a profile
 system usually goes soft:
@@ -194,10 +194,10 @@ what identity is this runtime component running as?
 what is it allowed to access?
 ```
 
-**Xmip does not impose one account model.** Each platform realises Service
+**Xmip does not impose one account model.** Each platform realizes Service
 Identity natively:
 
-| Platform | Realisation |
+| Platform | Realization |
 | --- | --- |
 | Windows | Managed Service Account, group MSA, domain or local service account |
 | Linux | dedicated service user, systemd user, LDAP-backed identity, Kerberos principal |
@@ -231,7 +231,7 @@ xmip/
     logs/
 ```
 
-It creates the layout, initialises both databases, installs default
+It creates the layout, initializes both databases, installs default
 configuration, and registers the Xmip Service where services exist.
 
 ## 7. Two databases, and why
@@ -239,7 +239,7 @@ configuration, and registers the Xmip Service where services exist.
 | | Runtime persistence | Management |
 | --- | --- | --- |
 | Default engine | RocksDB-style embedded key/value | SQLite-style embedded relational |
-| Optimised for | high write volume, replay from a known state | queryable administration views |
+| Optimized for | high write volume, replay from a known state | queryable administration views |
 | Source of truth for | **replay** | **administration** |
 
 **Runtime persistence** holds Messages, Stream references or payloads per
@@ -323,7 +323,7 @@ two nodes at once**, and how that is guaranteed is **open**.
 ADR-0017 answered it with a cluster-wide lease and ADR-0024 retired that record:
 a lease in per-node persistence proves nothing to another node, which is why
 `ExclusiveScope::Cluster` was never servable. ADR-0024's answer — claim the
-artefact at the endpoint — settles arrivals and settles nothing here, because a
+artifact at the endpoint — settles arrivals and settles nothing here, because a
 Journey mid-flight is Xmip's own state and has no endpoint to claim it at.
 
 This is the same open problem as *work does not move by itself* in

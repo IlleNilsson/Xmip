@@ -14,7 +14,7 @@
 - Concepts: Globalization, scope; locale-neutral; the data boundary
 
 **Xmip is an integration platform, not an end-user application, so it carries no
-product internationalisation — no translated UI, no localised messages. English
+product internationalization — no translated UI, no localized messages. English
 throughout code, logs, health, documentation and scope URIs. Globalization
 matters only at the data boundary, where Xmip parses or formats a partner's data,
 and there the locale is the partner's declared convention, never the server's.**
@@ -58,7 +58,7 @@ configuration, not inherited from the host the node runs on.
 
 ### 3. No i18n framework
 
-There is no localisation of Xmip's own surfaces and no resource-bundle
+There is no localization of Xmip's own surfaces and no resource-bundle
 machinery. If a future deployment needs an operator UI in another language, that
 is a decision for then; nothing here builds toward it, and nothing should.
 

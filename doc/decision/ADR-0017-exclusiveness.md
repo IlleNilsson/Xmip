@@ -11,7 +11,7 @@
 > a lease, because the endpoint is one thing however many nodes are asking.
 >
 > What survives, carried into ADR-0024 rather than left here: clause 3 (the
-> artefact, not the location), clause 3b (the `ResourceClaim` shape, which this
+> artifact, not the location), clause 3b (the `ResourceClaim` shape, which this
 > record specified and never implemented) and clause 3c (FTP, SFTP and IMAP
 > have no claim, and renaming at claim time does not give them one).
 >
@@ -33,7 +33,7 @@ renewal, so a runtime that stops being live stops being the owner.
 
 Receive Locations, Processes and Send Locations are treated alike. **The
 transport declares whether it is exclusive by default, and the default follows
-the resource:** a discrete claimable artefact is, a query or queue or connection
+the resource:** a discrete claimable artifact is, a query or queue or connection
 is not. Leases live in `xmip-core-persist`, which Xmip already requires — no
 Consul, etcd, Redis or ZooKeeper.
 
@@ -87,39 +87,39 @@ None of them is a special case.
 
 **2. The transport declares whether it is exclusive by default, and the default
 follows the resource.** A transport that addresses a discrete claimable
-artefact — a file, an FTP or SFTP path, an object in a bucket, a message in a
+artifact — a file, an FTP or SFTP path, an object in a bucket, a message in a
 mailbox — is exclusive by default, because two nodes can both see `order.edi`
 and both reach for it. A transport that does not — SQL, a queue, a broker
-topic, a listening socket — is not, because there is no artefact to claim and
+topic, a listening socket — is not, because there is no artifact to claim and
 the endpoint has usually solved it already. Defaulting a Kafka or SQS Receive
-Location to exclusive would serialise the one thing built to scale out.
+Location to exclusive would serialize the one thing built to scale out.
 
-**3. The resource is the artefact, not the location.** A file Receive Location
+**3. The resource is the artifact, not the location.** A file Receive Location
 is exclusive over the individual file, not over the directory it polls. Two
 nodes may poll the same directory at the same time and take different files.
 Making the location exclusive instead is what leaves the second node with
-nothing to do, and is the behaviour this decision exists to avoid.
+nothing to do, and is the behavior this decision exists to avoid.
 
-**3a. The sequence, in order.** A node that has detected an artefact:
+**3a. The sequence, in order.** A node that has detected an artifact:
 
-1. Check exclusiveness. Held by someone else, move on to the next artefact.
+1. Check exclusiveness. Held by someone else, move on to the next artifact.
 2. Check the resource is not held at the endpoint's own level — for a local
    file or an SMB share, a filesystem lock. A locked file is one another
    process has open, which includes a producer still writing it.
 3. Take that endpoint-level lock.
 4. Signal exclusiveness.
 5. Process.
-6. Consume: delete, rename, or move, so the artefact no longer matches the
+6. Consume: delete, rename, or move, so the artifact no longer matches the
    Receive Location's configuration and is never detected again.
 
 Exclusiveness first, because it is the Xmip-wide signal and the cheap check.
 The endpoint lock second, because it answers a question exclusiveness cannot:
 whether something outside Xmip is using the file. The lock is taken before
-exclusiveness is signalled so that a node dying between the two leaves nothing
+exclusiveness is signaled so that a node dying between the two leaves nothing
 behind — the operating system releases the lock with the process, and no
-exclusiveness was ever recorded, so the artefact is simply free again.
+exclusiveness was ever recorded, so the artifact is simply free again.
 
-Nothing moves at claim time. The artefact is read where it lies and only
+Nothing moves at claim time. The artifact is read where it lies and only
 changes name or place once it has been consumed.
 
 **3b. Exclusiveness defines the contract; the transport implements it.** Step 2
@@ -130,8 +130,8 @@ what FTP is:
 
 ```rust
 pub trait ResourceClaim {
-    fn is_available(&self, artefact: &ArtefactId) -> Result<bool, ClaimError>;
-    fn claim(&self, artefact: &ArtefactId) -> Result<Claimed, ClaimError>;
+    fn is_available(&self, artifact: &ArtefactId) -> Result<bool, ClaimError>;
+    fn claim(&self, artifact: &ArtefactId) -> Result<Claimed, ClaimError>;
     fn release(&self, claimed: Claimed) -> Result<(), ClaimError>;
 }
 ```
@@ -157,12 +157,12 @@ What each family can offer:
 
 **3c. Where there is no endpoint claim, exclusiveness stands alone.** FTP, SFTP
 and IMAP have nothing to offer at step 2, and `is_available` answers true. They
-are not made safe by renaming the artefact at claim time: that would put a
+are not made safe by renaming the artifact at claim time: that would put a
 second mechanism in the one place clause 3a says nothing moves, to defend
 against a non-Xmip client polling the same directory — which no mechanism
 defends against anyway. Exclusiveness is cluster-wide and authoritative, and it
 is enough. What these transports do need is a stability check, because a
-producer still uploading looks exactly like a finished file: an artefact whose
+producer still uploading looks exactly like a finished file: an artifact whose
 size and timestamp are unchanged across two consecutive listings, or a producer
 that writes to a temporary name and renames on completion.
 
@@ -174,7 +174,7 @@ and Xmip does not argue. Not defaulting to exclusive is not the same as
 refusing it.
 
 **5. Exclusiveness is released two ways, and only one of them waits.**
-Completing the work releases it immediately and explicitly: the artefact is
+Completing the work releases it immediately and explicitly: the artifact is
 processed, the holder gives it up, the next one can be taken at once. A
 graceful shutdown does the same. Nothing waits for a timer in the normal
 case, or a Receive Location would manage one file per lease duration.
@@ -207,7 +207,7 @@ system's cluster to answer a question about its own.
 Several modules inside `xmip-core-exclusiveness` are fine — scopes, the store
 contract, the lease — provided none of them is a protocol. And a provider may
 ship `xmip-<provider>-exclusiveness` building on the core one, on the same
-terms ADR-0012 clause 11 grants the surface modules: their licence, their
+terms ADR-0012 clause 11 grants the surface modules: their license, their
 support, no approval.
 
 **9. One lease type.** `ExclusiveLease` in `xmip-core-exclusiveness` is the
@@ -248,7 +248,7 @@ Succeeded
 TimedOut
 LeaseLost
 Failed
-Cancelled
+Canceled
 ```
 
 `LeaseLost` is not `Failed`, and the difference decides whether a retry is safe.
@@ -303,7 +303,7 @@ already eligible. It does not make a sequence.
   of the FTP transport knows a remote path is claimable, and the author of the
   Kafka transport knows a consumer group already is one.
 - The configuration has to show the effective setting and where it came from.
-  An artefact silently running twice, or silently refusing to scale, are both
+  An artifact silently running twice, or silently refusing to scale, are both
   failures this exists to prevent, and neither is visible without being shown.
 - A single-node installation pays nothing. `Process` scope never reaches the
   store.
@@ -323,7 +323,7 @@ points of failure instead of one.
 
 **Opt-in exclusivity everywhere.** Simpler to implement and surprises nobody
 at configuration time. Rejected for artefact-addressing transports: it is
-BizTalk's shape of mistake, where the safe behaviour was available and had to
+BizTalk's shape of mistake, where the safe behavior was available and had to
 be remembered. The cost of a forgotten opt-in on a file location is
 duplicate processing, which is the expensive kind of wrong; the cost of a
 forgotten opt-out on a queue is a platform that cannot scale.

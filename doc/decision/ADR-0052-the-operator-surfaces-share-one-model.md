@@ -43,7 +43,7 @@ several times over and the record broken in the places nobody had tested:
   playground snapshot, else native, else sample, then start a node — twice,
   in the web host and the desktop host. TOML configuration reading four
   times. Status to English twice, in `NativeOperator` and the CLI. The mood
-  to colour map twice, in the stylesheet where ADR-0041 puts it and in an
+  to color map twice, in the stylesheet where ADR-0041 puts it and in an
   inline gradient where it does not.
 - Three ways to find the runtime library: the GUIs from configuration, the
   language server from an argument, an environment variable or beside its

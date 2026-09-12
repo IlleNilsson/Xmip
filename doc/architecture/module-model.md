@@ -84,7 +84,7 @@ preservation log, deterministic continuation.
 
 **Publish and subscribe semantics.** A Subscription is an Artifact Definition.
 When it evaluates true at runtime it causes the action its Definition declares,
-which may publish. A Module may implement subscription *matching* or optimised
+which may publish. A Module may implement subscription *matching* or optimized
 routing; **a Module may not redefine what publish and subscribe mean.**
 
 **The contracts themselves**, which come in two kinds that are constantly
@@ -96,7 +96,7 @@ between Host Services      gRPC, with Protocol Buffers as the wire format
 ```
 
 These are different boundaries with different costs. ADR-0018 clause 10a prices
-the second one: a process hop is serialisation, a copy and a context switch.
+the second one: a process hop is serialization, a copy and a context switch.
 
 ## 3. What the runtime must never require
 
@@ -192,7 +192,7 @@ medium. They are declared, never inferred.
 
 ## 7. Handler lineage
 
-Some Modules belong to the same technology family and share behaviour,
+Some Modules belong to the same technology family and share behavior,
 configuration concepts, operational constraints or protocol expectations. The
 manifest declares that too:
 
@@ -206,7 +206,7 @@ family knowledge can be shared without the runtime learning any of it.
 | Family | Shared concepts |
 | --- | --- |
 | **TCP** | connection management, session handling, request/response, streaming, framing, timeout, keepalive, connection pooling, TLS |
-| **Queue** | queue, topic, subject, stream and partition identity, consumer group, durable subscription, acknowledgement, visibility timeout, offset, cursor, dead-letter behaviour, competing consumers, ordered or unordered delivery |
+| **Queue** | queue, topic, subject, stream and partition identity, consumer group, durable subscription, acknowledgment, visibility timeout, offset, cursor, dead-letter behavior, competing consumers, ordered or unordered delivery |
 | **File** | local and shared file, directory watch, polling, event-driven |
 | **Industrial / IoT** | declared reliability semantics — see below |
 
@@ -216,7 +216,7 @@ of it.
 
 UDP deserves its own note, because it is where this most often goes wrong.
 **UDP provides neither ordering nor reliable delivery.** A UDP-based Module
-needing reliability, ordering, de-duplication, acknowledgement, replay or
+needing reliability, ordering, de-duplication, acknowledgment, replay or
 persistence must declare and implement those capabilities itself, or bind to
 Xmip persistence semantics. It may not assume the runtime supplies them.
 
@@ -228,12 +228,12 @@ See `runtime-model.md` section 23, conflict 10.
 
 > The runtime does not implement HTTP, REST, SOAP, WebHook, TCP, UDP, CANBUS,
 > OPC UA, Modbus, MQTT, Profinet, EtherNet/IP, BACnet, LoRaWAN, CoAP or DDS
-> behaviour, and never will.
+> behavior, and never will.
 
 It reads the metadata above and applies platform rules only: loadability,
 compatibility, trust, isolation, ownership, identity, authorization, audit,
 retention, configuration binding, retry and outcome policy. Technology
-behaviour stays inside the Module.
+behavior stays inside the Module.
 
 This is what makes industrial and IoT support a matter of writing Modules
 rather than of changing Xmip.
@@ -285,7 +285,7 @@ policy and the resilience policy.
 ## 10. The ABI boundary is layered
 
 Rust traits are **not** the dynamic library boundary. Treating them as one is
-undefined behaviour waiting for a compiler upgrade.
+undefined behavior waiting for a compiler upgrade.
 
 ```text
 dynamic library boundary

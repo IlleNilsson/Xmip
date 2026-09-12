@@ -21,7 +21,7 @@ separately from the other four, because it is the one that can hold personal
 data, credentials in transit, medical records and commercial terms.
 
 A correction to earlier vocabulary: `terminology.md` retired "Tracking" in
-favour of Audit, which flattened a distinction worth keeping. Tracking's *job* —
+favor of Audit, which flattened a distinction worth keeping. Tracking's *job* —
 holding the real Message for inspection and replay — survives as retention. Only
 the word went.
 
@@ -102,7 +102,7 @@ paragraph named Parties and Endpoints as though they were containment until
 2026-09-03, which put two different hierarchies in one document — see ADR-0027
 clause 4.
 
-Health is a **mood**, not a colour (ADR-0041): it names what a human gets out of
+Health is a **mood**, not a color (ADR-0041): it names what a human gets out of
 a thread, process, node or cluster — the resource under load, not the machine —
 and tells an operator what to do when results are not flowing. A surface paints
 it. The **leaf** moods, worsening:
@@ -127,7 +127,7 @@ leaf carries the real mood, and an operator drills down through the `Holding`
 scopes to the one that is costing them. `Fine` up the tree still means every leaf
 beneath is `Fine`. Every mood drills down to the evidence behind it. (The GUIs
 paint Fine green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
-Holding orange; the colour is the surface's, the mood is the model's.)
+Holding orange; the color is the surface's, the mood is the model's.)
 
 **Observation is deliberately near-real-time, not synchronous.** Receive,
 Process and Send execution must never wait for it. It consumes lightweight
@@ -220,5 +220,5 @@ that spans both.
 
 Xmip audit must be able to reconstruct what happened, where, by whom, why,
 whether it succeeded, and what went wrong when it did not — which is what
-banking, aviation, energy, government and defence require before they will run
+banking, aviation, energy, government and defense require before they will run
 anything at all.

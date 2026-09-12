@@ -45,7 +45,7 @@ Write "Xmip Process", "Host Process", "System Process"; write "Process" alone
 only where the surrounding text makes the sense unmistakable, and prefer
 "Process Definition" / "Process Instance" (the Definition/Instance axis) when it
 does not. The generic operating-system sense stays lowercase, "process". The
-estate already capitalises its domain terms (Stream, Message, Journey); this
+estate already capitalizes its domain terms (Stream, Message, Journey); this
 extends that discipline to every collision.
 
 ### 2. `doc/terminology.md` is the arbiter

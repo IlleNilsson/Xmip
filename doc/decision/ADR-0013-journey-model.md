@@ -108,7 +108,7 @@ and a store of unauthorized bytes is a liability rather than a feature. The atte
 as a transport event; per v1.2 it "is not a Message or Journey".
 
 Refusal at Message creation retains the Stream, because the sender is identified,
-authenticated and authorized. There is someone answerable who can correct their serialiser and
+authenticated and authorized. There is someone answerable who can correct their serializer and
 replay.
 
 ### 2. A retained faulty Stream is held by `xmip-core-retain`
@@ -210,8 +210,8 @@ first-class Process capability and the Process model does not yet provide one.
 
 Protocol-level deduplication is not this. Where a transport's specification
 defines duplicate semantics — a Kafka idempotent producer, an AS2 message-id, a
-JMSMessageID — the transport Module honours them, because that is conformance
-rather than judgement. Same word, two layers.
+JMSMessageID — the transport Module honors them, because that is conformance
+rather than judgment. Same word, two layers.
 
 ### 5. A Publication produces zero, one or N Journeys
 
@@ -283,7 +283,7 @@ much easier thing to be confident about.
 **Every failure count is otherwise wrong.** If dismissal is `Failed`, then the
 failure rate on any dashboard is inflated by every deliberate intervention, and
 the more competently an estate is operated the worse its numbers look. A metric
-that punishes correct operator behaviour will be worked around rather than
+that punishes correct operator behavior will be worked around rather than
 fixed.
 
 **The alternative puts one terminal outcome somewhere else.** Recording

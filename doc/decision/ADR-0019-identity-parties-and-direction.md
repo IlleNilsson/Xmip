@@ -119,7 +119,7 @@ somebody else's Receive Location, and the symmetry is exact:
 
 A **Party** is the thing that has identities. It is not a credential store and
 not a role; it is the actor, per ADR-0007 and ADR-0008, and its identities are
-how it is recognised.
+how it is recognized.
 
 ```text
 Party  partner-x
@@ -144,7 +144,7 @@ genuinely differ: the certificate a partner presents to Xmip is not the
 certificate Xmip presents to that partner.
 
 Security roles remain separate from Party identity, per ADR-0009. A Party is
-recognised; a role is granted. Resolving a credential to a Party answers
+recognized; a role is granted. Resolving a credential to a Party answers
 authentication, and authorization is a separate question asked afterwards
 against that Party.
 
@@ -222,7 +222,7 @@ Where they must agree, configuration says so. **This is DMARC's structure and
 Xmip adopts it deliberately**: SPF proves the envelope sender, DKIM proves the
 author domain, and DMARC is neither — it is the alignment policy between them
 plus what to do when alignment fails. The same problem, a decade in production
-on internet mail, standardised as RFC 9989.
+on internet mail, standardized as RFC 9989.
 
 ```toml
 [receive.location.partner-x.identity]
@@ -316,13 +316,13 @@ the network could write to.
 
 ## Open
 
-- **Whether a Party may be recognised by an unverified message identity alone.**
+- **Whether a Party may be recognized by an unverified message identity alone.**
   A `ISA06` with no transport credential behind it is a claim. Clause 7 makes
   the transport identity authoritative for accountability, which implies the
   answer is no, but EDI over a shared drop folder is a real deployment and it
   deserves an explicit ruling rather than an inference.
 - **Party hierarchy.** ADR-0007 makes communication domains recursive —
-  organisation, company, fleet, department, device. Whether identity inherits
+  organization, company, fleet, department, device. Whether identity inherits
   down that hierarchy, so a fleet certificate authenticates a ship, is not
   decided here.
 

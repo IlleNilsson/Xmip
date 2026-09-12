@@ -1,4 +1,4 @@
-# ADR-0033: Certificates on Receive and Send, Let's Encrypt prioritised
+# ADR-0033: Certificates on Receive and Send, Let's Encrypt prioritized
 
 - Status: Accepted
 - Date: 2026-09-05
@@ -18,7 +18,7 @@
 **Certificate identity is the first authentication mechanism Xmip implements,
 on both directions: a Receive Location verifies the certificate a caller
 presents, and a Send Location presents one. And provisioning those certificates
-prioritises ACME — Let's Encrypt — among the identity protocols.** Twenty-eight
+prioritizes ACME — Let's Encrypt — among the identity protocols.** Twenty-eight
 mechanisms are declared and none is built (the survey, 2026-09-05); this picks
 the order, starting with certificates.
 
@@ -77,10 +77,10 @@ a caller that is authenticated but not authorized is refused with the reason. Th
 three never collapse into one check, and this holds for every mechanism, not just
 certificates.
 
-### 2. Provisioning prioritises ACME (Let's Encrypt)
+### 2. Provisioning prioritizes ACME (Let's Encrypt)
 
 The Receive side needs server certificates. Among the ways to obtain them, **ACME
-(RFC 8555 — Let's Encrypt) is prioritised**: an Xmip node can obtain and renew
+(RFC 8555 — Let's Encrypt) is prioritized**: an Xmip node can obtain and renew
 its own certificate rather than an operator installing one by hand. It is a
 capability of its own (`xmip-core-authenticate-acme`, or the certificate
 module's provisioning half), not a transport.
@@ -92,7 +92,7 @@ with Let's Encrypt issues **public, domain-validated** certificates over HTTP. I
 does not cover mutual-TLS against a private partner, an internal certificate
 authority, client certificates, or any non-public endpoint. Those remain, and
 for high-assurance partner integration the **internal CA + mutual-TLS** path is
-the default; Let's Encrypt is prioritised for the public edge, not made
+the default; Let's Encrypt is prioritized for the public edge, not made
 universal.
 
 ### 4. The build order
@@ -114,11 +114,11 @@ Each is security-critical and lands on its own, tested, rather than as one drop.
   gains the two authenticators; an ACME capability is added for provisioning.
 - The Playground's authentication faults (ADR-0028) become exercisable against a
   real mechanism rather than only simulated.
-- `open-problems.md` gains this as a prioritised item.
+- `open-problems.md` gains this as a prioritized item.
 
 ## Provenance
 
 The requirement and the priority are the owner's, 2026-09-05: certificates on
-Receive and Send, Let's Encrypt prioritised among the identity protocols.
+Receive and Send, Let's Encrypt prioritized among the identity protocols.
 Clauses 1 to 4 are the assistant's drafting of it, on the instruction to
 proceed and to write the decision down.

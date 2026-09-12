@@ -17,7 +17,7 @@
 `{ message: String }` struct, a `Display` that writes the message, an empty
 `Error` impl. That is now one macro in `xmip-core`: `declare_error!`, and
 `declare_retryable_error!` for the two that also carry a `retryable` flag.** The
-estate already centralises shared types in `foundation/core` (`Severity`,
+estate already centralizes shared types in `foundation/core` (`Severity`,
 `Mechanism`, the id types); these errors were the anomaly.
 
 ## Context
@@ -37,14 +37,14 @@ declares once is drift waiting to happen, and it read as an anomaly against the
 `declare_error!(Name)` expands to the `{ message: String }` struct with `Display`,
 `Error` (via `core::error::Error`, which no_std has) and a `new` constructor. The
 `message` field stays public, so an existing `Name { message }` literal still
-compiles — the migration is mechanical and behaviour-preserving. Doc attributes
+compiles — the migration is mechanical and behavior-preserving. Doc attributes
 pass through (`declare_error!(#[doc = "…"] Name)`).
 
 ### 2. Retryable errors get the sibling macro
 
 `declare_retryable_error!(Name)` adds `pub retryable: bool` and `retryable` /
 `permanent` constructors, matching what `transport` already offers. This is where
-the "modelled three ways" `retryable` flag (the survey's finding) is reconciled
+the "modeled three ways" `retryable` flag (the survey's finding) is reconciled
 for send and process; the resilience distinction itself is ADR-0026's.
 
 ### 3. Transport keeps its own

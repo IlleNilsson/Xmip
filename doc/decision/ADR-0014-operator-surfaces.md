@@ -181,7 +181,7 @@ a command run there.
 `xmip-core-webapi` was declared in `architecture.toml` as *"HTTP Web API for
 addressing Xmip Streams, Messages and Journeys"*, created on GitHub, and mounted
 as a submodule — with no architecture document describing it and no decision
-record authorising it. It is now `maturity = "deprecated"`.
+record authorizing it. It is now `maturity = "deprecated"`.
 
 **It contradicted clauses 3 and 6 of this record.** An HTTP API for addressing
 Xmip's own Streams, Messages and Journeys is a private endpoint and a second
@@ -214,7 +214,7 @@ that created it on GitHub on 2026-08-26 and cemented it.
 module. It is an ordinary Xmip artifact: a Receive Location on
 `transport-http` with `logic-http-api`, using the Composite interaction pattern
 in `runtime-model.md` section 11, routing to Processes. Xmip operated through
-its own message model, with identity, authorisation, audit and Journeys applying
+its own message model, with identity, authorization, audit and Journeys applying
 to management operations for free.
 
 That carries a real hazard, named in `open-problems.md` problem 16 as the
@@ -253,7 +253,7 @@ Clause 6. abi is in-process and cli and powershell are local processes, so on th
 
 The answer is that both shells already solve this. PowerShell Remoting carries a session over WinRM or over SSH, and the CLI runs over SSH like any other command. A remote invocation is the same invocation, so clause 3 holds unchanged: the web solution still does only what the command line does, on a machine it is not sitting on.
 
-This is worth more than the convenience. Remoting brings its own authentication with it, Kerberos and Active Directory on one path and SSH keys on the other, both already understood and already permitted inside the organisations Xmip is aimed at. Xmip does not have to design authentication for its own control plane, and a control plane with hand-rolled authentication is exactly the kind of thing that fails an enterprise security review.
+This is worth more than the convenience. Remoting brings its own authentication with it, Kerberos and Active Directory on one path and SSH keys on the other, both already understood and already permitted inside the organizations Xmip is aimed at. Xmip does not have to design authentication for its own control plane, and a control plane with hand-rolled authentication is exactly the kind of thing that fails an enterprise security review.
 
 Streaming survives the crossing. A remoting session returns objects as they are produced rather than at the end, and SSH streams standard output, so a follow mode works remotely without becoming a different mechanism.
 
@@ -293,7 +293,7 @@ MAUI hosts the desktop application because every other decision in Xmip is cross
 
 The render mode is not a preference. A web solution has to reach many nodes; reaching them means PowerShell Remoting or SSH; and a browser sandbox can do neither. WebAssembly cannot satisfy clause 6, so the web solution runs server-side. That is a constraint falling out of an earlier decision rather than a fresh choice.
 
-gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-acme-gui, on the same terms as the other three: their licence, their support, no approval.
+gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-acme-gui, on the same terms as the other three: their license, their support, no approval.
 
 ## Amendment, 2026-08-30: the SDK and the target framework are two rulings
 

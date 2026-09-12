@@ -53,7 +53,7 @@ a feeling: a Linear release is the first moment something exists that a change
 to Continuum can break, and review is worth paying for exactly when there is
 something to protect.
 
-**A second trigger may arrive first, and should be honoured if it does.** Once
+**A second trigger may arrive first, and should be honored if it does.** Once
 the module repositories hold content and are mounted as submodules per
 ADR-0016, a change in `Xmip` can break a repository that a different working
 copy depends on. That is also something to protect, and it may happen before

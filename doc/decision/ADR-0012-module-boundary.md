@@ -22,7 +22,7 @@ are a convenience and a module author is never obliged to use them —
 conformance is judged against the specification. The interface is a `repr(C)`
 table of `extern "C"` function pointers. **`dyn Trait` never crosses the
 boundary**, because Rust trait objects have no stable layout and passing one
-across a toolchain change is undefined behaviour. Ownership, lifetime and error
+across a toolchain change is undefined behavior. Ownership, lifetime and error
 representation are specified, not left to convention.
 
 ## Context
@@ -64,7 +64,7 @@ pub use xmip_core::contracts::*;
 pub use xmip_abi::{ ... };
 ```
 
-Re-exporting Rust types means a module author compiles against Xmip source. That pulls every implementer into Rust, and because Xmip is AGPL-3.0-or-later it pulls their module into AGPL with it. Xmip's position is that a third party brings their own licence and their own support. A boundary that only works by linking Xmip code cannot deliver that.
+Re-exporting Rust types means a module author compiles against Xmip source. That pulls every implementer into Rust, and because Xmip is AGPL-3.0-or-later it pulls their module into AGPL with it. Xmip's position is that a third party brings their own license and their own support. A boundary that only works by linking Xmip code cannot deliver that.
 
 ## Amendment, 2026-08-26: the boundary faces both ways
 
@@ -89,13 +89,13 @@ have to give when the boundary faced one direction.
 1. The normative module boundary is a written ABI specification and a C header. Not a Rust crate.
 2. Rust bindings remain available as convenience. A module author is never obliged to use them, and conformance is judged against the specification.
 3. The interface is a `#[repr(C)]` table of `extern "C"` function pointers, defined and versioned by Xmip.
-4. Rust traits are an implementation ergonomic on the Xmip side only. `dyn Trait` never crosses the boundary — Rust trait objects have no stable layout, and passing one across a toolchain change is undefined behaviour.
+4. Rust traits are an implementation ergonomic on the Xmip side only. `dyn Trait` never crosses the boundary — Rust trait objects have no stable layout, and passing one across a toolchain change is undefined behavior.
 5. `ModuleAbiKind` is removed. The descriptor carries the module name as a string.
 6. Each core module versions its own trait independently.
 7. Ownership, lifetime and error representation are part of the specification, not left to convention.
 8. Unwinding never crosses the boundary.
 
-9. The boundary carries no licence exception. The header is AGPL-3.0-or-later like the rest of Xmip. A user takes Xmip under Xmip's licence and may additionally have to satisfy the licences of what Xmip itself depends on; reconciling that is the user's business, not Xmip's.
+9. The boundary carries no license exception. The header is AGPL-3.0-or-later like the rest of Xmip. A user takes Xmip under Xmip's license and may additionally have to satisfy the licenses of what Xmip itself depends on; reconciling that is the user's business, not Xmip's.
 
 10. The binding crate is `xmip-core-abi`. It replaces `crates/xmip-module-abi` (whose package is actually named `xmip-abi`) and `crates/xmip-module-api`. Neither parses under ADR-0011 — there is no provider named `module` — and the first disagrees with its own package name.
 
@@ -138,13 +138,13 @@ Each of the seventeen traits therefore carries a public compatibility promise. T
 
 **Ownership.** Every pointer crossing the boundary declares who allocates, who frees, and how long it remains valid. Rust ownership does not survive the crossing. The architecture baseline already names buffer ownership as part of the minimal module foundation; this is that.
 
-**Unwinding.** A Rust panic crossing `extern "C"` is undefined behaviour, as is a C++ exception, a C# exception or a Java throwable. An implementation catches at its own boundary and returns an error code. The host treats an unwind as a fatal module defect.
+**Unwinding.** A Rust panic crossing `extern "C"` is undefined behavior, as is a C++ exception, a C# exception or a Java throwable. An implementation catches at its own boundary and returns an error code. The host treats an unwind as a fatal module defect.
 
 **No Rust types in the interface.** No `String`, no `Vec`, no `Box<dyn Trait>`, no enum without `#[repr(C)]`. Slices cross as pointer and length.
 
 ## Consequences
 
-`xmip-module-abi` becomes the reference implementation of a specification that lives beside it as a document and a header. Publishing that header is what makes "their licence, their support" true in practice rather than in principle.
+`xmip-module-abi` becomes the reference implementation of a specification that lives beside it as a document and a header. Publishing that header is what makes "their license, their support" true in practice rather than in principle.
 
 A module written in C#, PowerShell or Java never links Xmip code at all. A module written in Rust may use the bindings for ergonomics, or declare the same `extern "C"` signatures itself, exactly as a C author would.
 
@@ -160,13 +160,13 @@ It covers the universal boundary — primitives, status codes, the descriptor, s
 
 The other thirteen traits are deliberately unspecified. The reasoning above still holds for them: a trait table designed without an implementation in front of it is a guess, and a guess published as `v1` becomes a permanent compatibility promise. Each is written when its first implementation is.
 
-## The licence of the boundary
+## The license of the boundary
 
 Clause 9. `include/xmip_module.h` is AGPL-3.0-or-later, like the rest of Xmip.
 
-A permissive header was considered and rejected. The case for it: the header is the one file a third party must copy into their own build, so under AGPL it carries AGPL with it, and an implementer inherits Xmip's licence by the act of `#include`. The case against, and the one that decided it: Xmip does not undertake to resolve anyone's licensing position. A user takes Xmip under Xmip's licence, and may additionally have to satisfy the licences of what Xmip itself depends on. Reconciling that is the user's business.
+A permissive header was considered and rejected. The case for it: the header is the one file a third party must copy into their own build, so under AGPL it carries AGPL with it, and an implementer inherits Xmip's license by the act of `#include`. The case against, and the one that decided it: Xmip does not undertake to resolve anyone's licensing position. A user takes Xmip under Xmip's license, and may additionally have to satisfy the licenses of what Xmip itself depends on. Reconciling that is the user's business.
 
-What this ADR set out to make possible is unaffected. A module author is not obliged to write Rust, is not obliged to link Xmip code, and compiles against a C ABI rather than against Xmip source. That is a technical boundary and it stands. It was never a licence exemption, and "the boundary is the trait, not the licence" describes where Xmip stops dictating design.
+What this ADR set out to make possible is unaffected. A module author is not obliged to write Rust, is not obliged to link Xmip code, and compiles against a C ABI rather than against Xmip source. That is a technical boundary and it stands. It was never a license exemption, and "the boundary is the trait, not the license" describes where Xmip stops dictating design.
 
 ## The binding crate and the surface modules
 

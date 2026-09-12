@@ -21,7 +21,7 @@ discipline rather than the one that actually replaced this.
 - Name: The handler universe
 - Order: 4
 
-Organised handler support by technology, protocol and industry space, across
+Organized handler support by technology, protocol and industry space, across
 integration, business, cloud, healthcare, industrial, energy, finance,
 logistics, government, database, file, network, messaging and device.
 

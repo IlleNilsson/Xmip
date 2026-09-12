@@ -28,7 +28,7 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 - Stream preparation.
 - Transformation, assignment, promotion and demotion.
 - Identification, authentication and authorization.
-- Receive, route, process and send behaviour.
+- Receive, route, process and send behavior.
 
 ## 4. Runtime platform
 
@@ -37,7 +37,7 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 - Local IPC and inter-node HTTP/2 communication.
 - Durable execution state and disaster recovery.
 - Scheduling, priorities, overload handling and capability-aware failover.
-- Resilience, and artefact claims at the endpoint (ADR-0024).
+- Resilience, and artifact claims at the endpoint (ADR-0024).
 
 ## 5. Handler ecosystem
 

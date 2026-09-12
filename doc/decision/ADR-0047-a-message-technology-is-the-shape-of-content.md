@@ -58,7 +58,7 @@ names.
 - `technology()` — the manifest leaf.
 - `media_types()` — the media types this shape claims, so that a transport
   that says `application/json` is believed.
-- `recognises(bytes)` — whether the bytes look like this shape, asked only
+- `recognizes(bytes)` — whether the bytes look like this shape, asked only
   when no media type says. `binary` says yes to everything and is asked last.
 - `shape(&Stream)` — the parts and the announced type. A part has a name in
   the shape's own terms (a multipart name, a segment tag, a row number), its
@@ -66,7 +66,7 @@ names.
   back parts and the runtime makes Sections of them.
 
 `choose(shapes, &Stream)` in the Foundation picks the shape: the one that
-claims the media type, else the first in order that recognises the bytes.
+claims the media type, else the first in order that recognizes the bytes.
 
 ### 3. Fifteen technologies, each its own repository
 
@@ -91,7 +91,7 @@ document is checked for shape before `xmip-core-configure` reads it.
   nothing new.
 - Two names leave `message`, two join `contract`; the manifest keeps its
   count of declared technologies.
-- Problem 10's rule is honoured: the trait landed before any repository.
+- Problem 10's rule is honored: the trait landed before any repository.
 
 ## Provenance
 

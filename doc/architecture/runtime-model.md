@@ -118,7 +118,7 @@ the same reason it is the right warning. The MessageBox was a shared SQL
 database holding every message and every subscription for the whole group, and
 it was where BizTalk went to die under load — every scale-out story ended in
 "add another MessageBox and partition across them", which is an admission that
-the design put a cluster-wide write hotspot at the centre of the runtime.
+the design put a cluster-wide write hotspot at the center of the runtime.
 
 **A ToDo belongs to one node and is written only by that node.** There is no
 shared write path, so there is nothing to contend for and nothing to partition
@@ -160,7 +160,7 @@ completing work is a state transition. That is a queue in every sense that
 matters — durable, ordered where ordering is configured, survives restart — and
 it is MSMQ, MQ Series or RabbitMQ in none of them.
 
-This is the same argument ADR-0024 makes about claiming an artefact. Xmip
+This is the same argument ADR-0024 makes about claiming an artifact. Xmip
 already requires a durable store; making it also require somebody else's broker
 would mean depending on another system's cluster to answer a question about its
 own. The engine choice in `deployment-model.md` section 7 follows from this and
@@ -193,7 +193,7 @@ whatever sequence it likes is perfectly exclusive and completely unordered.
 Ordering needs three things a claim does not supply:
 
 **An order key.** Ordered *by what*? Global ordering across a Receive Location
-serialises everything and destroys throughput. What is almost always wanted is
+serializes everything and destroys throughput. What is almost always wanted is
 ordering **per key** — per trading partner, per device, per account — so that
 unrelated sequences run in parallel while each sequence stays intact. The key is
 configured; there is no useful default.
@@ -314,10 +314,10 @@ Two dimensions that read alike and are not:
 
 A Receive Port has the capability `OwnMessage`. A person has the role
 `Operator`. **Do not call an actor capability a role**, and do not mix user
-authorization with runtime communication modelling — ADR-0009 exists because
+authorization with runtime communication modeling — ADR-0009 exists because
 the two collapse into each other the moment anyone stops paying attention.
 
-This is also why a Party is not a role: a Party is recognised, a role is
+This is also why a Party is not a role: a Party is recognized, a role is
 granted, and a capability is what an Actor can do. Three dimensions.
 
 ### The test for Xmip Core
@@ -378,7 +378,7 @@ common actions, Message creation and Publication.
 
 A **Receive Location** defines how a Stream reaches its parent Receive Port. It
 owns the transport binding and endpoint, the accepted identities and
-mechanisms, the interaction type, the response behaviour, and any
+mechanisms, the interaction type, the response behavior, and any
 location-specific Content and Contract configuration.
 
 ```text
@@ -473,11 +473,11 @@ second invoice is a duplicate or a correction. A platform that deduplicates has
 guessed, and it will be wrong silently.
 
 So a Process decides. A duplicate is not refused at a gate — it authenticates,
-validates, becomes a Message and gets Journeys — and a Process that recognises
+validates, becomes a Message and gets Journeys — and a Process that recognizes
 it stops the Journey as `Dismissed`, not `Failed`. See ADR-0013 clause 4c.
 
 Where a transport's own specification defines duplicate semantics, the transport
-Module honours them. That is conformance, not judgement.
+Module honors them. That is conformance, not judgment.
 
 ### Subscription Instances form a chain
 
@@ -540,7 +540,7 @@ Stream. The language, its four segment kinds and three evaluation modes are
 ## 10. Send model
 
 **Send Port Group** — a named collection of Send Ports and nothing more. It
-owns no delivery behaviour. A Subscription targeting a Group dispatches to
+owns no delivery behavior. A Subscription targeting a Group dispatches to
 every Send Port in it, and each executes independently.
 
 **Send Port** — the logical outbound artifact. Several Subscriptions may
@@ -701,7 +701,7 @@ recovered Journey resumes rather than restarts, and Messages are immutable so a
 resumed Journey cannot half-produce one.
 
 Externally it depends on what the far side supports. A queue with
-acknowledgement and a deduplication window can be delivered to exactly once. An
+acknowledgment and a deduplication window can be delivered to exactly once. An
 FTP `PUT` cannot: the connection may drop after the bytes land and before the
 server answers, and no amount of Xmip correctness tells the two cases apart.
 
@@ -783,7 +783,7 @@ delivery and its security outcome are audited.**
 A **Party** is an organization, stakeholder, system, service or other entity
 Xmip interacts with. `xmip-core-party` connects Parties to identities,
 permissions, contacts, agreements and Endpoints, and holds the identities a
-Party is recognised by on receive and the ones Xmip presents on send. ADR-0019.
+Party is recognized by on receive and the ones Xmip presents on send. ADR-0019.
 
 **Endpoint** is the public, non-technical collective term for Receive Port,
 Receive Location, Send Port Group, Send Port and Send Location.
@@ -875,7 +875,7 @@ runtime configuration never constructs Contract inheritance.**
 **Configuration** is TOML and composes already-implemented, versioned Modules
 and Artifacts. A Receive Location selects, by reference: Transport Handler,
 Content Handler, Contract, accepted identities and mechanisms, authorization,
-interaction type, response behaviour, and audit and retention policy.
+interaction type, response behavior, and audit and retention policy.
 
 ### Validation gates
 
@@ -926,7 +926,7 @@ Message itself must be kept, that is retention's job, per section 16.
 Every configurable Xmip object exists twice, and the two must not be confused.
 
 A **Definition** is configured intent, declared in TOML. It describes what
-should happen and references the module capability needed to realise it. A
+should happen and references the module capability needed to realize it. A
 Definition does not execute.
 
 An **Instance** is the runtime execution of a Definition, created when the
@@ -1046,7 +1046,7 @@ scope is always audited.**
 ### Process outcome
 
 ```text
-Completed   CompletedWithWarnings   Failed   Cancelled   TimedOut   Abandoned
+Completed   CompletedWithWarnings   Failed   Canceled   TimedOut   Abandoned
 ```
 
 **How this relates to `JourneyState` is not yet decided.** A Process is one
@@ -1158,7 +1158,7 @@ its parent, so that a Message carries a chain `I1 -> I2 -> I3`.
 correlation identifier, not a lineage chain, and generation is tracked by
 message id.
 
-That leaves a naming question rather than a modelling one, since "Interchange"
+That leaves a naming question rather than a modeling one, since "Interchange"
 is retired vocabulary. A stable identifier over one reception and all its
 descendants is what ADR-0013 calls the **Publication** — one event, one
 identity, immutable. Whether the two are the same identifier is undecided and

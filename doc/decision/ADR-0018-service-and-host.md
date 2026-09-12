@@ -101,7 +101,7 @@ serviceNameSanitiser = "[^a-z0-9-]"
 ```
 
 Variables: `{host}` `{cluster}` `{node}` `{id}` `{trust}` `{bitness}`
-`{latency}` `{index}`. The template composes, the sanitiser regex replaces what
+`{latency}` `{index}`. The template composes, the sanitizer regex replaces what
 is not legal, and a validator that Xmip owns — not the operator — checks the
 result against the platform's rules. An operator who could configure the
 validator could configure a name that registers on Windows and fails on Linux,
@@ -140,7 +140,7 @@ intact.
 
 **10a. Latency is bought with isolation, and the currency is process hops.** A
 Journey whose receive, process and send all run in one Host Service crosses no
-process boundary. Split across three Host Services it pays serialisation, a
+process boundary. Split across three Host Services it pays serialization, a
 copy and a context switch at every hop, and it is no longer low latency
 whatever anybody labels it.
 
@@ -225,5 +225,5 @@ operating-system process a Host Service runs as). ADR-0035 settled that
 terminology.md arbitrates such a collision, so the phases are renamed to
 `plan-host-services` / `start-host-services` — they plan and start **Host
 Services**, which is what phase 3's tree already validated. The state and phase
-enums in `service.rs` were renamed to match. No behaviour changed; the names now
+enums in `service.rs` were renamed to match. No behavior changed; the names now
 say what the phases do.

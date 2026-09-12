@@ -55,7 +55,7 @@ reachability. Separated, the question answers itself.
 
 The estate's default for private, high-assurance partner integration is the
 **internal CA + mutual-TLS** (`transport/http/tls.rs` already says so). Let's
-Encrypt is prioritised for the **public-edge** source specifically (ADR-0033),
+Encrypt is prioritized for the **public-edge** source specifically (ADR-0033),
 and adds nothing to the other rows.
 
 ### 3. A provisioner is its own abstraction

@@ -22,7 +22,7 @@ Microsoft's path is to the cloud only, and every competitor sentence in
 section 4 leads with a hosted service.
 
 Surveyed 2026-08-27. Every date below is published and checkable; every
-judgement is marked as one. Re-check the dates rather than trusting this
+judgment is marked as one. Re-check the dates rather than trusting this
 document once they start passing.
 
 ## 1. The runway is public, and one deadline is next month
@@ -122,7 +122,7 @@ of them is ours to write, in a language with no incumbent library for any of it.
 
 ## What this forces
 
-### The licence costs adoption, knowingly
+### The license costs adoption, knowingly
 
 Enterprise legal teams reject AGPL as policy. That is the consistent finding, and
 it is a real cost that ADR-0023 accepts on purpose: dual licensing would remove
@@ -141,7 +141,7 @@ Rhapsody — without exception.
 declares them .NET 11 and `xmip-template-dotnet` now exists, so the obstacle is
 work rather than a decision.
 
-**Judgement, not fact:** this gap is wider than any runtime feature currently
+**Judgment, not fact:** this gap is wider than any runtime feature currently
 open, including ToDo.
 
 ## What to say out loud
@@ -166,7 +166,7 @@ months later. **No product was found that does this.**
 
 - BizTalk end of life and Azure succession —
   <https://www.schneider.im/microsoft-azure-logic-apps-will-replace-biztalk-server-2020/>,
-  <https://www.transparity.com/app-innovation/the-biztalk-lifecycle-biztalk-server-versions-end-of-life/>
+  <https://www.transparency.com/app-innovation/the-biztalk-lifecycle-biztalk-server-versions-end-of-life/>
 - SBMP retirement and migration timeline —
   <https://www.sixpivot.com.au/post/biztalk-server-end-of-life-critical-timeline-and-migration-strategy-for-enterprise-integration>
 - CData Arc positioning — <https://arc.cdata.com/lp/biztalk-eol/>

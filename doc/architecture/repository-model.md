@@ -47,7 +47,7 @@ that no two repositories resolve to one mount, so the next name that would break
 it fails a test rather than a clone.
 
 That layout is for human navigation. Cargo dependencies define the technical
-graph, and **no runtime behaviour reads a folder name**. Two tests do —
+graph, and **no runtime behavior reads a folder name**. Two tests do —
 `Rust.Style.Test.ps1` takes a file's crate from its path, and the mount test
 above — because both are about names and have nothing else to read. This
 paragraph previously said nothing read a folder name at all, which stopped being
@@ -97,7 +97,7 @@ observation capabilities where a fifth would contradict it.
 ## 2. Naming
 
 ADR-0011 governs. Shortest singular form, a verb where the module does
-something, the recognised standard name for a technology, normalised to
+something, the recognized standard name for a technology, normalized to
 lowercase and hyphenated. No file extensions, no informal abbreviations where a
 standard name exists.
 
@@ -124,7 +124,7 @@ this document's subject and not a plan.
 xmip
 │
 ├── Xmip                                   the platform itself — outside the pattern
-├── .github                                organisation defaults — outside the pattern
+├── .github                                organization defaults — outside the pattern
 │
 ├── xmip-<single token>                    PLATFORM LEVEL
 │   └── xmip-core                          foundation contracts, identifiers, shared types
@@ -141,7 +141,7 @@ xmip
     │   │
     │   └── <module>-<standard>            xmip-core-path-xpath      Xmip's implementation
     │
-    └── provider = anyone else ──────────  their licence, their support, no approval needed
+    └── provider = anyone else ──────────  their license, their support, no approval needed
         │
         ├── surface module                 xmip-acme-abi
         │   (abi, cli, powershell)         xmip-acme-cli
@@ -215,18 +215,18 @@ Five capabilities look similar from a distance and are constantly confused:
 - `xmip-core-transport` owns direction-neutral transport contracts, per
   ADR-0010. `xmip-core-transport-<technology>` implements one technology and
   declares whether it can receive, send or both.
-- `xmip-core-message-<representation>` implements serialisation,
-  deserialisation and materialisation.
+- `xmip-core-message-<representation>` implements serialization,
+  deserialization and materialization.
 - `xmip-core-contract-<technology>` implements Contract implication or
   evaluation.
 - `xmip-core-path-<language>` implements an addressing language.
 - `xmip-core-logic-<technology>` implements method and operation semantics:
   SOAP, HTTP API, gRPC.
 
-`xmip-core-contract` does not own representation parsing, serialisation or Path
-execution. Representation implementations materialise or serialise content.
-Path implementations address materialised content. Contract implementations
-evaluate the applicable Stream, Message or materialised structure without
+`xmip-core-contract` does not own representation parsing, serialization or Path
+execution. Representation implementations materialize or serialize content.
+Path implementations address materialized content. Contract implementations
+evaluate the applicable Stream, Message or materialized structure without
 absorbing either of the other two.
 
 ### Split on a base protocol, not on a resemblance
@@ -235,7 +235,7 @@ A repository is a protocol. **Depend on another protocol only where that other
 protocol independently exists and more than one thing builds on it.**
 
 TCP qualifies: HTTP, FTP, MLLP, AMQP and SMTP all sit on it, and it was
-specified, implemented and standardised without reference to any of them. So do
+specified, implemented and standardized without reference to any of them. So do
 UDP, HTTP and CAN bus. Those dependencies are declared, and they are real.
 
 What does not qualify is a layer extracted because two protocols resemble each
@@ -314,7 +314,7 @@ dependency = ["xmip-core-transport-tcp"]
 specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
 ```
 
-It sits beside `dependency` because it answers the neighbouring question. The
+It sits beside `dependency` because it answers the neighboring question. The
 dependency says HTTP is built on TCP; the specification says which HTTP.
 Together they are what somebody picking up an unimplemented repository needs
 before they write a line — and the alternative is that each implementer decides
@@ -395,7 +395,7 @@ Xmip/
     └── dotnet   what a .NET one is
 ```
 
-**The templates are submodules of the estate, not neighbours of it.** They sat
+**The templates are submodules of the estate, not neighbors of it.** They sat
 beside `Xmip/` until 2026-08-29, which meant cloning the estate did not get
 them, nothing measured them, and a rename could break repository creation
 without anything noticing — which it did. Under `template/` they are surveyed by
@@ -456,7 +456,7 @@ Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
 
 **A reserved repository that does not exist is not drift.** It is section 3
 working — the manifest is the design and creation follows need. The report
-counts only what is missing *and* declared beyond `reserved`, and summarises the
+counts only what is missing *and* declared beyond `reserved`, and summarizes the
 rest in one line. Reporting all of them printed 293 warnings to surface one
 action, which is a report nobody reads.
 
@@ -492,14 +492,14 @@ document and source file in the repository that owns it.
 
 ## 9. Source layout inside a repository
 
-Organise by **deployable capability**, never by technical layer. The same
+Organize by **deployable capability**, never by technical layer. The same
 shape repeats at every level — repository, module, feature — so a developer
-opening any part of Xmip recognises what they are looking at.
+opening any part of Xmip recognizes what they are looking at.
 
 ```text
 feature/
 ├── contracts/        the public shape: traits, types, the capability surface
-├── runtime/          behaviour
+├── runtime/          behavior
 ├── configuration/    how it is configured and bound
 ├── preservation/     what it persists and how it is recovered
 ├── observability/    audit, logs, traces, metrics
@@ -510,7 +510,7 @@ feature/
 `runtime/`, `test/` and nothing else; an empty `preservation/` directory is
 noise pretending to be structure.
 
-Do not organise around `controllers`, `services`, `repositories`, `models`,
+Do not organize around `controllers`, `services`, `repositories`, `models`,
 `utils` or `helpers` unless one of those genuinely names a capability. Those
 names describe how a framework thinks, not what Xmip does, and a `utils`
 directory is where cohesion goes to die.
@@ -519,14 +519,14 @@ The convention is language-independent. A `xmip-core-powershell` module and a
 Rust crate hold the same shape for the same reason.
 
 The outcome to aim at: opening any feature answers, without asking anyone,
-what capability it provides and where its contracts, behaviour, persistence,
+what capability it provides and where its contracts, behavior, persistence,
 observability and tests live.
 
 ## 10. Sequence
 
 One component at a time, and the order is not arbitrary:
 
-1. Stabilise the public purpose and contract of the component.
+1. Stabilize the public purpose and contract of the component.
 2. Create its repository with an initial commit.
 3. Move or rebuild the component there.
 4. Build and test it independently.

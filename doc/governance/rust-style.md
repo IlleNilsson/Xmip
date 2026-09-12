@@ -47,7 +47,7 @@ nothing, while the line-length rule caught twenty-five real violations in the
 same period.
 
 Length is also the wrong shape. `core/identity.rs` is 705 lines of which most
-is a catalogue of mechanisms — one `pub fn` per mechanism, each three lines.
+is a catalog of mechanisms — one `pub fn` per mechanism, each three lines.
 That is a table, not complexity. A short function with four nested `match`
 arms is worse and would sail through.
 
@@ -99,7 +99,7 @@ told yes, and the answer belongs in the entry. Anyone contributing follows this;
 an assistant follows it absolutely, because an assistant is exactly the
 contributor most likely to find a rule inconvenient at two in the morning and
 record a plausible sentence rather than ask. A reason written to justify a
-decision already taken is not a reason, it is a defence.
+decision already taken is not a reason, it is a defense.
 
 The same holds for line length in `powershell-style.md`. Neither is a rule that
 good code never breaks; both are rules that good code breaks knowingly and says
@@ -186,7 +186,7 @@ the module's name in the tab bar instead of five identical tabs.
 ## 6. What this does not enforce
 
 Module layout beyond file length, whether a `struct` should have been three, and
-whether a trait earns its existence. Those need judgement and are reviewed by
+whether a trait earns its existence. Those need judgment and are reviewed by
 people.
 
 Listing them here as enforced when they are not is the failure mode

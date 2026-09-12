@@ -47,7 +47,7 @@ and support burden permanently.
 | **C. Split by transport kind** | `transport-queue`, `transport-file`, `transport-stream` — reintroduces classification into names |
 
 **Lean: A.** The manifest already has `maturity`, and declaring is not building. C is the one
-to avoid: it puts a judgement back into the name, which is exactly what the manifest exists
+to avoid: it puts a judgment back into the name, which is exactly what the manifest exists
 to prevent.
 
 ## 7. The Operations tier is five near-identical modules
@@ -219,13 +219,13 @@ have no successor. Everything currently depends on one personal account.
 
 | option | effect | cost |
 |---|---|---|
-| **A. Move to a GitHub organisation, add a second owner** | survives one person stopping | an afternoon |
+| **A. Move to a GitHub organization, add a second owner** | survives one person stopping | an afternoon |
 | **B. DCO on contributions** | clean provenance for a future transfer | a file and a CI check |
 | **C. Register the trademark** | protects the name specifically | money, jurisdiction-by-jurisdiction |
 | **D. Written statement of intent** | says what should happen; not binding alone | an hour |
 
-**Lean: A first, then B.** An organisation with two owners is the single cheapest thing that
-changes the outcome if you stop — everything else protects assets that an organisation is
+**Lean: A first, then B.** An organization with two owners is the single cheapest thing that
+changes the outcome if you stop — everything else protects assets that an organization is
 already holding. C matters only once someone else wants the name.
 
 ---
@@ -371,7 +371,7 @@ here on 2026-09-03, with the other two consequences it left loose.
 
 | option | effect |
 |---|---|
-| **A. One module carrying every runtime identifier** | one artefact, works offline, and every operator downloads five platforms to use one |
+| **A. One module carrying every runtime identifier** | one artifact, works offline, and every operator downloads five platforms to use one |
 | **B. A meta-module with per-platform packages** | what .NET tooling already does; needs a gallery that resolves them, which an air-gapped estate does not have |
 | **C. The surface requires a local Xmip install and loads its libraries** | nothing to package; makes the PowerShell module useless on an administrator workstation, which is where it is most wanted |
 
@@ -432,7 +432,7 @@ internal — one runtime owns a unit of work by the durable claim (ADR-0024),
 checkpoints bound reprocessing — so delivery is at-least-once and edge effects
 must be idempotent (`DeduplicationRecord`). A dropped connection is a transport
 error over already-durable state, retried under `resilience`. An inbound claim is
-an atomic rename, so a schedule finds an artefact claimed-or-gone and moves on.
+an atomic rename, so a schedule finds an artifact claimed-or-gone and moves on.
 
 **Built (thin).** `xmip-core-persist` is types and a trait only —
 `DurableRecordIdentity`, `DurableExecutionCheckpoint`, `DurableJourneyState`,
@@ -525,7 +525,7 @@ retires entries from stops being an order.
                                        gitdir — decide it lives or retire it
 6. Cross-compilation                   four declared targets, verified on host
                                        only
-7. Organisation and second owner       problem 15, independent of all the above
+7. Organization and second owner       problem 15, independent of all the above
 ```
 
 **A decision blocks item 1.** The owner raised, 2026-09-05, that "Process" is
@@ -537,7 +537,7 @@ record. Before phases 4-9 name more of them, the record and the owner's model
 have to agree. Not yet filed as a numbered problem because it is a terminology
 correction, not an open design question — but it must be settled first.
 
-Problems 4, 5, 7, 8 and 9 remain naming judgements with no deadline. They cost
+Problems 4, 5, 7, 8 and 9 remain naming judgments with no deadline. They cost
 nothing to leave open and should not block the build work.
 
 ---
@@ -685,10 +685,10 @@ The four options as they were recorded:
 | **A. One node holds the cluster lease store** | simple; that node is now a single point of failure and a shared write path for exactly the thing that must not have one |
 | **B. Consensus among nodes** | correct and honest about the problem. It is also a distributed-consensus implementation, which ADR-0017 spent its entire argument avoiding |
 | **C. Cluster scope requires an external store, declared as such** | the five coordinators ADR-0017 removed, readmitted for one narrow purpose and only when Cluster scope is actually used |
-| **D. Cluster scope is not offered** | Node scope and resource-native claims cover more than expected — the file case is already handled by claiming the artefact itself |
+| **D. Cluster scope is not offered** | Node scope and resource-native claims cover more than expected — the file case is already handled by claiming the artifact itself |
 
 **Lean: D first, C as the escape hatch.** ADR-0017 clause 2 already says a
-transport addressing a discrete claimable artefact claims the artefact, and that
+transport addressing a discrete claimable artifact claims the artifact, and that
 claim is cluster-wide without any lease at all. The remaining need for true
 Cluster scope may be small enough to make B's cost absurd. Worth counting the
 real cases before building anything.

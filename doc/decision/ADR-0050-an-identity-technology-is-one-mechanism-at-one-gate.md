@@ -49,7 +49,7 @@ reads at the first gate and the one it verifies at the second are the same
 `Mechanism` value, declared once in the identify technology and reused by
 its authenticate sibling, so that `identify/jwt` and `authenticate/jwt` agree
 on a name without either depending on the other: the declaration goes up
-into `xmip-core-identify` (ADR-0044) as a catalogue of the mechanisms the
+into `xmip-core-identify` (ADR-0044) as a catalog of the mechanisms the
 estate knows.
 
 ### 2. The traits, as they stand
@@ -57,9 +57,9 @@ estate knows.
 - An identify technology implements `TransportIdentifier` (before the
   Message exists, given a `StreamArrival`), `MessageIdentifier` (after it,
   given the Message), or both where the mechanism travels on both layers.
-  It answers `None` where the arrival carries nothing it recognises, a
+  It answers `None` where the arrival carries nothing it recognizes, a
   `Presented` claim marked passed, inferred or detected where it does, and
-  an error only where it recognises something it cannot read.
+  an error only where it recognizes something it cannot read.
 - An authenticate technology implements `Authenticator`: `mechanism()` and
   `verify(&Presented) -> Verified`. It never takes a Party; the Party is what
   the capability resolves the verified value to.
@@ -147,7 +147,7 @@ in order and the first denial stands.
 
 ### 6. Where things go up
 
-The mechanism catalogue and the credential store the password, basic, digest
+The mechanism catalog and the credential store the password, basic, digest
 and scram verifiers share go up into their capabilities (ADR-0044). Nothing
 goes sideways: `basic` does not depend on `password`; both depend on
 `xmip-core-authenticate`.
@@ -155,7 +155,7 @@ goes sideways: `basic` does not depend on `password`; both depend on
 ## Consequences
 
 - Fifty-one manifest entries gain a description; each names its trait.
-- `xmip-core-identify` gains the mechanism catalogue; `xmip-core-authenticate`
+- `xmip-core-identify` gains the mechanism catalog; `xmip-core-authenticate`
   gains the credential store the four password-shaped verifiers share.
 - Every technology is built offline and proven in-process; the ones that
   need a host facility (`pam`, `windows`) build where the facility is and

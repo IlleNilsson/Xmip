@@ -88,7 +88,7 @@ renewal, so a runtime that stops being live stops being the owner.
 
 Receive Locations, Processes and Send Locations are treated alike. **The
 transport declares whether it is exclusive by default, and the default follows
-the resource:** a discrete claimable artefact is, a query or queue or connection
+the resource:** a discrete claimable artifact is, a query or queue or connection
 is not. Leases live in `xmip-core-persist`, which Xmip already requires — no
 Consul, etcd, Redis or ZooKeeper.
 
@@ -103,7 +103,7 @@ Xmip was doing; a claim knows what everyone is doing.** A file another process
 holds open includes a producer still writing it, and no amount of Xmip-internal
 bookkeeping sees that.
 
-A Receive Location claims the individual artefact, never the location it polls.
+A Receive Location claims the individual artifact, never the location it polls.
 Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
 the type, and what those need is a stability check rather than a rename at
 claim time. Two nodes on a lockless protocol is then a placement question,
@@ -147,11 +147,11 @@ archive owner's decision, not Xmip's.**
 
 → [Xmip retains and archives, it does not delete, in full](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)
 
-### Health names a mood, not a colour, and the worst does not roll up
+### Health names a mood, not a color, and the worst does not roll up
 
 Holding the rollup; a leaf's mood does not propagate
 
-**Health is a mood, not a colour — it names what a human gets out of a thread,
+**Health is a mood, not a color — it names what a human gets out of a thread,
 process, node or cluster (the resource under load, not the machine) and what to
 do when results stop. A surface paints it. The leaf moods, worsening: `Fine`
 (results flowing), `Paused` (a deliberate hold — an operator is working on it),
@@ -217,7 +217,7 @@ is what a runtime entity is able to do. Neither implies the other.
 **Certificate identity is the first authentication mechanism Xmip implements,
 on both directions: a Receive Location verifies the certificate a caller
 presents, and a Send Location presents one. And provisioning those certificates
-prioritises ACME — Let's Encrypt — among the identity protocols.** Twenty-eight
+prioritizes ACME — Let's Encrypt — among the identity protocols.** Twenty-eight
 mechanisms are declared and none is built (the survey, 2026-09-05); this picks
 the order, starting with certificates.
 
@@ -260,7 +260,7 @@ are a convenience and a module author is never obliged to use them —
 conformance is judged against the specification. The interface is a `repr(C)`
 table of `extern "C"` function pointers. **`dyn Trait` never crosses the
 boundary**, because Rust trait objects have no stable layout and passing one
-across a toolchain change is undefined behaviour. Ownership, lifetime and error
+across a toolchain change is undefined behavior. Ownership, lifetime and error
 representation are specified, not left to convention.
 
 → [The module boundary, in full](ADR-0012-module-boundary.md)
@@ -393,7 +393,7 @@ took.**
 xmip-<provider>-<module>-<standard>
 ```
 
-Shortest singular form, a verb where the module does something, the recognised
+Shortest singular form, a verb where the module does something, the recognized
 standard name for a technology. In `architecture.toml` the TOML tree path **is**
 the name — dots become hyphens and nothing else happens.
 
@@ -421,7 +421,7 @@ is that same rule with the segment removed.
 
 ### The handler universe
 
-Organised handler support by technology, protocol and industry space, across
+Organized handler support by technology, protocol and industry space, across
 integration, business, cloud, healthcare, industrial, energy, finance,
 logistics, government, database, file, network, messaging and device.
 
@@ -477,7 +477,7 @@ gate does not require.
 `{ message: String }` struct, a `Display` that writes the message, an empty
 `Error` impl. That is now one macro in `xmip-core`: `declare_error!`, and
 `declare_retryable_error!` for the two that also carry a `retryable` flag.** The
-estate already centralises shared types in `foundation/core` (`Severity`,
+estate already centralizes shared types in `foundation/core` (`Severity`,
 `Mechanism`, the id types); these errors were the anomaly.
 
 → [One error declaration, in full](ADR-0037-one-error-declaration.md)
@@ -485,7 +485,7 @@ estate already centralises shared types in `foundation/core` (`Severity`,
 ### Xmip has no product i18n; globalization lives only where it parses data
 
 **Xmip is an integration platform, not an end-user application, so it carries no
-product internationalisation — no translated UI, no localised messages. English
+product internationalization — no translated UI, no localized messages. English
 throughout code, logs, health, documentation and scope URIs. Globalization
 matters only at the data boundary, where Xmip parses or formats a partner's data,
 and there the locale is the partner's declared convention, never the server's.**
@@ -612,7 +612,7 @@ rather than as an aspiration in a document.
 ### The Playground exercises everything, all the time
 
 **`xmip-test-playground` exercises Xmip continuously.** It spawns Development
-nodes as System Processes on one machine — no virtualisation — and drives every
+nodes as System Processes on one machine — no virtualization — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
 for what arrives, and a **verdict per (transport, contract) pair** — arrived,
@@ -718,15 +718,15 @@ suspects it is hallucinating, it must say so before continuing.
 
 → [Pre-alpha refactor discipline, in full](ADR-0005-pre-alpha-refactor-discipline.md)
 
-### AGPL-3.0-or-later, and no second licence
+### AGPL-3.0-or-later, and no second license
 
-One licence, and no commercial one. A platform that cannot be relicensed cannot
-be closed, and holding the right to grant a second licence is the same right
+One license, and no commercial one. A platform that cannot be relicensed cannot
+be closed, and holding the right to grant a second license is the same right
 that makes closing it possible. Mirth Connect went commercial-only in March
 2025; Xmip gives up the ability to do that.
 
-No contributor licence agreement is needed, because there is no second licence
-to grant. Some buyers will refuse Xmip on licence grounds alone, knowingly.
+No contributor license agreement is needed, because there is no second license
+to grant. Some buyers will refuse Xmip on license grounds alone, knowingly.
 
 → [AGPL-3.0-or-later, in full](ADR-0023-licensing-model.md)
 
@@ -765,7 +765,7 @@ You have a word. This gives you the decision that governs it.
 | authorizer | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
-| Claim, claimable artefact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| Claim, claimable artifact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | configuration | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
@@ -805,7 +805,7 @@ You have a word. This gives you the decision that governs it.
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
-| Licence, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
+| License, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |

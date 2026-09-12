@@ -16,7 +16,7 @@ Accepted.
 xmip-<provider>-<module>-<standard>
 ```
 
-Shortest singular form, a verb where the module does something, the recognised
+Shortest singular form, a verb where the module does something, the recognized
 standard name for a technology. In `architecture.toml` the TOML tree path **is**
 the name — dots become hyphens and nothing else happens.
 
@@ -30,7 +30,7 @@ None of them can name two implementations of the same standard.
 
 A standard usually has several implementations. XSLT has Saxon, libxslt and the .NET engine. JSON Schema has several validators. Under a capability-first pattern `xmip-contract-json-schema` can be claimed exactly once, and the second implementation has nowhere to live.
 
-This matters because Xmip is built for third-party modules. An organisation conforms to Xmip traits and publishes under its own licence and its own support. A naming rule with no publisher slot cannot express that, and the boundary Xmip cares about is precisely the trait.
+This matters because Xmip is built for third-party modules. An organization conforms to Xmip traits and publishes under its own license and its own support. A naming rule with no publisher slot cannot express that, and the boundary Xmip cares about is precisely the trait.
 
 ## Decision
 
@@ -57,7 +57,7 @@ xmip-template    scaffolding for new repositories
 ```
 
 Two repositories sit outside the pattern entirely, because they are not named for what they
-contain: `Xmip`, the platform itself, and `.github`, the organisation defaults.
+contain: `Xmip`, the platform itself, and `.github`, the organization defaults.
 
 This ADR governs module names. It does not govern infrastructure, and forcing infrastructure
 into the pattern produces worse names than leaving it out. `xmip-repo-template` was
@@ -132,7 +132,7 @@ Xmip’s own path model — dot navigation, index navigation and predicates — 
 
 ### The `core` provider is the endorsement boundary
 
-`xmip-core-*` is what Xmip ships, hosts and supports. Anything else names its own provider and carries its own licence, its own support and its own responsibility. No approval, no registration and no negotiation is required to publish one.
+`xmip-core-*` is what Xmip ships, hosts and supports. Anything else names its own provider and carries its own license, its own support and its own responsibility. No approval, no registration and no negotiation is required to publish one.
 
 This is why the rule needs no enforcement mechanism. The name states who stands behind the module.
 
@@ -172,7 +172,7 @@ the token is theirs and Xmip will not use it for anything else.
 
 **Xmip is not affiliated with, endorsed by, or sponsored by Robert Bosch GmbH.** No
 `xmip-bosch-*` repository exists, and Xmip does not create repositories under another
-organisation's name. The token appears in this document as an illustration of the provider
+organization's name. The token appears in this document as an illustration of the provider
 slot and nowhere else — it is deliberately absent from `commonRepositories`, which is the
 list the reconcile script acts on. It will be removed on request from Bosch.
 
