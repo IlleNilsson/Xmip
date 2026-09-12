@@ -103,37 +103,69 @@ Describe 'The environment a roll is started with' {
             $environment = New-XmipPlaygroundEnvironment @least
 
             $environment.XMIP_PLAYGROUND_STRESS | Should -Be 'harsh'
-            $environment.XMIP_ONLINE | Should -Be 'false'
             $environment.XMIP_PLAYGROUND_SNAPSHOT | Should -Be 's'
+            $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
+            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_ONLINE_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_MAX_SECONDS'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_SCENARIOS'
         }
     }
 
-    It 'says the scenarios, the fleet, the internet and the limits the way the roll parses them' {
+    It 'says the tests, the fleet, the online nodes and the limits the way the roll parses them' {
         InModuleScope Xmip {
             $chosen = @{
-                Stress     = 'Brutal'
-                Scenario   = @('PingPong', 'load')
-                Nodes      = 0
-                Online     = $true
-                Duration   = [timespan]::FromMinutes(15)
-                TimeFactor = 9.5e-6
-                LoadBytes  = '512mb'
-                Snapshot   = 's'
-                History    = 'h'
-                Activity   = 'a'
+                Stress      = 'Brutal'
+                Test        = @('roundtrip', 'HeavyLoad')
+                Nodes       = 4
+                OnlineNodes = 2
+                Duration    = [timespan]::FromMinutes(15)
+                TimeFactor  = 9.5e-6
+                LoadBytes   = '512mb'
+                Snapshot    = 's'
+                History     = 'h'
+                Activity    = 'a'
             }
             $environment = New-XmipPlaygroundEnvironment @chosen
 
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'pingpong,load'
-            $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
-            $environment.XMIP_ONLINE | Should -Be 'true'
+            $environment.XMIP_PLAYGROUND_NODES | Should -Be '4'
+            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be '2'
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'
             $environment.XMIP_PLAYGROUND_LOAD_BYTES | Should -Be '512mb'
         }
+    }
+
+    It 'names a test for every scenario the roll drives, and nothing the roll does not' {
+        # The owner's names — HeavyLoad, LowLatency — over the roll's scenario
+        # names. SCENARIOS in roll.rs is the roll's list; the map must cover it
+        # exactly, or a test is unreachable or names nothing.
+        [string] $roll = Get-Content -Raw (Join-Path $script:Root 'test/playground/src/bin/roll.rs')
+        [string] $pattern = '(?s)const SCENARIOS: \[&str; \d+\] = \[(.*?)\];'
+        [string] $list = [regex]::Match($roll, $pattern).Groups[1].Value
+        [string[]] $scenarios = @(
+            [regex]::Matches($list, '"([a-z]+)"') | ForEach-Object { $_.Groups[1].Value }
+        )
+
+        InModuleScope Xmip -Parameters @{ Scenarios = $scenarios } {
+            [string[]] $mapped = @($script:XmipPlaygroundTest.Values | Sort-Object)
+
+            $mapped | Should -Be @($Scenarios | Sort-Object)
+            ConvertTo-XmipPlaygroundScenario -Test 'HeavyLoad', 'LowLatency' |
+                Should -Be @('load', 'furious')
+            ConvertTo-XmipTestName -Scenario 'furious' | Should -Be 'LowLatency'
+            ConvertTo-XmipTestName -Scenario 'fleet' | Should -Be 'fleet'
+            { ConvertTo-XmipPlaygroundScenario -Test 'Typo' } |
+                Should -Throw -ExpectedMessage '*No Playground test*'
+        }
+    }
+
+    It 'refuses more online nodes than nodes' {
+        { Start-XmipTest -Nodes 2 -OnlineNodes 3 -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*exceeds*'
+        { Start-XmipTestNode -Count 1 -OnlineNodes 2 -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*exceeds*'
     }
 
     It 'reads every variable the roll documents' {
@@ -221,6 +253,7 @@ observed_unix_nanos = 1789208338038783900
         $results.Count | Should -Be 3
 
         $pingpong = $results | Where-Object Scenario -eq 'pingpong'
+        $pingpong.Test | Should -Be 'RoundTrip'
         $pingpong.Transport | Should -Be 'tcp'
         $pingpong.Contract | Should -Be 'json'
         $pingpong.Node | Should -Be ''
@@ -233,8 +266,8 @@ observed_unix_nanos = 1789208338038783900
         ($results | Where-Object Scenario -eq 'fleet').Transport | Should -Be ''
     }
 
-    It 'filters by scenario and by node, and names the worst' {
-        @(Get-XmipTestResult -Path $script:Snapshot -Scenario pingpong).Count | Should -Be 1
+    It 'filters by test and by node, and names the worst' {
+        @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 1
         @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
         (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }

@@ -16,10 +16,10 @@
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Scenarios</Label><Width>28</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Tests</Label><Width>28</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Nodes</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Worst</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -29,10 +29,10 @@
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Scenarios.Count -eq 0) { 'all' } else { $_.Scenarios -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Nodes</PropertyName></TableColumnItem>
-              <TableColumnItem><PropertyName>Online</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>OnlineNodes</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Worst</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -78,7 +78,7 @@
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
-          <TableColumnHeader><Label>Scenario</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Test</Label><Width>14</Width></TableColumnHeader>
           <TableColumnHeader><Label>Node</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Transport</Label><Width>22</Width></TableColumnHeader>
           <TableColumnHeader><Label>Contract</Label><Width>14</Width></TableColumnHeader>
@@ -89,7 +89,7 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
-              <TableColumnItem><PropertyName>Scenario</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Test</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Node</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Transport</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Contract</PropertyName></TableColumnItem>

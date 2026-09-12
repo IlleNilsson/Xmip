@@ -29,9 +29,10 @@ function Start-XmipTestNode {
             The level each node runs at; it sets the claim's injected breach
             rate, none at Calm.
 
-        .PARAMETER Online
-            Let the nodes assume a route to the internet (ADR-0045). Off
-            unless said; each node publishes the word in its own health.
+        .PARAMETER OnlineNodes
+            How many of the nodes, counting from the first, may assume a route
+            to the internet (ADR-0045). None unless said; each node publishes
+            the word in its own health.
 
         .PARAMETER Rounds
             Rounds before a node exits on its own. 0, the default, runs until
@@ -53,7 +54,7 @@ function Start-XmipTestNode {
             Return one Xmip.TestNode object per node started.
 
         .EXAMPLE
-            Start-XmipTestNode -Count 5 -Online
+            Start-XmipTestNode -Count 5 -OnlineNodes 2
 
         .EXAMPLE
             Start-XmipTestNode -Name edge -Count 2 -Stress Harsh -Rounds 100 -PassThru
@@ -74,7 +75,8 @@ function Start-XmipTestNode {
         [string] $Stress = 'Calm',
 
         [Parameter()]
-        [switch] $Online,
+        [ValidateRange(0, 200)]
+        [int] $OnlineNodes = 0,
 
         [Parameter()]
         [ValidateRange(0, [int]::MaxValue)]
@@ -103,8 +105,13 @@ function Start-XmipTestNode {
         $Shared = Join-Path -Path $Path -ChildPath 'shared'
     }
 
-    [string] $line = if ($Online) { 'online' } else { 'offline' }
-    [string] $what = "Start $Count $($Stress.ToLowerInvariant()) $line node(s) named $Name-*"
+    if ($OnlineNodes -gt $Count) {
+        Write-Error "-OnlineNodes $OnlineNodes exceeds -Count $Count."
+        return
+    }
+
+    [string] $line = "$OnlineNodes of them online"
+    [string] $what = "Start $Count $($Stress.ToLowerInvariant()) node(s) named $Name-*, $line"
 
     if (-not $PSCmdlet.ShouldProcess("emulated nodes in $Path", $what)) {
         return
@@ -117,6 +124,7 @@ function Start-XmipTestNode {
 
     foreach ($ordinal in $first..($first + $Count - 1)) {
         [string] $nodeName = '{0}-{1:00}' -f $Name, $ordinal
+        [bool] $online = ($ordinal - $first) -lt $OnlineNodes
 
         $launch = @{
             FilePath               = $binary
@@ -132,7 +140,7 @@ function Start-XmipTestNode {
                 '--rounds', "$Rounds"
                 '--snapshot', (Join-Path -Path $Path -ChildPath "$nodeName.toml")
                 '--interval-ms', "$([int] $Interval.TotalMilliseconds)"
-                '--online', $(if ($Online) { 'true' } else { 'false' })
+                '--online', $(if ($online) { 'true' } else { 'false' })
             )
         }
 
