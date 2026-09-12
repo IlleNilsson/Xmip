@@ -33,9 +33,10 @@ Xmip receives data, processes it and sends it on. Every word it uses is chosen
 and explained in [`doc/terminology.md`](doc/terminology.md); these five are
 enough to start:
 
-- A **Stream** is what arrives: bytes from a file, a socket, a queue. Until
-  Xmip has accepted it, it is the sender's; a Stream in flight does not
-  survive a restart, and the sender's protocol says so.
+- A **Stream** is what arrives: bytes from a file, a socket, a queue, a mail
+  box, the rows a SQL statement returns, a device on a bus. Until Xmip has
+  accepted it, it is the sender's; a Stream in flight does not survive a
+  restart, and the sender's protocol says so.
 - A **Message** is what Xmip accepted the Stream as: immutable content with a
   shape. A **Contract** decides the acceptance: the content must be well-formed
   always, and where a Contract is named it must conform to it, or the Stream
