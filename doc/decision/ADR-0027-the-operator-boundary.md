@@ -156,18 +156,10 @@ Cluster and Node figures are **sums over that tree**, not a separate concept and
 not a separate call. That is what makes "throughput for every kind of thing"
 one mechanism rather than five.
 
-The common operational summary keeps those units honest while giving every
-surface the same five headings:
+An unpublished figure is absent, never silently zero. Every surface says the
+six under their own names — there is no Received, Processed or Sent, because
+those are the words this clause exists to keep apart (amendment of 2026-09-14).
 
-```text
-Received   Streams at Receive Locations
-Processed  Journeys in Xmip Processes
-Sent       Messages at Send Locations
-Retrying   work currently awaiting another attempt
-Failed     unsuccessful outcomes in the measurement window
-```
-
-An unpublished figure is absent, never silently zero.
 
 ### 6. The boundary reads snapshots and never counts on demand
 
@@ -293,12 +285,12 @@ changed is the word it uses for the first, not the fact that it knows.
 
 ## Amendment, 2026-09-14: two outcome counts
 
-Clause 5 named four counted things: streams, messages, journeys, bytes.
-`xmip_operate.h` now names six. `XMIP_COUNTED_RETRYING` is the number of work
-items awaiting another attempt; `XMIP_COUNTED_FAILED` is the number of
-outcomes that ended unsuccessfully in the measurement window. Both are counts,
-unit count, and they cross the way the four do: a scope, the thing counted,
-the unit and the window. They do not change the words. What is retrying or
+Clause 5 named four counted things when it was accepted: streams, messages,
+journeys, bytes. It now names six, corrected in place. `XMIP_COUNTED_RETRYING`
+is the number of work items awaiting another attempt; `XMIP_COUNTED_FAILED`
+is the number of outcomes that ended unsuccessfully in the measurement window.
+Both are counts, unit count, and they cross the way the four do: a scope, the
+thing counted, the unit and the window. They do not change the words. What is retrying or
 failed is a Journey or a Message, and the item behind the figure is ADR-0032's
 business, not the figure's. The runtime maps both and publishes neither yet; a
 surface shows an unpublished figure as absent, never as zero.
