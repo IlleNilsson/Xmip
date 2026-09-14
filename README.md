@@ -112,8 +112,8 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Playground -Test RoundTrip -Nodes R1, P1, S1, O1 -OnlineNodes O1
-   Start-XmipWeb -Snapshot .local-work/playground/playground-snapshot.toml
+   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 -OnlineNodes S1
+   Start-XmipWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
    Stop-XmipTest
@@ -123,12 +123,14 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
    board that follows receive, process and send as the cluster moves. Beside
    it are Configuration, the classic tree of the whole cluster, and Topology,
-   the cluster's own communication. `R1`, `P1`, `S1` and `O1` are four
-   simulated node processes, each named for the stage it carries; every node
-   runs every stage. `O1` may use the internet, the others may not.
+   the cluster's own communication. `C1` is the cluster and `R1`, `P1` and
+   `S1` its three simulated node processes. The names are yours and say
+   nothing about a role: what a node does comes from its configuration, and
+   in the Playground every node runs every stage. `S1` may use the internet
+   because you said so; the others may not.
 
-Nothing in Xmip starts on its own. You start a node, a test or a monitor, and
-you stop it. Every command that changes state accepts `-WhatIf`.
+Nothing in Xmip starts on its own. You name a cluster and its nodes, you
+start them when you want to, and you stop them. Every command that changes state accepts `-WhatIf`.
 `Get-Help Start-XmipTest -Full` documents every parameter.
 
 ---
@@ -422,14 +424,16 @@ The Playground runs Xmip's scenarios continuously, at a chosen stress level,
 with as many simulated node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Nodes R1, P1, S1
+Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh -Nodes R1, P1, S1
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest
 ```
 
-A roll is a cluster; `-Cluster` names it, and two rolls with two names are two
-clusters side by side, each with its own web GUI. Use the Playground to
+A roll is a cluster, and you name it with `-Cluster`; nothing names one for
+you. Two rolls with two names are two clusters side by side, each with its own
+web GUI. Omit `-Nodes` and the Playground spawns the node processes the stress
+level needs; in a real environment an orchestrator spawns nodes, never Xmip. Use the Playground to
 practice diagnosis and recovery, to verify an operational change, and to show
 the monitor before Xmip carries organizational data.
 

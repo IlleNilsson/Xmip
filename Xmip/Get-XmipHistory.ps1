@@ -21,8 +21,10 @@ function Get-XmipHistory {
             clause 6).
 
         .PARAMETER Path
-            The history file to read. Defaults to the well-known temp file the
-            playground writes to, so no argument is needed while it rolls.
+            The history file to read, or a directory holding one cluster's
+            history file, `<cluster>-history.toml`. Defaults to the run area,
+            `.local-work/playground` under the repository, so no argument is
+            needed while one cluster rolls.
 
         .PARAMETER Counted
             Limit to one kind — streams, messages or bytes. Omit for all three.
@@ -52,7 +54,11 @@ function Get-XmipHistory {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path -Path (Get-XmipPlaygroundLayout).Area -ChildPath 'playground-history.toml'
+        $Path = (Get-XmipPlaygroundLayout).Area
+    }
+
+    if (Test-Path -LiteralPath $Path -PathType Container) {
+        $Path = Resolve-XmipClusterFile -Directory $Path -Kind 'history'
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {

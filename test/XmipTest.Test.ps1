@@ -227,6 +227,15 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'refuses a roll without a cluster name, since the owner names the cluster' {
+        # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
+        { Start-XmipTest -Suite Playground -Nodes R1 -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*you name it*'
+        (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
+            Should -BeNullOrEmpty
+    }
+
     It 'refuses an online node that was not named a node' {
         { Start-XmipTest -Nodes R1 -OnlineNodes P1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
@@ -342,6 +351,15 @@ observed_unix_nanos = 1789208338038783900
 
     It 'takes the directory the snapshot is in' {
         @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 3
+    }
+
+    It 'refuses to guess between two clusters in one directory' {
+        [string] $two = Join-Path $TestDrive 'two'
+        New-Item -ItemType Directory -Path $two | Out-Null
+        Copy-Item -Path $script:Snapshot -Destination (Join-Path $two 'C1-snapshot.toml')
+        Copy-Item -Path $script:Snapshot -Destination (Join-Path $two 'C2-snapshot.toml')
+        { Get-XmipTestResult -Path $two -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*C1-snapshot.toml, C2-snapshot.toml*'
     }
 
     It 'says where a snapshot should be when there is none' {

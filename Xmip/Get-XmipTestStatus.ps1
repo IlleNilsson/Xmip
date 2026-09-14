@@ -78,7 +78,7 @@ function Get-XmipTestStatus {
                 $record.cluster
             }
             else {
-                'playground'
+                $null
             }
             Id          = $roll.Id
             StartTime   = $roll.StartTime
