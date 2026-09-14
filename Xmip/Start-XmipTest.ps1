@@ -72,6 +72,15 @@ function Start-XmipTest {
             Which of the named nodes may assume a route to the internet
             (ADR-0045), by name. None unless said; each must be in -Nodes.
 
+        .PARAMETER Cluster
+            The cluster this roll is (ADR-0028: a roll emulates a cluster),
+            by name — the scope root is xmip:///<Cluster> and the run
+            publishes to <Cluster>-snapshot.toml beside its history and
+            activity. Playground unless said. Two rolls with two names are
+            two clusters side by side, each with its own web monitor:
+            Start-XmipTest -Cluster SN2 -PassThru | Start-XmipWeb -Url ...
+            (the owner, 2026-09-14).
+
         .PARAMETER LoadBytes
             The load scenario's payload: a number or a size like 512mb or 2gb.
             Omit for a megabyte.
@@ -154,6 +163,10 @@ function Start-XmipTest {
         [string[]] $OnlineNodes = @(),
 
         [Parameter()]
+        [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
+        [string] $Cluster = 'playground',
+
+        [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
         [string] $LoadBytes,
 
@@ -203,9 +216,9 @@ function Start-XmipTest {
     [hashtable] $choice = Get-XmipPlaygroundChoice -Bound $PSBoundParameters
     $choice.Stress = $Stress
     $choice.Test = $Test
-    $choice.Snapshot = Join-Path -Path $Path -ChildPath 'playground-snapshot.toml'
-    $choice.History = Join-Path -Path $Path -ChildPath 'playground-history.toml'
-    $choice.Activity = Join-Path -Path $Path -ChildPath 'playground-activity.toml'
+    $choice.Snapshot = Join-Path -Path $Path -ChildPath "$Cluster-snapshot.toml"
+    $choice.History = Join-Path -Path $Path -ChildPath "$Cluster-history.toml"
+    $choice.Activity = Join-Path -Path $Path -ChildPath "$Cluster-activity.toml"
     [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
 
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
@@ -214,7 +227,8 @@ function Start-XmipTest {
         if ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
-    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online"
+    [string] $as = if ($Cluster -ne 'playground') { " as cluster $Cluster" }
+    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online$as"
 
     if (-not $PSCmdlet.ShouldProcess("the Xmip Playground in $Path", "Start a $what")) {
         return
@@ -250,6 +264,7 @@ function Start-XmipTest {
 
     $record = [ordered]@{
         suite       = $Suite.ToLowerInvariant()
+        cluster     = $Cluster
         pid         = $process.Id
         started     = $process.StartTime.ToString('o')
         stress      = $Stress.ToLowerInvariant()
@@ -278,6 +293,7 @@ function Start-XmipTest {
 
 # The parameters that mean something only to the Playground suite.
 [string[]] $script:XmipPlaygroundOnly = @(
+    'Cluster',
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
     'Nodes', 'OnlineNodes', 'LoadBytes', 'PassThru'
 )
@@ -378,7 +394,7 @@ function Get-XmipPlaygroundChoice {
 
     [hashtable] $chosen = @{}
 
-    foreach ($name in 'Nodes', 'OnlineNodes', 'Duration', 'TimeFactor', 'LoadBytes') {
+    foreach ($name in 'Nodes', 'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes') {
         if ($Bound.ContainsKey($name)) {
             $chosen[$name] = $Bound[$name]
         }
