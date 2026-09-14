@@ -158,8 +158,8 @@ Describe 'The environment a roll is started with' {
             $chosen = @{
                 Stress      = 'Brutal'
                 Test        = @('roundtrip', 'HeavyLoad')
-                Nodes       = @('alpha', 'beta', 'gamma')
-                OnlineNodes = @('alpha', 'gamma')
+                Nodes       = @('R1', 'P1', 'S1')
+                OnlineNodes = @('R1', 'S1')
                 Duration    = [timespan]::FromMinutes(15)
                 TimeFactor  = 9.5e-6
                 LoadBytes   = '512mb'
@@ -170,8 +170,8 @@ Describe 'The environment a roll is started with' {
             $environment = New-XmipPlaygroundEnvironment @chosen
 
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'pingpong,load'
-            $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'alpha,beta,gamma'
-            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'alpha,gamma'
+            $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'R1,P1,S1'
+            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'R1,S1'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'
@@ -188,14 +188,14 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
 
-            { Assert-XmipNodeName -Nodes 'alpha', 'Alpha' } |
+            { Assert-XmipNodeName -Nodes 'R1', 'r1' } |
                 Should -Throw -ExpectedMessage '*named once*'
-            { Assert-XmipNodeName -Nodes 'alpha' -OnlineNodes 'beta' } |
+            { Assert-XmipNodeName -Nodes 'R1' -OnlineNodes 'P1' } |
                 Should -Throw -ExpectedMessage '*-Nodes does not*'
             { Assert-XmipNodeName -Nodes '1st' } |
                 Should -Throw -ExpectedMessage '*starting with a letter*'
-            { Assert-XmipNodeName -Nodes 'alpha' } | Should -Not -Throw
-            { Assert-XmipNodeName -Nodes 'alpha', 'beta-2' -OnlineNodes 'beta-2' } |
+            { Assert-XmipNodeName -Nodes 'R1' } | Should -Not -Throw
+            { Assert-XmipNodeName -Nodes 'R1', 'P1-2' -OnlineNodes 'P1-2' } |
                 Should -Not -Throw
         }
     }
@@ -225,11 +225,11 @@ Describe 'The environment a roll is started with' {
     }
 
     It 'refuses an online node that was not named a node' {
-        { Start-XmipTest -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
+        { Start-XmipTest -Nodes R1 -OnlineNodes P1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
-        { Start-XmipTest -OnlineNodes alpha -ErrorAction Stop } |
+        { Start-XmipTest -OnlineNodes R1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*name them all*'
-        { Start-XmipTestNode -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
+        { Start-XmipTestNode -Nodes R1 -OnlineNodes P1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
     }
 

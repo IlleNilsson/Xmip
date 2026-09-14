@@ -63,7 +63,7 @@ function Start-XmipTest {
 
         .PARAMETER Nodes
             The nodes to simulate, by name — one process each, so
-            -Nodes alpha, beta, gamma is three node processes called that.
+            -Nodes R1, P1, S1 is three node processes called that.
             An empty list, @(), is no fleet at any level. Omit for the level's
             own numbered fleet: one, three, ten or forty, scaled to the
             machine's headroom.
