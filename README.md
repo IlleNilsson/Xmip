@@ -1,51 +1,83 @@
 # Xmip
 
-A messaging and integration platform. On-premises first, cloud-installable.
-Written in Rust, built around immutable Streams, immutable Messages,
-long-running Journeys, modular capabilities and Contracts. Licensed
-AGPL-3.0-or-later.
+**Accountable messaging and integration, under your control.**
 
-Xmip runs on Windows, Linux and macOS: a single server, an on-premises
-cluster, a cloud node or a small device. It operates without internet access.
+Xmip is an on-premises-first, cloud-installable messaging and integration
+platform for organizations that must connect systems reliably without making
+a cloud provider their control plane.
 
-This repository is the root of the estate: the manifest that names every Xmip
-repository, the architecture and decision records, and the PowerShell module
-that maintains them. The module repositories are mounted under `module/` as
-git submodules.
+Xmip accepts data, validates what it has accepted, records responsibility for
+it, processes it, and attempts every configured delivery. A Message does not
+disappear when something goes wrong: its Journey, evidence and outcome remain
+available so an operator can see what happened and decide what happens next.
 
-| Reader | Section |
+Written in Rust and licensed AGPL-3.0-or-later, Xmip runs on Windows, Linux
+and macOS — from one server or edge device to an on-premises cluster or nodes
+in a cloud of your choice. It operates without internet access.
+
+## Why Xmip
+
+| Need | Xmip's answer |
 | --- | --- |
-| New to Xmip | [Beginners](#beginners) |
-| Running Xmip | [Operators](#operators) |
-| Building Xmip or a module for it | [Developers](#developers) |
-| Evaluating Xmip for an organization | [Chief Information Officers](#chief-information-officers) |
-| Responsible for the engineering | [Chief Engineering Officers](#chief-engineering-officers) |
+| Keep data and operations under organizational control | On-premises first, air-gap capable and cloud-installable, with no hosted control plane. |
+| Know what happened to every accepted Message | Durable Messages, checkpointed Journeys, explicit outcomes and a persistent Audit. |
+| Find integration failures without archaeology | One operational model: the worst scope, its Status and its evidence, on every surface. |
+| Connect old, current and specialist systems | Contracts, transports and processing capabilities are independent Modules behind a stable C ABI. |
+| Change the platform without replacing it | Small capability boundaries, explicit dependencies and one repository per Module. |
+| Avoid another opaque integration black box | Source-available implementation, recorded architectural decisions and machine-checked rules. |
+
+Xmip deliberately carries forward the integration-server concepts that worked
+— Receive Locations, Xmip Processes and Send Locations — while correcting the
+failure modes its decision record names.
+
+This repository is the root of the Xmip estate: the manifest that names every
+Xmip repository, the architecture models, the decision records, the
+governance, and the PowerShell module that maintains them. Module
+repositories are mounted under `module/` as git submodules.
+
+| Reader | Start here |
+| --- | --- |
+| New to Xmip | [Beginner](#beginner) |
+| Responsible for the engineering | [Chief Engineering Officer](#chief-engineering-officer) |
+| Evaluating Xmip for an organization | [Chief Information Officer](#chief-information-officer) |
+| Running Xmip | [Operator](#operator) |
+| Building Xmip or a Module | [Developer](#developer) |
 
 ---
 
-## Beginners
+## Beginner
 
-Xmip receives data, processes it and sends it on. The vocabulary is defined in
-[`doc/terminology.md`](doc/terminology.md). Five terms are enough to begin.
+Think of Xmip as a post office for systems.
+
+It accepts Streams from applications, files, queues, databases, mailboxes and
+devices. It decides whether each arrival is acceptable, turns accepted content
+into a Message, and gives that Message one or more Journeys. Each Journey can
+process the Message and deliver it to its destination. If a delivery cannot
+complete, Xmip keeps the state and reports the reason instead of treating a
+transport acknowledgement as a successful application delivery.
+
+### Six terms to begin with
 
 - **Stream.** What arrives: bytes from a file, a socket, a queue, a mailbox,
   the rows a SQL statement returns, a device on a bus. A Stream belongs to the
   sender until Xmip accepts it.
-- **Message.** What Xmip accepts a Stream as: immutable content with a shape.
-  A **Contract** decides acceptance. Content must be well-formed, and where a
-  Contract is named it must conform; otherwise the Stream is refused and the
-  sender is told where and why. An accepted Message is written to disk before
-  anything acts on it and is never lost.
-- **Journey.** The path a Message takes through Xmip. A Journey checkpoints
-  and survives a restart.
-- **Receive, Process, Send.** The three stages of that path. The monitor is
-  organized around them.
-- **Status.** Every scope has one: Fine, Working, Stressed, Holding or Done. A
-  Status names what an operator can do about it, and the worst Status beneath
-  a scope says where to look.
+- **Contract.** The rules for acceptance. Content must be well-formed and,
+  where a Contract is named, conform to it. A refused Stream remains the
+  sender's responsibility, and the refusal says where and why.
+- **Message.** Immutable content Xmip has accepted. An accepted Message is
+  written to disk before anything acts on it and is never lost.
+- **Journey.** One durable line of work for a Message. It checkpoints and
+  survives a restart.
+- **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
+  Processes perform work, and Send Locations deliver departures. Every
+  surface follows the same three stages and names the exact Location or
+  Process.
+- **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
+  Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
+  needs attention, and it carries that leaf and its evidence, so the worst
+  Status beneath a scope says where to look.
 
-Nothing in Xmip starts on its own. You start a node, a test or a monitor, and
-you stop it.
+The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
 ### First run
 
@@ -63,11 +95,11 @@ you stop it.
    Every command below runs inside `pwsh` and is identical on all three
    platforms.
 
-2. Clone the estate and load the module.
+2. Clone the estate and load its PowerShell module.
 
    ```powershell
    git clone --recursive https://github.com/IlleNilsson/Xmip.git
-   cd Xmip
+   Set-Location -Path Xmip
    Import-Module -Name ./Xmip
    Install-XmipModule
    Install-XmipPrerequisite -Role developer -Install
@@ -76,11 +108,11 @@ you stop it.
    `Install-XmipModule` links the module into your user module path. In any
    later shell, `Import-Module -Name Xmip` is sufficient.
 
-3. Run the Playground, Xmip's own integration test. It needs no network and no
-   other software.
+3. Start the Playground and its monitor. The Playground is Xmip's own
+   integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Playground -Test RoundTrip -Nodes alpha, beta -OnlineNodes alpha
+   Start-XmipTest -Suite Playground -Test RoundTrip -Nodes R1, P1, S1, O1 -OnlineNodes O1
    Start-XmipWeb -Snapshot .local-work/playground/playground-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -88,23 +120,247 @@ you stop it.
    Stop-XmipWeb
    ```
 
-   The monitor at http://127.0.0.1:5087 shows the three stages, the cluster
-   Status and every node. `alpha` and `beta` are two simulated node processes;
-   `alpha` may use the internet, `beta` may not.
+   The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
+   board that follows receive, process and send as the cluster moves. Beside
+   it are Configuration, the classic tree of the whole cluster, and Topology,
+   the cluster's own communication. `R1`, `P1`, `S1` and `O1` are four
+   simulated node processes, each named for the stage it carries; every node
+   runs every stage. `O1` may use the internet, the others may not.
 
-Every command that changes state accepts `-WhatIf`. `Get-Help Start-XmipTest
--Full` documents every parameter.
+Nothing in Xmip starts on its own. You start a node, a test or a monitor, and
+you stop it. Every command that changes state accepts `-WhatIf`.
+`Get-Help Start-XmipTest -Full` documents every parameter.
 
 ---
 
-## Operators
+## Chief Engineering Officer
 
-### Platforms
+Xmip is engineered around one promise: after it accepts responsibility for a
+Message, the system can say where that Message went, what acted on it,
+whether delivery completed, and why work stopped when it did not.
+
+### Architectural choices that serve that promise
+
+| Engineering concern | Xmip's choice | Consequence |
+| --- | --- | --- |
+| Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
+| Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
+| Extensibility | A versioned C ABI and independently loadable Modules ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)). | A Module may be written in any language that can implement the ABI, and kept in its own repository. |
+| Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
+| Operational consistency | The `xmip` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
+| Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
+| Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Edge, server, cluster and cloud nodes are one product. |
+| Architectural memory | Accepted decision records and executable governance tests. | Tradeoffs survive staff and assistant turnover. |
+
+### Message ownership and failure boundaries
+
+A Stream is not a Message merely because bytes arrived. Xmip accepts only
+well-formed content and, where configured, content conforming to its Contract.
+Acceptance transfers responsibility to Xmip; durability therefore precedes
+execution. Routing creates Journeys; assignment and transformation create new
+immutable Message generations.
+
+A failure is persisted with the Message state, the Journey position, its
+classification, its evidence and the identities involved. An accepted Message
+that no Subscription matched goes to the Dead Message Queue; a failed Journey
+stays a failed Journey. The two are not collapsed into one dead-letter queue,
+because their recovery actions differ.
+
+### Boundaries and scale
+
+The architecture manifest, [`architecture.toml`](architecture.toml), is the
+estate's dependency graph and the only place its repositories are counted.
+Foundation defines what Xmip is; Capabilities define what it does; Technology
+repositories implement those capabilities; Operations run and govern the
+system; Platform repositories provide runtime-wide services. One repository
+per module and per technology: a module is mounted at
+`module/<domain>/<leaf>`, a technology inside its capability. Dependency
+rules are stated in the manifest and enforced by a test: foundation never
+depends on a technology, a technology may depend on its capability,
+operations consume public contracts only
+([repository-model.md](doc/architecture/repository-model.md)).
+
+Receive and Send own orchestration, ports and locations. Direction-neutral
+Transport Modules move Streams. Message Modules own representation. Contract
+Modules own acceptance rules. Logic Modules own method and operation
+semantics. A Handler is a runtime role, not a competing repository family.
+
+### Governance and verification
+
+The decision records, indexed by subject, are the memory of the estate. A
+change that contradicts one is a new record or an amendment. Rust and
+PowerShell style rules are gates in the test suite; length limits are
+recommendations whose breach requires prior agreement and a recorded reason.
+One command lands a change across every affected repository in dependency
+order and refuses when a gate fails.
+
+The Playground ([ADR-0028](doc/decision/ADR-0028-the-xmip-playground.md)) is
+an integration test over time: every transport by every contract, round after
+round, with injected faults, at four stress levels, with a fleet of node
+processes contending over real files, publishing the snapshots the monitors
+read. The estate's suite holds a test for every defect that has reached an
+operator's console.
+
+The design record starts at:
+
+- [`doc/architecture/runtime-model.md`](doc/architecture/runtime-model.md)
+- [`doc/architecture/module-model.md`](doc/architecture/module-model.md)
+- [`doc/architecture/repository-model.md`](doc/architecture/repository-model.md)
+- [`doc/architecture/deployment-model.md`](doc/architecture/deployment-model.md)
+- [`doc/architecture/observability-model.md`](doc/architecture/observability-model.md)
+- [`doc/decision/README.md`](doc/decision/README.md)
+
+### Current maturity
+
+Xmip has no stable release. `main` is the Continuum, the evolving state of the
+project. A Linear release is a stabilized, reproducible, versioned line cut
+from it; the first has not been cut
+([release-model.md](doc/governance/release-model.md)). The runtime, the
+operator surfaces and the Playground are operational; most technology
+repositories are scaffolded and not yet written. The manifest records that
+distinction for every repository, and it belongs in every technical
+evaluation. [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
+lists what is undecided, in order, with options and a recommendation for
+each. A visual designer is not built; the Monitor view is the first operator
+screen, with the Configuration tree and the Topology beside it.
+
+*Note.* The designs Xmip departs from are named in the decision records where
+the departure was decided.
+[`doc/planning/market-position.md`](doc/planning/market-position.md) holds
+the comparison.
+
+---
+
+## Chief Information Officer
+
+Xmip is for organizations whose integration problem is not simply moving
+data, but keeping control and accountability while systems, partners,
+regulations and deployment models change.
+
+### The organizational case
+
+- **Control.** Xmip runs on infrastructure you choose. It has no hosted
+  control plane and operates in an air-gapped environment. A node reaches out
+  only where its configuration permits, and the software reports nothing to
+  anyone.
+- **Sovereignty.** Data, configuration, audit and operational evidence stay
+  within the boundary your organization controls.
+- **Continuity.** Accepted Messages are durable and Journeys survive
+  restarts. The platform is designed around recovery, not optimistic
+  delivery.
+- **Accountability.** Audit records responsibility and outcomes; monitoring
+  shows the current state. They are separate, so a live dashboard is never
+  mistaken for the historical record.
+- **Portability.** Windows, Linux and macOS are equal targets. A cloud node
+  is an option, not a dependency.
+- **Inspectable architecture.** Source and decisions are available for
+  security, procurement and engineering review.
+
+### Where Xmip fits
+
+Xmip targets estates that would otherwise evaluate an integration server, an
+enterprise service bus or a hosted integration platform, and need an
+on-premises or sovereign deployment choice. Existing integration knowledge
+stays useful because familiar responsibilities survive, while Xmip removes
+the shared-database bottleneck and separates transport, content, contracts
+and operation semantics.
+
+### Security and assurance
+
+Three security profiles, `standard`, `enterprise` and `regulated`, set
+identity isolation and whether the runtime stops rather than operate
+unobserved ([deployment-model.md](doc/architecture/deployment-model.md),
+section 4). Identity is verified per protocol against the published
+standards; authorization follows it; Receive and Send identities are
+configured independently, because Xmip is the server on receive and the
+client on send. Certificates are the first mechanism built; they are
+provisioned by Let's Encrypt at a public edge and by your own authority
+elsewhere. Xmip is developed in Sweden and is source-available, which is
+relevant where data sovereignty is regulated. It implements the AS4 and
+Peppol protocols that European e-invoicing mandates require from 2026.
+
+### Licensing
+
+Xmip is AGPL-3.0-or-later. There is no commercial license, no dual license
+and no contributor agreement that could enable one
+([ADR-0023](doc/decision/ADR-0023-licensing-model.md)). The platform cannot
+be relicensed or withdrawn. Modules written against the C ABI are your own
+work under your own terms. Organizations whose policy excludes AGPL will find
+that policy engaged; the record acknowledges this.
+
+### A responsible adoption path
+
+1. **Prove the operational model.** Run the Playground and inspect failure,
+   recovery and monitoring behavior.
+2. **Select one bounded integration.** Prefer a flow with a known Contract,
+   clear ownership and a measurable delivery outcome.
+3. **Run beside the incumbent.** Compare acceptance, throughput, evidence and
+   recovery without making the pilot a migration event.
+4. **Review the security profile.** Involve security, operations and data
+   owners before moving responsibility for production Messages.
+5. **Adopt a Linear release when one exists.** Until then, treat the
+   Continuum as an engineering evaluation, not a supported product.
+
+*Note.* Xmip is designed to succeed the previous generation of integration
+servers, whose vendors now offer hosted services only. Its operator
+vocabulary is deliberately theirs.
+[`doc/planning/market-position.md`](doc/planning/market-position.md) holds
+the comparison, including their lifecycles, sovereignty pressure, e-invoicing
+and healthcare integration; it is planning evidence, not due diligence.
+
+---
+
+## Operator
+
+Xmip gives an operator one job: keep accepted Messages moving, and know why
+they are not moving when work stops. The operating model answers three
+questions quickly: what is affected, what is Xmip doing about it, and what
+evidence explains the current condition.
+
+### One operational model
+
+Every leaf has a mood: Fine, Paused, Working, Stressed, Exhausted or Done
+([ADR-0041](doc/decision/ADR-0041-health-is-a-mood-and-does-not-propagate.md)).
+A scope above a leaf is Holding when a leaf beneath it needs attention, and
+Holding is never shown alone; it carries the worst affected leaf and that
+leaf's evidence. An operator drills from the cluster into nodes, stages,
+services and locations without asking the message path to count itself.
+
+Four surfaces read one operator boundary
+([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
+[ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)) through one
+shared library, so they cannot disagree.
+
+| Surface | Best use |
+| --- | --- |
+| `xmip` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
+| PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
+| Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
+| Desktop | The same on one machine. Windows, Linux and macOS. |
+
+Both GUIs show three views: Monitor, the default, the board that follows
+receive, process and send as the cluster moves; Configuration, the classic
+tree of the whole cluster, held still; and Topology, the cluster's own
+communication. From any row the drill-down goes through the configuration
+that declared the scope and ends at that configuration
+([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
+amendment 2026-09-14).
+
+A role comes from a directory, never from Xmip: the group membership a
+remoting session proved, or the account behind an SSH key. An Observer
+watches; an Operator also pauses, resumes and configures; a Developer also
+opens the specific point's configuration from its scope
+([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
+Observation reads snapshots the runtime publishes and never enters the
+message path. Audit is the durable record of actions and outcomes; a live
+monitor is not a replacement for it.
+
+### Platforms and installation
 
 Xmip supports current platforms only
-([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux, Windows
-and macOS are equal: the runtime, the `xmip` command line, the PowerShell
-module and the web monitor run on all three.
+([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux,
+Windows and macOS are equal: the runtime, the `xmip` command line, the
+PowerShell module and the monitors run on all three.
 
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
@@ -119,24 +375,7 @@ module and the web monitor run on all three.
 administrative rights it prints the command and stops. A prerequisite below
 its floor fails the command.
 
-### Surfaces
-
-Four surfaces read one operator boundary
-([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
-[ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)), so they cannot
-disagree.
-
-| Surface | Purpose |
-| --- | --- |
-| `xmip` | Command line. `xmip health <scope>`; `--json` for one document; `--follow` for a stream of changes over SSH or a pipe. |
-| PowerShell module | The same answers as objects on the pipeline. |
-| Web monitor | Read-only. Serves many operators. |
-| Desktop | Monitors and configures. Windows, Linux and macOS. |
-
-Observation reads snapshots the runtime publishes and never enters the message
-path. Audit is the durable record.
-
-### Configuration
+### Configuration and control
 
 Configuration is TOML on disk; JSON is used only on the wire
 ([ADR-0031](doc/decision/ADR-0031-configuration-is-toml-json-is-transport.md)).
@@ -145,11 +384,37 @@ Configuration is TOML on disk; JSON is used only on the wire
 A node is offline unless its configuration says `online = true`
 ([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
 may reach the internet for duties that require it, such as certificate
-provisioning at a public edge.
+provisioning at a public edge. Online access is a declared choice, never a
+side effect of deployment.
+
+The `xmip` command line answers `xmip health <scope>` and `xmip validate
+<file>`; the PowerShell module answers the same as objects. Pause and resume
+are the two acts the operator boundary carries, and the only two: the thing
+that watches must not be able to stop the thing it watches
+([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). Their shape on
+every surface, `xmip pause`, `xmip resume`, `Suspend-XmipScope` and
+`Resume-XmipScope` with `-WhatIf`, is recorded in ADR-0052 and queued; start,
+stop and restart of a scope were declined.
 
 A security profile, `standard`, `enterprise` or `regulated`, sets identity
 isolation and whether the runtime fails closed
 ([deployment-model.md](doc/architecture/deployment-model.md), section 4).
+
+### Working an incident
+
+1. Start at the cluster Status and read its evidence.
+2. Drill into the worst node, stage and leaf scope.
+3. Tell a refused Stream, an unmatched Message and a failed Journey apart;
+   each has a different owner and a different recovery path.
+4. Read the Audit and the persisted failure state before changing
+   configuration.
+5. Pause or resume through the operator boundary, then confirm the new
+   published state.
+
+An accepted Message that no Subscription matched is in the Dead Message
+Queue and can be republished once the Subscription is corrected. A failed
+Journey keeps its position and resumes from its checkpoint. A refused Stream
+never became a Message and remains the sender's responsibility.
 
 ### Rehearsal
 
@@ -157,19 +422,29 @@ The Playground runs Xmip's scenarios continuously, at a chosen stress level,
 with as many simulated node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Nodes n1, n2, n3
+Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Nodes R1, P1, S1
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest
 ```
 
+A roll is a cluster; `-Cluster` names it, and two rolls with two names are two
+clusters side by side, each with its own web GUI. Use the Playground to
+practice diagnosis and recovery, to verify an operational change, and to show
+the monitor before Xmip carries organizational data.
+
 ---
 
-## Developers
+## Developer
+
+Xmip is an estate of deliberately small Modules around a stable boundary.
+The fastest way to contribute is to learn the nouns first, find the accepted
+decision that owns the subject, and change the smallest responsible
+repository.
 
 ### Setup
 
-Complete the beginners' steps, then:
+Complete the [first run](#first-run), then:
 
 ```powershell
 git submodule update --init --recursive
@@ -177,7 +452,7 @@ git config push.recurseSubmodules check
 ```
 
 A submodule is a commit, not a branch. [CONTRIBUTING.md](CONTRIBUTING.md)
-explains the consequences.
+explains how a Module change lands before the superproject updates its pin.
 
 ### Build, test, land
 
@@ -242,6 +517,19 @@ the reports (`module/operation/report`) and record identifiers
 (`module/platform/persist`). `doc/planning/` is working notes and not
 authoritative.
 
+### Adding or changing a capability
+
+1. Search [`doc/decision/README.md`](doc/decision/README.md) for the subject.
+2. Read the architecture model that owns it and
+   [`doc/planning/open-problems.md`](doc/planning/open-problems.md).
+3. Do not contradict an accepted decision; propose an amendment or a new
+   record.
+4. Put shared behavior in the capability that owns it, never in each
+   technology ([ADR-0044](doc/decision/ADR-0044-a-technology-shares-through-its-capability.md)).
+5. Keep dependencies explicit and within the direction rules of
+   `architecture.toml`.
+6. Add the test for the behavior or the defect before landing the change.
+
 ### The estate module
 
 Every command accepts `-WhatIf`. Reporting is the default.
@@ -258,7 +546,7 @@ Every command accepts `-WhatIf`. Reporting is the default.
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: the Playground or the estate's Pester suite. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. |
-| `Start-XmipWeb`, `Get-XmipWeb`, `Stop-XmipWeb` | The web monitor. |
+| `Start-XmipWeb`, `Get-XmipWeb`, `Stop-XmipWeb` | The web GUI, detached; it opens no browser. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
 
 ```powershell
@@ -281,113 +569,6 @@ change
 A module is a crate against a C ABI
 ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)) and may be written in
 any language that can implement one.
-
----
-
-## Chief Information Officers
-
-**What Xmip is.** One platform that moves data between the systems your
-organization runs and the partners it deals with: files, queues, sockets,
-databases, cloud services, industrial, healthcare and e-invoicing protocols.
-It runs on your own machines, a single server, an on-premises cluster, a node
-in a cloud of your choice or a device at the edge, on Windows, Linux or macOS,
-with the same behavior on each.
-
-**What remains under your control.** Your data stays on your infrastructure.
-Xmip installs and operates without internet access; a node reaches out only
-where its configuration permits, and the software reports nothing to anyone.
-Every accepted message is written to disk before it is processed, and no
-accepted message is lost. Every action is recorded in an audit that is
-separate from live monitoring.
-
-**Licensing.** Xmip is AGPL-3.0-or-later. There is no commercial license, no
-dual license and no contributor agreement that could enable one
-([ADR-0023](doc/decision/ADR-0023-licensing-model.md)). The platform cannot be
-relicensed or withdrawn. Modules written against the C ABI are your own work
-under your own terms. Organizations whose policy excludes AGPL will find that
-policy engaged; the record acknowledges this.
-
-**Assurance.** Three security profiles, `standard`, `enterprise` and
-`regulated`, determine identity isolation and whether the runtime stops rather
-than operate unobserved. Identity is verified per protocol against the
-published standards. Certificates are the first mechanism built; they are
-provisioned by Let's Encrypt at a public edge and by your own authority
-elsewhere. Xmip is developed in Sweden and is source-available, which is
-relevant where data sovereignty is regulated. It implements the AS4 and Peppol
-protocols that European e-invoicing mandates require from 2026.
-
-**Maturity.** Xmip has no stable release. `main` is the Continuum, the
-evolving state of the project. A Linear release is a stabilized, reproducible,
-versioned line cut from it; the first has not been cut
-([release-model.md](doc/governance/release-model.md)).
-[`architecture.toml`](architecture.toml) declares every repository and the
-maturity of each — three hundred and forty-three on 2026-09-14, most of them
-protocol, contract and archive technologies scaffolded and not yet written —
-and is the only place that count is kept. The runtime, the operator surfaces
-and the Playground are operational.
-
-*Note.* Xmip is designed to succeed the previous generation of integration
-servers, whose vendors now offer hosted services only. Its operator vocabulary
-is deliberately theirs.
-[`doc/planning/market-position.md`](doc/planning/market-position.md) holds
-the comparison.
-
----
-
-## Chief Engineering Officers
-
-**Architecture.**
-
-- The message path is Rust throughout. Concurrency, throughput and defect cost
-  are decided there.
-- The module boundary is a C ABI
-  ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)). A module implements
-  a versioned table the runtime calls. Modules may be written in any language
-  that implements the ABI and kept in their own repositories.
-- Durability precedes execution. A Stream is accepted only when well-formed
-  and, where a Contract is named, conformant
-  ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)).
-  An accepted Message is on disk before anything acts on it; a Journey
-  checkpoints and survives a restart
-  ([runtime-model.md](doc/architecture/runtime-model.md)).
-- One repository per module and per technology, in five domains: a module is
-  mounted at `module/<domain>/<leaf>`, a technology inside its capability.
-  Dependency rules are stated in the manifest and
-  enforced by a test: foundation never depends on a technology, a technology
-  may depend on its capability, operations consume public contracts only
-  ([repository-model.md](doc/architecture/repository-model.md)).
-- Four operator surfaces read one published snapshot through one shared
-  library ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
-  [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)).
-  Observation never queries the message path
-  ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)).
-- Current platforms only: stable Rust, .NET 11, PowerShell 7.6.5 Core
-  ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)).
-
-**Governance.** Fifty-two decision records, indexed by subject, are the memory
-of the estate. A change that contradicts one is a new record or an amendment.
-Rust and PowerShell style rules are gates in the test suite; length limits are
-recommendations whose breach requires prior agreement and a recorded reason.
-One command lands a change across every affected repository in dependency
-order and refuses when a gate fails.
-
-**Verification.** The Playground
-([ADR-0028](doc/decision/ADR-0028-the-xmip-playground.md)) is an integration
-test over time: every transport by every contract, round after round, with
-injected faults, at four stress levels, with a fleet of node processes
-contending over real files, publishing the snapshots the monitors read. The
-estate's suite holds a test for every defect that has reached an operator's
-console.
-
-**Open items.**
-[`doc/planning/open-problems.md`](doc/planning/open-problems.md) lists what is
-undecided, in order, with options and a recommendation for each. A visual
-designer is not built; the monitor is the first operator screen.
-
-*Note.* The designs Xmip departs from are named in the decision records where
-the departure was decided.
-[`doc/planning/market-position.md`](doc/planning/market-position.md) holds
-the comparison.
 
 ---
 
