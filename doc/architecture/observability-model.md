@@ -82,11 +82,10 @@ interaction.
 
 ## 5. Performance
 
-**Audit must not become the execution bottleneck.** Normal execution emits a
-small envelope onto a bounded asynchronous channel and `xmip-core-audit`
-persists independently of the action that produced it; what happens when
-capacity is exhausted, and which conditions are never suppressible, is in
-`module/operation/audit/doc/audit-record.md`.
+**Audit must not become the execution bottleneck.** How `xmip-core-audit`
+stays off the path — the envelope, the channel, what happens when capacity is
+exhausted and which conditions are never suppressible — is
+`module/operation/audit/doc/audit-record.md`, *Performance*.
 
 ## 6. Observation
 
@@ -125,9 +124,9 @@ the moment anything below is not, the parent is displeased and reports the rollu
 mood **`Holding`** — drill in. So a parent is only ever `Fine` or `Holding`; the
 leaf carries the real mood, and an operator drills down through the `Holding`
 scopes to the one that is costing them. `Fine` up the tree still means every leaf
-beneath is `Fine`. Every mood drills down to the evidence behind it. (The GUIs
-paint Fine green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
-Holding orange; the color is the surface's, the mood is the model's.)
+beneath is `Fine`. Every mood drills down to the evidence behind it. The color
+a mood is painted is the surface's, not the model's; the GUIs' mapping is
+recorded in ADR-0041 and lives with `xmip-core-gui`.
 
 **Observation is deliberately near-real-time, not synchronous.** Receive,
 Process and Send execution must never wait for it. It consumes lightweight

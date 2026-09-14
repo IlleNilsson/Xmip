@@ -89,9 +89,9 @@ runtime contracts. **Purpose compilation is a packaging strategy, not an
 alternative to modularity** — and a small device must never be forced to carry
 the full server footprint to get correct semantics.
 
-Two Rust rules that belong here rather than in a style guide: stages pass
-**owned** work to each other rather than sharing mutable message state, and
-blocking Handler work must never block a latency-sensitive runtime loop.
+The Rust rules a purpose-compiled runtime still obeys — stages pass owned
+work, blocking Handler work never blocks a latency-sensitive loop — are
+`module-model.md` section 12, and hold on every build.
 
 ## 3. Runtime roles
 

@@ -4,7 +4,7 @@ Xmip is a centrally governed architecture and software project.
 
 ## Authority
 
-The authoritative architecture is defined by the current architecture specification, `architecture.toml`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
+The authoritative architecture is defined by the five architecture models in `doc/architecture/`, the decision records in `doc/decision/`, `architecture.toml`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
 
 ## Decision process
 

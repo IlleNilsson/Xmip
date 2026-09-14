@@ -22,7 +22,7 @@ Repository placement is governed by [`architecture.toml`](architecture.toml). Ne
 
 Keep pull requests focused. Architecture changes and implementation changes should not be mixed unless the implementation directly proves the architecture change.
 
-Changes to the architecture baseline must update all authoritative representations that are affected, including the architecture specification and manifest.
+Changes to the architecture baseline must update all authoritative representations that are affected — the architecture models in `doc/architecture/`, the decision records and the manifest — together, in one change (`doc/governance/architectural-change-permission.md`).
 
 ## PowerShell tooling
 
