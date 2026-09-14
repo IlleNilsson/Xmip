@@ -193,15 +193,23 @@ The owner's rulings of the same evening, on what the surfaces show and from
 where. Each is a consequence of clause 1, one model every surface renders,
 applied to the GUI as it stands.
 
-1. **Three views: Cluster, Monitor and Topology.** The owner named them
-   later the same evening, and the naming supersedes the first draft of this
-   ruling, which had called the third view a static drill-down. **Monitor**
-   is the default view, the board that follows receive → process → send and
-   moves as the cluster moves. **Cluster** is the static drill-down — from
-   Cluster to Node to Receive Location to Xmip Process to Send Location —
-   that holds still so an operator can focus on the problem at hand, and it
-   reaches the configuration behind every scope and the binaries a node
-   runs (the modules loaded, ADR-0025). **Topology** is the overview of the
+1. **Three views: Configuration, Monitor and Topology.** The owner named
+   them later the same evening — first as Cluster, Monitor and Topology,
+   then, at the end of the night and finally, as *the classic Configuration
+   (tree), Monitor as it was but better, Topology (new)* — and the naming
+   supersedes the first draft of this ruling, which had called the third
+   view a static drill-down. **Monitor** is the default view, the board
+   that follows receive → process → send and moves as the cluster moves.
+   **Configuration** is the classic tree: the whole cluster open — Cluster,
+   Node, receive → process → send, every Receive Location, Xmip Process and
+   Send Location, the technology beneath — in configuration order, holding
+   still so an operator can focus on the problem at hand; from every row it
+   reaches the configuration behind the scope and the binaries a node runs
+   (the modules loaded, ADR-0025). Landed the same night as a first cut in
+   the web GUI, `/configuration`, first in the top bar: the tree, every
+   branch open, each row linking to the monitor's drill at that scope; what
+   the surface does not publish, the declaration and the binaries, is
+   queued with the native boundary's topology. **Topology** is the overview of the
    cluster, its own communication drawn (ruling 3), and from it an operator
    navigates to another Xmip cluster when allowed to. The shape of all three
    is ADR-0027's scope tree, which the boundary already publishes.
@@ -215,7 +223,12 @@ applied to the GUI as it stands.
    -OnlineNodes O1 -SuiteName SN2`. The owner withdrew the name the same
    evening — *my naming was wrong here* — since `-Suite` is already
    Playground or Estate and the thing named is a cluster: the parameter is
-   **`-Cluster SN2`**, true to ADR-0028, and is queued with the rest.
+   **`-Cluster SN2`**, true to ADR-0028. Landed the same night: a roll's
+   scope root is `xmip:///<cluster>`, its nodes hang under it, it publishes
+   to `<cluster>-snapshot.toml` and keeps its own scratch, so two rolls are
+   two clusters side by side, each with its own web monitor
+   (`Start-XmipTest -Cluster SN2 -PassThru | Start-XmipWeb -Url ...`).
+   One page navigating between them is what stays queued.
    What the playground topology draws is what the owner is after, in his
    words: **the fleet, the shared store, one process per node**. For the
    tests, each OS process simulates a node on a different computer, and that
@@ -240,7 +253,11 @@ applied to the GUI as it stands.
    declared it. An Operator may change it there (ADR-0009: Observer watches,
    Operator also configures), and a principal who is also a Developer can
    open the specific point's configuration from the scope — the declaration
-   behind the row, reached from the row. **The web GUI offers every role,
+   behind the row, reached from the row. The owner, later the same night:
+   the drill-down goes *through* the configuration, and a link from any
+   other view — a row on the monitor, a node or a link on the topology —
+   ends at the view of the actual configuration, not at a summary of it.
+   **The web GUI offers every role,
    not Observer alone.** ADR-0014's amendment of 2026-09-05 made the web
    monitor-only because a page in a browser cannot read a file on disk or
    load the native library; the owner rules that the limit is the browser's,

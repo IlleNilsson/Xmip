@@ -150,6 +150,7 @@ Describe 'The environment a roll is started with' {
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_MAX_SECONDS'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_SCENARIOS'
+            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_CLUSTER'
         }
     }
 
@@ -160,6 +161,7 @@ Describe 'The environment a roll is started with' {
                 Test        = @('roundtrip', 'HeavyLoad')
                 Nodes       = @('R1', 'P1', 'S1')
                 OnlineNodes = @('R1', 'S1')
+                Cluster     = 'SN2'
                 Duration    = [timespan]::FromMinutes(15)
                 TimeFactor  = 9.5e-6
                 LoadBytes   = '512mb'
@@ -172,6 +174,7 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'pingpong,load'
             $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'R1,P1,S1'
             $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'R1,S1'
+            $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be 'SN2'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'

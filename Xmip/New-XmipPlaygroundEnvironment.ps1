@@ -151,6 +151,9 @@ function New-XmipPlaygroundEnvironment {
         [string[]] $OnlineNodes,
 
         [Parameter()]
+        [string] $Cluster,
+
+        [Parameter()]
         [Nullable[timespan]] $Duration,
 
         [Parameter()]
@@ -179,6 +182,12 @@ function New-XmipPlaygroundEnvironment {
     if ($Test.Count -gt 0) {
         [string[]] $scenarios = ConvertTo-XmipPlaygroundScenario -Test $Test
         $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
+    }
+
+    # A named cluster: the roll's scope root and the nodes' (ADR-0028). Unset,
+    # the roll is the playground cluster, as it always was.
+    if (-not [string]::IsNullOrWhiteSpace($Cluster) -and $Cluster -ne 'playground') {
+        $environment.XMIP_PLAYGROUND_CLUSTER = $Cluster
     }
 
     # Nodes are named, not numbered (the owner, 2026-09-12): a list of names is

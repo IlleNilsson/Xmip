@@ -74,6 +74,12 @@ function Get-XmipTestStatus {
         [PSCustomObject]@{
             PSTypeName  = 'Xmip.TestStatus'
             Suite       = 'Playground'
+            Cluster     = if ($null -ne $record -and $record.cluster) {
+                $record.cluster
+            }
+            else {
+                'playground'
+            }
             Id          = $roll.Id
             StartTime   = $roll.StartTime
             Stress      = if ($null -ne $record) { $record.stress } else { $null }

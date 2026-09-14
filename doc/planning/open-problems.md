@@ -518,16 +518,19 @@ retires entries from stops being an order.
                                        and the fifty-one identity
                                        technologies ADR-0050 sorts
 3. The three views and the exact scope ADR-0052, amendment 2026-09-14:
-                                       Cluster, Monitor (the default) and
-                                       Topology; Cluster is the static
-                                       drill-down Cluster → Node → receive →
-                                       process → send to the configuration
-                                       and the binaries; Topology navigates
+                                       Configuration (the classic tree,
+                                       landed as a first cut), Monitor (the
+                                       default) and Topology; the tree is
+                                       Cluster → Node → receive → process →
+                                       send, open and still, reaching the
+                                       configuration and the binaries (not
+                                       yet published); Topology navigates
                                        to another cluster when allowed, a
                                        second named roll in the playground,
                                        Start-XmipTest -Cluster SN2 (the
-                                       playground topology is landed, the
-                                       rest is not); every
+                                       playground topology and -Cluster are
+                                       landed, the page that navigates
+                                       between clusters is not); every
                                        surface drills to the leaf; every view
                                        names the Receive Location, the
                                        Xmip Process and the Send Location,
