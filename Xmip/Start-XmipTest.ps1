@@ -74,12 +74,13 @@ function Start-XmipTest {
 
         .PARAMETER Cluster
             The cluster this roll is (ADR-0028: a roll emulates a cluster),
-            by name — the scope root is xmip:///<Cluster> and the run
-            publishes to <Cluster>-snapshot.toml beside its history and
-            activity. Playground unless said. Two rolls with two names are
-            two clusters side by side, each with its own web monitor:
-            Start-XmipTest -Cluster SN2 -PassThru | Start-XmipWeb -Url ...
-            (the owner, 2026-09-14).
+            by the name you give it — required: you name the cluster, and a
+            test spawns nodes, never a cluster (the owner, 2026-09-14). The
+            scope root is xmip:///<Cluster> and the run publishes to
+            <Cluster>-snapshot.toml beside its history and activity. Two
+            rolls with two names are two clusters side by side, each with
+            its own web GUI:
+            Start-XmipTest -Cluster C2 -PassThru | Start-XmipWeb -Url ...
 
         .PARAMETER LoadBytes
             The load scenario's payload: a number or a size like 512mb or 2gb.
@@ -95,17 +96,17 @@ function Start-XmipTest {
             Return the Xmip.TestStatus object for the roll started.
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Rounds 20
+            Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Test HeavyLoad -Nodes a, b -OnlineNodes a -PassThru |
+            Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad -Nodes R1, P1 -PassThru |
                 Start-XmipWeb
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
             Start-XmipTest -Suite Estate
@@ -164,7 +165,7 @@ function Start-XmipTest {
 
         [Parameter()]
         [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
-        [string] $Cluster = 'playground',
+        [string] $Cluster,
 
         [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
@@ -207,6 +208,13 @@ function Start-XmipTest {
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
     }
 
+    # You name the cluster; a test spawns nodes, never a cluster (the owner,
+    # 2026-09-14). Nothing here invents a name for a roll.
+    if ([string]::IsNullOrWhiteSpace($Cluster)) {
+        Write-Error 'A roll is a cluster and you name it: -Cluster <name>.'
+        return
+    }
+
     $layout = Get-XmipPlaygroundLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -227,8 +235,7 @@ function Start-XmipTest {
         if ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
-    [string] $as = if ($Cluster -ne 'playground') { " as cluster $Cluster" }
-    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online$as"
+    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online as cluster $Cluster"
 
     if (-not $PSCmdlet.ShouldProcess("the Xmip Playground in $Path", "Start a $what")) {
         return

@@ -899,6 +899,7 @@ function Test-XmipManifest {
 # each of the roll, the emulated nodes and the web host, and Get for what a run
 # says. Nothing in the estate starts any of them on its own (owner, 2026-09-12).
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
+. (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')

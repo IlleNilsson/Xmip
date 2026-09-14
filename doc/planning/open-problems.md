@@ -527,7 +527,7 @@ retires entries from stops being an order.
                                        yet published); Topology navigates
                                        to another cluster when allowed, a
                                        second named roll in the playground,
-                                       Start-XmipTest -Cluster SN2 (the
+                                       Start-XmipTest -Cluster C2 (the
                                        playground topology and -Cluster are
                                        landed, the page that navigates
                                        between clusters is not); every

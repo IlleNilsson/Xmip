@@ -8,9 +8,9 @@ function Start-XmipWeb {
             Starts the Xmip web monitor, detached, over the surface you name.
 
         .DESCRIPTION
-            The web surface is monitoring only (ADR-0014): it reads a snapshot
-            a roll or a node published and shows the cluster, the drill-down
-            and the history. This starts it as a background process and hands
+            The web GUI offers every role (ADR-0014, amended 2026-09-14). Over
+            a snapshot a roll or a node published it shows the cluster, the
+            drill-down and the history. This starts it as a background process and hands
             it the address and, when given, the snapshot to read — the surface
             is chosen on the command line, never guessed (ADR-0052 clause 3).
             Without -Snapshot the host reads what its own xmip.gui.toml says.
@@ -45,7 +45,7 @@ function Start-XmipWeb {
             Start-XmipTest -Suite Playground -Stress Harsh -PassThru | Start-XmipWeb
 
         .EXAMPLE
-            Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/snapshot.toml
+            Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/C1-snapshot.toml
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.Web')]

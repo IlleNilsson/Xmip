@@ -184,9 +184,9 @@ function New-XmipPlaygroundEnvironment {
         $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
     }
 
-    # A named cluster: the roll's scope root and the nodes' (ADR-0028). Unset,
-    # the roll is the playground cluster, as it always was.
-    if (-not [string]::IsNullOrWhiteSpace($Cluster) -and $Cluster -ne 'playground') {
+    # The named cluster: the roll's scope root and the nodes' (ADR-0028). The
+    # roll refuses without one; the name is the owner's, never invented here.
+    if (-not [string]::IsNullOrWhiteSpace($Cluster)) {
         $environment.XMIP_PLAYGROUND_CLUSTER = $Cluster
     }
 

@@ -227,7 +227,7 @@ applied to the GUI as it stands.
    scope root is `xmip:///<cluster>`, its nodes hang under it, it publishes
    to `<cluster>-snapshot.toml` and keeps its own scratch, so two rolls are
    two clusters side by side, each with its own web monitor
-   (`Start-XmipTest -Cluster SN2 -PassThru | Start-XmipWeb -Url ...`).
+   (`Start-XmipTest -Cluster C2 -PassThru | Start-XmipWeb -Url ...`).
    One page navigating between them is what stays queued.
    What the playground topology draws is what the owner is after, in his
    words: **the fleet, the shared store, one process per node**. For the
@@ -289,6 +289,23 @@ applied to the GUI as it stands.
    template's dialog; this puts the estate's in its place, without a script,
    since the estate keeps JavaScript to the VS Code extension. Landed the
    same day.
+
+8. **The owner names the cluster; a test may spawn nodes, never a
+   cluster.** The owner, later the same night, on an assistant's plan to
+   default a roll's cluster to a name of the tool's choosing: *I name the
+   nodes, their roles are by configuration, I name the clusters. I start
+   them when I want to.* And on the fleet: *by tests, you may spawn nodes,
+   not cluster, when needed.* So `-Cluster` is required for a roll and the
+   roll binary refuses without `XMIP_PLAYGROUND_CLUSTER`; the estate module
+   invents no cluster name, and the built-in *playground* cluster is gone.
+   The level's own numbered fleet stays (ADR-0028): a test spawns the nodes
+   it needs, and that is the tests' business only — in a real environment
+   nodes are spawned by the orchestrator, Kubernetes, .NET Aspire or their
+   kin, never by Xmip; the tests' fleet is System Processes on one machine,
+   for now (the owner, the same night). Ruling 6 is read in that light: R1 is the name the owner gave
+   a node, not a role — what a node does is its configuration (ADR-0009),
+   and in the playground every node runs every stage. Landed the same
+   night.
 
 Landed the same day: the renaming (6), and the first of the topology (3) —
 the playground's fleet publishes its nodes, its shared store and each node's

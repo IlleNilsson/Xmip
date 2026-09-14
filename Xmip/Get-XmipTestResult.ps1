@@ -19,9 +19,10 @@ function Get-XmipTestResult {
             split — the judgement is the roll's (ADR-0027 clause 6).
 
         .PARAMETER Path
-            The snapshot file, or the directory holding
-            `playground-snapshot.toml`. Defaults to the running roll's, else
-            `.local-work/playground` under the repository.
+            The snapshot file, or a directory holding exactly one
+            `<cluster>-snapshot.toml`; with more than one cluster there, name
+            the file. Defaults to `.local-work/playground` under the
+            repository.
 
         .PARAMETER Test
             Only these tests, by the names Start-XmipTest takes: RoundTrip,
@@ -64,7 +65,7 @@ function Get-XmipTestResult {
     }
 
     if (Test-Path -LiteralPath $Path -PathType Container) {
-        $Path = Join-Path -Path $Path -ChildPath 'playground-snapshot.toml'
+        $Path = Resolve-XmipClusterFile -Directory $Path -Kind 'snapshot'
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {
