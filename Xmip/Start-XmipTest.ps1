@@ -437,8 +437,13 @@ function Test-XmipPlaygroundBinary {
 
     [string] $actual = try { $Process.Path } catch { '' }
 
+    # A process another session started elevated shows no path to this one
+    # (2026-09-14: the owner's roll was invisible to the assistant's shell).
+    # The run record Start-XmipTest wrote for that pid vouches for it instead.
     if ([string]::IsNullOrWhiteSpace($actual)) {
-        return $false
+        [string] $area = (Get-XmipPlaygroundLayout).Area
+        [string] $record = Join-Path -Path $area -ChildPath "roll-$($Process.Id).toml"
+        return $Process.ProcessName -eq 'roll' -and (Test-Path -LiteralPath $record)
     }
 
     return [System.IO.Path]::GetFullPath($actual) -ieq [System.IO.Path]::GetFullPath($Path)

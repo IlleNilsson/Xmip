@@ -517,10 +517,17 @@ retires entries from stops being an order.
                                        (ADR-0051). sftp and peppol remain,
                                        and the fifty-one identity
                                        technologies ADR-0050 sorts
-3. The three views and the exact scope ADR-0052, amendment 2026-09-14: a
-                                       static drill-down Cluster → Node →
-                                       receive → process → send beside the
-                                       monitor and the topology; every
+3. The three views and the exact scope ADR-0052, amendment 2026-09-14:
+                                       Cluster, Monitor (the default) and
+                                       Topology; Cluster is the static
+                                       drill-down Cluster → Node → receive →
+                                       process → send to the configuration
+                                       and the binaries; Topology navigates
+                                       to another cluster when allowed, a
+                                       second named roll in the playground,
+                                       Start-XmipTest -Cluster SN2 (the
+                                       playground topology is landed, the
+                                       rest is not); every
                                        surface drills to the leaf; every view
                                        names the Receive Location, the
                                        Xmip Process and the Send Location,
@@ -533,11 +540,19 @@ retires entries from stops being an order.
                                        opens it, on the web as on the
                                        desktop; the prompt names the node
                                        when the session is remote; a role
-                                       comes from a directory, and
+                                       comes from a directory, the
+                                       playground's is a fake one that
+                                       allows the tester, and
                                        Start-XmipTest -Directory names
                                        which: kind, name and address
                                        (ADR-0009,
-                                       amendment 2026-09-14). The names
+                                       amendment 2026-09-14). The surfaces
+                                       are demonstrable over the playground
+                                       and not yet testable for real (the
+                                       owner, 2026-09-14 evening): the runtime
+                                       module has no tests, the GUI has none
+                                       of its own, and the web offers no
+                                       role — fix all three here. The names
                                        need item 1's
                                        configured node; the directory needs
                                        the role gate ADR-0027 blocks on

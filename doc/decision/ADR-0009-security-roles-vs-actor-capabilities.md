@@ -141,8 +141,11 @@ tests without a directory, **the tester is God** — the owner's words: the
 person who started the run holds every role and is refused nothing, unless
 the run says otherwise, because a playground roll is that person's own
 machine and their own doing (ADR-0028), and a gate there would guard
-nothing. Which directory group means which role is configuration, not code,
-and is not yet written.
+nothing. The owner's later wording the same evening: the playground has no
+directory, it has a **fake directory** that allows the tester — so a surface
+run over a roll asks a directory like any other and is told yes, and the
+role gate has one code path, not a test-mode bypass. Which directory group
+means which role is configuration, not code, and is not yet written.
 
 A test run that wants the real thing says so: `Start-XmipTest` gains
 **`-Directory`** beside `-OnlineNodes`, the owner's wording, naming the

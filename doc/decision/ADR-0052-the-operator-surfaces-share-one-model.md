@@ -193,17 +193,33 @@ The owner's rulings of the same evening, on what the surfaces show and from
 where. Each is a consequence of clause 1, one model every surface renders,
 applied to the GUI as it stands.
 
-1. **Three views, not two.** The GUI keeps the monitor, the cluster board
-   that follows receive → process → send, and the communication topology.
-   It gains a third: a **static drill-down** from Cluster to Node to Receive
-   Location to Xmip Process to Send Location. The monitor and the topology
-   move, and what moves goes by too fast to hold a problem in view; the
-   drill-down holds still so an operator can focus on the problem at hand.
-   Its shape is ADR-0027's scope tree, which the boundary already publishes.
+1. **Three views: Cluster, Monitor and Topology.** The owner named them
+   later the same evening, and the naming supersedes the first draft of this
+   ruling, which had called the third view a static drill-down. **Monitor**
+   is the default view, the board that follows receive → process → send and
+   moves as the cluster moves. **Cluster** is the static drill-down — from
+   Cluster to Node to Receive Location to Xmip Process to Send Location —
+   that holds still so an operator can focus on the problem at hand, and it
+   reaches the configuration behind every scope and the binaries a node
+   runs (the modules loaded, ADR-0025). **Topology** is the overview of the
+   cluster, its own communication drawn (ruling 3), and from it an operator
+   navigates to another Xmip cluster when allowed to. The shape of all three
+   is ADR-0027's scope tree, which the boundary already publishes.
    **Drilling down is what every surface is for** — the CLI, the PowerShell
    module and both GUIs exist to solve a problem, and each of them drills
    from the cluster to the leaf that explains the mood; a surface that
    stops short of the leaf has stopped short of its purpose.
+   In the playground a roll is a cluster (ADR-0028), so a second cluster to
+   navigate to is a second roll with a name — the owner's example,
+   `Start-XmipTest -Suite Playground -Test RoundTrip -Nodes R1, P1, S1, O1
+   -OnlineNodes O1 -SuiteName SN2`. The owner withdrew the name the same
+   evening — *my naming was wrong here* — since `-Suite` is already
+   Playground or Estate and the thing named is a cluster: the parameter is
+   **`-Cluster SN2`**, true to ADR-0028, and is queued with the rest.
+   What the playground topology draws is what the owner is after, in his
+   words: **the fleet, the shared store, one process per node**. For the
+   tests, each OS process simulates a node on a different computer, and that
+   is good enough; a firewall and a reverse proxy between them come later.
 2. **Every view names the exact scope.** The monitor, the topology and the
    drill-down say which Receive Location, which Xmip Process and which Send
    Location, never only the transport and the contract beneath them. The
@@ -246,9 +262,13 @@ applied to the GUI as it stands.
    playground still runs every stage on every node, so the letter there is
    what the node is for, not what it is limited to.
 
-Landed the same day: the renaming (6). Recorded and queued, not built:
-the third view (1), the exact names (2), the topology (3), the configuration
-drill (4) and the prompt (5), as Suggested order item 3 in
+Landed the same day: the renaming (6), and the first of the topology (3) —
+the playground's fleet publishes its nodes, its shared store and each node's
+exchanges under `[topology]` in the snapshot the web GUI reads
+(`test/playground/src/topology.rs`), so the view is no longer empty over a
+roll. Recorded and queued, not built: the third view (1), the exact names
+(2), the topology over the native boundary (3), the configuration drill (4)
+and the prompt (5), as Suggested order item 3 in
 `doc/planning/open-problems.md`.
 
 ## Alternatives considered
