@@ -278,6 +278,23 @@ changed is the word it uses for the first, not the fact that it knows.
   surface lands under `-All`, unverified. That gate has to grow before this
   boundary carries weight.
 
+## Amendment, 2026-09-14: two outcome counts
+
+Clause 5 named four counted things: streams, messages, journeys, bytes.
+`xmip_operate.h` now names six. `XMIP_COUNTED_RETRYING` is the number of work
+items awaiting another attempt; `XMIP_COUNTED_FAILED` is the number of
+outcomes that ended unsuccessfully in the measurement window. Both are counts,
+unit count, and they cross the way the four do: a scope, the thing counted,
+the unit and the window. They do not change the words. What is retrying or
+failed is a Journey or a Message, and the item behind the figure is ADR-0032's
+business, not the figure's. The runtime maps both and publishes neither yet; a
+surface shows an unpublished figure as absent, never as zero.
+
+Proposed by an assistant session on 2026-09-12, in five pull requests that
+merged without the record. The owner accepted the two counts on 2026-09-14 and
+declined the rest of the proposal — ADR-0052's amendment of the same date says
+what and why.
+
 ## Alternatives considered
 
 **One header for both audiences.** Rejected. It forces one version constant on

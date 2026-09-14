@@ -151,6 +151,42 @@ that does not exist — go.
   its fixture from `gui/samples` and gains a TypeScript gate.
 - The board answers the owner's question without a click.
 
+## Amendment, 2026-09-14: the row, the figures, the two acts, and what was declined
+
+`Xmip.Surface` gains three shapes every surface renders and none invents.
+`Figures` is the six counted things at a scope in the order every surface says
+them — Streams, Messages, Journeys, bytes, Retrying, Failed (ADR-0027 clause 5
+and its amendment of 2026-09-14) — with an unpublished figure absent rather
+than zero. `ScopeItem` is one row of the tree: the name, the mood, the worst
+leaf's severity and evidence (clause 2), and the figures. `ScopeOperation` is
+what came of a `ScopeAction`, and a `ScopeAction` is Pause or Resume, the two
+acts the boundary carries. The executable renders them as `xmip measure`,
+`xmip list`, `xmip show`, `xmip pause` and `xmip resume`; the PowerShell
+module emits them as objects from `Suspend-XmipScope` and `Resume-XmipScope`,
+both with `-WhatIf`. Retrying and Failed are figures, not Activity: ADR-0032
+owns that word for the items behind a count.
+
+Declined the same day, from the same proposal:
+
+- **Start, stop and restart of a scope, on every surface.** ADR-0027: the
+  thing that watches must not be able to stop the thing it watches, stated as
+  a property of the boundary, and the boundary has no such call. A surface
+  stub that answers "unsupported" is a promise the record forbids.
+- **A PowerShell drive over the scope tree.** No record asks for one; the
+  BizTalk provider is ADR-0014's example of a surface that drifted; objects on
+  the pipeline are the PowerShell shape (ADR-0014 clause 10).
+- **A prompt segment of five counts in five colors in place of the mood.** The
+  prompt says the mood — `[Xmip holding]` — because clause 2 puts the mood and
+  its reason first, and a count without the word beside it is a number, not a
+  fact.
+- **Received, Processed and Sent as the names of Streams, Journeys and
+  Messages.** ADR-0027 clause 5 keeps those three words apart on every page;
+  renaming them at the surface is where BizTalk's vocabulary would have come
+  back in.
+
+Proposed by an assistant session on 2026-09-12; reviewed and settled by the
+owner with the assistant on 2026-09-14.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
