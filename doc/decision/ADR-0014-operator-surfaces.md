@@ -267,6 +267,12 @@ The Xmip runtime is unaffected. It is Rust and does not wait for a .NET release.
 
 ## Amendment, 2026-09-12: one scope surface, including the PowerShell provider
 
+**Withdrawn 2026-09-14, two days after it landed.** It was merged with the
+code it describes and without the review the record asks for. The owner
+reviewed it against ADR-0027 and ADR-0032 and kept the shared shapes, the
+two acts and the two outcome counts, and declined the provider, start, stop
+and restart, and the word Activity for a count. ADR-0052's amendment of
+2026-09-14 is the ruling; the text below stays as what was proposed.
 The CLI, PowerShell module and GUI share `IOperatorSurface`, `ScopeTree`,
 `ScopeItem` and `ActivitySummary` from `xmip-core-abi`. They may render them
 differently; they may not redefine what a scope, counter or action means.
