@@ -187,6 +187,70 @@ Declined the same day, from the same proposal:
 Proposed by an assistant session on 2026-09-12; reviewed and settled by the
 owner with the assistant on 2026-09-14.
 
+## Amendment, 2026-09-14: the three views, the exact scope, and the node
+
+The owner's rulings of the same evening, on what the surfaces show and from
+where. Each is a consequence of clause 1, one model every surface renders,
+applied to the GUI as it stands.
+
+1. **Three views, not two.** The GUI keeps the monitor, the cluster board
+   that follows receive → process → send, and the communication topology.
+   It gains a third: a **static drill-down** from Cluster to Node to Receive
+   Location to Xmip Process to Send Location. The monitor and the topology
+   move, and what moves goes by too fast to hold a problem in view; the
+   drill-down holds still so an operator can focus on the problem at hand.
+   Its shape is ADR-0027's scope tree, which the boundary already publishes.
+   **Drilling down is what every surface is for** — the CLI, the PowerShell
+   module and both GUIs exist to solve a problem, and each of them drills
+   from the cluster to the leaf that explains the mood; a surface that
+   stops short of the leaf has stopped short of its purpose.
+2. **Every view names the exact scope.** The monitor, the topology and the
+   drill-down say which Receive Location, which Xmip Process and which Send
+   Location, never only the transport and the contract beneath them. The
+   playground drills stage → transport → contract because its scopes are
+   built that way (ADR-0028); that is the playground's shape, not the
+   product's. A node run from configuration (Suggested order, item 1) has
+   Locations and Xmip Processes by name, and the views show those names.
+3. **The topology shows Xmip's own communication.** The page's statement
+   that Xmip does not infer application relationships from sockets or health
+   records is wrong as a rule: the relationships between a Receive Location,
+   the Xmip Process a Subscription starts and the Send Location it feeds are
+   configured, and between nodes of a cluster they are observed. Both are
+   the topology's to draw, beside the infrastructure endpoints it aggregates
+   today. Nothing is inferred from a socket; what is configured is read and
+   what is observed is published, which is clause 1 again.
+4. **Drill to configuration, and change it by role, on the web as on the
+   desktop.** From any scope, the drill-down reaches the configuration that
+   declared it. An Operator may change it there (ADR-0009: Observer watches,
+   Operator also configures), and a principal who is also a Developer can
+   open the specific point's configuration from the scope — the declaration
+   behind the row, reached from the row. **The web GUI offers every role,
+   not Observer alone.** ADR-0014's amendment of 2026-09-05 made the web
+   monitor-only because a page in a browser cannot read a file on disk or
+   load the native library; the owner rules that the limit is the browser's,
+   not the web GUI's. Server-side Blazor invokes the executable on its
+   server, locally or over remoting, exactly as clause 11 of ADR-0014 says
+   every GUI does, and a node's configuration is on the node, reached the
+   same way. The web is monitor-only no longer; ADR-0014 and ADR-0009 are
+   amended today to say so.
+5. **The node is in the prompt.** Remote operation rides PowerShell
+   Remoting and SSH (ADR-0014 clause 6; ADR-0027), and a session on another
+   node must say so where the eye rests. The prompt segment names the node
+   beside the mood — `[Xmip R1 holding]` — whenever the session is remote,
+   so an operator on more nodes than one never acts on the wrong one.
+6. **Nodes are named for what they do.** A node in an example, a fixture or
+   a playground roll is R1, P1, S1 and their kin — the stage it carries and
+   a number — not alpha, beta and gamma. A name that says the role reads at
+   a glance in a prompt, a row and a drill-down; a Greek letter says nothing.
+   The playground's examples and fixtures are renamed the same day; the
+   playground still runs every stage on every node, so the letter there is
+   what the node is for, not what it is limited to.
+
+Landed the same day: the renaming (6). Recorded and queued, not built:
+the third view (1), the exact names (2), the topology (3), the configuration
+drill (4) and the prompt (5), as Suggested order item 3 in
+`doc/planning/open-problems.md`.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a

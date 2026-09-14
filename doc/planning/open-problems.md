@@ -517,15 +517,39 @@ retires entries from stops being an order.
                                        (ADR-0051). sftp and peppol remain,
                                        and the fifty-one identity
                                        technologies ADR-0050 sorts
-3. Journey replay end to end           problem 19, and the half of ADR-0024
+3. The three views and the exact scope ADR-0052, amendment 2026-09-14: a
+                                       static drill-down Cluster → Node →
+                                       receive → process → send beside the
+                                       monitor and the topology; every
+                                       surface drills to the leaf; every view
+                                       names the Receive Location, the
+                                       Xmip Process and the Send Location,
+                                       not the transport and contract
+                                       beneath; the
+                                       topology draws Xmip's own configured
+                                       and observed communication; the
+                                       drill reaches configuration, an
+                                       Operator changes it and a Developer
+                                       opens it, on the web as on the
+                                       desktop; the prompt names the node
+                                       when the session is remote; a role
+                                       comes from a directory, and
+                                       Start-XmipTest -Directory names
+                                       which: kind, name and address
+                                       (ADR-0009,
+                                       amendment 2026-09-14). The names
+                                       need item 1's
+                                       configured node; the directory needs
+                                       the role gate ADR-0027 blocks on
+4. Journey replay end to end           problem 19, and the half of ADR-0024
                                        that stayed open
-4. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
+5. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
                                        says where it belongs, not what it is
-5. xmip-core-webapi                    declared, mounted nowhere, one orphan
+6. xmip-core-webapi                    declared, mounted nowhere, one orphan
                                        gitdir — decide it lives or retire it
-6. Cross-compilation                   four declared targets, verified on host
+7. Cross-compilation                   four declared targets, verified on host
                                        only
-7. Organization and second owner       problem 15, independent of all the above
+8. Organization and second owner       problem 15, independent of all the above
 ```
 
 **A decision blocks item 1.** The owner raised, 2026-09-05, that "Process" is

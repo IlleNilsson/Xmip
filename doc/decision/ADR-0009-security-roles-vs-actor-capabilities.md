@@ -119,3 +119,41 @@ state in-process is a host process, and ADR-0022 clause 3 with the identity
 question ADR-0027 flags as *blocking shipping* must be settled before a role is
 enforced rather than merely defined. This records the role and its surface map;
 the gate is future work behind that settlement.
+
+## Amendment, 2026-09-14: the web is no longer monitoring only
+
+The table above says *Web (monitoring only)*. ADR-0014's amendment of the
+same day withdraws that limit: the web GUI offers, by role, what the desktop
+offers — an Observer watches, an Operator also acts and configures, and a
+Developer also opens the specific point's configuration from its scope
+(ADR-0052, amendment 2026-09-14). The roles stay the three named above and
+stay cumulative; what changes is that the web surface stops offering less
+than the role at the keyboard may do. Still not enforced, for the reason the
+paragraph above gives.
+
+**Where the role comes from**, the owner, the same day. Running for real, a
+principal's role is **authorized by a directory** — the group membership the
+remoting session already proved, Kerberos and Active Directory on one path,
+the account behind the SSH key on the other (ADR-0014, Reach). Xmip keeps no
+user store and assigns no role of its own; it reads which of Observer,
+Operator and Developer the directory grants the proven identity. Running the
+tests without a directory, **the tester is God** — the owner's words: the
+person who started the run holds every role and is refused nothing, unless
+the run says otherwise, because a playground roll is that person's own
+machine and their own doing (ADR-0028), and a gate there would guard
+nothing. Which directory group means which role is configuration, not code,
+and is not yet written.
+
+A test run that wants the real thing says so: `Start-XmipTest` gains
+**`-Directory`** beside `-OnlineNodes`, the owner's wording, naming the
+directory the roll authorizes its roles against — the run switch that turns
+God into a proven principal for that roll. A type alone is not enough to
+reach one, the owner added: the parameter carries **three things — the kind,
+the name and the address** — the kind says how to ask, the name says which
+directory (a domain, a tenant, a realm), and the address says where (a
+domain controller, a tenant endpoint, an LDAP URL), because a name resolves
+differently from each machine and an address alone does not say what it is.
+The kinds are the directories the remoting paths already prove against,
+and the parameter is built when the gate it feeds exists, not before: a
+parameter the playground cannot honor is a stub, and the playground does not
+simulate (ADR-0028).

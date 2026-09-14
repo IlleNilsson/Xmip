@@ -441,3 +441,20 @@ in it. The extension carries it because VS Code's extension host runs nothing
 else, and the shell is kept to what that host requires: starting the server,
 passing the runtime's path, and showing what comes back. The moment a piece
 of logic could live in the Rust server instead, it does.
+
+## Amendment, 2026-09-14: the web GUI offers every role
+
+The amendment of 2026-09-05 made the web GUI monitor-only, on the ground that
+a page in a browser cannot read a file on disk, load the native library or
+control a process. The owner ruled on 2026-09-14 that the limit is the
+browser's and was wrongly made the web GUI's: the web GUI is server-side
+Blazor, and its server invokes the executable, locally or over remoting, as
+clause 11 says every GUI does. A node's configuration is on the node and is
+reached the same way. So the web offers what the desktop offers, by role:
+an Observer watches, an Operator also pauses, resumes and configures, a
+Developer also opens the specific point's configuration from its scope. The
+rulings and their reasons are ADR-0052, amendment 2026-09-14, which also
+requires every surface — the CLI, the PowerShell module and both GUIs — to
+drill from the cluster to the leaf, and the prompt to name the node when the
+session is remote. What stays from 2026-09-05 is the fact: a browser page
+does none of this itself; the web GUI's server does it on the page's behalf.
