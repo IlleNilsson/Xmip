@@ -1701,3 +1701,78 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 #     section 15 scope -> module/platform/resilience/README.md
 #   doc/decision/ADR-0028-the-xmip-playground.md
 #     3a, 3b and the difficulty amendment -> test/playground/README.md
+
+# ---------------------------------------------------------------------------
+# Consolidation, tier three, 2026-09-14. What the survey found sitting twice,
+# or in the wrong repository, after tiers one and two; the ledger records
+# where each part went so nobody reads a pointer and wonders what it replaced.
+# ---------------------------------------------------------------------------
+
+[[superseded]]
+path = "module/operation/cli/ARCHITECTURE.md"
+replacedBy = "module/operation/cli/README.md"
+why = """
+Two documents on one subject in one repository, saying the same things twice:
+the responsibility, the .NET ruling, the shape, the dependencies, the
+non-responsibilities and the verification. Folded into the README on
+2026-09-14, every fact kept once, and the file deleted (ADR-0020 clause 1).
+The template setup checklists still ask a new repository for an
+ARCHITECTURE.md; whether they should is the owner's question, put to him
+separately, and this entry does not answer it."""
+
+[[superseded]]
+path = "module/operation/powershell/ARCHITECTURE.md"
+replacedBy = "module/operation/powershell/README.md"
+why = """
+Same defect as the cli's, folded the same day. Where the two disagreed — the
+README said the binding is a project reference to Xmip.Abi, the architecture
+file still said the header and nothing else — the README's newer fact (ADR-0014,
+amendment of 2026-09-09) survived and the older one did not."""
+
+# Content moved on 2026-09-14, each file kept, each part now said once where
+# its subject lives (ADR-0020 clause 1, ADR-0044 for what two repositories
+# both carried):
+#   doc/development/creating-transports-contracts-and-processes.md
+#     the mental-model table and the reference table -> the three module
+#     guides already carried them; the root keeps the three-way signpost
+#   doc/architecture/runtime-model.md
+#     section 12's literal enum JourneyState -> module/foundation/journey
+#     (src/lib.rs, the code; the model keeps the operator meaning); its
+#     section 21 Startup is now the estate's one account, from ADR-0018, and
+#     module-model.md section 8 and terminology.md Startup point at it
+#   doc/architecture/observability-model.md
+#     section 6's mood-to-color mapping -> ADR-0041, where it already stood,
+#     and xmip-core-gui, which paints it; section 5's channel sentence ->
+#     module/operation/audit/doc/audit-record.md, Performance
+#   doc/architecture/module-model.md
+#     section 5's .dll/.so/.dylib table -> module/foundation/abi/doc/
+#     specification.md section 3, Finding the library; section 6's manifest
+#     field list loses "module kind" (ADR-0012 clause 5 removed it) and points
+#     at the descriptor for what identifies a Module
+#   doc/architecture/deployment-model.md
+#     section 2's two Rust rules -> module-model.md section 12, which gains the
+#     one it lacked (blocking Handler work never blocks a runtime loop)
+#   module/capability/transport/doc/adding-a-transport.md
+#     steps 1-3 and Mount and land -> repository-model.md sections 7, 8 and
+#     10, which gain the two facts they lacked: repository creation is the
+#     owner's act, and Publish-XmipChange lands technology, then capability,
+#     then superproject; the reserved-planned-scaffolded-supported ladder is
+#     dropped for the manifest's own words in section 3
+#   module/capability/authenticate/doc/identity-by-technology.md
+#     section 4's manifest narrative and two dependency blocks -> the
+#     manifest, which already carried them; the AS2 four-layers paragraph stays
+#   module/foundation/abi/doc/specification.md
+#     section 13's restatement of ADR-0011 and ADR-0012 clause 11 -> a
+#     citation, as section 14 already was
+#   template/rust/TEMPLATE_SETUP.md, template/dotnet/TEMPLATE_SETUP.md
+#     items 1, 2, 8 and 9 -> citations of repository-model.md section 2,
+#     architectural-change-permission.md and the template README
+#   test/playground/README.md
+#     Running it -> the estate's README.md, which already showed the commands;
+#     the XMIP_PLAYGROUND_* variables and the test-name mapping stay
+#   fifty-three technology READMEs under identify, authenticate, authorize and
+#   transport/peppol and transport/sftp
+#     "nothing goes sideways" -> a citation of repository-model.md section 4
+#     and ADR-0044
+#   module/capability/logic/README.md, module/capability/logic/http-api/README.md
+#     ADR-0043's sentence, quoted in both -> a citation in each

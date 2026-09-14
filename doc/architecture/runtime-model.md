@@ -604,13 +604,12 @@ a worker without losing the ability to answer.
 
 ## 12. Journey state
 
-```rust
-enum JourneyState { Active, Waiting, Suspended, Recovering, Completed, Failed }
-```
-
-`Completed` and `Failed` are terminal. `Suspended` and `Recovering` are the
-operator-recoverable path. This is what `journey_model.rs` implements, with
-tests, and what ADR-0013 clause 7 records.
+A Journey is Active, Waiting, Suspended, Recovering, Completed, Failed or
+Dismissed. Completed, Failed and Dismissed are terminal. Suspended and
+Recovering are the operator-recoverable path. ADR-0013 clause 7 records the
+vocabulary, and the code is `JourneyState` in `xmip-core-journey`
+(`module/foundation/journey`); this document does not repeat the enum, which
+drifted from the crate once already.
 
 Earlier drafts named a different set — Created, Running, Paused, Waiting, Dead,
 Completed, Dismissed. The mapping, and what happened to the two that had no
@@ -967,23 +966,31 @@ replaceable.
 
 ### Startup
 
+This is the estate's one account of startup; `module-model.md` section 8 and
+`terminology.md` point here. ADR-0018 clause 4 decided the nine phases and
+which of the two services owns each:
+
 ```text
- 1. Load kernel configuration.
- 2. Load configured module declarations.
- 3. Load available modules.
- 4. Create Module Instances.
- 5. Load TOML Definitions.
- 6. Resolve concept categories and configured module references.
- 7. Validate Definitions against required capability contracts.
- 8. Bind Definitions to compatible Module Instances.
- 9. Create Instances.
-10. Validate topology references between Instances.
-11. Start eligible receive, schedule and runtime entry points.
+Xmip Service
+ 1. read-configuration       the node's configuration, whole
+ 2. build-execution-tree     the Definitions this node is supposed to run
+ 3. validate-startup         the gate: fail here, before anything starts
+ 4. plan-host-services       which Host Services, with what character and Modules
+ 5. start-host-services      register what is missing, start in configured order
+Xmip Host Service, each within itself
+ 6. load-modules             ABI-verified per ADR-0012, eager or delayed per ADR-0025
+ 7. register-capabilities    Handlers and Extensions into its registries
+ 8. verify-extensions        verified, not loaded
+ 9. accept-work              Receive Locations poll, Send Locations ready,
+                             Xmip Processes runnable
 ```
 
-A configuration error is therefore a startup failure, not a first-message
-failure. Steps 7 and 10 exist so that a Receive Location naming a Send Port
-that does not exist is refused before a Stream ever arrives.
+Phase 3 validates every Definition against the capability contracts it
+requires and every reference between Instances, so a configuration error is a
+startup failure, not a first-message failure: a Receive Location naming a Send
+Port that does not exist is refused before a Stream ever arrives. What each
+phase does in code is `StartupPhase` in `xmip-core-runtime`
+(`module/platform/runtime/src/service.rs`).
 
 ## 22. The Xmip Process
 
@@ -1029,7 +1036,9 @@ timeouts and decisions it meets.
 
 A Subscription Instance may correlate an incoming Message to a waiting Process
 Instance. Where the correlation and the wait condition both match, Xmip
-resumes that Instance from persisted state.
+resumes that Instance from persisted state. What that looks like from the
+Message's side — one Instance handling many Messages over time, each still one
+immutable Stream — is `module/capability/process/doc/process-instances.md`.
 
 ### Execution scope
 
@@ -1074,9 +1083,10 @@ Xmip creates a Journey for every unauthenticated connection attempt, which is
 both a liability and a denial-of-service surface. Section 4 states the result.
 
 **2. Journey states — two different enums.**
-v1.0 named seven operational states. `journey_model.rs` implemented six when
-this conflict was written and implements seven now; ADR-0013 clause 7 records
-the code.
+v1.0 named seven operational states. The root's `src/journey_model.rs`
+implemented six when this conflict was written; it merged into
+`xmip-core-journey` on 2026-08-27 (`doc/planning/allocation.toml`), which
+implements seven, and ADR-0013 clause 7 records the code.
 
 *Resolved:* the code. The mapping, and the two that had no equivalent:
 

@@ -40,8 +40,8 @@ xmip-core-audit-file      ->  module/file   a submodule of xmip-core-audit
 Two paths in two repositories. The leaf namespace is per-parent, so it is the
 parent that makes it unique, and a parent has no two children with one name.
 
-That property held across 334 declared repositories before anything enforced it,
-and it is invisible from the tree — which is why it was reported as a bug by
+That property held across every declared repository before anything enforced
+it, and it is invisible from the tree — which is why it was reported as a bug by
 someone reading the tree, on 2026-08-29. `Sync-XmipEstate.Test.ps1` now asserts
 that no two repositories resolve to one mount, so the next name that would break
 it fails a test rather than a clone.
@@ -60,11 +60,11 @@ layout's home). The scoping error was mine: ADR-0011 is about names.*
 
 | Domain | What it holds | Examples |
 | --- | --- | --- |
-| **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
+| **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-abi`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
 | **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
-| **Platform** | platform-wide runtime services | `xmip-core-abi`, `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience` |
+| **Platform** | platform-wide runtime services | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience`, `xmip-core-schedule` |
 
 **The test between Capability and Operation is the message path.** If a
 Journey waits for it, it is a Capability. `xmip-core-retain` moved on
@@ -164,16 +164,19 @@ that was true until 2026-08-27, when it became one template per language.*
 
 ## 3. Maturity
 
-Repository existence is independent of implementation maturity:
-
-```text
-reserved  scaffolded  implemented  verified  supported  deprecated  retired
-```
+Repository existence is independent of implementation maturity. The manifest
+uses three words today — `reserved`, the default, for a repository that is
+named and nothing more; `planned`; and `scaffolded` — and a repository that
+has been retired is a `[[retired]]` entry with its reason. The full vocabulary
+the estate module validates, from `reserved` through `supported` to `retired`,
+is declared once in `Xmip/Xmip.psm1` and not repeated here.
 
 The complete taxonomy is declared from the beginning. Maturity describes
 implementation and support state, not whether the repository belongs in the
-architecture. This is why 292 repositories are named and 44 exist: the manifest
-is the design, and creation follows need.
+architecture. That is why most of the repositories the manifest names are
+reserved: the manifest is the design, and creation follows need. How many are
+declared and how many exist is the manifest's answer, and any number written
+here would be wrong within a week.
 
 ## 4. Dependency rules
 
@@ -383,17 +386,30 @@ names of its day; that document is retired and this section is its home):
 Xmip/
 ├── module/
 │   ├── foundation/
-│   │   ├── core   journey   message   stream   party   event   abi
+│   │   ├── core   abi   stream   message   context   journey
+│   │   └── node   cluster   party   event
 │   ├── capability/
-│   │   ├── transport   route   process   transform   contract   path
+│   │   ├── receive   send   transport   logic   prepare   identify
+│   │   ├── authenticate   authorize   contract   path   assign   promote
+│   │   └── demote   transform   route   process   retain   migrate
 │   ├── operation/
-│   │   ├── audit   observe   report   retain   archive   cli   powershell
+│   │   ├── audit   observe   report   archive   diagnose
+│   │   └── cli   powershell   gui
 │   └── platform/
-│       └── runtime   configure   persist   resilience
+│       └── runtime   configure   persist   resilience   schedule
+├── test/
+│   └── playground   the Xmip Playground, ADR-0028
 └── template/
     ├── rust     what a Rust module repository is generated from
     └── dotnet   what a .NET one is
 ```
+
+The tree is drawn from `architecture.toml` as of 2026-09-14 and the manifest
+wins where they differ: `Sync-XmipEstate -Compose` mounts what the manifest
+declares, at the domain the manifest gives it. (`retain` sat under
+`operation/` here until that day, a month after it became a Capability, and
+four modules were missing — the drawing had rotted exactly as clause 5 of
+ADR-0020 predicts a drawing will.)
 
 **The templates are submodules of the estate, not neighbors of it.** They sat
 beside `Xmip/` until 2026-08-29, which meant cloning the estate did not get
@@ -431,11 +447,13 @@ A fresh `git clone` of `Xmip` gets source and manifest and no submodules.
 implementations. Parent repositories pin submodule commits; reconciliation must
 never use uncontrolled `git submodule update --remote`.
 
-Level two waits. Zero of the 249 implementation repositories exist, so today's
-composition pins the 42 modules only. A technology earns its own repository
-when it has a second consumer or a separate release cadence — until then it is
-a module inside its parent, which is how Camel treats `camel-file` inside
-`camel-components` rather than as its own artifact.
+Depth three is populated as technologies are written: each is its own
+repository (ADR-0010), mounted inside its capability, and the manifest's
+maturity says which exist. This paragraph said until 2026-09-14 that no
+implementation repository existed and that a technology earned one only on a
+second consumer or a separate release cadence; both stopped being true in
+September 2026, when the technology repositories were written, and the
+sentence was one more count that rotted.
 
 Earlier drafts proposed a flat integration checkout —
 `submodules/platform/`, `handlers/`, `content/`, `stores/`. That is rejected:
@@ -457,8 +475,9 @@ Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
 **A reserved repository that does not exist is not drift.** It is section 3
 working — the manifest is the design and creation follows need. The report
 counts only what is missing *and* declared beyond `reserved`, and summarizes the
-rest in one line. Reporting all of them printed 293 warnings to surface one
-action, which is a report nobody reads.
+rest in one line. Reporting all of them printed a warning per reserved
+repository — hundreds of them — to surface one action, which is a report
+nobody reads.
 
 **Unexpected repositories are reported, and are not automatically wrong.** A
 repository in the `xmip-` namespace that the manifest does not declare is
@@ -535,6 +554,19 @@ One component at a time, and the order is not arbitrary:
 `xmip-core` goes first, because every other repository depends on its shared
 domain contracts, and a contract that changes after its dependants exist is
 paid for by all of them.
+
+Step 2 is the owner's act. A repository is created on origin under his
+account — `Sync-XmipEstate -Create` from the manifest, or `gh repo create` by
+hand — and an assistant declares, scaffolds and implements but does not
+create. Step 3 starts from the template of section 7 for the language, never
+from a copy of a sibling repository: a sibling carries its own dialect, and a
+copied file is the defect ADR-0044 exists to remove.
+
+Step 5 is `Publish-XmipChange` (alias `xgit`), which is nesting-aware. It
+tests and lands the technology, records the moved gitlink in the capability
+that mounts it, then pins the superproject — technology, capability,
+superproject, in that order, because a dependency tracks `main` (ADR-0005) and
+must be pushed before anything depending on it can be verified.
 
 A repository is created, not merely named, when all of this holds: it exists
 on origin; its README states its responsibility and its exclusions; its crate

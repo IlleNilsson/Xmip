@@ -229,9 +229,17 @@ record; propose a new one or an amendment.
 | [`development/creating-transports-contracts-and-processes.md`](doc/development/creating-transports-contracts-and-processes.md) | adding a transport, a contract or a process |
 | [`doc/planning/open-problems.md`](doc/planning/open-problems.md) | open questions, in order |
 
-Two documents live with the repository that owns them: identity per protocol
-in `module/capability/authenticate/doc/`, the ABI specification in
-`module/foundation/abi/doc/`. `doc/planning/` is working notes and not
+A document whose subject is one module lives with that module
+([ADR-0020](doc/decision/ADR-0020-documentation-structure.md), clause 3), in
+its `doc/` folder: the ABI specification (`module/foundation/abi`), identity
+per technology (`module/capability/authenticate`), adding a transport
+(`module/capability/transport`), adding a contract
+(`module/capability/contract`), the node configuration document
+(`module/platform/configure`), Xmip Process instances
+(`module/capability/process`), the content selector
+(`module/capability/promote`), the audit record (`module/operation/audit`),
+the reports (`module/operation/report`) and record identifiers
+(`module/platform/persist`). `doc/planning/` is working notes and not
 authoritative.
 
 ### The estate module
@@ -311,11 +319,12 @@ protocols that European e-invoicing mandates require from 2026.
 **Maturity.** Xmip has no stable release. `main` is the Continuum, the
 evolving state of the project. A Linear release is a stabilized, reproducible,
 versioned line cut from it; the first has not been cut
-([release-model.md](doc/governance/release-model.md)). The manifest declares
-the maturity of every repository. Three hundred and forty-three repositories
-are declared, most of them protocol, contract and archive technologies;
-forty-four are built and mounted. The runtime, the operator surfaces and the
-Playground are operational.
+([release-model.md](doc/governance/release-model.md)).
+[`architecture.toml`](architecture.toml) declares every repository and the
+maturity of each — three hundred and forty-three on 2026-09-14, most of them
+protocol, contract and archive technologies scaffolded and not yet written —
+and is the only place that count is kept. The runtime, the operator surfaces
+and the Playground are operational.
 
 *Note.* Xmip is designed to succeed the previous generation of integration
 servers, whose vendors now offer hosted services only. Its operator vocabulary
@@ -341,8 +350,9 @@ the comparison.
   An accepted Message is on disk before anything acts on it; a Journey
   checkpoints and survives a restart
   ([runtime-model.md](doc/architecture/runtime-model.md)).
-- One repository per module, forty-four in five domains, mounted at
-  `module/<domain>/<leaf>`. Dependency rules are stated in the manifest and
+- One repository per module and per technology, in five domains: a module is
+  mounted at `module/<domain>/<leaf>`, a technology inside its capability.
+  Dependency rules are stated in the manifest and
   enforced by a test: foundation never depends on a technology, a technology
   may depend on its capability, operations consume public contracts only
   ([repository-model.md](doc/architecture/repository-model.md)).

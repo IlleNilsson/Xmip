@@ -210,6 +210,9 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.message.ubl]
     maturity = "scaffolded"
+    # UBL is XML with a schema: it rides on the xml technology as its carrier
+    # (ADR-0044 clause 1, repository-model section 4).
+    dependency = ["xmip-core-message-xml"]
     specification = "OASIS Universal Business Language"
     [xmip.core.message.xml]
     maturity = "scaffolded"
@@ -282,7 +285,7 @@ dependency = []
     [xmip.core.transport.aws-kinesis]
     maturity = "scaffolded"
     description = "Amazon Kinesis Data Streams transport: Signature Version 4 over the JSON API — put a Stream as one record, read a shard on from where it last stopped — a stream and its shard are a Location. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-transport-aws-sqs"]
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.bacnet]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-udp"]
@@ -449,10 +452,10 @@ dependency = []
     [xmip.core.transport.aws-sns]
     maturity = "scaffolded"
     description = "Amazon SNS transport: Signature Version 4 over the Query API — publish a Stream as a message to a topic, and receive as the HTTP endpoint a subscription delivers to, confirming itself and taking each notification as a Stream — a topic ARN is a Location. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-transport-aws-sqs"]
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.aws-sqs]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-http", "xmip-core-transport-s3"]
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
     specification = "Azure Blob Storage REST API, Shared Key authorisation"
@@ -464,7 +467,7 @@ dependency = []
     [xmip.core.transport.azure-event-hubs]
     maturity = "scaffolded"
     description = "Azure Event Hubs transport: a Shared Access Signature over the REST API — send a Stream as one event to a hub or one of its partitions; reading is AMQP, and this transport says so — a hub is a Location. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-transport-azure-service-bus"]
+    dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.azure-service-bus]
     maturity = "scaffolded"
     description = "Azure Service Bus transport: a Shared Access Signature over the REST API — send a Stream as a message, receive with peek-lock and complete each message once it is a Stream — a queue is a Location. A xmip-core-transport technology."
@@ -677,7 +680,7 @@ dependency = []
   description = "Common path-expression and addressing functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
-  dependency = ["xmip-core", "xmip-core-message", "xmip-core-context"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.path.dot]
     maturity = "scaffolded"
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
@@ -1092,14 +1095,14 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "planned"
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-observe", "xmip-core-resilience"]
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-node", "xmip-core-observe", "xmip-core-resilience"]
 
   [xmip.core.persist]
   description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "planned"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-journey"]
 
   [xmip.core.configure]
   description = "Reads and validates declared Xmip configuration and turns it into a service configuration."

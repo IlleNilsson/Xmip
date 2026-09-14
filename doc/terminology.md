@@ -288,15 +288,12 @@ policy-driven expiry — is an open question in ADR-0013 and is not settled here
 
 ## Startup
 
-Xmip Service startup builds a validated execution tree from configuration. The
-tree identifies the Modules to load, the Xmip Processes to start, the Xmip
+**Startup** is the Xmip Service building a validated execution tree from
+configuration and starting the Xmip Host Services that do the work; the tree
+identifies the Modules to load, the Xmip Processes to start, the Xmip
 Subprocesses and their required Modules, and the Extensions to verify but not
-load. ADR-0018 specifies the nine phases and which of the two services owns
-each.
-
-Xmip cannot own every incorrect decision made in configuration or code, but it
-mitigates predictable mistakes through validation, diagnostics, warnings and
-clear failure boundaries.
+load. The nine phases are `architecture/runtime-model.md` section 21,
+*Startup*, from ADR-0018.
 
 ## Retired terms
 

@@ -131,13 +131,10 @@ If not, it is a Module.
 
 ## 5. The loadable binary model
 
-A Module ships as a platform-native shared library:
-
-```text
-Windows   .dll
-Linux     .so
-macOS     .dylib
-```
+A Module ships as a platform-native shared library. What the file is called on
+each platform, and how the host finds, loads and unloads it, is the ABI
+specification's: `module/foundation/abi/doc/specification.md` section 3,
+*Finding the library*.
 
 **Installing a capability must never require recompiling the runtime.** A Module
 is installed by placing its package and manifest where the runtime can discover
@@ -149,18 +146,19 @@ possible, not so that it is mandatory.
 
 ## 6. The manifest
 
-Each Module carries `xmip-module.toml` declaring:
+Each Module carries a manifest, `xmip-module.toml`, beside its library. What
+identifies the Module — provider, module, standard, the ABI handshake and the
+trait and module versions — is the descriptor ADR-0012 defines and
+`module/foundation/abi/doc/specification.md` specifies, stated once there and
+not repeated in the manifest; the manifest adds what the runtime needs before
+it loads anything: platform, binary path, required capabilities, supported
+technologies, trust requirement and isolation requirement. There is no module
+kind: ADR-0012 clause 5 removed it, and the descriptor's module name is the
+kind.
 
-```text
-component id            supported Xmip contract version
-module kind             platform
-version                 binary path
-required capabilities   supported technologies
-trust requirement       isolation requirement
-```
-
-The runtime receives one or more module roots from node configuration and scans
-them for manifests.
+The runtime reads manifests from the module roots node configuration names and
+loads each library by the absolute path the specification requires (section 3,
+*Finding the library*); it never searches for one.
 
 ### Communication layering
 
@@ -240,29 +238,21 @@ rather than of changing Xmip.
 
 ## 8. Loading and registration
 
-```text
-Xmip Service
-    reads configuration
-    builds the execution tree
-    validates startup                 <- fails here, before anything starts
-    plans Host Services
-    starts Host Services
-Xmip Host Service, each within itself
-    loads its configured Modules      ABI-verified per ADR-0012
-    registers Handlers                into the Handler registry
-    registers Extensions              into the Extension registry
-    verifies Extensions               verified, not loaded
-    accepts work
-```
+Startup is `runtime-model.md` section 21, *Startup*: nine phases, the first
+five the Xmip Service's and the last four each Host Service's own, decided by
+ADR-0018 clause 4. What this document adds is what loading puts in place.
 
-The runtime resolves configured Handler names through the registry and talks to
-**Handler traits, never to concrete implementations**. Extensions are runtime
-utilities, not Handlers: a Handler does technology-specific receive, send,
-content or logic work; an Extension provides reusable capability to whatever may
-call it.
+A Host Service loads its configured Modules, ABI-verified per ADR-0012, and
+registers what they declare: Handlers into the Handler registry, Extensions
+into the Extension registry. The runtime resolves configured Handler names
+through the registry and talks to **Handler traits, never to concrete
+implementations**. Extensions are runtime utilities, not Handlers: a Handler
+does technology-specific receive, send, content or logic work; an Extension
+provides reusable capability to whatever may call it.
 
-**Modules load at startup. Extensions are verified at startup where possible and
-loaded only when execution requires them.** ADR-0018 owns the nine phases.
+**Modules load at startup, eager or delayed per ADR-0025. Extensions are
+verified at startup where possible and loaded only when execution requires
+them.**
 
 ## 9. Execution thread
 
@@ -331,6 +321,8 @@ detail:
 - Runtime failures return `Result`. **Panics are not runtime control flow.**
 - Handler boundaries are traits — inside a Host Service, above the C ABI of
   section 10.
+- Blocking Handler work never blocks a latency-sensitive runtime loop; it is
+  scheduled onto a worker, per section 9.
 - Configuration is loaded into typed structures, not consulted as text.
 - The core runtime avoids `unsafe`.
 

@@ -96,6 +96,23 @@ The dashboard softens; the gate does not.
 - A node that does not answer is `Done` at that node, with "no answer" as its
   evidence — unchanged in substance, renamed with the rest.
 
+## Amendment, 2026-09-14: the color has a name, said once
+
+Clause 1 put the mood-to-color mapping in the stylesheet and nowhere else, and
+the consolidation of the operator surfaces (ADR-0052) found it written a second
+time in the GUI and a third time, disagreeing, in the PowerShell prompt — which
+cannot read a stylesheet. The mapping now has two halves. Its *name* — Fine
+green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
+Holding orange, unknown muted — is said once, in `Xmip.Surface` beside the
+English for a mood (`English.Color`). Its *paint* stays where clause 1 put it:
+the stylesheet renders each name to the estate's tokens, and a console prompt
+renders each name to the nearest console color. No surface names a color of
+its own. Clause 1's "nowhere else" now reads: no other place decides what a
+mood is called, and no other stylesheet.
+
+Drafted by the assistant on the owner's instruction to consolidate, refactor
+and re-engineer, 2026-09-14; the names are the ones clause 1 already listed.
+
 ## Provenance
 
 Both moves are the owner's, 2026-09-06: *the worst must not propagate to the
