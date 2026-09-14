@@ -82,7 +82,15 @@ function Stop-XmipTest {
             Get-XmipTestNode | Where-Object { $_.Parent -eq $number } |
                 Stop-XmipTestNode -Confirm:$false
 
-            Stop-Process -Id $number -Force -ErrorAction SilentlyContinue
+            try {
+                Stop-Process -Id $number -Force -ErrorAction Stop
+            }
+            catch {
+                [string] $why = $_.Exception.Message
+                Write-Error "REFUSED: roll $number could not be stopped from this session: $why"
+                continue
+            }
+
             Wait-Process -Id $number -Timeout 5 -ErrorAction SilentlyContinue
 
             if (-not [string]::IsNullOrWhiteSpace($roll.Path)) {
