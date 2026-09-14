@@ -261,6 +261,17 @@ applied to the GUI as it stands.
    The playground's examples and fixtures are renamed the same day; the
    playground still runs every stage on every node, so the letter there is
    what the node is for, not what it is limited to.
+7. **Nothing on a page starts anything, and the page's own words when the
+   circuit drops.** No browser starts a web server: `Start-XmipWeb` starts
+   the web host, detached, and opens no browser; a page that appears to
+   start a server was started by a tool outside the estate. When the
+   circuit between the page and its host drops, the page says so in the
+   estate's words and style — *Reconnecting to the web monitor*, then
+   FAILED or REFUSED with a plain reload — not in the box blazor.web.js
+   draws when no element of the host's own is there. Clause 6 removed the
+   template's dialog; this puts the estate's in its place, without a script,
+   since the estate keeps JavaScript to the VS Code extension. Landed the
+   same day.
 
 Landed the same day: the renaming (6), and the first of the topology (3) —
 the playground's fleet publishes its nodes, its shared store and each node's
