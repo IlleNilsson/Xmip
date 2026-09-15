@@ -335,6 +335,16 @@ same day in `Xmip.PowerShell` (`PromptMonitor.Render`), composing with
 posh-git as before. Ruling 5 of the amendment above, the node in the prompt
 when the session is remote, stays queued.
 
+The owner, later the same day, on seeing it: *we do not need the mood. R, P,
+S, T, F in colors from red, yellow and green will solve that. Space is
+precious on a console line, so the mood shall not be spelled out; colors.*
+So the segment is `[R12 P11 S10 T1 F0]` and no word: a stage letter is
+green, yellow or red by the worst leaf on that stage — Fine green; Paused,
+Working and Stressed yellow; Exhausted and Done red — T yellow and F red
+when above zero, green otherwise, and gray where nothing is published.
+Clause 2's mood-first still holds on every surface with room for a word;
+the prompt has none, and its color is that mood. Built the same day.
+
 ## Amendment, 2026-09-15: a surface is told, it does not ask
 
 The owner, on a proposal from outside the estate to move the surfaces to
