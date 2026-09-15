@@ -555,7 +555,11 @@ retires entries from stops being an order.
                                        owner, 2026-09-14 evening): the runtime
                                        module has no tests, the GUI has none
                                        of its own, and the web offers no
-                                       role — fix all three here. The names
+                                       role — fix all three here. A surface
+                                       is told, never asks: the change feed
+                                       is signalled, and rides SignalR when
+                                       it crosses a network (ADR-0052,
+                                       amendment 2026-09-15). The names
                                        need item 1's
                                        configured node; the directory needs
                                        the role gate ADR-0027 blocks on
