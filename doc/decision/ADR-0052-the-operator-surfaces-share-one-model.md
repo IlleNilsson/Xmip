@@ -369,6 +369,44 @@ change feed says only that a new one exists.
 - **Polling only when really needed**, and then the record says why at the
   loop.
 
+## Amendment, 2026-09-15: the index — a publication is read once, as its tree
+
+The owner, on serious slowness in the GUI, the CLI and the PowerShell prompt:
+*it has to be a better way, go find it out.* Found: every surface filtered
+the whole publication again for every question. A board render asked the
+runtime for the health beneath the root, the branches beneath the focus,
+each stage, each node and the figures, and each answer walked eleven
+thousand records, splitting every scope into segments on the way; over the
+native boundary each answer first cloned the whole publication under the
+lock the publisher needs, eight times a render; over a snapshot file the
+two megabytes were flattened into sixty thousand configuration keys every
+second. The fix is not faster filtering. It is none.
+
+- **`ScopeIndex`** in `Xmip.Surface`: a publication as the scope tree
+  ADR-0027 describes, built in one pass — every scope with its worst leaf,
+  its rollup, the leaves beneath it, its children worst first and its six
+  figures summed upward. Immutable; a new publication is a new index, and
+  the change feed says when. Health, figures, branches, rollup and nodes are
+  lookups in it.
+- **Every surface answers from its index.** `IOperatorSurface.Index()` is
+  the one call. The snapshot surface builds one per file write, from the
+  Tomlyn document itself and no longer from a configuration; the native
+  surface reads the health beneath the root across the boundary once per
+  revision of the runtime's clock and keeps the index until the clock moves;
+  the remote surface fetches once per notice. `ScopeTree.Beneath` compares
+  by segment without splitting.
+- **The runtime hands out a handle, not a copy.** `PUBLISHED` holds an
+  `Arc<Snapshot>`; a call answers from the handle it took, and a
+  publication, once published, is never changed in place.
+- **A page reads the index and renders what it shows.** The Cluster page
+  reads once per publication and virtualizes its long list; the
+  Configuration tree is the index's branches in configuration order; the
+  prompt reads the root's rollup and figures.
+
+Proved in `Xmip.Surface.Test`: the index says what the record-by-record
+helpers say, and it indexes a Playground's eleven thousand leaves well within
+one render. Built the same day, on the owner's word.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
