@@ -335,6 +335,30 @@ same day in `Xmip.PowerShell` (`PromptMonitor.Render`), composing with
 posh-git as before. Ruling 5 of the amendment above, the node in the prompt
 when the session is remote, stays queued.
 
+## Amendment, 2026-09-15: a surface is told, it does not ask
+
+The owner, on a proposal from outside the estate to move the surfaces to
+events over SignalR: *whenever eventing, SignalR can be used by CLI, UI, GUI,
+it should. Polling is not preferred unless really needed.* Recorded as the
+rule for how a surface learns that something changed, and it changes nothing
+about what a surface reads: the snapshot stays the truth (ADR-0027), the
+change feed says only that a new one exists.
+
+- **Told, not asked.** `WatchAsync` is the one change feed every surface
+  follows, and it is signalled: the native boundary blocks in
+  `xmip_wait_change_v1` on a revision, and a published snapshot file is
+  watched by the file system. The two-second loop in `NativeOperator` is
+  the fallback for a runtime that cannot signal, kept for a rolling upgrade
+  and for nothing else; the twenty-five millisecond settle after a file
+  event is a debounce, not a poll.
+- **SignalR carries it across a network.** When a surface follows a host on
+  another machine — the CLI, the PowerShell module or a GUI following a web
+  host that follows a node — the change feed rides SignalR, which the web GUI
+  already speaks as server-side Blazor. Queued with the surfaces' remote
+  work in Suggested order item 3; nothing is built for it today.
+- **Polling only when really needed**, and then the record says why at the
+  loop.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
