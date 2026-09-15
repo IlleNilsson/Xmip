@@ -354,8 +354,18 @@ change feed says only that a new one exists.
 - **SignalR carries it across a network.** When a surface follows a host on
   another machine — the CLI, the PowerShell module or a GUI following a web
   host that follows a node — the change feed rides SignalR, which the web GUI
-  already speaks as server-side Blazor. Queued with the surfaces' remote
-  work in Suggested order item 3; nothing is built for it today.
+  already speaks as server-side Blazor. Built the same day, on the owner's
+  *do it*: `RemoteOperator` in `Xmip.Surface` is the third implementation of
+  the one interface, chosen by `Surface = "remote"` and `Url` in any host's
+  document or by `xmip --remote <url>`; `Xmip.Surface.Relay` is the served
+  half, `SurfaceHub` at `/surface` answering what the web host's own surface
+  answers and `SurfaceRelay` pushing that host's change feed to every
+  connected remote surface. The web host serves it; the CLI, the PowerShell
+  prompt and the desktop follow it; `validate` stays local because it asks a
+  runtime. Proved against a hub on a loopback port in `Xmip.Surface.Test`:
+  the same records over the wire, and a notice told, not asked, when the
+  host's file advances. The two acts cross the wire as they cross the
+  desktop, by role once ADR-0009's gate lands.
 - **Polling only when really needed**, and then the record says why at the
   loop.
 
