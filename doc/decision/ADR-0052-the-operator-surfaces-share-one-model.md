@@ -316,6 +316,25 @@ roll. Recorded and queued, not built: the third view (1), the exact names
 and the prompt (5), as Suggested order item 3 in
 `doc/planning/open-problems.md`.
 
+## Amendment, 2026-09-15: the five figures join the prompt
+
+The amendment of 2026-09-14 declined *a prompt segment of five counts in five
+colors in place of the mood*. The owner reaffirmed the counts on 2026-09-15:
+*the PowerShell prompt should reflect Receive, Process, Send, reTries and
+Failures, like posh-git does for Git repos.* Reaffirmed, it is his decision,
+and the objection is met rather than overruled: the mood stays first and in
+its color, so clause 2 holds, and each count carries its letter, so it is a
+fact with the word beside it, not a number alone. The segment is
+`[Xmip holding R12 P11 S10 T1 F0]`: R, P and S are what the three stages
+count — Streams, Journeys, Messages, `ScopeTree.CountedAt`, the same figures
+the board's tiles say — T is Retrying and F is Failed, the two outcome counts
+of the amendment above; bytes stay off the prompt. A figure the publisher has
+not published is a dash, never a zero. The letters light only when the count
+is above zero, T in the stressed color and F in the failed one. Built the
+same day in `Xmip.PowerShell` (`PromptMonitor.Render`), composing with
+posh-git as before. Ruling 5 of the amendment above, the node in the prompt
+when the session is remote, stays queued.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
