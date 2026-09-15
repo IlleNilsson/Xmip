@@ -56,7 +56,7 @@ process the Message and deliver it to its destination. If a delivery cannot
 complete, Xmip keeps the state and reports the reason instead of treating a
 transport acknowledgement as a successful application delivery.
 
-### Nine terms to begin with
+### Ten terms to begin with
 
 - **Stream.** What arrives: bytes from a file, a socket, a queue, a mailbox,
   the rows a SQL statement returns, a device on a bus. A Stream belongs to the
@@ -80,6 +80,14 @@ transport acknowledgement as a successful application delivery.
   waiting for something named. It is not an operating system process, it
   receives no Streams and delivers nothing outside, and its state belongs to
   the cluster, never to a thread or a node.
+- **Resilience.** Every delivery and every call out is an attempt, and a
+  guard is asked before each attempt whether it may go, must wait, is refused
+  or is answered by a fallback, and after it whether the outcome stands, the
+  attempt is repeated, or the work is given up. Retry, timeout, circuit
+  breaker, rate limit, bulkhead and fallback are the six guards
+  ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
+  A guard judges; it never runs the operation. Retrying and Failed are
+  counted at every scope and shown on every surface.
 - **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
   Processes perform work, and Send Locations deliver departures. Every
   surface follows the same three stages and names the exact Location or
