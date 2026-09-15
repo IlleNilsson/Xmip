@@ -66,20 +66,24 @@ transport acknowledgement as a successful application delivery.
   sender's responsibility, and the refusal says where and why.
 - **Message.** Immutable content Xmip has accepted. An accepted Message is
   written to disk before anything acts on it and is never lost.
+- **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
+  Processes perform work, and Send Locations deliver departures. Every
+  surface follows the same three stages and names the exact Location or
+  Process.
 - **Routing.** A Message is published once; every Subscription that matches
   it names a destination and opens one Journey. Routing creates no new
   Message. A Message no Subscription matched goes to the Dead Message Queue,
   to be republished once the Subscription is corrected.
 - **Journey.** One durable line of work for a Message, one per matched
   Subscription. It checkpoints and survives a restart.
-- **Assignment.** Setting values in a Message's context, from a literal or
-  from another value, in order. It belongs to an Xmip Process alone and
-  creates a new Message generation, as transformation does; routing does not.
 - **Processing.** What an Xmip Process does: a definition a Subscription
   starts, running step by step and answering with a Message, no Message, or
   waiting for something named. It is not an operating system process, it
   receives no Streams and delivers nothing outside, and its state belongs to
   the cluster, never to a thread or a node.
+- **Assignment.** Setting values in a Message's context, from a literal or
+  from another value, in order. It belongs to an Xmip Process alone and
+  creates a new Message generation, as transformation does; routing does not.
 - **Resilience.** Every delivery and every call out is an attempt, and a
   guard is asked before each attempt whether it may go, must wait, is refused
   or is answered by a fallback, and after it whether the outcome stands, the
@@ -88,10 +92,6 @@ transport acknowledgement as a successful application delivery.
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
   A guard judges; it never runs the operation. Retrying and Failed are
   counted at every scope and shown on every surface.
-- **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
-  Processes perform work, and Send Locations deliver departures. Every
-  surface follows the same three stages and names the exact Location or
-  Process.
 - **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
   Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
   needs attention, and it carries that leaf and its evidence, so the worst
