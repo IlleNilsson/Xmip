@@ -458,3 +458,16 @@ requires every surface — the CLI, the PowerShell module and both GUIs — to
 drill from the cluster to the leaf, and the prompt to name the node when the
 session is remote. What stays from 2026-09-05 is the fact: a browser page
 does none of this itself; the web GUI's server does it on the page's behalf.
+
+## Amendment, 2026-09-15: as few cmdlets as possible
+
+The owner, 2026-09-15: *create as few cmdlets as possible; use parameters,
+like the CLI uses commands and arguments.* Clause 10 already makes the
+PowerShell module the shape of the executable's JSON as objects; this says
+how small that shape is. `xmip` is one executable with eleven commands and
+their arguments. The PowerShell module is one cmdlet per noun, and what it
+does to the noun is a parameter or a parameter set — a new act on a known
+noun is a parameter, and only a new noun earns a cmdlet. Every parameter is
+named in every documented command. Every cmdlet that exists today stays as
+named; the rule governs what is added, and a consolidation is the owner's
+call. The estate module (`Xmip`) is held to the same rule.
