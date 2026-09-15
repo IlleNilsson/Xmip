@@ -56,7 +56,7 @@ process the Message and deliver it to its destination. If a delivery cannot
 complete, Xmip keeps the state and reports the reason instead of treating a
 transport acknowledgement as a successful application delivery.
 
-### Six terms to begin with
+### Nine terms to begin with
 
 - **Stream.** What arrives: bytes from a file, a socket, a queue, a mailbox,
   the rows a SQL statement returns, a device on a bus. A Stream belongs to the
@@ -66,8 +66,20 @@ transport acknowledgement as a successful application delivery.
   sender's responsibility, and the refusal says where and why.
 - **Message.** Immutable content Xmip has accepted. An accepted Message is
   written to disk before anything acts on it and is never lost.
-- **Journey.** One durable line of work for a Message. It checkpoints and
-  survives a restart.
+- **Routing.** A Message is published once; every Subscription that matches
+  it names a destination and opens one Journey. Routing creates no new
+  Message. A Message no Subscription matched goes to the Dead Message Queue,
+  to be republished once the Subscription is corrected.
+- **Journey.** One durable line of work for a Message, one per matched
+  Subscription. It checkpoints and survives a restart.
+- **Assignment.** Setting values in a Message's context, from a literal or
+  from another value, in order. It belongs to an Xmip Process alone and
+  creates a new Message generation, as transformation does; routing does not.
+- **Processing.** What an Xmip Process does: a definition a Subscription
+  starts, running step by step and answering with a Message, no Message, or
+  waiting for something named. It is not an operating system process, it
+  receives no Streams and delivers nothing outside, and its state belongs to
+  the cluster, never to a thread or a node.
 - **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
   Processes perform work, and Send Locations deliver departures. Every
   surface follows the same three stages and names the exact Location or
