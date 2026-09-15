@@ -477,6 +477,10 @@ git config push.recurseSubmodules check
 
 A submodule is a commit, not a branch. [CONTRIBUTING.md](CONTRIBUTING.md)
 explains how a Module change lands before the superproject updates its pin.
+`git status` at the root ignores dirt inside the forty-four submodules
+(`ignore = dirty` in `.gitmodules`): walking them took thirty seconds, and a
+prompt provider such as posh-git runs that status on every prompt. A moved
+pin still shows. `Get-XmipStatus` looks inside every module.
 
 ### Build, test, land
 
