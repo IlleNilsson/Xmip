@@ -558,8 +558,10 @@ retires entries from stops being an order.
                                        role — fix all three here. A surface
                                        is told, never asks: the change feed
                                        is signalled, and rides SignalR when
-                                       it crosses a network (ADR-0052,
-                                       amendment 2026-09-15). The names
+                                       it crosses a network — built, the
+                                       remote surface and the web host's
+                                       hub (ADR-0052, amendment
+                                       2026-09-15). The names
                                        need item 1's
                                        configured node; the directory needs
                                        the role gate ADR-0027 blocks on
