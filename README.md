@@ -484,16 +484,22 @@ The runtime and modules are Rust on the stable channel. The operator surfaces
 are .NET 11; the PowerShell module targets `net10.0` because `pwsh` hosts it.
 
 ```powershell
+Publish-XmipChange -Message 'short precise message'   # alias xgit: every suite, then land
 Start-XmipTest -Suite Estate                          # every test/*.Test.ps1
 Start-XmipTest -Suite Estate -Test Rust.Style         # test/Rust.Style.Test.ps1 alone
-Publish-XmipChange -Message 'short precise message'   # alias xgit
+Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1
 ```
 
-The Estate suite is the estate's own tests: the style rules, the manifest,
-the record and the estate module, one Pester file each under `test/`. Xmip
-itself is tested by its crates and by the Playground. `Publish-XmipChange`
-tests, commits and pushes every repository a change touched, in dependency
-order, modules first, then updates their pins in the superproject. `cargo fmt`, `cargo clippy
+Four kinds of test, and `Publish-XmipChange` runs every one a change
+touched, in dependency order, modules first, then commits, pushes and
+updates the pins in the superproject:
+
+| Suite | Runs | Command |
+| --- | --- | --- |
+| A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/operation/powershell/tests` |
+| The Playground's own | `test/playground` | `cargo test` in `test/playground` |
+| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Estate` |
+| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` | `cargo fmt`, `cargo clippy
 --workspace --all-targets -- -D warnings` and the suite must pass. Until the
 first Linear release, work commits directly to `main`
 ([release-model.md](doc/governance/release-model.md)).
