@@ -14,7 +14,7 @@ function Stop-XmipTest {
             this does what the roll would have: asks every node beneath it to
             leave through the fleet's stop file, waits five seconds, ends what
             stayed, then ends the roll. Takes Xmip.TestStatus objects from
-            Get-XmipTestStatus on the pipeline, or -Id, or nothing for all.
+            Get-XmipTest -View Status on the pipeline, or -Id, or nothing for all.
 
         .PARAMETER Test
             The runs to stop, from Get-XmipTestStatus.
@@ -26,7 +26,7 @@ function Stop-XmipTest {
             Stop-XmipTest
 
         .EXAMPLE
-            Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |
+            Get-XmipTest -View Status | Where-Object -Property Stress -EQ -Value brutal |
                 Stop-XmipTest -WhatIf
     #>
     [CmdletBinding(
@@ -35,12 +35,20 @@ function Stop-XmipTest {
         DefaultParameterSetName = 'All')]
     [OutputType([void])]
     param(
+        [Parameter()]
+        [ValidateSet('Suite', 'Node', 'Monitor')]
+        [string] $Target = 'Suite',
+
         [Parameter(ParameterSetName = 'Object', ValueFromPipeline)]
         [PSTypeName('Xmip.TestStatus')]
         [PSObject[]] $Test,
 
         [Parameter(ParameterSetName = 'Id', Mandatory)]
-        [int[]] $Id
+        [int[]] $Id,
+
+        [Parameter()]
+        [SupportsWildcards()]
+        [string[]] $Name = @('*')
     )
 
     begin {
@@ -61,6 +69,31 @@ function Stop-XmipTest {
     }
 
     end {
+        if ($Target -eq 'Monitor') {
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                return Stop-XmipWeb -Id $Id -WhatIf:$WhatIfPreference
+            }
+
+            return Stop-XmipWeb -WhatIf:$WhatIfPreference
+        }
+
+        if ($Target -eq 'Node') {
+            [bool] $byId = $PSBoundParameters.ContainsKey('Id')
+            [PSObject[]] $nodes = @(
+                Get-XmipTestNode | Where-Object {
+                    $candidate = $_
+                    [bool] $named = @(
+                        $Name | Where-Object { $candidate.Name -like $_ }
+                    ).Count -gt 0
+
+                    if ($byId) { return $candidate.Id -in $Id }
+                    return $named
+                }
+            )
+
+            return Stop-XmipTestNode -Node $nodes -WhatIf:$WhatIfPreference
+        }
+
         [object[]] $running = @(Get-XmipTestStatus)
 
         if ($PSCmdlet.ParameterSetName -eq 'All') {

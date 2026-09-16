@@ -9,11 +9,15 @@ BeforeAll {
     # its own #requires. Named once because three tests walk the same list.
     [string[]] $script:EntryPoints = @(
         'Xmip.psm1'
+        'Install-XmipEstate.ps1'
+        'Get-XmipEstate.ps1'
+        'Test-XmipEstate.ps1'
+        'Set-XmipEstate.ps1'
         'Sync-XmipEstate.ps1'
-        'Sync-XmipRepository.ps1'
-        'Install-XmipPrerequisite.ps1'
-        'Install-XmipModule.ps1'
-        'Publish-XmipChange.ps1'
+        'Publish-XmipEstate.ps1'
+        'Start-XmipTest.ps1'
+        'Get-XmipTest.ps1'
+        'Stop-XmipTest.ps1'
     )
 
     Import-Module (Join-Path $script:ModuleRoot 'Xmip.psd1') -Force
@@ -21,19 +25,19 @@ BeforeAll {
 
 Describe 'The manifest' {
     It 'is TOML, and the estate expands from it' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         @($manifest.repositories).Count | Should -BeGreaterThan 200
     }
 
     It 'names every repository from its position in the tree' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         # The path is the name: dots become hyphens and nothing else happens.
         @($manifest.repositories | Where-Object { $_.name -notlike 'xmip-*' }).Count |
             Should -Be 0
     }
 
     It 'gives every repository a domain, a role and a maturity' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         foreach ($property in 'architecturalDomain', 'repositoryRole', 'maturity') {
             @($manifest.repositories | Where-Object { -not $_.$property }).Count |
                 Should -Be 0 -Because "every repository needs $property"
@@ -41,7 +45,7 @@ Describe 'The manifest' {
     }
 
     It 'has no duplicate repository names' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         $names = @($manifest.repositories.name)
         $names.Count | Should -Be (@($names | Sort-Object -Unique).Count)
     }
@@ -102,15 +106,56 @@ Describe 'The module is the entry point' {
         $exported = (Get-Module Xmip).ExportedFunctions.Keys
 
         [string[]] $required = @(
+            'Install-XmipEstate'
+            'Get-XmipEstate'
+            'Test-XmipEstate'
+            'Set-XmipEstate'
             'Sync-XmipEstate'
-            'Sync-XmipRepository'
-            'Install-XmipPrerequisite'
-            'Get-XmipManifest'
+            'Publish-XmipEstate'
         )
 
         foreach ($name in $required) {
             $exported | Should -Contain $name
         }
+    }
+
+    It 'exports only Estate and Test nouns' {
+        [string[]] $expected = @(
+            'Get-XmipEstate'
+            'Get-XmipTest'
+            'Install-XmipEstate'
+            'Publish-XmipEstate'
+            'Set-XmipEstate'
+            'Start-XmipTest'
+            'Stop-XmipTest'
+            'Sync-XmipEstate'
+            'Test-XmipEstate'
+        )
+
+        @($exported | Sort-Object) | Should -Be $expected
+    }
+
+    It 'uses repository names for a dependency-complete local slice' {
+        InModuleScope Xmip {
+            $manifest = [PSCustomObject]@{
+                repositories = @(
+                    [PSCustomObject]@{ name = 'xmip-a'; dependencies = @('xmip-b') }
+                    [PSCustomObject]@{ name = 'xmip-b'; dependencies = @('xmip-c') }
+                    [PSCustomObject]@{ name = 'xmip-c'; dependencies = @() }
+                )
+            }
+
+            Resolve-XmipEstateSlice -Manifest $manifest -Include xmip-a |
+                Should -Be @('xmip-a', 'xmip-b', 'xmip-c')
+        }
+    }
+
+    It 'accepts Feature as a convenient name for Include' {
+        (Get-Command Set-XmipEstate).Parameters.Include.Aliases |
+            Should -Contain 'Feature'
+
+        (Get-Command Set-XmipEstate).Parameters.Path.Aliases |
+            Should -Contain 'Destination'
     }
 
     It 'declares Core and 7.6.5 on every entry point' {
@@ -229,7 +274,7 @@ Describe 'The estate is more than its modules' {
     It 'does not declare a retired repository as a live module' {
         # Retired and declared at once means the drift check would call it
         # missing and the retirement list would call it expected.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         $live = @($manifest.repositories.name)
 
         foreach ($entry in @($script:Architecture.retired)) {
@@ -268,7 +313,7 @@ Describe 'The estate is more than its modules' {
         # and by luck in equal measure, and the construction is invisible in the
         # tree, which is why it was reported as a bug by someone reading the
         # tree. This is the guarantee.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
 
         $mounts = & (Get-Module Xmip) {
             param($Repositories, $Declared)
@@ -296,7 +341,7 @@ Describe 'The estate is more than its modules' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the
         # estate is 44 of them.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
 
         [string[]] $declared = @($manifest.repositories.name) + @(
             $script:Architecture.crate.template.Values |

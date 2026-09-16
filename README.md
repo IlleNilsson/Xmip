@@ -13,8 +13,8 @@ remain available so operators can understand what happened and decide what
 happens next.
 
 Written in Rust and licensed AGPL-3.0-or-later, Xmip runs on Windows, Linux and
-macOS—from one server or edge device to an on-premises cluster or nodes in a
-cloud of your choice. It can operate without internet access.
+macOS — from one server or edge device to an on-premises cluster or nodes in a
+cloud of your choice. It operates without internet access.
 
 ## Why Xmip
 
@@ -97,8 +97,8 @@ The full vocabulary is in
    git clone --recursive https://github.com/IlleNilsson/Xmip.git
    Set-Location -Path Xmip
    Import-Module -Name ./Xmip
-   Install-XmipModule
-   Install-XmipPrerequisite -Role developer -Install
+   Install-XmipEstate -Target Module
+   Install-XmipEstate -Target Prerequisite -Role developer
    ```
 
 3. Start the Playground and its monitor. The Playground is Xmip's local
@@ -106,11 +106,11 @@ The full vocabulary is in
 
    ```powershell
    Start-XmipTest -Suite Playground -Test RoundTrip -Nodes alpha, beta -OnlineNodes alpha
-   Start-XmipWeb -Snapshot .local-work/playground/playground-snapshot.toml
-   Get-XmipTestStatus
-   Get-XmipTestResult | Where-Object -Property State -NE -Value fine
+   Start-XmipTest -Target Monitor -Snapshot .local-work/playground/playground-snapshot.toml
+   Get-XmipTest -View Status
+   Get-XmipTest -View Result | Where-Object -Property State -NE -Value fine
    Stop-XmipTest
-   Stop-XmipWeb
+   Stop-XmipTest -Target Monitor
    ```
 
 The monitor at <http://127.0.0.1:5087> shows the receive, process and send
@@ -290,21 +290,30 @@ published asynchronously by the runtime and never enters the message path.
 Audit is the durable record of actions and outcomes; a live monitor is not a
 replacement for it.
 
-### Platforms and installation
+### Installable devices and platforms
 
 Linux, Windows and macOS are equal operating targets. The runtime, command line,
 PowerShell module and monitors use the same Xmip model on each.
 
-| Concern | Windows | Linux | macOS |
-| --- | --- | --- | --- |
-| PowerShell 7.6.5 or later | `winget` | `snap`, `apt`, `dnf`, `zypper` or `pacman` | `brew` |
-| Local installation | `install/install-local.ps1` | `install/install-local.sh` | `install/install-local.sh` |
-| Desired state | DSC | Ansible | Ansible |
-| Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
+- **Windows:** servers, workstations, virtual machines and edge devices.
+  Install PowerShell with `winget`, install Xmip with
+  `install/install-local.ps1`, manage desired state with DSC, and operate
+  remotely over WinRM or SSH.
+- **Linux:** servers, appliances, containers, virtual machines and edge
+  devices. Install PowerShell with `snap`, `apt`, `dnf`, `zypper` or `pacman`,
+  install Xmip with `install/install-local.sh`, manage desired state with
+  Ansible, and operate remotely over SSH.
+- **macOS:** workstations, build hosts and edge nodes. Install PowerShell with
+  `brew`, install Xmip with `install/install-local.sh`, manage desired state
+  with Ansible, and operate remotely over SSH.
+- **On-premises and cloud:** run one node, an on-premises cluster, or nodes on
+  infrastructure in the cloud of your choice. Internet access is optional,
+  never a control-plane requirement.
 
-`Install-XmipPrerequisite -Role operator` reports what a machine lacks;
-`-Install` installs it. The command does not elevate itself. When a package
-needs administrative rights, it prints the required command and stops.
+`Test-XmipEstate -Target Prerequisite -Role operator` reports what a machine lacks;
+`Install-XmipEstate -Target Prerequisite -Role operator` installs it. Neither
+command elevates itself. When a package needs administrative rights, the
+command prints what is required and stops.
 
 ### Configuration and control
 
@@ -315,11 +324,11 @@ Online access is therefore a declared operational choice, not an accidental
 side effect of deployment.
 
 The CLI exposes `measure`, `list`, `show`, `pause` and `resume`.
-PowerShell supplies the corresponding pipeline objects and
-`Suspend-XmipScope` and `Resume-XmipScope`, both with `-WhatIf`. Start,
-stop and restart belong to service and host lifecycle management rather than
-the observation boundary. The read-only web monitor exposes none of those
-actions.
+PowerShell supplies the corresponding pipeline objects through
+`Get-XmipRuntime`, `Test-XmipRuntime` and `Set-XmipRuntime`. The Set command
+uses `-State Paused|Running` and supports `-WhatIf`. Start, stop and restart
+belong to service and host lifecycle management rather than the observation
+boundary. The read-only web monitor exposes none of those actions.
 
 Deployment profiles—`standard`, `enterprise` and `regulated`—set identity
 isolation and whether the runtime fails closed when required assurance is
@@ -348,8 +357,8 @@ without requiring a production system:
 
 ```powershell
 Start-XmipTest -Suite Playground -Test HeavyLoad, LowLatency -Stress Harsh -Nodes n1, n2, n3
-Get-XmipTestStatus
-Get-XmipTestResult -Test HeavyLoad -Worst
+Get-XmipTest -View Status
+Get-XmipTest -View Result -Test HeavyLoad -Worst
 Stop-XmipTest
 ```
 
@@ -387,10 +396,10 @@ hosts it.
 ```powershell
 Start-XmipTest -Suite Estate
 Start-XmipTest -Suite Estate -Test Rust.Style
-Publish-XmipChange -Message 'short precise message'
+Publish-XmipEstate -Message 'short precise message'
 ```
 
-`Publish-XmipChange` verifies and lands affected repositories in dependency
+`Publish-XmipEstate` verifies and lands affected repositories in dependency
 order, Modules first. Rust formatting, Clippy with warnings denied, and the
 relevant suites must pass. Until the first Linear release, accepted work lands
 on `main` as described in
@@ -429,29 +438,27 @@ The implementation guide for transports, Contracts and Processes is
 
 ### Estate commands
 
+Every command that changes state accepts `-WhatIf`. Reporting is the default.
+
 | Command | Purpose |
 | --- | --- |
-| `Install-XmipModule` | Link the module into `PSModulePath`. |
-| `Install-XmipPrerequisite` | Report or install requirements for a role. |
-| `Sync-XmipEstate` | Report manifest drift, configure repositories and compose submodules. |
-| `Sync-XmipRepository` | Work with local copies: clone, pull, status, branch, push and distribute. |
-| `Get-XmipManifest`, `Test-XmipManifest` | Read and validate the architecture manifest. |
-| `Get-XmipStatus` | Report dirty, ahead and behind state across the estate. |
-| `Publish-XmipChange` | Verify and land changes in dependency order. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | Control an estate or Playground test run. |
-| `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Control named simulated nodes. |
-| `Get-XmipTestResult`, `Get-XmipHistory` | Read current and historical results. |
-| `Start-XmipWeb`, `Get-XmipWeb`, `Stop-XmipWeb` | Control the web monitor. |
-| `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | Read and maintain the decision record. |
+| `Install-XmipEstate` | Link the module or install declared prerequisites. |
+| `Get-XmipEstate` | Read status, root, manifest, decisions or local slices. |
+| `Test-XmipEstate` | Validate the manifest or report missing prerequisites. |
+| `Set-XmipEstate` | Declare a named local repository slice and its path. |
+| `Sync-XmipEstate` | Reconcile GitHub, submodules or local repository working copies. |
+| `Publish-XmipEstate` | Test and land a change, dependency order, Modules first. |
+| `Start-XmipTest`, `Get-XmipTest`, `Stop-XmipTest` | Operate tests and their monitor. |
 
 Examples:
 
 ```powershell
-Sync-XmipEstate
-Sync-XmipEstate -Create -WhatIf
-Sync-XmipEstate -Compose
-Sync-XmipRepository -Status
-Get-XmipStatus
+Sync-XmipEstate                                       # report drift
+Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
+Sync-XmipEstate -Compose                              # wire the submodule tree locally
+Get-XmipEstate -View Status                           # dirty, ahead, behind
+Set-XmipEstate -Slice Runtime -Path D:\Repos\Xmip-Runtime -Include xmip-core-runtime
+Sync-XmipEstate -Target Repository -Slice Runtime -Action Clone
 ```
 
 `-Create` and `-Configure` require a GitHub token with `repo` scope,

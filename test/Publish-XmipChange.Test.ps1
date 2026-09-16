@@ -110,7 +110,7 @@ Describe 'Every exported command' {
         # Named rather than inferred: a command that pushes to origin and does
         # not support -WhatIf cannot be rehearsed, and the estate is 42 remote
         # repositories.
-        foreach ($name in 'Publish-XmipChange', 'Publish-XmipPin') {
+        foreach ($name in 'Set-XmipEstate', 'Sync-XmipEstate', 'Publish-XmipEstate') {
             (Get-Command -Name $name).Parameters.Keys |
                 Should -Contain 'WhatIf' -Because "$name writes to origin"
         }
@@ -523,12 +523,12 @@ Describe 'Publish-XmipPin' {
     It 'counts what it is pinning rather than being told' {
         # Being told "nothing landed" is what made it skip, leaving 18 stale
         # gitlinks. It has no -Count parameter now, on purpose.
-        (Get-Command -Name Publish-XmipPin).Parameters.Keys |
+        (Get-Command -Name Publish-XmipEstate).Parameters.Keys |
             Should -Not -Contain 'Count'
     }
 
     It 'is reachable as Publish-XmipChange -Pin' {
-        (Get-Command -Name Publish-XmipChange).Parameters.Keys |
+        (Get-Command -Name Publish-XmipEstate).Parameters.Keys |
             Should -Contain 'Pin'
     }
 }
@@ -538,14 +538,14 @@ Describe 'Publish-XmipChange' {
         # Dependencies track branch = "main" under ADR-0005, so a module that is
         # committed and not pushed is one the next in the order tests against
         # the previous published version. The pair is one operation here.
-        $parameters = (Get-Command -Name Publish-XmipChange).Parameters.Keys
+        $parameters = (Get-Command -Name Publish-XmipEstate).Parameters.Keys
 
         $parameters | Should -Not -Contain 'Commit'
         $parameters | Should -Not -Contain 'Push'
     }
 
     It 'takes -m, like git' {
-        (Get-Command -Name Publish-XmipChange).Parameters['Message'].Aliases |
+        (Get-Command -Name Publish-XmipEstate).Parameters['Message'].Aliases |
             Should -Contain 'm'
     }
 }

@@ -90,7 +90,7 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Suite Playground -Test HeavyLoad -Nodes a, b -OnlineNodes a -PassThru |
-                Start-XmipWeb
+                Start-XmipTest -Target Monitor
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
@@ -105,8 +105,12 @@ function Start-XmipTest {
             (Start-XmipTest -Suite Estate).Failed | Format-Table ExpandedPath
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
-    [OutputType('Xmip.TestStatus', 'Pester.Run')]
+    [OutputType('Xmip.TestStatus', 'Xmip.TestNode', 'Xmip.Web', 'Pester.Run')]
     param(
+        [Parameter()]
+        [ValidateSet('Suite', 'Node', 'Monitor')]
+        [string] $Target = 'Suite',
+
         # The sentence is "start the Playground's HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).
         [Parameter(Position = 0)]
@@ -161,12 +165,60 @@ function Start-XmipTest {
         [string] $Path,
 
         [Parameter()]
+        [string] $Shared,
+
+        [Parameter()]
+        [timespan] $Interval = [timespan]::FromMilliseconds(250),
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $Snapshot,
+
+        [Parameter()]
+        [string] $Url = 'http://127.0.0.1:5087',
+
+        [Parameter()]
+        [switch] $FromSource,
+
+        [Parameter()]
         [switch] $PassThru
     )
 
     # The first failure ends the call; a cascade of twenty errors after one
     # missing piece is what the owner saw on 2026-09-12.
     $ErrorActionPreference = 'Stop'
+
+    if ($Target -eq 'Monitor') {
+        $monitor = @{
+            Snapshot = $Snapshot
+            Url = $Url
+            FromSource = $FromSource
+            PassThru = $PassThru
+            WhatIf = $WhatIfPreference
+        }
+
+        return Start-XmipWeb @monitor
+    }
+
+    if ($Target -eq 'Node') {
+        if (-not $PSBoundParameters.ContainsKey('Nodes') -or $Nodes.Count -eq 0) {
+            throw 'Starting test nodes requires -Nodes.'
+        }
+
+        $nodeStart = @{
+            Nodes = $Nodes
+            Stress = $Stress
+            OnlineNodes = $OnlineNodes
+            Rounds = $Rounds
+            Interval = $Interval
+            PassThru = $PassThru
+            WhatIf = $WhatIfPreference
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($Path)) { $nodeStart.Path = $Path }
+        if (-not [string]::IsNullOrWhiteSpace($Shared)) { $nodeStart.Shared = $Shared }
+
+        return Start-XmipTestNode @nodeStart
+    }
 
     if ($Suite -eq 'Estate') {
         [string[]] $foreign = @(
@@ -281,165 +333,3 @@ function Start-XmipTest {
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
     'Nodes', 'OnlineNodes', 'LoadBytes', 'PassThru'
 )
-
-function Start-XmipEstateSuite {
-    <#
-        .SYNOPSIS
-            Runs the estate's Pester suite under test/ and returns the result.
-
-        .DESCRIPTION
-            `Invoke-Pester -Path ./test` finds nothing since 2026-09-11: the
-            estate's test files carry the singular suffix `.Test.ps1` and
-            Pester looks for the plural. Get-XmipPesterConfiguration tells it,
-            the same configuration the landing gate uses. The result is
-            returned, not printed, so a caller reads `PassedCount`,
-            `FailedCount` and `Failed` like any other object; the verdict is
-            said in words, OK or FAILED, with each failing test named.
-
-        .PARAMETER Path
-            The directory of tests. Defaults to test/ under the repository.
-
-        .PARAMETER Test
-            The test files to run, by name without the suffix: Rust.Style runs
-            test/Rust.Style.Test.ps1. Omit for every file.
-    #>
-    [CmdletBinding()]
-    [OutputType('Pester.Run')]
-    param(
-        [Parameter()]
-        [string] $Path,
-
-        [Parameter()]
-        [AllowEmptyCollection()]
-        [string[]] $Test = @()
-    )
-
-    if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test'
-    }
-
-    $configuration = Get-XmipPesterConfiguration -Path $Path
-
-    if ($Test.Count -gt 0) {
-        [string[]] $files = @(
-            $Test | ForEach-Object { Join-Path -Path $Path -ChildPath "$_.Test.ps1" }
-        )
-        [string[]] $missing = @($files | Where-Object { -not (Test-Path -LiteralPath $_) })
-
-        if ($missing.Count -gt 0) {
-            throw "No such test: $($missing -join ', '). The tests are the *.Test.ps1 in $Path."
-        }
-
-        $configuration.Run.Path = $files
-    }
-
-    # In its own runspace, never in this module's. The test files begin by
-    # removing Xmip and importing it afresh; run from inside the module they
-    # tore down the module that was running them, and every later call from
-    # the console found a hollow module (2026-09-12). A thread job shares the
-    # process, so the result comes back live, and its runspace is its own.
-    $job = Start-ThreadJob -ScriptBlock {
-        param($Configuration)
-
-        Set-StrictMode -Off
-        Invoke-Pester -Configuration $Configuration
-    } -ArgumentList $configuration
-
-    $result = Receive-Job -Job $job -Wait -AutoRemoveJob
-
-    [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
-
-    if ($result.FailedCount -eq 0) {
-        Write-Host "OK $tally" -ForegroundColor Green
-    }
-    else {
-        Write-Host "FAILED $tally" -ForegroundColor Red
-    }
-
-    foreach ($failure in $result.Failed) {
-        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
-    }
-
-    return $result
-}
-
-function Get-XmipPlaygroundChoice {
-    <#
-        .SYNOPSIS
-            The optional roll switches the caller actually gave, as the
-            arguments New-XmipPlaygroundEnvironment takes for them.
-    #>
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory)]
-        [System.Collections.IDictionary] $Bound
-    )
-
-    [hashtable] $chosen = @{}
-
-    foreach ($name in 'Nodes', 'OnlineNodes', 'Duration', 'TimeFactor', 'LoadBytes') {
-        if ($Bound.ContainsKey($name)) {
-            $chosen[$name] = $Bound[$name]
-        }
-    }
-
-    return $chosen
-}
-
-function Remove-XmipPlaygroundStaleRecord {
-    <#
-        .SYNOPSIS
-            Deletes run records whose roll is no longer running — a roll that
-            reached its rounds or its ceiling leaves one behind.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    $layout = Get-XmipPlaygroundLayout
-
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.toml' -File)) {
-        [string] $number = $file.BaseName -replace '^roll-', ''
-
-        if ($number -notmatch '^\d+$') {
-            continue
-        }
-
-        $process = Get-Process -Id ([int] $number) -ErrorAction SilentlyContinue
-        [bool] $alive = $null -ne $process -and
-            (Test-XmipPlaygroundBinary -Process $process -Path $layout.Roll)
-
-        if (-not $alive) {
-            Remove-Item -LiteralPath $file.FullName -Force
-        }
-    }
-}
-
-function Test-XmipPlaygroundBinary {
-    <#
-        .SYNOPSIS
-            Whether a process runs the named binary — the Playground's own
-            build, not any process that happens to share the name.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [System.Diagnostics.Process] $Process,
-
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    [string] $actual = try { $Process.Path } catch { '' }
-
-    if ([string]::IsNullOrWhiteSpace($actual)) {
-        return $false
-    }
-
-    return [System.IO.Path]::GetFullPath($actual) -ieq [System.IO.Path]::GetFullPath($Path)
-}

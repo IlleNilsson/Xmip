@@ -10,7 +10,7 @@
 
 @{
     RootModule           = 'Xmip.psm1'
-    ModuleVersion        = '1.21.0'
+    ModuleVersion        = '2.0.0'
     GUID                 = 'a4f1e6c2-9b73-4d58-8e21-5c7a3f0d94b6'
     Author               = 'Ilian Nilsson'
     CompanyName          = 'Xmip'
@@ -37,30 +37,15 @@
     RequiredModules      = @()
 
     FunctionsToExport    = @(
-        'Install-XmipModule'
-        'Install-XmipPrerequisite'
+        'Install-XmipEstate'
+        'Get-XmipEstate'
+        'Test-XmipEstate'
+        'Set-XmipEstate'
         'Sync-XmipEstate'
-        'Sync-XmipRepository'
-        'Get-XmipManifest'
-        'Get-XmipRepositoryRoot'
-        'Test-XmipManifest'
-        'Expand-XmipEstate'
-        'Publish-XmipChange'
-        'Publish-XmipPin'
-        'Get-XmipStatus'
-        'Get-XmipDecisionRecord'
-        'New-XmipDecisionIndex'
-        'Get-XmipHistory'
+        'Publish-XmipEstate'
         'Start-XmipTest'
-        'Get-XmipTestStatus'
+        'Get-XmipTest'
         'Stop-XmipTest'
-        'Start-XmipTestNode'
-        'Get-XmipTestNode'
-        'Stop-XmipTestNode'
-        'Get-XmipTestResult'
-        'Start-XmipWeb'
-        'Get-XmipWeb'
-        'Stop-XmipWeb'
     )
 
     # Table views for the playground and web objects, so Get-XmipTestStatus

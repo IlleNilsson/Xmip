@@ -182,7 +182,7 @@ Describe 'The setup procedure is present' {
         # A forward slash: the line is typed on Linux and macOS as often as on
         # Windows, and PowerShell reads it on all three (the owner, 2026-09-12).
         $script:Readme | Should -Match 'Import-Module -Name \./Xmip'
-        $script:Readme | Should -Match 'Install-XmipModule'
+        $script:Readme | Should -Match 'Install-XmipEstate -Target Module'
         $script:Readme | Should -Match 'Import-Module -Name Xmip'
     }
 

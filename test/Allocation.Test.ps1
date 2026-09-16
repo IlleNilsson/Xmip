@@ -221,7 +221,7 @@ Describe 'Every executable entry names a file that exists' {
 
 Describe 'Every destination is a real repository' {
     It 'moves only to repositories architecture.toml declares' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipEstate -View Manifest -Path (Join-Path $script:Root 'architecture.toml')
         [string[]] $declared = @($manifest.repositories | ForEach-Object { [string] $_.name })
 
         foreach ($entry in (Get-AllocationEntry -Section 'move')) {
