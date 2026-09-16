@@ -593,7 +593,22 @@ function Test-XmipCrateLine {
 
 function Sync-XmipEstate {
     [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType([PSCustomObject])]
     param(
+        [Parameter()]
+        [ValidateSet('GitHub', 'Repository')]
+        [string] $Target = 'GitHub',
+
+        [Parameter()]
+        [ValidateSet('Clone', 'Pull', 'Branch', 'CreateBranch', 'Push', 'Distribute')]
+        [string] $Action,
+
+        [Parameter()]
+        [string] $BranchName,
+
+        [Parameter()]
+        [string] $Slice,
+
         [switch] $Create,
         [switch] $Configure,
         [switch] $Compose,
@@ -616,11 +631,56 @@ function Sync-XmipEstate {
         [string] $ReportPath,
         [string] $GitHubToken = $env:GITHUB_TOKEN,
         [string] $GitHubApiBaseUri = 'https://api.github.com',
+        [string] $DestinationPath,
+        [string] $AllocationPath,
+        [string] $SourcePath,
+        [ValidateSet('Https', 'Ssh')]
+        [string] $Transport = 'Https',
+        [switch] $ModulesOnly,
         [switch] $PassThru
     )
 
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
+
+    if ($Target -eq 'Repository') {
+        if ([string]::IsNullOrWhiteSpace($Action)) {
+            throw '-Target Repository requires -Action.'
+        }
+
+        if (($Action -in 'CreateBranch', 'Push') -and [string]::IsNullOrWhiteSpace($BranchName)) {
+            throw "-Action $Action requires -BranchName."
+        }
+
+        [hashtable] $repositoryBound = @{}
+
+        foreach ($key in $PSBoundParameters.Keys) {
+            $repositoryBound[$key] = $PSBoundParameters[$key]
+        }
+
+        $repositoryBound.ManifestPath = $ManifestPath
+        $repositoryBound.Transport = $Transport
+        $repositoryBound.ModulesOnly = $ModulesOnly
+        $repositoryBound.PassThru = $PassThru
+
+        if (-not [string]::IsNullOrWhiteSpace($Slice)) {
+            $selection = Get-XmipEstateSlice -Slice $Slice
+
+            if ($null -eq $selection) { throw "No estate slice named '$Slice'." }
+
+            $repositoryBound.DestinationPath = $selection.Path
+            $repositoryBound.Only = @($selection.Repository)
+        }
+
+        $repositorySync = @{
+            Action = $Action
+            Bound = $repositoryBound
+            WhatIf = $WhatIfPreference
+        }
+
+        return Invoke-XmipRepositorySync @repositorySync
+    }
+
     if (-not $ReportPath) { $ReportPath = Join-Path $WorkingDirectory 'architecture-report.json' }
 
     function Assert-Command([string] $Name) {

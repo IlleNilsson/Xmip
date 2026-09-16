@@ -20,29 +20,11 @@ BeforeAll {
 }
 
 Describe 'Start, Get and Stop, and nothing else' {
-    It 'has exactly those verbs for the nodes and the web host' {
-        foreach ($noun in 'XmipTestNode', 'XmipWeb') {
-            [string[]] $verbs = @(Get-Command -Module Xmip -Noun $noun | ForEach-Object { $_.Verb })
-
-            [string[]] $sorted = @($verbs | Sort-Object)
-
-            $sorted | Should -Be @('Get', 'Start', 'Stop') -Because "$noun is operated"
-        }
-    }
-
-    It 'starts, reports and stops a test run under the names the owner chose' {
-        # 2026-09-12: Start-XmipTest, Get-XmipTestStatus and Stop-XmipTest — the
-        # Playground is one suite Xmip provides, and a transport's or a
-        # contract's suite may join it. He voted for Start, not Invoke: Invoke
-        # is for crossing a boundary — a language, a process, a computer — and
-        # a test run crosses none. The Pester door is -Suite Estate.
-        foreach ($name in 'Start-XmipTest', 'Get-XmipTestStatus', 'Stop-XmipTest') {
-            Get-Command -Module Xmip -Name $name | Should -Not -BeNullOrEmpty
-        }
-
+    It 'exports exactly Start, Get and Stop for the Test surface' {
         [string[]] $verbs = @(Get-Command -Module Xmip -Noun XmipTest | ForEach-Object { $_.Verb })
 
-        @($verbs | Sort-Object) | Should -Be @('Start', 'Stop')
+        @($verbs | Sort-Object) | Should -Be @('Get', 'Start', 'Stop')
+        Get-Command -Module Xmip -Noun XmipTestNode, XmipWeb | Should -BeNullOrEmpty
         Get-Command -Module Xmip -Name 'Invoke-XmipTest*' | Should -BeNullOrEmpty
     }
 
@@ -81,7 +63,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # afresh. Run from inside the module, the suite tore down the module
         # that was running it, and every later call from the console found a
         # hollow module. A thread job keeps the runspace apart.
-        [string] $door = Get-Content -Raw (Join-Path $script:Root 'Xmip/Start-XmipTest.ps1')
+        [string] $door = Get-Content -Raw (Join-Path $script:Root 'Xmip/Start-XmipEstateSuite.ps1')
 
         $door | Should -Match 'Start-ThreadJob' -Because 'the suite removes the module it runs in'
         $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
@@ -103,9 +85,9 @@ Describe 'Start, Get and Stop, and nothing else' {
     }
 
     It 'lets a test status object name the snapshot a web monitor reads' {
-        # Start-XmipTest -PassThru | Start-XmipWeb: the property and the
+        # Start-XmipTest -PassThru | Start-XmipTest -Target Monitor: the property and the
         # parameter share a name, and the parameter binds by it.
-        $parameter = (Get-Command -Name Start-XmipWeb).Parameters['Snapshot']
+        $parameter = (Get-Command -Name Start-XmipTest).Parameters['Snapshot']
         $binding = $parameter.Attributes |
             Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] }
 
@@ -119,7 +101,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         $manifest = Get-Item (Join-Path $script:Root 'architecture.toml')
         [string] $expected = $manifest.Directory.FullName
 
-        Get-XmipRepositoryRoot -StartAt ([System.IO.Path]::GetTempPath()) | Should -Be $expected
+        Get-XmipEstate -View Root -Path ([System.IO.Path]::GetTempPath()) | Should -Be $expected
     }
 
     It 'names no automatic start anywhere in the module' {
@@ -229,7 +211,7 @@ Describe 'The environment a roll is started with' {
             Should -Throw -ExpectedMessage '*-Nodes does not*'
         { Start-XmipTest -OnlineNodes alpha -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*name them all*'
-        { Start-XmipTestNode -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
+        { Start-XmipTest -Target Node -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
     }
 
@@ -313,7 +295,7 @@ observed_unix_nanos = 1789208338038783900
     }
 
     It 'splits a scope into scenario, node, transport and contract' {
-        [object[]] $results = @(Get-XmipTestResult -Path $script:Snapshot)
+        [object[]] $results = @(Get-XmipTest -View Result -Path $script:Snapshot)
 
         $results.Count | Should -Be 3
 
@@ -332,17 +314,17 @@ observed_unix_nanos = 1789208338038783900
     }
 
     It 'filters by test and by node, and names the worst' {
-        @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 1
-        @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
-        (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
+        @(Get-XmipTest -View Result -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 1
+        @(Get-XmipTest -View Result -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
+        (Get-XmipTest -View Result -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }
 
     It 'takes the directory the snapshot is in' {
-        @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 3
+        @(Get-XmipTest -View Result -Path $TestDrive).Count | Should -Be 3
     }
 
     It 'says where a snapshot should be when there is none' {
-        { Get-XmipTestResult -Path (Join-Path $TestDrive 'nowhere') -ErrorAction Stop } |
+        { Get-XmipTest -View Result -Path (Join-Path $TestDrive 'nowhere') -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*No snapshot*'
     }
 }

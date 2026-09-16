@@ -21,7 +21,7 @@ Set-StrictMode -Version Latest
 # One version for the whole module. The reader enforces minimumScriptVersion, so
 # the reader owns the number; a copy inside Sync-XmipEstate's body was invisible
 # from here and the check silently had nothing to compare against.
-[version] $script:XmipVersion = [version]::Parse('1.21.0')
+[version] $script:XmipVersion = [version]::Parse('2.0.0')
 
 # The manifest schema this module understands. Major is the compatibility
 # boundary: 2.x is the tree-is-the-name schema, and a 3.0 manifest will mean
@@ -888,6 +888,9 @@ function Test-XmipManifest {
 # #requires states that floor.
 . (Join-Path $PSScriptRoot 'Install-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipPrerequisite.ps1')
+. (Join-Path $PSScriptRoot 'Resolve-XmipEstateSlice.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEstateSlice.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipRepositorySync.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipRepository.ps1')
 . (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')
@@ -901,6 +904,10 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundChoice.ps1')
+. (Join-Path $PSScriptRoot 'Remove-XmipPlaygroundStaleRecord.ps1')
+. (Join-Path $PSScriptRoot 'Test-XmipPlaygroundBinary.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipEstateSuite.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipTest.ps1')
@@ -911,32 +918,28 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Start-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipWeb.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTestResultView.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTestHistoryView.ps1')
+. (Join-Path $PSScriptRoot 'Install-XmipEstate.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEstate.ps1')
+. (Join-Path $PSScriptRoot 'Test-XmipEstate.ps1')
+. (Join-Path $PSScriptRoot 'Set-XmipEstate.ps1')
+. (Join-Path $PSScriptRoot 'Publish-XmipEstate.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipTest.ps1')
+
+Set-Alias -Name xmip-git -Value Publish-XmipEstate
+Set-Alias -Name xgit -Value Publish-XmipEstate
 
 [string[]] $script:XmipExport = @(
-    'Install-XmipPrerequisite'
+    'Install-XmipEstate'
+    'Get-XmipEstate'
+    'Test-XmipEstate'
+    'Set-XmipEstate'
     'Sync-XmipEstate'
-    'Sync-XmipRepository'
-    'Get-XmipManifest'
-    'Test-XmipManifest'
-    'Expand-XmipEstate'
-    'Get-XmipRepositoryRoot'
-    'Install-XmipModule'
-    'Publish-XmipChange'
-    'Publish-XmipPin'
-    'Get-XmipStatus'
-    'Get-XmipDecisionRecord'
-    'New-XmipDecisionIndex'
-    'Get-XmipHistory'
+    'Publish-XmipEstate'
     'Start-XmipTest'
-    'Get-XmipTestStatus'
+    'Get-XmipTest'
     'Stop-XmipTest'
-    'Start-XmipTestNode'
-    'Get-XmipTestNode'
-    'Stop-XmipTestNode'
-    'Get-XmipTestResult'
-    'Start-XmipWeb'
-    'Get-XmipWeb'
-    'Stop-XmipWeb'
 )
 
 Export-ModuleMember -Function $script:XmipExport -Alias @('xmip-git', 'xgit')

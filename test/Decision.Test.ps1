@@ -321,7 +321,7 @@ Describe 'The index is generated, not written' {
         Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
         [PSCustomObject[]] $script:Declared = @(
-            Get-XmipDecisionRecord -DecisionRoot $script:DecisionRoot
+            Get-XmipEstate -View Decision -Path $script:DecisionRoot
         )
 
         [string[]] $script:Theme = @(
@@ -338,7 +338,7 @@ Describe 'The index is generated, not written' {
         # The whole point of the generator. A hand edit to README.md fails
         # here, which is the only way to stop the copies drifting again —
         # the previous index carried a section admitting they had.
-        [string] $generated = New-XmipDecisionIndex -DecisionRoot $script:DecisionRoot
+        [string] $generated = Get-XmipEstate -View DecisionIndex -Path $script:DecisionRoot
         [string] $committed = Get-Content -LiteralPath $script:IndexPath -Raw
 
         [string] $because = 'run: New-XmipDecisionIndex -Save'

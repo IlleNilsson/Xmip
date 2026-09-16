@@ -82,6 +82,8 @@ function Sync-XmipRepository {
 
         [switch] $ModulesOnly,
 
+        [string[]] $Only = @(),
+
         [switch] $PassThru
     )
 
@@ -359,6 +361,11 @@ function Sync-XmipRepository {
     if (-not $owner) { throw 'Manifest owner is missing.' }
 
     $repositoryNames = @(Get-RepositoryNames -Manifest $manifest -ModulesOnly:$ModulesOnly)
+
+    if ($Only.Count -gt 0) {
+        $repositoryNames = @($repositoryNames | Where-Object { $_ -in $Only })
+    }
+
     if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
     $operation = switch ($PSCmdlet.ParameterSetName) {

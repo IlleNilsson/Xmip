@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-two decisions, read as one document.
+Fifty-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -684,6 +684,18 @@ its configuration, never guessed from a file in a temp directory.**
 
 → [The operator surfaces share one model, in full](ADR-0052-the-operator-surfaces-share-one-model.md)
 
+### The public PowerShell command model for developing, testing and operating Xmip
+
+**PowerShell exposes three Xmip nouns: Estate for repositories, submodules and
+their architectural record; Test for suites, test nodes, results and their
+monitor; Runtime for the running product. Parameters select a view, target or
+action within one noun. The verb keeps its PowerShell promise: Get and Test
+only read, while Install, Set, Sync, Publish, Start and Stop may change state
+and support WhatIf. Public commands are façades over small private functions,
+not large scripts containing every implementation.**
+
+→ [PowerShell has three public nouns, in full](ADR-0053-powershell-has-three-public-nouns.md)
+
 ### What Xmip may assume about the internet, and how a test says it
 
 **Installation, operation and the runtime work with no internet at all.
@@ -835,6 +847,7 @@ You have a word. This gives you the decision that governs it.
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| PowerShell command model | [PowerShell has three public nouns](ADR-0053-powershell-has-three-public-nouns.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
@@ -956,3 +969,4 @@ is nowhere else.
 | [0050](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) | An identity technology is one mechanism at one gate | |
 | [0051](ADR-0051-a-transport-brings-its-own-far-end.md) | A transport brings its own far end | |
 | [0052](ADR-0052-the-operator-surfaces-share-one-model.md) | The operator surfaces share one model | |
+| [0053](ADR-0053-powershell-has-three-public-nouns.md) | PowerShell has three public nouns | |
