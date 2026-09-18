@@ -56,15 +56,24 @@ transport acknowledgement as a successful application delivery.
 
 ### The terms to begin with
 
-A Stream arrives. It is deserialized and validated against a Contract; if
-that fails, the refusal is reported, the Stream is disregarded, and the
-failure is audited. If it holds, the content is published into Xmip as a
+A Stream arrives, and its arrival is audited before anything else. It is
+deserialized and validated against a Contract; if that fails, the refusal
+is reported, the Stream is disregarded, and the failure is audited. If it
+holds, the content is published into Xmip as a
 Message, and where a Subscription picks the Message up a Journey begins, to
 an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
 
 - **Stream.** What arrives at a Receive Location: bytes from a file, a
   socket, a queue, a mailbox, the rows a SQL statement returns, a device on
   a bus. A Stream belongs to the sender until Xmip accepts it.
+- **Auditing.** The first thing that happens to an arrival, and the last
+  to every outcome: the durable record of what Xmip did and how it came
+  out. Entry, refusal, leaving, assignment, transformation, passing on,
+  pickup, sending and every failure are always audited; policy may add to
+  that list and never take from it. A failure is kept in its failure-time
+  state, with the Message, the place and the reason, so it can be
+  inspected, explained, retried or replayed. The record is what settles a
+  dispute between two parties about what was sent and what was received.
 - **Contract.** The rules for acceptance. A Stream is deserialized and must
   be well-formed and, where a Contract is named, conform to it. A Stream
   that fails is refused: the refusal says where and why, the Stream stays
@@ -107,13 +116,6 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
   A guard judges; it never runs the operation. Retrying and Failed are
   counted at every scope and shown on every surface.
-- **Auditing.** The durable record of what Xmip did and how it came out.
-  Entry, refusal, leaving, assignment, transformation, passing on, pickup,
-  sending and every failure are always audited; policy may add to that
-  list and never take from it. A failure is kept in its failure-time state,
-  with the Message, the place and the reason, so it can be inspected,
-  explained, retried or replayed. The record is what settles a dispute
-  between two parties about what was sent and what was received.
 - **Retention.** For the data it holds Xmip does two things over time: it
   retains a Message while it is live and archives it when its retention
   window passes. It never deletes. What becomes of an archive is the archive
