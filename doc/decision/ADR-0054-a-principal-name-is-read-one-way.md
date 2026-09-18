@@ -115,6 +115,42 @@ directory bind.
 - The technologies adopt the type in the order they are touched; the table
   in clause 4 is the list.
 
+## Adopted, 2026-09-19
+
+Built the same day across the table of clause 4, each crate gated and
+checked on disk.
+
+- **The first gate writes the evidence.** `username`, `ntlm`, `kerberos`,
+  `certificate`, `jwt`, `oidc` and `saml` put `principal.user` or
+  `principal.service` on the claim in canonical form, and nothing where the
+  text is not a principal name: an application's GUID is not a service
+  principal name and is left alone. `certificate` reads a new transport
+  property, `tls.peer.upn`, and parses no X.509. A token's principal is
+  read once, by `Compact::principal` in the capability, because `jwt` and
+  `oidc` both need it.
+- **The second gate compares accounts, not strings.** `windows` is rebuilt
+  over the capability's type and its own parsing is gone; `ldap` can bind
+  by the user principal name itself, as Active Directory accepts, beside
+  its DN template; `ntlm` meets a claim of `jane@partnerx` with a message
+  for user `jane` in domain `PARTNERX`; `kerberos` compares the ticket's
+  service through `ServicePrincipalName::is` and hands the client out as a
+  `UserPrincipalName`; `oidc`, `oauth2` and `saml` take an expected user
+  principal name and refuse another account naming both. `certificate`
+  proves a user principal name by the one the verified leaf carries in its
+  alternative names, under Microsoft's object identifier, read by
+  `authenticate::x509`. Principal evidence on a claim is used only to
+  refuse; the mechanism still decides.
+- **Two things changed that a reader of `windows` would notice.** A domain
+  now folds to lower case, so an account reads `corp\alice` where it read
+  `CORP\alice`; and `a@b@c` is a name, user `a@b` in domain `c`, because
+  the last `@` divides. Both follow from clause 2 and clause 1.
+- **Not done, and said so in the crates.** `ntlm` writes no
+  `principal.service`: the target name sits inside the NTLMv2 response's
+  attribute pairs, which `identify/ntlm` does not open. `mutual-tls` reads
+  no name of its own; the transport's handshake is where that certificate
+  is verified. And the open point of the Consequences stands: a name
+  learned only by verifying has nowhere to go.
+
 ## Alternatives considered
 
 **Each technology parses what it meets.** That is what had begun, and two
