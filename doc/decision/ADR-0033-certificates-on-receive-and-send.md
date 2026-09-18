@@ -116,6 +116,41 @@ Each is security-critical and lands on its own, tested, rather than as one drop.
   real mechanism rather than only simulated.
 - `open-problems.md` gains this as a prioritized item.
 
+## Amendment, 2026-09-18: the two authenticators are built, and where X.509 lives
+
+Step 4 of the build order, on the owner's *go ahead, and be sure to split
+into repos and modules so slicing and packaging can be done*. Built the same
+day, tested, each in its own repository as the manifest already had them:
+
+- **`authenticate/certificate`** walks the chain the first gate handed over
+  as the `certificate.chain` proof to one of the anchors the node holds, at
+  the clock it is given, against the CRLs it was configured with; then
+  requires the leaf to name the claimed value — subject or DNS name — and
+  the reported fingerprint to be the leaf's. The usage the leaf must be for
+  is configuration, any unless said, because an S/MIME certificate in AS2
+  is not a client-auth certificate.
+- **`authenticate/mutual-tls`** records what the transport proved and redoes
+  no cryptography, as clause 1 says: the transport that verified the client
+  chain in its handshake promotes `tls.peer.verified = verified`, the first
+  gate presents that as the `mutual-tls.handshake` proof, and the gate
+  answers Proven for it and refuses anything else with the reason. It may
+  narrow the issuers it takes.
+- **X.509 is the capability's, behind a feature.** Two technologies need
+  the chain walk, the names and the revocation lists, so they live in
+  `xmip-core-authenticate` (ADR-0044) as `authenticate::x509`, on only for
+  the two that ask (`features = ["x509"]`) and absent from the sixteen that
+  do not. The crypto beneath is webpki over ring — rustls's own — so the
+  estate still admits one crypto dependency. A `mint` feature issues test
+  chains and ships in no build. This is the split that lets a package carry
+  certificate verification or not.
+- **Revocation is by CRL and offline** (ADR-0045). Held lists are checked
+  down the whole chain and a certificate no held list covers is refused,
+  not passed. OCSP asks a responder and waits for the `online` switch.
+- **Steps 2 and 3 stay open.** The transport's server TLS still says
+  `with_no_client_auth()`, and nothing promotes `tls.peer.*` yet: the
+  vocabulary the two gates read is fixed here so the transport can grow
+  into it. Step 5, ACME, is untouched.
+
 ## Provenance
 
 The requirement and the priority are the owner's, 2026-09-05: certificates on

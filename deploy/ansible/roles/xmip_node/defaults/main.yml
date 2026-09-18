@@ -171,3 +171,5 @@ xmip_modules:
   - { name: xmip-core-message-hl7-er7, start: false }
   - { name: xmip-core-message-protobuf, start: false }
   - { name: xmip-core-logic-matter, start: false }
+  - { name: xmip-core-authenticate-certificate, start: false }
+  - { name: xmip-core-authenticate-mutual-tls, start: false }

@@ -804,11 +804,13 @@ dependency = []
     [xmip.core.authenticate.basic]
     [xmip.core.authenticate.bearer]
     [xmip.core.authenticate.certificate]
+    maturity = "scaffolded"
     [xmip.core.authenticate.digest]
     [xmip.core.authenticate.jwt]
     [xmip.core.authenticate.kerberos]
     [xmip.core.authenticate.ldap]
     [xmip.core.authenticate.mutual-tls]
+    maturity = "scaffolded"
     [xmip.core.authenticate.ntlm]
     [xmip.core.authenticate.oauth2]
     [xmip.core.authenticate.oidc]

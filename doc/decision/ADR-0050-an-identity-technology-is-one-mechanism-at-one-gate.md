@@ -209,6 +209,26 @@ was read before it was written.
   The Consequences above said they build where the facility is; they do
   not, yet, and this says so.
 
+## Amendment, 2026-09-18: one reading, two mechanisms, and a feature in the capability
+
+- **`identify/certificate` presents `mutual-tls` where the handshake proved
+  the chain, and `certificate` where it did not.** Section 3 gave the leaf
+  one mechanism; ADR-0033 clause 1 gives the two names to two situations
+  only the transport can tell apart. So the transport says which, in
+  `tls.peer.verified`, and the one reading of the peer certificate yields
+  the claim under the name the second gate will verify it by: `mutual-tls`
+  with the transport's word as its `mutual-tls.handshake` proof, else
+  `certificate` with the chain as its `certificate.chain` proof. The
+  sentence holds — each authenticate technology verifies one mechanism —
+  and the identify technology reads one thing; what it calls the claim is
+  what the transport did with it. The assistant's drafting, for the owner
+  to confirm or strike.
+- **A capability may hold shared code behind a feature.** Section 6 sends
+  shared code up; `authenticate::x509` goes up and stays off unless a
+  technology turns it on, so going up does not mean every sibling carries
+  it. The same for `mint`, a test-only issuer of chains. ADR-0044 as it
+  stands, with the feature as the packaging seam.
+
 ## Provenance
 
 The sentence and the three tables are the assistant's, 2026-09-10, under the
