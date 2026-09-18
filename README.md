@@ -170,6 +170,21 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    `Install-XmipModule` links the module into your user module path. In any
    later shell, `Import-Module -Name Xmip` is sufficient.
 
+   A console of its own, in Windows Terminal: add a profile whose starting
+   directory is the clone and whose command line is
+
+   ```text
+   pwsh -NoExit -Command "Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1"
+   ```
+
+   Do not add `-NoProfile`. posh-git is imported by a PowerShell profile
+   file, `-NoProfile` skips every one of them, and the prompt then shows
+   `PS D:\Repos\Xmip>` with no repository state (the owner's console,
+   2026-09-18). Leave the Xmip status segment out of the command line and
+   import it in the session that wants it: a console holding that module
+   holds its assemblies, and a build into them fails until it is closed.
+   That console is `pwsh`, which `Get-Process -Name Xmip-*` does not find.
+
 3. Start the Playground and its monitor. The Playground is Xmip's own
    integration rehearsal; it needs no network and no other software.
 
