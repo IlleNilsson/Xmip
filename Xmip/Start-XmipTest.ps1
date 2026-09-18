@@ -245,6 +245,19 @@ function Start-XmipTest {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Remove-XmipPlaygroundStaleRecord -Path $Path
 
+    # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
+    # ruling 1 of 2026-09-14). Two under one name publish to one file and each
+    # overwrites the other: on 2026-09-18 three rolled as CC1, the surfaces
+    # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank.
+    [int[]] $rolling = @(Get-XmipPlaygroundRolling -Path $Path -Cluster $Cluster)
+
+    if ($rolling.Count -gt 0) {
+        Write-Error ("REFUSED: cluster $Cluster is already rolling as pid " +
+            "$($rolling -join ', '). Stop it with Stop-XmipTest -Id " +
+            "$($rolling -join ', '), or name another cluster.")
+        return
+    }
+
     $launch = @{
         FilePath         = $roll
         WorkingDirectory = $layout.Playground
@@ -418,6 +431,35 @@ function Get-XmipPlaygroundChoice {
     }
 
     return $chosen
+}
+
+function Get-XmipPlaygroundRolling {
+    <#
+        .SYNOPSIS
+            The pids rolling as a cluster, from the run records in a directory.
+            Stale records are removed before this is asked, so a record here is
+            a roll that runs.
+    #>
+    [CmdletBinding()]
+    [OutputType([int])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    [string] $named = '^\s*cluster\s*=\s*"' + [regex]::Escape($Cluster) + '"\s*$'
+
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.toml' -File)) {
+        [string] $number = $file.BaseName -replace '^roll-', ''
+
+        if ($number -match '^\d+$' -and
+            (Select-String -LiteralPath $file.FullName -Pattern $named -Quiet)) {
+            [int] $number
+        }
+    }
 }
 
 function Remove-XmipPlaygroundStaleRecord {

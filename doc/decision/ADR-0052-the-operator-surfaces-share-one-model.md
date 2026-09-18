@@ -521,6 +521,33 @@ must never be mistaken for a stage that is done. The observer remembers one publ
 renderer stays pure; the two are two files since the day they reached the
 length one may be.
 
+## Amendment, 2026-09-19: a cluster rolls once, and a reader keeps what it read
+
+The owner, past midnight, on a prompt that showed nothing at all: *need
+more, or something is wrong.* Something was. Three rolls ran as cluster CC1,
+started from three consoles, each with its own three nodes and all
+publishing to the one `CC1-snapshot.toml`; a surface saw 803, 2,259 and
+11,499 leaves in turn. And the prompt was blank because one read had
+collided with a publisher: on Windows a file being renamed over answers a
+reader with a sharing violation or with *access denied*, the second is not
+an `IOException`, the snapshot surface did not catch it, and the prompt's
+observer ended on any exception and stayed ended.
+
+- **A cluster rolls once.** A roll is a cluster and two rolls are two
+  clusters (ruling 1 of 2026-09-14), and nothing held anyone to it.
+  `Start-XmipTest` now refuses a cluster name that is already rolling, says
+  REFUSED with the pid that holds it, and names the two ways on: stop it, or
+  name another cluster.
+- **A reader keeps what it read last through a read that collides.** The
+  snapshot surface treats a file it could not open as a moment, not as an
+  empty estate: the last publication stands and the next question reads
+  again. A file that is not TOML is still an empty estate, said so.
+- **One bad publication is one missed tick.** The prompt's observer keeps
+  observing and the segment keeps what it said.
+- **A publisher's temporary file is its own**, named for its pid, so two
+  processes publishing to one path — refused now, and still possible for a
+  roll started by hand — do not write into each other's half-finished file.
+
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
 The owner, on the web GUI: *Configuration tab, nice with icons with
