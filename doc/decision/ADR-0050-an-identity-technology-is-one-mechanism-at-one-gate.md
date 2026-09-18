@@ -161,6 +161,54 @@ goes sideways: `basic` does not depend on `password`; both depend on
   need a host facility (`pam`, `windows`) build where the facility is and
   refuse where it is not, as ADR-0045 requires.
 
+## Amendment, 2026-09-16: the catalog was already there, and the proof has a place
+
+Written by the assistant on the day the fifty-one were built, on the owner's
+*continue with protocol, identity, authentication and authorization*, and
+put here for the owner to confirm or strike. Two things the record of
+2026-09-10 got wrong, and one it left unsaid, surfaced when the first crate
+was read before it was written.
+
+- **The catalog is `xmip-core`'s and was before this record.** Section 1
+  and the Consequences sent the mechanism catalog up into
+  `xmip-core-identify`; `xmip-core` had held it since ADR-0022 as
+  `mechanism::declared` — twenty-eight mechanisms, each the last segment of
+  the repository that implements it. The seventeen this record names and
+  that file lacked (`ip`, `mac`, `dns`, `header`, `cookie`, `username`,
+  `endpoint`, `party`, `transport`, `message`, `contract`, `jwt`, `saml`,
+  `ntlm`, `ldap`, `pam`, `windows`) are added there, in the same voice, and
+  nothing goes into `identify`. A name read off a connection is filed as
+  `SharedSecret` and `Identifies`, following `circumstance`, because
+  ADR-0022's four classes have no other place for a claim with nothing
+  behind it. `ldap`, `pam` and `windows` verify a `username` claim and keep
+  their own names, so an Acceptance can say which verifier a Location uses.
+- **The proof rides on `Presented::proof`, and never on the record.**
+  `Presented` said the secret does not appear on it, and `Authenticator`
+  is given nothing else. Both were right and the type could not honour
+  them: a password, a Digest response, an NTLM type 3, a JWT with its
+  signature, an SSH signature over the session all have to reach the
+  verifier. `Presented` gains a private `proof` list beside `evidence`,
+  `with_proof(name, value)` and `proof(name)`, under names the mechanism
+  owns (`basic.credential`, `digest.response`, `jwt.token`,
+  `ntlm.authenticate`, `ssh-key.signature` and the rest); `Debug` prints
+  the names only, and the gate copies evidence onto the identity and proof
+  onto nothing. `value` stays the name — a username, a subject, a key id —
+  so what reaches the record is what may be recorded.
+- **What both jwt-shaped gates need lives up in `identify`.** Reading a
+  compact JWT's claims is the first gate's work and checking its signature
+  the second's, so `identify::jwt::Compact` (split, base64url, one
+  top-level claim by name) is the capability's, and `identify/jwt`,
+  `identify/oidc`, `authenticate/jwt`, `authenticate/oidc` and
+  `authenticate/oauth2` read it rather than each other. ADR-0044 as it
+  stands; no sibling depends on a sibling, and the manifest declares no
+  such dependency for any of the fifty-one.
+- **`pam` and `windows` bind nothing yet.** `unsafe_code = "forbid"` stands
+  in every crate; the two host verifiers are built over a trait with an
+  in-process implementation and refuse a real login with the reason, on
+  every operating system, until the owner rules on where unsafe may live.
+  The Consequences above said they build where the facility is; they do
+  not, yet, and this says so.
+
 ## Provenance
 
 The sentence and the three tables are the assistant's, 2026-09-10, under the
