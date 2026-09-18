@@ -68,7 +68,7 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   a bus. A Stream belongs to the sender until Xmip accepts it.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
-  out. Entry, refusal, leaving, assignment, transformation, passing on,
+  out. Every step below carries a note of what it audits. Entry, refusal, leaving, assignment, transformation, passing on,
   pickup, sending and every failure are always audited; policy may add to
   that list and never take from it. A failure is kept in its failure-time
   state, with the Message, the place and the reason, so it can be
@@ -76,12 +76,14 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   dispute between two parties about what was sent and what was received.
 - **Contract.** The rules for acceptance. A Stream is deserialized and must
   be well-formed and, where a Contract is named, conform to it. A Stream
-  that fails is refused: the refusal says where and why, the Stream stays
-  the sender's responsibility, and the failure is audited.
+  that fails is refused: the refusal says where and why, and the Stream
+  stays the sender's responsibility.
+  *Audited: the validation, and the refusal with its place and reason.*
 - **Message.** Validated content, published into Xmip. A Message is
   immutable, written to disk before anything acts on it, and never lost.
   Assignment and transformation do not change it; each writes a new
   generation of it, and every generation is kept.
+  *Audited: entry into Xmip, once per Message.*
 - **Subscription.** What picks a published Message up: an Xmip Process, a
   Send Port or a Send Port Group declares the Messages it wants. A Message
   is published once and every Subscription that matches it opens one
@@ -89,10 +91,13 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   picks up goes to the Dead Message Queue, which is not a dead letter
   queue: nothing failed, nothing wanted it, and it is republished once the
   Subscription is corrected.
+  *Audited: each pickup, by which Subscription, and a Message nothing
+  picked up.*
 - **Journey.** One durable line of work for a Message, begun by one
   Subscription, ending at the Xmip Process's answer or at the delivery. It
   checkpoints and survives a restart, and it ends Completed, Failed, or
   Dismissed when an operator stops it on purpose.
+  *Audited: its beginning, each passing on, and how it ended.*
 - **Processing.** What an Xmip Process does when a Subscription starts one:
   a definition running step by step and answering with a Message, no
   Message, or waiting for something named; a Message it answers with is
@@ -100,14 +105,18 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   process, it receives no Streams and delivers nothing outside, and its
   state belongs to the cluster, never to a thread or a node. A Journey to a
   Send Port has no Processing.
+  *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to an Xmip Process alone and
   creates a new Message generation, as transformation does; publishing does
   not.
+  *Audited: every assignment and every transformation, with the generation
+  it wrote.*
 - **Send.** A Send Port delivers a Message through its Send Locations; a
   Send Port Group is several Send Ports subscribed as one, so one Message
   goes to each. A transport acknowledgement is not an application delivery,
   and every surface names the exact Location.
+  *Audited: every sending, and the Message leaving Xmip.*
 - **Resilience.** Every delivery and every call out is an attempt, and a
   guard is asked before each attempt whether it may go, must wait, is refused
   or is answered by a fallback, and after it whether the outcome stands, the
@@ -116,6 +125,8 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
   A guard judges; it never runs the operation. Retrying and Failed are
   counted at every scope and shown on every surface.
+  *Audited: every failed attempt, and the giving up, with the Message in
+  its failure-time state.*
 - **Retention.** For the data it holds Xmip does two things over time: it
   retains a Message while it is live and archives it when its retention
   window passes. It never deletes. What becomes of an archive is the archive
