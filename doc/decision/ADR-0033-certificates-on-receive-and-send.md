@@ -151,7 +151,56 @@ day, tested, each in its own repository as the manifest already had them:
   vocabulary the two gates read is fixed here so the transport can grow
   into it. Step 5, ACME, is untouched.
 
-## Provenance
+## Amendment, 2026-09-18: hybrid certificates, classical and post-quantum in one
+
+The owner, the same day: *we need this: an X.509 hybrid certificate
+combines traditional classical cryptography (RSA or ECDSA) with
+post-quantum cryptography in a single digital certificate, to ensure
+backward compatibility while migrating to quantum-safe security.* Nothing in
+the record had said post-quantum before; this does.
+
+- **The shape is ITU-T X.509 (10/2019) clause 9.8, alternative
+  signatures.** The classical signature stays where it always was, and
+  three extensions carry a second public key (`subjectAltPublicKeyInfo`),
+  the algorithm of a second signature (`altSignatureAlgorithm`) and that
+  signature (`altSignatureValue`), computed over the `tbsCertificate`
+  without its `signature` field and without the `altSignatureValue`
+  extension (clause 7.2.2). A verifier that knows nothing of the extensions
+  sees an ordinary certificate, which is the backward compatibility the
+  owner named. Chosen over IETF LAMPS composite signatures
+  (draft-ietf-lamps-pq-composite-sigs), which a legacy verifier cannot read
+  at all; composite is the next slice, its own feature beside this one, on
+  the owner's word of the same day: alternative signatures first.
+- **The post-quantum algorithm is ML-DSA (FIPS 204)**, in its three
+  parameter sets, recognized by the identifiers RFC 9881 gives them.
+  Verification is aws-lc-rs's, because ring has no post-quantum signature;
+  so it is its own feature, `x509-alt` on the capability and `hybrid` on
+  `authenticate/certificate`, and a package is quantum-ready or not. The
+  classical walk stays on ring beneath webpki; the alternative walk follows
+  the very path the classical walk proved, leaf to anchor, and verifies
+  each certificate's alternative signature with its issuer's alternative
+  key — the anchor's with its own.
+- **The policy is the node's, in three words.** `Ignored`, a legacy
+  verifier's view; `WherePresent`, the default, where a certificate that
+  carries the extensions is held to them and one that does not is taken on
+  its classical signature, so a partner may move before the node requires
+  it; `Required`, every certificate on the path, anchor included, or
+  refused saying which one lacks it. A certificate carrying an alternative
+  signature its issuer has no alternative key for, or by an algorithm this
+  build does not know, is refused under any policy but `Ignored`.
+- **Minting for tests signs twice.** The alternative signature covers the
+  certificate without its own extension and without the classical
+  `signature` field, so the test minter signs once to learn those bytes,
+  alternative-signs them, and signs again with the third extension in
+  place; the classical signature covers all three. Proved in the
+  capability: a hybrid path verifies under every policy, a classical one
+  passes where present and is refused where required, and an alternative
+  signature by the wrong key is refused naming ML-DSA-65.
+- **Not yet.** Composite signatures; a hybrid key on Xmip's own side (a
+  Send Location presenting one, ACME issuing one); and the transport's
+  handshake, which is rustls's and follows rustls on post-quantum
+  certificates. Each is a slice of its own.
+
 
 The requirement and the priority are the owner's, 2026-09-05: certificates on
 Receive and Send, Let's Encrypt prioritized among the identity protocols.
