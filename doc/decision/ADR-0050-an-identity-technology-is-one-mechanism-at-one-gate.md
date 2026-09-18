@@ -229,6 +229,63 @@ was read before it was written.
   it. The same for `mint`, a test-only issuer of chains. ADR-0044 as it
   stands, with the feature as the packaging seam.
 
+## Amendment, 2026-09-19: the last twenty-four are written, and what writing them found
+
+**A correction first.** The landing of 2026-09-18 said of these technologies
+that they *read a claim off a connection* and *verify by password, digest,
+bearer*. For twenty-four of them that was not so: the session of 2026-09-16
+had wired their manifests and READMEs and left `src/lib.rs` the five-line
+declaration, the assistant landed them on the file list and not on the
+diff, and the message described code that was not there. Found the next
+day by counting lines. Pushed history stands, by the owner's word; this
+says what it did not. The twenty-four were written on 2026-09-19, each
+gated — format, tests, pedantic lints, a hundred columns, four hundred
+lines — and each checked on disk before it landed:
+
+- identify: `api-key`, `cookie`, `endpoint`, `party`, `transport`,
+  `username`, `kerberos`.
+- authenticate: `api-key`, `bearer`, `digest`, `scram`, `ldap`, `pam`,
+  `windows`, `oidc`, `oauth2`, `saml`, `ssh-key`, `kerberos`, `ntlm`.
+- authorize: `abac`, `policy`, `cedar`, `opa`.
+
+Digest and SCRAM pass the published vectors of RFC 7616 and RFC 7677,
+Kerberos those of RFC 3961, NTLM those of MS-NLMP. `pam` and `windows` are
+over a trait with an in-process implementation and refuse a real login with
+the reason, as the amendment of 2026-09-16 says, until the owner rules on
+where unsafe may live. `saml` verifies the enveloped RSA-SHA256 signature
+of the common profile and refuses everything else by name; an assertion
+whose canonical form it does not reproduce fails its digest and is refused,
+never passed.
+
+**What writing them found**, recorded and not decided here:
+
+- **The authorize gate counted the asked, not the answered.** `authorize()`
+  allowed an attempt where every policy consulted had abstained, against
+  its own second and third rules and its test's own comment; one offline
+  `opa` left a gate open. Fixed the same day in the capability: an attempt
+  is allowed where at least one policy permits and none denies, and the
+  denial says how many were asked. The runtime's tests and all fourteen
+  technologies pass against it.
+- **Section 3's row for `kerberos` cannot be built as written.** An AP-REQ
+  seals the client principal; what is in the clear is the ticket's service
+  principal, and that is what `identify/kerberos` presents. The second gate
+  decrypts the ticket and learns the client, and has nowhere to hand it
+  back: `Authenticator` answers `Verified` and nothing else. The same gap
+  keeps a token's granted scopes from reaching `authorize/scope`. ADR-0054
+  names it; it is a change to the capability's trait and the owner's.
+- **Digest needs the request's method and address as evidence**, under
+  `http.method` and `http.uri`, and the first gate does not write them; it
+  verifies today only where a method is configured.
+- **An API key in a query string is also in the arrival's address**, which
+  other identifiers put on the record as evidence. The HTTP transport
+  should strip it before the arrival is built, or the practice be refused.
+- **Candidates to go up** (ADR-0044), built without: a hashed secret store
+  with expiry (`api-key`, `bearer`); the Authorization scheme split and
+  Basic decoding (five identify technologies); one DER reader (two
+  Kerberos gates and `authenticate::x509`); a JWKS reader (`oidc`, `jwt`);
+  a neutral rendering of the facts for outside engines (`cedar`, `opa`);
+  the trailing-star match (three authorize technologies).
+
 ## Provenance
 
 The sentence and the three tables are the assistant's, 2026-09-10, under the

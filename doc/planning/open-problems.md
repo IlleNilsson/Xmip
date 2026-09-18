@@ -514,9 +514,15 @@ retires entries from stops being an order.
                                        that morning over a template stub and
                                        were built for real that afternoon).
                                        Every transport is its own far end
-                                       (ADR-0051). sftp and peppol remain,
-                                       and the fifty-one identity
-                                       technologies ADR-0050 sorts
+                                       (ADR-0051). sftp and peppol joined
+                                       them on 2026-09-19, and the fifty-one
+                                       identity technologies ADR-0050 sorts
+                                       are written (its amendment of that
+                                       day says what writing them found).
+                                       What is left is theirs to grow:
+                                       principal names (ADR-0054), a second
+                                       SSH cipher suite and known hosts,
+                                       peppol's SMP lookup
 3. The three views and the exact scope ADR-0052, amendment 2026-09-14:
                                        Configuration (the classic tree,
                                        landed as a first cut), Monitor (the
@@ -553,9 +559,12 @@ retires entries from stops being an order.
                                        are demonstrable over the playground
                                        and not yet testable for real (the
                                        owner, 2026-09-14 evening): the runtime
-                                       module has no tests, the GUI has none
-                                       of its own, and the web offers no
-                                       role — fix all three here. A surface
+                                       module had no tests, the GUI none of
+                                       its own, and the web offers no role.
+                                       The runtime has them since, and the
+                                       GUI since 2026-09-19 (Xmip.Gui.Test,
+                                       the three views over a published
+                                       fixture); the role is what is left. A surface
                                        is told, never asks: the change feed
                                        is signalled, and rides SignalR when
                                        it crosses a network — built, the

@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-three decisions, read as one document.
+Fifty-four decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -248,6 +248,19 @@ authorize technology is one policy that decides an attempt at one layer.
 Nineteen, eighteen and fourteen of them, each its own repository.**
 
 → [An identity technology is one mechanism at one gate, in full](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md)
+
+### How a user principal name and a service principal name are read,
+
+written and compared, whichever mechanism carried them
+
+**Identification and authentication by user principal name and by service
+principal name are supported wherever a mechanism can carry one. The two
+names are types in the identify capability, written in one canonical form,
+and a technology that reads one puts it on the claim under one of two
+evidence names, `principal.user` and `principal.service`. A Party is
+resolved by a principal name whatever mechanism carried it.**
+
+→ [A principal name is read one way, in full](ADR-0054-a-principal-name-is-read-one-way.md)
 
 ---
 
@@ -848,6 +861,7 @@ You have a word. This gives you the decision that governs it.
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
+| principal evidence | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | process declaration | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
@@ -867,6 +881,7 @@ You have a word. This gives you the decision that governs it.
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
+| service principal name, SPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Shape | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Shared code | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
@@ -891,6 +906,7 @@ You have a word. This gives you the decision that governs it.
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
+| User principal name, UPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -972,3 +988,4 @@ is nowhere else.
 | [0051](ADR-0051-a-transport-brings-its-own-far-end.md) | A transport brings its own far end | |
 | [0052](ADR-0052-the-operator-surfaces-share-one-model.md) | The operator surfaces share one model | |
 | [0053](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) | Every System Process Xmip owns says whose it is | |
+| [0054](ADR-0054-a-principal-name-is-read-one-way.md) | A principal name is read one way | |
