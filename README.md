@@ -68,12 +68,13 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   a bus. A Stream belongs to the sender until Xmip accepts it.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
-  out. Every step below carries a note of what it audits. Entry, refusal, leaving, assignment, transformation, passing on,
-  pickup, sending and every failure are always audited; policy may add to
-  that list and never take from it. A failure is kept in its failure-time
-  state, with the Message, the place and the reason, so it can be
-  inspected, explained, retried or replayed. The record is what settles a
-  dispute between two parties about what was sent and what was received.
+  out. Every step below carries a note of what it audits. Entry, refusal,
+  leaving, assignment, transformation, passing on, pickup, sending and
+  every failure are always audited; policy may add to that list and never
+  take from it. A failure is kept in its failure-time state, with the
+  Message, the place and the reason, so it can be inspected, explained,
+  retried or replayed. The record is what settles a dispute between two
+  parties about what was sent and what was received.
 - **Contract.** The rules for acceptance. A Stream is deserialized and must
   be well-formed and, where a Contract is named, conform to it. A Stream
   that fails is refused: the refusal says where and why, and the Stream
