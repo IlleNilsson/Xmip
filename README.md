@@ -217,7 +217,7 @@ whether delivery completed, and why work stopped when it did not.
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
 | Extensibility | A versioned C ABI and independently loadable Modules ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)). | A Module may be written in any language that can implement the ABI, and kept in its own repository. |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
-| Operational consistency | The `xmip` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
+| Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
 | Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Edge, server, cluster and cloud nodes are one product. |
 | Architectural memory | Accepted decision records and executable governance tests. | Tradeoffs survive staff and assistant turnover. |
@@ -449,7 +449,7 @@ its floor fails the command.
 
 Configuration is TOML on disk; JSON is used only on the wire
 ([ADR-0031](doc/decision/ADR-0031-configuration-is-toml-json-is-transport.md)).
-`xmip validate <file>` checks a node configuration without starting anything.
+`xmip-cli validate <file>` checks a node configuration without starting anything.
 
 A node is offline unless its configuration says `online = true`
 ([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
@@ -457,12 +457,12 @@ may reach the internet for duties that require it, such as certificate
 provisioning at a public edge. Online access is a declared choice, never a
 side effect of deployment.
 
-The `xmip` command line answers `xmip health <scope>` and `xmip validate
+The `xmip-cli` command line answers `xmip-cli health <scope>` and `xmip-cli validate
 <file>`; the PowerShell module answers the same as objects. Pause and resume
 are the two acts the operator boundary carries, and the only two: the thing
 that watches must not be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). Their shape on
-every surface, `xmip pause`, `xmip resume`, `Suspend-XmipScope` and
+every surface, `xmip-cli pause`, `xmip-cli resume`, `Suspend-XmipScope` and
 `Resume-XmipScope` with `-WhatIf`, is recorded in ADR-0052 and queued; start,
 stop and restart of a scope were declined.
 

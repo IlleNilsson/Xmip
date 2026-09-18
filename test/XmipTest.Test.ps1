@@ -268,7 +268,8 @@ Describe 'The environment a roll is started with' {
 Describe 'What a node was started with' {
     It 'is read back from its command line, quoted paths whole' {
         InModuleScope Xmip {
-            [string] $line = '"D:\a b\node.exe" --name node-03 --shared "D:\a b\shared" ' +
+            [string] $line = '"D:\a b\xmip-playground-node.exe" --name node-03 ' +
+                '--shared "D:\a b\shared" ' +
                 '--stress harsh --rounds 0 --snapshot "D:\a b\node-03.toml" ' +
                 '--interval-ms 500 --online true'
             $flags = Read-XmipTestNodeCommandLine -CommandLine $line
@@ -285,7 +286,8 @@ Describe 'What a node was started with' {
 
     It 'defaults the way the node binary does when a flag is absent' {
         InModuleScope Xmip {
-            $flags = Read-XmipTestNodeCommandLine -CommandLine 'node.exe --name n --rounds 3'
+            [string] $line = 'xmip-playground-node.exe --name n --rounds 3'
+            $flags = Read-XmipTestNodeCommandLine -CommandLine $line
 
             $flags.Interval | Should -Be ([timespan]::FromMilliseconds(250))
             $flags.Online | Should -BeFalse
@@ -371,7 +373,7 @@ observed_unix_nanos = 1789208338038783900
 Describe 'What a web host reads' {
     It 'is read back from its command line' {
         InModuleScope Xmip {
-            [string] $line = 'Xmip.Gui.Web.exe ' +
+            [string] $line = 'xmip-gui-web.exe ' +
                 '--Kestrel:Endpoints:Http:Url=http://127.0.0.1:5087 ' +
                 '--Xmip:Surface=snapshot "--Xmip:Snapshot=D:\a b\snapshot.toml"'
 

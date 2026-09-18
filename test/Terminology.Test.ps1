@@ -19,7 +19,7 @@ BeforeAll {
     $script:DocsRoot = (Resolve-Path (Join-Path $PSScriptRoot '..' 'doc')).Path
 
     # Built in pieces so each rule is legible and no line runs long.
-    $mtn = '(?<!["`*])'                                       # not a mention, before
+    $mtn = '(?<!["`*-])'                          # not a mention or a cmdlet's noun, before
     $qual = '(?<!(Xmip|Host|System|Sending|Receiving|Business) )'
     $mtnAfter = '(?!["`*])'                                   # not a mention, after
     $axis = '(?! (Definition|Instance))'                      # the Definition/Instance axis

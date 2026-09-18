@@ -471,3 +471,10 @@ noun is a parameter, and only a new noun earns a cmdlet. Every parameter is
 named in every documented command. Every cmdlet that exists today stays as
 named; the rule governs what is added, and a consolidation is the owner's
 call. The estate module (`Xmip`) is held to the same rule.
+
+## Amendment, 2026-09-18: the executable is `xmip-cli`
+
+ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the
+executable included, so that one line finds and stops them all. Where this
+record says the `xmip` executable, read `xmip-cli`; an operator types
+`xmip-cli health <scope>`. Nothing else about it changes.

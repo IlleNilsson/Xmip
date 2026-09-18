@@ -24,13 +24,13 @@ function Get-XmipPlaygroundLayout {
     [string] $playground = Join-Path -Path $root -ChildPath 'test/playground'
     [string] $target = Join-Path -Path $playground -ChildPath 'target/debug'
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
-    [string] $web = 'module/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/Xmip.Gui.Web'
+    [string] $web = 'module/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
 
     return [PSCustomObject]@{
         Root       = $root
         Playground = $playground
-        Roll       = Join-Path -Path $target -ChildPath "roll$suffix"
-        Node       = Join-Path -Path $target -ChildPath "node$suffix"
+        Roll       = Join-Path -Path $target -ChildPath "xmip-playground-roll$suffix"
+        Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
     }
@@ -63,10 +63,10 @@ function Invoke-XmipPlaygroundBuild {
     Push-Location -LiteralPath $layout.Playground
 
     try {
-        [string[]] $bins = @('--bin', 'node')
+        [string[]] $bins = @('--bin', 'xmip-playground-node')
 
         if ($Binary -eq 'roll') {
-            $bins += @('--bin', 'roll')
+            $bins += @('--bin', 'xmip-playground-roll')
         }
 
         & cargo build @bins 2>&1 | ForEach-Object { Write-Verbose "$_" }

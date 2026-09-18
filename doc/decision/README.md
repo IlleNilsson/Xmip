@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-two decisions, read as one document.
+Fifty-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -696,6 +696,17 @@ need the internet run online.**
 
 → [Offline is the default, in full](ADR-0045-offline-is-the-default.md)
 
+### What a System Process Xmip owns is called, and what it says of
+
+itself
+
+**Every System Process and every service Xmip owns is named `xmip-<what>`,
+and declares three things about itself: its name, its location and its
+purpose, which is Test or Runtime. One line finds them all, and one line
+stops them all: `Get-Process Xmip-* | Stop-Process -Force`.**
+
+→ [Every System Process Xmip owns says whose it is, in full](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md)
+
 ---
 
 ## 6. How the work is done
@@ -837,11 +848,13 @@ You have a word. This gives you the decision that governs it.
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
+| process declaration | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
+| purpose, test, runtime | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
@@ -863,6 +876,7 @@ You have a word. This gives you the decision that governs it.
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
@@ -880,6 +894,7 @@ You have a word. This gives you the decision that governs it.
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
@@ -956,3 +971,4 @@ is nowhere else.
 | [0050](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) | An identity technology is one mechanism at one gate | |
 | [0051](ADR-0051-a-transport-brings-its-own-far-end.md) | A transport brings its own far end | |
 | [0052](ADR-0052-the-operator-surfaces-share-one-model.md) | The operator surfaces share one model | |
+| [0053](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) | Every System Process Xmip owns says whose it is | |
