@@ -485,6 +485,17 @@ number wherever there is a number to present, `[R:5,317 P:60 S:60 T:3 F:1]`,
 by the owner's word the same evening; a figure nobody published keeps its
 dash and takes no colon.
 
+And last that evening: *I like it, but I like the posh-git style better.
+The color, light blue, when things are fine, square, and the hamburger
+symbol aft when things are fine.* So the segment wears posh-git's clothes:
+yellow brackets; the cyan posh-git gives a branch in step with its remote
+for a stage that is fine, where the prompt had used green; and posh-git's
+own `≡` at the end, in cyan, when every stage is fine and nothing is
+retrying or failed — `[R:5,317 P:60 S:60 ≡]` — gone the moment anything is
+not. Yellow and red stay what they were. ADR-0041's one color name per mood
+holds on every surface with room for a color of its own; the prompt sits
+beside posh-git and takes its palette.
+
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
 The owner, on the web GUI: *Configuration tab, nice with icons with
