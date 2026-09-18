@@ -182,6 +182,15 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    Stop-XmipWeb
    ```
 
+   Every System Process Xmip owns is named `xmip-<what>` and declares its
+   name, its location and its purpose, test or runtime (ADR-0053).
+   `Get-XmipProcess` lists them with what they said, and one line stops
+   every one of them, whatever started it:
+
+   ```powershell
+   Get-Process -Name Xmip-* | Stop-Process -Force
+   ```
+
    `-OnlineNodes R1` records that R1 may assume a route to the internet and
    the others may not (ADR-0045). R1 is the receiving edge, the node that
    would obtain its server certificate from Let's Encrypt over ACME, which is
