@@ -511,12 +511,13 @@ M and G, one decimal below ten of a unit.
 And, since 5.3K is 5.3K for a long while: *if a value in K, M, G or higher
 rises or lowers, let's paint it hotter or icier.* The letter keeps the
 mood's color and the number takes the trend's, against what the same
-observer published last: orange where it rose, burnt where it rose by a
+observer published last: orange where it rose, magenta where it rose by a
 tenth or more, a cool cyan where it fell, blue where it fell by as much,
 and the mood's own color where it stands still or was not published before.
 A count below a thousand is written in full, shows its own movement, and is
-not painted. Red stays the mood's alone, so a hot number is never mistaken
-for a stage that is done. The observer remembers one publication and the
+not painted. Red stays the mood's alone: hot was dark red for an hour and
+is magenta, because on a console the two reds read alike and a hot number
+must never be mistaken for a stage that is done. The observer remembers one publication and the
 renderer stays pure; the two are two files since the day they reached the
 length one may be.
 
