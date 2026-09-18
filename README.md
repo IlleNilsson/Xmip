@@ -47,35 +47,44 @@ repositories are mounted under `module/` as git submodules.
 
 ## Beginner
 
-Think of Xmip as a post office for systems.
-
-It accepts Streams from applications, files, queues, databases, mailboxes and
+Xmip accepts Streams from applications, files, queues, databases, mailboxes and
 devices. It decides whether each arrival is acceptable, turns accepted content
 into a Message, and gives that Message one or more Journeys. Each Journey can
 process the Message and deliver it to its destination. If a delivery cannot
 complete, Xmip keeps the state and reports the reason instead of treating a
 transport acknowledgement as a successful application delivery.
 
-### Ten terms to begin with
+### The terms to begin with
 
-- **Stream.** What arrives: bytes from a file, a socket, a queue, a mailbox,
-  the rows a SQL statement returns, a device on a bus. A Stream belongs to the
-  sender until Xmip accepts it.
+In the order things happen to a Message, each term before the first term
+that needs it.
+
+- **Receive, Process, Send.** The three stages, in every surface and every
+  record. A Receive Location accepts an arrival, an Xmip Process performs
+  work, and a Send Location delivers a departure. Every surface follows the
+  same three stages and names the exact Location or Process.
+- **Stream.** What arrives at a Receive Location: bytes from a file, a
+  socket, a queue, a mailbox, the rows a SQL statement returns, a device on
+  a bus. A Stream belongs to the sender until Xmip accepts it.
 - **Contract.** The rules for acceptance. Content must be well-formed and,
   where a Contract is named, conform to it. A refused Stream remains the
   sender's responsibility, and the refusal says where and why.
 - **Message.** Immutable content Xmip has accepted. An accepted Message is
-  written to disk before anything acts on it and is never lost.
-- **Receive, Process, Send.** Receive Locations accept arrivals, Xmip
-  Processes perform work, and Send Locations deliver departures. Every
-  surface follows the same three stages and names the exact Location or
-  Process.
+  written to disk before anything acts on it and is never lost. Assignment
+  and transformation do not change a Message; each writes a new generation
+  of it, and every generation is kept.
+- **Subscription.** What a destination or an Xmip Process declares it
+  wants: the Messages that match it. A Subscription names one Send Location
+  or one Xmip Process.
 - **Routing.** A Message is published once; every Subscription that matches
-  it names a destination and opens one Journey. Routing creates no new
-  Message. A Message no Subscription matched goes to the Dead Message Queue,
-  to be republished once the Subscription is corrected.
+  it opens one Journey to what it names. Routing creates no new Message and
+  no new generation. A Message no Subscription matched goes to the Dead
+  Message Queue, which is not a dead letter queue: nothing failed, nothing
+  wanted it, and it is republished once the Subscription is corrected.
 - **Journey.** One durable line of work for a Message, one per matched
-  Subscription. It checkpoints and survives a restart.
+  Subscription, from the match to the delivery or the Xmip Process's
+  answer. It checkpoints and survives a restart, and it ends Completed,
+  Failed, or Dismissed when an operator stops it on purpose.
 - **Processing.** What an Xmip Process does: a definition a Subscription
   starts, running step by step and answering with a Message, no Message, or
   waiting for something named. It is not an operating system process, it
@@ -92,6 +101,18 @@ transport acknowledgement as a successful application delivery.
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
   A guard judges; it never runs the operation. Retrying and Failed are
   counted at every scope and shown on every surface.
+- **Auditing.** The durable record of what Xmip did and how it came out.
+  Entry, leaving, assignment, transformation, passing on, pickup, sending
+  and every failure are always audited; policy may add to that list and
+  never take from it. A failure is kept in its failure-time state, with the
+  Message, the place and the reason, so it can be inspected, explained,
+  retried or replayed. The record is what settles a dispute between two
+  parties about what was sent and what was received.
+- **Retention.** For the data it holds Xmip does two things over time: it
+  retains a Message while it is live and archives it when its retention
+  window passes. It never deletes. What becomes of an archive is the archive
+  owner's decision, not Xmip's
+  ([ADR-0040](doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)).
 - **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
   Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
   needs attention, and it carries that leaf and its evidence, so the worst
