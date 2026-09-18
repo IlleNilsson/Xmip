@@ -89,9 +89,29 @@ Three things, said by the process itself and readable while it runs:
 - **purpose** — `test` or `runtime`. The Playground and everything it spawns
   is test. A process is runtime unless what started it says test.
 
-Recorded here and built next, as its own slice: the declaration is written
-where a process starts and removed where it ends, read by one command that
-lists every `xmip-*` process with the three beside it.
+Built the same day. A process writes its declaration where it starts, to
+one file named for it and its pid — `xmip-gui-web-4242.toml` — and takes it
+away where it ends. The directory is the node's to say, in
+`XMIP_PROCESS_DIRECTORY`; unset, it is `xmip/process` under the system's
+temporary directory, the same for every process on the machine, so a reader
+and a writer who were told nothing still meet. A process that is killed
+cannot take its declaration away, so whoever lists them drops those whose
+process is gone, and those whose pid now belongs to something not named
+`xmip-*`.
+
+One declaration, written twice in two languages because the estate has two:
+`Declaration` in `xmip-core-node` for a Rust process, `ProcessDeclaration`
+in `Xmip.Surface` for a .NET one, the same file in the same place. The
+Playground's roll and nodes say test and the scope they are; the web host
+says the surface it reads and test where `Start-XmipWeb` started it over a
+roll's file; the executable says the scope it was asked about and the
+purpose its document states; the desktop says runtime.
+`Get-XmipProcess` lists every `xmip-*` process with the three beside it,
+and `Get-XmipProcess -Purpose Test | Stop-Process -Force` stops the tests
+and leaves the product running. A process that declared nothing is still
+listed, by its name: the name is the rule, the declaration the courtesy.
+The language server is named as the rule says and does not declare yet; it
+depends on the ABI alone, and the declaration is not the ABI's.
 
 ## Consequences
 

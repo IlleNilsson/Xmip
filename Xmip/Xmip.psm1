@@ -912,6 +912,7 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Start-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipWeb.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipWeb.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipProcess.ps1')
 
 [string[]] $script:XmipExport = @(
     'Install-XmipPrerequisite'
@@ -938,6 +939,7 @@ function Test-XmipManifest {
     'Start-XmipWeb'
     'Get-XmipWeb'
     'Stop-XmipWeb'
+    'Get-XmipProcess'
 )
 
 Export-ModuleMember -Function $script:XmipExport -Alias @('xmip-git', 'xgit')

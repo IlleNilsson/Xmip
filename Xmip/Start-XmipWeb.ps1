@@ -72,6 +72,14 @@ function Start-XmipWeb {
     if (-not [string]::IsNullOrWhiteSpace($Snapshot)) {
         [string] $full = [System.IO.Path]::GetFullPath($Snapshot)
         $arguments += @('--Xmip:Surface=snapshot', "--Xmip:Snapshot=$full")
+
+        # A web host over a Playground roll's file is a test's, and says so in
+        # its declaration (ADR-0053); over anything else it is runtime.
+        [string] $area = [System.IO.Path]::GetFullPath($layout.Area)
+
+        if ($full.StartsWith($area, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $arguments += '--Xmip:Purpose=test'
+        }
     }
 
     [string] $over = if ($arguments.Count -gt 1) { " over $Snapshot" } else { '' }
