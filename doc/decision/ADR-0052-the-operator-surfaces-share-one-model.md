@@ -446,6 +446,23 @@ and renamed. Two consequences, built the same day:
   publication. `validate` still asks a runtime. Proved in `Xmip.Cli.Test`:
   the precedence, with no surface asked to answer.
 
+## Amendment, 2026-09-18: the prompt follows the roll its session started
+
+The owner, the same evening: *I still can't get the prompt to show status
+while running test.* The roll was cluster CC1, publishing
+`CC1-snapshot.toml` every tick, and the prompt followed `C1-snapshot.toml`,
+the one file the shipped document names; it sat frozen on another cluster's
+last publication. Clause 3 stands — a surface is stated, never guessed — and
+the operator had stated it, to `Start-XmipTest -Cluster CC1`, which knew
+the file and told nobody. Now it tells the prompt: where the PowerShell
+module is loaded in the session, `Start-XmipTest` calls
+`PromptMonitor.Follow` with the snapshot its roll publishes, and the
+observer restarts on that file; a replaced observer can no longer write the
+segment. Nothing is loaded that was not, and a session without the prompt
+is untouched. A roll started elsewhere is still followed through the
+document. Proved in the module's tests: the segment follows a snapshot the
+session names over the one the document ships.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
