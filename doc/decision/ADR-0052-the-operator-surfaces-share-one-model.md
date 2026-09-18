@@ -476,6 +476,50 @@ misconfigured]`, for a document that names a surface this build does not
 know, because that is the operator's to fix. Clause 3's *said so on the
 page* still holds for a page; a prompt has no room to say it.
 
+## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
+
+The owner, on the web GUI: *Configuration tab, nice with icons with
+severity, missing drilldown to the problem area. Topology: observed only
+shows fleet to shared store. Not between receiving nodes, processing nodes
+and sending nodes. Does not show sending and receiving endpoints. Does
+nothing of use.*
+
+- **The tree drills to the problem.** Ruling 1 of 2026-09-14 says a surface
+  that stops short of the leaf has stopped short of its purpose, and the
+  first cut of `/configuration` did: a troubled branch said how many lay
+  beneath it and linked only to the monitor. Now a branch that is not fine
+  names the leaf that explains it, with its evidence, and carries a
+  *problem* link to that leaf's row; the branches on the way to it stand
+  open however deep, so the link lands on something visible, and the row it
+  lands on is outlined. The cluster's own row does the same. No script: the
+  browser's details element and a fragment, as before.
+- **Three points to drill from, and nothing else.** The owner, the same
+  evening: *the web solution has to be simple, drill down from three
+  points, configuration, monitor and topology. No need for Configured +
+  observed. Topology shall always be Configured + observed.* So the
+  Topology's switch between configured, observed and both is gone and the
+  picture is always both; origin is still said on what is selected and is
+  never a filter. And a scope reached in one view leads to the same scope
+  in the others, written in one place (`ScopeLink`): a Configuration row
+  to the Monitor's drill, the Monitor's drill to the Configuration row, a
+  node or a link selected on the Topology to both. Every Configuration
+  row, branch or leaf, is a place a link can land. Ruling 4 of 2026-09-14,
+  built for what the surfaces publish today; the declaration behind a row
+  stays queued with the native boundary.
+- **The Topology draws all there is, and that is the finding.** A Playground
+  node runs the same two scenarios as every other, against one shared
+  directory; R1, P1 and S1 are names, and a name says nothing about a role
+  (ruling 8). There is no traffic from a receiving node to a processing
+  node to a sending node, and no endpoint outside the cluster, so there is
+  nothing of that kind to publish, and a surface that invents it is not a
+  surface (clause 1). Beneath that sits `open-problems.md` problem 17, *how
+  does work reach another node*, lean A and undecided: the product itself
+  does not yet hand work between nodes. What the owner asked for is
+  therefore a Playground that rehearses a staged path — endpoints outside,
+  a stage per node by configuration, and the hop between nodes — and that
+  waits on his word on problem 17, asked the same evening. Recorded and
+  queued, not built.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
