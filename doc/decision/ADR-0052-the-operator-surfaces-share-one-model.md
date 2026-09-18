@@ -463,6 +463,19 @@ is untouched. A roll started elsewhere is still followed through the
 document. Proved in the module's tests: the segment follows a snapshot the
 session names over the one the document ships.
 
+The owner, on seeing it work: *I asked for the same kind of output as
+posh-git*, and *that Xmip is connected is obvious, as it is for posh-git, if
+the prompt shows it.* So the segment sits where posh-git puts a
+repository's state, after the path and before the closing `>` —
+`D:\Repos\Xmip [main] [R12 P11 S10 T0 F0]>` — composed into whatever
+prompt is in force, and it had stood in front of the whole prompt. And
+where there is nothing to show there is nothing on the line: connecting,
+unavailable and not configured are the absence of the segment, as posh-git
+shows nothing outside a repository. One word remains, `[Xmip
+misconfigured]`, for a document that names a surface this build does not
+know, because that is the operator's to fix. Clause 3's *said so on the
+page* still holds for a page; a prompt has no room to say it.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
