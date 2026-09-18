@@ -370,6 +370,30 @@ observed_unix_nanos = 1789208338038783900
     }
 }
 
+Describe 'A cluster rolls once' {
+    It 'finds the roll already running as a cluster, and none for another name' {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            # 2026-09-18: three rolls as CC1 overwrote one another's snapshot.
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
+                'suite = "playground"'
+                'cluster = "CC1"'
+                'pid = 4242'
+            )
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
+                'suite = "playground"'
+                'cluster = "CC10"'
+                'pid = 4343'
+            )
+
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'CC1') | Should -Be @(4242)
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'CC10') | Should -Be @(4343)
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'C1').Count | Should -Be 0
+        }
+    }
+}
+
 Describe 'What a web host reads' {
     It 'is read back from its command line' {
         InModuleScope Xmip {
