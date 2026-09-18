@@ -144,12 +144,26 @@ checked on disk.
   now folds to lower case, so an account reads `corp\alice` where it read
   `CORP\alice`; and `a@b@c` is a name, user `a@b` in domain `c`, because
   the last `@` divides. Both follow from clause 2 and clause 1.
-- **Not done, and said so in the crates.** `ntlm` writes no
-  `principal.service`: the target name sits inside the NTLMv2 response's
-  attribute pairs, which `identify/ntlm` does not open. `mutual-tls` reads
-  no name of its own; the transport's handshake is where that certificate
-  is verified. And the open point of the Consequences stands: a name
-  learned only by verifying has nowhere to go.
+- **NTLM's target name, from the specification.** Left out at first,
+  because the name sits inside the NTLMv2 response's attribute pairs; the
+  owner, the same day: *look at specs online, do your best.* [MS-NLMP]
+  2.2.2.1 and 2.2.2.7 give the layout — sixteen bytes of proof, twenty-eight
+  of client challenge, then pairs of identifier and length, with
+  `MsvAvTargetName` 0x0009 the target's service principal name in UTF-16 —
+  and 3.2.5.1.2 gives the server's rules. So the capability reads it once
+  (`identify::ntlm::ClientChallenge`), `identify/ntlm` writes it as
+  `ntlm.target` and, where the client does not flag it as taken from an
+  untrusted source, as `principal.service`; and `authenticate/ntlm`, once
+  the proof has verified, holds the client to the service the node says it
+  is and refuses a response relayed from another server naming both. The
+  same reading gave the response's timestamp, which the second gate now
+  holds within thirty-six hours of its clock, the specification's
+  `MaxLifetime` as current Windows sets it.
+- **Not done, and said so in the crates.** `mutual-tls` reads no name of
+  its own; the transport's handshake is where that certificate is verified.
+  NTLM's MIC and channel bindings need the three messages and the channel,
+  which only the transport holds. And the open point of the Consequences
+  stands: a name learned only by verifying has nowhere to go.
 
 ## Alternatives considered
 
