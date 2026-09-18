@@ -480,7 +480,10 @@ And on `[R5,317 P60 S60 T– F–]` over a live roll: *T and F do not need to
 be there if there are none.* So T and F are on the line only when something
 is retrying or has failed, `[R5,317 P60 S60]` otherwise, and they are
 yellow and red when they are there; a zero, and a count nobody published,
-are both nothing on the line.
+are both nothing on the line. And a colon stands between a letter and its
+number wherever there is a number to present, `[R:5,317 P:60 S:60 T:3 F:1]`,
+by the owner's word the same evening; a figure nobody published keeps its
+dash and takes no colon.
 
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
