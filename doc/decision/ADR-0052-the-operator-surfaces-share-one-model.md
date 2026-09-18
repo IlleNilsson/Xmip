@@ -496,6 +496,18 @@ not. Yellow and red stay what they were. ADR-0041's one color name per mood
 holds on every surface with room for a color of its own; the prompt sits
 beside posh-git and takes its palette.
 
+Then its order and its numbers: *posh-git has the hamburger after a branch,
+let's use that. If the Xmip prompt is at a node, write node name +
+hamburger. Xmip is also dealing with numbers greater than integers, so
+incorporate K, M, G so the prompt won't go wild.* So the segment reads as
+posh-git's does, `[main ≡ +0 ~1 -0]` there and `[R1 ≡ R:5.3K P:60 S:60]`
+here: what the prompt is at, the sign when square, the counts. What it is
+at is the last name every published scope shares — a node's own
+publication shares its node, a cluster's only the cluster — in the color of
+the worst stage, and a segment that is only a kind, the Playground's
+`node`, names nothing. A count is as it is below a thousand and then in K,
+M and G, one decimal below ten of a unit.
+
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
 The owner, on the web GUI: *Configuration tab, nice with icons with
