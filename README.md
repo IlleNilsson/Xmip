@@ -56,16 +56,12 @@ transport acknowledgement as a successful application delivery.
 
 ### The terms to begin with
 
-In the order things happen to a Message, each term before the first term
-that needs it.
+In the order things happen: a Stream becomes a Message, the Message is
+routed, and each route is received, optionally processed, and sent.
 
-- **Receive, Process, Send.** The three stages, in every surface and every
-  record. A Receive Location accepts an arrival, an Xmip Process performs
-  work, and a Send Location delivers a departure. Every surface follows the
-  same three stages and names the exact Location or Process.
-- **Stream.** What arrives at a Receive Location: bytes from a file, a
-  socket, a queue, a mailbox, the rows a SQL statement returns, a device on
-  a bus. A Stream belongs to the sender until Xmip accepts it.
+- **Stream.** What arrives: bytes from a file, a socket, a queue, a mailbox,
+  the rows a SQL statement returns, a device on a bus. A Stream belongs to
+  the sender until Xmip accepts it.
 - **Contract.** The rules for acceptance. Content must be well-formed and,
   where a Contract is named, conform to it. A refused Stream remains the
   sender's responsibility, and the refusal says where and why.
@@ -85,14 +81,21 @@ that needs it.
   Subscription, from the match to the delivery or the Xmip Process's
   answer. It checkpoints and survives a restart, and it ends Completed,
   Failed, or Dismissed when an operator stops it on purpose.
-- **Processing.** What an Xmip Process does: a definition a Subscription
-  starts, running step by step and answering with a Message, no Message, or
-  waiting for something named. It is not an operating system process, it
-  receives no Streams and delivers nothing outside, and its state belongs to
-  the cluster, never to a thread or a node.
+- **Receive.** A Receive Location accepts arrivals: it is where a Stream
+  comes in and where a Message begins. Every surface names the exact
+  Location.
+- **Processing, optional.** What an Xmip Process does when a Subscription
+  starts one: a definition running step by step and answering with a
+  Message, no Message, or waiting for something named. It is not an
+  operating system process, it receives no Streams and delivers nothing
+  outside, and its state belongs to the cluster, never to a thread or a
+  node. A Journey that names a Send Location has no Processing at all.
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to an Xmip Process alone and
   creates a new Message generation, as transformation does; routing does not.
+- **Send.** A Send Location delivers departures: one Journey ends there,
+  and a transport acknowledgement is not an application delivery. Every
+  surface names the exact Location.
 - **Resilience.** Every delivery and every call out is an attempt, and a
   guard is asked before each attempt whether it may go, must wait, is refused
   or is answered by a fallback, and after it whether the outcome stands, the
@@ -116,7 +119,8 @@ that needs it.
 - **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
   Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
   needs attention, and it carries that leaf and its evidence, so the worst
-  Status beneath a scope says where to look.
+  Status beneath a scope says where to look. The three stages, Receive,
+  Process and Send, are what every surface counts and colors.
 
 The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
