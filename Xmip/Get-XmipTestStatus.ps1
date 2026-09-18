@@ -13,7 +13,7 @@ function Get-XmipTestStatus {
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
-            started by hand (`cargo run --bin roll`) has no record and is
+            started by hand (`cargo run --bin xmip-playground-roll`) has no record and is
             listed with what a process alone can tell.
 
             Nothing here starts, stops or writes anything. Nothing running
@@ -44,7 +44,7 @@ function Get-XmipTestStatus {
     }
 
     [System.Diagnostics.Process[]] $rolls = @(
-        Get-Process -Name 'roll' -ErrorAction SilentlyContinue |
+        Get-Process -Name 'xmip-playground-roll' -ErrorAction SilentlyContinue |
             Where-Object { Test-XmipPlaygroundBinary -Process $_ -Path $layout.Roll }
     )
 

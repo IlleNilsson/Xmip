@@ -520,6 +520,13 @@ nothing of use.*
   waits on his word on problem 17, asked the same evening. Recorded and
   queued, not built.
 
+## Amendment, 2026-09-18: the executable is `xmip-cli`
+
+ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the
+executable included, so that one line finds and stops them all. Where this
+record says the `xmip` executable, read `xmip-cli`; an operator types
+`xmip-cli health <scope>`. Nothing else about it changes.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a

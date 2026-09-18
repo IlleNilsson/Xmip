@@ -471,12 +471,12 @@ function Test-XmipPlaygroundBinary {
     [string] $actual = try { $Process.Path } catch { '' }
 
     # A process another session started elevated shows no path to this one
-    # (2026-09-14: the owner's roll was invisible to the assistant's shell).
-    # The run record Start-XmipTest wrote for that pid vouches for it instead.
+    # (2026-09-14: the owner's roll was invisible to the assistant's shell;
+    # 2026-09-18: so was his web host, which Stop-XmipWeb then could not
+    # stop). Its name vouches for it: every System Process Xmip owns is named
+    # xmip-<what> and nothing else is (ADR-0053).
     if ([string]::IsNullOrWhiteSpace($actual)) {
-        [string] $area = (Get-XmipPlaygroundLayout).Area
-        [string] $record = Join-Path -Path $area -ChildPath "roll-$($Process.Id).toml"
-        return $Process.ProcessName -eq 'roll' -and (Test-Path -LiteralPath $record)
+        return $Process.ProcessName -like 'xmip-*'
     }
 
     return [System.IO.Path]::GetFullPath($actual) -ieq [System.IO.Path]::GetFullPath($Path)

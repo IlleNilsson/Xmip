@@ -23,6 +23,11 @@ unless the surrounding context makes the meaning unavoidable.
 | **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
+Every System Process and every service Xmip owns is named `xmip-<what>` —
+`xmip-cli`, `xmip-gui-web`, `xmip-playground-node` — and declares its name,
+its location and its purpose, test or runtime, so that one line finds them
+all and one line stops them all (ADR-0053).
+
 When a person writes or says **Process** without qualification and the meaning
 is not clear, the correct response is to ask whether they mean **System
 Process** or **Xmip Process**.

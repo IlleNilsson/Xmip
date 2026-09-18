@@ -37,7 +37,7 @@ function Get-XmipTestNode {
     $layout = Get-XmipPlaygroundLayout
 
     [System.Diagnostics.Process[]] $processes = @(
-        Get-Process -Name 'node' -ErrorAction SilentlyContinue |
+        Get-Process -Name 'xmip-playground-node' -ErrorAction SilentlyContinue |
             Where-Object { Test-XmipPlaygroundBinary -Process $_ -Path $layout.Node }
     )
 
@@ -66,7 +66,7 @@ function ConvertTo-XmipTestNode {
     [string] $line = try { $Process.CommandLine } catch { '' }
     [hashtable] $flags = Read-XmipTestNodeCommandLine -CommandLine "$line"
     $parent = try { $Process.Parent } catch { $null }
-    [bool] $ofRoll = $null -ne $parent -and $parent.ProcessName -eq 'roll'
+    [bool] $ofRoll = $null -ne $parent -and $parent.ProcessName -eq 'xmip-playground-roll'
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'
