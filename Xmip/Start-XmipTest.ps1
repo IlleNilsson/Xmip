@@ -293,6 +293,16 @@ function Start-XmipTest {
     ConvertTo-Toml -InputObject $record | Set-Content -LiteralPath $recordPath -Encoding utf8
     Write-Verbose "started $what as pid $($process.Id); record at $recordPath"
 
+    # The prompt, where this session shows one, follows the roll just started:
+    # the shipped document names C1, and on 2026-09-18 a roll named CC1 left
+    # the prompt frozen on another cluster's file. Said here because this
+    # command knows the file; nothing is loaded that is not loaded already.
+    $prompt = 'Xmip.PowerShell.PromptMonitor' -as [type]
+
+    if ($null -ne $prompt) {
+        $prompt::Follow($environment.XMIP_PLAYGROUND_SNAPSHOT)
+    }
+
     if ($PassThru) {
         return Get-XmipTestStatus -Path $Path | Where-Object { $_.Id -eq $process.Id }
     }
