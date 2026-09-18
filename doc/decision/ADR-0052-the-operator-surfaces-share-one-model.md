@@ -476,6 +476,12 @@ misconfigured]`, for a document that names a surface this build does not
 know, because that is the operator's to fix. Clause 3's *said so on the
 page* still holds for a page; a prompt has no room to say it.
 
+And on `[R5,317 P60 S60 T– F–]` over a live roll: *T and F do not need to
+be there if there are none.* So T and F are on the line only when something
+is retrying or has failed, `[R5,317 P60 S60]` otherwise, and they are
+yellow and red when they are there; a zero, and a count nobody published,
+are both nothing on the line.
+
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
 The owner, on the web GUI: *Configuration tab, nice with icons with
