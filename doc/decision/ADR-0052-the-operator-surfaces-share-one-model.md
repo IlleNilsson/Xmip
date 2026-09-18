@@ -508,6 +508,18 @@ the worst stage, and a segment that is only a kind, the Playground's
 `node`, names nothing. A count is as it is below a thousand and then in K,
 M and G, one decimal below ten of a unit.
 
+And, since 5.3K is 5.3K for a long while: *if a value in K, M, G or higher
+rises or lowers, let's paint it hotter or icier.* The letter keeps the
+mood's color and the number takes the trend's, against what the same
+observer published last: orange where it rose, burnt where it rose by a
+tenth or more, a cool cyan where it fell, blue where it fell by as much,
+and the mood's own color where it stands still or was not published before.
+A count below a thousand is written in full, shows its own movement, and is
+not painted. Red stays the mood's alone, so a hot number is never mistaken
+for a stage that is done. The observer remembers one publication and the
+renderer stays pure; the two are two files since the day they reached the
+length one may be.
+
 ## Amendment, 2026-09-18: the Configuration view drills to the problem, and what the Topology lacks
 
 The owner, on the web GUI: *Configuration tab, nice with icons with
