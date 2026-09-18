@@ -174,13 +174,19 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 -OnlineNodes S1
+   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 -OnlineNodes R1
    Start-XmipWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
    Stop-XmipTest
    Stop-XmipWeb
    ```
+
+   `-OnlineNodes R1` records that R1 may assume a route to the internet and
+   the others may not (ADR-0045). R1 is the receiving edge, the node that
+   would obtain its server certificate from Let's Encrypt over ACME, which is
+   the one online act Xmip has (ADR-0033, ADR-0034). The switch permits;
+   nothing in the Playground reaches out.
 
    The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
    board that follows receive, process and send as the cluster moves. Beside
