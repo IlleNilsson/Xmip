@@ -320,7 +320,7 @@ and the prompt (5), as Suggested order item 3 in
 
 The amendment of 2026-09-14 declined *a prompt segment of five counts in five
 colors in place of the mood*. The owner reaffirmed the counts on 2026-09-15:
-*the PowerShell prompt should reflect Receive, Process, Send, reTries and
+*the PowerShell prompt should reflect `Receive`, `Process`, `Send`, reTries and
 Failures, like posh-git does for Git repos.* Reaffirmed, it is his decision,
 and the objection is met rather than overruled: the mood stays first and in
 its color, so clause 2 holds, and each count carries its letter, so it is a
@@ -416,6 +416,35 @@ second. The fix is not faster filtering. It is none.
 Proved in `Xmip.Surface.Test`: the index says what the record-by-record
 helpers say, and it indexes a Playground's eleven thousand leaves well within
 one render. Built the same day, on the owner's word.
+
+## Amendment, 2026-09-18: a published file is flushed, and the executable chooses too
+
+The owner, three days after the prompt first showed figures: *the status
+prompt for PowerShell and CLI if possible still does not work.* It said
+`[Xmip unavailable]` while the C1 snapshot lay where the document said,
+because that snapshot, its history and its activity file were each the
+right length and nothing but zeros: a hard stop on 2026-09-16 came after
+the Playground's rename and before the data reached the disk. A rename is
+journaled and file contents are not, and `write_atomic` had only written
+and renamed. Two consequences, built the same day:
+
+- **A publisher flushes before it renames.** `write_atomic` in the
+  Playground writes the sibling temp file, flushes it to the device, then
+  renames it over the target. A reader sees the previous file or this one,
+  never a torn one and never an empty one; this is what *atomic* meant in
+  clause 3 all along. Any Xmip publisher that writes a snapshot follows the
+  same order.
+- **The executable's document chooses its surface, as every other host's
+  does.** Clause 3 and the amendment of 2026-09-15 said *any host's
+  document*, and `xmip.cli.toml` was read for `RuntimeLibrary` alone; the
+  executable could follow a library or `--remote`, never a snapshot. Now
+  `SurfaceOpen` reads the same `[Xmip]` keys — `Surface`, `RuntimeLibrary`,
+  `Snapshot`, `Url` — and the line wins over the document: `--remote`, then
+  `--runtime`, then what is written. As shipped, `xmip.cli.toml` follows
+  the C1 roll, the same file the PowerShell prompt follows, so `xmip show
+  xmip:///C1` and `[R… P… S… T… F…]` say the same thing from the same
+  publication. `validate` still asks a runtime. Proved in `Xmip.Cli.Test`:
+  the precedence, with no surface asked to answer.
 
 ## Alternatives considered
 
