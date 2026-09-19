@@ -60,7 +60,7 @@ one step to the parser and twenty to the reader.
 defines that cmdlet; `test/Allocation.Test.ps1` is the allocation test. Pester
 discovers `*.Tests.ps1` by default, so the estate tells Pester its extension
 through `Get-XmipPesterConfiguration` — every run, the gate and
-`Start-XmipTest -Suite Core.Estate` alike — rather than bending its files to the
+`Start-XmipTest -Suite Estate` alike — rather than bending its files to the
 tool. The owner's ruling, 2026-09-11: the tool's convention is not the estate's.
 The verb is Start: Xmip's tests are suites a person starts, the Playground and
 the estate's Pester suite alike. Invoke is for crossing a boundary — another

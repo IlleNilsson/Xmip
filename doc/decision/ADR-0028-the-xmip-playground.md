@@ -236,7 +236,22 @@ transport's own; **a node is a process**, and a cluster's nodes are spawned,
 merged and restarted by the roll.
 
 2026-09-19, the owner: what the Playground spawns is a cluster and its nodes;
-the word fleet is retired.
+the word fleet is retired **here**.
+
+Retired from the rig, not from the estate. The assistant wrote the same day
+that fleet *"is in no record of the estate's vocabulary"*, and that was
+false: ADR-0007's communication domain model opens its Actor hierarchy with
+*Fleet owner* → *Ship owner* → *Ship* → *Captain* → *Crew*, and
+`runtime-model.md` repeats it as the recursion that lets one architecture
+serve a fleet operator and a sensor on a bus. ADR-0019 asks whether a fleet
+certificate authenticates a ship. Fleet is the estate's word for a customer
+who owns many of a thing.
+
+What was wrong was borrowing it for a group of test node processes, which
+is a cluster and was already called one. The owner, noticing the word gone
+from the suites: *I used Fleet in an example.* His example stands, in
+ADR-0052 and in the Playground's README; the word keeps its own meaning
+everywhere it had one.
 
 ## Amendment, 2026-09-19: even clusters are spawned as processes
 

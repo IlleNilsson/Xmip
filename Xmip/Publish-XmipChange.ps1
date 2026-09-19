@@ -62,7 +62,7 @@ function Get-XmipStatus {
             Get-XmipStatus | Where-Object Suspicious
     #>
     [CmdletBinding()]
-    [OutputType([PSCustomObject])]
+    [OutputType('Xmip.Status', 'Xmip.StatusSummary')]
     param(
         [Parameter()]
         [switch] $Short,
@@ -127,6 +127,7 @@ function Get-XmipStatus {
 
         if ($Short) {
             [PSCustomObject]@{
+                PSTypeName = 'Xmip.StatusSummary'
                 Module     = $module
                 Branch     = $git.Branch
                 Changed    = $files.Count
@@ -142,6 +143,7 @@ function Get-XmipStatus {
             $file = $line.Substring(3).Trim('"')
 
             [PSCustomObject]@{
+                PSTypeName = 'Xmip.Status'
                 Module     = $module
                 Branch     = $git.Branch
                 State      = $line.Substring(0, 2)
@@ -227,7 +229,7 @@ function Publish-XmipChange {
             xgit -Pin
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
-    [OutputType([PSCustomObject])]
+    [OutputType('Xmip.Change')]
     param(
         [Parameter(Position = 0)]
         [Alias('m')]
@@ -314,10 +316,11 @@ function Publish-XmipChange {
         # `Verified False` on their own read as a failed run — which is how a
         # successful landing was reported as nothing happening on 2026-08-29.
         return [PSCustomObject]@{
-            Landed   = @()
-            Skipped  = @()
-            Platform = $true
-            Verified = $false
+            PSTypeName = 'Xmip.Change'
+            Landed     = @()
+            Skipped    = @()
+            Platform   = $true
+            Verified   = $false
         }
     }
 
@@ -416,10 +419,11 @@ function Publish-XmipChange {
                 Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
                 return [PSCustomObject]@{
-                    Landed   = $landed.ToArray()
-                    Skipped  = $skipped.ToArray()
-                    Platform = $true
-                    Verified = $true
+                    PSTypeName = 'Xmip.Change'
+                    Landed     = $landed.ToArray()
+                    Skipped    = $skipped.ToArray()
+                    Platform   = $true
+                    Verified   = $true
                 }
             }
         }
@@ -438,10 +442,11 @@ function Publish-XmipChange {
     }
 
     [PSCustomObject]@{
-        Landed   = $landed.ToArray()
-        Skipped  = $skipped.ToArray()
-        Platform = $true
-        Verified = -not $NoVerify
+        PSTypeName = 'Xmip.Change'
+        Landed     = $landed.ToArray()
+        Skipped    = $skipped.ToArray()
+        Platform   = $true
+        Verified   = -not $NoVerify
     }
 }
 

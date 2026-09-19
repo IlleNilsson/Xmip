@@ -238,7 +238,12 @@ function Install-XmipPrerequisite {
 
     $results = [Collections.Generic.List[object]]::new()
     function Record([string] $Name, [string] $Status, [string] $Detail) {
-        $results.Add([pscustomobject]@{ name = $Name; status = $Status; detail = $Detail })
+        $results.Add([pscustomobject]@{
+                PSTypeName = 'Xmip.Prerequisite'
+                name       = $Name
+                status     = $Status
+                detail     = $Detail
+            })
     }
 
     foreach ($name in (Get-TomlKey $prerequisites)) {

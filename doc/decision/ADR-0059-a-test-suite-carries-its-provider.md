@@ -127,6 +127,112 @@ rule, and a third party's suite would have inherited neither.
    real test of `Core.Estate`, and as a regular expression it matches
    `RustXStyle` too, while as a wildcard it is the name the operator typed.
 
+## Amendment, 2026-09-19: a bare name is Xmip's own, and `-Suite` filters
+
+Two rulings the same day, both the owner's, both against clauses drafted by
+the assistant and quoted here as he wrote them.
+
+On the name, having used the qualified form and disliked it: *"Got it, -Suite
+is Playground, Not Core.Playground. My choice. That is fine but all
+instructions has to be updated."*
+
+On the filter: *"Filter the -Suite as the -Test parameter."*
+
+**Clause 14. A name with no provider is the reserved provider's, and that is
+the canonical spelling for Xmip's own two.** This **supersedes clause 1**,
+which required the qualified form, and **supersedes clause 2**, which refused
+a bare name at the door. `Playground` and `Estate` are how the estate spells
+its own suites, and they are what every surface prints, records and documents:
+the run record's `suite` field, `Get-XmipTestStatus`, `Get-XmipTestResult`,
+`Get-XmipTestNode`, the `[run]` table, the refusals, tab completion and all
+help text. A third party's stays qualified, because it must: `Acme.Playground`.
+
+This is not the alternative this record rejected. *Accept a bare name and
+expand it to `Core.<Name>`* was declined below as teaching the wrong shape;
+what is decided here is stronger and is ADR-0011's own clause applied rather
+than bent — *`core` is reserved and means Xmip itself*. A name with no
+provider is therefore not a name missing a slot; it is the reserved
+provider's, exactly as a one-token module name already means platform level
+in ADR-0011. The slot `Acme.Playground` needs was never the bare word's to
+occupy: `Acme` is not `core`, and nothing a bare name means is available to
+anyone else.
+
+**Clause 15. The qualified form is still accepted, and that is the owner's to
+strike.** `Core.Playground` resolves to the Playground and `Core.Estate` to
+the estate, because that is literally what a bare name means and because every
+instruction written before this amendment spells it that way. The owner wrote
+*"Not Core.Playground"*, which can be read as a refusal rather than a
+preference; it was not read that way, and refusing it outright is a one-line
+change to `Get-XmipNamedTestSuite`. **This clause is his to strike.**
+
+**Clause 16. `-Suite` takes wildcards, as `-Test` does.** This **supersedes
+clause 7's `-Suite` stays exact**, and with it the argument that a wildcard
+suite would leave *which provider did I just run* unanswerable. That argument
+was the assistant's, named in the Provenance below as his to strike, and he
+struck it. It is safe to strike because a run records its own resolved suite —
+the run record beside the snapshot, and `Get-XmipTestStatus` reading it back —
+so *which did I run* is answered per run and never needed to be answered per
+command. Wildcards, never regular expressions: clause 8 stands unchanged.
+
+`-Suite *` is every suite this estate knows, `-Suite *Play*` is the
+Playground, and a literal name holds no wildcard character and selects exactly
+one suite, so nothing an operator typed before this means anything else now. A
+pattern that matches nothing is REFUSED before anything starts, naming what
+was given and the suites there are — the same words as a name nobody
+provides, since a name that names none and a pattern that matches none are
+one fault (ADR-0055 clause 2).
+
+**Clause 17. Several suites matched run one after another, and one that will
+not start does not stop the rest.** They run in the order `Get-XmipTestSuite`
+lists them, Xmip's own first. Each returns what it returns — the Playground a
+detached roll that comes back at once, the estate a Pester run that blocks, a
+provider's whatever its command gives — so a group run emits the same objects
+a caller would get from running each by hand, in order, and reads them by
+type. What is about to run is said in one line before anything starts, and
+what did not start is said by name at the end, in the estate's words: this is
+the only report of a group run, because the objects cannot be one. A suite
+that refuses is named and the rest carry on, which is the rule a malformed
+declaration already follows in the Consequences below — what another provider
+wrote may never stop Xmip's own tests.
+
+**Clause 18. A switch that belongs to one suite alone is not a fault when a
+pattern chose the group.** `-Stress` on `-Suite Estate` is still REFUSED: an
+operator who named one suite and gave it another's switch meant something
+else. `-Suite * -Cluster Z3` is not that mistake — it is a roll on Z3 with the
+estate's files beside it — so the Playground's own parameters are dropped for
+the Pester suite rather than refused. A provider's command keeps everything it
+was given, since only the provider knows what its command takes.
+
+**Clause 19. `-Suite` still defaults to `Playground`.** An omitted `-Suite`
+could be read as `*` under clause 9 — an omitted selector means the most the
+rig can give — and it is not. Clause 9's rule is about what one run brings;
+`-Suite` chooses which rig runs at all, and a bare `Start-XmipTest` has never
+meant *and also run the estate's Pester gate*. The owner's words at clause 9
+named `-Stress` and `-Nodes` and nothing else. **If he wants the default to be
+`*`, this is the clause to strike.**
+
+**Clause 20. The shape of a suite name is checked in the body, not at the
+parameter, and this qualifies ADR-0055 clause 1.** The door is the parameter
+where the parameter can say the whole refusal; a `ValidatePattern` cannot,
+because PowerShell wraps it — the operator reads *Cannot validate argument on
+parameter 'Suite'* first and the estate's words second, which reads as the
+framework complaining rather than Xmip refusing (the owner, 2026-09-19). The
+estate says its outcomes in its own words, so the words must be ours alone.
+Nothing is lost: `Get-XmipTestSuiteRefusal` is the first thing the cmdlet
+does, it is pure, and it starts nothing — which is what ADR-0055 clause 1
+protects. Clause 16 then made the check redundant as a shape check and it is
+gone: with a filter, an unmatched pattern and a misspelled name are the same
+refusal, and there is one voice rather than two.
+
+**What this amendment overtakes in the Consequences below.** Two bullets there
+state clauses 1 and 2 as consequences and are no longer true of the estate:
+*`Start-XmipTest -Suite Playground` is refused where it used to run* — it runs,
+and it is the spelling — and *the run record carries `suite =
+"Core.Playground"`* — it carries `suite = "Playground"`, and a record written
+before today is read back as `Playground` all the same, so a roll started this
+morning reports the one spelling this afternoon. The bullets stay as what was
+decided that day; this is what supersedes them.
+
 ## Amendment, 2026-09-19: an omitted selector means the most the rig can give
 
 The owner, the same day, on the two switches nobody types: *"Omitted -Stress,
@@ -296,3 +402,14 @@ and that the count is asked of the rig so the door can record it — are the
 assistant's drafting. Clause 12 is the one to read twice: refusing outright
 was the alternative, and it was declined because it would refuse every
 `-Stress Calm` run, calm's own count being one.
+
+The second amendment's two rulings are the owner's, 2026-09-19, quoted at its
+head: the bare name and the filter on `-Suite`. Both overrule clauses this
+record's own Provenance had already marked as the assistant's — clause 7's
+*`-Suite` stays exact* was his reasoning, and it is now superseded by clause
+16. Clauses 17 and 18, which say what several suites matched do and which
+switches survive a group run, and clause 20, which records where the shape
+check lives and why, are the assistant's drafting. Clause 15 — that
+`Core.Playground` is still accepted — and clause 19 — that the default stays
+`Playground` — are named there as the owner's to strike, and are the two
+things to read first.

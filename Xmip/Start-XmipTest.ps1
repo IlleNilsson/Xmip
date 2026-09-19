@@ -12,9 +12,9 @@ function Start-XmipTest {
         .DESCRIPTION
             Xmip provides its tests as suites, and -Suite says which one runs.
             A suite carries the provider who publishes it, exactly as a module
-            does (ADR-0011): Core.Playground is a roll that runs detached until
+            does (ADR-0011): Playground is a roll that runs detached until
             you stop it, Get-XmipTestStatus says what runs and Stop-XmipTest
-            ends it; Core.Estate is the Pester suite under test/, the estate's
+            ends it; Estate is the Pester suite under test/, the estate's
             memory of every past defect, which runs here and now, says OK or
             FAILED and returns the Pester result. Acme.Playground is Acme's,
             and joins by a declaration rather than by an edit to Xmip.
@@ -42,12 +42,29 @@ function Start-XmipTest {
             is whose.
 
         .PARAMETER Suite
-            Which test suite to run, as <Provider>.<Name>: Core.Playground
-            (the default) or Core.Estate. The provider is required — a bare
-            Playground is REFUSED, because the slot it would leave empty is
-            where Acme.Playground goes. Case does not matter;
-            core.playground is Core.Playground. The Playground parameters
-            below belong to Core.Playground alone.
+            Which test suite to run: Playground (the default) or Estate,
+            which are Xmip's own. A name with no provider is Xmip's, because
+            core is the reserved provider (ADR-0011), so Playground and
+            Core.Playground are the one suite and Playground is how it is
+            spelled. Someone else's carries their name: Acme.Playground.
+            Case does not matter. The Playground parameters below belong to
+            the Playground alone.
+
+            Wildcards select a group, exactly as -Test does (the owner,
+            2026-09-19): -Suite * is every suite this estate knows, -Suite
+            *Play* is the Playground, and a literal name is one suite as
+            before. A pattern matching nothing is REFUSED, naming it and the
+            suites there are, before anything starts.
+
+            Several suites matched run one after another in the order they
+            are listed, each returning what it returns — the Playground a
+            detached roll that comes back at once, the estate a Pester run
+            that blocks, a provider's whatever its command gives — so a
+            caller reads the stream by type. It is said in words which are
+            about to run and which did not start; one suite failing to start
+            never stops the rest. A switch that belongs to one suite alone is
+            not a fault when a pattern chose the group: -Suite * -Cluster Z3
+            rolls on Z3 and runs the estate's Pester files beside it.
 
             A provider adds a suite by dropping a declaration in test/suite,
             with no edit to Xmip's own source:
@@ -160,13 +177,13 @@ function Start-XmipTest {
             Return the Xmip.TestStatus object for the roll started.
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1
+            Start-XmipTest -Suite Playground -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, P1 -PassThru |
+            Start-XmipTest -Suite Playground -Cluster C1 -Nodes R1, P1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -177,22 +194,28 @@ function Start-XmipTest {
                 @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
+            Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
             Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Estate
+            Start-XmipTest -Suite Estate
 
         .EXAMPLE
-            (Start-XmipTest -Suite Core.Estate).Failed | Format-Table ExpandedPath
+            (Start-XmipTest -Suite Estate).Failed | Format-Table ExpandedPath
 
         .EXAMPLE
             Start-XmipTest -Suite Acme.Playground -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
+            Start-XmipTest -Suite Estate -Test Sync-Xmip*
+
+        .EXAMPLE
+            Start-XmipTest -Suite * -Cluster C1
+
+        .EXAMPLE
+            Start-XmipTest -Suite *Play* -Cluster C1
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus', 'Pester.Run')]
@@ -200,14 +223,14 @@ function Start-XmipTest {
         # The sentence is "start the Playground's HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).
         #
-        # The shape is refused at the door and the set cannot be (ADR-0055
-        # clauses 1 and 2): a provider's suite is declared, not compiled in, so
-        # no ValidateSet can know it. The pattern says a suite is qualified;
-        # the completer offers the ones there are; the body refuses the rest.
+        # Neither the set nor the shape is declared here (ADR-0055 clauses 1
+        # and 2; ADR-0059, amendment 2026-09-19): a provider's suite is
+        # declared, not compiled in, so no ValidateSet can know it, and a
+        # ValidatePattern's refusal reaches the operator wrapped in
+        # PowerShell's own words. The completer offers the ones there are;
+        # the body refuses the rest, in the estate's words.
         [Parameter(Position = 0)]
-        [ValidatePattern('^[A-Za-z][A-Za-z0-9]*\.[A-Za-z][A-Za-z0-9]*$', ErrorMessage =
-            "REFUSED. A suite is <Provider>.<Name>: '{0}' names no provider. " +
-            'Did you mean Core.{0}?')]
+        [SupportsWildcards()]
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
@@ -226,7 +249,7 @@ function Start-XmipTest {
                 ForEach-Object { $_.Name } |
                 Where-Object { $_ -like "$wordToComplete*" }
         })]
-        [string] $Suite = 'Core.Playground',
+        [string] $Suite = 'Playground',
 
         # The hardest level, because an omitted selector means the most the
         # rig can give and not a cautious default (the owner, 2026-09-19;
@@ -240,7 +263,11 @@ function Start-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            [string[]] $names = if ($fakeBoundParameters['Suite'] -like '*.Estate') {
+            # Bare or qualified, both name the estate's suite (ADR-0059,
+            # amendment 2026-09-19); omitted, -Suite is the Playground.
+            [string] $asked = "$($fakeBoundParameters['Suite'])"
+
+            [string[]] $names = if ($asked -ieq 'Estate' -or $asked -ieq 'Core.Estate') {
                 [string] $root = Get-XmipRepositoryRoot
                 Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
                     ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
@@ -306,7 +333,17 @@ function Start-XmipTest {
         return
     }
 
-    $chosen = @($known | Where-Object { $_.Name -ieq $Suite })[0]
+    # Whatever was typed, the suite says what it is called: Core.Playground
+    # resolves to the Playground and the record carries the canonical
+    # spelling (ADR-0059, amendment 2026-09-19). A pattern may name several,
+    # and then each is run in turn.
+    [object[]] $matched = @(Get-XmipNamedTestSuite -Name $Suite -Known $known)
+
+    if ($matched.Count -gt 1) {
+        return Start-XmipTestSuiteGroup -Suite $matched -Bound $PSBoundParameters
+    }
+
+    $chosen = $matched[0]
     $Suite = $chosen.Name
 
     if ($chosen.Kind -eq 'pester') {
@@ -535,6 +572,86 @@ function Start-XmipTest {
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
     'Nodes', 'OnlineNodes', 'NodeCapability', 'LoadBytes', 'PassThru'
 )
+
+function Start-XmipTestSuiteGroup {
+    <#
+        .SYNOPSIS
+            Runs every suite a pattern matched, in the order they are listed,
+            saying in words which are about to run and which did not start.
+
+        .DESCRIPTION
+            Each is started through Start-XmipTest itself, so a group run and
+            a single run are the same run: the same refusals, the same
+            records, the same -WhatIf. Two things differ, and only because a
+            pattern chose the group rather than an operator naming one suite.
+
+            A switch that belongs to the Playground alone is dropped for the
+            estate's Pester suite rather than refused — -Suite * -Cluster Z3
+            is not a mistake about -Cluster; it is a roll on Z3 with the
+            estate's files beside it. A provider's command keeps everything,
+            since only the provider knows what its command takes.
+
+            One suite that will not start does not stop the others, which is
+            the rule a malformed declaration already follows (ADR-0059): what
+            another provider wrote may never stop Xmip's own tests. Each
+            failure is said by name and again at the end.
+
+        .PARAMETER Suite
+            The suites matched, in the order Get-XmipTestSuite lists them.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+    #>
+    [CmdletBinding()]
+    [OutputType([object])]
+    param(
+        [Parameter(Mandatory)]
+        [object[]] $Suite,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound
+    )
+
+    [string[]] $names = @($Suite | ForEach-Object { $_.Name })
+    Write-Host "Running $($names.Count) suites in order: $($names -join ', ')."
+
+    [System.Collections.Generic.List[string]] $refused = @()
+
+    foreach ($one in $Suite) {
+        [hashtable] $forward = @{}
+
+        foreach ($key in @($Bound.Keys)) {
+            $forward[$key] = $Bound[$key]
+        }
+
+        $forward['Suite'] = $one.Name
+        $forward['ErrorAction'] = 'Stop'
+
+        if ($one.Kind -eq 'pester') {
+            foreach ($only in $script:XmipPlaygroundOnly) {
+                $forward.Remove($only)
+            }
+        }
+
+        try {
+            Start-XmipTest @forward
+        }
+        catch {
+            $refused.Add($one.Name)
+            Write-Host "FAILED $($one.Name) did not start: $($_.Exception.Message)"
+        }
+    }
+
+    [string] $ran = $names -join ', '
+
+    if ($refused.Count -eq 0) {
+        Write-Host "OK $($names.Count) suites started: $ran."
+        return
+    }
+
+    [string] $missing = $refused -join ', '
+    Write-Host "FAILED $($refused.Count) of $($names.Count) did not start: $missing."
+}
 
 function Start-XmipProviderSuite {
     <#

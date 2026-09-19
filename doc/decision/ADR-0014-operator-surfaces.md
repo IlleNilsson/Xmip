@@ -510,3 +510,69 @@ found by the owner opening the surface nobody had updated.
 
 Applies to everything from this day forward, and to the debt named above,
 which is now owed rather than optional.
+
+## Amendment, 2026-09-19: every object an operator sees is typed and has a table view
+
+The owner, looking at his console: *"Now revise the output from Xmip, it does
+not look well."*
+
+He was right, and the cause was measurable rather than aesthetic. The module
+exported twenty-seven commands and `Xmip/Xmip.Format.ps1xml` declared a view
+for four types. PowerShell renders an object of more than four properties and
+no view as a vertical list, one property per line with a blank line between
+objects, so `Get-XmipStatus` printed five lines *per changed file* — hundreds
+of lines on a dirty estate where a table of six rows says the same thing. Most
+of those objects could not be given a view at all, because they carried no
+`PSTypeName` for a view to select on.
+
+**The rule: every object an operator sees is typed `Xmip.<Noun>` where it is
+built, and every such type has a table view that fits a 120-column console.**
+A type name is not decoration — it is the only handle formatting, parameter
+validation (`[PSTypeName('Xmip.TestStatus')]`) and a future `Xmip.Surface`
+have on the shape. This is clause 10's "the shape of the executable's JSON as
+objects" carried one step further: the shape is also *named*.
+
+Typed and given a view on this day, all in the estate module:
+
+| Type | Cmdlet |
+| --- | --- |
+| `Xmip.Status` | `Get-XmipStatus` |
+| `Xmip.StatusSummary` | `Get-XmipStatus -Short` |
+| `Xmip.Change` | `Publish-XmipChange` |
+| `Xmip.DecisionRecord` | `Get-XmipDecisionRecord` |
+| `Xmip.EstateRepository` | `Get-XmipEstateRepository` |
+| `Xmip.History` | `Get-XmipHistory` |
+| `Xmip.Prerequisite` | `Install-XmipPrerequisite -PassThru` |
+
+Given a view, having already been typed: `Xmip.Process` (`Get-XmipProcess`)
+and `Xmip.TestSuite` (the suites `Start-XmipTest -Suite` takes). The four that
+had views — `Xmip.TestStatus`, `Xmip.TestNode`, `Xmip.TestResult`, `Xmip.Web`
+— keep their shape; `Xmip.TestStatus` was 134 columns wide and wrapped its own
+header, and it and `Xmip.Web` now fit.
+
+Three conventions the views follow, so that a reader meets one style:
+
+- **A long free-text field or a path is the last column**, where truncation
+  costs least, and a full path is shortened to its file name. A full path in a
+  table is almost always wrong; `Format-List` still holds it whole.
+- **A time in a table is `MM-dd HH:mm`.** The year is this year and the
+  seconds are not what the eye is looking for. `Xmip.History` is the exception
+  and keeps `yyyy-MM-dd HH:mm:ss`, because there the instant *is* the
+  measurement.
+- **An empty, zero or null value is rendered as the word for it** — `none`,
+  `open`, `absent`, `by hand`, `unsaid`, `Xmip runs it` — which the four
+  original views already did. A blank cell is a question; a word is an answer.
+
+Presentation only. No cmdlet's return changed: same objects, same properties,
+same pipeline behaviour, and `Format-List` still shows every property,
+including the ones a table drops. Columns a table drops are named in the view
+file, not hidden: `Leaf`, `Parent` and `Mounted` from `Xmip.EstateRepository`
+(the first two are read off `Name`, the third is `Mount` being non-empty),
+`Branch` from the per-file `Xmip.Status` (it repeats once per file and is kept
+in the `-Short` summary), and `Prose`, `Concepts`, `Subject`, `Note`, `Order`
+and `File` from `Xmip.DecisionRecord`.
+
+The four surfaces of the amendment above are not all reached by this: it is
+the PowerShell module's rendering alone. The CLI, the GUIs and the ABI publish
+the same model and render it their own way, and nothing here changes what they
+are given.

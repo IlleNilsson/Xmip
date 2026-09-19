@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Default table views for the objects the playground and web cmdlets emit, so
-  Get-XmipTestStatus reads at a glance and Format-List still shows everything.
+  Default table views for every object an Xmip cmdlet hands an operator, so
+  the console reads at a glance and Format-List still shows everything.
+
+  An object with more than four properties and no view is rendered by
+  PowerShell as a vertical list — five lines a file for Get-XmipStatus. Every
+  type here is declared where its cmdlet builds the object, and every view
+  fits a 120-column console without wrapping (ADR-0014, amendment
+  2026-09-19).
+
+  Two rules the columns follow. A long free-text or path field is last, where
+  truncation costs least; a full path is shortened to the file name and left
+  whole for Format-List. A time in a table is 'MM-dd HH:mm', because the year
+  is today's and the seconds are not what the eye is looking for — except in
+  Xmip.History, where the instant is the measurement.
 -->
 <Configuration>
   <ViewDefinitions>
@@ -12,25 +24,27 @@
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
-          <TableColumnHeader><Label>Suite</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Suite</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Cluster</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Tests</Label><Width>28</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>Nodes</Label><Width>24</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Tests</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Nodes</Label><Width>15</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>15</Width></TableColumnHeader>
           <TableColumnHeader><Label>Worst</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.Cluster) { 'by hand' } else { $_.Cluster }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Worst</PropertyName></TableColumnItem>
@@ -53,7 +67,7 @@
           <TableColumnHeader><Label>Online</Label><Width>6</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Parent</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
-          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
           <TableColumnHeader><Label>Snapshot</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -66,8 +80,8 @@
               <TableColumnItem><PropertyName>Online</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Parent) { 'by hand' } else { $_.Parent }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
-              <TableColumnItem><PropertyName>Snapshot</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[System.IO.Path]::GetFileName("$($_.Snapshot)")</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>
@@ -104,6 +118,30 @@
       </TableControl>
     </View>
     <View>
+      <Name>Xmip.TestSuite</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.TestSuite</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Provider</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Kind</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Command</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Provider</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Kind</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Command)) { 'Xmip runs it' } else { $_.Command }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
       <Name>Xmip.Web</Name>
       <ViewSelectedBy>
         <TypeName>Xmip.Web</TypeName>
@@ -112,8 +150,8 @@
         <TableHeaders>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Url</Label><Width>26</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Surface</Label><Width>10</Width></TableColumnHeader>
-          <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Surface</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
           <TableColumnHeader><Label>Snapshot</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -122,8 +160,206 @@
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Url</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Surface</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
-              <TableColumnItem><PropertyName>Snapshot</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Snapshot)) { 'none' } else { [System.IO.Path]::GetFileName($_.Snapshot) }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.Process</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Process</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Purpose</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Declared</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Location</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Purpose)) { 'unsaid' } else { $_.Purpose }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Declared</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.Started) { 'unknown' } else { $_.Started.ToString('MM-dd HH:mm') }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Location)) { 'unsaid' } else { $_.Location }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.Status</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Status</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Module</Label><Width>44</Width></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>5</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Suspicious</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Path</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } else { $_.Module }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Suspicious</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Path</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.StatusSummary</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.StatusSummary</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Module</Label><Width>44</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Branch</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Changed</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Ahead</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Behind</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Suspicious</Label><Width>10</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } else { $_.Module }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Branch</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Changed</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>AheadBy</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>BehindBy</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Suspicious</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.Change</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Change</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Verified</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Platform</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Landed</Label><Width>44</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Skipped</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Verified</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Platform</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Landed.Count -eq 0) { 'none' } else { $_.Landed -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Skipped.Count -eq 0) { 'none' } else { $_.Skipped -join ',' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.DecisionRecord</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.DecisionRecord</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Number</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Title</Label><Width>54</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Theme</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Number</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Title</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Theme)) { 'unthemed' } else { $_.Theme }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.EstateRepository</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.EstateRepository</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>40</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Domain</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Maturity</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Mount</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Domain</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Maturity</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Mounted) { $_.Mount } else { 'absent' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.History</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.History</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Node</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Counted</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Value</Label><Width>16</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Observed</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Node</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Counted</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Value</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.Observed.ToString('yyyy-MM-dd HH:mm:ss')</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Xmip.Prerequisite</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.Prerequisite</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Detail</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>status</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>detail</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 # The Playground's tests by the names a person asks for them, and the scope
 # segment the roll drives and publishes each under
 # (test/playground/src/bin/roll.rs). The owner's shape, 2026-09-12:
-# Start-XmipTest -Suite Core.Playground -Test HeavyLoad. 2026-09-19, the owner: the
+# Start-XmipTest -Suite Playground -Test HeavyLoad. 2026-09-19, the owner: the
 # old scenario wording is replaced by the test names everywhere.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipPlaygroundTest = [ordered]@{
     RoundTrip      = 'round-trip'

@@ -596,9 +596,16 @@ nothing of use.*
 
 The owner, on the Topology over a roll: *Fleet is what I see in topology when
 running test, I would like to see cluster, nodes, receive, process, send.*
-The word was an assistant's and is in no record of the estate's vocabulary;
-ADR-0028 retires it the same day. Where an earlier amendment of this record
-says it, read *the cluster's nodes*.
+What was an assistant's was borrowing the word for a group of the rig's node
+processes, which is a cluster and was already called one; that borrowing is
+what ADR-0028 retires the same day. Fleet itself keeps its own meaning as a
+domain Actor — ADR-0007's communication domain model opens its examples with
+*Fleet owner → Ship owner → Ship → Captain → Crew*, and
+`doc/architecture/runtime-model.md` says the recursion *lets one architecture
+serve a fleet operator and a sensor on a bus* — so the claim first written
+here, that the word appeared in no record of the estate's vocabulary, was
+wrong and is corrected. Where an earlier amendment of this record says Fleet
+of the rig's processes, read *the cluster's nodes*.
 
 - **What a roll publishes.** The cluster (`kind = "cluster"`, scope
   `xmip:///<cluster>`) holds its nodes (`node`); a node holds the stages of
@@ -680,6 +687,86 @@ ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the
 executable included, so that one line finds and stops them all. Where this
 record says the `xmip` executable, read `xmip-cli`; an operator types
 `xmip-cli health <scope>`. Nothing else about it changes.
+
+## Amendment, 2026-09-19: a filter is a wildcard, and the wildcard is one
+
+The owner, told that the filter convention had reached 8 of 137 PowerShell
+parameters and neither of the other two surfaces: *Go ahead, as deep as you
+can.*
+
+**The rule is the estate's, not PowerShell's.** ADR-0059 clause 7 — a
+parameter that selects among things that already exist takes a wildcard, one
+that names a thing to create does not — was written for cmdlets, and reads as
+a convention of the shell it was written in. It is not. It is a rule about
+what an argument *is*, and it holds wherever an operator names a scope: at the
+prompt, on the command line, in a box on a page. Clause 8 holds with it —
+wildcards, never regular expressions — for the reason clause 8 gives: as a
+regular expression `Rust.Style` also names `RustXStyle`, and as a wildcard it
+is the name the operator typed.
+
+**The matcher is shared, for the reason this record exists.** `ScopePattern`
+in `Xmip.Surface` is `*`, `?` and literal everything else, case-insensitive,
+matched over the scope's own path so that `C1/node/R*` and
+`xmip:///C1/node/R*` are one pattern. Written twice it would have drifted
+exactly as `Beneath` had drifted four ways before clause 1. `ScopeFilter`
+beside it is that pattern applied to one publication — what matched, what
+stands on the way down to it, and the one sentence a surface says about it —
+so the three views narrow alike and none of them decides for itself what a
+pattern means.
+
+Where it cannot be `-like` exactly, the file says so and so does this record:
+a character set (`[a-c]`) and the backtick escape are literal here, since no
+scope the estate publishes carries either; and the scheme is read the one way
+`ScopeTree` reads it, lower-case, so `XMIP:///C1` is a path and not a scope.
+`*` crosses a `/`, as it does in `-like`.
+
+**What each surface now filters.**
+
+- **The executable.** `health`, `measure`, `list` and `show` take a pattern
+  wherever they took a scope, and `pause` and `resume` act on each scope one
+  names. What a pattern selects is the *topmost* scopes it matched: every
+  command reads a scope and everything beneath it, so a child of a match would
+  be said twice. Nothing is added together — `measure` over four scopes is
+  four lines, because a sum over several scopes is a figure at a scope that is
+  not in the tree, and `health` is one banner each, because a rollup over
+  several would be the same invention (ADR-0041). `--json` carries the same
+  answer in structure: `pattern`, `matched`, and the per-scope document a
+  single read already emits. A pattern that names nothing is REFUSED, naming
+  the pattern, what there is beneath the literal part of it and the source,
+  and exits 1 — with `--json`, the refusal is a document too. `validate`,
+  `probe` and `status` name a thing rather than select one, and take no
+  wildcard.
+- **The three views.** One filter box under the run line, the same control on
+  each, applied when the operator presses Enter or leaves the box rather than
+  on every keystroke — a view over eleven thousand scopes must not re-render
+  under a typing hand. The **monitor** narrows its drill, its attention list
+  and its node rows, and never its banner or its stage tiles: a filter that
+  could make a troubled cluster look fine is worse than no filter. The
+  **configuration** tree keeps the path down to every match, however deep, and
+  stands open to it, and a row that matched shows its whole subtree. The
+  **topology** filters nodes, and draws a link only where both of its ends
+  survive, since a line to something hidden points at nothing. An empty box is
+  everything; a pattern that matches nothing says so in the estate's words
+  where the eye already is, and the topology says it where the picture was, so
+  an empty canvas is never read as a cluster that publishes no topology. The
+  desktop routes to these same pages and gains all of it.
+
+**Judged, and the owner's to overrule.** The filter is each view's own and is
+not carried between them or in the URL — a shared one would have to survive a
+link, and no link carries it today. It applies on Enter, not per keystroke.
+`pause` and `resume` take a pattern although they act: one act already reaches
+everything beneath the scope it names (ADR-0027), so a pattern names several
+subtrees rather than opening a wider one, and the exit is non-zero unless
+every one of them applied.
+
+**Not done.** The VS Code extension has no filter — its surface is its own and
+its language is the one place TypeScript lives. The PowerShell module is
+untouched: it already obeys, and widening the rule to the other 129 parameters
+is a reading of each one, not a change of this kind. `--follow` re-matches its
+pattern at every notice, which is built but proved only in the unit tests, not
+against a live roll. ADR-0059 is the other agent's this session and was read,
+not edited; the decision index was not regenerated, since nothing here changes
+a record's In brief.
 
 ## Alternatives considered
 

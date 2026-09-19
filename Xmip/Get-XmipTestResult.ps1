@@ -10,8 +10,8 @@ function Get-XmipTestResult {
             and the evidence.
 
         .DESCRIPTION
-            A snapshot is published by a roll, so what this reads is
-            Core.Playground's and says so.
+            A snapshot is published by a roll, so what this reads is the
+            Playground's and says so.
             Reads the snapshot TOML a roll writes after every round (ADR-0028
             clause 4: a verdict is health, per scope) and emits one object per
             record, with the scope split into what an operator filters on.
