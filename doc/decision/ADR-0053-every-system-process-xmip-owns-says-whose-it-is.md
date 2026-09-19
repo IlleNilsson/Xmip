@@ -141,3 +141,26 @@ name and not in place of it.
 The requirement, the one line and the executable's new name are the
 owner's, 2026-09-18. The table, clause 2 and the shape of clause 3 are the
 assistant's drafting of it.
+
+## Amendment, 2026-09-19: the cluster is a process, and says so
+
+The owner: *even clusters have to be spawned as processes during tests.*
+
+A fourth name joins the table, `xmip-playground-cluster`, and a Playground
+run is a tree of three declarations rather than two. The roll is the test,
+the cluster is a process the roll spawns, and the nodes are processes the
+cluster spawns; each declares its name, its location and purpose Test where
+it starts, as clause 3 requires:
+
+| process | location |
+|---|---|
+| `xmip-playground-roll` | `xmip:///<cluster>` |
+| `xmip-playground-cluster` | `xmip:///<cluster>` |
+| `xmip-playground-node` | `xmip:///<cluster>/node/<name>` |
+
+The roll and its cluster share a location, because they are the test of that
+cluster and the cluster itself; the name tells them apart, which is what
+clause 1 is for. `Get-XmipProcess` shows all three, and
+`Get-XmipProcess -Purpose Test | Stop-Process -Force` still stops them all.
+The ordinary way to end a run is `Stop-XmipTest`, which ends the tree from
+the leaves up so nothing is orphaned (ADR-0028, amendment 2026-09-19).
