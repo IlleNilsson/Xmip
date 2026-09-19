@@ -2,23 +2,24 @@
 
 Set-StrictMode -Version Latest
 
-function Stop-XmipWeb {
+function Stop-XmipOperationWeb {
     <#
         .SYNOPSIS
             Stops Xmip web monitors — the ones given, or every one on the
             machine.
 
         .PARAMETER Web
-            The hosts to stop, from Get-XmipWeb.
+            The hosts to stop, from Get-XmipOperationWeb.
 
         .PARAMETER Id
             The process ids of the hosts to stop.
 
         .EXAMPLE
-            Stop-XmipWeb
+            Stop-XmipOperationWeb
 
         .EXAMPLE
-            Get-XmipWeb | Where-Object -Property Url -Like -Value '*5087' | Stop-XmipWeb
+            Get-XmipOperationWeb | Where-Object -Property Url -Like -Value '*5087' |
+                Stop-XmipOperationWeb
     #>
     [CmdletBinding(
         SupportsShouldProcess,
@@ -52,7 +53,7 @@ function Stop-XmipWeb {
     }
 
     end {
-        [object[]] $running = @(Get-XmipWeb)
+        [object[]] $running = @(Get-XmipOperationWeb)
 
         if ($PSCmdlet.ParameterSetName -eq 'All') {
             $targets.AddRange([int[]] @($running | ForEach-Object { $_.Id }))
@@ -62,7 +63,7 @@ function Stop-XmipWeb {
             $found = $running | Where-Object { $_.Id -eq $number } | Select-Object -First 1
 
             if ($null -eq $found) {
-                Write-Error "No Xmip web monitor has pid $number. Get-XmipWeb lists them."
+                Write-Error "No Xmip web monitor has pid $number. Get-XmipOperationWeb lists them."
                 continue
             }
 

@@ -909,9 +909,9 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Get-XmipTestNode.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipTestNode.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestResult.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipWeb.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipWeb.ps1')
-. (Join-Path $PSScriptRoot 'Stop-XmipWeb.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipOperationWeb.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipOperationWeb.ps1')
+. (Join-Path $PSScriptRoot 'Stop-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipProcess.ps1')
 
 [string[]] $script:XmipExport = @(
@@ -936,9 +936,9 @@ function Test-XmipManifest {
     'Get-XmipTestNode'
     'Stop-XmipTestNode'
     'Get-XmipTestResult'
-    'Start-XmipWeb'
-    'Get-XmipWeb'
-    'Stop-XmipWeb'
+    'Start-XmipOperationWeb'
+    'Get-XmipOperationWeb'
+    'Stop-XmipOperationWeb'
     'Get-XmipProcess'
 )
 

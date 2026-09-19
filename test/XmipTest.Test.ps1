@@ -21,7 +21,7 @@ BeforeAll {
 
 Describe 'Start, Get and Stop, and nothing else' {
     It 'has exactly those verbs for the nodes and the web host' {
-        foreach ($noun in 'XmipTestNode', 'XmipWeb') {
+        foreach ($noun in 'XmipTestNode', 'XmipOperationWeb') {
             [string[]] $verbs = @(Get-Command -Module Xmip -Noun $noun | ForEach-Object { $_.Verb })
 
             [string[]] $sorted = @($verbs | Sort-Object)
@@ -103,9 +103,9 @@ Describe 'Start, Get and Stop, and nothing else' {
     }
 
     It 'lets a test status object name the snapshot a web monitor reads' {
-        # Start-XmipTest -PassThru | Start-XmipWeb: the property and the
+        # Start-XmipTest -PassThru | Start-XmipOperationWeb: the property and the
         # parameter share a name, and the parameter binds by it.
-        $parameter = (Get-Command -Name Start-XmipWeb).Parameters['Snapshot']
+        $parameter = (Get-Command -Name Start-XmipOperationWeb).Parameters['Snapshot']
         $binding = $parameter.Attributes |
             Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] }
 
@@ -401,10 +401,11 @@ Describe 'What a web host reads' {
                 '--Kestrel:Endpoints:Http:Url=http://127.0.0.1:5087 ' +
                 '--Xmip:Surface=snapshot "--Xmip:Snapshot=D:\a b\snapshot.toml"'
 
-            Read-XmipWebArgument -CommandLine $line -Name 'Kestrel:Endpoints:Http:Url' |
+            Read-XmipOperationWebArgument -CommandLine $line -Name 'Kestrel:Endpoints:Http:Url' |
                 Should -Be 'http://127.0.0.1:5087'
-            Read-XmipWebArgument -CommandLine $line -Name 'Xmip:Surface' | Should -Be 'snapshot'
-            Read-XmipWebArgument -CommandLine $line -Name 'Xmip:Role' | Should -Be ''
+            Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Surface' |
+                Should -Be 'snapshot'
+            Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Role' | Should -Be ''
         }
     }
 }

@@ -58,9 +58,9 @@
         'Get-XmipTestNode'
         'Stop-XmipTestNode'
         'Get-XmipTestResult'
-        'Start-XmipWeb'
-        'Get-XmipWeb'
-        'Stop-XmipWeb'
+        'Start-XmipOperationWeb'
+        'Get-XmipOperationWeb'
+        'Stop-XmipOperationWeb'
         'Get-XmipProcess'
     )
 

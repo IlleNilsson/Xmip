@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-function Start-XmipWeb {
+function Start-XmipOperationWeb {
     <#
         .SYNOPSIS
             Starts the Xmip web monitor, detached, over the surface you name.
@@ -19,8 +19,8 @@ function Start-XmipWeb {
             to `dotnet run` from source otherwise. It binds to 127.0.0.1 by
             default rather than localhost, because a browser that cached HSTS for
             localhost from another app silently forces https and the plain-http
-            server then looks dead. Get-XmipWeb lists what is running and
-            Stop-XmipWeb ends it.
+            server then looks dead. Get-XmipOperationWeb lists what is running and
+            Stop-XmipOperationWeb ends it.
 
         .PARAMETER Snapshot
             The snapshot file to monitor. Bound from the pipeline, so a
@@ -39,13 +39,14 @@ function Start-XmipWeb {
             Return the Xmip.Web object for the host started.
 
         .EXAMPLE
-            Start-XmipWeb
+            Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Stress Harsh -PassThru | Start-XmipWeb
+            Start-XmipTest -Suite Playground -Stress Harsh -PassThru | Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipWeb -Url http://0.0.0.0:5087 -Snapshot .local-work/playground/C1-snapshot.toml
+            $snapshot = '.local-work/playground/C1-snapshot.toml'
+            Start-XmipOperationWeb -Url http://0.0.0.0:5087 -Snapshot $snapshot
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.Web')]
@@ -114,6 +115,6 @@ function Start-XmipWeb {
     Write-Verbose "web monitor starting at $Url as pid $($process.Id)"
 
     if ($PassThru) {
-        return ConvertTo-XmipWeb -Process $process
+        return ConvertTo-XmipOperationWeb -Process $process
     }
 }
