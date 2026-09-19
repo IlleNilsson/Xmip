@@ -40,7 +40,7 @@ function Get-XmipHistory {
             Get-XmipHistory -Since (Get-Date).AddMinutes(-5)
     #>
     [CmdletBinding()]
-    [OutputType([PSCustomObject])]
+    [OutputType('Xmip.History')]
     param(
         [Parameter()]
         [string] $Path,
@@ -89,10 +89,11 @@ function Get-XmipHistory {
         [long] $millis = [long] ($point.observed_unix_nanos / 1000000)
 
         [PSCustomObject]@{
-            Node     = $document.node
-            Counted  = $point.counted
-            Value    = [long] $point.value
-            Observed = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime
+            PSTypeName = 'Xmip.History'
+            Node       = $document.node
+            Counted    = $point.counted
+            Value      = [long] $point.value
+            Observed   = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime
         }
     }
 }

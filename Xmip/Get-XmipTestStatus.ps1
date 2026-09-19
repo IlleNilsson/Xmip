@@ -9,8 +9,8 @@ function Get-XmipTestStatus {
             suite, what it was started with and how it stands.
 
         .DESCRIPTION
-            A run of Core.Playground is a roll, and the suite it names is the
-            qualified one it was started with, read back from the run record.
+            A run of the Playground is a roll, and the suite it names is the
+            one it was started with, read back from the run record.
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
@@ -63,6 +63,7 @@ function Get-XmipTestStatus {
     }
 
     [object[]] $nodes = @(Get-XmipTestNode)
+    [object[]] $suites = @(Get-XmipTestSuite)
     Import-Module PSToml -ErrorAction Stop
 
     foreach ($roll in $rolls) {
@@ -87,10 +88,19 @@ function Get-XmipTestStatus {
         [object[]] $mine = @($nodes | Where-Object { $_.Parent -eq $roll.Id })
         [object[]] $online = @($mine | Where-Object { $_.Online })
 
-        # The suite the run was started with, qualified, from the record that
-        # carries it. A roll started by hand has no record and is the
-        # Playground by the binary it is.
+        # The suite the run was started with, from the record that carries it,
+        # said the one way whatever spelling started it: a record written
+        # before 2026-09-19 says Core.Playground and this says Playground
+        # (ADR-0059, amendment 2026-09-19). A roll started by hand has no
+        # record and is the Playground by the binary it is.
         [string] $named = Get-XmipDeclaredText -Declaration $record -Key 'suite'
+        $ran = if ($named -ne '') {
+            Get-XmipNamedTestSuite -Name $named -Known $suites | Select-Object -First 1
+        }
+
+        if ($null -ne $ran) {
+            $named = $ran.Name
+        }
 
         [PSCustomObject]@{
             PSTypeName  = 'Xmip.TestStatus'

@@ -203,7 +203,7 @@ function Get-XmipDecisionRecord {
             module.
     #>
     [CmdletBinding()]
-    [OutputType([PSCustomObject[]])]
+    [OutputType('Xmip.DecisionRecord')]
     param(
         [Parameter(Mandatory = $false)]
         [string] $DecisionRoot
@@ -233,18 +233,19 @@ function Get-XmipDecisionRecord {
         }
 
         [PSCustomObject] @{
-            Number   = ($record.BaseName -replace '^ADR-(\d{4}).*$', '$1')
-            File     = $record.Name
-            Title    = ((Get-Content -LiteralPath $record.FullName -TotalCount 1) -replace
-                        '^#\s*ADR-\d{4}:\s*', '')
-            Status   = Get-XmipDecisionStatus -Text $text
-            Theme    = $brief['Theme']
-            Subject  = $brief['Subject']
-            Name     = $brief['Name']
-            Order    = [int] ($brief['Order'] ?? 0)
-            Concepts = $concept
-            Note     = $brief['Note']
-            Prose    = $brief.Prose
+            PSTypeName = 'Xmip.DecisionRecord'
+            Number     = ($record.BaseName -replace '^ADR-(\d{4}).*$', '$1')
+            File       = $record.Name
+            Title      = ((Get-Content -LiteralPath $record.FullName -TotalCount 1) -replace
+                          '^#\s*ADR-\d{4}:\s*', '')
+            Status     = Get-XmipDecisionStatus -Text $text
+            Theme      = $brief['Theme']
+            Subject    = $brief['Subject']
+            Name       = $brief['Name']
+            Order      = [int] ($brief['Order'] ?? 0)
+            Concepts   = $concept
+            Note       = $brief['Note']
+            Prose      = $brief.Prose
         }
     }
 }

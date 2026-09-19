@@ -88,7 +88,7 @@ function Get-XmipEstateRepository {
             from.
     #>
     [CmdletBinding()]
-    [OutputType([PSCustomObject[]])]
+    [OutputType('Xmip.EstateRepository')]
     param(
         [Parameter(Mandatory = $false)]
         [string] $Root
@@ -121,13 +121,14 @@ function Get-XmipEstateRepository {
         }
 
         [PSCustomObject] @{
-            Name     = [string] $entry.name
-            Leaf     = $leaf
-            Domain   = [string] $entry.architecturalDomain
-            Maturity = [string] $entry.maturity
-            Parent   = $parent
-            Mount    = $mount
-            Mounted  = (-not [string]::IsNullOrEmpty($mount))
+            PSTypeName = 'Xmip.EstateRepository'
+            Name       = [string] $entry.name
+            Leaf       = $leaf
+            Domain     = [string] $entry.architecturalDomain
+            Maturity   = [string] $entry.maturity
+            Parent     = $parent
+            Mount      = $mount
+            Mounted    = (-not [string]::IsNullOrEmpty($mount))
         }
     }
 }
