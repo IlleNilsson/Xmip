@@ -6,13 +6,13 @@ function Get-XmipTestNode {
     <#
         .SYNOPSIS
             The emulated node processes running on this machine — a roll's
-            fleet and the ones started by hand — one object each.
+            nodes and the ones started by hand — one object each.
 
         .DESCRIPTION
             A node is a process running the Playground's own node binary
             (ADR-0028 clause 2). What it is doing is read from its command
             line: its name, stress level, whether it may assume the internet,
-            its rounds, the directory it shares with its fleet and where it
+            its rounds, the directory it shares with its cluster and where it
             publishes. Parent is the roll that spawned it, or null for one
             started by Start-XmipTestNode or by hand.
 

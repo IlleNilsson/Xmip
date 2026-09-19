@@ -222,7 +222,7 @@ The owner: *incorporate higher difficulty, stress on all tests; we need about
 
 The stress level, the ceiling every transport declares, the tests at every
 level, the half-of-what-is-free budget of 2026-09-11, the far end's move into
-the transport under ADR-0051 and the fleet of node processes are decided
+the transport under ADR-0051 and the cluster's node processes are decided
 here and described in `test/playground/README.md`, where they moved on
 2026-09-12.
 
@@ -232,5 +232,8 @@ numbers from it; **a ceiling** is a fact about a protocol, written where it
 comes from, never set to make a test pass; **the suite** stays minutes, the
 brutal runs are what a roll is for; **the budget** is half of what is free of
 other work, measured again before every round; **the far end** is the
-transport's own; **a node is a process**, and a fleet of them is spawned,
+transport's own; **a node is a process**, and a cluster's nodes are spawned,
 merged and restarted by the roll.
+
+2026-09-19, the owner: what the Playground spawns is a cluster and its nodes;
+the word fleet is retired.

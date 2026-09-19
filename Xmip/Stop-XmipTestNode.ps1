@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 function Stop-XmipTestNode {
     <#
         .SYNOPSIS
-            Stops emulated nodes: asks first through the fleet's stop file,
+            Stops emulated nodes: asks first through the cluster's stop file,
             ends what stays after five seconds. Every node on the machine when
             none is named.
 

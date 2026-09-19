@@ -592,6 +592,42 @@ nothing of use.*
   waits on his word on problem 17, asked the same evening. Recorded and
   queued, not built.
 
+## Amendment, 2026-09-19: the Topology is cluster, nodes, receive, process, send
+
+The owner, on the Topology over a roll: *Fleet is what I see in topology when
+running test, I would like to see cluster, nodes, receive, process, send.*
+The word was an assistant's and is in no record of the estate's vocabulary;
+ADR-0028 retires it the same day. Where an earlier amendment of this record
+says it, read *the cluster's nodes*.
+
+- **What a roll publishes.** The cluster (`kind = "cluster"`, scope
+  `xmip:///<cluster>`) holds its nodes (`node`); a node holds the stages of
+  the message path it runs (`stage`); a receive or a send stage holds one
+  endpoint per transport it reported on (`endpoint`, the transport's scope
+  beneath the stage). The nodes' rollup is the record of the branch they
+  hang under, `xmip:///<cluster>/node`, which the scope index shows as that
+  branch's own and never as a node beside them. The shared store,
+  `xmip:///<cluster>/shared`, is drawn only when a node ran a test over it.
+- **What runs between the nodes.** The finding of 2026-09-18 stands
+  answered for the rig: a role node runs one stage of RoundTrip and hands
+  each pair on, R to P to S, between real processes, and every delivered
+  handoff is a hop on a link (`send-receive`, protocol `handoff`, volume the
+  hops, mood the worst leaf at either end). `open-problems.md` problem 17
+  records that this rehearses option A in the rig and rules nothing for the
+  runtime.
+- **The run says what it was started with.** The snapshot carries `[run]` —
+  tests, nodes, which are online, the level — `Xmip.Surface` reads it as a
+  `RunHeader`, and the web GUI says it in one line at the top of all three
+  views. The prompt is unchanged.
+- **For the owner to rule.** Ruling 8 of 2026-09-14 says *R1 is the name the
+  owner gave a node, not a role — what a node does is its configuration*.
+  In the rig, since this day, the first letter of a test node's name picks
+  the stage it runs (R, P, S; any other name runs whole tests, as before).
+  That is a convention of the Playground's test nodes and claims nothing
+  about a node of the runtime, whose role stays its configuration
+  (ADR-0009); whether the rig should take a node's stage from configuration
+  instead is the owner's to say.
+
 ## Amendment, 2026-09-18: the executable is `xmip-cli`
 
 ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the

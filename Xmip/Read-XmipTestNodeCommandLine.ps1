@@ -11,9 +11,10 @@ function Read-XmipTestNodeCommandLine {
         .DESCRIPTION
             The node binary (test/playground/src/bin/node.rs) takes
             `--name --shared --stress --rounds --snapshot [--interval-ms]
-            [--online]`. A running node carries nothing else that says what it
-            is, so Get-XmipTestNode reads this. Quoted arguments are one
-            token; the executable itself is dropped.
+            [--online] [--nodes] [--scenarios]`. A running node carries
+            nothing else that says what it is, so Get-XmipTestNode reads
+            this. Quoted arguments are one token; the executable itself is
+            dropped; a flag this does not report is passed over.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]

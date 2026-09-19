@@ -10,9 +10,9 @@ function Stop-XmipTest {
             named.
 
         .DESCRIPTION
-            A Playground roll ended by a signal does not get to stop its own fleet, so
+            A Playground roll ended by a signal does not get to stop its own nodes, so
             this does what the roll would have: asks every node beneath it to
-            leave through the fleet's stop file, waits five seconds, ends what
+            leave through the cluster's stop file, waits five seconds, ends what
             stayed, then ends the roll. Takes Xmip.TestStatus objects from
             Get-XmipTestStatus on the pipeline, or -Id, or nothing for all.
 

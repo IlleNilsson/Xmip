@@ -291,6 +291,11 @@ for edge estates where the device that receives is the device that processes,
 and it is probably right for the purpose-compiled runtime — but it cannot be the
 only answer for a server cluster.
 
+2026-09-19: the Playground hands work R -> P -> S between node processes through
+per-node inboxes in the cluster's shared directory, each hop recorded. This is
+option A rehearsed in the rig only; it rules nothing for the runtime, which stays
+the owner's to decide.
+
 ---
 
 # Carried in from must-remember.md

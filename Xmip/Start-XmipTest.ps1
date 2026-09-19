@@ -6,7 +6,7 @@ function Start-XmipTest {
     <#
         .SYNOPSIS
             Starts one run of an Xmip test suite, detached, with the stress,
-            scenarios, fleet and limits you choose. Nothing starts unless you
+            tests, nodes and limits you choose. Nothing starts unless you
             call this.
 
         .DESCRIPTION
@@ -40,8 +40,8 @@ function Start-XmipTest {
 
         .PARAMETER Stress
             How hard: Calm, Realistic, Harsh or Brutal. Realistic is the roll's
-            own default. Harsh and Brutal spawn a fleet of node processes
-            unless -Nodes says otherwise.
+            own default. Harsh and Brutal spawn node processes unless
+            -Nodes says otherwise.
 
         .PARAMETER Test
             Which tests of the suite to run; omit for the whole suite. The
@@ -63,9 +63,15 @@ function Start-XmipTest {
 
         .PARAMETER Nodes
             The nodes to simulate, by name — one process each, so
-            -Nodes R1, P1, S1 is three node processes called that.
-            An empty list, @(), is no fleet at any level. Omit for the level's
-            own numbered fleet: one, three, ten or forty, scaled to the
+            -Nodes R1, P1, S1 is three node processes called that. The
+            letter is the role: a node named R... receives, P... processes,
+            S... sends, and every node runs its part of the tests you named.
+            RoundTrip over role nodes hands each pair R to P to S between
+            the processes, so it needs at least one of each and is REFUSED
+            otherwise, before anything starts. A node with any other name
+            (node-01) has no role and runs the shared-directory tests whole.
+            An empty list, @(), is no nodes at any level. Omit for the level's
+            own numbered nodes: one, three, ten or forty, scaled to the
             machine's headroom.
 
         .PARAMETER OnlineNodes
@@ -101,6 +107,9 @@ function Start-XmipTest {
         .EXAMPLE
             Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad -Nodes R1, P1 -PassThru |
                 Start-XmipOperationWeb
+
+        .EXAMPLE
+            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, R2, P1, S1 -OnlineNodes R1, S1
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
@@ -215,6 +224,16 @@ function Start-XmipTest {
         return
     }
 
+    # The letter is the role (the owner, 2026-09-19), and RoundTrip over role
+    # nodes needs all three. Said here, before anything is built or spawned;
+    # the roll refuses the same way for one started by hand.
+    [string] $refusal = Get-XmipNodeRoleRefusal -Nodes $Nodes -Test $Test
+
+    if ($refusal -ne '') {
+        Write-Error $refusal
+        return
+    }
+
     $layout = Get-XmipPlaygroundLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -291,7 +310,7 @@ function Start-XmipTest {
         tests       = @($Test)
         rounds      = $Rounds
         nodes       = if ($boundNodes) { @($Nodes) } else { @() }
-        fleet       = if ($boundNodes) { 'named' } else { 'level' }
+        node_names  = if ($boundNodes) { 'named' } else { 'level' }
         online      = @($OnlineNodes)
         duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }

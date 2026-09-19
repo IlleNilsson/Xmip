@@ -75,7 +75,7 @@ clause 5). A test that genuinely needs the internet — the day one does — rea
 the switch and does not run without it, saying so rather than failing: in Rust
 through the playground's `switch::online()`, which reads `XMIP_ONLINE`, and in
 PowerShell through the same variable. The playground's node processes carry
-`--online` and publish it, so a fleet's board shows which emulated nodes think
+`--online` and publish it, so a cluster's board shows which emulated nodes think
 they may reach out; at every stress level the default is that none may.
 
 ## Consequences
@@ -84,7 +84,7 @@ they may reach out; at every stress level the default is that none may.
   false, and the desktop editor round-trips it.
 - The DSC and Ansible node configurations write `online = false`; an operator
   sets it true on purpose, per node.
-- The playground gains `switch.rs`, the node binary `--online`, the fleet
+- The playground gains `switch.rs`, the node binary `--online`, the roll
   passes it, and every emulated node's health record says `offline` or
   `online`. There is no test today that needs the internet; the gate exists so
   the first one does not bring the suite online with it.

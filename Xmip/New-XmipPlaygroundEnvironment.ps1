@@ -53,7 +53,7 @@ function ConvertTo-XmipTestName {
         .SYNOPSIS
             The test a person knows for a scenario the roll published; the
             scenario's own name when it is not one of the seven (a node's
-            record, the fleet's rollup).
+            record, the cluster's rollup of its nodes).
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -115,6 +115,86 @@ function Assert-XmipNodeName {
     if ($strangers.Count -gt 0) {
         throw "-OnlineNodes names nodes -Nodes does not: $($strangers -join ', ')."
     }
+}
+
+function Get-XmipNodeRole {
+    <#
+        .SYNOPSIS
+            The role a node's name gives it (the owner, 2026-09-19: the letter
+            is the role): R receives, P processes, S sends, in either case,
+            when the whole name is letters and digits. Empty for any other
+            name — node-01 has no role and runs whole tests itself. The rule
+            is the roll's (test/playground/src/role.rs). Pure.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Name
+    )
+
+    if ($Name -notmatch '^[RrPpSs][A-Za-z0-9]*$') {
+        return ''
+    }
+
+    return $Name.Substring(0, 1).ToUpperInvariant()
+}
+
+function Get-XmipNodeRoleRefusal {
+    <#
+        .SYNOPSIS
+            Why RoundTrip cannot run over the nodes named, or the empty string
+            when it can. Pure, and asked before anything is spawned.
+
+        .DESCRIPTION
+            RoundTrip over role nodes hands every pair R to P to S between
+            the node processes, so it needs at least one of each. No role
+            nodes at all is no refusal — the roll runs RoundTrip whole — and
+            neither is a run that does not include RoundTrip. No -Test means
+            every test, RoundTrip among them. The roll refuses the same way
+            (test/playground/src/role.rs); this says it before a process
+            starts.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes = @(),
+
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Test = @()
+    )
+
+    [string[]] $tests = @($Test | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
+    if ($tests.Count -gt 0 -and 'RoundTrip' -notin $tests) {
+        return ''
+    }
+
+    [string[]] $roles = @(
+        $Nodes |
+            Where-Object { $null -ne $_ } |
+            ForEach-Object { Get-XmipNodeRole -Name $_ } |
+            Where-Object { $_ -ne '' }
+    )
+
+    if ($roles.Count -eq 0) {
+        return ''
+    }
+
+    [string[]] $missing = @('R', 'P', 'S' | Where-Object { $_ -notin $roles })
+
+    if ($missing.Count -eq 0) {
+        return ''
+    }
+
+    return ('REFUSED. RoundTrip over role nodes needs at least one R, one P and one S ' +
+        "node; -Nodes names no $($missing -join ' and no ').")
 }
 
 function New-XmipPlaygroundEnvironment {
@@ -193,11 +273,16 @@ function New-XmipPlaygroundEnvironment {
     }
 
     # Nodes are named, not numbered (the owner, 2026-09-12): a list of names is
-    # one process each; an empty list is no fleet at any level; nothing said
-    # leaves the level its own numbered fleet.
+    # one process each; an empty list is no nodes at any level; nothing said
+    # leaves the level its own numbered nodes.
     if ($null -ne $Nodes) {
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
+        [string] $refusal = Get-XmipNodeRoleRefusal -Nodes $Nodes -Test $Test
+
+        if ($refusal -ne '') {
+            throw $refusal
+        }
 
         if ($Nodes.Count -eq 0) {
             $environment.XMIP_PLAYGROUND_NODES = '0'
