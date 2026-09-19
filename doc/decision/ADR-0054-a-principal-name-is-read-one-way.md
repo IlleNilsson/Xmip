@@ -111,7 +111,8 @@ directory bind.
   answers `Verified` and nothing else, so a mechanism that learns the real
   name only by verifying — Kerberos, and an opaque token by introspection —
   has nowhere to put it. Recorded here as open; it is a change to the
-  capability's trait and the owner's to rule on.
+  capability's trait and the owner's to rule on. *Closed by the amendment
+  of 2026-09-19 below.*
 - The technologies adopt the type in the order they are touched; the table
   in clause 4 is the list.
 
@@ -165,7 +166,44 @@ checked on disk.
   which only the transport holds. And the open point of the Consequences
   stands: a name learned only by verifying has nowhere to go.
 
+## Amendment, 2026-09-19: the second gate hands back what it learned
+
+The open point of the Consequences is closed. The owner, asked what was
+still not done, the same day: *solve it.* The assistant read that as the
+ruling the point was waiting for; the owner confirms or strikes it.
+
+- **`Conclusion`, in the authenticate capability.** A verdict and the pairs
+  of evidence the verifying itself gave. `Authenticator` gains
+  `conclude(&Presented) -> Result<Conclusion, AuthenticateError>`, defaulted
+  to the verdict of `verify` with nothing learned, so the fourteen
+  mechanisms that learn nothing are untouched and `verify` keeps its
+  meaning. The gate calls `conclude`.
+- **What is learned takes the place of what was claimed.** On the identity,
+  a learned pair replaces a presented pair of the same name: a claimed
+  `principal.user` does not stand beside a verified one. Everything else
+  presented is kept as before.
+- **Adopted by the three that learn.** `kerberos` learns the ticket's
+  client as `kerberos.client`, and as `principal.user` where it is one user
+  in one realm. `oauth2` learns the answer's `scope`, its `client_id` as
+  `oauth2.client`, and its `username` as `principal.user` where it is one.
+  `jwt` learns the token's `scope`, which its signature covers.
+- **A defect this found.** `authorize/scope` has read evidence named `scope`
+  since it was written and said `oauth2` and `jwt` record it; neither
+  could, so the policy denied every token. The name is now one constant,
+  `authenticate::conclusion::SCOPE`, and both write it.
+- **Not done.** `oidc` and `saml` learn nothing new: their names are in the
+  token the first gate read, and the second gate already checks them.
+
 ## Alternatives considered
+
+**Widen `Verified` to carry the evidence.** `Verified` is `Copy`, lives in
+the context crate and is matched in forty files across three capabilities;
+a verdict is also not the place for a name. A second type beside it changes
+four crates.
+
+**A second pass, `learned(&Presented)`, after `verify`.** It would open a
+ticket or ask an authorization server twice, and the second answer need not
+be the first.
 
 **Each technology parses what it meets.** That is what had begun, and two
 technologies already disagreed about what a logon name is.
