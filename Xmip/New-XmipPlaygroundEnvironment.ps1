@@ -2,17 +2,19 @@
 
 Set-StrictMode -Version Latest
 
-# The Playground's tests by the names a person asks for them, and the scenario
-# the roll drives for each (test/playground/src/bin/roll.rs). The owner's shape,
-# 2026-09-12: Start-XmipTest -Suite Playground -Test HeavyLoad.
+# The Playground's tests by the names a person asks for them, and the scope
+# segment the roll drives and publishes each under
+# (test/playground/src/bin/roll.rs). The owner's shape, 2026-09-12:
+# Start-XmipTest -Suite Playground -Test HeavyLoad. 2026-09-19, the owner: the
+# old scenario wording is replaced by the test names everywhere.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipPlaygroundTest = [ordered]@{
-    RoundTrip      = 'pingpong'
-    LowLatency     = 'furious'
-    HeavyLoad      = 'load'
-    Retention      = 'secretary'
+    RoundTrip      = 'round-trip'
+    LowLatency     = 'low-latency'
+    HeavyLoad      = 'heavy-load'
+    Retention      = 'retention'
     Filing         = 'filing'
-    ExclusiveClaim = 'claim'
-    DailyBacklog   = 'daily'
+    ExclusiveClaim = 'exclusive-claim'
+    DailyBacklog   = 'daily-backlog'
 }
 
 function ConvertTo-XmipPlaygroundScenario {

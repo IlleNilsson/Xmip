@@ -68,7 +68,9 @@ theirs to hold and theirs to answer for.
 
 ### 4. The scenario matches
 
-The Playground's secretary is two stages — **retain**, then **archive** (ADR-0028).
+The Playground's Retention test — the secretary scenario until 2026-09-19, when
+the owner replaced the old scenario wording with the test names everywhere — is
+two stages, **retain**, then **archive** (ADR-0028).
 Archived items accumulate; the scenario never purges them, because Xmip never
 does. A missed sweep under pressure still surfaces as a retention or archive
 leak, which is the property the scenario exists to prove.

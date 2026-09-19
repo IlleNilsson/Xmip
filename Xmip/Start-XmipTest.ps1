@@ -59,7 +59,7 @@ function Start-XmipTest {
 
         .PARAMETER TimeFactor
             The factor on simulated time: 1 is real time, below 1 runs the
-            simulated clock faster (the secretary ages on it).
+            simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
             The nodes to simulate, by name — one process each, so
@@ -83,7 +83,7 @@ function Start-XmipTest {
             Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER LoadBytes
-            The load scenario's payload: a number or a size like 512mb or 2gb.
+            The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
             Omit for a megabyte.
 
         .PARAMETER Path

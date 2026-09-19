@@ -75,7 +75,7 @@ other Host Service.
 
 ### 3. One test, over everything, over time
 
-The **pingpong test** is a single integration test whose subject is every
+The **RoundTrip test** is a single integration test whose subject is every
 transport the estate declares by every content contract it declares — not a
 test per protocol or per contract, but one test across the whole matrix at
 once. Its scenario is a round trip: send an actual Stream, catch it, check it
@@ -100,7 +100,7 @@ adapter — send a payload, get back what returned or why it could not — and e
 transport implements that adapter however its own shape demands, so the scenario
 is one thing over all of them and a new transport is a new adapter, not a new
 test. File was first — self-contained, no port to coordinate; **tcp, http, smtp,
-udp and websocket joined 2026-09-05**, each ping-ponging over a real loopback
+udp and websocket joined 2026-09-05**, each round-tripping over a real loopback
 connection (bind, send from a second thread, receive, compare) and each carrying
 both the bytes and text contracts whole. Two needed a transport change first,
 both landed the same day: udp gained the bind/receive split so the sender could
@@ -112,7 +112,11 @@ adapter, no change to the scenario. Clause 5 governs them all.
 
 ### 3a. More than one scenario, and two time limits
 
-Pingpong is the first scenario, not the only one; each asks a different
+2026-09-19, the owner: the old scenario wording is replaced by the test names
+everywhere (round-trip, low-latency, heavy-load, retention, filing,
+exclusive-claim, daily-backlog).
+
+RoundTrip is the first test, not the only one; each asks a different
 question of the same estate over the same adapters, and every roll honors
 a wall-clock maximum and a factor on simulated time. What the scenarios are
 and how the limits work is the Playground's own manual,

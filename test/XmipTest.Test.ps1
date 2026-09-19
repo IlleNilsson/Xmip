@@ -171,7 +171,7 @@ Describe 'The environment a roll is started with' {
             }
             $environment = New-XmipPlaygroundEnvironment @chosen
 
-            $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'pingpong,load'
+            $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'round-trip,heavy-load'
             $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'R1,P1,S1'
             $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'R1,S1'
             $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be 'SN2'
@@ -211,7 +211,7 @@ Describe 'The environment a roll is started with' {
         [string] $pattern = '(?s)const SCENARIOS: \[&str; \d+\] = \[(.*?)\];'
         [string] $list = [regex]::Match($roll, $pattern).Groups[1].Value
         [string[]] $scenarios = @(
-            [regex]::Matches($list, '"([a-z]+)"') | ForEach-Object { $_.Groups[1].Value }
+            [regex]::Matches($list, '"([a-z-]+)"') | ForEach-Object { $_.Groups[1].Value }
         )
 
         InModuleScope Xmip -Parameters @{ Scenarios = $scenarios } {
@@ -219,8 +219,8 @@ Describe 'The environment a roll is started with' {
 
             $mapped | Should -Be @($Scenarios | Sort-Object)
             ConvertTo-XmipPlaygroundScenario -Test 'HeavyLoad', 'LowLatency' |
-                Should -Be @('load', 'furious')
-            ConvertTo-XmipTestName -Scenario 'furious' | Should -Be 'LowLatency'
+                Should -Be @('heavy-load', 'low-latency')
+            ConvertTo-XmipTestName -Scenario 'low-latency' | Should -Be 'LowLatency'
             ConvertTo-XmipTestName -Scenario 'fleet' | Should -Be 'fleet'
             { ConvertTo-XmipPlaygroundScenario -Test 'Typo' } |
                 Should -Throw -ExpectedMessage '*No Playground test*'
@@ -304,14 +304,14 @@ source = "playground"
 node = "xmip:///playground"
 
 [[records]]
-scope = "xmip:///playground/pingpong/tcp/json"
+scope = "xmip:///playground/round-trip/tcp/json"
 state = "fine"
 severity = 0
 evidence = "12 rounds, all whole"
 observed_unix_nanos = 1789208338038783900
 
 [[records]]
-scope = "xmip:///playground/node/node-02/claim/file/parallel"
+scope = "xmip:///playground/node/node-02/exclusive-claim/file/parallel"
 state = "done"
 severity = 90
 evidence = "claimed twice"
@@ -331,13 +331,13 @@ observed_unix_nanos = 1789208338038783900
 
         $results.Count | Should -Be 3
 
-        $pingpong = $results | Where-Object Scenario -eq 'pingpong'
-        $pingpong.Test | Should -Be 'RoundTrip'
-        $pingpong.Transport | Should -Be 'tcp'
-        $pingpong.Contract | Should -Be 'json'
-        $pingpong.Node | Should -Be ''
+        $roundTrip = $results | Where-Object Scenario -eq 'round-trip'
+        $roundTrip.Test | Should -Be 'RoundTrip'
+        $roundTrip.Transport | Should -Be 'tcp'
+        $roundTrip.Contract | Should -Be 'json'
+        $roundTrip.Node | Should -Be ''
 
-        $claim = $results | Where-Object Scenario -eq 'claim'
+        $claim = $results | Where-Object Scenario -eq 'exclusive-claim'
         $claim.Node | Should -Be 'node-02'
         $claim.Transport | Should -Be 'file'
         $claim.Contract | Should -Be 'parallel'
