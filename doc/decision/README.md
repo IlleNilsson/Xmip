@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-six decisions, read as one document.
+Fifty-eight decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -408,6 +408,19 @@ took.**
 
 → [A resilience technology is a guard on the attempt, in full](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)
 
+### What a trait table buys, and what only a loader buys
+
+**A trait table buys a versioned, language-neutral promise, and buys nothing
+back from the build. The day's lost work goes only when a technology stops
+being a Cargo dependency and becomes an artifact the host opens at run
+time — and the estate has no loader at all. Buy the table first, because
+sixteen traits have none and a loader cannot load what has no table; buy the
+loader second, because that is where the saving is. `authenticate` is wave
+two, at trait version 1.0, and nothing follows it until a loader has loaded
+one.**
+
+→ [A vtable is a promise; only a loader is a saving, in full](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) — **still Proposed**
+
 ---
 
 ## 4. The shape of the estate
@@ -540,6 +553,18 @@ technologies it mounts and the one directory that is not a technology says
 so by its name. A crate that hosts nothing keeps `src`.**
 
 → [A crate that hosts technologies keeps its source in `.src`, in full](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md)
+
+### What separates a Foundation repository from a Platform one
+
+**Foundation is what Xmip is: a definition, with no verb of its own, true of
+the traffic whether or not anything is running. Platform is what a running
+node needs to keep those definitions alive: it acts — it reads a document,
+opens a store, spawns a host, fires a timer — and the subject of that verb is
+the node itself. A Foundation crate depends only on Foundation. Platform is
+not the default: a crate that answers to the message-path test or the
+observation test is placed there first, and only what is left is Platform.**
+
+→ [Foundation is a noun; Platform is a lifecycle, in full](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) — **still Proposed**
 
 ---
 
@@ -797,6 +822,8 @@ You have a word. This gives you the decision that governs it.
 | `.src` | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a contract version | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
+| a definition has no verb | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
+| ABI-friendly trait | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
 | ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | ACME, Let's Encrypt | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
@@ -887,6 +914,7 @@ You have a word. This gives you the decision that governs it.
 | part | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Platform is not the default | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
@@ -927,17 +955,22 @@ You have a word. This gives you the decision that governs it.
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the carrier technology | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
+| the Foundation-Platform test | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
+| the loader | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | the one adapter | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | User principal name, UPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| vtable shim | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
+| Wave two | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
@@ -1021,3 +1054,5 @@ is nowhere else.
 | [0054](ADR-0054-a-principal-name-is-read-one-way.md) | A principal name is read one way | |
 | [0055](ADR-0055-bad-input-is-refused-at-the-door.md) | Bad input is refused at the door | |
 | [0056](ADR-0056-a-node-declares-what-it-can-do.md) | A node declares what it can do | **Proposed** |
+| [0057](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) | A vtable is a promise; only a loader is a saving | **Proposed** |
+| [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | **Proposed** |

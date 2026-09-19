@@ -478,3 +478,35 @@ ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the
 executable included, so that one line finds and stops them all. Where this
 record says the `xmip` executable, read `xmip-cli`; an operator types
 `xmip-cli health <scope>`. Nothing else about it changes.
+
+## Amendment, 2026-09-19: a change reaches every surface, or says which it did not
+
+The owner, after a day in which three separate things were published and
+reached one surface each: *with all you do, keep API, CLI, PowerShell & GUI
+up to date.*
+
+The four are one model (ADR-0052) so that an operator sees the same estate
+whichever one they open. A change that reaches only the surface its author
+happened to be working in does not leave the others empty — it leaves them
+**wrong**, and confidently so, which is worse. Each of the day's three was
+found by the owner opening the surface nobody had updated.
+
+- **Every change asks the question four times.** When something is newly
+  published, recorded or named, what should the ABI and `Xmip.Surface`
+  expose, the CLI print, the PowerShell module return as an object, and the
+  GUI show? A change is not finished until each has its answer.
+- **A surface left behind is named in the landing message.** Not omitted,
+  not deferred silently, and never *"left for the owner to ask for"* — that
+  phrase was written the same day about node capabilities reaching the
+  snapshot and not the GUI, and it is the failure this amendment exists to
+  stop. The operator should not have to ask for the view of a thing the
+  estate already knows.
+- **The order is the model first.** `Xmip.Surface` reads it once; the three
+  faces render it. A surface that parses a published file itself is the
+  drift ADR-0052 was written to end.
+- **What a surface shows nothing about, it says nothing about.** Silence is
+  reserved for what is genuinely absent; a value the estate holds and a
+  surface does not show is a defect, not a design.
+
+Applies to everything from this day forward, and to the debt named above,
+which is now owed rather than optional.
