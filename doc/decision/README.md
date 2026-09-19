@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-nine decisions, read as one document.
+Sixty decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -566,6 +566,19 @@ observation test is placed there first, and only what is left is Platform.**
 
 → [Foundation is a noun; Platform is a lifecycle, in full](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) — **still Proposed**
 
+### How a reader sees the whole estate, and why it is not drawn by hand
+
+**The whole estate is one generated document. `New-XmipEstateMap` reads
+`architecture.toml` and the `.gitmodules` files and writes
+`doc/architecture/estate-map.md`, which names every declared repository, the
+domain and parent it sits under, its declared maturity, and whether it is
+composed in this working tree. `test/EstateMap.Test.ps1` regenerates it and
+fails when the committed file differs, so it cannot be edited by hand and
+cannot rot. The hand-drawn tree in `repository-model.md` section 7 stays: it
+says where modules mount, which is a different question.**
+
+→ [The estate map is generated, in full](ADR-0060-the-estate-map-is-generated.md) — **still Proposed**
+
 ---
 
 ## 5. Operating Xmip
@@ -862,6 +875,8 @@ You have a word. This gives you the decision that governs it.
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | decision | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
+| declared maturity | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
+| declared repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -872,6 +887,7 @@ You have a word. This gives you the decision that governs it.
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
+| estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
@@ -904,6 +920,7 @@ You have a word. This gives you the decision that governs it.
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| mounted repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
@@ -1073,3 +1090,4 @@ is nowhere else.
 | [0057](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) | A vtable is a promise; only a loader is a saving | **Proposed** |
 | [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | **Proposed** |
 | [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | **Proposed** |
+| [0060](ADR-0060-the-estate-map-is-generated.md) | The estate map is generated | **Proposed** |

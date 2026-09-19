@@ -289,6 +289,13 @@ Describe 'ADR-0020: six architecture documents' {
             'deployment-model.md'
             'observability-model.md'
             'identity-by-technology.md'
+
+            # The seventh, and not a seventh model. ADR-0060 clause 6 gives
+            # the reason ADR-0020 clause 4 requires for a further document:
+            # it is generated from architecture.toml rather than written, so
+            # it is a rendering of the manifest and not a document that can
+            # come to disagree with it. Held by test/EstateMap.Test.ps1.
+            'estate-map.md'
         )
 
         [string[]] $actual = @(
