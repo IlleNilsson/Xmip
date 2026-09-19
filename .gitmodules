@@ -127,7 +127,7 @@
 	url = https://github.com/IlleNilsson/xmip-core-report.git
 	ignore = dirty
 [submodule "modules/platform/resilience"]
-	path = module/platform/resilience
+	path = module/capability/resilience
 	url = https://github.com/IlleNilsson/xmip-core-resilience.git
 	ignore = dirty
 [submodule "modules/capabilities/retain"]

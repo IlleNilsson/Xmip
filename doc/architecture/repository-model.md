@@ -61,10 +61,19 @@ layout's home). The scoping error was mine: ADR-0011 is about names.*
 | Domain | What it holds | Examples |
 | --- | --- | --- |
 | **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-abi`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
-| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process` |
+| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
-| **Platform** | platform-wide runtime services | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-resilience`, `xmip-core-schedule` |
+| **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-schedule` |
+
+**The test between Foundation and Platform is the lifecycle** (ADR-0058).
+Foundation is what Xmip *is* — a noun that is true of a Message, a Journey or
+a Node whether or not anything is running, and that a reader can understand
+without knowing a node exists. Platform is what a running node needs to keep
+those nouns alive — something that is started, supervised and stopped, and
+whose subject is the node rather than the traffic. `xmip-core-persist` is
+Platform because a store is opened and closed; `xmip-core-journey` is
+Foundation because a Journey's state is true of the Journey.
 
 **The test between Capability and Operation is the message path.** If a
 Journey waits for it, it is a Capability. `xmip-core-retain` moved on
@@ -81,6 +90,16 @@ says observation never sits in the message path. `archive` stays too: it moves
 and its `xmip-core-event` dependency was the tell — eventing is for the
 asynchronous family it was sitting with, not for something called synchronously
 at a gate.
+
+`xmip-core-resilience` moved from Platform to Capability on 2026-09-19, by both
+tests at once. A Journey waits for a retry and for a timeout — the guard runs
+inside the attempt, and nothing proceeds until it decides (ADR-0048) — so the
+message-path test makes it a Capability. Nothing starts, supervises or stops
+it, so the lifecycle test keeps it out of Platform. Its shape had been saying
+so since ADR-0049: a `.src/` host crate with six technologies mounted beside
+it, which is the shape of `xmip-core-authenticate` and of no platform service.
+It sat in Platform because nothing had written the Foundation-Platform test
+down, and anything runtime-shaped landed there by default.
 
 Every Technology repository is a direct child of exactly one Capability
 repository. That is what makes the name computable from the tree, and the tree
@@ -391,12 +410,13 @@ Xmip/
 │   ├── capability/
 │   │   ├── receive   send   transport   logic   prepare   identify
 │   │   ├── authenticate   authorize   contract   path   assign   promote
-│   │   └── demote   transform   route   process   retain   migrate
+│   │   ├── demote   transform   route   process   retain   migrate
+│   │   └── resilience
 │   ├── operation/
 │   │   ├── audit   observe   report   archive   diagnose
 │   │   └── cli   powershell   gui
 │   └── platform/
-│       └── runtime   configure   persist   resilience   schedule
+│       └── runtime   configure   persist   schedule
 ├── test/
 │   └── playground   the Xmip Playground, ADR-0028
 └── template/

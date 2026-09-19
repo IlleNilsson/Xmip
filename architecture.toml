@@ -1028,8 +1028,8 @@ dependency = []
 
   [xmip.core.resilience]
   description = "Retry, timeout, circuit-breaker, rate-limit, bulkhead and fallback capability."
-  architecturalDomain = "Platform"
-  repositoryRole = "platform-service"
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
   dependency = ["xmip-core"]
     [xmip.core.resilience.bulkhead]
     maturity = "scaffolded"

@@ -1698,7 +1698,9 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 #     section 7 UUIDv7 -> module/platform/persist/doc/record-identifier.md
 #   doc/architecture/runtime-model.md
 #     section 9 selectors -> module/capability/promote/doc/content-selector.md
-#     section 15 scope -> module/platform/resilience/README.md
+#     section 15 scope -> module/capability/resilience/README.md
+#       (mounted at module/platform/resilience when this move was made;
+#        resilience became a Capability on 2026-09-19, ADR-0058)
 #   doc/decision/ADR-0028-the-xmip-playground.md
 #     3a, 3b and the difficulty amendment -> test/playground/README.md
 
