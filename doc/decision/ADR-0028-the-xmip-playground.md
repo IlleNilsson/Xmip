@@ -318,3 +318,52 @@ exists the rig has no business inventing a second.
 Agreed 2026-09-19, not yet built. Nothing resolved on the owner's machine the
 day it was agreed — `C1`, `R1` and their kin were checked and there is no
 search suffix — so the rig's behavior is unchanged until an estate has names.
+
+## Amendment, 2026-09-19: a run is found by what it declared, not by the file
+
+Two defects, found the same day the cluster became a process of its own.
+
+**What was wrong.** `Get-XmipTestStatus` and `Get-XmipTestNode` judged a
+process by the file on disk: the image the operating system reports it running
+had to be the Playground binary under `test/playground/target/debug`, and a
+process that failed that test was dropped without a word. The owner rebuilt the
+Playground while his roll was rolling. Twenty-one processes — a roll, its
+cluster and its nodes — went on running, and every cmdlet meant to manage
+them answered with nothing. `Get-XmipProcess` found all twenty-one, because it
+asks what each process declared of itself (ADR-0053) rather than what is on
+disk.
+
+**What it cost.** `Stop-XmipTest` reads the same lookup, so the roll could not
+be stopped by its own cmdlet: the nodes had to be killed by pid. Reproduced on
+cluster Y1 the same day — with the binaries replaced underneath it,
+`Get-XmipTestNode` gave every node an empty `Parent`, `Get-XmipTestStatus` gave
+the run an empty `Nodes`, and `Stop-XmipTest -Cluster Y1` stopped the cluster
+and the roll and left three orphaned node processes behind. **A process Xmip
+started and cannot find is a process Xmip cannot stop.**
+
+**What now holds.**
+
+- **The declaration is the truth, the name is the rule.** A process is looked
+  up by the binary it declared it started from (ADR-0053 carries it), then by
+  the image this machine reports, then by its name — and every System Process
+  Xmip owns is named `xmip-<what>` and nothing else is. A running process is
+  never dropped because the file it came from was rebuilt, renamed, moved or
+  deleted under it.
+- **A disagreement is said in words** (ADR-0055). Where the image is not the
+  binary expected, the cmdlet warns, naming the pid, the image and the file,
+  and lists the process anyway. Silence is what made this invisible.
+- **A parent is named by its pid.** This machine names a parent process after
+  the image file's *current* name, so renaming the binaries renamed every
+  parent and no node belonged to a roll any more. Parentage is now resolved
+  through the pid and the declaration, never through the file.
+- **A process that declared itself is found even when this machine no longer
+  calls it by that name**, and that, too, is said.
+
+The lookup lives in `Xmip/Get-XmipPlaygroundProcess.ps1`; it moved out of
+`Xmip/Start-XmipTest.ps1` with this change. `test/XmipTest.Test.ps1` holds the
+tests, over the judgment itself rather than over a running binary — the suite
+still starts nothing.
+
+The other defect of that day, a history file that had never held a point, is
+ADR-0029's: the rule it broke is what a history point is, not what the
+Playground spawns. It is recorded there.

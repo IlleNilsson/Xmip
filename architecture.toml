@@ -22,6 +22,12 @@ versionPolicy = "minimum"
 crossPlatform = true
 windowsPowerShellSupported = false
 
+# `maturity` is deliberately not here. It was, defaulting to "reserved", and a
+# default that reads as a statement is a manifest that lies: on 2026-09-19,
+# 156 repositories were "reserved" and 79 of them were composed and holding
+# source. Every repository states its own maturity now, and
+# test/Sync-XmipEstate.Test.ps1 fails on one that does not. ADR-0060,
+# amendment 2026-09-19, which also defines what each word means.
 [default]
 visibility = "public"
 autoInitialize = true
@@ -30,7 +36,6 @@ hasProjects = false
 hasWiki = false
 defaultBranch = "main"
 license = "AGPL-3.0-or-later"
-maturity = "reserved"
 repositoryTopics = ["xmip"]
 submoduleRoot = "module"
 
@@ -167,26 +172,28 @@ appliesTo = ["soap", "http-api", "grpc"]
 description = "Core Xmip identifiers, shared types and stable public contracts."
 architecturalDomain = "Foundation"
 repositoryRole = "common-architecture"
+maturity = "scaffolded"
 dependency = []
 
   [xmip.core.abi]
   description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings. Used by cli, powershell and gui, and the boundary loadable Modules plug into."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.stream]
   description = "Incoming and prepared Stream data before and during Message creation."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.message]
   description = "Immutable Message, section and Message-instance model."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
     [xmip.core.message.avro]
     maturity = "scaffolded"
@@ -236,13 +243,14 @@ dependency = []
   description = "Message Context values and metadata."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.transport]
   description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-context"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
@@ -282,6 +290,7 @@ dependency = []
     dependency = ["xmip-core-transport-tcp"]
     specification = "IETF RFC 1939, receive only; the maildrop lock is the native claim"
     [xmip.core.transport.sftp]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-tcp"]
     [xmip.core.transport.smtp]
     maturity = "scaffolded"
@@ -410,6 +419,7 @@ dependency = []
     dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus"]
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
+    maturity = "scaffolded"
     dependency = ["xmip-core-transport-as4"]
     specification = "OpenPeppol transport infrastructure, SMP and SML lookup"
     [xmip.core.transport.profinet]
@@ -582,12 +592,14 @@ dependency = []
   description = "Journey lineage and descendants created by routing, assignment and transformation."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.contract]
   description = "Common Contract implication, evaluation and result functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
@@ -695,6 +707,7 @@ dependency = []
   description = "Common path-expression and addressing functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.path.dot]
     maturity = "scaffolded"
@@ -722,150 +735,246 @@ dependency = []
   description = "Stream preparation stages usable before Message creation, during processing and before Send."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream"]
     [xmip.core.prepare.base64]
+    maturity = "reserved"
     [xmip.core.prepare.bzip2]
+    maturity = "reserved"
     [xmip.core.prepare.canonicalize]
+    maturity = "reserved"
     [xmip.core.prepare.charset]
+    maturity = "reserved"
     [xmip.core.prepare.checksum]
+    maturity = "reserved"
     [xmip.core.prepare.chunking]
+    maturity = "reserved"
     [xmip.core.prepare.decrypt]
+    maturity = "reserved"
     [xmip.core.prepare.deflate]
+    maturity = "reserved"
     [xmip.core.prepare.encrypt]
+    maturity = "reserved"
     [xmip.core.prepare.envelope]
+    maturity = "reserved"
     [xmip.core.prepare.framing]
+    maturity = "reserved"
     [xmip.core.prepare.gzip]
+    maturity = "reserved"
     [xmip.core.prepare.hash]
+    maturity = "reserved"
     [xmip.core.prepare.line-ending]
+    maturity = "reserved"
     [xmip.core.prepare.quoted-printable]
+    maturity = "reserved"
     [xmip.core.prepare.sign]
+    maturity = "reserved"
     [xmip.core.prepare.tar]
+    maturity = "reserved"
     [xmip.core.prepare.verify-signature]
+    maturity = "reserved"
     [xmip.core.prepare.zip]
+    maturity = "reserved"
     [xmip.core.prepare.zstd]
+    maturity = "reserved"
 
   [xmip.core.transform]
   description = "Common Contract-aware transformation functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-contract", "xmip-core-path"]
     [xmip.core.transform.c]
+    maturity = "reserved"
     [xmip.core.transform.cpp]
+    maturity = "reserved"
     [xmip.core.transform.dotnet]
+    maturity = "reserved"
     [xmip.core.transform.go]
+    maturity = "reserved"
     [xmip.core.transform.handlebars]
+    maturity = "reserved"
     [xmip.core.transform.java]
+    maturity = "reserved"
     [xmip.core.transform.jolt]
+    maturity = "reserved"
     [xmip.core.transform.jq]
+    maturity = "reserved"
     [xmip.core.transform.jsonata]
+    maturity = "reserved"
     [xmip.core.transform.liquid]
+    maturity = "reserved"
     [xmip.core.transform.mustache]
+    maturity = "reserved"
     [xmip.core.transform.python]
+    maturity = "reserved"
     [xmip.core.transform.rust]
+    maturity = "reserved"
     [xmip.core.transform.tera]
+    maturity = "reserved"
     [xmip.core.transform.wasm]
+    maturity = "reserved"
     [xmip.core.transform.xquery]
+    maturity = "reserved"
     [xmip.core.transform.xslt]
+    maturity = "reserved"
 
   [xmip.core.assign]
   description = "Common Path-based assignment functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.promote]
   description = "Common Path-based promotion into Message Context."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.demote]
   description = "Common Path-based demotion into Message or artifact configuration."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-path"]
 
   [xmip.core.identify]
   description = "Common transport-level and message-level identification functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
     [xmip.core.identify.api-key]
+    maturity = "scaffolded"
     [xmip.core.identify.certificate]
+    maturity = "scaffolded"
     [xmip.core.identify.contract]
+    maturity = "scaffolded"
     [xmip.core.identify.cookie]
+    maturity = "scaffolded"
     [xmip.core.identify.dns]
+    maturity = "scaffolded"
     [xmip.core.identify.endpoint]
+    maturity = "scaffolded"
     [xmip.core.identify.header]
+    maturity = "scaffolded"
     [xmip.core.identify.ip]
+    maturity = "scaffolded"
     [xmip.core.identify.jwt]
+    maturity = "scaffolded"
     [xmip.core.identify.kerberos]
+    maturity = "scaffolded"
     [xmip.core.identify.mac]
+    maturity = "scaffolded"
     [xmip.core.identify.message]
+    maturity = "scaffolded"
     [xmip.core.identify.ntlm]
+    maturity = "scaffolded"
     [xmip.core.identify.oidc]
+    maturity = "scaffolded"
     [xmip.core.identify.party]
+    maturity = "scaffolded"
     [xmip.core.identify.saml]
+    maturity = "scaffolded"
     [xmip.core.identify.ssh-key]
+    maturity = "scaffolded"
     [xmip.core.identify.transport]
+    maturity = "scaffolded"
     [xmip.core.identify.username]
+    maturity = "scaffolded"
 
   [xmip.core.authenticate]
   description = "Common transport-level and message-level authentication functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.api-key]
+    maturity = "scaffolded"
     [xmip.core.authenticate.basic]
+    maturity = "scaffolded"
     [xmip.core.authenticate.bearer]
+    maturity = "scaffolded"
     [xmip.core.authenticate.certificate]
     maturity = "scaffolded"
     [xmip.core.authenticate.digest]
+    maturity = "scaffolded"
     [xmip.core.authenticate.jwt]
+    maturity = "scaffolded"
     [xmip.core.authenticate.kerberos]
+    maturity = "scaffolded"
     [xmip.core.authenticate.ldap]
+    maturity = "scaffolded"
     [xmip.core.authenticate.mutual-tls]
     maturity = "scaffolded"
     [xmip.core.authenticate.ntlm]
+    maturity = "scaffolded"
     [xmip.core.authenticate.oauth2]
+    maturity = "scaffolded"
     [xmip.core.authenticate.oidc]
+    maturity = "scaffolded"
     [xmip.core.authenticate.pam]
+    maturity = "scaffolded"
     [xmip.core.authenticate.password]
+    maturity = "scaffolded"
     [xmip.core.authenticate.saml]
+    maturity = "scaffolded"
     [xmip.core.authenticate.scram]
+    maturity = "scaffolded"
     [xmip.core.authenticate.ssh-key]
+    maturity = "scaffolded"
     [xmip.core.authenticate.windows]
+    maturity = "scaffolded"
 
   [xmip.core.authorize]
   description = "Common transport-level and message-level authorization functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.abac]
+    maturity = "scaffolded"
     [xmip.core.authorize.acl]
+    maturity = "scaffolded"
     [xmip.core.authorize.artifact]
+    maturity = "scaffolded"
     [xmip.core.authorize.cedar]
+    maturity = "scaffolded"
     [xmip.core.authorize.claim]
+    maturity = "scaffolded"
     [xmip.core.authorize.contract]
+    maturity = "scaffolded"
     [xmip.core.authorize.location]
+    maturity = "scaffolded"
     [xmip.core.authorize.opa]
+    maturity = "scaffolded"
     [xmip.core.authorize.party]
+    maturity = "scaffolded"
     [xmip.core.authorize.policy]
+    maturity = "scaffolded"
     [xmip.core.authorize.rbac]
+    maturity = "scaffolded"
     [xmip.core.authorize.role]
+    maturity = "scaffolded"
     [xmip.core.authorize.scope]
+    maturity = "scaffolded"
     [xmip.core.authorize.transport]
+    maturity = "scaffolded"
 
   [xmip.core.receive]
   description = "Common Receive Port and Receive Location functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-transport"]
 
   [xmip.core.route]
   description = "Common publication, subscription and routing functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-journey"]
     [xmip.core.route.content]
     maturity = "scaffolded"
@@ -896,105 +1005,155 @@ dependency = []
   description = "Common Process execution functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-journey"]
     [xmip.core.process.bash]
+    maturity = "reserved"
     [xmip.core.process.c]
+    maturity = "reserved"
     [xmip.core.process.command]
+    maturity = "reserved"
     [xmip.core.process.cpp]
+    maturity = "reserved"
     [xmip.core.process.dotnet]
+    maturity = "reserved"
     [xmip.core.process.go]
+    maturity = "reserved"
     [xmip.core.process.grpc]
+    maturity = "reserved"
     [xmip.core.process.http]
+    maturity = "reserved"
     [xmip.core.process.java]
+    maturity = "reserved"
     [xmip.core.process.lua]
+    maturity = "reserved"
     [xmip.core.process.powershell]
+    maturity = "reserved"
     [xmip.core.process.python]
+    maturity = "reserved"
     [xmip.core.process.rust]
+    maturity = "reserved"
     [xmip.core.process.wasm]
+    maturity = "reserved"
 
   [xmip.core.send]
   description = "Common Send Port, Send Group and Send Location functionality."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-transport"]
 
   [xmip.core.node]
   description = "Xmip Node model, roles and capabilities."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.cluster]
   description = "Xmip Cluster model and node membership."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.party]
   description = "Xmip Party model, associations, and the identities a Party is recognised by on receive and presents on send. ADR-0019."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.event]
   description = "External and internal Xmip event model."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
   [xmip.core.audit]
   description = "Configurable Begin, Execute, Finished and Failure audit functionality."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.audit.elasticsearch]
+    maturity = "reserved"
     [xmip.core.audit.file]
+    maturity = "reserved"
     [xmip.core.audit.kafka]
+    maturity = "reserved"
     [xmip.core.audit.mssql]
+    maturity = "reserved"
     [xmip.core.audit.opensearch]
+    maturity = "reserved"
     [xmip.core.audit.otlp]
+    maturity = "reserved"
     [xmip.core.audit.postgres]
+    maturity = "reserved"
     [xmip.core.audit.sqlite]
+    maturity = "reserved"
     [xmip.core.audit.syslog]
+    maturity = "reserved"
 
   [xmip.core.observe]
   description = "Near-real-time operational observation functionality."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.observe.etw]
+    maturity = "reserved"
     [xmip.core.observe.journald]
+    maturity = "reserved"
     [xmip.core.observe.otlp]
+    maturity = "reserved"
     [xmip.core.observe.prometheus]
+    maturity = "reserved"
     [xmip.core.observe.windows-event-log]
+    maturity = "reserved"
 
   [xmip.core.report]
   description = "Reportable Xmip data and report production functionality."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.report.csv]
+    maturity = "reserved"
     [xmip.core.report.html]
+    maturity = "reserved"
     [xmip.core.report.json]
+    maturity = "reserved"
     [xmip.core.report.pdf]
+    maturity = "reserved"
     [xmip.core.report.prometheus]
+    maturity = "reserved"
     [xmip.core.report.sql]
+    maturity = "reserved"
 
   [xmip.core.retain]
   description = "Holds what a gate refused and what policy says to keep. In the message path: a Journey waits for it."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-persist"]
     [xmip.core.retain.azure-blob]
+    maturity = "reserved"
     [xmip.core.retain.file]
+    maturity = "reserved"
     [xmip.core.retain.gcs]
+    maturity = "reserved"
     [xmip.core.retain.s3]
+    maturity = "reserved"
     [xmip.core.retain.sql]
+    maturity = "reserved"
 
   [xmip.core.archive]
   description = "Archive functionality."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-event"]
     [xmip.core.archive.azure-blob]
     description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
@@ -1045,6 +1204,7 @@ dependency = []
   description = "Retry, timeout, circuit-breaker, rate-limit, bulkhead and fallback capability."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
     [xmip.core.resilience.bulkhead]
     maturity = "scaffolded"
@@ -1090,21 +1250,21 @@ dependency = []
   description = "The Xmip Service and the Xmip Host Services it spawns: configuration, execution tree, startup validation, host process plans, capability and module registries."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure", "xmip-core-node", "xmip-core-observe", "xmip-core-resilience"]
 
   [xmip.core.persist]
   description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-journey"]
 
   [xmip.core.configure]
   description = "Reads and validates declared Xmip configuration and turns it into a service configuration."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
-  maturity = "planned"
+  maturity = "scaffolded"
   dependency = ["xmip-core"]
 
 # Surfaces, ADR-0014. abi is above. These three were named in surface and had

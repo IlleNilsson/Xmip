@@ -54,8 +54,7 @@ function Get-XmipTestStatus {
     }
 
     [System.Diagnostics.Process[]] $rolls = @(
-        Get-Process -Name 'xmip-playground-roll' -ErrorAction SilentlyContinue |
-            Where-Object { Test-XmipPlaygroundBinary -Process $_ -Path $layout.Roll }
+        Get-XmipPlaygroundProcess -Name 'xmip-playground-roll' -Path $layout.Roll
     )
 
     if ($rolls.Count -eq 0) {

@@ -45,6 +45,58 @@ Describe 'The manifest' {
         $names = @($manifest.repositories.name)
         $names.Count | Should -Be (@($names | Sort-Object -Unique).Count)
     }
+
+    It 'states a maturity on every repository rather than inheriting one' {
+        # `reserved` was the [default] until 2026-09-19, so a repository that
+        # declared nothing read as deliberately reserved. 156 read that way and
+        # 79 of them were composed and holding source — the manifest filed
+        # built work as un-started. The default is gone; this is what keeps it
+        # gone, and it reads the TOML rather than the expansion because the
+        # expansion is where the inheriting happened. ADR-0060, amendment
+        # 2026-09-19.
+        Import-Module PSToml -ErrorAction Stop
+
+        [string] $path = Join-Path $script:Root 'architecture.toml'
+        $toml = ConvertFrom-Toml -InputObject (Get-Content -LiteralPath $path -Raw)
+
+        [string] $never = 'a defaulted maturity is a repository that never said'
+        $toml.default.Contains('maturity') | Should -BeFalse -Because $never
+
+        # Keys that describe a repository, so a table at one of them is not a
+        # child of it. The same list Xmip.psm1 holds as $script:XmipMetadataKey.
+        [string[]] $metadata = @(
+            'description', 'architecturalDomain', 'repositoryRole'
+            'maturity', 'dependency', 'primaryLanguage'
+        )
+
+        [string[]] $silent = @()
+        $pending = [Collections.Generic.Queue[hashtable]]::new()
+
+        foreach ($provider in $toml.xmip.Keys) {
+            $pending.Enqueue(@{ Name = "xmip-$provider"; Node = $toml.xmip[$provider] })
+        }
+
+        while ($pending.Count -gt 0) {
+            $entry = $pending.Dequeue()
+
+            if (-not $entry.Node.Contains('maturity')) {
+                $silent += [string] $entry.Name
+            }
+
+            foreach ($key in $entry.Node.Keys) {
+                $child = $entry.Node[$key]
+
+                if ($child -isnot [Collections.IDictionary]) { continue }
+                if ($key -in $metadata) { continue }
+
+                $pending.Enqueue(@{ Name = "$($entry.Name)-$key"; Node = $child })
+            }
+        }
+
+        [string] $detail = $silent -join "`n"
+
+        $silent.Count | Should -Be 0 -Because "these inherit a maturity:`n$detail"
+    }
 }
 
 Describe 'Sync-XmipEstate' {

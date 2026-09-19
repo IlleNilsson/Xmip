@@ -960,3 +960,136 @@ Describe 'What a web host reads' {
         }
     }
 }
+
+Describe 'A run whose binaries changed underneath it' {
+    <#
+        2026-09-19: the owner's roll, its cluster and its nodes were alive
+        while Get-XmipTestStatus and Get-XmipTestNode said nothing, because the
+        Playground binaries had been rebuilt under the running processes. A
+        process Xmip started and cannot find is a process Xmip cannot stop, so
+        the file on disk no longer decides, and a disagreement is said.
+    #>
+    BeforeAll {
+        $script:Built = 'D:/playground/target/debug/xmip-playground-roll.exe'
+        $script:Moved = 'D:/playground/target/debug/xmip-playground-roll.exe.old'
+    }
+
+    It 'is still the Playground''s run, and the image is said not to be the file' {
+        InModuleScope Xmip -Parameters @{ Built = $script:Built; Moved = $script:Moved } {
+            param($Built, $Moved)
+
+            [hashtable] $rebuilt = @{
+                Id       = 4242
+                Name     = 'xmip-playground-roll'
+                Image    = $Moved
+                Declared = ''
+                Expected = $Built
+            }
+
+            Test-XmipPlaygroundImage @rebuilt -WarningVariable said -WarningAction Continue |
+                Should -BeTrue -Because 'it is the run, whatever happened to the file'
+            "$said" | Should -BeLike '*rebuilt, renamed or moved*'
+        }
+    }
+
+    It 'takes the binary a process declared it started from as proof' {
+        InModuleScope Xmip -Parameters @{ Built = $script:Built } {
+            param($Built)
+
+            # ADR-0053: it said where it started, and that does not change.
+            [hashtable] $elevated = @{
+                Id       = 4242
+                Name     = 'xmip-playground-roll'
+                Image    = ''
+                Declared = $Built
+                Expected = $Built
+            }
+
+            Test-XmipPlaygroundImage @elevated -WarningVariable quiet | Should -BeTrue
+            $quiet | Should -BeNullOrEmpty -Because 'nothing disagreed'
+        }
+    }
+
+    It 'is not a process that is no Xmip process' {
+        InModuleScope Xmip -Parameters @{ Built = $script:Built } {
+            param($Built)
+
+            [hashtable] $stranger = @{
+                Id       = 4242
+                Name     = 'notepad'
+                Image    = 'C:/Windows/notepad.exe'
+                Declared = ''
+                Expected = $Built
+            }
+
+            Test-XmipPlaygroundImage @stranger | Should -BeFalse
+        }
+    }
+
+    It 'names a parent by its pid, never by the file its image came from' {
+        # The half that cost three orphaned nodes: this machine calls a parent
+        # by the image file's current name, so a rebuild renamed every parent
+        # and no node had a roll to be stopped with.
+        InModuleScope Xmip {
+            [hashtable] $said = @{ 4242 = @{ name = 'xmip-playground-cluster' } }
+
+            Resolve-XmipProcessName -Id 4242 -Declared $said |
+                Should -Be 'xmip-playground-cluster'
+            Resolve-XmipProcessName -Id 0 -Declared $said | Should -Be ''
+            Resolve-XmipProcessName -Id 2000000000 -Declared @{ } | Should -Be ''
+        }
+    }
+}
+
+Describe 'What a history file holds' {
+    <#
+        ADR-0029: a history point is a counted measurement over time. Every
+        history the Playground published between 2026-09-05 and 2026-09-19
+        held none, and no surface said so.
+    #>
+    It 'is read back point by point, oldest first' {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            [string] $path = Join-Path $Area 'Y1-history.toml'
+            Set-Content -LiteralPath $path -Encoding utf8 -Value @(
+                'node = "xmip:///Y1"'
+                '[[points]]'
+                'counted = "bytes"'
+                'observed_unix_nanos = 1757000000000000000'
+                'value = 1024'
+                '[[points]]'
+                'counted = "messages"'
+                'observed_unix_nanos = 1757000001000000000'
+                'value = 7'
+            )
+
+            [object[]] $read = @(Get-XmipHistory -Path $path)
+
+            $read.Count | Should -Be 2
+            $read[0].Node | Should -Be 'xmip:///Y1'
+            $read[0].Counted | Should -Be 'bytes'
+            $read[0].Value | Should -Be 1024
+            @(Get-XmipHistory -Path $path -Counted messages).Value | Should -Be 7
+        }
+    }
+
+    It 'says in words that a producer wrote no points, rather than nothing' {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            [string] $path = Join-Path $Area 'Y2-history.toml'
+            Set-Content -LiteralPath $path -Encoding utf8 -Value @(
+                'node = "xmip:///Y2"'
+                'points = []'
+            )
+
+            [object[]] $read = @(
+                Get-XmipHistory -Path $path -WarningVariable said -WarningAction Continue
+            )
+
+            $read.Count | Should -Be 0
+            "$said" | Should -BeLike '*holds no points*'
+        }
+    }
+}

@@ -369,3 +369,137 @@ assistant has not designed that and does not claim it is free.
 This record is Proposed. It extends ADR-0012 and contradicts no clause of
 it; where it found the implementation behind the specification, it says so
 in Consequences rather than quietly changing either.
+
+## Amendment, 2026-09-19: step 2 is built, and it has opened two modules
+
+Clause 8 step 2 is done, in the order clause 8 recommends and against wave
+one rather than against a table written the same week. Step 1 — the mirror
+gap in `ffi.rs` — was **not** needed for it and was not done: the contract
+table was already mirrored, and `MessageVtable` and `PathVtable` remain
+absent.
+
+**What was built.** Three files in `xmip-core-runtime`, the host:
+
+- `src/compatibility.rs` — ADR-0012's *Compatibility* rule as
+  `accepts(descriptor, expectation)`. `abi::validate_module_abi` answers the
+  first line (`abi_version`); the other three need a second party, the
+  capability doing the loading, which no descriptor can supply by itself.
+  Not feature-gated, so the estate's own gate compiles and runs it.
+- `src/loaded_module.rs` — the load. `LoadLibraryExW` with
+  `LOAD_WITH_ALTERED_SEARCH_PATH` on Windows and `dlopen(RTLD_LOCAL)`
+  elsewhere, as specification section 3 requires and as `libloading`'s
+  portable constructor does **not** do on Windows; resolve
+  `xmip_create_module_v1`; call it with an `XmipHost` whose three callbacks
+  are real functions; copy the descriptor out; judge it; hold the library and
+  the instance; `destroy` then unload, in that order, including on the
+  refusal path.
+- `src/loaded_contract.rs` — the contract table selected by
+  `descriptor.module`, and `configure`, `start`, `bind`, `validate`,
+  `implies`, `release`, `stop` driven through it. A byte range reaches the
+  module as an `XmipReader` the host fills; diagnostics are copied before any
+  further call, because the header lends them only until the next one.
+
+Both loading files are behind the `dynamic-loading` feature, which existed
+for this and had never held a loader.
+
+**What it opened.** `module/capability/contract/rust`'s
+`xmip_core_contract_rust.dll` and `module/capability/contract/c`'s
+`xmip_core_contract_c.dll`, both already built in the estate, both driven
+through the same code with no branch on language — a byte range validated,
+`implies("descriptor")` answering `any`, `implies` on a key the standard
+does not determine answering `NOT_FOUND`. That is the sentence in
+Consequences — *not one of them has ever been opened by Xmip* — no longer
+true. The C one is the load-bearing case: the host cannot tell what it
+loaded, and now that is demonstrated rather than asserted.
+
+**What the descriptor check enforces**, in ADR-0012's own order:
+`abi_version` equal to the host's, `module` equal to the loading capability,
+`trait_major` equal, `trait_minor` less than or equal. Every refusal names
+the field and both values, and a refused module is destroyed and unloaded
+rather than kept:
+
+```text
+xmip-core-contract-rust 0.1.0 (abi 1, trait 1.0) answers the 'contract'
+trait and 'transport' is loading it: descriptor.module must equal the
+loading capability
+```
+
+The table's own `XmipVtableHeader` is checked against the descriptor as
+well. A module whose descriptor and table disagree about their trait version
+is refused; the header makes both statements and nothing had ever compared
+them.
+
+**Where `unsafe` lives, and how much.** Eighteen blocks, in two files, and
+nowhere else in the crate: eight in `src/loaded_module.rs` — of which two are
+the Windows and non-Windows arms of the same function, so seventeen compile
+on any one platform — and ten in `src/loaded_contract.rs`. Each carries a
+comment naming the pointer's origin, its lifetime and who frees it. Beside
+them are four `unsafe extern "C" fn` definitions, which are what the host
+*hands to* a module — three host callbacks and one stream reader — and
+dereference nothing between them but the reader's own context.
+`unsafe_code` stays `deny` and those two files
+allow it at the top with their reason, which is the pattern `operate.rs` and
+`start.rs` already established for the boundary facing the other way
+(ADR-0027). `compatibility.rs` has none, deliberately: the rule an operator
+argues with should be readable without reading an `unsafe` block.
+
+**The runtime is the right home** because the host is what loads. The
+alternative was `xmip-core-abi`, which already holds the header, the
+descriptor and the .NET probe — but ADR-0012 clause 2 makes that crate a
+*convenience for module authors*, and a module author does not load modules.
+A loader in the binding crate would also be a loader every module that used
+the binding linked.
+
+**Two corrections to this record's own Context.** Both were written from a
+search of Rust and both are wrong for the same reason.
+
+1. *Nothing in the estate opens a module* is false. `xmip-core-abi`'s
+   `dotnet/Xmip.Abi/Module/ModuleProbe.cs` opens a library with
+   `NativeLibrary.Load`, resolves the entrypoint, calls it with a real
+   `XmipHost` including an `UnmanagedCallersOnly` log callback, reads the
+   descriptor and destroys the instance. `xmip probe` in `xmip-core-cli` and
+   `Get-XmipModuleDescriptor` in `xmip-core-powershell` both drive it. What
+   was true, and is what the record meant: **nothing in Rust** opened a
+   module, the runtime opened nothing, and nothing anywhere selected a trait
+   table or called a trait function — the .NET probe reads the descriptor and
+   stops. That last part is still the gap this amendment closes.
+2. The `libloading` count stands, but its conclusion did not: a loader does
+   not need `libloading`, and the .NET one uses the platform's own loader.
+
+**What ADR-0012 and the specification disagree about, unresolved.**
+ADR-0012's *Compatibility* says `trait_minor` **is less than or equal to**
+the host's. `doc/specification.md` section 2 says *a module may be newer in
+`trait_minor` than the host* and that the host may call any function the
+module declares. Those are opposite rules for the same field. The code
+implements ADR-0012's, because ADR-0012 is the decision and the
+specification says the header wins over it only on the header's own
+statements — and the header states no rule here, only the fields. **This is
+for the owner to settle**, and it decides whether a node running an older
+Xmip may load a newer module.
+
+**What is still not done**, plainly:
+
+- **Nothing calls this.** `host::dynamic::verify_dynamic_module` checks a
+  request an operator composed; `LoadedModule::open` reads what a module
+  actually filled; nothing joins them, and no node configuration names a
+  library path. A node still cannot use a technology — the Consequences
+  section's last bullet is unchanged.
+- **Only `contract`.** `transport`, `message` and `path` have tables in the
+  header and no host side here. `message` and `path` are still missing from
+  `ffi.rs` entirely, which is step 1.
+- **No gate runs the proof.** `Test-XmipModule` runs `cargo test` on the
+  default feature set and then *builds* the declared features, so the estate
+  compiles the loader and never runs its tests. Making them run is one of two
+  choices — `dynamic-loading` becomes a default feature, or the gate tests
+  features as well as building them — and both change how the estate lands
+  code, so neither was taken here.
+- **The conformance suite still does not exist** (specification section 11).
+  This loader exercises rules 1, 4, 5 and 7 against two modules and proves
+  nothing about the other three.
+- **The host table is a stub in one respect**: `log` discards. A module's log
+  lines should reach `xmip-core-observe` and do not.
+- **Unloading is not proven safe in general.** It is sound for what this code
+  does — one instance, every string copied at the call it arrived in, no
+  thread started — and specification section 3's four conditions are not
+  *checked*, they are *satisfied by construction*. A module that starts a
+  thread would break that, and nothing here would notice.

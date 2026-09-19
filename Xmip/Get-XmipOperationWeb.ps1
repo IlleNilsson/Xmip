@@ -25,8 +25,7 @@ function Get-XmipOperationWeb {
     $layout = Get-XmipPlaygroundLayout
 
     [System.Diagnostics.Process[]] $hosts = @(
-        Get-Process -Name 'xmip-gui-web' -ErrorAction SilentlyContinue |
-            Where-Object { Test-XmipPlaygroundBinary -Process $_ -Path $layout.Web }
+        Get-XmipPlaygroundProcess -Name 'xmip-gui-web' -Path $layout.Web
     )
 
     foreach ($process in $hosts) {
