@@ -512,8 +512,8 @@ never became a Message and remains the sender's responsibility.
 
 ### Rehearsal
 
-The Playground runs Xmip's scenarios continuously, at a chosen stress level,
-with as many simulated node processes as you name.
+The Playground runs Xmip's own tests continuously, at a chosen stress level,
+over as many node processes as you name.
 
 ```powershell
 Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh -Nodes R1, P1, S1
@@ -522,12 +522,17 @@ Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest
 ```
 
-A roll is a cluster, and you name it with `-Cluster`; nothing names one for
-you. Two rolls with two names are two clusters side by side, each with its own
-web GUI. Omit `-Nodes` and the Playground spawns the node processes the stress
-level needs; in a real environment an orchestrator spawns nodes, never Xmip. Use the Playground to
-practice diagnosis and recovery, to verify an operational change, and to show
-the monitor before Xmip carries organizational data.
+You name the cluster with `-Cluster`; nothing names one for you. Two names
+are two clusters side by side, each with its own web GUI.
+
+Every tier is a process of its own: the test spawns the cluster, the cluster
+spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
+three. Omit `-Nodes` and the stress level decides how many nodes there are;
+in a real environment an orchestrator spawns nodes, never Xmip.
+
+Use the Playground to practice diagnosis and recovery, to verify an
+operational change, and to show the monitor before Xmip carries
+organizational data.
 
 ---
 

@@ -628,6 +628,23 @@ says it, read *the cluster's nodes*.
   (ADR-0009); whether the rig should take a node's stage from configuration
   instead is the owner's to say.
 
+## Amendment, 2026-09-19: the roll is the test, the cluster is a process
+
+The owner: *even clusters have to be spawned as processes during tests.*
+
+Ruling 1 of 2026-09-14 and the amendment above say *a roll is a cluster*.
+Read it now as *a roll is one cluster's test, and the cluster is a process
+the roll spawns*. A roll still means exactly one cluster — `Start-XmipTest`
+still refuses a name already rolling, and the cluster is still the owner's to
+name (ruling 8) — but the roll no longer is the cluster.
+
+Nothing a surface reads changes. The roll publishes `<Cluster>-snapshot.toml`
+at the same path with the same shape: `[run]`, `[[records]]`, `[[counts]]`,
+and the topology of this record's previous amendment — the cluster, its
+nodes, their stages, an endpoint per transport, and the handoff links. The
+cluster publishes its own half to `<Cluster>-cluster.toml` beside it, which
+is the roll's input and no surface's. ADR-0028 and ADR-0053 carry the rest.
+
 ## Amendment, 2026-09-18: the executable is `xmip-cli`
 
 ADR-0053: every System Process Xmip owns is named `xmip-<what>`, the

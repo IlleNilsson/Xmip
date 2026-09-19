@@ -13,7 +13,9 @@ function Get-XmipTestNode {
             (ADR-0028 clause 2). What it is doing is read from its command
             line: its name, stress level, whether it may assume the internet,
             its rounds, the directory it shares with its cluster and where it
-            publishes. Parent is the roll that spawned it, or null for one
+            publishes. Parent is the roll the node belongs to — the cluster
+            process spawns it and the roll spawns the cluster (the owner,
+            2026-09-19), so the roll is its grandparent — or null for one
             started by Start-XmipTestNode or by hand.
 
         .PARAMETER Name
@@ -66,6 +68,14 @@ function ConvertTo-XmipTestNode {
     [string] $line = try { $Process.CommandLine } catch { '' }
     [hashtable] $flags = Read-XmipTestNodeCommandLine -CommandLine "$line"
     $parent = try { $Process.Parent } catch { $null }
+
+    # Even clusters are spawned as processes (the owner, 2026-09-19): the
+    # cluster is the node's parent and the roll is the cluster's, so the roll
+    # a node belongs to is one step further up than it was.
+    if ($null -ne $parent -and $parent.ProcessName -eq 'xmip-playground-cluster') {
+        $parent = try { $parent.Parent } catch { $null }
+    }
+
     [bool] $ofRoll = $null -ne $parent -and $parent.ProcessName -eq 'xmip-playground-roll'
 
     return [PSCustomObject]@{

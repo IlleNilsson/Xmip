@@ -9,7 +9,7 @@ function Get-XmipPlaygroundLayout {
             run output live. One answer for every playground cmdlet.
 
         .DESCRIPTION
-            The roll and node binaries are cargo's debug build under
+            The roll, cluster and node binaries are cargo's debug build under
             test/playground; the web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
             goes under .local-work/playground, the device-local folder the
@@ -30,6 +30,7 @@ function Get-XmipPlaygroundLayout {
         Root       = $root
         Playground = $playground
         Roll       = Join-Path -Path $target -ChildPath "xmip-playground-roll$suffix"
+        Cluster    = Join-Path -Path $target -ChildPath "xmip-playground-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
@@ -45,25 +46,35 @@ function Invoke-XmipPlaygroundBuild {
             it prevents.
 
         .PARAMETER Binary
-            `roll` or `node`. The roll spawns the node, so building the roll
-            builds both.
+            `roll`, `cluster` or `node`. The roll spawns the cluster and the
+            cluster spawns the nodes (the owner, 2026-09-19), so building the
+            roll builds all three and building the cluster builds it and the
+            node.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'node')]
+        [ValidateSet('roll', 'cluster', 'node')]
         [string] $Binary
     )
 
     $layout = Get-XmipPlaygroundLayout
-    [string] $path = if ($Binary -eq 'roll') { $layout.Roll } else { $layout.Node }
+    [string] $path = switch ($Binary) {
+        'roll' { $layout.Roll }
+        'cluster' { $layout.Cluster }
+        default { $layout.Node }
+    }
 
     Write-Verbose "cargo build --bin $Binary in $($layout.Playground)"
     Push-Location -LiteralPath $layout.Playground
 
     try {
         [string[]] $bins = @('--bin', 'xmip-playground-node')
+
+        if ($Binary -in 'roll', 'cluster') {
+            $bins += @('--bin', 'xmip-playground-cluster')
+        }
 
         if ($Binary -eq 'roll') {
             $bins += @('--bin', 'xmip-playground-roll')

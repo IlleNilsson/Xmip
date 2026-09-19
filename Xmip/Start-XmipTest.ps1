@@ -27,9 +27,15 @@ function Start-XmipTest {
             the snapshot so Get-XmipTestStatus can say what is running and
             Stop-XmipTest can end it, nodes first.
 
-            The roll and node binaries are built first, a no-op when they are
-            current, so a roll never runs yesterday's scenarios. The roll's own
-            output goes
+            A roll spawns one cluster process and the cluster spawns one
+            process per node (the owner, 2026-09-19: even clusters have to be
+            spawned as processes during tests). Get-XmipProcess shows all
+            three kinds with the location and purpose each declared, and
+            Stop-XmipTest ends the tree from the leaves up.
+
+            The roll, cluster and node binaries are built first, a no-op when
+            they are current, so a roll never runs yesterday's scenarios. The
+            roll's own output goes
             to `roll-<start time>.log` and `.err` under -Path, one line per
             round; the run record `roll-<pid>.toml` beside them says which log
             is whose.
@@ -62,8 +68,9 @@ function Start-XmipTest {
             simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
-            The nodes to simulate, by name — one process each, so
-            -Nodes R1, P1, S1 is three node processes called that. The
+            The nodes to simulate, by name — one process each, spawned by the
+            roll's cluster process, so -Nodes R1, P1, S1 is three node
+            processes called that under one cluster called -Cluster. The
             letter is the role: a node named R... receives, P... processes,
             S... sends, and every node runs its part of the tests you named.
             RoundTrip over role nodes hands each pair R to P to S between
@@ -79,9 +86,10 @@ function Start-XmipTest {
             (ADR-0045), by name. None unless said; each must be in -Nodes.
 
         .PARAMETER Cluster
-            The cluster this roll is (ADR-0028: a roll emulates a cluster),
-            by the name you give it — required: you name the cluster, and a
-            test spawns nodes, never a cluster (the owner, 2026-09-14). The
+            The cluster this roll starts (ADR-0028), by the name you give it
+            — required: you name the cluster, and a test spawns a cluster and
+            its nodes, never invents a name for one (the owner, 2026-09-14
+            and 2026-09-19). The
             scope root is xmip:///<Cluster> and the run publishes to
             <Cluster>-snapshot.toml beside its history and activity. Two
             rolls with two names are two clusters side by side, each with

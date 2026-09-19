@@ -237,3 +237,33 @@ merged and restarted by the roll.
 
 2026-09-19, the owner: what the Playground spawns is a cluster and its nodes;
 the word fleet is retired.
+
+## Amendment, 2026-09-19: even clusters are spawned as processes
+
+The owner: *even clusters have to be spawned as processes during tests.*
+
+Decision 2 says the Playground spawns processes. Until this day the cluster
+was not one of them: `xmip-playground-roll` was both the test and the cluster
+— it declared itself at `xmip:///<Cluster>` and spawned the node processes
+itself. It is now three deep, and each of the three declares itself
+(ADR-0053):
+
+- **the roll is the test.** It chooses the scenarios, sets the stress, runs
+  the tests that stay in its own process, judges, draws the board, and
+  publishes `<Cluster>-snapshot.toml` — the one file the prompt, the CLI and
+  the GUI read, unchanged in path and in shape.
+- **the cluster is a process the roll spawns**, one per roll (this record's
+  rule is untouched: a roll is one cluster). It owns the store its nodes
+  share, spawns and supervises them, restarts one that hangs, merges what each
+  published, adds the rollup at `xmip:///<cluster>/node` that no node can say
+  about itself, and publishes all of it to `<Cluster>-cluster.toml`, which the
+  roll merges.
+- **the nodes are processes the cluster spawns**, as decision 2 and the
+  2026-09-09 amendment already say.
+
+The `stop` file in the shared directory stops the whole tree, and a cluster
+stops its own nodes before it goes, however it is ended; `Stop-XmipTest` ends
+the tree from the leaves up. Nothing is orphaned: `Get-Process xmip-*` is
+empty afterwards.
+
+The details are `test/playground/README.md`, as 3a says.
