@@ -194,6 +194,33 @@ ruling the point was waiting for; the owner confirms or strikes it.
 - **Not done.** `oidc` and `saml` learn nothing new: their names are in the
   token the first gate read, and the second gate already checks them.
 
+## Amendment, 2026-09-19: NTLM's MIC and channel bindings
+
+The same *solve it* covered the other thing left undone. Both were left
+because they need what only the transport holds; the answer is that the
+transport hands it over, as evidence and proofs already travel.
+
+- **The channel is configuration.** `MsvAvChannelBindings` is the MD5 of a
+  `gss_channel_bindings_struct` with empty addresses over
+  `tls-server-end-point:` and the hash of the server's certificate (RFC
+  5929). The node's certificate is the node's own, so the verifier is told
+  it (`bound_to_channel`) and refuses a response bound to another channel,
+  or to none: a response relayed from a TLS connection to someone else.
+- **The MIC rides as proofs.** A transport that keeps the handshake's first
+  two messages writes them as the properties `ntlm.negotiate` and
+  `ntlm.challenge`; `identify/ntlm` carries them on as proofs, and
+  `authenticate/ntlm` derives the exported session key ([MS-NLMP] 3.3.2,
+  3.4.5.1, RC4 where key exchange was negotiated) and verifies the MIC over
+  the three messages. The CHALLENGE presented must be the one the response
+  proved under. `requiring_integrity` refuses a response whose MIC cannot
+  be checked; without it an absent MIC is left alone, as before.
+- **Checked against the published numbers.** The session base key and the
+  decrypted session key are those of [MS-NLMP] 4.2.4, and RC4 is the
+  keystream of RFC 6229.
+- **Not done.** No transport of the estate runs the NTLM handshake, so no
+  transport writes the two properties yet. `tls-server-end-point` is the
+  only channel type built; `tls-unique` is not.
+
 ## Alternatives considered
 
 **Widen `Verified` to carry the evidence.** `Verified` is `Copy`, lives in
