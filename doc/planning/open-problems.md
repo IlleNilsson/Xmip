@@ -511,7 +511,30 @@ retires entries from stops being an order.
                                        green, make the throughput cards real,
                                        and are what the Playground needs to
                                        exercise anything. Blocked on the
-                                       vocabulary question below
+                                       vocabulary question below — and, since
+                                       2026-09-19, on something larger that
+                                       had never been stated: **a node cannot
+                                       use a single technology.**
+                                       `xmip-core-runtime` has sixteen Xmip
+                                       dependencies and not one of them is a
+                                       technology; the root assembly has none
+                                       either; the only place the two hundred
+                                       technologies are linked is
+                                       `test/playground`, with one hundred
+                                       and twenty-three. Nor can they be
+                                       loaded instead of linked: there is no
+                                       loader anywhere — `libloading` appears
+                                       in one of two hundred and forty Cargo
+                                       files, and that one is the VS Code
+                                       extension opening the runtime, the
+                                       other way round. Seven contract
+                                       technologies already fill a real
+                                       vtable and Xmip has never opened one.
+                                       So phases 4-9 have nothing to start
+                                       even once the vocabulary is settled.
+                                       ADR-0057 is where this is worked out,
+                                       and its finding is that a vtable alone
+                                       buys nothing: the loader is the saving
 2. Protocol implementations            eighty-two of eighty-four transports,
                                        every contract, message, route, logic,
                                        resilience, path and archive technology
