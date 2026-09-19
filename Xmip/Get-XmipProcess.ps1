@@ -44,8 +44,15 @@ function Get-XmipProcess {
             A process that declared nothing is still listed, by its name, with
             Declared false: the name is the rule, the declaration the courtesy.
 
+        .PARAMETER Name
+            Only the processes whose name matches, wildcards allowed:
+            -Name 'xmip-playground-*' is a roll, its cluster and its nodes.
+            Every Xmip process unless said.
+
         .PARAMETER Purpose
             Only the processes that declared this purpose: Test or Runtime.
+            Two values and both are offered, so this is a set rather than a
+            pattern (ADR-0055 clause 4).
 
         .PARAMETER Path
             The directory the declarations are in. Defaults to what
@@ -57,10 +64,17 @@ function Get-XmipProcess {
 
         .EXAMPLE
             Get-XmipProcess -Purpose Test | Stop-Process -Force
+
+        .EXAMPLE
+            Get-XmipProcess -Name 'xmip-playground-node'
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
     param(
+        [Parameter()]
+        [SupportsWildcards()]
+        [string] $Name = '*',
+
         [Parameter()]
         [ValidateSet('Test', 'Runtime')]
         [string] $Purpose,
@@ -76,6 +90,10 @@ function Get-XmipProcess {
     [hashtable] $declared = Read-XmipProcessDeclaration -Path $Path
 
     foreach ($process in @(Get-Process -Name 'xmip-*' -ErrorAction SilentlyContinue)) {
+        if ($process.ProcessName -notlike $Name) {
+            continue
+        }
+
         $said = $declared[$process.Id]
         [string] $stated = if ($null -ne $said) { [string] $said['purpose'] } else { '' }
 

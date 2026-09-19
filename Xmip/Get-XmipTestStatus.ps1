@@ -9,7 +9,8 @@ function Get-XmipTestStatus {
             suite, what it was started with and how it stands.
 
         .DESCRIPTION
-            The Playground is the one suite today, and a run of it is a roll.
+            A run of Core.Playground is a roll, and the suite it names is the
+            qualified one it was started with, read back from the run record.
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
@@ -23,17 +24,26 @@ function Get-XmipTestStatus {
             Where the run records are. Defaults to the repository's
             .local-work/playground folder, where Start-XmipTest writes.
 
+        .PARAMETER Cluster
+            Only the runs whose cluster matches, wildcards allowed. Every run
+            unless said. This selects among the runs there are; the cluster is
+            named, not matched, where Start-XmipTest spawns one.
+
         .EXAMPLE
             Get-XmipTestStatus
 
         .EXAMPLE
-            Get-XmipTestStatus | Format-List
+            Get-XmipTestStatus -Cluster 'Z*' | Format-List
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
     param(
         [Parameter()]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter()]
+        [SupportsWildcards()]
+        [string] $Cluster = '*'
     )
 
     $ErrorActionPreference = 'Stop'
@@ -63,6 +73,12 @@ function Get-XmipTestStatus {
             $record = Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Toml
         }
 
+        [string] $rolledAs = Get-XmipDeclaredText -Declaration $record -Key 'cluster'
+
+        if ($rolledAs -notlike $Cluster) {
+            continue
+        }
+
         [string] $snapshot = if ($null -ne $record) { $record.snapshot } else { '' }
         $worst = if (Test-Path -LiteralPath $snapshot) {
             Get-XmipTestResult -Path $snapshot -Worst
@@ -71,15 +87,15 @@ function Get-XmipTestStatus {
         [object[]] $mine = @($nodes | Where-Object { $_.Parent -eq $roll.Id })
         [object[]] $online = @($mine | Where-Object { $_.Online })
 
+        # The suite the run was started with, qualified, from the record that
+        # carries it. A roll started by hand has no record and is the
+        # Playground by the binary it is.
+        [string] $named = Get-XmipDeclaredText -Declaration $record -Key 'suite'
+
         [PSCustomObject]@{
             PSTypeName  = 'Xmip.TestStatus'
-            Suite       = 'Playground'
-            Cluster     = if ($null -ne $record -and $record.cluster) {
-                $record.cluster
-            }
-            else {
-                $null
-            }
+            Suite       = if ($named -ne '') { $named } else { $script:XmipPlaygroundSuite }
+            Cluster     = if ($rolledAs -ne '') { $rolledAs } else { $null }
             Id          = $roll.Id
             StartTime   = $roll.StartTime
             Stress      = if ($null -ne $record) { $record.stress } else { $null }

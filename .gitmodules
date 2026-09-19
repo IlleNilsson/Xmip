@@ -50,10 +50,6 @@
 	path = module/capability/demote
 	url = https://github.com/IlleNilsson/xmip-core-demote.git
 	ignore = dirty
-[submodule "modules/operations/diagnose"]
-	path = module/operation/diagnose
-	url = https://github.com/IlleNilsson/xmip-core-diagnose.git
-	ignore = dirty
 [submodule "modules/foundation/event"]
 	path = module/foundation/event
 	url = https://github.com/IlleNilsson/xmip-core-event.git
@@ -77,10 +73,6 @@
 [submodule "modules/foundation/message"]
 	path = module/foundation/message
 	url = https://github.com/IlleNilsson/xmip-core-message.git
-	ignore = dirty
-[submodule "modules/capabilities/migrate"]
-	path = module/capability/migrate
-	url = https://github.com/IlleNilsson/xmip-core-migrate.git
 	ignore = dirty
 [submodule "modules/foundation/node"]
 	path = module/foundation/node
@@ -141,10 +133,6 @@
 [submodule "modules/platform/runtime"]
 	path = module/platform/runtime
 	url = https://github.com/IlleNilsson/xmip-core-runtime.git
-	ignore = dirty
-[submodule "modules/platform/schedule"]
-	path = module/platform/schedule
-	url = https://github.com/IlleNilsson/xmip-core-schedule.git
 	ignore = dirty
 [submodule "modules/capabilities/send"]
 	path = module/capability/send

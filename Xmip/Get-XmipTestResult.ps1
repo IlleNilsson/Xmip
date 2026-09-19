@@ -10,7 +10,8 @@ function Get-XmipTestResult {
             and the evidence.
 
         .DESCRIPTION
-            The Playground is the one suite today, and a run of it is a roll.
+            A snapshot is published by a roll, so what this reads is
+            Core.Playground's and says so.
             Reads the snapshot TOML a roll writes after every round (ADR-0028
             clause 4: a verdict is health, per scope) and emits one object per
             record, with the scope split into what an operator filters on.
@@ -32,6 +33,7 @@ function Get-XmipTestResult {
             Only these tests, by the names Start-XmipTest takes: RoundTrip,
             LowLatency, HeavyLoad, Retention, Filing, ExclusiveClaim,
             DailyBacklog; or node, for the cluster's rollup of its nodes.
+            Wildcards allowed, as -Node takes them.
 
         .PARAMETER Node
             Only records published by these nodes, wildcards allowed.
@@ -52,6 +54,7 @@ function Get-XmipTestResult {
         [string] $Path,
 
         [Parameter()]
+        [SupportsWildcards()]
         [string[]] $Test,
 
         [Parameter()]
@@ -85,8 +88,12 @@ function Get-XmipTestResult {
         foreach ($record in @($document.records)) {
             $result = ConvertTo-XmipTestResult -Record $record -Root $root
 
-            if ($PSBoundParameters.ContainsKey('Test') -and $result.Test -notin $Test) {
-                continue
+            if ($PSBoundParameters.ContainsKey('Test')) {
+                [bool] $wanted = @($Test | Where-Object { $result.Test -like $_ }).Count -gt 0
+
+                if (-not $wanted) {
+                    continue
+                }
             }
 
             if ($PSBoundParameters.ContainsKey('Node')) {
@@ -155,7 +162,7 @@ function ConvertTo-XmipTestResult {
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestResult'
-        Suite      = 'Playground'
+        Suite      = $script:XmipPlaygroundSuite
         Test       = ConvertTo-XmipTestName -Scenario $scenario
         Scenario   = $scenario
         Node       = $node

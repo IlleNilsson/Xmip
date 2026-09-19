@@ -35,7 +35,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # Playground is one suite Xmip provides, and a transport's or a
         # contract's suite may join it. He voted for Start, not Invoke: Invoke
         # is for crossing a boundary — a language, a process, a computer — and
-        # a test run crosses none. The Pester door is -Suite Estate.
+        # a test run crosses none. The Pester door is -Suite Core.Estate.
         foreach ($name in 'Start-XmipTest', 'Get-XmipTestStatus', 'Stop-XmipTest') {
             Get-Command -Module Xmip -Name $name | Should -Not -BeNullOrEmpty
         }
@@ -66,14 +66,56 @@ Describe 'Start, Get and Stop, and nothing else' {
         $position.Test | Should -Be 1
     }
 
-    It 'offers the Playground and the estate suite, Playground first' {
-        [string[]] $suites = @(
-            (Get-Command -Name Start-XmipTest).Parameters['Suite'].Attributes |
-                Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } |
-                ForEach-Object { $_.ValidValues }
+    It 'offers the Playground and the estate suite qualified, Playground first' {
+        # ADR-0059: a suite carries its provider, and which suites there are
+        # cannot be a ValidateSet, since a provider declares its own. The shape
+        # is the door; the completer is the offer (ADR-0055 clauses 1 and 4).
+        $parameter = (Get-Command -Name Start-XmipTest).Parameters['Suite']
+
+        $parameter.Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } |
+            Should -BeNullOrEmpty -Because 'a third party''s suite is not knowable here'
+
+        $completer = $parameter.Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] } |
+            Select-Object -First 1
+
+        [string[]] $offered = @(
+            $completer.ScriptBlock.Invoke('Start-XmipTest', 'Suite', '', $null, @{})
         )
 
-        $suites | Should -Be @('Playground', 'Estate')
+        $offered | Should -Be @('Core.Playground', 'Core.Estate')
+    }
+
+    It 'refuses a suite that names no provider, at the door, and says what would be right' {
+        # The owner, 2026-09-19: -Suite Playground shall need Core.Playground,
+        # to make room for Acme.Playground. A bare name is refused by the
+        # parameter, before the body runs at all.
+        { Start-XmipTest -Suite Playground -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*REFUSED. A suite is <Provider>.<Name>*'
+        { Start-XmipTest -Suite Playground -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*Did you mean Core.Playground?*'
+        { Start-XmipTest -Suite 'Core.' -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*REFUSED*'
+    }
+
+    It 'refuses a qualified suite nobody provides, naming the suites there are' {
+        [string] $expected = '*REFUSED. No test suite is called Acme.Playground*' +
+            'Core.Playground, Core.Estate*'
+
+        { Start-XmipTest -Suite Acme.Playground -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage $expected
+    }
+
+    It 'takes the suite however it is cased, and writes it back the one way' {
+        InModuleScope Xmip {
+            [object[]] $known = @(Get-XmipTestSuite)
+
+            Get-XmipTestSuiteRefusal -Name 'core.playground' -Known $known | Should -Be ''
+            Get-XmipTestSuiteRefusal -Name 'CORE.ESTATE' -Known $known | Should -Be ''
+            @($known | Where-Object { $_.Name -ieq 'core.playground' })[0].Name |
+                Should -Be 'Core.Playground'
+        }
     }
 
     It 'runs the estate suite in its own runspace, never in the module it tests' {
@@ -88,8 +130,8 @@ Describe 'Start, Get and Stop, and nothing else' {
     }
 
     It 'refuses Playground switches on the estate suite' {
-        { Start-XmipTest -Suite Estate -Stress Harsh -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*belong to the Playground suite*'
+        { Start-XmipTest -Suite Core.Estate -Stress Harsh -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*belong to Core.Playground, not Core.Estate*'
     }
 
     It 'rehearses every Start and Stop with -WhatIf' {
@@ -226,13 +268,13 @@ Describe 'The environment a roll is started with' {
             ConvertTo-XmipTestName -Scenario 'low-latency' | Should -Be 'LowLatency'
             ConvertTo-XmipTestName -Scenario 'node' | Should -Be 'node'
             { ConvertTo-XmipPlaygroundScenario -Test 'Typo' } |
-                Should -Throw -ExpectedMessage '*No Playground test*'
+                Should -Throw -ExpectedMessage 'REFUSED. No test matches Typo*'
         }
     }
 
     It 'refuses a roll without a cluster name, since the owner names the cluster' {
         # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
-        { Start-XmipTest -Suite Playground -Nodes R1 -ErrorAction Stop } |
+        { Start-XmipTest -Suite Core.Playground -Nodes R1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*you name it*'
         (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
@@ -331,6 +373,214 @@ Describe 'The environment a roll is started with' {
 
         foreach ($variable in $documented) {
             $builder | Should -Match $variable -Because "the roll reads $variable"
+        }
+    }
+}
+
+Describe 'A suite carries its provider' {
+    It 'reads a provider''s declaration and makes room for Acme.Playground' {
+        # ADR-0059, and the point of the whole change: a third party adds a
+        # suite by dropping a file, with no edit to Xmip's own source.
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            [string] $area = Join-Path $Area 'suite'
+            New-Item -ItemType Directory -Path $area | Out-Null
+            Set-Content -LiteralPath (Join-Path $area 'acme.toml') -Encoding utf8 -Value @(
+                'provider = "Acme"'
+                'name = "Playground"'
+                'command = "Start-AcmeXmipTest"'
+            )
+
+            [object[]] $known = @(Get-XmipTestSuite -Path $area)
+
+            @($known | ForEach-Object { $_.Name }) |
+                Should -Be @('Core.Playground', 'Core.Estate', 'Acme.Playground')
+            $known[2].Kind | Should -Be 'command'
+            $known[2].Command | Should -Be 'Start-AcmeXmipTest'
+            $known[2].Provider | Should -Be 'Acme'
+            Get-XmipTestSuiteRefusal -Name 'acme.playground' -Known $known | Should -Be ''
+        }
+    }
+
+    It 'warns a half-written declaration by name, and keeps the other suites' {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            [string] $area = Join-Path $Area 'bad'
+            New-Item -ItemType Directory -Path $area | Out-Null
+            [string] $file = Join-Path $area 'half.toml'
+            Set-Content -LiteralPath $file -Encoding utf8 -Value @(
+                'provider = "Acme"'
+                'name = "Playground"'
+            )
+
+            [object[]] $read = @(
+                Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
+            )
+            "$said" | Should -BeLike '*REFUSED*declares no command*'
+            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
+
+            Set-Content -LiteralPath $file -Encoding utf8 -Value @(
+                'provider = "core"'
+                'name = "Playground"'
+                'command = "Start-AcmeXmipTest"'
+            )
+
+            [object[]] $read = @(
+                Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
+            )
+            "$said" | Should -BeLike '*REFUSED*reserved for Xmip itself*'
+            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
+
+            Set-Content -LiteralPath $file -Encoding utf8 -Value @(
+                'provider = "Acme Ltd"'
+                'name = "Playground"'
+                'command = "Start-AcmeXmipTest"'
+            )
+
+            [object[]] $read = @(
+                Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
+            )
+            "$said" | Should -BeLike '*REFUSED*which is not a name*'
+            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
+        }
+    }
+
+    It 'starts a provider''s suite through the command it declared, and refuses one it has not' {
+        InModuleScope Xmip {
+            [hashtable] $made = @{
+                Provider = 'Acme'
+                Name     = 'Playground'
+                Kind     = 'command'
+                Command  = 'Start-AcmeXmipTest'
+                Source   = 'acme.toml'
+            }
+            $acme = New-XmipTestSuite @made
+
+            { Start-XmipProviderSuite -Suite $acme -Bound @{} -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED. Acme.Playground starts with*'
+
+            # The provider's own command, once this session has it. -Test is
+            # handed on only when tests were named: nothing named is the whole
+            # suite, and the provider's command is called as it would be by
+            # hand for a full run.
+            function global:Start-AcmeXmipTest {
+                param($Cluster, $Test)
+
+                return "acme:$Cluster`:$($Test -join ',')"
+            }
+
+            try {
+                [hashtable] $whole = @{ Cluster = 'Z9'; Test = @() }
+                Start-XmipProviderSuite -Suite $acme -Bound $whole | Should -Be 'acme:Z9:'
+
+                [hashtable] $named = @{ Cluster = 'Z9'; Test = @('Smoke') }
+                Start-XmipProviderSuite -Suite $acme -Bound $named | Should -Be 'acme:Z9:Smoke'
+            }
+            finally {
+                Remove-Item -LiteralPath 'function:global:Start-AcmeXmipTest' -Force
+            }
+        }
+    }
+
+    It 'runs the whole suite when no test is named, for every suite and every provider' {
+        # The owner, 2026-09-19: -Suite with -Test excluded means run all
+        # tests in the suite. One rule, one place, not two behaviors that
+        # happen to agree.
+        InModuleScope Xmip {
+            Test-XmipWholeSuite | Should -BeTrue
+            Test-XmipWholeSuite -Test @() | Should -BeTrue
+            Test-XmipWholeSuite -Test @('') | Should -BeTrue
+            Test-XmipWholeSuite -Test 'HeavyLoad' | Should -BeFalse
+
+            # Core.Playground: no scenarios named is every scenario, which the
+            # roll reads from the variable being unset.
+            $whole = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $environment = New-XmipPlaygroundEnvironment @whole
+
+            $environment.ContainsKey('XMIP_PLAYGROUND_SCENARIOS') | Should -BeFalse
+            (New-XmipPlaygroundEnvironment @whole -Test HeavyLoad).XMIP_PLAYGROUND_SCENARIOS |
+                Should -Be 'heavy-load'
+
+            # Core.Estate: no file named is every *.Test.ps1 under test/, and
+            # the same predicate is what decides it there.
+            [string] $path = Join-Path (Get-XmipRepositoryRoot) 'Xmip/Start-XmipTest.ps1'
+            [string] $door = Get-Content -Raw -LiteralPath $path
+
+            $door | Should -Match 'if \(-not \(Test-XmipWholeSuite -Test \$Test\)\) \{'
+        }
+    }
+
+    It 'selects tests with wildcards, and -Test * says what omitting it says' {
+        # The owner, 2026-09-19: use wild characters for parameters, for
+        # instance -Test *. Wildcards and not regular expressions (ADR-0059):
+        # Rust.Style is a test name and the dot in it is a dot.
+        InModuleScope Xmip {
+            [string[]] $seven = @($script:XmipPlaygroundTest.Keys)
+
+            Expand-XmipTestName -Test 'Round*' -Known $seven | Should -Be @('RoundTrip')
+            @(Expand-XmipTestName -Test '*' -Known $seven).Count | Should -Be $seven.Count
+            Expand-XmipTestName -Test 'Heavy*', 'Heavy*' -Known $seven |
+                Should -Be @('HeavyLoad') -Because 'a test named twice runs once'
+
+            # The dot is a dot. Under a regular expression Rust.Style would
+            # take RustXStyle with it; under a wildcard it takes only itself.
+            [string[]] $files = @('Rust.Style', 'RustXStyle', 'XmipTest')
+            Expand-XmipTestName -Test 'Rust.Style' -Known $files | Should -Be @('Rust.Style')
+
+            { Expand-XmipTestName -Test 'Nope*' -Known $seven } |
+                Should -Throw -ExpectedMessage 'REFUSED. No test matches Nope**RoundTrip*'
+
+            ConvertTo-XmipPlaygroundScenario -Test 'Round*' | Should -Be @('round-trip')
+
+            # -Test * is the whole suite, exactly as omitting it is: neither
+            # sets XMIP_PLAYGROUND_SCENARIOS, which is how the roll is told.
+            $whole = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $star = New-XmipPlaygroundEnvironment @whole -Test '*'
+            $none = New-XmipPlaygroundEnvironment @whole
+
+            $star.ContainsKey('XMIP_PLAYGROUND_SCENARIOS') | Should -BeFalse
+            @($star.Keys | Sort-Object) | Should -Be @($none.Keys | Sort-Object)
+            Test-XmipWholeSuite -Test '*' | Should -BeTrue
+        }
+    }
+
+    It 'takes wildcards where a parameter filters, and not where one names' {
+        # The owner's rule, 2026-09-19: a filter takes wild characters; a
+        # parameter that names what to spawn does not. [SupportsWildcards()]
+        # is how a parameter announces it, and Get-Help shows it.
+        [hashtable] $filters = @{
+            'Start-XmipTest'     = @('Test')
+            'Get-XmipTestResult' = @('Test', 'Node')
+            'Get-XmipTestStatus' = @('Cluster')
+            'Stop-XmipTest'      = @('Cluster')
+            'Get-XmipTestNode'   = @('Name')
+            'Get-XmipProcess'    = @('Name')
+        }
+
+        [type] $wild = [System.Management.Automation.SupportsWildcardsAttribute]
+
+        foreach ($command in $filters.Keys) {
+            foreach ($parameter in $filters[$command]) {
+                $said = (Get-Command -Name $command).Parameters[$parameter].Attributes |
+                    Where-Object { $_ -is $wild }
+
+                $said | Should -Not -BeNullOrEmpty -Because "$command -$parameter filters"
+            }
+        }
+
+        # Named, not matched: -Suite must stay exact or "which provider did I
+        # run" has no answer, and -Nodes and -Cluster on Start-XmipTest name
+        # what to spawn.
+        foreach ($named in 'Suite', 'Nodes', 'Cluster') {
+            $said = (Get-Command -Name Start-XmipTest).Parameters[$named].Attributes |
+                Where-Object { $_ -is $wild }
+
+            $said | Should -BeNullOrEmpty -Because "-$named names, it does not filter"
         }
     }
 }
@@ -438,6 +688,15 @@ observed_unix_nanos = 1789208338038783900
         (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }
 
+    It 'takes a wildcard where it takes a test name' {
+        # The owner, 2026-09-19: wild characters on a filter parameter.
+        @(Get-XmipTestResult -Path $script:Snapshot -Test 'Round*').Count | Should -Be 2
+        @(Get-XmipTestResult -Path $script:Snapshot -Test '*').Count | Should -Be 4
+        @(Get-XmipTestResult -Path $script:Snapshot -Test 'Exclusive*', 'node').Count |
+            Should -Be 2
+        @(Get-XmipTestResult -Path $script:Snapshot -Test 'Nope*').Count | Should -Be 0
+    }
+
     It 'takes the directory the snapshot is in' {
         @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 4
     }
@@ -464,12 +723,12 @@ Describe 'A cluster rolls once' {
 
             # 2026-09-18: three rolls as CC1 overwrote one another's snapshot.
             Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
-                'suite = "playground"'
+                'suite = "Core.Playground"'
                 'cluster = "CC1"'
                 'pid = 4242'
             )
             Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
-                'suite = "playground"'
+                'suite = "Core.Playground"'
                 'cluster = "CC10"'
                 'pid = 4343'
             )
@@ -501,7 +760,7 @@ Describe 'What a web host reads' {
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
             Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
             Mock -CommandName Get-XmipTestStatus -MockWith {
-                [PSCustomObject]@{ Suite = 'Playground'; Cluster = 'C1' }
+                [PSCustomObject]@{ Suite = 'Core.Playground'; Cluster = 'C1' }
             }
 
             Start-XmipOperationWeb -WarningVariable said -WarningAction SilentlyContinue

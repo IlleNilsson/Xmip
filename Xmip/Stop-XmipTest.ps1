@@ -26,8 +26,17 @@ function Stop-XmipTest {
         .PARAMETER Id
             The process ids of the runs to stop.
 
+        .PARAMETER Cluster
+            The runs to stop by the cluster each rolls as, wildcards allowed:
+            -Cluster Z* stops every roll whose cluster begins with Z. A
+            pattern no roll matches is REFUSED, naming the clusters rolling,
+            so nothing is stopped by accident and nothing silently is not.
+
         .EXAMPLE
             Stop-XmipTest
+
+        .EXAMPLE
+            Stop-XmipTest -Cluster 'Z*'
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |
@@ -44,7 +53,11 @@ function Stop-XmipTest {
         [PSObject[]] $Test,
 
         [Parameter(ParameterSetName = 'Id', Mandatory)]
-        [int[]] $Id
+        [int[]] $Id,
+
+        [Parameter(ParameterSetName = 'Cluster', Mandatory)]
+        [SupportsWildcards()]
+        [string] $Cluster
     )
 
     begin {
@@ -69,6 +82,25 @@ function Stop-XmipTest {
 
         if ($PSCmdlet.ParameterSetName -eq 'All') {
             $targets.AddRange([int[]] @($running | ForEach-Object { $_.Id }))
+        }
+
+        if ($PSCmdlet.ParameterSetName -eq 'Cluster') {
+            [object[]] $picked = @($running | Where-Object { "$($_.Cluster)" -like $Cluster })
+
+            if ($picked.Count -eq 0) {
+                [string] $rolling = @($running | ForEach-Object { $_.Cluster }) -join ', '
+                [string] $there = if ($rolling) {
+                    "Rolling now: $rolling."
+                }
+                else {
+                    'Nothing is rolling.'
+                }
+
+                Write-Error "REFUSED. No roll matches $Cluster. $there"
+                return
+            }
+
+            $targets.AddRange([int[]] @($picked | ForEach-Object { $_.Id }))
         }
 
         foreach ($number in @($targets | Sort-Object -Unique)) {

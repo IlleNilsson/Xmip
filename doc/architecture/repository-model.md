@@ -64,7 +64,7 @@ layout's home). The scoping error was mine: ADR-0011 is about names.*
 | **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
-| **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-schedule` |
+| **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist` |
 
 **The test between Foundation and Platform is the lifecycle** (ADR-0058).
 Foundation is what Xmip *is* — a noun that is true of a Message, a Journey or
@@ -410,13 +410,12 @@ Xmip/
 │   ├── capability/
 │   │   ├── receive   send   transport   logic   prepare   identify
 │   │   ├── authenticate   authorize   contract   path   assign   promote
-│   │   ├── demote   transform   route   process   retain   migrate
-│   │   └── resilience
+│   │   └── demote   transform   route   process   retain   resilience
 │   ├── operation/
-│   │   ├── audit   observe   report   archive   diagnose
+│   │   ├── audit   observe   report   archive
 │   │   └── cli   powershell   gui
 │   └── platform/
-│       └── runtime   configure   persist   schedule
+│       └── runtime   configure   persist
 ├── test/
 │   └── playground   the Xmip Playground, ADR-0028
 └── template/
@@ -424,12 +423,17 @@ Xmip/
     └── dotnet   what a .NET one is
 ```
 
-The tree is drawn from `architecture.toml` as of 2026-09-14 and the manifest
+The tree is drawn from `architecture.toml` as of 2026-09-19 and the manifest
 wins where they differ: `Sync-XmipEstate -Compose` mounts what the manifest
 declares, at the domain the manifest gives it. (`retain` sat under
-`operation/` here until that day, a month after it became a Capability, and
+`operation/` here until 2026-09-14, a month after it became a Capability, and
 four modules were missing — the drawing had rotted exactly as clause 5 of
 ADR-0020 predicts a drawing will.)
+
+*Redrawn 2026-09-19. `migrate`, `diagnose` and `schedule` left the tree that
+day: three repositories with no implementation, unmounted on the owner's
+instruction. ADR-0058, amendment 2026-09-19. The estate mounts forty-one
+modules.*
 
 **The templates are submodules of the estate, not neighbors of it.** They sat
 beside `Xmip/` until 2026-08-29, which meant cloning the estate did not get

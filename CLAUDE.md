@@ -13,7 +13,7 @@ The estate is governed by its own records, and they are current:
   is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
   ADR-0025 module loading. Do not contradict an accepted record; propose a new
   one or an amendment, and let the owner decide.
-- `doc/architecture/` — five models. `repository-model.md` explains why 44
+- `doc/architecture/` — five models. `repository-model.md` explains why 41
   submodules mount where they do.
 - `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
   `test/*.Test.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
@@ -35,7 +35,7 @@ One command tests and lands everything, dependency order, modules first:
 
 Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
 before anything depending on it can be verified — the tool handles the order.
-Run `Start-XmipTest -Suite Estate` before landing anything non-trivial; the
+Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial; the
 suite is ~96 tests and is the estate's memory of every past defect. pwsh 7.6.5,
 PSToml and posh-git required. Rust builds with stable cargo; C# builds with the
 .NET 11 preview SDK but the PowerShell binary module targets net10.0 because
@@ -67,7 +67,7 @@ and it cost real work.
   record or the file itself.
 - Full paths when naming files to the owner.
 - The estate ends every session square: everything committed, everything
-  pushed, `git status` clean in all 44 submodules and the superproject.
+  pushed, `git status` clean in all 41 submodules and the superproject.
   `Get-XmipStatus` shows the whole estate at once.
 
 ## The assistant's working area

@@ -280,3 +280,56 @@ reopened here.
 
 The record is Proposed rather than Accepted until the owner says so, and the
 move it describes is on disk and uncommitted for him to read first.
+
+## Amendment, 2026-09-19: clause 7 is superseded — three empty mounts are gone
+
+The owner, 2026-09-19, told that `module/platform/schedule` is a six-line
+stub: *So delete what we do not need, we are in a design phase.*
+
+**Clause 7 above is superseded.** It kept `xmip-core-schedule` *on notice*,
+and the alternative it rejected — *Retire `xmip-core-schedule`* — is the one
+now taken. The reasoning of clause 7 was that retiring it would delete the
+only place that work is declared. That is not what happened and not what the
+clause weighed: the work is declared in open problem 23 and in the recovery
+model, and those declarations are untouched. What is gone is the mount.
+
+Three repositories go, not one. Each held a single `lib.rs` whose entire body
+was a doc comment ending *"No public ... API is implemented yet"*, and nothing
+in the estate depended on any of them in code:
+
+- `xmip-core-migrate`, mounted at `module/capability/migrate`, with ten
+  technologies declared under it and none written.
+- `xmip-core-diagnose`, mounted at `module/operation/diagnose`.
+- `xmip-core-schedule`, mounted at `module/platform/schedule`.
+
+**A repository that holds no implementation is a name the estate pays for on
+every clone, every landing and every survey** — a recursive submodule update
+fetches it, `Publish-XmipChange` orders it, `Get-XmipStatus`
+reports it, and the Rust style rule measures it. It buys nothing back, because
+the name it reserves is already kept by the record that plans the work.
+Declaring a thing and mounting a thing are two acts, and only the second one
+has a running cost.
+
+**The three GitHub repositories still exist and are untouched.** Only their
+mounts are gone. `architecture.toml` moves each to `[[retired]]`, which is the
+estate's own mechanism for a repository that is archived rather than deleted —
+without it the retirement reports as drift forever (ADR-0024, and the
+`xmip-core-exclusiveness` episode that taught the estate retiring and
+unmounting are separate actions). Nothing in this record deletes a repository;
+repository-model.md section 8 still holds, and whether these three should be
+deleted on GitHub is the owner's call and nobody else's.
+
+**What brings each back is a first implementation.** Write one, and
+`Sync-XmipEstate` re-creates the declaration and `-Compose` re-mounts it at the
+domain the manifest gives it. For `schedule` that first implementation waits on
+a `RuntimeStore` backend, exactly as clause 7 said — a trigger with nowhere
+durable to record that it fired is a demonstration, not a scheduler.
+
+Counts, against the Consequences above: `module/platform/` holds three mounts,
+not four; `module/capability/` eighteen, not nineteen; `module/operation/`
+seven, not eight. The estate is forty-one submodules, not forty-four. The
+manifest declares 330 repositories, not 343 — the ten unwritten `migrate`
+technologies go with their parent.
+
+Status stays Proposed. This amendment is the assistant's drafting on the
+owner's instruction, which is quoted above in his words.

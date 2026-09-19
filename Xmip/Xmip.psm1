@@ -898,6 +898,7 @@ function Test-XmipManifest {
 # this machine: Start, Get and Stop for
 # each of the roll, the emulated nodes and the web host, and Get for what a run
 # says. Nothing in the estate starts any of them on its own (owner, 2026-09-12).
+. (Join-Path $PSScriptRoot 'Get-XmipTestSuite.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeCapability.ps1')
