@@ -83,6 +83,15 @@ function Start-XmipOperationWeb {
         }
     }
 
+    # Asked to follow what the pipeline names, and it named nothing: no roll
+    # is running. An empty host would answer and show nothing (the owner's
+    # console, 2026-09-19).
+    if ($arguments.Count -eq 1 -and $PSCmdlet.MyInvocation.ExpectingInput) {
+        Write-Error ('REFUSED. The pipeline named no run to follow: nothing is rolling. ' +
+            'Start-XmipTest first.')
+        return
+    }
+
     # The surface is stated, never guessed (ADR-0052 clause 3), so a roll is
     # not followed unasked. But a host that will not show the roll beside it
     # says so, and says how (the owner's console, twice, 2026-09-19).
