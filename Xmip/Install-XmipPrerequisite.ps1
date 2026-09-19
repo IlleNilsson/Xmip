@@ -158,7 +158,25 @@ function Install-XmipPrerequisite {
             return $true
         }
 
-        [version] $required = [version]::Parse($Minimum)
+        # A floor may be written the way a person says it: Java's is "21", and
+        # [version] needs two components, so [version]'21' throws. Before
+        # 2026-09-19 that exception ended the whole run at the first such
+        # entry, and every prerequisite after it went unreported — javac was
+        # installed, and python and libudev were never reached. A floor this
+        # cannot read is the manifest's defect and is said so (ADR-0055); it
+        # never stops the machine being surveyed.
+        [string] $floor = $Minimum.Trim()
+
+        if ($floor -match '^\d+$') {
+            $floor = "$floor.0"
+        }
+
+        [version] $required = $null
+
+        if (-not [version]::TryParse($floor, [ref] $required)) {
+            Write-Warning "UNREADABLE FLOOR: $Name declares '$Minimum', which is no version."
+            return $true
+        }
 
         if ($actual -ge $required) {
             return $true
