@@ -10,7 +10,7 @@ function Start-XmipTestNode {
 
         .DESCRIPTION
             Each node is one process of the Playground's node binary (ADR-0028
-            clause 2), running the claim and daily scenarios over a directory
+            clause 2), running the ExclusiveClaim and DailyBacklog tests over a directory
             the whole set shares, so the contention is between real processes.
             Each publishes its own snapshot under -Path and writes its own
             log beside it. The processes are detached; Get-XmipTestNode

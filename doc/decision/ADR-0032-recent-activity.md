@@ -65,7 +65,7 @@ history. A scope with nothing recent says so.
   them; the file surface and, later, the runtime publish them; the GUIs, CLI and
   ABI read them.
 - The Playground publishes a Stream and a Message per round — the two ends each
-  pingpong drives. It publishes **no Journeys**: it exercises transport and
+  RoundTrip drives. It publishes **no Journeys**: it exercises transport and
   contract, not processing, so there is no Journey to show until a real node
   runs. The view says so rather than inventing one.
 - Bounded like history, for the same reason: a node runs for weeks, and the list
