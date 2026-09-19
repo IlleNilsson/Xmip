@@ -300,6 +300,7 @@ The design record starts at:
 - [`doc/architecture/runtime-model.md`](doc/architecture/runtime-model.md)
 - [`doc/architecture/module-model.md`](doc/architecture/module-model.md)
 - [`doc/architecture/repository-model.md`](doc/architecture/repository-model.md)
+- [`doc/architecture/estate-map.md`](doc/architecture/estate-map.md)
 - [`doc/architecture/deployment-model.md`](doc/architecture/deployment-model.md)
 - [`doc/architecture/observability-model.md`](doc/architecture/observability-model.md)
 - [`doc/decision/README.md`](doc/decision/README.md)
@@ -629,6 +630,7 @@ record; propose a new one or an amendment.
 | [`doc/terminology.md`](doc/terminology.md) | the vocabulary |
 | [`architecture/runtime-model.md`](doc/architecture/runtime-model.md) | what Xmip does at runtime |
 | [`architecture/repository-model.md`](doc/architecture/repository-model.md) | why the estate is shaped as it is |
+| [`architecture/estate-map.md`](doc/architecture/estate-map.md) | every declared repository, and whether it is mounted — generated |
 | [`architecture/module-model.md`](doc/architecture/module-model.md) | the module boundary, loading and isolation |
 | [`architecture/deployment-model.md`](doc/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
 | [`architecture/observability-model.md`](doc/architecture/observability-model.md) | audit, logs, traces, retention, observation |

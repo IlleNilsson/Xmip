@@ -892,6 +892,8 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Sync-XmipRepository.ps1')
 . (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipDecisionIndex.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEstateRepository.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipEstateMap.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipHistory.ps1')
 
 # Xmip's test suites — the Playground is the first — and the web monitor on
@@ -931,6 +933,8 @@ function Test-XmipManifest {
     'Get-XmipStatus'
     'Get-XmipDecisionRecord'
     'New-XmipDecisionIndex'
+    'Get-XmipEstateRepository'
+    'New-XmipEstateMap'
     'Get-XmipHistory'
     'Start-XmipTest'
     'Get-XmipTestStatus'
