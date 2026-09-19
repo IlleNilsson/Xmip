@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-function Get-XmipWeb {
+function Get-XmipOperationWeb {
     <#
         .SYNOPSIS
             The Xmip web monitors running on this machine: address, the
@@ -15,7 +15,7 @@ function Get-XmipWeb {
             when the surface is a snapshot. Nothing running means no output.
 
         .EXAMPLE
-            Get-XmipWeb
+            Get-XmipOperationWeb
     #>
     [CmdletBinding()]
     [OutputType('Xmip.Web')]
@@ -30,11 +30,11 @@ function Get-XmipWeb {
     )
 
     foreach ($process in $hosts) {
-        ConvertTo-XmipWeb -Process $process
+        ConvertTo-XmipOperationWeb -Process $process
     }
 }
 
-function ConvertTo-XmipWeb {
+function ConvertTo-XmipOperationWeb {
     <#
         .SYNOPSIS
             One web host process as the Xmip.Web object the web cmdlets emit.
@@ -47,19 +47,24 @@ function ConvertTo-XmipWeb {
     )
 
     [string] $line = try { "$($Process.CommandLine)" } catch { '' }
-    [string] $surface = Read-XmipWebArgument -CommandLine $line -Name 'Xmip:Surface'
+    [string] $surface = Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Surface'
+
+    $url = @{
+        CommandLine = $line
+        Name        = 'Kestrel:Endpoints:Http:Url'
+    }
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.Web'
         Id         = $Process.Id
-        Url        = Read-XmipWebArgument -CommandLine $line -Name 'Kestrel:Endpoints:Http:Url'
+        Url        = Read-XmipOperationWebArgument @url
         Surface    = if ([string]::IsNullOrEmpty($surface)) { 'configured' } else { $surface }
-        Snapshot   = Read-XmipWebArgument -CommandLine $line -Name 'Xmip:Snapshot'
+        Snapshot   = Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Snapshot'
         StartTime  = $Process.StartTime
     }
 }
 
-function Read-XmipWebArgument {
+function Read-XmipOperationWebArgument {
     <#
         .SYNOPSIS
             The value of one `--Name=value` argument on a web host's command

@@ -227,7 +227,7 @@ applied to the GUI as it stands.
    scope root is `xmip:///<cluster>`, its nodes hang under it, it publishes
    to `<cluster>-snapshot.toml` and keeps its own scratch, so two rolls are
    two clusters side by side, each with its own web monitor
-   (`Start-XmipTest -Cluster C2 -PassThru | Start-XmipWeb -Url ...`).
+   (`Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...`).
    One page navigating between them is what stays queued.
    What the playground topology draws is what the owner is after, in his
    words: **the fleet, the shared store, one process per node**. For the
@@ -279,7 +279,7 @@ applied to the GUI as it stands.
    playground still runs every stage on every node, so the letter there is
    what the node is for, not what it is limited to.
 7. **Nothing on a page starts anything, and the page's own words when the
-   circuit drops.** No browser starts a web server: `Start-XmipWeb` starts
+   circuit drops.** No browser starts a web server: `Start-XmipOperationWeb` starts
    the web host, detached, and opens no browser; a page that appears to
    start a server was started by a tool outside the estate. When the
    circuit between the page and its host drops, the page says so in the

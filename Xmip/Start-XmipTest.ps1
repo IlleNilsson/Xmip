@@ -80,7 +80,7 @@ function Start-XmipTest {
             <Cluster>-snapshot.toml beside its history and activity. Two
             rolls with two names are two clusters side by side, each with
             its own web GUI:
-            Start-XmipTest -Cluster C2 -PassThru | Start-XmipWeb -Url ...
+            Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER LoadBytes
             The load scenario's payload: a number or a size like 512mb or 2gb.
@@ -100,7 +100,7 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad -Nodes R1, P1 -PassThru |
-                Start-XmipWeb
+                Start-XmipOperationWeb
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
@@ -514,7 +514,7 @@ function Test-XmipPlaygroundBinary {
 
     # A process another session started elevated shows no path to this one
     # (2026-09-14: the owner's roll was invisible to the assistant's shell;
-    # 2026-09-18: so was his web host, which Stop-XmipWeb then could not
+    # 2026-09-18: so was his web host, which Stop-XmipOperationWeb then could not
     # stop). Its name vouches for it: every System Process Xmip owns is named
     # xmip-<what> and nothing else is (ADR-0053).
     if ([string]::IsNullOrWhiteSpace($actual)) {

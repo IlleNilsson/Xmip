@@ -190,11 +190,11 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
    ```powershell
    Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 -OnlineNodes R1
-   Start-XmipWeb -Snapshot .local-work/playground/C1-snapshot.toml
+   Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
    Stop-XmipTest
-   Stop-XmipWeb
+   Stop-XmipOperationWeb
    ```
 
    Every System Process Xmip owns is named `xmip-<what>` and declares its
@@ -655,7 +655,7 @@ Every command accepts `-WhatIf`. Reporting is the default.
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: the Playground or the estate's Pester suite. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. |
-| `Start-XmipWeb`, `Get-XmipWeb`, `Stop-XmipWeb` | The web GUI, detached; it opens no browser. |
+| `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
 
 ```powershell

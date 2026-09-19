@@ -33,8 +33,8 @@ Playground's were `roll` and `node`, and `node` was Node.js's name long
 before it was this one's. The web monitor was `Xmip.Gui.Web`, the desktop
 `Xmip.Operations`, the executable `xmip` with no dash, and only the language
 server, `xmip-lsp`, fit. What that cost was paid the same day: a web host
-started elevated locked the GUI's build output, `Get-XmipWeb` could not see
-it because an elevated process shows no path, `Stop-XmipWeb` could not stop
+started elevated locked the GUI's build output, `Get-XmipOperationWeb` could not see
+it because an elevated process shows no path, `Stop-XmipOperationWeb` could not stop
 it, and a landing waited on its owner finding the shell it came from. A
 PowerShell session holding the prompt module did the same twice.
 
@@ -103,7 +103,7 @@ One declaration, written twice in two languages because the estate has two:
 `Declaration` in `xmip-core-node` for a Rust process, `ProcessDeclaration`
 in `Xmip.Surface` for a .NET one, the same file in the same place. The
 Playground's roll and nodes say test and the scope they are; the web host
-says the surface it reads and test where `Start-XmipWeb` started it over a
+says the surface it reads and test where `Start-XmipOperationWeb` started it over a
 roll's file; the executable says the scope it was asked about and the
 purpose its document states; the desktop says runtime.
 `Get-XmipProcess` lists every `xmip-*` process with the three beside it,
@@ -118,7 +118,7 @@ depends on the ABI alone, and the declaration is not the ABI's.
 - ADR-0014 clause 8 and ADR-0052 clause 5 name the executable `xmip`; it is
   `xmip-cli`, and an operator types `xmip-cli health <scope>`. Both records
   are amended.
-- `Get-XmipWeb`, `Get-XmipTestStatus` and `Get-XmipTestNode` find processes
+- `Get-XmipOperationWeb`, `Get-XmipTestStatus` and `Get-XmipTestNode` find processes
   by the new names, and see one started elevated.
 - On Linux the kernel keeps fifteen characters of a process name, so
   `xmip-playground-roll` and `xmip-playground-node` both read
