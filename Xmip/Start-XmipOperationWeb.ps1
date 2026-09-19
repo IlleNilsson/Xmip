@@ -89,6 +89,21 @@ function Start-XmipOperationWeb {
         return
     }
 
+    # A second host on a held address dies at once and says nothing, and the
+    # first keeps answering with whatever it was started over (the owner's
+    # console, 2026-09-19). Refuse, and say who holds it.
+    if (Test-XmipOperationWebAnswering -Url $Url) {
+        [string] $held = (Get-XmipOperationWeb | ForEach-Object -MemberName Id) -join ', '
+        [string] $who = 'another process holds it'
+
+        if ($held) {
+            $who = "xmip-gui-web pid $held runs"
+        }
+
+        Write-Error "REFUSED. $Url already answers: $who. Stop-XmipOperationWeb ends ours."
+        return
+    }
+
     if (-not $FromSource -and (Test-Path -LiteralPath $layout.Web)) {
         $launch = @{
             FilePath         = $layout.Web
@@ -116,5 +131,38 @@ function Start-XmipOperationWeb {
 
     if ($PassThru) {
         return ConvertTo-XmipOperationWeb -Process $process
+    }
+}
+
+function Test-XmipOperationWebAnswering {
+    <#
+        .SYNOPSIS
+            Whether something already listens where a web host would.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Url
+    )
+
+    [uri] $address = $Url
+    [string] $reach = $address.Host
+
+    if ($reach -in '0.0.0.0', '+', '*') {
+        $reach = '127.0.0.1'
+    }
+
+    $client = [System.Net.Sockets.TcpClient]::new()
+
+    try {
+        $client.Connect($reach, $address.Port)
+        return $true
+    }
+    catch [System.Net.Sockets.SocketException] {
+        return $false
+    }
+    finally {
+        $client.Dispose()
     }
 }
