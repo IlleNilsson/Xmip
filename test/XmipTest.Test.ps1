@@ -154,7 +154,7 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'says the tests, the fleet, the online nodes and the limits the way the roll parses them' {
+    It 'says the tests, the nodes, the online nodes and the limits the way the roll parses them' {
         InModuleScope Xmip {
             $chosen = @{
                 Stress      = 'Brutal'
@@ -182,7 +182,7 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'names nodes, one process each, and an empty list is no fleet' {
+    It 'names nodes, one process each, and an empty list is no nodes' {
         InModuleScope Xmip {
             $none = @{ Stress = 'Harsh'; Nodes = @(); Snapshot = 's'; History = 'h' }
             $none.Activity = 'a'
@@ -205,9 +205,9 @@ Describe 'The environment a roll is started with' {
 
     It 'names a test for every scenario the roll drives, and nothing the roll does not' {
         # The owner's names — HeavyLoad, LowLatency — over the roll's scenario
-        # names. SCENARIOS in roll.rs is the roll's list; the map must cover it
-        # exactly, or a test is unreachable or names nothing.
-        [string] $roll = Get-Content -Raw (Join-Path $script:Root 'test/playground/src/bin/roll.rs')
+        # names. SCENARIOS in scenario.rs is the roll's list and the node's; the
+        # map must cover it exactly, or a test is unreachable or names nothing.
+        [string] $roll = Get-Content -Raw (Join-Path $script:Root 'test/playground/src/scenario.rs')
         [string] $pattern = '(?s)const SCENARIOS: \[&str; \d+\] = \[(.*?)\];'
         [string] $list = [regex]::Match($roll, $pattern).Groups[1].Value
         [string[]] $scenarios = @(
@@ -221,7 +221,7 @@ Describe 'The environment a roll is started with' {
             ConvertTo-XmipPlaygroundScenario -Test 'HeavyLoad', 'LowLatency' |
                 Should -Be @('heavy-load', 'low-latency')
             ConvertTo-XmipTestName -Scenario 'low-latency' | Should -Be 'LowLatency'
-            ConvertTo-XmipTestName -Scenario 'fleet' | Should -Be 'fleet'
+            ConvertTo-XmipTestName -Scenario 'node' | Should -Be 'node'
             { ConvertTo-XmipPlaygroundScenario -Test 'Typo' } |
                 Should -Throw -ExpectedMessage '*No Playground test*'
         }
@@ -236,6 +236,41 @@ Describe 'The environment a roll is started with' {
             Should -BeNullOrEmpty
     }
 
+    It 'refuses RoundTrip over role nodes that lack a role, before anything starts' {
+        # The owner, 2026-09-19: the letter is the role, and the path is R to
+        # P to S between the node processes. The helper is pure; nothing runs.
+        InModuleScope Xmip {
+            Get-XmipNodeRole -Name 'R1' | Should -Be 'R'
+            Get-XmipNodeRole -Name 'p2' | Should -Be 'P'
+            Get-XmipNodeRole -Name 'Send3' | Should -Be 'S'
+            Get-XmipNodeRole -Name 'node-01' | Should -Be ''
+            Get-XmipNodeRole -Name 'R-1' | Should -Be ''
+
+            Get-XmipNodeRoleRefusal -Nodes 'R1', 'R2', 'P1', 'P2', 'S1', 'S2' -Test 'RoundTrip' |
+                Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes 'R1', 'R2', 'S1' -Test 'RoundTrip' |
+                Should -Be ('REFUSED. RoundTrip over role nodes needs at least one R, one P ' +
+                    'and one S node; -Nodes names no P.')
+            Get-XmipNodeRoleRefusal -Nodes 'R1' | Should -BeLike '*names no P and no S.'
+            Get-XmipNodeRoleRefusal -Nodes 'R1' -Test 'roundtrip', 'Filing' |
+                Should -BeLike 'REFUSED.*'
+
+            # Not RoundTrip, no role nodes, or no nodes: nothing to refuse.
+            Get-XmipNodeRoleRefusal -Nodes 'R1' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes @() | Should -Be ''
+            Get-XmipNodeRoleRefusal | Should -Be ''
+
+            $chosen = @{ Stress = 'Calm'; Nodes = @('R1', 'S1'); Snapshot = 's'; History = 'h' }
+            $chosen.Activity = 'a'
+            { New-XmipPlaygroundEnvironment @chosen } |
+                Should -Throw -ExpectedMessage '*names no P.'
+        }
+
+        { Start-XmipTest -Test RoundTrip -Cluster Z8 -Nodes R1, S1 -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip over role nodes*names no P.'
+    }
+
     It 'refuses an online node that was not named a node' {
         { Start-XmipTest -Nodes R1 -OnlineNodes P1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
@@ -246,10 +281,12 @@ Describe 'The environment a roll is started with' {
     }
 
     It 'reads every variable the roll documents' {
-        # roll.rs and switch.rs are the source of the names; a variable the
-        # roll reads that no parameter can set is a switch an operator cannot
-        # reach from PowerShell.
-        [string] $roll = Get-Content -Raw (Join-Path $script:Root 'test/playground/src/bin/roll.rs')
+        # roll.rs, environment.rs and switch.rs are the source of the names; a
+        # variable the roll reads that no parameter can set is a switch an
+        # operator cannot reach from PowerShell.
+        [string] $roll = @(
+            'test/playground/src/bin/roll.rs', 'test/playground/src/environment.rs'
+        ) | ForEach-Object { Get-Content -Raw (Join-Path $script:Root $_) }
         [string[]] $documented = @(
             [regex]::Matches($roll, 'XMIP_PLAYGROUND_[A-Z_]+') |
                 ForEach-Object { $_.Value } |
@@ -318,7 +355,14 @@ evidence = "claimed twice"
 observed_unix_nanos = 1789208338038783900
 
 [[records]]
-scope = "xmip:///playground/fleet"
+scope = "xmip:///playground/node/R1/receive/tcp/json"
+state = "fine"
+severity = 0
+evidence = "12/12 rounds passed"
+observed_unix_nanos = 1789208338038783900
+
+[[records]]
+scope = "xmip:///playground/node"
 state = "stressed"
 severity = 40
 evidence = "node-02 restarted once"
@@ -329,9 +373,9 @@ observed_unix_nanos = 1789208338038783900
     It 'splits a scope into scenario, node, transport and contract' {
         [object[]] $results = @(Get-XmipTestResult -Path $script:Snapshot)
 
-        $results.Count | Should -Be 3
+        $results.Count | Should -Be 4
 
-        $roundTrip = $results | Where-Object Scenario -eq 'round-trip'
+        $roundTrip = $results | Where-Object { $_.Scenario -eq 'round-trip' -and $_.Node -eq '' }
         $roundTrip.Test | Should -Be 'RoundTrip'
         $roundTrip.Transport | Should -Be 'tcp'
         $roundTrip.Contract | Should -Be 'json'
@@ -342,17 +386,27 @@ observed_unix_nanos = 1789208338038783900
         $claim.Transport | Should -Be 'file'
         $claim.Contract | Should -Be 'parallel'
 
-        ($results | Where-Object Scenario -eq 'fleet').Transport | Should -Be ''
+        # A role node's stage is RoundTrip's, published under the node.
+        $received = $results | Where-Object Node -eq 'R1'
+        $received.Test | Should -Be 'RoundTrip'
+        $received.Transport | Should -Be 'receive'
+        $received.Contract | Should -Be 'tcp/json'
+
+        # The cluster's rollup of its nodes is no node's record.
+        $rollup = $results | Where-Object Scenario -eq 'node'
+        $rollup.Node | Should -Be ''
+        $rollup.Transport | Should -Be ''
     }
 
     It 'filters by test and by node, and names the worst' {
-        @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 1
+        @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 2
         @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
+        @(Get-XmipTestResult -Path $script:Snapshot -Node 'R*').Count | Should -Be 1
         (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }
 
     It 'takes the directory the snapshot is in' {
-        @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 3
+        @(Get-XmipTestResult -Path $TestDrive).Count | Should -Be 4
     }
 
     It 'refuses to guess between two clusters in one directory' {

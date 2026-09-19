@@ -290,9 +290,9 @@ order and refuses when a gate fails.
 
 The Playground ([ADR-0028](doc/decision/ADR-0028-the-xmip-playground.md)) is
 an integration test over time: every transport by every contract, round after
-round, with injected faults, at four stress levels, with a fleet of node
-processes contending over real files, publishing the snapshots the monitors
-read. The estate's suite holds a test for every defect that has reached an
+round, with injected faults, at four stress levels, with a cluster's nodes as
+processes contending over real files and handing work receive to process to
+send, publishing the snapshots the monitors read. The estate's suite holds a test for every defect that has reached an
 operator's console.
 
 The design record starts at:

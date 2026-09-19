@@ -14,9 +14,13 @@ function Get-XmipTestResult {
             Reads the snapshot TOML a roll writes after every round (ADR-0028
             clause 4: a verdict is health, per scope) and emits one object per
             record, with the scope split into what an operator filters on.
-            A record under `node/<name>` is a fleet node's; `fleet` is the
-            fleet's own rollup. It reads a file and computes nothing but the
-            split — the judgement is the roll's (ADR-0027 clause 6).
+            A record under `node/<name>` is that node's, and `node` alone
+            is the cluster's rollup of its nodes. A role node publishes its
+            stage of RoundTrip under its name, as
+            node/<name>/<stage>/<transport>/<contract> — R receives, P
+            processes, S sends — and those are RoundTrip's. It reads a file
+            and computes nothing but the split — the judgement is the roll's
+            (ADR-0027 clause 6).
 
         .PARAMETER Path
             The snapshot file, or a directory holding exactly one
@@ -27,10 +31,10 @@ function Get-XmipTestResult {
         .PARAMETER Test
             Only these tests, by the names Start-XmipTest takes: RoundTrip,
             LowLatency, HeavyLoad, Retention, Filing, ExclusiveClaim,
-            DailyBacklog; or fleet, for the fleet's own rollup.
+            DailyBacklog; or node, for the cluster's rollup of its nodes.
 
         .PARAMETER Node
-            Only records published by these fleet nodes, wildcards allowed.
+            Only records published by these nodes, wildcards allowed.
 
         .PARAMETER Worst
             Only the single worst record — highest severity, first by scope.
@@ -134,6 +138,14 @@ function ConvertTo-XmipTestResult {
     if ($segments.Count -ge 2 -and $segments[0] -eq 'node') {
         $node = $segments[1]
         $segments = @($segments | Select-Object -Skip 2)
+    }
+
+    # A role node publishes its stage of RoundTrip straight under its name:
+    # node/R1/receive/tcp/json is RoundTrip's, as round-trip/receive/tcp/json
+    # is when the roll runs the test whole.
+    if ($node -ne '' -and $segments.Count -ge 1 -and
+        $segments[0] -in 'receive', 'process', 'send') {
+        $segments = @('round-trip') + $segments
     }
 
     [long] $millis = [long] ([long] $Record.observed_unix_nanos / 1000000)
