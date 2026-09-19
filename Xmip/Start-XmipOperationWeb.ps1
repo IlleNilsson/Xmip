@@ -83,6 +83,20 @@ function Start-XmipOperationWeb {
         }
     }
 
+    # The surface is stated, never guessed (ADR-0052 clause 3), so a roll is
+    # not followed unasked. But a host that will not show the roll beside it
+    # says so, and says how (the owner's console, twice, 2026-09-19).
+    if ($arguments.Count -eq 1) {
+        [string] $rolling = (Get-XmipTestStatus |
+                Where-Object -Property Suite -EQ -Value Playground |
+                ForEach-Object -MemberName Cluster) -join ', '
+
+        if ($rolling) {
+            Write-Warning ("No -Snapshot: this host reads its own xmip.gui.toml and will not " +
+                "show the roll $rolling. To follow it: Get-XmipTestStatus | Start-XmipOperationWeb")
+        }
+    }
+
     [string] $over = if ($arguments.Count -gt 1) { " over $Snapshot" } else { '' }
 
     if (-not $PSCmdlet.ShouldProcess("the Xmip web monitor at $Url", "Start$over")) {
