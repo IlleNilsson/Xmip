@@ -425,6 +425,16 @@ Describe 'What a web host reads' {
         }
     }
 
+    It 'refuses an empty pipeline: nothing is rolling, so there is nothing to follow' {
+        InModuleScope Xmip {
+            Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
+
+            { @() | Start-XmipOperationWeb } |
+                Should -Throw -ExpectedMessage 'REFUSED*nothing is rolling*'
+            Should -Invoke -CommandName Start-Process -Times 0
+        }
+    }
+
     It 'refuses an address that already answers, and starts nothing there' {
         # The owner's console, 2026-09-19: a second host on a held port died
         # silently and the first kept answering over the wrong surface.
