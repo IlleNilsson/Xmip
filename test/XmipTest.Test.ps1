@@ -474,8 +474,34 @@ Describe 'What a web host reads' {
             Start-XmipOperationWeb -WarningVariable said -WarningAction SilentlyContinue
             "$said" | Should -BeLike '*will not show the roll C1*Get-XmipTestStatus |*'
 
-            Start-XmipOperationWeb -Snapshot 'x.toml' -WarningVariable quiet
-            $quiet | Should -BeNullOrEmpty -Because 'it was pointed at a snapshot'
+            # A snapshot that is there: ADR-0055 refuses one that is not.
+            [string] $real = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-warn.toml'
+            Set-Content -LiteralPath $real -Value '' -NoNewline
+
+            try {
+                Start-XmipOperationWeb -Snapshot $real -WarningVariable quiet
+                $quiet | Should -BeNullOrEmpty -Because 'it was pointed at a snapshot'
+            }
+            finally {
+                Remove-Item -LiteralPath $real -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+
+    It 'refuses a snapshot that is not there and an address that is not one' {
+        # ADR-0055: the door is the parameter. A host over a path that is
+        # not there answers and shows nothing, which is what the owner met
+        # three times on 2026-09-19.
+        InModuleScope Xmip {
+            Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
+
+            [string] $gone = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-no-such.toml'
+
+            { Start-XmipOperationWeb -Snapshot $gone } |
+                Should -Throw -ExpectedMessage '*REFUSED*No snapshot*'
+            { Start-XmipOperationWeb -Url 'localhost:5087' } |
+                Should -Throw -ExpectedMessage '*REFUSED*not an address*'
+            Should -Invoke -CommandName Start-Process -Times 0
         }
     }
 

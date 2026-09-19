@@ -51,10 +51,24 @@ function Start-XmipOperationWeb {
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.Web')]
     param(
+        # Checked where the caller is bound, not where the file is read
+        # (ADR-0055): a host started over a path that is not there answers
+        # and shows nothing, which is the failure this rule exists to stop.
         [Parameter(ValueFromPipelineByPropertyName)]
+        [ValidateScript({
+            if (Test-Path -LiteralPath $_ -PathType Leaf) {
+                return $true
+            }
+
+            throw "REFUSED. No snapshot at '$_'. Get-XmipTestStatus names the one a roll publishes."
+        })]
         [string] $Snapshot,
 
         [Parameter()]
+        [ValidatePattern(
+            '^https?://([A-Za-z0-9.-]+|\[[0-9A-Fa-f:]+\]|\*|\+):\d{1,5}/?$',
+            ErrorMessage = "REFUSED. '{0}' is not an address to bind: http://<host>:<port>."
+        )]
         [string] $Url = 'http://127.0.0.1:5087',
 
         [Parameter()]
