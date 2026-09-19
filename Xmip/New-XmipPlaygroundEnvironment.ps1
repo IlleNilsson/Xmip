@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 # The Playground's tests by the names a person asks for them, and the scope
 # segment the roll drives and publishes each under
 # (test/playground/src/bin/roll.rs). The owner's shape, 2026-09-12:
-# Start-XmipTest -Suite Playground -Test HeavyLoad. 2026-09-19, the owner: the
+# Start-XmipTest -Suite Core.Playground -Test HeavyLoad. 2026-09-19, the owner: the
 # old scenario wording is replaced by the test names everywhere.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipPlaygroundTest = [ordered]@{
     RoundTrip      = 'round-trip'
@@ -21,28 +21,25 @@ function ConvertTo-XmipPlaygroundScenario {
     <#
         .SYNOPSIS
             The roll's scenario names for the tests a person named, in order.
-            Unknown names are an error naming the tests there are.
+            Wildcards select among the seven; a pattern that matches none of
+            them is REFUSED, naming the tests there are.
     #>
     [CmdletBinding()]
     [OutputType([string[]])]
     param(
         [Parameter()]
         [AllowEmptyCollection()]
+        [SupportsWildcards()]
         [string[]] $Test = @()
     )
 
+    [string[]] $wanted = @(
+        Expand-XmipTestName -Test $Test -Known @($script:XmipPlaygroundTest.Keys)
+    )
     [string[]] $scenarios = @()
 
-    foreach ($name in $Test) {
-        [string] $known = $script:XmipPlaygroundTest.Keys | Where-Object { $_ -ieq $name }
-
-        if ([string]::IsNullOrEmpty($known)) {
-            [string] $names = $script:XmipPlaygroundTest.Keys -join ', '
-
-            throw "No Playground test is named $name. The tests are $names."
-        }
-
-        $scenarios += $script:XmipPlaygroundTest[$known]
+    foreach ($name in $wanted) {
+        $scenarios += $script:XmipPlaygroundTest[$name]
     }
 
     return $scenarios
@@ -185,7 +182,10 @@ function New-XmipPlaygroundEnvironment {
         XMIP_PLAYGROUND_ACTIVITY = $Activity
     }
 
-    if ($Test.Count -gt 0) {
+    # Nothing named is the whole suite (the owner, 2026-09-19), and
+    # Test-XmipWholeSuite is the one place that decides it. An unset
+    # XMIP_PLAYGROUND_SCENARIOS is how the roll is told so.
+    if (-not (Test-XmipWholeSuite -Test $Test)) {
         [string[]] $scenarios = ConvertTo-XmipPlaygroundScenario -Test $Test
         $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
     }

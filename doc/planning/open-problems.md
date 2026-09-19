@@ -442,7 +442,8 @@ an atomic rename, so a schedule finds an artifact claimed-or-gone and moves on.
 **Built (thin).** `xmip-core-persist` is types and a trait only —
 `DurableRecordIdentity`, `DurableExecutionCheckpoint`, `DurableJourneyState`,
 `RecoveryLease`, `DeduplicationRecord`, the `RuntimeStore` trait — with **no
-backend implementing it**. `schedule` is a stub; `resilience` is types. So
+backend implementing it**. `schedule` is a stub — unmounted 2026-09-19, the
+repository kept on GitHub (ADR-0058, amendment); `resilience` is types. So
 recovery is not executable today: the contracts exist, the durable store behind
 them does not.
 

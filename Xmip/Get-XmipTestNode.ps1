@@ -80,7 +80,7 @@ function ConvertTo-XmipTestNode {
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'
-        Suite      = 'Playground'
+        Suite      = $script:XmipPlaygroundSuite
         Name       = $flags.Name
         Id         = $Process.Id
         Stress     = $flags.Stress

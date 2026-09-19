@@ -25,6 +25,12 @@ generated = "2026-08-25"
 # Seven were already planned. Seven more come from the orphan crates, named
 # to ADR-0011: shortest singular form, verb where the module does something.
 # The names are a proposal. Say so if any of them is wrong.
+#
+# This list is the proposal as it stood on 2026-08-25 and is not pruned when a
+# name later retires — `xmip-core-webapi` retired on 2026-09-06 and stayed
+# here, and `xmip-core-migrate`, `xmip-core-schedule` and `xmip-core-diagnose`
+# were unmounted on 2026-09-19 (ADR-0058, amendment). architecture.toml is
+# where a repository's current standing is read; this section is history.
 
 [create]
 planned = [

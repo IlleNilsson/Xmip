@@ -42,7 +42,8 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Stress Harsh -PassThru | Start-XmipOperationWeb
+            Start-XmipTest -Suite Core.Playground -Stress Harsh -PassThru |
+                Start-XmipOperationWeb
 
         .EXAMPLE
             $snapshot = '.local-work/playground/C1-snapshot.toml'
@@ -111,7 +112,7 @@ function Start-XmipOperationWeb {
     # says so, and says how (the owner's console, twice, 2026-09-19).
     if ($arguments.Count -eq 1) {
         [string] $rolling = (Get-XmipTestStatus |
-                Where-Object -Property Suite -EQ -Value Playground |
+                Where-Object -Property Suite -EQ -Value $script:XmipPlaygroundSuite |
                 ForEach-Object -MemberName Cluster) -join ', '
 
         if ($rolling) {

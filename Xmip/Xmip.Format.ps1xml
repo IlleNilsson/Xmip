@@ -12,7 +12,7 @@
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
-          <TableColumnHeader><Label>Suite</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Suite</Label><Width>16</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>StartTime</Label><Width>20</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>

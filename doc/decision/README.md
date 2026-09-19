@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-eight decisions, read as one document.
+Fifty-nine decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -769,6 +769,19 @@ known, the surface offers that set and takes nothing else.**
 
 → [Bad input is refused at the door, in full](ADR-0055-bad-input-is-refused-at-the-door.md)
 
+### What a test suite is called, who may add one, what it means to
+
+run one without naming tests, and how a filter selects among them
+  wildcard on a filter
+
+**A test suite is named `<Provider>.<Name>`, the same rule that names every
+module (ADR-0011), and the provider is required: `Core.Playground`, never
+`Playground`. `core` is Xmip itself; anyone else names themselves, and adds
+a suite by declaring it rather than by editing Xmip. Naming no test runs
+the whole suite, for every suite and every provider.**
+
+→ [A test suite carries its provider, in full](ADR-0059-a-test-suite-carries-its-provider.md) — **still Proposed**
+
 ---
 
 ## 6. How the work is done
@@ -927,6 +940,7 @@ You have a word. This gives you the decision that governs it.
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |
 | purpose, test, runtime | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
+| qualified suite name | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
@@ -949,6 +963,7 @@ You have a word. This gives you the decision that governs it.
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| suite declaration | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
@@ -963,6 +978,7 @@ You have a word. This gives you the decision that governs it.
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
+| the whole suite | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
@@ -1056,3 +1072,4 @@ is nowhere else.
 | [0056](ADR-0056-a-node-declares-what-it-can-do.md) | A node declares what it can do | **Proposed** |
 | [0057](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) | A vtable is a promise; only a loader is a saving | **Proposed** |
 | [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | **Proposed** |
+| [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | **Proposed** |
