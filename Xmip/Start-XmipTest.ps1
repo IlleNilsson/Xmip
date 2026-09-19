@@ -70,20 +70,37 @@ function Start-XmipTest {
         .PARAMETER Nodes
             The nodes to simulate, by name — one process each, spawned by the
             roll's cluster process, so -Nodes R1, P1, S1 is three node
-            processes called that under one cluster called -Cluster. The
-            letter is the role: a node named R... receives, P... processes,
-            S... sends, and every node runs its part of the tests you named.
-            RoundTrip over role nodes hands each pair R to P to S between
-            the processes, so it needs at least one of each and is REFUSED
-            otherwise, before anything starts. A node with any other name
-            (node-01) has no role and runs the shared-directory tests whole.
-            An empty list, @(), is no nodes at any level. Omit for the level's
+            processes called that under one cluster called -Cluster. What
+            each node does is the capability it is started with (ADR-0056),
+            and every node runs its part of the tests you named. As a
+            convenience of this cmdlet, a name beginning with R, P or S is
+            shorthand for the receive, process or send capability — the
+            shorthand lives here, at the operator's door, and nothing
+            downstream reads a node's name. -NodeCapability states the
+            capability outright and overrides it. A node neither named that
+            way nor given a capability declares none and runs the
+            shared-directory tests whole. RoundTrip across nodes hands each
+            pair from receive to process to send between the processes, so
+            each capability must be declared somewhere; it is REFUSED
+            otherwise, naming the capability, before anything starts. An
+            empty list, @(), is no nodes at any level. Omit for the level's
             own numbered nodes: one, three, ten or forty, scaled to the
             machine's headroom.
 
+        .PARAMETER NodeCapability
+            What each node declares it can do, stated per node and overriding
+            the name shorthand: -Nodes alpha, beta -NodeCapability
+            @{ alpha = 'receive'; beta = 'process,send' }. The values are
+            receive, process and send, one or more, separated by commas or by
+            plus; an unknown word, or a node -Nodes does not name, is REFUSED
+            before anything starts. A node the table does not name keeps the
+            shorthand. ADR-0056 names two further kinds of capability,
+            authentication and runtime, which the Playground does not model.
+
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
-            (ADR-0045), by name. None unless said; each must be in -Nodes.
+            (ADR-0045) — the online capability of ADR-0056, by name. None
+            unless said; each must be in -Nodes.
 
         .PARAMETER Cluster
             The cluster this roll starts (ADR-0028), by the name you give it
@@ -118,6 +135,10 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, R2, P1, S1 -OnlineNodes R1, S1
+
+        .EXAMPLE
+            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes alpha, beta, gamma -NodeCapability
+                @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
 
         .EXAMPLE
             Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
@@ -178,6 +199,10 @@ function Start-XmipTest {
         [string[]] $Nodes,
 
         [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability,
+
+        [Parameter()]
         [string[]] $OnlineNodes = @(),
 
         [Parameter()]
@@ -221,8 +246,14 @@ function Start-XmipTest {
         return
     }
 
+    if ($NodeCapability -and -not $PSBoundParameters.ContainsKey('Nodes')) {
+        Write-Error '-NodeCapability names nodes; name them all with -Nodes first.'
+        return
+    }
+
     if ($PSBoundParameters.ContainsKey('Nodes')) {
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
+        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
     }
 
     # You name the cluster; a test spawns nodes, never a cluster (the owner,
@@ -232,10 +263,16 @@ function Start-XmipTest {
         return
     }
 
-    # The letter is the role (the owner, 2026-09-19), and RoundTrip over role
-    # nodes needs all three. Said here, before anything is built or spawned;
-    # the roll refuses the same way for one started by hand.
-    [string] $refusal = Get-XmipNodeRoleRefusal -Nodes $Nodes -Test $Test
+    # A node declares what it can do (ADR-0056), and RoundTrip across nodes
+    # needs receive, process and send declared somewhere. Said here, before
+    # anything is built or spawned; the roll refuses the same way for one
+    # started by hand.
+    [hashtable] $asked = @{
+        Nodes          = $Nodes
+        Test           = $Test
+        NodeCapability = $NodeCapability
+    }
+    [string] $refusal = Get-XmipNodeCapabilityRefusal @asked
 
     if ($refusal -ne '') {
         Write-Error $refusal
@@ -352,7 +389,7 @@ function Start-XmipTest {
 [string[]] $script:XmipPlaygroundOnly = @(
     'Cluster',
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
-    'Nodes', 'OnlineNodes', 'LoadBytes', 'PassThru'
+    'Nodes', 'OnlineNodes', 'NodeCapability', 'LoadBytes', 'PassThru'
 )
 
 function Start-XmipEstateSuite {
@@ -451,7 +488,12 @@ function Get-XmipPlaygroundChoice {
 
     [hashtable] $chosen = @{}
 
-    foreach ($name in 'Nodes', 'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes') {
+    [string[]] $optional = @(
+        'Nodes', 'OnlineNodes', 'NodeCapability'
+        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes'
+    )
+
+    foreach ($name in $optional) {
         if ($Bound.ContainsKey($name)) {
             $chosen[$name] = $Bound[$name]
         }
