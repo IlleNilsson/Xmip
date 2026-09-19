@@ -609,16 +609,17 @@ says it, read *the cluster's nodes*.
   branch's own and never as a node beside them. The shared store,
   `xmip:///<cluster>/shared`, is drawn only when a node ran a test over it.
 - **What runs between the nodes.** The finding of 2026-09-18 stands
-  answered for the rig: a role node runs one stage of RoundTrip and hands
-  each pair on, R to P to S, between real processes, and every delivered
-  handoff is a hop on a link (`send-receive`, protocol `handoff`, volume the
-  hops, mood the worst leaf at either end). `open-problems.md` problem 17
-  records that this rehearses option A in the rig and rules nothing for the
-  runtime.
+  answered for the rig: a node runs the stages of RoundTrip it declared and
+  hands each pair on, receive to process to send, between real processes,
+  and every delivered handoff is a hop on a link (`send-receive`, protocol
+  `handoff`, volume the hops, mood the worst leaf at either end); the hop
+  carries the stage at either end, so the link is drawn without reading a
+  name. `open-problems.md` problem 17 records that this rehearses option A
+  in the rig and rules nothing for the runtime.
 - **The run says what it was started with.** The snapshot carries `[run]` —
-  tests, nodes, which are online, the level — `Xmip.Surface` reads it as a
-  `RunHeader`, and the web GUI says it in one line at the top of all three
-  views. The prompt is unchanged.
+  tests, nodes, what each was started with, which are online, the level —
+  `Xmip.Surface` reads it as a `RunHeader`, and the web GUI says it in one
+  line at the top of all three views. The prompt is unchanged.
 - **Ruled the same day: a node carries the roles suitable for its purpose.**
   Asked, the owner: *Rn, Pn, Sn are nodes that carries roles.* The
   assistant wrote that back as one role to a node, and was corrected the
@@ -634,10 +635,27 @@ says it, read *the cluster's nodes*.
   untouched: he names the clusters, and a test may spawn nodes and never a
   cluster.
 
-  What the rig does today, for the owner to keep or widen: a node whose
-  purpose is receiving carries the receive role and no other, because that
-  is what makes the handoff R to P to S visible in the topology. Nothing in
-  the ruling forbids such a node a second role; nothing yet gives it one.
+  What the rig does today, for the owner to keep or widen: **a node is
+  started with a declared capability and serves the stages it declared** —
+  `--can receive`, or `--can process,send` for a node whose purpose needs
+  both — and the topology draws a node's stages from the capability record
+  it publishes (ADR-0056). The letter is the operator's shorthand for a
+  capability, expanded inside `Start-XmipTest` because the owner types
+  `-Nodes R1, P1, S1`; `-NodeCapability @{ alpha = 'receive' }` states it
+  outright and overrides the shorthand. Downstream of that cmdlet — the
+  roll, the cluster, a node, the topology, every surface — a node's name is
+  read nowhere. A run of cluster Z8 over nodes called `alpha`, `beta` and
+  `gamma` draws the same receive-to-process-to-send handoffs as one over
+  `R1`, `P1` and `S1`.
+
+  **The correction this paragraph records.** For one afternoon on
+  2026-09-19 the assistant had the rig take a node's stage from the first
+  letter of its name. The owner: *I know, so why do you break it!* The
+  estate already held the model — ADR-0009, what a node does is its
+  configuration; ADR-0022, placement must satisfy node capability; the
+  deployment model, *any capable node may resume work if it can satisfy the
+  required capabilities* — and ADR-0056 wrote down what a capability is.
+  Configuration and capability decide; a name is not a criterion.
 
 ## Amendment, 2026-09-19: the roll is the test, the cluster is a process
 

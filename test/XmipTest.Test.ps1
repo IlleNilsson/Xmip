@@ -174,6 +174,8 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'round-trip,heavy-load'
             $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'R1,P1,S1'
             $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'R1,S1'
+            $environment.XMIP_PLAYGROUND_NODE_CAPABILITIES |
+                Should -Be 'R1=receive,P1=process,S1=send'
             $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be 'SN2'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
@@ -190,6 +192,7 @@ Describe 'The environment a roll is started with' {
 
             $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
+            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_CAPABILITIES'
 
             { Assert-XmipNodeName -Nodes 'R1', 'r1' } |
                 Should -Throw -ExpectedMessage '*named once*'
@@ -236,39 +239,69 @@ Describe 'The environment a roll is started with' {
             Should -BeNullOrEmpty
     }
 
-    It 'refuses RoundTrip over role nodes that lack a role, before anything starts' {
-        # The owner, 2026-09-19: the letter is the role, and the path is R to
-        # P to S between the node processes. The helper is pure; nothing runs.
+    It 'expands the letter to a capability at the door and nowhere else' {
+        # ADR-0056: a node declares what it can do, and nothing downstream
+        # reads a node's name. The letter is the operator's shorthand for a
+        # capability, expanded here; -NodeCapability overrides it. Pure.
         InModuleScope Xmip {
-            Get-XmipNodeRole -Name 'R1' | Should -Be 'R'
-            Get-XmipNodeRole -Name 'p2' | Should -Be 'P'
-            Get-XmipNodeRole -Name 'Send3' | Should -Be 'S'
-            Get-XmipNodeRole -Name 'node-01' | Should -Be ''
-            Get-XmipNodeRole -Name 'R-1' | Should -Be ''
+            Get-XmipNodeCapability -Name 'R1' | Should -Be 'receive'
+            Get-XmipNodeCapability -Name 'p2' | Should -Be 'process'
+            Get-XmipNodeCapability -Name 'Send3' | Should -Be 'send'
+            Get-XmipNodeCapability -Name 'node-01' | Should -Be ''
+            Get-XmipNodeCapability -Name 'R-1' | Should -Be ''
 
-            Get-XmipNodeRoleRefusal -Nodes 'R1', 'R2', 'P1', 'P2', 'S1', 'S2' -Test 'RoundTrip' |
-                Should -Be ''
-            Get-XmipNodeRoleRefusal -Nodes 'R1', 'R2', 'S1' -Test 'RoundTrip' |
-                Should -Be ('REFUSED. RoundTrip over role nodes needs at least one R, one P ' +
-                    'and one S node; -Nodes names no P.')
-            Get-XmipNodeRoleRefusal -Nodes 'R1' | Should -BeLike '*names no P and no S.'
-            Get-XmipNodeRoleRefusal -Nodes 'R1' -Test 'roundtrip', 'Filing' |
+            # Stated outright, the name says nothing at all.
+            $stated = @{ alpha = 'receive'; R1 = 'process,send'; beta = @() }
+            Get-XmipNodeCapability -Name 'alpha' -NodeCapability $stated | Should -Be 'receive'
+            Get-XmipNodeCapability -Name 'R1' -NodeCapability $stated | Should -Be 'process,send'
+            Get-XmipNodeCapability -Name 'beta' -NodeCapability $stated | Should -Be ''
+
+            Get-XmipNodeCapabilityText -Nodes 'R1', 'P1', 'S1', 'node-01' |
+                Should -Be 'R1=receive,P1=process,S1=send'
+            Get-XmipNodeCapabilityText -Nodes 'alpha', 'beta' -NodeCapability $stated |
+                Should -Be 'alpha=receive'
+
+            { ConvertTo-XmipNodeCapability -Capability 'relay' } |
+                Should -Throw -ExpectedMessage 'REFUSED: no capability is called relay*'
+            { Assert-XmipNodeCapability -Nodes 'alpha' -NodeCapability @{ gamma = 'send' } } |
+                Should -Throw -ExpectedMessage '*-Nodes does not*'
+        }
+    }
+
+    It 'refuses RoundTrip whose nodes leave a capability undeclared, before anything starts' {
+        # The path is receive to process to send between the node processes,
+        # and the refusal names the capability nobody declared, never a letter.
+        InModuleScope Xmip {
+            [string] $whole = 'REFUSED. RoundTrip across nodes needs the receive, process ' +
+                'and send capability declared; no node declares process.'
+
+            $six = @{ Nodes = @('R1', 'R2', 'P1', 'P2', 'S1', 'S2'); Test = 'RoundTrip' }
+            Get-XmipNodeCapabilityRefusal @six | Should -Be ''
+            Get-XmipNodeCapabilityRefusal -Nodes 'R1', 'R2', 'S1' -Test 'RoundTrip' |
+                Should -Be $whole
+            Get-XmipNodeCapabilityRefusal -Nodes 'R1' | Should -BeLike '*declares process or send.'
+            Get-XmipNodeCapabilityRefusal -Nodes 'R1' -Test 'roundtrip', 'Filing' |
                 Should -BeLike 'REFUSED.*'
 
-            # Not RoundTrip, no role nodes, or no nodes: nothing to refuse.
-            Get-XmipNodeRoleRefusal -Nodes 'R1' -Test 'HeavyLoad' | Should -Be ''
-            Get-XmipNodeRoleRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
-            Get-XmipNodeRoleRefusal -Nodes @() | Should -Be ''
-            Get-XmipNodeRoleRefusal | Should -Be ''
+            # Named for nothing, but declaring the whole path: no refusal.
+            $stated = @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
+            $named = @{ Nodes = @('alpha', 'beta', 'gamma'); NodeCapability = $stated }
+            Get-XmipNodeCapabilityRefusal @named | Should -Be ''
+
+            # Not RoundTrip, nothing declared, or no nodes: nothing to refuse.
+            Get-XmipNodeCapabilityRefusal -Nodes 'R1' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeCapabilityRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
+            Get-XmipNodeCapabilityRefusal -Nodes @() | Should -Be ''
+            Get-XmipNodeCapabilityRefusal | Should -Be ''
 
             $chosen = @{ Stress = 'Calm'; Nodes = @('R1', 'S1'); Snapshot = 's'; History = 'h' }
             $chosen.Activity = 'a'
             { New-XmipPlaygroundEnvironment @chosen } |
-                Should -Throw -ExpectedMessage '*names no P.'
+                Should -Throw -ExpectedMessage '*declares process.'
         }
 
         { Start-XmipTest -Test RoundTrip -Cluster Z8 -Nodes R1, S1 -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip over role nodes*names no P.'
+            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares process.'
     }
 
     It 'refuses an online node that was not named a node' {

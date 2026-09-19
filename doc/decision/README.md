@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-five decisions, read as one document.
+Fifty-six decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -164,6 +164,18 @@ the parent is displeased and reports `Holding` — drill in. A parent is only ev
 `Fine`.**
 
 → [Health is a mood and does not propagate, in full](ADR-0041-health-is-a-mood-and-does-not-propagate.md)
+
+### What a node says it can do, in the terms work is matched against
+
+authentication capability; runtime capability; placement criteria
+
+**A node declares its capabilities, and work is placed on a node whose
+capabilities satisfy what the work requires. There are four kinds: online,
+feature, authentication and runtime. They are the criteria placement works
+with, and a requirement no node satisfies is refused with both sides
+named, never placed somewhere that cannot serve it.**
+
+→ [A node declares what it can do, in full](ADR-0056-a-node-declares-what-it-can-do.md) — **still Proposed**
 
 ---
 
@@ -823,6 +835,7 @@ You have a word. This gives you the decision that governs it.
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
+| feature capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Guard | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
@@ -858,11 +871,13 @@ You have a word. This gives you the decision that governs it.
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | near end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
+| node capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | offered choice | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | Offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
+| online capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | online, the switch | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
@@ -1005,3 +1020,4 @@ is nowhere else.
 | [0053](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) | Every System Process Xmip owns says whose it is | |
 | [0054](ADR-0054-a-principal-name-is-read-one-way.md) | A principal name is read one way | |
 | [0055](ADR-0055-bad-input-is-refused-at-the-door.md) | Bad input is refused at the door | |
+| [0056](ADR-0056-a-node-declares-what-it-can-do.md) | A node declares what it can do | **Proposed** |

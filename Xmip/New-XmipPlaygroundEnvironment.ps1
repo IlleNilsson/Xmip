@@ -117,86 +117,6 @@ function Assert-XmipNodeName {
     }
 }
 
-function Get-XmipNodeRole {
-    <#
-        .SYNOPSIS
-            The role a node's name gives it (the owner, 2026-09-19: the letter
-            is the role): R receives, P processes, S sends, in either case,
-            when the whole name is letters and digits. Empty for any other
-            name — node-01 has no role and runs whole tests itself. The rule
-            is the roll's (test/playground/src/role.rs). Pure.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [AllowEmptyString()]
-        [string] $Name
-    )
-
-    if ($Name -notmatch '^[RrPpSs][A-Za-z0-9]*$') {
-        return ''
-    }
-
-    return $Name.Substring(0, 1).ToUpperInvariant()
-}
-
-function Get-XmipNodeRoleRefusal {
-    <#
-        .SYNOPSIS
-            Why RoundTrip cannot run over the nodes named, or the empty string
-            when it can. Pure, and asked before anything is spawned.
-
-        .DESCRIPTION
-            RoundTrip over role nodes hands every pair R to P to S between
-            the node processes, so it needs at least one of each. No role
-            nodes at all is no refusal — the roll runs RoundTrip whole — and
-            neither is a run that does not include RoundTrip. No -Test means
-            every test, RoundTrip among them. The roll refuses the same way
-            (test/playground/src/role.rs); this says it before a process
-            starts.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter()]
-        [AllowNull()]
-        [AllowEmptyCollection()]
-        [string[]] $Nodes = @(),
-
-        [Parameter()]
-        [AllowNull()]
-        [AllowEmptyCollection()]
-        [string[]] $Test = @()
-    )
-
-    [string[]] $tests = @($Test | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-
-    if ($tests.Count -gt 0 -and 'RoundTrip' -notin $tests) {
-        return ''
-    }
-
-    [string[]] $roles = @(
-        $Nodes |
-            Where-Object { $null -ne $_ } |
-            ForEach-Object { Get-XmipNodeRole -Name $_ } |
-            Where-Object { $_ -ne '' }
-    )
-
-    if ($roles.Count -eq 0) {
-        return ''
-    }
-
-    [string[]] $missing = @('R', 'P', 'S' | Where-Object { $_ -notin $roles })
-
-    if ($missing.Count -eq 0) {
-        return ''
-    }
-
-    return ('REFUSED. RoundTrip over role nodes needs at least one R, one P and one S ' +
-        "node; -Nodes names no $($missing -join ' and no ').")
-}
-
 function New-XmipPlaygroundEnvironment {
     <#
         .SYNOPSIS
@@ -231,6 +151,10 @@ function New-XmipPlaygroundEnvironment {
         [AllowNull()]
         [AllowEmptyCollection()]
         [string[]] $OnlineNodes,
+
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability,
 
         [Parameter()]
         [string] $Cluster,
@@ -278,7 +202,13 @@ function New-XmipPlaygroundEnvironment {
     if ($null -ne $Nodes) {
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
-        [string] $refusal = Get-XmipNodeRoleRefusal -Nodes $Nodes -Test $Test
+        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
+        [hashtable] $asked = @{
+            Nodes          = $Nodes
+            Test           = $Test
+            NodeCapability = $NodeCapability
+        }
+        [string] $refusal = Get-XmipNodeCapabilityRefusal @asked
 
         if ($refusal -ne '') {
             throw $refusal
@@ -288,8 +218,13 @@ function New-XmipPlaygroundEnvironment {
             $environment.XMIP_PLAYGROUND_NODES = '0'
         }
         else {
+            # What each node declares it can do (ADR-0056). The letter is the
+            # operator's shorthand for a capability and is expanded here, at
+            # the door; nothing downstream reads a node's name.
             $environment.XMIP_PLAYGROUND_NODE_NAMES = $Nodes -join ','
             $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
+            $environment.XMIP_PLAYGROUND_NODE_CAPABILITIES =
+                Get-XmipNodeCapabilityText -Nodes $Nodes -NodeCapability $NodeCapability
         }
     }
 

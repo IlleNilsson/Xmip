@@ -267,3 +267,39 @@ the tree from the leaves up. Nothing is orphaned: `Get-Process xmip-*` is
 empty afterwards.
 
 The details are `test/playground/README.md`, as 3a says.
+
+## Amendment, 2026-09-19: a real node is used, a simulated one is the fallback
+
+The owner, the same day: *if there are actual DNS names for clusters and
+nodes, the test shall use them instead of spawning test processes.*
+
+Spawning is not the point of the Playground; having something to test against
+is. A simulated node exists because there is no real one, and where a real one
+exists the rig has no business inventing a second.
+
+- **What is resolved, and only that.** The names the operator already named,
+  `-Cluster` and `-Nodes`, through the machine's own resolver. Nothing else,
+  and never a name the operator did not type. ADR-0045 clause 1 governs a
+  node's own path and forbids resolving a **public** name at runtime; a test
+  asking its resolver whether `R1` is a machine on this network is neither
+  the runtime path nor a public name.
+- **Resolving is not trusting.** A name that resolves gives an address, and
+  the rig still has to find Xmip there: the node must answer and declare
+  itself (ADR-0053) and say what it can do (ADR-0056). A name that resolves
+  to something that is not an Xmip node is REFUSED by name, not quietly
+  replaced with a spawned process — the operator meant that machine.
+- **The fallback is today's behavior exactly.** A name that does not resolve
+  is a node the rig spawns, as it does now. An estate with no DNS, or a
+  machine with no route, behaves as it does today and says so. Offline stays
+  the default (ADR-0045).
+- **The run says which is which.** `[run]` and the board name, per node,
+  whether it is real or simulated, because a green board means two different
+  things in the two cases and an operator must never have to guess which.
+- **What a real node is not asked to do.** The rig does not spawn, configure
+  or stop it; in a real environment an orchestrator owns a node's life, never
+  Xmip (ruling 8 of ADR-0052). The rig sends it work and reads what it
+  publishes.
+
+Agreed 2026-09-19, not yet built. Nothing resolved on the owner's machine the
+day it was agreed — `C1`, `R1` and their kin were checked and there is no
+search suffix — so the rig's behavior is unchanged until an estate has names.
