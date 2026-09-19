@@ -409,6 +409,22 @@ Describe 'What a web host reads' {
         }
     }
 
+    It 'warns that it will not show a roll it was not pointed at, and says how to' {
+        InModuleScope Xmip {
+            Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
+            Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
+            Mock -CommandName Get-XmipTestStatus -MockWith {
+                [PSCustomObject]@{ Suite = 'Playground'; Cluster = 'C1' }
+            }
+
+            Start-XmipOperationWeb -WarningVariable said -WarningAction SilentlyContinue
+            "$said" | Should -BeLike '*will not show the roll C1*Get-XmipTestStatus |*'
+
+            Start-XmipOperationWeb -Snapshot 'x.toml' -WarningVariable quiet
+            $quiet | Should -BeNullOrEmpty -Because 'it was pointed at a snapshot'
+        }
+    }
+
     It 'refuses an address that already answers, and starts nothing there' {
         # The owner's console, 2026-09-19: a second host on a held port died
         # silently and the first kept answering over the wrong surface.
