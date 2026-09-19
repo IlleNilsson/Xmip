@@ -279,3 +279,27 @@ brew = "python@3.13"
 apt = "python3-dev"
 dnf = "python3-devel"
 pacman = "python"
+
+[prerequisite.libudev]
+role = "developer"
+probe = "pkg-config --exists libudev"
+note = """
+Linux only, and only to build three transports: serial, m-bus and
+wireless-m-bus. Each reaches a serial port through serialport, which reaches
+udev through libudev-sys, which is a build script over the system library —
+so a machine without libudev's development files does not fail at run time,
+it fails to compile, in a C build script, with pkg-config's own message.
+
+Found on 2026-09-19 by building the estate on a clean AlmaLinux box: 242 of
+246 crates passed and these three could not build at all. The estate calls
+itself cross-platform, so a Linux developer meeting that on their third
+transport should meet it here instead.
+
+Windows and macOS reach a serial port without udev and declare nothing.
+"""
+
+[prerequisite.libudev.linux]
+apt = "libudev-dev"
+dnf = "systemd-devel"
+zypper = "systemd-devel"
+pacman = "systemd-libs"
