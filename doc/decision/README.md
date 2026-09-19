@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Fifty-four decisions, read as one document.
+Fifty-five decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -720,6 +720,18 @@ stops them all: `Get-Process Xmip-* | Stop-Process -Force`.**
 
 → [Every System Process Xmip owns says whose it is, in full](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md)
 
+### When an operator surface checks what it was given, and what it
+
+says when the answer is no
+
+**Every operator surface — the PowerShell module, the CLI and the web GUI
+— checks what it was given at the earliest point it can, and refuses in
+words that name what was wrong and what would be right. Better than
+refusing is not letting it be said: where the set of right answers is
+known, the surface offers that set and takes nothing else.**
+
+→ [Bad input is refused at the door, in full](ADR-0055-bad-input-is-refused-at-the-door.md)
+
 ---
 
 ## 6. How the work is done
@@ -829,6 +841,7 @@ You have a word. This gives you the decision that governs it.
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| late failure | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | License, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
@@ -848,6 +861,7 @@ You have a word. This gives you the decision that governs it.
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
+| offered choice | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | Offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | online, the switch | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
@@ -872,6 +886,7 @@ You have a word. This gives you the decision that governs it.
 | qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
+| refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | resilience technology | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
@@ -989,3 +1004,4 @@ is nowhere else.
 | [0052](ADR-0052-the-operator-surfaces-share-one-model.md) | The operator surfaces share one model | |
 | [0053](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) | Every System Process Xmip owns says whose it is | |
 | [0054](ADR-0054-a-principal-name-is-read-one-way.md) | A principal name is read one way | |
+| [0055](ADR-0055-bad-input-is-refused-at-the-door.md) | Bad input is refused at the door | |
