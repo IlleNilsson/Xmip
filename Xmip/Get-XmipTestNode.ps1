@@ -11,12 +11,20 @@ function Get-XmipTestNode {
         .DESCRIPTION
             A node is a process running the Playground's own node binary
             (ADR-0028 clause 2). What it is doing is read from its command
-            line: its name, stress level, whether it may assume the internet,
-            its rounds, the directory it shares with its cluster and where it
-            publishes. Parent is the roll the node belongs to — the cluster
-            process spawns it and the roll spawns the cluster (the owner,
-            2026-09-19), so the roll is its grandparent — or null for one
-            started by Start-XmipTestNode or by hand.
+            line: its name, stress level, what it declared it can do, whether
+            it may assume the internet, its rounds, the directory it shares
+            with its cluster and where it publishes. Parent is the roll the
+            node belongs to — the cluster process spawns it and the roll
+            spawns the cluster (the owner, 2026-09-19), so the roll is its
+            grandparent — or null for one started by Start-XmipTestNode or by
+            hand.
+
+            Capability is the feature capability the node declared (ADR-0056),
+            in the words -NodeCapability takes them: 'receive',
+            'process,send', or empty for a node that declared no stage and
+            runs whole tests itself. Online is the online capability of the
+            same record. The Playground models neither authentication nor
+            runtime capability, so neither is here.
 
         .PARAMETER Name
             Only nodes whose name matches, wildcards allowed.
@@ -26,6 +34,9 @@ function Get-XmipTestNode {
 
         .EXAMPLE
             Get-XmipTestNode -Name 'node-0*' | Where-Object -Property Online -EQ -Value $true
+
+        .EXAMPLE
+            Get-XmipTestNode | Where-Object -Property Capability -Match -Value 'send'
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestNode')]
@@ -84,6 +95,7 @@ function ConvertTo-XmipTestNode {
         Name       = $flags.Name
         Id         = $Process.Id
         Stress     = $flags.Stress
+        Capability = $flags.Capability
         Online     = $flags.Online
         Rounds     = $flags.Rounds
         Interval   = $flags.Interval

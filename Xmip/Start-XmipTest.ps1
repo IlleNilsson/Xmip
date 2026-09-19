@@ -61,9 +61,11 @@ function Start-XmipTest {
             reserved provider core, is REFUSED by name.
 
         .PARAMETER Stress
-            How hard: Calm, Realistic, Harsh or Brutal. Realistic is the roll's
-            own default. Harsh and Brutal spawn node processes unless
-            -Nodes says otherwise.
+            How hard: Calm, Realistic, Harsh or Brutal. Omit it and the roll
+            runs at Brutal, the hardest level there is: an omitted selector
+            means the most the rig can give (ADR-0059, amendment 2026-09-19,
+            where the rule and the owner's words live). Naming a level pins
+            it, so -Stress Calm is calm.
 
         .PARAMETER Test
             Which tests of the suite to run. Omit it, for any suite and any
@@ -106,9 +108,17 @@ function Start-XmipTest {
             pair from receive to process to send between the processes, so
             each capability must be declared somewhere; it is REFUSED
             otherwise, naming the capability, before anything starts. An
-            empty list, @(), is no nodes at any level. Omit for the level's
-            own numbered nodes: one, three, ten or forty, scaled to the
-            machine's headroom.
+            empty list, @(), is no nodes at any level.
+
+            Omit it and the level brings its full complement (ADR-0059,
+            amendment 2026-09-19): its own count of nodes — one, three, ten or
+            forty, scaled to the machine's headroom — named node-01 up and
+            dealt receive, process, send and round again, so the message path
+            is covered and the run never refuses a roster it composed itself.
+            A level with fewer than three nodes cannot cover the path; those
+            nodes declare no stage, RoundTrip runs whole in the roll, and it
+            is said. The run record and the [run] table carry the nodes that
+            were resolved.
 
         .PARAMETER NodeCapability
             What each node declares it can do, stated per node and overriding
@@ -148,6 +158,9 @@ function Start-XmipTest {
 
         .PARAMETER PassThru
             Return the Xmip.TestStatus object for the roll started.
+
+        .EXAMPLE
+            Start-XmipTest -Suite Core.Playground -Cluster C1
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
@@ -215,9 +228,12 @@ function Start-XmipTest {
         })]
         [string] $Suite = 'Core.Playground',
 
+        # The hardest level, because an omitted selector means the most the
+        # rig can give and not a cautious default (the owner, 2026-09-19;
+        # ADR-0059). Naming a level still pins it.
         [Parameter()]
         [ValidateSet('Calm', 'Realistic', 'Harsh', 'Brutal')]
-        [string] $Stress = 'Realistic',
+        [string] $Stress = 'Brutal',
 
         [Parameter(Position = 1)]
         [SupportsWildcards()]
@@ -376,13 +392,14 @@ function Start-XmipTest {
     $choice.Snapshot = Join-Path -Path $Path -ChildPath "$Cluster-snapshot.toml"
     $choice.History = Join-Path -Path $Path -ChildPath "$Cluster-history.toml"
     $choice.Activity = Join-Path -Path $Path -ChildPath "$Cluster-activity.toml"
-    [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
 
+    [bool] $boundNodes = $PSBoundParameters.ContainsKey('Nodes')
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
-    [string] $with = if ($PSBoundParameters.ContainsKey('Nodes')) {
-        if ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
+    [string] $with = if (-not $boundNodes) {
+        ", the $($Stress.ToLowerInvariant()) level's full complement"
     }
+    elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
     [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online as cluster $Cluster"
 
@@ -407,6 +424,45 @@ function Start-XmipTest {
         return
     }
 
+    # Omitted, -Nodes is the level's full complement, resolved here so the run
+    # record says what an operator got and the roll is told by name rather than
+    # left to decide twice (ADR-0059, amendment 2026-09-19). The count is the
+    # rig's to answer, so the rig is asked.
+    if (-not $boundNodes) {
+        $complement = Get-XmipNodeComplement -Roll $roll -Stress $Stress
+        $Nodes = $complement.Nodes
+        $NodeCapability = $complement.NodeCapability
+        $choice.Nodes = $Nodes
+        $choice.NodeCapability = $NodeCapability
+
+        # A complement that refused itself would be no answer at all, so this
+        # asks before anything is spawned, as a named roster is asked.
+        $asked = @{
+            Nodes          = $Nodes
+            Test           = $Test
+            NodeCapability = $NodeCapability
+        }
+        [string] $composed = Get-XmipNodeCapabilityRefusal @asked
+
+        if ($composed -ne '') {
+            Write-Error $composed
+            return
+        }
+
+        # Said, not left to be noticed (ADR-0055 clause 5): a level with fewer
+        # nodes than the path has stages runs RoundTrip whole in the roll.
+        [bool] $roundTrip = (Test-XmipWholeSuite -Test $Test) -or ('RoundTrip' -in $Test)
+
+        if ($roundTrip -and -not $complement.Covers) {
+            Write-Warning ("The $($Stress.ToLowerInvariant()) level brings " +
+                "$($Nodes.Count) node(s) on this machine, too few for receive, " +
+                'process and send: they declare no stage and RoundTrip runs whole ' +
+                'in the roll. Name -Nodes R1, P1, S1 to split the message path.')
+        }
+    }
+
+    [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
+
     $launch = @{
         FilePath         = $roll
         WorkingDirectory = $layout.Playground
@@ -427,10 +483,11 @@ function Start-XmipTest {
 
     $process = Start-Process @launch
 
-    [bool] $boundNodes = $PSBoundParameters.ContainsKey('Nodes')
     [bool] $boundDuration = $PSBoundParameters.ContainsKey('Duration')
     [bool] $boundFactor = $PSBoundParameters.ContainsKey('TimeFactor')
 
+    # The nodes are the resolved ones either way: an operator who named none
+    # can read what they got, and node_names says which of the two it was.
     $record = [ordered]@{
         suite       = $Suite
         cluster     = $Cluster
@@ -439,8 +496,8 @@ function Start-XmipTest {
         stress      = $Stress.ToLowerInvariant()
         tests       = @($Test)
         rounds      = $Rounds
-        nodes       = if ($boundNodes) { @($Nodes) } else { @() }
-        node_names  = if ($boundNodes) { 'named' } else { 'level' }
+        nodes       = @($Nodes)
+        node_names  = if ($boundNodes) { 'named' } else { 'complement' }
         online      = @($OnlineNodes)
         duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }
@@ -453,7 +510,9 @@ function Start-XmipTest {
     Import-Module PSToml -ErrorAction Stop
     [string] $recordPath = Join-Path -Path $Path -ChildPath "roll-$($process.Id).toml"
     ConvertTo-Toml -InputObject $record | Set-Content -LiteralPath $recordPath -Encoding utf8
-    Write-Verbose "started $what as pid $($process.Id); record at $recordPath"
+    [string] $declared = Get-XmipNodeCapabilityText -Nodes $Nodes -NodeCapability $NodeCapability
+    [string] $roster = if ($declared -ne '') { "; roster $declared" } else { '' }
+    Write-Verbose "started $what$roster as pid $($process.Id); record at $recordPath"
 
     # The prompt, where this session shows one, follows the roll just started:
     # the shipped document names C1, and on 2026-09-18 a roll named CC1 left
