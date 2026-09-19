@@ -408,4 +408,28 @@ Describe 'What a web host reads' {
             Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Role' | Should -Be ''
         }
     }
+
+    It 'refuses an address that already answers, and starts nothing there' {
+        # The owner's console, 2026-09-19: a second host on a held port died
+        # silently and the first kept answering over the wrong surface.
+        InModuleScope Xmip {
+            $listener = [System.Net.Sockets.TcpListener]::new(
+                [System.Net.IPAddress]::Loopback, 0)
+            $listener.Start()
+
+            try {
+                [string] $url = "http://127.0.0.1:$($listener.LocalEndpoint.Port)"
+                Mock -CommandName Start-Process -MockWith { }
+
+                Test-XmipOperationWebAnswering -Url $url | Should -BeTrue
+                { Start-XmipOperationWeb -Url $url } | Should -Throw -ExpectedMessage 'REFUSED*'
+                Should -Invoke -CommandName Start-Process -Times 0
+            }
+            finally {
+                $listener.Stop()
+            }
+
+            Test-XmipOperationWebAnswering -Url $url | Should -BeFalse
+        }
+    }
 }
