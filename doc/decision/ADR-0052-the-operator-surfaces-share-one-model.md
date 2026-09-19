@@ -619,22 +619,25 @@ says it, read *the cluster's nodes*.
   tests, nodes, which are online, the level — `Xmip.Surface` reads it as a
   `RunHeader`, and the web GUI says it in one line at the top of all three
   views. The prompt is unchanged.
-- **Ruled the same day: a node carries a role, and these names say which.**
-  Asked, the owner: *Rn, Pn, Sx are nodes that carries roles.* So the first
-  letter of such a name is not a label on a node that could be doing
-  anything — R names a node that receives, P one that processes, S one that
-  sends — and the rig taking a node's stage from its letter is right rather
-  than a local convention. The gloss on ruling 8 of 2026-09-14, *R1 is the
-  name the owner gave a node, not a role*, is superseded by this: the owner
-  names the node, and where he names it R, P or S he has said what it
-  carries. The rest of ruling 8 stands untouched — he names the clusters,
-  a test may spawn nodes and never a cluster.
+- **Ruled the same day: a node carries the roles suitable for its purpose.**
+  Asked, the owner: *Rn, Pn, Sn are nodes that carries roles.* The
+  assistant wrote that back as one role to a node, and was corrected the
+  same hour: *a node carries roles suitable for its purpose.* So the letter
+  names the node's purpose, and the roles it carries are the ones that
+  purpose needs — not one stage, and not a fence around the node. That is
+  ruling 6 of this record in its own words: *the letter is what the node is
+  for, not what it is limited to.*
 
-  The assistant's reading, for the owner to strike if it overreaches:
-  configuration remains how a node is told what to do (ADR-0009), and a
-  node whose name says a role and whose configuration says another is a
-  contradiction the estate should refuse rather than resolve (ADR-0055). A
-  name outside R, P and S carries no role and is configured as before.
+  This supersedes the gloss on ruling 8 of 2026-09-14, *R1 is the name the
+  owner gave a node, not a role*. A name the owner gives says the node's
+  purpose, and purpose is not nothing. The rest of ruling 8 stands
+  untouched: he names the clusters, and a test may spawn nodes and never a
+  cluster.
+
+  What the rig does today, for the owner to keep or widen: a node whose
+  purpose is receiving carries the receive role and no other, because that
+  is what makes the handoff R to P to S visible in the topology. Nothing in
+  the ruling forbids such a node a second role; nothing yet gives it one.
 
 ## Amendment, 2026-09-19: the roll is the test, the cluster is a process
 
