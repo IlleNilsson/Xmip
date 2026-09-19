@@ -619,14 +619,22 @@ says it, read *the cluster's nodes*.
   tests, nodes, which are online, the level — `Xmip.Surface` reads it as a
   `RunHeader`, and the web GUI says it in one line at the top of all three
   views. The prompt is unchanged.
-- **For the owner to rule.** Ruling 8 of 2026-09-14 says *R1 is the name the
-  owner gave a node, not a role — what a node does is its configuration*.
-  In the rig, since this day, the first letter of a test node's name picks
-  the stage it runs (R, P, S; any other name runs whole tests, as before).
-  That is a convention of the Playground's test nodes and claims nothing
-  about a node of the runtime, whose role stays its configuration
-  (ADR-0009); whether the rig should take a node's stage from configuration
-  instead is the owner's to say.
+- **Ruled the same day: a node carries a role, and these names say which.**
+  Asked, the owner: *Rn, Pn, Sx are nodes that carries roles.* So the first
+  letter of such a name is not a label on a node that could be doing
+  anything — R names a node that receives, P one that processes, S one that
+  sends — and the rig taking a node's stage from its letter is right rather
+  than a local convention. The gloss on ruling 8 of 2026-09-14, *R1 is the
+  name the owner gave a node, not a role*, is superseded by this: the owner
+  names the node, and where he names it R, P or S he has said what it
+  carries. The rest of ruling 8 stands untouched — he names the clusters,
+  a test may spawn nodes and never a cluster.
+
+  The assistant's reading, for the owner to strike if it overreaches:
+  configuration remains how a node is told what to do (ADR-0009), and a
+  node whose name says a role and whose configuration says another is a
+  contradiction the estate should refuse rather than resolve (ADR-0055). A
+  name outside R, P and S carries no role and is configured as before.
 
 ## Amendment, 2026-09-19: the roll is the test, the cluster is a process
 
