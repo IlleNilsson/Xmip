@@ -101,3 +101,42 @@ operator without a browser, and another program, read the same history.
 The requirement is the owner's, 2026-09-05: *abi, cli, ui and gui shall have
 history.* Clauses 1 to 5 are the assistant's drafting of it, on the instruction
 to proceed.
+
+## Amendment, 2026-09-19: a point is the measurement at the scope it names
+
+**What was wrong.** Clause 1 says a point is what a snapshot carries at one
+instant, and clause 5 says the Playground writes its history to a file. Neither
+said at **which scope** the file's points are counted, and the two halves
+disagreed in the code. A snapshot file carries the node's throughput as
+`Snapshot::measure` rolls it up — every count at and beneath the node, summed.
+A history keeps a series per scope exactly as it was recorded, and reads one
+exact scope back. The Playground's scenarios record beneath the node, each
+under its own subtree, and nothing was ever recorded at the node itself, so the
+series for the node was empty.
+
+**What it cost.** Every `*-history.toml` the Playground ever published held
+`points = []` — from the day this record was accepted, 2026-09-05, to the day
+it was found, 2026-09-19. `Get-XmipHistory` emitted nothing, the ABI's series
+held nothing and the GUI drew no curve. Nobody noticed for a fortnight because
+no test asserted that a history file holds points and no surface said that the
+one it read was empty.
+
+**What now holds.**
+
+- **A history point is the same counted measurement the snapshot publishes, at
+  the same scope**: the rollup at and beneath the scope named, not only what
+  happened to be recorded at that exact scope. The producer retains it that
+  way, so the boundary still reads what was retained and computes nothing
+  (clause 3, ADR-0027 clause 6).
+- **The Playground records it each round**: `test/playground/src/curve.rs`
+  records the snapshot, which keeps every scope's own series, and beside it the
+  node's rollup, which is the curve the file carries. Its tests assert that a
+  round driven the way a roll drives one leaves points in the file — and that
+  recording the snapshot alone leaves none, which is the defect kept as a test.
+- **A surface with no history says so** (clause 4, ADR-0055).
+  `Get-XmipHistory` warns, naming the file, when the history it read holds no
+  points, rather than emitting nothing and looking like a quiet node.
+
+The file format is unchanged: the reader was right and the producer was wrong.
+The other defect of that day, a running roll made unfindable by a rebuild, is
+ADR-0028's.

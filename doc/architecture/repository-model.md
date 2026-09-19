@@ -184,11 +184,18 @@ that was true until 2026-08-27, when it became one template per language.*
 ## 3. Maturity
 
 Repository existence is independent of implementation maturity. The manifest
-uses three words today — `reserved`, the default, for a repository that is
-named and nothing more; `planned`; and `scaffolded` — and a repository that
-has been retired is a `[[retired]]` entry with its reason. The full vocabulary
-the estate module validates, from `reserved` through `supported` to `retired`,
-is declared once in `Xmip/Xmip.psm1` and not repeated here.
+uses two words today — `reserved`, for a repository that is named and nothing
+more, and `scaffolded` — and a repository that has been retired is a
+`[[retired]]` entry with its reason. The full vocabulary the estate module
+validates, from `reserved` through `supported` to `retired`, is declared once
+in `Xmip/Xmip.psm1`, and what each word means is defined once in ADR-0060,
+amendment 2026-09-19.
+
+**Every repository states its own maturity; none is defaulted.** `[default]`
+supplied `reserved` until 2026-09-19, which made *nobody said* read as
+*deliberately reserved* — 156 repositories said nothing and 79 of them were
+composed and holding source. `test/Sync-XmipEstate.Test.ps1` now fails on a
+declaration that does not state one.
 
 The complete taxonomy is declared from the beginning. Maturity describes
 implementation and support state, not whether the repository belongs in the

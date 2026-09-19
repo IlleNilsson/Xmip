@@ -891,32 +891,6 @@ function Remove-XmipPlaygroundStaleRecord {
     }
 }
 
-function Test-XmipPlaygroundBinary {
-    <#
-        .SYNOPSIS
-            Whether a process runs the named binary — the Playground's own
-            build, not any process that happens to share the name.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [System.Diagnostics.Process] $Process,
-
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    [string] $actual = try { $Process.Path } catch { '' }
-
-    # A process another session started elevated shows no path to this one
-    # (2026-09-14: the owner's roll was invisible to the assistant's shell;
-    # 2026-09-18: so was his web host, which Stop-XmipOperationWeb then could not
-    # stop). Its name vouches for it: every System Process Xmip owns is named
-    # xmip-<what> and nothing else is (ADR-0053).
-    if ([string]::IsNullOrWhiteSpace($actual)) {
-        return $Process.ProcessName -like 'xmip-*'
-    }
-
-    return [System.IO.Path]::GetFullPath($actual) -ieq [System.IO.Path]::GetFullPath($Path)
-}
+# Which live processes are the Playground's is Get-XmipPlaygroundProcess.ps1:
+# Test-XmipPlaygroundBinary moved there on 2026-09-19, with the finding that a
+# rebuilt binary must not make a running roll disappear.

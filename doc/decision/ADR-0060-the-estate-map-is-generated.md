@@ -178,3 +178,173 @@ Clause 4 records a refusal as much as a decision: the map reports the
 manifest's maturity unchanged, including the six repositories whose
 declaration is plainly behind their contents. Re-classifying them is the
 owner's call and was deliberately not taken here.
+
+## Amendment, 2026-09-19: the maturity words are defined and the default is gone
+
+Clause 4 refused to correct the manifest and said so. The map then made the
+disagreement quantitative enough to act on, and this amendment acts on it. It
+does three things — it defines the vocabulary, it removes the default that
+made *nobody said* indistinguishable from *deliberately reserved*, and it
+corrects the declarations where the evidence is mechanical.
+
+### 1. What each word means
+
+The estate validates twelve maturity words in `Xmip/Xmip.psm1`
+(`$script:XmipMaturity`) and has never said what any of them means.
+`repository-model.md` section 3 names three of them in passing and points at
+that list. Below is the whole ladder. It is read top to bottom and each rung
+assumes the ones above it.
+
+- **`planned`** — nothing exists. The work is decided and scheduled, and a
+  record says when and why.
+- **`reserved`** — the name is held in the manifest and nothing more. No
+  GitHub repository, no mount, no code. `Sync-XmipEstate` does not create it
+  and a missing one is not drift.
+- **`created`** — the GitHub repository exists.
+- **`configured`** — created, and its GitHub settings match `[default]` and
+  its own declaration.
+- **`submodule`** — composed by its parent: the root for a module, the
+  capability for a technology (ADR-0016).
+- **`workspace`** — composed, and it builds as part of something: a Cargo
+  workspace member, or a project a surface builds.
+- **`scaffolded`** — composed here, with a build manifest, a README stating
+  its responsibility, and source that says what the thing is. Its public API
+  is not finished and nothing depends on it being finished.
+- **`implemented`** — the responsibility the README states is carried out in
+  code, and the public API is complete for what the repository claims.
+- **`verified`** — implemented, with its own tests, and they pass.
+- **`supported`** — verified, released, and carrying a compatibility promise.
+  Breaking it needs a record.
+- **`deprecated`** — still present and no longer to be used. A replacement is
+  named.
+- **`retired`** — gone. A `[[retired]]` entry with a date and a reason; the
+  GitHub repository is archived rather than deleted (ADR-0024).
+
+`created`, `configured`, `submodule` and `workspace` are the reconciliation
+stages `Sync-XmipEstate` walks, and no repository declares any of them today.
+They are defined here so the ladder has no gaps, not because anything uses
+them.
+
+**The rung that matters for reading the manifest is `scaffolded`.** Below it
+the repository may not exist; at it and above it, it exists, it is composed,
+and it holds source. That is the line `test/Deploy.Test.ps1` already drew
+without a definition to draw it from.
+
+### 2. The default is gone
+
+`[default]` carried `maturity = "reserved"`, so a repository that declared
+nothing read as one deliberately held back. On 2026-09-19 the map counted 156
+such repositories and **79 of them were composed and holding source**,
+including sixteen of the eighteen capabilities. The manifest filed built work
+as un-started, and nothing could tell the two apart, because they were spelled
+the same.
+
+`maturity` is no longer in `[default]`. Every one of the 330 declarations
+states its own, and `test/Sync-XmipEstate.Test.ps1` — *states a maturity on
+every repository rather than inheriting one* — reads the TOML rather than the
+expansion and fails on a repository that does not. It reads the TOML because
+the expansion is where the inheriting happened: a test over
+`Get-XmipManifest`'s output cannot see the difference, which is why no test
+saw it for a month.
+
+The module keeps a hard-coded `reserved` fallback so a malformed manifest
+still parses. That is a parser's business and not a statement about a
+repository; the gate above is what makes it unreachable.
+
+### 3. What was re-classified, and on what evidence
+
+**Evidence, applied to every entry and to nothing else:** the repository is
+composed in this working tree (a directory reached through the `.gitmodules`
+chain), and that directory holds a build manifest, a README, and at least one
+source file with a body. No judgement of quality, completeness or intent.
+
+- **79 were `reserved` by default and are now `scaffolded`.** Every one met
+  the test. Every one has a `Cargo.toml` or a `.csproj`, a README, and source.
+  The smallest is `xmip-core-report` at 49 lines of `src/lib.rs` — which is a
+  record type, a sink trait and its tests, not a stub — against the estate's
+  existing `scaffolded` floor of 19 lines (`xmip-core-contract-dotnet`).
+- **6 were `planned` and are now `scaffolded`.** `xmip-core-abi` (8,418 lines
+  of its own, both C headers and the .NET binding), `xmip-core-transport`
+  (2,352 of its own and 86 technologies beneath it), `xmip-core-runtime`
+  (4,345), `xmip-core-configure`, `xmip-core-persist` and `xmip-core-stream`.
+  `planned` means nothing exists; all six exist and build. **This is the one
+  the owner should look at hardest**, because unlike the 79 these were stated
+  rather than inherited, and the Provenance above deliberately left them
+  alone. Six lines revert it.
+- **76 were `reserved` by default and now say `reserved` in the file.** Not a
+  re-classification: the same word, written down. `xmip-test` already said it
+  and is untouched, which makes 77.
+
+Counts, before and after: `planned` 6 → 0, `reserved` 156 → 77, `scaffolded`
+168 → 253. Maturity and composition now agree exactly — 253 composed, 253 at
+`scaffolded`, 77 declared and absent, 77 `reserved`.
+
+### 4. What was left, and why
+
+**Nothing was promoted above `scaffolded`.** `implemented` and `verified` ask
+whether a repository does what its README says and whether its own tests
+prove it — neither is mechanical, and guessing would put the manifest back
+where this amendment found it. The candidates are visible in the sizes above
+and are the owner's to rule on, repository by repository: `xmip-core-abi`,
+`xmip-core-runtime`, `xmip-core-transport`, `xmip-core-authenticate`,
+`xmip-core-contract`, `xmip-core-identify`, `xmip-core-authorize`,
+`xmip-core-message`, `xmip-core-path` and `xmip-core-archive` each hold
+thousands of lines of their own.
+
+**Seven composed repositories sit nearest the line and were still moved**:
+`xmip-core-report` (49 lines), `xmip-core-cluster` (54), `xmip-core-event`
+(57), `xmip-core-assign` (68), `xmip-core-retain` (77), `xmip-core-prepare`
+(93) and `xmip-core-process` (99). Each is a host crate whose technologies
+mount beside it (ADR-0049) and each holds declared types, not a doc comment.
+They are inside the band the 168 existing `scaffolded` entries already
+occupy, so leaving them at `reserved` would have been the same lie in a
+smaller font.
+
+**The 77 uncomposed declarations were left at `reserved`.** See clause 5.
+
+### 5. The seven capabilities that compose nothing: none of the 76 exists
+
+Consequences above recorded that `prepare` (20 declared technologies),
+`transform` (17), `process` (14), `audit` (9), `report` (6), `observe` (5) and
+`retain` (5) compose none of the 76 technologies they declare, and left open
+*whether the seven uncomposed capabilities are waiting on work or on a
+decision*. They are waiting on both, and the reason is simpler than either:
+
+**None of the 76 repositories exists on GitHub.** `gh repo list IlleNilsson`
+returns 262 repositories. All 253 composed here are among them; not one of the
+76 is, and `gh repo view` on a sample of four answers *Could not resolve to a
+Repository*. The seventy-seventh absence, `xmip-test`, is a provider namespace
+with nothing to mount and already said `reserved` in the manifest.
+
+So these are not repositories someone forgot to mount. They are names, and
+`reserved` is exactly the right word for them — which is why this amendment
+writes that word into the file rather than changing it. The gap the map
+reported is not a composition gap at all; it is seventy-six pieces of work
+that have not been started, in seven capabilities that have a host crate and
+no implementations under it.
+
+**Nothing was created, mounted, deleted or re-declared.** Seventy-six
+repositories is the owner's decision. What is now on the record is that the
+choice is *create these, or retire the declarations* — and not *go and mount
+what is already there*, which is what the map's seventy-seven read like.
+
+### 6. What this touched
+
+- `architecture.toml` — `maturity` removed from `[default]`; 155 declarations
+  gain an explicit one; six `planned` become `scaffolded`.
+- `test/Sync-XmipEstate.Test.ps1` — one test, in the `The manifest` block.
+- `deploy/dsc/xmip-node.dsc.yaml` and
+  `deploy/ansible/roles/xmip_node/defaults/main.yml` — 51 technologies each.
+  The owner's rule (2026-09-08) is that every technology at `scaffolded` or
+  beyond appears in both lists, and `test/Deploy.Test.ps1` holds it; promoting
+  the identify, authenticate and authorize technologies and two transports
+  brought them in. All 51 are `present` and stopped; the started set is
+  unchanged.
+- `doc/architecture/estate-map.md` — regenerated, as clause 2 requires.
+- `doc/architecture/repository-model.md` section 3 — the sentence calling
+  `reserved` the default was true until this amendment and is corrected.
+
+Status stays Proposed. The definitions in clause 1 and the promotion of the
+six in clause 3 are the assistant's drafting on the owner's instruction to
+make the manifest true where the evidence is unambiguous; both are the
+owner's to overrule.

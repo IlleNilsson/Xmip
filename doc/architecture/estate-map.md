@@ -39,9 +39,8 @@ the estate tree, and are counted nowhere below.
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| planned | 6 | 6 | 0 |
-| reserved | 156 | 79 | 77 |
-| scaffolded | 168 | 168 | 0 |
+| reserved | 77 | 0 | 77 |
+| scaffolded | 253 | 253 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -59,16 +58,16 @@ Things Xmip is.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core` | reserved | `module/foundation/core` | — |
-| `xmip-core-abi` | planned | `module/foundation/abi` | — |
-| `xmip-core-cluster` | reserved | `module/foundation/cluster` | — |
-| `xmip-core-context` | reserved | `module/foundation/context` | — |
-| `xmip-core-event` | reserved | `module/foundation/event` | — |
-| `xmip-core-journey` | reserved | `module/foundation/journey` | — |
-| `xmip-core-message` | reserved | `module/foundation/message` | 15 |
-| `xmip-core-node` | reserved | `module/foundation/node` | — |
-| `xmip-core-party` | reserved | `module/foundation/party` | — |
-| `xmip-core-stream` | planned | `module/foundation/stream` | — |
+| `xmip-core` | scaffolded | `module/foundation/core` | — |
+| `xmip-core-abi` | scaffolded | `module/foundation/abi` | — |
+| `xmip-core-cluster` | scaffolded | `module/foundation/cluster` | — |
+| `xmip-core-context` | scaffolded | `module/foundation/context` | — |
+| `xmip-core-event` | scaffolded | `module/foundation/event` | — |
+| `xmip-core-journey` | scaffolded | `module/foundation/journey` | — |
+| `xmip-core-message` | scaffolded | `module/foundation/message` | 15 |
+| `xmip-core-node` | scaffolded | `module/foundation/node` | — |
+| `xmip-core-party` | scaffolded | `module/foundation/party` | — |
+| `xmip-core-stream` | scaffolded | `module/foundation/stream` | — |
 
 ### `xmip-core-message`, 15 technologies
 
@@ -86,38 +85,38 @@ Things Xmip does.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-assign` | reserved | `module/capability/assign` | — |
-| `xmip-core-authenticate` | reserved | `module/capability/authenticate` | 18 |
-| `xmip-core-authorize` | reserved | `module/capability/authorize` | 14 |
-| `xmip-core-contract` | reserved | `module/capability/contract` | 27 |
-| `xmip-core-demote` | reserved | `module/capability/demote` | — |
-| `xmip-core-identify` | reserved | `module/capability/identify` | 19 |
+| `xmip-core-assign` | scaffolded | `module/capability/assign` | — |
+| `xmip-core-authenticate` | scaffolded | `module/capability/authenticate` | 18 |
+| `xmip-core-authorize` | scaffolded | `module/capability/authorize` | 14 |
+| `xmip-core-contract` | scaffolded | `module/capability/contract` | 27 |
+| `xmip-core-demote` | scaffolded | `module/capability/demote` | — |
+| `xmip-core-identify` | scaffolded | `module/capability/identify` | 19 |
 | `xmip-core-logic` | scaffolded | `module/capability/logic` | 4 |
-| `xmip-core-path` | reserved | `module/capability/path` | 8 |
-| `xmip-core-prepare` | reserved | `module/capability/prepare` | 20 |
-| `xmip-core-process` | reserved | `module/capability/process` | 14 |
-| `xmip-core-promote` | reserved | `module/capability/promote` | — |
-| `xmip-core-receive` | reserved | `module/capability/receive` | — |
-| `xmip-core-resilience` | reserved | `module/capability/resilience` | 6 |
-| `xmip-core-retain` | reserved | `module/capability/retain` | 5 |
-| `xmip-core-route` | reserved | `module/capability/route` | 8 |
-| `xmip-core-send` | reserved | `module/capability/send` | — |
-| `xmip-core-transform` | reserved | `module/capability/transform` | 17 |
-| `xmip-core-transport` | planned | `module/capability/transport` | 84 |
+| `xmip-core-path` | scaffolded | `module/capability/path` | 8 |
+| `xmip-core-prepare` | scaffolded | `module/capability/prepare` | 20 |
+| `xmip-core-process` | scaffolded | `module/capability/process` | 14 |
+| `xmip-core-promote` | scaffolded | `module/capability/promote` | — |
+| `xmip-core-receive` | scaffolded | `module/capability/receive` | — |
+| `xmip-core-resilience` | scaffolded | `module/capability/resilience` | 6 |
+| `xmip-core-retain` | scaffolded | `module/capability/retain` | 5 |
+| `xmip-core-route` | scaffolded | `module/capability/route` | 8 |
+| `xmip-core-send` | scaffolded | `module/capability/send` | — |
+| `xmip-core-transform` | scaffolded | `module/capability/transform` | 17 |
+| `xmip-core-transport` | scaffolded | `module/capability/transport` | 84 |
 
 ### `xmip-core-authenticate`, 18 technologies
 
 All 18 composed in `module/capability/authenticate`.
 
-- **reserved**, 16 — api-key, basic, bearer, digest, jwt, kerberos, ldap,
-  ntlm, oauth2, oidc, pam, password, saml, scram, ssh-key, windows
-- **scaffolded**, 2 — certificate, mutual-tls
+- **scaffolded**, 18 — api-key, basic, bearer, certificate, digest, jwt,
+  kerberos, ldap, mutual-tls, ntlm, oauth2, oidc, pam, password, saml, scram,
+  ssh-key, windows
 
 ### `xmip-core-authorize`, 14 technologies
 
 All 14 composed in `module/capability/authorize`.
 
-- **reserved**, 14 — abac, acl, artifact, cedar, claim, contract, location,
+- **scaffolded**, 14 — abac, acl, artifact, cedar, claim, contract, location,
   opa, party, policy, rbac, role, scope, transport
 
 ### `xmip-core-contract`, 27 technologies
@@ -133,7 +132,7 @@ All 27 composed in `module/capability/contract`.
 
 All 19 composed in `module/capability/identify`.
 
-- **reserved**, 19 — api-key, certificate, contract, cookie, dns, endpoint,
+- **scaffolded**, 19 — api-key, certificate, contract, cookie, dns, endpoint,
   header, ip, jwt, kerberos, mac, message, ntlm, oidc, party, saml, ssh-key,
   transport, username
 
@@ -197,16 +196,15 @@ Declared, and none composed: `module/capability/transform` has no
 
 All 84 composed in `module/capability/transport`.
 
-- **reserved**, 2 — peppol, sftp
-- **scaffolded**, 82 — activemq, amqp, as2, as4, aws-kinesis, aws-sns,
+- **scaffolded**, 84 — activemq, amqp, as2, as4, aws-kinesis, aws-sns,
   aws-sqs, azure-blob, azure-event-grid, azure-event-hubs, azure-service-bus,
   bacnet, bluetooth, can-bus, canopen, coap, cotp, dds, dhcp, dicom, dnp3,
   dns, ethercat, ethernet, ethernet-ip, file, ftp, google-cloud-storage,
   google-pub-sub, hart, http, ibm-mq, iec-60870-5-104, iec-61850, imap,
   io-link, iso-tp, j1939, kafka, knx, lorawan, m-bus, mdns, mllp, modbus,
   mqtt, msmq, mssql, mysql, named-pipe, nats, nats-jetstream, nfs, obd-ii,
-  opc-ua, oracle, pop3, postgresql, profinet, rabbitmq, redis-streams,
-  redpanda, s3, s7comm, secs-gem, serial, smb, smtp, snmp, sqlite, ssdp,
+  opc-ua, oracle, peppol, pop3, postgresql, profinet, rabbitmq, redis-streams,
+  redpanda, s3, s7comm, secs-gem, serial, sftp, smb, smtp, snmp, sqlite, ssdp,
   syslog, tcp, thread, udp, uds, unix-socket, webdav, websocket,
   wireless-hart, wireless-m-bus, zigbee
 
@@ -218,13 +216,13 @@ Running and governing Xmip.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-archive` | reserved | `module/operation/archive` | 10 |
-| `xmip-core-audit` | reserved | `module/operation/audit` | 9 |
+| `xmip-core-archive` | scaffolded | `module/operation/archive` | 10 |
+| `xmip-core-audit` | scaffolded | `module/operation/audit` | 9 |
 | `xmip-core-cli` | scaffolded | `module/operation/cli` | — |
 | `xmip-core-gui` | scaffolded | `module/operation/gui` | 1 |
-| `xmip-core-observe` | reserved | `module/operation/observe` | 5 |
+| `xmip-core-observe` | scaffolded | `module/operation/observe` | 5 |
 | `xmip-core-powershell` | scaffolded | `module/operation/powershell` | — |
-| `xmip-core-report` | reserved | `module/operation/report` | 6 |
+| `xmip-core-report` | scaffolded | `module/operation/report` | 6 |
 | `xmip-test` | reserved | not mounted | — |
 | `xmip-test-playground` | scaffolded | `test/playground` | — |
 
@@ -268,9 +266,9 @@ Platform-wide runtime services.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-configure` | planned | `module/platform/configure` | — |
-| `xmip-core-persist` | planned | `module/platform/persist` | — |
-| `xmip-core-runtime` | planned | `module/platform/runtime` | — |
+| `xmip-core-configure` | scaffolded | `module/platform/configure` | — |
+| `xmip-core-persist` | scaffolded | `module/platform/persist` | — |
+| `xmip-core-runtime` | scaffolded | `module/platform/runtime` | — |
 
 ---
 

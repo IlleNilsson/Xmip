@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 function Get-XmipHistory {
     <#
         .SYNOPSIS
-            Reads a node's throughput history from the JSON file a producer
+            Reads a node's throughput history from the TOML file a producer
             publishes, one object per point.
 
         .DESCRIPTION
@@ -70,6 +70,21 @@ function Get-XmipHistory {
 
     $document = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
 
+    # A file with no points at all is the producer's fault, not the reader's,
+    # and it is said rather than answered with silence (ADR-0055). Every
+    # history the Playground published between 2026-09-05 and 2026-09-19 was
+    # one of these, and nobody noticed because nothing said anything.
+    [object[]] $points = @()
+
+    if ($document.Contains('points')) {
+        $points = @($document.points)
+    }
+
+    if ($points.Count -eq 0) {
+        Write-Warning "The history at $Path holds no points; its producer wrote none."
+        return
+    }
+
     [long] $sinceNanos = if ($PSBoundParameters.ContainsKey('Since')) {
         [DateTimeOffset]::new($Since).ToUnixTimeMilliseconds() * 1000000
     }
@@ -77,7 +92,7 @@ function Get-XmipHistory {
         [long]::MinValue
     }
 
-    foreach ($point in $document.points) {
+    foreach ($point in $points) {
         if ($Counted -and $point.counted -ne $Counted) {
             continue
         }
