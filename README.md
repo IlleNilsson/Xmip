@@ -527,8 +527,10 @@ are two clusters side by side, each with its own web GUI.
 
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
-three. Omit `-Nodes` and the stress level decides how many nodes there are;
-in a real environment an orchestrator spawns nodes, never Xmip.
+three. Omit both switches and you get the most the rig can give: `-Stress` is
+`Brutal`, and `-Nodes` is that level's full complement, dealt over receive,
+process and send so the message path runs between the node processes; in a
+real environment an orchestrator spawns nodes, never Xmip.
 
 Use the Playground to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries

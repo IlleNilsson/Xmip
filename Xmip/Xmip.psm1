@@ -902,6 +902,7 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeCapability.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipNodeComplement.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')

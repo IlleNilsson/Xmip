@@ -122,6 +122,38 @@ Three records point at a thing none of them defines. This one defines it.
 - A profile's *cluster capabilities* in `deployment-model.md` should be
   read as the union of its nodes' capabilities, and that document's
   wording is to be reconciled with the four kinds.
+- **2026-09-19, the surfaces: all four show it, and none parses the file.**
+  ADR-0014's amendment of the same day — *a change reaches every surface, or
+  says which it did not* — was owed for this record, whose capabilities
+  reached the snapshot and stopped there. The model went into
+  `Xmip.Surface` first: `NodeCapability` is what one node declares, read
+  either from the record the node published at `<node>/capability` or from
+  `[run].capabilities`, which `RunHeader` no longer ignores.
+  `ScopeIndex.Capability(node)` answers from the published record in the one
+  pass the index already makes, and a surface prefers it over `[run]`,
+  because clause 1 says a node declares its own capabilities and `[run]` says
+  only what it was *started* with; `NodeCapability.Origin` says which of the
+  two a reader is looking at. The three faces render that and parse nothing.
+  - **GUI** — the run line on every view names each node with what it
+    declared (`nodes R1=receive P1=process+send S1=send`), which is one list
+    where two would have crowded it; the topology's inspector says a node's
+    capability when the operator has drilled to that node, with the
+    publisher's whole sentence on the row; the configuration tree carries
+    the capability as a row of its own beneath the node, named `capability`
+    rather than filed under *technology*.
+  - **CLI** — owed nothing for the capability itself and was shown to owe
+    nothing by running it: a capability is a scope, so `xmip-cli list
+    <node>` already listed it and `xmip-cli show <node>/capability` already
+    printed the node's own words. What it did owe was the run, which it had
+    never shown at all: `xmip-cli health` now prints the same line the GUI
+    does, and `--json` carries it as `run`.
+  - **PowerShell** — `Get-XmipTestNode` carries `Capability` beside
+    `Online`, read from the `--can` flag the cluster starts each node with.
+    A parameter on a known noun, not a cmdlet.
+  - **What still owes nothing.** Authentication and runtime capability reach
+    no surface because nothing publishes them; the rig says so in its own
+    evidence rather than being silent. The prompt segment is unchanged.
+
 - **Not decided here.** How a capability is written in configuration, how
   a requirement is written beside a Journey or a Receive Location, and
   whether the four kinds are a closed set. Named so the gaps are on the

@@ -346,6 +346,69 @@ Describe 'The environment a roll is started with' {
             Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares process.'
     }
 
+    It 'rolls at the hardest level when -Stress is omitted, and a named level pins it' {
+        # The owner, 2026-09-19: "Omitted -Stress, Omitted -Nodes means bring
+        # it all", and asked which, he chose the hardest level over every
+        # level in turn (ADR-0059, amendment). An omitted selector is the most
+        # the rig can give, not a cautious default.
+        $ast = (Get-Command -Name Start-XmipTest).ScriptBlock.Ast
+        $stress = $ast.Body.ParamBlock.Parameters |
+            Where-Object { $_.Name.VariablePath.UserPath -eq 'Stress' }
+
+        $stress.DefaultValue.Value | Should -Be 'Brutal'
+
+        $offered = $stress.Attributes |
+            Where-Object { $_.TypeName.Name -eq 'ValidateSet' } |
+            Select-Object -First 1
+
+        @($offered.PositionalArguments | ForEach-Object { $_.Value }) |
+            Should -Be @('Calm', 'Realistic', 'Harsh', 'Brutal') -Because 'a level still pins'
+    }
+
+    It 'brings the level''s full complement when -Nodes is omitted, covering the path' {
+        # The complement is the roll's to compose — the count is scaled to the
+        # machine's headroom and only the rig measures it — so the door asks
+        # for it and hands it back by name. What arrives is parsed here, and a
+        # roster the door composed itself must never refuse itself.
+        InModuleScope Xmip {
+            $dealt = ConvertFrom-XmipRosterText -Text (
+                'node-01=receive,node-02=process,node-03=send,node-04=receive')
+
+            $dealt.Nodes | Should -Be @('node-01', 'node-02', 'node-03', 'node-04')
+            $dealt.NodeCapability['node-04'] | Should -Be 'receive'
+            $dealt.Covers | Should -BeTrue
+
+            [hashtable] $asked = @{
+                Nodes          = $dealt.Nodes
+                Test           = 'RoundTrip'
+                NodeCapability = $dealt.NodeCapability
+            }
+            Get-XmipNodeCapabilityRefusal @asked | Should -Be ''
+
+            # Too few nodes for three stages: they declare nothing, the roll
+            # runs RoundTrip whole, and nothing refuses itself.
+            $small = ConvertFrom-XmipRosterText -Text 'node-01,node-02'
+
+            $small.Covers | Should -BeFalse
+            $small.NodeCapability['node-01'] | Should -Be ''
+            $asked.Nodes = $small.Nodes
+            $asked.NodeCapability = $small.NodeCapability
+
+            Get-XmipNodeCapabilityRefusal @asked | Should -Be ''
+
+            { ConvertFrom-XmipRosterText -Text 'node-01=relay' } |
+                Should -Throw -ExpectedMessage 'REFUSED: no capability is called relay*'
+        }
+
+        # The record says the nodes that were resolved, never an empty list:
+        # an operator who typed neither switch can read what they got.
+        [string] $path = Join-Path (Get-XmipRepositoryRoot) 'Xmip/Start-XmipTest.ps1'
+        [string] $door = Get-Content -Raw -LiteralPath $path
+
+        $door | Should -Match '(?m)^\s*nodes\s+= @\(\$Nodes\)\s*$'
+        $door | Should -Match "node_names.+else \{ 'complement' \}"
+    }
+
     It 'refuses an online node that was not named a node' {
         { Start-XmipTest -Nodes R1 -OnlineNodes P1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
@@ -591,7 +654,7 @@ Describe 'What a node was started with' {
             [string] $line = '"D:\a b\xmip-playground-node.exe" --name node-03 ' +
                 '--shared "D:\a b\shared" ' +
                 '--stress harsh --rounds 0 --snapshot "D:\a b\node-03.toml" ' +
-                '--interval-ms 500 --online true'
+                '--interval-ms 500 --can process,send --online true'
             $flags = Read-XmipTestNodeCommandLine -CommandLine $line
 
             $flags.Name | Should -Be 'node-03'
@@ -600,6 +663,7 @@ Describe 'What a node was started with' {
             $flags.Rounds | Should -Be 0
             $flags.Snapshot | Should -Be 'D:\a b\node-03.toml'
             $flags.Interval | Should -Be ([timespan]::FromMilliseconds(500))
+            $flags.Capability | Should -Be 'process,send'
             $flags.Online | Should -BeTrue
         }
     }
@@ -612,6 +676,24 @@ Describe 'What a node was started with' {
             $flags.Interval | Should -Be ([timespan]::FromMilliseconds(250))
             $flags.Online | Should -BeFalse
             $flags.Rounds | Should -Be 3
+            $flags.Capability | Should -Be ''
+        }
+    }
+
+    It 'reads the capability a node declared, and an empty one is no stage' {
+        # ADR-0056: a node declares what it can do and nothing is read out of
+        # its name. The cluster passes --can to every node it spawns, empty
+        # for one that declared no stage and runs whole tests itself.
+        InModuleScope Xmip {
+            $one = Read-XmipTestNodeCommandLine -CommandLine (
+                'xmip-playground-node.exe --name R1 --can receive --online true')
+            $one.Capability | Should -Be 'receive'
+            $one.Online | Should -BeTrue
+
+            $none = Read-XmipTestNodeCommandLine -CommandLine (
+                'xmip-playground-node.exe --name n1 --can "" --online false')
+            $none.Capability | Should -Be ''
+            $none.Online | Should -BeFalse
         }
     }
 }

@@ -127,6 +127,57 @@ rule, and a third party's suite would have inherited neither.
    real test of `Core.Estate`, and as a regular expression it matches
    `RustXStyle` too, while as a wildcard it is the name the operator typed.
 
+## Amendment, 2026-09-19: an omitted selector means the most the rig can give
+
+The owner, the same day, on the two switches nobody types: *"Omitted -Stress,
+Omitted -Nodes means bring it all."* Asked whether an omitted `-Stress` should
+run every level in turn or the hardest one, he chose **the hardest level**.
+
+**Clause 9. An omitted selector on `Start-XmipTest` means the most the rig can
+give, not a cautious default.** `-Stress` omitted is `Brutal`, where it was
+`Realistic`. `-Nodes` omitted is the level's full complement. Naming either
+still pins it, so `-Stress Calm` is calm and `-Nodes @()` is no nodes.
+
+**Clause 10. Maximum, not each in turn — and that is where this differs from
+`-Test`.** Clause 6 says naming no test runs *every* test, because the tests
+are a set and running all of them is one run of the suite. The levels are not
+a set to be covered; they are an ordering of the same run, and a roll at all
+four in turn would be four rolls, each weaker than the last, saying nothing
+the hardest one does not say. So an omitted `-Test` means *every*, an omitted
+`-Stress` means *hardest*, and both are one rule: the most the rig can give of
+the thing that switch selects.
+
+**Clause 11. The full complement is composed, not incidental.** The level's
+own count of nodes was already what an omitted `-Nodes` produced at `harsh`
+and `brutal` — but as nodes that declared nothing, so `RoundTrip` ran whole in
+the roll and the message path between the node processes, the thing the nodes
+exist for, never ran. The complement is now dealt: the level's nodes,
+`node-01` up, taking receive, process and send in message-path order and round
+again, so every stage is covered and no two counts differ by more than one
+(`test/playground/src/complement.rs`). A count and a deal, not a count. And at
+every level, not only the two hard ones: `-Stress Calm` with no `-Nodes` now
+brings calm's own one node where it brought none.
+
+**Clause 12. A level too small for the path declares nothing, and says so.**
+Below three nodes the deal cannot cover three stages, and a roster with two of
+the three declared is refused by `Roster::refusal` — an omitted `-Nodes` that
+composed a roster which then refused itself would be no answer at all. Below
+three, every node of the complement declares no stage: each runs whole tests
+itself, as a node that declares nothing always has, the roll runs `RoundTrip`
+whole, and `Start-XmipTest` warns in words, naming the count and
+`-Nodes R1, P1, S1` as what would split the path. ADR-0055 clause 5 allows
+exactly this: carrying on is right, it is not what the operator probably
+meant, so it is said rather than left to be noticed.
+
+**Clause 13. The rig owns the count; the door owns the record.** How many
+nodes a level brings is scaled to the machine's headroom, and only the rig
+measures that, so `Start-XmipTest` asks it — `xmip-playground-roll --roster
+<level>` prints the complement and starts nothing — and then hands those names
+back to the roll. One composition, in one place, and the run record can carry
+the nodes an operator never typed. Both readings of a run now say what it was:
+the record beside the snapshot and the `[run]` table inside it, and the roll's
+first log line names the level and the roster it resolved to.
+
 ## Consequences
 
 - `Start-XmipTest -Suite Playground` is refused where it used to run. That
@@ -175,6 +226,13 @@ rule, and a third party's suite would have inherited neither.
   files live, the declaration moves there and this clause is what says it
   may. Nothing in the estate ships a declaration today, so the mechanism is
   proven by a fixture and by the refusals, not by a second provider.
+- **What the amendment changed, and what it left.** `Start-XmipTest -Cluster
+  C1` with nothing else now rolls at `brutal` over the brutal complement,
+  where it rolled at `realistic` over none. `Start-XmipTestNode -Stress` keeps
+  `Calm`: its `-Nodes` is mandatory, so nothing there is omitted and there is
+  no selector to read as *bring it all* — the owner's words were about the two
+  switches of `Start-XmipTest`. If he wants one default for both, this is the
+  clause to strike.
 - **Not decided here.** Whether a provider may declare more than one suite
   in one file, whether a declaration may name a script rather than a
   command, and how a suite's own tests are offered to `-Test` tab
@@ -228,3 +286,13 @@ otherwise. The eight clauses, the declaration file's shape, the choice of
 `test/suite` over the manifest, and the reading of ADR-0011 and ADR-0055
 into them are the assistant's drafting, and the record is Proposed rather
 than Accepted until the owner says so.
+
+The amendment's rule is the owner's too, 2026-09-19, quoted at its head, and
+so is the choice between the hardest level and every level in turn: he was
+asked, and answered *the hardest*. Clauses 11 to 13 — that the complement is
+dealt over the message path rather than merely counted, that a level too
+small for the path declares nothing and is warned about rather than refused,
+and that the count is asked of the rig so the door can record it — are the
+assistant's drafting. Clause 12 is the one to read twice: refusing outright
+was the alternative, and it was declined because it would refuse every
+`-Stress Calm` run, calm's own count being one.
