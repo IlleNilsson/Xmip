@@ -162,8 +162,8 @@ xmip
     │
     └── provider = anyone else ──────────  their license, their support, no approval needed
         │
-        ├── surface module                 xmip-acme-abi
-        │   (abi, cli, powershell)         xmip-acme-cli
+        ├── surface module                 xmip-<provider>-abi
+        │   (abi, cli, powershell)         xmip-<provider>-cli
         │                                  nothing external to name — stops here
         │
         └── standard-keyed module          xmip-saxon-transform-xslt
@@ -174,7 +174,8 @@ xmip
 Two things the tree states that prose keeps losing. A provider's surface
 modules stop at the module because there is no external standard to name —
 ADR-0012 clause 11. Everyone else's modules *must* carry the standard, because
-`xmip-acme-transform` claims a capability while `xmip-acme-transform-xslt`
+`xmip-<provider>-transform` claims a capability while
+`xmip-<provider>-transform-xslt`
 claims an implementation of something nameable, and only the second can be
 held to anything.
 

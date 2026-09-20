@@ -1,4 +1,4 @@
-#requires -Version 7.6.5
+﻿#requires -Version 7.6.5
 
 Set-StrictMode -Version Latest
 
@@ -12,12 +12,13 @@ function Start-XmipTest {
         .DESCRIPTION
             Xmip provides its tests as suites, and -Suite says which one runs.
             A suite carries the provider who publishes it, exactly as a module
-            does (ADR-0011): Playground is a roll that runs detached until
-            you stop it, Get-XmipTestStatus says what runs and Stop-XmipTest
-            ends it; Estate is the Pester suite under test/, the estate's
-            memory of every past defect, which runs here and now, says OK or
-            FAILED and returns the Pester result. Acme.Playground is Acme's,
-            and joins by a declaration rather than by an edit to Xmip.
+            does (ADR-0011): Core.Playground is a roll that runs detached
+            until you stop it, Get-XmipTestStatus says what runs and
+            Stop-XmipTest ends it; Core.Estate is the Pester suite under
+            test/, the estate's memory of every past defect, which runs here
+            and now, says OK or FAILED and returns the Pester result.
+            A third party's suite is <Provider>.<Name> and joins by a
+            declaration rather than by an edit to Xmip.
 
             The Playground (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
@@ -42,13 +43,16 @@ function Start-XmipTest {
             is whose.
 
         .PARAMETER Suite
-            Which test suite to run: Playground (the default) or Estate,
-            which are Xmip's own. A name with no provider is Xmip's, because
-            core is the reserved provider (ADR-0011), so Playground and
-            Core.Playground are the one suite and Playground is how it is
-            spelled. Someone else's carries their name: Acme.Playground.
-            Case does not matter. The Playground parameters below belong to
-            the Playground alone.
+            Which test suite to run: Core.Playground (the default) or
+            Core.Estate, which are Xmip's own. Every suite is
+            <Provider>.<Name> and core is the reserved provider that means
+            Xmip itself (ADR-0011), so Core.Playground is how the Playground
+            is spelled — in the run record, in every refusal and on every
+            surface. A bare Playground is still accepted and resolves to it,
+            so nothing typed before this means anything else now. A third
+            party's suite carries its own provider: <Provider>.<Name>. Case
+            does not matter. The Playground parameters below belong to the
+            Playground alone.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite this estate knows, -Suite
@@ -66,12 +70,14 @@ function Start-XmipTest {
             not a fault when a pattern chose the group: -Suite * -Cluster Z3
             rolls on Z3 and runs the estate's Pester files beside it.
 
-            A provider adds a suite by dropping a declaration in test/suite,
-            with no edit to Xmip's own source:
+            A third party adds a suite by dropping a declaration in
+            test/suite, with no edit to Xmip's own source. Example stands in
+            for whatever it calls itself; the estate names no placeholder
+            company (ADR-0059, amendment 2026-09-20):
 
-                provider = "Acme"
+                provider = "Example"
                 name     = "Playground"
-                command  = "Start-AcmeXmipTest"
+                command  = "Start-ExampleXmipTest"
 
             Start-XmipTest hands that command everything it was given beside
             -Suite. A declaration missing any of the three, or claiming the
@@ -111,7 +117,7 @@ function Start-XmipTest {
 
         .PARAMETER Nodes
             The nodes to simulate, by name — one process each, spawned by the
-            roll's cluster process, so -Nodes R1, P1, S1 is three node
+            roll's cluster process, so -Nodes alpha, beta, gamma is three node
             processes called that under one cluster called -Cluster. What
             each node does is the capability it is started with (ADR-0056),
             stated with -NodeCapability. A name says nothing about it: the
@@ -164,10 +170,11 @@ function Start-XmipTest {
             its nodes, never invents a name for one (the owner, 2026-09-14
             and 2026-09-19). The
             scope root is xmip:///<Cluster> and the run publishes to
-            <Cluster>-snapshot.toml beside its history and activity. Two
-            rolls with two names are two clusters side by side, each with
-            its own web GUI:
-            Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
+            <Cluster>-snapshot.toml beside its history and activity. Any name
+            a file can carry will do, and none of them means anything to
+            Xmip. Two rolls with two names are two clusters side by side,
+            each with its own web GUI:
+            Start-XmipTest -Cluster orders -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
@@ -183,46 +190,47 @@ function Start-XmipTest {
             Return the Xmip.TestStatus object for the roll started.
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Cluster C1
+            Start-XmipTest -Suite Core.Playground -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Playground -Cluster C1 -Nodes R1, P1 -PassThru |
+            Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes alpha, beta -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, R2, P1, S1 -OnlineNodes R1, S1
-                -NodeCapability @{ R1 = 'receive'; R2 = 'receive'; P1 = 'process'; S1 = 'send' }
+            Start-XmipTest -Test RoundTrip -Cluster orders -Nodes east, west, mill, quay
+                -OnlineNodes east, quay -NodeCapability @{ east = 'receive'
+                    west = 'receive'; mill = 'process'; quay = 'send' }
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes alpha, beta, gamma -NodeCapability
-                @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
+            Start-XmipTest -Test RoundTrip -Cluster north -Nodes alpha, beta, gamma
+                -NodeCapability @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
 
         .EXAMPLE
-            Start-XmipTest -Suite Estate -Test Rust.Style, XmipTest
+            Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Cluster nightly -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Estate
+            Start-XmipTest -Suite Core.Estate
 
         .EXAMPLE
-            (Start-XmipTest -Suite Estate).Failed | Format-Table ExpandedPath
+            (Start-XmipTest -Suite Core.Estate).Failed | Format-Table ExpandedPath
 
         .EXAMPLE
-            Start-XmipTest -Suite Acme.Playground -Cluster C1
+            Start-XmipTest -Suite Example.Playground -Cluster orders
 
         .EXAMPLE
-            Start-XmipTest -Suite Estate -Test Sync-Xmip*
+            Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
 
         .EXAMPLE
-            Start-XmipTest -Suite * -Cluster C1
+            Start-XmipTest -Suite * -Cluster orders
 
         .EXAMPLE
-            Start-XmipTest -Suite *Play* -Cluster C1
+            Start-XmipTest -Suite *Play* -Cluster orders
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus', 'Pester.Run')]
@@ -256,7 +264,7 @@ function Start-XmipTest {
                 ForEach-Object { $_.Name } |
                 Where-Object { $_ -like "$wordToComplete*" }
         })]
-        [string] $Suite = 'Playground',
+        [string] $Suite = 'Core.Playground',
 
         # The hardest level, because an omitted selector means the most the
         # rig can give and not a cautious default (the owner, 2026-09-19;
@@ -270,8 +278,9 @@ function Start-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            # Bare or qualified, both name the estate's suite (ADR-0059,
-            # amendment 2026-09-19); omitted, -Suite is the Playground.
+            # Qualified or bare, both name the estate's suite, and
+            # Core.Estate is the spelling (ADR-0059, amendment 2026-09-20);
+            # omitted, -Suite is the Playground.
             [string] $asked = "$($fakeBoundParameters['Suite'])"
 
             [string[]] $names = if ($asked -ieq 'Estate' -or $asked -ieq 'Core.Estate') {
@@ -329,9 +338,9 @@ function Start-XmipTest {
     # missing piece is what the owner saw on 2026-09-12.
     $ErrorActionPreference = 'Stop'
 
-    # Which suites there are is read, never declared at the parameter: Acme's
-    # is a file a provider dropped, and this session may have started before
-    # it existed. Refused here, before anything is built or spawned.
+    # Which suites there are is read, never declared at the parameter: a
+    # third party's is a file it dropped, and this session may have started
+    # before it existed. Refused here, before anything is built or spawned.
     [object[]] $known = @(Get-XmipTestSuite)
     [string] $refused = Get-XmipTestSuiteRefusal -Name $Suite -Known $known
 
@@ -340,10 +349,10 @@ function Start-XmipTest {
         return
     }
 
-    # Whatever was typed, the suite says what it is called: Core.Playground
+    # Whatever was typed, the suite says what it is called: a bare Playground
     # resolves to the Playground and the record carries the canonical
-    # spelling (ADR-0059, amendment 2026-09-19). A pattern may name several,
-    # and then each is run in turn.
+    # spelling, Core.Playground (ADR-0059, amendment 2026-09-20). A pattern
+    # may name several, and then each is run in turn.
     [object[]] $matched = @(Get-XmipNamedTestSuite -Name $Suite -Known $known)
 
     if ($matched.Count -gt 1) {
@@ -511,14 +520,16 @@ function Start-XmipTest {
             Write-Warning ("The $($Stress.ToLowerInvariant()) level brings " +
                 "$($Nodes.Count) node(s) on this machine, too few for receive, " +
                 'process and send: they declare no stage and RoundTrip runs whole ' +
-                "in the roll. Name -Nodes and state -NodeCapability @{ R1 = 'receive'; " +
-                "P1 = 'process'; S1 = 'send' } to split the message path.")
+                'in the roll. Name -Nodes and state -NodeCapability ' +
+                "@{ alpha = 'receive'; beta = 'process'; gamma = 'send' } " +
+                'to split the message path.')
         }
     }
 
     # A process name is its image file's name, so the roll, its cluster and
     # every node run images linked for this cluster: the operating system then
-    # says xmip-playground-C1-node-R1 rather than one more xmip-playground-node
+    # says xmip-playground-<cluster>-node-<node>, both names the operator's,
+    # rather than one more xmip-playground-node
     # (the owner, 2026-09-20; ADR-0053, amendment). The roll finds its cluster
     # binary beside its own image and the cluster finds the node binary the
     # same way, which is why all three are linked here.

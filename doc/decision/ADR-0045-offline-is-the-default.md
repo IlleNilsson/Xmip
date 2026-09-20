@@ -98,3 +98,36 @@ they may reach out; at every stress level the default is that none may.
 The rule is the owner's, 2026-09-10, stated in one message; the drafting is the
 assistant's on the instruction to proceed. The earlier records it gathers under
 one rule are named above.
+
+## Amendment, 2026-09-20: an online node is where the estate fetches from
+
+The owner: *an online node can be used to download Xmip and related software
+as Visual Studio Code and extensions.*
+
+Clause 2 says packaging is online and installation is offline, and clause 3
+gives every node a switch that records whether it may assume a route out.
+Neither said **who does the fetching**, and the unspoken answer had been "a
+developer's laptop, somewhere else". That leaves an air-gapped estate with no
+account of how software reaches it at all.
+
+- **A node with the online capability is the estate's door.** It fetches what
+  the estate needs from the world — Xmip's own releases, the prerequisites of
+  `prerequisite.toml`, Visual Studio Code and the Xmip extension, a module a
+  provider published — and the offline nodes take it from there rather than
+  from the internet. Online capability is ADR-0056's first kind, and this is
+  the first thing it is *for* rather than merely a fact about a node.
+- **It changes nothing about the message path.** Clause 1 stands whole: no
+  node reaches for the internet to receive, process, send, retain or archive.
+  Fetching software is provisioning, which clause 2 already places outside the
+  path, and it happens whether or not any Journey is running.
+- **Offline stays the default, and the fetch is deliberate.** A node does not
+  acquire software because it can. Someone asks it to, as someone asks for an
+  ACME certificate (ADR-0034) — the one online act the estate already had.
+- **What follows, and is not built.** `Install-XmipPrerequisite` installs
+  through the machine's own package manager, which assumes the machine can
+  reach a feed; on an offline node it cannot, and the cmdlet has no way to be
+  handed what an online node already fetched. Where a fetched thing is put,
+  how an offline node is pointed at it, and how its integrity is proven are
+  all open. They are named here so the gap is on the record.
+
+Agreed 2026-09-20, not yet built.

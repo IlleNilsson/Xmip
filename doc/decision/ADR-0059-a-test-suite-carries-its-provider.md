@@ -20,10 +20,11 @@
   wildcard on a filter
 
 **A test suite is named `<Provider>.<Name>`, the same rule that names every
-module (ADR-0011), and the provider is required: `Core.Playground`, never
-`Playground`. `core` is Xmip itself; anyone else names themselves, and adds
-a suite by declaring it rather than by editing Xmip. Naming no test runs
-the whole suite, for every suite and every provider.**
+module (ADR-0011): `Core.Playground` is the name, and it is what the estate
+prints, records and documents. `core` is Xmip itself, so a bare `Playground`
+is accepted as its shorthand and canonicalized; a third party names itself
+and adds a suite by declaring it rather than by editing Xmip. Naming no test
+runs the whole suite, for every suite and every provider.**
 
 ## Context
 
@@ -43,7 +44,8 @@ property. use wild characters or regexp for parameters. For instance
 Read against ADR-0011 that is the one shape the estate does not allow: a
 name with no provider slot cannot say who stands behind the thing it names,
 and a second implementation has nowhere to live. The same argument that gave
-`xmip-acme-contract-json-schema` its place gives `Acme.Playground` its place,
+`xmip-<provider>-contract-json-schema` its place gives
+`<Provider>.Playground` its place,
 and a bare `Playground` denies it.
 
 The two core suites also already ran whole when no test was named, but by
@@ -77,14 +79,15 @@ rule, and a third party's suite would have inherited neither.
    a TOML file under `test/suite`, one per suite, saying three things:
 
    ```toml
-   provider = "Acme"
+   provider = "Example"
    name     = "Playground"
-   command  = "Start-AcmeXmipTest"
+   command  = "Start-ExampleXmipTest"
    ```
 
    `Start-XmipTest` hands that command everything it was given beside
    `-Suite`. The command is the provider's own, from the provider's
-   PowerShell surface module — `xmip-acme-powershell` in ADR-0011's terms —
+   PowerShell surface module — `xmip-<provider>-powershell` in ADR-0011's
+   terms —
    so Xmip runs nothing of its own for a suite it did not write. A
    declaration that omits any of the three, that spells provider or name as
    something other than a name, that claims the reserved provider `core`, or
@@ -147,7 +150,8 @@ a bare name at the door. `Playground` and `Estate` are how the estate spells
 its own suites, and they are what every surface prints, records and documents:
 the run record's `suite` field, `Get-XmipTestStatus`, `Get-XmipTestResult`,
 `Get-XmipTestNode`, the `[run]` table, the refusals, tab completion and all
-help text. A third party's stays qualified, because it must: `Acme.Playground`.
+help text. A third party's stays qualified, because it must:
+`<Provider>.<Name>`.
 
 This is not the alternative this record rejected. *Accept a bare name and
 expand it to `Core.<Name>`* was declined below as teaching the wrong shape;
@@ -155,8 +159,9 @@ what is decided here is stronger and is ADR-0011's own clause applied rather
 than bent — *`core` is reserved and means Xmip itself*. A name with no
 provider is therefore not a name missing a slot; it is the reserved
 provider's, exactly as a one-token module name already means platform level
-in ADR-0011. The slot `Acme.Playground` needs was never the bare word's to
-occupy: `Acme` is not `core`, and nothing a bare name means is available to
+in ADR-0011. The slot `<Provider>.Playground` needs was never the bare word's
+to occupy: a third party is not `core`, and nothing a bare name means is
+available to
 anyone else.
 
 **Clause 15. The qualified form is still accepted, and that is the owner's to
@@ -286,10 +291,187 @@ the nodes an operator never typed. Both readings of a run now say what it was:
 the record beside the snapshot and the `[run]` table inside it, and the roll's
 first log line names the level and the roster it resolved to.
 
+## Amendment, 2026-09-20: the qualified name is canonical, and no placeholder
+
+Three rulings, all the owner's, all the same day, quoted here as he wrote them.
+The first two are about the suite name and are opposite to one another; the
+third is about the company the record had invented. This amendment says which
+way the estate went, and says that it changed its mind rather than letting the
+record read as though it always knew.
+
+### The suite is `Core.Playground`
+
+The morning, on having used the qualified form and disliked it — the ruling the
+amendment of 2026-09-19 above carries: *"Got it, -Suite is Playground, Not
+Core.Playground. My choice. That is fine but all instructions has to be
+updated."*
+
+The afternoon, on being told the suite was called `Playground`: *"Sort it, there
+was a decision made. It's name is Core.Playground, to give place for third
+parties."*
+
+**Clause 21. The qualified form is canonical, and clauses 1 and 2 as this
+record first wrote them are the rule again.** `Core.Playground` and
+`Core.Estate` are what the estate prints, records and documents: the run
+record's `suite` field, `Get-XmipTestStatus`, `Get-XmipTestResult`,
+`Get-XmipTestNode`, the `[run]` table, every refusal, tab completion, all help
+text, `README.md`, `CONTRIBUTING.md` and the governance documents. This
+**supersedes clause 14** of the amendment above, which made the bare name
+canonical. That amendment is not deleted and its ruling is not rewritten: it was
+what he said in the morning, an agent made the whole estate say it, and by the
+afternoon he had decided the other way. A record that quietly reverses itself is
+worse than one that shows it changed its mind.
+
+The reason he gave the second time is the reason clause 1 gave the first time —
+*to give place for third parties* — which is why the second ruling wins rather
+than merely being later. The morning's was a preference about typing; the
+afternoon's is about the slot the name leaves for someone else, and that is what
+this record exists to protect.
+
+**Clause 22. A bare name is accepted and is canonicalized to the qualified one.
+This is the assistant's reading of two opposite rulings, and it is the owner's
+to strike.** He has now said *"Not Core.Playground"* once and *"It's name is
+Core.Playground"* once. Read together, the thing both rulings agree on is that
+`Core.Playground` must exist and must be spelled somewhere; they disagree only
+about whether `Playground` is an error. It is not treated as one. `Playground`
+and `core.playground` both resolve to `Core.Playground`, case never matters, and
+what comes back is always the qualified spelling — so every command he typed
+this morning still runs and every instruction the estate publishes is correct.
+Refusing a bare name would break the former to satisfy the latter, and nothing
+he wrote asked for that.
+
+This **supersedes clause 2** of the record as first written, which refused a
+bare name at the door, and it **replaces clause 15**, which said the same thing
+with the canonical and the accepted the other way round. **If he wants a bare
+name refused, this is the clause to strike**, and it is one condition in
+`Get-XmipNamedTestSuite` — the `Provider -ieq 'Core'` arm that lets an unqualified
+name reach the reserved provider's suites.
+
+**Clause 23. A bare name reaches the reserved provider alone.** `Playground` is
+shorthand for `Core.Playground` and never for a third party's suite of the same
+name, even where Xmip declares none. That is what keeps the shorthand safe to
+accept: it can only ever mean the one thing ADR-0011 already says a missing
+provider means.
+
+### The estate names no placeholder company
+
+On the invented third party: *"third parties aka acme, as NOT in the
+certification protocol ACME"*, and then: *"Let's dump acme as a word for third
+party. Let's just use 3'rd party instead."*
+
+**Clause 24. There is no placeholder company. A grammar slot says what a
+fictional company only pretended to say.** `Acme` was this record's example
+provider in thirty-nine places across the estate — `Acme.Playground`,
+`xmip-acme-powershell`, `Start-AcmeXmipTest`, `xmip-acme-authenticate-scim`, and
+ADR-0012's descriptor comment `"core", "saxon", "acme"`. The estate also uses
+ACME for what RFC 8555 means by it: certificate provisioning from Let's Encrypt,
+eleven times in ADR-0033 and six in ADR-0034. So the same four letters named the
+protocol Xmip depends on and a company Xmip made up, and a reader had to know
+which was which from context. The invented company goes; the protocol stays,
+untouched, everywhere it appears.
+
+What replaces it:
+
+1. **In prose, a third party is called a third party.** *A third party declares
+   a suite under `test/suite`.* No invented name appears in explanatory text
+   anywhere in the estate.
+
+2. **Where a grammar needs a slot, the metavariable the estate already uses.**
+   `<provider>` and `<Provider>`: `xmip-<provider>-powershell`,
+   `<Provider>.<Name>`. ADR-0011 already writes
+   `xmip-<provider>-<module>-<standard>`, so this is the estate's own
+   convention rather than a new one, and it says the true thing — the slot is a
+   slot — where a company name only stood in for it.
+
+3. **Where a runnable example or a test fixture needs a literal, one token:
+   `Example`, lowercase `example` for a repository segment.** A suite
+   declaration has to hold a string; a test asserting that a qualified name
+   resolves has to name one. The token is `Example` because RFC 2606 reserves
+   `example` for documentation precisely so that documentation can never
+   collide with a real party — which is the exact fault `acme` had — and because
+   it is plainly not a company, which is what was asked for. It collides with
+   nothing: `xmip-example-*`, `Example.Playground` and `Start-ExampleXmipTest`
+   appear nowhere else in the estate. One token across the whole estate, so a
+   reader learns it once.
+
+   `vendor` and `partner` were considered and both were rejected on collision
+   with the estate's own vocabulary, not on taste. ADR-0011 uses *vendor* as a
+   naming concept — *a vendor name in slot 3 is unremarkable* — so
+   `xmip-vendor-contract-sql` would read as a dialect rather than a publisher,
+   in the one record that governs the slot. *Partner* is a domain term of
+   ADR-0019, `doc/terminology.md` and the runtime model, where it means a party
+   Xmip exchanges messages with. **The choice of `Example` is the assistant's
+   and is the owner's to change**; it is one token and a sweep.
+
+4. **`saxon` stays.** It is a real XSLT vendor, named deliberately in ADR-0011
+   as a real example of the provider slot in use. It was never a placeholder,
+   and nothing here touches it.
+
+5. **The ACME protocol stays, and so do his own words.** ADR-0033, ADR-0034,
+   ADR-0045, ADR-0056, ADR-0019, `doc/architecture/runtime-model.md`,
+   `README.md`'s walkthrough and the Playground's fault simulation all mean RFC
+   8555 and are correct. The owner's quoted words keep his spelling wherever he
+   wrote *acme*, including in the Context of this record, because a quote is
+   what was said.
+
+6. **This record's own earlier prose is swept in place, not annotated.** The
+   Context, the original clause 4, the superseded amendment, the Consequences
+   and the Alternatives all named `Acme` as the example provider; they now say
+   `<Provider>` or *a third party*, and clause 4's declaration holds `Example`.
+   Nothing they decided changed — the placeholder was never a decision, only an
+   illustration of one — so annotating each would have buried the rule under its
+   own footnotes. The rulings, the clauses and every word of his stay exactly
+   where they were.
+
+### What this amendment overtakes in the Consequences below
+
+The first Consequences bullet says *`Start-XmipTest -Suite Playground` is
+refused where it used to run*. It is not refused; clause 22 accepts it and
+canonicalizes it. The second bullet — *the run record carries
+`suite = "Core.Playground"`* — is true again, and so is the rest of that bullet
+about `Get-XmipTestStatus`, `Get-XmipTestResult` and `Get-XmipTestNode` saying
+`Core.Playground` from one spelling held in one place. The paragraph of the
+amendment above headed *What this amendment overtakes in the Consequences below*
+is therefore itself overtaken: a record written this morning with
+`suite = "Playground"` is read back as `Core.Playground`, and one written before
+that already said it.
+
+### Where these two reached
+
+The canonical spelling: `$script:XmipPlaygroundSuite` and
+`$script:XmipEstateSuite` in `Xmip/Get-XmipTestSuite.ps1`, `New-XmipTestSuite`'s
+canonical `Name`, `Get-XmipNamedTestSuite`, `Get-XmipTestSuiteRefusal`,
+`Start-XmipTest`'s default, help, examples and tab completion,
+`Get-XmipTestStatus`, `Get-XmipTestResult`, `Get-XmipTestNode`,
+`Start-XmipOperationWeb`'s filter, `test/XmipTest.Test.ps1`, `README.md`,
+`CONTRIBUTING.md`, `doc/governance/release-model.md` and
+`doc/governance/powershell-style.md`.
+
+The placeholder: ADR-0011 and ADR-0012, each with an amendment of its own
+pointing here; ADR-0014's `xmip-<provider>-gui`; ADR-0057's
+`xmip-<provider>-authenticate-scim`; `doc/architecture/repository-model.md`'s
+tree; `module/foundation/core/src/mechanism.rs`; and the module and test files
+above.
+
+Two shipped documents were checked and needed nothing:
+`module/operation/cli/src/Xmip.Cli/xmip.cli.toml` and
+`module/operation/powershell/src/Xmip.PowerShell/xmip.powershell.toml` name the
+Playground as the rig of ADR-0028 and no longer name a suite or the command that
+produced their snapshot, which the Consequences above said they did.
+
+**Not swept, and named here so it is a decision rather than an oversight.**
+Several Rust test fixtures in mounted modules use *ACME* as a customer or tenant
+name in sample data — a CSV row, an Avro string, a Pub/Sub project id, a claim
+value — and `test/playground` uses it in a payload fixture. None of them is the
+example *provider* this ruling is about, none of them is read by a person
+looking for who publishes a module, and changing them would dirty modules for
+nothing. **If he wants them gone too, that is one sweep and this clause is where
+to say so.**
+
 ## Consequences
 
 - `Start-XmipTest -Suite Playground` is refused where it used to run. That
-  is the instruction: the slot it left empty is where `Acme.Playground`
+  is the instruction: the slot it left empty is where `<Provider>.Playground`
   goes. `-Suite` still defaults to `Core.Playground`, so every command that
   never said `-Suite` is unaffected.
 - The suite travels. The run record carries `suite = "Core.Playground"`, and
@@ -357,7 +539,8 @@ that pays.
 
 **Accept a bare name and expand it to `Core.<Name>`.** Convenient, and it
 teaches the wrong shape: an operator who types `Playground` for a year
-learns that a suite has no provider, and the day Acme ships one, a habit has
+learns that a suite has no provider, and the day a third party ships one, a
+habit has
 to be unlearned. The owner said the qualified form should be *needed*.
 
 **A `ValidateSet` rebuilt at import from the declarations.** The set would
@@ -415,3 +598,19 @@ check lives and why, are the assistant's drafting. Clause 15 — that
 `Core.Playground` is still accepted — and clause 19 — that the default stays
 `Playground` — are named there as the owner's to strike, and are the two
 things to read first.
+
+The third amendment's three rulings are the owner's, 2026-09-20, quoted at its
+head: that the suite's name is `Core.Playground`, and that no invented company
+stands for a third party. The first of those reverses his own ruling of the
+morning, which is said in the open rather than smoothed over. Clause 22 — that a
+bare name is accepted and canonicalized rather than refused — is the assistant's
+reading of two opposite rulings and is named there as his to strike, and it is
+the first thing to read. So is the choice of `Example` as the one literal
+stand-in token in clause 24, with `vendor` and `partner` rejected on collision
+with ADR-0011's and ADR-0019's own vocabulary; the reasoning is stated so he can
+overrule it in one sweep. The `## In brief` block above still reads
+*`Core.Playground`, never `Playground`*. The first half was right again; the
+second contradicted clause 22, which accepts the bare form as the reserved
+provider's shorthand. Corrected the same day, and the index regenerated with
+it, so the estate's own concept listing no longer advertises a rule the
+record does not hold.

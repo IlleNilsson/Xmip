@@ -147,9 +147,10 @@ function ConvertTo-XmipTestResult {
         $segments = @($segments | Select-Object -Skip 2)
     }
 
-    # A role node publishes its stage of RoundTrip straight under its name:
-    # node/R1/receive/tcp/json is RoundTrip's, as round-trip/receive/tcp/json
-    # is when the roll runs the test whole.
+    # A node that declared a stage publishes it straight under its own name,
+    # whatever that name is: node/<node>/receive/tcp/json is RoundTrip's, as
+    # round-trip/receive/tcp/json is when the roll runs the test whole. The
+    # stage is read from the path, never from the node's name.
     if ($node -ne '' -and $segments.Count -ge 1 -and
         $segments[0] -in 'receive', 'process', 'send') {
         $segments = @('round-trip') + $segments

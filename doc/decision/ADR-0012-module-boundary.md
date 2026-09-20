@@ -106,7 +106,7 @@ have to give when the boundary faced one direction.
 ```c
 typedef struct {
     uint32_t    abi_version;      /* handshake version — currently 1        */
-    const char* provider;         /* "core", "saxon", "acme"                */
+    const char* provider;         /* "core", "saxon", a third party's       */
     const char* module;           /* "transport", "path", "contract"        */
     const char* standard;         /* "http", "xpath" — null for none        */
     uint32_t    trait_major;      /* trait version built against            */
@@ -173,8 +173,8 @@ What this ADR set out to make possible is unaffected. A module author is not obl
 Clauses 10 and 11. `abi` is a core module with a plugin surface, not internal plumbing. Xmip publishes `xmip-core-abi`. Any provider may extend it.
 
 ```text
-xmip-core-abi      xmip-core-cli      xmip-core-powershell
-xmip-acme-abi      xmip-acme-cli      xmip-acme-powershell
+xmip-core-abi          xmip-core-cli          xmip-core-powershell
+xmip-<provider>-abi    xmip-<provider>-cli    xmip-<provider>-powershell
 ```
 
 These are **surface** modules under ADR-0011: a provider extends Xmip's own surface rather than implementing someone else's specification, so there is no standard to name and the name stops at the provider. That is the one case where a non-`core` provider may omit the last slot.
@@ -186,3 +186,12 @@ A binding is a convenience over the header, never the definition of the boundary
 ## Open
 
 Nothing in this ADR. What remains is implementation: a first module built against the specification, and a conformance suite able to drive the seven rules in its section 11 from outside a module.
+
+## Amendment, 2026-09-20: the descriptor's example provider
+
+The descriptor's comment on `provider` read `"core", "saxon", "acme"`. It now
+reads `"core", "saxon", a third party's`. The field is unchanged; the example
+is. ADR-0059's amendment of 2026-09-20 records why — `acme` collided with the
+ACME provisioning protocol ADR-0033 and ADR-0034 actually use — and ADR-0011's
+amendment of the same day carries it through the naming rule. The surface-module
+example in this record moves to `xmip-<provider>-abi` for the same reason.

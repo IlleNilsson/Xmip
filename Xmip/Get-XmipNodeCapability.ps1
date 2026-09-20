@@ -264,7 +264,7 @@ function Get-XmipNodeCapabilityWarning {
 
         .DESCRIPTION
             A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn
-            are arbitrary node names), so -Nodes R1, P1, S1 with no
+            are arbitrary node names), so -Nodes alpha, beta, gamma with no
             -NodeCapability is three nodes that declare no stage. That is
             legal — they run the shared-directory tests whole and the roll runs
             RoundTrip itself — and it is probably not what the operator meant,

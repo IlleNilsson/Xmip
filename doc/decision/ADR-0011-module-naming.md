@@ -79,13 +79,14 @@ an external specification. `abi`, `cli` and `powershell` are surface modules. Th
 provider and stop:
 
 ```text
-xmip-core-abi          xmip-core-cli          xmip-core-powershell
-xmip-acme-abi          xmip-acme-cli          xmip-acme-powershell
+xmip-core-abi              xmip-core-cli              xmip-core-powershell
+xmip-<provider>-abi        xmip-<provider>-cli        xmip-<provider>-powershell
 ```
 
-There is no standard to name, so requiring one would force an invented token. `xmip-acme-cli`
-is already unambiguous: it is Acme's contribution to the command surface. A provider
-publishes one of each at most, which is the accepted cost of the shorter name.
+There is no standard to name, so requiring one would force an invented token.
+`xmip-<provider>-cli` is already unambiguous: it is that third party's contribution to
+the command surface. A provider publishes one of each at most, which is the accepted
+cost of the shorter name.
 
 Surface modules are open to any provider on the same terms as every other module. They are
 not core-only, and no approval is needed to publish one.
@@ -139,9 +140,9 @@ This is why the rule needs no enforcement mechanism. The name states who stands 
 ### The provider slot and the standard slot are not alike
 
 ```text
-xmip-acme-contract-volkswagen-multimedia
-     ^^^^          ^^^^^^^^^^^^^^^^^^^^^
-     who made it   what it talks to
+xmip-<provider>-contract-volkswagen-multimedia
+     ^^^^^^^^^^          ^^^^^^^^^^^^^^^^^^^^^
+     who made it         what it talks to
 ```
 
 The provider slot is **attributive**. Under the endorsement rule it states who publishes and
@@ -209,8 +210,8 @@ Only the naming patterns in ADR-0010 clauses 3, 6, 7, 8 and 9 are superseded. Th
 The shape is close to ADR-0010 — the difference is the provider slot, which is what lets a second implementation exist:
 
 ```text
-xmip-core-contract-json-schema     shipped by Xmip
-xmip-acme-contract-json-schema     shipped by someone else
+xmip-core-contract-json-schema          shipped by Xmip
+xmip-<provider>-contract-json-schema    shipped by a third party
 ```
 
 ## Supersedes
@@ -229,3 +230,18 @@ ADR-0001 clause `xmip-<core-area>` for core repositories is unaffected.
 A repository is the unit of source, build and release. A sub-module is the unit of loading and runtime upgrade. One repository may ship several sub-modules where they share an implementation — one driver, one dialect, one credential model, one test suite.
 
 The manifest remains the registry. It is the only place that will know a third-party module exists.
+
+## Amendment, 2026-09-20: the example provider is a slot, not a company
+
+The placeholder in this record used to be `acme`. It is now `<provider>`, the
+metavariable this record already writes in `xmip-<provider>-<module>-<standard>`,
+and prose says *a third party*. Nothing about the rule changed; only the example
+did. The reason is recorded once, in ADR-0059's amendment of the same day: the
+estate uses ACME for what RFC 8555 means by it — certificate provisioning, in
+ADR-0033 and ADR-0034 — so the same four letters named both the protocol Xmip
+depends on and a company Xmip invented. The owner struck the invented company
+rather than the protocol: *"Let's dump acme as a word for third party. Let's just
+use 3'rd party instead."*
+
+`saxon` stays. It is a real XSLT vendor, named here deliberately as a real
+example of the provider slot in use, and it was never a placeholder.

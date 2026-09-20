@@ -3,17 +3,18 @@
 Set-StrictMode -Version Latest
 
 # A test suite carries a provider, exactly as a module does (ADR-0011), and
-# `core` is reserved for Xmip itself — so a name with no provider is already
-# the reserved provider's, and Xmip's own two are spelled bare (ADR-0059,
-# amendment 2026-09-19; the owner: "-Suite is Playground, Not Core.Playground").
-# Said once here, so no surface spells the Playground's name for itself and
-# none of them can disagree.
-[string] $script:XmipPlaygroundSuite = 'Playground'
-[string] $script:XmipEstateSuite = 'Estate'
+# the qualified form is the canonical one: Xmip's own two are Core.Playground
+# and Core.Estate, which is what every surface prints, records and documents
+# (ADR-0059, amendment 2026-09-20; the owner: "It's name is Core.Playground,
+# to give place for third parties"). A bare name is still accepted and is
+# canonicalized to the qualified one. Said once here, so no surface spells the
+# Playground's name for itself and none of them can disagree.
+[string] $script:XmipPlaygroundSuite = 'Core.Playground'
+[string] $script:XmipEstateSuite = 'Core.Estate'
 
 # Where a provider declares a suite of its own: one TOML file per suite in
 # this directory, relative to the repository root. Xmip's own source is not
-# edited to make room for Acme.Playground — a file is dropped here.
+# edited to make room for a third party's suite — a file is dropped here.
 [string] $script:XmipTestSuiteArea = 'test/suite'
 
 function Get-XmipTestSuite {
@@ -23,9 +24,9 @@ function Get-XmipTestSuite {
             caller gives -Suite, who provides it, and how it starts.
 
         .DESCRIPTION
-            Playground and Estate are known to the module, so the
+            Core.Playground and Core.Estate are known to the module, so the
             estate's own gate runs on a fresh clone with nothing declared.
-            Every other suite is a provider's, declared in a TOML file under
+            Every other suite is a third party's, declared in a TOML file under
             test/suite and read here. A declaration that is malformed is
             REFUSED by name (ADR-0055) rather than skipped, because a suite
             that silently is not there is a test run nobody notices missing.
@@ -75,9 +76,9 @@ function New-XmipTestSuite {
     <#
         .SYNOPSIS
             One suite as the Xmip.TestSuite object every surface reads. The
-            canonical spelling is bare for Xmip's own — Playground, Estate —
-            and Provider.Name for everyone else; a caller is matched against
-            it without regard to case.
+            canonical spelling is Provider.Name for everyone, Xmip's own two
+            included — Core.Playground, Core.Estate — and a caller is matched
+            against it without regard to case.
 
         .PARAMETER Provider
             Who publishes the suite. Core is Xmip itself (ADR-0011).
@@ -115,11 +116,12 @@ function New-XmipTestSuite {
         [string] $Source = ''
     )
 
-    # `core` is the reserved provider (ADR-0011), so a bare name is already
-    # Xmip's and printing Core. in front of it tells an operator nothing he
-    # did not know. Xmip's own two are canonical bare; a provider's keeps the
-    # slot that says who stands behind it (ADR-0059, amendment 2026-09-19).
-    [string] $canonical = if ($Provider -ieq 'Core') { $Name } else { "$Provider.$Name" }
+    # Every suite is spelled <Provider>.<Name>, Xmip's own included: the slot
+    # a third party needs is only obviously there when Xmip fills its own,
+    # and `core` is the reserved provider that fills it here (ADR-0011;
+    # ADR-0059, amendment 2026-09-20). A bare name is still accepted at the
+    # door and resolves to this spelling; it is never what is printed back.
+    [string] $canonical = "$Provider.$Name"
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestSuite'
@@ -139,14 +141,17 @@ function Read-XmipTestSuiteDeclaration {
 
         .DESCRIPTION
             The file says who provides the suite, what it is called and the
-            command that starts it. Three lines are the whole of it:
+            command that starts it. Three lines are the whole of it, with
+            Example standing in for whatever the third party calls itself —
+            the estate names no placeholder company (ADR-0059, amendment
+            2026-09-20):
 
-                provider = "Acme"
+                provider = "Example"
                 name     = "Playground"
-                command  = "Start-AcmeXmipTest"
+                command  = "Start-ExampleXmipTest"
 
-            The command is the provider's, from the provider's own PowerShell
-            module (ADR-0011 names it xmip-acme-powershell). Start-XmipTest
+            The command is the third party's, from its own PowerShell
+            module (ADR-0011 names it xmip-<provider>-powershell). Start-XmipTest
             hands it everything -Suite was given beside it, and hands it no
             -Test when the operator named none, which means the whole suite.
 
@@ -234,11 +239,12 @@ function Get-XmipNamedTestSuite {
             never disagree about it.
 
         .DESCRIPTION
-            A name is matched against the canonical spelling and against
-            <Provider>.<Name>, so Playground and Core.Playground are the one
-            suite: a bare name is the reserved provider's (ADR-0011), and the
-            qualified form is literally what it means (ADR-0059, amendment
-            2026-09-19). Case never matters, here or anywhere.
+            A name is matched against the canonical <Provider>.<Name> and,
+            for the reserved provider alone, against the bare name, so
+            Playground and Core.Playground are the one suite and the one
+            spelling that comes back is Core.Playground (ADR-0011; ADR-0059,
+            amendment 2026-09-20). A bare name reaches Xmip's own suites and
+            no one else's. Case never matters, here or anywhere.
 
             The match is a wildcard, as -Test's is and as Get-XmipTestNode
             -Name's is (the owner, 2026-09-19: "Filter the -Suite as the -Test
@@ -266,7 +272,7 @@ function Get-XmipNamedTestSuite {
     )
 
     return $Known | Where-Object {
-        $_.Name -like $Name -or "$($_.Provider).$($_.Suite)" -like $Name
+        $_.Name -like $Name -or ($_.Provider -ieq 'Core' -and $_.Suite -like $Name)
     }
 }
 
@@ -323,8 +329,9 @@ function Get-XmipTestSuiteRefusal {
     [string] $how = if ($wild::ContainsWildcardCharacters($Name)) { 'matches' } else { 'is called' }
 
     return ("REFUSED. No test suite $how $Name. The suites are $there. A " +
-        "bare name is Xmip's own; a provider's suite is <Provider>.<Name>, " +
-        "declared under $area — provider, name and the command that starts it.")
+        "suite is <Provider>.<Name>, and a bare name is accepted as Xmip's " +
+        "own; a provider declares one under $area — provider, name and the " +
+        'command that starts it.')
 }
 
 function Test-XmipWholeSuite {
@@ -336,7 +343,7 @@ function Test-XmipWholeSuite {
             run all tests in the test suite).
 
         .DESCRIPTION
-            Playground and Estate both did this already and did it
+            Core.Playground and Core.Estate both did this already and did it
             by two unrelated accidents — an unset XMIP_PLAYGROUND_SCENARIOS
             that the roll reads as every scenario, and an empty -Test that
             Pester reads as every file. Two behaviors that happen to agree are
@@ -372,7 +379,7 @@ function Expand-XmipTestName {
             [SupportsWildcards()] and matches with -like — and they are
             PowerShell's own convention, so a parameter that takes them says
             so in its help. The two also disagree about a dot: Rust.Style is a
-            real test of Estate, and a regular expression would match
+            real test of Core.Estate, and a regular expression would match
             RustXStyle with it, while a wildcard reads the dot as the dot an
             operator typed.
 
