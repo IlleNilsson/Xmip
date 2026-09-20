@@ -1,6 +1,8 @@
 # ADR-0056: A node declares what it can do
 
-- Status: Proposed
+- Status: Accepted
+- Accepted: 2026-09-20, the owner, on being shown what each record named
+  as his to strike. Nothing was struck.
 - Date: 2026-09-19
 - Related: ADR-0022 (identity classes and runtime isolation; the placement
   solver), ADR-0045 (offline is the default), ADR-0050 (an identity

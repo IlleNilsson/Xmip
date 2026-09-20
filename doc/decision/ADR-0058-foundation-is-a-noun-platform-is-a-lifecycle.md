@@ -1,6 +1,8 @@
 # ADR-0058: Foundation is a noun; Platform is a lifecycle
 
-- Status: Proposed
+- Status: Accepted
+- Accepted: 2026-09-20, the owner, on being shown what each record named
+  as his to strike. Nothing was struck.
 - Date: 2026-09-19
 - Related: ADR-0011 (module naming), ADR-0012 (the module boundary), ADR-0016
   (submodule composition), ADR-0018 (service and host; the runtime owns the

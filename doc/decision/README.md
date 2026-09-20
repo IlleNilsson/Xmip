@@ -175,7 +175,7 @@ feature, authentication and runtime. They are the criteria placement works
 with, and a requirement no node satisfies is refused with both sides
 named, never placed somewhere that cannot serve it.**
 
-→ [A node declares what it can do, in full](ADR-0056-a-node-declares-what-it-can-do.md) — **still Proposed**
+→ [A node declares what it can do, in full](ADR-0056-a-node-declares-what-it-can-do.md)
 
 ---
 
@@ -419,7 +419,7 @@ loader second, because that is where the saving is. `authenticate` is wave
 two, at trait version 1.0, and nothing follows it until a loader has loaded
 one.**
 
-→ [A vtable is a promise; only a loader is a saving, in full](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) — **still Proposed**
+→ [A vtable is a promise; only a loader is a saving, in full](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)
 
 ---
 
@@ -564,7 +564,7 @@ the node itself. A Foundation crate depends only on Foundation. Platform is
 not the default: a crate that answers to the message-path test or the
 observation test is placed there first, and only what is left is Platform.**
 
-→ [Foundation is a noun; Platform is a lifecycle, in full](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) — **still Proposed**
+→ [Foundation is a noun; Platform is a lifecycle, in full](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md)
 
 ### How a reader sees the whole estate, and why it is not drawn by hand
 
@@ -577,7 +577,7 @@ fails when the committed file differs, so it cannot be edited by hand and
 cannot rot. The hand-drawn tree in `repository-model.md` section 7 stays: it
 says where modules mount, which is a different question.**
 
-→ [The estate map is generated, in full](ADR-0060-the-estate-map-is-generated.md) — **still Proposed**
+→ [The estate map is generated, in full](ADR-0060-the-estate-map-is-generated.md)
 
 ---
 
@@ -793,7 +793,7 @@ module (ADR-0011), and the provider is required: `Core.Playground`, never
 a suite by declaring it rather than by editing Xmip. Naming no test runs
 the whole suite, for every suite and every provider.**
 
-→ [A test suite carries its provider, in full](ADR-0059-a-test-suite-carries-its-provider.md) — **still Proposed**
+→ [A test suite carries its provider, in full](ADR-0059-a-test-suite-carries-its-provider.md)
 
 ---
 
@@ -1086,8 +1086,8 @@ is nowhere else.
 | [0053](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) | Every System Process Xmip owns says whose it is | |
 | [0054](ADR-0054-a-principal-name-is-read-one-way.md) | A principal name is read one way | |
 | [0055](ADR-0055-bad-input-is-refused-at-the-door.md) | Bad input is refused at the door | |
-| [0056](ADR-0056-a-node-declares-what-it-can-do.md) | A node declares what it can do | **Proposed** |
-| [0057](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) | A vtable is a promise; only a loader is a saving | **Proposed** |
-| [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | **Proposed** |
-| [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | **Proposed** |
-| [0060](ADR-0060-the-estate-map-is-generated.md) | The estate map is generated | **Proposed** |
+| [0056](ADR-0056-a-node-declares-what-it-can-do.md) | A node declares what it can do | |
+| [0057](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) | A vtable is a promise; only a loader is a saving | |
+| [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | |
+| [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | |
+| [0060](ADR-0060-the-estate-map-is-generated.md) | The estate map is generated | |

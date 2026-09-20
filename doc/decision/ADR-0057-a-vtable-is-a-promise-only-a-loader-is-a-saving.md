@@ -1,6 +1,8 @@
 # ADR-0057: A vtable is a promise; only a loader is a saving
 
-- Status: Proposed
+- Status: Accepted
+- Accepted: 2026-09-20, the owner, on being shown what each record named
+  as his to strike. Nothing was struck.
 - Date: 2026-09-19
 - Related: ADR-0012 (the module boundary — this record extends it and
   reopens none of it), ADR-0025 (when a Module loads), ADR-0027 (the
