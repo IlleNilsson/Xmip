@@ -221,7 +221,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    name, its location and its purpose, test or runtime (ADR-0053). A
    Playground process says which cluster and which node it is —
    `xmip-playground-C1-roll`, `xmip-playground-C1-cluster`,
-   `xmip-playground-C1-R1` — so twenty rows of `Get-Process` read as a tree
+   `xmip-playground-C1-node-R1` — so twenty rows of `Get-Process` read as a tree
    rather than as six identical lines (amendment 2026-09-20).
    `Get-XmipProcess` lists them with what they said, and one line stops
    every one of them, whatever started it:

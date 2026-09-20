@@ -294,11 +294,13 @@ Describe 'The environment a roll is started with' {
                 Should -Not -Throw
 
             # A node's name is the last word of its process name and so a
-            # file name (ADR-0053, amendment 2026-09-20); roll and cluster
-            # are the two words that tell the rest of the tree apart.
-            foreach ($taken in 'roll', 'Cluster', 'edge-roll', 'west-cluster') {
-                { Assert-XmipNodeName -Nodes $taken } |
-                    Should -Throw -ExpectedMessage 'REFUSED: no node is called*'
+            # file name (ADR-0053, amendment 2026-09-20) — and nothing more.
+            # The owner, 2026-09-20: "A node is a node and can have one or
+            # more roles, roll is something different." The marker in
+            # xmip-playground-<cluster>-node-<name> carries the kind, so no
+            # word is reserved and no name is refused for the shape's sake.
+            foreach ($free in 'roll', 'Cluster', 'edge-roll', 'west-cluster', 'node') {
+                { Assert-XmipNodeName -Nodes $free } | Should -Not -Throw
             }
         }
     }

@@ -125,10 +125,11 @@ function Start-XmipTest {
             anything starts. An empty list, @(), is no nodes at any level.
 
             A node's name is also the last word of its process name —
-            xmip-playground-<cluster>-<node> (ADR-0053, amendment
-            2026-09-20) — so it takes the shape -Cluster takes and is
-            neither roll nor cluster, which name the other two processes of
-            the tree. Anything else is REFUSED before a process starts.
+            xmip-playground-<cluster>-node-<node> (ADR-0053, amendment
+            2026-09-20) — so it takes the shape -Cluster takes, and that is
+            all: no word is reserved, and a node called roll is a node called
+            roll. Anything a file cannot be called is REFUSED before a process
+            starts.
 
             Omit it and the level brings its full complement (ADR-0059,
             amendment 2026-09-19): its own count of nodes — one, three, ten or
@@ -517,7 +518,7 @@ function Start-XmipTest {
 
     # A process name is its image file's name, so the roll, its cluster and
     # every node run images linked for this cluster: the operating system then
-    # says xmip-playground-C1-R1 rather than one more xmip-playground-node
+    # says xmip-playground-C1-node-R1 rather than one more xmip-playground-node
     # (the owner, 2026-09-20; ADR-0053, amendment). The roll finds its cluster
     # binary beside its own image and the cluster finds the node binary the
     # same way, which is why all three are linked here.

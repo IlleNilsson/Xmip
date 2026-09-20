@@ -78,12 +78,12 @@ function Assert-XmipNodeName {
 
         .DESCRIPTION
             A node's name is the last word of its process name and so a file
-            name — xmip-playground-<cluster>-<node> (ADR-0053, amendment
-            2026-09-20) — which is why the shape is the one -Cluster takes and
-            why roll and cluster are not among them: those two words tell the
-            other processes of the tree apart. Refused at the door with the
-            reason, never mangled into something that happens to work
-            (ADR-0055).
+            name — xmip-playground-<cluster>-node-<node> (ADR-0053, amendment
+            2026-09-20) — which is why the shape is the one -Cluster takes,
+            and that is the whole of it. No word is reserved: the name carries
+            a node marker, so a node called roll is a node called roll (the
+            owner, 2026-09-20). Refused at the door with the reason, never
+            mangled into something that happens to work (ADR-0055).
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -102,13 +102,6 @@ function Assert-XmipNodeName {
     foreach ($name in $every) {
         if ($name -notmatch '^[A-Za-z][A-Za-z0-9-]*$') {
             throw "A node's name is letters, digits and hyphens, starting with a letter: not $name."
-        }
-
-        if ($name -match '(^|-)(roll|cluster)$') {
-            throw ("REFUSED: no node is called $name; xmip-playground-<cluster>-" +
-                "$($Matches[2].ToLowerInvariant()) is the " +
-                "$($Matches[2].ToLowerInvariant()) of the tree, and two processes " +
-                'may not share one name (ADR-0053).')
         }
     }
 

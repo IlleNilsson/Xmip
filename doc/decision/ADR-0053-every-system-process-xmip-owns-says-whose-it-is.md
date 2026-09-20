@@ -186,33 +186,54 @@ tool the operating system gives show the image name and nothing else.
 
 ### 4. A Playground process is named for its suite, its cluster and itself
 
-`xmip-<suite>-<cluster>-<what>`, where `what` is `roll`, `cluster`, or the
-node's own name:
+`xmip-<suite>-<cluster>-<what>`, where `what` is `roll`, `cluster`, or
+`node-<name>`:
 
 | process | name | location |
 |---|---|---|
 | the roll | `xmip-playground-W1-roll` | `xmip:///W1` |
 | its cluster | `xmip-playground-W1-cluster` | `xmip:///W1` |
-| a node | `xmip-playground-W1-R1` | `xmip:///W1/node/R1` |
+| a node | `xmip-playground-W1-node-R1` | `xmip:///W1/node/R1` |
 
 Clause 1 is untouched and is why this works: every one still begins `xmip-`,
 so `Get-Process Xmip-* | Stop-Process -Force` still stops them all, and
 `Get-Process xmip-playground-W1-*` is now one cluster's tree. The cluster
 sits at a fixed column, which is what makes twenty rows readable at a glance;
-the kind is the last word, which is what tells the roll and its cluster apart
-where they share a location.
+the kind follows it, which is what tells the roll and its cluster apart where
+they share a location.
 
 The name a process was given before this stays its name where nobody named a
 cluster: a roll started by hand with `cargo run --bin xmip-playground-roll`,
 and the crate's own tests, are still `xmip-playground-roll`,
 `xmip-playground-cluster` and `xmip-playground-node`.
 
-**A node is not called `roll` or `cluster`**, and no node's name ends in
-`-roll` or `-cluster`, because those are the last words that tell the tree
-apart. A node's name is also a file name, for the reason clause 5 gives, so
-it takes the same shape a cluster's name takes — letters, digits and hyphens,
-starting with a letter. Anything else is REFUSED at the door and nothing is
-spawned (ADR-0055); it is never quietly mangled into a name that works.
+**The kind is a marker the name carries, and no word is reserved.** The shape
+first drafted here made the kind the *last* word — `xmip-playground-W1-R1` for
+a node — and then had to forbid a node being called `roll` or `cluster`, or
+ending in `-roll` or `-cluster`, so that `xmip-playground-W1-my-roll` could not
+be read as W1's roll. The owner struck that the same day: *a node is a node and
+can have one or more roles, roll is something different.* He had ruled hours
+earlier that node names are the operator's and arbitrary (*Rn, Pn and Sn are
+arbitrary node names*), and a reserved word contradicts it: the shape must
+carry the distinction, not the operator. So a node's word is `node-<name>`.
+`xmip-playground-W1-node-roll` is the node called `roll` and is nobody's roll;
+`xmip-playground-W1-roll` is still W1's roll. A reader — and
+`Get-XmipPlaygroundImageKind` — takes the marker first and the endings second,
+which is what makes the two unambiguous.
+
+A node's name is a file name, for the reason clause 5 gives, so it takes the
+same shape a cluster's name takes — letters, digits and hyphens, starting with
+a letter — and **that is the whole of the rule**. Anything else is REFUSED at
+the door and nothing is spawned (ADR-0055); it is never quietly mangled into a
+name that works.
+
+The cost is paid where a level names its own nodes `node-01`: that node is
+`xmip-playground-W1-node-node-01`. It is ugly, it is rare, and it is true,
+which is worth more than a name an operator may not use. What the marker does
+not settle is a *cluster* whose name ends in `-node`: its roll would read as a
+node of a shorter cluster. No cluster is named that today, nothing is refused
+for it, and the declaration of clause 3 says which it is; if it ever matters
+the owner rules, and the answer is not a reserved word.
 
 ### 5. The name is a file, because a process cannot be renamed
 
@@ -284,5 +305,6 @@ the name the same way on both paths. A roll stays findable and stoppable by
   That is the *target choice* `CONTRIBUTING.md` reserves `.local-work` for,
   and it is how a second session builds at all while a roll is up.
 
-The requirement and the shape are the owner's, 2026-09-20; the reserved
-words, the link and clause 6 are the assistant's drafting of them.
+The requirement and the shape are the owner's, 2026-09-20, as is striking the
+reserved words the assistant had drafted under it the same day; the node
+marker that replaced them, the link and clause 6 are the assistant's drafting.

@@ -102,30 +102,51 @@ Describe 'What a Playground process is called' {
                 Should -Be 'xmip-playground-W1-roll'
             Get-XmipPlaygroundImageName -Cluster 'W1' -What 'cluster' |
                 Should -Be 'xmip-playground-W1-cluster'
-            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'R1' |
-                Should -Be 'xmip-playground-W1-R1'
+            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'node-R1' |
+                Should -Be 'xmip-playground-W1-node-R1'
 
             # Clause 1 is untouched: the owner's one line still finds them.
-            foreach ($what in 'roll', 'cluster', 'R1') {
+            foreach ($what in 'roll', 'cluster', 'node-R1') {
                 Get-XmipPlaygroundImageName -Cluster 'W1' -What $what |
                     Should -BeLike 'xmip-*'
             }
         }
     }
 
+    It 'lets a node be called roll or cluster, and is still unambiguous' {
+        # The owner, 2026-09-20: "A node is a node and can have one or more
+        # roles, roll is something different." The marker carries the kind, so
+        # no name has to be reserved for the shape's convenience.
+        InModuleScope Xmip {
+            Get-XmipPlaygroundImageName -Cluster 'U1' -What 'node-roll' |
+                Should -Be 'xmip-playground-U1-node-roll'
+            Get-XmipPlaygroundImageName -Cluster 'U1' -What 'node-roll' |
+                Should -Not -Be (Get-XmipPlaygroundImageName -Cluster 'U1' -What 'roll')
+
+            Get-XmipPlaygroundImageKind -Name 'xmip-playground-U1-node-roll' |
+                Should -Be 'Node'
+            Get-XmipPlaygroundImageKind -Name 'xmip-playground-U1-node-cluster' |
+                Should -Be 'Node'
+            Get-XmipPlaygroundImageKind -Name 'xmip-playground-U1-roll' |
+                Should -Be 'Roll'
+            Get-XmipPlaygroundImageKind -Name 'xmip-playground-U1-cluster' |
+                Should -Be 'Cluster'
+        }
+    }
+
     It 'says which of the three it is, named for a cluster or not' {
         InModuleScope Xmip {
             [hashtable] $expected = @{
-                'xmip-playground-W1-roll'    = 'Roll'
-                'xmip-playground-W1-cluster' = 'Cluster'
-                'xmip-playground-W1-R1'      = 'Node'
-                'xmip-playground-W1-node-01' = 'Node'
-                'xmip-playground-roll'       = 'Roll'
-                'xmip-playground-cluster'    = 'Cluster'
-                'xmip-playground-node'       = 'Node'
-                'xmip-gui-web'               = ''
-                'xmip-cli'                   = ''
-                'notepad'                    = ''
+                'xmip-playground-W1-roll'         = 'Roll'
+                'xmip-playground-W1-cluster'      = 'Cluster'
+                'xmip-playground-W1-node-R1'      = 'Node'
+                'xmip-playground-W1-node-node-01' = 'Node'
+                'xmip-playground-roll'            = 'Roll'
+                'xmip-playground-cluster'         = 'Cluster'
+                'xmip-playground-node'            = 'Node'
+                'xmip-gui-web'                    = ''
+                'xmip-cli'                        = ''
+                'notepad'                         = ''
             }
 
             foreach ($name in $expected.Keys) {
@@ -141,7 +162,7 @@ Describe 'What a Playground process is called' {
         # about a binary that changed under it.
         InModuleScope Xmip {
             [string] $area = (Get-XmipPlaygroundLayout).Image
-            [string] $image = Join-Path $area 'W1' 'xmip-playground-W1-R1.exe'
+            [string] $image = Join-Path $area 'W1' 'xmip-playground-W1-node-R1.exe'
 
             Test-XmipPlaygroundOwnImage -Path $image | Should -BeTrue
             Test-XmipPlaygroundOwnImage -Path '' | Should -BeFalse
