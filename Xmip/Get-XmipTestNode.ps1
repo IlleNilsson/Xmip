@@ -109,7 +109,8 @@ function ConvertTo-XmipTestNode {
 
     # Judged by which of the three the name is, never by the whole name: since
     # 2026-09-20 a process carries its cluster, so xmip-playground-V1-cluster
-    # is the cluster of V1 and xmip-playground-cluster is one nobody named.
+    # is the cluster of V1 and xmip-playground-cluster is one nobody named. A
+    # node called cluster is xmip-playground-V1-node-cluster and is neither.
     [string] $named = Resolve-XmipProcessName -Id $above -Declared $known
 
     if ((Get-XmipPlaygroundImageKind -Name $named) -eq 'Cluster') {

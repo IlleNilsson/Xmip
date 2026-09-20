@@ -630,26 +630,24 @@ of the rig's processes, read *the cluster's nodes*.
 - **Ruled the same day: a node carries the roles suitable for its purpose.**
   Asked, the owner: *Rn, Pn, Sn are nodes that carries roles.* The
   assistant wrote that back as one role to a node, and was corrected the
-  same hour: *a node carries roles suitable for its purpose.* So the letter
-  names the node's purpose, and the roles it carries are the ones that
-  purpose needs — not one stage, and not a fence around the node. That is
-  ruling 6 of this record in its own words: *the letter is what the node is
-  for, not what it is limited to.*
+  same hour: *a node carries roles suitable for its purpose.* So a node is
+  not fenced to one stage: the roles it carries are the ones its purpose
+  needs, which is what the rig does when a node is started declaring
+  `receive`, or `process,send`.
 
-  This supersedes the gloss on ruling 8 of 2026-09-14, *R1 is the name the
-  owner gave a node, not a role*. A name the owner gives says the node's
-  purpose, and purpose is not nothing. The rest of ruling 8 stands
-  untouched: he names the clusters, and a test may spawn nodes and never a
-  cluster.
-
-  **Overruled, 2026-09-20.** The owner, on both halves of it: *C1 and C2 are
-  not roles, they are arbitrary cluster names, there may be one or more
-  clusters*, and *Rn, Pn and Sn are arbitrary node names.* The reading above
-  — that the letter names the node's purpose — is the reading of 2026-09-19
-  and no longer holds; the gloss of 2026-09-14 it superseded is the one that
-  stands. The paragraphs are kept as written because the quotes in them are
-  the owner's own and the sequence is the record; what they conclude is not
-  current. ADR-0056's amendment of 2026-09-20 is where the rule lives now.
+  The assistant read one thing more into that than the owner had said — that
+  the letter of `R1` names the node's purpose, and so that a name the owner
+  gives says something — and wrote it here on 2026-09-19 as superseding the
+  gloss on ruling 8 of 2026-09-14, *R1 is the name the owner gave a node, not
+  a role*. The owner struck that reading the next day, 2026-09-20, on both
+  halves of it: *C1 and C2 are not roles, they are arbitrary cluster names,
+  there may be one or more clusters*, and *Rn, Pn and Sn are arbitrary node
+  names.* So the gloss of 2026-09-14 was never superseded and stands: a name
+  is the operator's, it says nothing, and nothing in Xmip reads one. What the
+  ruling of 2026-09-19 did settle — a node carries the roles its purpose needs
+  — stands as written above, and ADR-0056's amendment of 2026-09-20 is where
+  the rule lives now. The rest of ruling 8 was never in question: he names the
+  clusters, and a test may spawn nodes and never a cluster.
 
   What the rig does today, for the owner to keep or widen: **a node is
   started with a declared capability and serves the stages it declared** —

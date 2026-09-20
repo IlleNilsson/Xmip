@@ -23,7 +23,7 @@ function Get-XmipPlaygroundProcess {
         .PARAMETER Name
             The process name, wildcards allowed. Since 2026-09-20 a
             Playground process is named for its cluster and what it is —
-            xmip-playground-V1-roll, xmip-playground-V1-R1 — so the
+            xmip-playground-V1-roll, xmip-playground-V1-node-R1 — so the
             Playground's own callers ask for xmip-playground-* and say which
             of the three with -Kind. xmip-gui-web is named outright.
 
@@ -35,9 +35,9 @@ function Get-XmipPlaygroundProcess {
 
         .PARAMETER Kind
             Which of the Playground's three: Roll, Cluster or Node. The name
-            says it — xmip-playground-<cluster>-roll and -cluster end in the
-            word, and anything else under the prefix is a node — so a roll's
-            tree is found by kind rather than by twenty names.
+            says it — a node carries the marker node-, and a name without one
+            ending in -roll or -cluster is that — so a roll's tree is found by
+            kind rather than by twenty names.
     #>
     [CmdletBinding()]
     [OutputType([System.Diagnostics.Process])]

@@ -35,14 +35,20 @@ function Get-XmipPlaygroundImageName {
     <#
         .SYNOPSIS
             What one instance of the Playground is called:
-            xmip-playground-<cluster>-<what>, where what is roll, cluster or a
-            node's own name. Pure.
+            xmip-playground-<cluster>-<what>, where what is roll, cluster or
+            node-<name>. Pure.
 
         .PARAMETER Cluster
             The cluster it belongs to.
 
         .PARAMETER What
-            roll, cluster, or the node's name.
+            roll, cluster, or node- and the node's name. The node marker is
+            what makes the kind a shape rather than a word a node may not be
+            called. The owner, 2026-09-20: a node is a node and can have one
+            or more roles, roll is something different. So
+            xmip-playground-U1-node-roll is the node called roll, and
+            xmip-playground-U1-roll is still the roll; nothing collides and no
+            name is refused (ADR-0053, amendment 2026-09-20).
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -232,9 +238,11 @@ function Get-XmipPlaygroundImageKind {
         .DESCRIPTION
             The name is xmip-playground-<cluster>-<what> since 2026-09-20, and
             xmip-playground-<what> where no cluster named it — a roll started by
-            hand, or this crate's own tests. What is roll, cluster, or a node's
-            own name, which is why a node may be called neither (ADR-0055:
-            Assert-XmipNodeName refuses it at the door).
+            hand, or this crate's own tests. What is roll, cluster, or
+            node-<name>, and the node marker is read first: it is what lets a
+            node be called roll without being one (the owner, 2026-09-20). A
+            name carrying no marker and ending in neither word is a node too,
+            which is what the bare xmip-playground-node is.
 
         .PARAMETER Name
             The process name.
@@ -254,6 +262,12 @@ function Get-XmipPlaygroundImageKind {
     }
 
     [string] $rest = $Name.Substring($prefix.Length).ToLowerInvariant()
+
+    # The marker before the endings: xmip-playground-W1-node-roll is the node
+    # called roll, never W1's roll, and that is the whole point of the marker.
+    if ($rest.Contains('-node-')) {
+        return 'Node'
+    }
 
     foreach ($kind in 'roll', 'cluster') {
         if ($rest -eq $kind -or $rest.EndsWith("-$kind")) {

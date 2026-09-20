@@ -24,7 +24,7 @@ unless the surrounding context makes the meaning unavoidable.
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
 Every System Process and every service Xmip owns is named `xmip-<what>` —
-`xmip-cli`, `xmip-gui-web`, `xmip-playground-C1-R1` — and declares its name,
+`xmip-cli`, `xmip-gui-web`, `xmip-playground-C1-node-R1` — and declares its name,
 its location and its purpose, test or runtime, so that one line finds them
 all and one line stops them all (ADR-0053). Where there are many of a kind,
 `<what>` says which: a Playground process carries its suite, its cluster and
