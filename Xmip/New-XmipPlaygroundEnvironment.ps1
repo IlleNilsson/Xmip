@@ -75,6 +75,15 @@ function Assert-XmipNodeName {
             The nodes a person named are well formed, distinct, and the online
             ones are among them. Throws otherwise; a node is a process, and a
             process is named once.
+
+        .DESCRIPTION
+            A node's name is the last word of its process name and so a file
+            name — xmip-playground-<cluster>-<node> (ADR-0053, amendment
+            2026-09-20) — which is why the shape is the one -Cluster takes and
+            why roll and cluster are not among them: those two words tell the
+            other processes of the tree apart. Refused at the door with the
+            reason, never mangled into something that happens to work
+            (ADR-0055).
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -93,6 +102,13 @@ function Assert-XmipNodeName {
     foreach ($name in $every) {
         if ($name -notmatch '^[A-Za-z][A-Za-z0-9-]*$') {
             throw "A node's name is letters, digits and hyphens, starting with a letter: not $name."
+        }
+
+        if ($name -match '(^|-)(roll|cluster)$') {
+            throw ("REFUSED: no node is called $name; xmip-playground-<cluster>-" +
+                "$($Matches[2].ToLowerInvariant()) is the " +
+                "$($Matches[2].ToLowerInvariant()) of the tree, and two processes " +
+                'may not share one name (ADR-0053).')
         }
     }
 
@@ -165,6 +181,9 @@ function New-XmipPlaygroundEnvironment {
         [Parameter()]
         [string] $LoadBytes,
 
+        [Parameter()]
+        [string] $Image,
+
         [Parameter(Mandatory)]
         [string] $Snapshot,
 
@@ -218,9 +237,9 @@ function New-XmipPlaygroundEnvironment {
             $environment.XMIP_PLAYGROUND_NODES = '0'
         }
         else {
-            # What each node declares it can do (ADR-0056). The letter is the
-            # operator's shorthand for a capability and is expanded here, at
-            # the door; nothing downstream reads a node's name.
+            # What each node declares it can do (ADR-0056), and only what
+            # -NodeCapability stated: a node's name says nothing (the owner,
+            # 2026-09-20: Rn, Pn and Sn are arbitrary node names).
             $environment.XMIP_PLAYGROUND_NODE_NAMES = $Nodes -join ','
             $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
             $environment.XMIP_PLAYGROUND_NODE_CAPABILITIES =
@@ -241,6 +260,14 @@ function New-XmipPlaygroundEnvironment {
 
     if (-not [string]::IsNullOrWhiteSpace($LoadBytes)) {
         $environment.XMIP_PLAYGROUND_LOAD_BYTES = $LoadBytes
+    }
+
+    # Where this run's per-instance images go, so the cluster process and each
+    # node link one and run under a name that says which cluster and which node
+    # it is (ADR-0053, amendment 2026-09-20). Unset, nothing is linked and each
+    # keeps the binary's own name, which is what a roll started by hand does.
+    if (-not [string]::IsNullOrWhiteSpace($Image)) {
+        $environment.XMIP_PLAYGROUND_IMAGES = $Image
     }
 
     return $environment

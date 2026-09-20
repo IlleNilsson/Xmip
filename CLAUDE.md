@@ -1,92 +1,12 @@
 # Working in the Xmip estate
 
-Xmip is a Rust, cross-platform Messaging & Integration Platform — the
-replacement for BizTalk, MuleSoft and their kind. On-premises first,
-cloud-installable. `doc/planning/market-position.md` opens with the position;
-`doc/terminology.md` is the vocabulary and its words are chosen, not casual.
+The rules for working here live in [CONTRIBUTING.md](CONTRIBUTING.md) — what
+to read before writing, how work lands, the hard-learned rules and the
+working area. Read that file before changing anything.
 
-## Read before writing
-
-The estate is governed by its own records, and they are current:
-
-- `doc/decision/README.md` — the ADR index. ADR-0011 names things, ADR-0012
-  is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
-  ADR-0025 module loading. Do not contradict an accepted record; propose a new
-  one or an amendment, and let the owner decide.
-- `doc/architecture/` — five models. `repository-model.md` explains why 41
-  submodules mount where they do.
-- `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
-  `test/*.Test.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
-  production lines; a file is named for what it defines; a loop variable is
-  never a parameter. **Length rules are strict recommendations: breaking one
-  requires the owner's agreement FIRST, then the recorded reason.** An
-  assistant follows that absolutely.
-- `doc/planning/open-problems.md` — what is open and in what order. Problem
-  19 and the Suggested order section are the queue.
-- `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
-  `test/Allocation.Test.ps1`; keep it true when files move.
-
-## How work lands
-
-One command tests and lands everything, dependency order, modules first:
-
-    Import-Module ./Xmip/Xmip.psd1 -Force
-    xgit -m 'short precise message'    # alias for Publish-XmipChange
-
-Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
-before anything depending on it can be verified — the tool handles the order.
-Run `Start-XmipTest -Suite Estate` before landing anything non-trivial; the
-suite is ~96 tests and is the estate's memory of every past defect. pwsh 7.6.5,
-PSToml and posh-git required. Rust builds with stable cargo; C# builds with the
-.NET 11 preview SDK but the PowerShell binary module targets net10.0 because
-pwsh hosts it (ADR-0014, amendment 2026-08-30).
-
-## Be the colleague who remembers
-
-Before engaging with any idea the owner raises, check whether the estate has
-already answered it: the concept index in `doc/decision/README.md`, then
-`doc/planning/open-problems.md`. If a record answers it, SAY SO FIRST —
-"ADR-0024 settled this; the claim lives at the endpoint" — before any other
-work. The owner is human and designs better than he archives; the assistant
-has no memory between sessions and reads faster than any human. The pairing
-only works if the assistant does the remembering from the record, including
-correcting the owner. Gladly keeping along with a solved problem is the
-specific failure this rule exists to prevent — it happened with exclusiveness,
-and it cost real work.
-
-## Hard-learned rules
-
-- Ask the owner before breaking any recommendation, deleting non-trivial
-  content, or deciding anything two records disagree on. He answers fast and
-  dislikes discovering decisions after the fact far more than being asked.
-- Read a file before editing it; check a signature before calling it. Most of
-  this repository's test suite exists because someone (usually an assistant)
-  skipped that.
-- Say outcomes in words — OK, FAILED, REFUSED — never color alone.
-- Commit messages are short and precise; reasoning belongs in a decision
-  record or the file itself.
-- Full paths when naming files to the owner.
-- The estate ends every session square: everything committed, everything
-  pushed, `git status` clean in all 41 submodules and the superproject.
-  `Get-XmipStatus` shows the whole estate at once.
-
-## The assistant's working area
-
-`.ai-interaction/` at the repository root, git-ignored. Every log, run script
-and scratch file an assistant produces goes there and nowhere else — logs as
-`.ai-interaction/land.log`, runnable sequences as `.ai-interaction/*.ps1`. The
-assistant's reach is this repository; nothing above `D:\Repos\Xmip` is its
-business.
-
-`.ai-work/` is not yours either: `Sync-XmipEstate -Report` writes it. The
-assistant argued the two folders had different authors and deserved different
-prefixes; the owner heard the argument and ruled otherwise on 2026-08-31 —
-machine-generated working output is `.ai-*`, whichever machinery wrote it.
-The folders stay separate; the prefix does not. Write to `.ai-interaction/`,
-never to `.ai-work/`.
-
-`.local-work/` is the third of the untracked family and also not yours:
-device-local state for building or running Xmip on this machine — a target
-choice, a local node configuration. Nothing writes it yet; it is reserved so
-the first thing that does has a home. The three together: `.ai-interaction/`
-is who, `.ai-work/` is what machinery, `.local-work/` is where.
+This file is a pointer on purpose. The owner, 2026-09-20: *I do not think
+that the file CLAUDE.md should be named CLAUDE.md. Regardless of AI-tool, the
+same rules apply.* It exists only because Claude Code loads a file of this
+name; `AGENTS.md` is the same pointer for the tools that load that one.
+Do not move a rule back into it: one subject has one document (ADR-0020,
+clause 8).

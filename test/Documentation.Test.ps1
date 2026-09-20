@@ -64,6 +64,37 @@ Describe 'README names only commands that exist' {
     }
 }
 
+Describe 'README names every command that exists' {
+    It 'names every function and alias the module exports' {
+        # The mirror of the first test, and the direction a new command escapes
+        # through. The owner, 2026-09-20: *when you change things, you have to
+        # change all related — I can see for example, that the main README.md
+        # is not updated.* Six exported commands had never reached it:
+        # Expand-XmipEstate, Get-XmipEstateRepository, Get-XmipRepositoryRoot,
+        # New-XmipEstateMap, Publish-XmipPin and the xmip-git alias. Checking
+        # that the README names nothing dead says nothing about a command
+        # nobody wrote down, which is the half that rots silently.
+        [string[]] $exported = @(
+            (Get-Module Xmip).ExportedFunctions.Keys
+            (Get-Module Xmip).ExportedAliases.Keys
+        )
+
+        $exported.Count | Should -BeGreaterThan 20 -Because 'the module exports a command surface'
+
+        [string[]] $unnamed = @(
+            $exported |
+                Where-Object { $script:Readme -notmatch "\b$([regex]::Escape($_))\b" } |
+                Sort-Object
+        )
+
+        [string] $detail = $unnamed -join ', '
+        [string] $where = 'name each in README.md where it is used, or in the estate-module ' +
+            'table under Developer if it belongs nowhere else'
+
+        $unnamed | Should -BeNullOrEmpty -Because "README.md names none of these: $detail. $where"
+    }
+}
+
 Describe 'README links resolve' {
     It 'links to no file that does not exist' {
         [string[]] $links = @(

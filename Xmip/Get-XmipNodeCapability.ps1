@@ -53,18 +53,21 @@ function Get-XmipNodeCapability {
     <#
         .SYNOPSIS
             What the node called Name declares it can do: what -NodeCapability
-            says for it, else the operator's shorthand on its name. Pure.
+            says for it, and nothing at all otherwise. Pure.
 
         .DESCRIPTION
             A node declares its capabilities and nothing is inferred
-            (ADR-0056). The one shorthand is a convenience of this cmdlet and
-            lives nowhere else: a name beginning with R, P or S, the rest
-            letters and digits, is taken as receive, process or send, because
-            the owner types -Nodes R1, P1, S1. -NodeCapability overrides it.
-            A node neither named that way nor given a capability declares
-            none and runs whole tests itself. Nothing downstream — not the
-            roll, not the cluster, not a node, not a surface — reads a node's
-            name.
+            (ADR-0056). Until 2026-09-20 this cmdlet kept one exception — a
+            name beginning with R, P or S was read as receive, process or send
+            — and the owner struck it: *Rn, Pn and Sn are arbitrary node
+            names.* Nowhere in Xmip does a letter of a name mean anything now.
+
+            A node given no capability declares none and runs the
+            shared-directory tests whole, which is a real answer and not an
+            error; Start-XmipTest says so in words where RoundTrip was asked
+            for. The other way to have the message path covered is to omit
+            -Nodes, and let the level's complement deal the capabilities by
+            position.
 
         .PARAMETER Name
             The node's name.
@@ -92,13 +95,7 @@ function Get-XmipNodeCapability {
         }
     }
 
-    if ($Name -notmatch '^[RrPpSs][A-Za-z0-9]*$') {
-        return ''
-    }
-
-    [string] $letter = $Name.Substring(0, 1).ToLowerInvariant()
-
-    return @($script:XmipNodeCapability | Where-Object { $_.StartsWith($letter) })[0]
+    return ''
 }
 
 function Get-XmipNodeCapabilityText {
@@ -112,7 +109,8 @@ function Get-XmipNodeCapabilityText {
             The nodes, by name.
 
         .PARAMETER NodeCapability
-            What the operator stated per node; the shorthand fills the rest.
+            What the operator stated per node. A node it does not name
+            declares nothing, and is left out.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -251,5 +249,71 @@ function Get-XmipNodeCapabilityRefusal {
     }
 
     return ('REFUSED. RoundTrip across nodes needs the receive, process and send ' +
-        "capability declared; no node declares $($missing -join ' or ').")
+        "capability declared; no node declares $($missing -join ' or '). " +
+        'State it with -NodeCapability, one entry per node — ' +
+        "-NodeCapability @{ $($Nodes[0]) = 'receive' } — or omit -Nodes and take " +
+        "the level's full complement, which deals the whole path.")
+}
+
+function Get-XmipNodeCapabilityWarning {
+    <#
+        .SYNOPSIS
+            What an operator who named nodes and declared nothing is about to
+            get, said before anything spawns, or the empty string where there
+            is nothing to say. Pure.
+
+        .DESCRIPTION
+            A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn
+            are arbitrary node names), so -Nodes R1, P1, S1 with no
+            -NodeCapability is three nodes that declare no stage. That is
+            legal — they run the shared-directory tests whole and the roll runs
+            RoundTrip itself — and it is probably not what the operator meant,
+            so it is said rather than discovered (ADR-0055 clause 5). Not
+            refused: running whole tests is a real answer.
+
+        .PARAMETER Nodes
+            The nodes, by name.
+
+        .PARAMETER Test
+            The tests named; none named is every test.
+
+        .PARAMETER NodeCapability
+            What the operator stated per node.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes = @(),
+
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Test = @(),
+
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability
+    )
+
+    [string[]] $named = @($Nodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    [string[]] $tests = @($Test | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
+    if ($named.Count -eq 0 -or ($tests.Count -gt 0 -and 'RoundTrip' -notin $tests)) {
+        return ''
+    }
+
+    [string] $declared = Get-XmipNodeCapabilityText -Nodes $named -NodeCapability $NodeCapability
+
+    if ($declared -ne '') {
+        return ''
+    }
+
+    return ("None of $($named -join ', ') declares a stage, so each runs the " +
+        'shared-directory tests whole and RoundTrip runs in the roll rather than ' +
+        'across the nodes. A node name says nothing about what it does (ADR-0056). ' +
+        "Split the message path with -NodeCapability @{ $($named[0]) = 'receive' } " +
+        "and so on, or omit -Nodes to take the level's full complement.")
 }

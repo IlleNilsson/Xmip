@@ -66,7 +66,7 @@ an empty page what it had decided.
 3. **A refusal says three things**: that it refused, what was wrong, and
    what would be right. It begins with the word REFUSED. It names the
    value it got and the values it would take. The estate says its
-   outcomes in words (CLAUDE.md), and a refusal is an outcome.
+   outcomes in words (CONTRIBUTING.md), and a refusal is an outcome.
 
 4. **Better than refusing is offering.** Where the set is known, the
    surface offers it: tab completion on a PowerShell parameter, the

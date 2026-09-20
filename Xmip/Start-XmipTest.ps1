@@ -114,18 +114,21 @@ function Start-XmipTest {
             roll's cluster process, so -Nodes R1, P1, S1 is three node
             processes called that under one cluster called -Cluster. What
             each node does is the capability it is started with (ADR-0056),
-            and every node runs its part of the tests you named. As a
-            convenience of this cmdlet, a name beginning with R, P or S is
-            shorthand for the receive, process or send capability — the
-            shorthand lives here, at the operator's door, and nothing
-            downstream reads a node's name. -NodeCapability states the
-            capability outright and overrides it. A node neither named that
-            way nor given a capability declares none and runs the
-            shared-directory tests whole. RoundTrip across nodes hands each
-            pair from receive to process to send between the processes, so
-            each capability must be declared somewhere; it is REFUSED
-            otherwise, naming the capability, before anything starts. An
-            empty list, @(), is no nodes at any level.
+            stated with -NodeCapability. A name says nothing about it: the
+            owner, 2026-09-20, *Rn, Pn and Sn are arbitrary node names*, and
+            the one shorthand this cmdlet used to keep is gone. A node given
+            no capability declares none and runs the shared-directory tests
+            whole, which is said in words where RoundTrip was asked for.
+            RoundTrip across nodes hands each pair from receive to process to
+            send between the processes, so each capability must be declared
+            somewhere; it is REFUSED otherwise, naming the capability, before
+            anything starts. An empty list, @(), is no nodes at any level.
+
+            A node's name is also the last word of its process name —
+            xmip-playground-<cluster>-<node> (ADR-0053, amendment
+            2026-09-20) — so it takes the shape -Cluster takes and is
+            neither roll nor cluster, which name the other two processes of
+            the tree. Anything else is REFUSED before a process starts.
 
             Omit it and the level brings its full complement (ADR-0059,
             amendment 2026-09-19): its own count of nodes — one, three, ten or
@@ -138,14 +141,16 @@ function Start-XmipTest {
             were resolved.
 
         .PARAMETER NodeCapability
-            What each node declares it can do, stated per node and overriding
-            the name shorthand: -Nodes alpha, beta -NodeCapability
-            @{ alpha = 'receive'; beta = 'process,send' }. The values are
-            receive, process and send, one or more, separated by commas or by
-            plus; an unknown word, or a node -Nodes does not name, is REFUSED
-            before anything starts. A node the table does not name keeps the
-            shorthand. ADR-0056 names two further kinds of capability,
-            authentication and runtime, which the Playground does not model.
+            What each node declares it can do, stated per node: -Nodes alpha,
+            beta -NodeCapability @{ alpha = 'receive'; beta = 'process,send' }.
+            The values are receive, process and send, one or more, separated
+            by commas or by plus; an unknown word, or a node -Nodes does not
+            name, is REFUSED before anything starts. A node the table does not
+            name declares nothing. This is the only way a named node gets a
+            capability; omit -Nodes instead and the level's complement deals
+            them over the whole message path. ADR-0056 names two further kinds
+            of capability, authentication and runtime, which the Playground
+            does not model.
 
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
@@ -188,6 +193,7 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, R2, P1, S1 -OnlineNodes R1, S1
+                -NodeCapability @{ R1 = 'receive'; R2 = 'receive'; P1 = 'process'; S1 = 'send' }
 
         .EXAMPLE
             Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes alpha, beta, gamma -NodeCapability
@@ -417,6 +423,16 @@ function Start-XmipTest {
         return
     }
 
+    # A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn are
+    # arbitrary node names), so nodes named with no capability stated declare
+    # none. That is legal and is probably not what was meant, so it is said
+    # rather than discovered (ADR-0055 clause 5).
+    [string] $said = Get-XmipNodeCapabilityWarning @asked
+
+    if ($said -ne '') {
+        Write-Warning $said
+    }
+
     $layout = Get-XmipPlaygroundLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -494,14 +510,24 @@ function Start-XmipTest {
             Write-Warning ("The $($Stress.ToLowerInvariant()) level brings " +
                 "$($Nodes.Count) node(s) on this machine, too few for receive, " +
                 'process and send: they declare no stage and RoundTrip runs whole ' +
-                'in the roll. Name -Nodes R1, P1, S1 to split the message path.')
+                "in the roll. Name -Nodes and state -NodeCapability @{ R1 = 'receive'; " +
+                "P1 = 'process'; S1 = 'send' } to split the message path.")
         }
     }
+
+    # A process name is its image file's name, so the roll, its cluster and
+    # every node run images linked for this cluster: the operating system then
+    # says xmip-playground-C1-R1 rather than one more xmip-playground-node
+    # (the owner, 2026-09-20; ADR-0053, amendment). The roll finds its cluster
+    # binary beside its own image and the cluster finds the node binary the
+    # same way, which is why all three are linked here.
+    $choice.Image = Get-XmipPlaygroundImageArea -Cluster $Cluster
+    [string] $image = New-XmipPlaygroundImage -Cluster $Cluster
 
     [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
 
     $launch = @{
-        FilePath         = $roll
+        FilePath         = $image
         WorkingDirectory = $layout.Playground
         Environment      = $environment
         WindowStyle      = 'Hidden'
@@ -555,10 +581,19 @@ function Start-XmipTest {
     # the shipped document names C1, and on 2026-09-18 a roll named CC1 left
     # the prompt frozen on another cluster's file. Said here because this
     # command knows the file; nothing is loaded that is not loaded already.
+    #
+    # And it is told what else is rolling. The prompt reads one publication,
+    # so with two clusters it followed whichever started last and looked like
+    # the whole estate; now the segment says how many it is not showing
+    # (ADR-0052, amendment 2026-09-20). Named by this session, never counted
+    # from files on disk — a surface is stated (clause 3).
     $prompt = 'Xmip.PowerShell.PromptMonitor' -as [type]
 
     if ($null -ne $prompt) {
-        $prompt::Follow($environment.XMIP_PLAYGROUND_SNAPSHOT)
+        [string[]] $beside = @(
+            Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot
+        )
+        $prompt::Follow($environment.XMIP_PLAYGROUND_SNAPSHOT, $beside)
     }
 
     if ($PassThru) {
@@ -883,6 +918,7 @@ function Remove-XmipPlaygroundStaleRecord {
 
         $process = Get-Process -Id ([int] $number) -ErrorAction SilentlyContinue
         [bool] $alive = $null -ne $process -and
+            (Get-XmipPlaygroundImageKind -Name $process.ProcessName) -eq 'Roll' -and
             (Test-XmipPlaygroundBinary -Process $process -Path $layout.Roll)
 
         if (-not $alive) {

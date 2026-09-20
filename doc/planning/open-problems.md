@@ -521,20 +521,26 @@ retires entries from stops being an order.
                                        either; the only place the two hundred
                                        technologies are linked is
                                        `test/playground`, with one hundred
-                                       and twenty-three. Nor can they be
-                                       loaded instead of linked: there is no
-                                       loader anywhere — `libloading` appears
-                                       in one of two hundred and forty Cargo
-                                       files, and that one is the VS Code
-                                       extension opening the runtime, the
-                                       other way round. Seven contract
-                                       technologies already fill a real
-                                       vtable and Xmip has never opened one.
-                                       So phases 4-9 have nothing to start
-                                       even once the vocabulary is settled.
-                                       ADR-0057 is where this is worked out,
-                                       and its finding is that a vtable alone
-                                       buys nothing: the loader is the saving
+                                       and twenty-three. They can now be
+                                       loaded instead: ADR-0057 step 2
+                                       landed on 2026-09-19 and
+                                       `xmip-core-runtime` opens a shared
+                                       library, resolves
+                                       `xmip_create_module_v1`, holds the
+                                       descriptor to what the loading
+                                       capability requires and drives the
+                                       contract table through it, behind the
+                                       `dynamic-loading` feature. It has
+                                       opened the Rust and the C contract
+                                       technology with the same code. What
+                                       is still missing is a node that does
+                                       it: `start.rs` performs phases 1-3
+                                       and says in every record that 4-9 are
+                                       not built, so nothing asks for a
+                                       Module yet. Phases 4-9 still have
+                                       nothing to start once the vocabulary
+                                       is settled, for a smaller reason
+                                       than before
 2. Protocol implementations            eighty-two of eighty-four transports,
                                        every contract, message, route, logic,
                                        resilience, path and archive technology

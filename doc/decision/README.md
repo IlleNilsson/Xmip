@@ -766,7 +766,7 @@ itself
 **Every System Process and every service Xmip owns is named `xmip-<what>`,
 and declares three things about itself: its name, its location and its
 purpose, which is Test or Runtime. One line finds them all, and one line
-stops them all: `Get-Process Xmip-* | Stop-Process -Force`.**
+stops them all: `Get-Process xmip-* | Stop-Process -Force`.**
 
 → [Every System Process Xmip owns says whose it is, in full](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md)
 

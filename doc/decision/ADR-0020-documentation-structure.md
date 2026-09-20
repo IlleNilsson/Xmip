@@ -5,6 +5,10 @@
 - Amended: 2026-09-09 — `doc/decisions/` became `doc/decision/`: a folder is
   named in the shortest singular form like everything else (ADR-0011); the
   empty `doc/operations/` went
+- Amended: 2026-09-20 — `CLAUDE.md` folded into `CONTRIBUTING.md`; the root
+  keeps `CLAUDE.md` and adds `AGENTS.md` as pointers to it (clause 8)
+- Amended: 2026-09-20 — a document that names a thing is tested against it:
+  `README.md` must name every command the module exports
 - Related: ADR-0011 (naming), ADR-0016 (composition)
 
 ## In brief
@@ -110,6 +114,27 @@ search result that wastes a reader's time. **Delete them.** The directory
 structure can be recreated in the second it takes, when there is something to
 put in it.
 
+### 8. A rule is not named for the tool that reads it
+
+The owner, 2026-09-20: *I do not think that the file CLAUDE.md should be
+named CLAUDE.md. Regardless of AI-tool, the same rules apply.*
+
+`CLAUDE.md` held how work is done in the estate — the records to read before
+writing, the hard-learned rules, how a change lands, the working area — and
+every line of it is as true of a human contributor as of a model. A filename
+that names one vendor's tool makes the rules look like that tool's
+configuration rather than the estate's, and it puts clause 1 in breach: two
+root documents, `CONTRIBUTING.md` and `CLAUDE.md`, on the one subject of how
+to contribute. The content was folded into `CONTRIBUTING.md` on 2026-09-20,
+phrased for whoever is working, with the differences between a person and a
+model stated where they matter instead of smoothed away.
+
+Tools that load a fixed filename are the one exception clause 1 has to allow.
+`CLAUDE.md` and `AGENTS.md` stay at the root as pointers of a few lines each:
+what the file is, where the rules live, and that it is a pointer on purpose
+so that nobody re-fills it. They carry no rule of their own, so there is
+nothing in them that can fall out of step — which is what clause 1 protects.
+
 ## Consequences
 
 - 110 documents become roughly 30: six architecture documents, terminology,
@@ -135,3 +160,43 @@ narrow addendum — which is exactly the trap `v1.2` set.
 now: the root genuinely owns cross-cutting subjects — the runtime model spans
 every module — and pushing those into any one module repository would make that
 repository the de facto root.
+
+## Amendment, 2026-09-20: a document that names a thing is tested against it
+
+The owner, 2026-09-20: *when you change things, you have to change all
+related — I can see for example, that the main README.md is not updated.*
+
+He was right, and the gap was measurable. The Xmip module exported
+twenty-seven functions and two aliases; `README.md` named twenty-two
+functions and one alias. `Expand-XmipEstate`, `Get-XmipEstateRepository`,
+`Get-XmipRepositoryRoot`, `New-XmipEstateMap`, `Publish-XmipPin` and the
+`xmip-git` alias appeared nowhere in it. The module loader that had landed
+the day before (ADR-0057, amendment 2026-09-19) appeared nowhere either,
+although it is the first time Xmip opens a Module for real. `Start-XmipTest`
+had gained `-NodeCapability` (ADR-0056) while the README still told a
+beginner that a node's name says nothing about what it does — which had been
+true and had stopped being true.
+
+Clause 1 says a subject has exactly one document. It does not say the
+document is right. A document read as true and not true is the failure
+clause 1 exists to prevent, arriving by a different road: not two documents
+disagreeing, but one document and the estate disagreeing.
+
+**Where the relationship between a document and the thing it describes can be
+checked, the check is a test.** `test/Documentation.Test.ps1` has asserted
+since it was written that `README.md` names no command that does not exist,
+and that every document under `doc/architecture/` is linked from it. It now
+also asserts the direction that rots silently: **every function and alias the
+Xmip module exports is named in `README.md`**, and the failure lists the ones
+missing and says where to put them. A new cmdlet cannot reach `main` without
+the front door naming it.
+
+Not asserted, deliberately: that every exported command carries
+comment-based help with a `.SYNOPSIS` and an `.EXAMPLE`. Ten of the
+twenty-seven have no `.EXAMPLE` and six no `.SYNOPSIS` — but comment-based
+help may sit above a function as well as inside it, so an honest check needs
+an AST walk rather than a search, and two of the six are helpers whose export
+is itself questionable (`Expand-XmipEstate` takes a TOML node and a list;
+`New-XmipRepositoryEntry` beside it in ADR-0036 is not exported at all).
+Writing help for a command the owner may choose to withdraw is work spent
+twice. The test is worth having once the export list is his again.

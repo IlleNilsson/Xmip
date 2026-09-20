@@ -902,6 +902,7 @@ function Test-XmipManifest {
 # says. Nothing in the estate starts any of them on its own (owner, 2026-09-12).
 . (Join-Path $PSScriptRoot 'Get-XmipTestSuite.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipPlaygroundImage.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundProcess.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeCapability.ps1')

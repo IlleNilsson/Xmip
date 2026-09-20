@@ -21,27 +21,48 @@ function Get-XmipPlaygroundProcess {
             it, whatever has happened to the file since they started.
 
         .PARAMETER Name
-            The process name, which is the binary's: xmip-playground-roll,
-            xmip-playground-cluster, xmip-playground-node, xmip-gui-web.
+            The process name, wildcards allowed. Since 2026-09-20 a
+            Playground process is named for its cluster and what it is —
+            xmip-playground-V1-roll, xmip-playground-V1-R1 — so the
+            Playground's own callers ask for xmip-playground-* and say which
+            of the three with -Kind. xmip-gui-web is named outright.
 
         .PARAMETER Path
-            Where that binary is expected to be. A process whose image is
-            elsewhere is still this one's, and it is said.
+            Where the binary is expected to be. A process whose image is
+            elsewhere is still this one's, and it is said. A process running
+            one of the Playground's own per-instance images is this one's
+            without a word, because nothing else writes that directory.
+
+        .PARAMETER Kind
+            Which of the Playground's three: Roll, Cluster or Node. The name
+            says it — xmip-playground-<cluster>-roll and -cluster end in the
+            word, and anything else under the prefix is a node — so a roll's
+            tree is found by kind rather than by twenty names.
     #>
     [CmdletBinding()]
     [OutputType([System.Diagnostics.Process])]
     param(
         [Parameter(Mandatory)]
+        [SupportsWildcards()]
         [string] $Name,
 
         [Parameter(Mandatory)]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter()]
+        [ValidateSet('Roll', 'Cluster', 'Node')]
+        [string] $Kind
     )
 
     [hashtable] $declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
     [System.Collections.Generic.List[int]] $found = @()
+    [bool] $byKind = $PSBoundParameters.ContainsKey('Kind')
 
     foreach ($process in @(Get-Process -Name $Name -ErrorAction SilentlyContinue)) {
+        if ($byKind -and (Get-XmipPlaygroundImageKind -Name $process.ProcessName) -ne $Kind) {
+            continue
+        }
+
         if (Test-XmipPlaygroundBinary -Process $process -Path $Path -Declared $declared) {
             $found.Add($process.Id)
             $process
@@ -52,7 +73,13 @@ function Get-XmipPlaygroundProcess {
     # file its image came from was renamed or replaced under it. It said what
     # it was where it started, and that is what it still is.
     foreach ($id in @($declared.Keys)) {
-        if ($found.Contains([int] $id) -or [string] $declared[$id]['name'] -ne $Name) {
+        [string] $said = [string] $declared[$id]['name']
+
+        if ($found.Contains([int] $id) -or $said -notlike $Name) {
+            continue
+        }
+
+        if ($byKind -and (Get-XmipPlaygroundImageKind -Name $said) -ne $Kind) {
             continue
         }
 
@@ -63,7 +90,7 @@ function Get-XmipPlaygroundProcess {
         }
 
         Write-Warning (
-            "Process $id declared itself as $Name; this machine now calls it " +
+            "Process $id declared itself as $said; this machine now calls it " +
             "$($process.ProcessName), so its binary changed under it. It is listed, " +
             'so it can be stopped (ADR-0053).'
         )
@@ -117,6 +144,16 @@ function Test-XmipPlaygroundBinary {
     }
 
     [string] $image = try { $Process.Path } catch { '' }
+
+    # A process running one of the Playground's own per-instance images is the
+    # Playground's, and nothing about it disagrees: the image is not the built
+    # binary on purpose, because a process name is its image's name and an
+    # operator asked to read the cluster and the node off it (ADR-0053,
+    # amendment 2026-09-20). Nothing but this module writes that directory.
+    if ((Test-XmipPlaygroundOwnImage -Path $started) -or
+        (Test-XmipPlaygroundOwnImage -Path $image)) {
+        return $true
+    }
 
     [hashtable] $judgment = @{
         Id       = $Process.Id
