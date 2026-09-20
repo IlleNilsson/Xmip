@@ -50,7 +50,7 @@ function Get-XmipTestNode {
     $layout = Get-XmipPlaygroundLayout
 
     [System.Diagnostics.Process[]] $processes = @(
-        Get-XmipPlaygroundProcess -Name 'xmip-playground-node' -Path $layout.Node
+        Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Node -Kind Node
     )
 
     [hashtable] $declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
@@ -107,13 +107,18 @@ function ConvertTo-XmipTestNode {
     # and Stop-XmipTest left three of them running (2026-09-19).
     [int] $above = if ($null -ne $parent) { $parent.Id } else { 0 }
 
-    if ((Resolve-XmipProcessName -Id $above -Declared $known) -eq 'xmip-playground-cluster') {
+    # Judged by which of the three the name is, never by the whole name: since
+    # 2026-09-20 a process carries its cluster, so xmip-playground-V1-cluster
+    # is the cluster of V1 and xmip-playground-cluster is one nobody named.
+    [string] $named = Resolve-XmipProcessName -Id $above -Declared $known
+
+    if ((Get-XmipPlaygroundImageKind -Name $named) -eq 'Cluster') {
         $parent = try { $parent.Parent } catch { $null }
         $above = if ($null -ne $parent) { $parent.Id } else { 0 }
+        $named = Resolve-XmipProcessName -Id $above -Declared $known
     }
 
-    [bool] $ofRoll =
-        (Resolve-XmipProcessName -Id $above -Declared $known) -eq 'xmip-playground-roll'
+    [bool] $ofRoll = (Get-XmipPlaygroundImageKind -Name $named) -eq 'Roll'
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'

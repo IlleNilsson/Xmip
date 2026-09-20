@@ -161,7 +161,7 @@
               <TableColumnItem><PropertyName>Url</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Surface</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Snapshot)) { 'none' } else { [System.IO.Path]::GetFileName($_.Snapshot) }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if (@($_.Snapshot).Count -eq 0) { 'none' } else { (@($_.Snapshot) | ForEach-Object { [System.IO.Path]::GetFileName($_) }) -join ', ' }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>
@@ -174,7 +174,7 @@
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
-          <TableColumnHeader><Label>Name</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Name</Label><Width>32</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Purpose</Label><Width>8</Width></TableColumnHeader>
           <TableColumnHeader><Label>Declared</Label><Width>8</Width></TableColumnHeader>

@@ -19,7 +19,7 @@
 **Every System Process and every service Xmip owns is named `xmip-<what>`,
 and declares three things about itself: its name, its location and its
 purpose, which is Test or Runtime. One line finds them all, and one line
-stops them all: `Get-Process Xmip-* | Stop-Process -Force`.**
+stops them all: `Get-Process xmip-* | Stop-Process -Force`.**
 
 ## Context
 
@@ -27,6 +27,13 @@ The owner, 2026-09-18, after an evening of locked build directories: *every
 process, every service that Xmip owns should declare its name, location and
 purpose. Test or Runtime. I want to be able to kill all processes by running
 `Get-Process Xmip-* | Stop-Process -Force`.*
+
+The quote keeps the owner's own capital. Windows matches a process name
+without regard to case, so `Xmip-*` finds them and nobody noticed for two
+days — but the processes are named `xmip-*`, and on 2026-09-20 the owner
+caught the estate's own instructions teaching the wrong spelling. They were
+corrected; this line was not, because a quote is what was said and not what
+is true. Where the two differ in this record, that is why.
 
 Xmip built six executables and one of them would have matched. The
 Playground's were `roll` and `node`, and `node` was Node.js's name long
@@ -164,3 +171,118 @@ clause 1 is for. `Get-XmipProcess` shows all three, and
 `Get-XmipProcess -Purpose Test | Stop-Process -Force` still stops them all.
 The ordinary way to end a run is `Stop-XmipTest`, which ends the tree from
 the leaves up so nothing is orphaned (ADR-0028, amendment 2026-09-19).
+
+## Amendment, 2026-09-20: the name says which cluster and which node
+
+The owner, reading `Get-Process Xmip-*` with two clusters rolling: *these
+process names does not tell an operator or developer much. … Cluster, Node
+and test suite shall be incorporated in the process name.* Eleven rows said
+`xmip-playground-node` six times over, `xmip-playground-cluster` twice and
+`xmip-playground-roll` twice, and nothing in the list said which cluster any
+of them belonged to. The information existed — every one of them declares its
+location under clause 3, and `Get-XmipProcess` printed `xmip:///W1/node/P1`
+beside it — but `Get-Process`, Task Manager, Resource Monitor and every other
+tool the operating system gives show the image name and nothing else.
+
+### 4. A Playground process is named for its suite, its cluster and itself
+
+`xmip-<suite>-<cluster>-<what>`, where `what` is `roll`, `cluster`, or the
+node's own name:
+
+| process | name | location |
+|---|---|---|
+| the roll | `xmip-playground-W1-roll` | `xmip:///W1` |
+| its cluster | `xmip-playground-W1-cluster` | `xmip:///W1` |
+| a node | `xmip-playground-W1-R1` | `xmip:///W1/node/R1` |
+
+Clause 1 is untouched and is why this works: every one still begins `xmip-`,
+so `Get-Process Xmip-* | Stop-Process -Force` still stops them all, and
+`Get-Process xmip-playground-W1-*` is now one cluster's tree. The cluster
+sits at a fixed column, which is what makes twenty rows readable at a glance;
+the kind is the last word, which is what tells the roll and its cluster apart
+where they share a location.
+
+The name a process was given before this stays its name where nobody named a
+cluster: a roll started by hand with `cargo run --bin xmip-playground-roll`,
+and the crate's own tests, are still `xmip-playground-roll`,
+`xmip-playground-cluster` and `xmip-playground-node`.
+
+**A node is not called `roll` or `cluster`**, and no node's name ends in
+`-roll` or `-cluster`, because those are the last words that tell the tree
+apart. A node's name is also a file name, for the reason clause 5 gives, so
+it takes the same shape a cluster's name takes — letters, digits and hyphens,
+starting with a letter. Anything else is REFUSED at the door and nothing is
+spawned (ADR-0055); it is never quietly mangled into a name that works.
+
+### 5. The name is a file, because a process cannot be renamed
+
+On Windows a process's name is its **image file's** name, and a running
+process cannot be renamed; on Linux the name follows the executable too. A
+distinct name per instance is therefore a distinct file per instance. Each is
+a **hard link** to the built binary in device-local space — `.local-work`,
+which `CONTRIBUTING.md` reserves for what this machine needs to run Xmip —
+and a copy only where a link cannot be made, on another volume or a file
+system without them. Nothing is written into the repository, and the links go
+when the roll ends: the roll takes what it can on its way out, `Stop-XmipTest`
+takes the rest, and the next roll on the same cluster clears the directory
+before it starts.
+
+A link is not a micro-optimisation here. The node binary is twenty-one
+megabytes and the brutal level brings forty nodes; copying would write eight
+hundred megabytes for every roll, on every start.
+
+### 6. The declaration is the name the process actually has
+
+Clause 3 says a process declares its name. It now declares the name the
+operating system lists it under, read from its own image rather than written
+as a constant, so a declaration cannot drift from the process list — which is
+what would make `Get-XmipProcess` lie. `Get-XmipPlaygroundProcess` judges a
+process by its declaration first and by its name second (2026-09-19), and the
+per-instance names go through it: it is asked for a **kind** — Roll, Cluster
+or Node — rather than for one of three fixed names, and the kind is read off
+the name the same way on both paths. A roll stays findable and stoppable by
+`Get-XmipTestStatus`, `Get-XmipTestNode` and `Stop-XmipTest`.
+
+### What the other processes do, and why
+
+- `xmip-gui-web` keeps its name. One web host now serves every cluster at
+  once (ADR-0052, amendment 2026-09-20), so there is no one cluster to put in
+  its name, and its declared location already says which surface it reads.
+  Naming it for a cluster would be the lie this amendment exists to remove.
+- `xmip-cli` keeps its name. An invocation is short-lived and answers about
+  one scope, which it declares; it is not a process an operator finds in a
+  list and wonders about. `--snapshot <path>` already says which cluster it
+  read.
+- `xmip-lsp`, `xmip-operations`, `xmip-service` and `xmip-host-<name>` are
+  unchanged; none of them is one of many alike.
+
+### What follows from it
+
+- On Linux the kernel keeps fifteen characters of a process name, so every
+  one of these still reads `xmip-playground` in `ps -o comm`. The prefix
+  survives, which is what the one line needs; the whole name is in
+  `/proc/<pid>/exe`, in `ps -o args`, and to `pgrep -f`. The consequence
+  ADR-0053 already recorded is widened, not introduced, and an operator on
+  Linux reads the cluster from `Get-XmipProcess` as before.
+- `Get-XmipTestNode`'s walk from a node up to its roll asks which **kind** a
+  parent is rather than comparing its whole name, since the name now carries
+  a cluster.
+- The image directory is the Playground's alone, so a process running out of
+  it is the Playground's without further proof — which is what keeps the
+  rebuilt-binary warning of 2026-09-19 from firing on every ordinary run.
+- **Every surface, and the one that owes nothing** (ADR-0014, amendment
+  2026-08-30). A process name reaches exactly one surface: PowerShell's
+  `Get-XmipProcess`, whose table widened for it, with `Get-XmipTestStatus`
+  and `Get-XmipTestNode` finding a run's tree by kind. `xmip-cli`, the web
+  GUI, the desktop and the prompt show scopes, health and rates and have
+  never shown a process name, so none of them changes; a scope like
+  `xmip:///W1/node/R1` already said which cluster and which node, and this
+  amendment exists because the operating system's own list did not.
+- Where a session's build directory is held open by another session's roll,
+  `CARGO_TARGET_DIR` moves both the build and what the cmdlets link and run:
+  `Get-XmipPlaygroundLayout` asks cargo rather than assuming `target/debug`.
+  That is the *target choice* `CONTRIBUTING.md` reserves `.local-work` for,
+  and it is how a second session builds at all while a roll is up.
+
+The requirement and the shape are the owner's, 2026-09-20; the reserved
+words, the link and clause 6 are the assistant's drafting of them.

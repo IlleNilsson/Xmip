@@ -33,7 +33,7 @@ function Get-XmipProcess {
             Every System Process Xmip owns is named xmip-<what> (ADR-0053), so
             the operating system's list is the list:
 
-                Get-Process Xmip-* | Stop-Process -Force
+                Get-Process xmip-* | Stop-Process -Force
 
             stops them all. This says what each one is for before you do. A
             process declares three things where it starts — its name, its
@@ -46,8 +46,11 @@ function Get-XmipProcess {
 
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
-            -Name 'xmip-playground-*' is a roll, its cluster and its nodes.
-            Every Xmip process unless said.
+            -Name 'xmip-playground-*' is every roll, cluster and node on this
+            machine, and -Name 'xmip-playground-C1-*' is cluster C1's tree
+            alone, since a Playground process carries its cluster and what it
+            is (ADR-0053, amendment 2026-09-20). Every Xmip process unless
+            said.
 
         .PARAMETER Purpose
             Only the processes that declared this purpose: Test or Runtime.
@@ -66,7 +69,7 @@ function Get-XmipProcess {
             Get-XmipProcess -Purpose Test | Stop-Process -Force
 
         .EXAMPLE
-            Get-XmipProcess -Name 'xmip-playground-node'
+            Get-XmipProcess -Name 'xmip-playground-C1-*'
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]

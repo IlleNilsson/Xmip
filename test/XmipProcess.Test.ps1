@@ -88,3 +88,77 @@ Describe 'What a killed process left behind' {
         }
     }
 }
+
+Describe 'What a Playground process is called' {
+    <#
+        ADR-0053, amendment 2026-09-20. The owner, reading eleven rows of
+        Get-Process with two clusters up: "these process names does not tell an
+        operator or developer much. Cluster, Node and test suite shall be
+        incorporated in the process name."
+    #>
+    It 'carries its suite, its cluster and what it is' {
+        InModuleScope Xmip {
+            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'roll' |
+                Should -Be 'xmip-playground-W1-roll'
+            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'cluster' |
+                Should -Be 'xmip-playground-W1-cluster'
+            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'R1' |
+                Should -Be 'xmip-playground-W1-R1'
+
+            # Clause 1 is untouched: the owner's one line still finds them.
+            foreach ($what in 'roll', 'cluster', 'R1') {
+                Get-XmipPlaygroundImageName -Cluster 'W1' -What $what |
+                    Should -BeLike 'xmip-*'
+            }
+        }
+    }
+
+    It 'says which of the three it is, named for a cluster or not' {
+        InModuleScope Xmip {
+            [hashtable] $expected = @{
+                'xmip-playground-W1-roll'    = 'Roll'
+                'xmip-playground-W1-cluster' = 'Cluster'
+                'xmip-playground-W1-R1'      = 'Node'
+                'xmip-playground-W1-node-01' = 'Node'
+                'xmip-playground-roll'       = 'Roll'
+                'xmip-playground-cluster'    = 'Cluster'
+                'xmip-playground-node'       = 'Node'
+                'xmip-gui-web'               = ''
+                'xmip-cli'                   = ''
+                'notepad'                    = ''
+            }
+
+            foreach ($name in $expected.Keys) {
+                Get-XmipPlaygroundImageKind -Name $name | Should -Be $expected[$name]
+            }
+        }
+    }
+
+    It 'is the Playground''s own where its image is, whatever the built file is called' {
+        # The image is deliberately not the built binary: a process name is
+        # its image's name. Nothing but this module writes that directory, so
+        # a process running out of it is the Playground's without a warning
+        # about a binary that changed under it.
+        InModuleScope Xmip {
+            [string] $area = (Get-XmipPlaygroundLayout).Image
+            [string] $image = Join-Path $area 'W1' 'xmip-playground-W1-R1.exe'
+
+            Test-XmipPlaygroundOwnImage -Path $image | Should -BeTrue
+            Test-XmipPlaygroundOwnImage -Path '' | Should -BeFalse
+            Test-XmipPlaygroundOwnImage -Path 'C:/Windows/notepad.exe' | Should -BeFalse
+            Test-XmipPlaygroundOwnImage -Path (
+                Join-Path (Get-XmipPlaygroundLayout).Playground 'target/debug/x.exe') |
+                Should -BeFalse
+        }
+    }
+
+    It 'lives under .local-work, device-local and never in the repository' {
+        InModuleScope Xmip {
+            $layout = Get-XmipPlaygroundLayout
+
+            $layout.Image | Should -BeLike '*.local-work*'
+            Get-XmipPlaygroundImageArea -Cluster 'W1' |
+                Should -Be (Join-Path $layout.Image 'W1')
+        }
+    }
+}

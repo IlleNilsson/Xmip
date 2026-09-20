@@ -642,16 +642,26 @@ of the rig's processes, read *the cluster's nodes*.
   untouched: he names the clusters, and a test may spawn nodes and never a
   cluster.
 
+  **Overruled, 2026-09-20.** The owner, on both halves of it: *C1 and C2 are
+  not roles, they are arbitrary cluster names, there may be one or more
+  clusters*, and *Rn, Pn and Sn are arbitrary node names.* The reading above
+  — that the letter names the node's purpose — is the reading of 2026-09-19
+  and no longer holds; the gloss of 2026-09-14 it superseded is the one that
+  stands. The paragraphs are kept as written because the quotes in them are
+  the owner's own and the sequence is the record; what they conclude is not
+  current. ADR-0056's amendment of 2026-09-20 is where the rule lives now.
+
   What the rig does today, for the owner to keep or widen: **a node is
   started with a declared capability and serves the stages it declared** —
   `--can receive`, or `--can process,send` for a node whose purpose needs
   both — and the topology draws a node's stages from the capability record
-  it publishes (ADR-0056). The letter is the operator's shorthand for a
-  capability, expanded inside `Start-XmipTest` because the owner types
-  `-Nodes R1, P1, S1`; `-NodeCapability @{ alpha = 'receive' }` states it
-  outright and overrides the shorthand. Downstream of that cmdlet — the
-  roll, the cluster, a node, the topology, every surface — a node's name is
-  read nowhere. A run of cluster Z8 over nodes called `alpha`, `beta` and
+  it publishes (ADR-0056). `-NodeCapability @{ alpha = 'receive' }` states
+  that capability, and since 2026-09-20 it is the only thing that does:
+  `Start-XmipTest` briefly read `R`, `P` and `S` as a shorthand at the
+  operator's door, and the owner struck it — *Rn, Pn and Sn are arbitrary
+  node names* (ADR-0056, amendment 2026-09-20). Nowhere in Xmip — this
+  cmdlet, the roll, the cluster, a node, the topology, every surface — is a
+  node's name read. A run of cluster Z8 over nodes called `alpha`, `beta` and
   `gamma` draws the same receive-to-process-to-send handoffs as one over
   `R1`, `P1` and `S1`.
 
@@ -767,6 +777,146 @@ pattern at every notice, which is built but proved only in the unit tests, not
 against a live roll. ADR-0059 is the other agent's this session and was read,
 not edited; the decision index was not regenerated, since nothing here changes
 a record's In brief.
+
+## Amendment, 2026-09-20: a face holds more than one cluster and says which
+
+The amendment of 2026-09-14, ruling 1, landed two rolls side by side and wrote
+down what it had not built: *from it an operator navigates to another Xmip
+cluster when allowed to* — *one page navigating between them is what stays
+queued*. That gap is what the owner met with `-Cluster C1` and `-Cluster C2`
+rolling at once, and it was wider than a missing page:
+
+- **The prompt reported C2 and said nothing of C1.** `Start-XmipTest` calls
+  `PromptMonitor.Follow` on every start (amendment of 2026-09-18), so the last
+  roll started won and the segment silently followed one publication of two.
+- **The web views showed neither.** A host started without `-Snapshot` falls
+  back to its own `xmip.gui.toml`, which names the native surface, and the page
+  read `NATIVE — no runtime library at … · nothing recorded · 0 node(s)`.
+- **The documented easy path refused itself.** `Get-XmipTestStatus |
+  Start-XmipOperationWeb` piped two objects at a `[string]` parameter, and the
+  second host found 5087 held.
+
+**Nothing is added together, at any surface.** A cluster is a whole scope tree
+with its own root (ADR-0027), and the amendment of 2026-09-19 already settled
+what a surface may do with several of anything: a sum over several scopes is a
+figure at a scope that is not in the tree, and a rollup over several is the same
+invention (ADR-0041). Two clusters are two publications, side by side, and no
+banner, tile, figure or prompt ever spans them. What is shared is the face.
+
+- **`ClusterSurfaces` in `Xmip.Surface`** is one `IOperatorSurface` per cluster
+  with a name above them — the shape chosen over one surface that answers per
+  cluster, because that second shape would put a cluster argument on every call
+  of clause 1's interface and invite exactly the rollup this record forbids.
+  A cluster is named once, when the set is opened, from what its publisher says:
+  `[run].cluster`, else the one first segment every published scope shares. Kept,
+  not re-read — **a cluster keeps its name and its place in the chooser whatever
+  becomes of its publisher**, and does not vanish from under the operator's
+  hand. A roll that ends leaves its file, so its last publication still stands
+  and reads as one (clause 3); a cluster whose surface answers nothing at all —
+  the file taken away — is still in the chooser and says it has stopped
+  publishing.
+  **Two surfaces naming one cluster are REFUSED**, for the reason
+  `Start-XmipTest` refuses a cluster already rolling: a face that held two could
+  not say which it was showing. `Xmip.Surface.Test` proves the two, the one, the
+  roll that ends mid-read and the refusal.
+- **A host names its clusters in its document or on its line.** `Xmip:Snapshot`
+  takes a path as before or a list — `Snapshot = ["…/C1-snapshot.toml", …]`,
+  `--Xmip:Snapshot:0=… --Xmip:Snapshot:1=…`. A list wins over a path, because
+  the two reach the same key from different sources and a line naming two
+  clusters must not be quietly replaced by the one the shipped document names.
+- **`Start-XmipOperationWeb` takes several and starts one host.**
+  `Get-XmipTestStatus | Start-XmipOperationWeb` over two rolls is one host
+  serving both. The parameter is `[string[]]`, still bound by property name from
+  the pipeline, and the command gathers the pipeline in `process` and starts the
+  host once in `end`; before, the body was one `end` block and a second object
+  produced a refusal rather than a second cluster.
+- **The three views say which cluster they are on, and move between them.**
+  The cluster is in the address — `?cluster=C2` — so a link carries it, a reload
+  keeps it, and two tabs watch two clusters. The chooser sits at the head of the
+  **run line**, not on a line of its own: the owner has said twice that these
+  views are crowded, there is a run line and a filter line already, and which
+  cluster a view shows belongs beside what that run was started with. A host
+  holding one cluster draws nothing new and writes the addresses it always
+  wrote. Every link out of a view carries its cluster, since a link that dropped
+  it would land on the other cluster's tree at a scope that is not in it; and
+  moving cluster starts the drill and the filter over, for the same reason.
+  `ClusterView` is where a page reads the set, names what it chose and follows
+  that cluster's change feed — written once, as clause 1 asks, and it replaced
+  the same watch copied into all three pages.
+- **The prompt says there is more than it shows.** It still reads one
+  publication, and the segment is untouched but for one thing: where the session
+  named more rolls than the one it follows, the name carries how many it is not
+  showing — `[C2+1 ≡ R:5.3K P:60 S:60]`, the count in the gray this segment
+  already gives what it has no figure for. None beside is nothing on the line,
+  as everything else here. The others are **named by the session**, never counted
+  from files in a directory: `Start-XmipTest` says what is rolling when it
+  follows the roll it started, and `Stop-XmipTest` says it again when one ends,
+  so the count cannot outlive the cluster. Clause 3 holds — a surface is stated.
+
+**The executable owes one thing, and it is not several clusters.** `xmip-cli`
+answers one question at one scope and ends; it has no session to navigate and
+nothing it could combine. What it lacked over two rolls was a way to say *which*
+without editing `xmip.cli.toml`, so it gains `--snapshot <path>`, between
+`--remote` and `--runtime` in the precedence the amendment of 2026-09-18 set,
+and reads the first where a document names several. The desktop routes to the
+same pages and holds its one surface as a set of one. The VS Code extension is
+untouched: its surface is its own, and this changes nothing it reads.
+
+**R, P and S are a rate, not a total.** The owner, the same day, on the segment
+this amendment had just widened: *the CLI/PowerShell status number does not mean
+anything over time. There has to be a logical cap on summarising the R, P, S, T
+and F numbers or do a completely different prompt visualization.* Asked to
+choose between a rate, a rolling window and a sparkline, he picked **the rate —
+what is moving now**. A total is bounded by uptime and grows whatever happens; a
+rate is bounded by throughput, and it can say `R:0/s`, **stalled**, which a
+rising total can never say. That is the whole of the change.
+
+- `[C1 ≡ R:1.2K/s P:240/s S:238/s]`. Everything else on the line is exactly as
+  the owner left it — the K/M/G ladder, the hotter and icier trend, posh-git's
+  yellow brackets and cyan, the `≡` when square, the node or cluster in front,
+  T and F only when above zero. This changes what the number means, not how the
+  line looks.
+- **T and F stay counts.** A retry total and a failure total mean something and
+  should be small, and they keep the rule they already had.
+- **One publication is no interval and therefore no rate**, and that is the dash
+  this segment already shows for a figure nobody published — never `0/s`,
+  because on this line `0/s` means stalled and *not known yet* is not stalled.
+  So does a figure that fell: a counter only falls where its publisher started
+  over, and two publications of two runs are not an interval.
+- **The calculation is `FigureFlow` in `Xmip.Surface`**, so a second face reads
+  one rate rather than computing its own (clause 1). The clock is the reader's:
+  a published snapshot carries no observation time for its counts, and the
+  prompt reads at every notice, so the interval between two reads is the
+  interval between two publications. A trickle is written `0.3/s` and never
+  rounded to `0/s`, on the same *one decimal below ten of a unit* the K, M and G
+  ladder already uses.
+- **The trend colour still earns its place, and the judgement is stated rather
+  than assumed.** Over a total it answered *is anything moving*, which the rate
+  now answers outright; over a rate it answers a different question — *is the
+  rate climbing or falling*, whether a cluster is speeding up or winding down —
+  and no digit on the line says that, because `1.2K/s` is `1.2K/s` across a wide
+  band. The rule that a number below a thousand is not painted holds for the
+  reason it always did: 238/s to 241/s is visible in the digits.
+- **The executable keeps totals, and this record says so rather than leaving the
+  two surfaces silently different** (ADR-0014's amendment). An invocation is one
+  sample, with no interval; a rate from a single reading would be the average
+  over the publisher's whole uptime, which is the number being retired. With
+  `--follow` there are samples, and clause 10's JSON Lines already carry each
+  document's figures, so a program computes the rate exactly rather than being
+  handed a rounded one. The web board is unchanged and was already right: its
+  stage tiles have said *+412 last round · 240/s* since `English.Flow` was
+  written, and the prompt was the one surface still saying a total.
+
+**Judged, and the owner's to overrule.** `+1` glued to the name, rather than a
+word or a second bracket, because space on a console line is precious and
+posh-git's own `+` never sits against the branch name. The chooser on the run
+line rather than in the top bar beside Configuration, Monitor and Topology,
+because
+the top bar is what a view *is* and the run line is what it is *of*. A cluster
+the host does not hold falls back to the first rather than refusing, because a
+roll that ended leaves links behind. And the surface relay serves the first
+cluster alone: a remote surface reads one tree, and a tree of two clusters is a
+scope in neither.
 
 ## Alternatives considered
 

@@ -48,6 +48,14 @@ function ConvertTo-XmipOperationWeb {
     [string] $line = try { "$($Process.CommandLine)" } catch { '' }
     [string] $surface = Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Surface'
 
+    # One key for one snapshot, an indexed key each for several: a host may
+    # hold a cluster per snapshot (ADR-0052, amendment 2026-09-20).
+    $read = @{
+        CommandLine = $line
+        Name        = 'Xmip:Snapshot'
+        Every       = $true
+    }
+
     $url = @{
         CommandLine = $line
         Name        = 'Kestrel:Endpoints:Http:Url'
@@ -58,7 +66,7 @@ function ConvertTo-XmipOperationWeb {
         Id         = $Process.Id
         Url        = Read-XmipOperationWebArgument @url
         Surface    = if ([string]::IsNullOrEmpty($surface)) { 'configured' } else { $surface }
-        Snapshot   = Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Snapshot'
+        Snapshot   = @(Read-XmipOperationWebArgument @read)
         StartTime  = $Process.StartTime
     }
 }
@@ -68,6 +76,22 @@ function Read-XmipOperationWebArgument {
         .SYNOPSIS
             The value of one `--Name=value` argument on a web host's command
             line, quotes removed; empty when absent. Pure.
+
+        .DESCRIPTION
+            A host may be told several of one thing — one snapshot per cluster,
+            as --Xmip:Snapshot:0 and --Xmip:Snapshot:1 (ADR-0052, amendment
+            2026-09-20). -Every reads them all, in the order they were written,
+            and reads a plain --Name= too; without it the plain key alone is
+            read, as it always was.
+
+        .PARAMETER CommandLine
+            The host process's command line.
+
+        .PARAMETER Name
+            The key, without its leading dashes.
+
+        .PARAMETER Every
+            Read every value of the key, indexed ones included.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -77,14 +101,24 @@ function Read-XmipOperationWebArgument {
         [string] $CommandLine,
 
         [Parameter(Mandatory)]
-        [string] $Name
+        [string] $Name,
+
+        [Parameter()]
+        [switch] $Every
     )
 
-    [string] $pattern = '--' + [regex]::Escape($Name) + '=("[^"]*"|\S+)'
+    [string] $key = [regex]::Escape($Name)
+    [string] $value = '=("[^"]*"|\S+)'
+    [string] $pattern = if ($Every) { "--$key(?::\d+)?$value" } else { "--$key$value" }
 
-    if ($CommandLine -match $pattern) {
-        return $Matches[1].Trim('"')
+    if (-not $Every) {
+        if ($CommandLine -match $pattern) {
+            return $Matches[1].Trim('"')
+        }
+
+        return ''
     }
 
-    return ''
+    return @([regex]::Matches($CommandLine, $pattern) |
+            ForEach-Object { $_.Groups[1].Value.Trim('"') })
 }

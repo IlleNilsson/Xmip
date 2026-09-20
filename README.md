@@ -183,13 +183,14 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    2026-09-18). Leave the Xmip status segment out of the command line and
    import it in the session that wants it: a console holding that module
    holds its assemblies, and a build into them fails until it is closed.
-   That console is `pwsh`, which `Get-Process -Name Xmip-*` does not find.
+   That console is `pwsh`, which `Get-Process -Name xmip-*` does not find.
 
 3. Start the Playground and its monitor. The Playground is Xmip's own
    integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 -OnlineNodes R1
+   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
+    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
    Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -197,17 +198,41 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    Stop-XmipOperationWeb
    ```
 
+   A roll is a cluster, and two rolls are two clusters side by side. One web
+   host serves them all, and the three views say which cluster they are on and
+   move between them (ADR-0052, amendment 2026-09-20):
+
+   ```powershell
+   Start-XmipTest -Suite Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
+    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
+   Get-XmipTestStatus | Start-XmipOperationWeb
+   ```
+
+   The prompt follows one cluster and says how many it is not showing —
+   `[C2+1 ≡ R:1.2K/s P:240/s S:238/s]`. R, P and S are what each stage is
+   moving per second, not a total since the roll began: `R:0/s` says stalled,
+   which a rising total never can, and a dash says there has been only one
+   publication so far. T and F are counts, on the line only when above zero.
+   `xmip-cli --snapshot <path>` names which cluster the executable reads; it
+   answers one cluster per invocation and shows totals, because a single
+   reading has no interval to take a rate over.
+
    Every System Process Xmip owns is named `xmip-<what>` and declares its
-   name, its location and its purpose, test or runtime (ADR-0053).
+   name, its location and its purpose, test or runtime (ADR-0053). A
+   Playground process says which cluster and which node it is —
+   `xmip-playground-C1-roll`, `xmip-playground-C1-cluster`,
+   `xmip-playground-C1-R1` — so twenty rows of `Get-Process` read as a tree
+   rather than as six identical lines (amendment 2026-09-20).
    `Get-XmipProcess` lists them with what they said, and one line stops
    every one of them, whatever started it:
 
    ```powershell
-   Get-Process -Name Xmip-* | Stop-Process -Force
+   Get-Process -Name xmip-* | Stop-Process -Force
    ```
 
    `-OnlineNodes R1` records that R1 may assume a route to the internet and
-   the others may not (ADR-0045). R1 is the receiving edge, the node that
+   the others may not (ADR-0045). R1 is the node this command declared
+   `receive` for, so it is the receiving edge — the node that
    would obtain its server certificate from Let's Encrypt over ACME, which is
    the one online act Xmip has (ADR-0033, ADR-0034). The switch permits;
    nothing in the Playground reaches out.
@@ -216,10 +241,17 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    board that follows receive, process and send as the cluster moves. Beside
    it are Configuration, the classic tree of the whole cluster, and Topology,
    the cluster's own communication. `C1` is the cluster and `R1`, `P1` and
-   `S1` its three simulated node processes. The names are yours and say
-   nothing about a role: what a node does comes from its configuration, and
-   in the Playground every node runs every stage. `S1` may use the internet
-   because you said so; the others may not.
+   `S1` its three simulated node processes. Those names are yours and mean
+   nothing — the owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node names*,
+   and the same of clusters. What a node does is the capability it was
+   started with, never its name
+   ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)):
+   `-NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }` states
+   it, or omit `-Nodes` and the level's complement deals the whole message
+   path for you. A node given no capability declares none and runs the
+   shared-directory tests whole, which `Start-XmipTest` says in words before
+   it starts anything. `R1` may use the internet because you said so; the
+   others may not.
 
 Nothing in Xmip starts on its own. You name a cluster and its nodes, you
 start them when you want to, and you stop them. Every command that changes state accepts `-WhatIf`.
@@ -239,7 +271,7 @@ whether delivery completed, and why work stopped when it did not.
 | --- | --- | --- |
 | Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
-| Extensibility | A versioned C ABI and independently loadable Modules ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)). | A Module may be written in any language that can implement the ABI, and kept in its own repository. |
+| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module may be written in any language that can implement the ABI, kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for. |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
@@ -311,7 +343,12 @@ Xmip has no stable release. `main` is the Continuum, the evolving state of the
 project. A Linear release is a stabilized, reproducible, versioned line cut
 from it; the first has not been cut
 ([release-model.md](doc/governance/release-model.md)). The runtime, the
-operator surfaces and the Playground are operational; most technology
+operator surfaces and the Playground are operational, and since 2026-09-19
+the runtime opens a Module for real: it loads the shared library, resolves
+`xmip_create_module_v1`, refuses a descriptor the loading capability's trait
+version does not admit, and drives the contract table through it — the same
+code for a C Module and a Rust one. Technologies are still linked rather
+than loaded, and most technology
 repositories are scaffolded and not yet written. The manifest records that
 distinction for every repository, and it belongs in every technical
 evaluation. [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
@@ -428,7 +465,7 @@ shared library, so they cannot disagree.
 
 | Surface | Best use |
 | --- | --- |
-| `xmip` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
+| `xmip-cli` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, Linux and macOS. |
@@ -454,7 +491,7 @@ monitor is not a replacement for it.
 
 Xmip supports current platforms only
 ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux,
-Windows and macOS are equal: the runtime, the `xmip` command line, the
+Windows and macOS are equal: the runtime, the `xmip-cli` command line, the
 PowerShell module and the monitors run on all three.
 
 | | Windows | Linux | macOS |
@@ -517,7 +554,8 @@ The Playground runs Xmip's own tests continuously, at a chosen stress level,
 over as many node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh -Nodes R1, P1, S1
+Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh `
+    -Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest
@@ -571,7 +609,7 @@ are .NET 11; the PowerShell module targets `net10.0` because `pwsh` hosts it.
 Publish-XmipChange -Message 'short precise message'   # alias xgit: every suite, then land
 Start-XmipTest -Suite Estate                     # every test/*.Test.ps1
 Start-XmipTest -Suite Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
-Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1
+Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip   # omit -Nodes: the complement
 Start-XmipTest -Suite * -Cluster C1               # every suite this estate knows
 ```
 
@@ -584,9 +622,11 @@ updates the pins in the superproject:
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/operation/powershell/tests` |
 | The Playground's own | `test/playground` | `cargo test` in `test/playground` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Estate` |
-| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` | `cargo fmt`, `cargo clippy
---workspace --all-targets -- -D warnings` and the suite must pass. Until the
-first Linear release, work commits directly to `main`
+| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+
+Before a change lands, `cargo fmt`, `cargo clippy --workspace --all-targets
+-- -D warnings` and the suite must pass. Until the first Linear release, work
+commits directly to `main`
 ([release-model.md](doc/governance/release-model.md)).
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
@@ -671,7 +711,7 @@ authoritative.
 
 ### The estate module
 
-Every command accepts `-WhatIf`. Reporting is the default.
+Every command that changes state accepts `-WhatIf`. Reporting is the default.
 
 | Command | Purpose |
 | --- | --- |
@@ -680,13 +720,16 @@ Every command accepts `-WhatIf`. Reporting is the default.
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
+| `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them. |
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind. |
-| `Publish-XmipChange` | Test and land a change, dependency order, modules first. |
+| `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
+| `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Playground`, `Estate` — a bare name is Xmip's own — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. |
-| `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. |
+| `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
+| `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |
 
 ```powershell
 Sync-XmipEstate                                       # report drift

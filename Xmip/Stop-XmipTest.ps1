@@ -16,9 +16,10 @@ function Stop-XmipTest {
             done: asks every node beneath the roll to leave through the
             cluster's stop file, waits five seconds, ends what stayed, then
             ends the roll's cluster, then the roll. Nothing is orphaned —
-            Get-Process xmip-* is empty afterwards. Takes Xmip.TestStatus
-            objects from Get-XmipTestStatus on the pipeline, or -Id, or
-            nothing for all.
+            Get-Process xmip-* is empty afterwards, and the per-instance
+            images the tree ran under are taken away with it (ADR-0053,
+            amendment 2026-09-20). Takes Xmip.TestStatus objects from
+            Get-XmipTestStatus on the pipeline, or -Id, or nothing for all.
 
         .PARAMETER Test
             The runs to stop, from Get-XmipTestStatus.
@@ -135,8 +136,55 @@ function Stop-XmipTest {
                 Remove-Item -LiteralPath $record -Force -ErrorAction SilentlyContinue
             }
 
+            # The images the tree ran under go with it. The roll took what it
+            # could on its way out and could not take its own, since a process
+            # holds its image open; this takes the rest (ADR-0053, amendment
+            # 2026-09-20).
+            if (-not [string]::IsNullOrWhiteSpace($roll.Cluster)) {
+                Remove-XmipPlaygroundImage -Cluster $roll.Cluster -Confirm:$false
+            }
+
             Write-Verbose "stopped roll $number"
         }
+
+        # The prompt followed one of the rolls and was told how many others
+        # there were. Stopping one changes that count, and a segment saying
+        # +1 over a cluster that has ended is the lie this record's amendment
+        # of 2026-09-20 exists to stop. What is left is said again.
+        Update-XmipPromptFollowing
+    }
+}
+
+function Update-XmipPromptFollowing {
+    <#
+        .SYNOPSIS
+            Tells the prompt, where this session has one, which roll to follow
+            and how many are rolling beside it.
+
+        .DESCRIPTION
+            The prompt reads one publication (ADR-0052 clause 3; amendment
+            2026-09-20). Where the one it followed has ended, it follows the
+            first still rolling; where none is left it is left alone, since a
+            snapshot nobody publishes reads as nothing and the segment goes
+            quiet by itself. Nothing is loaded that is not loaded already.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param()
+
+    $prompt = 'Xmip.PowerShell.PromptMonitor' -as [type]
+
+    if ($null -eq $prompt) {
+        return
+    }
+
+    [string[]] $rolling = @(
+        Get-XmipTestStatus | ForEach-Object -MemberName Snapshot |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+
+    if ($rolling.Count -gt 0) {
+        $prompt::Follow($rolling[0], $rolling)
     }
 }
 
@@ -162,8 +210,15 @@ function Stop-XmipTestCluster {
         [int] $Parent
     )
 
+    # Found through Get-XmipPlaygroundProcess, which judges by declaration
+    # first and by name second, so a cluster whose image was rebuilt under it
+    # is still found and still stopped (2026-09-19). Since 2026-09-20 its name
+    # carries its cluster — xmip-playground-V1-cluster — so the kind is asked
+    # for rather than the name.
+    $layout = Get-XmipPlaygroundLayout
+
     [System.Diagnostics.Process[]] $clusters = @(
-        Get-Process -Name 'xmip-playground-cluster' -ErrorAction SilentlyContinue |
+        Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Cluster -Kind Cluster |
             Where-Object {
                 $owner = try { $_.Parent } catch { $null }
                 $null -ne $owner -and $owner.Id -eq $Parent

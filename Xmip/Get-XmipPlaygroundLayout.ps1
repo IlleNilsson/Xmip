@@ -13,8 +13,16 @@ function Get-XmipPlaygroundLayout {
             test/playground; the web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
             goes under .local-work/playground, the device-local folder the
-            estate reserves for running Xmip here (CLAUDE.md: .local-work is
-            where). Nothing here is created; Start-* create what they use.
+            estate reserves for running Xmip here (CONTRIBUTING.md:
+            .local-work is where). Nothing here is created; Start-* create
+            what they use.
+
+            Image is where a run's per-instance images go, one directory per
+            cluster: a process name is its image file's name, so a name that
+            says which cluster and which node is a file per instance (ADR-0053,
+            amendment 2026-09-20). They are hard links to the built binaries,
+            never copies of the repository, and they are device-local like
+            everything else a run writes here.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -22,7 +30,21 @@ function Get-XmipPlaygroundLayout {
 
     [string] $root = Get-XmipRepositoryRoot
     [string] $playground = Join-Path -Path $root -ChildPath 'test/playground'
-    [string] $target = Join-Path -Path $playground -ChildPath 'target/debug'
+
+    # Where cargo builds is cargo's own answer, not an assumption:
+    # CARGO_TARGET_DIR moves it, and this follows, so the cmdlets link and run
+    # what was just built rather than what is beside the crate. CONTRIBUTING.md
+    # reserves .local-work for device-local state, naming a target choice as
+    # the first of them; a session whose ordinary target directory is held open
+    # by another session's roll sets it there and builds without touching it.
+    [string] $chosen = $env:CARGO_TARGET_DIR
+    [string] $target = if ([string]::IsNullOrWhiteSpace($chosen)) {
+        Join-Path -Path $playground -ChildPath 'target/debug'
+    }
+    else {
+        Join-Path -Path $chosen -ChildPath 'debug'
+    }
+
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
     [string] $web = 'module/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
 
@@ -34,6 +56,8 @@ function Get-XmipPlaygroundLayout {
         Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
+        Image      = Join-Path -Path $root -ChildPath '.local-work/playground/image'
+        Suffix     = $suffix
     }
 }
 

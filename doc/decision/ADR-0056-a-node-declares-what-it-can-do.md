@@ -116,11 +116,11 @@ Three records point at a thing none of them defines. This one defines it.
   which of the four a silent rig means.
 - The rig had briefly done the opposite — a node's stage read out of the
   first letter of its name — and the owner refused it the same day: *I
-  know, so why do you break it!* A name is not a criterion. The one place
-  a letter still means anything is `Start-XmipTest -Nodes R1, P1, S1`,
-  where the cmdlet expands it into a capability at the operator's door;
-  `-NodeCapability` states it outright, and nothing downstream reads a
-  node's name.
+  know, so why do you break it!* A name is not a criterion. One place kept
+  a letter for a day — `Start-XmipTest -Nodes R1, P1, S1` expanded it into a
+  capability at the operator's door — and the owner struck that too on
+  2026-09-20 (amendment below): `-NodeCapability` states it outright, and
+  nothing anywhere reads a node's name.
 - A profile's *cluster capabilities* in `deployment-model.md` should be
   read as the union of its nodes' capabilities, and that document's
   wording is to be reconciled with the four kinds.
@@ -184,3 +184,39 @@ The four kinds are the owner's, 2026-09-19, quoted in the Context. The
 five clauses, the consequences and the reconciliation with ADR-0022 and
 problem 17 are the assistant's drafting of them, and the record is
 Proposed rather than Accepted until the owner says so.
+
+## Amendment, 2026-09-20: the last letter that meant something is gone
+
+The owner: *Rn, Pn and Sn are arbitrary node names.* He had said the same of
+clusters an hour earlier: *C1 and C2 are not roles, they are arbitrary cluster
+names, there may be one or more clusters.*
+
+The Consequences above record one surviving exception to clause 1 — that
+`Start-XmipTest -Nodes R1, P1, S1` read the first letter as a capability at
+the operator's door, and that nothing downstream did. That exception is
+struck. `Get-XmipNodeCapability` returns what `-NodeCapability` states for a
+node and nothing otherwise; no letter of any name means anything anywhere in
+Xmip.
+
+What an operator gets instead, and how it is said:
+
+- **`-NodeCapability` states it**, one entry per node:
+  `-Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process';
+  S1 = 'send' }`. This is now the only way a named node carries a stage.
+- **Omitting `-Nodes` deals them.** The level's full complement (ADR-0059,
+  amendment 2026-09-19) names its own nodes and deals receive, process and
+  send round the list by position, which reads no name either.
+- **A node given none declares none**, runs the shared-directory tests whole,
+  and the roll runs `RoundTrip` itself. That is a real answer and is not
+  refused. It is also not what an operator typing `R1, P1, S1` is likely to
+  have meant, so `Start-XmipTest` **says so in words before anything spawns**
+  (ADR-0055 clause 5), naming `-NodeCapability` and the complement as the two
+  ways to split the message path.
+- **The `RoundTrip` refusal** — a roster that declares some stages but not all
+  three — now ends by naming both of those ways rather than only the
+  capability nobody declared. With the shorthand gone it is the signpost an
+  operator meets most often.
+
+The compromise this strikes was the assistant's, made on 2026-09-19 and
+flagged at the time as the one place a name still carried meaning. It carried
+for a day.

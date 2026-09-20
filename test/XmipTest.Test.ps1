@@ -243,17 +243,19 @@ Describe 'The environment a roll is started with' {
     It 'says the tests, the nodes, the online nodes and the limits the way the roll parses them' {
         InModuleScope Xmip {
             $chosen = @{
-                Stress      = 'Brutal'
-                Test        = @('roundtrip', 'HeavyLoad')
-                Nodes       = @('R1', 'P1', 'S1')
-                OnlineNodes = @('R1', 'S1')
-                Cluster     = 'SN2'
-                Duration    = [timespan]::FromMinutes(15)
-                TimeFactor  = 9.5e-6
-                LoadBytes   = '512mb'
-                Snapshot    = 's'
-                History     = 'h'
-                Activity    = 'a'
+                Stress         = 'Brutal'
+                Test           = @('roundtrip', 'HeavyLoad')
+                Nodes          = @('R1', 'P1', 'S1')
+                NodeCapability = @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
+                OnlineNodes    = @('R1', 'S1')
+                Cluster        = 'SN2'
+                Duration       = [timespan]::FromMinutes(15)
+                TimeFactor     = 9.5e-6
+                LoadBytes      = '512mb'
+                Image          = 'i'
+                Snapshot       = 's'
+                History        = 'h'
+                Activity       = 'a'
             }
             $environment = New-XmipPlaygroundEnvironment @chosen
 
@@ -267,6 +269,7 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'
             $environment.XMIP_PLAYGROUND_LOAD_BYTES | Should -Be '512mb'
+            $environment.XMIP_PLAYGROUND_IMAGES | Should -Be 'i'
         }
     }
 
@@ -289,6 +292,14 @@ Describe 'The environment a roll is started with' {
             { Assert-XmipNodeName -Nodes 'R1' } | Should -Not -Throw
             { Assert-XmipNodeName -Nodes 'R1', 'P1-2' -OnlineNodes 'P1-2' } |
                 Should -Not -Throw
+
+            # A node's name is the last word of its process name and so a
+            # file name (ADR-0053, amendment 2026-09-20); roll and cluster
+            # are the two words that tell the rest of the tree apart.
+            foreach ($taken in 'roll', 'Cluster', 'edge-roll', 'west-cluster') {
+                { Assert-XmipNodeName -Nodes $taken } |
+                    Should -Throw -ExpectedMessage 'REFUSED: no node is called*'
+            }
         }
     }
 
@@ -325,27 +336,27 @@ Describe 'The environment a roll is started with' {
             Should -BeNullOrEmpty
     }
 
-    It 'expands the letter to a capability at the door and nowhere else' {
-        # ADR-0056: a node declares what it can do, and nothing downstream
-        # reads a node's name. The letter is the operator's shorthand for a
-        # capability, expanded here; -NodeCapability overrides it. Pure.
+    It 'reads no letter of a node''s name, at the door or anywhere else' {
+        # The owner, 2026-09-20: "Rn, Pn and Sn are arbitrary node names."
+        # Start-XmipTest kept the last shorthand in the estate for a day and
+        # it is struck (ADR-0056, amendment). A node carries what
+        # -NodeCapability states for it and nothing otherwise. Pure.
         InModuleScope Xmip {
-            Get-XmipNodeCapability -Name 'R1' | Should -Be 'receive'
-            Get-XmipNodeCapability -Name 'p2' | Should -Be 'process'
-            Get-XmipNodeCapability -Name 'Send3' | Should -Be 'send'
-            Get-XmipNodeCapability -Name 'node-01' | Should -Be ''
-            Get-XmipNodeCapability -Name 'R-1' | Should -Be ''
+            foreach ($name in 'R1', 'p2', 'Send3', 'node-01', 'R-1') {
+                Get-XmipNodeCapability -Name $name | Should -Be ''
+            }
 
-            # Stated outright, the name says nothing at all.
             $stated = @{ alpha = 'receive'; R1 = 'process,send'; beta = @() }
             Get-XmipNodeCapability -Name 'alpha' -NodeCapability $stated | Should -Be 'receive'
             Get-XmipNodeCapability -Name 'R1' -NodeCapability $stated | Should -Be 'process,send'
             Get-XmipNodeCapability -Name 'beta' -NodeCapability $stated | Should -Be ''
 
-            Get-XmipNodeCapabilityText -Nodes 'R1', 'P1', 'S1', 'node-01' |
-                Should -Be 'R1=receive,P1=process,S1=send'
+            Get-XmipNodeCapabilityText -Nodes 'R1', 'P1', 'S1', 'node-01' | Should -Be ''
             Get-XmipNodeCapabilityText -Nodes 'alpha', 'beta' -NodeCapability $stated |
                 Should -Be 'alpha=receive'
+            Get-XmipNodeCapabilityText -Nodes 'R1', 'P1' -NodeCapability @{
+                R1 = 'receive'; P1 = 'process+send'
+            } | Should -Be 'R1=receive,P1=process+send'
 
             { ConvertTo-XmipNodeCapability -Capability 'relay' } |
                 Should -Throw -ExpectedMessage 'REFUSED: no capability is called relay*'
@@ -354,19 +365,57 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'says what nodes with no capability will do, and does not refuse it' {
+        # ADR-0055 clause 5: running whole tests is a real answer, and it is
+        # not what someone typing R1, P1, S1 is likely to have meant. Said
+        # before anything spawns, naming both ways to split the path.
+        InModuleScope Xmip {
+            [string] $said = Get-XmipNodeCapabilityWarning -Nodes 'R1', 'P1', 'S1'
+
+            $said | Should -BeLike '*None of R1, P1, S1 declares a stage*'
+            $said | Should -BeLike '*-NodeCapability*'
+            $said | Should -BeLike '*omit -Nodes*'
+
+            # Nothing to say: a stage declared, a run without RoundTrip, or
+            # no nodes named at all.
+            Get-XmipNodeCapabilityWarning -Nodes 'alpha' -NodeCapability @{ alpha = 'receive' } |
+                Should -Be ''
+            Get-XmipNodeCapabilityWarning -Nodes 'R1', 'P1' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeCapabilityWarning | Should -Be ''
+        }
+
+        Start-XmipTest -Cluster Z9 -Nodes R1, P1, S1 -WhatIf -WarningVariable said |
+            Out-Null
+        "$said" | Should -BeLike '*declares a stage*'
+    }
+
     It 'refuses RoundTrip whose nodes leave a capability undeclared, before anything starts' {
         # The path is receive to process to send between the node processes,
         # and the refusal names the capability nobody declared, never a letter.
         InModuleScope Xmip {
-            [string] $whole = 'REFUSED. RoundTrip across nodes needs the receive, process ' +
-                'and send capability declared; no node declares process.'
+            $whole = @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
+            $half = @{ R1 = 'receive'; R2 = 'receive'; S1 = 'send' }
 
-            $six = @{ Nodes = @('R1', 'R2', 'P1', 'P2', 'S1', 'S2'); Test = 'RoundTrip' }
+            $six = @{
+                Nodes          = @('R1', 'R2', 'P1', 'P2', 'S1', 'S2')
+                Test           = 'RoundTrip'
+                NodeCapability = $whole + @{ R2 = 'receive'; P2 = 'process'; S2 = 'send' }
+            }
             Get-XmipNodeCapabilityRefusal @six | Should -Be ''
-            Get-XmipNodeCapabilityRefusal -Nodes 'R1', 'R2', 'S1' -Test 'RoundTrip' |
-                Should -Be $whole
-            Get-XmipNodeCapabilityRefusal -Nodes 'R1' | Should -BeLike '*declares process or send.'
-            Get-XmipNodeCapabilityRefusal -Nodes 'R1' -Test 'roundtrip', 'Filing' |
+
+            # The signpost an operator meets most often now that a name says
+            # nothing: it names the capability nobody declared and both ways
+            # to declare one.
+            $short = @{ Nodes = @('R1', 'R2', 'S1'); Test = 'RoundTrip'; NodeCapability = $half }
+            [string] $said = Get-XmipNodeCapabilityRefusal @short
+
+            $said | Should -BeLike 'REFUSED. RoundTrip across nodes*no node declares process.*'
+            $said | Should -BeLike '*-NodeCapability*'
+            $said | Should -BeLike '*omit -Nodes*'
+
+            $one = @{ Nodes = @('R1'); NodeCapability = @{ R1 = 'receive' } }
+            Get-XmipNodeCapabilityRefusal @one | Should -BeLike '*declares process or send.*'
+            Get-XmipNodeCapabilityRefusal @one -Test 'roundtrip', 'Filing' |
                 Should -BeLike 'REFUSED.*'
 
             # Named for nothing, but declaring the whole path: no refusal.
@@ -375,19 +424,30 @@ Describe 'The environment a roll is started with' {
             Get-XmipNodeCapabilityRefusal @named | Should -Be ''
 
             # Not RoundTrip, nothing declared, or no nodes: nothing to refuse.
+            # R1 alone declares nothing at all now, so it is the third case.
             Get-XmipNodeCapabilityRefusal -Nodes 'R1' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeCapabilityRefusal -Nodes 'R1' | Should -Be ''
             Get-XmipNodeCapabilityRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
             Get-XmipNodeCapabilityRefusal -Nodes @() | Should -Be ''
             Get-XmipNodeCapabilityRefusal | Should -Be ''
 
             $chosen = @{ Stress = 'Calm'; Nodes = @('R1', 'S1'); Snapshot = 's'; History = 'h' }
             $chosen.Activity = 'a'
+            $chosen.NodeCapability = @{ R1 = 'receive'; S1 = 'send' }
             { New-XmipPlaygroundEnvironment @chosen } |
-                Should -Throw -ExpectedMessage '*declares process.'
+                Should -Throw -ExpectedMessage '*no node declares process.*'
         }
 
-        { Start-XmipTest -Test RoundTrip -Cluster Z8 -Nodes R1, S1 -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares process.'
+        [hashtable] $door = @{
+            Test           = 'RoundTrip'
+            Cluster        = 'Z8'
+            Nodes          = @('R1', 'S1')
+            NodeCapability = @{ R1 = 'receive'; S1 = 'send' }
+            ErrorAction    = 'Stop'
+        }
+
+        { Start-XmipTest @door } |
+            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares process.*'
     }
 
     It 'rolls at the hardest level when -Stress is omitted, and a named level pins it' {

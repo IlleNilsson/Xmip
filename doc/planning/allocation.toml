@@ -774,6 +774,10 @@ path = "LICENSE"
 [[keep]]
 path = "CONTRIBUTING.md"
 [[keep]]
+path = "CLAUDE.md"
+[[keep]]
+path = "AGENTS.md"
+[[keep]]
 path = "GOVERNANCE.md"
 [[keep]]
 path = "SECURITY.md"
