@@ -1,4 +1,4 @@
-#requires -PSEdition Core
+﻿#requires -PSEdition Core
 #requires -Version 7.6.5
 
 <#
@@ -35,7 +35,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # Playground is one suite Xmip provides, and a transport's or a
         # contract's suite may join it. He voted for Start, not Invoke: Invoke
         # is for crossing a boundary — a language, a process, a computer — and
-        # a test run crosses none. The Pester door is -Suite Estate.
+        # a test run crosses none. The Pester door is -Suite Core.Estate.
         foreach ($name in 'Start-XmipTest', 'Get-XmipTestStatus', 'Stop-XmipTest') {
             Get-Command -Module Xmip -Name $name | Should -Not -BeNullOrEmpty
         }
@@ -46,7 +46,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         Get-Command -Module Xmip -Name 'Invoke-XmipTest*' | Should -BeNullOrEmpty
     }
 
-    It 'reads "Start-XmipTest Playground HeavyLoad" as suite then test, nothing else by position' {
+    It 'reads "Start-XmipTest Core.Playground HeavyLoad" as suite then test, nothing by position' {
         # 2026-09-12: typed positionally, the second word landed on -Stress.
         $parameters = (Get-Command -Name Start-XmipTest).Parameters
         [hashtable] $position = @{}
@@ -84,34 +84,50 @@ Describe 'Start, Get and Stop, and nothing else' {
             $completer.ScriptBlock.Invoke('Start-XmipTest', 'Suite', '', $null, @{})
         )
 
-        $offered | Should -Be @('Playground', 'Estate')
+        $offered | Should -Be @('Core.Playground', 'Core.Estate')
     }
 
-    It 'takes a bare name as Xmip''s own, and the qualified form as the same suite' {
-        # The owner, 2026-09-19: "Got it, -Suite is Playground, Not
-        # Core.Playground. My choice." A bare name is the reserved provider's
-        # (ADR-0011), so both spellings are the one suite and the bare one is
-        # what the estate writes (ADR-0059, amendment 2026-09-19).
+    It 'canonicalizes every spelling to the qualified name, and accepts the bare one' {
+        # The owner, 2026-09-20: "Sort it, there was a decision made. It's
+        # name is Core.Playground, to give place for third parties." The
+        # qualified form is canonical again; a bare name is still accepted
+        # and resolves to it, so nothing he has typed refuses (ADR-0059,
+        # amendment 2026-09-20). The assertion is on what comes back, not on
+        # what goes in: one spelling out of three spellings in.
         InModuleScope Xmip {
             [object[]] $known = @(Get-XmipTestSuite)
 
             foreach ($spelling in 'Playground', 'Core.Playground', 'core.playground') {
                 (Get-XmipNamedTestSuite -Name $spelling -Known $known).Name |
-                    Should -Be 'Playground'
+                    Should -Be 'Core.Playground'
                 Get-XmipTestSuiteRefusal -Name $spelling -Known $known | Should -Be ''
             }
 
             foreach ($spelling in 'Estate', 'Core.Estate', 'CORE.ESTATE') {
                 (Get-XmipNamedTestSuite -Name $spelling -Known $known).Name |
-                    Should -Be 'Estate'
+                    Should -Be 'Core.Estate'
                 Get-XmipTestSuiteRefusal -Name $spelling -Known $known | Should -Be ''
             }
+
+            # A bare name reaches the reserved provider's suites and no one
+            # else's: it is shorthand for Core., never for whoever declared
+            # a suite of the same name.
+            [hashtable] $declared = @{
+                Provider = 'Example'
+                Name     = 'Playground'
+                Kind     = 'command'
+                Command  = 'Start-ExampleXmipTest'
+            }
+            [object[]] $third = @($known; New-XmipTestSuite @declared)
+
+            @(Get-XmipNamedTestSuite -Name 'Playground' -Known $third).Name |
+                Should -Be 'Core.Playground'
         }
     }
 
     It 'refuses a bare name nobody provides, and says how a provider''s is spelled' {
         [string] $expected = '*REFUSED. No test suite is called Nonsense*' +
-            'Playground, Estate*<Provider>.<Name>*'
+            'Core.Playground, Core.Estate*<Provider>.<Name>*'
 
         { Start-XmipTest -Suite Nonsense -ErrorAction Stop } |
             Should -Throw -ExpectedMessage $expected
@@ -126,14 +142,15 @@ Describe 'Start, Get and Stop, and nothing else' {
             [object[]] $known = @(Get-XmipTestSuite)
 
             @(Get-XmipNamedTestSuite -Name '*' -Known $known | ForEach-Object { $_.Name }) |
-                Should -Be @('Playground', 'Estate')
-            @(Get-XmipNamedTestSuite -Name '*Play*' -Known $known).Name | Should -Be 'Playground'
+                Should -Be @('Core.Playground', 'Core.Estate')
+            @(Get-XmipNamedTestSuite -Name '*Play*' -Known $known).Name |
+                Should -Be 'Core.Playground'
             @(Get-XmipNamedTestSuite -Name 'Core.*' -Known $known).Count | Should -Be 2
             @(Get-XmipNamedTestSuite -Name 'Nope*' -Known $known).Count | Should -Be 0
 
             Get-XmipTestSuiteRefusal -Name '*' -Known $known | Should -Be ''
             Get-XmipTestSuiteRefusal -Name 'Nope*' -Known $known |
-                Should -BeLike 'REFUSED. No test suite matches Nope*Playground, Estate*'
+                Should -BeLike 'REFUSED. No test suite matches Nope*Core.Playground, Core.Estate*'
         }
 
         { Start-XmipTest -Suite 'Nope*' -ErrorAction Stop } |
@@ -150,15 +167,15 @@ Describe 'Start, Get and Stop, and nothing else' {
                 ForEach-Object { "$_" }
         )
 
-        "$said" | Should -BeLike '*Running 2 suites in order: Playground, Estate.*'
-        "$said" | Should -BeLike '*OK 2 suites started: Playground, Estate.*'
+        "$said" | Should -BeLike '*Running 2 suites in order: Core.Playground, Core.Estate.*'
+        "$said" | Should -BeLike '*OK 2 suites started: Core.Playground, Core.Estate.*'
     }
 
     It 'refuses a qualified suite nobody provides, naming the suites there are' {
-        [string] $expected = '*REFUSED. No test suite is called Acme.Playground*' +
-            'Playground, Estate*'
+        [string] $expected = '*REFUSED. No test suite is called Example.Playground*' +
+            'Core.Playground, Core.Estate*'
 
-        { Start-XmipTest -Suite Acme.Playground -ErrorAction Stop } |
+        { Start-XmipTest -Suite Example.Playground -ErrorAction Stop } |
             Should -Throw -ExpectedMessage $expected
     }
 
@@ -174,8 +191,8 @@ Describe 'Start, Get and Stop, and nothing else' {
     }
 
     It 'refuses Playground switches on the estate suite' {
-        { Start-XmipTest -Suite Estate -Stress Harsh -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*belong to Playground, not Estate*'
+        { Start-XmipTest -Suite Core.Estate -Stress Harsh -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage '*belong to Core.Playground, not Core.Estate*'
     }
 
     It 'rehearses every Start and Stop with -WhatIf' {
@@ -331,7 +348,7 @@ Describe 'The environment a roll is started with' {
 
     It 'refuses a roll without a cluster name, since the owner names the cluster' {
         # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
-        { Start-XmipTest -Suite Playground -Nodes R1 -ErrorAction Stop } |
+        { Start-XmipTest -Suite Core.Playground -Nodes R1 -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*you name it*'
         (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
@@ -547,28 +564,31 @@ Describe 'The environment a roll is started with' {
 }
 
 Describe 'A suite carries its provider' {
-    It 'reads a provider''s declaration and makes room for Acme.Playground' {
+    It 'reads a third party''s declaration and makes room for its suite' {
         # ADR-0059, and the point of the whole change: a third party adds a
         # suite by dropping a file, with no edit to Xmip's own source.
+        # Example is a stand-in token and not a company: the estate names
+        # no placeholder company (ADR-0059, amendment 2026-09-20).
         InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
             param($Area)
 
             [string] $area = Join-Path $Area 'suite'
             New-Item -ItemType Directory -Path $area | Out-Null
-            Set-Content -LiteralPath (Join-Path $area 'acme.toml') -Encoding utf8 -Value @(
-                'provider = "Acme"'
+            Set-Content -LiteralPath (Join-Path $area 'example.toml') -Encoding utf8 -Value @(
+                'provider = "Example"'
                 'name = "Playground"'
-                'command = "Start-AcmeXmipTest"'
+                'command = "Start-ExampleXmipTest"'
             )
 
             [object[]] $known = @(Get-XmipTestSuite -Path $area)
 
             @($known | ForEach-Object { $_.Name }) |
-                Should -Be @('Playground', 'Estate', 'Acme.Playground')
+                Should -Be @('Core.Playground', 'Core.Estate', 'Example.Playground')
             $known[2].Kind | Should -Be 'command'
-            $known[2].Command | Should -Be 'Start-AcmeXmipTest'
-            $known[2].Provider | Should -Be 'Acme'
-            Get-XmipTestSuiteRefusal -Name 'acme.playground' -Known $known | Should -Be ''
+            $known[2].Command | Should -Be 'Start-ExampleXmipTest'
+            $known[2].Provider | Should -Be 'Example'
+            Get-XmipTestSuiteRefusal -Name 'example.playground' -Known $known |
+                Should -Be ''
         }
     }
 
@@ -580,7 +600,7 @@ Describe 'A suite carries its provider' {
             New-Item -ItemType Directory -Path $area | Out-Null
             [string] $file = Join-Path $area 'half.toml'
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
-                'provider = "Acme"'
+                'provider = "Example"'
                 'name = "Playground"'
             )
 
@@ -588,70 +608,72 @@ Describe 'A suite carries its provider' {
                 Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
             )
             "$said" | Should -BeLike '*REFUSED*declares no command*'
-            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
-            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Estate'
+            @($read | Where-Object { $_.Provider -eq 'Example' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
 
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
                 'provider = "core"'
                 'name = "Playground"'
-                'command = "Start-AcmeXmipTest"'
+                'command = "Start-ExampleXmipTest"'
             )
 
             [object[]] $read = @(
                 Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
             )
             "$said" | Should -BeLike '*REFUSED*reserved for Xmip itself*'
-            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
-            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Estate'
+            @($read | Where-Object { $_.Provider -eq 'Example' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
 
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
-                'provider = "Acme Ltd"'
+                'provider = "Example Ltd"'
                 'name = "Playground"'
-                'command = "Start-AcmeXmipTest"'
+                'command = "Start-ExampleXmipTest"'
             )
 
             [object[]] $read = @(
                 Get-XmipTestSuite -Path $area -WarningVariable said -WarningAction SilentlyContinue
             )
             "$said" | Should -BeLike '*REFUSED*which is not a name*'
-            @($read | Where-Object { $_.Provider -eq 'Acme' }) | Should -BeNullOrEmpty
-            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Estate'
+            @($read | Where-Object { $_.Provider -eq 'Example' }) | Should -BeNullOrEmpty
+            @($read | ForEach-Object { $_.Name }) | Should -Contain 'Core.Estate'
         }
     }
 
     It 'starts a provider''s suite through the command it declared, and refuses one it has not' {
         InModuleScope Xmip {
             [hashtable] $made = @{
-                Provider = 'Acme'
+                Provider = 'Example'
                 Name     = 'Playground'
                 Kind     = 'command'
-                Command  = 'Start-AcmeXmipTest'
-                Source   = 'acme.toml'
+                Command  = 'Start-ExampleXmipTest'
+                Source   = 'example.toml'
             }
-            $acme = New-XmipTestSuite @made
+            $theirs = New-XmipTestSuite @made
 
-            { Start-XmipProviderSuite -Suite $acme -Bound @{} -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*REFUSED. Acme.Playground starts with*'
+            { Start-XmipProviderSuite -Suite $theirs -Bound @{} -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED. Example.Playground starts with*'
 
             # The provider's own command, once this session has it. -Test is
             # handed on only when tests were named: nothing named is the whole
             # suite, and the provider's command is called as it would be by
             # hand for a full run.
-            function global:Start-AcmeXmipTest {
+            function global:Start-ExampleXmipTest {
                 param($Cluster, $Test)
 
-                return "acme:$Cluster`:$($Test -join ',')"
+                return "example:$Cluster`:$($Test -join ',')"
             }
 
             try {
                 [hashtable] $whole = @{ Cluster = 'Z9'; Test = @() }
-                Start-XmipProviderSuite -Suite $acme -Bound $whole | Should -Be 'acme:Z9:'
+                Start-XmipProviderSuite -Suite $theirs -Bound $whole |
+                    Should -Be 'example:Z9:'
 
                 [hashtable] $named = @{ Cluster = 'Z9'; Test = @('Smoke') }
-                Start-XmipProviderSuite -Suite $acme -Bound $named | Should -Be 'acme:Z9:Smoke'
+                Start-XmipProviderSuite -Suite $theirs -Bound $named |
+                    Should -Be 'example:Z9:Smoke'
             }
             finally {
-                Remove-Item -LiteralPath 'function:global:Start-AcmeXmipTest' -Force
+                Remove-Item -LiteralPath 'function:global:Start-ExampleXmipTest' -Force
             }
         }
     }
@@ -913,13 +935,16 @@ Describe 'A cluster rolls once' {
             param($Area)
 
             # 2026-09-18: three rolls as CC1 overwrote one another's snapshot.
+            # One record spells the suite as this morning wrote it and one
+            # as the estate writes it now: a run is found by its cluster,
+            # and an older record still reads (ADR-0059, 2026-09-20).
             Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
                 'suite = "Playground"'
                 'cluster = "CC1"'
                 'pid = 4242'
             )
             Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
-                'suite = "Playground"'
+                'suite = "Core.Playground"'
                 'cluster = "CC10"'
                 'pid = 4343'
             )
@@ -951,7 +976,7 @@ Describe 'What a web host reads' {
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
             Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
             Mock -CommandName Get-XmipTestStatus -MockWith {
-                [PSCustomObject]@{ Suite = 'Playground'; Cluster = 'C1' }
+                [PSCustomObject]@{ Suite = 'Core.Playground'; Cluster = 'C1' }
             }
 
             Start-XmipOperationWeb -WarningVariable said -WarningAction SilentlyContinue

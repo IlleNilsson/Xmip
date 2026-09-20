@@ -89,8 +89,8 @@ function Get-XmipTestStatus {
 
         # The suite the run was started with, from the record that carries it,
         # said the one way whatever spelling started it: a record written
-        # before 2026-09-19 says Core.Playground and this says Playground
-        # (ADR-0059, amendment 2026-09-19). A roll started by hand has no
+        # earlier may say Playground and this says Core.Playground
+        # (ADR-0059, amendment 2026-09-20). A roll started by hand has no
         # record and is the Playground by the binary it is.
         [string] $named = Get-XmipDeclaredText -Declaration $record -Key 'suite'
         $ran = if ($named -ne '') {

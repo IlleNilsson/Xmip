@@ -788,10 +788,11 @@ run one without naming tests, and how a filter selects among them
   wildcard on a filter
 
 **A test suite is named `<Provider>.<Name>`, the same rule that names every
-module (ADR-0011), and the provider is required: `Core.Playground`, never
-`Playground`. `core` is Xmip itself; anyone else names themselves, and adds
-a suite by declaring it rather than by editing Xmip. Naming no test runs
-the whole suite, for every suite and every provider.**
+module (ADR-0011): `Core.Playground` is the name, and it is what the estate
+prints, records and documents. `core` is Xmip itself, so a bare `Playground`
+is accepted as its shorthand and canonicalized; a third party names itself
+and adds a suite by declaring it rather than by editing Xmip. Naming no test
+runs the whole suite, for every suite and every provider.**
 
 → [A test suite carries its provider, in full](ADR-0059-a-test-suite-carries-its-provider.md)
 

@@ -138,7 +138,7 @@ It is chosen for four reasons, in order:
    `mechanism()`, `verify()`, `conclude()`.
 3. **A third party has a reason to write one.** `mechanism.rs` in
    `xmip-core` names the case itself, in a comment about a provider adding
-   `xmip-acme-authenticate-scim`. A bank's HSM and a customer's SCIM
+   `xmip-<provider>-authenticate-scim`. A bank's HSM and a customer's SCIM
    directory are the plausible first non-Xmip modules, and neither author
    wants to write Rust.
 4. **The gate is small and well fenced.** ADR-0019 clause 2 and ADR-0050

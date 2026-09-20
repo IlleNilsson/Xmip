@@ -321,7 +321,7 @@ MAUI hosts the desktop application because every other decision in Xmip is cross
 
 The render mode is not a preference. A web solution has to reach many nodes; reaching them means PowerShell Remoting or SSH; and a browser sandbox can do neither. WebAssembly cannot satisfy clause 6, so the web solution runs server-side. That is a constraint falling out of an earlier decision rather than a fresh choice.
 
-gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-acme-gui, on the same terms as the other three: their license, their support, no approval.
+gui joins abi, cli and powershell in surfaceModules. A provider may ship xmip-<provider>-gui, on the same terms as the other three: their license, their support, no approval.
 
 ## Amendment, 2026-08-30: the SDK and the target framework are two rulings
 

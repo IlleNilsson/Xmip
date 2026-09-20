@@ -189,7 +189,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
+   Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
     -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
    Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
@@ -203,7 +203,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    move between them (ADR-0052, amendment 2026-09-20):
 
    ```powershell
-   Start-XmipTest -Suite Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
+   Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
     -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
    Get-XmipTestStatus | Start-XmipOperationWeb
    ```
@@ -554,7 +554,7 @@ The Playground runs Xmip's own tests continuously, at a chosen stress level,
 over as many node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh `
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad, LowLatency -Stress Harsh `
     -Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
@@ -607,9 +607,9 @@ are .NET 11; the PowerShell module targets `net10.0` because `pwsh` hosts it.
 
 ```powershell
 Publish-XmipChange -Message 'short precise message'   # alias xgit: every suite, then land
-Start-XmipTest -Suite Estate                     # every test/*.Test.ps1
-Start-XmipTest -Suite Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
-Start-XmipTest -Suite Playground -Cluster C1 -Test RoundTrip   # omit -Nodes: the complement
+Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1
+Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip   # omit -Nodes: the complement
 Start-XmipTest -Suite * -Cluster C1               # every suite this estate knows
 ```
 
@@ -621,8 +621,8 @@ updates the pins in the superproject:
 | --- | --- | --- |
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/operation/powershell/tests` |
 | The Playground's own | `test/playground` | `cargo test` in `test/playground` |
-| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Estate` |
-| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate` |
+| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
 Before a change lands, `cargo fmt`, `cargo clippy --workspace --all-targets
 -- -D warnings` and the suite must pass. Until the first Linear release, work
@@ -631,10 +631,13 @@ commits directly to `main`
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
 (ADR-0011, ADR-0059), and `core` is the reserved provider that means Xmip
-itself — so a bare name is Xmip's own and `Playground` and `Core.Playground`
-are one suite. Someone else's carries their name: `Acme.Playground`. A
-provider adds a suite by dropping a declaration in `test/suite` — `provider`,
-`name` and the `command` that starts it — with no edit to Xmip's own source.
+itself — so Xmip's own two are `Core.Playground` and `Core.Estate`, and that
+is what every record, refusal and surface spells. A bare `Playground` is
+accepted and resolves to `Core.Playground`, so nothing you have typed stops
+working. A third party's suite carries its own provider: `<Provider>.<Name>`.
+A third party adds a suite by dropping a declaration in `test/suite` —
+`provider`, `name` and the `command` that starts it — with no edit to Xmip's
+own source.
 Omit `-Test` and the whole suite runs, for every suite and every provider.
 
 `-Test` takes wildcards, as every filter parameter in the module does:
@@ -724,7 +727,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Playground`, `Estate` — a bare name is Xmip's own — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a third party's `<Provider>.<Name>`. `-Suite` takes wildcards. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |

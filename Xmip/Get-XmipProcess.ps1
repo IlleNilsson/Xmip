@@ -47,10 +47,10 @@ function Get-XmipProcess {
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
             -Name 'xmip-playground-*' is every roll, cluster and node on this
-            machine, and -Name 'xmip-playground-C1-*' is cluster C1's tree
-            alone, since a Playground process carries its cluster and what it
-            is (ADR-0053, amendment 2026-09-20). Every Xmip process unless
-            said.
+            machine, and -Name 'xmip-playground-orders-*' is the tree of a
+            cluster someone called orders, since a Playground process carries
+            its cluster and what it is (ADR-0053, amendment 2026-09-20). Every
+            Xmip process unless said.
 
         .PARAMETER Purpose
             Only the processes that declared this purpose: Test or Runtime.
@@ -69,7 +69,7 @@ function Get-XmipProcess {
             Get-XmipProcess -Purpose Test | Stop-Process -Force
 
         .EXAMPLE
-            Get-XmipProcess -Name 'xmip-playground-C1-*'
+            Get-XmipProcess -Name 'xmip-playground-orders-*'
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]

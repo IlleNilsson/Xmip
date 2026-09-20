@@ -263,8 +263,9 @@ function Get-XmipPlaygroundImageKind {
 
     [string] $rest = $Name.Substring($prefix.Length).ToLowerInvariant()
 
-    # The marker before the endings: xmip-playground-W1-node-roll is the node
-    # called roll, never W1's roll, and that is the whole point of the marker.
+    # The marker before the endings: xmip-playground-orders-node-roll is the
+    # node called roll, never the orders cluster's roll, and that is the whole
+    # point of the marker.
     if ($rest.Contains('-node-')) {
         return 'Node'
     }

@@ -118,7 +118,7 @@ xgit -m 'short precise message'    # alias for Publish-XmipChange
 
 Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
 before anything depending on it can be verified — the tool handles the order.
-Run `Start-XmipTest -Suite Estate` before landing anything non-trivial; the
+Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial; the
 suite is around two hundred tests and is the estate's memory of every past
 defect.
 
