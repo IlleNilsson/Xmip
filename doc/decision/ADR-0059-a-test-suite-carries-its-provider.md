@@ -1,6 +1,8 @@
 # ADR-0059: A test suite carries its provider
 
-- Status: Proposed
+- Status: Accepted
+- Accepted: 2026-09-20, the owner, on being shown what each record named
+  as his to strike. Nothing was struck.
 - Date: 2026-09-19
 - Related: ADR-0011 (module and repository naming), ADR-0055 (bad input is
   refused at the door), ADR-0028 (the Playground), ADR-0014 (the operator

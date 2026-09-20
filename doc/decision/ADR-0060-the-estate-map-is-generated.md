@@ -1,6 +1,8 @@
 # ADR-0060: The estate map is generated
 
-- Status: Proposed
+- Status: Accepted
+- Accepted: 2026-09-20, the owner, on being shown what each record named
+  as his to strike. Nothing was struck.
 - Date: 2026-09-19
 - Related: ADR-0016 (submodule composition, amended 2026-09-07 for depth
   three), ADR-0020 (one document per subject; clause 5, the manifest is the
