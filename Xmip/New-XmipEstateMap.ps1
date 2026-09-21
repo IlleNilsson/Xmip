@@ -452,8 +452,8 @@ function New-XmipMapRetired {
         '## Retired'
         ''
         'Named here because a reader who remembers one of these and cannot find'
-        'it above should be told what happened to it. The GitHub repository is'
-        'archived rather than deleted in every case.'
+        'it above should be told what happened to it. Each says whether its'
+        'GitHub repository was kept or deleted.'
         ''
     )
 

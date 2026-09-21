@@ -860,10 +860,14 @@ function Test-XmipManifest {
         [StringComparer]::OrdinalIgnoreCase
     )
 
-    $cratePolicy = Get-PropertyValue -Object $Manifest -Name 'cratePolicy' -Default ([pscustomobject]@{})
+    # `[crate]`, where the manifest keeps it. This read schema 1's
+    # `cratePolicy` until 2026-09-21, a table the manifest had not had for
+    # weeks, so the default of false answered for it and the rule was never
+    # checked; found while deleting the reader of the old shape.
+    $crate = Get-TomlValue -Node $Manifest -Name 'crate' -Default $null
 
     [bool] $crateMustMatch = [bool](
-        Get-PropertyValue -Object $cratePolicy -Name 'primaryCrateMatchesRepository' -Default $false
+        Get-TomlValue -Node $crate -Name 'primaryCrateMatchesRepository' -Default $false
     )
 
     foreach ($repository in $repositories) {

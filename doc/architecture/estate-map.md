@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145385 lines of production
+Where each repository mounts and what it holds: 145386 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -353,7 +353,7 @@ hold no source to count.
 │       ├── configure                            198
 │       └── persist                               93
 └── test/
-    └── playground                              9474
+    └── playground                              9475
 ```
 
 ---
@@ -581,12 +581,13 @@ Platform-wide runtime services.
 ## Retired
 
 Named here because a reader who remembers one of these and cannot find
-it above should be told what happened to it. The GitHub repository is
-archived rather than deleted in every case.
+it above should be told what happened to it. Each says whether its
+GitHub repository was kept or deleted.
 
 - **`xmip-core-exclusiveness`**, 2026-08-27 — ADR-0024. ResourceClaim in
-  xmip-core-transport replaces it. Archived rather than deleted because
-  ADR-0017 is part of the record.
+  xmip-core-transport replaces it. The GitHub repository was deleted on
+  2026-09-21 on the owner's word — nothing is released, and ADR-0017 and
+  ADR-0024 keep the record of why it existed and why it went.
 
 - **`xmip-core-webapi`**, 2026-09-06 — ADR-0014 amendment 2026-08-26. The web
   API belongs to the Logic axis (xmip-core-logic-http-api over

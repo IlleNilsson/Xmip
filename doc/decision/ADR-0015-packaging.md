@@ -62,3 +62,17 @@ The workspace today has neither. Its only store feature is sqlite-store over rus
 **Module distribution and signing.** If the runtime loads native code out of module/, something must decide whether an unsigned module may load, and where a signed one comes from.
 
 **There is no binary to package yet.** The only binary in the workspace is xmip-tiny-device. ADR-0014 clause 8 says the command is xmip, produced by xmip-core-cli, which does not exist. This ADR records the shape so that the first binary lands into a decided one, not to suggest packaging can be built before there is something to put in it.
+
+## Amendment, 2026-09-21: install/ is deleted
+
+`install/install-local.ps1` and `install-local.sh`, which the Context above
+describes, are gone. The owner: *We are designing from scratch, nothing is
+released or published. There is no point holding on to old repos or code.*
+They created a directory layout and installed no binary, and the estate's
+own style gate had called them superseded and awaiting deletion while the
+README still offered them.
+
+Clause 10 stands: the installed layout — bin, config, modules and the rest
+it names — is normative. What is gone is the one thing that created it by
+hand, so until packaging lands nothing lays a node out, which is what the
+Context already said of installing one.

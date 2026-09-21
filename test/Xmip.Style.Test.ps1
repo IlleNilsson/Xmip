@@ -13,9 +13,10 @@
         Get-XmipStyleFinding | Group-Object Rule
         Get-XmipStyleFinding | Where-Object Rule -eq 'LineLength' | Format-Table
 
-    Scope is the module and these tests. scripts/, tools/ and install/ are
-    superseded and awaiting deletion; they are deliberately not measured,
-    because a rule that fails on code nobody maintains gets switched off.
+    Scope is the module and these tests. The superseded scripts/, tools/ and
+    install/ were left unmeasured while they waited for deletion, because a
+    rule that fails on code nobody maintains gets switched off; the last of
+    them went on 2026-09-21, and there is nothing left outside the rules.
 #>
 
 # Declared at file scope, not in BeforeAll: Pester discovers test names before
@@ -64,8 +65,8 @@ BeforeAll {
         The files the style rules apply to.
 
         .DESCRIPTION
-        The module and these tests. scripts/, tools/ and install/ are omitted
-        on purpose: they are superseded and awaiting deletion.
+        The module and these tests, which is every PowerShell file the estate
+        keeps since install/ was deleted (2026-09-21).
     #>
     function Get-MeasuredFile {
         [CmdletBinding()]
@@ -430,7 +431,7 @@ Describe 'PowerShell style, section 1: layout' {
             'Publish-XmipChange.ps1'       = 6
             'Sync-XmipEstate.ps1'          = 8
             'Sync-XmipRepository.ps1'      = 20
-            'Xmip.psm1'                    = 19
+            'Xmip.psm1'                    = 18
             'Decision.Test.ps1'          = 1
             'Documentation.Test.ps1'      = 5
             'Publish-XmipChange.Test.ps1' = 2

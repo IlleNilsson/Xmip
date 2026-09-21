@@ -127,10 +127,15 @@ function Get-XmipDeclaredOwner {
 
 <#
     .SYNOPSIS
-    The owner/name of the repository new crates are generated from, or ''.
+    The repository each language's new crates are generated from, by
+    language; empty when the manifest names none.
 
     .DESCRIPTION
-    crate.template in schema 2.0, cratePolicy.template in schema 1.
+    `[crate.template]`, a table of language to owner/name. It also read the
+    single string of schema 2.0 before 2026-08-27 and `cratePolicy` from
+    schema 1 until 2026-09-21, when the owner ruled that nothing released
+    means nothing to stay compatible with: *There is no point holding on to
+    old repos or code.* The manifest has one shape and this reads that one.
 #>
 function Get-XmipTemplate {
     [CmdletBinding()]
@@ -143,22 +148,8 @@ function Get-XmipTemplate {
     $crate = Get-TomlValue $Manifest 'crate' $null
     $declared = Get-TomlValue $crate 'template' $null
 
-    # A string in schema 2.0 before 2026-08-27, and in cratePolicy in schema 1.
-    # Both meant "the Rust template", because there was only one.
-    if ($declared -is [string]) {
-        return @{ rust = $declared }
-    }
-
     if ($null -eq $declared) {
-        [string] $legacy = [string](
-            Get-PropertyValue (Get-PropertyValue $Manifest 'cratePolicy') 'template' ''
-        )
-
-        if ([string]::IsNullOrWhiteSpace($legacy)) {
-            return @{}
-        }
-
-        return @{ rust = $legacy }
+        return @{}
     }
 
     $templates = @{}
@@ -175,9 +166,9 @@ function Get-XmipTemplate {
     Repositories the manifest says were retired.
 
     .DESCRIPTION
-    Archived rather than deleted, so they are still on GitHub and would
-    otherwise report as drift for as long as they exist. A warning that is
-    always there is a warning nobody reads.
+    Those still on GitHub would otherwise report as drift for as long as they
+    exist, and a warning that is always there is a warning nobody reads. One
+    deleted since (xmip-core-exclusiveness, 2026-09-21) is simply not there.
 #>
 function Get-XmipRetiredName {
     [CmdletBinding()]
