@@ -513,7 +513,6 @@ PowerShell module and the monitors run on all three.
 | --- | --- | --- | --- |
 | PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Local layout | `install/install-local.ps1` under `%ProgramData%\Xmip` | `install/install-local.sh` under `/opt/xmip` | `install/install-local.sh` |
 | Desired state | `deploy/dsc/xmip-node.dsc.yaml` | `deploy/ansible/roles` | `deploy/ansible/roles` |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
@@ -686,7 +685,6 @@ Xmip/                 the estate's PowerShell module
 module/               the modules, submodules at module/<domain>/<leaf>
 test/                 the estate's Pester suite; test/playground is the Playground
 deploy/               Ansible roles and a DSC configuration for a node
-install/              local layout scripts
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```

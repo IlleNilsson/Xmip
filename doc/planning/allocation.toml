@@ -805,10 +805,17 @@ path = "asset/brand/xmip-logo.png"
 path = "test/Sync-XmipEstate.Test.ps1"
 [[keep]]
 path = "test/Sync-XmipEstate.StrictMode.Test.ps1"
-[[keep]]
+[[remove]]
 path = "install/install-local.ps1"
-[[keep]]
+[[remove]]
 path = "install/install-local.sh"
+reason = """
+Removed 2026-09-21 on the owner's word: nothing is released, and there is no
+point holding on to code that is not the design. The style gate had called
+both superseded and awaiting deletion for weeks while the README still offered
+them. They created a directory layout and installed no binary; the layout
+itself stays normative in ADR-0015 clause 10.
+"""
 [[keep]]
 path = "deploy/ansible/roles/xmip_node/defaults/main.yml"
 [[keep]]

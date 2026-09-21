@@ -110,7 +110,7 @@ dotnet = "IlleNilsson/xmip-template-dotnet"
 [[retired]]
 name = "xmip-core-exclusiveness"
 on = "2026-08-27"
-reason = "ADR-0024. ResourceClaim in xmip-core-transport replaces it. Archived rather than deleted because ADR-0017 is part of the record."
+reason = "ADR-0024. ResourceClaim in xmip-core-transport replaces it. The GitHub repository was deleted on 2026-09-21 on the owner's word — nothing is released, and ADR-0017 and ADR-0024 keep the record of why it existed and why it went."
 
 [[retired]]
 name = "xmip-core-webapi"
