@@ -52,6 +52,307 @@ the root forgot.
 
 ---
 
+## The tree
+
+Where each repository mounts and what it holds: 144900 lines of production
+source, every file charged to the deepest repository containing it, so a
+parent is its own code and never its children added again. Counted by
+`Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
+length with; a Rust file ends at its first `#[cfg(test)]` and a `*.Test.ps1`
+or `*.Test.cs` counts as nothing.
+
+Heaviest first at every level, because that is what a tree of counts is for.
+The tables below are alphabetical, for looking a name up. A name ending in `/`
+is a directory of the working tree; every other name is a repository.
+
+A name under `declared, not built` is declared by the manifest and mounted
+nowhere — work not begun, not work unmounted. There are 77 of them and they
+hold no source to count.
+
+```text
+├── module/
+│   ├── capability/
+│   │   ├── authenticate                        2080
+│   │   │   ├── saml                            1043
+│   │   │   ├── kerberos                         985
+│   │   │   ├── ntlm                             796
+│   │   │   ├── ldap                             685
+│   │   │   ├── oauth2                           605
+│   │   │   ├── oidc                             510
+│   │   │   ├── digest                           509
+│   │   │   ├── ssh-key                          509
+│   │   │   ├── jwt                              431
+│   │   │   ├── windows                          406
+│   │   │   ├── scram                            405
+│   │   │   ├── pam                              352
+│   │   │   ├── api-key                          240
+│   │   │   ├── bearer                           226
+│   │   │   ├── certificate                      160
+│   │   │   ├── basic                            111
+│   │   │   ├── mutual-tls                        97
+│   │   │   └── password                          81
+│   │   ├── transport                           1620
+│   │   │   ├── opc-ua                          2380
+│   │   │   ├── sftp                            2189
+│   │   │   ├── mssql                           2178
+│   │   │   ├── mysql                           1833
+│   │   │   ├── smb                             1722
+│   │   │   ├── http                            1691
+│   │   │   ├── nfs                             1585
+│   │   │   ├── rabbitmq                        1567
+│   │   │   ├── snmp                            1417
+│   │   │   ├── oracle                          1312
+│   │   │   ├── ibm-mq                          1277
+│   │   │   ├── postgresql                      1276
+│   │   │   ├── ethercat                        1258
+│   │   │   ├── kafka                           1166
+│   │   │   ├── webdav                          1164
+│   │   │   ├── amqp                            1097
+│   │   │   ├── as4                             1072
+│   │   │   ├── nats-jetstream                  1069
+│   │   │   ├── s7comm                          1021
+│   │   │   ├── io-link                         1015
+│   │   │   ├── iec-61850                        968
+│   │   │   ├── m-bus                            926
+│   │   │   ├── canopen                          905
+│   │   │   ├── activemq                         891
+│   │   │   ├── dicom                            887
+│   │   │   ├── peppol                           880
+│   │   │   ├── lorawan                          874
+│   │   │   ├── hart                             872
+│   │   │   ├── secs-gem                         858
+│   │   │   ├── mdns                             848
+│   │   │   ├── bluetooth                        844
+│   │   │   ├── wireless-hart                    824
+│   │   │   ├── uds                              822
+│   │   │   ├── aws-kinesis                      804
+│   │   │   ├── ethernet-ip                      791
+│   │   │   ├── mqtt                             789
+│   │   │   ├── azure-event-grid                 787
+│   │   │   ├── aws-sns                          785
+│   │   │   ├── dhcp                             780
+│   │   │   ├── j1939                            756
+│   │   │   ├── thread                           742
+│   │   │   ├── dns                              736
+│   │   │   ├── as2                              734
+│   │   │   ├── profinet                         730
+│   │   │   ├── azure-blob                       727
+│   │   │   ├── ftp                              718
+│   │   │   ├── redis-streams                    718
+│   │   │   ├── imap                             699
+│   │   │   ├── azure-service-bus                690
+│   │   │   ├── google-pub-sub                   688
+│   │   │   ├── knx                              687
+│   │   │   ├── cotp                             667
+│   │   │   ├── zigbee                           667
+│   │   │   ├── nats                             661
+│   │   │   ├── aws-sqs                          637
+│   │   │   ├── coap                             635
+│   │   │   ├── iso-tp                           611
+│   │   │   ├── dds                              603
+│   │   │   ├── redpanda                         594
+│   │   │   ├── pop3                             585
+│   │   │   ├── obd-ii                           582
+│   │   │   ├── msmq                             571
+│   │   │   ├── wireless-m-bus                   560
+│   │   │   ├── google-cloud-storage             556
+│   │   │   ├── s3                               554
+│   │   │   ├── websocket                        545
+│   │   │   ├── ssdp                             526
+│   │   │   ├── syslog                           516
+│   │   │   ├── azure-event-hubs                 471
+│   │   │   ├── ethernet                         468
+│   │   │   ├── smtp                             452
+│   │   │   ├── iec-60870-5-104                  432
+│   │   │   ├── dnp3                             421
+│   │   │   ├── sqlite                           373
+│   │   │   ├── named-pipe                       343
+│   │   │   ├── can-bus                          320
+│   │   │   ├── modbus                           317
+│   │   │   ├── serial                           303
+│   │   │   ├── unix-socket                      266
+│   │   │   ├── bacnet                           258
+│   │   │   ├── mllp                             235
+│   │   │   ├── udp                              176
+│   │   │   ├── file                             148
+│   │   │   └── tcp                              134
+│   │   ├── identify                            1038
+│   │   │   ├── kerberos                         476
+│   │   │   ├── saml                             362
+│   │   │   ├── ip                               313
+│   │   │   ├── ntlm                             275
+│   │   │   ├── api-key                          255
+│   │   │   ├── dns                              221
+│   │   │   ├── username                         194
+│   │   │   ├── jwt                              187
+│   │   │   ├── header                           186
+│   │   │   ├── oidc                             145
+│   │   │   ├── certificate                      136
+│   │   │   ├── cookie                           131
+│   │   │   ├── transport                        109
+│   │   │   ├── ssh-key                           90
+│   │   │   ├── contract                          88
+│   │   │   ├── party                             88
+│   │   │   ├── mac                               86
+│   │   │   ├── endpoint                          82
+│   │   │   └── message                           81
+│   │   ├── route                                879
+│   │   │   ├── content                          101
+│   │   │   ├── expression                       101
+│   │   │   ├── metadata                         101
+│   │   │   ├── party                             80
+│   │   │   ├── header                            78
+│   │   │   ├── contract                          75
+│   │   │   ├── regex                             74
+│   │   │   └── context                           53
+│   │   ├── contract                             472
+│   │   │   ├── graphql-schema                   874
+│   │   │   ├── sql                              774
+│   │   │   ├── xml-schema                       745
+│   │   │   ├── avro                             714
+│   │   │   ├── toon                             702
+│   │   │   ├── protobuf                         690
+│   │   │   ├── json-schema                      593
+│   │   │   ├── fixed-width                      495
+│   │   │   ├── edi-edifact                      452
+│   │   │   ├── schematron                       438
+│   │   │   ├── edi-x12                          437
+│   │   │   ├── wsdl                             373
+│   │   │   ├── openapi                          359
+│   │   │   ├── yaml                             351
+│   │   │   ├── hl7-v2                           312
+│   │   │   ├── toml                             297
+│   │   │   ├── fhir                             273
+│   │   │   ├── rust                             253
+│   │   │   ├── asyncapi                         223
+│   │   │   ├── regex                            165
+│   │   │   ├── java                             113
+│   │   │   ├── csv                              112
+│   │   │   ├── python                           100
+│   │   │   ├── go                                57
+│   │   │   ├── c                                 29
+│   │   │   ├── cpp                               29
+│   │   │   └── dotnet                            19
+│   │   ├── path                                 299
+│   │   │   ├── fhirpath                         749
+│   │   │   ├── jsonpath                         741
+│   │   │   ├── predicate                        582
+│   │   │   ├── dot                              355
+│   │   │   ├── xpath                            255
+│   │   │   ├── regex                            253
+│   │   │   ├── index                            216
+│   │   │   └── json-pointer                     144
+│   │   ├── authorize                            285
+│   │   │   ├── opa                              454
+│   │   │   ├── location                         395
+│   │   │   ├── abac                             360
+│   │   │   ├── transport                        293
+│   │   │   ├── cedar                            290
+│   │   │   ├── policy                           256
+│   │   │   ├── role                             226
+│   │   │   ├── artifact                         217
+│   │   │   ├── acl                              204
+│   │   │   ├── rbac                             192
+│   │   │   ├── contract                         184
+│   │   │   ├── scope                            178
+│   │   │   ├── claim                            173
+│   │   │   └── party                            131
+│   │   ├── resilience                           204
+│   │   │   ├── circuit-breaker                  135
+│   │   │   ├── rate-limit                       108
+│   │   │   ├── retry                             88
+│   │   │   ├── bulkhead                          83
+│   │   │   ├── timeout                           80
+│   │   │   └── fallback                          66
+│   │   ├── receive                              173
+│   │   ├── logic                                152
+│   │   │   ├── matter                          1142
+│   │   │   ├── soap                             278
+│   │   │   ├── http-api                         257
+│   │   │   └── grpc                             212
+│   │   ├── send                                 143
+│   │   ├── demote                                82
+│   │   ├── promote                               48
+│   │   ├── process                               40
+│   │   │       declared, not built 14
+│   │   │       bash  c  command  cpp  dotnet  go  grpc  http  java  lua
+│   │   │       powershell  python  rust  wasm
+│   │   ├── prepare                               29
+│   │   │       declared, not built 20
+│   │   │       base64  bzip2  canonicalize  charset  checksum  chunking
+│   │   │       decrypt  deflate  encrypt  envelope  framing  gzip  hash
+│   │   │       line-ending  quoted-printable  sign  tar  verify-signature
+│   │   │       zip  zstd
+│   │   ├── transform                             29
+│   │   │       declared, not built 17
+│   │   │       c  cpp  dotnet  go  handlebars  java  jolt  jq  jsonata
+│   │   │       liquid  mustache  python  rust  tera  wasm  xquery  xslt
+│   │   ├── assign                                28
+│   │   └── retain                                27
+│   │           declared, not built 5
+│   │           azure-blob  file  gcs  s3  sql
+│   ├── foundation/
+│   │   ├── abi                                 8006
+│   │   ├── message                             1048
+│   │   │   ├── xml                              335
+│   │   │   ├── protobuf                         332
+│   │   │   ├── avro                             304
+│   │   │   ├── json                             254
+│   │   │   ├── multipart                        194
+│   │   │   ├── csv                              149
+│   │   │   ├── fixed-width                      105
+│   │   │   ├── form-urlencoded                  100
+│   │   │   ├── hl7-er7                           93
+│   │   │   ├── edi-x12                           77
+│   │   │   ├── edi-edifact                       75
+│   │   │   ├── ubl                               67
+│   │   │   ├── text                              58
+│   │   │   ├── edi-tradacoms                     55
+│   │   │   └── binary                            38
+│   │   ├── core                                 902
+│   │   ├── context                              345
+│   │   ├── journey                              344
+│   │   ├── node                                 210
+│   │   ├── party                                186
+│   │   ├── stream                                38
+│   │   ├── cluster                               21
+│   │   └── event                                 20
+│   ├── operation/
+│   │   ├── cli                                 3054
+│   │   ├── gui                                 1686
+│   │   │   └── vscode                           698
+│   │   ├── powershell                          1665
+│   │   ├── observe                              561
+│   │   │       declared, not built 5
+│   │   │       etw  journald  otlp  prometheus  windows-event-log
+│   │   ├── archive                              461
+│   │   │   ├── sql                              320
+│   │   │   ├── file                             315
+│   │   │   ├── mysql                            191
+│   │   │   ├── postgresql                       181
+│   │   │   ├── mssql                            180
+│   │   │   ├── azure-blob                       165
+│   │   │   ├── s3                               155
+│   │   │   ├── parquet                          147
+│   │   │   ├── gcs                              135
+│   │   │   └── sqlite                           133
+│   │   ├── audit                                 89
+│   │   │       declared, not built 9
+│   │   │       elasticsearch  file  kafka  mssql  opensearch  otlp  postgres
+│   │   │       sqlite  syslog
+│   │   └── report                                18
+│   │           declared, not built 6
+│   │           csv  html  json  pdf  prometheus  sql
+│   └── platform/
+│       ├── runtime                             3221
+│       ├── configure                            198
+│       └── persist                               93
+└── test/
+    └── playground                              9419
+```
+
+---
+
 ## Foundation
 
 Things Xmip is.

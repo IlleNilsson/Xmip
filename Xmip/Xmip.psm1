@@ -893,6 +893,9 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipDecisionIndex.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipEstateRepository.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipSourceFile.ps1')
+. (Join-Path $PSScriptRoot 'Add-XmipMapMount.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipMapTree.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipEstateMap.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipHistory.ps1')
 
@@ -936,6 +939,7 @@ function Test-XmipManifest {
     'Get-XmipDecisionRecord'
     'New-XmipDecisionIndex'
     'Get-XmipEstateRepository'
+    'Get-XmipSourceFile'
     'New-XmipEstateMap'
     'Get-XmipHistory'
     'Start-XmipTest'

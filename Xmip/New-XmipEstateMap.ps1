@@ -634,6 +634,9 @@ function New-XmipMapText {
 
         .PARAMETER Extra
             Submodules mounted here that the estate tree does not declare.
+
+        .PARAMETER Source
+            Every source file, for the tree's counts.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -646,7 +649,11 @@ function New-XmipMapText {
 
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
-        [string[]] $Extra
+        [string[]] $Extra,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [PSCustomObject[]] $Source
     )
 
     $classification = Get-TomlValue -Node $Manifest -Name 'classification' -Default $null
@@ -655,7 +662,8 @@ function New-XmipMapText {
         '## The count'
         ''
     ) + (New-XmipMapCount -Repository $Repository) + @('') +
-        (New-XmipMapComposition) + @('---', '')
+        (New-XmipMapComposition) + @('---', '') +
+        (New-XmipMapTree -Repository $Repository -Source $Source) + @('---', '')
 
     foreach ($name in $script:XmipMapDomain) {
         [hashtable] $section = @{
@@ -729,7 +737,16 @@ function New-XmipEstateMap {
     [string[]] $declared = @($repository | ForEach-Object { $_.Name })
     [string[]] $extra = @($composed.Keys | Where-Object { $_ -notin $declared } | Sort-Object)
 
-    [string] $text = (New-XmipMapText -Manifest $manifest -Repository $repository -Extra $extra)
+    [PSCustomObject[]] $source = @(Get-XmipSourceFile -Root $Root)
+
+    [hashtable] $whole = @{
+        Manifest   = $manifest
+        Repository = $repository
+        Extra      = $extra
+        Source     = $source
+    }
+
+    [string] $text = (New-XmipMapText @whole)
 
     if (-not $Save) {
         return $text

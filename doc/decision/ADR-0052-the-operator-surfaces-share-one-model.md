@@ -271,13 +271,22 @@ applied to the GUI as it stands.
    node must say so where the eye rests. The prompt segment names the node
    beside the mood — `[Xmip R1 holding]` — whenever the session is remote,
    so an operator on more nodes than one never acts on the wrong one.
-6. **Nodes are named for what they do.** A node in an example, a fixture or
-   a playground roll is R1, P1, S1 and their kin — the stage it carries and
-   a number — not alpha, beta and gamma. A name that says the role reads at
-   a glance in a prompt, a row and a drill-down; a Greek letter says nothing.
-   The playground's examples and fixtures are renamed the same day; the
-   playground still runs every stage on every node, so the letter there is
-   what the node is for, not what it is limited to.
+6. **A name in an example is only an example.** The playground's examples and
+   fixtures were renamed the same day, from alpha, beta and gamma to R1, P1
+   and S1, on the assistant's argument that a name saying the stage reads at
+   a glance in a prompt, a row and a drill-down where a Greek letter says
+   nothing. The renaming happened and is what landed; the argument did not
+   survive. The owner struck it on 2026-09-20, of nodes and of clusters
+   alike — *Rn, Pn and Sn are arbitrary node names*; *C1 and C2 are not
+   roles, they are arbitrary cluster names, there may be one or more
+   clusters* — and ruling 8 below had already glossed it that way the same
+   evening. So the rule this ruling leaves behind is the narrow one: an
+   example needs a name, any name a file can carry will do, and nothing in
+   Xmip reads one. What a node does is the capability it declares
+   (ADR-0056), and the playground runs the stages a node declared, never the
+   stages its name suggests. Where the estate shows an example it varies the
+   spelling on purpose, so that none of them reads as the shape a name is
+   supposed to take.
 7. **Nothing on a page starts anything, and the page's own words when the
    circuit drops.** No browser starts a web server: `Start-XmipOperationWeb` starts
    the web host, detached, and opens no browser; a page that appears to

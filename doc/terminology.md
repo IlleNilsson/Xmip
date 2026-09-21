@@ -24,7 +24,7 @@ unless the surrounding context makes the meaning unavoidable.
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
 Every System Process and every service Xmip owns is named `xmip-<what>` —
-`xmip-cli`, `xmip-gui-web`, `xmip-playground-C1-node-R1` — and declares its name,
+`xmip-cli`, `xmip-gui-web`, `xmip-playground-orders-node-mill` — and declares its name,
 its location and its purpose, test or runtime, so that one line finds them
 all and one line stops them all (ADR-0053). Where there are many of a kind,
 `<what>` says which: a Playground process carries its suite, its cluster and
@@ -42,7 +42,7 @@ type in the code and **roll** had never been written down here at all.
 
 | Term | Meaning |
 | --- | --- |
-| **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll is one cluster (ADR-0028). |
+| **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll runs exactly one cluster (ADR-0028), and the cluster is a process the roll spawns, not the roll itself (ADR-0052, amendment 2026-09-19). |
 | **Role** | What something is permitted or expected to be. A Node has `NodeRole` — Operational, Executing, Monitoring, Development — and an operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. |
 
 A node's **capability** is a third thing again and is not a role: it is what a
