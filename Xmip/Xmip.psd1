@@ -51,6 +51,7 @@
         'Get-XmipDecisionRecord'
         'New-XmipDecisionIndex'
         'Get-XmipEstateRepository'
+        'Get-XmipSourceFile'
         'New-XmipEstateMap'
         'Get-XmipHistory'
         'Start-XmipTest'

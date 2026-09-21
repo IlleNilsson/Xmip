@@ -476,6 +476,56 @@ are not conflated when D&R is taken up.
 
 Filed 2026-09-06, prompted by a power cut mid-test.
 
+## 24. There is no serial bus, so no serial protocol is proved on one
+
+The owner, 2026-09-20: *I guess Xmip is missing a serial bus simulator to test
+serial transport protocols.* He is right, and the shape of what is missing is
+sharper than the guess.
+
+**What exists.** `SerialTransport::loopback()` is a line, not a bus. Its
+`round` is `round_in_order` — write the frame, then read it back, one thread,
+no second party. It proves framing: delimited frames end at the delimiter, a
+fixed frame is exactly its length, a partial match inside a payload is not a
+frame boundary. That is real and it is all of it. The `serialport` crate is
+behind the `port` feature and nothing in any test opens a port.
+
+**What rides on it.** Four technologies declare `xmip-core-transport-serial`:
+`dnp3`, `m-bus`, `hart` and `wireless-hart` through `hart`. Each stood up its
+own device stand-in on top of that line — `m-bus/src/loopback.rs` has a
+loopback meter, `hart/src/loopback.rs` a loopback field device. This is the
+same duplication `transport/.src/loopback.rs` was written to end one level up,
+where the dance had been written in the Playground *forty-two times over*
+(ADR-0051). It has reappeared below, per protocol, unremarked.
+
+**What none of them can prove.** A serial bus is multi-drop: several devices
+on one pair of wires, each with an address, a master that polls one of them,
+and turnaround between the two directions. M-Bus addresses a primary; HART
+addresses a polling address; DNP3 carries a link-layer source and destination.
+Against a line that echoes, every one of those is written and none is
+exercised — nothing can show that a device at the wrong address stays silent,
+that a second device does not answer over the first, or that a master that
+polls before turnaround reads its own frame back. The line cannot lose a
+character, hold a break condition or run at the wrong baud either, so the
+error paths a field bus exists to survive are unreached.
+
+**The shape already exists in the estate.** `can-bus` did this properly:
+`Loopback` there is an in-process *bus* held behind `Arc<dyn Bus>`, with
+`CanTransport` a participant on it and the bus a thing in its own right. Three
+technologies — `j1939`, `obd-ii` and `uds` through `iso-tp` — sit on it. A
+serial bus would be the same object: an addressed multi-drop line in
+`xmip-core-transport-serial`, with `SerialTransport` a party on it and the
+present echo kept as the one-party case.
+
+| option | effect |
+|---|---|
+| **A. A multi-drop bus in `serial`, modelled on `can-bus`'s** | the four riders drop their own stand-ins and gain addressing, silence and turnaround; the pattern is proved and the parallel is exact |
+| **B. Leave the per-protocol stand-ins and add addressing to each** | four places to keep true, which is the duplication ADR-0051 named |
+| **C. A real port behind `com0com` or a pty** | proves the driver, needs a machine set up for it, and cannot run in the gate — a later addition, not the first one |
+
+**Lean: A**, with C named as what it does not replace: a bus in process proves
+the protocol, never the port. Filed 2026-09-20 on the owner's observation,
+verified the same hour.
+
 ---
 
 # Suggested order
@@ -568,10 +618,11 @@ retires entries from stops being an order.
                                        yet published); Topology navigates
                                        to another cluster when allowed, a
                                        second named roll in the playground,
-                                       Start-XmipTest -Cluster C2 (the
-                                       playground topology and -Cluster are
-                                       landed, the page that navigates
-                                       between clusters is not); every
+                                       Start-XmipTest -Cluster orders (the
+                                       playground topology, -Cluster and the
+                                       chooser that moves a view between
+                                       clusters are all landed, ADR-0052,
+                                       amendment 2026-09-20); every
                                        surface drills to the leaf; every view
                                        names the Receive Location, the
                                        Xmip Process and the Send Location,

@@ -19,8 +19,10 @@ On-prem cluster
 
 **The runtime semantics are identical on all of them.** What varies is which
 Modules are loaded, which persistence and observability providers are
-configured, and which cluster capabilities exist. A profile is a packaging and
-configuration choice, never a different product.
+configured, and which capabilities exist across the cluster — the union of what
+its nodes declare, in ADR-0056's four kinds: online, feature, authentication
+and runtime. A profile is a packaging and configuration choice, never a
+different product.
 
 The laws that hold everywhere:
 

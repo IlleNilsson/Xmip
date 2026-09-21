@@ -122,8 +122,8 @@ Three records point at a thing none of them defines. This one defines it.
   2026-09-20 (amendment below): `-NodeCapability` states it outright, and
   nothing anywhere reads a node's name.
 - A profile's *cluster capabilities* in `deployment-model.md` should be
-  read as the union of its nodes' capabilities, and that document's
-  wording is to be reconciled with the four kinds.
+  read as the union of its nodes' capabilities; that document's wording was
+  reconciled with the four kinds on 2026-09-20 and now says so.
 - **2026-09-19, the surfaces: all four show it, and none parses the file.**
   ADR-0014's amendment of the same day — *a change reaches every surface, or
   says which it did not* — was owed for this record, whose capabilities

@@ -13,7 +13,8 @@
     Findings are objects, so a failure can be grouped and sorted rather than
     read as a wall of text:
 
-        Get-XmipRustFile | Sort-Object Code -Descending | Select-Object -First 10
+        Get-XmipSourceFile -Language Rust |
+            Sort-Object Code -Descending | Select-Object -First 10
 #>
 
 # At file scope, not in BeforeAll: Pester discovers test names before BeforeAll
@@ -24,50 +25,13 @@ BeforeAll {
     $script:Root = Join-Path $PSScriptRoot '..'
     [int] $script:MaximumFileLines = 400
 
-    <#
-        .SYNOPSIS
-        Every Rust source file in the estate, with its production and test lines
-        counted separately.
-
-        .DESCRIPTION
-        `module/` and `template/`. The template is Rust that the estate ships
-        and that every new repository is generated from, so a rule it does not
-        obey is a rule every new repository starts out breaking.
-
-        `target/` is build output and is excluded: it holds generated sources
-        that nobody wrote and that would dominate any measurement.
-    #>
-    function Get-XmipRustFile {
-        [CmdletBinding()]
-        [OutputType([PSCustomObject])]
-        param()
-
-        $roots = @('module', 'template') |
-            ForEach-Object { Join-Path $script:Root $_ } |
-            Where-Object { Test-Path -LiteralPath $_ }
-
-        Get-ChildItem -LiteralPath $roots -Recurse -Filter '*.rs' -File |
-            Where-Object { $_.FullName -notmatch '[\\/]target[\\/]' } |
-            ForEach-Object {
-                $lines = @(Get-Content -LiteralPath $_.FullName)
-
-                # The line that starts the test module, or past the end when
-                # there is none. Tests below it are not counted against the
-                # gate — see rust-style.md section 2.
-                $boundary = 1..$lines.Count |
-                    Where-Object { $lines[$_ - 1] -match '^\s*#\[cfg\(test\)\]' } |
-                    Select-Object -First 1
-
-                $code = if ($boundary) { $boundary - 1 } else { $lines.Count }
-
-                [PSCustomObject]@{
-                    Path  = [IO.Path]::GetRelativePath($script:Root, $_.FullName) -replace '\\', '/'
-                    Code  = $code
-                    Tests = $lines.Count - $code
-                    Total = $lines.Count
-                }
-            }
-    }
+    # The counter used to live here, where nothing else could reach it, and
+    # the estate map needed the same number. Two counters disagree within a
+    # week — ADR-0020 clause 5 — so it moved into the module and this calls
+    # it. `Get-XmipSourceFile` reads `module/`, `test/` and `template/`, and
+    # the template is Rust every new repository is generated from, so a rule
+    # it breaks is a rule every new repository starts out breaking.
+    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
     # The ratchet, rust-style.md section 4. Empty, which is the intended state.
     #
@@ -85,7 +49,7 @@ BeforeAll {
     #   platform/runtime/src/arrival.rs   440 -> split, above
     $script:Ratchet = @{ }
 
-    $script:Files = @(Get-XmipRustFile)
+    $script:Files = @(Get-XmipSourceFile -Root $script:Root -Language Rust)
 }
 
 Describe 'Rust style, section 1: a file has one subject' {
