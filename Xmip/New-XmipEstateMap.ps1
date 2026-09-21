@@ -720,7 +720,15 @@ function New-XmipEstateMap {
         [string] $Root,
 
         [Parameter(Mandatory = $false)]
-        [switch] $Save
+        [switch] $Save,
+
+        # The same map as a page, for publishing where the owner reads it.
+        # Html is returned, or with -Save written to .local-work, never to
+        # doc/: a page is a view of the document, not a second document
+        # (ADR-0060, amendment 2026-09-21).
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Markdown', 'Html')]
+        [string] $Format = 'Markdown'
     )
 
     Set-StrictMode -Version Latest
@@ -747,6 +755,27 @@ function New-XmipEstateMap {
     }
 
     [string] $text = (New-XmipMapText @whole)
+
+    if ($Format -eq 'Html') {
+        [hashtable] $page = @{
+            Root       = $Root
+            Repository = $repository
+            Source     = $source
+            Map        = $text
+            Retired    = @(Get-TomlValue -Node $manifest -Name 'retired' -Default @())
+        }
+
+        [string] $html = New-XmipEstatePage @page
+
+        if ($Save) {
+            [string] $where = Join-Path $Root '.local-work/estate-map.html'
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $where) | Out-Null
+            Set-Content -LiteralPath $where -Value $html -NoNewline -Encoding utf8
+            Write-Host "OK       wrote $where"
+        }
+
+        return $html
+    }
 
     if (-not $Save) {
         return $text

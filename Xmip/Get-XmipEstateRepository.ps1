@@ -101,6 +101,15 @@ function Get-XmipEstateRepository {
     $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.toml')
     [hashtable] $composed = Get-XmipEstateComposition -Root $Root
 
+    # Every mount's full path to the repository at it, so a .NET project
+    # reference resolves to the repository that holds the project it names.
+    [hashtable] $owner = @{}
+
+    foreach ($name in $composed.Keys) {
+        [string] $full = [IO.Path]::GetFullPath((Join-Path $Root $composed[$name]))
+        $owner[$full.TrimEnd([char] 92, [char] 47)] = $name
+    }
+
     foreach ($entry in ($manifest.repositories | Sort-Object -Property name)) {
         [string] $parent = ''
 
@@ -129,6 +138,12 @@ function Get-XmipEstateRepository {
             Parent     = $parent
             Mount      = $mount
             Mounted    = (-not [string]::IsNullOrEmpty($mount))
+            Declared   = [string[]] @($entry.dependencies)
+            Uses       = [string[]] @(
+                if (-not [string]::IsNullOrEmpty($mount)) {
+                    Get-XmipRepositoryUse -Root $Root -Mount $mount -Owner $owner
+                }
+            )
         }
     }
 }
