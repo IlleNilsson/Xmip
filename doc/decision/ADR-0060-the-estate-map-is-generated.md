@@ -350,3 +350,33 @@ Status stays Proposed. The definitions in clause 1 and the promotion of the
 six in clause 3 are the assistant's drafting on the owner's instruction to
 make the manifest true where the evidence is unambiguous; both are the
 owner's to overrule.
+
+## Amendment, 2026-09-21: the landing writes the map
+
+The map gained a tree on 2026-09-20: every repository where it mounts, with
+the lines of production source it holds, counted by `Get-XmipSourceFile`
+and split by language where a repository holds more than one. That made
+the map depend on the code in every module, not only on the manifest and
+the `.gitmodules` files, and clause 2's "regenerating it is how it is
+written" stopped being something anyone could keep. A change to one
+technology three levels down made the superproject's map wrong without the
+superproject being touched, and the owner read a stale map twice in one day
+(*Xmip Estate Map is still either not up to date or implementations are
+missing*).
+
+1. **`Publish-XmipChange` regenerates the map when it pins.** The pin is the
+   one moment the estate knows every module that moved, so the map it
+   commits is true of exactly what it pins. Nobody has to remember.
+2. **A map that will not generate warns and the pin goes on.** The modules
+   are on origin by then, and gitlinks pointing at where the modules were
+   is a worse state than a map a line count behind.
+3. **`test/EstateMap.Test.ps1` still byte-compares.** Between landings the
+   working tree can be ahead of the map, and the test says so; that is the
+   test doing its job, and `New-XmipEstateMap -Save` is the answer.
+
+The second half of the owner's sentence is also true and the map is right
+about it: seventy-six technologies are declared and not built, in
+`process`, `prepare`, `transform`, `retain`, `observe`, `audit` and
+`report`. None of them has a repository on GitHub, which was found on
+2026-09-19 when the manifest stopped defaulting to `reserved`. The map is
+the record of that gap, not the cause of it.

@@ -1499,6 +1499,24 @@ function Publish-XmipPin {
         }
     }
 
+    # The estate map is generated from what is mounted and what each mount
+    # holds (ADR-0060), and every module this landing moved changed what it
+    # holds, so the pin is the one moment the map can be made true of exactly
+    # what is being pinned. It was left to whoever remembered until
+    # 2026-09-21, and nobody could: a change to one technology three levels
+    # down made the superproject's map wrong without touching the
+    # superproject, and the owner read a stale map twice in a day.
+    #
+    # A map that will not generate warns rather than stopping the pin. The
+    # modules are on origin already, and an estate whose gitlinks point at
+    # where the modules were is worse than a map a line count behind.
+    try {
+        New-XmipEstateMap -Root $RepositoryRoot -Save | Out-Null
+    }
+    catch {
+        Write-Warning "The estate map was not regenerated: $($_.Exception.Message)"
+    }
+
     & git -C $RepositoryRoot add -A
 
     # What is staged, not what is dirty. `git status --porcelain` reports a

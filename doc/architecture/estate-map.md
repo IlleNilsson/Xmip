@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145045 lines of production
+Where each repository mounts and what it holds: 145385 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -96,13 +96,13 @@ hold no source to count.
 │   │   │   ├── basic                            111
 │   │   │   ├── mutual-tls                        97
 │   │   │   └── password                          81
-│   │   ├── transport                           1705
+│   │   ├── transport                           1745
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
 │   │   │   ├── mssql                           2178
 │   │   │   ├── mysql                           1833
 │   │   │   ├── smb                             1722
-│   │   │   ├── http                            1691
+│   │   │   ├── http                            1711
 │   │   │   ├── nfs                             1585
 │   │   │   ├── rabbitmq                        1567
 │   │   │   ├── snmp                            1417
@@ -131,19 +131,19 @@ hold no source to count.
 │   │   │   ├── wireless-hart                    824
 │   │   │   ├── uds                              822
 │   │   │   ├── aws-kinesis                      804
+│   │   │   ├── azure-event-grid                 793
+│   │   │   ├── aws-sns                          791
 │   │   │   ├── ethernet-ip                      791
 │   │   │   ├── mqtt                             789
-│   │   │   ├── azure-event-grid                 787
-│   │   │   ├── aws-sns                          785
 │   │   │   ├── dhcp                             780
 │   │   │   ├── j1939                            756
+│   │   │   ├── dns                              749
 │   │   │   ├── thread                           742
-│   │   │   ├── dns                              736
 │   │   │   ├── as2                              734
 │   │   │   ├── profinet                         730
 │   │   │   ├── azure-blob                       727
-│   │   │   ├── ftp                              718
 │   │   │   ├── redis-streams                    718
+│   │   │   ├── ftp                              710
 │   │   │   ├── imap                             699
 │   │   │   ├── azure-service-bus                690
 │   │   │   ├── google-pub-sub                   688
@@ -151,7 +151,7 @@ hold no source to count.
 │   │   │   ├── cotp                             667
 │   │   │   ├── zigbee                           667
 │   │   │   ├── nats                             661
-│   │   │   ├── aws-sqs                          637
+│   │   │   ├── aws-sqs                          644
 │   │   │   ├── coap                             635
 │   │   │   ├── iso-tp                           611
 │   │   │   ├── dds                              603
@@ -162,22 +162,22 @@ hold no source to count.
 │   │   │   ├── wireless-m-bus                   560
 │   │   │   ├── google-cloud-storage             556
 │   │   │   ├── s3                               554
-│   │   │   ├── websocket                        545
+│   │   │   ├── websocket                        543
 │   │   │   ├── ssdp                             526
-│   │   │   ├── syslog                           516
+│   │   │   ├── syslog                           518
+│   │   │   ├── smtp                             487
+│   │   │   ├── named-pipe                       475
 │   │   │   ├── azure-event-hubs                 471
 │   │   │   ├── ethernet                         468
-│   │   │   ├── smtp                             452
 │   │   │   ├── iec-60870-5-104                  432
 │   │   │   ├── dnp3                             421
 │   │   │   ├── sqlite                           373
-│   │   │   ├── named-pipe                       343
+│   │   │   ├── unix-socket                      327
 │   │   │   ├── can-bus                          320
 │   │   │   ├── modbus                           317
 │   │   │   ├── serial                           303
-│   │   │   ├── unix-socket                      266
 │   │   │   ├── bacnet                           258
-│   │   │   ├── mllp                             235
+│   │   │   ├── mllp                             226
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
@@ -353,7 +353,7 @@ hold no source to count.
 │       ├── configure                            198
 │       └── persist                               93
 └── test/
-    └── playground                              9437
+    └── playground                              9474
 ```
 
 ---
