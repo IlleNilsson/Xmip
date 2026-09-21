@@ -135,10 +135,21 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
 Describe 'Get-XmipMapWeight charges a file to the deepest repository holding it' {
     BeforeAll {
         $script:Source = @(
-            [PSCustomObject]@{ Path = 'module/capability/transport/.src/lib.rs'; Code = 100 }
-            [PSCustomObject]@{ Path = 'module/capability/transport/http/src/lib.rs'; Code = 40 }
-            [PSCustomObject]@{ Path = 'module/capability/transport/http/src/more.rs'; Code = 2 }
-            [PSCustomObject]@{ Path = 'module/nowhere/src/lib.rs'; Code = 9 }
+            [PSCustomObject]@{
+                Path = 'module/capability/transport/.src/lib.rs'; Code = 100; Language = 'Rust'
+            }
+            [PSCustomObject]@{
+                Path = 'module/capability/transport/http/src/lib.rs'; Code = 40; Language = 'Rust'
+            }
+            [PSCustomObject]@{
+                Path = 'module/capability/transport/http/src/more.rs'; Code = 2; Language = 'Rust'
+            }
+            [PSCustomObject]@{
+                Path = 'module/capability/transport/http/src/Thing.cs'; Code = 7; Language = 'C#'
+            }
+            [PSCustomObject]@{
+                Path = 'module/nowhere/src/lib.rs'; Code = 9; Language = 'Rust'
+            }
         )
 
         $script:Mount = @(
@@ -150,11 +161,19 @@ Describe 'Get-XmipMapWeight charges a file to the deepest repository holding it'
     }
 
     It 'gives a parent its own source and not its children''s' {
-        $script:Weight['module/capability/transport'] | Should -Be 100
+        $script:Weight['module/capability/transport']['Rust'] | Should -Be 100
     }
 
     It 'adds a child''s files together under the child' {
-        $script:Weight['module/capability/transport/http'] | Should -Be 42
+        $script:Weight['module/capability/transport/http']['Rust'] | Should -Be 42
+    }
+
+    It 'keeps each language of a mount apart, so the tree can say what it is' {
+        # One total hid that the estate's largest repository is almost all C#
+        # (the owner, 2026-09-21).
+        $script:Weight['module/capability/transport/http']['C#'] | Should -Be 7
+        $script:Weight['module/capability/transport'].ContainsKey('C#') |
+            Should -BeFalse -Because 'the parent holds no C# of its own'
     }
 
     It 'charges nothing to a mount nobody declared' {
@@ -164,10 +183,12 @@ Describe 'Get-XmipMapWeight charges a file to the deepest repository holding it'
     It 'charges every line exactly once' {
         [int] $sum = 0
 
-        foreach ($count in $script:Weight.Values) {
-            $sum += $count
+        foreach ($spoken in $script:Weight.Values) {
+            foreach ($count in $spoken.Values) {
+                $sum += $count
+            }
         }
 
-        $sum | Should -Be 142 -Because 'the file under no mount is the only one not counted'
+        $sum | Should -Be 149 -Because 'the file under no mount is the only one not counted'
     }
 }
