@@ -914,6 +914,7 @@ function Test-XmipManifest {
 . (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
+. (Join-Path $PSScriptRoot 'Select-XmipTestRoll.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTestNode.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestNode.ps1')

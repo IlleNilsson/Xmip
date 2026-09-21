@@ -18,10 +18,21 @@ function Stop-XmipTest {
             ends the roll's cluster, then the roll. Nothing is orphaned —
             Get-Process xmip-* is empty afterwards, and the per-instance
             images the tree ran under are taken away with it (ADR-0053,
-            amendment 2026-09-20). Takes Xmip.TestStatus objects from
-            Get-XmipTestStatus on the pipeline, or -Id, or nothing for all.
+            amendment 2026-09-20).
 
-        .PARAMETER Test
+            Which runs: those -Cluster and -Test pick together, as
+            Start-XmipTest was told them; those on the pipeline from
+            Get-XmipTestStatus; those with the process ids in -Id; or every
+            run when nothing is named.
+
+            A run is one process, so a test is stopped by stopping the run
+            that drives it. A run that also drives a test not named is
+            REFUSED rather than stopped, naming what else it runs, because
+            stopping it would stop those too (ADR-0055 clause 5). The refusal
+            comes before anything is stopped, so a command that is refused
+            has done nothing (clause 2).
+
+        .PARAMETER InputObject
             The runs to stop, from Get-XmipTestStatus.
 
         .PARAMETER Id
@@ -33,8 +44,18 @@ function Stop-XmipTest {
             pattern no roll matches is REFUSED, naming the clusters rolling,
             so nothing is stopped by accident and nothing silently is not.
 
+        .PARAMETER Test
+            The runs to stop by the tests they drive, as Start-XmipTest -Test
+            names them, wildcards allowed; with -Cluster, only on those
+            clusters. A run started without -Test drives its whole suite and
+            is matched by every test in it. A pattern no running test matches
+            is REFUSED, naming what is running.
+
         .EXAMPLE
             Stop-XmipTest
+
+        .EXAMPLE
+            Stop-XmipTest -Cluster C1 -Test RoundTrip
 
         .EXAMPLE
             Stop-XmipTest -Cluster 'Z*'
@@ -46,19 +67,62 @@ function Stop-XmipTest {
     [CmdletBinding(
         SupportsShouldProcess,
         ConfirmImpact = 'Medium',
-        DefaultParameterSetName = 'All')]
+        DefaultParameterSetName = 'Filter')]
     [OutputType([void])]
     param(
+        # The pipeline's object was -Test until 2026-09-21, which left
+        # Stop-XmipTest -Test RoundTrip binding a test's name to a run's
+        # status and failing, while Start-XmipTest -Test RoundTrip meant the
+        # test. One word, one meaning on one noun: the object is
+        # -InputObject, PowerShell's own name for it, and -Test is a test.
         [Parameter(ParameterSetName = 'Object', ValueFromPipeline)]
         [PSTypeName('Xmip.TestStatus')]
-        [PSObject[]] $Test,
+        [PSObject[]] $InputObject,
 
         [Parameter(ParameterSetName = 'Id', Mandatory)]
         [int[]] $Id,
 
-        [Parameter(ParameterSetName = 'Cluster', Mandatory)]
+        [Parameter(ParameterSetName = 'Filter')]
         [SupportsWildcards()]
-        [string] $Cluster
+        [ArgumentCompleter({
+            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+            # The clusters rolling now, which are the only ones there are to
+            # stop (ADR-0055 clause 4).
+            Get-XmipTestStatus |
+                ForEach-Object { "$($_.Cluster)" } |
+                Where-Object { $_ -ne '' -and $_ -like "$wordToComplete*" } |
+                Sort-Object -Unique
+        })]
+        [string] $Cluster,
+
+        [Parameter(ParameterSetName = 'Filter')]
+        [SupportsWildcards()]
+        [ArgumentCompleter({
+            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+            # The tests running now, on the clusters already named if any. A
+            # completer runs in the caller's scope, so the whole-suite list is
+            # asked of the module (see Start-XmipTest's -Suite completer).
+            $module = Get-Module -Name Xmip | Select-Object -First 1
+
+            if ($null -eq $module) {
+                return
+            }
+
+            [string] $among = "$($fakeBoundParameters['Cluster'])"
+
+            & $module {
+                param($Among)
+
+                Get-XmipTestStatus |
+                    Where-Object { $Among -eq '' -or "$($_.Cluster)" -like $Among } |
+                    ForEach-Object { Get-XmipTestOfRoll -Roll $_ }
+            } $among |
+                Where-Object { $_ -like "$wordToComplete*" } |
+                Sort-Object -Unique
+        })]
+        [string[]] $Test = @()
     )
 
     begin {
@@ -67,7 +131,7 @@ function Stop-XmipTest {
     }
 
     process {
-        foreach ($item in @($Test)) {
+        foreach ($item in @($InputObject)) {
             if ($null -ne $item) {
                 $targets.Add([int] $item.Id)
             }
@@ -81,26 +145,14 @@ function Stop-XmipTest {
     end {
         [object[]] $running = @(Get-XmipTestStatus)
 
-        if ($PSCmdlet.ParameterSetName -eq 'All') {
-            $targets.AddRange([int[]] @($running | ForEach-Object { $_.Id }))
-        }
-
-        if ($PSCmdlet.ParameterSetName -eq 'Cluster') {
-            [object[]] $picked = @($running | Where-Object { "$($_.Cluster)" -like $Cluster })
-
-            if ($picked.Count -eq 0) {
-                [string] $rolling = @($running | ForEach-Object { $_.Cluster }) -join ', '
-                [string] $there = if ($rolling) {
-                    "Rolling now: $rolling."
-                }
-                else {
-                    'Nothing is rolling.'
-                }
-
-                Write-Error "REFUSED. No roll matches $Cluster. $there"
-                return
+        if ($PSCmdlet.ParameterSetName -eq 'Filter') {
+            [hashtable] $asked = @{
+                Running = $running
+                Cluster = $Cluster
+                Test    = $Test
             }
 
+            [object[]] $picked = @(Select-XmipTestRoll @asked)
             $targets.AddRange([int[]] @($picked | ForEach-Object { $_.Id }))
         }
 

@@ -575,8 +575,14 @@ Start-XmipTest -Suite Core.Playground -Cluster nightly -Test HeavyLoad, LowLaten
     -NodeCapability @{ east = 'receive'; west = 'receive'; mill = 'process'; quay = 'send' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
-Stop-XmipTest
+Stop-XmipTest -Cluster nightly -Test HeavyLoad, LowLatency
 ```
+
+`Stop-XmipTest` takes the run the way `Start-XmipTest` was told it, by
+`-Cluster` and `-Test` together, or every run with neither. A run is one
+process, so a test is stopped by stopping the run that drives it; a run that
+also drives a test you did not name is refused, saying what else it runs,
+and nothing is stopped.
 
 You name the cluster with `-Cluster` and the nodes with `-Nodes`; nothing
 names either for you, and Xmip reads nothing in the names you choose. Two
@@ -663,7 +669,7 @@ Omit `-Test` and the whole suite runs, for every suite and every provider.
 omitting it, and a pattern that matches nothing is refused by name before
 anything starts. Wildcards and not regular expressions, so the dot in
 `Rust.Style` is the dot you typed. `Get-XmipTestStatus -Cluster 'night*'`,
-`Stop-XmipTest -Cluster 'night*'`, `Get-XmipTestResult -Node 'east*'` and
+`Stop-XmipTest -Cluster 'night*' -Test 'Heavy*'`, `Get-XmipTestResult -Node 'east*'` and
 `Get-XmipProcess -Name 'xmip-playground-*'` match the same way. `-Suite`
 filters too (the owner, 2026-09-19): `-Suite *` runs every suite this estate
 knows, one after another, and says in words which are about to run and which

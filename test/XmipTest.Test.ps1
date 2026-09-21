@@ -748,7 +748,7 @@ Describe 'A suite carries its provider' {
             'Start-XmipTest'     = @('Suite', 'Test')
             'Get-XmipTestResult' = @('Test', 'Node')
             'Get-XmipTestStatus' = @('Cluster')
-            'Stop-XmipTest'      = @('Cluster')
+            'Stop-XmipTest'      = @('Cluster', 'Test')
             'Get-XmipTestNode'   = @('Name')
             'Get-XmipProcess'    = @('Name')
         }
@@ -1177,6 +1177,99 @@ Describe 'What a history file holds' {
 
             $read.Count | Should -Be 0
             "$said" | Should -BeLike '*holds no points*'
+        }
+    }
+}
+
+Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cannot do' {
+    # The owner, 2026-09-21: Stop-XmipTest -Cluster <Cluster> -Test <Test> was
+    # missing, and -Test was bound to the pipeline's status object, so the
+    # word meant a test on Start-XmipTest and a run on Stop-XmipTest.
+    BeforeAll {
+        # A run as Get-XmipTestStatus describes it, and nothing more: the
+        # choosing is tested without a process started or stopped.
+        function New-FakeRoll {
+            param([int] $Id, [string] $Cluster, [string[]] $Tests = @())
+
+            [PSCustomObject]@{
+                Id      = $Id
+                Cluster = $Cluster
+                Suite   = 'Core.Playground'
+                Tests   = $Tests
+            }
+        }
+    }
+
+    It 'takes a test by name, and the pipeline object as -InputObject' {
+        $parameters = (Get-Command -Name Stop-XmipTest).Parameters
+
+        $parameters['Test'].ParameterType | Should -Be ([string[]])
+        $parameters['InputObject'].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] } |
+            ForEach-Object { $_.ValueFromPipeline } |
+            Should -Contain $true
+
+        @($parameters['Cluster'].ParameterSets.Keys) | Should -Contain 'Filter'
+        @($parameters['Test'].ParameterSets.Keys) | Should -Contain 'Filter'
+    }
+
+    It 'stops the run a cluster and a test name pick, as they were started' {
+        [object[]] $running = @(
+            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
+            New-FakeRoll -Id 12 -Cluster C2 -Tests RoundTrip, Retention
+            New-FakeRoll -Id 13 -Cluster C3
+        )
+
+        InModuleScope Xmip -Parameters @{ Running = $running } {
+            param($Running)
+
+            @(Select-XmipTestRoll -Running $Running -Cluster C1 -Test RoundTrip).Id |
+                Should -Be 11
+            @(Select-XmipTestRoll -Running $Running -Cluster C2 -Test RoundTrip, Retention).Id |
+                Should -Be 12
+            @(Select-XmipTestRoll -Running $Running -Cluster C3 -Test '*').Id |
+                Should -Be 13 -Because 'a run of the whole suite is every test in it'
+            @(Select-XmipTestRoll -Running $Running).Count |
+                Should -Be 3 -Because 'nothing named is every run'
+        }
+    }
+
+    It 'refuses a run that also drives a test not named, and picks nothing' {
+        [object[]] $running = @(
+            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
+            New-FakeRoll -Id 12 -Cluster C2 -Tests RoundTrip, Retention
+        )
+
+        InModuleScope Xmip -Parameters @{ Running = $running } {
+            param($Running)
+
+            { Select-XmipTestRoll -Running $Running -Test RoundTrip -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED*also runs Retention*Nothing was stopped*'
+
+            # C1 alone would qualify and is not picked: a refused command has
+            # done nothing (ADR-0055 clause 2).
+            [object[]] $picked = @(
+                Select-XmipTestRoll -Running $Running -Test RoundTrip -ErrorAction SilentlyContinue
+            )
+            $picked.Count | Should -Be 0
+        }
+    }
+
+    It 'refuses a cluster or a test that nothing running matches, naming what is' {
+        [object[]] $running = @(New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip)
+
+        InModuleScope Xmip -Parameters @{ Running = $running } {
+            param($Running)
+
+            [string] $nothing = '*REFUSED. No roll matches Z9. Rolling now: C1 running RoundTrip.*'
+            { Select-XmipTestRoll -Running $Running -Cluster Z9 -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage $nothing
+
+            [string] $none = '*REFUSED. No roll on C1 runs a test matching Storm.*'
+            { Select-XmipTestRoll -Running $Running -Cluster C1 -Test Storm -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage $none
+            { Select-XmipTestRoll -Running @() -Test RoundTrip -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*Nothing is rolling.*'
         }
     }
 }

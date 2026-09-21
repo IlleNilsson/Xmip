@@ -614,3 +614,34 @@ second contradicted clause 22, which accepts the bare form as the reserved
 provider's shorthand. Corrected the same day, and the index regenerated with
 it, so the estate's own concept listing no longer advertises a rule the
 record does not hold.
+
+## Amendment, 2026-09-21: Stop-XmipTest takes a test by name
+
+The owner: *The CmdLet Stop-XmipTest is not complete. There is a parameter
+set missing. Stop-XmipTest -Cluster <Cluster> -Test <Test>.*
+
+It was worse than missing. `-Test` existed on `Stop-XmipTest` and was the
+pipeline's parameter, typed as a run's status object, so
+`Stop-XmipTest -Test RoundTrip` bound a test's name to a run and failed,
+while `Start-XmipTest -Test RoundTrip` meant the test. One word had two
+meanings on one noun.
+
+1. **`-Test` names a test**, as on `Start-XmipTest` and
+   `Get-XmipTestResult`: wildcards allowed, offered from what is running.
+   The pipeline's object is `-InputObject`, PowerShell's own name for it;
+   binding from `Get-XmipTestStatus` is unchanged.
+2. **`-Cluster` and `-Test` pick together**, in one parameter set that is
+   also the default: neither is every run, and a run started without
+   `-Test` drives its whole suite and is matched by every test in it.
+3. **A run is stopped whole.** A run is one process, so a test is stopped by
+   stopping the run that drives it. A run that also drives a test not named
+   is REFUSED, naming what else it runs, and the refusal comes before
+   anything is stopped, so a refused command has done nothing (ADR-0055
+   clauses 2, 3 and 5). `Start-XmipTest -Cluster C1 -Test RoundTrip` and
+   `Stop-XmipTest -Cluster C1 -Test RoundTrip` are each other's inverse.
+4. **A filter that matches nothing is refused**, naming what is rolling,
+   as `-Cluster` alone already was.
+
+The choosing is `Select-XmipTestRoll`, apart from the stopping so it is
+tested with runs made of their properties and no process started
+(`test/XmipTest.Test.ps1`). Nothing here is a new cmdlet.
