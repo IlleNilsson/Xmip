@@ -1,0 +1,361 @@
+<title>Xmip Estate Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F4; --panel:#F8F9FB; --ink:#1B2430; --muted:#5B6673; --line:#C9D0D8; --faint:#DEE3E9;
+  --foundation:#2F5D8A; --capability:#2E7D6B; --platform:#8A5A2F; --operation:#6B4E8A; --other:#6F7784;
+  --edge:#1B2430; --nested:#E4E9EF; --staged:#A8551F; --lime:#75C93B;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',Consolas,'Courier New',monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A21; --panel:#1B222B; --ink:#E6EAEE; --muted:#9AA5B1; --line:#3A4552; --faint:#2A3340;
+    --foundation:#7FB0DE; --capability:#6FC3AD; --platform:#D9A06A; --operation:#B69AD6; --other:#9AA3AF;
+    --edge:#E6EAEE; --nested:#232C37; --staged:#E4A06A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A21; --panel:#1B222B; --ink:#E6EAEE; --muted:#9AA5B1; --line:#3A4552; --faint:#2A3340;
+  --foundation:#7FB0DE; --capability:#6FC3AD; --platform:#D9A06A; --operation:#B69AD6; --other:#9AA3AF;
+  --edge:#E6EAEE; --nested:#232C37; --staged:#E4A06A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+.wrap{padding-inline:clamp(16px,3vw,32px)}
+header{padding-block:28px 18px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:14px 40px;align-items:flex-end}
+h1{font-family:var(--serif);font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--serif);font-weight:600;font-size:19px;margin:0 0 8px;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--muted);max-width:64ch}
+.stamp{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stamp::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
+.stamp b{color:var(--ink);font-weight:500}
+.facts{display:flex;gap:28px;flex-wrap:wrap;margin-left:auto;font-variant-numeric:tabular-nums}
+.facts div{display:flex;flex-direction:column}
+.facts b{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.1}
+.facts span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+main{display:grid;grid-template-columns:minmax(300px,460px) minmax(0,1fr)}
+@media (max-width:1100px){main{grid-template-columns:minmax(0,1fr)}}
+aside{border-right:1px solid var(--line);background:var(--panel);padding-block:20px 32px;overflow-x:auto}
+@media (max-width:1100px){aside{border-right:0;border-bottom:1px solid var(--line)}}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px;font-weight:600}
+pre.tree{font-family:var(--mono);font-size:12px;line-height:1.55;margin:0;white-space:pre;font-variant-numeric:tabular-nums}
+.tree .t{color:var(--muted);opacity:.75}
+.tree .n{color:var(--muted)}
+.tree .l{color:var(--muted);font-style:italic}
+.tree .nb{color:var(--staged)}
+.tree .d{font-weight:500}
+.foundation{color:var(--foundation)} .capability{color:var(--capability)}
+.platform{color:var(--platform)} .operation{color:var(--operation)} .other{color:var(--other)}
+.content{display:flex;flex-direction:column;gap:28px;padding-block:20px 40px;min-width:0}
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--panel);border-radius:4px}
+svg{display:block;width:100%;height:auto;font-family:var(--mono)}
+figure{margin:0}
+figcaption{margin:12px 2px 0;color:var(--muted);max-width:80ch}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin:12px 2px 0;font-size:12px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px;border:1.5px solid currentColor}
+.legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--staged);margin-right:6px}
+.node rect{fill:var(--panel);stroke-width:1.5}
+.node text{fill:var(--ink);font-size:12px}
+.node .lines{fill:var(--muted);font-size:10px}
+.node.foundation rect{stroke:var(--foundation)} .node.capability rect{stroke:var(--capability)}
+.node.platform rect{stroke:var(--platform)} .node.operation rect{stroke:var(--operation)}
+.node .kids rect{fill:var(--nested);stroke-dasharray:3 2}
+.node .flag{fill:var(--staged)}
+.node:focus-visible rect.box{stroke:var(--lime);stroke-width:3}
+.node:focus{outline:none}
+.edge{fill:none;stroke:var(--edge);stroke-width:1;opacity:.5;transition:opacity .15s,stroke-width .15s}
+.edge.hub{opacity:.22}
+svg.focus .edge{opacity:.06}
+svg.focus .edge.on{opacity:1;stroke-width:1.8}
+svg.focus .node{opacity:.3}
+svg.focus .node.on{opacity:1}
+.band text{fill:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--sans);font-weight:600}
+.band line{stroke:var(--faint);stroke-width:1}
+.table{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed;min-width:560px}
+col.who{width:22%} col.half{width:39%}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;padding:6px 12px 6px 0;border-bottom:1px solid var(--line)}
+td{padding:6px 12px 6px 0;border-bottom:1px solid var(--faint);vertical-align:top}
+td:first-child{font-family:var(--mono);white-space:nowrap}
+td.list{font-family:var(--mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+td.list .x{color:var(--staged)}
+.prose{max-width:72ch;color:var(--muted);margin:0 0 12px}
+ul.retired{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;max-width:80ch}
+ul.retired b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+ul.retired span{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.edge{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Xmip Estate Map</h1>
+      <p class="lede">Every repository as it mounts under <code>D:\Repos\Xmip</code>, the lines of
+        production source each holds, who uses whom as the build says it, and where the manifest
+        says otherwise. Generated by <code>New-XmipEstateMap -Format Html</code>, never edited.</p>
+      <div class="stamp" id="stamp"></div>
+    </div>
+    <div class="facts" id="facts"></div>
+  </header>
+</div>
+
+<main>
+  <aside class="wrap">
+    <p class="eyebrow">Mount tree · lines of production source</p>
+    <pre class="tree" id="tree"></pre>
+  </aside>
+
+  <div class="content wrap">
+    <section>
+      <p class="eyebrow">Who uses whom · hover, focus or click a module to isolate its edges</p>
+      <figure>
+        <div class="scroll"><svg id="graph" role="img" aria-label="Dependency graph of the Xmip modules"></svg></div>
+        <figcaption id="caption"></figcaption>
+      </figure>
+      <div class="legend">
+        <span class="operation"><i></i>operation</span>
+        <span class="platform"><i></i>platform</span>
+        <span class="capability"><i></i>capability</span>
+        <span class="foundation"><i></i>foundation</span>
+        <span>→ uses (its Cargo.toml or .csproj)</span>
+        <span><span class="dot"></span>the manifest says otherwise</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Where the manifest and the build disagree</h2>
+      <p class="prose">An edge above is what a module's build uses. The manifest's
+        <code>dependency</code> list is a declaration, and where the two differ the build is
+        what is true; the manifest is what needs correcting.</p>
+      <div class="table"><table id="drift"></table></div>
+    </section>
+
+    <section>
+      <h2>Retired</h2>
+      <p class="prose">Named here so a module remembered and not found above is accounted for.
+        Each GitHub repository is kept.</p>
+      <ul class="retired" id="retired"></ul>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  const E = /*ESTATE*/null;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const num = (n) => n.toLocaleString('en-US');
+
+  $('stamp').innerHTML = 'Built from <b>' + esc(E.commit) + '</b> on ' + esc(E.built);
+
+  const facts = [
+    [num(E.lines), 'lines of source'],
+    [num(E.mounted), 'repositories mounted'],
+    [num(E.declared), 'declared'],
+    [num(E.notBuilt), 'declared, not built'],
+  ];
+  $('facts').innerHTML = facts.map(([b, s]) => '<div><b>' + b + '</b><span>' + s + '</span></div>').join('');
+
+  // The tree, exactly as estate-map.md draws it, coloured by the domain it is in.
+  const domains = ['foundation', 'capability', 'operation', 'platform'];
+  let domain = 'other', absent = false;
+  $('tree').innerHTML = E.tree.map((line) => {
+    const top = line.match(/── ([a-z]+)\/$/);
+    if (top && line.indexOf('│   ├') !== 0) {
+      domain = domains.includes(top[1]) ? top[1] : 'other';
+    }
+    if (/declared, not built/.test(line)) { absent = true; return '<span class="nb">' + esc(line) + '</span>'; }
+    const m = line.match(/^([│├└─\s]*)(\S+)(\s*)(\d*)(.*)$/);
+    if (!m || !/[├└]/.test(m[1])) {
+      return absent ? '<span class="nb">' + esc(line) + '</span>' : esc(line);
+    }
+    absent = false;
+    const dir = m[2].endsWith('/');
+    return '<span class="t">' + esc(m[1]) + '</span>' +
+      '<span class="' + domain + (dir ? ' d' : '') + '">' + esc(m[2]) + '</span>' +
+      esc(m[3]) + '<span class="n">' + esc(m[4]) + '</span>' +
+      '<span class="l">' + esc(m[5]) + '</span>';
+  }).join('\n');
+
+  // The graph: one row per domain, capability split so no row runs wide.
+  const byName = {};
+  E.modules.forEach((m) => { byName[m.name] = m; });
+  const heavy = (a, b) => b.lines - a.lines || a.name.localeCompare(b.name);
+  const of = (d) => E.modules.filter((m) => m.domain === d).sort(heavy);
+  const rows = [];
+  const put = (label, list) => {
+    for (let i = 0; i < list.length; i += 9) {
+      rows.push({ label: i === 0 ? label : '', names: list.slice(i, i + 9).map((m) => m.name) });
+    }
+  };
+  put('operation', of('operation'));
+  put('platform', of('platform'));
+  put('capability', of('capability'));
+  put('foundation', of('foundation'));
+
+  const H = 40, PADX = 70, GAP = 20, BADGE = 96;
+  let y = 70;
+  rows.forEach((r, i) => {
+    if (i > 0) { y += r.label ? 150 : 110; }
+    r.y = y;
+  });
+  const HEIGHT = y + 90;
+
+  const svg = $('graph');
+  const lang = (m) => {
+    const entries = Object.entries(m.languages || {}).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) { return 'no source'; }
+    const short = { Rust: 'rs', 'C#': 'C#', PowerShell: 'ps' };
+    return num(m.lines) + ' ' + (short[entries[0][0]] || entries[0][0]);
+  };
+  const pos = {};
+  // The canvas is as wide as its widest row, so no row is ever cut at an edge.
+  rows.forEach((r) => {
+    r.widths = r.names.map((n) => {
+      const m = byName[n];
+      const w = Math.max(96, n.length * 7.4 + 30);
+      return (m.nested || m.notBuilt) ? w + BADGE : w;
+    });
+    r.total = r.widths.reduce((a, b) => a + b, 0) + GAP * (r.widths.length - 1);
+  });
+  const W = Math.max(1100, ...rows.map((r) => r.total)) + 2 * PADX;
+  svg.style.minWidth = Math.round(W * 0.8) + 'px';
+  rows.forEach((r) => {
+    const widths = r.widths, total = r.total;
+    let x = PADX + (W - 2 * PADX - total) / 2;
+    r.names.forEach((n, i) => {
+      const m = byName[n];
+      pos[n] = { x, y: r.y, w: widths[i], badge: !!(m.nested || m.notBuilt) };
+      x += widths[i] + GAP;
+    });
+  });
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + HEIGHT);
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (t, a, txt) => {
+    const e = document.createElementNS(ns, t);
+    for (const k in a) { e.setAttribute(k, a[k]); }
+    if (txt != null) { e.textContent = txt; }
+    return e;
+  };
+  const defs = el('defs', {});
+  const mk = el('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '7', markerHeight: '7', orient: 'auto-start-reverse' });
+  mk.appendChild(el('path', { d: 'M0,0 L10,5 L0,10 z', fill: 'var(--edge)' }));
+  defs.appendChild(mk);
+  svg.appendChild(defs);
+
+  rows.filter((r) => r.label).forEach((r) => {
+    const g = el('g', { class: 'band' });
+    g.appendChild(el('line', { x1: 20, y1: r.y - 22, x2: W - 20, y2: r.y - 22 }));
+    g.appendChild(el('text', { x: 24, y: r.y - 28 }, r.label));
+    svg.appendChild(g);
+  });
+
+  const edgesG = el('g', {});
+  svg.appendChild(edgesG);
+  const edges = [];
+  const anchor = (n) => {
+    const p = pos[n];
+    const main = p.badge ? p.w - BADGE : p.w;
+    return { cx: p.x + main / 2, top: p.y, bottom: p.y + H };
+  };
+  const hubs = new Set(E.modules.filter((m) => m.uses.length >= 8).map((m) => m.name));
+  E.modules.forEach((m) => m.uses.forEach((to) => {
+    if (!pos[to] || !pos[m.name]) { return; }
+    const a = anchor(m.name), b = anchor(to);
+    let d;
+    if (b.top > a.bottom + 20) {
+      const my = (a.bottom + b.top) / 2;
+      d = `M${a.cx},${a.bottom} C${a.cx},${my} ${b.cx},${my} ${b.cx},${b.top - 2}`;
+    } else if (a.top > b.bottom + 20) {
+      const my = (a.top + b.bottom) / 2;
+      d = `M${a.cx},${a.top} C${a.cx},${my} ${b.cx},${my} ${b.cx},${b.bottom + 2}`;
+    } else {
+      const lift = 34 + Math.abs(a.cx - b.cx) * 0.05;
+      const sx = a.cx + (b.cx > a.cx ? 12 : -12), tx = b.cx + (b.cx > a.cx ? -12 : 12);
+      d = `M${sx},${a.top} C${sx},${a.top - lift} ${tx},${a.top - lift} ${tx},${a.top - 2}`;
+    }
+    const p = el('path', { d, class: 'edge' + (hubs.has(m.name) ? ' hub' : ''), 'marker-end': 'url(#arrow)', 'data-from': m.name, 'data-to': to });
+    edgesG.appendChild(p);
+    edges.push(p);
+  }));
+
+  const nodesG = el('g', {});
+  svg.appendChild(nodesG);
+  E.modules.forEach((m) => {
+    const p = pos[m.name];
+    if (!p) { return; }
+    const main = p.badge ? p.w - BADGE : p.w;
+    const g = el('g', { class: 'node ' + m.domain, 'data-name': m.name, tabindex: '0' });
+    g.appendChild(el('rect', { class: 'box', x: p.x, y: p.y, width: p.w, height: H, rx: 3 }));
+    g.appendChild(el('text', { x: p.x + main / 2, y: p.y + 17, 'text-anchor': 'middle' }, m.name));
+    g.appendChild(el('text', { x: p.x + main / 2, y: p.y + 31, 'text-anchor': 'middle', class: 'lines' }, lang(m)));
+    if (p.badge) {
+      const k = el('g', { class: 'kids' });
+      k.appendChild(el('rect', { x: p.x + main + 6, y: p.y + 5, width: BADGE - 12, height: H - 10, rx: 2 }));
+      k.appendChild(el('text', { x: p.x + main + BADGE / 2, y: p.y + 18, 'text-anchor': 'middle' }, m.nested + ' nested'));
+      k.appendChild(el('text', { x: p.x + main + BADGE / 2, y: p.y + 31, 'text-anchor': 'middle', class: 'lines' }, m.notBuilt ? m.notBuilt + ' not built' : 'all built'));
+      g.appendChild(k);
+    }
+    const drift = m.undeclared.length + m.unused.length;
+    if (drift) {
+      g.appendChild(el('circle', { class: 'flag', cx: p.x + p.w - 6, cy: p.y + 6, r: 4 }));
+    }
+    const said = [m.name + (m.uses.length ? ' uses ' + m.uses.join(', ') : ' uses no other module')];
+    if (m.technology) { said.push('and ' + m.technology + ' technologies'); }
+    if (m.undeclared.length) { said.push('undeclared: ' + m.undeclared.join(', ')); }
+    if (m.unused.length) { said.push('declared, not used: ' + m.unused.join(', ')); }
+    g.appendChild(el('title', {}, said.join('\n')));
+    nodesG.appendChild(g);
+  });
+
+  let pinned = null;
+  const apply = (name) => {
+    const nodes = nodesG.querySelectorAll('.node');
+    if (!name) {
+      svg.classList.remove('focus');
+      nodes.forEach((g) => g.classList.remove('on'));
+      edges.forEach((e) => e.classList.remove('on'));
+      return;
+    }
+    svg.classList.add('focus');
+    const on = new Set([name]);
+    edges.forEach((e) => {
+      const hit = e.dataset.from === name || e.dataset.to === name;
+      e.classList.toggle('on', hit);
+      if (hit) { on.add(e.dataset.from); on.add(e.dataset.to); }
+    });
+    nodes.forEach((g) => g.classList.toggle('on', on.has(g.dataset.name)));
+  };
+  const nodeOf = (e) => e.target.closest('.node');
+  nodesG.addEventListener('mouseover', (e) => { const g = nodeOf(e); if (g && !pinned) { apply(g.dataset.name); } });
+  nodesG.addEventListener('mouseleave', () => { if (!pinned) { apply(null); } });
+  nodesG.addEventListener('focusin', (e) => { const g = nodeOf(e); if (g && !pinned) { apply(g.dataset.name); } });
+  nodesG.addEventListener('focusout', () => { if (!pinned) { apply(null); } });
+  nodesG.addEventListener('click', (e) => {
+    const g = nodeOf(e);
+    if (!g) { return; }
+    pinned = pinned === g.dataset.name ? null : g.dataset.name;
+    apply(pinned);
+  });
+  svg.addEventListener('click', (e) => { if (!e.target.closest('.node')) { pinned = null; apply(null); } });
+
+  const outside = (E.outside || []).map((o) => o.name + ', which links ' + num(o.uses) + ' estate crates and declares ' + num(o.declared));
+  $('caption').textContent = 'An arrow runs from a module to a module its build names: a Rust dependency ' +
+    '(not a dev-dependency) or a .NET project reference. A dashed box counts the technologies mounted ' +
+    'inside that module\u2019s own repository; the tree names them.' +
+    (outside.length ? ' Left out of the drawing: ' + outside.join('; ') + '.' : '');
+
+  // The drift table.
+  const drift = E.modules.filter((m) => m.undeclared.length || m.unused.length).sort((a, b) => a.name.localeCompare(b.name));
+  const list = (xs) => xs.length ? xs.map((x) => '<span class="x">' + esc(x) + '</span>').join(', ') : '\u2014';
+  $('drift').innerHTML = '<colgroup><col class="who"><col class="half"><col class="half"></colgroup><thead><tr><th>Module</th><th>Uses, not declared</th><th>Declared, not used</th></tr></thead><tbody>' +
+    drift.map((m) => '<tr><td>' + esc(m.name) + '</td><td class="list">' + list(m.undeclared) + '</td><td class="list">' + list(m.unused) + '</td></tr>').join('') +
+    '</tbody>';
+
+  $('retired').innerHTML = E.retired.map((r) => '<li><b>' + esc(r.name) + '</b> <span>' + esc(r.on) + ' \u2014 ' + esc(r.reason) + '</span></li>').join('');
+})();
+</script>

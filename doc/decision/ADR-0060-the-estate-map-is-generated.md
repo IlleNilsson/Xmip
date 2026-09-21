@@ -380,3 +380,28 @@ about it: seventy-six technologies are declared and not built, in
 `report`. None of them has a repository on GitHub, which was found on
 2026-09-19 when the manifest stopped defaulting to `reserved`. The map is
 the record of that gap, not the cause of it.
+
+## Amendment, 2026-09-21: the page is generated too
+
+The owner read the estate on a published page, and that page had been
+written by hand on 2026-09-10 — every count and every dependency edge typed
+in. It was eleven days behind the estate and still drew `diagnose`, retired
+on 2026-09-19, as a module with no dependencies (*It is still not up to date
+and how can the module 'diagnose' have no dependencies*). Every stale number
+the owner quoted that day came from it; `estate-map.md` was current.
+
+1. **`New-XmipEstateMap -Format Html` builds the page** from what the
+   document is built from, with the document's tree verbatim, so the two
+   cannot disagree about a count. It is written to `.local-work` with
+   `-Save` and never to `doc/`: a page is a view of the document, not a
+   second document.
+2. **The page names the commit it was built from.** A stale page shows
+   itself instead of being found out by arithmetic.
+3. **Its edges are what the build uses** — each repository's
+   `[dependencies]` and its non-test `.csproj` references
+   (`Get-XmipEstateRepository`'s new `Uses`) — and not the manifest's
+   `dependency` list (`Declared`). Where the two differ the page lists it.
+   On the day this was written they differed for most modules: `runtime`
+   used sixteen and declared six. Landing order was never at risk, since
+   `Publish-XmipChange` orders by `Cargo.toml`; the manifest's lists are
+   documentation that has drifted, and correcting them is open.
