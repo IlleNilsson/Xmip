@@ -31,6 +31,11 @@ function Get-XmipMapWeight {
             than present as zero: the caller tells a repository that holds
             nothing from one it never asked about.
 
+            The value is a count per language rather than one total, because
+            one total hides what a repository is written in: `abi` read 8060
+            and is 7225 lines of C# (the owner, 2026-09-21, whose own drawing
+            of the map carried the split and whose assistant's did not).
+
         .PARAMETER Mount
             Every mounted repository's path, root-relative, forward slashes.
 
@@ -70,10 +75,14 @@ function Get-XmipMapWeight {
             }
 
             if (-not $weight.ContainsKey($within)) {
-                $weight[$within] = 0
+                $weight[$within] = @{}
             }
 
-            $weight[$within] += $file.Code
+            if (-not $weight[$within].ContainsKey($file.Language)) {
+                $weight[$within][$file.Language] = 0
+            }
+
+            $weight[$within][$file.Language] += $file.Code
             break
         }
     }
@@ -100,10 +109,11 @@ function New-XmipMapNode {
     )
 
     return [PSCustomObject]@{
-        Name   = $Name
-        Code   = $null
-        Child  = [ordered] @{}
-        Absent = [string[]] @()
+        Name     = $Name
+        Code     = $null
+        Language = $null
+        Child    = [ordered] @{}
+        Absent   = [string[]] @()
     }
 }
 
@@ -125,7 +135,8 @@ function Add-XmipMapMount {
             The path to add, root-relative, forward slashes.
 
         .PARAMETER Code
-            The lines the mount holds, or $null when it holds none.
+            The lines the mount holds, per language, or $null when it holds
+            none.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -138,7 +149,7 @@ function Add-XmipMapMount {
 
         [Parameter(Mandatory = $false)]
         [AllowNull()]
-        [object] $Code
+        [hashtable] $Code
     )
 
     [PSCustomObject] $at = $Root
@@ -151,7 +162,16 @@ function Add-XmipMapMount {
         $at = $at.Child[$step]
     }
 
-    $at.Code = $Code
+    if ($null -ne $Code) {
+        [int] $sum = 0
+
+        foreach ($count in $Code.Values) {
+            $sum += $count
+        }
+
+        $at.Code = $sum
+        $at.Language = $Code
+    }
 
     return $at
 }

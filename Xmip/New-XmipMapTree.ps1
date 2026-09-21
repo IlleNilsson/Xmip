@@ -75,8 +75,9 @@ function New-XmipMapBranch {
         }
 
         [hashtable] $drawn = @{
-            Name = $Indent + $elbow + $said
-            Code = $child[$index].Code
+            Name     = $Indent + $elbow + $said
+            Code     = $child[$index].Code
+            Language = $child[$index].Language
         }
 
         $line += Format-XmipTreeName @drawn
@@ -103,6 +104,13 @@ function Format-XmipTreeName {
 
         .PARAMETER Code
             The lines it holds, or $null when it holds none.
+
+        .PARAMETER Language
+            Those lines per language. A repository written in one language
+            says nothing about it — the estate is Rust and the exception is
+            what a reader needs told. Where there are two or more, every
+            language but the largest is named after the count, so `abi` reads
+            8060 and says 7225 of them are C#.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -112,7 +120,11 @@ function Format-XmipTreeName {
 
         [Parameter(Mandatory = $false)]
         [AllowNull()]
-        [object] $Code
+        [object] $Code,
+
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [hashtable] $Language
     )
 
     if ($null -eq $Code) {
@@ -125,7 +137,53 @@ function Format-XmipTreeName {
         $pad = 1
     }
 
-    return $Name + (' ' * $pad) + [string] $Code
+    return $Name + (' ' * $pad) + [string] $Code +
+        (Format-XmipTreeLanguage -Language $Language)
+}
+
+
+function Format-XmipTreeLanguage {
+    <#
+        .SYNOPSIS
+            What a repository is written in, where that is not one thing.
+
+        .DESCRIPTION
+            Nothing for a repository of one language, which is nearly all of
+            them and is the estate's Rust default. Otherwise every language
+            it holds, largest first, as `C# 7225 · Rust 835`.
+
+            Every one of them, not just the ones that are not the largest: a
+            lone `+835 Rust` beside a total of 8060 reads as eight thousand
+            and eight hundred, because a plus sign means addition wherever
+            else it is written. The count in the column is the whole of the
+            repository and these say what it is made of.
+
+        .PARAMETER Language
+            Lines per language, or $null.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [hashtable] $Language
+    )
+
+    if ($null -eq $Language -or $Language.Count -lt 2) {
+        return ''
+    }
+
+    [PSCustomObject[]] $spoken = @(
+        $Language.Keys | ForEach-Object {
+            [PSCustomObject]@{ Name = $_; Code = $Language[$_] }
+        } | Sort-Object -Property Code -Descending
+    )
+
+    [string[]] $said = @(
+        $spoken | ForEach-Object { "$($_.Name) $($_.Code)" }
+    )
+
+    return '  ' + ($said -join ' · ')
 }
 
 
@@ -215,7 +273,7 @@ function New-XmipMapTree {
     [hashtable] $placed = @{}
 
     foreach ($entry in ($mounted | Sort-Object -Property Mount)) {
-        [object] $code = $null
+        [hashtable] $code = $null
 
         if ($weight.ContainsKey($entry.Mount)) {
             $code = $weight[$entry.Mount]
@@ -234,8 +292,10 @@ function New-XmipMapTree {
 
     [int] $sum = 0
 
-    foreach ($count in $weight.Values) {
-        $sum += $count
+    foreach ($spoken in $weight.Values) {
+        foreach ($count in $spoken.Values) {
+            $sum += $count
+        }
     }
 
     return @(
@@ -287,6 +347,12 @@ function New-XmipMapTreeWords {
         'is for. The tables below are alphabetical, for looking a name up. ' +
         'A name ending in `/` is a directory of the working tree; every other ' +
         'name is a repository.'
+
+        'A repository written in more than one language says what it is made ' +
+        'of, largest first, and one written in a single language says nothing ' +
+        '— the estate is Rust and the exception is what a reader needs told. ' +
+        'One total hid that the largest repository in the estate is almost ' +
+        'all C# (the owner, 2026-09-21).'
 
         'A name under `declared, not built` is declared by the manifest and ' +
         'mounted nowhere — work not begun, not work unmounted. There are ' +

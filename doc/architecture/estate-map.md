@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 144900 lines of production
+Where each repository mounts and what it holds: 145045 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -64,6 +64,11 @@ or `*.Test.cs` counts as nothing.
 Heaviest first at every level, because that is what a tree of counts is for.
 The tables below are alphabetical, for looking a name up. A name ending in `/`
 is a directory of the working tree; every other name is a repository.
+
+A repository written in more than one language says what it is made of,
+largest first, and one written in a single language says nothing — the estate
+is Rust and the exception is what a reader needs told. One total hid that the
+largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
 nowhere — work not begun, not work unmounted. There are 77 of them and they
@@ -91,7 +96,7 @@ hold no source to count.
 │   │   │   ├── basic                            111
 │   │   │   ├── mutual-tls                        97
 │   │   │   └── password                          81
-│   │   ├── transport                           1620
+│   │   ├── transport                           1705
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
 │   │   │   ├── mssql                           2178
@@ -175,7 +180,7 @@ hold no source to count.
 │   │   │   ├── mllp                             235
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
-│   │   │   └── tcp                              134
+│   │   │   └── tcp                              131
 │   │   ├── identify                            1038
 │   │   │   ├── kerberos                         476
 │   │   │   ├── saml                             362
@@ -205,7 +210,7 @@ hold no source to count.
 │   │   │   ├── contract                          75
 │   │   │   ├── regex                             74
 │   │   │   └── context                           53
-│   │   ├── contract                             472
+│   │   ├── contract                             472  Rust 366 · PowerShell 106
 │   │   │   ├── graphql-schema                   874
 │   │   │   ├── sql                              774
 │   │   │   ├── xml-schema                       745
@@ -292,7 +297,7 @@ hold no source to count.
 │   │           declared, not built 5
 │   │           azure-blob  file  gcs  s3  sql
 │   ├── foundation/
-│   │   ├── abi                                 8006
+│   │   ├── abi                                 8060  C# 7225 · Rust 835
 │   │   ├── message                             1048
 │   │   │   ├── xml                              335
 │   │   │   ├── protobuf                         332
@@ -321,7 +326,7 @@ hold no source to count.
 │   │   ├── cli                                 3054
 │   │   ├── gui                                 1686
 │   │   │   └── vscode                           698
-│   │   ├── powershell                          1665
+│   │   ├── powershell                          1656  C# 1060 · PowerShell 596
 │   │   ├── observe                              561
 │   │   │       declared, not built 5
 │   │   │       etw  journald  otlp  prometheus  windows-event-log
@@ -348,7 +353,7 @@ hold no source to count.
 │       ├── configure                            198
 │       └── persist                               93
 └── test/
-    └── playground                              9419
+    └── playground                              9437
 ```
 
 ---
