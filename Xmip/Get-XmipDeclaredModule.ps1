@@ -191,12 +191,12 @@ function Sort-XmipModuleDependency {
                 # module look ready. The sort then emitted its input order,
                 # which is alphabetical, and authenticate was tested before the
                 # identify and context it depends on.
-                $module = $_
+                $candidate = $_
 
                 $blockers = @(
-                    $needs[$module] |
+                    $needs[$candidate] |
                         ForEach-Object { $package[$_] } |
-                        Where-Object { $_ -and $_ -ne $module -and $waiting.Contains($_) }
+                        Where-Object { $_ -and $_ -ne $candidate -and $waiting.Contains($_) }
                 )
 
                 $blockers.Count -eq 0
