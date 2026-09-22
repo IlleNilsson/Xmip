@@ -335,3 +335,21 @@ technologies go with their parent.
 
 Status stays Proposed. This amendment is the assistant's drafting on the
 owner's instruction, which is quoted above in his words.
+
+## Amendment, 2026-09-22: xmip-core-migrate stays
+
+On 2026-09-21 the owner ruled that nothing is released and there is no point
+holding on to old repositories, and `xmip-core-exclusiveness` was deleted on
+GitHub. Of the three this record unmounted, the owner then set a condition
+on one: *xmip-core-migrate shall stay if not migration from other platforms
+is implemented in any other repo.*
+
+Nothing implements it. No Rust, C# or PowerShell in the estate names BizTalk,
+MuleSoft or any other platform to move from, so the condition holds and the
+repository stays on GitHub. It stays unmounted as this record left it — the
+rule is about keeping the name, not about paying for an empty mount — and it
+is not to be deleted while the condition holds. The day another repository
+implements migration from other platforms, the question is open again.
+
+`xmip-core-diagnose` and `xmip-core-schedule` are kept as well, on the owner's
+answer of 2026-09-21, without a condition yet.

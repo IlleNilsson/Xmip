@@ -120,7 +120,7 @@ reason = "ADR-0014 amendment 2026-08-26. The web API belongs to the Logic axis (
 [[retired]]
 name = "xmip-core-migrate"
 on = "2026-09-19"
-reason = "ADR-0058 amendment 2026-09-19, on the owner's instruction. One lib.rs with no implementation and no consumer; a name the estate paid for on every clone, landing and survey. The GitHub repository is untouched and the capability is still planned by the record that names it. A first implementation brings the mount back."
+reason = "ADR-0058 amendment 2026-09-19, on the owner's instruction. One lib.rs with no implementation and no consumer; a name the estate paid for on every clone, landing and survey. The GitHub repository stays, by the owner's rule of 2026-09-22: it is kept for as long as no other repository implements migration from other platforms, and nothing does. A first implementation brings the mount back."
 
 [[retired]]
 name = "xmip-core-schedule"

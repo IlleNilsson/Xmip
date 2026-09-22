@@ -598,8 +598,9 @@ GitHub repository was kept or deleted.
 - **`xmip-core-migrate`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer; a
   name the estate paid for on every clone, landing and survey. The GitHub
-  repository is untouched and the capability is still planned by the record
-  that names it. A first implementation brings the mount back.
+  repository stays, by the owner's rule of 2026-09-22: it is kept for as long
+  as no other repository implements migration from other platforms, and
+  nothing does. A first implementation brings the mount back.
 
 - **`xmip-core-schedule`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. Six lines and no public API; clause 7 of that record
