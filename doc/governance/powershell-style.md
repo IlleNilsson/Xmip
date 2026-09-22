@@ -318,6 +318,7 @@ same redirect:
 | Rule | Section | Enforced |
 | --- | --- | --- |
 | Line over 100 characters | 1 | yes, with a per-file ratchet |
+| A file of the module over 400 lines, less its recorded debt | 1 | yes |
 | Backtick line continuation | 3 | yes |
 | A loop variable that is a parameter | 4 | yes |
 | A local written under another spelling of a parameter | 4 | yes |
