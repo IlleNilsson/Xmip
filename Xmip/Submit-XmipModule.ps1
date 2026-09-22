@@ -136,8 +136,25 @@ function Submit-XmipModule {
         Write-Host "   staging $name..." -ForegroundColor DarkGray
         & git -C $path add -A
 
+        # A host whose own files are clean is dirty only through its nested
+        # modules, which land on their own after it, and it is pinned to them
+        # at the end. Until 2026-09-22 this committed anyway: git refused,
+        # printed its status, and that status went down the pipeline as the
+        # names of modules landed, while the refusal itself was never read.
+        & git -C $path diff --cached --quiet
+
+        if ($LASTEXITCODE -eq 0) {
+            [string] $note = '   nothing of its own to commit; its nested modules land next'
+            Write-Host $note -ForegroundColor DarkGray
+            continue
+        }
+
         Write-Host '   committing...' -ForegroundColor DarkGray
-        & git -C $path commit -m $Message --quiet
+        [string[]] $said = @(& git -C $path commit -m $Message --quiet 2>&1)
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Committing $name failed: $($said -join ' ')"
+        }
 
         Write-Host '   pushing to origin...' -ForegroundColor DarkGray
         & git -C $path push origin main --quiet
