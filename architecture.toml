@@ -932,16 +932,16 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authenticate.basic]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.bearer]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.certificate]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authenticate.digest]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.jwt]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
