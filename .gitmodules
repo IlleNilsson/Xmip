@@ -165,3 +165,6 @@
 [submodule "module/foundation/asn1"]
 	path = module/foundation/asn1
 	url = https://github.com/IlleNilsson/xmip-core-asn1.git
+[submodule "module/foundation/codec"]
+	path = module/foundation/codec
+	url = https://github.com/IlleNilsson/xmip-core-codec.git
