@@ -576,3 +576,10 @@ The four surfaces of the amendment above are not all reached by this: it is
 the PowerShell module's rendering alone. The CLI, the GUIs and the ABI publish
 the same model and render it their own way, and nothing here changes what they
 are given.
+
+## Amendment, 2026-09-22: xmip-core-webapi is deleted
+
+The GitHub repository this record deprecated on 2026-08-26 is deleted, on the
+owner's word: *xmip-core-webapi can be deleted.* Nothing is released, and
+`xmip-core-logic-http-api` over `xmip-core-transport-http` is the web API. The
+reason it went is kept here and in the manifest's `[[retired]]` entry.
