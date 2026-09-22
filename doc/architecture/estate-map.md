@@ -592,8 +592,9 @@ GitHub repository was kept or deleted.
 - **`xmip-core-webapi`**, 2026-09-06 — ADR-0014 amendment 2026-08-26. The web
   API belongs to the Logic axis (xmip-core-logic-http-api over
   xmip-core-transport-http), not a module of its own; it was declared, mounted
-  nowhere, and deprecated. Retired rather than deleted because the amendment
-  is part of the record; may return with the Logic axis.
+  nowhere, and deprecated. The GitHub repository was deleted on 2026-09-22 on
+  the owner's word; xmip-core-logic-http-api is the web API, and ADR-0014
+  keeps the record of why.
 
 - **`xmip-core-migrate`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer; a
