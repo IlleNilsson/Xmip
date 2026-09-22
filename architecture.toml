@@ -260,6 +260,13 @@ dependency = []
   maturity = "scaffolded"
   dependency = ["xmip-core"]
 
+  [xmip.core.asn1]
+  description = "X.690 tag-length-value, read and written in its basic and distinguished encoding rules, for every ASN.1 protocol and token Xmip handles: SNMP, MMS, GOOSE, LDAP, Kerberos, X.509. One reader where six technologies each carried their own until 2026-09-22."
+  architecturalDomain = "Foundation"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+
   [xmip.core.transport]
   description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
   architecturalDomain = "Capability"

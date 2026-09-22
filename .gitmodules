@@ -162,3 +162,6 @@
 	path = test/playground
 	url = https://github.com/IlleNilsson/xmip-test-playground
 	ignore = dirty
+[submodule "module/foundation/asn1"]
+	path = module/foundation/asn1
+	url = https://github.com/IlleNilsson/xmip-core-asn1.git
