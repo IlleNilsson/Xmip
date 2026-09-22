@@ -310,12 +310,18 @@ function Publish-XmipChange {
                 # other half was never passing the subject in.
                 Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
+                # Verified is false here: the run stopped because a module did
+                # not verify. It said true until 2026-09-22, so a stopped run
+                # and a whole one printed the same summary.
+                [string] $stopped = "The landing stopped at $module, which did not verify."
+                Write-Error $stopped -ErrorAction Continue
+
                 return [PSCustomObject]@{
                     PSTypeName = 'Xmip.Change'
                     Landed     = $landed.ToArray()
                     Skipped    = $skipped.ToArray()
                     Platform   = $true
-                    Verified   = $true
+                    Verified   = $false
                 }
             }
         }
