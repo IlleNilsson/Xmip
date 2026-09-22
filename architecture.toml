@@ -279,7 +279,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-asn1"]
+  dependency = ["xmip-core-asn1", "xmip-core-codec"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
@@ -290,13 +290,14 @@ dependency = []
     [xmip.core.transport.as4]
     maturity = "scaffolded"
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.ftp]
     maturity = "scaffolded"
     description = "FTP and FTPS transport implementation."
     specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
+    dependency = ["xmip-core-codec"]
     specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
     maturity = "scaffolded"
@@ -317,7 +318,7 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.transport.webdav]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.websocket]
     maturity = "scaffolded"
     specification = "IETF RFC 6455, with the applicable extension documents"
@@ -428,7 +429,7 @@ dependency = []
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-as4"]
+    dependency = ["xmip-core-transport-as4", "xmip-core-codec"]
     specification = "OpenPeppol transport infrastructure, SMP and SML lookup"
     [xmip.core.transport.profinet]
     maturity = "scaffolded"
@@ -484,11 +485,11 @@ dependency = []
     dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.aws-sqs]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
     specification = "Azure Blob Storage REST API, Shared Key authorisation"
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.azure-event-grid]
     maturity = "scaffolded"
     description = "Azure Event Grid transport: a topic key over the REST API — publish a Stream as one CloudEvent to a topic, receive as the webhook a subscription delivers to, answering the validation handshake — a topic endpoint is a Location. A xmip-core-transport technology."
@@ -527,7 +528,7 @@ dependency = []
     [xmip.core.transport.msmq]
     maturity = "scaffolded"
     description = "MSMQ transport: one message is one Stream, carried as an SRMP envelope with its body attached over the HTTP transport MSMQ uses between machines. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.mssql]
     maturity = "scaffolded"
     specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
@@ -565,7 +566,7 @@ dependency = []
     [xmip.core.transport.s3]
     maturity = "scaffolded"
     specification = "Amazon S3 REST API, Signature Version 4"
-    dependency = ["xmip-core-transport-http"]
+    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
     [xmip.core.transport.serial]
     maturity = "scaffolded"
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
@@ -717,7 +718,7 @@ dependency = []
     specification = "Connectivity Standards Alliance Matter"
     [xmip.core.logic.soap]
     maturity = "scaffolded"
-    dependency = ["xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core-contract", "xmip-core-stream", "xmip-core-codec"]
 
   [xmip.core.path]
   description = "Common path-expression and addressing functionality."
@@ -869,7 +870,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1", "xmip-core-codec"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -917,7 +918,7 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.saml]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-message"]
+    dependency = ["xmip-core", "xmip-core-message", "xmip-core-codec"]
     [xmip.core.identify.ssh-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -933,7 +934,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1", "xmip-core-codec"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -978,7 +979,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authenticate.saml]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-codec"]
     [xmip.core.authenticate.scram]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]

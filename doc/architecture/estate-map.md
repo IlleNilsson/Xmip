@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145278 lines of production
+Where each repository mounts and what it holds: 145355 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -77,8 +77,8 @@ hold no source to count.
 ```text
 ├── module/
 │   ├── capability/
-│   │   ├── authenticate                        2026
-│   │   │   ├── saml                            1043
+│   │   ├── authenticate                        2033
+│   │   │   ├── saml                             989
 │   │   │   ├── kerberos                         830
 │   │   │   ├── ntlm                             796
 │   │   │   ├── oauth2                           604
@@ -96,13 +96,13 @@ hold no source to count.
 │   │   │   ├── mutual-tls                        97
 │   │   │   ├── basic                             86
 │   │   │   └── password                          81
-│   │   ├── transport                           1721
+│   │   ├── transport                           1718
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
 │   │   │   ├── mssql                           2141
 │   │   │   ├── mysql                           1833
+│   │   │   ├── http                            1723
 │   │   │   ├── smb                             1722
-│   │   │   ├── http                            1711
 │   │   │   ├── nfs                             1585
 │   │   │   ├── rabbitmq                        1567
 │   │   │   ├── snmp                            1417
@@ -110,10 +110,10 @@ hold no source to count.
 │   │   │   ├── ibm-mq                          1277
 │   │   │   ├── ethercat                        1258
 │   │   │   ├── postgresql                      1258
+│   │   │   ├── webdav                          1174
 │   │   │   ├── kafka                           1165
-│   │   │   ├── webdav                          1164
+│   │   │   ├── as4                             1100
 │   │   │   ├── amqp                            1097
-│   │   │   ├── as4                             1072
 │   │   │   ├── nats-jetstream                  1069
 │   │   │   ├── s7comm                          1021
 │   │   │   ├── io-link                         1015
@@ -122,7 +122,7 @@ hold no source to count.
 │   │   │   ├── canopen                          905
 │   │   │   ├── activemq                         891
 │   │   │   ├── dicom                            887
-│   │   │   ├── peppol                           880
+│   │   │   ├── peppol                           882
 │   │   │   ├── lorawan                          874
 │   │   │   ├── hart                             872
 │   │   │   ├── secs-gem                         858
@@ -139,9 +139,9 @@ hold no source to count.
 │   │   │   ├── j1939                            756
 │   │   │   ├── dns                              749
 │   │   │   ├── as2                              734
+│   │   │   ├── azure-blob                       730
 │   │   │   ├── profinet                         730
 │   │   │   ├── thread                           729
-│   │   │   ├── azure-blob                       727
 │   │   │   ├── redis-streams                    718
 │   │   │   ├── ftp                              710
 │   │   │   ├── imap                             699
@@ -158,10 +158,10 @@ hold no source to count.
 │   │   │   ├── redpanda                         594
 │   │   │   ├── pop3                             585
 │   │   │   ├── obd-ii                           582
-│   │   │   ├── msmq                             571
+│   │   │   ├── msmq                             573
 │   │   │   ├── wireless-m-bus                   560
+│   │   │   ├── s3                               557
 │   │   │   ├── google-cloud-storage             556
-│   │   │   ├── s3                               554
 │   │   │   ├── websocket                        543
 │   │   │   ├── ssdp                             526
 │   │   │   ├── syslog                           518
@@ -181,8 +181,8 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1227
-│   │   │   ├── saml                             362
+│   │   ├── identify                            1312
+│   │   │   ├── saml                             350
 │   │   │   ├── kerberos                         331
 │   │   │   ├── ip                               285
 │   │   │   ├── ntlm                             271
@@ -272,7 +272,7 @@ hold no source to count.
 │   │   ├── receive                              173
 │   │   ├── logic                                152
 │   │   │   ├── matter                          1142
-│   │   │   ├── soap                             278
+│   │   │   ├── soap                             272
 │   │   │   ├── http-api                         257
 │   │   │   └── grpc                             212
 │   │   ├── send                                 143
