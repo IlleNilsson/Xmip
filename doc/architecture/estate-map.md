@@ -606,8 +606,10 @@ GitHub repository was kept or deleted.
 - **`xmip-core-schedule`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. Six lines and no public API; clause 7 of that record
   kept it and the amendment supersedes clause 7. The GitHub repository is
-  untouched and open problem 23 still names the work. A first implementation,
-  which waits on a RuntimeStore backend, brings the mount back.
+  retained by the owner's rule of 2026-09-22, and every piece of scheduling
+  Xmip writes — what decides when work runs: a timer, an interval, a polled
+  pickup — belongs in it and nowhere else; none has been written yet. The
+  first of it brings the mount back.
 
 - **`xmip-core-diagnose`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer. The

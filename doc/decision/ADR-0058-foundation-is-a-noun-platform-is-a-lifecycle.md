@@ -351,5 +351,15 @@ rule is about keeping the name, not about paying for an empty mount — and it
 is not to be deleted while the condition holds. The day another repository
 implements migration from other platforms, the question is open again.
 
-`xmip-core-diagnose` and `xmip-core-schedule` are kept as well, on the owner's
-answer of 2026-09-21, without a condition yet.
+`xmip-core-diagnose` is kept as well, on the owner's answer of 2026-09-21,
+without a condition yet.
+
+**`xmip-core-schedule` is retained, and scheduling lives there.** The owner,
+the same day: *xmip-core-schedule shall be retained and the scheduling code if
+any done shall be in this repo.* Scheduling is what decides when work runs —
+a timer, an interval, a polled pickup — and no repository holds any: searched
+on 2026-09-22, the estate has none. `Arriving::Scheduled` in `xmip-core` is
+not scheduling and stays where it is; it is the name of how a Stream arrived,
+a noun the identifying capabilities read, and Foundation is where nouns live
+(clause 1). The timer that will produce it is the first thing
+`xmip-core-schedule` holds, and it brings the mount back.
