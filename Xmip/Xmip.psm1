@@ -892,6 +892,12 @@ function Test-XmipManifest {
 # #requires states that floor.
 . (Join-Path $PSScriptRoot 'Install-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipPrerequisite.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipComposePlan.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipUnexpectedName.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipCrateFinding.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-GitHubApi.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-CreateRepositories.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-Compose.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipRepository.ps1')
 . (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')

@@ -428,7 +428,6 @@ Describe 'PowerShell style, section 1: layout' {
         #>
         $script:LineRatchet = @{
             'Install-XmipPrerequisite.ps1' = 7
-            'Sync-XmipEstate.ps1'          = 8
             'Sync-XmipRepository.ps1'      = 20
             'Xmip.psm1'                    = 18
             'Decision.Test.ps1'          = 1
@@ -551,6 +550,94 @@ Describe 'PowerShell style: a loop variable is not a parameter' {
         ) -join "`n"
 
         $shadowed.Count | Should -Be 0 -Because "a loop variable must not be a parameter:`n$detail"
+    }
+
+    It 'never assigns to a parameter under another spelling' {
+        <#
+            The same defect in another shape, on 2026-09-22. Invoke-
+            ConfigureRepositories was lifted out of Sync-XmipEstate and given
+            a connection parameter, $GitHub, and its body already held a local
+            $github for a repository's settings. One variable, two meanings:
+            the settings were handed on as the connection and the first call
+            to GitHub refused them. The suite passed; a -WhatIf run found it.
+
+            Assigning to a parameter can be right — `$Root = ...` fills a
+            default. Assigning to it under a different spelling never is: the
+            writer believed it was another variable. The spelling is compared
+            exactly, so only that case is caught.
+        #>
+        [object[]] $respelled = @(
+            foreach ($file in Get-MeasuredFile -At $script:Root) {
+                $errors = $null
+                $ast = Get-ParsedFile -File $file -Errors ([ref] $errors)
+
+                if ($errors) { continue }
+
+                [type] $functionAst =
+                    [System.Management.Automation.Language.FunctionDefinitionAst]
+                [type] $assignmentAst =
+                    [System.Management.Automation.Language.AssignmentStatementAst]
+
+                foreach ($function in $ast.FindAll({ $args[0] -is $functionAst }, $true)) {
+                    [string[]] $parameters = @(
+                        $function.Body.ParamBlock.Parameters.Name.VariablePath.UserPath
+                    )
+
+                    if ($parameters.Count -eq 0) { continue }
+
+                    [object[]] $assignments = @(
+                        $function.FindAll({ $args[0] -is $assignmentAst }, $true)
+                    )
+
+                    foreach ($assignment in $assignments) {
+                        # Only this function's own statements: a function
+                        # nested inside has its own scope and its own names.
+                        [object] $owner = $assignment.Parent
+
+                        while ($owner -and $owner -isnot $functionAst) { $owner = $owner.Parent }
+
+                        if ($owner -ne $function) { continue }
+
+                        [object] $target = $assignment.Left
+
+                        [type] $convert =
+                            [System.Management.Automation.Language.ConvertExpressionAst]
+                        [type] $variable =
+                            [System.Management.Automation.Language.VariableExpressionAst]
+
+                        if ($target -is $convert) { $target = $target.Child }
+
+                        if ($target -isnot $variable) { continue }
+
+                        [string] $written = $target.VariablePath.UserPath
+                        [string] $declared = @(
+                            $parameters | Where-Object { $_ -ieq $written }
+                        )[0]
+
+                        if ($declared -and $declared -cne $written) {
+                            [PSCustomObject]@{
+                                Path     = $file.Name
+                                Function = $function.Name
+                                Written  = $written
+                                Declared = $declared
+                                Line     = $assignment.Extent.StartLineNumber
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        [string] $detail = (
+            $respelled | ForEach-Object {
+                "$($_.Path):$($_.Line) $($_.Function) writes `$$($_.Written), " +
+                "which is its parameter `$$($_.Declared)"
+            }
+        ) -join "`n"
+
+        $respelled.Count | Should -Be 0 -Because (
+            "a local under another spelling of a parameter is that parameter:`n$detail"
+        )
     }
 }
 

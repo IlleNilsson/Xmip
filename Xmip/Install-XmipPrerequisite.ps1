@@ -313,7 +313,7 @@ function Install-XmipPrerequisite {
                 # SkipPublisherCheck because Windows ships a Microsoft-signed
                 # Pester 3 whose publisher differs from the gallery's, and the
                 # install is refused without it.
-                [hashtable] $install = @{
+                [hashtable] $fromGallery = @{
                     Name                = $id
                     Scope               = 'CurrentUser'
                     Force               = $true
@@ -321,7 +321,7 @@ function Install-XmipPrerequisite {
                     SkipPublisherCheck  = $true
                 }
 
-                Install-Module @install
+                Install-Module @fromGallery
                 Record -Name $name -Status 'installed' -Detail 'psgallery'
             }
             else { Record $name 'would-install' 'psgallery' }

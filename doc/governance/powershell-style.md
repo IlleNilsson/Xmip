@@ -204,6 +204,16 @@ accept an array and do something plausible with one. It surfaced on 2026-08-29
 only when the variable reached a `[string]` parameter, which refused it. The
 second instance was in the function that commits and pushes the estate.
 
+**Nor is any local written under another spelling of a parameter.** The same
+defect in a second shape, found on 2026-09-22 when helpers nested inside
+`Sync-XmipEstate` were lifted out and given a `$GitHub` connection parameter:
+one of them already held a local `$github` for a repository's settings, and
+handed the settings on as the connection. Assigning to a parameter can be
+right — `$Root = Get-XmipRepositoryRoot` fills a default — so the gate asks
+only whether the spelling differs, which is never deliberate. It found two
+more on its first run, one of them giving the `-Install` switch of
+`Install-XmipPrerequisite` a hashtable's type.
+
 **Explicit `return`.** PowerShell's implicit output is real and useful; it is
 also how a stray expression ends up in a function's return value. Say what comes
 back.
@@ -310,6 +320,7 @@ same redirect:
 | Line over 100 characters | 1 | yes, with a per-file ratchet |
 | Backtick line continuation | 3 | yes |
 | A loop variable that is a parameter | 4 | yes |
+| A local written under another spelling of a parameter | 4 | yes |
 | A file that does not parse | — | yes |
 | Function over 35 lines | 2 | **reported, not gated** |
 
