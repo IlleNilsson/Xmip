@@ -72,6 +72,7 @@ function Get-XmipTestSuite {
     }
 }
 
+
 function New-XmipTestSuite {
     <#
         .SYNOPSIS
@@ -134,101 +135,6 @@ function New-XmipTestSuite {
     }
 }
 
-function Read-XmipTestSuiteDeclaration {
-    <#
-        .SYNOPSIS
-            One provider's suite, from the TOML file that declares it.
-
-        .DESCRIPTION
-            The file says who provides the suite, what it is called and the
-            command that starts it. Three lines are the whole of it, with
-            Example standing in for whatever the third party calls itself —
-            the estate names no placeholder company (ADR-0059, amendment
-            2026-09-20):
-
-                provider = "Example"
-                name     = "Playground"
-                command  = "Start-ExampleXmipTest"
-
-            The command is the third party's, from its own PowerShell
-            module (ADR-0011 names it xmip-<provider>-powershell). Start-XmipTest
-            hands it everything -Suite was given beside it, and hands it no
-            -Test when the operator named none, which means the whole suite.
-
-        .PARAMETER Path
-            The declaration file.
-    #>
-    [CmdletBinding()]
-    [OutputType('Xmip.TestSuite')]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    Import-Module PSToml -ErrorAction Stop
-    $declared = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
-
-    [hashtable] $said = @{
-        provider = Get-XmipDeclaredText -Declaration $declared -Key 'provider'
-        name     = Get-XmipDeclaredText -Declaration $declared -Key 'name'
-        command  = Get-XmipDeclaredText -Declaration $declared -Key 'command'
-    }
-
-    Assert-XmipTestSuiteDeclaration -Said $said -Path $Path
-
-    [hashtable] $made = @{
-        Provider = $said.provider
-        Name     = $said.name
-        Kind     = 'command'
-        Command  = $said.command
-        Source   = $Path
-    }
-
-    return New-XmipTestSuite @made
-}
-
-function Assert-XmipTestSuiteDeclaration {
-    <#
-        .SYNOPSIS
-            A suite declaration says all three things and says them as names.
-            Throws REFUSED naming the file otherwise; a half-written
-            declaration is never read as no declaration.
-
-        .PARAMETER Said
-            The provider, name and command read from the file.
-
-        .PARAMETER Path
-            The file, so a refusal names which one.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [hashtable] $Said,
-
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    foreach ($key in 'provider', 'name', 'command') {
-        if ([string]::IsNullOrWhiteSpace($Said[$key])) {
-            throw ("REFUSED. $Path declares no $key. A suite declaration says " +
-                'provider, name and command, and nothing less.')
-        }
-    }
-
-    foreach ($word in 'provider', 'name') {
-        if ($Said[$word] -notmatch '^[A-Za-z][A-Za-z0-9]*$') {
-            throw ("REFUSED. $Path declares $word '$($Said[$word])', which is not a " +
-                'name: a letter, then letters and digits.')
-        }
-    }
-
-    if ($Said.provider -ieq 'core') {
-        throw ("REFUSED. $Path declares the provider core, which is reserved for Xmip " +
-            'itself (ADR-0011). Name the provider who publishes the suite.')
-    }
-}
 
 function Get-XmipNamedTestSuite {
     <#
@@ -275,6 +181,7 @@ function Get-XmipNamedTestSuite {
         $_.Name -like $Name -or ($_.Provider -ieq 'Core' -and $_.Suite -like $Name)
     }
 }
+
 
 function Get-XmipTestSuiteRefusal {
     <#
@@ -334,6 +241,7 @@ function Get-XmipTestSuiteRefusal {
         'command that starts it.')
 }
 
+
 function Test-XmipWholeSuite {
     <#
         .SYNOPSIS
@@ -367,6 +275,7 @@ function Test-XmipWholeSuite {
 
     return $named.Count -eq 0
 }
+
 
 function Expand-XmipTestName {
     <#
@@ -424,46 +333,4 @@ function Expand-XmipTestName {
     }
 
     return $chosen.ToArray()
-}
-
-function Get-XmipDeclaredText {
-    <#
-        .SYNOPSIS
-            One string from a TOML declaration or a run record, and the empty
-            string when the key is absent.
-
-        .DESCRIPTION
-            Set-StrictMode turns a missing key into an error at the point it
-            is read, which would report a declaration's omission as a
-            property that does not exist. A declaration that forgot a key is
-            refused in words instead, and this is what lets it be.
-
-        .PARAMETER Declaration
-            What ConvertFrom-Toml returned, or nothing at all.
-
-        .PARAMETER Key
-            The key to read.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [AllowNull()]
-        [object] $Declaration,
-
-        [Parameter(Mandatory)]
-        [string] $Key
-    )
-
-    if ($null -eq $Declaration) {
-        return ''
-    }
-
-    [string[]] $keys = @($Declaration.Keys)
-
-    if ($keys -notcontains $Key) {
-        return ''
-    }
-
-    return "$($Declaration[$Key])"
 }
