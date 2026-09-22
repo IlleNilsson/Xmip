@@ -1,6 +1,6 @@
 # The Xmip estate
 
-331 repositories are declared and 254 of them are
+332 repositories are declared and 255 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -30,17 +30,17 @@ the estate tree, and are counted nowhere below.
 
 | Domain | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| Foundation | 11 | 11 | 0 |
+| Foundation | 12 | 12 | 0 |
 | Capability | 18 | 18 | 0 |
 | Operation | 9 | 8 | 1 |
 | Platform | 3 | 3 | 0 |
 | Technology | 290 | 214 | 76 |
-| **Total** | 331 | 254 | 77 |
+| **Total** | 332 | 255 | 77 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | reserved | 77 | 0 | 77 |
-| scaffolded | 254 | 254 | 0 |
+| scaffolded | 255 | 255 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145152 lines of production
+Where each repository mounts and what it holds: 145278 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -320,6 +320,7 @@ hold no source to count.
 │   │   ├── journey                              344
 │   │   ├── node                                 210
 │   │   ├── party                                186
+│   │   ├── codec                                126
 │   │   ├── stream                                38
 │   │   ├── cluster                               21
 │   │   └── event                                 20
@@ -369,6 +370,7 @@ Things Xmip is.
 | `xmip-core-abi` | scaffolded | `module/foundation/abi` | — |
 | `xmip-core-asn1` | scaffolded | `module/foundation/asn1` | — |
 | `xmip-core-cluster` | scaffolded | `module/foundation/cluster` | — |
+| `xmip-core-codec` | scaffolded | `module/foundation/codec` | — |
 | `xmip-core-context` | scaffolded | `module/foundation/context` | — |
 | `xmip-core-event` | scaffolded | `module/foundation/event` | — |
 | `xmip-core-journey` | scaffolded | `module/foundation/journey` | — |
