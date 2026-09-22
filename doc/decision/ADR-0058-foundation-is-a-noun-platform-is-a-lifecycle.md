@@ -336,20 +336,25 @@ technologies go with their parent.
 Status stays Proposed. This amendment is the assistant's drafting on the
 owner's instruction, which is quoted above in his words.
 
-## Amendment, 2026-09-22: xmip-core-migrate stays
+## Amendment, 2026-09-22: three repositories are the homes of three capabilities
 
 On 2026-09-21 the owner ruled that nothing is released and there is no point
-holding on to old repositories, and `xmip-core-exclusiveness` was deleted on
-GitHub. Of the three this record unmounted, the owner then set a condition
-on one: *xmip-core-migrate shall stay if not migration from other platforms
-is implemented in any other repo.*
+holding on to old repositories, and `xmip-core-exclusiveness` and
+`xmip-core-webapi` were deleted on GitHub. The three this record unmounted
+were not: each is retained as **the only home for Xmip's own code of its
+capability**, and each stays unmounted until the first of that code is
+written, because the rule keeps the name and not an empty mount.
 
-Nothing implements it. No Rust, C# or PowerShell in the estate names BizTalk,
-MuleSoft or any other platform to move from, so the condition holds and the
-repository stays on GitHub. It stays unmounted as this record left it — the
-rule is about keeping the name, not about paying for an empty mount — and it
-is not to be deleted while the condition holds. The day another repository
-implements migration from other platforms, the question is open again.
+**Only home means Xmip's own.** The owner: *3'rd parties may create their own
+repos regarding all repos.* A third party may keep migration, scheduling,
+diagnosis — or any capability the estate has — in a repository of its own
+under its own provider name, as ADR-0011 names them. What the rule forbids is
+Xmip putting that code anywhere else in its own estate.
+
+**`xmip-core-migrate` is the home of migration.** The owner: *xmip-core-migrate
+is the home for migration code.* Migration is moving integrations built on
+another platform onto Xmip. Searched on 2026-09-22, no code in the estate
+does any.
 
 **`xmip-core-diagnose` is retained, and diagnosis lives there.** The owner,
 the same day: *xmip-core-diagnose shall also be kept and diagnosis code shall

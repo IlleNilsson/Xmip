@@ -599,22 +599,25 @@ GitHub repository was kept or deleted.
 - **`xmip-core-migrate`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer; a
   name the estate paid for on every clone, landing and survey. The GitHub
-  repository stays, by the owner's rule of 2026-09-22: it is kept for as long
-  as no other repository implements migration from other platforms, and
-  nothing does. A first implementation brings the mount back.
+  repository is retained by the owner's rule of 2026-09-22 as the only home
+  for Xmip's own migration code — moving integrations from other platforms
+  onto Xmip; none has been written yet. A third party may keep its own under
+  its own provider name (ADR-0011). The first of it brings the mount back.
 
 - **`xmip-core-schedule`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. Six lines and no public API; clause 7 of that record
   kept it and the amendment supersedes clause 7. The GitHub repository is
-  retained by the owner's rule of 2026-09-22, and every piece of scheduling
-  Xmip writes — what decides when work runs: a timer, an interval, a polled
-  pickup — belongs in it and nowhere else; none has been written yet. The
-  first of it brings the mount back.
+  retained by the owner's rule of 2026-09-22, and it is the only home for
+  Xmip's own scheduling code — what decides when work runs: a timer, an
+  interval, a polled pickup; none has been written yet. A third party may keep
+  its own under its own provider name (ADR-0011). The first of it brings the
+  mount back.
 
 - **`xmip-core-diagnose`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer. The
-  GitHub repository is retained by the owner's rule of 2026-09-22, and
-  diagnosis code — explaining why a running node, Journey or endpoint is in
-  the state it is — belongs in it and nowhere else; none has been written yet.
+  GitHub repository is retained by the owner's rule of 2026-09-22, and it is
+  the only home for Xmip's own diagnosis code — explaining why a running node,
+  Journey or endpoint is in the state it is; none has been written yet. A
+  third party may keep its own under its own provider name (ADR-0011).
   ADR-0025 names diagnosis as an Operation capability. The first of it brings
   the mount back.
