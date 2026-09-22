@@ -613,5 +613,8 @@ GitHub repository was kept or deleted.
 
 - **`xmip-core-diagnose`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
   owner's instruction. One lib.rs with no implementation and no consumer. The
-  GitHub repository is untouched and ADR-0025 still names diagnosis as an
-  Operation capability. A first implementation brings the mount back.
+  GitHub repository is retained by the owner's rule of 2026-09-22, and
+  diagnosis code — explaining why a running node, Journey or endpoint is in
+  the state it is — belongs in it and nowhere else; none has been written yet.
+  ADR-0025 names diagnosis as an Operation capability. The first of it brings
+  the mount back.
