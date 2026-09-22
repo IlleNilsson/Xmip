@@ -168,3 +168,6 @@
 [submodule "module/foundation/codec"]
 	path = module/foundation/codec
 	url = https://github.com/IlleNilsson/xmip-core-codec.git
+[submodule "module/foundation/net"]
+	path = module/foundation/net
+	url = https://github.com/IlleNilsson/xmip-core-net.git
