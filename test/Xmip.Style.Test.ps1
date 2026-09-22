@@ -429,7 +429,6 @@ Describe 'PowerShell style, section 1: layout' {
         $script:LineRatchet = @{
             'Install-XmipPrerequisite.ps1' = 7
             'Sync-XmipRepository.ps1'      = 20
-            'Xmip.psm1'                    = 18
             'Decision.Test.ps1'          = 1
             'Documentation.Test.ps1'      = 5
             'Publish-XmipChange.Test.ps1' = 2
@@ -491,12 +490,8 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         [int] $script:MaximumFileLines = 400
 
         $script:FileRatchet = @{
-            'Xmip.psm1'                    = 977
             'Start-XmipTest.ps1'           = 944
-            'New-XmipEstateMap.ps1'        = 795
-            'New-XmipDecisionIndex.ps1'    = 618
             'Sync-XmipRepository.ps1'      = 597
-            'Get-XmipTestSuite.ps1'        = 469
             'Install-XmipPrerequisite.ps1' = 434
         }
 
