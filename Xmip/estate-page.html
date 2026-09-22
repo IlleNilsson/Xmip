@@ -353,7 +353,9 @@ ul.retired span{color:var(--muted)}
   const drift = E.modules.filter((m) => m.undeclared.length || m.unused.length).sort((a, b) => a.name.localeCompare(b.name));
   const list = (xs) => xs.length ? xs.map((x) => '<span class="x">' + esc(x) + '</span>').join(', ') : '\u2014';
   $('drift').innerHTML = '<colgroup><col class="who"><col class="half"><col class="half"></colgroup><thead><tr><th>Module</th><th>Uses, not declared</th><th>Declared, not used</th></tr></thead><tbody>' +
-    drift.map((m) => '<tr><td>' + esc(m.name) + '</td><td class="list">' + list(m.undeclared) + '</td><td class="list">' + list(m.unused) + '</td></tr>').join('') +
+    (drift.length
+      ? drift.map((m) => '<tr><td>' + esc(m.name) + '</td><td class="list">' + list(m.undeclared) + '</td><td class="list">' + list(m.unused) + '</td></tr>').join('')
+      : '<tr><td colspan="3">None. The manifest lists what every build uses, and <code>test/Dependency.Test.ps1</code> keeps it so.</td></tr>') +
     '</tbody>';
 
   $('retired').innerHTML = E.retired.map((r) => '<li><b>' + esc(r.name) + '</b> <span>' + esc(r.on) + ' \u2014 ' + esc(r.reason) + '</span></li>').join('');

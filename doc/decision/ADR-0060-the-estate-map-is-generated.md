@@ -404,4 +404,8 @@ the owner quoted that day came from it; `estate-map.md` was current.
    On the day this was written they differed for most modules: `runtime`
    used sixteen and declared six. Landing order was never at risk, since
    `Publish-XmipChange` orders by `Cargo.toml`; the manifest's lists are
-   documentation that has drifted, and correcting them is open.
+   documentation that had drifted. They were made true on 2026-09-22 — every
+   mounted repository's list is what its build uses, a technology's parent
+   left implied — and `test/Dependency.Test.ps1` fails the day a build and
+   its list part again. The page's table of disagreements says *None* while
+   that holds.
