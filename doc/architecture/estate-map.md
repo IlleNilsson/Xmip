@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145386 lines of production
+Where each repository mounts and what it holds: 145379 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -96,10 +96,10 @@ hold no source to count.
 │   │   │   ├── basic                            111
 │   │   │   ├── mutual-tls                        97
 │   │   │   └── password                          81
-│   │   ├── transport                           1745
+│   │   ├── transport                           1851
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
-│   │   │   ├── mssql                           2178
+│   │   │   ├── mssql                           2141
 │   │   │   ├── mysql                           1833
 │   │   │   ├── smb                             1722
 │   │   │   ├── http                            1711
@@ -108,9 +108,9 @@ hold no source to count.
 │   │   │   ├── snmp                            1417
 │   │   │   ├── oracle                          1312
 │   │   │   ├── ibm-mq                          1277
-│   │   │   ├── postgresql                      1276
 │   │   │   ├── ethercat                        1258
-│   │   │   ├── kafka                           1166
+│   │   │   ├── postgresql                      1258
+│   │   │   ├── kafka                           1165
 │   │   │   ├── webdav                          1164
 │   │   │   ├── amqp                            1097
 │   │   │   ├── as4                             1072
@@ -128,8 +128,8 @@ hold no source to count.
 │   │   │   ├── secs-gem                         858
 │   │   │   ├── mdns                             848
 │   │   │   ├── bluetooth                        844
-│   │   │   ├── wireless-hart                    824
 │   │   │   ├── uds                              822
+│   │   │   ├── wireless-hart                    811
 │   │   │   ├── aws-kinesis                      804
 │   │   │   ├── azure-event-grid                 793
 │   │   │   ├── aws-sns                          791
@@ -138,9 +138,9 @@ hold no source to count.
 │   │   │   ├── dhcp                             780
 │   │   │   ├── j1939                            756
 │   │   │   ├── dns                              749
-│   │   │   ├── thread                           742
 │   │   │   ├── as2                              734
 │   │   │   ├── profinet                         730
+│   │   │   ├── thread                           729
 │   │   │   ├── azure-blob                       727
 │   │   │   ├── redis-streams                    718
 │   │   │   ├── ftp                              710
@@ -181,19 +181,19 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1038
+│   │   ├── identify                            1109
 │   │   │   ├── kerberos                         476
 │   │   │   ├── saml                             362
-│   │   │   ├── ip                               313
+│   │   │   ├── ip                               285
 │   │   │   ├── ntlm                             275
 │   │   │   ├── api-key                          255
-│   │   │   ├── dns                              221
+│   │   │   ├── dns                              197
 │   │   │   ├── username                         194
-│   │   │   ├── jwt                              187
 │   │   │   ├── header                           186
-│   │   │   ├── oidc                             145
+│   │   │   ├── jwt                              170
 │   │   │   ├── certificate                      136
 │   │   │   ├── cookie                           131
+│   │   │   ├── oidc                             128
 │   │   │   ├── transport                        109
 │   │   │   ├── ssh-key                           90
 │   │   │   ├── contract                          88
@@ -238,6 +238,21 @@ hold no source to count.
 │   │   │   ├── c                                 29
 │   │   │   ├── cpp                               29
 │   │   │   └── dotnet                            19
+│   │   ├── authorize                            321
+│   │   │   ├── opa                              454
+│   │   │   ├── location                         395
+│   │   │   ├── abac                             360
+│   │   │   ├── transport                        293
+│   │   │   ├── cedar                            290
+│   │   │   ├── policy                           256
+│   │   │   ├── role                             226
+│   │   │   ├── artifact                         217
+│   │   │   ├── contract                         184
+│   │   │   ├── acl                              178
+│   │   │   ├── scope                            178
+│   │   │   ├── claim                            173
+│   │   │   ├── rbac                             166
+│   │   │   └── party                            131
 │   │   ├── path                                 299
 │   │   │   ├── fhirpath                         749
 │   │   │   ├── jsonpath                         741
@@ -247,21 +262,6 @@ hold no source to count.
 │   │   │   ├── regex                            253
 │   │   │   ├── index                            216
 │   │   │   └── json-pointer                     144
-│   │   ├── authorize                            285
-│   │   │   ├── opa                              454
-│   │   │   ├── location                         395
-│   │   │   ├── abac                             360
-│   │   │   ├── transport                        293
-│   │   │   ├── cedar                            290
-│   │   │   ├── policy                           256
-│   │   │   ├── role                             226
-│   │   │   ├── artifact                         217
-│   │   │   ├── acl                              204
-│   │   │   ├── rbac                             192
-│   │   │   ├── contract                         184
-│   │   │   ├── scope                            178
-│   │   │   ├── claim                            173
-│   │   │   └── party                            131
 │   │   ├── resilience                           204
 │   │   │   ├── circuit-breaker                  135
 │   │   │   ├── rate-limit                       108
