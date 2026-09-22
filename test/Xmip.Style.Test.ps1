@@ -490,7 +490,7 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         [int] $script:MaximumFileLines = 400
 
         $script:FileRatchet = @{
-            'Start-XmipTest.ps1'           = 944
+            'Start-XmipTest.ps1'           = 476
             'Sync-XmipRepository.ps1'      = 597
             'Install-XmipPrerequisite.ps1' = 434
         }

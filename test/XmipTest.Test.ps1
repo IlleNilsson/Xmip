@@ -12,6 +12,27 @@
 #>
 
 BeforeAll {
+    <#
+        .SYNOPSIS
+        Start-XmipTest's source, every file of it.
+
+        .DESCRIPTION
+        One file of 944 lines until 2026-09-22 and a family now: the cmdlet,
+        the suite groups, and the Playground roll it hands its work to. A test
+        asking what the start does reads all three, so it does not care which
+        file a line moved to.
+    #>
+    function Get-XmipStartSource {
+        [string] $module = Join-Path (Get-XmipRepositoryRoot) 'Xmip'
+
+        return ((
+                'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1',
+                'Start-XmipPlaygroundRoll.ps1' | ForEach-Object {
+                    Get-Content -Raw -LiteralPath (Join-Path $module $_)
+                }
+            ) -join "`n")
+    }
+
     $script:Root = Join-Path $PSScriptRoot '..'
     $script:ManifestPath = Join-Path $script:Root 'Xmip/Xmip.psd1'
 
@@ -184,7 +205,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # afresh. Run from inside the module, the suite tore down the module
         # that was running it, and every later call from the console found a
         # hollow module. A thread job keeps the runspace apart.
-        [string] $door = Get-Content -Raw (Join-Path $script:Root 'Xmip/Start-XmipTest.ps1')
+        [string] $door = Get-XmipStartSource
 
         $door | Should -Match 'Start-ThreadJob' -Because 'the suite removes the module it runs in'
         $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
@@ -525,8 +546,7 @@ Describe 'The environment a roll is started with' {
 
         # The record says the nodes that were resolved, never an empty list:
         # an operator who typed neither switch can read what they got.
-        [string] $path = Join-Path (Get-XmipRepositoryRoot) 'Xmip/Start-XmipTest.ps1'
-        [string] $door = Get-Content -Raw -LiteralPath $path
+        [string] $door = Get-XmipStartSource
 
         $door | Should -Match '(?m)^\s*nodes\s+= @\(\$Nodes\)\s*$'
         $door | Should -Match "node_names.+else \{ 'complement' \}"
@@ -682,7 +702,11 @@ Describe 'A suite carries its provider' {
         # The owner, 2026-09-19: -Suite with -Test excluded means run all
         # tests in the suite. One rule, one place, not two behaviors that
         # happen to agree.
-        InModuleScope Xmip {
+        [string] $source = Get-XmipStartSource
+
+        InModuleScope Xmip -Parameters @{ Source = $source } {
+            param([string] $Source)
+
             Test-XmipWholeSuite | Should -BeTrue
             Test-XmipWholeSuite -Test @() | Should -BeTrue
             Test-XmipWholeSuite -Test @('') | Should -BeTrue
@@ -699,10 +723,7 @@ Describe 'A suite carries its provider' {
 
             # Estate: no file named is every *.Test.ps1 under test/, and
             # the same predicate is what decides it there.
-            [string] $path = Join-Path (Get-XmipRepositoryRoot) 'Xmip/Start-XmipTest.ps1'
-            [string] $door = Get-Content -Raw -LiteralPath $path
-
-            $door | Should -Match 'if \(-not \(Test-XmipWholeSuite -Test \$Test\)\) \{'
+            $Source | Should -Match 'if \(-not \(Test-XmipWholeSuite -Test \$Test\)\) \{'
         }
     }
 
