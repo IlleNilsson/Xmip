@@ -428,7 +428,6 @@ Describe 'PowerShell style, section 1: layout' {
         #>
         $script:LineRatchet = @{
             'Install-XmipPrerequisite.ps1' = 7
-            'Publish-XmipChange.ps1'       = 6
             'Sync-XmipEstate.ps1'          = 8
             'Sync-XmipRepository.ps1'      = 20
             'Xmip.psm1'                    = 18
