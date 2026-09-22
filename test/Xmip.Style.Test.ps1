@@ -427,9 +427,7 @@ Describe 'PowerShell style, section 1: layout' {
             in the same change — that is the ratchet ratcheting.
         #>
         $script:LineRatchet = @{
-            'Install-XmipPrerequisite.ps1' = 7
-            'Sync-XmipRepository.ps1'      = 20
-            'Decision.Test.ps1'          = 1
+            'Decision.Test.ps1'           = 1
             'Documentation.Test.ps1'      = 5
             'Publish-XmipChange.Test.ps1' = 2
             'Sync-XmipEstate.Test.ps1'    = 6
@@ -490,9 +488,7 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         [int] $script:MaximumFileLines = 400
 
         $script:FileRatchet = @{
-            'Start-XmipTest.ps1'           = 476
-            'Sync-XmipRepository.ps1'      = 597
-            'Install-XmipPrerequisite.ps1' = 434
+            'Start-XmipTest.ps1' = 476
         }
 
         [string] $module = Join-Path $script:Root 'Xmip'
