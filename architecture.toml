@@ -877,7 +877,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1", "xmip-core-codec"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1", "xmip-core-codec", "xmip-core-net"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -892,7 +892,7 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.dns]
     maturity = "scaffolded"
-    dependency = ["xmip-core"]
+    dependency = ["xmip-core", "xmip-core-net"]
     [xmip.core.identify.endpoint]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -901,7 +901,7 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.ip]
     maturity = "scaffolded"
-    dependency = ["xmip-core"]
+    dependency = ["xmip-core", "xmip-core-net"]
     [xmip.core.identify.jwt]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-message"]
@@ -1044,7 +1044,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.transport]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-net"]
 
   [xmip.core.receive]
   description = "Common Receive Port and Receive Location functionality."
