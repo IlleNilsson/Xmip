@@ -314,6 +314,8 @@ function Get-TomlValue {
 . (Join-Path $PSScriptRoot 'Get-XmipNodeComplement.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipTestSuiteGroup.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipPlaygroundRoll.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
 . (Join-Path $PSScriptRoot 'Select-XmipTestRoll.ps1')
