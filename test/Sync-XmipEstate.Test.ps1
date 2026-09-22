@@ -204,10 +204,31 @@ Describe 'ADR-0021: current platforms only, enforced' {
         }
     }
 
-    It 'tracks channels rather than pinning versions' {
-        $toolchain = Get-Content (Join-Path $script:Root 'rust-toolchain.toml') -Raw
-        $toolchain | Should -Match 'channel\s*=\s*"stable"'
-        $toolchain | Should -Not -Match 'channel\s*=\s*"1\.' -Because 'ADR-0021 forbids a pinned toolchain'
+    It 'tracks channels rather than pinning versions, in every repository' {
+        # Every repository, not the root alone. Until 2026-09-22 this read
+        # only the root's file, while the Rust template pinned 1.94.1 and 210
+        # repositories generated from it carried that pin: rustup takes the
+        # nearest file, so each of them built on March's compiler however far
+        # stable had moved.
+        [string[]] $folders = @('module', 'template', 'test') |
+            ForEach-Object { Join-Path $script:Root $_ }
+        [object[]] $files = @(
+            Get-Item -LiteralPath (Join-Path $script:Root 'rust-toolchain.toml')
+            Get-ChildItem -Path $folders -Filter 'rust-toolchain.toml' -File -Recurse |
+                Where-Object { $_.FullName -notmatch '[\\/]target[\\/]' }
+        )
+
+        [string[]] $pinned = @(
+            $files |
+                Where-Object {
+                    (Get-Content -LiteralPath $_.FullName -Raw) -notmatch 'channel\s*=\s*"stable"'
+                } |
+                ForEach-Object { [IO.Path]::GetRelativePath($script:Root, $_.FullName) }
+        )
+
+        $pinned | Should -BeNullOrEmpty -Because (
+            "ADR-0021 forbids a pinned toolchain: $($pinned -join ', ')"
+        )
     }
 
     It 'declares the Core edition on every entry point' {
