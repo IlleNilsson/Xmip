@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145184 lines of production
+Where each repository mounts and what it holds: 145152 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -77,24 +77,24 @@ hold no source to count.
 ```text
 ├── module/
 │   ├── capability/
-│   │   ├── authenticate                        2019
+│   │   ├── authenticate                        2026
 │   │   │   ├── saml                            1043
 │   │   │   ├── kerberos                         830
 │   │   │   ├── ntlm                             796
-│   │   │   ├── oauth2                           605
+│   │   │   ├── oauth2                           604
 │   │   │   ├── ldap                             550
 │   │   │   ├── oidc                             510
-│   │   │   ├── digest                           509
 │   │   │   ├── ssh-key                          509
+│   │   │   ├── digest                           477
 │   │   │   ├── jwt                              431
 │   │   │   ├── windows                          406
 │   │   │   ├── scram                            405
 │   │   │   ├── pam                              352
 │   │   │   ├── api-key                          240
-│   │   │   ├── bearer                           226
+│   │   │   ├── bearer                           210
 │   │   │   ├── certificate                      160
-│   │   │   ├── basic                            111
 │   │   │   ├── mutual-tls                        97
+│   │   │   ├── basic                             86
 │   │   │   └── password                          81
 │   │   ├── transport                           1721
 │   │   │   ├── opc-ua                          2380
@@ -181,19 +181,19 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1116
+│   │   ├── identify                            1227
 │   │   │   ├── saml                             362
-│   │   │   ├── kerberos                         340
+│   │   │   ├── kerberos                         331
 │   │   │   ├── ip                               285
-│   │   │   ├── ntlm                             275
+│   │   │   ├── ntlm                             271
 │   │   │   ├── api-key                          255
 │   │   │   ├── dns                              197
-│   │   │   ├── username                         194
-│   │   │   ├── header                           186
-│   │   │   ├── jwt                              170
+│   │   │   ├── username                         171
+│   │   │   ├── jwt                              169
+│   │   │   ├── header                           148
 │   │   │   ├── certificate                      136
 │   │   │   ├── cookie                           131
-│   │   │   ├── oidc                             128
+│   │   │   ├── oidc                             127
 │   │   │   ├── transport                        109
 │   │   │   ├── ssh-key                           90
 │   │   │   ├── contract                          88
