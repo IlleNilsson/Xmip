@@ -23,6 +23,28 @@
 BeforeAll {
     $script:Root = Join-Path $PSScriptRoot '..'
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
+
+    <#
+        .SYNOPSIS
+        The landing's source, every file of it.
+
+        .DESCRIPTION
+        Publish-XmipChange was one file of 1,586 lines until 2026-09-22 and is
+        a family of files now, each named for what it defines. A test that
+        asks what the landing's code says reads all of them, so it does not
+        care which file a line was moved to.
+    #>
+    function Get-XmipLandingSource {
+        [string[]] $family = @(
+            'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
+            'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
+            'Publish-XmipPin.ps1'
+        )
+
+        return (($family | ForEach-Object {
+                    Get-Content -Raw -LiteralPath (Join-Path $script:ModuleRoot $_)
+                }) -join "`n")
+    }
     $script:ManifestPath = Join-Path $script:ModuleRoot 'Xmip.psd1'
 
     # Every copy first, then one import.
@@ -310,7 +332,7 @@ Describe 'A detached submodule lands on a main put at its commit' {
         # changed files, HEAD stayed detached, and the push of that stale main
         # failed with the commit already made. `checkout -B main` puts main at
         # the commit the superproject pinned, which is where it belongs.
-        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
+        $source = Get-XmipLandingSource
 
         $source | Should -Match 'git -C \$path checkout -B main'
         $source | Should -Not -Match 'git -C \$path checkout main\b'
@@ -321,7 +343,7 @@ Describe 'Publish-XmipPin is given what it needs' {
     It 'is passed -Message everywhere it is called' {
         # The half of the defect a fixture cannot see. Resolve-XmipCommitSubject
         # can be correct and the message still never arrive.
-        $source = Get-Content (Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1') -Raw
+        $source = Get-XmipLandingSource
 
         [string[]] $calls = @(
             [regex]::Matches($source, 'Publish-XmipPin\s+-RepositoryRoot[^\r\n]*') |
@@ -552,9 +574,7 @@ Describe 'Publish-XmipChange' {
 
 Describe 'A module the estate is about to pin is on origin first' {
     BeforeAll {
-        [string] $script:Source = Get-Content -Raw -LiteralPath (
-            Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1'
-        )
+        [string] $script:Source = Get-XmipLandingSource
 
         [System.Management.Automation.Language.Ast] $script:Ast =
             [System.Management.Automation.Language.Parser]::ParseInput(
