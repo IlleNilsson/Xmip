@@ -1,6 +1,6 @@
 # The Xmip estate
 
-332 repositories are declared and 255 of them are
+333 repositories are declared and 256 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -30,17 +30,17 @@ the estate tree, and are counted nowhere below.
 
 | Domain | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| Foundation | 12 | 12 | 0 |
+| Foundation | 13 | 13 | 0 |
 | Capability | 18 | 18 | 0 |
 | Operation | 9 | 8 | 1 |
 | Platform | 3 | 3 | 0 |
 | Technology | 290 | 214 | 76 |
-| **Total** | 332 | 255 | 77 |
+| **Total** | 333 | 256 | 77 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | reserved | 77 | 0 | 77 |
-| scaffolded | 255 | 255 | 0 |
+| scaffolded | 256 | 256 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145355 lines of production
+Where each repository mounts and what it holds: 145496 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -244,13 +244,13 @@ hold no source to count.
 │   │   │   ├── abac                             360
 │   │   │   ├── transport                        293
 │   │   │   ├── cedar                            290
-│   │   │   ├── policy                           256
+│   │   │   ├── policy                           249
 │   │   │   ├── role                             226
-│   │   │   ├── artifact                         217
-│   │   │   ├── contract                         184
+│   │   │   ├── artifact                         215
 │   │   │   ├── acl                              178
-│   │   │   ├── scope                            178
+│   │   │   ├── contract                         176
 │   │   │   ├── claim                            173
+│   │   │   ├── scope                            172
 │   │   │   ├── rbac                             166
 │   │   │   └── party                            131
 │   │   ├── path                                 299
@@ -320,6 +320,7 @@ hold no source to count.
 │   │   ├── journey                              344
 │   │   ├── node                                 210
 │   │   ├── party                                186
+│   │   ├── net                                  164
 │   │   ├── codec                                126
 │   │   ├── stream                                38
 │   │   ├── cluster                               21
@@ -375,6 +376,7 @@ Things Xmip is.
 | `xmip-core-event` | scaffolded | `module/foundation/event` | — |
 | `xmip-core-journey` | scaffolded | `module/foundation/journey` | — |
 | `xmip-core-message` | scaffolded | `module/foundation/message` | 15 |
+| `xmip-core-net` | scaffolded | `module/foundation/net` | — |
 | `xmip-core-node` | scaffolded | `module/foundation/node` | — |
 | `xmip-core-party` | scaffolded | `module/foundation/party` | — |
 | `xmip-core-stream` | scaffolded | `module/foundation/stream` | — |

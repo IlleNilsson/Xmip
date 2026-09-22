@@ -260,6 +260,13 @@ dependency = []
   maturity = "scaffolded"
   dependency = ["xmip-core"]
 
+  [xmip.core.net]
+  description = "Network primitives the capabilities share: an address as a transport writes it, a network in prefix notation, and the name the peer's address travels under. One copy where identification and authorization each had their own and disagreed about the name until 2026-09-22."
+  architecturalDomain = "Foundation"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+
   [xmip.core.codec]
   description = "Encoding primitives every layer shares: XML escaping, and the hex, base64, checksums, byte cursor and writer, varints, civil dates and lexer machinery that capabilities each wrote by hand until 2026-09-22. What a format means stays with the format; how its bytes and characters are written is here."
   architecturalDomain = "Foundation"
