@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145496 lines of production
+Where each repository mounts and what it holds: 145272 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -181,13 +181,13 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1312
+│   │   ├── identify                            1276
 │   │   │   ├── saml                             350
 │   │   │   ├── kerberos                         331
-│   │   │   ├── ip                               285
 │   │   │   ├── ntlm                             271
 │   │   │   ├── api-key                          255
-│   │   │   ├── dns                              197
+│   │   │   ├── dns                              195
+│   │   │   ├── ip                               187
 │   │   │   ├── username                         171
 │   │   │   ├── jwt                              169
 │   │   │   ├── header                           148
@@ -242,11 +242,11 @@ hold no source to count.
 │   │   │   ├── opa                              454
 │   │   │   ├── location                         395
 │   │   │   ├── abac                             360
-│   │   │   ├── transport                        293
 │   │   │   ├── cedar                            290
 │   │   │   ├── policy                           249
 │   │   │   ├── role                             226
 │   │   │   ├── artifact                         215
+│   │   │   ├── transport                        205
 │   │   │   ├── acl                              178
 │   │   │   ├── contract                         176
 │   │   │   ├── claim                            173
