@@ -272,6 +272,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
+  dependency = ["xmip-core-asn1"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
@@ -861,7 +862,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -891,7 +892,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-message"]
     [xmip.core.identify.kerberos]
     maturity = "scaffolded"
-    dependency = ["xmip-core"]
+    dependency = ["xmip-core", "xmip-core-asn1"]
     [xmip.core.identify.mac]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -925,7 +926,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -946,10 +947,10 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.kerberos]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
     [xmip.core.authenticate.ldap]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
     [xmip.core.authenticate.mutual-tls]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]

@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145794 lines of production
+Where each repository mounts and what it holds: 145184 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -77,12 +77,12 @@ hold no source to count.
 ```text
 ├── module/
 │   ├── capability/
-│   │   ├── authenticate                        2080
+│   │   ├── authenticate                        2019
 │   │   │   ├── saml                            1043
-│   │   │   ├── kerberos                         985
+│   │   │   ├── kerberos                         830
 │   │   │   ├── ntlm                             796
-│   │   │   ├── ldap                             685
 │   │   │   ├── oauth2                           605
+│   │   │   ├── ldap                             550
 │   │   │   ├── oidc                             510
 │   │   │   ├── digest                           509
 │   │   │   ├── ssh-key                          509
@@ -96,7 +96,7 @@ hold no source to count.
 │   │   │   ├── basic                            111
 │   │   │   ├── mutual-tls                        97
 │   │   │   └── password                          81
-│   │   ├── transport                           1851
+│   │   ├── transport                           1721
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
 │   │   │   ├── mssql                           2141
@@ -181,9 +181,9 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1109
-│   │   │   ├── kerberos                         476
+│   │   ├── identify                            1116
 │   │   │   ├── saml                             362
+│   │   │   ├── kerberos                         340
 │   │   │   ├── ip                               285
 │   │   │   ├── ntlm                             275
 │   │   │   ├── api-key                          255
