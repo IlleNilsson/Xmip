@@ -351,8 +351,19 @@ rule is about keeping the name, not about paying for an empty mount — and it
 is not to be deleted while the condition holds. The day another repository
 implements migration from other platforms, the question is open again.
 
-`xmip-core-diagnose` is kept as well, on the owner's answer of 2026-09-21,
-without a condition yet.
+**`xmip-core-diagnose` is retained, and diagnosis lives there.** The owner,
+the same day: *xmip-core-diagnose shall also be kept and diagnosis code shall
+be moved to it if there are any.* Diagnosis is explaining why a running
+node, Journey or endpoint is in the state it is — ADR-0025's Operation
+capability, which observes the path and does not carry it — and no
+repository holds any. Searched on 2026-09-22, the nearest thing is
+`ModuleProbe` in `xmip-core-abi`, behind `xmip probe` and the PowerShell
+probe, and it is not diagnosis: its own summary calls it the first rule of
+ADR-0012's section 11 conformance suite, which checks that a module honours
+the boundary, and its home is the conformance repository the specification
+names. A contract's `diagnostics` in the ABI are its findings about content,
+which is validation. Nothing moves; the first diagnosis Xmip writes goes to
+`xmip-core-diagnose` and brings the mount back.
 
 **`xmip-core-schedule` is retained, and scheduling lives there.** The owner,
 the same day: *xmip-core-schedule shall be retained and the scheduling code if
