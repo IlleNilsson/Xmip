@@ -425,7 +425,8 @@ Xmip/
 │   └── platform/
 │       └── runtime   configure   persist
 ├── test/
-│   └── playground   the Xmip Playground, ADR-0028
+│   └── core/
+│       └── playground   the Xmip Playground, ADR-0028
 └── template/
     ├── rust     what a Rust module repository is generated from
     └── dotnet   what a .NET one is
@@ -442,6 +443,27 @@ ADR-0020 predicts a drawing will.)
 day: three repositories with no implementation, unmounted on the owner's
 instruction. ADR-0058, amendment 2026-09-19. The estate mounts forty-one
 modules.*
+
+**A path without a provider in it means `core`.** The owner, 2026-09-23,
+reading the estate map: *there is no room for third parties*. The Playground
+was `xmip-test-playground` at `test/playground`, which put `test` in the
+provider's place — the second segment of a name, where `core` belongs — and
+left a second provider nowhere to stand. It is `xmip-core-test-playground` at
+`test/core/playground`, and anyone else's is `xmip-<theirs>-test-playground`
+at `test/<theirs>/playground`.
+
+The same holds under `module/`. Core's modules keep the paths above, because
+core is the provider every path without one means; another provider's mount
+under a subtree of their own, so their modules sit beside Xmip's rather than
+among them:
+
+```text
+xmip-acme-transport        ->  module/acme/capability/transport
+xmip-acme-transport-kafka  ->  kafka, inside that
+```
+
+`Get-XmipMountPath` computes it, and `test/Sync-XmipEstate.Test.ps1` holds it
+to that.
 
 **This tree is where things mount, and it is two levels deep.** The estate is
 larger than that: the manifest declares 330 repositories, 290 of them

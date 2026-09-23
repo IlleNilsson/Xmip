@@ -17,4 +17,4 @@ What every technology shares — how its repository is named, declared, created,
 mounted and landed — is `doc/architecture/repository-model.md`, sections 2, 7,
 8 and 10; the rules the tests enforce are `doc/governance/rust-style.md`; what
 to build and in what order is `doc/planning/open-problems.md`; a transport or a
-contract is proven in the Playground (ADR-0028, `test/playground/README.md`).
+contract is proven in the Playground (ADR-0028, `test/core/playground/README.md`).

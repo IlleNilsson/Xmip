@@ -393,6 +393,34 @@ Describe 'The estate is more than its modules' {
         $shared.Count | Should -Be 0 -Because "two repositories cannot share one mount:`n$detail"
     }
 
+    It 'leaves a provider other than core a subtree of its own' {
+        # The owner, 2026-09-23: the Playground had taken test/playground and
+        # left nowhere for anyone else's. A path without a provider in it
+        # means core; another provider mounts under its own name, so its
+        # modules sit beside Xmip's rather than among them.
+        $mount = & (Get-Module Xmip) {
+            param($Repositories)
+
+            foreach ($repository in $Repositories) {
+                $path = Get-XmipMountPath -Repository $repository -Declared @('xmip-acme-transport')
+
+                [pscustomobject]@{ Name = $repository.name; At = $path.Mount; In = $path.Owner }
+            }
+        } @(
+            [pscustomobject]@{ name = 'xmip-core-transport'; architecturalDomain = 'Capability' }
+            [pscustomobject]@{ name = 'xmip-acme-transport'; architecturalDomain = 'Capability' }
+            [pscustomobject]@{
+                name                = 'xmip-acme-transport-kafka'
+                architecturalDomain = 'Capability'
+            }
+        )
+
+        $mount[0].At | Should -Be 'module/capability/transport'
+        $mount[1].At | Should -Be 'module/acme/capability/transport'
+        $mount[2].In | Should -Be 'xmip-acme-transport'
+        $mount[2].At | Should -Be 'kafka'
+    }
+
     It 'mounts nothing the manifest does not declare' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the

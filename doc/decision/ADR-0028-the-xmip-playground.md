@@ -367,3 +367,32 @@ still starts nothing.
 The other defect of that day, a history file that had never held a point, is
 ADR-0029's: the rule it broke is what a history point is, not what the
 Playground spawns. It is recorded there.
+
+## Amendment, 2026-09-23: the Playground is core's, and says so
+
+The owner, reading the estate map: *there is no room for 3rd parties there is
+test/playground. It should be test/core/playground so there is room for
+test/3rd party/playground. Corresponding repos would be
+xmip-core-test-playground and xmip-<3rd party>-test-playground.*
+
+He is right, and the reason is in the name. A repository is
+`xmip-<provider>-<module>` (repository-model.md, section 2), so
+`xmip-test-playground` read as *provider `test`, module `playground`* — and
+the manifest said as much, calling `test` a provider namespace others may
+join. But that left a second provider only the provider's own slot to take:
+`xmip-acme-playground` claims a module named playground rather than saying it
+is test scaffolding, and the path `test/playground` had no room at all.
+
+- **`test` is the kind of work, not the provider.** The repository is
+  `xmip-core-test-playground`, declared at `xmip.core.test.playground`,
+  mounted at `test/core/playground`. A second provider's is
+  `xmip-<theirs>-test-playground` at `test/<theirs>/playground`, declared the
+  same way under their own provider, and every rule here applies to it
+  unchanged.
+- **Core's own paths do not move.** A path without a provider in it means
+  core, so `module/capability/transport` stays as it is; a provider other
+  than core mounts under a subtree of its own. The rule is written down now
+  rather than invented when the first third-party module arrives.
+- **The rename kept its history.** GitHub redirects the old name, the
+  submodule moved with `git mv`, and the crate is `xmip-core-test-playground`.
+  Clause 1 above still holds: one repository, optional, ADR-0036.
