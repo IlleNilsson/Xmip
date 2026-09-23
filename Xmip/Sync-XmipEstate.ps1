@@ -46,8 +46,8 @@
     A provider other than `core` mounts under a subtree of its own, so its
     modules sit beside Xmip's rather than among them:
 
-        xmip-acme-transport        ->  module/acme/capability/transport
-        xmip-acme-transport-kafka  ->  kafka, inside that
+        xmip-<provider>-transport        ->  module/<provider>/capability/transport
+        xmip-<provider>-transport-kafka  ->  kafka, inside that
 
     The owner's rule of 2026-09-23, when he found the Playground had taken
     `test/playground` with no room for anyone else's. Core's own paths stay
@@ -107,7 +107,7 @@ function Get-XmipMountPath {
         ).ToLowerInvariant()
 
         # The leaf is what follows the provider, whoever the provider is:
-        # xmip-core-transport is transport, and so is xmip-acme-transport.
+        # xmip-core-transport is transport, and so is any other provider's.
         # A name that is only a provider — xmip-core itself — is its own leaf.
         if ('' -ne $provider -and $segment.Count -gt 2) {
             $leaf = ($segment | Select-Object -Skip 2) -join '-'

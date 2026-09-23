@@ -458,8 +458,8 @@ under a subtree of their own, so their modules sit beside Xmip's rather than
 among them:
 
 ```text
-xmip-acme-transport        ->  module/acme/capability/transport
-xmip-acme-transport-kafka  ->  kafka, inside that
+xmip-<provider>-transport        ->  module/<provider>/capability/transport
+xmip-<provider>-transport-kafka  ->  kafka, inside that
 ```
 
 `Get-XmipMountPath` computes it, and `test/Sync-XmipEstate.Test.ps1` holds it

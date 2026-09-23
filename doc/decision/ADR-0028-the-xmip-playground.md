@@ -380,7 +380,7 @@ He is right, and the reason is in the name. A repository is
 `xmip-test-playground` read as *provider `test`, module `playground`* — and
 the manifest said as much, calling `test` a provider namespace others may
 join. But that left a second provider only the provider's own slot to take:
-`xmip-acme-playground` claims a module named playground rather than saying it
+`xmip-<provider>-playground` claims a module named playground rather than saying
 is test scaffolding, and the path `test/playground` had no room at all.
 
 - **`test` is the kind of work, not the provider.** The repository is
