@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145388 lines of production
+Where each repository mounts and what it holds: 145403 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -358,7 +358,7 @@ hold no source to count.
 │       └── persist                               93
 └── test/
     └── core/
-        └── playground                          9475
+        └── playground                          9490
 ```
 
 ---

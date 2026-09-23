@@ -116,9 +116,13 @@ function Start-XmipTest {
             simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
-            The nodes to simulate, by name — one process each, spawned by the
-            roll's cluster process, so -Nodes alpha, beta, gamma is three node
-            processes called that under one cluster called -Cluster. What
+            The nodes to simulate, by name or by count — one process each,
+            spawned by the roll's cluster process: -Nodes alpha, beta, gamma
+            is three called that under one cluster called -Cluster, and
+            -Nodes 6 is six the roll names and deals over the message path
+            itself, as it does for an omitted -Nodes. A name starts with a
+            letter, so a lone number is a count, and a count is refused with
+            -OnlineNodes or -NodeCapability, which need names. What
             each node does is the capability it is started with (ADR-0056),
             stated with -NodeCapability. A name says nothing about it: the
             owner, 2026-09-20, *Rn, Pn and Sn are arbitrary node names*, and
@@ -400,14 +404,19 @@ function Start-XmipTest {
         return
     }
 
-    if ($NodeCapability -and -not $PSBoundParameters.ContainsKey('Nodes')) {
-        Write-Error '-NodeCapability names nodes; name them all with -Nodes first.'
-        return
+    [int] $count = Get-XmipNodeCount -Nodes $Nodes
+    [hashtable] $selection = @{
+        Nodes          = $Nodes
+        OnlineNodes    = $OnlineNodes
+        NodeCapability = $NodeCapability
+        Test           = $Test
+        Named          = $PSBoundParameters.ContainsKey('Nodes')
     }
+    [string] $refused = Get-XmipNodeSelectionRefusal @selection
 
-    if ($PSBoundParameters.ContainsKey('Nodes')) {
-        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
-        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
+    if ($refused -ne '') {
+        Write-Error $refused
+        return
     }
 
     # You name the cluster; a test spawns nodes, never a cluster (the owner,
@@ -417,20 +426,11 @@ function Start-XmipTest {
         return
     }
 
-    # A node declares what it can do (ADR-0056), and RoundTrip across nodes
-    # needs receive, process and send declared somewhere. Said here, before
-    # anything is built or spawned; the roll refuses the same way for one
-    # started by hand.
+    # A count names nothing, so only names can be warned about.
     [hashtable] $asked = @{
-        Nodes          = $Nodes
+        Nodes          = if ($count -ge 0) { $null } else { $Nodes }
         Test           = $Test
         NodeCapability = $NodeCapability
-    }
-    [string] $refusal = Get-XmipNodeCapabilityRefusal @asked
-
-    if ($refusal -ne '') {
-        Write-Error $refusal
-        return
     }
 
     # A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn are

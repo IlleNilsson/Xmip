@@ -311,6 +311,30 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'takes how many nodes as well as which, and leaves the naming to the roll' {
+        # The owner, 2026-09-23: how many nodes in each cluster I want. A
+        # node's name starts with a letter, so a lone number is no name and
+        # can only be a count; the roll names those nodes and deals them over
+        # receive, process and send, as it does for an omitted -Nodes.
+        InModuleScope Xmip {
+            $common = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+
+            $counted = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 6
+            $named = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 'east', 'west'
+
+            $counted.XMIP_PLAYGROUND_NODES | Should -Be '6'
+            $counted.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
+            $named.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'east,west'
+            $named.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
+
+            Get-XmipNodeCount -Nodes @('6') | Should -Be 6
+            Get-XmipNodeCount -Nodes @('0') | Should -Be 0
+            Get-XmipNodeCount -Nodes @('east', 'west') | Should -Be -1
+            Get-XmipNodeCount -Nodes @('R1') | Should -Be -1
+            Get-XmipNodeCount -Nodes @() | Should -Be -1
+        }
+    }
+
     It 'names nodes, one process each, and an empty list is no nodes' {
         InModuleScope Xmip {
             $none = @{ Stress = 'Harsh'; Nodes = @(); Snapshot = 's'; History = 'h' }

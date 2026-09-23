@@ -69,6 +69,91 @@ function ConvertTo-XmipTestName {
     return $Scenario
 }
 
+<#
+    .SYNOPSIS
+    Why a node selection cannot be run, or '' where it can.
+
+    .DESCRIPTION
+    -Nodes says which nodes by name, or how many by count, and the two allow
+    different things: names can be given capabilities and marked online,
+    while a count leaves the naming and the dealing to the roll, so there is
+    no name for -OnlineNodes or -NodeCapability to hold on to.
+
+    Said at the door and before anything is built (ADR-0055), by the one
+    function both Start-XmipTest and the environment ask, so they cannot
+    disagree about what was asked for.
+
+    .PARAMETER Nodes
+    What -Nodes was given, or $null where it was not given at all.
+
+    .PARAMETER OnlineNodes
+    What -OnlineNodes was given.
+
+    .PARAMETER NodeCapability
+    What -NodeCapability was given.
+
+    .PARAMETER Test
+    What -Test was given, for the capability the path needs.
+
+    .PARAMETER Named
+    True where -Nodes was given at all, however it was given.
+#>
+function Get-XmipNodeSelectionRefusal {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [string[]] $Nodes,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [string[]] $OnlineNodes,
+
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [string[]] $Test,
+
+        [Parameter()]
+        [switch] $Named
+    )
+
+    [int] $count = Get-XmipNodeCount -Nodes $Nodes
+
+    if ($NodeCapability -and -not $Named) {
+        return '-NodeCapability names nodes; name them all with -Nodes first.'
+    }
+
+    if ($count -ge 0 -and ($OnlineNodes -or $NodeCapability)) {
+        return ('-Nodes <count> leaves the naming to the roll, so -OnlineNodes and ' +
+            '-NodeCapability have no names to hold on to. Name the nodes instead.')
+    }
+
+    if ($Named -and $count -lt 0) {
+        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
+        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
+    }
+
+    # A node declares what it can do (ADR-0056), and RoundTrip across nodes
+    # needs receive, process and send declared somewhere. A count is dealt by
+    # the roll, so only names can leave a stage undeclared.
+    [hashtable] $asked = @{
+        Nodes          = if ($count -ge 0) { $null } else { $Nodes }
+        Test           = $Test
+        NodeCapability = $NodeCapability
+    }
+
+    return Get-XmipNodeCapabilityRefusal @asked
+}
+
+
 function Assert-XmipNodeName {
     <#
         .SYNOPSIS
@@ -208,10 +293,19 @@ function New-XmipPlaygroundEnvironment {
         $environment.XMIP_PLAYGROUND_CLUSTER = $Cluster
     }
 
-    # Nodes are named, not numbered (the owner, 2026-09-12): a list of names is
-    # one process each; an empty list is no nodes at any level; nothing said
-    # leaves the level its own numbered nodes.
-    if ($null -ne $Nodes) {
+    # A count says how many and leaves the naming and the dealing to the roll
+    # (the owner, 2026-09-23): `-Nodes 6` is six nodes over the message path,
+    # numbered as the level's own complement is.
+    [int] $count = Get-XmipNodeCount -Nodes $Nodes
+
+    if ($count -ge 0) {
+        $environment.XMIP_PLAYGROUND_NODES = "$count"
+    }
+
+    # Otherwise nodes are named, not numbered (the owner, 2026-09-12): a list
+    # of names is one process each; an empty list is no nodes at any level;
+    # nothing said leaves the level its own numbered nodes.
+    elseif ($null -ne $Nodes) {
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
         Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
