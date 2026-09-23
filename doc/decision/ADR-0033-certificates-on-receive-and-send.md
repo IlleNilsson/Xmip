@@ -202,6 +202,45 @@ the record had said post-quantum before; this does.
   certificates. Each is a slice of its own.
 
 
+## Amendment, 2026-09-23: the handshake's key exchange is hybrid, and TLS has a home
+
+The owner asked whether TLS hybrid was built, and on hearing it was not:
+*Fix ... TLS Hybrid.* The certificate had been hybrid since 2026-09-18 and
+the session it opened was not: the key exchange was X25519 alone, so a
+recording of today's traffic could be read by whoever later holds a quantum
+computer, however quantum-safe the certificate that authenticated it.
+
+- **The group is X25519MLKEM768**, the hybrid of X25519 and ML-KEM-768
+  (FIPS 203) that the IETF's hybrid design for TLS 1.3 names and that
+  browsers, CDNs and OpenSSL 3.5 already offer. A session agreed on it is as
+  safe as the stronger of the two: a flaw found in the young lattice scheme
+  still leaves X25519, and a quantum computer still faces ML-KEM.
+- **Offered first, never alone.** Both sides build from one provider whose
+  groups are, in order, X25519MLKEM768, X25519, P-256 and P-384. Two Xmip
+  nodes agree the hybrid; a peer that knows only classical groups is served
+  with X25519, so nothing that connects today stops connecting. The
+  handshake records which was agreed, and the tests prove both.
+- **The provider is aws-lc-rs, not ring**, because ring has no ML-KEM. It is
+  rustls's default and the crypto the estate already builds for ML-DSA in
+  `x509-alt`; its assembler comes prebuilt, so a Windows build needs no NASM.
+  The groups are listed explicitly rather than taken from the provider's
+  default, so a change of rustls's preference cannot quietly change Xmip's.
+- **TLS is a repository of its own, `xmip-core-tls`**, on the owner's
+  decision of 2026-09-22. It sat inside `xmip-core-transport-http`, where the
+  transports riding on HTTP could reach it and the twenty that do not — SMTP
+  and IMAP with STARTTLS, MQTT, AMQP, Kafka, the databases, syslog — could
+  not. Four technologies mapped their `https` URLs to a stack they had no way
+  to load, and `webdav` mapped `webdavs://` and then refused it; all five now
+  reach TLS, and webdav connects through the http technology's endpoint like
+  every other rider. A client, a server, the node's certificate and the
+  operating system's trust store live there; one call serves STARTTLS, since
+  an upgrade in place is the same wrap on a socket already negotiated. When
+  to upgrade, and what a protocol sends first, stays with the protocol.
+- **Not yet**, still: composite signatures, and a hybrid key on Xmip's own
+  side. A post-quantum *certificate* in the handshake — ML-DSA as the TLS
+  signature rather than beside it — waits on rustls and on public CAs issuing
+  one.
+
 The requirement and the priority are the owner's, 2026-09-05: certificates on
 Receive and Send, Let's Encrypt prioritized among the identity protocols.
 Clauses 1 to 4 are the assistant's drafting of it, on the instruction to

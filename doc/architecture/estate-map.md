@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145493 lines of production
+Where each repository mounts and what it holds: 145388 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -96,13 +96,13 @@ hold no source to count.
 │   │   │   ├── mutual-tls                        97
 │   │   │   ├── basic                             86
 │   │   │   └── password                          81
-│   │   ├── transport                           1718
+│   │   ├── transport                           1727
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
 │   │   │   ├── mssql                           2143
 │   │   │   ├── mysql                           1833
 │   │   │   ├── smb                             1724
-│   │   │   ├── http                            1722
+│   │   │   ├── http                            1604
 │   │   │   ├── nfs                             1585
 │   │   │   ├── rabbitmq                        1567
 │   │   │   ├── snmp                            1417
@@ -110,7 +110,7 @@ hold no source to count.
 │   │   │   ├── ibm-mq                          1277
 │   │   │   ├── ethercat                        1258
 │   │   │   ├── postgresql                      1258
-│   │   │   ├── webdav                          1174
+│   │   │   ├── webdav                          1178
 │   │   │   ├── kafka                           1165
 │   │   │   ├── as4                             1100
 │   │   │   ├── amqp                            1097

@@ -293,7 +293,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-asn1", "xmip-core-codec"]
+  dependency = ["xmip-core-asn1", "xmip-core-codec", "xmip-core-tls"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
@@ -311,7 +311,7 @@ dependency = []
     specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
-    dependency = ["xmip-core-codec"]
+    dependency = ["xmip-core-codec", "xmip-core-tls"]
     specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
     maturity = "scaffolded"
