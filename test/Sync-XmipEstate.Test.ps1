@@ -402,22 +402,22 @@ Describe 'The estate is more than its modules' {
             param($Repositories)
 
             foreach ($repository in $Repositories) {
-                $path = Get-XmipMountPath -Repository $repository -Declared @('xmip-acme-transport')
+                $path = Get-XmipMountPath -Repository $repository -Declared @('xmip-example-transport')
 
                 [pscustomobject]@{ Name = $repository.name; At = $path.Mount; In = $path.Owner }
             }
         } @(
             [pscustomobject]@{ name = 'xmip-core-transport'; architecturalDomain = 'Capability' }
-            [pscustomobject]@{ name = 'xmip-acme-transport'; architecturalDomain = 'Capability' }
+            [pscustomobject]@{ name = 'xmip-example-transport'; architecturalDomain = 'Capability' }
             [pscustomobject]@{
-                name                = 'xmip-acme-transport-kafka'
+                name                = 'xmip-example-transport-kafka'
                 architecturalDomain = 'Capability'
             }
         )
 
         $mount[0].At | Should -Be 'module/capability/transport'
-        $mount[1].At | Should -Be 'module/acme/capability/transport'
-        $mount[2].In | Should -Be 'xmip-acme-transport'
+        $mount[1].At | Should -Be 'module/example/capability/transport'
+        $mount[2].In | Should -Be 'xmip-example-transport'
         $mount[2].At | Should -Be 'kafka'
     }
 

@@ -645,3 +645,24 @@ meanings on one noun.
 The choosing is `Select-XmipTestRoll`, apart from the stopping so it is
 tested with runs made of their properties and no process started
 (`test/XmipTest.Test.ps1`). Nothing here is a new cmdlet.
+
+## Amendment, 2026-09-23: the sweep was not finished, and it was not kept
+
+Clause 24 above says there is no placeholder company. The sweep of 2026-09-20
+left nine places holding one, and on 2026-09-23 the assistant wrote four more
+into a new mount rule — `xmip-acme-transport`, `module/acme/capability/...` —
+in `Get-XmipMountPath`, its test, `repository-model.md` and ADR-0028's
+amendment. The owner: *We were not to use acme any more, 3'rd party or
+provider*, and *ACME is for the certificate provider*.
+
+- **Prose and doc comments take the grammar slot**: `xmip-<provider>-transport`
+  mounting at `module/<provider>/capability/transport`, and *a third party*
+  where a sentence needs a noun.
+- **Where a literal is needed**, a provider is `example` and a partner or
+  tenant is `partner-x`: the mount test's declared repositories, the tenant a
+  claim carries (`authorize/claim`), the cloud project a Pub/Sub topic sits in
+  (`transport/google-pub-sub`, five places), and a dynamic module's entry-point
+  symbol in `platform/runtime`, which read `acme_create_v1` and now reads
+  `partner_create_v1`.
+- **ACME still means RFC 8555**, and the owner's quoted words keep his
+  spelling, as clause 5 of the amendment above already had it.
