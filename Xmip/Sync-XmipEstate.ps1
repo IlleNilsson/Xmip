@@ -42,6 +42,16 @@
 
     The name is the TOML tree path with dots as hyphens, so the mount name is
     the last segment and the owner is the name minus that segment.
+
+    A provider other than `core` mounts under a subtree of its own, so its
+    modules sit beside Xmip's rather than among them:
+
+        xmip-acme-transport        ->  module/acme/capability/transport
+        xmip-acme-transport-kafka  ->  kafka, inside that
+
+    The owner's rule of 2026-09-23, when he found the Playground had taken
+    `test/playground` with no room for anyone else's. Core's own paths stay
+    where they are: it is the provider every path without one means.
 #>
 function Get-XmipMountPath {
     [CmdletBinding()]
@@ -76,14 +86,38 @@ function Get-XmipMountPath {
         $leaf = $name.Substring(5)
     }
 
+    # The provider is the second segment: xmip-<provider>-<module>. Core's
+    # modules mount under module/<domain>/, and anyone else's under a subtree
+    # of their own, which is what leaves room for a second provider's module
+    # beside Xmip's rather than in with them.
+    [string[]] $segment = $name.Split('-')
+    [string] $provider = if ($segment.Count -ge 2 -and $segment[0] -ieq 'xmip') {
+        $segment[1]
+    }
+    else {
+        ''
+    }
+
     # xmip-core is both a repository and the prefix every module carries, so a
     # module resolves to it. Modules mount under the estate root regardless —
     # ADR-0016 shows Xmip pinning module/transport directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
         [string] $domain = [string](
             Get-PropertyValue $Repository 'architecturalDomain' 'Capability'
-        )
-        return [pscustomobject]@{ Owner = ''; Mount = "module/$($domain.ToLowerInvariant())/$leaf" }
+        ).ToLowerInvariant()
+
+        # The leaf is what follows the provider, whoever the provider is:
+        # xmip-core-transport is transport, and so is xmip-acme-transport.
+        # A name that is only a provider — xmip-core itself — is its own leaf.
+        if ('' -ne $provider -and $segment.Count -gt 2) {
+            $leaf = ($segment | Select-Object -Skip 2) -join '-'
+        }
+
+        if ('' -ne $provider -and $provider -ine 'core') {
+            return [pscustomobject]@{ Owner = ''; Mount = "module/$provider/$domain/$leaf" }
+        }
+
+        return [pscustomobject]@{ Owner = ''; Mount = "module/$domain/$leaf" }
     }
 
     return [pscustomobject]@{ Owner = $owner; Mount = $leaf }

@@ -10,7 +10,7 @@ function ConvertFrom-XmipRosterText {
 
         .DESCRIPTION
             The text is the roll's own spelling of a roster
-            (test/playground/src/roster.rs): name, or name=capability, or
+            (test/core/playground/src/roster.rs): name, or name=capability, or
             name=capability+capability, comma separated. Every node named is
             in the table, declaring nothing where it declared nothing, so
             nothing downstream falls back to reading a letter off a name

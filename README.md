@@ -643,7 +643,7 @@ updates the pins in the superproject:
 | Suite | Runs | Command |
 | --- | --- | --- |
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/operation/powershell/tests` |
-| The Playground's own | `test/playground` | `cargo test` in `test/playground` |
+| The Playground's own | `test/core/playground` | `cargo test` in `test/core/playground` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate` |
 | The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
@@ -683,7 +683,7 @@ prerequisite.toml     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
 Xmip/                 the estate's PowerShell module
 module/               the modules, submodules at module/<domain>/<leaf>
-test/                 the estate's Pester suite; test/playground is the Playground
+test/                 the estate's Pester suite; test/core/playground is the Playground
 deploy/               Ansible roles and a DSC configuration for a node
 template/             the Rust and .NET repository templates
 doc/                  the record

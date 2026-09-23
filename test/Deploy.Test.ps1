@@ -35,6 +35,14 @@ BeforeAll {
             if (-not $technology.Contains('maturity')) { continue }
             if ($technology.maturity -in @('reserved', 'planned', 'retired')) { continue }
             if ($technology.Contains('primaryLanguage')) { continue }
+
+            # Optional scaffolding is not a technology a node loads: the
+            # Playground exercises Xmip from outside and mounts outside
+            # module/ (ADR-0036). It reached this list on 2026-09-23, when it
+            # became xmip-core-test-playground and so looked like every other
+            # xmip-core-<capability>-<leaf>.
+            if ($technology.Contains('optional') -and $technology.optional) { continue }
+
             $deployed.Add("xmip-core-$capability-$leaf")
         }
     }

@@ -570,7 +570,7 @@ retires entries from stops being an order.
                                        technology; the root assembly has none
                                        either; the only place the two hundred
                                        technologies are linked is
-                                       `test/playground`, with one hundred
+                                       `test/core/playground`, with one hundred
                                        and twenty-three. They can now be
                                        loaded instead: ADR-0057 step 2
                                        landed on 2026-09-19 and

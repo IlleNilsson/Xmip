@@ -1719,7 +1719,7 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 #       (mounted at module/platform/resilience when this move was made;
 #        resilience became a Capability on 2026-09-19, ADR-0058)
 #   doc/decision/ADR-0028-the-xmip-playground.md
-#     3a, 3b and the difficulty amendment -> test/playground/README.md
+#     3a, 3b and the difficulty amendment -> test/core/playground/README.md
 
 # ---------------------------------------------------------------------------
 # Consolidation, tier three, 2026-09-14. What the survey found sitting twice,
@@ -1786,7 +1786,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   template/rust/TEMPLATE_SETUP.md, template/dotnet/TEMPLATE_SETUP.md
 #     items 1, 2, 8 and 9 -> citations of repository-model.md section 2,
 #     architectural-change-permission.md and the template README
-#   test/playground/README.md
+#   test/core/playground/README.md
 #     Running it -> the estate's README.md, which already showed the commands;
 #     the XMIP_PLAYGROUND_* variables and the test-name mapping stay
 #   fifty-three technology READMEs under identify, authenticate, authorize and

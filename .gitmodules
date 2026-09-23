@@ -158,9 +158,9 @@
 	path = template/dotnet
 	url = https://github.com/IlleNilsson/xmip-template-dotnet.git
 	ignore = dirty
-[submodule "tests/playground"]
-	path = test/playground
-	url = https://github.com/IlleNilsson/xmip-test-playground
+[submodule "test/core/playground"]
+	path = test/core/playground
+	url = https://github.com/IlleNilsson/xmip-core-test-playground
 	ignore = dirty
 [submodule "module/foundation/asn1"]
 	path = module/foundation/asn1

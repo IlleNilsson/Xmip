@@ -32,9 +32,9 @@ the estate tree, and are counted nowhere below.
 | --- | ---: | ---: | ---: |
 | Foundation | 14 | 14 | 0 |
 | Capability | 18 | 18 | 0 |
-| Operation | 9 | 8 | 1 |
+| Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 290 | 214 | 76 |
+| Technology | 291 | 215 | 76 |
 | **Total** | 334 | 257 | 77 |
 
 | Maturity | Declared | Mounted | Not mounted |
@@ -357,7 +357,8 @@ hold no source to count.
 │       ├── configure                            198
 │       └── persist                               93
 └── test/
-    └── playground                              9475
+    └── core/
+        └── playground                          9475
 ```
 
 ---
@@ -537,8 +538,7 @@ Running and governing Xmip.
 | `xmip-core-observe` | scaffolded | `module/operation/observe` | 5 |
 | `xmip-core-powershell` | scaffolded | `module/operation/powershell` | — |
 | `xmip-core-report` | scaffolded | `module/operation/report` | 6 |
-| `xmip-test` | reserved | not mounted | — |
-| `xmip-test-playground` | scaffolded | `test/playground` | — |
+| `xmip-core-test` | reserved | not mounted | 1 |
 
 ### `xmip-core-archive`, 10 technologies
 
@@ -571,6 +571,13 @@ Declared, and none composed: `module/operation/observe` has no `.gitmodules`.
 Declared, and none composed: `module/operation/report` has no `.gitmodules`.
 
 - **reserved**, 6 — csv, html, json, pdf, prometheus, sql
+
+### `xmip-core-test`, one technology
+
+The parent is not composed here, so what it composes cannot be read; every
+technology below is declared only.
+
+- **scaffolded**, 1 — playground
 
 ---
 

@@ -1420,28 +1420,28 @@ dependency = []
     dependency = ["xmip-core-abi"]
 
 
-# A second provider. `core` is Xmip's own; `test` is the namespace for what
-# exercises Xmip, and it is deliberately not Xmip's alone — another provider
-# drops its own playground module beside this one, xmip-<theirs>-playground,
-# and the estate's rules apply to it unchanged. Named by the owner, 2026-09-05,
-# to invite exactly that. The root is reserved: there is no xmip-test crate,
-# only what sits beneath it.
-[xmip.test]
-description = "What exercises Xmip. A provider namespace others may join."
-architecturalDomain = "Operation"
-repositoryRole = "operational-capability"
-maturity = "reserved"
-dependency = []
+# What exercises Xmip, under the provider whose work it exercises. `test` is
+# the kind of work, not a provider: until 2026-09-23 it stood in the provider's
+# place — xmip-test-playground at test/playground — and left nowhere for anyone
+# else's. A second provider's is xmip-<theirs>-test-playground at
+# test/<theirs>/playground, and the estate's rules apply to it unchanged.
+  [xmip.core.test]
+  description = "What exercises Xmip: the Playground, and what follows it. Every provider may have one."
+  architecturalDomain = "Operation"
+  repositoryRole = "operational-capability"
+  maturity = "reserved"
+  dependency = []
 
-  [xmip.test.playground]
+  [xmip.core.test.playground]
   description = "The Xmip Playground: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  # Test scaffolding, not a capability the runtime loads: it mounts at the estate
-  # root rather than under module/, and it is optional — the estate builds and
-  # runs without it. ADR-0036.
-  mount = "test/playground"
+  # Test scaffolding, not a capability the runtime loads: it mounts outside
+  # module/, and it is optional — the estate builds and runs without it
+  # (ADR-0036). Under the provider, because another provider's playground
+  # mounts at test/<theirs>/playground beside it (the owner, 2026-09-23).
+  mount = "test/core/playground"
   optional = true
   dependency = [
       "xmip-core",
