@@ -49,6 +49,7 @@ function Invoke-Compose {
     }
 
     [int] $moved = 0
+    [int] $refused = 0
 
     foreach ($item in @($plan.misplaced)) {
         [string] $what = '{0}: {1} -> {2}' -f $item.Name, $item.From, $item.Mount
@@ -57,16 +58,29 @@ function Invoke-Compose {
             continue
         }
 
-        Invoke-Native -FilePath 'git' -Arguments @('mv', $item.From, $item.Mount) -At $root |
-            Out-Null
+        # A rename refused is refused whole, so the rest can still move; the
+        # summary says how many did not.
+        try {
+            Move-XmipSubmodule -Root $root -From $item.From -To $item.Mount
+        }
+        catch {
+            Write-Host "REFUSED: $what — $($_.Exception.Message)"
+            $refused++
+            continue
+        }
+
+        # git mv rewrites .gitmodules and leaves it unstaged, and the next
+        # git mv refuses to run while it is. So one move at a time is all a
+        # run used to manage (found moving 25 modules, 2026-09-23).
+        Invoke-Native -FilePath 'git' -Arguments @('add', '.gitmodules') -At $root | Out-Null
 
         Write-Host "MOVED: $what"
         $moved++
     }
 
     [string] $summary =
-        'Compose: {0} added, {1} moved, {2} already mounted, {3} waiting, {4} deprecated' -f
-        $added, $moved, $plan.mounted, $plan.waiting, $plan.retired
+        ('Compose: {0} added, {1} moved, {2} refused, {3} already mounted, {4} waiting, ' +
+        '{5} deprecated') -f $added, $moved, $refused, $plan.mounted, $plan.waiting, $plan.retired
 
     Write-Step $summary
 

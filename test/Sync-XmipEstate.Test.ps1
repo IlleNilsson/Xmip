@@ -395,9 +395,9 @@ Describe 'The estate is more than its modules' {
 
     It 'leaves a provider other than core a subtree of its own' {
         # The owner, 2026-09-23: the Playground had taken test/playground and
-        # left nowhere for anyone else's. A path without a provider in it
-        # means core; another provider mounts under its own name, so its
-        # modules sit beside Xmip's rather than among them.
+        # left nowhere for anyone else's; then, provider before purpose. Every
+        # provider, core included, mounts under its own name, whatever the
+        # domain, so another's modules sit beside Xmip's rather than among them.
         $mount = & (Get-Module Xmip) {
             param($Repositories)
 
@@ -415,18 +415,36 @@ Describe 'The estate is more than its modules' {
                 name                = 'xmip-example-transport-kafka'
                 architecturalDomain = 'Capability'
             }
+            [pscustomobject]@{ name = 'xmip-core-node'; architecturalDomain = 'Foundation' }
+            [pscustomobject]@{ name = 'xmip-core-runtime'; architecturalDomain = 'Platform' }
         )
 
-        $mount[0].At | Should -Be 'module/capability/transport'
+        $mount[0].At | Should -Be 'module/core/capability/transport'
         $mount[1].At | Should -Be 'module/example/capability/transport'
         $mount[2].In | Should -Be 'xmip-example-transport'
         $mount[2].At | Should -Be 'kafka'
+        $mount[3].At | Should -Be 'module/core/foundation/node'
+        $mount[4].At | Should -Be 'module/core/platform/runtime'
+    }
+
+    It 'mounts every provider''s work under module/<provider>/, and nothing else there' {
+        # Provider before purpose, checked against the tree rather than the
+        # function: a hand-declared mount could still put purpose first. A
+        # template belongs to no provider and stays at template/<language>.
+        [string] $modules = Get-Content -Raw (Join-Path $script:Root '.gitmodules')
+        [string[]] $path = [regex]::Matches($modules, '(?m)^\s*path = (\S+)') |
+            ForEach-Object { $_.Groups[1].Value }
+
+        foreach ($at in $path) {
+            [string] $shape = '^(module/[a-z0-9]+/[a-z]+/[a-z0-9-]+|template/[a-z]+)$'
+            $at | Should -Match $shape -Because "$at is where a submodule mounts"
+        }
     }
 
     It 'mounts nothing the manifest does not declare' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the
-        # estate is 41 of them.
+        # estate is dozens of them.
         $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
         [string[]] $declared = @($manifest.repositories.name) + @(

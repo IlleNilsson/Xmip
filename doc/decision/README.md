@@ -440,7 +440,7 @@ the name — dots become hyphens and nothing else happens.
 ### Submodule composition mirrors ownership
 
 Two levels, each owned by the repository that pins it. `Xmip` pins
-`module/transport`; `xmip-core-transport` pins `kafka`. A parent pins
+`module/core/capability/transport`; `xmip-core-transport` pins `kafka`. A parent pins
 commits, and reconciliation never uses `git submodule update --remote`.
 
 → [Submodule composition, in full](ADR-0016-submodule-composition.md)
@@ -953,6 +953,7 @@ You have a word. This gives you the decision that governs it.
 | process declaration | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
+| Provider before purpose | [Submodule composition](ADR-0016-submodule-composition.md) |
 | Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Publication, Subscription matching | [The Journey model](ADR-0013-journey-model.md) |

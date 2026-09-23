@@ -29,6 +29,7 @@
 # that hosts it, never in a list of its own.
 [string[]] $script:XmipMapDomain = @(
     'Foundation'
+    'Library'
     'Capability'
     'Operation'
     'Platform'

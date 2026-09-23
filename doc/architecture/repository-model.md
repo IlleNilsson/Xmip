@@ -24,8 +24,8 @@ per ADR-0011.
 
 It does place it on disk, and that is not a contradiction. The name is one
 thing, the navigable tree is another: `Sync-XmipEstate -Compose` mounts a module
-at `module/<domain>/<leaf>`, so `xmip-core-journey` appears at
-`module/foundation/journey`. Section 7 has the shape.
+at `module/<provider>/<domain>/<leaf>`, so `xmip-core-journey` appears at
+`module/core/foundation/journey`. Section 7 has the shape.
 
 **A leaf is not unique across the estate, and does not need to be.** The estate
 declares `file` four times — under transport, audit, retain and archive — and
@@ -405,61 +405,62 @@ ADR-0016 governs, and `Sync-XmipEstate -Compose` performs it. **The filesystem
 hierarchy and the submodules are one thing** — wiring the submodules is what
 produces the tree, and `git clone --recursive` reproduces it for everyone else.
 
-Two levels. Depth two mounts under `Xmip`, grouped by architectural domain,
-the owner's layout (first drawn in the repository creation blueprint under the
-names of its day; that document is retired and this section is its home):
+Two levels. Depth two mounts under `Xmip`, grouped by provider and then by
+architectural domain — provider before purpose (the owner, 2026-09-23):
 
 ```text
 Xmip/
 ├── module/
-│   ├── foundation/
-│   │   ├── core   abi   stream   message   context   journey
-│   │   └── node   cluster   party   event
-│   ├── capability/
-│   │   ├── receive   send   transport   logic   prepare   identify
-│   │   ├── authenticate   authorize   contract   path   assign   promote
-│   │   └── demote   transform   route   process   retain   resilience
-│   ├── operation/
-│   │   ├── audit   observe   report   archive
-│   │   └── cli   powershell   gui
-│   └── platform/
-│       └── runtime   configure   persist
-├── test/
 │   └── core/
-│       └── playground   the Xmip Playground, ADR-0028
+│       ├── foundation/
+│       │   ├── core   abi   stream   message   context   journey
+│       │   └── node   cluster   party   event
+│       ├── library/
+│       │   └── asn1   codec   net   tls
+│       ├── capability/
+│       │   ├── receive   send   transport   logic   prepare   identify
+│       │   ├── authenticate   authorize   contract   path   assign   promote
+│       │   └── demote   transform   route   process   retain   resilience
+│       ├── operation/
+│       │   ├── audit   observe   report   archive
+│       │   └── cli   powershell   gui
+│       ├── platform/
+│       │   └── runtime   configure   persist
+│       └── test/
+│           └── playground   the Xmip Playground, ADR-0028
 └── template/
     ├── rust     what a Rust module repository is generated from
     └── dotnet   what a .NET one is
 ```
 
-The tree is drawn from `architecture.toml` as of 2026-09-19 and the manifest
+The tree is drawn from `architecture.toml` as of 2026-09-23 and the manifest
 wins where they differ: `Sync-XmipEstate -Compose` mounts what the manifest
-declares, at the domain the manifest gives it. (`retain` sat under
+declares, at the provider and domain the manifest gives it. (`retain` sat under
 `operation/` here until 2026-09-14, a month after it became a Capability, and
 four modules were missing — the drawing had rotted exactly as clause 5 of
 ADR-0020 predicts a drawing will.)
 
 *Redrawn 2026-09-19. `migrate`, `diagnose` and `schedule` left the tree that
 day: three repositories with no implementation, unmounted on the owner's
-instruction. ADR-0058, amendment 2026-09-19. The estate mounts forty-one
-modules.*
+instruction. ADR-0058, amendment 2026-09-19.*
 
-**A path without a provider in it means `core`.** The owner, 2026-09-23,
+**Provider before purpose, with no exception.** The owner, 2026-09-23,
 reading the estate map: *there is no room for third parties*. The Playground
 was `xmip-test-playground` at `test/playground`, which put `test` in the
 provider's place — the second segment of a name, where `core` belongs — and
-left a second provider nowhere to stand. It is `xmip-core-test-playground` at
-`test/core/playground`, and anyone else's is `xmip-<theirs>-test-playground`
-at `test/<theirs>/playground`.
-
-The same holds under `module/`. Core's modules keep the paths above, because
-core is the provider every path without one means; another provider's mount
-under a subtree of their own, so their modules sit beside Xmip's rather than
-among them:
+left a second provider nowhere to stand. A first answer put the provider in
+the path of what a node loads and left what starts a node without one; the
+owner, the same day: *provider before purpose* — he is the inventor and others
+plug in. So everything a provider ships, whatever its purpose, is one subtree
+of its own: its modules, its libraries and its Playground. A third party reads
+its whole place from its name and owns it without touching anyone else's:
 
 ```text
+xmip-core-node                   ->  module/core/foundation/node
+xmip-core-test-playground        ->  module/core/test/playground
 xmip-<provider>-transport        ->  module/<provider>/capability/transport
 xmip-<provider>-transport-kafka  ->  kafka, inside that
+xmip-<provider>-test-playground  ->  module/<provider>/test/playground
 ```
 
 `Get-XmipMountPath` computes it, and `test/Sync-XmipEstate.Test.ps1` holds it
@@ -481,8 +482,9 @@ without anything noticing — which it did. Under `template/` they are surveyed 
 `Get-XmipStatus`, landed by `Publish-XmipChange` and measured by the Rust style
 rule like anything else.
 
-They are **not** under `module/`: a module is something Xmip loads at runtime,
-and a template is never loaded by anything. `crate.template` in
+They are **not** under `module/`: `module/` is what a provider ships, and a
+template belongs to no provider — its name has none, `xmip-template-rust` —
+and is never loaded by anything. `crate.template` in
 `architecture.toml` names them by `owner/name` for the GitHub API; the path is
 `template/<language>`.
 

@@ -157,7 +157,7 @@ Describe 'Every argument is named' {
         # the same of code (powershell-style.md, section 3).
         [string[]] $files = @(
             (Join-Path $script:Root 'README.md')
-            (Join-Path $script:Root 'test/core/playground/README.md')
+            (Join-Path $script:Root 'module/core/test/playground/README.md')
             (Get-ChildItem -Path (Join-Path $script:Root 'Xmip') -Filter '*.ps1' |
                 ForEach-Object { $_.FullName })
         )

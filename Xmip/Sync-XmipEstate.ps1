@@ -28,11 +28,11 @@
     Two levels, per ADR-0016 and section 14 of the repository creation
     blueprint.
 
-    Depth two mounts under Xmip, grouped by architectural domain, because that
-    layout exists for human navigation:
+    Depth two mounts under Xmip, grouped by provider and then by architectural
+    domain, because that layout exists for human navigation:
 
-        xmip-core-transport   ->  module/capability/transport
-        xmip-core-journey     ->  module/foundation/journey
+        xmip-core-transport   ->  module/core/capability/transport
+        xmip-core-journey     ->  module/core/foundation/journey
 
     Depth three mounts directly inside its own parent capability, because at
     that level the parent is the grouping and everything in that repository is
@@ -43,15 +43,20 @@
     The name is the TOML tree path with dots as hyphens, so the mount name is
     the last segment and the owner is the name minus that segment.
 
-    A provider other than `core` mounts under a subtree of its own, so its
-    modules sit beside Xmip's rather than among them:
+    **Provider before purpose, with no exception.** The owner, 2026-09-23:
+    *Provider before purpose* — the inventor is one provider and others plug
+    in beside him. A first draft kept what starts a node (`foundation`,
+    `platform`) without a provider; that left two slicings in one tree, and
+    it went the same day. Whatever a provider ships sits in one subtree of
+    its own, so a third party can read its whole place from its name:
 
+        xmip-core-node                   ->  module/core/foundation/node
+        xmip-core-runtime                ->  module/core/platform/runtime
+        xmip-core-transport              ->  module/core/capability/transport
+        xmip-core-transport-kafka        ->  kafka, inside that
         xmip-<provider>-transport        ->  module/<provider>/capability/transport
         xmip-<provider>-transport-kafka  ->  kafka, inside that
-
-    The owner's rule of 2026-09-23, when he found the Playground had taken
-    `test/playground` with no room for anyone else's. Core's own paths stay
-    where they are: it is the provider every path without one means.
+        xmip-core-library-asn1           ->  module/core/library/asn1
 #>
 function Get-XmipMountPath {
     [CmdletBinding()]
@@ -68,9 +73,8 @@ function Get-XmipMountPath {
     [string] $name = [string](Get-PropertyValue $Repository 'name')
 
     # An explicit mount wins over the computed path. Almost nothing declares one
-    # — the domain-grouped `module/<domain>/<leaf>` below is right for a module.
-    # A repository that is not a module (the Playground is test scaffolding, not
-    # a capability the runtime loads) mounts where it says. ADR-0036.
+    # — `module/<provider>/<domain>/<leaf>` below is right for a module. One
+    # whose owner is reserved (a library, the Playground) mounts where it says.
     [string] $declaredMount = [string](Get-PropertyValue $Repository 'mount' '')
     if ('' -ne $declaredMount) {
         return [pscustomobject]@{ Owner = ''; Mount = $declaredMount }
@@ -86,10 +90,7 @@ function Get-XmipMountPath {
         $leaf = $name.Substring(5)
     }
 
-    # The provider is the second segment: xmip-<provider>-<module>. Core's
-    # modules mount under module/<domain>/, and anyone else's under a subtree
-    # of their own, which is what leaves room for a second provider's module
-    # beside Xmip's rather than in with them.
+    # The provider is the second segment: xmip-<provider>-<module>.
     [string[]] $segment = $name.Split('-')
     [string] $provider = if ($segment.Count -ge 2 -and $segment[0] -ieq 'xmip') {
         $segment[1]
@@ -100,7 +101,7 @@ function Get-XmipMountPath {
 
     # xmip-core is both a repository and the prefix every module carries, so a
     # module resolves to it. Modules mount under the estate root regardless —
-    # ADR-0016 shows Xmip pinning module/transport directly.
+    # ADR-0016 has Xmip pin every module directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
         [string] $domain = [string](
             Get-PropertyValue $Repository 'architecturalDomain' 'Capability'
@@ -113,11 +114,12 @@ function Get-XmipMountPath {
             $leaf = ($segment | Select-Object -Skip 2) -join '-'
         }
 
-        if ('' -ne $provider -and $provider -ine 'core') {
-            return [pscustomobject]@{ Owner = ''; Mount = "module/$provider/$domain/$leaf" }
+        # Only a name with no provider in it mounts without one.
+        if ('' -eq $provider) {
+            return [pscustomobject]@{ Owner = ''; Mount = "module/$domain/$leaf" }
         }
 
-        return [pscustomobject]@{ Owner = ''; Mount = "module/$domain/$leaf" }
+        return [pscustomobject]@{ Owner = ''; Mount = "module/$provider/$domain/$leaf" }
     }
 
     return [pscustomobject]@{ Owner = $owner; Mount = $leaf }

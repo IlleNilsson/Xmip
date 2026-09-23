@@ -187,7 +187,7 @@ function Start-XmipOperationWeb {
         }
 
         $layout = Get-XmipPlaygroundLayout
-        [string] $source = 'module/operation/gui/src/Xmip.Gui.Web'
+        [string] $source = 'module/core/operation/gui/src/Xmip.Gui.Web'
         [string] $project = Join-Path -Path $layout.Root -ChildPath $source
         [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
 

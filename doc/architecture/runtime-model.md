@@ -535,7 +535,7 @@ selector declares how far into the Stream it must reach. **Promote** extracts
 selected properties as far and as fast as needed, then stops; **demote** is
 its send-side counterpart, writing configured properties into the outgoing
 Stream. The language, its four segment kinds and three evaluation modes are
-`module/capability/promote/doc/content-selector.md`.
+`module/core/capability/promote/doc/content-selector.md`.
 
 ## 10. Send model
 
@@ -608,7 +608,7 @@ A Journey is Active, Waiting, Suspended, Recovering, Completed, Failed or
 Dismissed. Completed, Failed and Dismissed are terminal. Suspended and
 Recovering are the operator-recoverable path. ADR-0013 clause 7 records the
 vocabulary, and the code is `JourneyState` in `xmip-core-journey`
-(`module/foundation/journey`); this document does not repeat the enum, which
+(`module/core/foundation/journey`); this document does not repeat the enum, which
 drifted from the crate once already.
 
 Earlier drafts named a different set — Created, Running, Paused, Waiting, Dead,
@@ -990,7 +990,7 @@ requires and every reference between Instances, so a configuration error is a
 startup failure, not a first-message failure: a Receive Location naming a Send
 Port that does not exist is refused before a Stream ever arrives. What each
 phase does in code is `StartupPhase` in `xmip-core-runtime`
-(`module/platform/runtime/src/service.rs`).
+(`module/core/platform/runtime/src/service.rs`).
 
 ## 22. The Xmip Process
 
@@ -1038,7 +1038,7 @@ A Subscription Instance may correlate an incoming Message to a waiting Process
 Instance. Where the correlation and the wait condition both match, Xmip
 resumes that Instance from persisted state. What that looks like from the
 Message's side — one Instance handling many Messages over time, each still one
-immutable Stream — is `module/capability/process/doc/process-instances.md`.
+immutable Stream — is `module/core/capability/process/doc/process-instances.md`.
 
 ### Execution scope
 

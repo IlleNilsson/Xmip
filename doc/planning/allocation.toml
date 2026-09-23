@@ -1693,7 +1693,7 @@ answered by Sync-XmipEstate. ADR-0020 clause 1: two documents on one subject,
 and this was the wrong one."""
 
 [[superseded]]
-path = "module/capability/route/doc/routing-architecture.md"
+path = "module/core/capability/route/doc/routing-architecture.md"
 replacedBy = "doc/architecture/runtime-model.md"
 why = """
 A 'frozen architectural baseline' for publish, subscribe, evaluate and dispatch
@@ -1705,21 +1705,21 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 # Content moved on 2026-09-12, each file kept, each part now beside its subject
 # (ADR-0020 clause 3). Recorded here so the ledger says where a paragraph went:
 #   doc/development/creating-transports-contracts-and-processes.md
-#     parts A, B, C -> module/capability/transport/doc/adding-a-transport.md,
-#     module/capability/contract/doc/adding-a-contract.md,
-#     module/platform/configure/doc/node-configuration.md
+#     parts A, B, C -> module/core/capability/transport/doc/adding-a-transport.md,
+#     module/core/capability/contract/doc/adding-a-contract.md,
+#     module/core/platform/configure/doc/node-configuration.md
 #   doc/architecture/observability-model.md
-#     section 8 -> module/operation/report/doc/reports.md
-#     section 2 record model, section 5 -> module/operation/audit/doc/audit-record.md
+#     section 8 -> module/core/operation/report/doc/reports.md
+#     section 2 record model, section 5 -> module/core/operation/audit/doc/audit-record.md
 #   doc/architecture/deployment-model.md
-#     section 7 UUIDv7 -> module/platform/persist/doc/record-identifier.md
+#     section 7 UUIDv7 -> module/core/platform/persist/doc/record-identifier.md
 #   doc/architecture/runtime-model.md
-#     section 9 selectors -> module/capability/promote/doc/content-selector.md
-#     section 15 scope -> module/capability/resilience/README.md
-#       (mounted at module/platform/resilience when this move was made;
+#     section 9 selectors -> module/core/capability/promote/doc/content-selector.md
+#     section 15 scope -> module/core/capability/resilience/README.md
+#       (mounted at module/core/platform/resilience when this move was made;
 #        resilience became a Capability on 2026-09-19, ADR-0058)
 #   doc/decision/ADR-0028-the-xmip-playground.md
-#     3a, 3b and the difficulty amendment -> test/core/playground/README.md
+#     3a, 3b and the difficulty amendment -> module/core/test/playground/README.md
 
 # ---------------------------------------------------------------------------
 # Consolidation, tier three, 2026-09-14. What the survey found sitting twice,
@@ -1728,8 +1728,8 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 # ---------------------------------------------------------------------------
 
 [[superseded]]
-path = "module/operation/cli/ARCHITECTURE.md"
-replacedBy = "module/operation/cli/README.md"
+path = "module/core/operation/cli/ARCHITECTURE.md"
+replacedBy = "module/core/operation/cli/README.md"
 why = """
 Two documents on one subject in one repository, saying the same things twice:
 the responsibility, the .NET ruling, the shape, the dependencies, the
@@ -1740,8 +1740,8 @@ ARCHITECTURE.md; whether they should is the owner's question, put to him
 separately, and this entry does not answer it."""
 
 [[superseded]]
-path = "module/operation/powershell/ARCHITECTURE.md"
-replacedBy = "module/operation/powershell/README.md"
+path = "module/core/operation/powershell/ARCHITECTURE.md"
+replacedBy = "module/core/operation/powershell/README.md"
 why = """
 Same defect as the cli's, folded the same day. Where the two disagreed — the
 README said the binding is a project reference to Xmip.Abi, the architecture
@@ -1755,43 +1755,43 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     the mental-model table and the reference table -> the three module
 #     guides already carried them; the root keeps the three-way signpost
 #   doc/architecture/runtime-model.md
-#     section 12's literal enum JourneyState -> module/foundation/journey
+#     section 12's literal enum JourneyState -> module/core/foundation/journey
 #     (src/lib.rs, the code; the model keeps the operator meaning); its
 #     section 21 Startup is now the estate's one account, from ADR-0018, and
 #     module-model.md section 8 and terminology.md Startup point at it
 #   doc/architecture/observability-model.md
 #     section 6's mood-to-color mapping -> ADR-0041, where it already stood,
 #     and xmip-core-gui, which paints it; section 5's channel sentence ->
-#     module/operation/audit/doc/audit-record.md, Performance
+#     module/core/operation/audit/doc/audit-record.md, Performance
 #   doc/architecture/module-model.md
-#     section 5's .dll/.so/.dylib table -> module/foundation/abi/doc/
+#     section 5's .dll/.so/.dylib table -> module/core/foundation/abi/doc/
 #     specification.md section 3, Finding the library; section 6's manifest
 #     field list loses "module kind" (ADR-0012 clause 5 removed it) and points
 #     at the descriptor for what identifies a Module
 #   doc/architecture/deployment-model.md
 #     section 2's two Rust rules -> module-model.md section 12, which gains the
 #     one it lacked (blocking Handler work never blocks a runtime loop)
-#   module/capability/transport/doc/adding-a-transport.md
+#   module/core/capability/transport/doc/adding-a-transport.md
 #     steps 1-3 and Mount and land -> repository-model.md sections 7, 8 and
 #     10, which gain the two facts they lacked: repository creation is the
 #     owner's act, and Publish-XmipChange lands technology, then capability,
 #     then superproject; the reserved-planned-scaffolded-supported ladder is
 #     dropped for the manifest's own words in section 3
-#   module/capability/authenticate/doc/identity-by-technology.md
+#   module/core/capability/authenticate/doc/identity-by-technology.md
 #     section 4's manifest narrative and two dependency blocks -> the
 #     manifest, which already carried them; the AS2 four-layers paragraph stays
-#   module/foundation/abi/doc/specification.md
+#   module/core/foundation/abi/doc/specification.md
 #     section 13's restatement of ADR-0011 and ADR-0012 clause 11 -> a
 #     citation, as section 14 already was
 #   template/rust/TEMPLATE_SETUP.md, template/dotnet/TEMPLATE_SETUP.md
 #     items 1, 2, 8 and 9 -> citations of repository-model.md section 2,
 #     architectural-change-permission.md and the template README
-#   test/core/playground/README.md
+#   module/core/test/playground/README.md
 #     Running it -> the estate's README.md, which already showed the commands;
 #     the XMIP_PLAYGROUND_* variables and the test-name mapping stay
 #   fifty-three technology READMEs under identify, authenticate, authorize and
 #   transport/peppol and transport/sftp
 #     "nothing goes sideways" -> a citation of repository-model.md section 4
 #     and ADR-0044
-#   module/capability/logic/README.md, module/capability/logic/http-api/README.md
+#   module/core/capability/logic/README.md, module/core/capability/logic/http-api/README.md
 #     ADR-0043's sentence, quoted in both -> a citation in each

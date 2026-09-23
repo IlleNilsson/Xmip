@@ -396,3 +396,13 @@ is test scaffolding, and the path `test/playground` had no room at all.
 - **The rename kept its history.** GitHub redirects the old name, the
   submodule moved with `git mv`, and the crate is `xmip-core-test-playground`.
   Clause 1 above still holds: one repository, optional, ADR-0036.
+
+## Amendment, 2026-09-23 (later): provider before purpose
+
+The paragraph above kept `test/` first and core's modules at
+`module/<domain>/<leaf>`. The owner, the same day: *provider before purpose* —
+he is the inventor, and others plug in. So the Playground mounts with
+everything else core ships, at `module/core/test/playground`, and a second
+provider's at `module/<theirs>/test/playground`; core's modules moved to
+`module/core/<domain>/<leaf>`. The second bullet above no longer holds: a path
+carries its provider, core's included. ADR-0016, amendment 2026-09-23.

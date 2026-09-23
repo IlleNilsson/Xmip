@@ -26,7 +26,7 @@ The estate is governed by its own records, and they are current:
   is the module boundary, ADR-0014 the operator surfaces, ADR-0019 identity,
   ADR-0025 module loading. Do not contradict an accepted record; propose a
   new one or an amendment, and let the owner decide.
-- `doc/architecture/` — five models. `repository-model.md` explains why 41
+- `doc/architecture/` — five models. `repository-model.md` explains why the
   submodules mount where they do.
 - `doc/governance/rust-style.md` and `powershell-style.md` — enforced by
   `test/*.Test.ps1`, not aspirational. Lines ≤ 100 columns; files ≤ 400
@@ -81,7 +81,7 @@ and it cost real work.
 - Say outcomes in words — OK, FAILED, REFUSED — never color alone.
 - Full paths when naming files to the owner.
 - The estate ends every session square: everything committed, everything
-  pushed, `git status` clean in all 41 submodules and the superproject.
+  pushed, `git status` clean in every submodule and the superproject.
   `Get-XmipStatus` shows the whole estate at once.
 
 ## Before implementation
@@ -133,7 +133,8 @@ on a mutating command where that is practical.
 
 ## Submodules
 
-Xmip mounts every module as a submodule under `module/<domain>/<leaf>`. Four
+Xmip mounts every module as a submodule under
+`module/<provider>/<domain>/<leaf>` — provider before purpose. Four
 facts explain every surprise:
 
 - **A submodule is a commit, not a branch.** `Xmip` records "at this path, this
@@ -166,11 +167,11 @@ commit the parent pins.
 **Changing something in a module**
 
 ```powershell
-cd module/foundation/core
+cd module/core/foundation/core
 git checkout main          # detached otherwise, and the commit goes nowhere
 git add -A; git commit -m "..."; git push origin main
 
-cd ../../..
+cd ../../../..
 git add -A; git commit -m "Pin core: ..."; git push origin main
 ```
 
