@@ -225,7 +225,7 @@ computer, however quantum-safe the certificate that authenticated it.
   `x509-alt`; its assembler comes prebuilt, so a Windows build needs no NASM.
   The groups are listed explicitly rather than taken from the provider's
   default, so a change of rustls's preference cannot quietly change Xmip's.
-- **TLS is a repository of its own, `xmip-core-tls`**, on the owner's
+- **TLS is a repository of its own, `xmip-core-library-tls`**, on the owner's
   decision of 2026-09-22. It sat inside `xmip-core-transport-http`, where the
   transports riding on HTTP could reach it and the twenty that do not — SMTP
   and IMAP with STARTTLS, MQTT, AMQP, Kafka, the databases, syslog — could

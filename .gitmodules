@@ -1,153 +1,153 @@
 [submodule "modules/foundation/core"]
-	path = module/foundation/core
+	path = module/core/foundation/core
 	url = https://github.com/IlleNilsson/xmip-core.git
 	ignore = dirty
 [submodule "modules/foundation/abi"]
-	path = module/foundation/abi
+	path = module/core/foundation/abi
 	url = https://github.com/IlleNilsson/xmip-core-abi.git
 	ignore = dirty
 [submodule "modules/operations/archive"]
-	path = module/operation/archive
+	path = module/core/operation/archive
 	url = https://github.com/IlleNilsson/xmip-core-archive.git
 	ignore = dirty
 [submodule "modules/capabilities/assign"]
-	path = module/capability/assign
+	path = module/core/capability/assign
 	url = https://github.com/IlleNilsson/xmip-core-assign.git
 	ignore = dirty
 [submodule "modules/operations/audit"]
-	path = module/operation/audit
+	path = module/core/operation/audit
 	url = https://github.com/IlleNilsson/xmip-core-audit.git
 	ignore = dirty
 [submodule "modules/capabilities/authenticate"]
-	path = module/capability/authenticate
+	path = module/core/capability/authenticate
 	url = https://github.com/IlleNilsson/xmip-core-authenticate.git
 	ignore = dirty
 [submodule "modules/capabilities/authorize"]
-	path = module/capability/authorize
+	path = module/core/capability/authorize
 	url = https://github.com/IlleNilsson/xmip-core-authorize.git
 	ignore = dirty
-[submodule "modules/operations/cli"]
-	path = module/operation/cli
+[submodule "module/core/operation/cli"]
+	path = module/core/operation/cli
 	url = https://github.com/IlleNilsson/xmip-core-cli.git
 	ignore = dirty
 [submodule "modules/foundation/cluster"]
-	path = module/foundation/cluster
+	path = module/core/foundation/cluster
 	url = https://github.com/IlleNilsson/xmip-core-cluster.git
 	ignore = dirty
 [submodule "modules/platform/configure"]
-	path = module/platform/configure
+	path = module/core/platform/configure
 	url = https://github.com/IlleNilsson/xmip-core-configure.git
 	ignore = dirty
 [submodule "modules/foundation/context"]
-	path = module/foundation/context
+	path = module/core/foundation/context
 	url = https://github.com/IlleNilsson/xmip-core-context.git
 	ignore = dirty
-[submodule "modules/capabilities/contract"]
-	path = module/capability/contract
+[submodule "module/core/capability/contract"]
+	path = module/core/capability/contract
 	url = https://github.com/IlleNilsson/xmip-core-contract.git
 	ignore = dirty
 [submodule "modules/capabilities/demote"]
-	path = module/capability/demote
+	path = module/core/capability/demote
 	url = https://github.com/IlleNilsson/xmip-core-demote.git
 	ignore = dirty
 [submodule "modules/foundation/event"]
-	path = module/foundation/event
+	path = module/core/foundation/event
 	url = https://github.com/IlleNilsson/xmip-core-event.git
 	ignore = dirty
-[submodule "modules/operations/gui"]
-	path = module/operation/gui
+[submodule "module/core/operation/gui"]
+	path = module/core/operation/gui
 	url = https://github.com/IlleNilsson/xmip-core-gui.git
 	ignore = dirty
 [submodule "modules/capabilities/identify"]
-	path = module/capability/identify
+	path = module/core/capability/identify
 	url = https://github.com/IlleNilsson/xmip-core-identify.git
 	ignore = dirty
 [submodule "modules/foundation/journey"]
-	path = module/foundation/journey
+	path = module/core/foundation/journey
 	url = https://github.com/IlleNilsson/xmip-core-journey.git
 	ignore = dirty
 [submodule "modules/capabilities/logic"]
-	path = module/capability/logic
+	path = module/core/capability/logic
 	url = https://github.com/IlleNilsson/xmip-core-logic.git
 	ignore = dirty
 [submodule "modules/foundation/message"]
-	path = module/foundation/message
+	path = module/core/foundation/message
 	url = https://github.com/IlleNilsson/xmip-core-message.git
 	ignore = dirty
 [submodule "modules/foundation/node"]
-	path = module/foundation/node
+	path = module/core/foundation/node
 	url = https://github.com/IlleNilsson/xmip-core-node.git
 	ignore = dirty
 [submodule "modules/operations/observe"]
-	path = module/operation/observe
+	path = module/core/operation/observe
 	url = https://github.com/IlleNilsson/xmip-core-observe.git
 	ignore = dirty
 [submodule "modules/foundation/party"]
-	path = module/foundation/party
+	path = module/core/foundation/party
 	url = https://github.com/IlleNilsson/xmip-core-party.git
 	ignore = dirty
 [submodule "modules/capabilities/path"]
-	path = module/capability/path
+	path = module/core/capability/path
 	url = https://github.com/IlleNilsson/xmip-core-path.git
 	ignore = dirty
 [submodule "modules/platform/persist"]
-	path = module/platform/persist
+	path = module/core/platform/persist
 	url = https://github.com/IlleNilsson/xmip-core-persist.git
 	ignore = dirty
 [submodule "modules/operations/powershell"]
-	path = module/operation/powershell
+	path = module/core/operation/powershell
 	url = https://github.com/IlleNilsson/xmip-core-powershell.git
 	ignore = dirty
 [submodule "modules/capabilities/prepare"]
-	path = module/capability/prepare
+	path = module/core/capability/prepare
 	url = https://github.com/IlleNilsson/xmip-core-prepare.git
 	ignore = dirty
 [submodule "modules/capabilities/process"]
-	path = module/capability/process
+	path = module/core/capability/process
 	url = https://github.com/IlleNilsson/xmip-core-process.git
 	ignore = dirty
 [submodule "modules/capabilities/promote"]
-	path = module/capability/promote
+	path = module/core/capability/promote
 	url = https://github.com/IlleNilsson/xmip-core-promote.git
 	ignore = dirty
 [submodule "modules/capabilities/receive"]
-	path = module/capability/receive
+	path = module/core/capability/receive
 	url = https://github.com/IlleNilsson/xmip-core-receive.git
 	ignore = dirty
 [submodule "modules/operations/report"]
-	path = module/operation/report
+	path = module/core/operation/report
 	url = https://github.com/IlleNilsson/xmip-core-report.git
 	ignore = dirty
 [submodule "modules/platform/resilience"]
-	path = module/capability/resilience
+	path = module/core/capability/resilience
 	url = https://github.com/IlleNilsson/xmip-core-resilience.git
 	ignore = dirty
 [submodule "modules/capabilities/retain"]
-	path = module/capability/retain
+	path = module/core/capability/retain
 	url = https://github.com/IlleNilsson/xmip-core-retain.git
 	ignore = dirty
 [submodule "modules/capabilities/route"]
-	path = module/capability/route
+	path = module/core/capability/route
 	url = https://github.com/IlleNilsson/xmip-core-route.git
 	ignore = dirty
 [submodule "modules/platform/runtime"]
-	path = module/platform/runtime
+	path = module/core/platform/runtime
 	url = https://github.com/IlleNilsson/xmip-core-runtime.git
 	ignore = dirty
 [submodule "modules/capabilities/send"]
-	path = module/capability/send
+	path = module/core/capability/send
 	url = https://github.com/IlleNilsson/xmip-core-send.git
 	ignore = dirty
 [submodule "modules/foundation/stream"]
-	path = module/foundation/stream
+	path = module/core/foundation/stream
 	url = https://github.com/IlleNilsson/xmip-core-stream.git
 	ignore = dirty
 [submodule "modules/capabilities/transform"]
-	path = module/capability/transform
+	path = module/core/capability/transform
 	url = https://github.com/IlleNilsson/xmip-core-transform.git
 	ignore = dirty
 [submodule "modules/capabilities/transport"]
-	path = module/capability/transport
+	path = module/core/capability/transport
 	url = https://github.com/IlleNilsson/xmip-core-transport.git
 	ignore = dirty
 [submodule "template/rust"]
@@ -159,18 +159,18 @@
 	url = https://github.com/IlleNilsson/xmip-template-dotnet.git
 	ignore = dirty
 [submodule "test/core/playground"]
-	path = test/core/playground
+	path = module/core/test/playground
 	url = https://github.com/IlleNilsson/xmip-core-test-playground
 	ignore = dirty
-[submodule "module/foundation/asn1"]
-	path = module/foundation/asn1
-	url = https://github.com/IlleNilsson/xmip-core-asn1.git
-[submodule "module/foundation/codec"]
-	path = module/foundation/codec
-	url = https://github.com/IlleNilsson/xmip-core-codec.git
-[submodule "module/foundation/net"]
-	path = module/foundation/net
-	url = https://github.com/IlleNilsson/xmip-core-net.git
-[submodule "module/foundation/tls"]
-	path = module/foundation/tls
-	url = https://github.com/IlleNilsson/xmip-core-tls.git
+[submodule "module/core/library/asn1"]
+	path = module/core/library/asn1
+	url = https://github.com/IlleNilsson/xmip-core-library-asn1.git
+[submodule "module/core/library/codec"]
+	path = module/core/library/codec
+	url = https://github.com/IlleNilsson/xmip-core-library-codec.git
+[submodule "module/core/library/net"]
+	path = module/core/library/net
+	url = https://github.com/IlleNilsson/xmip-core-library-net.git
+[submodule "module/core/library/tls"]
+	path = module/core/library/tls
+	url = https://github.com/IlleNilsson/xmip-core-library-tls.git

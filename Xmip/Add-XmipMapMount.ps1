@@ -22,7 +22,7 @@ function Get-XmipMapWeight {
 
         .DESCRIPTION
             A file belongs to the deepest mount that contains it, so
-            `module/capability/transport` is its own source and not the eighty
+            `module/core/capability/transport` is its own source and not the eighty
             technologies beneath it. Without that rule a parent's count is
             every child's count added again, and the tree would say the estate
             is several times its own size.

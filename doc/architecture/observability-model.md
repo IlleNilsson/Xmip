@@ -39,7 +39,7 @@ The record model — the two lifecycle shapes, severity independent of phase,
 the policy hierarchy in which the most specific configured level wins, and
 the persistent audit directive a Definition carries onto every descendant
 Message — is `xmip-core-audit`'s, and is written beside it:
-`module/operation/audit/doc/audit-record.md`. Two things are not policy:
+`module/core/operation/audit/doc/audit-record.md`. Two things are not policy:
 failures are always audited, and failure records are always persisted.
 
 ## 3. Audit must outlive what produced it
@@ -85,7 +85,7 @@ interaction.
 **Audit must not become the execution bottleneck.** How `xmip-core-audit`
 stays off the path — the envelope, the channel, what happens when capacity is
 exhausted and which conditions are never suppressible — is
-`module/operation/audit/doc/audit-record.md`, *Performance*.
+`module/core/operation/audit/doc/audit-record.md`, *Performance*.
 
 ## 6. Observation
 
@@ -198,7 +198,7 @@ addressing model Xmip had written down anywhere.
 of them mandatory because a security review board and an auditor need them
 before they know to ask, and every one derived from configuration and
 records, never authored by hand. Which four, and how each is derived, is
-`module/operation/report/doc/reports.md`.
+`module/core/operation/report/doc/reports.md`.
 
 ## 9. Ownership
 

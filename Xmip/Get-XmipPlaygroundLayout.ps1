@@ -10,7 +10,7 @@ function Get-XmipPlaygroundLayout {
 
         .DESCRIPTION
             The roll, cluster and node binaries are cargo's debug build under
-            test/core/playground; the web host is the GUI's debug build. Everything
+            module/core/test/playground; the web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
             goes under .local-work/playground, the device-local folder the
             estate reserves for running Xmip here (CONTRIBUTING.md:
@@ -29,7 +29,7 @@ function Get-XmipPlaygroundLayout {
     param()
 
     [string] $root = Get-XmipRepositoryRoot
-    [string] $playground = Join-Path -Path $root -ChildPath 'test/core/playground'
+    [string] $playground = Join-Path -Path $root -ChildPath 'module/core/test/playground'
 
     # Where cargo builds is cargo's own answer, not an assumption:
     # CARGO_TARGET_DIR moves it, and this follows, so the cmdlets link and run
@@ -46,7 +46,7 @@ function Get-XmipPlaygroundLayout {
     }
 
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
-    [string] $web = 'module/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
+    [string] $web = 'module/core/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
 
     return [PSCustomObject]@{
         Root       = $root

@@ -41,6 +41,7 @@ submoduleRoot = "module"
 
 [classification]
 Foundation = "Things Xmip is."
+Library = "What capabilities are built out of."
 Capabilities = "Things Xmip does."
 Technology = "How a capability is implemented."
 Operations = "Running and governing Xmip."
@@ -260,40 +261,12 @@ dependency = []
   maturity = "scaffolded"
   dependency = ["xmip-core"]
 
-  [xmip.core.net]
-  description = "Network primitives the capabilities share: an address as a transport writes it, a network in prefix notation, and the name the peer's address travels under. One copy where identification and authorization each had their own and disagreed about the name until 2026-09-22."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
-  maturity = "scaffolded"
-  dependency = []
-
-  [xmip.core.tls]
-  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, a connection upgraded in place for STARTTLS, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
-  maturity = "scaffolded"
-  dependency = []
-
-  [xmip.core.codec]
-  description = "Encoding primitives every layer shares: XML escaping, and the hex, base64, checksums, byte cursor and writer, varints, civil dates and lexer machinery that capabilities each wrote by hand until 2026-09-22. What a format means stays with the format; how its bytes and characters are written is here."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
-  maturity = "scaffolded"
-  dependency = []
-
-  [xmip.core.asn1]
-  description = "X.690 tag-length-value, read and written in its basic and distinguished encoding rules, for every ASN.1 protocol and token Xmip handles: SNMP, MMS, GOOSE, LDAP, Kerberos, X.509. One reader where six technologies each carried their own until 2026-09-22."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
-  maturity = "scaffolded"
-  dependency = []
-
   [xmip.core.transport]
   description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-asn1", "xmip-core-codec", "xmip-core-tls"]
+  dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish, consume and acknowledge"
@@ -304,14 +277,14 @@ dependency = []
     [xmip.core.transport.as4]
     maturity = "scaffolded"
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.ftp]
     maturity = "scaffolded"
     description = "FTP and FTPS transport implementation."
     specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
-    dependency = ["xmip-core-codec", "xmip-core-tls"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-tls"]
     specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
     [xmip.core.transport.imap]
     maturity = "scaffolded"
@@ -332,7 +305,7 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.transport.webdav]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.websocket]
     maturity = "scaffolded"
     specification = "IETF RFC 6455, with the applicable extension documents"
@@ -443,7 +416,7 @@ dependency = []
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-as4", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-as4", "xmip-core-library-codec"]
     specification = "OpenPeppol transport infrastructure, SMP and SML lookup"
     [xmip.core.transport.profinet]
     maturity = "scaffolded"
@@ -499,11 +472,11 @@ dependency = []
     dependency = ["xmip-core-transport-http"]
     [xmip.core.transport.aws-sqs]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
     specification = "Azure Blob Storage REST API, Shared Key authorisation"
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.azure-event-grid]
     maturity = "scaffolded"
     description = "Azure Event Grid transport: a topic key over the REST API — publish a Stream as one CloudEvent to a topic, receive as the webhook a subscription delivers to, answering the validation handshake — a topic endpoint is a Location. A xmip-core-transport technology."
@@ -542,7 +515,7 @@ dependency = []
     [xmip.core.transport.msmq]
     maturity = "scaffolded"
     description = "MSMQ transport: one message is one Stream, carried as an SRMP envelope with its body attached over the HTTP transport MSMQ uses between machines. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.mssql]
     maturity = "scaffolded"
     specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
@@ -580,7 +553,7 @@ dependency = []
     [xmip.core.transport.s3]
     maturity = "scaffolded"
     specification = "Amazon S3 REST API, Signature Version 4"
-    dependency = ["xmip-core-transport-http", "xmip-core-codec"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec"]
     [xmip.core.transport.serial]
     maturity = "scaffolded"
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
@@ -732,7 +705,7 @@ dependency = []
     specification = "Connectivity Standards Alliance Matter"
     [xmip.core.logic.soap]
     maturity = "scaffolded"
-    dependency = ["xmip-core-contract", "xmip-core-stream", "xmip-core-codec"]
+    dependency = ["xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
 
   [xmip.core.path]
   description = "Common path-expression and addressing functionality."
@@ -884,7 +857,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-asn1", "xmip-core-codec", "xmip-core-net"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-net"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -899,7 +872,7 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.dns]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-net"]
+    dependency = ["xmip-core", "xmip-core-library-net"]
     [xmip.core.identify.endpoint]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -908,13 +881,13 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.ip]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-net"]
+    dependency = ["xmip-core", "xmip-core-library-net"]
     [xmip.core.identify.jwt]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-message"]
     [xmip.core.identify.kerberos]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-asn1"]
+    dependency = ["xmip-core", "xmip-core-library-asn1"]
     [xmip.core.identify.mac]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -932,7 +905,7 @@ dependency = []
     dependency = ["xmip-core"]
     [xmip.core.identify.saml]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-message", "xmip-core-codec"]
+    dependency = ["xmip-core", "xmip-core-message", "xmip-core-library-codec"]
     [xmip.core.identify.ssh-key]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -948,7 +921,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1", "xmip-core-codec"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -969,10 +942,10 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.kerberos]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1"]
     [xmip.core.authenticate.ldap]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-asn1"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1"]
     [xmip.core.authenticate.mutual-tls]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -993,7 +966,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authenticate.saml]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-codec"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
     [xmip.core.authenticate.scram]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -1051,7 +1024,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.transport]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-net"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-library-net"]
 
   [xmip.core.receive]
   description = "Common Receive Port and Receive Location functionality."
@@ -1420,11 +1393,57 @@ dependency = []
     dependency = ["xmip-core-abi"]
 
 
+# What capabilities are built out of, and what a third party may replace like
+# anything else (the owner, 2026-09-23). The root is reserved: there is no
+# xmip-core-library crate, only what sits beneath it.
+  [xmip.core.library]
+  description = "The libraries capabilities are built out of: encodings, addresses, the guarded connection."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "reserved"
+  dependency = []
+
+
+  [xmip.core.library.asn1]
+  description = "X.690 tag-length-value, read and written in its basic and distinguished encoding rules, for every ASN.1 protocol and token Xmip handles: SNMP, MMS, GOOSE, LDAP, Kerberos, X.509. One reader where six technologies each carried their own until 2026-09-22."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+  mount = "module/core/library/asn1"
+
+
+  [xmip.core.library.codec]
+  description = "Encoding primitives every layer shares: XML escaping, and the hex, base64, checksums, byte cursor and writer, varints, civil dates and lexer machinery that capabilities each wrote by hand until 2026-09-22. What a format means stays with the format; how its bytes and characters are written is here."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+  mount = "module/core/library/codec"
+
+
+  [xmip.core.library.net]
+  description = "Network primitives the capabilities share: an address as a transport writes it, a network in prefix notation, and the name the peer's address travels under. One copy where identification and authorization each had their own and disagreed about the name until 2026-09-22."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+  mount = "module/core/library/net"
+
+
+  [xmip.core.library.tls]
+  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, a connection upgraded in place for STARTTLS, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+  mount = "module/core/library/tls"
+
 # What exercises Xmip, under the provider whose work it exercises. `test` is
 # the kind of work, not a provider: until 2026-09-23 it stood in the provider's
 # place — xmip-test-playground at test/playground — and left nowhere for anyone
-# else's. A second provider's is xmip-<theirs>-test-playground at
-# test/<theirs>/playground, and the estate's rules apply to it unchanged.
+# else's. Provider before purpose, like everything a provider ships: a second
+# provider's is xmip-<theirs>-test-playground at module/<theirs>/test/playground.
   [xmip.core.test]
   description = "What exercises Xmip: the Playground, and what follows it. Every provider may have one."
   architecturalDomain = "Operation"
@@ -1437,11 +1456,10 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  # Test scaffolding, not a capability the runtime loads: it mounts outside
-  # module/, and it is optional — the estate builds and runs without it
-  # (ADR-0036). Under the provider, because another provider's playground
-  # mounts at test/<theirs>/playground beside it (the owner, 2026-09-23).
-  mount = "test/core/playground"
+  # Test scaffolding, not a capability the runtime loads, and optional — the
+  # estate builds and runs without it (ADR-0036). It still mounts with what
+  # its provider ships: provider before purpose (the owner, 2026-09-23).
+  mount = "module/core/test/playground"
   optional = true
   dependency = [
       "xmip-core",

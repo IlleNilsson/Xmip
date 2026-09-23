@@ -570,7 +570,7 @@ retires entries from stops being an order.
                                        technology; the root assembly has none
                                        either; the only place the two hundred
                                        technologies are linked is
-                                       `test/core/playground`, with one hundred
+                                       `module/core/test/playground`, with one hundred
                                        and twenty-three. They can now be
                                        loaded instead: ADR-0057 step 2
                                        landed on 2026-09-19 and
@@ -769,7 +769,7 @@ the manifest tell the truth today, migrate deliberately once green.
 *Resolved by option A, recorded here 2026-09-03.*
 
 `crates/` does not exist. Both crates are gone and `xmip-core-abi` is real —
-seven files at `module/foundation/abi`, with the specification beside them.
+seven files at `module/core/foundation/abi`, with the specification beside them.
 What remains are citations inside ADR-0012 and ADR-0016, and those are correct
 as they stand: a record says what was true when it was written.
 

@@ -98,7 +98,7 @@ work, blocking Handler work never blocks a latency-sensitive loop — are
 ### TLS is built in or it is not there
 
 **A guarded connection needs the `tls` feature at build time.** TLS is
-`xmip-core-tls` (ADR-0033, amendment 2026-09-23): the hybrid key exchange, the
+`xmip-core-library-tls` (ADR-0033, amendment 2026-09-23): the hybrid key exchange, the
 node's certificate and the trust store. A transport that can guard a
 connection — `http` and the technologies riding on it, and every technology
 that takes the feature as they are wired up — carries a `tls` feature that
@@ -286,7 +286,7 @@ rarely and queried arbitrarily — and one engine serving both serves neither.
 timestamp leads, so records written in sequence land in sequence and a range
 over identifiers is a range over time. The reasoning, the two boundaries an
 integrator meets (.NET's `Guid` byte order, SQL Server's sort order) and the
-two cautions are `module/platform/persist/doc/record-identifier.md`.
+two cautions are `module/core/platform/persist/doc/record-identifier.md`.
 
 ## 8. Desired state
 

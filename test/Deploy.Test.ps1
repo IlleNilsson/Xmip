@@ -29,6 +29,10 @@ BeforeAll {
         $node = $manifest.xmip.core[$capability]
         if ($node -isnot [System.Collections.IDictionary]) { continue }
         if ($node.Contains('primaryLanguage')) { continue }
+
+        # A library is linked into whatever uses it, never loaded by a node,
+        # so what sits under it is no technology (the owner, 2026-09-23).
+        if ([string] $node.architecturalDomain -eq 'Library') { continue }
         foreach ($leaf in $node.Keys) {
             $technology = $node[$leaf]
             if ($technology -isnot [System.Collections.IDictionary]) { continue }
