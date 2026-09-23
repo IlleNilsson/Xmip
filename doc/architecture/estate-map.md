@@ -54,7 +54,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145272 lines of production
+Where each repository mounts and what it holds: 145274 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -80,7 +80,7 @@ hold no source to count.
 │   │   ├── authenticate                        2033
 │   │   │   ├── saml                             989
 │   │   │   ├── kerberos                         830
-│   │   │   ├── ntlm                             796
+│   │   │   ├── ntlm                             798
 │   │   │   ├── oauth2                           604
 │   │   │   ├── ldap                             550
 │   │   │   ├── oidc                             510
@@ -99,10 +99,10 @@ hold no source to count.
 │   │   ├── transport                           1718
 │   │   │   ├── opc-ua                          2380
 │   │   │   ├── sftp                            2189
-│   │   │   ├── mssql                           2141
+│   │   │   ├── mssql                           2143
 │   │   │   ├── mysql                           1833
-│   │   │   ├── http                            1723
-│   │   │   ├── smb                             1722
+│   │   │   ├── smb                             1724
+│   │   │   ├── http                            1722
 │   │   │   ├── nfs                             1585
 │   │   │   ├── rabbitmq                        1567
 │   │   │   ├── snmp                            1417
@@ -125,13 +125,13 @@ hold no source to count.
 │   │   │   ├── peppol                           882
 │   │   │   ├── lorawan                          874
 │   │   │   ├── hart                             872
-│   │   │   ├── secs-gem                         858
+│   │   │   ├── secs-gem                         854
 │   │   │   ├── mdns                             848
 │   │   │   ├── bluetooth                        844
 │   │   │   ├── uds                              822
 │   │   │   ├── wireless-hart                    811
 │   │   │   ├── aws-kinesis                      804
-│   │   │   ├── azure-event-grid                 793
+│   │   │   ├── azure-event-grid                 792
 │   │   │   ├── aws-sns                          791
 │   │   │   ├── ethernet-ip                      791
 │   │   │   ├── mqtt                             789
@@ -181,10 +181,10 @@ hold no source to count.
 │   │   │   ├── udp                              176
 │   │   │   ├── file                             148
 │   │   │   └── tcp                              131
-│   │   ├── identify                            1276
+│   │   ├── identify                            1278
 │   │   │   ├── saml                             350
 │   │   │   ├── kerberos                         331
-│   │   │   ├── ntlm                             271
+│   │   │   ├── ntlm                             273
 │   │   │   ├── api-key                          255
 │   │   │   ├── dns                              195
 │   │   │   ├── ip                               187
@@ -211,7 +211,7 @@ hold no source to count.
 │   │   │   ├── regex                             74
 │   │   │   └── context                           53
 │   │   ├── contract                             472  Rust 366 · PowerShell 106
-│   │   │   ├── graphql-schema                   874
+│   │   │   ├── graphql-schema                   872
 │   │   │   ├── sql                              774
 │   │   │   ├── xml-schema                       745
 │   │   │   ├── avro                             714

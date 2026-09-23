@@ -3,8 +3,8 @@
 
 <#
 .SYNOPSIS
-    What this machine is, what it has, whether a version is new enough, and
-    which roles a role implies.
+    What this machine is, what it has, whether a version is new enough or
+    current, and which roles a role implies.
 
 .DESCRIPTION
     Nested inside Install-XmipPrerequisite until 2026-09-22, when that function
@@ -161,4 +161,78 @@ function Resolve-XmipRole($RoleTable, [string] $Name) {
     }
     Walk $Name
     return $seen
+}
+
+function Read-XmipRustCheck {
+    <#
+        What `rustup check` said about one toolchain: what it is and what is
+        current. Its lines, rather than the command, so the reading is
+        testable without a network.
+
+            stable-x86_64-pc-windows-msvc - update available: 1.94.1 (…) -> 1.98.1 (…)
+            stable-x86_64-pc-windows-msvc - up to date: 1.98.1 (…)
+
+        Latest is empty where the toolchain is current, and Unverifiable is
+        true where rustup said nothing about it.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $Said,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Toolchain
+    )
+
+    # Select-Object, not [0]: indexing an empty array is an error under
+    # Set-StrictMode, and rustup says nothing about a toolchain it does not
+    # know.
+    [string] $line = $Said | Where-Object { $_ -like "$Toolchain - *" } | Select-Object -First 1
+    [string] $current = ''
+    [string] $latest = ''
+
+    if ($line -match 'update available: (\S+) .*-> (\S+)') {
+        $current = $Matches[1]
+        $latest = $Matches[2]
+    }
+    elseif ($line -match 'up to date: (\S+)') {
+        $current = $Matches[1]
+    }
+
+    [pscustomobject]@{
+        Toolchain    = $Toolchain
+        Current      = $current
+        Latest       = $latest
+        Unverifiable = '' -eq $current
+    }
+}
+
+function Get-XmipRustChannel {
+    <#
+        Whether the toolchain a channel names is the channel's current
+        release. ADR-0021 says Rust is latest stable, and rust-toolchain.toml
+        says `channel = "stable"`, but rustup resolves that to whatever stable
+        it last installed: on 2026-09-22 this machine's stable was 1.94.1 of
+        March while stable was 1.98.1, and nothing said so.
+
+        Asks `rustup check`, which asks the network.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Channel
+    )
+
+    # `rustup default` names the host's toolchain: stable-x86_64-pc-windows-msvc.
+    [string] $default = ((@(rustup default 2>$null) -join ' ') -split '\s+')[0]
+    [string] $toolchain = if ($default -like "$Channel-*") { $default } else { $Channel }
+
+    # Its exit code is no verdict: rustup check exits 100 where an update is
+    # available. The line for the toolchain is what says.
+    [string[]] $said = @(rustup check 2>&1 | ForEach-Object { [string] $_ })
+
+    Read-XmipRustCheck -Said $said -Toolchain $toolchain
 }
