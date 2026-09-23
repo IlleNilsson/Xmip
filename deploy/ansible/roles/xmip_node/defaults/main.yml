@@ -7,6 +7,10 @@ xmip_management_engine: sqlite
 # ADR-0045: offline unless said. Set true per node that may reach out.
 xmip_online: false
 
+# TLS is a build feature, not an entry here: a package built without `tls`
+# refuses an https endpoint rather than sending it in the clear
+# (deployment-model.md section 2, ADR-0033).
+#
 # The technologies this node loads, by repository name (ADR-0011), and whether
 # each starts. One entry per module the estate has built, kept in step with
 # architecture.toml maturity; a playbook overrides the list for a node that
