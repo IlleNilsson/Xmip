@@ -260,6 +260,35 @@ function Install-XmipPrerequisite {
     $rust = Get-TomlValue $prerequisites 'rust' $null
     if ($rust -and $roles.Contains([string](Get-TomlValue $rust 'role')) -and
         (Get-Command rustup -ErrorAction SilentlyContinue)) {
+        # The channel, current. rust-toolchain.toml says `channel = "stable"`
+        # and rustup resolves that to whatever stable it last installed: on
+        # 2026-09-22 this machine built on March's 1.94.1 while stable was
+        # 1.98.1, and nothing said so. ADR-0021 is latest stable, so an old
+        # one is outdated exactly as a version below a floor is.
+        [string] $channel = [string](Get-TomlValue $rust 'channel' '')
+
+        if ($channel) {
+            $state = Get-XmipRustChannel -Channel $channel
+
+            if ($state.Unverifiable) {
+                Write-Warning ("UNVERIFIABLE: rustup could not say whether " +
+                    "$($state.Toolchain) is current.")
+            }
+            elseif ($state.Latest) {
+                Write-Warning ("OUTDATED: $($state.Toolchain) is $($state.Current); " +
+                    "$channel is $($state.Latest). ADR-0021.")
+                Record "rust ($channel)" 'outdated' "$($state.Current) < $($state.Latest)"
+
+                if ($Install -and $PSCmdlet.ShouldProcess($state.Toolchain, 'rustup update')) {
+                    Write-Host "INSTALL: $($state.Toolchain) $($state.Latest)"
+                    rustup update $channel | Out-Host
+                }
+            }
+            else {
+                Write-Host "PRESENT: rust ($channel)  ($($state.Current))"
+            }
+        }
+
         foreach ($component in @(Get-TomlValue $rust 'component' @())) {
             if (-not $Install) {
                 Write-Host "COMPONENT: $component (rustup component add $component)"

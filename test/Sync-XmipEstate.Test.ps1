@@ -241,6 +241,34 @@ Describe 'ADR-0021: current platforms only, enforced' {
         }
     }
 
+    It 'reads whether the channel a toolchain file names is current' {
+        # The other half of ADR-0021, and the half nothing looked at: the file
+        # says `stable` and rustup resolves it to whatever stable it last
+        # installed. On 2026-09-22 that was March's 1.94.1 against 1.98.1.
+        InModuleScope Xmip {
+            [string] $toolchain = 'stable-x86_64-pc-windows-msvc'
+            # One string: a `+` at the end of a line inside an array literal
+            # starts another element rather than continuing this one.
+            [string] $available = "$toolchain - update available: " +
+                '1.94.1 (e408947bf 2026-03-25) -> 1.98.1 (48a229cea 2026-09-01)'
+            [string[]] $behind = @('rustup - up to date : 1.29.1', $available)
+
+            $old = Read-XmipRustCheck -Said $behind -Toolchain $toolchain
+            $current = Read-XmipRustCheck -Toolchain $toolchain -Said @(
+                "$toolchain - up to date: 1.98.1 (48a229cea 2026-09-01)"
+            )
+            $quiet = @('rustup - up to date : 1.29.1')
+            $silent = Read-XmipRustCheck -Said $quiet -Toolchain $toolchain
+
+            $old.Current | Should -Be '1.94.1'
+            $old.Latest | Should -Be '1.98.1'
+            $old.Unverifiable | Should -BeFalse
+            $current.Current | Should -Be '1.98.1'
+            $current.Latest | Should -BeNullOrEmpty
+            $silent.Unverifiable | Should -BeTrue
+        }
+    }
+
     It 'fails rather than reports when a floor is not met' {
         $script = Get-Content (Join-Path $script:ModuleRoot 'Install-XmipPrerequisite.ps1') -Raw
         $script | Should -Match 'Write-Error' -Because 'an unmet floor must be an error, not a warning'
