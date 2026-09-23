@@ -65,6 +65,45 @@ function ConvertFrom-XmipRosterText {
     }
 }
 
+<#
+    .SYNOPSIS
+    How many nodes `-Nodes` asked for, where it asked with a number.
+
+    .DESCRIPTION
+    A node's name starts with a letter, so a lone number is no name and can
+    only be a count: `-Nodes 6` is six nodes and `-Nodes east, west` is two
+    named ones. The owner, 2026-09-23: *how many nodes in each cluster I
+    want*.
+
+    The nodes a count brings are the roll's to name and to deal over receive,
+    process and send (`complement::of_count`) — the same dealing an omitted
+    -Nodes gets — so nothing here invents either.
+
+    Returns the count, or `-1` where this is a list of names.
+
+    .PARAMETER Nodes
+    What -Nodes was given.
+#>
+function Get-XmipNodeCount {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [string[]] $Nodes
+    )
+
+    [string[]] $said = @($Nodes | Where-Object { $null -ne $_ })
+
+    if ($said.Count -ne 1 -or $said[0] -notmatch '^\d+$') {
+        return -1
+    }
+
+    return [int] $said[0]
+}
+
+
 function Get-XmipNodeComplement {
     <#
         .SYNOPSIS
