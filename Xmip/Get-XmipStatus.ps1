@@ -98,7 +98,8 @@ function Get-XmipStatus {
         # its Index and Working sets read as "clean" when they mean "not
         # counted". On 2026-08-27 that hid two modified modules and cost three
         # rounds of a red build.
-        $changed = @(& git -C $path status --porcelain | Where-Object { $_ })
+        [string[]] $porcelain = @(Invoke-XmipGit -At $path -Arguments @('status', '--porcelain'))
+        $changed = @($porcelain | Where-Object { $_ })
         $files = @($changed | ForEach-Object { $_.Substring(3).Trim('"') } | Sort-Object -Unique)
 
         $behind = $git.BehindBy -gt 0

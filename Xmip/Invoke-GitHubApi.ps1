@@ -21,34 +21,6 @@ function Assert-Command([string] $Name) {
     }
 }
 
-function Invoke-Native {
-    param(
-        [Parameter(Mandatory)] [string] $FilePath,
-        [string[]] $Arguments = @(),
-        [string] $At = '',
-        [switch] $CaptureOutput
-    )
-
-    $previous = $PWD
-    try {
-        if ($At) { Set-Location $At }
-        if ($CaptureOutput) {
-            $output = & $FilePath @Arguments 2>&1
-        }
-        else {
-            & $FilePath @Arguments
-        }
-        if ($LASTEXITCODE -ne 0) {
-            $details = if ($CaptureOutput) { "`n$($output -join "`n")" } else { '' }
-            throw "Command failed: $FilePath $($Arguments -join ' ')$details"
-        }
-        if ($CaptureOutput) { return @($output) }
-    }
-    finally {
-        Set-Location $previous
-    }
-}
-
 function Get-GitHubHeaders {
     param([Parameter(Mandatory)] [hashtable] $GitHub)
 

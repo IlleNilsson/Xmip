@@ -277,6 +277,7 @@ function Get-TomlValue {
 . (Join-Path $PSScriptRoot 'Get-XmipCrateFinding.ps1')
 . (Join-Path $PSScriptRoot 'Invoke-GitHubApi.ps1')
 . (Join-Path $PSScriptRoot 'Invoke-CreateRepositories.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipGit.ps1')
 . (Join-Path $PSScriptRoot 'Move-XmipSubmodule.ps1')
 . (Join-Path $PSScriptRoot 'Invoke-Compose.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')

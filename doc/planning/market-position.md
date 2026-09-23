@@ -120,6 +120,94 @@ Both halves of that matter. It is differentiation nobody can claim, and it means
 there is no ecosystem to borrow adapters, mappers or EDI parsers from. Every one
 of them is ours to write, in a language with no incumbent library for any of it.
 
+## 8. Re-checked 2026-09-23: what changed, and what Xmip needs
+
+The owner asked what Xmip needs against the competition. Sections 1-7 were
+re-checked against their sources and newer ones; they stand as written on
+2026-08-27, and where they no longer hold, it is said here rather than in
+place, so the survey and its correction can both be read.
+
+**What no longer holds.**
+
+- **Section 1.** Microsoft shipped a hotfix (KB5091379) adding AMQP to the
+  SB-Messaging adapter, so SBMP's retirement on 2026-09-30 forces a hotfix,
+  not a platform decision. Microsoft's own lifecycle post announcing 2020 as
+  the final version is from December 2025; 2026-01-09 is a third party's.
+  Paid extended support runs 2028-2030.
+- **Section 2.** The Logic Apps hybrid deployment model reached general
+  availability in June 2025 and runs on customer infrastructure. It is not
+  disconnected: it needs Azure Arc-enabled Kubernetes, outbound connectivity
+  to Azure and SQL, and its managed connectors run in Azure. The hole is
+  **no first-party disconnected successor**, not no on-premises one.
+- **Section 4.** "None of them competes for the estate that will not move"
+  is wrong. MuleSoft's private-cloud edition targets air-gapped sites; IBM App
+  Connect Enterprise and webMethods self-host; Seeburger, Axway B2Bi and Cleo
+  run on-premises with conformant AS4; Kestra 2.0 (Apache 2.0, 2026-09-08)
+  sells air-gapped orchestration. CData Arc now adds Git versioning, an MCP
+  server, encryption at rest and hash-chained, tamper-evident logs, and runs
+  on Linux and macOS through its Java edition.
+- **Section 5.** The Open Integration Engine shipped 4.6.0 on 2026-07-09 and
+  applied to the Eclipse Foundation. And "Xmip already covers HL7 v2 and
+  FHIR" overclaims: the technologies exist, no node runs them.
+- **Section 6.** France requires receiving through a DGFiP-registered
+  platform, which a Peppol access point alone is not; Germany has required
+  every business to receive since 2025-01-01, and e-mail counts; ViDA was
+  adopted 2025-03-11 with intra-EU duties from 2030-07-01; OpenPeppol makes
+  ISO 27001 mandatory for service providers from 2027-07-01. AS4 is
+  mandatory for access-point operators, not for every business, so Xmip
+  ships AS4 and Peppol as protocol software a certified operator runs.
+- **Section 7.** Still narrowly true, but Apache Iggy (incubating) now has a
+  Rust connector runtime that loads plugins dynamically, the pattern of
+  ADR-0057.
+- **"The largest product gap is not in the runtime"**, below, is stale:
+  the GUI and PowerShell repositories are built. The largest gap is now the
+  runtime itself — no node can run a technology (open-problems.md, Suggested
+  order) — and then transformation.
+
+**Table stakes Xmip lacks**, in the order open-problems.md's Suggested order
+takes them (judgment, with the survey behind it):
+
+1. A node that runs: phases 4-9, a technology in a node, a real Receive
+   Location. Every row below depends on it.
+2. Transformation. BizTalk estates are thousands of XSLT 1.0 maps; CData sells
+   reusing them and Microsoft ships a map converter. All seventeen `transform`
+   technologies are reserved.
+3. Durable state across restart, deduplication, and Journey replay.
+4. Tracking and message search: find a Message by promoted property, see its
+   body, resubmit it. Every audit, report and observe sink is reserved.
+5. EDI completeness: interchange control numbers, acknowledgements (997, 999,
+   TA1, CONTRL), batching, agreement-driven validation — trading-partner
+   agreements in `party`.
+6. Secrets and keys: a local encrypted store, the platform key stores, PKCS#11
+   and a vault. Nothing in the manifest holds a secret. **Needs a home.**
+7. Sign, encrypt, compress: all twenty `prepare` technologies are reserved,
+   and AS2 and AS4 need S/MIME, WS-Security and compression.
+8. One orchestration technology with correlation, timeouts and compensation.
+9. Polling schedules for a Receive Location (SFTP, FTP, SQL, calendar).
+10. High availability and placement.
+11. An OpenTelemetry exporter.
+12. A signed release with an SBOM and a vulnerability policy: the Cyber
+    Resilience Act's reporting duties for manufacturers began 2026-09-11.
+13. BizTalk artifact import — bindings, schemas including flat-file
+    annotations, maps. The highest-leverage item outside the runtime, and
+    **needs a home**.
+
+**Worth keeping, because nobody else has them:** running disconnected with no
+control plane; refusals that carry place and reason; `never_satisfiable`;
+identity isolation that fails closed at startup; the breadth of industrial
+transports (OPC UA, IEC 61850, Modbus, PROFINET, M-Bus), which no iPaaS here
+covers. Tamper-evident audit is no longer unique, so it must be matched, not
+claimed.
+
+**Deliberately not:** a hosted control plane; metering or telemetry that phones
+home; a catalogue of SaaS connectors (generic HTTP and OpenAPI, and the ABI
+for third parties, instead); an API-management product; a language model in
+the message path — an MCP server over the read-only operator boundary is the
+credible step; being a certified Peppol access point, which is an
+organization's certification, not software.
+
+Sources for this section are listed under **Sources, 2026-09-23** at the end.
+
 ## What this forces
 
 ### The license costs adoption, knowingly
@@ -186,3 +274,23 @@ months later. **No product was found that does this.**
   <https://ossalt.com/guides/oss-licensing-guide-mit-apache-agpl-2026>
 - iPaaS market —
   <https://www.g2.com/products/ibm-webmethods-hybrid-integration-2025-12-05/competitors/alternatives>
+
+## Sources, 2026-09-23
+
+- Microsoft lifecycle post — <https://techcommunity.microsoft.com/blog/integrationsonazureblog/microsoft-biztalk-server-product-lifecycle-update/4478559>
+- SBMP retirement and the AMQP hotfix — <https://techcommunity.microsoft.com/blog/integrationsonazureblog/service-bus-sbmp-retirement-what-biztalk-server-2020-customers-need-to-know/4513155>
+- Logic Apps hybrid GA and its requirements —
+  <https://techcommunity.microsoft.com/blog/integrationsonazureblog/announcement-general-availability-of-logic-apps-hybrid-deployment-model/4422414>,
+  <https://learn.microsoft.com/en-us/azure/logic-apps/set-up-standard-workflows-hybrid-deployment-requirements>
+- BizTalk orchestration migration tool — <https://techcommunity.microsoft.com/blog/integrationsonazureblog/a-biztalk-migration-tool-from-orchestrations-to-logic-apps-workflows/4494876>
+- CData Arc — <https://arc.cdata.com/blog/cdata-arc-release-q1-2026>,
+  <https://community.cdata.com/cdata-arc-48/introducing-the-arc-q2-2026-release-1827>
+- MuleSoft private-cloud edition — <https://blogs.mulesoft.com/dev-guides/private-agentic-ai-with-mcp-and-a2a-support-in-mulesoft-pce/>
+- EU eDelivery AS4 conformant solutions — <https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eDelivery+AS4+conformant+solutions>
+- Kestra 2.0 — <https://kestra.io/blogs/kestra-2-0-what-you-actually-get>
+- Open Integration Engine — <https://github.com/OpenIntegrationEngine/engine/releases>
+- France — <https://www.avalara.com/blog/en/europe/2026/08/peppol-vs-pfdp-france-e-invoicing.html>
+- ViDA — <https://www.nortonrosefulbright.com/en/knowledge/publications/7f7569e5/vat-in-the-digital-age-vida-package-finally-adopted>
+- Peppol ISO 27001 — <https://www.vatupdate.com/2026/07/13/iso-27001-is-now-mandatory-for-all-peppol-service-providers/>
+- Cyber Resilience Act reporting — <https://digital-strategy.ec.europa.eu/en/policies/cra-reporting>
+- Apache Iggy connectors — <https://iggy.apache.org/blogs/2025/06/06/connectors-runtime/>

@@ -43,7 +43,7 @@ function Invoke-Compose {
         [string] $url = "https://github.com/$owner/$($item.Name).git"
         [string[]] $arguments = @('submodule', 'add', '--', $url, $item.Mount)
 
-        Invoke-Native -FilePath 'git' -Arguments $arguments -At $root | Out-Null
+        Invoke-XmipGit -At $root -Arguments $arguments | Out-Null
         Write-Host "COMPOSED: $($item.Mount)"
         $added++
     }
@@ -72,7 +72,7 @@ function Invoke-Compose {
         # git mv rewrites .gitmodules and leaves it unstaged, and the next
         # git mv refuses to run while it is. So one move at a time is all a
         # run used to manage (found moving 25 modules, 2026-09-23).
-        Invoke-Native -FilePath 'git' -Arguments @('add', '.gitmodules') -At $root | Out-Null
+        Invoke-XmipGit -At $root -Arguments @('add', '.gitmodules') | Out-Null
 
         Write-Host "MOVED: $what"
         $moved++

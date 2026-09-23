@@ -334,8 +334,8 @@ Describe 'A detached submodule lands on a main put at its commit' {
         # the commit the superproject pinned, which is where it belongs.
         $source = Get-XmipLandingSource
 
-        $source | Should -Match 'git -C \$path checkout -B main'
-        $source | Should -Not -Match 'git -C \$path checkout main\b'
+        $source | Should -Match ([regex]::Escape("@('checkout', '-B', 'main'"))
+        $source | Should -Not -Match ([regex]::Escape("@('checkout', 'main'"))
     }
 }
 
@@ -607,7 +607,9 @@ Describe 'A module the estate is about to pin is on origin first' {
 
     It 'refuses to continue when such a push fails' {
         # Throwing, not warning. A failed push here is the one condition that
-        # produces the unclonable estate this whole Describe is about.
+        # produces the unclonable estate this whole Describe is about. Since
+        # 2026-09-23 the throw is Invoke-XmipGit's, so what is held is that the
+        # push goes through it and is not asked with -Test, which never throws.
         [System.Management.Automation.Language.FunctionDefinitionAst] $function =
             $script:Ast.Find({
                 param($node)
@@ -618,13 +620,16 @@ Describe 'A module the estate is about to pin is on origin first' {
 
         $function | Should -Not -BeNullOrEmpty -Because 'the function has to exist'
 
-        [bool] $throws = $null -ne $function.Find({
+        [string] $push = [string] $function.Find({
             param($node)
 
-            $node -is [System.Management.Automation.Language.ThrowStatementAst]
+            $node -is [System.Management.Automation.Language.CommandAst] -and
+                $node.GetCommandName() -eq 'Invoke-XmipGit' -and
+                $node.Extent.Text -match "'push'"
         }, $true)
 
-        $throws | Should -BeTrue
+        $push | Should -Not -BeNullOrEmpty -Because 'the push runs through Invoke-XmipGit'
+        $push | Should -Not -Match '-Test\b' -Because 'a push asked with -Test never throws'
     }
 
     It 'completes a commit rather than making one' {

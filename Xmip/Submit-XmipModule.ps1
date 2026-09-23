@@ -68,11 +68,8 @@ function Publish-XmipUnpushed {
             continue
         }
 
-        & git -C $path push origin HEAD:main --quiet
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "Pushing $name failed. The estate must not pin a commit origin does not have."
-        }
+        # Throws on failure: the estate must not pin a commit origin does not have.
+        Invoke-XmipGit -At $path -Arguments @('push', 'origin', 'HEAD:main', '--quiet') | Out-Null
 
         Write-Output $name
     }
@@ -119,11 +116,11 @@ function Submit-XmipModule {
         # to wherever the stale local main pointed — behind origin after a
         # `git submodule update` — refused over the changed files, left HEAD
         # detached, and the push of that stale main failed (2026-09-12, twice).
-        $branch = (& git -C $path branch --show-current) -join ''
+        [string] $branch = @(Invoke-XmipGit -At $path -Arguments @('branch', '--show-current'))[0]
 
         if ([string]::IsNullOrWhiteSpace($branch)) {
             Write-Host "   NOTE: detached HEAD, putting main here" -ForegroundColor Yellow
-            & git -C $path checkout -B main --quiet
+            Invoke-XmipGit -At $path -Arguments @('checkout', '-B', 'main', '--quiet') | Out-Null
         }
 
         # Each step announced before it runs, not after.
@@ -134,35 +131,26 @@ function Submit-XmipModule {
         # target/. A trace after the slow step reports only the steps that
         # finished, which is the opposite of what a stall needs.
         Write-Host "   staging $name..." -ForegroundColor DarkGray
-        & git -C $path add -A
+        Invoke-XmipGit -At $path -Arguments @('add', '-A') | Out-Null
 
         # A host whose own files are clean is dirty only through its nested
         # modules, which land on their own after it, and it is pinned to them
         # at the end. Until 2026-09-22 this committed anyway: git refused,
         # printed its status, and that status went down the pipeline as the
         # names of modules landed, while the refusal itself was never read.
-        & git -C $path diff --cached --quiet
-
-        if ($LASTEXITCODE -eq 0) {
+        if (Invoke-XmipGit -At $path -Arguments @('diff', '--cached', '--quiet') -Test) {
             [string] $note = '   nothing of its own to commit; its nested modules land next'
             Write-Host $note -ForegroundColor DarkGray
             continue
         }
 
         Write-Host '   committing...' -ForegroundColor DarkGray
-        [string[]] $said = @(& git -C $path commit -m $Message --quiet 2>&1)
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "Committing $name failed: $($said -join ' ')"
-        }
+        Invoke-XmipGit -At $path -Arguments @('commit', '-m', $Message, '--quiet') | Out-Null
 
         Write-Host '   pushing to origin...' -ForegroundColor DarkGray
-        & git -C $path push origin main --quiet
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "Pushing $name failed. Anything before it is already on origin; " +
-                'fix this and run again.'
-        }
+        # A failed push throws: anything before it is already on origin, so
+        # fixing it and running again is safe.
+        Invoke-XmipGit -At $path -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
 
         Write-Host "   OK, landed" -ForegroundColor Green
         $name

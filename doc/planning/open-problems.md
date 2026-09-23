@@ -528,7 +528,112 @@ verified the same hour.
 
 ---
 
+# Consolidation
+
+## 25. The estate still says one thing in several places
+
+The owner, 2026-09-23: *Let's consolidate, refactor and re-engineer if needed.
+Look at competition, what do we need for Xmip.* Four read-only audits that day,
+each finding checked in the code before it was written here. The 2026-09-22
+list of homes was **a third done**: of its 32 items, 7 done, 10 partial, 15 not
+started, and every adapter written that day to save call-site edits still in
+place. `xmip-core-library-codec` is described in the manifest as holding hex,
+base64, checksums, cursors, varints, civil dates and lexers; it holds XML
+escaping and nothing else.
+
+**Copies that behave differently — bugs, first:**
+
+| # | Concept | Where it diverges | One home |
+|---|---|---|---|
+| a | A Journey across a restart | `persist::DurableJourneyState` drops `previous_journey_id`, `cause`, `depth` and entries, so a recovered Journey restarts its chain depth at zero and loop protection is off | persist stores `journey::Journey` |
+| b | A node's configuration | modelled four times: two trees in `configure`, a subset in `runtime/execution_tree.rs`, and the editor's own in C#, which defaults a location's `start` and `transport` where the runtime requires them, never unescapes, and matches keys by prefix | the one document in `configure`; the editor validates through `xmip_validate_v1` |
+| c | Protocol Buffers wire rules | contract refuses groups and checks only field 0; message accepts groups and caps the field number | message's reader, contract depends on it |
+| d | CSV | contract splits on lines and refuses a quoted line break; message accepts one | message's record reader |
+| e | A path lexer | FHIRPath and the predicate language consume whitespace as one byte and panic on U+00A0 | one character reader in codec, every lexer on it |
+| f | TOML string quoting | the node declaration escapes three characters; archive's copy escapes all | codec |
+| g | msmq over https | always writes `http://`; its `tls` feature does nothing | `http::endpoint`, as as2, as4 and webdav already do |
+| h | A null context value | route's `X` reads null as present, `context:X` as absent | one `routable` beside `text_of` |
+| i | A node's capability | parsed three ways: Playground and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | `node` parses, `cluster` places |
+| j | A health colour | `SegmentRender.Traffic` maps Paused yellow and Holding red, the prompt grey and orange | `English.Color` |
+| k | Scope containment | `observe` compares text, `ScopeTree` strips scheme and authority first | a scope type in `observe` |
+| l | Landing a pin | `Publish-XmipPin` checked only the push, so a failed commit followed by an empty push reported success | **Resolved 2026-09-23:** `Invoke-XmipGit` is the one way the module runs git, and a test refuses any other |
+| m | Reading TOML in PowerShell | three readers assume one of the two shapes PSToml has returned | one reader in the module |
+
+**One concept, several copies, the same behavior.** Loopback rigs in 51
+transports over a parent that shares only the traits; `rabbitmq` rewriting
+`amqp`; three SQL archives that are one type; Kerberos AP-REQ and SPNEGO read
+twice; NTLM type 3 twice; two JOSE key types; a clock in ten authenticate
+crates; evidence names declared on both sides of the identity gate; dns and
+mdns message codecs; CANopen and EtherCAT SDO; webdav's own HTTP codec; three
+MIME writers; seven lexers; three hand-written HTTP clients; SQL quoting five
+times; hex twelve times, base64 three, SHA-1 two, CRC four, byte readers
+fourteen, civil dates six — one of them inside `library/asn1`; SigV4, AWS Query
+and Azure SAS still in `transport/http`, where the owner ruled on 2026-09-22
+they leave for `xmip-core-transport-aws` and `-azure`, neither yet created;
+four time types; record-then-sink written four ways with three error
+contracts; three models of a location; two predicate languages; two resilience
+models; two host-type rules and two module registries in the runtime; three
+transport traits for one concept, two of them with no implementation outside
+a test.
+
+**Owned by the wrong crate.** The Playground holds the snapshot format the
+surfaces read, the topology and run header they draw, retention's policy,
+node capability and placement, and a claim by rename it documents elsewhere
+as unsafe; the runtime holds Message treatment presets `message` owns.
+
+**Dead.** Nothing depends on persist, event, audit, report, process,
+prepare, transform, assign, promote, demote, cluster or resilience; the
+runtime's `capability_registry`, `HostService`, `registration.rs`,
+`ModuleRegistry`, `RuntimeDispatcher` and the generation presets run only
+under their own tests.
+
+| option | effect |
+|---|---|
+| **A. Divergences first, then one home per concern, then the runtime** | what is wrong stops being wrong before anything is built on it; the order the owner set on 2026-09-22 |
+| **B. The runtime first, consolidating what it touches** | a node runs sooner, over copies that disagree |
+
+**Lean: A**, because (a) and (b) sit on the runtime's own path: a node
+started on today's configuration model and recovered by today's persist would
+inherit both. Every row was checked in the code on 2026-09-23; the change that
+resolves a row names the paths it touched, and the row moves to Resolved with
+it.
+
+---
+
 # Suggested order
+
+Rewritten 2026-09-23. The owner asked what Xmip needs against the
+competition; the answer, surveyed that day with sources, is in
+`market-position.md` section 8. It sorts into four phases, and the phases are
+the order:
+
+```text
+A. Divergences          problem 25 (a)-(m): copies that disagree are bugs
+B. One home each        problem 25's list; the 2026-09-22 shims removed;
+                        transport-aws and transport-azure created (approved
+                        2026-09-22); dead code deleted or wired
+C. A node runs          the 2026-09-05 item 1 below, in the smallest honest
+                        sequence: the Xmip Process vocabulary settled; subscriptions
+                        and location bindings in the configuration; file
+                        claims by rename (ADR-0024); one transport trait; a
+                        file-backed store that writes the Stream and Message
+                        before execution; an xmip-service executable doing
+                        phases 4-9 with technologies linked by feature (the
+                        purpose-compiled runtime, deployment-model.md); a
+                        Xmip Process branch in departure; checkpoint, resume
+D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
+                        tracking, message search and resubmit; EDI
+                        acknowledgements and trading-partner agreements;
+                        sign, encrypt, compress (prepare); secrets; an
+                        OpenTelemetry exporter; a signed release with an SBOM
+                        (the Cyber Resilience Act's reporting duties began
+                        2026-09-11); BizTalk artifact import
+```
+
+Phase D's secrets and BizTalk import have no home in the manifest, and a
+visual mapper none in the surfaces; the owner decides each.
+
+The 2026-09-05 order follows unchanged; its entries sit inside phases C and D.
 
 Rewritten 2026-09-05. The 2026-08-30 list had gone stale the way its own
 predecessor did: its first two entries — the .NET verification gate and the
