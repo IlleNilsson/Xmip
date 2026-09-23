@@ -220,7 +220,7 @@ function New-XmipEstatePage {
     }
 
     [hashtable] $data = @{
-        commit    = ((& git -C $Root rev-parse --short HEAD) -join '').Trim()
+        commit    = @(Invoke-XmipGit -At $Root -Arguments @('rev-parse', '--short', 'HEAD'))[0]
         built     = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm') + ' UTC'
         declared  = $Repository.Count
         mounted   = $mounted.Count

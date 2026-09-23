@@ -48,12 +48,12 @@ function Publish-XmipPin {
     # sees each parent's own gitlink move and pins that.
     foreach ($parent in @(Get-XmipNestedParent -RepositoryRoot $RepositoryRoot)) {
         $parentPath = Join-Path -Path $RepositoryRoot -ChildPath $parent
-        & git -C $parentPath add -A
+        Invoke-XmipGit -At $parentPath -Arguments @('add', '-A') | Out-Null
 
         # Staged, not dirty — the same reason the superproject uses below: an
         # untracked file inside a grandchild reads as modified but is not the
         # parent's to commit.
-        $nested = @(& git -C $parentPath diff --cached --name-only)
+        $nested = @(Invoke-XmipGit -At $parentPath -Arguments @('diff', '--cached', '--name-only'))
 
         if ($nested.Count -eq 0) {
             continue
@@ -61,13 +61,11 @@ function Publish-XmipPin {
 
         Write-Host "   pinning nested in $parent..." -ForegroundColor DarkGray
         $subject = Resolve-XmipCommitSubject -Staged $nested -Message $Message
-        & git -C $parentPath commit -m $subject --quiet
-        & git -C $parentPath push origin main --quiet
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "Pinning nested modules in $parent failed. " +
-                'The technology is on origin; only its gitlink is missing.'
-        }
+        # Each step throws on its own, the commit as much as the push. Until
+        # 2026-09-23 only the push was checked, and a failed commit followed
+        # by a push with nothing new reported the parent pinned.
+        Invoke-XmipGit -At $parentPath -Arguments @('commit', '-m', $subject, '--quiet') | Out-Null
+        Invoke-XmipGit -At $parentPath -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
     }
 
     # The estate map is generated from what is mounted and what each mount
@@ -88,29 +86,27 @@ function Publish-XmipPin {
         Write-Warning "The estate map was not regenerated: $($_.Exception.Message)"
     }
 
-    & git -C $RepositoryRoot add -A
+    Invoke-XmipGit -At $RepositoryRoot -Arguments @('add', '-A') | Out-Null
 
     # What is staged, not what is dirty. `git status --porcelain` reports a
     # submodule as modified when the only change is an untracked file *inside*
     # it — content the superproject cannot stage and has no business committing.
     # Counting those meant committing nothing, printing git's "no changes added
     # to commit" at the operator, and calling it a pin.
-    $staged = @(& git -C $RepositoryRoot diff --cached --name-only)
+    $staged = @(Invoke-XmipGit -At $RepositoryRoot -Arguments @('diff', '--cached', '--name-only'))
 
     if ($staged.Count -eq 0) {
         # Committed is not pushed. On 2026-08-30 a rebase left the pin commit
         # in place with a clean tree; this branch said 'already pinned' and
         # returned, and the estate sat one commit ahead of a remote that had
         # never seen it. Nothing to commit still means everything to push.
-        [string] $ahead = (& git -C $RepositoryRoot rev-list --count '@{upstream}..HEAD') -join ''
+        [string[]] $count = @('rev-list', '--count', '@{upstream}..HEAD')
+        [string] $ahead = @(Invoke-XmipGit -At $RepositoryRoot -Arguments $count)[0]
 
         if ($ahead -ne '0' -and -not [string]::IsNullOrWhiteSpace($ahead)) {
             Write-Host "   pushing $ahead committed pin(s) to origin..." -ForegroundColor DarkGray
-            & git -C $RepositoryRoot push origin main --quiet
-
-            if ($LASTEXITCODE -ne 0) {
-                throw 'Pushing the estate failed. The pin is committed; only the push is missing.'
-            }
+            Invoke-XmipGit -At $RepositoryRoot -Arguments @('push', 'origin', 'main', '--quiet') |
+                Out-Null
 
             Write-Host 'OK. Estate pushed.' -ForegroundColor Green
 
@@ -126,12 +122,8 @@ function Publish-XmipPin {
 
     $subject = Resolve-XmipCommitSubject -Staged $staged -Message $Message
 
-    & git -C $RepositoryRoot commit -m $subject --quiet
-    & git -C $RepositoryRoot push origin main --quiet
-
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Pushing the estate failed. The modules are landed; only the pin is missing.'
-    }
+    Invoke-XmipGit -At $RepositoryRoot -Arguments @('commit', '-m', $subject, '--quiet') | Out-Null
+    Invoke-XmipGit -At $RepositoryRoot -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
 
     # Three outcomes, because there are three. Reporting "Pinned 1 module" over a
     # commit that also carried an ADR and a test file is how the wrong subject

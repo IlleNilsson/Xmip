@@ -172,7 +172,7 @@ function Sync-XmipRepository {
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Clone $cloneUrl")) {
                 try {
-                    Invoke-Git -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
+                    Invoke-XmipGit -Arguments @('clone', $cloneUrl, $repositoryPath) | Out-Host
                     Write-Host "CLONED: $repositoryName"
                     $statusValue = 'cloned'
                 }
@@ -234,9 +234,10 @@ function Sync-XmipRepository {
         }
         elseif ($operation -eq 'Pull') {
             if ($PSCmdlet.ShouldProcess($repositoryPath, 'Fetch, prune and fast-forward')) {
-                Invoke-Git -At $repositoryPath -Arguments @('fetch', '--all', '--prune') | Out-Host
+                [string[]] $fetch = @('fetch', '--all', '--prune')
+                Invoke-XmipGit -At $repositoryPath -Arguments $fetch | Out-Host
                 try {
-                    Invoke-Git -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
+                    Invoke-XmipGit -At $repositoryPath -Arguments @('pull', '--ff-only') | Out-Host
                     Write-Host "PULLED: $repositoryName"
                     $statusValue = 'pulled'
                 }
@@ -251,7 +252,7 @@ function Sync-XmipRepository {
         }
         elseif ($operation -eq 'Branch') {
             [string[]] $listBranches = @('branch', '--all', '--no-color')
-            $branches = @(Invoke-Git -At $repositoryPath -Arguments $listBranches)
+            $branches = @(Invoke-XmipGit -At $repositoryPath -Arguments $listBranches)
             Write-Host "BRANCHES: $repositoryName"
             $branches | ForEach-Object { Write-Host "  $_" }
             $statusValue = 'listed'
@@ -260,13 +261,13 @@ function Sync-XmipRepository {
             $branchName = $Create
             [string[]] $verifyCreate = @('show-ref', '--verify', '--quiet', "refs/heads/$Create")
 
-            if (Test-GitCommand -At $repositoryPath -Arguments $verifyCreate) {
+            if (Invoke-XmipGit -At $repositoryPath -Arguments $verifyCreate -Test) {
                 Write-Host "BRANCH EXISTS: $repositoryName/$Create"
                 $statusValue = 'branch-existing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath,
                     "Create local branch '$Create' at HEAD")) {
-                Invoke-Git -At $repositoryPath -Arguments @('branch', $Create) | Out-Host
+                Invoke-XmipGit -At $repositoryPath -Arguments @('branch', $Create) | Out-Host
                 Write-Host "BRANCH CREATED: $repositoryName/$Create"
                 $statusValue = 'branch-created'
             }
@@ -276,12 +277,12 @@ function Sync-XmipRepository {
             $branchName = $Push
             [string[]] $verifyPush = @('show-ref', '--verify', '--quiet', "refs/heads/$Push")
 
-            if (-not (Test-GitCommand -At $repositoryPath -Arguments $verifyPush)) {
+            if (-not (Invoke-XmipGit -At $repositoryPath -Arguments $verifyPush -Test)) {
                 Write-Warning "BRANCH MISSING: $repositoryName/$Push"
                 $statusValue = 'branch-missing'
             }
             elseif ($PSCmdlet.ShouldProcess($repositoryPath, "Push branch '$Push' to origin")) {
-                Invoke-Git -At $repositoryPath -Arguments @('push', 'origin', $Push) | Out-Host
+                Invoke-XmipGit -At $repositoryPath -Arguments @('push', 'origin', $Push) | Out-Host
                 Write-Host "PUSHED: $repositoryName/$Push"
                 $statusValue = 'pushed'
             }

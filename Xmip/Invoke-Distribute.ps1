@@ -14,54 +14,6 @@
     Style: doc/governance/powershell-style.md
 #>
 
-function Invoke-Git {
-    param([Parameter(Mandatory)] [string[]] $Arguments, [string] $At = '')
-    $previousLocation = $PWD
-    try {
-        if ($At) { Set-Location -LiteralPath $At }
-        $output = @(& git @Arguments 2>&1)
-        if ($LASTEXITCODE -ne 0) {
-            [string] $newLine = [Environment]::NewLine
-            [string] $command = $Arguments -join ' '
-            [string] $detail = $output -join $newLine
-
-            throw "Git command failed: git $command$newLine$detail"
-        }
-        $output
-    }
-    finally {
-        Set-Location $previousLocation
-    }
-}
-
-function Test-GitCommand {
-    param([Parameter(Mandatory)] [string[]] $Arguments, [Parameter(Mandatory)] [string] $At)
-    $previousLocation = $PWD
-    try {
-        Set-Location -LiteralPath $At
-        & git @Arguments *> $null
-        $LASTEXITCODE -eq 0
-    }
-    finally {
-        Set-Location $previousLocation
-    }
-}
-
-function Get-GitLine {
-    # Most git plumbing here answers with exactly one line, and reading the
-    # first of an array at every call site is what pushed those call sites
-    # past 120 characters. Returns '' when git says nothing.
-    param([Parameter(Mandatory)] [string[]] $Arguments, [Parameter(Mandatory)] [string] $At)
-
-    [string[]] $lines = @(Invoke-Git -At $At -Arguments $Arguments)
-
-    if (0 -eq $lines.Count) {
-        return ''
-    }
-
-    return [string] $lines[0]
-}
-
 function Get-RepositoryNames {
     param([Parameter(Mandatory)] $Manifest, [switch] $ModulesOnly)
 
@@ -86,14 +38,15 @@ function Get-RepositoryNames {
 function Get-RepositoryStatus {
     param([Parameter(Mandatory)] [string] $At)
 
-    $porcelain = @(Invoke-Git -At $At -Arguments @('status', '--porcelain=v1'))
-    [string[]] $headRef = @('symbolic-ref', '--quiet', '--short', 'HEAD')
-    [string] $branch = Get-GitLine -At $At -Arguments $headRef
-    $detached = -not $branch
+    $porcelain = @(Invoke-XmipGit -At $At -Arguments @('status', '--porcelain=v1'))
 
-    if ($detached) {
-        $branch = Get-GitLine -At $At -Arguments @('rev-parse', '--short', 'HEAD')
-    }
+    # symbolic-ref answers a detached head with exit 1, which is the answer,
+    # not a failure; asked as a failure it threw before the fallback below
+    # could run (found moving the git calls onto one helper, 2026-09-23).
+    [string[]] $headRef = @('symbolic-ref', '--quiet', '--short', 'HEAD')
+    $detached = -not (Invoke-XmipGit -At $At -Arguments $headRef -Test)
+    [string[]] $name = if ($detached) { @('rev-parse', '--short', 'HEAD') } else { $headRef }
+    [string] $branch = @(Invoke-XmipGit -At $At -Arguments $name)[0]
 
     $ahead = 0
     $behind = 0
@@ -102,14 +55,14 @@ function Get-RepositoryStatus {
         'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'
     )
 
-    $hasUpstream = Test-GitCommand -At $At -Arguments $upstreamRef
+    $hasUpstream = Invoke-XmipGit -At $At -Arguments $upstreamRef -Test
 
     if ($hasUpstream) {
         [string[]] $countArguments = @(
             'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'
         )
 
-        [string] $counts = Get-GitLine -At $At -Arguments $countArguments
+        [string] $counts = @(Invoke-XmipGit -At $At -Arguments $countArguments)[0]
         if ($counts -match '^(\d+)\s+(\d+)$') {
             $ahead = [int]$Matches[1]
             $behind = [int]$Matches[2]
@@ -233,11 +186,11 @@ function Invoke-Distribute {
             # history still holds every one of them. Copy, add, and remove
             # from the source. The past stays findable where it happened.
             Copy-Item -LiteralPath $from -Destination $target -Force
-            Invoke-Git -At $repository -Arguments @('add', '--', $item.Path) | Out-Null
+            Invoke-XmipGit -At $repository -Arguments @('add', '--', $item.Path) | Out-Null
             # --force because git rm refuses a locally modified file, and
             # the copy into the target is already made by this point.
             [string[]] $remove = @('rm', '--quiet', '--force', '--', $item.From)
-            Invoke-Git -At $Source -Arguments $remove | Out-Null
+            Invoke-XmipGit -At $Source -Arguments $remove | Out-Null
             [void] $touched.Add($item.To)
         }
 
@@ -250,7 +203,7 @@ function Invoke-Distribute {
     foreach ($repository in $touched) {
         $at = Join-Path $Destination $repository
         if ($PSCmdlet.ShouldProcess($repository, 'Commit adopted files')) {
-            Invoke-Git -At $at -Arguments @('commit', '--quiet', '-m',
+            Invoke-XmipGit -At $at -Arguments @('commit', '--quiet', '-m',
                 'Adopt the files this repository owns, per Xmip allocation.toml') | Out-Null
         }
     }

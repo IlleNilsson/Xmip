@@ -57,7 +57,10 @@ function Repair-XmipSubmoduleLink {
     $text = $text.Replace("path = $From`n", "path = $To`n")
     Set-Content -LiteralPath $modules -Value $text -NoNewline
 
-    & git -C $Root config --rename-section "submodule.$From" "submodule.$To" 2>&1 | Out-Null
+    # The estate's config may not name the submodule at all; then there is
+    # nothing to rename, and that is not a failure.
+    [string[]] $rename = @('config', '--rename-section', "submodule.$From", "submodule.$To")
+    Invoke-XmipGit -At $Root -Arguments $rename -Test | Out-Null
 
     Repair-XmipGitPointer -Root $Root -Path $To
 
@@ -215,14 +218,13 @@ function Move-XmipSubmodule {
     # the next git command that wants it.
     [string] $source = Join-Path $Root $From
 
-    foreach ($tree in Get-XmipNestedGit -Directory $source) {
-        & git -C $tree fsmonitor--daemon stop 2>&1 | Out-Null
+    # A daemon that is not running answers the stop with a failure, which is
+    # the state wanted.
+    foreach ($tree in @($source) + @(Get-XmipNestedGit -Directory $source)) {
+        Invoke-XmipGit -At $tree -Arguments @('fsmonitor--daemon', 'stop') -Test | Out-Null
     }
 
-    & git -C $source fsmonitor--daemon stop 2>&1 | Out-Null
-    & git -C $Root mv $From $To 2>&1 | Out-Null
-
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Invoke-XmipGit -At $Root -Arguments @('mv', $From, $To) -Test)) {
         # Refused by the filesystem, not by git: rename it in two steps and
         # let git read the result.
         [string] $beside = Join-Path $Root ".xmip-move-$([IO.Path]::GetRandomFileName())"
@@ -240,8 +242,11 @@ function Move-XmipSubmodule {
         }
 
         Repair-XmipSubmoduleLink -Root $Root -From $From -To $To
-        & git -C $Root rm -q --cached $From 2>&1 | Out-Null
+        [string[]] $forget = @('rm', '-q', '--cached', '--ignore-unmatch', $From)
+        Invoke-XmipGit -At $Root -Arguments $forget | Out-Null
     }
 
-    & git -C $Root add -A '.gitmodules' $From $To 2>&1 | Out-Null
+    # The old path is out of the index by now, by git mv or by the rm above;
+    # naming it here would be a pathspec that matches nothing.
+    Invoke-XmipGit -At $Root -Arguments @('add', '-A', '.gitmodules', $To) | Out-Null
 }

@@ -423,8 +423,10 @@ configured independently, because Xmip is the server on receive and the
 client on send. Certificates are the first mechanism built; they are
 provisioned by Let's Encrypt at a public edge and by your own authority
 elsewhere. Xmip is developed in Sweden and is source-available, which is
-relevant where data sovereignty is regulated. It implements the AS4 and
-Peppol protocols that European e-invoicing mandates require from 2026.
+relevant where data sovereignty is regulated. Its AS4 and Peppol transports
+are protocol software for the operator of a certified access point, which is
+what European e-invoicing runs on; certification itself belongs to the
+operator, and no node runs a transport yet (market-position.md, section 8).
 
 ### Licensing
 

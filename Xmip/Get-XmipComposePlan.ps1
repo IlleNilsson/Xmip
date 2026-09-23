@@ -84,7 +84,7 @@ function Get-XmipPinnedCommit {
         [string] $mount = [string] $MountOf[$name]
         [string[]] $arguments = @('ls-tree', 'HEAD', '--', $mount)
         [string[]] $output = @(
-            Invoke-Native -FilePath 'git' -Arguments $arguments -At $Root -CaptureOutput
+            Invoke-XmipGit -At $Root -Arguments $arguments
         )
 
         # 160000 commit <sha>\t<path>
