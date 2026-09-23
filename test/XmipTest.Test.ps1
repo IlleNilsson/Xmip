@@ -1035,6 +1035,45 @@ Describe 'What a web host reads' {
         }
     }
 
+    It 'waits for a snapshot a rolling cluster has not published yet' {
+        # The owner, 2026-09-23, piping two fresh rolls into the monitor: a
+        # roll publishes when its first round ends, so the file a run names
+        # is not there yet, and being refused for it is the tool arguing with
+        # what it was just told. It waits instead, and only while the run is
+        # there.
+        InModuleScope Xmip {
+            [string] $coming = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-Q1-snapshot.toml'
+            $rolling = [PSCustomObject]@{ Cluster = 'Q1'; Snapshot = $coming }
+
+            Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
+            Mock -CommandName Start-Sleep -MockWith {
+                # The round ends while the wait sleeps.
+                Set-Content -LiteralPath $coming -Value 'published'
+            }
+
+            { Wait-XmipSnapshot -Path $coming } | Should -Not -Throw
+            Should -Invoke -CommandName Start-Sleep -Times 1
+            Remove-Item -LiteralPath $coming -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'refuses a snapshot a run names and then stops without publishing' {
+        InModuleScope Xmip {
+            [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-Q2-snapshot.toml'
+            $rolling = [PSCustomObject]@{ Cluster = 'Q2'; Snapshot = $never }
+            $script:asked = 0
+
+            Mock -CommandName Start-Sleep -MockWith { }
+            Mock -CommandName Get-XmipTestStatus -MockWith {
+                $script:asked++
+                if ($script:asked -eq 1) { $rolling } else { @() }
+            }
+
+            { Wait-XmipSnapshot -Path $never } |
+                Should -Throw -ExpectedMessage '*REFUSED*Q2 stopped without publishing*'
+        }
+    }
+
     It 'refuses an empty pipeline: nothing is rolling, so there is nothing to follow' {
         InModuleScope Xmip {
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }

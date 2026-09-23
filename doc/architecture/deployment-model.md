@@ -95,6 +95,30 @@ The Rust rules a purpose-compiled runtime still obeys — stages pass owned
 work, blocking Handler work never blocks a latency-sensitive loop — are
 `module-model.md` section 12, and hold on every build.
 
+### TLS is built in or it is not there
+
+**A guarded connection needs the `tls` feature at build time.** TLS is
+`xmip-core-tls` (ADR-0033, amendment 2026-09-23): the hybrid key exchange, the
+node's certificate and the trust store. A transport that can guard a
+connection — `http` and the technologies riding on it, and every technology
+that takes the feature as they are wired up — carries a `tls` feature that
+pulls it in, off by default, because a forwarder on an edge device should not
+carry a TLS stack it never opens.
+
+So a package either has it or it does not, and this is a packaging decision
+like any other in this section:
+
+```text
+cargo build --features tls        a node that may speak https, ldaps, STARTTLS
+cargo build                       a node on plain sockets only
+```
+
+Without the feature an `https://` endpoint is refused with a message saying
+so, rather than sent in the clear. The desired-state lists in `deploy/` name
+the modules a node loads, not the features it was built with; a package built
+without `tls` and a Location configured for `https` is the operator's error
+the node reports at once.
+
 ## 3. Runtime roles
 
 Three roles, deliberately few:

@@ -1,5 +1,10 @@
 # Xmip DSC v3 sample
 # Intended as a starter desired-state document.
+#
+# The module lists below name what a node loads. TLS is a build feature, not
+# an entry here: a package built without `tls` refuses an https endpoint
+# rather than sending it in the clear (deployment-model.md section 2,
+# ADR-0033).
 
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 resources:

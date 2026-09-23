@@ -401,8 +401,10 @@ Describe 'The estate is more than its modules' {
         $mount = & (Get-Module Xmip) {
             param($Repositories)
 
+            [string[]] $declared = @('xmip-example-transport')
+
             foreach ($repository in $Repositories) {
-                $path = Get-XmipMountPath -Repository $repository -Declared @('xmip-example-transport')
+                $path = Get-XmipMountPath -Repository $repository -Declared $declared
 
                 [pscustomobject]@{ Name = $repository.name; At = $path.Mount; In = $path.Owner }
             }
