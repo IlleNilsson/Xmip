@@ -171,3 +171,6 @@
 [submodule "module/foundation/net"]
 	path = module/foundation/net
 	url = https://github.com/IlleNilsson/xmip-core-net.git
+[submodule "module/foundation/tls"]
+	path = module/foundation/tls
+	url = https://github.com/IlleNilsson/xmip-core-tls.git

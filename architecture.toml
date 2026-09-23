@@ -267,6 +267,13 @@ dependency = []
   maturity = "scaffolded"
   dependency = []
 
+  [xmip.core.tls]
+  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, a connection upgraded in place for STARTTLS, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
+  architecturalDomain = "Foundation"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+
   [xmip.core.codec]
   description = "Encoding primitives every layer shares: XML escaping, and the hex, base64, checksums, byte cursor and writer, varints, civil dates and lexer machinery that capabilities each wrote by hand until 2026-09-22. What a format means stays with the format; how its bytes and characters are written is here."
   architecturalDomain = "Foundation"
