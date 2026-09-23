@@ -430,7 +430,7 @@ Describe 'PowerShell style, section 1: layout' {
             'Decision.Test.ps1'           = 1
             'Documentation.Test.ps1'      = 5
             'Publish-XmipChange.Test.ps1' = 2
-            'Sync-XmipEstate.Test.ps1'    = 6
+            'Sync-XmipEstate.Test.ps1'    = 5
         }
     }
 
