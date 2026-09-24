@@ -382,6 +382,7 @@ dependency = []
     [xmip.core.transport.hart]
     maturity = "scaffolded"
     specification = "FieldComm Group HART, IEC 61784-1 communication profile CPF 9"
+    dependency = ["xmip-core-transport-serial"]
     [xmip.core.transport.iec-60870-5-104]
     maturity = "scaffolded"
     specification = "IEC 60870-5-104: APCI, STARTDT and TESTFR, I frames acknowledged one at a time"
@@ -414,7 +415,7 @@ dependency = []
     specification = "LoRa Alliance LoRaWAN"
     [xmip.core.transport.m-bus]
     maturity = "scaffolded"
-    description = "M-Bus transport: EN 13757 wired metering over a serial line — short and long frames, SND_UD and REQ_UD2 answered by RSP_UD, a Stream as variable data records across as many telegrams as it takes; a loopback meter stands in for the line. A xmip-core-transport technology."
+    description = "M-Bus transport: EN 13757 wired metering over a serial line — short and long frames, SND_UD and REQ_UD2 answered by RSP_UD, a Stream as variable data records across as many telegrams as it takes; meters on the serial technology's multi-drop bus stand in for the line. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-serial"]
     specification = "EN 13757, wired metering bus"
     [xmip.core.transport.mdns]
