@@ -286,6 +286,42 @@ never passed.
   a neutral rendering of the facts for outside engines (`cedar`, `opa`);
   the trailing-star match (three authorize technologies).
 
+## Amendment, 2026-09-24: the candidates went up, each to one home
+
+The owner, 2026-09-24: *code is placed once, and everything else uses it.*
+The candidates of the amendment of 2026-09-19, and the copies the audit of
+2026-09-22 found beside them, each have one home now, and every copy is gone.
+Section 6 as it stands; nothing goes sideways.
+
+| concept | home | read by |
+|---|---|---|
+| the `Negotiate` token to its AP-REQ's ticket: SPNEGO, GSS-API, bare | `identify::kerberos` | `identify/kerberos`, `authenticate/kerberos` |
+| the NTLM AUTHENTICATE message | `identify::ntlm::Authenticate` | `identify/ntlm`, `authenticate/ntlm` |
+| every evidence and proof name a claim carries across the gates | `identify::evidence` | the first gate's writers, the second gate's readers, `authorize/scope` |
+| the clock and a credential's window | `authenticate::clock` | the ten verifiers that hold a time |
+| JOSE keys and the choice of one | `authenticate::jose`, behind a feature | `jwt`, `oidc` |
+| X.690, and an `OBJECT IDENTIFIER`'s contents | `xmip-core-library-asn1` | Kerberos, LDAP, X.509, SNMP, IEC 61850, directly |
+| base 64 and base64url | `codec::base64` | every identity crate; the external `base64` crate is gone from all of them |
+| the name an API key with no id goes by, `sha256:` and sixteen hex digits | `identify::api_key` | `identify/api-key`, `authenticate/api-key` |
+
+- **Two readings changed where the copies disagreed.** A token was held
+  valid for the second of its `exp` by `jwt`, `oidc` and `oauth2` and not by
+  `saml`; RFC 7519 section 4.1.4 refuses it *on or after* `exp`, and the one
+  window does. And where a token named no key, `jwt` tried the first key of
+  its algorithm and `oidc` every one; every one is the rule.
+- **Already one before this, confirmed:** the `Authorization` header and the
+  Digest list (`identify::authorization`, quotes honoured as RFC 7616
+  requires), SAML's unescaping and its principal (`codec::xml`,
+  `identify::saml`), the `*` pattern (`authorize::pattern`), and the peer
+  address `authorize/transport` reads (`net::PEER_ADDRESS`).
+- **Not here, and why.** The SMB transport writes and reads an NTLM message
+  of its own, a counted-field simplification rather than the specification's
+  layout; reading it with `identify::ntlm` would make a transport depend on
+  the identify capability, which is the owner's to rule on. The SSH names
+  the SFTP transport writes and `identify/ssh-key` reads (`ssh.key`,
+  `ssh.signature`, `ssh.session`) cross the transport's boundary, not the
+  gates', and are left with the same question.
+
 ## Provenance
 
 The sentence and the three tables are the assistant's, 2026-09-10, under the

@@ -190,7 +190,11 @@ ruling the point was waiting for; the owner confirms or strikes it.
 - **A defect this found.** `authorize/scope` has read evidence named `scope`
   since it was written and said `oauth2` and `jwt` record it; neither
   could, so the policy denied every token. The name is now one constant,
-  `authenticate::conclusion::SCOPE`, and both write it.
+  `authenticate::conclusion::SCOPE`, and both write it. *Since 2026-09-24
+  it is `identify::evidence::SCOPE`, beside `principal.user` and
+  `principal.service` and every other name a claim carries across the
+  gates, and `authorize/scope` reads that constant rather than a string of
+  its own (ADR-0050, amendment 2026-09-24).*
 - **Not done.** `oidc` and `saml` learn nothing new: their names are in the
   token the first gate read, and the second gate already checks them.
 

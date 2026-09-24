@@ -430,36 +430,37 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'reads a capability by the node crate''s rule, as the Playground and the surface do' {
-        # node::Stage::declared is the one parse (open problem 25, row i).
-        # PowerShell and Xmip.Surface reach no Rust for it, so their copies
-        # are held to it here: the same words, lowercase exactly (the owner,
-        # 2026-09-24: 'Send' is an unknown word), and an unknown word refused
-        # in the same sentence.
+    It 'reads a capability by the node crate''s rule, and keeps no copy of it' {
+        # node::Stage::declared is the one parse (open problem 25, row i), and
+        # since 2026-09-24 the one implementation: this module asks
+        # Xmip.Surface, which calls it in the runtime (xmip_operate.h section
+        # 7). No word list is written here, in the surface, or anywhere but
+        # the node crate (the owner, 2026-09-24: code is placed once).
         [string] $root = Get-XmipRepositoryRoot
-        [string] $rust = Get-Content -Raw -LiteralPath (
-            Join-Path $root 'module/foundation/node/src/stage.rs')
-        [string] $surface = Get-Content -Raw -LiteralPath (
-            Join-Path $root 'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs')
-        [string] $capability = Get-Content -Raw -LiteralPath (
-            Join-Path $root 'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')
+        [string] $list = '[''"]receive[''"],\s*[''"]process[''"],\s*[''"]send[''"]'
 
-        $rust | Should -Match 'WORDS: \[&''static str; 3\] = \["receive", "process", "send"\]'
-        $surface | Should -Match 'Stages \{ get; \} = \["receive", "process", "send"\]'
-        $rust | Should -Match ([regex]::Escape(
-                '"REFUSED: no capability is called {}; a node declares {}, or nothing at all."'))
-        $rust | Should -Not -Match 'ignore_ascii_case|to_ascii_lowercase'
-        $capability | Should -Not -Match 'IgnoreCase|ToLower'
+        foreach ($copy in @(
+                'Xmip/Get-XmipNodeCapability.ps1'
+                'Xmip/Get-XmipNodeComplement.ps1'
+                'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
+                'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')) {
+            Get-Content -Raw -LiteralPath (Join-Path $root $copy) |
+                Should -Not -Match $list -Because "$copy calls the node crate's words"
+        }
 
         InModuleScope Xmip {
-            $script:XmipNodeCapability | Should -Be @('receive', 'process', 'send')
             ConvertTo-XmipNodeCapability -Capability 'send + receive' | Should -Be 'receive,send'
-            { ConvertTo-XmipNodeCapability -Capability 'Send + RECEIVE' } |
-                Should -Throw -ExpectedMessage ('REFUSED: no capability is called Send, RECEIVE; ' +
-                    'a node declares receive, process, send, or nothing at all.')
-            { ConvertTo-XmipNodeCapability -Capability 'receive,relay+hold' } |
-                Should -Throw -ExpectedMessage ('REFUSED: no capability is called relay, hold; ' +
-                    'a node declares receive, process, send, or nothing at all.')
+            ConvertTo-XmipNodeCapability -Capability @('process', 'send') |
+                Should -Be 'process,send'
+
+            foreach ($said in 'Send + RECEIVE', 'receive,relay+hold') {
+                [string] $refusal = ''
+                [Xmip.Surface.NodeCapability]::Ordered($said, [ref] $refusal) | Out-Null
+
+                $refusal | Should -BeLike 'REFUSED: no capability is called *'
+                { ConvertTo-XmipNodeCapability -Capability $said } |
+                    Should -Throw -ExpectedMessage $refusal
+            }
         }
     }
 
@@ -992,21 +993,27 @@ observed_unix_nanos = 1789208338038783900
         (Get-XmipTestResult -Path $louder -Worst).State | Should -Be 'done'
     }
 
-    It 'ranks the moods in the order HealthState declares them' {
-        [string] $enum = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot (
-            '../module/foundation/abi/dotnet/Xmip.Abi/Operate/HealthState.cs'))
-        [string[]] $declared = @(
-            [regex]::Matches($enum, '(?m)^\s+(\w+) = \d+,') |
-                ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() }
-        )
+    It 'reads the snapshot and ranks the worst through the surface, keeping no copy' {
+        # The owner, 2026-09-24: code is placed once. The snapshot reader is
+        # SnapshotOperator's and the worst-first order the runtime's
+        # (observe::Standing, called through ScopeTree.Worst); this module
+        # parses no snapshot and ranks no mood of its own.
         [string] $script = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot (
             '../Xmip/Get-XmipTestResult.ps1'))
-        [string] $line = [regex]::Match($script, '\$moods = ([^\r\n]+)').Groups[1].Value
-        [string[]] $ranked = @([regex]::Matches($line, "'(\w+)'") |
-            ForEach-Object { $_.Groups[1].Value })
 
-        $declared.Count | Should -Be 7
-        $ranked | Should -Be $declared
+        $script | Should -Not -Match 'ConvertFrom-Toml|\$moods|''holding'''
+        $script | Should -Match 'SnapshotOperator'
+        $script | Should -Match 'ScopeTree\]::Worst'
+
+        InModuleScope Xmip -Parameters @{ Snapshot = $script:Snapshot } {
+            param($Snapshot)
+
+            $surface = [Xmip.Surface.SnapshotOperator]::new($Snapshot)
+            $all = $surface.Health([Xmip.Surface.ScopeTree]::Root)
+
+            (Get-XmipTestResult -Path $Snapshot -Worst).Scope |
+                Should -Be ([Xmip.Surface.ScopeTree]::Worst($all).Scope)
+        }
     }
 
     It 'takes a wildcard where it takes a test name' {

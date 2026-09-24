@@ -2,30 +2,20 @@
 
 Set-StrictMode -Version Latest
 
-# The capability words a node may declare, in message-path order. The one
-# parse is the node crate's, node::Stage::declared
-# (module/foundation/node/src/stage.rs), and ADR-0056 is the record: a node
-# declares what it can do, and work is placed on a node whose capabilities
-# satisfy it. This module reaches no Rust to ask it, so this is a copy held to
-# it by test/XmipTest.Test.ps1: the same words, lowercase exactly (the owner,
-# 2026-09-24), any other word refused in the same sentence. The other two
-# kinds ADR-0056 names — authentication and runtime capability — are not
-# modelled in the rig.
-[string[]] $script:XmipNodeCapability = @('receive', 'process', 'send')
-
 function ConvertTo-XmipNodeCapability {
     <#
         .SYNOPSIS
             The capability words a value says, in message-path order, as the
-            node binary's -can takes them. Pure.
+            node binary's -can takes them.
 
         .DESCRIPTION
-            A string or a list, separated by commas or by +. Each word is
-            lowercase exactly: 'Send' or 'RECEIVE' is an unknown word (the
-            owner, 2026-09-24). An unknown word is refused before anything
-            starts (ADR-0055), naming the word and the values a capability
-            would take, in the words node::Stage::declared uses. Nothing
-            declares nothing.
+            A string or a list, separated by commas or by +. The words and the
+            parse are the node crate's, node::Stage::declared (ADR-0056,
+            amendment 2026-09-24), and this module keeps no copy: it asks
+            Xmip.Surface's NodeCapability, which calls that parse in the
+            runtime. Each word is lowercase exactly, and an unknown word is
+            refused before anything starts (ADR-0055) in that parse's own
+            sentence. Nothing declares nothing.
 
         .PARAMETER Capability
             What was said for one node: 'receive', 'process,send', or a list.
@@ -38,22 +28,17 @@ function ConvertTo-XmipNodeCapability {
         [object] $Capability
     )
 
-    [string[]] $words = @(
-        @($Capability) |
-            Where-Object { $null -ne $_ } |
-            ForEach-Object { ([string] $_) -split '[,+]' } |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ -ne '' }
-    )
+    Import-XmipOperatorModule
 
-    [string[]] $strangers = @($words | Where-Object { $_ -cnotin $script:XmipNodeCapability })
+    [string] $said = @(@($Capability) | Where-Object { $null -ne $_ }) -join ','
+    [string] $refusal = ''
+    [string[]] $stages = @([Xmip.Surface.NodeCapability]::Ordered($said, [ref] $refusal))
 
-    if ($strangers.Count -gt 0) {
-        throw ("REFUSED: no capability is called $($strangers -join ', '); a node " +
-            "declares $($script:XmipNodeCapability -join ', '), or nothing at all.")
+    if ($refusal -ne '') {
+        throw $refusal
     }
 
-    return (@($script:XmipNodeCapability | Where-Object { $_ -cin $words }) -join ',')
+    return ($stages -join ',')
 }
 
 function Get-XmipNodeCapability {
@@ -249,7 +234,7 @@ function Get-XmipNodeCapabilityRefusal {
         return ''
     }
 
-    [string[]] $missing = @($script:XmipNodeCapability | Where-Object { $_ -notin $declared })
+    [string[]] $missing = @([Xmip.Surface.ScopeTree]::Stages | Where-Object { $_ -notin $declared })
 
     if ($missing.Count -eq 0) {
         return ''

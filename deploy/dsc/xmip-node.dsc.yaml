@@ -215,6 +215,8 @@ resources:
                 "xmip-core-identify-username",
                 "xmip-core-transport-peppol",
                 "xmip-core-transport-sftp",
+                "xmip-core-transport-aws",
+                "xmip-core-transport-azure",
               ]
               started = [
                 "xmip-core-transport-file", "xmip-core-transport-tcp",
