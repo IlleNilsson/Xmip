@@ -128,7 +128,8 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
             [PSCustomObject]@{
                 Path  = $_.Path
                 Name  = [IO.Path]::GetFileNameWithoutExtension($_.Path)
-                Crate = if ($parts[0] -eq 'module' -and
+                Crate = if ($parts[0] -eq 'sdk') { 'sdk' }
+                        elseif ($parts[0] -eq 'module' -and
                             $parts[1] -notin 'foundation', 'platform' -and
                             $parts.Count -ge 4) { $parts[3] }
                         elseif ($parts.Count -ge 3) { $parts[2] }

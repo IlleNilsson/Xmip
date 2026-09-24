@@ -441,7 +441,7 @@ Describe 'The estate is more than its modules' {
         foreach ($at in $path) {
             [string] $shape = '^(module/(foundation|platform)/[a-z0-9-]+|' +
                 'module/(?!foundation/|platform/)[a-z0-9]+/[a-z]+/[a-z0-9-]+|' +
-                'test/[a-z0-9]+/playground|template/[a-z]+)$'
+                'test/[a-z0-9]+/playground|template/[a-z]+|sdk)$'
             $at | Should -Match $shape -Because "$at is where a submodule mounts"
         }
     }

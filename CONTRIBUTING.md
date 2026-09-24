@@ -249,9 +249,11 @@ to users over a network.
 
 Extensions do not require permission.
 
-Any organization may build a module against `xmip-core-sdk`, at a versioned
-tag, and ship it as a library a node loads through the C ABI, under whatever
-license it chooses. Those modules are the publisher's work, the publisher's
+Any organization may build a module against the capability it belongs to —
+a contract against `xmip-core-contract`, a transport against
+`xmip-core-transport` — prove it on the SDK's simulators (`sdk/`), and ship it
+as a library a node loads through the C ABI, under whatever license it
+chooses. Those modules are the publisher's work, the publisher's
 support and the publisher's responsibility. Xmip neither endorses nor
 maintains them.
 
