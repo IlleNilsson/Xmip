@@ -7,9 +7,9 @@
 - Related: ADR-0022 (identity classes and runtime isolation; the placement
   solver), ADR-0045 (offline is the default), ADR-0050 (an identity
   technology is one mechanism at one gate), ADR-0025 (module loading),
-  ADR-0052 (a node carries the roles suitable for its purpose; amendment
-  2026-09-24, the surfaces call the node crate's parse), ADR-0009
-  (configuration)
+  ADR-0052 (a node carries the roles suitable for its purpose; amendments
+  2026-09-24, the surfaces call the node crate's parse, and the node's
+  evidence and run entry), ADR-0009 (configuration)
 
 ## In brief
 
@@ -260,6 +260,20 @@ is now one rule.
   through the operator module it now loads. `test/XmipTest.Test.ps1` holds
   that no word list is written outside the node crate (ADR-0052, amendment
   "one implementation, and the surfaces call the runtime's exports").
+
+- **The two forms a declaration is said in are the node crate's too**, the
+  same day. What a node publishes of itself — `declares receive,send;
+  online; …` — and the entry a run lists it by — `edge-01=receive+send` —
+  were written by the Playground and read again by `Xmip.Surface`. Both are
+  `node::Capability` now (`evidence`, `from_evidence`, `entry`,
+  `from_entry`), moved from the Playground, which keeps only the flags it
+  starts a node process with; where the record sits, `<node>/capability`, is
+  `observe::capability`'s. The surfaces call both through
+  `xmip_capability_published_v1` and `xmip_capability_entry_v1` (ADR-0052,
+  amendment "the last cross-language copies, and a publication read once").
+  A refused published declaration no longer reports the node online: it is
+  refused whole (ADR-0055). Where a declaration places work is open
+  problem 25, row o, and not moved.
 
 Provenance: the case rule is the owner's, 2026-09-24. The rest is the
 assistant's drafting of problem 25's row.

@@ -463,6 +463,19 @@ Describe 'The estate is more than its modules' {
     }
 }
 
+Describe 'What the manifest tells GitHub' {
+    # GitHub refuses a description over 350 characters; three were written
+    # longer on 2026-09-24 and found only when -Configure stopped on one.
+    It 'gives every repository a description GitHub takes' {
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        [string[]] $long = @($manifest.repositories |
+                Where-Object { "$($_.description)".Length -gt 350 } |
+                ForEach-Object { "$($_.name) ($("$($_.description)".Length))" })
+
+        $long | Should -BeNullOrEmpty
+    }
+}
+
 Describe 'Configuring repositories' {
     # -Only was ignored here, so creating two repositories reconfigured all of
     # them, and GitHub's 350-character limit refused a description after the

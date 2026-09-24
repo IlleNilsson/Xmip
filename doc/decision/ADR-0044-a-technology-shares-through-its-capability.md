@@ -127,7 +127,11 @@ hold HTTP. Two technologies were approved that day to hold them,
   percent-encoding, RFC 1123's date and the judgement of a status.
   `x-amz-date` went to the AWS signer that reads it, once the civil
   calendar both dates are written off had moved to `xmip-core-library-codec`
-  the same day.
+  the same day. *(Later the same day: percent-encoding and a URL's
+  authority are a URI's, not HTTP's, and moved to `xmip-core-library-net`,
+  which the identity gates and the form shape reach too; http's own
+  exchange of a request for its answer follows to `net::http`, the one
+  HTTP/1.1 client, so an answer sent in chunks is read in one place.)*
 - **A signature is compared by the HMAC's own check**, `verify_slice`,
   which takes the same time however far the two agree. The hand-written
   constant-time compare http carried for the three signers is gone.

@@ -6,10 +6,12 @@
   is the interface into Xmip; 2026-09-05, the web GUI monitors; 2026-09-09,
   the .NET binding is one project in xmip-core-abi; 2026-09-10, the
   configuration tool has two faces), ADR-0027 (the operator boundary;
-  amendment 2026-09-24, section 7's rules), ADR-0041 (health is a mood and
-  does not propagate; its color name corrected 2026-09-24), ADR-0044 (a
+  amendments 2026-09-24, section 7's rules and section 8's publication
+  reader), ADR-0041 (health is a mood and does not propagate; its color name
+  corrected 2026-09-24, its rollup exported the same day), ADR-0044 (a
   technology shares through its capability), ADR-0056 (a node declares what
-  it can do; its copies corrected 2026-09-24)
+  it can do; its copies corrected 2026-09-24, its evidence and run entry
+  moved to the node crate the same day)
 
 ## In brief
 
@@ -1082,6 +1084,63 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
   returns what the export returns, and `test/XmipTest.Test.ps1` and
   `Xmip.Gui.Test`'s `StylesheetTest` that no copy is written again.
 
+## Amendment, 2026-09-24: the last cross-language copies, and a publication read once
+
+The amendment above left seven copies standing, each written in Rust and
+again in .NET (open problem 25, "still to do in phase B"), and one set of
+presets in the wrong crate. The owner's rule of the same day applies to each
+unchanged: one implementation in the crate that owns it, a one-line forwarder
+in the runtime's library, one binding in `Xmip.Abi`, and callers.
+
+| Concept | The one implementation | Export | Callers | Copies removed |
+|---|---|---|---|---|
+| The rollup: a parent is Fine or Holding | `observe::Health::rolled` | `xmip_health_rolled_v1` | `ScopeTree.Rolled`, and through it `Rollup`, `Branches`, `ScopeIndex`, `English.Rollup`, `MoodClass` and every face; `Snapshot::worst` in Rust | `ScopeTree.Rolled`'s own comparison; `Snapshot::worst`'s inline one |
+| Counted words and the kind a stage counts | `observe::Counted::word`, `named`, `ALL`, `at` (new `observe/src/counted.rs`, `Counted` moved there) | `xmip_counted_word_v1`, `xmip_stage_counted_v1` | `English.Kind` (the command line's figure names), `ScopeTree.CountedAt` (the board's tiles, the prompt); the Playground and the publication reader in Rust | the Playground's `counted_name`, `counted_named` and `COUNTED`; `SnapshotOperator.ParseCounted`; `ScopeTree.CountedAt`'s table; `MeasureCommand`'s six literal keys |
+| Whether a stage pauses, what a thing at it is called | `node::Stage::pausable`, `Stage::location` | `xmip_stage_pausable_v1`, `xmip_stage_location_v1` | `ScopeTree.Pausable` (the Cluster page's pause button), `ScopeTree.Location` (the Configuration page's kind) | `Cluster.razor`'s `IsPausable`; `Configuration.razor`'s three stage cases |
+| A node's capability evidence and a run's entry for it | `node::Capability` (`evidence`, `from_evidence`, `entry`, `from_entry`; new `node/src/capability.rs`, moved from the Playground) and where the record sits, `observe::capability` (`scope`, `declared`) | `xmip_capability_published_v1`, `xmip_capability_entry_v1` | `NodeCapability.Declared` (now given the record's scope, and null for any other record), `NodeCapability.Started`, and through them `ScopeIndex`, `RunHeader` and the Configuration page's kind | the Playground's `Capability` and its hand-built `name=a+b` in the roster and the run; `NodeCapability`'s `declares `/`; online;` parse and its `=` split; `ScopeIndex.Declaration`'s and `Configuration.razor`'s test of a leaf called `capability` |
+| The topology model and its words (node kind, origin, pattern) | `observe::topology` (`Topology`, `TopologyNode`, `TopologyLink`, `NodeKind`, `Origin`, `Pattern`), moved from the Playground | section 8, as values | the Playground draws with it; every surface reads it through the reader below | the Playground's string-typed model; `SnapshotOperator.ParseNodeKind`, `ParseOrigin`, `ParsePattern` |
+| The run header | `observe::Run`, moved from the Playground (which keeps only `run::started`, filling it) | section 8 | `RunHeader.From` | `RunHeader.Read`'s TOML walk |
+| A publication's shape: its keys, its words, what an unknown word reads as | `observe::Publication` (`of`, `whole`, `to_toml`, `read`, `snapshot`) | section 8: `xmip_publication_read_v1` and its seven companions (ADR-0027's amendment of the same date) | `SnapshotOperator` through `Xmip.Abi`'s `PublicationReader`, and the Playground's roll, cluster and nodes in Rust | the Playground's `SnapshotReport` and its readers; `SnapshotOperator`'s TOML walk (`Rows`, `Text`, `Number`, `Real`, `ParseState`, `ParseObserved`, the topology parse) |
+| The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Playground's `history_toml` | the Playground's `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
+| The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Playground's `activity_toml` | the Playground's `ActivityReport`/`ItemReport` and its own `kind_name` word list |
+| The language server's validate entrypoint and its shape | `abi::operate::XMIP_VALIDATE_ENTRYPOINT`, `ValidateFn` (and `StartFn` beside it) | — (a Rust-to-Rust copy) | `xmip-lsp`'s `runtime.rs`; the runtime's `start.rs` proves both exports have the declared shape | `runtime.rs`'s own `ENTRYPOINT` bytes and `ValidateFn` |
+
+- **A publication is read in one place.** `SnapshotOperator` hands the file's
+  text to the runtime and builds its index from what comes back; it names no
+  key and no word. What a reader does not know it decides once, in
+  `observe::Publication`: a mood no one is called is Stressed, so it shows (the
+  surface's rule until now); a counted kind no one is called is skipped (the
+  Playground's rule until now — the surface counted it as Streams, which
+  inflated a figure); a topology word falls back as the surface's did. A count
+  crosses at the scope it was recorded at: the surface put every count at the
+  publication's own scope, which only a roll's file made true.
+- **Where a node publishes its capability is the snapshot's to say.** A
+  surface asks whether a record is a node's declaration by giving the runtime
+  its scope; it no longer reads meaning from a leaf's name.
+- **The topology's parents are Fine or Holding.** ADR-0041 already decided
+  it: the Playground draws the cluster, a node, a stage, an endpoint and the
+  shared store in the mood of a record at its own scope, else
+  `Health::rolled` over the worst beneath it, with that record's evidence; a
+  link, which is no parent, keeps the worst leaf at either end. Until
+  2026-09-24 a parent carried its worst leaf's own mood.
+- **The history file and the activity file each have one writing.** A
+  history is `observe::Curve`, read for `Get-XmipHistory` by the runtime; the
+  cmdlet walks no TOML and refuses a counted word the runtime does not name.
+  The activity file is `observe::Recent`; nothing outside the Playground
+  reads it yet, so it has no export — the day a surface reads it, it reads
+  through one beside the curve's.
+- **Message treatment presets are `message`'s.** `MessageTreatment::CONVERSATION`,
+  `BUSINESS` and `PASS_THROUGH` are associated constants beside the type, and
+  `Default` is `BUSINESS`; the runtime's `generation.rs` wrote them as three
+  functions and is left with the generation itself.
+
+Tested once where each is written — `observe`'s `health.rs`, `counted.rs`,
+`capability.rs`, `topology.rs`, `publication.rs`, `curve.rs` and `recent.rs`, `node`'s `stage.rs` and
+`capability.rs`, `message`'s `lib.rs` — with the runtime's `rule.rs`,
+`rule/node.rs` and `publication.rs` proving each export forwards and has the
+declared shape, `Xmip.Abi.Tests` the crossing, and `Xmip.Surface.Test` that
+the surface answers what the export answers.
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
@@ -1109,7 +1168,12 @@ every surface — is the owner's ruling and the lead's design, drafted by the
 assistant; the choice of .NET as the one home of runtime discovery, with the
 language server told its library, is the assistant's, for the owner to
 overrule. ADR-0027's amendment of 2026-09-24 declares the exports, and
-ADR-0041's and ADR-0056's amendments point here.
+ADR-0041's and ADR-0056's amendments point here. The amendment "the last
+cross-language copies, and a publication read once" is the assistant's
+carrying out of the lead's list of the same day under the same ruling; the
+reader's choices for a word nobody knows are the assistant's, for the owner
+to overrule; rolling the topology's parents up and giving the history and
+activity files one home are the lead's instruction of the same day.
 
 The instruction of 2026-09-24 — the command line and PowerShell share, and
 logic goes down the layers — is the owner's; what moved where is the

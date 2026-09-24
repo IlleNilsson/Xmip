@@ -4,7 +4,8 @@
 - Date: 2026-08-25
 - Related: ADR-0006 (send-side identity inheritance), ADR-0007 (communication
   domain model), ADR-0008 (Xmip entities as actors), ADR-0009 (security roles
-  versus actor capabilities), ADR-0013 (disposition and the Journey model)
+  versus actor capabilities), ADR-0013 (disposition and the Journey model),
+  ADR-0050 (an identity technology is one mechanism at one gate)
 
 ## In brief
 
@@ -361,3 +362,47 @@ stage. The pipeline does not bend to a mechanism, and a mechanism that would
 need it to is refused rather than accommodated. This is what makes the
 twenty-eight declared mechanisms a list of plug-ins rather than twenty-eight
 different identity models.
+
+## Amendment, 2026-09-24: a name one layer writes and another reads is context's
+
+Clause 6 puts both identities and their evidence in the Message Context, and
+the consequences make `xmip-core-context` the crate that carries them. The
+names those facts travel under before they are identities had no such home:
+the transport writes them on the arrival, the gates read them, and each side
+declared its own. The peer's address was `xmip-core-library-net`'s; the SFTP
+transport declared `ssh.key`, `ssh.user`, `ssh.signature` and `ssh.session`
+and `identify/ssh-key` and `authenticate/ssh-key` declared them again; two
+identify technologies each declared the HTTP header prefix; the peer
+certificate's issuer and fingerprint and the first two NTLM legs sat in
+`identify::evidence` although a transport writes them; and the runtime wrote
+the sending Party under a literal `route/party` declared for itself.
+
+**The owner, 2026-09-24: `xmip-core-context` owns every property name one
+layer writes and another reads.** `context::property` declares each once,
+below both sides:
+
+- what a transport says about an arrival — the peer's address and hardware
+  address; HTTP's header and query prefixes, the `Authorization`, `Cookie`,
+  `Forwarded` and `X-Forwarded-For` headers, the posted `SAMLResponse`, the
+  method and the target; the TLS peer certificate's subject, UPN, chain,
+  issuer, fingerprint and the handshake's word that it verified; the SSH
+  key, user, signature and session; the NTLM NEGOTIATE and CHALLENGE — which
+  the identity gates read;
+- what the runtime writes into the Message Context for a route to read: the
+  sending Party, `xmip.party`, and the receiving one.
+
+`identify::evidence` keeps only the names that cross the gates inside
+identity (ADR-0050, amendment 2026-09-24), and a test in `identify` refuses
+an evidence name that is also a property name. No copy is left in `net`, the
+SFTP transport or any gate. A name a gate hands on under the name the
+transport wrote it — the peer's address, the certificate's issuer — is still
+the transport's name, and so still here.
+
+Not moved, and asked: `route/header` reads a header from the Message Context
+under `header.<name>`, while the transport's vocabulary puts one on the
+arrival under `http.header.<name>`. Nothing writes the first yet. Whether
+promotion writes the second spelling into context, or the two stay distinct
+vocabularies for two moments, is the owner's.
+
+Provenance: the ruling is the owner's, 2026-09-24; the list of names, and the
+module holding them, are the assistant's drafting under it.

@@ -3,7 +3,8 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0027 (the operator boundary, amendment 2026-09-05 "three states,
-  no fourth"; amendment 2026-09-24, the mood's word, color and order exported),
+  no fourth"; amendments 2026-09-24, the mood's word, color, order and
+  rollup exported),
   ADR-0028 (the Playground), ADR-0052 (amendment 2026-09-24, one
   implementation), doc/architecture/observability-model.md
 
@@ -135,6 +136,17 @@ names, its color's name and the worst-first order are `observe::Health` and
 `StylesheetTest` holds that. The console prompt renders names as it did.
 ADR-0052's amendment "one implementation, and the surfaces call the runtime's
 exports" is the record of the move.
+
+**The rollup too, 2026-09-24.** What a parent shows — Fine over Fine,
+Holding over anything else — was written in `observe::Snapshot::worst` and
+again in `ScopeTree.Rolled`. It is `observe::Health::rolled` now; the
+snapshot calls it and the surfaces call it through `xmip_health_rolled_v1`
+(ADR-0052, amendment "the last cross-language copies, and a publication read
+once"). The Playground's topology draws its parents — the cluster, a node, a
+stage, an endpoint, the shared store — through it too, the same day: Fine or
+Holding over the worst beneath, a record at the thing's own scope keeping its
+mood, and a link the worst leaf at either end. Until then a drawn parent
+carried its worst leaf's own mood, which this record never allowed.
 
 ## Provenance
 

@@ -464,6 +464,32 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'reads a publication, a stage and a capability record through the runtime' {
+        # The owner, 2026-09-24: code is placed once. A publication's keys and
+        # words are observe::Publication's, read for a surface by the runtime
+        # (xmip_operate.h section 8); what a stage counts and whether it
+        # pauses are observe::Counted's and node::Stage's; where a node's
+        # capability record sits and how it reads are observe::capability's
+        # and node::Capability's (section 7). None is written in .NET.
+        [string] $root = Get-XmipRepositoryRoot
+        [string] $words = '"(streams|journeys|retrying|virtual-machine|request-response|' +
+            'publish-consume|fire-and-forget|configured|declares |receive location)"|' +
+            'Tomlyn|is "receive" or "send"|\], "capability"'
+
+        foreach ($copy in @(
+                'module/foundation/abi/dotnet/Xmip.Surface/SnapshotOperator.cs'
+                'module/foundation/abi/dotnet/Xmip.Surface/RunHeader.cs'
+                'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs'
+                'module/foundation/abi/dotnet/Xmip.Surface/ScopeIndex.cs'
+                'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
+                'module/core/operation/cli/src/Xmip.Cli/MeasureCommand.cs'
+                'module/core/operation/gui/src/Xmip.Gui/Pages/Cluster.razor'
+                'module/core/operation/gui/src/Xmip.Gui/Pages/Configuration.razor')) {
+            Get-Content -Raw -LiteralPath (Join-Path $root $copy) |
+                Should -Not -Match $words -Because "$copy calls the runtime for them"
+        }
+    }
+
     It 'says what nodes with no capability will do, and does not refuse it' {
         # ADR-0055 clause 5: running whole tests is a real answer, and it is
         # not what someone typing R1, P1, S1 is likely to have meant. Said
@@ -1312,7 +1338,19 @@ Describe 'What a history file holds' {
             $read[0].Counted | Should -Be 'bytes'
             $read[0].Value | Should -Be 1024
             @(Get-XmipHistory -Path $path -Counted messages).Value | Should -Be 7
+            { Get-XmipHistory -Path $path -Counted Messages -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage 'REFUSED: no counted kind is called Messages*'
         }
+    }
+
+    It 'reads the file through the runtime''s reader, walking no TOML and naming no kind' {
+        # The owner, 2026-09-24: code is placed once. The history's shape is
+        # observe::Curve's, read through xmip_operate.h section 8.
+        [string] $script = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot (
+            '../Xmip/Get-XmipHistory.ps1'))
+
+        $script | Should -Not -Match 'ConvertFrom-Toml|Get-TomlValue|''(streams|bytes)'''
+        $script | Should -Match 'Publications\.Curve'
     }
 
     It 'says in words that a producer wrote no points, rather than nothing' {

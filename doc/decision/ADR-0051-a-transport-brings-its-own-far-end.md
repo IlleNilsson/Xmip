@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-11
+- Amended: 2026-09-24 — the far ends are the capability's
 - Related: ADR-0028 (the Playground: clause 5, the far end is Xmip; the
   amendment of 2026-09-09, every transport declares its ceiling), ADR-0044
   (a technology shares through its capability), ADR-0010 (one protocol,
@@ -125,3 +126,31 @@ The re-engineering was asked for by the owner on 2026-09-11 — *let's go bold
 and consolidate, refactor and re-engineer if needed* — after the Playground
 rolled over forty-two of eighty-four transports. The trait, its home and the
 waves are the assistant's drafting.
+
+## Amendment, 2026-09-24: the far ends are the capability's
+
+Problem 25 found the rig written again in every technology: fifty-one
+transports over a parent that shared only the traits, each declaring the
+struct its far end is — a listener or a socket with its address, a device
+held in process, a session map with its counter — and the refusal of a
+payload over the ceiling written twenty-nine times, the Playground's among
+them. Shared code goes up
+(clause 1), so the rig moved into the capability, and the trait is
+unchanged:
+
+- `listening::Listening` over `Accepting`, taken by value, for every TCP far
+  end; `bound::Bound` over `Reading` for every datagram far end; `held::Held`,
+  an address and one take, for every far end in this process. A technology
+  implements `Accepting` or `Reading` on its transport type, or hands a
+  closure over the session it serves.
+- `standing::Standing`: the sessions an in-process pair has stood up and not
+  yet taken, by address, forgotten when the far end is taken.
+- `loopback::both_ends` and `loopback::poke`: the two-thread dance and the
+  bounded poke, which `Loopback::round` is and a far end that delivers
+  onward — SNS to its subscription, Event Grid to its webhook — uses again.
+- `ceiling::within`: the one sentence for a payload over a protocol's
+  ceiling; `arrived::next_arrival` and `arrived::one_arrival` for the
+  arrival a far end hands back.
+
+What a far end does with the exchange once it has it stays the technology's
+(clause 2): its protocol.
