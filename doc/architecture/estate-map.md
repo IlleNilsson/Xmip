@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 147155 lines of production
+Where each repository mounts and what it holds: 147183 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -302,7 +302,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── codec                           1533
+│   │   │   ├── codec                           1561
 │   │   │   ├── asn1                             497
 │   │   │   ├── tls                              219
 │   │   │   └── net                              164
