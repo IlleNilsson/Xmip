@@ -98,22 +98,6 @@ Describe 'Reading a TOML node, whichever shape PSToml returned' -ForEach @(
             Get-TomlValue -Node $Said -Name 'purpose' | Should -Be 'test'
         }
     }
-
-    It 'reads a history (<Shape>)' {
-        $point = New-TomlShape -Shape $Shape -Value @{
-            counted = 'Messages'; value = 7; observed_unix_nanos = 1000000000
-        }
-        $history = New-TomlShape -Shape $Shape -Value @{ node = 'C1'; points = @($point) }
-        Mock ConvertFrom-Toml -ModuleName Xmip { $history }.GetNewClosure()
-        [string] $path = Join-Path $TestDrive "history-$Shape.toml"
-        Set-Content -LiteralPath $path -Value '# read through the mock'
-
-        $read = @(Get-XmipHistory -Path $path)
-
-        $read.Count | Should -Be 1
-        $read[0].Node | Should -Be 'C1'
-        $read[0].Value | Should -Be 7
-    }
 }
 
 Describe 'Where TOML is read' {

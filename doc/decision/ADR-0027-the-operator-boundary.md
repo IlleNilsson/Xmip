@@ -6,8 +6,9 @@
   ADR-0018 (the Service and the Host Services), ADR-0022 (identity classes),
   ADR-0052 (amendments 2026-09-24: clause 3's containment once, in
   `observe::Scope`, and the surfaces call the runtime's exports; the earlier
-  one that had two writers is struck), ADR-0041 (a mood's color name),
-  ADR-0056 (the stage words)
+  one that had two writers is struck; and the last copies, the same day),
+  ADR-0041 (a mood's color name and its rollup), ADR-0056 (the stage words,
+  a node's evidence and its run entry)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
 ## In brief
@@ -347,6 +348,55 @@ The runtime's `rule.rs` implements them; `xmip-core-abi`'s `operate::rule`
 declares their shapes, and the runtime's tests fail to compile if an export
 drifts from them; `Xmip.Abi`'s `RuntimeRules` binds them once for every .NET
 surface. ADR-0052's amendment of the same date says who calls each.
+
+
+## Amendment, 2026-09-24 (later the same day): section 7 grows, and section 8 reads a publication
+
+ADR-0052's amendment "the last cross-language copies, and a publication read
+once" moved seven more rules to their owners. Section 7 gains seven symbols,
+each a separate optional export under the same rules as the first eight —
+pure, a thin forwarder, `XMIP_OPERATE_VERSION` unchanged:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_health_rolled_v1` | `observe::Health::rolled` |
+| `xmip_counted_word_v1` | `observe::Counted::word` |
+| `xmip_stage_counted_v1` | `observe::Counted::at` |
+| `xmip_stage_pausable_v1` | `node::Stage::pausable` |
+| `xmip_stage_location_v1` | `node::Stage::location` |
+| `xmip_capability_published_v1` | `observe::capability::declared` |
+| `xmip_capability_entry_v1` | `node::Capability::from_entry` |
+
+A word that is no stage is `XMIP_E_NOT_FOUND`; a record that is no
+capability record is `XMIP_E_NOT_FOUND`; a declaration naming a word that is
+no stage is `XMIP_E_INVALID` with the node's name still written and the
+refusal written as `xmip_stage_declared_v1` writes one.
+
+**Section 8, a publication read by the runtime.** A surface that reads the
+file a publisher wrote — a node's or a roll's snapshot — hands the text to
+`xmip_publication_read_v1` and gets back a handle; `_head_v1`, `_records_v1`,
+`_counts_v1`, `_nodes_v1`, `_links_v1` and `_run_v1` hand out what it read as
+the header's values in section 5's fill shape (the records as
+`XmipHealthEntry`, the counts as `XmipMeasurement`, the topology as the new
+`XmipTopologyNode` and `XmipTopologyLink` with `XmipTopologyKind`,
+`XmipTopologyOrigin` and `XmipCommunicationPattern`, the run's lists by
+`XmipRunList`), and `xmip_publication_free_v1` releases the handle and
+everything borrowed from it. A curve — the history file beside a
+publication (ADR-0029), `observe::Curve` — is read the same way:
+`xmip_curve_read_v1` into a handle, `xmip_curve_points_v1` as
+`XmipMeasurement`s at the curve's node, `xmip_curve_free_v1`. Unlike section
+7 it holds something, and says
+so: every string borrows from the handle, and nothing is valid after the
+free. It touches no running node, so clause 6 is not in play. A text that is
+no publication is `XMIP_E_INVALID` with the reader's own words, as
+`xmip_validate_v1` reports.
+
+The runtime's `rule.rs`, `rule/node.rs`, `publication.rs` and `curve.rs`
+implement them;
+`xmip-core-abi`'s `operate::rule`, `operate::publication` and the section 6
+declarations beside them (`StartFn`, `ValidateFn`, which the language server
+now calls through) declare their shapes; `Xmip.Abi`'s `RuntimeRules` and
+`PublicationReader` bind them once.
 
 
 ## Alternatives considered

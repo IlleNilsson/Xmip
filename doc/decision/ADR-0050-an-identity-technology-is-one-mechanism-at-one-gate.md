@@ -322,9 +322,55 @@ Section 6 as it stands; nothing goes sideways.
   `ssh.signature`, `ssh.session`) cross the transport's boundary, not the
   gates', and are left with the same question.
 
+## Amendment, 2026-09-24: the NTLM layout is a library, and the gates share a secret store
+
+The owner ruled the same day on the two questions the amendment above left
+open. The first is here; the second — the names a transport writes — is
+ADR-0019's, amendment 2026-09-24, and this record points there.
+
+- **The NTLM message layout is `xmip-core-library-ntlm`**, mounted at
+  `module/core/library/ntlm` beside asn1, codec, net and tls. It reads and
+  writes all three messages — NEGOTIATE, CHALLENGE, AUTHENTICATE — and the
+  `NTLMv2` client challenge inside a response, as [MS-NLMP] section 2.2
+  lays them out. `identify::ntlm` and its test fixture are gone; so is the
+  SMB transport's `ntlm.rs`, a counted-field simplification no other NTLM
+  speaker would have understood, which now writes and reads the
+  specification's layout through the library. `authenticate/ntlm` read the
+  CHALLENGE's nonce and the MIC by offset; it asks the library for both.
+  What is identity's own stays at the gates: that a NEGOTIATE claims
+  nothing, a CHALLENGE is the server's and a type 3 naming no user claims
+  no one (`identify/ntlm`), and the `NTLMv2` proof, the MIC's HMAC and the
+  target and channel rules (`authenticate/ntlm`). Both capabilities' errors
+  take the library's with `From`, as they take asn1's.
+- **The hashed secret store with expiry is `authenticate::secret`**, the
+  home the amendment of 2026-09-19 named as a candidate: a secret the node
+  minted with full entropy, kept as its SHA-256 under the name it was
+  issued to, with its expiry. `api-key` and `bearer` each carried one of
+  their own — the same three fields and the same constant-time lookup under
+  two names — and both are gone. Which names a key answers to, its id or
+  its digest name, stays `api-key`'s.
+- **`authenticate` re-exports nothing of the first gate's.** `pub use
+  identify::Presented` let twenty crates name the claim through the second
+  gate; each imports it from `identify` now.
+- **`identify::evidence` keeps only the names that cross the gates inside
+  identity.** The peer certificate's issuer and fingerprint and the first
+  two NTLM legs are written by a transport before any gate runs, and are
+  `context::property`'s with the rest of the transport's vocabulary
+  (ADR-0019, amendment 2026-09-24); a test holds the two lists apart.
+
+The table of the amendment above is superseded in two rows: the NTLM
+AUTHENTICATE message is the library's, and the names a claim carries are
+split between `identify::evidence` and `context::property` as said.
+
 ## Provenance
 
 The sentence and the three tables are the assistant's, 2026-09-10, under the
 owner's instruction to sort everything declared and not built. The traits
 they lean on are ADR-0019's and ADR-0022's. Nothing was put to the owner as
 a question because the records had already said what a gate is.
+
+The rulings of the amendment "the NTLM layout is a library, and the gates
+share a secret store" are the owner's, 2026-09-24: the library and where it
+mounts, the secret store's home, the re-export's removal and what stays in
+`identify::evidence`. The assistant drafted the text and chose the library's
+shape.

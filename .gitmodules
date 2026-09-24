@@ -177,3 +177,6 @@
 [submodule "module/foundation/sdk"]
 	path = sdk
 	url = https://github.com/IlleNilsson/xmip-core-sdk.git
+[submodule "module/core/library/ntlm"]
+	path = module/core/library/ntlm
+	url = https://github.com/IlleNilsson/xmip-core-library-ntlm.git
