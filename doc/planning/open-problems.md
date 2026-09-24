@@ -641,10 +641,11 @@ it; `specification.md` and ADR-0012 name the two readings.
 
 The owner, 2026-09-24: *The identity test has to be split into two. One local,
 on-prem version and one using ACME when a node is online* — and then *ACME has
-to be incorporated both locally and internetwise for Xmip.* Decided the same
-day, ADR-0034 amendment 2026-09-24: provisioning is a capability,
-`xmip-core-provision`, ACME one of its technologies for both reaches, and two
-tests, `identity-local` and `identity-online`.
+to be incorporated both locally and internetwise for Xmip* — an online node uses
+Let's Encrypt, any other the CA its end user chooses, and step-ca is for tests
+only. Decided the same day, ADR-0034 amendment 2026-09-24: provisioning is a
+capability, `xmip-core-provision`, ACME one of its technologies for both
+reaches, and two tests, `identity-local` and `identity-online`.
 
 What exists: certificate **usage** — mutual TLS on Receive and Send, a stand-in
 certificate authority, the certificate authenticators. What does not: anything
@@ -656,8 +657,8 @@ fault string, and identity is a stage inside `round-trip`.
 | 1 | `xmip-core-provision` declared and created, its trait in the SDK (ADR-0061: a provider may ship a certificate source) |
 | 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names |
 | 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME |
-| 4 | the Playground runs a local ACME server — Pebble, Let's Encrypt's test server, declared in `prerequisite.toml` — and `identity-local` provisions from it and presents the result on mutual TLS |
-| 5 | `identity-online` on nodes that declare online, against the internet |
+| 4 | the Playground runs step-ca — declared in `prerequisite.toml` for a test machine only — and `identity-local` provisions from it by ACME and presents the result on mutual TLS |
+| 5 | `identity-online` on nodes that declare online, against Let's Encrypt |
 
 **Open for the owner before step 5:** Let's Encrypt validates that the node
 controls a name — `http-01` needs a public address on port 80, `dns-01` needs
