@@ -101,31 +101,33 @@ of it, on the instruction to write the overall answer down.
 
 The owner, 2026-09-24: *The identity test has to be split into two. One local,
 on-prem version and one using ACME when a node is online.* Told that an ACME
-server can run locally — Let's Encrypt's own test server, Pebble, speaks the
-protocol; so do on-premises certificate authorities — he ruled: *ACME has to be
-incorporated both locally and internetwise for Xmip.*
+server can run locally, he ruled: *ACME has to be incorporated both locally and
+internetwise for Xmip*; then *we have an online switch for nodes: if a node is
+online use Let's Encrypt, otherwise internal emulated ACME service*; and, of
+that service: *step-ca is only for test. The end user will choose their CA.*
 
 1. **Provisioning is a capability, `xmip-core-provision`**, mounted at
    `module/core/capability/provision` (ADR-0016), with a technology per source:
    `acme`, `internal-ca`, `self-signed` and `platform`. Clause 3's provisioner is
-   this capability's trait; usage stays where ADR-0033 put it (the owner,
-   2026-09-24).
-2. **ACME is one technology for both reaches.** It speaks RFC 8555 to whatever
-   ACME directory a node's configuration names: a server on the premises, or
-   Let's Encrypt over the internet. The first row of clause 2's table is no
-   longer the only one ACME serves: an on-premises estate with its own ACME
-   server provisions through it too.
-3. **The Playground tests identity twice**, as two tests of the `Core.Playground`
-   suite rather than one stage of the round trip:
-   - **`identity-local`** — on-premises: a node obtains its certificate by ACME
-     from a local ACME server the Playground runs, and presents it on mutual
-     TLS. No internet, repeatable, on every node.
-   - **`identity-online`** — a node that declares itself online (ADR-0045,
-     ADR-0056) obtains its certificate by ACME over the internet, and presents
-     it. It runs only on a node that declares online.
+   this capability's trait; usage stays where ADR-0033 put it.
+2. **ACME is one technology for both reaches**, speaking RFC 8555 to whatever
+   ACME directory it is pointed at. **The node's online switch chooses the
+   default** (ADR-0045, ADR-0056): a node that declares itself online uses
+   Let's Encrypt; a node that does not uses the certificate authority its end
+   user configures — any ACME service on the premises, or an internal CA. The
+   end user chooses their CA; Xmip ships none for production.
+3. **The Playground tests identity twice**, as two tests of the
+   `Core.Playground` suite rather than one stage of the round trip:
+   - **`identity-local`** — a node that is not online obtains its certificate
+     by ACME from **step-ca** (Smallstep, Apache-2.0), which the Playground runs
+     on the machine, and presents it on mutual TLS. No internet, repeatable, on
+     every node. step-ca is the test's certificate authority only (the owner,
+     2026-09-24); nothing in a production node depends on it.
+   - **`identity-online`** — a node that declares itself online obtains its
+     certificate by ACME from Let's Encrypt, and presents it.
 4. **Clause 4 is amended.** The Playground still does not issue publicly from a
    laptop with nothing to prove, which is what clause 4 guarded; but it does
-   perform real ACME issuance, locally always, and over the internet where a
-   node is online.
+   perform real ACME issuance: against step-ca always, and against Let's
+   Encrypt where a node is online.
 
 Open problem 27 holds the work.
