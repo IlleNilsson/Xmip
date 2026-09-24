@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145766 lines of production
+Where each repository mounts and what it holds: 145992 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -98,7 +98,7 @@ hold no source to count.
 │   │   │   │   ├── mutual-tls                    97
 │   │   │   │   ├── basic                         86
 │   │   │   │   └── password                      81
-│   │   │   ├── transport                       1727
+│   │   │   ├── transport                       1758
 │   │   │   │   ├── opc-ua                      2380
 │   │   │   │   ├── sftp                        2189
 │   │   │   │   ├── mssql                       2143
@@ -120,14 +120,14 @@ hold no source to count.
 │   │   │   │   ├── s7comm                      1021
 │   │   │   │   ├── io-link                     1015
 │   │   │   │   ├── iec-61850                    968
-│   │   │   │   ├── m-bus                        926
 │   │   │   │   ├── canopen                      905
 │   │   │   │   ├── activemq                     891
 │   │   │   │   ├── dicom                        887
 │   │   │   │   ├── peppol                       882
 │   │   │   │   ├── lorawan                      874
-│   │   │   │   ├── hart                         872
+│   │   │   │   ├── m-bus                        860
 │   │   │   │   ├── secs-gem                     854
+│   │   │   │   ├── hart                         853
 │   │   │   │   ├── mdns                         848
 │   │   │   │   ├── bluetooth                    844
 │   │   │   │   ├── uds                          822
@@ -160,8 +160,9 @@ hold no source to count.
 │   │   │   │   ├── redpanda                     594
 │   │   │   │   ├── pop3                         585
 │   │   │   │   ├── obd-ii                       582
+│   │   │   │   ├── serial                       581
 │   │   │   │   ├── msmq                         573
-│   │   │   │   ├── wireless-m-bus               560
+│   │   │   │   ├── wireless-m-bus               562
 │   │   │   │   ├── s3                           557
 │   │   │   │   ├── google-cloud-storage         556
 │   │   │   │   ├── websocket                    543
@@ -177,7 +178,6 @@ hold no source to count.
 │   │   │   │   ├── unix-socket                  327
 │   │   │   │   ├── can-bus                      320
 │   │   │   │   ├── modbus                       317
-│   │   │   │   ├── serial                       303
 │   │   │   │   ├── bacnet                       258
 │   │   │   │   ├── mllp                         226
 │   │   │   │   ├── udp                          176

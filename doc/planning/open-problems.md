@@ -476,7 +476,20 @@ are not conflated when D&R is taken up.
 
 Filed 2026-09-06, prompted by a power cut mid-test.
 
-## 24. There is no serial bus, so no serial protocol is proved on one
+## 24. There is no serial bus, so no serial protocol is proved on one — **option A landed**
+
+*Option A landed 2026-09-24, on the owner's "get it done":
+`serial::bus::Bus`, an in-process multi-drop bus with addressed devices,
+silence, collision, turnaround, unsolicited frames, a lost character and a
+break condition. M-Bus meters and HART field devices are devices on it, two of
+each proved on one bus; their stand-in lines are gone. The frame line both
+declared for themselves is one trait, `transport::line::Line`, in the
+capability they share (ADR-0044), and wireless M-Bus uses it too. A serial
+port reads a protocol's frames by the length the protocol says
+(`Framing::Measured`), so a real port and the bus are the same boundary. Two
+of the four riders named below are not on a serial line: DNP3 is implemented
+over TCP only, and WirelessHART is radio with a time-slotted `Radio` of its
+own. Option C, a real port behind com0com or a pty, stays open.*
 
 The owner, 2026-09-20: *I guess Xmip is missing a serial bus simulator to test
 serial transport protocols.* He is right, and the shape of what is missing is
