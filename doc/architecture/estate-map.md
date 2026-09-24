@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 146180 lines of production
+Where each repository mounts and what it holds: 147616 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -158,10 +158,10 @@ hold no source to count.
 │   │   │   │   ├── iso-tp                       636
 │   │   │   │   ├── coap                         635
 │   │   │   │   ├── dds                          603
+│   │   │   │   ├── msmq                         596
 │   │   │   │   ├── redpanda                     594
 │   │   │   │   ├── obd-ii                       591
 │   │   │   │   ├── pop3                         585
-│   │   │   │   ├── msmq                         573
 │   │   │   │   ├── wireless-m-bus               562
 │   │   │   │   ├── s3                           557
 │   │   │   │   ├── google-cloud-storage         556
@@ -204,13 +204,22 @@ hold no source to count.
 │   │   │   │   ├── mac                           86
 │   │   │   │   ├── endpoint                      82
 │   │   │   │   └── message                       81
+│   │   │   ├── route                            906
+│   │   │   │   ├── expression                   101
+│   │   │   │   ├── metadata                     101
+│   │   │   │   ├── content                       91
+│   │   │   │   ├── contract                      75
+│   │   │   │   ├── party                         72
+│   │   │   │   ├── regex                         70
+│   │   │   │   ├── header                        67
+│   │   │   │   └── context                       43
 │   │   │   ├── contract                         894  Rust 788 · PowerShell 106
-│   │   │   │   ├── graphql-schema               872
-│   │   │   │   ├── sql                          774
+│   │   │   │   ├── graphql-schema               829
 │   │   │   │   ├── xml-schema                   745
 │   │   │   │   ├── avro                         714
+│   │   │   │   ├── sql                          702
 │   │   │   │   ├── toon                         702
-│   │   │   │   ├── protobuf                     661
+│   │   │   │   ├── protobuf                     654
 │   │   │   │   ├── json-schema                  593
 │   │   │   │   ├── fixed-width                  495
 │   │   │   │   ├── edi-edifact                  452
@@ -232,15 +241,6 @@ hold no source to count.
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
-│   │   │   ├── route                            879
-│   │   │   │   ├── content                      101
-│   │   │   │   ├── expression                   101
-│   │   │   │   ├── metadata                     101
-│   │   │   │   ├── party                         80
-│   │   │   │   ├── header                        78
-│   │   │   │   ├── contract                      75
-│   │   │   │   ├── regex                         74
-│   │   │   │   └── context                       53
 │   │   │   ├── authorize                        321
 │   │   │   │   ├── opa                          454
 │   │   │   │   ├── location                     395
@@ -257,9 +257,9 @@ hold no source to count.
 │   │   │   │   ├── rbac                         166
 │   │   │   │   └── party                        131
 │   │   │   ├── path                             299
-│   │   │   │   ├── fhirpath                     749
-│   │   │   │   ├── jsonpath                     741
-│   │   │   │   ├── predicate                    582
+│   │   │   │   ├── fhirpath                     742
+│   │   │   │   ├── jsonpath                     724
+│   │   │   │   ├── predicate                    584
 │   │   │   │   ├── dot                          355
 │   │   │   │   ├── xpath                        255
 │   │   │   │   ├── regex                        253
@@ -300,21 +300,21 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
+│   │   │   ├── codec                            417
 │   │   │   ├── asn1                             415
 │   │   │   ├── tls                              219
-│   │   │   ├── net                              164
-│   │   │   └── codec                            126
+│   │   │   └── net                              164
 │   │   └── operation/
-│   │       ├── cli                             3054
-│   │       ├── gui                             1686
+│   │       ├── cli                             2669
+│   │       ├── gui                             1927
 │   │       │   └── vscode                       698
-│   │       ├── powershell                      1656  C# 1060 · PowerShell 596
-│   │       ├── observe                          561
+│   │       ├── powershell                      1835  C# 1135 · PowerShell 700
+│   │       ├── observe                          619
 │   │       │       declared, not built 5
 │   │       │       etw  journald  otlp  prometheus  windows-event-log
 │   │       ├── archive                          461
-│   │       │   ├── sql                          320
-│   │       │   ├── file                         315
+│   │       │   ├── sql                          294
+│   │       │   ├── file                         265
 │   │       │   ├── mysql                        191
 │   │       │   ├── postgresql                   181
 │   │       │   ├── mssql                        180
@@ -331,7 +331,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                 8060  C# 7225 · Rust 835
+│   │   ├── abi                                 9353  C# 8518 · Rust 835
 │   │   ├── message                             1317
 │   │   │   ├── xml                              335
 │   │   │   ├── avro                             304
@@ -351,18 +351,18 @@ hold no source to count.
 │   │   ├── core                                 902
 │   │   ├── journey                              350
 │   │   ├── context                              345
-│   │   ├── node                                 210
+│   │   ├── node                                 288
 │   │   ├── party                                186
 │   │   ├── stream                                38
 │   │   ├── cluster                               21
 │   │   └── event                                 20
 │   └── platform/
-│       ├── runtime                             3221
-│       ├── configure                            198
+│       ├── runtime                             3214
+│       ├── configure                            131
 │       └── persist                               98
 └── test/
     └── core/
-        └── playground                          9491
+        └── playground                          9459
 ```
 
 ---

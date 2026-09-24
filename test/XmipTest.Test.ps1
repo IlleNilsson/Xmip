@@ -430,6 +430,39 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'reads a capability by the node crate''s rule, as the Playground and the surface do' {
+        # node::Stage::declared is the one parse (open problem 25, row i).
+        # PowerShell and Xmip.Surface reach no Rust for it, so their copies
+        # are held to it here: the same words, lowercase exactly (the owner,
+        # 2026-09-24: 'Send' is an unknown word), and an unknown word refused
+        # in the same sentence.
+        [string] $root = Get-XmipRepositoryRoot
+        [string] $rust = Get-Content -Raw -LiteralPath (
+            Join-Path $root 'module/foundation/node/src/stage.rs')
+        [string] $surface = Get-Content -Raw -LiteralPath (
+            Join-Path $root 'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs')
+        [string] $capability = Get-Content -Raw -LiteralPath (
+            Join-Path $root 'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')
+
+        $rust | Should -Match 'WORDS: \[&''static str; 3\] = \["receive", "process", "send"\]'
+        $surface | Should -Match 'Stages \{ get; \} = \["receive", "process", "send"\]'
+        $rust | Should -Match ([regex]::Escape(
+                '"REFUSED: no capability is called {}; a node declares {}, or nothing at all."'))
+        $rust | Should -Not -Match 'ignore_ascii_case|to_ascii_lowercase'
+        $capability | Should -Not -Match 'IgnoreCase|ToLower'
+
+        InModuleScope Xmip {
+            $script:XmipNodeCapability | Should -Be @('receive', 'process', 'send')
+            ConvertTo-XmipNodeCapability -Capability 'send + receive' | Should -Be 'receive,send'
+            { ConvertTo-XmipNodeCapability -Capability 'Send + RECEIVE' } |
+                Should -Throw -ExpectedMessage ('REFUSED: no capability is called Send, RECEIVE; ' +
+                    'a node declares receive, process, send, or nothing at all.')
+            { ConvertTo-XmipNodeCapability -Capability 'receive,relay+hold' } |
+                Should -Throw -ExpectedMessage ('REFUSED: no capability is called relay, hold; ' +
+                    'a node declares receive, process, send, or nothing at all.')
+        }
+    }
+
     It 'says what nodes with no capability will do, and does not refuse it' {
         # ADR-0055 clause 5: running whole tests is a real answer, and it is
         # not what someone typing R1, P1, S1 is likely to have meant. Said
@@ -946,6 +979,34 @@ observed_unix_nanos = 1789208338038783900
         @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
         @(Get-XmipTestResult -Path $script:Snapshot -Node 'R*').Count | Should -Be 1
         (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
+    }
+
+    It 'names the worst by mood before severity, as every surface does' {
+        # It sorted by severity alone, so a stressed leaf at 95 outranked a
+        # done one at 90 here and nowhere else (found 2026-09-24).
+        [string] $louder = Join-Path $TestDrive 'louder'
+        New-Item -ItemType Directory -Path $louder | Out-Null
+        (Get-Content -LiteralPath $script:Snapshot -Raw) -replace 'severity = 40', 'severity = 95' |
+            Set-Content -LiteralPath (Join-Path $louder 'playground-snapshot.toml') -Encoding utf8
+
+        (Get-XmipTestResult -Path $louder -Worst).State | Should -Be 'done'
+    }
+
+    It 'ranks the moods in the order HealthState declares them' {
+        [string] $enum = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot (
+            '../module/foundation/abi/dotnet/Xmip.Abi/Operate/HealthState.cs'))
+        [string[]] $declared = @(
+            [regex]::Matches($enum, '(?m)^\s+(\w+) = \d+,') |
+                ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() }
+        )
+        [string] $script = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot (
+            '../Xmip/Get-XmipTestResult.ps1'))
+        [string] $line = [regex]::Match($script, '\$moods = ([^\r\n]+)').Groups[1].Value
+        [string[]] $ranked = @([regex]::Matches($line, "'(\w+)'") |
+            ForEach-Object { $_.Groups[1].Value })
+
+        $declared.Count | Should -Be 7
+        $ranked | Should -Be $declared
     }
 
     It 'takes a wildcard where it takes a test name' {

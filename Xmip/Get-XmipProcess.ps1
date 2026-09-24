@@ -98,7 +98,7 @@ function Get-XmipProcess {
         }
 
         $said = $declared[$process.Id]
-        [string] $stated = if ($null -ne $said) { [string] $said['purpose'] } else { '' }
+        [string] $stated = [string](Get-TomlValue -Node $said -Name 'purpose' -Default '')
 
         if ($PSBoundParameters.ContainsKey('Purpose') -and $stated -ne $Purpose) {
             continue
@@ -112,7 +112,7 @@ function Get-XmipProcess {
             Name       = $process.ProcessName
             Id         = $process.Id
             Purpose    = if ($stated) { (Get-Culture).TextInfo.ToTitleCase($stated) } else { '' }
-            Location   = if ($null -ne $said) { [string] $said['location'] } else { '' }
+            Location   = [string](Get-TomlValue -Node $said -Name 'location' -Default '')
             Started    = $started
             Declared   = $null -ne $said
         }
@@ -148,8 +148,7 @@ function Read-XmipProcessDeclaration {
             $null
         }
 
-        [bool] $numbered = $null -ne $said -and $said.Contains('pid')
-        [int] $id = if ($numbered) { [int] $said['pid'] } else { 0 }
+        [int] $id = [int](Get-TomlValue -Node $said -Name 'pid' -Default 0)
         $alive = if ($id -gt 0) { Get-Process -Id $id -ErrorAction SilentlyContinue } else { $null }
 
         if ($null -eq $alive -or $alive.ProcessName -notlike 'xmip-*') {

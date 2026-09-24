@@ -106,7 +106,10 @@ green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
 Holding orange, unknown muted — is said once, in `Xmip.Surface` beside the
 English for a mood (`English.Color`). Its *paint* stays where clause 1 put it:
 the stylesheet renders each name to the estate's tokens, and a console prompt
-renders each name to the nearest console color. No surface names a color of
+renders each name to the nearest console color — for the prompt, posh-git's
+palette, as ADR-0052's amendments of 2026-09-15 rule (clarified 2026-09-24,
+problem 25 row (j): `SegmentRender.Paint` is that one rendering, and
+`Traffic` keeps no table of its own). No surface names a color of
 its own. Clause 1's "nowhere else" now reads: no other place decides what a
 mood is called, and no other stylesheet.
 

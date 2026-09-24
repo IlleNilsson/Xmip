@@ -3,7 +3,9 @@
 - Status: Accepted
 - Date: 2026-09-03
 - Related: ADR-0014 (the operator surfaces), ADR-0012 (the module boundary),
-  ADR-0018 (the Service and the Host Services), ADR-0022 (identity classes)
+  ADR-0018 (the Service and the Host Services), ADR-0022 (identity classes),
+  ADR-0052 (amendment 2026-09-24: clause 3's containment, written in
+  `observe::Scope` and `ScopeTree`, held to one set of cases)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
 ## In brief

@@ -114,6 +114,46 @@ Describe 'README links resolve' {
     }
 }
 
+Describe 'Every estate path a document names exists' {
+    # The owner, 2026-09-24, importing Xmip.PowerShell from the path its
+    # README gave: module/operation/..., which the mount rule of 2026-09-23 had
+    # moved to module/core/operation/.... Decision records keep the paths of
+    # their day; every other document is read as true now.
+    It 'names no path under module/ or test/ that is not there' {
+        [string[]] $documents = @(
+            git -C $script:Root ls-files --recurse-submodules -- '*.md' |
+                Where-Object { $_ -notmatch '^doc/decision/' }
+        )
+        $documents.Count | Should -BeGreaterThan 50
+
+        # Named on purpose though absent: test/suite is where a provider drops
+        # a declaration and need not exist (Get-XmipTestSuite); the two in
+        # repository-model.md are what the mount rule replaced, said as such.
+        [string[]] $intended = @(
+            'README.md names test/suite'
+            'test/core/playground/README.md names test/suite'
+            'doc/architecture/repository-model.md names test/playground'
+            'doc/architecture/repository-model.md names module/capability/core/transport'
+        )
+
+        [string[]] $missing = @(
+            foreach ($document in $documents) {
+                [string] $text = Get-Content -LiteralPath (Join-Path $script:Root $document) -Raw
+                if (-not $text) { continue }
+                foreach ($match in [regex]::Matches($text, '`((?:module|test)/[^`\s]+)`')) {
+                    [string] $named = $match.Groups[1].Value.TrimEnd('/', '.', ',', ':')
+                    if ($named -match '[<>*{}$]') { continue }
+                    [string] $path = $named -replace '(\.rs|\.md|\.toml|\.ps1|\.cs):\d+$', '$1'
+                    if (-not (Test-Path -LiteralPath (Join-Path $script:Root $path))) {
+                        "$document names $named"
+                    }
+                }
+            }
+        )
+        $missing | Where-Object { $_ -notin $intended } | Should -BeNullOrEmpty
+    }
+}
+
 Describe 'README lists every document that exists' {
     It 'links to every document under doc/architecture' {
         # The reverse direction, and the one that was missing. Checking that

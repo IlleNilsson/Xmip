@@ -75,3 +75,30 @@ Two kinds of JSON are outside this rule because Xmip does not own their format:
 The rule is the owner's, stated across 2026-09-04 and 2026-09-05 and finally
 *"write every decision down."* Clauses 1 to 4 are the assistant's drafting of it,
 on that instruction.
+
+## Amendment, 2026-09-24: an Xmip Process's lists default to empty
+
+The owner, 2026-09-24, on open problem 25 row (b): an Xmip Process's
+`required_modules`, `xmip_subprocesses` and `extensions` **default to empty
+when the document omits them**, as the document's top-level lists
+(`modules`, `xmip_processes`, `receive_locations`, `send_locations`) already
+do; an Xmip Subprocess's `required_modules` and `extensions` likewise. An
+Xmip Process that needs no module and has no Subprocess or Extension says
+nothing about them, and the desktop editor does not have to write three empty
+lists for an Xmip Process it adds.
+
+What the runtime cannot start without still has no default: the `start` of
+an Xmip Process or a Location, and a Location's `transport`. A document
+without them is refused, never completed — by `xmip-core-configure`, which
+reads the one document, and so by `xmip_validate_v1` for every surface
+(ADR-0027, amendment 2026-09-05).
+
+The format itself is still open problem 14; this settles what one key means in
+the shape that exists. Held by
+`module/platform/configure/src/lib.rs`
+(`a_process_that_names_no_list_reads_them_as_empty`) and
+`module/platform/runtime/src/start.rs` (`a_minimal_process_validates`);
+described in `module/platform/configure/doc/node-configuration.md`.
+
+Provenance: the ruling is the owner's, 2026-09-24; the wording is the
+assistant's.

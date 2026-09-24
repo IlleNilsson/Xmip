@@ -2,6 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-09-10
+- Amended: 2026-09-24 — a `Null` is absent and bytes are refused, under `X`
+  and `context:X` alike, through one `route::routable`
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -55,7 +57,8 @@ decision stays with the Predicate and the reasoning stays with the Routing.
 - `read(&Message, name)` — the value of `name` for this Message, or `None`
   when the Message has no such thing. `None` promotes nothing, and a filter
   over nothing declines with its reason, as it always did. An error is for a
-  name the technology cannot read at all.
+  name the technology cannot read at all. What counts as "no such thing" for
+  a context value is settled by the amendment of 2026-09-24 below.
 
 `promote(&Message, sources, properties)` in the capability splits each
 property, asks the source whose technology it names, and adds what came back
@@ -73,7 +76,9 @@ and depend on the capability, message and context alone: `contract` reads
 the section's binding and needs nothing from the contract crate, and `party`
 reads the party id the runtime promotes (`xmip.party`) and needs nothing from
 the party crate. The one rendering of a context value as filter text,
-`route::text_of`, lives in the capability (ADR-0044), never in a sibling.
+`route::text_of`, lives in the capability (ADR-0044), never in a sibling;
+since the amendment of 2026-09-24 every reading goes through `route::routable`
+beside it.
 
 ## Consequences
 
@@ -89,3 +94,36 @@ the party crate. The one rendering of a context value as filter text,
 The reading of the eight names and the sentence are the assistant's, put to
 the owner on 2026-09-10 as a question and agreed as written. The instruction
 to build them is the owner's: *sort it all.*
+
+## Amendment, 2026-09-24: a Null is absent, bytes are refused
+
+A property with no prefix and the same property spelled `context:X` disagreed
+(open problem 25, row h). The gathering of the whole context,
+`Promoted::from_context`, promoted a `Null` as empty text and dropped bytes in
+silence, so `exists X` passed on a Null and `X = ""` matched it; the `context`
+technology, and `header`, `party` and `regex` after it, read a Null as nothing
+promoted and refused bytes. Each technology carried its own copy of that
+match.
+
+1. **A `Null` is absent.** A context value that is `Null` is "no such thing"
+   in the sense of decision 2, exactly as a key the Context does not hold:
+   nothing is promoted, `exists` fails, and no comparison matches it, not
+   even one with empty text.
+2. **Bytes are refused.** A `Binary` value that a filter names is an error
+   with a reason, under `X` and `context:X` alike, because bytes are not
+   text. Gathering the whole context leaves a `Binary` value out rather than
+   refusing the Message, since no filter need name that key; `promote`, which
+   reads the names the filters use, refuses it.
+3. **One reading.** `route::routable`, beside `route::text_of` in the
+   capability, is the one reading of a value a filter names. Bare `X`,
+   `context:`, `header:`, `party:`, `regex:` and the scalar `content:` finds
+   all go through it, and the copies in the technologies are gone.
+   `contract:type` stays text only, refusing any other type, and reads a
+   Null as absent already.
+
+### Provenance of the amendment
+
+The owner's, 2026-09-24, answering the two questions put to him: whether a
+Null context value is present or absent in a filter, and whether bytes under
+a bare `X` are dropped or refused. *Absent*, and *refused*, under both
+spellings.
