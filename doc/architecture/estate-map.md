@@ -1,6 +1,6 @@
 # The Xmip estate
 
-335 repositories are declared and 257 of them are
+336 repositories are declared and 258 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -30,18 +30,18 @@ the estate tree, and are counted nowhere below.
 
 | Domain | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| Foundation | 10 | 10 | 0 |
+| Foundation | 11 | 11 | 0 |
 | Library | 1 | 0 | 1 |
 | Capability | 18 | 18 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
 | Technology | 295 | 219 | 76 |
-| **Total** | 335 | 257 | 78 |
+| **Total** | 336 | 258 | 78 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | reserved | 78 | 0 | 78 |
-| scaffolded | 257 | 257 | 0 |
+| scaffolded | 258 | 258 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145483 lines of production
+Where each repository mounts and what it holds: 145766 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -204,15 +204,15 @@ hold no source to count.
 │   │   │   │   ├── endpoint                      82
 │   │   │   │   └── message                       81
 │   │   │   ├── route                            879
+│   │   │   │   ├── expression                   103
 │   │   │   │   ├── content                      101
-│   │   │   │   ├── expression                   101
 │   │   │   │   ├── metadata                     101
 │   │   │   │   ├── party                         80
 │   │   │   │   ├── header                        78
 │   │   │   │   ├── contract                      75
 │   │   │   │   ├── regex                         74
 │   │   │   │   └── context                       53
-│   │   │   ├── contract                         457  Rust 351 · PowerShell 106
+│   │   │   ├── contract                         367  Rust 261 · PowerShell 106
 │   │   │   │   ├── graphql-schema               872
 │   │   │   │   ├── sql                          774
 │   │   │   │   ├── xml-schema                   745
@@ -225,17 +225,17 @@ hold no source to count.
 │   │   │   │   ├── schematron                   438
 │   │   │   │   ├── edi-x12                      437
 │   │   │   │   ├── wsdl                         373
-│   │   │   │   ├── openapi                      359
+│   │   │   │   ├── openapi                      361
 │   │   │   │   ├── yaml                         351
 │   │   │   │   ├── hl7-v2                       312
 │   │   │   │   ├── toml                         297
 │   │   │   │   ├── fhir                         273
-│   │   │   │   ├── rust                         253
-│   │   │   │   ├── asyncapi                     223
+│   │   │   │   ├── asyncapi                     225
 │   │   │   │   ├── regex                        165
 │   │   │   │   ├── csv                          114
 │   │   │   │   ├── java                         113
 │   │   │   │   ├── python                       100
+│   │   │   │   ├── rust                          66
 │   │   │   │   ├── go                            57
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
@@ -348,6 +348,7 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── core                                 902
+│   │   ├── sdk                                  554
 │   │   ├── journey                              350
 │   │   ├── context                              345
 │   │   ├── node                                 210
@@ -381,6 +382,7 @@ Things Xmip is.
 | `xmip-core-message` | scaffolded | `module/foundation/message` | 15 |
 | `xmip-core-node` | scaffolded | `module/foundation/node` | — |
 | `xmip-core-party` | scaffolded | `module/foundation/party` | — |
+| `xmip-core-sdk` | scaffolded | `module/foundation/sdk` | — |
 | `xmip-core-stream` | scaffolded | `module/foundation/stream` | — |
 
 ### `xmip-core-message`, 15 technologies

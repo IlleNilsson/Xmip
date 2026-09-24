@@ -174,3 +174,6 @@
 [submodule "module/core/library/tls"]
 	path = module/core/library/tls
 	url = https://github.com/IlleNilsson/xmip-core-library-tls.git
+[submodule "module/foundation/sdk"]
+	path = module/foundation/sdk
+	url = https://github.com/IlleNilsson/xmip-core-sdk.git
