@@ -653,7 +653,7 @@ core's manifest. Whether anything is taken at a versioned tag is open again.
 |---|---|---|
 | 1 | the SDK repository created and mounted at the root; ADR-0061; CONTRIBUTING's boundary sentence — **done 2026-09-24** | 3 |
 | 2 | the export that wraps a Rust contract in its table, in the contract capability — **done 2026-09-24**: `contract/rust` is the worked example, and the runtime's loader opens it (the trait moved into the SDK that morning and back the same day) | 2, first trait |
-| 3 | an export for each other table the header declares — transport, message, path — in the capability each belongs to; the transport trait's shape and the table's differ (ADR-0057) and the owner rules which gives | 2 |
+| 3 | an export for each other table the header declares — transport, message, path — in the capability each belongs to; the transport trait's shape and the table's differ, and neither gives: ADR-0057 clause 9, accepted 2026-09-20, keeps the published tables and the ergonomic Rust traits, and the export absorbs the difference | 2 |
 | 4 | the runtime loads every table the header declares, from the library a node's configuration names | 1 |
 | 5 | the tag: a test holding `sdk-v…` to the traits it describes, and the landing tagging the SDK when it changes | 2 |
 | 6 | a provider quick start in the SDK's README, and a module of provider `example` built outside core's crates, loaded by a node | 4, 5 |
