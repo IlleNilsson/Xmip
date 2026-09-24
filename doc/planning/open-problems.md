@@ -491,6 +491,15 @@ of the four riders named below are not on a serial line: DNP3 is implemented
 over TCP only, and WirelessHART is radio with a time-slotted `Radio` of its
 own. Option C, a real port behind com0com or a pty, stays open.*
 
+*The same day the CAN bus followed, into the SDK as `sdk::broadcast`, a
+medium every node hears: every other node gets each frame, the sender does
+not, and a frame nobody hears is not acknowledged. The CAN riders had faked one
+bus with two one-way queues per exchange; each party is a node on one bus now.
+What it showed at once: ISO-TP takes any frame that arrives, and so UDS and
+OBD-II above it would read another node's traffic on a bus that carried any.
+CANopen filters by identifier and J1939 parses it. ISO-TP filtering by the
+peer's identifier is open.*
+
 The owner, 2026-09-20: *I guess Xmip is missing a serial bus simulator to test
 serial transport protocols.* He is right, and the shape of what is missing is
 sharper than the guess.
