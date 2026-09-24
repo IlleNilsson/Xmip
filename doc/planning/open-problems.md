@@ -598,6 +598,73 @@ inherit both. Every row was checked in the code on 2026-09-23; the change that
 resolves a row names the paths it touched, and the row moves to Resolved with
 it.
 
+## 26. A provider other than core cannot plug in
+
+The owner, 2026-09-24: *Put yourself in a provider's position — would you be
+pleased with the documentation, tools and opportunities?* No, and in this
+order of how soon a provider would stop:
+
+1. **Nothing to plug into.** No node runs a technology; only contracts can be
+   loaded through the ABI, and nothing loads them.
+2. **Nothing stable to build against.** Every crate `publish = false`, every
+   dependency `branch = "main"`; the ABI's `trait_minor` rule reads one way in
+   ADR-0012 and the other in `specification.md`.
+3. **The license boundary was unclear**: *the boundary is the trait*, while a
+   Rust technology links the AGPL trait crates into itself.
+4. **Documentation written for the estate's maintainer**: the provider guide
+   was twenty lines of pointers into records.
+5. **Tooling for one owner**: the templates on one account, and nothing that
+   starts a provider's module.
+6. **No route to a customer**: nothing packages, signs or distributes a
+   provider's module, or says which node it works with.
+
+**Decided 2026-09-24, ADR-0061:** one versioned crate, `xmip-core-sdk` at
+`module/foundation/sdk`, over `abi`; a provider takes it by git tag; the ABI is
+the license boundary; a provider declares its modules in core's manifest.
+
+**The work, in order** — each step one change, and each moves every copy:
+
+| step | what | closes |
+|---|---|---|
+| 1 | the SDK repository created and mounted; ADR-0061; CONTRIBUTING's boundary sentence — **done 2026-09-24** | 3 |
+| 2 | the contract trait moves into the SDK, every contract technology imports it from there, and the export that wraps a Rust contract in its table — **done 2026-09-24**: `contract/rust` is the worked example, and the runtime's loader opens it | 2, first trait |
+| 3 | the other traits a provider implements, one capability per change: transport, message shape, path, guard, archive store, the identity gates | 2 |
+| 4 | the runtime loads every table the header declares, from the library a node's configuration names | 1 |
+| 5 | the tag: a test holding `sdk-v…` to the traits it describes, and the landing tagging the SDK when it changes | 2 |
+| 6 | a provider quick start in the SDK's README, and a module of provider `example` built outside core's crates, loaded by a node | 4, 5 |
+| 7 | packaging a provider's module with its declaration of which SDK it was built against | 6 |
+
+The `trait_minor` disagreement is the owner's to settle before step 4 relies on
+it; `specification.md` and ADR-0012 name the two readings.
+
+## 27. Xmip cannot obtain a certificate, and identity is tested once
+
+The owner, 2026-09-24: *The identity test has to be split into two. One local,
+on-prem version and one using ACME when a node is online* — and then *ACME has
+to be incorporated both locally and internetwise for Xmip.* Decided the same
+day, ADR-0034 amendment 2026-09-24: provisioning is a capability,
+`xmip-core-provision`, ACME one of its technologies for both reaches, and two
+tests, `identity-local` and `identity-online`.
+
+What exists: certificate **usage** — mutual TLS on Receive and Send, a stand-in
+certificate authority, the certificate authenticators. What does not: anything
+that **obtains** a certificate. ACME appears in the estate only as a simulated
+fault string, and identity is a stage inside `round-trip`.
+
+| step | what |
+|---|---|
+| 1 | `xmip-core-provision` declared and created, its trait in the SDK (ADR-0061: a provider may ship a certificate source) |
+| 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names |
+| 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME |
+| 4 | the Playground runs a local ACME server — Pebble, Let's Encrypt's test server, declared in `prerequisite.toml` — and `identity-local` provisions from it and presents the result on mutual TLS |
+| 5 | `identity-online` on nodes that declare online, against the internet |
+
+**Open for the owner before step 5:** Let's Encrypt validates that the node
+controls a name — `http-01` needs a public address on port 80, `dns-01` needs
+write access to the name's DNS. A laptop has neither. `identity-online` needs
+one of them named: a domain and the way its DNS is written, or a public host the
+Playground may run on.
+
 ---
 
 # Suggested order

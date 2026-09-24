@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-09-06
+- Amended: 2026-09-24 — provisioning is a capability, `xmip-core-provision`;
+  ACME is used on-premises against a local ACME server and over the internet;
+  the Playground tests both, `identity-local` and `identity-online`
 - Related: ADR-0033 (certificates on Receive and Send), ADR-0019 (the identity
   pipeline), ADR-0021 (current platforms), ADR-0028 (the offline Playground),
   deployment-model.md
@@ -93,3 +96,36 @@ The framing is the owner's, 2026-09-06: Xmip runs on-premises with or without
 internet, in the cloud, and on a tiny device, and the certificate source differs
 by deployment while its use does not. Clauses 1 to 4 are the assistant's drafting
 of it, on the instruction to write the overall answer down.
+
+## Amendment, 2026-09-24: ACME on-premises and online, and a test of each
+
+The owner, 2026-09-24: *The identity test has to be split into two. One local,
+on-prem version and one using ACME when a node is online.* Told that an ACME
+server can run locally — Let's Encrypt's own test server, Pebble, speaks the
+protocol; so do on-premises certificate authorities — he ruled: *ACME has to be
+incorporated both locally and internetwise for Xmip.*
+
+1. **Provisioning is a capability, `xmip-core-provision`**, mounted at
+   `module/core/capability/provision` (ADR-0016), with a technology per source:
+   `acme`, `internal-ca`, `self-signed` and `platform`. Clause 3's provisioner is
+   this capability's trait; usage stays where ADR-0033 put it (the owner,
+   2026-09-24).
+2. **ACME is one technology for both reaches.** It speaks RFC 8555 to whatever
+   ACME directory a node's configuration names: a server on the premises, or
+   Let's Encrypt over the internet. The first row of clause 2's table is no
+   longer the only one ACME serves: an on-premises estate with its own ACME
+   server provisions through it too.
+3. **The Playground tests identity twice**, as two tests of the `Core.Playground`
+   suite rather than one stage of the round trip:
+   - **`identity-local`** — on-premises: a node obtains its certificate by ACME
+     from a local ACME server the Playground runs, and presents it on mutual
+     TLS. No internet, repeatable, on every node.
+   - **`identity-online`** — a node that declares itself online (ADR-0045,
+     ADR-0056) obtains its certificate by ACME over the internet, and presents
+     it. It runs only on a node that declares online.
+4. **Clause 4 is amended.** The Playground still does not issue publicly from a
+   laptop with nothing to prove, which is what clause 4 guarded; but it does
+   perform real ACME issuance, locally always, and over the internet where a
+   node is online.
+
+Open problem 27 holds the work.

@@ -249,12 +249,15 @@ to users over a network.
 
 Extensions do not require permission.
 
-Any organization may implement Xmip traits and interfaces and publish modules
-under whatever license it chooses. Those modules are the publisher's work, the
-publisher's support and the publisher's responsibility. Xmip neither endorses
-nor maintains them.
+Any organization may build a module against `xmip-core-sdk`, at a versioned
+tag, and ship it as a library a node loads through the C ABI, under whatever
+license it chooses. Those modules are the publisher's work, the publisher's
+support and the publisher's responsibility. Xmip neither endorses nor
+maintains them.
 
-The boundary is the trait, not the license.
+The boundary is the ABI (ADR-0061). A module loaded through it is a separate
+work; a module linked into Xmip at build time is part of Xmip, and is
+AGPL-3.0-or-later.
 
 ## Contributions
 

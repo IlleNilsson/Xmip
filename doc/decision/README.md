@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty decisions, read as one document.
+Sixty-one decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -420,6 +420,23 @@ two, at trait version 1.0, and nothing follows it until a loader has loaded
 one.**
 
 → [A vtable is a promise; only a loader is a saving, in full](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)
+
+### What a provider other than core builds against, how it gets it,
+
+where its license ends and where it declares what it ships
+
+**A provider builds against one crate, `xmip-core-sdk`, which holds every
+trait a provider implements and the one export that wraps a Rust
+implementation in the C ABI's tables. It mounts at `module/foundation/sdk`,
+because a node cannot start without it, and it depends on `xmip-core-abi`,
+which stays the C boundary. Core's capabilities depend on the SDK too, so
+there is one definition of each trait. A provider takes the SDK by a
+versioned git tag; nothing is published to a registry. A module loaded
+through the C ABI is a separate work under any license; a module linked into
+Xmip is AGPL-3.0-or-later. A provider declares its modules in core's
+`architecture.toml`.**
+
+→ [A provider builds against the SDK, in full](ADR-0061-a-provider-builds-against-the-sdk.md)
 
 ---
 
@@ -912,6 +929,7 @@ You have a word. This gives you the decision that governs it.
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | late failure | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
+| license boundary | [A provider builds against the SDK](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | License, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
@@ -953,6 +971,7 @@ You have a word. This gives you the decision that governs it.
 | process declaration | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
+| provider | [A provider builds against the SDK](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | Provider before purpose | [Submodule composition](ADR-0016-submodule-composition.md) |
 | Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
@@ -970,6 +989,7 @@ You have a word. This gives you the decision that governs it.
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| SDK | [A provider builds against the SDK](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | service principal name, SPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
@@ -1004,6 +1024,7 @@ You have a word. This gives you the decision that governs it.
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | User principal name, UPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| versioned tag | [A provider builds against the SDK](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | vtable shim | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Wave two | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
@@ -1093,3 +1114,4 @@ is nowhere else.
 | [0058](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) | Foundation is a noun; Platform is a lifecycle | |
 | [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | |
 | [0060](ADR-0060-the-estate-map-is-generated.md) | The estate map is generated | |
+| [0061](ADR-0061-a-provider-builds-against-the-sdk.md) | A provider builds against the SDK | |
