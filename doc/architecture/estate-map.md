@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145992 lines of production
+Where each repository mounts and what it holds: 145981 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -76,6 +76,7 @@ nowhere — work not begun, not work unmounted. There are 78 of them and they
 hold no source to count.
 
 ```text
+├── sdk                                          227
 ├── module/
 │   ├── core/
 │   │   ├── capability/
@@ -160,7 +161,6 @@ hold no source to count.
 │   │   │   │   ├── redpanda                     594
 │   │   │   │   ├── pop3                         585
 │   │   │   │   ├── obd-ii                       582
-│   │   │   │   ├── serial                       581
 │   │   │   │   ├── msmq                         573
 │   │   │   │   ├── wireless-m-bus               562
 │   │   │   │   ├── s3                           557
@@ -175,6 +175,7 @@ hold no source to count.
 │   │   │   │   ├── iec-60870-5-104              432
 │   │   │   │   ├── dnp3                         421
 │   │   │   │   ├── sqlite                       373
+│   │   │   │   ├── serial                       372
 │   │   │   │   ├── unix-socket                  327
 │   │   │   │   ├── can-bus                      320
 │   │   │   │   ├── modbus                       317
@@ -203,16 +204,7 @@ hold no source to count.
 │   │   │   │   ├── mac                           86
 │   │   │   │   ├── endpoint                      82
 │   │   │   │   └── message                       81
-│   │   │   ├── route                            879
-│   │   │   │   ├── expression                   103
-│   │   │   │   ├── content                      101
-│   │   │   │   ├── metadata                     101
-│   │   │   │   ├── party                         80
-│   │   │   │   ├── header                        78
-│   │   │   │   ├── contract                      75
-│   │   │   │   ├── regex                         74
-│   │   │   │   └── context                       53
-│   │   │   ├── contract                         367  Rust 261 · PowerShell 106
+│   │   │   ├── contract                         894  Rust 788 · PowerShell 106
 │   │   │   │   ├── graphql-schema               872
 │   │   │   │   ├── sql                          774
 │   │   │   │   ├── xml-schema                   745
@@ -240,6 +232,15 @@ hold no source to count.
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
+│   │   │   ├── route                            879
+│   │   │   │   ├── content                      101
+│   │   │   │   ├── expression                   101
+│   │   │   │   ├── metadata                     101
+│   │   │   │   ├── party                         80
+│   │   │   │   ├── header                        78
+│   │   │   │   ├── contract                      75
+│   │   │   │   ├── regex                         74
+│   │   │   │   └── context                       53
 │   │   │   ├── authorize                        321
 │   │   │   │   ├── opa                          454
 │   │   │   │   ├── location                     395
@@ -348,7 +349,6 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── core                                 902
-│   │   ├── sdk                                  554
 │   │   ├── journey                              350
 │   │   ├── context                              345
 │   │   ├── node                                 210
@@ -382,7 +382,7 @@ Things Xmip is.
 | `xmip-core-message` | scaffolded | `module/foundation/message` | 15 |
 | `xmip-core-node` | scaffolded | `module/foundation/node` | — |
 | `xmip-core-party` | scaffolded | `module/foundation/party` | — |
-| `xmip-core-sdk` | scaffolded | `module/foundation/sdk` | — |
+| `xmip-core-sdk` | scaffolded | `sdk` | — |
 | `xmip-core-stream` | scaffolded | `module/foundation/stream` | — |
 
 ### `xmip-core-message`, 15 technologies

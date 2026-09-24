@@ -33,8 +33,10 @@
 
 # The trees the estate composes into: ADR-0016. `template/` is Rust the estate
 # ships and every new repository is generated from, so it is counted like the
-# rest rather than treated as an example.
-[string[]] $script:XmipSourceRoot = @('module', 'test', 'template')
+# rest rather than treated as an example. `sdk/` is what a provider builds
+# against, mounted at the root since 2026-09-24 (ADR-0061); left off this list
+# it would be the one crate no style gate reads.
+[string[]] $script:XmipSourceRoot = @('module', 'test', 'template', 'sdk')
 
 
 function Measure-XmipSourceCode {
