@@ -190,7 +190,7 @@ Describe 'Resolve-XmipCommitSubject' {
             $staged = @(
                 '.gitmodules'
                 'doc/decision/ADR-0024-resource-claim-replaces-exclusiveness.md'
-                'module/core/platform/exclusiveness'
+                'module/platform/exclusiveness'
                 'test/Sync-XmipEstate.Test.ps1'
             )
 
@@ -201,7 +201,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message even when gitlinks are all there is' {
         InModuleScope Xmip {
-            $staged = @('module/core/foundation/core', 'module/core/capability/route')
+            $staged = @('module/foundation/core', 'module/core/capability/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Arrivals and departures' |
                 Should -Be 'Arrivals and departures' -Because 'the land carried a message'
@@ -210,7 +210,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'keeps the message for a single-module land' {
         InModuleScope Xmip {
-            $staged = @('module/core/foundation/core')
+            $staged = @('module/foundation/core')
 
             Resolve-XmipCommitSubject -Staged $staged -Message 'Record the departure' |
                 Should -Be 'Record the departure'
@@ -226,14 +226,14 @@ Describe 'Resolve-XmipCommitSubject' {
 
     It 'falls back to the pin subject when there is no message' {
         InModuleScope Xmip {
-            Resolve-XmipCommitSubject -Staged @('module/core/foundation/core') -Message '' |
+            Resolve-XmipCommitSubject -Staged @('module/foundation/core') -Message '' |
                 Should -Be 'Pin 1 module'
         }
     }
 
     It 'names the count in the fallback when there is no message' {
         InModuleScope Xmip {
-            $staged = @('module/core/foundation/core', 'module/core/capability/route')
+            $staged = @('module/foundation/core', 'module/core/capability/route')
 
             Resolve-XmipCommitSubject -Staged $staged -Message '' |
                 Should -Be 'Pin 2 modules'
@@ -368,20 +368,20 @@ Describe 'Sort-XmipModuleDependency' {
         $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-sort-$([guid]::NewGuid())"
 
         $modules = @{
-            'module/core/foundation/a' = @'
+            'module/foundation/a' = @'
 [package]
 name = "xmip-core-a"
 
 [dependencies]
 '@
-            'module/core/foundation/b' = @'
+            'module/foundation/b' = @'
 [package]
 name = "xmip-core-b"
 
 [dependencies]
 xmip-a = { package = "xmip-core-a", git = "https://example.invalid/a", branch = "main" }
 '@
-            'module/core/foundation/c' = @'
+            'module/foundation/c' = @'
 [package]
 name = "xmip-core-c"
 
@@ -397,9 +397,9 @@ b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main
         }
 
         $script:Given = @(
-            'module/core/foundation/c'
-            'module/core/foundation/a'
-            'module/core/foundation/b'
+            'module/foundation/c'
+            'module/foundation/a'
+            'module/foundation/b'
         )
     }
 
@@ -429,10 +429,10 @@ b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main
 
             $ordered = @(Sort-XmipModuleDependency -RepositoryRoot $Root -Module $Given)
 
-            $ordered.IndexOf('module/core/foundation/a') |
-                Should -BeLessThan $ordered.IndexOf('module/core/foundation/b')
-            $ordered.IndexOf('module/core/foundation/b') |
-                Should -BeLessThan $ordered.IndexOf('module/core/foundation/c')
+            $ordered.IndexOf('module/foundation/a') |
+                Should -BeLessThan $ordered.IndexOf('module/foundation/b')
+            $ordered.IndexOf('module/foundation/b') |
+                Should -BeLessThan $ordered.IndexOf('module/foundation/c')
         }
     }
 
@@ -442,10 +442,10 @@ b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main
         InModuleScope Xmip -Parameters @{ Root = $script:Fixture } {
             param($Root)
 
-            [hashtable] $sort = @{ RepositoryRoot = $Root; Module = @('module/core/foundation/c') }
+            [hashtable] $sort = @{ RepositoryRoot = $Root; Module = @('module/foundation/c') }
             $ordered = @(Sort-XmipModuleDependency @sort)
 
-            $ordered | Should -Be @('module/core/foundation/c')
+            $ordered | Should -Be @('module/foundation/c')
         }
     }
 
@@ -474,8 +474,8 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 [submodule "module/core/capability/contract"]
 	path = module/core/capability/contract
 	url = https://example.invalid/contract
-[submodule "module/core/foundation/core"]
-	path = module/core/foundation/core
+[submodule "module/foundation/core"]
+	path = module/foundation/core
 	url = https://example.invalid/core
 '@
             'module/core/capability/contract/.gitmodules' = @'
@@ -504,7 +504,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
 
             $declared | Should -Contain 'module/core/capability/contract'
             $declared | Should -Contain 'module/core/capability/contract/csv'
-            $declared | Should -Contain 'module/core/foundation/core'
+            $declared | Should -Contain 'module/foundation/core'
         }
     }
 
@@ -523,7 +523,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
         InModuleScope Xmip -Parameters @{ Root = $script:Nest } {
             param($Root)
 
-            # module/core/foundation/core has no .gitmodules of its own; the ordinary
+            # module/foundation/core has no .gitmodules of its own; the ordinary
             # case must be silent, not an error.
             { Get-XmipDeclaredModule -RepositoryRoot $Root } | Should -Not -Throw
         }

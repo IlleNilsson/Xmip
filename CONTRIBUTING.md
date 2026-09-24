@@ -133,8 +133,9 @@ on a mutating command where that is practical.
 
 ## Submodules
 
-Xmip mounts every module as a submodule under
-`module/<provider>/<domain>/<leaf>` — provider before purpose. Four
+Xmip mounts every module as a submodule: what starts a node at
+`module/foundation/<leaf>` and `module/platform/<leaf>`, everything else at
+`module/<provider>/<domain>/<leaf>` (ADR-0016). Four
 facts explain every surprise:
 
 - **A submodule is a commit, not a branch.** `Xmip` records "at this path, this
@@ -167,11 +168,11 @@ commit the parent pins.
 **Changing something in a module**
 
 ```powershell
-cd module/core/foundation/core
+cd module/foundation/core
 git checkout main          # detached otherwise, and the commit goes nowhere
 git add -A; git commit -m "..."; git push origin main
 
-cd ../../../..
+cd ../../..
 git add -A; git commit -m "Pin core: ..."; git push origin main
 ```
 

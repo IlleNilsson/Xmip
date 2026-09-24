@@ -118,7 +118,8 @@ Describe 'Rust style, section 1: a file has one subject' {
 Describe 'Rust style, section 5: a file is named for what it defines' {
     BeforeAll {
         # The crate a file belongs to, taken from the path rather than from
-        # Cargo.toml: module/<provider>/<domain>/<crate>/src/... . Reading the manifest
+        # Cargo.toml: module/<domain>/<crate>/src/... for what starts a node,
+        # module/<provider>/<domain>/<crate>/src/... otherwise. Reading the manifest
         # would be more correct and would also make this test depend on every one of
         # them being parseable, which is a different test's job.
         $script:Named = $script:Files | ForEach-Object {
@@ -127,7 +128,9 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
             [PSCustomObject]@{
                 Path  = $_.Path
                 Name  = [IO.Path]::GetFileNameWithoutExtension($_.Path)
-                Crate = if ($parts[0] -eq 'module' -and $parts.Count -ge 4) { $parts[3] }
+                Crate = if ($parts[0] -eq 'module' -and
+                            $parts[1] -notin 'foundation', 'platform' -and
+                            $parts.Count -ge 4) { $parts[3] }
                         elseif ($parts.Count -ge 3) { $parts[2] }
                         else { $parts[0] }
             }

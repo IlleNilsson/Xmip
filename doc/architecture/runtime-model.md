@@ -608,7 +608,7 @@ A Journey is Active, Waiting, Suspended, Recovering, Completed, Failed or
 Dismissed. Completed, Failed and Dismissed are terminal. Suspended and
 Recovering are the operator-recoverable path. ADR-0013 clause 7 records the
 vocabulary, and the code is `JourneyState` in `xmip-core-journey`
-(`module/core/foundation/journey`); this document does not repeat the enum, which
+(`module/foundation/journey`); this document does not repeat the enum, which
 drifted from the crate once already.
 
 Earlier drafts named a different set — Created, Running, Paused, Waiting, Dead,
@@ -990,7 +990,7 @@ requires and every reference between Instances, so a configuration error is a
 startup failure, not a first-message failure: a Receive Location naming a Send
 Port that does not exist is refused before a Stream ever arrives. What each
 phase does in code is `StartupPhase` in `xmip-core-runtime`
-(`module/core/platform/runtime/src/service.rs`).
+(`module/platform/runtime/src/service.rs`).
 
 ## 22. The Xmip Process
 

@@ -142,7 +142,7 @@ function Invoke-Distribute {
     $touched = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
     # A composed estate keeps its working copies as submodules inside this
-    # repository, so a repository name resolves to module/<provider>/<domain>/<leaf>
+    # repository, so a repository name resolves to its mount under module/
     # rather than to a sibling clone. Without this, Distribute writes into
     # ../xmip-repositories and the submodule that owns the file never sees
     # it.

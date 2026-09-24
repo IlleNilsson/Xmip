@@ -133,7 +133,7 @@ If not, it is a Module.
 
 A Module ships as a platform-native shared library. What the file is called on
 each platform, and how the host finds, loads and unloads it, is the ABI
-specification's: `module/core/foundation/abi/doc/specification.md` section 3,
+specification's: `module/foundation/abi/doc/specification.md` section 3,
 *Finding the library*.
 
 **Installing a capability must never require recompiling the runtime.** A Module
@@ -149,7 +149,7 @@ possible, not so that it is mandatory.
 Each Module carries a manifest, `xmip-module.toml`, beside its library. What
 identifies the Module — provider, module, standard, the ABI handshake and the
 trait and module versions — is the descriptor ADR-0012 defines and
-`module/core/foundation/abi/doc/specification.md` specifies, stated once there and
+`module/foundation/abi/doc/specification.md` specifies, stated once there and
 not repeated in the manifest; the manifest adds what the runtime needs before
 it loads anything: platform, binary path, required capabilities, supported
 technologies, trust requirement and isolation requirement. There is no module

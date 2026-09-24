@@ -395,9 +395,10 @@ Describe 'The estate is more than its modules' {
 
     It 'leaves a provider other than core a subtree of its own' {
         # The owner, 2026-09-23: the Playground had taken test/playground and
-        # left nowhere for anyone else's; then, provider before purpose. Every
-        # provider, core included, mounts under its own name, whatever the
-        # domain, so another's modules sit beside Xmip's rather than among them.
+        # left nowhere for anyone else's; what starts a node carries no
+        # provider, everything else does, provider before purpose. Read as one
+        # rule, foundation went under core; the owner, 2026-09-24: *Do you think
+        # core is not needed to start Xmip?* Both halves are held here.
         $mount = & (Get-Module Xmip) {
             param($Repositories)
 
@@ -423,20 +424,24 @@ Describe 'The estate is more than its modules' {
         $mount[1].At | Should -Be 'module/example/capability/transport'
         $mount[2].In | Should -Be 'xmip-example-transport'
         $mount[2].At | Should -Be 'kafka'
-        $mount[3].At | Should -Be 'module/core/foundation/node'
-        $mount[4].At | Should -Be 'module/core/platform/runtime'
+        $mount[3].At | Should -Be 'module/foundation/node'
+        $mount[4].At | Should -Be 'module/platform/runtime'
     }
 
-    It 'mounts every provider''s work under module/<provider>/, and nothing else there' {
-        # Provider before purpose, checked against the tree rather than the
-        # function: a hand-declared mount could still put purpose first. A
+    It 'mounts what starts a node without a provider and everything else with one' {
+        # Checked against the tree rather than the function: a hand-declared
+        # mount could still break the rule. What starts a node is
+        # module/foundation/ and module/platform/; every other module is
+        # module/<provider>/<domain>/; a Playground is test/<provider>/; a
         # template belongs to no provider and stays at template/<language>.
         [string] $modules = Get-Content -Raw (Join-Path $script:Root '.gitmodules')
         [string[]] $path = [regex]::Matches($modules, '(?m)^\s*path = (\S+)') |
             ForEach-Object { $_.Groups[1].Value }
 
         foreach ($at in $path) {
-            [string] $shape = '^(module/[a-z0-9]+/[a-z]+/[a-z0-9-]+|template/[a-z]+)$'
+            [string] $shape = '^(module/(foundation|platform)/[a-z0-9-]+|' +
+                'module/(?!foundation/|platform/)[a-z0-9]+/[a-z]+/[a-z0-9-]+|' +
+                'test/[a-z0-9]+/playground|template/[a-z]+)$'
             $at | Should -Match $shape -Because "$at is where a submodule mounts"
         }
     }

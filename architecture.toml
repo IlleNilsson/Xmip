@@ -601,7 +601,7 @@ dependency = []
     specification = "AsyncAPI 2.x and 3.x in JSON; YAML is the next layer"
     [xmip.core.contract.avro]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-message"]
     specification = "Apache Avro 1.11 schema, binary encoding and object container file"
     [xmip.core.contract.c]
     maturity = "scaffolded"
@@ -611,7 +611,7 @@ dependency = []
     primaryLanguage = "cpp"
     [xmip.core.contract.csv]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-message"]
     [xmip.core.contract.dotnet]
     description = "Content contracts authored as .NET modules over the Xmip ABI — the .NET counterpart of the Rust contract technologies."
     primaryLanguage = "dotnet"
@@ -641,7 +641,7 @@ dependency = []
     specification = "OpenAPI 3.x and Swagger 2.0 in JSON; YAML is the next layer"
     [xmip.core.contract.protobuf]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-message"]
     specification = "Protocol Buffers wire format and the proto3 language, imports not followed"
     [xmip.core.contract.python]
     maturity = "scaffolded"
@@ -1442,8 +1442,8 @@ dependency = []
 # What exercises Xmip, under the provider whose work it exercises. `test` is
 # the kind of work, not a provider: until 2026-09-23 it stood in the provider's
 # place — xmip-test-playground at test/playground — and left nowhere for anyone
-# else's. Provider before purpose, like everything a provider ships: a second
-# provider's is xmip-<theirs>-test-playground at module/<theirs>/test/playground.
+# else's. A second provider's is xmip-<theirs>-test-playground at
+# test/<theirs>/playground, and the estate's rules apply to it unchanged.
   [xmip.core.test]
   description = "What exercises Xmip: the Playground, and what follows it. Every provider may have one."
   architecturalDomain = "Operation"
@@ -1456,10 +1456,12 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  # Test scaffolding, not a capability the runtime loads, and optional — the
-  # estate builds and runs without it (ADR-0036). It still mounts with what
-  # its provider ships: provider before purpose (the owner, 2026-09-23).
-  mount = "module/core/test/playground"
+  # Test scaffolding, not a capability the runtime loads: it mounts outside
+  # module/, and it is optional — the estate builds and runs without it
+  # (ADR-0036). Under the provider, because another provider's playground
+  # mounts at test/<theirs>/playground beside it (the owner, 2026-09-23, and
+  # again 2026-09-24 when it had been moved under module/).
+  mount = "test/core/playground"
   optional = true
   dependency = [
       "xmip-core",
@@ -1496,6 +1498,7 @@ dependency = []
       "xmip-core-contract-wsdl",
       "xmip-core-contract-xml-schema",
       "xmip-core-identify",
+      "xmip-core-message",
       "xmip-core-node",
       "xmip-core-observe",
       "xmip-core-retain",

@@ -545,10 +545,10 @@ escaping and nothing else.
 
 | # | Concept | Where it diverges | One home |
 |---|---|---|---|
-| a | A Journey across a restart | `persist::DurableJourneyState` drops `previous_journey_id`, `cause`, `depth` and entries, so a recovered Journey restarts its chain depth at zero and loop protection is off | persist stores `journey::Journey` |
+| a | A Journey across a restart | `persist::DurableJourneyState` dropped `previous_journey_id`, `cause`, `depth` and entries, so a recovered Journey restarted its chain depth at zero and loop protection was off | **Resolved 2026-09-24:** persist stores `journey::Journey` whole, and a test writes and reads one two links deep |
 | b | A node's configuration | modelled four times: two trees in `configure`, a subset in `runtime/execution_tree.rs`, and the editor's own in C#, which defaults a location's `start` and `transport` where the runtime requires them, never unescapes, and matches keys by prefix | the one document in `configure`; the editor validates through `xmip_validate_v1` |
-| c | Protocol Buffers wire rules | contract refuses groups and checks only field 0; message accepts groups and caps the field number | message's reader, contract depends on it |
-| d | CSV | contract splits on lines and refuses a quoted line break; message accepts one | message's record reader |
+| c | Protocol Buffers wire rules | contract refused groups and checked only field 0; message accepted groups and capped the field number | **Resolved 2026-09-24:** one walk, `message::protobuf`, with the encoders beside it; the contract checks the schema over it, tag before value |
+| d | CSV | contract split on lines, refused a quoted line break and took a quote anywhere as opening one; message follows RFC 4180 | **Resolved 2026-09-24:** the contract reads `message::record`, and refuses a NUL byte as the shape does |
 | e | A path lexer | FHIRPath and the predicate language consume whitespace as one byte and panic on U+00A0 | one character reader in codec, every lexer on it |
 | f | TOML string quoting | the node declaration escapes three characters; archive's copy escapes all | codec |
 | g | msmq over https | always writes `http://`; its `tls` feature does nothing | `http::endpoint`, as as2, as4 and webdav already do |
@@ -675,7 +675,7 @@ retires entries from stops being an order.
                                        technology; the root assembly has none
                                        either; the only place the two hundred
                                        technologies are linked is
-                                       `module/core/test/playground`, with one hundred
+                                       `test/core/playground`, with one hundred
                                        and twenty-three. They can now be
                                        loaded instead: ADR-0057 step 2
                                        landed on 2026-09-19 and
@@ -874,7 +874,7 @@ the manifest tell the truth today, migrate deliberately once green.
 *Resolved by option A, recorded here 2026-09-03.*
 
 `crates/` does not exist. Both crates are gone and `xmip-core-abi` is real —
-seven files at `module/core/foundation/abi`, with the specification beside them.
+seven files at `module/foundation/abi`, with the specification beside them.
 What remains are citations inside ADR-0012 and ADR-0016, and those are correct
 as they stand: a record says what was true when it was written.
 
