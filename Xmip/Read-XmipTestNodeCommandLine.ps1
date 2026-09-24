@@ -9,7 +9,7 @@ function Read-XmipTestNodeCommandLine {
             line: the flags the node binary takes, as a hashtable. Pure.
 
         .DESCRIPTION
-            The node binary (module/core/test/playground/src/bin/node.rs) takes
+            The node binary (test/core/playground/src/bin/node.rs) takes
             `--name --shared --stress --rounds --snapshot [--interval-ms]
             [--can] [--online] [--nodes] [--scenarios]`. A running node
             carries nothing else that says what it is, so Get-XmipTestNode

@@ -371,7 +371,7 @@ Describe 'The environment a roll is started with' {
         # The owner's names — HeavyLoad, LowLatency — over the roll's scenario
         # names. SCENARIOS in scenario.rs is the roll's list and the node's; the
         # map must cover it exactly, or a test is unreachable or names nothing.
-        [string] $scenarios = Join-Path $script:Root 'module/core/test/playground/src/scenario.rs'
+        [string] $scenarios = Join-Path $script:Root 'test/core/playground/src/scenario.rs'
         [string] $roll = Get-Content -Raw $scenarios
         [string] $pattern = '(?s)const SCENARIOS: \[&str; \d+\] = \[(.*?)\];'
         [string] $list = [regex]::Match($roll, $pattern).Groups[1].Value
@@ -591,8 +591,8 @@ Describe 'The environment a roll is started with' {
         # variable the roll reads that no parameter can set is a switch an
         # operator cannot reach from PowerShell.
         [string] $roll = @(
-            'module/core/test/playground/src/bin/roll.rs'
-            'module/core/test/playground/src/environment.rs'
+            'test/core/playground/src/bin/roll.rs'
+            'test/core/playground/src/environment.rs'
         ) | ForEach-Object { Get-Content -Raw (Join-Path $script:Root $_) }
         [string[]] $documented = @(
             [regex]::Matches($roll, 'XMIP_PLAYGROUND_[A-Z_]+') |

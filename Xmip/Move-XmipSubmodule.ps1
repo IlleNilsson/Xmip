@@ -7,7 +7,7 @@
 
 .DESCRIPTION
     Lifted out of Invoke-Compose.ps1 on 2026-09-23, when moving every module under
-    module/<provider>/ taught it what Windows, editors and git itself do to a
+    module/core/ taught it what Windows, editors and git itself do to a
     submodule that moves: held directories, half-finished git mv, nested git
     directories counted from the old depth. Invoke-Compose asks; this moves.
 

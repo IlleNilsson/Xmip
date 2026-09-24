@@ -20,6 +20,12 @@
     Import-Module ./Xmip.psm1
     Sync-XmipEstate -Create -Configure -WhatIf
 #>
+# The domains that start Xmip on a node: linked into the node binary, one of
+# them per estate, and so mounted with no provider in the path. Every other
+# domain is something a provider ships, and mounts under that provider.
+[string[]] $script:XmipNodeDomain = @('foundation', 'platform')
+
+
 <#
     .SYNOPSIS
     The path a repository mounts at inside its owner, or '' if it has none.
@@ -28,11 +34,11 @@
     Two levels, per ADR-0016 and section 14 of the repository creation
     blueprint.
 
-    Depth two mounts under Xmip, grouped by provider and then by architectural
-    domain, because that layout exists for human navigation:
+    Depth two mounts under Xmip, grouped for human navigation: what starts
+    Xmip by its domain, everything else by its provider and then its domain:
 
+        xmip-core-journey     ->  module/foundation/journey
         xmip-core-transport   ->  module/core/capability/transport
-        xmip-core-journey     ->  module/core/foundation/journey
 
     Depth three mounts directly inside its own parent capability, because at
     that level the parent is the grouping and everything in that repository is
@@ -43,15 +49,18 @@
     The name is the TOML tree path with dots as hyphens, so the mount name is
     the last segment and the owner is the name minus that segment.
 
-    **Provider before purpose, with no exception.** The owner, 2026-09-23:
-    *Provider before purpose* — the inventor is one provider and others plug
-    in beside him. A first draft kept what starts a node (`foundation`,
-    `platform`) without a provider; that left two slicings in one tree, and
-    it went the same day. Whatever a provider ships sits in one subtree of
-    its own, so a third party can read its whole place from its name:
+    **What starts Xmip carries no provider; everything else carries one, and
+    the provider comes before the purpose.** The owner, 2026-09-23: *What is
+    needed to start Xmip on a node does not need to be mounted with provider.
+    Everything else has to be mounted with provider*, and then *provider
+    before purpose*. The second refines the first rather than replacing it —
+    the owner, 2026-09-24, when both had been read as one rule and
+    `foundation` moved under `core`: *Do you think core is not needed to
+    start Xmip?*
 
-        xmip-core-node                   ->  module/core/foundation/node
-        xmip-core-runtime                ->  module/core/platform/runtime
+        xmip-core                        ->  module/foundation/core
+        xmip-core-node                   ->  module/foundation/node
+        xmip-core-runtime                ->  module/platform/runtime
         xmip-core-transport              ->  module/core/capability/transport
         xmip-core-transport-kafka        ->  kafka, inside that
         xmip-<provider>-transport        ->  module/<provider>/capability/transport
@@ -73,8 +82,8 @@ function Get-XmipMountPath {
     [string] $name = [string](Get-PropertyValue $Repository 'name')
 
     # An explicit mount wins over the computed path. Almost nothing declares one
-    # — `module/<provider>/<domain>/<leaf>` below is right for a module. One
-    # whose owner is reserved (a library, the Playground) mounts where it says.
+    # — the path computed below is right for a module. One whose owner is
+    # reserved (a library, the Playground) mounts where it says.
     [string] $declaredMount = [string](Get-PropertyValue $Repository 'mount' '')
     if ('' -ne $declaredMount) {
         return [pscustomobject]@{ Owner = ''; Mount = $declaredMount }
@@ -114,8 +123,8 @@ function Get-XmipMountPath {
             $leaf = ($segment | Select-Object -Skip 2) -join '-'
         }
 
-        # Only a name with no provider in it mounts without one.
-        if ('' -eq $provider) {
+        # What starts Xmip carries no provider, and nor does a name with none.
+        if ($domain -in $script:XmipNodeDomain -or '' -eq $provider) {
             return [pscustomobject]@{ Owner = ''; Mount = "module/$domain/$leaf" }
         }
 

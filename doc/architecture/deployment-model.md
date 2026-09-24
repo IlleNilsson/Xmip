@@ -286,7 +286,7 @@ rarely and queried arbitrarily — and one engine serving both serves neither.
 timestamp leads, so records written in sequence land in sequence and a range
 over identifiers is a range over time. The reasoning, the two boundaries an
 integrator meets (.NET's `Guid` byte order, SQL Server's sort order) and the
-two cautions are `module/core/platform/persist/doc/record-identifier.md`.
+two cautions are `module/platform/persist/doc/record-identifier.md`.
 
 ## 8. Desired state
 

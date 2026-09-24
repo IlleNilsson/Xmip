@@ -3,7 +3,7 @@
 Set-StrictMode -Version Latest
 
 # The capability words a node may declare, in message-path order. The list is
-# the roll's (module/core/test/playground/src/capability.rs), and ADR-0056 is the record:
+# the roll's (test/core/playground/src/capability.rs), and ADR-0056 is the record:
 # a node declares what it can do, and work is placed on a node whose
 # capabilities satisfy it. The other two kinds ADR-0056 names — authentication
 # and runtime capability — are not modelled in the rig.
@@ -194,7 +194,7 @@ function Get-XmipNodeCapabilityRefusal {
             any stage is no refusal — the roll runs RoundTrip whole — and
             neither is a run that does not include RoundTrip. No -Test means
             every test, RoundTrip among them. The roll refuses the same way
-            (module/core/test/playground/src/roster.rs); this says it before a process
+            (test/core/playground/src/roster.rs); this says it before a process
             starts.
 
         .PARAMETER Nodes

@@ -4,8 +4,9 @@
 - Date: 2026-08-25
 - Amended: 2026-09-07, decision 1 — a technology mounts directly under its
   parent, `csv`, not `module/csv`
-- Amended: 2026-09-23, decision 1 — provider before purpose: the root pins
-  `module/<provider>/<domain>/<leaf>`, core's included
+- Amended: 2026-09-23, corrected 2026-09-24, decision 1 — what starts a node
+  mounts at `module/<domain>/<leaf>`, everything else at
+  `module/<provider>/<domain>/<leaf>`
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging)
 
@@ -65,19 +66,24 @@ nothing: `xmip-core-contract/csv` is the CSV contract the way
 each and the layout was cheap to change. The root keeps `module/`, because at
 the root the word separates modules from `doc/`, `test/` and `template/`.
 
-*Amended 2026-09-23: provider before purpose.* The root pins a module at
-`module/<provider>/<domain>/<leaf>` — `xmip-core-transport` at
-`module/core/capability/transport`, `xmip-core-node` at
-`module/core/foundation/node`, the Playground at `module/core/test/playground`,
-and another provider's at `module/<theirs>/…` beside them. The owner: *provider
-before purpose*; he is the inventor and others plug in. A draft that morning
-put the provider only in the path of what a node loads and left `foundation`
-and `platform` without one, which sliced one tree two ways; it went the same
-day. Everything a provider ships is one subtree, so a third party reads its
-whole place from its name and owns it without touching anyone else's. The
-templates stay at `template/<language>`: they belong to no provider.
-repository-model.md, section 7, draws it; `test/Sync-XmipEstate.Test.ps1`
-holds every mount to it.
+*Amended 2026-09-23, corrected 2026-09-24: what starts Xmip carries no
+provider; everything else does, provider before purpose.* The owner,
+2026-09-23: *What is needed to start Xmip on a node does not need to be mounted
+with provider. Everything else has to be mounted with provider* — and then
+*provider before purpose*: he is the inventor and others plug in. So the root
+pins what starts a node by its domain alone, `xmip-core` at
+`module/foundation/core` and `xmip-core-runtime` at `module/platform/runtime`,
+and every other module at `module/<provider>/<domain>/<leaf>`,
+`xmip-core-transport` at `module/core/capability/transport` and another
+provider's at `module/<theirs>/…` beside it. A Playground is test scaffolding
+and mounts at `test/<provider>/playground` (ADR-0028); the templates stay at
+`template/<language>`, belonging to no provider.
+
+As first written, this amendment read *provider before purpose* as replacing
+the first rule and moved `foundation` and `platform` under `core` too. The
+owner, 2026-09-24: *Do you think core is not needed to start Xmip?* The second
+instruction refines the first; both hold. repository-model.md, section 7,
+draws the tree; `test/Sync-XmipEstate.Test.ps1` holds every mount to it.
 
 A `.gitmodules` file belongs to the repository doing the pinning. The root
 never reaches past its own children; a module repository composes its own

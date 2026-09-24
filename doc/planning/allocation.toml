@@ -1707,19 +1707,19 @@ repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
 #   doc/development/creating-transports-contracts-and-processes.md
 #     parts A, B, C -> module/core/capability/transport/doc/adding-a-transport.md,
 #     module/core/capability/contract/doc/adding-a-contract.md,
-#     module/core/platform/configure/doc/node-configuration.md
+#     module/platform/configure/doc/node-configuration.md
 #   doc/architecture/observability-model.md
 #     section 8 -> module/core/operation/report/doc/reports.md
 #     section 2 record model, section 5 -> module/core/operation/audit/doc/audit-record.md
 #   doc/architecture/deployment-model.md
-#     section 7 UUIDv7 -> module/core/platform/persist/doc/record-identifier.md
+#     section 7 UUIDv7 -> module/platform/persist/doc/record-identifier.md
 #   doc/architecture/runtime-model.md
 #     section 9 selectors -> module/core/capability/promote/doc/content-selector.md
 #     section 15 scope -> module/core/capability/resilience/README.md
-#       (mounted at module/core/platform/resilience when this move was made;
+#       (mounted at module/platform/resilience when this move was made;
 #        resilience became a Capability on 2026-09-19, ADR-0058)
 #   doc/decision/ADR-0028-the-xmip-playground.md
-#     3a, 3b and the difficulty amendment -> module/core/test/playground/README.md
+#     3a, 3b and the difficulty amendment -> test/core/playground/README.md
 
 # ---------------------------------------------------------------------------
 # Consolidation, tier three, 2026-09-14. What the survey found sitting twice,
@@ -1755,7 +1755,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     the mental-model table and the reference table -> the three module
 #     guides already carried them; the root keeps the three-way signpost
 #   doc/architecture/runtime-model.md
-#     section 12's literal enum JourneyState -> module/core/foundation/journey
+#     section 12's literal enum JourneyState -> module/foundation/journey
 #     (src/lib.rs, the code; the model keeps the operator meaning); its
 #     section 21 Startup is now the estate's one account, from ADR-0018, and
 #     module-model.md section 8 and terminology.md Startup point at it
@@ -1764,7 +1764,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     and xmip-core-gui, which paints it; section 5's channel sentence ->
 #     module/core/operation/audit/doc/audit-record.md, Performance
 #   doc/architecture/module-model.md
-#     section 5's .dll/.so/.dylib table -> module/core/foundation/abi/doc/
+#     section 5's .dll/.so/.dylib table -> module/foundation/abi/doc/
 #     specification.md section 3, Finding the library; section 6's manifest
 #     field list loses "module kind" (ADR-0012 clause 5 removed it) and points
 #     at the descriptor for what identifies a Module
@@ -1780,13 +1780,13 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   module/core/capability/authenticate/doc/identity-by-technology.md
 #     section 4's manifest narrative and two dependency blocks -> the
 #     manifest, which already carried them; the AS2 four-layers paragraph stays
-#   module/core/foundation/abi/doc/specification.md
+#   module/foundation/abi/doc/specification.md
 #     section 13's restatement of ADR-0011 and ADR-0012 clause 11 -> a
 #     citation, as section 14 already was
 #   template/rust/TEMPLATE_SETUP.md, template/dotnet/TEMPLATE_SETUP.md
 #     items 1, 2, 8 and 9 -> citations of repository-model.md section 2,
 #     architectural-change-permission.md and the template README
-#   module/core/test/playground/README.md
+#   test/core/playground/README.md
 #     Running it -> the estate's README.md, which already showed the commands;
 #     the XMIP_PLAYGROUND_* variables and the test-name mapping stay
 #   fifty-three technology READMEs under identify, authenticate, authorize and

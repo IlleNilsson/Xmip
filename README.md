@@ -314,8 +314,9 @@ estate's dependency graph and the only place its repositories are counted.
 Foundation defines what Xmip is; Capabilities define what it does; Technology
 repositories implement those capabilities; Operations run and govern the
 system; Platform repositories provide runtime-wide services. One repository
-per module and per technology: a module is mounted at
-`module/<provider>/<domain>/<leaf>`, a technology inside its capability. Dependency
+per module and per technology: what starts a node is mounted at
+`module/foundation/<leaf>` or `module/platform/<leaf>`, every other module at
+`module/<provider>/<domain>/<leaf>`, and a technology inside its capability. Dependency
 rules are stated in the manifest and enforced by a test: foundation never
 depends on a technology, a technology may depend on its capability,
 operations consume public contracts only
@@ -645,7 +646,7 @@ updates the pins in the superproject:
 | Suite | Runs | Command |
 | --- | --- | --- |
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests` |
-| The Playground's own | `module/core/test/playground` | `cargo test` in `module/core/test/playground` |
+| The Playground's own | `test/core/playground` | `cargo test` in `test/core/playground` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate` |
 | The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
@@ -684,8 +685,9 @@ architecture.toml     the estate: every repository, named by its position in the
 prerequisite.toml     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
 Xmip/                 the estate's PowerShell module
-module/               what each provider ships, at module/<provider>/<domain>/<leaf>
-test/                 the estate's Pester suite
+module/               the modules: foundation/ and platform/ start a node, the rest
+                      at module/<provider>/<domain>/<leaf>
+test/                 the estate's Pester suite; test/core/playground is the Playground
 deploy/               Ansible roles and a DSC configuration for a node
 template/             the Rust and .NET repository templates
 doc/                  the record
@@ -712,15 +714,15 @@ record; propose a new one or an amendment.
 
 A document whose subject is one module lives with that module
 ([ADR-0020](doc/decision/ADR-0020-documentation-structure.md), clause 3), in
-its `doc/` folder: the ABI specification (`module/core/foundation/abi`), identity
+its `doc/` folder: the ABI specification (`module/foundation/abi`), identity
 per technology (`module/core/capability/authenticate`), adding a transport
 (`module/core/capability/transport`), adding a contract
 (`module/core/capability/contract`), the node configuration document
-(`module/core/platform/configure`), Xmip Process instances
+(`module/platform/configure`), Xmip Process instances
 (`module/core/capability/process`), the content selector
 (`module/core/capability/promote`), the audit record (`module/core/operation/audit`),
 the reports (`module/core/operation/report`) and record identifiers
-(`module/core/platform/persist`). `doc/planning/` is working notes and not
+(`module/platform/persist`). `doc/planning/` is working notes and not
 authoritative.
 
 ### Adding or changing a capability

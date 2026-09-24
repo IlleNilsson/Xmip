@@ -11,10 +11,10 @@ Each guide lives with the subject it describes (ADR-0020 clause 3):
 | --- | --- |
 | A transport (Kafka, MQTT, S3 ...) | `module/core/capability/transport/doc/adding-a-transport.md` |
 | A contract (CSV, JSON, EDIFACT ...) | `module/core/capability/contract/doc/adding-a-contract.md` |
-| An Xmip Process (a Receive, work, Send flow) | `module/core/platform/configure/doc/node-configuration.md` |
+| An Xmip Process (a Receive, work, Send flow) | `module/platform/configure/doc/node-configuration.md` |
 
 What every technology shares — how its repository is named, declared, created,
 mounted and landed — is `doc/architecture/repository-model.md`, sections 2, 7,
 8 and 10; the rules the tests enforce are `doc/governance/rust-style.md`; what
 to build and in what order is `doc/planning/open-problems.md`; a transport or a
-contract is proven in the Playground (ADR-0028, `module/core/test/playground/README.md`).
+contract is proven in the Playground (ADR-0028, `test/core/playground/README.md`).

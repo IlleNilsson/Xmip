@@ -397,12 +397,16 @@ is test scaffolding, and the path `test/playground` had no room at all.
   submodule moved with `git mv`, and the crate is `xmip-core-test-playground`.
   Clause 1 above still holds: one repository, optional, ADR-0036.
 
-## Amendment, 2026-09-23 (later): provider before purpose
+## Amendment, 2026-09-24: the Playground stays at test/core/playground
 
-The paragraph above kept `test/` first and core's modules at
-`module/<domain>/<leaf>`. The owner, the same day: *provider before purpose* —
-he is the inventor, and others plug in. So the Playground mounts with
-everything else core ships, at `module/core/test/playground`, and a second
-provider's at `module/<theirs>/test/playground`; core's modules moved to
-`module/core/<domain>/<leaf>`. The second bullet above no longer holds: a path
-carries its provider, core's included. ADR-0016, amendment 2026-09-23.
+For a day the Playground was moved to `module/core/test/playground`, on a
+reading of the owner's *provider before purpose* as putting everything a
+provider ships under `module/`. The owner, 2026-09-24, asked where it belongs,
+and answered: `test/core/playground`, as placed above. A second provider's is
+`test/<theirs>/playground`.
+
+The second bullet above no longer holds, for a different reason. Core's modules
+did move: the owner's rule of 2026-09-23 is that what starts a node mounts with
+no provider — `module/foundation/…`, `module/platform/…` — and everything else
+with its provider first, `module/core/capability/transport`. ADR-0016,
+amendment 2026-09-23, corrected 2026-09-24.
