@@ -232,7 +232,11 @@ computer, however quantum-safe the certificate that authenticated it.
   not. Four technologies mapped their `https` URLs to a stack they had no way
   to load, and `webdav` mapped `webdavs://` and then refused it; all five now
   reach TLS, and webdav connects through the http technology's endpoint like
-  every other rider. A client, a server, the node's certificate and the
+  every other rider. *(Corrected 2026-09-24: msmq did not — it still wrote
+  `http://` and never used its `tls` feature. Since problem 25 row (g) it
+  connects through the same endpoint, and `msmqs://`, `https://` and
+  `DIRECT=HTTPS://` queues are refused rather than sent in the clear without
+  `tls`.)* A client, a server, the node's certificate and the
   operating system's trust store live there; one call serves STARTTLS, since
   an upgrade in place is the same wrap on a socket already negotiated. When
   to upgrade, and what a protocol sends first, stays with the protocol.

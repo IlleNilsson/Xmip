@@ -40,6 +40,11 @@ with `InvariantCulture` precisely so a German-locale machine does not write
 `1,5` where the parser expects `1.5`. This is the safe default and the one that
 prevents the classic locale bug.
 
+*Note, 2026-09-24 (open problem 25, row b):* `NodeConfiguration` no longer
+formats values itself. Since that date the TOML library behind `Xmip.Surface`'s
+`TomlDocument` writes the node configuration, and it writes invariant. The
+example stands for what it illustrates; the decision is unchanged.
+
 ### 2. Locale-aware only at the data boundary
 
 Three concerns, and only these, are locale-aware, at the edge where Xmip reads or

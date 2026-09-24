@@ -925,6 +925,85 @@ roll that ended leaves links behind. And the surface relay serves the first
 cluster alone: a remote surface reads one tree, and a tree of two clusters is a
 scope in neither.
 
+## Amendment, 2026-09-24: scope containment has two writers and one set of cases
+
+Open problem 25, row k: `ScopeTree.Beneath` read a scope by its path, the
+scheme and the authority gone as ADR-0027 clause 3 says, while the runtime's
+`observe` compared the whole text — so `xmip://edge-01/n/receive/a` was
+beneath `xmip:///n` on a surface and not in the snapshot that paused it.
+
+**The rule is `observe::Scope` in the runtime and `ScopeTree` on the
+surfaces, both on purpose.** `Scope::contains` is what the snapshot and the
+activity log answer by. Clause 1 keeps the scope tree in `Xmip.Surface`,
+and it stays there: the owner, 2026-09-24, ruled that `ScopeTree` keeps its
+own writing, because a surface loads no Rust library — the snapshot and
+remote surfaces run with no runtime beside them, and a board compares
+thousands of records at a time.
+
+**One set of cases holds the two to one rule.**
+`src/scope-vector.toml` in xmip-core-observe is the statement: each case a
+scope, a candidate, whether one contains the other, and where useful the
+path and whether it is the root. A test in `observe` reads it and
+`ScopeTreeTest` in `Xmip.Surface.Test` reads the same file, copied beside
+the test assembly from the estate checkout. A change to the rule is a
+change to that file first, and fails whichever writer did not follow.
+
+The cases cover the root in its four spellings, the authority on either
+side, text without the scheme, a slash at either end, the lower-case scheme
+(`XMIP:///C1` is a path), and a prefix of segments rather than of
+characters (`n` does not contain `nx`). A query and a fragment are not
+stripped on either side; nothing the estate publishes carries one yet, and
+the cases record that behavior so a change to it lands in both at once.
+
+## Amendment, 2026-09-24: the command line and PowerShell share, down the layers
+
+The owner, 2026-09-24: *Force some love down the layers, CLI and PowerShell
+shall share.* Clause 1 already said what the .NET surfaces share; an audit the
+same day (open problem 25) found the executable and the PowerShell module
+still writing several of the same answers twice, and the cmdlets short of
+what the executable could do. Each moved to the lowest layer both already
+reach — `Xmip.Abi` where the answer is the binding's, `Xmip.Surface` where it
+is the model's — and each face now renders it; neither writes it.
+
+- **Which surface an invocation reads**, the line over the document —
+  `--remote`, `--snapshot`, `--runtime`, then the document, then the runtime
+  rule — is `SurfaceChoice.Stated` over a `SurfaceLine`, and whether it
+  answers is `SurfaceChoice.Answering`. The executable, the prompt and every
+  cmdlet that reads a scope ask it. So `Get-XmipHealth`, `Suspend-XmipScope`
+  and `Resume-XmipScope` take `-Remote`, `-Snapshot` and `-Library` as named
+  parameters in the executable's order, `-Library` is no longer mandatory, and
+  with none of them the module's own `xmip.powershell.toml` decides, as
+  `xmip.cli.toml` decides for the executable: clause 1's one discovery rule,
+  reaching the cmdlets at last. `Test-XmipNodeConfiguration -Library` finds
+  its runtime by `RuntimeLibrary.Stated`, as `xmip-cli validate --runtime`.
+- **What a scope argument selects** is `ScopeSelection`, moved out of the
+  executable: the cmdlets' `-Scope` takes a wildcard over the scopes that
+  exist, answered per topmost scope and never rolled up, and refuses one
+  that names nothing with the executable's REFUSED sentence — the amendment
+  of 2026-09-19 carried to the module it had left untouched.
+- **The two acts** are `IOperatorSurface.Control` on every surface; the
+  cmdlets' own pause and resume over the binding are gone.
+- **A validation** is the `ConfigurationVerdict` `xmip-cli validate`
+  renders; `Test-XmipNodeConfiguration` emits it in place of a shape of its
+  own.
+- **What a status code means** is `StatusMeaning` in `Xmip.Abi`, and a code
+  the header does not define is `unknown` on both faces (the cmdlet said
+  `Unknown`). **The two boundaries** are `AbiBoundaries`, and `Get-XmipAbi`
+  now says the operator boundary too. **Whether a probed module conforms**
+  is `ModuleProbe.Result.Complaint`, which the cmdlet now reports as the
+  executable always exited on it.
+- **A mood in text** is `English.Mood`'s word, lower case, on every command
+  (`xmip-cli health` printed the enum's name); **a figure** is
+  `English.Figure`'s, for the executable and the topology inspector alike;
+  **nothing at a scope** is `English.NothingAt`'s sentence on both faces.
+
+Each rule is tested once, where it lives — `Xmip.Surface.Test` and
+`Xmip.Abi.Tests` — and the faces' tests call through it. What the estate
+module (`Xmip/`, the script module) repeats of `Xmip.Surface` — a node's
+declared capability, a snapshot read record by record, the worst leaf — is
+not moved: no record says whether that module may load a built assembly, and
+the question is the owner's (open problem 25).
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a
@@ -941,3 +1020,11 @@ this record is correcting. A demo reads a published snapshot.
 The priority and the ruling on the button are the owner's, 2026-09-11. The
 survey, the library, its home and the clauses are the assistant's drafting
 of *consolidate, refactor and re-engineer if needed*.
+
+The ruling of 2026-09-24 — scope containment keeps two writers, held
+together by one shared set of cases, because a surface loads no Rust library
+— is the owner's; ADR-0027's Related line points back to it.
+
+The instruction of 2026-09-24 — the command line and PowerShell share, and
+logic goes down the layers — is the owner's; what moved where is the
+assistant's drafting of it.

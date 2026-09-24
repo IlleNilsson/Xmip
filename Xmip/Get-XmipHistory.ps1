@@ -74,11 +74,7 @@ function Get-XmipHistory {
     # and it is said rather than answered with silence (ADR-0055). Every
     # history the Playground published between 2026-09-05 and 2026-09-19 was
     # one of these, and nobody noticed because nothing said anything.
-    [object[]] $points = @()
-
-    if ($document.Contains('points')) {
-        $points = @($document.points)
-    }
+    [object[]] $points = @(Get-TomlValue -Node $document -Name 'points' -Default @())
 
     if ($points.Count -eq 0) {
         Write-Warning "The history at $Path holds no points; its producer wrote none."
@@ -105,7 +101,7 @@ function Get-XmipHistory {
 
         [PSCustomObject]@{
             PSTypeName = 'Xmip.History'
-            Node       = $document.node
+            Node       = Get-TomlValue -Node $document -Name 'node'
             Counted    = $point.counted
             Value      = [long] $point.value
             Observed   = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime

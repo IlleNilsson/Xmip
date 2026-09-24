@@ -220,3 +220,34 @@ What an operator gets instead, and how it is said:
 The compromise this strikes was the assistant's, made on 2026-09-19 and
 flagged at the time as the one place a name still carried meaning. It carried
 for a day.
+
+## Amendment, 2026-09-24: the node crate reads the words, lowercase exactly
+
+Open problem 25, row i: a declared capability was read three ways. The
+Playground and PowerShell refused an unknown word and ignored case;
+`Xmip.Surface` dropped an unknown word without a word and matched case
+exactly. The decision above is unchanged; how and where the words are read
+is now one rule.
+
+- **The words are exact lowercase only.** The owner, 2026-09-24: `receive`,
+  `process` and `send` are the words, and `RECEIVE` or `Send` is an unknown
+  word, refused with the same sentence as any other. No record had ruled on
+  case before; this is his ruling, not a reconciliation of the copies.
+- **`node::Stage` is the stage, and `Stage::declared` the one parse**
+  (`module/foundation/node/src/stage.rs`). Words are separated by commas or
+  `+`, blanks ignored, returned in path order, and any word that is not one
+  of the three is REFUSED, naming every such word and the words there are
+  (ADR-0055).
+- **The Playground reads through it**: `--can`, `--nodes` and a published
+  capability record alike. Its own `Stage` copy is gone; every verdict, hop
+  and scope uses the node's.
+- **PowerShell and `Xmip.Surface` keep a copy**, because neither reaches
+  Rust for this: the script module calls no native library, and a surface
+  reads a snapshot with no runtime loaded while `xmip_operate.h` carries no
+  such call. Both copies follow the same rule, and a refused declaration
+  reaches the surfaces as its refusal (`NodeCapability.Refusal`, said by
+  `Line()`). `test/XmipTest.Test.ps1` holds the three word lists and the
+  refusal sentence equal.
+
+Provenance: the case rule is the owner's, 2026-09-24. The rest is the
+assistant's drafting of problem 25's row.

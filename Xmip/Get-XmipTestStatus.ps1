@@ -73,13 +73,13 @@ function Get-XmipTestStatus {
             $record = Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Toml
         }
 
-        [string] $rolledAs = Get-XmipDeclaredText -Declaration $record -Key 'cluster'
+        [string] $rolledAs = [string](Get-TomlValue -Node $record -Name 'cluster' -Default '')
 
         if ($rolledAs -notlike $Cluster) {
             continue
         }
 
-        [string] $snapshot = if ($null -ne $record) { $record.snapshot } else { '' }
+        [string] $snapshot = [string](Get-TomlValue -Node $record -Name 'snapshot' -Default '')
         $worst = if (Test-Path -LiteralPath $snapshot) {
             Get-XmipTestResult -Path $snapshot -Worst
         }
@@ -92,7 +92,7 @@ function Get-XmipTestStatus {
         # earlier may say Playground and this says Core.Playground
         # (ADR-0059, amendment 2026-09-20). A roll started by hand has no
         # record and is the Playground by the binary it is.
-        [string] $named = Get-XmipDeclaredText -Declaration $record -Key 'suite'
+        [string] $named = [string](Get-TomlValue -Node $record -Name 'suite' -Default '')
         $ran = if ($named -ne '') {
             Get-XmipNamedTestSuite -Name $named -Known $suites | Select-Object -First 1
         }
@@ -107,15 +107,15 @@ function Get-XmipTestStatus {
             Cluster     = if ($rolledAs -ne '') { $rolledAs } else { $null }
             Id          = $roll.Id
             StartTime   = $roll.StartTime
-            Stress      = if ($null -ne $record) { $record.stress } else { $null }
-            Tests       = if ($null -ne $record) { @($record.tests) } else { @() }
-            Rounds      = if ($null -ne $record) { [int] $record.rounds } else { 0 }
+            Stress      = Get-TomlValue -Node $record -Name 'stress'
+            Tests       = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
+            Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
             Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
             OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
             Worst       = if ($null -ne $worst) { $worst.State } else { $null }
             Snapshot    = $snapshot
             Path        = if ($null -ne $record) { $Path } else { $null }
-            Log         = if ($null -ne $record) { $record.log } else { $null }
+            Log         = Get-TomlValue -Node $record -Name 'log'
         }
     }
 }

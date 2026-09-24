@@ -641,7 +641,7 @@ dependency = []
     primaryLanguage = "go"
     [xmip.core.contract.graphql-schema]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec"]
     specification = "GraphQL specification October 2021: the document grammar, held at the root to a schema"
     [xmip.core.contract.java]
     maturity = "scaffolded"
@@ -655,7 +655,7 @@ dependency = []
     specification = "OpenAPI 3.x and Swagger 2.0 in JSON; YAML is the next layer"
     [xmip.core.contract.protobuf]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-message"]
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core-library-codec"]
     specification = "Protocol Buffers wire format and the proto3 language, imports not followed"
     [xmip.core.contract.python]
     maturity = "scaffolded"
@@ -673,7 +673,7 @@ dependency = []
     primaryLanguage = "rust"
     [xmip.core.contract.sql]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec"]
     specification = "ISO/IEC 9075 statement syntax, vendor-neutral; statement kinds bind as the conformance claim"
     [xmip.core.contract.wsdl]
     maturity = "scaffolded"
@@ -733,7 +733,7 @@ dependency = []
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
     [xmip.core.path.fhirpath]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
     specification = "HL7 FHIRPath, the normative core over FHIR JSON"
     [xmip.core.path.index]
     maturity = "scaffolded"
@@ -743,11 +743,11 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
     [xmip.core.path.jsonpath]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
     specification = "IETF RFC 9535"
     [xmip.core.path.predicate]
     maturity = "scaffolded"
-    dependency = ["xmip-core-contract"]
+    dependency = ["xmip-core-contract", "xmip-core-library-codec"]
     specification = "A boolean expression over structured content: comparisons, and, or, not, exists"
     [xmip.core.path.regex]
     maturity = "scaffolded"
@@ -1062,7 +1062,6 @@ dependency = []
     [xmip.core.route.content]
     maturity = "scaffolded"
     dependency = [
-        "xmip-core",
         "xmip-core-message",
         "xmip-core-path",
         "xmip-core-path-dot",
@@ -1137,7 +1136,7 @@ dependency = []
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-library-codec"]
 
   [xmip.core.cluster]
   description = "Xmip Cluster model and node membership."
@@ -1250,6 +1249,7 @@ dependency = []
     [xmip.core.archive.file]
     description = "File archive target: one item is one file under a directory, its metadata beside it. A xmip-core-archive technology."
     maturity = "scaffolded"
+    dependency = ["xmip-core-library-codec"]
     [xmip.core.archive.gcs]
     description = "Google Cloud Storage archive target: one item is one object in a bucket. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1281,6 +1281,7 @@ dependency = []
     [xmip.core.archive.sql]
     description = "SQL script archive target: one item is one INSERT in a vendor-neutral script any database loads. A xmip-core-archive technology."
     maturity = "scaffolded"
+    dependency = ["xmip-core-library-codec"]
     specification = "ISO/IEC 9075 INSERT statements, one script per data type"
     [xmip.core.archive.sqlite]
     description = "SQLite archive target: one file, no server, the archive a single node keeps beside itself. A xmip-core-archive technology."
@@ -1428,7 +1429,7 @@ dependency = []
 
 
   [xmip.core.library.codec]
-  description = "Encoding primitives every layer shares: XML escaping, and the hex, base64, checksums, byte cursor and writer, varints, civil dates and lexer machinery that capabilities each wrote by hand until 2026-09-22. What a format means stays with the format; how its bytes and characters are written is here."
+  description = "Encoding primitives every layer shares: XML escaping and unescaping, TOML basic strings quoted and read back, and the character reader every lexer walks its text with: one copy of each, where capabilities each wrote their own. What a format means stays with the format; how its characters and bytes are written and read is here. Hex, base64, checksums, byte cursors, varints and civil dates are still to move here (open problem 25)."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

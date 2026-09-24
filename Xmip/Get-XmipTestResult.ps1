@@ -109,7 +109,19 @@ function Get-XmipTestResult {
     )
 
     if ($Worst) {
-        [object[]] $order = @(@{ Expression = 'Severity'; Descending = $true }, 'Scope')
+        # The mood first, then severity, then scope — ScopeTree.WorstFirst's
+        # order, so -Worst names the leaf every surface names. A word the
+        # snapshot reader does not know reads as Stressed there, and here.
+        [string[]] $moods = 'fine', 'paused', 'working', 'stressed', 'exhausted', 'done', 'holding'
+        [scriptblock] $rank = {
+            [int] $at = [array]::IndexOf($moods, "$($_.State)")
+            if ($at -lt 0) { 3 } else { $at }
+        }
+        [object[]] $order = @(
+            @{ Expression = $rank; Descending = $true }
+            @{ Expression = 'Severity'; Descending = $true }
+            'Scope'
+        )
 
         return $results | Sort-Object -Property $order | Select-Object -First 1
     }

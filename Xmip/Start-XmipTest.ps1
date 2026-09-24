@@ -154,9 +154,9 @@ function Start-XmipTest {
         .PARAMETER NodeCapability
             What each node declares it can do, stated per node: -Nodes alpha,
             beta -NodeCapability @{ alpha = 'receive'; beta = 'process,send' }.
-            The values are receive, process and send, one or more, separated
-            by commas or by plus; an unknown word, or a node -Nodes does not
-            name, is REFUSED before anything starts. A node the table does not
+            The values are receive, process and send, lowercase exactly, by
+            comma or plus; any other word ('Send' too), or a node -Nodes does
+            not name, is REFUSED before anything starts. A node the table does not
             name declares nothing. This is the only way a named node gets a
             capability; omit -Nodes instead and the level's complement deals
             them over the whole message path. ADR-0056 names two further kinds

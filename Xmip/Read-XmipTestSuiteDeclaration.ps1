@@ -49,9 +49,9 @@ function Read-XmipTestSuiteDeclaration {
     $declared = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
 
     [hashtable] $said = @{
-        provider = Get-XmipDeclaredText -Declaration $declared -Key 'provider'
-        name     = Get-XmipDeclaredText -Declaration $declared -Key 'name'
-        command  = Get-XmipDeclaredText -Declaration $declared -Key 'command'
+        provider = [string](Get-TomlValue -Node $declared -Name 'provider' -Default '')
+        name     = [string](Get-TomlValue -Node $declared -Name 'name' -Default '')
+        command  = [string](Get-TomlValue -Node $declared -Name 'command' -Default '')
     }
 
     Assert-XmipTestSuiteDeclaration -Said $said -Path $Path
@@ -109,47 +109,4 @@ function Assert-XmipTestSuiteDeclaration {
         throw ("REFUSED. $Path declares the provider core, which is reserved for Xmip " +
             'itself (ADR-0011). Name the provider who publishes the suite.')
     }
-}
-
-
-function Get-XmipDeclaredText {
-    <#
-        .SYNOPSIS
-            One string from a TOML declaration or a run record, and the empty
-            string when the key is absent.
-
-        .DESCRIPTION
-            Set-StrictMode turns a missing key into an error at the point it
-            is read, which would report a declaration's omission as a
-            property that does not exist. A declaration that forgot a key is
-            refused in words instead, and this is what lets it be.
-
-        .PARAMETER Declaration
-            What ConvertFrom-Toml returned, or nothing at all.
-
-        .PARAMETER Key
-            The key to read.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [AllowNull()]
-        [object] $Declaration,
-
-        [Parameter(Mandatory)]
-        [string] $Key
-    )
-
-    if ($null -eq $Declaration) {
-        return ''
-    }
-
-    [string[]] $keys = @($Declaration.Keys)
-
-    if ($keys -notcontains $Key) {
-        return ''
-    }
-
-    return "$($Declaration[$Key])"
 }
