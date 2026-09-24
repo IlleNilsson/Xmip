@@ -7,7 +7,8 @@
 - Related: ADR-0022 (identity classes and runtime isolation; the placement
   solver), ADR-0045 (offline is the default), ADR-0050 (an identity
   technology is one mechanism at one gate), ADR-0025 (module loading),
-  ADR-0052 (a node carries the roles suitable for its purpose), ADR-0009
+  ADR-0052 (a node carries the roles suitable for its purpose; amendment
+  2026-09-24, the surfaces call the node crate's parse), ADR-0009
   (configuration)
 
 ## In brief
@@ -248,6 +249,17 @@ is now one rule.
   reaches the surfaces as its refusal (`NodeCapability.Refusal`, said by
   `Line()`). `test/XmipTest.Test.ps1` holds the three word lists and the
   refusal sentence equal.
+
+  **Corrected the same day, 2026-09-24.** The owner: *Code shall be uniquely
+  placed, used by others, whom in turn has unique code used by others. It is
+  common sense.* Neither keeps a copy. The runtime's library exports the
+  words and the parse (`xmip_stage_words_v1`, `xmip_stage_declared_v1`,
+  `xmip_operate.h` section 7, forwarding to `node::Stage`);
+  `NodeCapability.Ordered` and `ScopeTree.Stages` call them, and the script
+  module's `ConvertTo-XmipNodeCapability` calls `NodeCapability.Ordered`
+  through the operator module it now loads. `test/XmipTest.Test.ps1` holds
+  that no word list is written outside the node crate (ADR-0052, amendment
+  "one implementation, and the surfaces call the runtime's exports").
 
 Provenance: the case rule is the owner's, 2026-09-24. The rest is the
 assistant's drafting of problem 25's row.

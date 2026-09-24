@@ -138,7 +138,10 @@ Describe 'Every estate path a document names exists' {
 
         [string[]] $missing = @(
             foreach ($document in $documents) {
-                [string] $text = Get-Content -LiteralPath (Join-Path $script:Root $document) -Raw
+                [string] $file = Join-Path $script:Root $document
+                # Listed by git and deleted in the working tree: nothing to read.
+                if (-not (Test-Path -LiteralPath $file)) { continue }
+                [string] $text = Get-Content -LiteralPath $file -Raw
                 if (-not $text) { continue }
                 foreach ($match in [regex]::Matches($text, '`((?:module|test)/[^`\s]+)`')) {
                     [string] $named = $match.Groups[1].Value.TrimEnd('/', '.', ',', ':')

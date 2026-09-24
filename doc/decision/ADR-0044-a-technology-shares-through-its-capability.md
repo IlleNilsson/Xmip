@@ -14,7 +14,7 @@
   does
 - Name: A technology shares through its capability
 - Order: 11
-- Concepts: Shared code; the capability crate; the carrier technology; copied files
+- Concepts: Shared code; the capability crate; the carrier technology; the vendor crate; copied files
 
 **Code that two technologies both need lives in the crate both already
 depend on: their parent capability, or the technology they both ride on. A
@@ -101,6 +101,67 @@ grow technologies, they ride on the same transports.
 - A shared module changes for every technology at once. That is the point,
   and it is why the change lands capability first, technologies after — the
   order `xgit` already keeps.
+
+## Amendment, 2026-09-24: what one vendor speaks is that vendor's crate
+
+On 2026-09-14 clause 1 put Signature Version 4, the AWS Query API, Azure's
+Shared Access Signature and a Service Bus namespace's answers in
+`xmip-core-transport-http`, because every technology that needed them rode
+on HTTP. The owner ruled on 2026-09-22 that they leave: they are not HTTP,
+they are what AWS and Azure speak over it, and a crate that is HTTP should
+hold HTTP. Two technologies were approved that day to hold them,
+`xmip-core-transport-aws` and `xmip-core-transport-azure`, and created on
+2026-09-24.
+
+- **A vendor crate is a carrier technology in clause 1's sense**, one layer
+  up: it rides on http, and the vendor's technologies ride on it. s3,
+  aws-sqs, aws-sns and aws-kinesis depend on `aws` for Signature Version 4,
+  the Query API and the JSON 1.1 protocol; azure-blob, azure-service-bus
+  and azure-event-hubs depend on `azure` for the Shared Access Signature,
+  Shared Key and a namespace's answers. azure-event-grid's topic key is its
+  own and stays with it.
+- **The vendor crate is not a transport.** It implements no `Transport`;
+  it is the shared dialect of a family, which is why it sits under the
+  capability beside the technologies it serves.
+- **http keeps HTTP**: the request and its answer, the endpoint,
+  percent-encoding, RFC 1123's date and the judgement of a status.
+  `x-amz-date` went to the AWS signer that reads it, once the civil
+  calendar both dates are written off had moved to `xmip-core-library-codec`
+  the same day.
+- **A signature is compared by the HMAC's own check**, `verify_slice`,
+  which takes the same time however far the two agree. The hand-written
+  constant-time compare http carried for the three signers is gone.
+
+Done 2026-09-24: both repositories created and mounted under
+`module/core/capability/transport/`, every caller moved, nothing re-exported
+from http.
+
+## Amendment, 2026-09-24: a dialect is a choice, not a copy
+
+Clause 2 left each SQL technology "its own quoting". Five crates read that as
+writing the rule itself: a literal between quotes with the quote doubled, an
+identifier between delimiters with the closing one doubled. That rule is the
+same everywhere; only which delimiter is the dialect's. The `MySQL` and
+`PostgreSQL` far ends had it wrong, reading `` `in``box` `` and `"in""box"` as
+ending at the first doubled delimiter.
+
+- **The doubling is `codec::sql::Delimiter`'s** (`xmip-core-library-codec`,
+  the lowest crate the SQL transports, the SQL script archive and the SQL
+  contract all reach): `quote`, and `read` over the character reader. A
+  dialect names the delimiter — `'`, `"`, `[`…`]`, a backtick — and keeps
+  what is truly its own: T-SQL's `N` prefix, `MySQL`'s backslash escapes.
+- **An archive in a SQL server's table is one type**, `archive::sql::SqlArchive<D>`
+  in the archive capability, with the row, its INSERT and SELECT and the
+  receipt. What clause 2 leaves the technology is the `archive::sql::Dialect`
+  it implements — quoting, the bytes literal and how they come back, how a
+  new row's id is asked for, the moment's form — and the connection through
+  its transport technology. `SqlServer`, `MySql` and `PostgreSql` are all
+  that archive-mssql, -mysql and -postgresql hold.
+- **One protocol is one technology.** `rabbitmq` rode AMQP 0-9-1 with a
+  second copy of `amqp`'s frame, methods, content, client and session. It
+  now depends on `amqp`, a declared sibling carrier in clause 1's sense, and
+  keeps RabbitMQ's idiom: the queue as the Location, the default exchange,
+  a durable declaration before a publish, persistence and `rabbitmq://`.
 
 ## Provenance
 

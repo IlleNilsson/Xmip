@@ -462,3 +462,33 @@ Describe 'The estate is more than its modules' {
         }
     }
 }
+
+Describe 'Configuring repositories' {
+    # -Only was ignored here, so creating two repositories reconfigured all of
+    # them, and GitHub's 350-character limit refused a description after the
+    # ones before it had changed (found 2026-09-24).
+    It 'configures only what -Only names, and judges every description first' {
+        InModuleScope Xmip {
+            Mock Invoke-GitHubApi { }
+            Mock Write-Step { }
+            $manifest = [pscustomobject]@{
+                owner        = 'example'
+                repositories = @(
+                    [pscustomobject]@{ name = 'xmip-a'; description = 'short' }
+                    [pscustomobject]@{ name = 'xmip-b'; description = 'short' }
+                    [pscustomobject]@{ name = 'xmip-long'; description = 'x' * 351 }
+                )
+            }
+            $github = @{ Token = 'token' }
+            $report = [ordered]@{ missing = @(); operations = @{ configured = 0; skipped = 0 } }
+            [hashtable] $estate = @{ Manifest = $manifest; Report = $report; GitHub = $github }
+
+            Invoke-ConfigureRepositories @estate -Only 'xmip-b'
+            Should -Invoke Invoke-GitHubApi -Times 1 -Exactly
+            $report.operations.configured | Should -Be 1
+
+            { Invoke-ConfigureRepositories @estate -Only 'xmip-z' } | Should -Throw '*not declared*'
+            { Invoke-ConfigureRepositories @estate } | Should -Throw '*350 characters*xmip-long*'
+        }
+    }
+}

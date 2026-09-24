@@ -228,3 +228,5 @@ xmip_modules:
   - { name: xmip-core-identify-username, start: false }
   - { name: xmip-core-transport-peppol, start: false }
   - { name: xmip-core-transport-sftp, start: false }
+  - { name: xmip-core-transport-aws, start: false }
+  - { name: xmip-core-transport-azure, start: false }

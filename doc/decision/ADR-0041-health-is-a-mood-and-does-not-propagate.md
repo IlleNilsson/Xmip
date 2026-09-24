@@ -3,7 +3,9 @@
 - Status: Accepted
 - Date: 2026-09-06
 - Related: ADR-0027 (the operator boundary, amendment 2026-09-05 "three states,
-  no fourth"), ADR-0028 (the Playground), doc/architecture/observability-model.md
+  no fourth"; amendment 2026-09-24, the mood's word, color and order exported),
+  ADR-0028 (the Playground), ADR-0052 (amendment 2026-09-24, one
+  implementation), doc/architecture/observability-model.md
 
 ## In brief
 
@@ -104,7 +106,10 @@ time in the GUI and a third time, disagreeing, in the PowerShell prompt — whic
 cannot read a stylesheet. The mapping now has two halves. Its *name* — Fine
 green, Paused slate, Working blue, Stressed yellow, Exhausted burnt, Done red,
 Holding orange, unknown muted — is said once, in `Xmip.Surface` beside the
-English for a mood (`English.Color`). Its *paint* stays where clause 1 put it:
+English for a mood (`English.Color`). *(Corrected 2026-09-24: once, in
+`observe::Health::color` beside the mood itself; `English.Color` calls it
+through the runtime's `xmip_health_color_v1`, and only "muted", for a value
+the runtime does not define, is the surface's — see below.)* Its *paint* stays where clause 1 put it:
 the stylesheet renders each name to the estate's tokens, and a console prompt
 renders each name to the nearest console color — for the prompt, posh-git's
 palette, as ADR-0052's amendments of 2026-09-15 rule (clarified 2026-09-24,
@@ -115,6 +120,21 @@ mood is called, and no other stylesheet.
 
 Drafted by the assistant on the owner's instruction to consolidate, refactor
 and re-engineer, 2026-09-14; the names are the ones clause 1 already listed.
+
+**Corrected 2026-09-24.** The owner: *Code shall be uniquely placed, used by
+others, whom in turn has unique code used by others. It is common sense.* The
+name had one home in .NET and a table in the stylesheet besides — each mood's
+class painted its token directly — and the words a mood is called by were
+written in C# and in the Playground again. Now a mood's word, the mood a word
+names, its color's name and the worst-first order are `observe::Health` and
+`observe::Standing`, written once in Rust; the runtime's library forwards them
+(`xmip_operate.h` section 7) and `English` calls them. The stylesheet paints
+*names*: an element in a mood carries the mood's word and its color's name
+(`MoodClass` in `Xmip.Gui`), the sheet renders each name to its token as
+`--mood`, and no rule gives a mood a color — `Xmip.Gui.Test`'s
+`StylesheetTest` holds that. The console prompt renders names as it did.
+ADR-0052's amendment "one implementation, and the surfaces call the runtime's
+exports" is the record of the move.
 
 ## Provenance
 

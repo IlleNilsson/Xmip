@@ -4,8 +4,10 @@
 - Date: 2026-09-03
 - Related: ADR-0014 (the operator surfaces), ADR-0012 (the module boundary),
   ADR-0018 (the Service and the Host Services), ADR-0022 (identity classes),
-  ADR-0052 (amendment 2026-09-24: clause 3's containment, written in
-  `observe::Scope` and `ScopeTree`, held to one set of cases)
+  ADR-0052 (amendments 2026-09-24: clause 3's containment once, in
+  `observe::Scope`, and the surfaces call the runtime's exports; the earlier
+  one that had two writers is struck), ADR-0041 (a mood's color name),
+  ADR-0056 (the stage words)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
 ## In brief
@@ -301,6 +303,51 @@ Proposed by an assistant session on 2026-09-12, in five pull requests that
 merged without the record. The owner accepted the two counts on 2026-09-14 and
 declined the rest of the proposal — ADR-0052's amendment of the same date says
 what and why.
+
+## Amendment, 2026-09-24: section 7, the rules a surface calls
+
+The owner, 2026-09-24: *Code shall be uniquely placed, used by others, whom in
+turn has unique code used by others. It is common sense.* The surfaces wrote
+again what the runtime's crates already decide — whether one scope is beneath
+another (clause 3), the stage words, what a mood is called and painted, which
+record is the worst — and a language boundary was the reason given. It is not
+one: the boundary is crossed. `xmip_operate.h` gains a section 7 of eight
+exported symbols, each a thin forwarder into the crate that owns the rule and
+no rule of its own:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_scope_contains_v1` | `observe::Scope::contains` |
+| `xmip_scope_parts_v1` | `observe::Scope::segments` |
+| `xmip_stage_words_v1` | `node::Stage::WORDS` |
+| `xmip_stage_declared_v1` | `node::Stage::declared` |
+| `xmip_health_word_v1` | `observe::Health::word` |
+| `xmip_health_named_v1` | `observe::Health::named` |
+| `xmip_health_color_v1` | `observe::Health::color` |
+| `xmip_health_order_v1` | `observe::Standing::worst_first` |
+
+**Versioned by clause 2's own rule, additively.** Each is a separate optional
+symbol with its version in its name, as `xmip_wait_change_v1` was: the
+version-1 table is untouched and `XMIP_OPERATE_VERSION` stays 1, because no
+existing symbol changed shape. A runtime that predates section 7 lacks the
+symbols, and a surface binding them says which one is missing rather than
+failing on a call. A change to one of them is a `_v2` beside it.
+
+**Pure, and outside clause 6's concern.** None reads the snapshot or holds a
+table, so none can make execution wait; each may be called from any thread,
+before any node started. Strings come back borrowed from the caller's own
+input or static in the library, and nothing handed back is freed by the
+caller. Every call returns a status: `XMIP_E_MALFORMED` for text that is not
+UTF-8, `XMIP_E_INVALID` for a mood section 3 does not define or a declaration
+naming a word that is no stage — its REFUSED sentence written into the
+caller's buffer the way `xmip_validate_v1` writes its report — and
+`XMIP_E_NOT_FOUND` for a word that names no mood.
+
+The runtime's `rule.rs` implements them; `xmip-core-abi`'s `operate::rule`
+declares their shapes, and the runtime's tests fail to compile if an export
+drifts from them; `Xmip.Abi`'s `RuntimeRules` binds them once for every .NET
+surface. ADR-0052's amendment of the same date says who calls each.
+
 
 ## Alternatives considered
 

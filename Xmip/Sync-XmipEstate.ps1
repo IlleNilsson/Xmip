@@ -227,7 +227,7 @@ function Sync-XmipEstate {
         Invoke-CreateRepositories @creating
     }
     if ($Configure) {
-        Invoke-ConfigureRepositories -Manifest $manifest -Report $drift -GitHub $GitHub
+        Invoke-ConfigureRepositories -Manifest $manifest -Report $drift -GitHub $GitHub -Only $Only
     }
     if ($Compose) { Invoke-Compose -Manifest $manifest -Actual $actual }
     if ($Cargo) { Invoke-Cargo }

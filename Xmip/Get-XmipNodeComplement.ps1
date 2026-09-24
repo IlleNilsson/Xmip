@@ -55,7 +55,8 @@ function ConvertFrom-XmipRosterText {
     [string[]] $words = @(
         $declared.Values | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' }
     )
-    [string[]] $missing = @($script:XmipNodeCapability | Where-Object { $_ -notin $words })
+    Import-XmipOperatorModule
+    [string[]] $missing = @([Xmip.Surface.ScopeTree]::Stages | Where-Object { $_ -notin $words })
 
     return [PSCustomObject]@{
         Nodes          = $nodes

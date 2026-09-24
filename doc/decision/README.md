@@ -1023,6 +1023,7 @@ You have a word. This gives you the decision that governs it.
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
+| the vendor crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the whole suite | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |

@@ -153,7 +153,8 @@ function Invoke-ConfigureRepositories {
     param(
         [Parameter(Mandatory)] $Manifest,
         [Parameter(Mandatory)] [System.Collections.IDictionary] $Report,
-        [Parameter(Mandatory)] [hashtable] $GitHub
+        [Parameter(Mandatory)] [hashtable] $GitHub,
+        [string[]] $Only = @()
     )
 
     if (-not $GitHub.Token) {
@@ -164,7 +165,29 @@ function Invoke-ConfigureRepositories {
     $missing = [Collections.Generic.HashSet[string]]::new(
         [string[]]@($Report.missing), [StringComparer]::OrdinalIgnoreCase)
 
-    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
+    # -Only narrows configuring as it narrows creating: it was ignored here, so
+    # creating two repositories reconfigured all of them (found 2026-09-24).
+    [object[]] $declared = @(Get-PropertyValue $Manifest 'repositories' @())
+    [string[]] $names = @($declared | ForEach-Object { [string](Get-PropertyValue $_ 'name') })
+    foreach ($wanted in $Only) {
+        if ($wanted -notin $names) {
+            throw "-Only '$wanted' is not declared in the manifest; nothing is configured by guess."
+        }
+    }
+    [object[]] $chosen = @($declared | Where-Object {
+            $Only.Count -eq 0 -or [string](Get-PropertyValue $_ 'name') -in $Only })
+
+    # GitHub refuses a description over 350 characters, and refused it after
+    # every repository before it was configured. Every one is judged first.
+    [string[]] $long = @($chosen | Where-Object {
+            ([string](Get-PropertyValue $_ 'description')).Length -gt 350 } |
+            ForEach-Object { [string](Get-PropertyValue $_ 'name') })
+    if ($long.Count -gt 0) {
+        throw ("REFUSED: GitHub takes a description of 350 characters or fewer, and " +
+            "architecture.toml gives more for $($long -join ', ').")
+    }
+
+    foreach ($repository in $chosen) {
         $name = [string](Get-PropertyValue $repository 'name')
 
         # Nothing to configure on a repository that does not exist.

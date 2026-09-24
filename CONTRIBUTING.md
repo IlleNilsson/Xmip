@@ -72,6 +72,14 @@ and it cost real work.
   one that is absent. Where the relationship can be checked, **write the test
   rather than trusting the next reader to remember** — that is what the rest
   of these rules are, and why they hold.
+- **Code is placed once, and everything else uses it.** A rule, a parse, a
+  word list or an order has exactly one implementation, in the lowest layer
+  that owns it; every layer above calls it, and that layer's own code is in
+  turn the one others call. A second copy held equal by a test is still a
+  second copy, and a language boundary is not a reason for one: the surface
+  calls across it. The owner, 2026-09-24: *Code shall be uniquely placed,
+  used by others, whom in turn has unique code used by others. It is common
+  sense.*
 - Ask the owner before breaking any recommendation, deleting non-trivial
   content, or deciding anything two records disagree on. He answers fast and
   dislikes discovering decisions after the fact far more than being asked.

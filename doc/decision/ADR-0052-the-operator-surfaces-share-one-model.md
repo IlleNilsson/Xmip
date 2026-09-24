@@ -5,9 +5,11 @@
 - Related: ADR-0014 (the operator surfaces; amendments 2026-08-26, the ABI
   is the interface into Xmip; 2026-09-05, the web GUI monitors; 2026-09-09,
   the .NET binding is one project in xmip-core-abi; 2026-09-10, the
-  configuration tool has two faces), ADR-0027 (the operator boundary),
-  ADR-0041 (health is a mood and does not propagate), ADR-0044 (a technology
-  shares through its capability)
+  configuration tool has two faces), ADR-0027 (the operator boundary;
+  amendment 2026-09-24, section 7's rules), ADR-0041 (health is a mood and
+  does not propagate; its color name corrected 2026-09-24), ADR-0044 (a
+  technology shares through its capability), ADR-0056 (a node declares what
+  it can do; its copies corrected 2026-09-24)
 
 ## In brief
 
@@ -91,6 +93,10 @@ depend. It holds:
 - Runtime discovery, one rule for every surface: the configuration's
   `Xmip:RuntimeLibrary`, else `XMIP_RUNTIME_LIBRARY`, else the library
   beside the executable. The language server keeps the same rule in Rust.
+  *(Amended 2026-09-24: it does not. The rule is written once, in
+  `RuntimeLibrary`, and the language server is told its library — the
+  amendment "one implementation, and the surfaces call the runtime's
+  exports".)*
 - A status said in English, once.
 - The configuration document, read once: TOML, the same reader everywhere.
 
@@ -927,6 +933,14 @@ scope in neither.
 
 ## Amendment, 2026-09-24: scope containment has two writers and one set of cases
 
+**Struck by the owner, 2026-09-24:** *Code shall be uniquely placed, used by
+others, whom in turn has unique code used by others. It is common sense.* Two
+writers held to one set of cases are two copies, and a language boundary is no
+reason for a second: the surface calls across it. The amendment "one
+implementation, and the surfaces call the runtime's exports", below, replaces
+this one; `src/scope-vector.toml` and both tests that read it are gone. What
+follows is kept as it was ruled, so the record shows what was struck.
+
 Open problem 25, row k: `ScopeTree.Beneath` read a scope by its path, the
 scheme and the authority gone as ADR-0027 clause 3 says, while the runtime's
 `observe` compared the whole text — so `xmip://edge-01/n/receive/a` was
@@ -1002,7 +1016,71 @@ Each rule is tested once, where it lives — `Xmip.Surface.Test` and
 module (`Xmip/`, the script module) repeats of `Xmip.Surface` — a node's
 declared capability, a snapshot read record by record, the worst leaf — is
 not moved: no record says whether that module may load a built assembly, and
-the question is the owner's (open problem 25).
+the question is the owner's (open problem 25). *(Moved the same day: the
+script module loads the operator module and calls it — the next amendment.)*
+
+## Amendment, 2026-09-24: one implementation, and the surfaces call the runtime's exports
+
+The owner, 2026-09-24: *Code shall be uniquely placed, used by others, whom in
+turn has unique code used by others. It is common sense.* And, against
+collapsing everything into one place: layered, one home per concept. The
+amendment "scope containment has two writers and one set of cases", above, is
+struck by it. Each rule below has one implementation, in the crate that owns
+it; the runtime's native library forwards it to the surfaces as a C export —
+one call into the owner and no logic of its own (`xmip_operate.h` section 7,
+ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
+(`RuntimeRules`); and every surface calls it.
+
+| Concept | The one implementation | Export | Callers |
+|---|---|---|---|
+| Scope containment, a scope's parts | `observe::Scope::contains`, `Scope::segments` (xmip-core-observe) | `xmip_scope_contains_v1`, `xmip_scope_parts_v1` | `ScopeTree.Beneath` and `Parts`, and through them `ScopeIndex`, `ScopePattern`, every face, and the script module's `Get-XmipTestResult` |
+| The stage words, a declaration's parse | `node::Stage::WORDS`, `Stage::declared` (xmip-core-node) | `xmip_stage_words_v1`, `xmip_stage_declared_v1` | `ScopeTree.Stages`, `NodeCapability.Ordered`, and the script module's `ConvertTo-XmipNodeCapability`, its RoundTrip refusal and its roster reading |
+| A mood's word, the mood a word names, its color's name | `observe::Health::word`, `named`, `color` (xmip-core-observe) | `xmip_health_word_v1`, `xmip_health_named_v1`, `xmip_health_color_v1` | `English.Mood`, `MoodOf`, `Color`, and through them `SnapshotOperator`, the GUI (`MoodClass`), the prompt (`SegmentRender.Traffic`), the command line and `Get-XmipTestResult`; the Playground's publisher, which is Rust, calls `Health::word` and `named` itself |
+| The worst-first order | `observe::Standing` and `Standing::worst_first` (xmip-core-observe), which `Snapshot::health` sorts by | `xmip_health_order_v1` | `ScopeTree.WorstFirst`, `Worst` and `Branches`, `ScopeIndex` (one call per publication, every "which is worse" after it a lookup of the runtime's answer), the prompt's worst stage and `Get-XmipTestResult -Worst` |
+| Runtime discovery | `RuntimeLibrary` (`Xmip.Surface`) | none: it finds the library the others are called in | every .NET surface and, through the operator module, the script module |
+
+- **Every surface loads the runtime library**, a snapshot or a remote one as
+  much as a native one. `RuntimeLibrary.Rules` loads it once per process: the
+  library the surface's own configuration found (`Find`, `Stated`), else the
+  rule with nothing configured, beside `Xmip.Surface`'s own assembly — beside
+  the executable, or beside the module in PowerShell. A surface with no
+  runtime says where it looked and how to put one there, and answers no rule
+  from a copy. "A surface loads no Rust library", the reason of the struck
+  amendment, is withdrawn with it.
+- **Runtime discovery is the one rule a surface cannot ask the runtime for**:
+  it has to find the library before it can call anything in it, so the rule
+  is written once, in `RuntimeLibrary`, and nowhere else. The Rust copy the
+  language server used (`abi::runtime_library`) is deleted, and the server
+  looks for no library of its own: it loads the one `--runtime` names, which
+  the VS Code extension passes from its `xmip.runtime.library` setting, and
+  says on every validation when none is named. A Rust process cannot call a
+  .NET rule, and a .NET surface cannot call a Rust one before the library is
+  found; one writing, and the Rust consumer told, is the only way to one.
+- **In a composed estate the runtime lies beside every .NET output.**
+  `Xmip.Abi`'s project copies the library `cargo build` leaves in
+  xmip-core-runtime's `target/debug` into the output of everything that
+  references it — the cli, the PowerShell module, the GUI hosts and each test
+  project — where the rule's last resort finds it. A deployment puts its own
+  there.
+- **The script module uses the operator module.** `Xmip/` builds
+  `Xmip.PowerShell` into a directory of the session's own on the first command
+  that needs it and imports its binary module — never from the project's
+  `bin/`, which it would lock, and without the prompt integration
+  (`Import-XmipOperatorModule`). `ConvertTo-XmipNodeCapability` calls
+  `NodeCapability.Ordered`; `Get-XmipTestResult` reads a snapshot through
+  `SnapshotOperator`, which now says the scope it publishes at (`Root()`),
+  lists it worst first and names the worst by `ScopeTree.Worst`. Its word
+  list, its TOML walk and its mood ranking are gone.
+- **The stylesheet paints names, not moods.** An element in a mood carries the
+  mood's word and its color's name (`MoodClass`); the sheet renders each name
+  to its token as `--mood` and decides no mood's color (ADR-0041's amendment
+  of 2026-09-14, corrected the same day).
+- **Each rule is tested once, where it is written** — `observe`'s `scope.rs`
+  and `health.rs`, `node`'s `stage.rs` — and the runtime's `rule.rs` proves
+  each export forwards and has the shape `xmip-core-abi` declares.
+  `Xmip.Abi.Tests` proves the crossing, `Xmip.Surface.Test` that the surface
+  returns what the export returns, and `test/XmipTest.Test.ps1` and
+  `Xmip.Gui.Test`'s `StylesheetTest` that no copy is written again.
 
 ## Alternatives considered
 
@@ -1023,7 +1101,15 @@ of *consolidate, refactor and re-engineer if needed*.
 
 The ruling of 2026-09-24 — scope containment keeps two writers, held
 together by one shared set of cases, because a surface loads no Rust library
-— is the owner's; ADR-0027's Related line points back to it.
+— is the owner's, and he struck it the same day: *Code shall be uniquely
+placed, used by others, whom in turn has unique code used by others. It is
+common sense.* The amendment that replaces it — one implementation per
+concept in its owning crate, forwarded by the runtime's exports and called by
+every surface — is the owner's ruling and the lead's design, drafted by the
+assistant; the choice of .NET as the one home of runtime discovery, with the
+language server told its library, is the assistant's, for the owner to
+overrule. ADR-0027's amendment of 2026-09-24 declares the exports, and
+ADR-0041's and ADR-0056's amendments point here.
 
 The instruction of 2026-09-24 — the command line and PowerShell share, and
 logic goes down the layers — is the owner's; what moved where is the

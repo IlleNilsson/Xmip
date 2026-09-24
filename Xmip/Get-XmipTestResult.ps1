@@ -13,8 +13,10 @@ function Get-XmipTestResult {
             A snapshot is published by a roll, so what this reads is the
             Playground's and says so.
             Reads the snapshot TOML a roll writes after every round (ADR-0028
-            clause 4: a verdict is health, per scope) and emits one object per
-            record, with the scope split into what an operator filters on.
+            clause 4: a verdict is health, per scope) through the surfaces' own
+            reader, Xmip.Surface's SnapshotOperator in the operator module, and
+            emits one object per record, worst first, with the scope split into
+            what an operator filters on.
             A record under `node/<name>` is that node's, and `node` alone
             is the cluster's rollup of its nodes. A role node publishes its
             stage of RoundTrip under its name, as
@@ -39,7 +41,9 @@ function Get-XmipTestResult {
             Only records published by these nodes, wildcards allowed.
 
         .PARAMETER Worst
-            Only the single worst record — highest severity, first by scope.
+            Only the single worst record, by the order every surface ranks by
+            (ScopeTree.Worst): the worse mood, then the higher severity, then
+            the scope.
 
         .EXAMPLE
             Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -80,60 +84,77 @@ function Get-XmipTestResult {
         return
     }
 
-    Import-Module PSToml -ErrorAction Stop
-    $document = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
-    [string] $root = "$($document.node)/"
+    # Read by the surfaces' own snapshot reader and ranked by the runtime's
+    # worst-first order: this module keeps no reader, no mood words and no
+    # ranking of its own (the owner, 2026-09-24: code is placed once).
+    Import-XmipOperatorModule
+    # A full path: .NET does not share this session's location.
+    $surface = [Xmip.Surface.SnapshotOperator]::new((Resolve-Path -LiteralPath $Path).ProviderPath)
+    [string] $root = $surface.Root()
 
-    [object[]] $results = @(
-        foreach ($record in @($document.records)) {
+    [object[]] $kept = @(
+        foreach ($record in @($surface.Health([Xmip.Surface.ScopeTree]::Root))) {
             $result = ConvertTo-XmipTestResult -Record $record -Root $root
 
-            if ($PSBoundParameters.ContainsKey('Test')) {
-                [bool] $wanted = @($Test | Where-Object { $result.Test -like $_ }).Count -gt 0
-
-                if (-not $wanted) {
-                    continue
-                }
+            if (-not (Test-XmipTestResultWanted -Result $result -Test $Test -Node $Node)) {
+                continue
             }
 
-            if ($PSBoundParameters.ContainsKey('Node')) {
-                [bool] $matched = @($Node | Where-Object { $result.Node -like $_ }).Count -gt 0
-
-                if (-not $matched) {
-                    continue
-                }
-            }
-
-            $result
+            [PSCustomObject]@{ Record = $record; Result = $result }
         }
     )
 
     if ($Worst) {
-        # The mood first, then severity, then scope — ScopeTree.WorstFirst's
-        # order, so -Worst names the leaf every surface names. A word the
-        # snapshot reader does not know reads as Stressed there, and here.
-        [string[]] $moods = 'fine', 'paused', 'working', 'stressed', 'exhausted', 'done', 'holding'
-        [scriptblock] $rank = {
-            [int] $at = [array]::IndexOf($moods, "$($_.State)")
-            if ($at -lt 0) { 3 } else { $at }
-        }
-        [object[]] $order = @(
-            @{ Expression = $rank; Descending = $true }
-            @{ Expression = 'Severity'; Descending = $true }
-            'Scope'
-        )
+        $worstRecord = [Xmip.Surface.ScopeTree]::Worst(
+            [Xmip.Abi.Operate.HealthRecord[]] @($kept | ForEach-Object { $_.Record }))
 
-        return $results | Sort-Object -Property $order | Select-Object -First 1
+        return $kept |
+            Where-Object { [object]::ReferenceEquals($_.Record, $worstRecord) } |
+            Select-Object -First 1 -ExpandProperty Result
     }
 
-    return $results
+    return $kept | ForEach-Object { $_.Result }
+}
+
+function Test-XmipTestResultWanted {
+    <#
+        .SYNOPSIS
+            Whether one result is among the tests and the nodes asked for:
+            each list a set of wildcards, and an absent list wants all.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [PSObject] $Result,
+
+        [Parameter()]
+        [AllowNull()]
+        [string[]] $Test,
+
+        [Parameter()]
+        [AllowNull()]
+        [string[]] $Node
+    )
+
+    if ($null -ne $Test -and @($Test | Where-Object { $Result.Test -like $_ }).Count -eq 0) {
+        return $false
+    }
+
+    return ($null -eq $Node -or @($Node | Where-Object { $Result.Node -like $_ }).Count -gt 0)
 }
 
 function ConvertTo-XmipTestResult {
     <#
         .SYNOPSIS
-            One snapshot record as an Xmip.TestResult, its scope split
+            One published record as an Xmip.TestResult, its scope split
             into scenario, node, transport and contract.
+
+        .PARAMETER Record
+            A Xmip.Abi.Operate.HealthRecord, as SnapshotOperator reads it.
+
+        .PARAMETER Root
+            The scope the publisher publishes at; what is beneath it is split.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]
@@ -145,13 +166,13 @@ function ConvertTo-XmipTestResult {
         [string] $Root
     )
 
-    [string] $leaf = "$($Record.scope)"
+    [string[]] $segments = @([Xmip.Surface.ScopeTree]::Parts($Record.Scope))
 
-    if ($leaf.StartsWith($Root, [System.StringComparison]::Ordinal)) {
-        $leaf = $leaf.Substring($Root.Length)
+    if ([Xmip.Surface.ScopeTree]::Beneath($Record.Scope, $Root)) {
+        [int] $above = [Xmip.Surface.ScopeTree]::Parts($Root).Count
+        $segments = @($segments | Select-Object -Skip $above)
     }
 
-    [string[]] $segments = @($leaf -split '/')
     [string] $node = ''
 
     if ($segments.Count -ge 2 -and $segments[0] -eq 'node') {
@@ -162,15 +183,13 @@ function ConvertTo-XmipTestResult {
     # A node that declared a stage publishes it straight under its own name,
     # whatever that name is: node/<node>/receive/tcp/json is RoundTrip's, as
     # round-trip/receive/tcp/json is when the roll runs the test whole. The
-    # stage is read from the path, never from the node's name.
+    # stage is read from the path, by the node crate's own words, never from
+    # the node's name.
     if ($node -ne '' -and $segments.Count -ge 1 -and
-        $segments[0] -in 'receive', 'process', 'send') {
+        [Xmip.Surface.ScopeTree]::Stages.Contains($segments[0])) {
         $segments = @('round-trip') + $segments
     }
 
-    [long] $millis = [long] ([long] $Record.observed_unix_nanos / 1000000)
-    [string[]] $rest = @($segments | Select-Object -Skip 2)
-    [string] $contract = $rest -join '/'
     [string] $scenario = if ($segments.Count -ge 1) { $segments[0] } else { '' }
 
     return [PSCustomObject]@{
@@ -180,11 +199,11 @@ function ConvertTo-XmipTestResult {
         Scenario   = $scenario
         Node       = $node
         Transport  = if ($segments.Count -ge 2) { $segments[1] } else { '' }
-        Contract   = $contract
-        State      = "$($Record.state)"
-        Severity   = [int] $Record.severity
-        Evidence   = "$($Record.evidence)"
-        Observed   = [DateTimeOffset]::FromUnixTimeMilliseconds($millis).LocalDateTime
-        Scope      = "$($Record.scope)"
+        Contract   = @($segments | Select-Object -Skip 2) -join '/'
+        State      = [Xmip.Surface.English]::Mood($Record.State)
+        Severity   = [int] $Record.Severity
+        Evidence   = $Record.Evidence
+        Observed   = $Record.Observed.LocalDateTime
+        Scope      = $Record.Scope
     }
 }
