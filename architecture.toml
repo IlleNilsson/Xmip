@@ -399,12 +399,12 @@ dependency = []
     specification = "IEC 61131-9, single-drop digital communication interface"
     [xmip.core.transport.iso-tp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-can-bus"]
+    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk"]
     specification = "ISO 15765-2, segmentation for payloads larger than a CAN frame"
     [xmip.core.transport.j1939]
     maturity = "scaffolded"
     description = "J1939 transport: SAE J1939 over CAN — 29-bit identifiers of priority, parameter group and source address, and the transport protocol, BAM and RTS/CTS, for a payload of up to 1785 bytes. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-can-bus"]
+    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk"]
     specification = "SAE J1939"
     [xmip.core.transport.knx]
     maturity = "scaffolded"
@@ -425,7 +425,7 @@ dependency = []
     [xmip.core.transport.obd-ii]
     maturity = "scaffolded"
     description = "OBD-II transport: SAE J1979 over ISO-TP — mode 01 parameters and mode 09 vehicle information asked at the functional address 0x7DF and answered from 0x7E8; a Receive Location polls one, a Send Location answers one as the ECU. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk"]
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
     maturity = "scaffolded"
@@ -446,7 +446,7 @@ dependency = []
     [xmip.core.transport.uds]
     maturity = "scaffolded"
     description = "UDS transport: ISO 14229 diagnostics over ISO-TP — a Send Location writes a data identifier, by WriteDataByIdentifier or a download in TransferData blocks; a Receive Location serves one as an ECU would, and the bytes written to it arrive as a Stream. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk"]
     specification = "ISO 14229, unified diagnostic services"
     [xmip.core.transport.wireless-hart]
     maturity = "scaffolded"
@@ -505,6 +505,7 @@ dependency = []
     [xmip.core.transport.can-bus]
     maturity = "scaffolded"
     specification = "ISO 11898, classical CAN frames; SocketCAN on Linux, an in-process loopback bus everywhere"
+    dependency = ["xmip-core-sdk"]
     [xmip.core.transport.file]
     maturity = "scaffolded"
     specification = "Platform file-system behaviour and the Rust standard library file APIs"

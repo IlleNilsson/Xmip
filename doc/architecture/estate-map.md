@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 145981 lines of production
+Where each repository mounts and what it holds: 146180 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -76,7 +76,7 @@ nowhere — work not begun, not work unmounted. There are 78 of them and they
 hold no source to count.
 
 ```text
-├── sdk                                          227
+├── sdk                                          377
 ├── module/
 │   ├── core/
 │   │   ├── capability/
@@ -131,7 +131,7 @@ hold no source to count.
 │   │   │   │   ├── hart                         853
 │   │   │   │   ├── mdns                         848
 │   │   │   │   ├── bluetooth                    844
-│   │   │   │   ├── uds                          822
+│   │   │   │   ├── uds                          828
 │   │   │   │   ├── wireless-hart                811
 │   │   │   │   ├── aws-kinesis                  804
 │   │   │   │   ├── azure-event-grid             792
@@ -139,7 +139,7 @@ hold no source to count.
 │   │   │   │   ├── ethernet-ip                  791
 │   │   │   │   ├── mqtt                         789
 │   │   │   │   ├── dhcp                         780
-│   │   │   │   ├── j1939                        756
+│   │   │   │   ├── j1939                        759
 │   │   │   │   ├── dns                          749
 │   │   │   │   ├── as2                          734
 │   │   │   │   ├── azure-blob                   730
@@ -155,12 +155,12 @@ hold no source to count.
 │   │   │   │   ├── zigbee                       667
 │   │   │   │   ├── nats                         661
 │   │   │   │   ├── aws-sqs                      644
+│   │   │   │   ├── iso-tp                       636
 │   │   │   │   ├── coap                         635
-│   │   │   │   ├── iso-tp                       611
 │   │   │   │   ├── dds                          603
 │   │   │   │   ├── redpanda                     594
+│   │   │   │   ├── obd-ii                       591
 │   │   │   │   ├── pop3                         585
-│   │   │   │   ├── obd-ii                       582
 │   │   │   │   ├── msmq                         573
 │   │   │   │   ├── wireless-m-bus               562
 │   │   │   │   ├── s3                           557
@@ -177,7 +177,7 @@ hold no source to count.
 │   │   │   │   ├── sqlite                       373
 │   │   │   │   ├── serial                       372
 │   │   │   │   ├── unix-socket                  327
-│   │   │   │   ├── can-bus                      320
+│   │   │   │   ├── can-bus                      326
 │   │   │   │   ├── modbus                       317
 │   │   │   │   ├── bacnet                       258
 │   │   │   │   ├── mllp                         226
