@@ -94,10 +94,39 @@ The keyed hash costs the engine the order of its keys, and the management
 store its SQL; `deployment-model.md` section 7 says so. Clause 1 waits for the
 web host and the node-to-node protocol (problem 29, step 5).
 
+Built 2026-09-25, clause 1 for the web host and the remote surfaces (problem
+29, step 5). The rule is `SurfaceTls` in `Xmip.Surface`, once for both ends
+and every .NET surface: a PEM chain and key and the anchors a peer's chain
+must reach — `Certificate`, `PrivateKey` and `TrustAnchor` in a host's
+`[Xmip]` table, else `XMIP_CERTIFICATE`, `XMIP_PRIVATE_KEY` and
+`XMIP_TRUST_ANCHOR`, else the operating system's trust store — the forms
+`xmip-core-library-tls` takes them in; and `Permits`: HTTPS always, plain
+HTTP to this machine only. The web host (`SurfaceBinding` in
+`Xmip.Surface.Relay`) refuses plain HTTP beyond loopback and HTTPS with no
+certificate before it listens; every HTTPS address presents the host's
+certificate, asks a caller for one and checks it against the anchors, and
+the surface hub takes no caller over TLS without one. A browser may decline
+and reads the pages. Plain HTTP on loopback is bound, and said where it is
+bound: a log line and an audit record per address (ADR-0062).
+`RemoteOperator` presents its certificate, checks the host's for server use
+and the host's name, and refuses plain HTTP to another machine before it
+connects; the CLI's `--remote`, the PowerShell module's `-Remote`, the
+prompt and the desktop reach it through `SurfaceChoice` with the same keys.
+`Start-XmipOperationWeb` takes `-Certificate`, `-PrivateKey` and
+`-TrustAnchor`. Proved in `Xmip.Surface.Test` against a hub on a loopback
+port with certificates a test authority issued: mutual TLS answers; a client
+certificate the host does not trust, a host certificate the surface does not
+trust and no certificate at all are refused. Revocation is not checked on
+this path yet, the estate's being by held CRLs (ADR-0045). The TLS on this
+path is the platform's, through Kestrel and SslStream (SChannel on Windows,
+OpenSSL elsewhere), not `xmip-core-library-tls`, so its key exchange is what
+the platform offers rather than the library's hybrid first; the node-to-node
+protocol (problems 17 and 18) is still to be born on the library.
+
 ## Consequences
 
 - The web host and the remote surfaces move to TLS; a browser on another
-  machine reaches the monitor over HTTPS.
+  machine reaches the monitor over HTTPS. Built 2026-09-25.
 - A lost key-encryption key is lost data. Rotation and recovery belong to
   the key home's design.
 - Encryption is audited like any other act (ADR-0062): a record that fails

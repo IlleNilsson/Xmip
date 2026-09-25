@@ -2,77 +2,6 @@
 
 Set-StrictMode -Version Latest
 
-# How long a fresh roll is given to publish its first round before the wait
-# below gives up and says so. A Playground round is minutes, not hours.
-[timespan] $script:SnapshotWait = [timespan]::FromMinutes(10)
-
-
-<#
-    .SYNOPSIS
-    Waits for a snapshot a rolling cluster has not published yet.
-
-    .DESCRIPTION
-    A roll publishes when a round ends, so the file a run names does not
-    exist between `Start-XmipTest` and the end of its first round. The owner,
-    2026-09-23, piping two fresh rolls into the monitor and being refused:
-    *Fix it.*
-
-    A path no run names is refused as it always was. A path a run names is
-    waited for while that run is still there, and the wait is bounded: a
-    round that takes longer than [`SNAPSHOT_WAIT`] is a round the operator
-    should hear about rather than a console that hangs (ADR-0055).
-
-    .PARAMETER Path
-    The snapshot to wait for, full path.
-#>
-function Wait-XmipSnapshot {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Path
-    )
-
-    if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        return
-    }
-
-    [object] $rolling = Get-XmipTestStatus |
-        Where-Object { $_.Snapshot -and ([IO.Path]::GetFullPath($_.Snapshot) -eq $Path) } |
-        Select-Object -First 1
-
-    if (-not $rolling) {
-        throw "REFUSED. No snapshot at '$Path'. Get-XmipTestStatus names the one a roll publishes."
-    }
-
-    [string] $cluster = [string] $rolling.Cluster
-    Write-Host "   waiting for $cluster to publish its first round..." -ForegroundColor DarkGray
-
-    [datetime] $until = (Get-Date).Add($script:SnapshotWait)
-
-    while ((Get-Date) -lt $until) {
-        if (Test-Path -LiteralPath $Path -PathType Leaf) {
-            return
-        }
-
-        # The run may end before it ever publishes — a roll refused at its
-        # first round, a cluster stopped by hand. Then there is nothing to
-        # wait for and saying so beats waiting out the bound.
-        [bool] $still = @(Get-XmipTestStatus | Where-Object Cluster -eq $cluster).Count -gt 0
-
-        if (-not $still) {
-            throw "REFUSED. $cluster stopped without publishing '$Path'."
-        }
-
-        Start-Sleep -Seconds 2
-    }
-
-    [string] $waited = "$cluster published no snapshot within $($script:SnapshotWait)."
-
-    throw "REFUSED. $waited Is its round longer than that?"
-}
-
-
 function Start-XmipOperationWeb {
     <#
         .SYNOPSIS
@@ -103,15 +32,40 @@ function Start-XmipOperationWeb {
             server then looks dead. Get-XmipOperationWeb lists what is running and
             Stop-XmipOperationWeb ends it.
 
+            Xmip's own traffic is TLS (ADR-0063 clause 1). Plain http is bound on
+            loopback only, the one exception, and the host says so in its log and
+            its audit where it binds it. Any other address is https:// and needs
+            -Certificate and -PrivateKey: the host presents that certificate, asks
+            a caller for one and checks it against -TrustAnchor, and its surface
+            hub takes no remote surface without one. The host refuses plain http
+            beyond loopback, and https with no certificate, before it listens; the
+            refusal is in its audit and in the .err file beside its log.
+
         .PARAMETER Snapshot
             The snapshot file or files to monitor, one per cluster. Bound from
             the pipeline, so a Start-XmipTest -PassThru object names one and
             two rolls on the pipeline name two.
 
         .PARAMETER Url
-            Where to bind. Defaults to http://127.0.0.1:5087. Use
-            http://0.0.0.0:5087 to reach it from another device on the network
-            (the firewall must also allow the port).
+            Where to bind. Defaults to http://127.0.0.1:5087, plain http on
+            loopback. Use https://0.0.0.0:5443 with -Certificate and -PrivateKey
+            to reach it from another device on the network (the firewall must
+            also allow the port); https://127.0.0.1:5443 serves TLS on this
+            machine alone.
+
+        .PARAMETER Certificate
+            The PEM certificate chain, leaf first, the host presents on https.
+            Named with -PrivateKey. Unset, the host's xmip.gui.toml or
+            XMIP_CERTIFICATE decides (ADR-0063 clause 1; where the file comes from
+            is provisioning's, ADR-0034).
+
+        .PARAMETER PrivateKey
+            The PEM private key of -Certificate.
+
+        .PARAMETER TrustAnchor
+            The PEM anchors a caller's certificate must reach. Unset, the host's
+            xmip.gui.toml or XMIP_TRUST_ANCHOR, else the operating system's trust
+            store.
 
         .PARAMETER FromSource
             Run `dotnet run` from the project rather than the built executable —
@@ -131,8 +85,9 @@ function Start-XmipOperationWeb {
             Get-XmipTestStatus | Start-XmipOperationWeb
 
         .EXAMPLE
+            $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
             $snapshot = '.local-work/playground/C1-snapshot.toml'
-            Start-XmipOperationWeb -Url http://0.0.0.0:5087 -Snapshot $snapshot
+            Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.Web')]
@@ -148,9 +103,24 @@ function Start-XmipOperationWeb {
         [Parameter()]
         [ValidatePattern(
             '^https?://([A-Za-z0-9.-]+|\[[0-9A-Fa-f:]+\]|\*|\+):\d{1,5}/?$',
-            ErrorMessage = "REFUSED. '{0}' is not an address to bind: http://<host>:<port>."
+            ErrorMessage = "REFUSED. '{0}' is not an address to bind: http(s)://<host>:<port>."
         )]
         [string] $Url = 'http://127.0.0.1:5087',
+
+        [Parameter()]
+        [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf },
+            ErrorMessage = "REFUSED. No certificate file at '{0}'.")]
+        [string] $Certificate,
+
+        [Parameter()]
+        [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf },
+            ErrorMessage = "REFUSED. No private key file at '{0}'.")]
+        [string] $PrivateKey,
+
+        [Parameter()]
+        [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf },
+            ErrorMessage = "REFUSED. No trust anchor file at '{0}'.")]
+        [string] $TrustAnchor,
 
         [Parameter()]
         [switch] $FromSource,
@@ -202,6 +172,21 @@ function Start-XmipOperationWeb {
         [string] $source = 'module/core/operation/gui/src/Xmip.Gui.Web'
         [string] $project = Join-Path -Path $layout.Root -ChildPath $source
         [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
+
+        # What the host presents and trusts, named here or left to its document
+        # (ADR-0063 clause 1). Whether an address may be bound plain is the
+        # host's to decide, by the one rule in Xmip.Surface; it refuses before
+        # it listens and says why in its audit.
+        foreach ($pair in @(
+                @{ Key = 'Xmip:Certificate'; Path = $Certificate }
+                @{ Key = 'Xmip:PrivateKey'; Path = $PrivateKey }
+                @{ Key = 'Xmip:TrustAnchor'; Path = $TrustAnchor }
+            )) {
+            if ($pair.Path) {
+                [string] $full = (Resolve-Path -LiteralPath $pair.Path).ProviderPath
+                $arguments += "--$($pair.Key)=$full"
+            }
+        }
 
         if ($following.Count -gt 0) {
             $arguments += '--Xmip:Surface=snapshot'

@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-11
 - Amended: 2026-09-24 — the far ends are the capability's
+- Amended: 2026-09-25 — the trait knows the order and the release
 - Related: ADR-0028 (the Playground: clause 5, the far end is Xmip; the
   amendment of 2026-09-09, every transport declares its ceiling), ADR-0044
   (a technology shares through its capability), ADR-0010 (one protocol,
@@ -154,3 +155,42 @@ unchanged:
 
 What a far end does with the exchange once it has it stays the technology's
 (clause 2): its protocol.
+
+## Amendment, 2026-09-25: the trait knows the order and the release
+
+The amendment of 2026-09-24 left the trait unchanged, and two things were
+still written once per technology. Sixteen technologies — Bluetooth, CAN
+bus, CANopen, EtherCAT, Ethernet, file, HART, IO-Link, LoRaWAN, M-Bus,
+PROFINET, SQLite, Thread, WirelessHART, wireless M-Bus and Zigbee —
+overrode `round` only to call `round_in_order`, and twenty-six overrode
+`unblock` with nothing: those sixteen and serial, whose ends exchange in
+order and are never released, and the nine datagram technologies — UDP,
+`BACnet`, CoAP, DDS, DHCP, KNX, mDNS, SNMP and SSDP — whose far end reads
+with its own timeout. Each override was the same fact stated again. The trait
+learns both:
+
+- `Loopback::exchanges_in_order`, declared by the technology and `false`
+  unless it says otherwise. Where it is `true`, the provided `round` is
+  `round_in_order`, and the provided `unblock` releases nothing. The sixteen
+  `round` overrides are that declaration now; serial declares it too and keeps
+  its `round`, which frames both ends for the payload first.
+- `FarEnd::datagram`, answered by the far end, `false` unless it says
+  otherwise. `bound::Bound`, the one datagram far end, says `true`, and the
+  provided `round` leaves a datagram far end to its own timeout rather than
+  poke a TCP port at its address that is not its own. The datagram
+  technologies state nothing: the far end they already stand up knows.
+- The provided `unblock` is the bounded poke of a TCP listener, as before.
+  A technology overrides it only where its far end is released some other
+  way — a path to connect to, a frame that ends a transfer — which is what
+  the seven overrides left (AWS SQS, ISO-TP, J1939, named pipe, OBD-II, UDS,
+  Unix socket) do.
+
+No technology's round changes: what went on one thread still does, and no
+far end is poked that was not poked before.
+
+### Provenance
+
+The owner ruled on 2026-09-24, *teach the trait*: the flag and the default
+that knows a datagram, an in-process or a TCP address, so the overrides go.
+The shape — the flag on `Loopback`, the datagram fact on the far end that
+already holds the socket — is the assistant's drafting.

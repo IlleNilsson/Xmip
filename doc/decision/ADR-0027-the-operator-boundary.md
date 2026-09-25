@@ -432,6 +432,30 @@ reached as `RuntimeRules.Audit`, and `Xmip.Surface`'s `ProgramAudit` is what
 every .NET program and both PowerShell modules call.
 
 
+## Amendment, 2026-09-25: section 7 says where a scope sits
+
+Open problem 25, row q: `Xmip.Surface`'s `ScopeTree.Node` took a scope's
+first segment for its node, so the Monitor named the cluster as the node of
+every record a roll publishes, and the PowerShell prompt looked for the
+literal `node` segment itself — the scope's shape known in two surfaces and
+known differently. Clause 4 puts the node beneath the cluster, and ADR-0053
+gives a node the location `xmip:///<cluster>/node/<name>`; which segment that
+is, and the stage of the message path beneath it, are `observe::Scope`'s now
+(`node`, `stage`). Section 7 gains one symbol under its rules — a separate
+optional export, pure, `XMIP_OPERATE_VERSION` unchanged:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_scope_node_v1` | `observe::Scope::node` and `observe::Scope::stage` |
+
+It writes the node, borrowed from the scope, and the stage's static word,
+each empty where there is none: the cluster is never a node, and a
+cluster's or a node's name is never a stage. The runtime's
+`src/ffi/rule.rs` implements it, `xmip-core-abi`'s `operate::rule` declares
+its shape (`ScopeNodeFn`), and `Xmip.Abi`'s `RuntimeRules.Node` binds it;
+ADR-0052's amendment of the same date says who calls it.
+
+
 ## Alternatives considered
 
 **One header for both audiences.** Rejected. It forces one version constant on

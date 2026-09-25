@@ -52,7 +52,7 @@ decision stays with the Predicate and the reasoning stays with the Routing.
 `Source` has two methods, and every technology implements both:
 
 - `technology()` — the manifest leaf, which is also the prefix a property
-  carries: `content:order.total`, `header:content-type`,
+  carries: `content:order.total`, `header:http.content-type`,
   `metadata:generation`, `party:sender`.
 - `read(&Message, name)` — the value of `name` for this Message, or `None`
   when the Message has no such thing. `None` promotes nothing, and a filter
@@ -127,3 +127,47 @@ The owner's, 2026-09-24, answering the two questions put to him: whether a
 Null context value is present or absent in a filter, and whether bytes under
 a bare `X` are dropped or refused. *Absent*, and *refused*, under both
 spellings.
+
+## Amendment, 2026-09-25: a header is named with its protocol
+
+The owner ruled on 2026-09-24 the question ADR-0019's amendment of that day
+left open: a header a transport writes is `<protocol>.header.<name>`, built
+once in `context::property::header`. `route/header` read `header:<name>`
+from a bare `header.<name>` that nothing wrote; it reads
+`header:<protocol>.<name>` from the key that builder makes —
+`header:http.content-type` is `http.header.content-type`,
+`header:amqp.x-priority` is `amqp.header.x-priority`. The protocol is the
+text before the first dot, because a protocol's word has none and a
+header's name may; a filter that names no protocol is refused with its
+reason, as any property a technology cannot read is (decision 2).
+
+**A name's case counts where the protocol says it does.** HTTP compares
+field names without regard to case (RFC 9110 section 5.1), and so do the
+mail protocols (RFC 5322 section 1.2.2) and SIP (RFC 3261 section 7.3.1);
+Kafka record headers, AMQP application properties, NATS headers and MQTT
+user properties compare byte for byte, and `Trace-Id` and `trace-id` are two
+headers there. Folding every protocol's names would have merged them. So
+`context::property::HEADER_CASE_FOLDING` is the one table of the protocols
+that fold, each cited to its clause — `http`, `https`, what rides on HTTP
+(`as2`, `as4`, `webdav`, `websocket`, `ssdp`), `smtp`, `imap`, `pop3`,
+`mime`, `sip` — and `property::header` lowers the name only for those, the
+protocol word itself always, as a URI scheme compares. `route/header` reads
+the key that builder makes and compares it exactly, so
+`header:http.Content-Type` finds `http.header.content-type` while
+`header:kafka.Trace-Id` and `header:kafka.trace-id` are two properties.
+
+The owner's, 2026-09-24: the spelling and that the filter names the
+protocol. Where the protocol ends in the filter is the assistant's. That
+case folds per protocol, from one table, was the lead's correction of the
+assistant's first draft, which folded every protocol, 2026-09-25.
+
+## Amendment, 2026-09-25, later: headers reach the Message Context at arrival
+
+The owner, 2026-09-25, asked where headers enter a Message's context once
+their name is one: **the runtime, at arrival.** A transport hands the headers
+it received with the arrival — `transport::Arrived` carries them as
+properties beside the origin and the bytes — and the runtime writes them into
+the Message Context once, as `<protocol>.header.<name>` through
+`context::property::header`, case folded where the protocol folds it. No
+transport writes into a context. Chosen from two: the runtime at arrival, or
+each transport. Not yet built (problem 25, row r).
