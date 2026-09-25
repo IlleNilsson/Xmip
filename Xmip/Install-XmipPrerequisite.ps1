@@ -301,6 +301,66 @@ function Install-XmipPrerequisite {
         }
     }
 
+    # The event source the operating system's log is written under when audit
+    # cannot persist a record (ADR-0062). Windows only. Registering it needs
+    # elevation once and this never elevates: an elevated -Install registers
+    # it, anything else says so and prints the line. Until it is registered
+    # the fallback writes under .NET Runtime and says so in the entry. The
+    # name is the ABI header's XMIP_EVENT_SOURCE, read where it is declared:
+    # the prerequisites run before anything is built, so there is no binding
+    # yet to ask.
+    $eventSource = Get-TomlValue $manifest 'eventSource' $null
+
+    if ($IsWindows -and $eventSource -and
+        $roles.Contains([string](Get-TomlValue $eventSource 'role'))) {
+        [string] $header = Join-Path -Path (Split-Path -Parent $ManifestPath) -ChildPath (
+            'module/foundation/abi/include/xmip_operate.h')
+        $declared = Select-String -LiteralPath $header -Pattern (
+            '^#define\s+XMIP_EVENT_SOURCE\s+"([^"]+)"') | Select-Object -First 1
+
+        if ($null -eq $declared) {
+            throw "XMIP_EVENT_SOURCE is not declared in $header."
+        }
+
+        [string] $sourceName = $declared.Matches[0].Groups[1].Value
+        [string] $sourceLog = [string](Get-TomlValue $eventSource 'log')
+        [string] $label = "event source $sourceName"
+        [string] $line = ("[System.Diagnostics.EventLog]::CreateEventSource(" +
+            "'$sourceName', '$sourceLog')")
+        [bool] $registered = $false
+
+        # Asked unelevated about a source that is not there, EventLog searches
+        # the Security log too and is refused; that is "not registered".
+        try { $registered = [System.Diagnostics.EventLog]::SourceExists($sourceName) }
+        catch { $registered = $false }
+
+        $principal = [Security.Principal.WindowsPrincipal](
+            [Security.Principal.WindowsIdentity]::GetCurrent())
+        [bool] $elevated = $principal.IsInRole(
+            [Security.Principal.WindowsBuiltInRole]::Administrator)
+
+        if ($registered) {
+            Write-Host "PRESENT: $label  ($sourceLog)"
+            Record $label 'present' $sourceLog
+        }
+        elseif (-not $elevated) {
+            Write-Warning "NEEDS ELEVATION: $label"
+            Write-Host "    $line"
+            Record $label 'needs-elevation' $line
+        }
+        elseif (-not $Install) {
+            Write-Warning "MISSING: $label"
+            Write-Host "    $line"
+            Record $label 'missing' $line
+        }
+        elseif ($PSCmdlet.ShouldProcess($label, $line)) {
+            Write-Host "INSTALL: $label"
+            [System.Diagnostics.EventLog]::CreateEventSource($sourceName, $sourceLog)
+            Record $label 'installed' $line
+        }
+        else { Record $label 'would-install' $line }
+    }
+
     Write-Host ''
     $summary = $results | Group-Object status | ForEach-Object { "$($_.Name)=$($_.Count)" }
     Write-Step "Prerequisites: $($summary -join '  ')"

@@ -505,6 +505,17 @@ Observation reads snapshots the runtime publishes and never enters the
 message path. Audit is the durable record of actions and outcomes; a live
 monitor is not a replacement for it.
 
+Every Xmip program audits, not only the runtime
+([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md)): the monitors,
+`xmip-cli`, both PowerShell modules, the Playground and the language server
+record what they start and stop, every act taken through them and every
+failure, through `xmip-core-audit`. A program's records go to `audit.toml` in
+the directory its configuration names as `AuditDirectory`, else the one
+`XMIP_AUDIT_DIRECTORY` names; the estate's tooling uses
+`.local-work/audit`. When audit cannot persist a record, the operating
+system's log holds it: the Windows Event Log under the source `Xmip`, the
+journal or syslog on Linux (`journalctl -t xmip`), the unified log on macOS.
+
 ### Platforms and installation
 
 Xmip supports current platforms only
@@ -521,7 +532,9 @@ PowerShell module and the monitors run on all three.
 
 `Install-XmipPrerequisite -Role operator` reports what a machine lacks;
 `-Install` installs it. The command never elevates: where a package requires
-administrative rights it prints the command and stops. A prerequisite below
+administrative rights it prints the command and stops. On Windows it also
+registers the `Xmip` event source the audit fallback writes under, when run
+elevated with `-Install`. A prerequisite below
 its floor fails the command.
 
 ### Configuration and control
@@ -557,7 +570,8 @@ isolation and whether the runtime fails closed
 3. Tell a refused Stream, an unmatched Message and a failed Journey apart;
    each has a different owner and a different recovery path.
 4. Read the Audit and the persisted failure state before changing
-   configuration.
+   configuration. A monitor that showed *an unhandled error* has its record
+   there too — or in the operating system's log, when audit was down.
 5. Pause or resume through the operator boundary, then confirm the new
    published state.
 
@@ -781,6 +795,14 @@ Get-XmipStatus
 
 `-Create` and `-Configure` require a GitHub token with `repo` scope, from
 `-GitHubToken` or `$env:GITHUB_TOKEN`. Nothing deletes a repository.
+
+The module audits its own acts through the audit capability, reached through
+the operator module (ADR-0062): every start and stop of a test or a web
+monitor, every refusal and failure of those commands, and a landing that
+stopped or finished, into `.local-work/audit/audit.toml` — the directory it
+sets `XMIP_AUDIT_DIRECTORY` to for the session when nothing else did, so
+everything it starts records there too. `Start-XmipOperationWeb` keeps the
+host's console in `.local-work/web`, as a roll's is kept beside the roll.
 
 ### Contributing
 

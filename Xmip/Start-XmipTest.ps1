@@ -282,22 +282,15 @@ function Start-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            # Qualified or bare, both name the estate's suite, and
-            # Core.Estate is the spelling (ADR-0059, amendment 2026-09-20);
-            # omitted, -Suite is the Playground.
+            # Asked of the module, as -Suite's completer asks (Get-XmipTestChoice).
+            $module = Get-Module -Name Xmip | Select-Object -First 1
             [string] $asked = "$($fakeBoundParameters['Suite'])"
 
-            [string[]] $names = if ($asked -ieq 'Estate' -or $asked -ieq 'Core.Estate') {
-                [string] $root = Get-XmipRepositoryRoot
-                Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
-                    ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
+            if ($null -ne $module) {
+                & $module {
+                    param($Asked, $Word) Get-XmipTestChoice -Suite $Asked -Word $Word
+                } $asked $wordToComplete
             }
-            else {
-                'RoundTrip', 'LowLatency', 'HeavyLoad', 'Retention'
-                'Filing', 'ExclusiveClaim', 'DailyBacklog'
-            }
-
-            $names | Where-Object { $_ -like "$wordToComplete*" }
         })]
         [string[]] $Test = @(),
 
@@ -341,6 +334,11 @@ function Start-XmipTest {
     # The first failure ends the call; a cascade of twenty errors after one
     # missing piece is what the owner saw on 2026-09-12.
     $ErrorActionPreference = 'Stop'
+
+    # Every start, refusal and failure is audited (ADR-0062): under 'Stop' a
+    # Write-Error ends the call in the trap, is recorded and goes on unchanged.
+    trap { Write-XmipAudit -Action 'Start-XmipTest' -ErrorRecord $_; break }
+    Write-XmipAudit -Action 'Start-XmipTest' -Phase Begin -Property $PSBoundParameters
 
     # Which suites there are is read, never declared at the parameter: a
     # third party's is a file it dropped, and this session may have started

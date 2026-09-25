@@ -406,3 +406,30 @@ vocabularies for two moments, is the owner's.
 
 Provenance: the ruling is the owner's, 2026-09-24; the list of names, and the
 module holding them, are the assistant's drafting under it.
+
+## Amendment, 2026-09-25: a group Managed Service Account wherever one exists
+
+The owner, 2026-09-25: *I do not know if gMSA accounts exist on all
+platforms (Windows, Linux, OS X), but where it exists it should be
+supported.* The Service Identity a node runs as (`doc/architecture/
+deployment-model.md` section 5, the operator-facing half of this record)
+may be a group Managed Service Account wherever the platform offers one, and
+Xmip supports it there: the service installs and runs under it with no
+password Xmip holds, and a technology that reaches a counterparty as the
+node itself — SQL Server with integrated security, an SMB share, LDAP, an
+HTTP endpoint that negotiates Kerberos — authenticates with its ticket.
+
+Where one exists, as known on 2026-09-25: Windows joined to Active
+Directory, natively; Windows containers and Kubernetes Windows pods, through
+a credential spec. On Linux there is no native one; an AD-joined host can
+hold a gMSA's Kerberos ticket through a daemon that fetches it (AWS's
+open-source `credentials-fetcher` is one), unverified here on AlmaLinux 10.
+macOS has none. Where none exists, the platform's own Service Identity in
+section 5's table stands, and nothing is emulated.
+
+Nothing implements this yet: no node runs as a service (open-problems.md,
+the Suggested order's phase C). It is a requirement on that work, filed as
+problem 28.
+
+The owner's, the requirement; the platform list and the unverified Linux
+route are the assistant's.

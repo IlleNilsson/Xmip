@@ -230,3 +230,8 @@ xmip_modules:
   - { name: xmip-core-transport-sftp, start: false }
   - { name: xmip-core-transport-aws, start: false }
   - { name: xmip-core-transport-azure, start: false }
+  - { name: xmip-core-secret-dpapi, start: false }
+  - { name: xmip-core-secret-file, start: false }
+  - { name: xmip-core-secret-keychain, start: false }
+  - { name: xmip-core-persist-rocksdb, start: false }
+  - { name: xmip-core-persist-sqlite, start: false }

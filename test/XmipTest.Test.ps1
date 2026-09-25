@@ -12,6 +12,12 @@
 #>
 
 BeforeAll {
+    # What these commands audit while they are tested goes to this run's own
+    # drive, never to .local-work/audit or the operating system's log
+    # (ADR-0062): stated over whatever the session had, and given back after.
+    $script:AuditBefore = $env:XMIP_AUDIT_DIRECTORY
+    $env:XMIP_AUDIT_DIRECTORY = Join-Path -Path $TestDrive -ChildPath 'audit'
+
     <#
         .SYNOPSIS
         Start-XmipTest's source, every file of it.
@@ -1628,4 +1634,8 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
                 Should -Throw -ExpectedMessage '*REFUSED*run 5 has ended (OK)*'
         }
     }
+}
+
+AfterAll {
+    $env:XMIP_AUDIT_DIRECTORY = $script:AuditBefore
 }

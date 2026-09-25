@@ -310,8 +310,12 @@ worse than none, because it is trusted exactly when nobody is checking.
 
 Four of its items were still true, and this register is where they belong:
 
-- **Journey replay end to end.** RocksDB and SQLite stores exist; the replay
-  model over them is not implemented, and interchange history is not yet
+- **Journey replay end to end.** No store exists to replay from: the RocksDB
+  runtime store of 2026-06-14 was dropped from the build on 2026-06-26 and
+  deleted on 2026-08-20, and the SQLite store did not move when the monolith
+  was distributed on 2026-08-26, so `xmip-core-persist` holds the types and
+  no engine (corrected 2026-09-25; which engine is ADR-0015's open question).
+  The replay model is not implemented, and interchange history is not yet
   queryable. Related to problem 17 and to ADR-0024's open consequence on
   Journey recovery across nodes.
 - **Cluster coordination.** No inter-node protocol, no failover execution.
@@ -699,6 +703,38 @@ controls a name — `http-01` needs a public address on port 80, `dns-01` needs
 write access to the name's DNS. A laptop has neither. `identity-online` needs
 one of them named: a domain and the way its DNS is written, or a public host the
 Playground may run on.
+
+## 28. A node cannot run under a group Managed Service Account
+
+The owner, 2026-09-25: *where it exists it should be supported* (ADR-0019,
+amendment 2026-09-25). Nothing installs a node as a service yet, so nothing
+runs under any Service Identity, a gMSA least of all.
+
+| step | what |
+|---|---|
+| 1 | the node installs as a Windows service under a gMSA (`DOMAIN
+ame$`, no password), refusing in words when the host cannot retrieve the account's password |
+| 2 | the technologies that reach a counterparty as the node — mssql integrated security, smb, ldap, http's Negotiate — authenticate with the service's own Kerberos ticket, and a test proves each on a domain |
+| 3 | Windows containers and Kubernetes Windows pods: the credential spec a deployment names |
+| 4 | Linux: an AD-joined host with a gMSA ticket fetched by a daemon (e.g. `credentials-fetcher`), verified on AlmaLinux before it is claimed |
+
+**Open for the owner before step 2 can be proven:** a test domain — a domain
+controller Xmip's tests may use, or one the Playground stands up.
+
+## 29. Xmip stores nothing, encrypts nothing at rest, and has no home for keys
+
+The owner, 2026-09-25, chose RocksDB for the runtime store and SQLite for
+management (ADR-0015, amendment) and required Xmip's own traffic and storage
+encrypted (ADR-0063). Since 2026-08-20 `xmip-core-persist` has held the types
+and no engine.
+
+| step | what |
+|---|---|
+| 1 | the key home, **decided 2026-09-25** (ADR-0063 clause 4): `xmip-core-secret`, a new capability, created and declared; the platform key store its first technology per platform (DPAPI/CNG, the kernel keyring or a service-only file, the keychain), PKCS#11 and vaults after. **Built 2026-09-25:** `KeyStore`, `DataKey` (the one AES-256-GCM, HKDF and HMAC), `dpapi` tested on Windows, `file` on AlmaLinux, `keychain` built and not run on macOS; `pkcs11`, `vault`, `azure-key-vault`, `aws-kms` reserved; `keyring` reserved, because the kernel keyring forgets a key at a restart — the owner decides what it is for |
+| 2 | `persist` gains its encryption layer: AES-256-GCM per record, lookup keys by keyed hash, a record that fails its tag audited as a failure. **Built 2026-09-25:** `EncryptedStore` over the `Engine` trait, and a `RuntimeStore`; a failed tag is `PersistError::Refused` with scope and reason, audited by the caller — wiring that caller to `xmip-core-audit` is open |
+| 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
+| 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
+| 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line |
 
 ---
 

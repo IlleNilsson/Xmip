@@ -162,6 +162,14 @@ function Stop-XmipTest {
     }
 
     end {
+        # Every stop is audited, and so is every refusal and failure
+        # (ADR-0062): with 'Stop' in begin, a Write-Error ends the call here,
+        # is recorded, and goes on to the caller unchanged.
+        trap {
+            Write-XmipAudit -Action 'Stop-XmipTest' -ErrorRecord $_
+            break
+        }
+
         # An estate run that has ended is listed, and there is nothing of it
         # to stop: it is chosen only by its id, and then refused in words.
         [object[]] $listed = @(Get-XmipTestStatus)
@@ -198,6 +206,10 @@ function Stop-XmipTest {
             if ($roll.Kind -eq 'pester') {
                 if ($PSCmdlet.ShouldProcess("the $($roll.Suite) run $number", 'Stop')) {
                     Stop-XmipEstateRun -Run $roll
+                    Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
+                        Id    = $number
+                        Suite = $roll.Suite
+                    }
                 }
 
                 continue
@@ -235,6 +247,11 @@ function Stop-XmipTest {
                 Remove-XmipPlaygroundImage -Cluster $roll.Cluster -Confirm:$false
             }
 
+            Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
+                Id      = $number
+                Suite   = $roll.Suite
+                Cluster = $roll.Cluster
+            }
             Write-Verbose "stopped roll $number"
         }
 

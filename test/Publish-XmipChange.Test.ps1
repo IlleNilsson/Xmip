@@ -21,6 +21,12 @@
 #>
 
 BeforeAll {
+    # What these commands audit while they are tested goes to this run's own
+    # drive, never to .local-work/audit or the operating system's log
+    # (ADR-0062): stated over whatever the session had, and given back after.
+    $script:AuditBefore = $env:XMIP_AUDIT_DIRECTORY
+    $env:XMIP_AUDIT_DIRECTORY = Join-Path -Path $TestDrive -ChildPath 'audit'
+
     $script:Root = Join-Path $PSScriptRoot '..'
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
 
@@ -686,4 +692,8 @@ Describe 'Test-XmipSelfVerifyingModule' {
         # of a SKIPPED line knows what would have made it land.
         $script:Ast.Extent.Text | Should -Match 'no Cargo\.toml, no project and no verify\.ps1'
     }
+}
+
+AfterAll {
+    $env:XMIP_AUDIT_DIRECTORY = $script:AuditBefore
 }

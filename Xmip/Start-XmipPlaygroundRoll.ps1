@@ -336,6 +336,8 @@ function Start-XmipPlaygroundRoll {
     $launch.RedirectStandardOutput = Join-Path -Path $Path -ChildPath "roll-$stamp.log"
     $launch.RedirectStandardError = Join-Path -Path $Path -ChildPath "roll-$stamp.err"
 
+    # What it starts audits where the tooling does (ADR-0062).
+    Initialize-XmipAudit
     $process = Start-Process @launch
 
     [bool] $boundDuration = $Bound.ContainsKey('Duration')

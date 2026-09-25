@@ -374,3 +374,31 @@ share a secret store" are the owner's, 2026-09-24: the library and where it
 mounts, the secret store's home, the re-export's removal and what stays in
 `identify::evidence`. The assistant drafted the text and chose the library's
 shape.
+
+## Amendment, 2026-09-25: where unsafe may live
+
+The question the 2026-09-16 amendment left open is answered by the owner,
+2026-09-25: **a crate that must call a C interface may allow unsafe code in
+one named file, and forbids it everywhere else.** Every block in that file
+carries a comment naming the pointer's origin, its lifetime and who frees
+it, as `xmip-core-abi` and the runtime's loader already do (ADR-0057,
+amendment 2026-09-19). The crate sets `unsafe_code = "deny"` in `Cargo.toml` — `forbid`, which a
+module otherwise keeps, cannot be lowered by a file — and the one file
+allows it with its reason at the top; a test
+in the estate holds the list of such files, so a new one is a change a
+reviewer sees.
+
+It unblocks the Windows Event Log in `xmip-core-audit` (ADR-0062), which
+went through `powershell.exe` for want of it, and Windows DPAPI in
+`xmip-core-secret` (ADR-0063); `pam` and `windows` here, trait-based without
+unsafe since 2026-09-16, may now call their system interfaces the same way.
+
+The owner's, the rule, chosen from two: one file per crate, or unsafe only
+in `abi` and the runtime.
+
+*Refined the same day, the owner's choice from three:* the runtime is the
+whole C boundary, and one file for it would be some two thousand lines
+against the 400-line limit, so **the runtime keeps its boundary in one
+named folder, `src/ffi/`**, each file under the limit, and allows unsafe
+there and nowhere else. The rule reads: one file per crate, or for the
+runtime, one folder. `test/Unsafe.Test.ps1` holds both.

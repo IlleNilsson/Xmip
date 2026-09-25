@@ -136,6 +136,14 @@ function Publish-XmipChange {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
+    # A landing that failed is audited, whatever failed in it (ADR-0062): a
+    # throw ends the call here, is recorded, and goes on to the caller
+    # unchanged. A landing that stopped at a module says so below.
+    trap {
+        Write-XmipAudit -Action 'Publish-XmipChange' -ErrorRecord $_
+        break
+    }
+
     # Not $all. PowerShell variable names are case-insensitive, so that name
     # overwrites the -All switch parameter and the next call hands an array to
     # a [switch].
@@ -314,6 +322,14 @@ function Publish-XmipChange {
                 # not verify. It said true until 2026-09-22, so a stopped run
                 # and a whole one printed the same summary.
                 [string] $stopped = "The landing stopped at $module, which did not verify."
+                [hashtable] $stoppedAt = @{
+                    Action   = 'Publish-XmipChange'
+                    Phase    = 'Failure'
+                    Severity = 'Error'
+                    Message  = $stopped
+                    Property = @{ Module = $module; Landed = $landed; Subject = $Message }
+                }
+                Write-XmipAudit @stoppedAt
                 Write-Error $stopped -ErrorAction Continue
 
                 return [PSCustomObject]@{
@@ -337,6 +353,13 @@ function Publish-XmipChange {
 
     if ($skipped.Count -gt 0) {
         Write-Host "SKIPPED, unverifiable here: $($skipped -join ', ')" -ForegroundColor DarkGray
+    }
+
+    Write-XmipAudit -Action 'Publish-XmipChange' -Phase Finished -Property @{
+        Landed   = $landed
+        Skipped  = $skipped
+        Verified = -not $NoVerify
+        Subject  = $Message
     }
 
     [PSCustomObject]@{

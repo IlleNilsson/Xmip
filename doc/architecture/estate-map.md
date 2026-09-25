@@ -1,6 +1,6 @@
 # The Xmip estate
 
-339 repositories are declared and 261 of them are
+351 repositories are declared and 267 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -32,16 +32,16 @@ the estate tree, and are counted nowhere below.
 | --- | ---: | ---: | ---: |
 | Foundation | 11 | 11 | 0 |
 | Library | 1 | 0 | 1 |
-| Capability | 18 | 18 | 0 |
+| Capability | 19 | 19 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 298 | 222 | 76 |
-| **Total** | 339 | 261 | 78 |
+| Technology | 309 | 227 | 82 |
+| **Total** | 351 | 267 | 84 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| reserved | 78 | 0 | 78 |
-| scaffolded | 261 | 261 | 0 |
+| reserved | 84 | 0 | 84 |
+| scaffolded | 267 | 267 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 149028 lines of production
+Where each repository mounts and what it holds: 153833 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -72,7 +72,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 78 of them and they
+nowhere — work not begun, not work unmounted. There are 84 of them and they
 hold no source to count.
 
 ```text
@@ -243,6 +243,12 @@ hold no source to count.
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
+│   │   │   ├── secret                           497
+│   │   │   │   ├── file                         223
+│   │   │   │   ├── dpapi                        180
+│   │   │   │   ├── keychain                     106
+│   │   │   │       declared, not built 5
+│   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── authorize                        321
 │   │   │   │   ├── location                     397
 │   │   │   │   ├── abac                         360
@@ -308,13 +314,17 @@ hold no source to count.
 │   │   │   ├── asn1                             497
 │   │   │   └── tls                              219
 │   │   └── operation/
-│   │       ├── cli                             2671
-│   │       ├── gui                             2024
-│   │       │   └── vscode                       702
-│   │       ├── powershell                      1826  C# 1126 · PowerShell 700
+│   │       ├── cli                             3024
+│   │       ├── gui                             2327
+│   │       │   └── vscode                       802
+│   │       ├── powershell                      2125  C# 1361 · PowerShell 764
 │   │       ├── observe                         1684
 │   │       │       declared, not built 5
 │   │       │       etw  journald  otlp  prometheus  windows-event-log
+│   │       ├── audit                            889
+│   │       │       declared, not built 10
+│   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
+│   │       │       postgres  sqlite  syslog  windows-event-log
 │   │       ├── archive                          626
 │   │       │   ├── sql                          256
 │   │       │   ├── file                         254
@@ -326,15 +336,11 @@ hold no source to count.
 │   │       │   ├── mysql                         91
 │   │       │   ├── postgresql                    77
 │   │       │   └── mssql                         73
-│   │       ├── audit                             89
-│   │       │       declared, not built 9
-│   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
-│   │       │       postgres  sqlite  syslog
 │   │       └── report                            18
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                10964  C# 9839 · Rust 1125
+│   │   ├── abi                                11649  C# 10454 · Rust 1195
 │   │   ├── message                             1293
 │   │   │   ├── xml                              335
 │   │   │   ├── avro                             298
@@ -360,12 +366,14 @@ hold no source to count.
 │   │   ├── cluster                               21
 │   │   └── event                                 20
 │   └── platform/
-│       ├── runtime                             4221
-│       ├── configure                            131
-│       └── persist                               98
+│       ├── runtime                             4417
+│       ├── persist                              701
+│       │   ├── sqlite                           107
+│       │   └── rocksdb                          105
+│       └── configure                            131
 └── test/
     └── core/
-        └── playground                          8960
+        └── playground                          9208
 ```
 
 ---
@@ -436,6 +444,7 @@ Things Xmip does.
 | `xmip-core-resilience` | scaffolded | `module/core/capability/resilience` | 6 |
 | `xmip-core-retain` | scaffolded | `module/core/capability/retain` | 5 |
 | `xmip-core-route` | scaffolded | `module/core/capability/route` | 8 |
+| `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
 | `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 17 |
 | `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 86 |
@@ -523,6 +532,14 @@ All 8 composed in `module/core/capability/route`.
 - **scaffolded**, 8 — content, context, contract, expression, header,
   metadata, party, regex
 
+### `xmip-core-secret`, 8 technologies
+
+3 of 8 composed in `module/core/capability/secret`; a name marked `*` is one
+the parent does not compose.
+
+- **reserved**, 5 — aws-kms*, azure-key-vault*, keyring*, pkcs11*, vault*
+- **scaffolded**, 3 — dpapi, file, keychain
+
 ### `xmip-core-transform`, 17 technologies
 
 Declared, and none composed: `module/core/capability/transform` has no
@@ -556,7 +573,7 @@ Running and governing Xmip.
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
 | `xmip-core-archive` | scaffolded | `module/core/operation/archive` | 10 |
-| `xmip-core-audit` | scaffolded | `module/core/operation/audit` | 9 |
+| `xmip-core-audit` | scaffolded | `module/core/operation/audit` | 10 |
 | `xmip-core-cli` | scaffolded | `module/core/operation/cli` | — |
 | `xmip-core-gui` | scaffolded | `module/core/operation/gui` | 1 |
 | `xmip-core-observe` | scaffolded | `module/core/operation/observe` | 5 |
@@ -571,13 +588,13 @@ All 10 composed in `module/core/operation/archive`.
 - **scaffolded**, 10 — azure-blob, file, gcs, mssql, mysql, parquet,
   postgresql, s3, sql, sqlite
 
-### `xmip-core-audit`, 9 technologies
+### `xmip-core-audit`, 10 technologies
 
 Declared, and none composed: `module/core/operation/audit` has no
 `.gitmodules`.
 
-- **reserved**, 9 — elasticsearch, file, kafka, mssql, opensearch, otlp,
-  postgres, sqlite, syslog
+- **reserved**, 10 — elasticsearch, file, kafka, mssql, opensearch, otlp,
+  postgres, sqlite, syslog, windows-event-log
 
 ### `xmip-core-gui`, one technology
 
@@ -615,8 +632,14 @@ Platform-wide runtime services.
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
 | `xmip-core-configure` | scaffolded | `module/platform/configure` | — |
-| `xmip-core-persist` | scaffolded | `module/platform/persist` | — |
+| `xmip-core-persist` | scaffolded | `module/platform/persist` | 2 |
 | `xmip-core-runtime` | scaffolded | `module/platform/runtime` | — |
+
+### `xmip-core-persist`, 2 technologies
+
+All 2 composed in `module/platform/persist`.
+
+- **scaffolded**, 2 — rocksdb, sqlite
 
 ---
 

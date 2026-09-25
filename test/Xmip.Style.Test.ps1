@@ -488,7 +488,7 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         [int] $script:MaximumFileLines = 400
 
         $script:FileRatchet = @{
-            'Start-XmipTest.ps1' = 476
+            'Start-XmipTest.ps1' = 474
         }
 
         [string] $module = Join-Path $script:Root 'Xmip'

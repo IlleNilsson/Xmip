@@ -84,6 +84,10 @@ function Start-XmipOperationWeb {
             drill-down and the history. This starts it as a background process and hands
             it the address and, when given, the snapshot to read — the surface
             is chosen on the command line, never guessed (ADR-0052 clause 3).
+            What the host writes to its console is kept in
+            .local-work/web/web-<start time>.log and .err, and every start,
+            refusal and failure is audited (ADR-0062), as the host itself
+            audits its own start, stop and every error it logs.
             Without -Snapshot the host reads what its own xmip.gui.toml says.
 
             Several snapshots are one host over several clusters (ADR-0052,
@@ -181,6 +185,14 @@ function Start-XmipOperationWeb {
 
     end {
         $ErrorActionPreference = 'Stop'
+
+        # Every start is audited, and so is every refusal and failure
+        # (ADR-0062): a Write-Error ends the call here under 'Stop', is
+        # recorded, and goes on to the caller unchanged.
+        trap {
+            Write-XmipAudit -Action 'Start-XmipOperationWeb' -ErrorRecord $_
+            break
+        }
 
         foreach ($named in $following) {
             Wait-XmipSnapshot -Path $named
@@ -280,8 +292,25 @@ function Start-XmipOperationWeb {
             }
         }
 
+        # The host's own output is kept beside its run, as a roll's is: a host
+        # that dies at start says why in a file, not on a console nobody kept
+        # (ADR-0062, the failure that prompted it). Named for the start time,
+        # since Start-Process wants the file named before the pid exists.
+        [string] $area = Join-Path -Path $layout.Root -ChildPath '.local-work/web'
+        Initialize-XmipAudit
+        $null = New-Item -ItemType Directory -Path $area -Force
+        [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $launch.RedirectStandardOutput = Join-Path -Path $area -ChildPath "web-$stamp.log"
+        $launch.RedirectStandardError = Join-Path -Path $area -ChildPath "web-$stamp.err"
+
         $process = Start-Process @launch
         Write-Verbose "web monitor starting at $Url as pid $($process.Id)"
+        Write-XmipAudit -Action 'Start-XmipOperationWeb' -Phase Begin -Property @{
+            Id       = $process.Id
+            Url      = $Url
+            Snapshot = $following -join ', '
+            Log      = $launch.RedirectStandardOutput
+        }
 
         if ($PassThru) {
             return ConvertTo-XmipOperationWeb -Process $process

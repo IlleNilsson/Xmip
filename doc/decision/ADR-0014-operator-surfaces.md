@@ -301,7 +301,7 @@ cli becomes the specification of what an operator can do. Every capability the e
 
 It also means a capability is testable before any user interface exists.
 
-A web solution that can remote into every node holds credentials that reach the whole cluster. That makes the web host a high-value target and it must be treated as one: its own identity rather than a shared operator account, least privilege on each node, and every remote invocation audited through xmip-core-audit like any other operator action. Inheriting mature authentication does not mean inheriting a safe deployment.
+A web solution that can remote into every node holds credentials that reach the whole cluster. That makes the web host a high-value target and it must be treated as one: its own identity rather than a shared operator account, least privilege on each node, and every remote invocation audited through xmip-core-audit like any other operator action. Inheriting mature authentication does not mean inheriting a safe deployment. ADR-0062 (2026-09-25) widens the audit clause from remote invocations to every Xmip program and every act and failure in it, and sends to the operating system's log what audit cannot persist.
 
 ## The command
 
