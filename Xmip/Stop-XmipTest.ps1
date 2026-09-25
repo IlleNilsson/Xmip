@@ -50,7 +50,7 @@ function Stop-XmipTest {
 
         .PARAMETER Cluster
             The runs to stop by the cluster each rolls as, wildcards allowed:
-            -Cluster Z* stops every roll whose cluster begins with Z. A
+            -Cluster C* stops every roll whose cluster begins with C. A
             pattern no roll matches is REFUSED, naming the clusters rolling,
             so nothing is stopped by accident and nothing silently is not.
 
@@ -77,7 +77,7 @@ function Stop-XmipTest {
             Stop-XmipTest -Cluster C1 -Test RoundTrip
 
         .EXAMPLE
-            Stop-XmipTest -Cluster 'Z*'
+            Stop-XmipTest -Cluster 'C*'
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |

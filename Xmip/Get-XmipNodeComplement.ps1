@@ -72,7 +72,7 @@ function ConvertFrom-XmipRosterText {
 
     .DESCRIPTION
     A node's name starts with a letter, so a lone number is no name and can
-    only be a count: `-Nodes 6` is six nodes and `-Nodes east, west` is two
+    only be a count: `-Nodes 6` is six nodes and `-Nodes alpha, beta` is two
     named ones. The owner, 2026-09-23: *how many nodes in each cluster I
     want*.
 

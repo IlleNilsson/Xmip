@@ -39,7 +39,7 @@ function Get-XmipTestStatus {
             Get-XmipTestStatus
 
         .EXAMPLE
-            Get-XmipTestStatus -Cluster 'Z*' | Format-List
+            Get-XmipTestStatus -Cluster 'C*' | Format-List
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate

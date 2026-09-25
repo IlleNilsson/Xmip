@@ -52,7 +52,10 @@ function Start-XmipTestNode {
             Return one Xmip.TestNode object per node started.
 
         .EXAMPLE
-            Start-XmipTestNode -Nodes alpha, beta, gamma -OnlineNodes alpha, beta
+            Start-XmipTestNode -Nodes R1, P1, S1 -OnlineNodes R1, S1
+
+            The names are the tester's and mean nothing to Xmip: a node
+            started here declares no stage, whatever it is called.
 
         .EXAMPLE
             Start-XmipTestNode -Nodes edge-1, edge-2 -Stress Harsh -Rounds 100 -PassThru

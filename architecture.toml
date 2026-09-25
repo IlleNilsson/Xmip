@@ -297,8 +297,9 @@ dependency = []
     specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
+    description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. A xmip-core-transport technology."
     dependency = ["xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net"]
-    specification = "IETF RFC 9110, with the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents"
+    specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
     maturity = "scaffolded"
     specification = "IETF RFC 3501: select, search, fetch, flag deleted, expunge, append"
@@ -746,6 +747,7 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
     [xmip.core.logic.grpc]
     maturity = "scaffolded"
+    description = "gRPC logic technology: a /package.Service/Method path and a length-prefixed message become a named operation with protobuf arguments, and a result or status becomes a frame and grpc-status trailers again, on a stream of an HTTP/2 connection. A xmip-core-logic technology."
     dependency = ["xmip-core-contract", "xmip-core-stream"]
     [xmip.core.logic.http-api]
     maturity = "scaffolded"
@@ -1540,7 +1542,7 @@ dependency = []
 
 
   [xmip.core.library.net]
-  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, and HTTP/1.1 itself, both halves, which the http transport and every capability asking a service speak."
+  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, and HTTP itself, both halves: HTTP/1.1, and HTTP/2 with HPACK, which the http transport and every capability asking a service speak."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1567,7 +1569,7 @@ dependency = []
 
 
   [xmip.core.library.tls]
-  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, a connection upgraded in place for STARTTLS, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
+  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, upgraded in place for STARTTLS, the protocol inside agreed by ALPN, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

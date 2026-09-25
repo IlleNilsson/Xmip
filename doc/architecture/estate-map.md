@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 155609 lines of production
+Where each repository mounts and what it holds: 158746 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -167,6 +167,7 @@ hold no source to count.
 │   │   │   │   ├── syslog                       500
 │   │   │   │   ├── msmq                         483
 │   │   │   │   ├── smtp                         479
+│   │   │   │   ├── http                         471
 │   │   │   │   ├── named-pipe                   458
 │   │   │   │   ├── azure-event-hubs             451
 │   │   │   │   ├── websocket                    445
@@ -174,7 +175,6 @@ hold no source to count.
 │   │   │   │   ├── ethernet                     433
 │   │   │   │   ├── iec-60870-5-104              431
 │   │   │   │   ├── dnp3                         405
-│   │   │   │   ├── http                         379
 │   │   │   │   ├── serial                       370
 │   │   │   │   ├── can-bus                      351
 │   │   │   │   ├── sqlite                       336
@@ -281,11 +281,11 @@ hold no source to count.
 │   │   │   │   ├── timeout                       80
 │   │   │   │   └── fallback                      66
 │   │   │   ├── receive                          174
-│   │   │   ├── logic                            152
-│   │   │   │   ├── matter                      1128
-│   │   │   │   ├── soap                         272
-│   │   │   │   ├── http-api                     257
-│   │   │   │   └── grpc                         212
+│   │   │   ├── logic                            156
+│   │   │   │   ├── matter                      1129
+│   │   │   │   ├── soap                         273
+│   │   │   │   ├── http-api                     259
+│   │   │   │   └── grpc                         215
 │   │   │   ├── send                             143
 │   │   │   ├── demote                            82
 │   │   │   ├── promote                           48
@@ -308,14 +308,14 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
+│   │   │   ├── net                             4164
 │   │   │   ├── codec                           1938
-│   │   │   ├── net                             1198
 │   │   │   ├── ntlm                             804
 │   │   │   ├── asn1                             497
-│   │   │   ├── tls                              219
+│   │   │   ├── tls                              284
 │   │   │   └── ssh                              169
 │   │   └── operation/
-│   │       ├── cli                             3026
+│   │       ├── cli                             3029
 │   │       ├── gui                             2482
 │   │       │   └── vscode                       802
 │   │       ├── powershell                      2128  C# 1364 · PowerShell 764

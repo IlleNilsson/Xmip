@@ -189,8 +189,8 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    integration rehearsal; it needs no network and no other software.
 
    ```powershell
-   Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes alpha, beta, gamma `
-    -NodeCapability @{ alpha = 'receive'; beta = 'process'; gamma = 'send' } -OnlineNodes alpha
+   Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
+    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
    Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -206,22 +206,22 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    2026-09-20):
 
    ```powershell
-   Start-XmipTest -Suite Core.Playground -Cluster orders -Test RoundTrip -Nodes east, mill `
-    -NodeCapability @{ east = 'receive'; mill = 'process,send' } -OnlineNodes east
+   Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
+    -NodeCapability @{ R1 = 'receive'; P1 = 'process,send' } -OnlineNodes R1
    Get-XmipTestStatus | Start-XmipOperationWeb
    ```
 
-   Nothing of the second roll matches the first but the suite: a cluster
-   called `orders`, two nodes called `east` and `mill`, and one node carrying
-   two stages because its purpose needs both
-   ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)). Xmip
-   reads none of those names.
+   The second roll is a cluster called `C2` with two nodes, and `P1` carries
+   two stages because `-NodeCapability` says so, not because of its name
+   ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)). Its
+   `R1` is not the first roll's `R1`: each cluster names its own nodes, and
+   Xmip reads none of those names.
 
    The prompt follows one cluster and says how many it is not showing —
-   `[orders+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters there are the three
+   `[C2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters there are the three
    stages of the message path, which is the one place in Xmip where a letter
-   means anything, and each is what that stage is moving per second, not a
-   total since the roll began: `R:0/s` says stalled, which a rising total
+   means anything — the R of a node called `R1` means nothing — and each
+   is what that stage is moving per second, not a total since the roll began: `R:0/s` says stalled, which a rising total
    never can, and a dash says there has been only one publication so far. T
    and F are counts, on the line only when above zero.
    `xmip-cli --snapshot <path>` names which cluster the executable reads; it
@@ -232,7 +232,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    name, its location and its purpose, test or runtime (ADR-0053). A
    Playground process says which cluster and which node it is —
    `xmip-playground-C1-roll`, `xmip-playground-C1-cluster`,
-   `xmip-playground-C1-node-alpha` — so twenty rows of `Get-Process` read as a
+   `xmip-playground-C1-node-R1` — so twenty rows of `Get-Process` read as a
    tree rather than as one name repeated (amendment 2026-09-20).
    `Get-XmipProcess` lists them with what they said, and one line stops
    every one of them, whatever started it:
@@ -241,8 +241,8 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    Get-Process -Name xmip-* | Stop-Process -Force
    ```
 
-   `-OnlineNodes alpha` records that `alpha` may assume a route to the
-   internet and the others may not (ADR-0045). `alpha` is the node this
+   `-OnlineNodes R1` records that `R1` may assume a route to the
+   internet and the others may not (ADR-0045). `R1` is the node this
    command declared `receive` for, so it is the receiving edge — the node that
    would obtain its server certificate from Let's Encrypt over ACME, which is
    the one online act Xmip has (ADR-0033, ADR-0034). The switch permits;
@@ -251,21 +251,24 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
    board that follows receive, process and send as the cluster moves. Beside
    it are Configuration, the classic tree of the whole cluster, and Topology,
-   the cluster's own communication. `C1` is the cluster and `alpha`, `beta`
-   and `gamma` its three simulated node processes. Those names are yours and
+   the cluster's own communication. `C1` is the cluster and `R1`, `P1`
+   and `S1` its three simulated node processes. Those names are yours and
    mean nothing — the owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node
-   names*, and the same of clusters. This walkthrough says `C1` only because
+   names*, and the same of clusters. The examples name clusters `C1`, `C2` and
+   nodes `R1`, `P1`, `S1` because that is how the owner names them when he
+   tests (2026-09-25): the letter reminds you, and Xmip never reads it. This
+   walkthrough says `C1` also because
    the `xmip-cli` and PowerShell documents that ship in a developer's clone
    follow `C1-snapshot.toml`; roll under any other name and point them at that
    file, or let `Start-XmipTest` tell the session. Nothing in Xmip reads a
    cluster's name or a node's: what a node does is the capability it was
    started with
    ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-   `-NodeCapability @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }`
+   `-NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }`
    states it, or omit `-Nodes` and the level's complement deals the whole
    message path for you. A node given no capability declares none and runs the
    shared-directory tests whole, which `Start-XmipTest` says in words before
-   it starts anything. `alpha` may use the internet because you said so; the
+   it starts anything. `R1` may use the internet because you said so; the
    others may not.
 
 Nothing in Xmip starts on its own. You name a cluster and its nodes, you
@@ -586,12 +589,12 @@ The Playground runs Xmip's own tests continuously, at a chosen stress level,
 over as many node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster nightly -Test HeavyLoad, LowLatency `
-    -Stress Harsh -Nodes east, west, mill, quay -OnlineNodes east `
-    -NodeCapability @{ east = 'receive'; west = 'receive'; mill = 'process'; quay = 'send' }
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad, LowLatency `
+    -Stress Harsh -Nodes R1, R2, P1, S1 -OnlineNodes R1 `
+    -NodeCapability @{ R1 = 'receive'; R2 = 'receive'; P1 = 'process'; S1 = 'send' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
-Stop-XmipTest -Cluster nightly -Test HeavyLoad, LowLatency
+Stop-XmipTest -Cluster C1 -Test HeavyLoad, LowLatency
 ```
 
 `Stop-XmipTest` takes the run the way `Start-XmipTest` was told it, by
@@ -655,8 +658,8 @@ Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, d
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
 Get-XmipTestStatus                                    # running, OK or FAILED, with counts
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
-Start-XmipTest -Suite Core.Playground -Cluster scratch -Test RoundTrip  # omit -Nodes: dealt
-Start-XmipTest -Suite * -Cluster scratch              # every suite this estate knows
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
+Start-XmipTest -Suite * -Cluster C1                   # every suite this estate knows
 ```
 
 Four kinds of test, and `Publish-XmipChange` runs every one a change
@@ -698,8 +701,8 @@ Start starts, Status observes, Stop stops.
 `-Test Round*` is RoundTrip, `-Test *` is every test and says the same as
 omitting it, and a pattern that matches nothing is refused by name before
 anything starts. Wildcards and not regular expressions, so the dot in
-`Rust.Style` is the dot you typed. `Get-XmipTestStatus -Cluster 'night*'`,
-`Stop-XmipTest -Cluster 'night*' -Test 'Heavy*'`, `Get-XmipTestResult -Node 'east*'` and
+`Rust.Style` is the dot you typed. `Get-XmipTestStatus -Cluster 'C*'`,
+`Stop-XmipTest -Cluster 'C*' -Test 'Heavy*'`, `Get-XmipTestResult -Node 'R*'` and
 `Get-XmipProcess -Name 'xmip-playground-*'` match the same way. `-Suite`
 filters too (the owner, 2026-09-19): `-Suite *` runs every suite this estate
 knows, one after another, and says in words which are about to run and which

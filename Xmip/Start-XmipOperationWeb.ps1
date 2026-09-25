@@ -78,7 +78,7 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Stress Harsh -PassThru |
+            Start-XmipTest -Suite Core.Playground -Cluster C1 -Stress Harsh -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE

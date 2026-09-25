@@ -67,8 +67,8 @@ function Start-XmipTest {
             caller reads the stream by type. It is said in words which are
             about to run and which did not start; one suite failing to start
             never stops the rest. A switch that belongs to one suite alone is
-            not a fault when a pattern chose the group: -Suite * -Cluster Z3
-            rolls on Z3 and runs the estate's Pester files beside it.
+            not a fault when a pattern chose the group: -Suite * -Cluster C1
+            rolls on C1 and runs the estate's Pester files beside it.
 
             A third party adds a suite by dropping a declaration in
             test/suite, with no edit to Xmip's own source. Example stands in
@@ -117,17 +117,19 @@ function Start-XmipTest {
 
         .PARAMETER Nodes
             The nodes to simulate, by name or by count — one process each,
-            spawned by the roll's cluster process: -Nodes alpha, beta, gamma
-            is three called that under one cluster called -Cluster, and
-            -Nodes 6 is six the roll names and deals over the message path
-            itself, as it does for an omitted -Nodes. A name starts with a
-            letter, so a lone number is a count, and a count is refused with
-            -OnlineNodes or -NodeCapability, which need names. What
-            each node does is the capability it is started with (ADR-0056),
-            stated with -NodeCapability. A name says nothing about it: the
-            owner, 2026-09-20, *Rn, Pn and Sn are arbitrary node names*, and
-            the one shorthand this cmdlet used to keep is gone. A node given
-            no capability declares none and runs the shared-directory tests
+            spawned by the roll's cluster process: -Nodes R1, P1, S1 is three
+            called that under one cluster called -Cluster, and -Nodes 6 is six
+            the roll names and deals over the message path itself, as it does
+            for an omitted -Nodes. A name starts with a letter, so a lone
+            number is a count, and a count is refused with -OnlineNodes or
+            -NodeCapability, which need names. What each node does is the
+            capability it is started with (ADR-0056), stated with
+            -NodeCapability. A name says nothing about it: the owner,
+            2026-09-20, *Rn, Pn and Sn are arbitrary node names*. The names
+            are the tester's: these examples call clusters C1, C2 and nodes
+            R1, P1, S1, as the owner does when he tests (2026-09-25), a
+            reminder to the person and never to Xmip. A node given no
+            capability declares none and runs the shared-directory tests
             whole, which is said in words where RoundTrip was asked for.
             RoundTrip across nodes hands each pair from receive to process to
             send between the processes, so each capability must be declared
@@ -147,21 +149,19 @@ function Start-XmipTest {
             dealt receive, process, send and round again, so the message path
             is covered and the run never refuses a roster it composed itself.
             A level with fewer than three nodes cannot cover the path; those
-            nodes declare no stage, RoundTrip runs whole in the roll, and it
-            is said. The run record and the [run] table carry the nodes that
-            were resolved.
+            nodes declare no stage, RoundTrip runs whole in the roll, and it is
+            said. The run record and the [run] table carry the nodes resolved.
 
         .PARAMETER NodeCapability
-            What each node declares it can do, stated per node: -Nodes alpha,
-            beta -NodeCapability @{ alpha = 'receive'; beta = 'process,send' }.
-            The values are receive, process and send, lowercase exactly, by
-            comma or plus; any other word ('Send' too), or a node -Nodes does
-            not name, is REFUSED before anything starts. A node the table does not
-            name declares nothing. This is the only way a named node gets a
+            What each node declares it can do, stated per node: -Nodes R1, P1
+            -NodeCapability @{ R1 = 'receive'; P1 = 'process,send' }. The values
+            are receive, process and send, lowercase exactly, by comma or plus;
+            any other word ('Send' too), or a node -Nodes does not name, is
+            REFUSED before anything starts. A node the table does not name
+            declares nothing. This is the only way a named node gets a
             capability; omit -Nodes instead and the level's complement deals
             them over the whole message path. ADR-0056 names two further kinds
-            of capability, authentication and runtime, which the Playground
-            does not model.
+            of capability, authentication and runtime, which the Playground does not model.
 
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
@@ -172,13 +172,12 @@ function Start-XmipTest {
             The cluster this roll starts (ADR-0028), by the name you give it
             — required: you name the cluster, and a test spawns a cluster and
             its nodes, never invents a name for one (the owner, 2026-09-14
-            and 2026-09-19). The
-            scope root is xmip:///<Cluster> and the run publishes to
-            <Cluster>-snapshot.toml beside its history and activity. Any name
-            a file can carry will do, and none of them means anything to
-            Xmip. Two rolls with two names are two clusters side by side,
-            each with its own web GUI:
-            Start-XmipTest -Cluster orders -PassThru | Start-XmipOperationWeb -Url ...
+            and 2026-09-19). The scope root is xmip:///<Cluster> and the run
+            publishes to <Cluster>-snapshot.toml beside its history and
+            activity. Any name a file can carry will do, and none means
+            anything to Xmip. Two rolls with two names are two clusters side
+            by side, each with its own web GUI:
+            Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
@@ -200,23 +199,24 @@ function Start-XmipTest {
             Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes alpha, beta -PassThru |
+            Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster orders -Nodes east, west, mill, quay
-                -OnlineNodes east, quay -NodeCapability @{ east = 'receive'
-                    west = 'receive'; mill = 'process'; quay = 'send' }
+            # The names are the tester's; -NodeCapability says what each does.
+            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, P1, S1
+                -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster north -Nodes alpha, beta, gamma
-                -NodeCapability @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
+            Start-XmipTest -Test RoundTrip -Cluster C2 -Nodes R1, R2, P1, S1
+                -OnlineNodes R1, S1 -NodeCapability @{ R1 = 'receive'
+                    R2 = 'receive'; P1 = 'process'; S1 = 'send' }
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Cluster nightly -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate
@@ -225,16 +225,16 @@ function Start-XmipTest {
             Get-XmipTestResult -Suite Core.Estate | Format-Table -Property Test, Name
 
         .EXAMPLE
-            Start-XmipTest -Suite Example.Playground -Cluster orders
+            Start-XmipTest -Suite Example.Playground -Cluster C1
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
 
         .EXAMPLE
-            Start-XmipTest -Suite * -Cluster orders
+            Start-XmipTest -Suite * -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite *Play* -Cluster orders
+            Start-XmipTest -Suite *Play* -Cluster C1
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]

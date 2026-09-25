@@ -23,8 +23,8 @@ function Get-XmipPlaygroundProcess {
         .PARAMETER Name
             The process name, wildcards allowed. Since 2026-09-20 a
             Playground process is named for its cluster and what it is —
-            xmip-playground-orders-roll, xmip-playground-orders-node-mill,
-            for a cluster someone called orders and a node they called mill,
+            xmip-playground-C1-roll, xmip-playground-C1-node-alpha, for a
+            cluster someone called C1 and a node they called alpha,
             both names free — so the Playground's own callers ask for
             xmip-playground-* and say which of the three with -Kind.
             xmip-gui-web is named outright.

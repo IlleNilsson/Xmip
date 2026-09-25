@@ -68,6 +68,9 @@ function Get-XmipTestResult {
 
         .EXAMPLE
             Get-XmipTestResult -Test RoundTrip -Worst
+
+        .EXAMPLE
+            Get-XmipTestResult -Path .local-work/playground/C1-snapshot.toml -Node R1
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]

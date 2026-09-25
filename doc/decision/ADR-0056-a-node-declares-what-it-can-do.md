@@ -233,6 +233,19 @@ stands (a scope, a process name, a declaration, a `-NodeCapability` entry, a
 flag naming nodes, or a quoted name). The records keep the names where they
 tell what happened.
 
+**2026-09-25, later the same day: the help shows the tester's names.** The
+owner names clusters Cn and nodes Rn, Pn and Sn when he runs tests — *That is
+why I use Cn, Rn, Pn, Sn. No confusion*; he could not read `north`, which is a
+direction — and ruled that help examples and the README show `C1`, `R1`,
+`P1`, `S1` as parameter values, with `-NodeCapability @{ R1 = 'receive';
+P1 = 'process'; S1 = 'send' }` still saying what each node does and a
+sentence saying the names mean nothing to Xmip. Code, tests and fixtures keep
+names that carry no meaning; the ruling above stands for them.
+`test/NodeName.Test.ps1` allows such a name in a README.md, in the .EXAMPLE
+and .PARAMETER sections of a script's help, and in a binary's usage text, and
+nowhere else. Provenance: the owner's ruling, 2026-09-25; the placement of
+the allowance is the assistant's drafting of it.
+
 ## Amendment, 2026-09-24: the node crate reads the words, lowercase exactly
 
 Open problem 25, row i: a declared capability was read three ways. The
