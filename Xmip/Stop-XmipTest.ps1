@@ -20,10 +20,16 @@ function Stop-XmipTest {
             images the tree ran under are taken away with it (ADR-0053,
             amendment 2026-09-20).
 
-            Which runs: those -Cluster and -Test pick together, as
+            Which runs: those -Suite, -Cluster and -Test pick together, as
             Start-XmipTest was told them; those on the pipeline from
             Get-XmipTestStatus; those with the process ids in -Id; or every
             run when nothing is named.
+
+            A run of Core.Estate, the estate's Pester suite, is one pwsh of
+            its own: stopping it ends that pwsh and whatever it started, and
+            takes its record; its log is kept. One that has already ended is
+            listed by Get-XmipTestStatus with its verdict and is never picked
+            by a filter; named by -Id it is REFUSED, since nothing of it runs.
 
             A run is one process, so a test is stopped by stopping the run
             that drives it. A run that also drives a test not named is
@@ -51,8 +57,17 @@ function Stop-XmipTest {
             is matched by every test in it. A pattern no running test matches
             is REFUSED, naming what is running.
 
+        .PARAMETER Suite
+            The runs to stop by the suite each runs, as Start-XmipTest -Suite
+            names it, wildcards allowed: -Suite Core.Estate stops the estate's
+            Pester run. A pattern no running suite matches is REFUSED, naming
+            what is running.
+
         .EXAMPLE
             Stop-XmipTest
+
+        .EXAMPLE
+            Stop-XmipTest -Suite Core.Estate
 
         .EXAMPLE
             Stop-XmipTest -Cluster C1 -Test RoundTrip
@@ -122,7 +137,11 @@ function Stop-XmipTest {
                 Where-Object { $_ -like "$wordToComplete*" } |
                 Sort-Object -Unique
         })]
-        [string[]] $Test = @()
+        [string[]] $Test = @(),
+
+        [Parameter(ParameterSetName = 'Filter')]
+        [SupportsWildcards()]
+        [string] $Suite
     )
 
     begin {
@@ -143,13 +162,17 @@ function Stop-XmipTest {
     }
 
     end {
-        [object[]] $running = @(Get-XmipTestStatus)
+        # An estate run that has ended is listed, and there is nothing of it
+        # to stop: it is chosen only by its id, and then refused in words.
+        [object[]] $listed = @(Get-XmipTestStatus)
+        [object[]] $running = @($listed | Where-Object { $_.State -eq 'running' })
 
         if ($PSCmdlet.ParameterSetName -eq 'Filter') {
             [hashtable] $asked = @{
                 Running = $running
                 Cluster = $Cluster
                 Test    = $Test
+                Suite   = $Suite
             }
 
             [object[]] $picked = @(Select-XmipTestRoll @asked)
@@ -157,10 +180,26 @@ function Stop-XmipTest {
         }
 
         foreach ($number in @($targets | Sort-Object -Unique)) {
-            $roll = $running | Where-Object { $_.Id -eq $number } | Select-Object -First 1
+            $roll = $listed | Where-Object { $_.Id -eq $number } | Select-Object -First 1
 
             if ($null -eq $roll) {
-                Write-Error "No Playground roll has pid $number. Get-XmipTestStatus lists them."
+                Write-Error "No test run has pid $number. Get-XmipTestStatus lists them."
+                continue
+            }
+
+            # The estate's Pester run is one pwsh and what it started; it has
+            # no nodes and no cluster (Stop-XmipEstateRun).
+            if ($roll.Kind -eq 'pester' -and $roll.State -ne 'running') {
+                Write-Error ("REFUSED: the $($roll.Suite) run $number has ended " +
+                    "($($roll.State)); there is nothing to stop.")
+                continue
+            }
+
+            if ($roll.Kind -eq 'pester') {
+                if ($PSCmdlet.ShouldProcess("the $($roll.Suite) run $number", 'Stop')) {
+                    Stop-XmipEstateRun -Run $roll
+                }
+
                 continue
             }
 
@@ -282,4 +321,41 @@ function Stop-XmipTestCluster {
         Wait-Process -Id $cluster.Id -Timeout 5 -ErrorAction SilentlyContinue
         Write-Verbose "stopped cluster $($cluster.Id) of roll $Parent"
     }
+}
+
+
+function Stop-XmipEstateRun {
+    <#
+        .SYNOPSIS
+            Ends a running estate run: its pwsh and everything that pwsh
+            started, then its record.
+
+        .DESCRIPTION
+            A test may start a process of its own — cargo, a node, a host —
+            and ending only the run's pwsh would orphan it, so the whole
+            tree is ended, as Stop-XmipTest ends a roll's tree. The log is
+            kept, for what the run said before it was stopped.
+
+        .PARAMETER Run
+            The run, from Get-XmipEstateRun.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [PSObject] $Run
+    )
+
+    try {
+        [System.Diagnostics.Process]::GetProcessById($Run.Id).Kill($true)
+    }
+    catch {
+        [string] $why = $_.Exception.Message
+        Write-Error "REFUSED: $($Run.Suite) run $($Run.Id) could not be stopped: $why"
+        return
+    }
+
+    Wait-Process -Id $Run.Id -Timeout 5 -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $Run.Record -Force -ErrorAction SilentlyContinue
+    Write-Verbose "stopped the $($Run.Suite) run $($Run.Id)"
 }

@@ -10,7 +10,11 @@ function Get-XmipTestStatus {
 
         .DESCRIPTION
             A run of the Playground is a roll, and the suite it names is the
-            one it was started with, read back from the run record.
+            one it was started with, read back from the run record. A run of
+            Core.Estate is the estate's Pester suite in a pwsh of its own,
+            listed from its record under .local-work/estate while it runs and
+            after it ends: State says running, OK or FAILED in words, and
+            Tally the counts. A new estate run clears the ended ones.
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
@@ -18,22 +22,27 @@ function Get-XmipTestStatus {
             listed with what a process alone can tell.
 
             Nothing here starts, stops or writes anything. Nothing running
-            means no output.
+            and nothing recorded means no output.
 
         .PARAMETER Path
-            Where the run records are. Defaults to the repository's
-            .local-work/playground folder, where Start-XmipTest writes.
+            Where the rolls' run records are. Defaults to the repository's
+            .local-work/playground folder, where Start-XmipTest writes. The
+            estate's records are always read from .local-work/estate.
 
         .PARAMETER Cluster
             Only the runs whose cluster matches, wildcards allowed. Every run
             unless said. This selects among the runs there are; the cluster is
-            named, not matched, where Start-XmipTest spawns one.
+            named, not matched, where Start-XmipTest spawns one. An estate run
+            rolls as no cluster, so naming one leaves it out.
 
         .EXAMPLE
             Get-XmipTestStatus
 
         .EXAMPLE
             Get-XmipTestStatus -Cluster 'Z*' | Format-List
+
+        .EXAMPLE
+            Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
@@ -52,6 +61,10 @@ function Get-XmipTestStatus {
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = $layout.Area
     }
+
+    # The estate's Pester runs, running or finished, from their own records.
+    # None rolls as a cluster, so a -Cluster that names one leaves them out.
+    Get-XmipEstateRun -Path $layout.Estate | Where-Object { "$($_.Cluster)" -like $Cluster }
 
     [System.Diagnostics.Process[]] $rolls = @(
         Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Roll -Kind Roll
@@ -104,7 +117,9 @@ function Get-XmipTestStatus {
         [PSCustomObject]@{
             PSTypeName  = 'Xmip.TestStatus'
             Suite       = if ($named -ne '') { $named } else { $script:XmipPlaygroundSuite }
-            Cluster     = if ($rolledAs -ne '') { $rolledAs } else { $null }
+            Kind        = 'roll'
+            State       = 'running'
+            Cluster    = if ($rolledAs -ne '') { $rolledAs } else { $null }
             Id          = $roll.Id
             StartTime   = $roll.StartTime
             Stress      = Get-TomlValue -Node $record -Name 'stress'

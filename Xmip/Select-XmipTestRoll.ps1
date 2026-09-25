@@ -83,7 +83,16 @@ function Format-XmipRollingNow {
                 'the whole suite'
             }
 
-            "$($roll.Cluster) running $drives"
+            # A run with no cluster, the estate's Pester run, is named by its
+            # suite and its pid.
+            [string] $named = if ("$($roll.Cluster)" -ne '') {
+                "$($roll.Cluster)"
+            }
+            else {
+                "$($roll.Suite) $($roll.Id)"
+            }
+
+            "$named running $drives"
         }
     )
 
@@ -94,13 +103,15 @@ function Format-XmipRollingNow {
 function Select-XmipTestRoll {
     <#
         .SYNOPSIS
-            The runs -Cluster and -Test pick together, or a refusal.
+            The runs -Suite, -Cluster and -Test pick together, or a refusal.
 
         .DESCRIPTION
-            Neither given is every run. -Cluster picks by the cluster a run
-            rolls as. -Test picks the runs that drive a matching test, and
-            then refuses every one of them that also drives a test not
-            named, since stopping it would stop that test too. Either filter
+            None given is every run. -Suite picks by the suite a run runs,
+            read as Start-XmipTest reads it, so Estate and Core.Estate are
+            one suite. -Cluster picks by the cluster a run rolls as. -Test
+            picks the runs that drive a matching test, and then refuses every
+            one of them that also drives a test not named, since stopping it
+            would stop that test too. Any filter
             matching nothing is refused as well, naming what is running, so a
             typo never reads as success.
 
@@ -115,6 +126,9 @@ function Select-XmipTestRoll {
 
         .PARAMETER Test
             Test names or patterns; none for any.
+
+        .PARAMETER Suite
+            A suite name or pattern; empty for any.
     #>
     [CmdletBinding()]
     [OutputType([object[]])]
@@ -130,14 +144,32 @@ function Select-XmipTestRoll {
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyCollection()]
-        [string[]] $Test = @()
+        [string[]] $Test = @(),
+
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string] $Suite
     )
 
     [string] $there = Format-XmipRollingNow -Running $Running
     [object[]] $rolls = $Running
 
+    if (-not [string]::IsNullOrEmpty($Suite)) {
+        [string[]] $named = @(
+            Get-XmipNamedTestSuite -Name $Suite -Known @(Get-XmipTestSuite) |
+                ForEach-Object { $_.Name }
+        )
+        $rolls = @($Running | Where-Object { "$($_.Suite)" -in $named })
+
+        if ($rolls.Count -eq 0) {
+            Write-Error "REFUSED. No run of a suite matching $Suite is running. $there"
+            return
+        }
+    }
+
     if (-not [string]::IsNullOrEmpty($Cluster)) {
-        $rolls = @($Running | Where-Object { "$($_.Cluster)" -like $Cluster })
+        $rolls = @($rolls | Where-Object { "$($_.Cluster)" -like $Cluster })
 
         if ($rolls.Count -eq 0) {
             Write-Error "REFUSED. No roll matches $Cluster. $there"

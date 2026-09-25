@@ -126,9 +126,11 @@ xgit -m 'short precise message'    # alias for Publish-XmipChange
 
 Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
 before anything depending on it can be verified — the tool handles the order.
-Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial; the
-suite is around two hundred tests and is the estate's memory of every past
-defect.
+Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial, and
+land when `Get-XmipTestStatus` says OK; the suite is around two hundred tests
+and is the estate's memory of every past defect. It runs detached, so the
+prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
+failed.
 
 **The toolchain.** PowerShell Core 7.6.5 or newer, with PSToml and posh-git.
 Rust builds with stable cargo; C# builds with the .NET 11 preview SDK, but
@@ -236,8 +238,8 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
-configuration. Nothing writes it yet; it is reserved so the first thing that
-does has a home. It is not a scratch folder either; scratch is
+configuration, what a test run writes: `playground/` for the rolls and
+`estate/` for the estate's Pester runs. It is not a scratch folder either; scratch is
 `.ai-interaction/`. The three together: `.ai-interaction/` is who, `.ai-work/`
 is what machinery, `.local-work/` is where.
 
