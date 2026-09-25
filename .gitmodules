@@ -183,3 +183,6 @@
 [submodule "module/core/capability/secret"]
 	path = module/core/capability/secret
 	url = https://github.com/IlleNilsson/xmip-core-secret.git
+[submodule "module/core/library/ssh"]
+	path = module/core/library/ssh
+	url = https://github.com/IlleNilsson/xmip-core-library-ssh.git

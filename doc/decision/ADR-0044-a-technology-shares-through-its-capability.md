@@ -140,6 +140,17 @@ Done 2026-09-24: both repositories created and mounted under
 `module/core/capability/transport/`, every caller moved, nothing re-exported
 from http.
 
+Done 2026-09-25: the exchange followed. The request and its answer, both
+halves, are `net::http`, and the URL a Location names `net::Endpoint`; http's
+own codec (`message`), its Stream writer (`client`) and its URL reader
+(`HttpTarget`) are gone, and every technology riding on HTTP calls net for
+the message and http for what is the transport's — the connection and its
+TLS (`http::endpoint`), a request served (`http::server`), the judgement of
+a status (`http::status`) and RFC 1123's date. The head reader the
+transport capability held for HTTP and SMTP went with it, to `net::head`,
+and a network failure reaches a transport's `?` through
+`From<NetError> for TransportError`, judged by its kind.
+
 ## Amendment, 2026-09-24: a dialect is a choice, not a copy
 
 Clause 2 left each SQL technology "its own quoting". Five crates read that as

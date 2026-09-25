@@ -1274,6 +1274,35 @@ nodes, an open node framed with its traffic outside; `ThreeViewsTest`: the
 root's crumb).
 
 
+## Amendment, 2026-09-25: the node a scope is on is observe's
+
+Open problem 25, row q. The Monitor's rows named a record's node by
+`ScopeTree.Node`, which took the first segment — the cluster, for every
+record a roll publishes under `xmip:///<cluster>/node/<name>` — while the
+prompt's `SegmentRender.At` looked for the literal `node` segment itself, and
+`ScopeTree.Stage` and `ScopeIndex` took any stage word anywhere, so a node
+called `send` read as a stage. The scope's shape was known in three places and
+known three ways.
+
+`observe::Scope::node` and `observe::Scope::stage` are the one reading: the
+node is the segment after the `node` marker beneath the cluster, and none
+where there is no marker — the cluster is never a node; the stage is the
+first stage word beneath the node, or beneath the cluster where the scope is
+on no node. The runtime forwards both as `xmip_scope_node_v1` (ADR-0027,
+amendment 2026-09-25), `RuntimeRules.Node` binds it, and `ScopeTree.Node`
+and `ScopeTree.Stage` call it; `SegmentRender.At` asks `ScopeTree.Node` of
+the prefix every record shares, and `ScopeIndex` files a record under
+`ScopeTree.Stage`. No surface reads the marker or a stage's position any
+more.
+
+Proved by `observe`'s `scope.rs`, the runtime's `ffi/rule.rs`,
+`Xmip.Abi.Tests` (`RuntimeRulesTests`, `OperateAbiTests`),
+`Xmip.Surface.Test` (`ScopeTreeTest`: the surface returns what the export
+returns), `Xmip.Gui.Test` (`TwoClustersTest`: a Monitor row names `gamma`,
+the rollup no node and no row the cluster) and the PowerShell prompt's
+tests.
+
+
 ## Alternatives considered
 
 **A `Xmip.Surface` repository of its own.** Rejected for now: it would be a

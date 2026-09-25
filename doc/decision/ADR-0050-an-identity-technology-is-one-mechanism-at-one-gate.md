@@ -402,3 +402,30 @@ against the 400-line limit, so **the runtime keeps its boundary in one
 named folder, `src/ffi/`**, each file under the limit, and allows unsafe
 there and nowhere else. The rule reads: one file per crate, or for the
 runtime, one folder. `test/Unsafe.Test.ps1` holds both.
+
+## Amendment, 2026-09-25: the SSH wire types are a library
+
+The owner approved it on 2026-09-24: **the SSH wire types are
+`xmip-core-library-ssh`**, mounted at `module/core/library/ssh` beside
+asn1, codec, net, ntlm and tls. It reads and writes what RFC 4251 section 5
+gives SSH — `boolean`, `string`, `mpint` and `name-list`; `byte`, `uint32`
+and `uint64` are codec's own — as `SshRead` over codec's cursor and
+`SshWrite` beside codec's byte writer, and a refusal is codec's error.
+
+- **Two readers were one encoding.** `authenticate/ssh-key` read key blobs,
+  signature blobs and signed data with a `wire` module of its own, and the
+  SFTP transport read and wrote the same types in its `packet` module for
+  its key exchange, user authentication, channels and file protocol. Both
+  are gone; both crates depend on the library, and the gate's test helpers
+  that wrote a `string` and an `mpint` write them with it.
+- **The packet framing stays with the transport.** RFC 4253 section 6 —
+  the length, the padding, the cipher and the MAC around a payload — is the
+  SFTP transport's alone: the gate reads blobs a transport already took
+  apart and frames nothing, so there was no second copy to move.
+- **What a blob means stays with its reader.** Which key types and
+  signature algorithms verify, and how an ECDSA signature's two integers
+  become scalars, are the gate's; what a message number says is the
+  transport's.
+
+The owner's, 2026-09-24: the library, its name and where it mounts. The
+assistant chose its shape.

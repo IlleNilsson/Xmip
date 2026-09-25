@@ -807,6 +807,10 @@ stopped or finished, into `.local-work/audit/audit.toml` — the directory it
 sets `XMIP_AUDIT_DIRECTORY` to for the session when nothing else did, so
 everything it starts records there too. `Start-XmipOperationWeb` keeps the
 host's console in `.local-work/web`, as a roll's is kept beside the roll.
+It binds plain http on loopback only, and says so in the host's log and
+audit; any other address is `https://` with `-Certificate` and `-PrivateKey`,
+and a remote surface following it presents a certificate `-TrustAnchor`
+reaches (ADR-0063 clause 1).
 
 ### Contributing
 

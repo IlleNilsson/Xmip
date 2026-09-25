@@ -404,6 +404,17 @@ arrival under `http.header.<name>`. Nothing writes the first yet. Whether
 promotion writes the second spelling into context, or the two stay distinct
 vocabularies for two moments, is the owner's.
 
+*Answered by the owner the same day: one spelling, and it names the
+protocol.* A header a transport writes — on the arrival or into the Message
+Context — is `<protocol>.header.<name>`, the name in lower case where
+the protocol folds it (ADR-0046, amendment 2026-09-25): `http.header.*`,
+`amqp.header.*`, `kafka.header.*`. `context::property::header`
+builds it and is the only place the spelling is written; the well-known HTTP
+header names beside it are built from the same spelling, the identity gates
+that read a named header call it, and `route/header` reads through it, its
+filter naming the protocol: `header:http.content-type` (ADR-0046, amendment
+2026-09-25). The bare `header.<name>` is gone.
+
 Provenance: the ruling is the owner's, 2026-09-24; the list of names, and the
 module holding them, are the assistant's drafting under it.
 

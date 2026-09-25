@@ -33,6 +33,8 @@ BeforeAll {
         'module/core/operation/gui/vscode/.src/runtime.rs'      = 'ADR-0014, amendment 2026-09-10'
         # The Windows Event Log and the registry (ADR-0062).
         'module/core/operation/audit/src/windows_event_log.rs' = 'ADR-0050, amendment 2026-09-25'
+        # CryptProtectData and CryptUnprotectData: the key home on Windows.
+        'module/core/capability/secret/dpapi/src/crypt_protect.rs' = 'ADR-0063 clause 4'
     }
 
     # The crate a file belongs to: the nearest directory above it with a
