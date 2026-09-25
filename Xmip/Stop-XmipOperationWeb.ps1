@@ -53,6 +53,12 @@ function Stop-XmipOperationWeb {
     }
 
     end {
+        # Every stop is audited, and so is every failure (ADR-0062).
+        trap {
+            Write-XmipAudit -Action 'Stop-XmipOperationWeb' -ErrorRecord $_
+            break
+        }
+
         [object[]] $running = @(Get-XmipOperationWeb)
 
         if ($PSCmdlet.ParameterSetName -eq 'All') {
@@ -69,6 +75,10 @@ function Stop-XmipOperationWeb {
 
             if ($PSCmdlet.ShouldProcess("web monitor at $($found.Url) (pid $number)", 'Stop')) {
                 Stop-Process -Id $number -Force -ErrorAction SilentlyContinue
+                Write-XmipAudit -Action 'Stop-XmipOperationWeb' -Phase Finished -Property @{
+                    Id  = $number
+                    Url = $found.Url
+                }
                 Write-Verbose "stopped web monitor $number"
             }
         }

@@ -2,16 +2,17 @@
 
 - Status: Accepted
 - Date: 2026-09-11
-- Related: ADR-0014 (the operator surfaces; amendments 2026-08-26, the ABI
-  is the interface into Xmip; 2026-09-05, the web GUI monitors; 2026-09-09,
-  the .NET binding is one project in xmip-core-abi; 2026-09-10, the
-  configuration tool has two faces), ADR-0027 (the operator boundary;
-  amendments 2026-09-24, section 7's rules and section 8's publication
-  reader), ADR-0041 (health is a mood and does not propagate; its color name
-  corrected 2026-09-24, its rollup exported the same day), ADR-0044 (a
-  technology shares through its capability), ADR-0056 (a node declares what
-  it can do; its copies corrected 2026-09-24, its evidence and run entry
-  moved to the node crate the same day)
+- Related: ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
+  `ProgramAudit` for every .NET surface), ADR-0014 (the operator surfaces;
+  amendments 2026-08-26, the ABI is the interface into Xmip; 2026-09-05, the
+  web GUI monitors; 2026-09-09, the .NET binding is one project in
+  xmip-core-abi; 2026-09-10, the configuration tool has two faces), ADR-0027
+  (the operator boundary; amendments 2026-09-24, section 7's rules and
+  section 8's publication reader), ADR-0041 (health is a mood and does not
+  propagate; its color name corrected 2026-09-24, its rollup exported the
+  same day), ADR-0044 (a technology shares through its capability), ADR-0056
+  (a node declares what it can do; its copies corrected 2026-09-24, its
+  evidence and run entry moved to the node crate the same day)
 
 ## In brief
 
@@ -1078,7 +1079,7 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
   to its token as `--mood` and decides no mood's color (ADR-0041's amendment
   of 2026-09-14, corrected the same day).
 - **Each rule is tested once, where it is written** — `observe`'s `scope.rs`
-  and `health.rs`, `node`'s `stage.rs` — and the runtime's `rule.rs` proves
+  and `health.rs`, `node`'s `stage.rs` — and the runtime's `rule.rs` (`src/ffi/`) proves
   each export forwards and has the shape `xmip-core-abi` declares.
   `Xmip.Abi.Tests` proves the crossing, `Xmip.Surface.Test` that the surface
   returns what the export returns, and `test/XmipTest.Test.ps1` and
@@ -1103,7 +1104,7 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
 | A publication's shape: its keys, its words, what an unknown word reads as | `observe::Publication` (`of`, `whole`, `to_toml`, `read`, `snapshot`) | section 8: `xmip_publication_read_v1` and its seven companions (ADR-0027's amendment of the same date) | `SnapshotOperator` through `Xmip.Abi`'s `PublicationReader`, and the Playground's roll, cluster and nodes in Rust | the Playground's `SnapshotReport` and its readers; `SnapshotOperator`'s TOML walk (`Rows`, `Text`, `Number`, `Real`, `ParseState`, `ParseObserved`, the topology parse) |
 | The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Playground's `history_toml` | the Playground's `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
 | The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Playground's `activity_toml` | the Playground's `ActivityReport`/`ItemReport` and its own `kind_name` word list |
-| The language server's validate entrypoint and its shape | `abi::operate::XMIP_VALIDATE_ENTRYPOINT`, `ValidateFn` (and `StartFn` beside it) | — (a Rust-to-Rust copy) | `xmip-lsp`'s `runtime.rs`; the runtime's `start.rs` proves both exports have the declared shape | `runtime.rs`'s own `ENTRYPOINT` bytes and `ValidateFn` |
+| The language server's validate entrypoint and its shape | `abi::operate::XMIP_VALIDATE_ENTRYPOINT`, `ValidateFn` (and `StartFn` beside it) | — (a Rust-to-Rust copy) | `xmip-lsp`'s `runtime.rs`; the runtime's `ffi/start.rs` proves both exports have the declared shape | `runtime.rs`'s own `ENTRYPOINT` bytes and `ValidateFn` |
 
 - **A publication is read in one place.** `SnapshotOperator` hands the file's
   text to the runtime and builds its index from what comes back; it names no
@@ -1140,6 +1141,25 @@ Tested once where each is written — `observe`'s `health.rs`, `counted.rs`,
 `rule/node.rs` and `publication.rs` proving each export forwards and has the
 declared shape, `Xmip.Abi.Tests` the crossing, and `Xmip.Surface.Test` that
 the surface answers what the export answers.
+
+## Amendment, 2026-09-25: the surfaces audit through one class
+
+ADR-0062: every Xmip program audits through `xmip-core-audit`. What the .NET
+surfaces share for it is `Xmip.Surface`'s `ProgramAudit`: the program's
+name, the directory its configuration names (`Xmip:AuditDirectory`, resolved
+as `Xmip:RuntimeLibrary` is), `Record`, `Failed` — one exception, one record
+— and `WatchUnhandled`, each a call into the runtime's `xmip_audit_v1`
+(ADR-0027, amendment of the same date) and none a record of its own. When
+the runtime's library cannot be loaded at all, `ProgramAudit` writes one
+entry to the operating system's log itself, saying why; that writer,
+`OperatingSystemLog`, is the only one in .NET. The two GUI hosts add
+`Xmip.Gui`'s `AuditLoggerProvider`, which makes every error a host logs a
+record — a Blazor circuit that dies among them — and the web host a
+`CircuitHandler` for who was connected; the command line records each
+command and its exit, and the PowerShell module every cmdlet's failure
+through one base class and the prompt's failures where it used to swallow
+them.
+
 
 ## Alternatives considered
 

@@ -427,7 +427,8 @@ Xmip/
 │       ├── capability/
 │       │   ├── receive   send   transport   logic   prepare   identify
 │       │   ├── authenticate   authorize   contract   path   assign   promote
-│       │   └── demote   transform   route   process   retain   resilience
+│       │   ├── demote   transform   route   process   retain   resilience
+│       │   └── secret
 │       └── operation/
 │           ├── audit   observe   report   archive
 │           └── cli   powershell   gui

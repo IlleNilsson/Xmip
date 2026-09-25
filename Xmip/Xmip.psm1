@@ -315,6 +315,7 @@ function Get-TomlValue {
 . (Join-Path $PSScriptRoot 'Get-XmipPlaygroundProcess.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'Import-XmipOperatorModule.ps1')
+. (Join-Path $PSScriptRoot 'Write-XmipAudit.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeCapability.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeComplement.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')

@@ -115,6 +115,8 @@ function Start-XmipEstateSuite {
         $launch.WindowStyle = 'Hidden'
     }
 
+    # What it starts audits where the tooling does (ADR-0062).
+    Initialize-XmipAudit
     $process = Start-Process @launch
 
     Write-XmipEstateStart @run -Id $process.Id -Started $process.StartTime

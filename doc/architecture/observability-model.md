@@ -211,6 +211,15 @@ persistence contracts, and query contracts.
 its own audit persistence — the moment two exist, no query can answer a question
 that spans both.
 
+**Nor does any Xmip program** (ADR-0062). The web and desktop monitors, the
+command line, both PowerShell modules, the Playground's processes, the
+language server and the estate's own tooling record what they start and stop,
+every act an operator takes through them and every failure, through the same
+capability — a .NET program and PowerShell through the runtime's library. When
+audit cannot persist a record, the capability writes it to the operating
+system's log instead: the Windows Event Log, the journal or syslog, the
+unified log. A failure is never only on a screen.
+
 ## 10. The invariant
 
 > Every Xmip action is auditable. What is recorded is determined by the

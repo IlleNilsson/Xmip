@@ -76,3 +76,33 @@ Clause 10 stands: the installed layout — bin, config, modules and the rest
 it names — is normative. What is gone is the one thing that created it by
 hand, so until packaging lands nothing lays a node out, which is what the
 Context already said of installing one.
+
+## Amendment, 2026-09-25: the persistence engine is RocksDB
+
+The open question above — *whether the RocksDB-style shape is filled by
+RocksDB or by a pure Rust store* — is answered by the owner, 2026-09-25:
+**RocksDB**, for the runtime store (Messages, Journeys, checkpoints), and an
+embedded SQLite for the management store, the two shapes
+`database-selection.md` chose before it was folded away on 2026-08-25.
+
+He asked for it believing it was already there. It had been: a RocksDB
+runtime store was written on 2026-06-14, its dependency dropped from the
+build as unused on 2026-06-26, and the store deleted on 2026-08-20; the
+SQLite store did not move when the monolith was distributed on 2026-08-26.
+`xmip-core-persist` has held the types and no engine since.
+
+What it costs, as the Open section said and the owner took knowingly: a C++
+toolchain and libclang in every build that includes the runtime store,
+harder cross-compilation to arm64, larger artifacts. `prerequisite.toml`
+declares the toolchain; the AlmaLinux guest verifies the Linux build. Each
+engine is a technology under `persist`, so a device build can leave RocksDB
+out.
+
+Encryption of what is stored is not the engine's (ADR-0063).
+
+Built 2026-09-25: `xmip-core-persist-rocksdb` and `xmip-core-persist-sqlite`,
+each a `persist::Engine` under persist's `EncryptedStore`, tested on Windows
+and on the AlmaLinux guest. `prerequisite.toml` declares libclang (and, on
+Linux, the C++ compiler); the first Windows build of RocksDB took some twenty
+minutes. RocksDB is built without compression, since what it stores is
+ciphertext.

@@ -217,6 +217,11 @@ resources:
                 "xmip-core-transport-sftp",
                 "xmip-core-transport-aws",
                 "xmip-core-transport-azure",
+                "xmip-core-secret-dpapi",
+                "xmip-core-secret-file",
+                "xmip-core-secret-keychain",
+                "xmip-core-persist-rocksdb",
+                "xmip-core-persist-sqlite",
               ]
               started = [
                 "xmip-core-transport-file", "xmip-core-transport-tcp",

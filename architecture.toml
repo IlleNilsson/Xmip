@@ -1198,15 +1198,22 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.audit]
-  description = "Configurable Begin, Execute, Finished and Failure audit functionality."
+  description = "Configurable Begin, Execute, Finished and Failure audit functionality, for every Xmip action and every Xmip program, and the operating system's log when audit cannot persist (ADR-0062)."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec"]
+    # file, syslog and windows-event-log are carried by the capability itself
+    # (src/file_sink.rs, src/syslog.rs, src/windows_event_log.rs): the file is
+    # every program's default sink and the other two are ADR-0062's fallback,
+    # which is the capability's own rule, and a capability does not depend on
+    # its technologies. None has a repository of its own, so each stays
+    # reserved; a repository for one is the owner's decision.
     [xmip.core.audit.elasticsearch]
     maturity = "reserved"
     [xmip.core.audit.file]
     maturity = "reserved"
+    description = "Records appended as TOML tables to audit.toml in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
     [xmip.core.audit.kafka]
     maturity = "reserved"
     [xmip.core.audit.mssql]
@@ -1221,6 +1228,10 @@ dependency = []
     maturity = "reserved"
     [xmip.core.audit.syslog]
     maturity = "reserved"
+    description = "The local syslog socket: the systemd journal on Linux, the unified log on macOS. ADR-0062's fallback when audit cannot persist. Carried by xmip-core-audit itself, src/syslog.rs."
+    [xmip.core.audit.windows-event-log]
+    maturity = "reserved"
+    description = "The Windows Event Log, Application, source Xmip. ADR-0062's fallback when audit cannot persist. Carried by xmip-core-audit itself, src/windows_event_log.rs."
 
   [xmip.core.observe]
   description = "Near-real-time operational observation functionality."
@@ -1346,6 +1357,45 @@ dependency = []
     [xmip.core.resilience.timeout]
     maturity = "scaffolded"
 
+  # The key home, ADR-0063 clause 4, created on the owner's word of
+  # 2026-09-25. A Capability rather than Platform by ADR-0058 clause 4: it is
+  # not opened for the node's sake alone — persist wraps its data keys here,
+  # and the secrets a transport presents (market-position.md section 8) are
+  # to live here too. Its technologies are the places a key-encryption key is
+  # held; the sealing itself is the capability's, once.
+  [xmip.core.secret]
+  description = "The key home (ADR-0063): a key store wraps and unwraps a data key under a named key-encryption key, creating it when absent, and says which store it is. AES-256-GCM sealing and the keyed hash, once. The platform's key store first; PKCS#11 and vaults as further technologies."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = []
+    [xmip.core.secret.dpapi]
+    description = "Windows DPAPI: a key-encryption key in a file sealed by CryptProtectData under the Service Identity, readable by that identity on that machine alone. A xmip-core-secret technology."
+    maturity = "scaffolded"
+    specification = "Windows Data Protection API, CryptProtectData and CryptUnprotectData, user scope"
+    [xmip.core.secret.file]
+    description = "A key-encryption key in a file readable by the Service Identity alone: 0600 in a 0700 directory, refused when either is wider. Linux and every Unix. A xmip-core-secret technology."
+    maturity = "scaffolded"
+    [xmip.core.secret.keychain]
+    description = "The macOS keychain: a key-encryption key as a generic password item of the Service Identity's keychain. A xmip-core-secret technology."
+    maturity = "scaffolded"
+    specification = "Apple Security framework, generic password items"
+    # The Linux kernel keyring holds a key until the machine restarts and no
+    # longer: a key-encryption key kept only there is lost data after a
+    # reboot (ADR-0063, Consequences). Reserved until the owner decides what
+    # it is for — a cache in front of file, or nothing.
+    [xmip.core.secret.keyring]
+    maturity = "reserved"
+    [xmip.core.secret.pkcs11]
+    maturity = "reserved"
+    specification = "OASIS PKCS #11 Cryptographic Token Interface"
+    [xmip.core.secret.vault]
+    maturity = "reserved"
+    [xmip.core.secret.azure-key-vault]
+    maturity = "reserved"
+    [xmip.core.secret.aws-kms]
+    maturity = "reserved"
+
 # xmip.core.exclusiveness is retired. ADR-0024.
 #
 # It held a lease inside Xmip and could never say where a cluster-wide one
@@ -1381,6 +1431,7 @@ dependency = []
   dependency = [
       "xmip-core",
       "xmip-core-abi",
+      "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authorize",
       "xmip-core-configure",
@@ -1399,11 +1450,21 @@ dependency = []
   ]
 
   [xmip.core.persist]
-  description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication."
+  description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication. Every record encrypted and authenticated before an engine sees it, its lookup key a keyed hash (ADR-0063)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-journey"]
+  dependency = ["xmip-core", "xmip-core-journey", "xmip-core-secret"]
+    # The engines, each a technology under persist (ADR-0015, amendment
+    # 2026-09-25), so a device build can leave RocksDB out. Each stores
+    # ciphertext only: the encryption is persist's, above them, once.
+    [xmip.core.persist.rocksdb]
+    description = "The runtime store: RocksDB, an embedded log-structured key/value engine, holding persist's sealed records. Needs a C++ toolchain and libclang to build. A xmip-core-persist technology."
+    maturity = "scaffolded"
+    [xmip.core.persist.sqlite]
+    description = "The management store: an embedded SQLite file, bundled, holding persist's sealed records in one table. A xmip-core-persist technology."
+    maturity = "scaffolded"
+    specification = "SQLite 3 database file, one record table"
 
   [xmip.core.configure]
   description = "Reads and validates declared Xmip configuration and turns it into a service configuration."
@@ -1446,7 +1507,7 @@ dependency = []
     description = "The VS Code extension, the developer's face of the configuration tool: a TypeScript shell around a Rust language server that validates a node configuration through the ABI (ADR-0014, amendment 2026-09-10). A xmip-core-gui technology."
     maturity = "scaffolded"
     primaryLanguage = "rust"
-    dependency = ["xmip-core-abi"]
+    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit"]
 
 
 # What capabilities are built out of, and what a third party may replace like
@@ -1541,6 +1602,7 @@ dependency = []
       "xmip-core-archive-s3",
       "xmip-core-archive-sql",
       "xmip-core-archive-sqlite",
+      "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authorize",
       "xmip-core-context",

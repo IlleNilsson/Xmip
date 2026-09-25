@@ -238,8 +238,10 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
-configuration, what a test run writes: `playground/` for the rolls and
-`estate/` for the estate's Pester runs. It is not a scratch folder either; scratch is
+configuration, what a test run writes: `playground/` for the rolls,
+`estate/` for the estate's Pester runs, `web/` for what a web monitor
+`Start-XmipOperationWeb` started wrote to its console, and `audit/` for the
+audit records of everything the estate's tooling starts (ADR-0062). It is not a scratch folder either; scratch is
 `.ai-interaction/`. The three together: `.ai-interaction/` is who, `.ai-work/`
 is what machinery, `.local-work/` is where.
 

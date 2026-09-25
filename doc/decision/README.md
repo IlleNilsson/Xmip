@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty-one decisions, read as one document.
+Sixty-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -177,6 +177,23 @@ named, never placed somewhere that cannot serve it.**
 
 → [A node declares what it can do, in full](ADR-0056-a-node-declares-what-it-can-do.md)
 
+### Which Xmip programs audit, through what, and where a record goes
+
+when audit itself fails
+
+**Every Xmip program records what it does and every failure through
+`xmip-core-audit` — the runtime and its node, the web and desktop monitors,
+the command line, both PowerShell modules, the Playground's roll, cluster and
+node processes, the language server and the estate's own tooling — not the
+runtime alone. The record is written once, in the audit capability; a .NET
+program and PowerShell reach it through the runtime's library, as they reach
+every other rule (ADR-0052, ADR-0027). When audit cannot persist a record,
+the record goes to the operating system's log instead: the Windows Event
+Log, the systemd journal or syslog on Linux, the unified log on macOS.
+Nothing an Xmip program does fails silently.**
+
+→ [Every Xmip tool audits, in full](ADR-0062-every-xmip-tool-audits.md)
+
 ---
 
 ## 2. Identity and security
@@ -273,6 +290,21 @@ evidence names, `principal.user` and `principal.service`. A Party is
 resolved by a principal name whatever mechanism carried it.**
 
 → [A principal name is read one way, in full](ADR-0054-a-principal-name-is-read-one-way.md)
+
+### What of Xmip's own traffic and storage is encrypted, and where
+
+**Every connection between Xmip's own parts — node to node, a surface to a
+node or to a web host, a tool to the runtime over a network — is mutual TLS
+through `xmip-core-library-tls`, with its hybrid key exchange. Everything
+Xmip stores of its own — the runtime store, the management store, what it
+archives — is encrypted by one layer in `xmip-core-persist`, authenticated
+encryption per record, whatever engine holds the bytes. A database that
+belongs to someone else, which a transport only reads or writes, is
+encrypted or not as its owner configures. The keys come from one key home: a
+new `secret` capability, the operating system's key store by default, and
+PKCS#11 and vaults as further technologies of it.**
+
+→ [Xmip encrypts its own traffic and its own storage, in full](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md)
 
 ---
 
@@ -883,6 +915,8 @@ You have a word. This gives you the decision that governs it.
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
 | attempt | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
+| audit | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
+| audit sink | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | authenticator | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
@@ -909,6 +943,8 @@ You have a word. This gives you the decision that governs it.
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
+| encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
+| encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
@@ -1017,9 +1053,11 @@ You have a word. This gives you the decision that governs it.
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | the Foundation-Platform test | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
+| the key home | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | the loader | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | the method axis | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | the one adapter | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
+| the operating system's log | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
@@ -1034,6 +1072,7 @@ You have a word. This gives you the decision that governs it.
 | vtable shim | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Wave two | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
+| Xmip tool | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
@@ -1121,3 +1160,5 @@ is nowhere else.
 | [0059](ADR-0059-a-test-suite-carries-its-provider.md) | A test suite carries its provider | |
 | [0060](ADR-0060-the-estate-map-is-generated.md) | The estate map is generated | |
 | [0061](ADR-0061-a-provider-builds-against-the-sdk.md) | A provider builds against the capabilities; the SDK simulates | |
+| [0062](ADR-0062-every-xmip-tool-audits.md) | Every Xmip tool audits | |
+| [0063](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) | Xmip encrypts its own traffic and its own storage | |

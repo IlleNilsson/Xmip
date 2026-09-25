@@ -387,7 +387,7 @@ absent.
   first line (`abi_version`); the other three need a second party, the
   capability doing the loading, which no descriptor can supply by itself.
   Not feature-gated, so the estate's own gate compiles and runs it.
-- `src/loaded_module.rs` — the load. `LoadLibraryExW` with
+- `src/loaded_module.rs` (`src/ffi/loaded_module.rs` since 2026-09-25) — the load. `LoadLibraryExW` with
   `LOAD_WITH_ALTERED_SEARCH_PATH` on Windows and `dlopen(RTLD_LOCAL)`
   elsewhere, as specification section 3 requires and as `libloading`'s
   portable constructor does **not** do on Windows; resolve
@@ -395,7 +395,7 @@ absent.
   are real functions; copy the descriptor out; judge it; hold the library and
   the instance; `destroy` then unload, in that order, including on the
   refusal path.
-- `src/loaded_contract.rs` — the contract table selected by
+- `src/loaded_contract.rs` (`src/ffi/loaded_contract.rs` since 2026-09-25) — the contract table selected by
   `descriptor.module`, and `configure`, `start`, `bind`, `validate`,
   `implies`, `release`, `stop` driven through it. A byte range reaches the
   module as an `XmipReader` the host fills; diagnostics are copied before any
@@ -444,6 +444,10 @@ allow it at the top with their reason, which is the pattern `operate.rs` and
 `start.rs` already established for the boundary facing the other way
 (ADR-0027). `compatibility.rs` has none, deliberately: the rule an operator
 argues with should be readable without reading an `unsafe` block.
+
+Since 2026-09-25 (ADR-0050, refined that day) all four, and every other
+file of the runtime that crosses a C boundary, live in one folder,
+`src/ffi/`, the only place in the runtime that may hold unsafe code.
 
 **The runtime is the right home** because the host is what loads. The
 alternative was `xmip-core-abi`, which already holds the header, the

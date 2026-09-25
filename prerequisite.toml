@@ -303,3 +303,68 @@ apt = "libudev-dev"
 dnf = "systemd-devel"
 zypper = "systemd-devel"
 pacman = "systemd-libs"
+
+[prerequisite.libclang]
+role = "developer"
+probe = "clang --version"
+note = """
+For the runtime store, xmip-core-persist-rocksdb (ADR-0015, amendment
+2026-09-25). RocksDB is C++: its crate compiles it with the platform's C++
+compiler and binds it through bindgen, which loads libclang while it builds.
+A machine without libclang does not fail at run time, it fails to compile, in
+librocksdb-sys's build script, with "Unable to find libclang". bindgen finds
+it on the path, in LLVM's default install directory, or where LIBCLANG_PATH
+points.
+
+The C++ compiler itself is the linker entry above on Windows (the VCTools
+workload is C and C++) and on macOS (the command line tools); Linux names it
+in cxx below. The first Windows build of RocksDB takes some twenty minutes;
+later builds reuse it.
+
+A device build that leaves the runtime store out needs neither (ADR-0015:
+each engine is a technology under persist).
+"""
+
+[prerequisite.libclang.windows]
+winget = "LLVM.LLVM"
+elevation = true
+note = "A machine-scope installer; winget offers no per-user one, so the install prompts for elevation. It puts clang and libclang.dll in C:\\Program Files\\LLVM\\bin, where bindgen looks first."
+
+[prerequisite.libclang.macos]
+brew = "llvm"
+
+[prerequisite.libclang.linux]
+apt = "libclang-dev"
+dnf = "clang-devel"
+zypper = "clang-devel"
+pacman = "clang"
+
+[prerequisite.cxx]
+role = "developer"
+probe = "c++ --version"
+note = "Linux only: the C++ compiler RocksDB's crate builds with (libclang above). The linker entry installs gcc, which compiles C and not C++; build-essential and base-devel already carry g++, so apt and pacman repeat them only to say so. Found on 2026-09-25 building the runtime store on the AlmaLinux guest, which had gcc and no g++."
+
+[prerequisite.cxx.linux]
+apt = "build-essential"
+dnf = "gcc-c++"
+zypper = "gcc-c++"
+pacman = "base-devel"
+
+# ---------------------------------------------------------------------------
+
+# Not a package: the event source the operating system's log is written under
+# on Windows when audit cannot persist a record (ADR-0062 clause 3). Its name
+# is declared once, as XMIP_EVENT_SOURCE in the ABI's xmip_operate.h, and
+# Install-XmipPrerequisite reads it there, as xmip-core-audit and
+# Xmip.Surface do through their bindings.
+[eventSource]
+role = "operator"
+log = "Application"
+note = """
+Registering an event source needs elevation once, and Install-XmipPrerequisite
+never elevates: run elevated with -Install and it registers the source,
+otherwise it prints the line to run. Until then, every entry the fallback
+writes goes under the Application log's .NET Runtime source and says so in its
+first sentence. Linux and macOS need nothing: the journal, syslog and the
+unified log take an entry from any program.
+"""

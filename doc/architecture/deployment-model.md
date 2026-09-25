@@ -225,7 +225,7 @@ Identity natively:
 
 | Platform | Realization |
 | --- | --- |
-| Windows | Managed Service Account, group MSA, domain or local service account |
+| Windows | Managed Service Account, group MSA (supported wherever it exists: ADR-0019, amendment 2026-09-25), domain or local service account |
 | Linux | dedicated service user, systemd user, LDAP-backed identity, Kerberos principal |
 | Containers, Kubernetes | container runtime identity, service account, workload identity, mounted token |
 | Cloud | managed identity, service principal, IAM role |
@@ -264,7 +264,7 @@ configuration, and registers the Xmip Service where services exist.
 
 | | Runtime persistence | Management |
 | --- | --- | --- |
-| Default engine | RocksDB-style embedded key/value | SQLite-style embedded relational |
+| Engine | RocksDB, `xmip-core-persist-rocksdb` | SQLite, `xmip-core-persist-sqlite` |
 | Optimized for | high write volume, replay from a known state | queryable administration views |
 | Source of truth for | **replay** | **administration** |
 
@@ -279,6 +279,18 @@ operator metadata and management audit.
 They are separate databases and stay separate. Their access patterns are
 opposites — one is written constantly and read by key, the other is written
 rarely and queried arbitrarily — and one engine serving both serves neither.
+The owner chose the two engines on 2026-09-25 (ADR-0015, amendment); each is
+a technology under `xmip-core-persist`, so a device build can leave RocksDB
+and its C++ toolchain out.
+
+**Both are encrypted, above the engine** (ADR-0063 clause 2). Persist's
+`EncryptedStore` seals every record with AES-256-GCM before either engine
+sees it and looks it up by a keyed hash, so neither file holds what is stored
+or what it is stored under; the data key is wrapped by the key home,
+`xmip-core-secret`. The cost is stated rather than hidden: the management
+store is a table of sealed records, so "queried arbitrarily" is answered by
+reading records through persist, not by SQL over the file, and a query the
+administration views need is an index persist keeps for it.
 
 ### Record identifiers are UUIDv7
 
@@ -287,6 +299,9 @@ timestamp leads, so records written in sequence land in sequence and a range
 over identifiers is a range over time. The reasoning, the two boundaries an
 integrator meets (.NET's `Guid` byte order, SQL Server's sort order) and the
 two cautions are `module/platform/persist/doc/record-identifier.md`.
+The engine is keyed by a keyed hash of the identifier, not the identifier
+(ADR-0063), so the ordering holds for the identifier and not on disk; the same
+document says what that costs.
 
 ## 8. Desired state
 

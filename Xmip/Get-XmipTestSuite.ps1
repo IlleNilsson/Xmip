@@ -334,3 +334,43 @@ function Expand-XmipTestName {
 
     return $chosen.ToArray()
 }
+
+function Get-XmipTestChoice {
+    <#
+        .SYNOPSIS
+            The tests Start-XmipTest's -Test completes to, for the suite named
+            so far. Private; the completer asks the module for it.
+
+        .PARAMETER Suite
+            The suite typed so far; empty is the Playground.
+
+        .PARAMETER Word
+            What has been typed of the test.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Suite = '',
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Word = ''
+    )
+
+    # Qualified or bare, both name the estate's suite, and Core.Estate is the
+    # spelling (ADR-0059, amendment 2026-09-20); omitted, -Suite is the
+    # Playground.
+    [string[]] $names = if ($Suite -ieq 'Estate' -or $Suite -ieq 'Core.Estate') {
+        [string] $root = Get-XmipRepositoryRoot
+        Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
+            ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
+    }
+    else {
+        'RoundTrip', 'LowLatency', 'HeavyLoad', 'Retention'
+        'Filing', 'ExclusiveClaim', 'DailyBacklog'
+    }
+
+    $names | Where-Object { $_ -like "$Word*" }
+}

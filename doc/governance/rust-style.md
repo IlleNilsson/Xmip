@@ -183,6 +183,21 @@ crate called `xmip-core-receive` existed elsewhere. It is `generation.rs`.
 **No `mod.rs`.** `http.rs` beside `http/`, not `http/mod.rs`. The 2018 form puts
 the module's name in the tab bar instead of five identical tabs.
 
+## 5a. Unsafe code lives in one named file
+
+A crate forbids unsafe code. A crate that must call a C interface allows it
+in one named file and nowhere else, and every block in that file says where
+its pointers come from, how long they live and who frees them (ADR-0050,
+amendment 2026-09-25). The runtime is the one exception, refined the same
+day: its whole C boundary — the operator's exports and the module loader —
+is one folder, `src/ffi/`, each file under 400 lines, and what a boundary
+file does beyond reading and writing pointers stays outside it. Its `Cargo.toml` says `unsafe_code = "deny"` rather
+than `forbid`, because Rust lets no file lower `forbid`; the file lowers
+`deny` at its top with its reason. `test/Unsafe.Test.ps1` holds the folder and
+the list of those files, one per crate, fails on any other file that allows
+unsafe code or crate that lowers the lint without one, and fails on a block without its `SAFETY`
+comment.
+
 ## 6. What this does not enforce
 
 Module layout beyond file length, whether a `struct` should have been three, and

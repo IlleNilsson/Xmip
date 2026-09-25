@@ -8,7 +8,8 @@
   `observe::Scope`, and the surfaces call the runtime's exports; the earlier
   one that had two writers is struck; and the last copies, the same day),
   ADR-0041 (a mood's color name and its rollup), ADR-0056 (the stage words,
-  a node's evidence and its run entry)
+  a node's evidence and its run entry), ADR-0062 (section 9, a program's
+  audit record)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
 ## In brief
@@ -344,7 +345,7 @@ naming a word that is no stage — its REFUSED sentence written into the
 caller's buffer the way `xmip_validate_v1` writes its report — and
 `XMIP_E_NOT_FOUND` for a word that names no mood.
 
-The runtime's `rule.rs` implements them; `xmip-core-abi`'s `operate::rule`
+The runtime's `rule.rs` (now `src/ffi/rule.rs`, ADR-0050, refined 2026-09-25) implements them; `xmip-core-abi`'s `operate::rule`
 declares their shapes, and the runtime's tests fail to compile if an export
 drifts from them; `Xmip.Abi`'s `RuntimeRules` binds them once for every .NET
 surface. ADR-0052's amendment of the same date says who calls each.
@@ -391,12 +392,44 @@ free. It touches no running node, so clause 6 is not in play. A text that is
 no publication is `XMIP_E_INVALID` with the reader's own words, as
 `xmip_validate_v1` reports.
 
-The runtime's `rule.rs`, `rule/node.rs`, `publication.rs` and `curve.rs`
+The runtime's `rule.rs`, `rule/node.rs`, `publication.rs` and `curve.rs` (all under
+`src/ffi/` since 2026-09-25)
 implement them;
 `xmip-core-abi`'s `operate::rule`, `operate::publication` and the section 6
 declarations beside them (`StartFn`, `ValidateFn`, which the language server
 now calls through) declare their shapes; `Xmip.Abi`'s `RuntimeRules` and
 `PublicationReader` bind them once.
+
+
+## Amendment, 2026-09-25: section 9, a program's audit record
+
+ADR-0062: every Xmip program audits through `xmip-core-audit`, and a .NET
+program and PowerShell reach it through the runtime's library as they reach
+section 7's rules. `xmip_operate.h` gains a section 9 of one symbol,
+`xmip_audit_v1`, a thin forwarder into
+`audit::program_audit::ProgramAudit::record` under section 7's rules — a
+separate optional symbol, `XMIP_OPERATE_VERSION` unchanged, pure in clause
+6's sense: it reads no snapshot and holds nothing afterwards.
+
+It takes the program's name, the directory it was told (empty lets the
+capability decide), the action, an `XmipPhase` and an `XmipSeverity`, a
+message and the properties as key-then-value strings; it answers with an
+`XmipKept` — suppressed, persisted, or held by the operating system's log
+because the sink could not keep it — and, when not the sink, where and why
+as UTF-8 in the caller's buffer, the way `xmip_validate_v1` writes its
+report. `XMIP_E_INVALID` for a phase or severity the header does not define
+or an odd property count; `XMIP_E_IO` when neither the sink nor the
+operating system's log kept it. The record, its policy, the file sink and
+the fallback are the capability's, never the forwarder's. Section 9 also
+declares `XMIP_EVENT_SOURCE`, the Windows Event Log source the fallback
+writes under, so the capability, the .NET fallback and the prerequisite
+installer name it from one place.
+
+The runtime's `src/ffi/audit.rs` implements it; `xmip-core-abi`'s `operate::audit`
+declares its shape and its three enumerations, and the runtime's tests fail
+to compile if the export drifts; `Xmip.Abi`'s `RuntimeAudit` binds it once,
+reached as `RuntimeRules.Audit`, and `Xmip.Surface`'s `ProgramAudit` is what
+every .NET program and both PowerShell modules call.
 
 
 ## Alternatives considered
