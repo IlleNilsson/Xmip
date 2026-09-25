@@ -296,7 +296,7 @@ exists the rig has no business inventing a second.
   `-Cluster` and `-Nodes`, through the machine's own resolver. Nothing else,
   and never a name the operator did not type. ADR-0045 clause 1 governs a
   node's own path and forbids resolving a **public** name at runtime; a test
-  asking its resolver whether `R1` is a machine on this network is neither
+  asking its resolver whether `alpha` is a machine on this network is neither
   the runtime path nor a public name.
 - **Resolving is not trusting.** A name that resolves gives an address, and
   the rig still has to find Xmip there: the node must answer and declare

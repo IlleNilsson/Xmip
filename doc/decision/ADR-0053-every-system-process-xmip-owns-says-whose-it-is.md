@@ -91,7 +91,7 @@ Three things, said by the process itself and readable while it runs:
 
 - **name** — what it is, the `xmip-<what>` above.
 - **location** — where in Xmip it belongs: the scope it serves, such as
-  `xmip:///C1` or `xmip:///C1/node/R1`, or the surface it reads where it
+  `xmip:///C1` or `xmip:///C1/node/alpha`, or the surface it reads where it
   serves none.
 - **purpose** — `test` or `runtime`. The Playground and everything it spawns
   is test. A process is runtime unless what started it says test.
@@ -193,7 +193,7 @@ tool the operating system gives show the image name and nothing else.
 |---|---|---|
 | the roll | `xmip-playground-W1-roll` | `xmip:///W1` |
 | its cluster | `xmip-playground-W1-cluster` | `xmip:///W1` |
-| a node | `xmip-playground-W1-node-R1` | `xmip:///W1/node/R1` |
+| a node | `xmip-playground-W1-node-alpha` | `xmip:///W1/node/alpha` |
 
 Clause 1 is untouched and is why this works: every one still begins `xmip-`,
 so `Get-Process Xmip-* | Stop-Process -Force` still stops them all, and
@@ -297,7 +297,7 @@ the name the same way on both paths. A roll stays findable and stoppable by
   and `Get-XmipTestNode` finding a run's tree by kind. `xmip-cli`, the web
   GUI, the desktop and the prompt show scopes, health and rates and have
   never shown a process name, so none of them changes; a scope like
-  `xmip:///W1/node/R1` already said which cluster and which node, and this
+  `xmip:///W1/node/alpha` already said which cluster and which node, and this
   amendment exists because the operating system's own list did not.
 - Where a session's build directory is held open by another session's roll,
   `CARGO_TARGET_DIR` moves both the build and what the cmdlets link and run:
@@ -308,3 +308,28 @@ the name the same way on both paths. A roll stays findable and stoppable by
 The requirement and the shape are the owner's, 2026-09-20, as is striking the
 reserved words the assistant had drafted under it the same day; the node
 marker that replaced them, the link and clause 6 are the assistant's drafting.
+
+## Amendment, 2026-09-25: a roll's processes are the ones declared in its cluster
+
+On 2026-09-25 a brutal roll's cluster restarted its nodes faster than they
+could be listed (ADR-0052, amendment of the same date): each node read by
+`Get-XmipTestNode` was already gone, or not yet a child, when its parent was
+asked, so `Get-XmipTestStatus` said *Nodes: none* while seventeen ran, and
+`Stop-XmipTest`, which asked the nodes beneath the roll to leave, asked none
+and ended their cluster under them. The tree is a fact of one moment; the
+location a process declared is not.
+
+- `Get-XmipTestNode` carries each node's declared `Location`, and a node is
+  its roll's by the tree **or** by a location inside the roll's cluster
+  (`Test-XmipTestNodeOfRoll`), for the status and the stop alike.
+- After the roll's cluster process, `Stop-XmipTest` ends every live process
+  that declared its location as the cluster's root or inside it
+  (`Stop-XmipTestCluster`, `Test-XmipClusterLocation`): `xmip:///C1` and
+  `xmip:///C1/node/node-01` are C1's, `xmip:///C10/...` is not. A declaration
+  is compared as its segments' prefix and never read for meaning.
+- A declaration file whose process ended between the listing and the read
+  is a process gone, not an error (`Read-XmipProcessDeclaration`).
+
+`test/XmipTest.Test.ps1` holds it: a stopped roll ends every process
+declared in its cluster and nothing declared in another. The owner's report
+is the lead's, 2026-09-25; the rule is the assistant's drafting.

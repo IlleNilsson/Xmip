@@ -138,7 +138,7 @@ Three records point at a thing none of them defines. This one defines it.
   only what it was *started* with; `NodeCapability.Origin` says which of the
   two a reader is looking at. The three faces render that and parse nothing.
   - **GUI** — the run line on every view names each node with what it
-    declared (`nodes R1=receive P1=process+send S1=send`), which is one list
+    declared (`nodes alpha=receive beta=process+send gamma=send`), which is one list
     where two would have crowded it; the topology's inspector says a node's
     capability when the operator has drilled to that node, with the
     publisher's whole sentence on the row; the configuration tree carries
@@ -202,14 +202,14 @@ Xmip.
 What an operator gets instead, and how it is said:
 
 - **`-NodeCapability` states it**, one entry per node:
-  `-Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process';
-  S1 = 'send' }`. This is now the only way a named node carries a stage.
+  `-Nodes alpha, beta, gamma -NodeCapability @{ alpha = 'receive';
+  beta = 'process'; gamma = 'send' }`. This is now the only way a named node carries a stage.
 - **Omitting `-Nodes` deals them.** The level's full complement (ADR-0059,
   amendment 2026-09-19) names its own nodes and deals receive, process and
   send round the list by position, which reads no name either.
 - **A node given none declares none**, runs the shared-directory tests whole,
   and the roll runs `RoundTrip` itself. That is a real answer and is not
-  refused. It is also not what an operator typing `R1, P1, S1` is likely to
+  refused. It is also not what an operator naming three nodes is likely to
   have meant, so `Start-XmipTest` **says so in words before anything spawns**
   (ADR-0055 clause 5), naming `-NodeCapability` and the complement as the two
   ways to split the message path.
@@ -221,6 +221,17 @@ What an operator gets instead, and how it is said:
 The compromise this strikes was the assistant's, made on 2026-09-19 and
 flagged at the time as the one place a name still carried meaning. It carried
 for a day.
+
+**2026-09-25: the names themselves go.** Nothing read the letter any more,
+but the estate's tests, fixtures and examples still named their nodes that
+way, and the owner: *Why does the test code include R1, P1 and S1, those are
+parameters to tests!* Every such node in code, tests, fixtures and help is now
+named for nothing — alpha, beta, gamma, delta, epsilon, zeta — with what it
+does stated in its capability declaration, and `test/NodeName.Test.ps1` fails
+the day a node named a stage letter and digits appears where a node's name
+stands (a scope, a process name, a declaration, a `-NodeCapability` entry, a
+flag naming nodes, or a quoted name). The records keep the names where they
+tell what happened.
 
 ## Amendment, 2026-09-24: the node crate reads the words, lowercase exactly
 

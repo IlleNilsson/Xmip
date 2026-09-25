@@ -598,7 +598,11 @@ Stop-XmipTest -Cluster nightly -Test HeavyLoad, LowLatency
 `-Cluster` and `-Test` together, or every run with neither. A run is one
 process, so a test is stopped by stopping the run that drives it; a run that
 also drives a test you did not name is refused, saying what else it runs,
-and nothing is stopped.
+and nothing is stopped. A stopped roll leaves nothing of its cluster running:
+after its nodes and its cluster process, every process that declared a
+location in the cluster (ADR-0053) is ended too, whatever the process tree
+said at that moment, and `Get-XmipTestStatus` counts a node as its roll's by
+the same declaration.
 
 You name the cluster with `-Cluster` and the nodes with `-Nodes`; nothing
 names either for you, and Xmip reads nothing in the names you choose. Two

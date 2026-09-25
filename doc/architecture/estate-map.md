@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 153833 lines of production
+Where each repository mounts and what it holds: 154536 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -314,11 +314,11 @@ hold no source to count.
 │   │   │   ├── asn1                             497
 │   │   │   └── tls                              219
 │   │   └── operation/
-│   │       ├── cli                             3024
-│   │       ├── gui                             2327
+│   │       ├── cli                             3026
+│   │       ├── gui                             2434
 │   │       │   └── vscode                       802
 │   │       ├── powershell                      2125  C# 1361 · PowerShell 764
-│   │       ├── observe                         1684
+│   │       ├── observe                         1728
 │   │       │       declared, not built 5
 │   │       │       etw  journald  otlp  prometheus  windows-event-log
 │   │       ├── audit                            889
@@ -340,7 +340,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                11649  C# 10454 · Rust 1195
+│   │   ├── abi                                11966  C# 10758 · Rust 1208
 │   │   ├── message                             1293
 │   │   │   ├── xml                              335
 │   │   │   ├── avro                             298
@@ -366,14 +366,14 @@ hold no source to count.
 │   │   ├── cluster                               21
 │   │   └── event                                 20
 │   └── platform/
-│       ├── runtime                             4417
+│       ├── runtime                             4531
 │       ├── persist                              701
 │       │   ├── sqlite                           107
 │       │   └── rocksdb                          105
 │       └── configure                            131
 └── test/
     └── core/
-        └── playground                          9208
+        └── playground                          9327
 ```
 
 ---

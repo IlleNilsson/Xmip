@@ -278,7 +278,7 @@ applied to the GUI as it stands.
 5. **The node is in the prompt.** Remote operation rides PowerShell
    Remoting and SSH (ADR-0014 clause 6; ADR-0027), and a session on another
    node must say so where the eye rests. The prompt segment names the node
-   beside the mood — `[Xmip R1 holding]` — whenever the session is remote,
+   beside the mood — `[Xmip alpha holding]` — whenever the session is remote,
    so an operator on more nodes than one never acts on the wrong one.
 6. **A name in an example is only an example.** The playground's examples and
    fixtures were renamed the same day, from alpha, beta and gamma to R1, P1
@@ -1159,6 +1159,119 @@ record — a Blazor circuit that dies among them — and the web host a
 command and its exit, and the PowerShell module every cmdlet's failure
 through one base class and the prompt's failures where it used to swallow
 them.
+
+## Amendment, 2026-09-25: one cluster row, a topology that drills by address, and traffic on the line
+
+The owner, on the web monitor over a roll: *Configuration looks weird, two
+headers for the cluster*; *Topology does not work, one can't drill down to
+nodes*; *even when testing, the topology does not show configured traffic or
+its usage.* Each was reproduced over a real publication — cluster T1, nodes
+alpha, beta and gamma declaring receive, process and send — before it was
+changed, and each was a fault of its own layer.
+
+- **Configuration: the cluster heads the tree once.** The page drew a row of
+  its own above the tree — the cluster's name taken from the first segment of
+  a scope, its rollup, its worst leaf — and the tree's first row was the same
+  cluster again. The row above is gone; the tree's cluster row carries its
+  problem link and a link to the same thing on the Topology, as every row the
+  topology draws now does. A row's kind is what the publisher's topology says
+  the thing is (`observe::topology`: cluster, node, stage, endpoint, and
+  beneath an endpoint the technology), where a topology is published: read
+  from the depth alone, a Playground cluster — its nodes beneath a `node`
+  segment — came out one level off, the nodes' rollup branch saying *node*,
+  a node *scope*, a receive stage *receive location*. Without a topology the
+  depth is all there is and decides as before.
+- **Topology: the drill is in the address, and every node is a link.** The
+  canvas opened on the cluster alone — one box, no line, since every link ran
+  inside it — and the only way down was a click that selected it and a
+  button in the inspector, neither of which a prerendered page can press and
+  nothing linked to. Now the canvas opens on the one top-level thing there is,
+  so a cluster shows its nodes and the handoffs between them at once; the node
+  open is `?focus=<id>` in the address (`ScopeLink.TopologyAt`), so the trail
+  is links, a reload keeps the place and cluster → node → stage → endpoint is
+  a chain of addresses; every node on the canvas is a link, to its own drill
+  where something is beneath it and to its Configuration row where nothing is
+  (ruling 4 of 2026-09-14); and the inspector says the open node in full with
+  its Configuration and Monitor links, lists what is beneath it with the same
+  three links each, and lists every link inside it. A line is still selected
+  by a click, for its whole record.
+- **Traffic: configured and observed, and what passed, on the line.** The
+  fault was in what the Playground published. It drew a link only for a pair
+  of stages a handoff had crossed, marked every one `both` whether or not
+  anything configured it, and wrote a rate of zero always. So a path the
+  roster configured and nobody used was not drawn at all, and usage was a
+  total with no rate. `topology.rs` now draws every pair the roster configures
+  when the run hands RoundTrip along declared stages — receive to each node
+  that declared process, process to each that declared send, since the
+  roster picks one by a hash of the pair — `configured` with volume zero and
+  evidence saying no handoff was observed, `both` once a hop crossed it, and
+  `observed` for a hop no configuration declares. The rate is the rise in a
+  link's volume over the seconds between two publications, and it is a model
+  rule, so it is written once in `observe`, `Topology::rate_since`, and the
+  roll states it; no surface computes one. The view draws what was stated:
+  each line carries `English.Traffic` — `598 · 8.7/s`, or
+  `configured · no traffic observed` on a dashed line — and the per-second
+  wording is `English.Rate`, which the board's `English.Flow` now calls
+  rather than writing its own.
+- **Found on the way: a roll the status could not follow and the stop left
+  behind.** A brutal roll's first round outlasted the three silent rounds
+  after which the cluster judges a node hung, so every node was killed and
+  restarted into the same wait — hundreds of processes, most of them gone or
+  not yet a child by the time `Get-XmipTestStatus` read their parent, which
+  therefore said *Nodes: none*, and `Stop-XmipTest` asked none of them to
+  leave and ended their cluster under seventeen. A node that has not published
+  once is now starting, not hung, for two minutes (the Playground's
+  `cluster/member.rs`); a node is its roll's by the tree or by the location it
+  declared in the roll's cluster (ADR-0053); and after the cluster
+  `Stop-XmipTest` ends every process declared in it.
+
+Proved by `Xmip.Gui.Test` (`ClusterTopologyTest`: one cluster row, the kinds
+the publisher says, every node a link, the drill by address, configured and
+observed traffic both drawn and said), `Xmip.Surface.Test` (the fixture's
+three links with their origins and rates, `English.Traffic`), `observe`'s
+`topology.rs` (`rate_since`), the Playground's `topology.rs` (a configured
+path drawn before its first handoff) and `cluster.rs` (a starting node is not
+restarted), and `test/XmipTest.Test.ps1` (a stopped roll ends every process
+declared in its cluster and nothing declared in another).
+
+## Amendment, 2026-09-25: the topology's words from observe, the nodes counted, and an open node framed
+
+Four things left over from the amendment above, each fixed in its own layer.
+
+- **The words are observe's.** The web GUI kept a word list of its own for a
+  topology kind, an origin and a pattern (`TopologyWords`): the class each was
+  styled by, and the name a person read — *virtual machine*, *configured and
+  observed*, *Publish → consume*. `observe::topology` writes both once now,
+  `word` and `name` beside each value; the runtime forwards them by value
+  (`xmip_topology_kind_words_v1`, `…_origin_…`, `…_pattern_…`, section 8 of
+  `xmip_operate.h`); `Xmip.Abi` binds them (`PublicationReader.Words`); and
+  `English.Word` and `English.Name` are what a surface calls, as it calls
+  `English.Mood` for a mood. The GUI's copy is gone. A class is now the
+  published word, so `publishconsume` became `publish-consume`.
+- **The nodes are what the publisher draws as nodes.** The Monitor over a
+  cluster of three said *1 node(s)*: it counted the scopes directly beneath
+  the root, and a roll puts its cluster there and its nodes beneath
+  `xmip:///<cluster>/node`. `IOperatorSurface.NodeScopes` is the one answer —
+  the topology's things of kind node, where a topology is published, and the
+  scopes beneath the root only where none is, which is a node's own
+  publication — and the Monitor counts and lists what it gives.
+- **The crumb at the root leads somewhere.** The Monitor's crumb linked the
+  root to `configuration#s-xmip----`, an anchor no row carries, since the
+  tree begins beneath the root. `ScopeLink.Configuration` writes the root as
+  the tree itself, from its top.
+- **An open node is framed, and what leaves it goes outside.** Open at a
+  node, the canvas drew the node's children and beside them every other
+  top-level thing — the cluster's box, with the other nodes' traffic drawn
+  into it. Now it draws the node's frame, labeled with the node, and its
+  children; a line that leaves the node runs to one marker outside the frame
+  labeled *outside*, and the inspector names that end the same way.
+
+Proved by `observe`'s `topology.rs`, the runtime's `ffi/topology.rs` and
+`wire.rs`, `Xmip.Abi.Tests` (`RuntimeRulesTests`, `OperateAbiTests`),
+`Xmip.Surface.Test` (`EnglishTest`, `ClusterSnapshotTest`: the fixture's
+three nodes) and `Xmip.Gui.Test` (`ClusterTopologyTest`: the Monitor's three
+nodes, an open node framed with its traffic outside; `ThreeViewsTest`: the
+root's crumb).
 
 
 ## Alternatives considered

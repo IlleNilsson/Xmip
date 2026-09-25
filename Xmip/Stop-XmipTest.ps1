@@ -18,7 +18,11 @@ function Stop-XmipTest {
             ends the roll's cluster, then the roll. Nothing is orphaned —
             Get-Process xmip-* is empty afterwards, and the per-instance
             images the tree ran under are taken away with it (ADR-0053,
-            amendment 2026-09-20).
+            amendment 2026-09-20). A roll's nodes are the ones beneath it in
+            the tree or declared in its cluster, and after the cluster every
+            process declared in the cluster is ended as well: on 2026-09-25 a
+            cluster restarting its nodes faster than they could be listed
+            left seventeen running behind a stopped roll.
 
             Which runs: those -Suite, -Cluster and -Test pick together, as
             Start-XmipTest was told them; those on the pipeline from
@@ -219,9 +223,9 @@ function Stop-XmipTest {
                 continue
             }
 
-            Get-XmipTestNode | Where-Object { $_.Parent -eq $number } |
+            Get-XmipTestNode | Where-Object { Test-XmipTestNodeOfRoll -Node $_ -Roll $roll } |
                 Stop-XmipTestNode -Confirm:$false
-            Stop-XmipTestCluster -Parent $number
+            Stop-XmipTestCluster -Parent $number -Cluster "$($roll.Cluster)"
 
             try {
                 Stop-Process -Id $number -Force -ErrorAction Stop
@@ -295,51 +299,6 @@ function Update-XmipPromptFollowing {
         $prompt::Follow($rolling[0], $rolling)
     }
 }
-
-function Stop-XmipTestCluster {
-    <#
-        .SYNOPSIS
-            Ends the cluster process a roll spawned, so no cluster outlives
-            the roll that started it.
-
-        .DESCRIPTION
-            The nodes are asked to leave first, through the stop file they and
-            their cluster share; by the time this runs the cluster has nothing
-            left to supervise. A cluster started elevated shows no path to a
-            session that is not, so its name vouches for it (ADR-0053).
-
-        .PARAMETER Parent
-            The process id of the roll whose cluster to end.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [int] $Parent
-    )
-
-    # Found through Get-XmipPlaygroundProcess, which judges by declaration
-    # first and by name second, so a cluster whose image was rebuilt under it
-    # is still found and still stopped (2026-09-19). Since 2026-09-20 its name
-    # carries its cluster — xmip-playground-V1-cluster — so the kind is asked
-    # for rather than the name.
-    $layout = Get-XmipPlaygroundLayout
-
-    [System.Diagnostics.Process[]] $clusters = @(
-        Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Cluster -Kind Cluster |
-            Where-Object {
-                $owner = try { $_.Parent } catch { $null }
-                $null -ne $owner -and $owner.Id -eq $Parent
-            }
-    )
-
-    foreach ($cluster in $clusters) {
-        Stop-Process -Id $cluster.Id -Force -ErrorAction SilentlyContinue
-        Wait-Process -Id $cluster.Id -Timeout 5 -ErrorAction SilentlyContinue
-        Write-Verbose "stopped cluster $($cluster.Id) of roll $Parent"
-    }
-}
-
 
 function Stop-XmipEstateRun {
     <#

@@ -17,7 +17,9 @@ function Get-XmipTestNode {
             node belongs to — the cluster process spawns it and the roll
             spawns the cluster (the owner, 2026-09-19), so the roll is its
             grandparent — or null for one started by Start-XmipTestNode or by
-            hand.
+            hand. Location is the scope the node declared itself at
+            (ADR-0053), xmip:///<cluster>/node/<name>, which says its
+            cluster whatever the process tree says at the moment it is read.
 
             Capability is the feature capability the node declared (ADR-0056),
             in the words -NodeCapability takes them: 'receive',
@@ -120,6 +122,7 @@ function ConvertTo-XmipTestNode {
     }
 
     [bool] $ofRoll = (Get-XmipPlaygroundImageKind -Name $named) -eq 'Roll'
+    $said = $known[$Process.Id]
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'
@@ -132,8 +135,45 @@ function ConvertTo-XmipTestNode {
         Rounds     = $flags.Rounds
         Interval   = $flags.Interval
         Parent     = if ($ofRoll) { $above } else { $null }
+        Location   = [string](Get-TomlValue -Node $said -Name 'location' -Default '')
         Shared     = $flags.Shared
         Snapshot   = $flags.Snapshot
         StartTime  = $Process.StartTime
     }
+}
+
+function Test-XmipTestNodeOfRoll {
+    <#
+        .SYNOPSIS
+            Whether a node belongs to a roll: the roll is its grandparent, or
+            it declared a location inside the cluster the roll rolls as.
+
+        .DESCRIPTION
+            The process tree alone lost a roll's nodes on 2026-09-25: a
+            cluster restarting them as fast as they were listed left each one
+            gone, or not yet a child, by the time its parent was read, and
+            Get-XmipTestStatus said Nodes: none while seventeen ran. What a
+            node declared of itself (ADR-0053) does not depend on the moment.
+
+        .PARAMETER Node
+            The node, from Get-XmipTestNode.
+
+        .PARAMETER Roll
+            The roll: anything with its process Id and the Cluster it rolls as.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [PSObject] $Node,
+
+        [Parameter(Mandatory)]
+        [PSObject] $Roll
+    )
+
+    if ($null -ne $Node.Parent -and $Node.Parent -eq $Roll.Id) {
+        return $true
+    }
+
+    return Test-XmipClusterLocation -Location "$($Node.Location)" -Cluster "$($Roll.Cluster)"
 }

@@ -97,7 +97,10 @@ function Get-XmipTestStatus {
             Get-XmipTestResult -Path $snapshot -Worst
         }
 
-        [object[]] $mine = @($nodes | Where-Object { $_.Parent -eq $roll.Id })
+        $whose = [PSCustomObject]@{ Id = $roll.Id; Cluster = $rolledAs }
+        [object[]] $mine = @(
+            $nodes | Where-Object { Test-XmipTestNodeOfRoll -Node $_ -Roll $whose }
+        )
         [object[]] $online = @($mine | Where-Object { $_.Online })
 
         # The suite the run was started with, from the record that carries it,

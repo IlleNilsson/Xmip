@@ -278,7 +278,7 @@ composed a roster which then refused itself would be no answer at all. Below
 three, every node of the complement declares no stage: each runs whole tests
 itself, as a node that declares nothing always has, the roll runs `RoundTrip`
 whole, and `Start-XmipTest` warns in words, naming the count and
-`-Nodes R1, P1, S1` as what would split the path. ADR-0055 clause 5 allows
+`-Nodes` with `-NodeCapability` as what would split the path. ADR-0055 clause 5 allows
 exactly this: carrying on is right, it is not what the operator probably
 meant, so it is said rather than left to be noticed.
 

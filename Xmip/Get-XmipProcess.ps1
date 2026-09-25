@@ -142,7 +142,9 @@ function Read-XmipProcessDeclaration {
 
     foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'xmip-*.toml' -File)) {
         $said = try {
-            Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Toml
+            # A process ending between the listing and this read takes its
+            # file with it; that is a process gone, not an error.
+            Get-Content -LiteralPath $file.FullName -Raw -ErrorAction Stop | ConvertFrom-Toml
         }
         catch {
             $null

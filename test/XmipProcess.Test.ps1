@@ -50,7 +50,7 @@ Describe 'What a killed process left behind' {
             [string] $stale = Join-Path $Area 'xmip-playground-node-2000000000.toml'
             Set-Content -LiteralPath $stale -Encoding utf8 -Value @(
                 'name = "xmip-playground-node"'
-                'location = "xmip:///C1/node/R1"'
+                'location = "xmip:///C1/node/alpha"'
                 'purpose = "test"'
                 'pid = 2000000000'
             )
@@ -102,11 +102,11 @@ Describe 'What a Playground process is called' {
                 Should -Be 'xmip-playground-W1-roll'
             Get-XmipPlaygroundImageName -Cluster 'W1' -What 'cluster' |
                 Should -Be 'xmip-playground-W1-cluster'
-            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'node-R1' |
-                Should -Be 'xmip-playground-W1-node-R1'
+            Get-XmipPlaygroundImageName -Cluster 'W1' -What 'node-alpha' |
+                Should -Be 'xmip-playground-W1-node-alpha'
 
             # Clause 1 is untouched: the owner's one line still finds them.
-            foreach ($what in 'roll', 'cluster', 'node-R1') {
+            foreach ($what in 'roll', 'cluster', 'node-alpha') {
                 Get-XmipPlaygroundImageName -Cluster 'W1' -What $what |
                     Should -BeLike 'xmip-*'
             }
@@ -139,7 +139,7 @@ Describe 'What a Playground process is called' {
             [hashtable] $expected = @{
                 'xmip-playground-W1-roll'         = 'Roll'
                 'xmip-playground-W1-cluster'      = 'Cluster'
-                'xmip-playground-W1-node-R1'      = 'Node'
+                'xmip-playground-W1-node-alpha'      = 'Node'
                 'xmip-playground-W1-node-node-01' = 'Node'
                 'xmip-playground-roll'            = 'Roll'
                 'xmip-playground-cluster'         = 'Cluster'
@@ -162,7 +162,7 @@ Describe 'What a Playground process is called' {
         # about a binary that changed under it.
         InModuleScope Xmip {
             [string] $area = (Get-XmipPlaygroundLayout).Image
-            [string] $image = Join-Path $area 'W1' 'xmip-playground-W1-node-R1.exe'
+            [string] $image = Join-Path $area 'W1' 'xmip-playground-W1-node-alpha.exe'
 
             Test-XmipPlaygroundOwnImage -Path $image | Should -BeTrue
             Test-XmipPlaygroundOwnImage -Path '' | Should -BeFalse
