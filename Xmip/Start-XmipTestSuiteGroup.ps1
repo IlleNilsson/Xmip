@@ -3,13 +3,14 @@
 
 <#
 .SYNOPSIS
-    Running a group of suites, a third party's declared suite, and the estate's own Pester suite.
+    Running a group of suites, and a third party's declared suite.
 
 .DESCRIPTION
     Apart from Start-XmipTest.ps1 since 2026-09-22, when that file was 944 lines
     against the 400 the estate allows a file and the owner asked for the estate to
     be consolidated. Start-XmipTest chooses and refuses; what each kind of suite
-    then does is here.
+    then does is here, except the estate's own Pester suite, which is
+    Start-XmipEstateSuite.ps1 since 2026-09-25.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -166,88 +167,4 @@ function Start-XmipProviderSuite {
     }
 
     return & $command @forward
-}
-
-
-function Start-XmipEstateSuite {
-    <#
-        .SYNOPSIS
-            Runs the estate's Pester suite under test/ and returns the result.
-
-        .DESCRIPTION
-            `Invoke-Pester -Path ./test` finds nothing since 2026-09-11: the
-            estate's test files carry the singular suffix `.Test.ps1` and
-            Pester looks for the plural. Get-XmipPesterConfiguration tells it,
-            the same configuration the landing gate uses. The result is
-            returned, not printed, so a caller reads `PassedCount`,
-            `FailedCount` and `Failed` like any other object; the verdict is
-            said in words, OK or FAILED, with each failing test named.
-
-        .PARAMETER Path
-            The directory of tests. Defaults to test/ under the repository.
-
-        .PARAMETER Test
-            The test files to run, by name without the suffix: Rust.Style runs
-            test/Rust.Style.Test.ps1. Omit for every file — nothing named is
-            the whole suite, and Test-XmipWholeSuite is where that is decided.
-    #>
-    [CmdletBinding()]
-    [OutputType('Pester.Run')]
-    param(
-        [Parameter()]
-        [string] $Path,
-
-        [Parameter()]
-        [AllowEmptyCollection()]
-        [string[]] $Test = @()
-    )
-
-    if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test'
-    }
-
-    $configuration = Get-XmipPesterConfiguration -Path $Path
-
-    if (-not (Test-XmipWholeSuite -Test $Test)) {
-        [string[]] $known = @(
-            Get-ChildItem -LiteralPath $Path -Filter '*.Test.ps1' -File |
-                ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' } |
-                Sort-Object
-        )
-        [string[]] $wanted = @(Expand-XmipTestName -Test $Test -Known $known)
-        [string[]] $files = @(
-            $wanted | ForEach-Object { Join-Path -Path $Path -ChildPath "$_.Test.ps1" }
-        )
-
-        $configuration.Run.Path = $files
-    }
-
-    # In its own runspace, never in this module's. The test files begin by
-    # removing Xmip and importing it afresh; run from inside the module they
-    # tore down the module that was running them, and every later call from
-    # the console found a hollow module (2026-09-12). A thread job shares the
-    # process, so the result comes back live, and its runspace is its own.
-    $job = Start-ThreadJob -ScriptBlock {
-        param($Configuration)
-
-        Set-StrictMode -Off
-        Invoke-Pester -Configuration $Configuration
-    } -ArgumentList $configuration
-
-    $result = Receive-Job -Job $job -Wait -AutoRemoveJob
-
-    [string] $tally = "$($result.PassedCount) passed, $($result.FailedCount) failed"
-
-    if ($result.FailedCount -eq 0) {
-        Write-Host "OK $tally" -ForegroundColor Green
-    }
-    else {
-        Write-Host "FAILED $tally" -ForegroundColor Red
-    }
-
-    foreach ($failure in $result.Failed) {
-        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
-    }
-
-    return $result
 }

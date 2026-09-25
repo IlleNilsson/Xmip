@@ -632,9 +632,11 @@ The runtime and modules are Rust on the stable channel. The operator surfaces
 are .NET 11; the PowerShell module targets `net10.0` because `pwsh` hosts it.
 
 ```powershell
-Publish-XmipChange -Message 'short precise message'   # alias xgit: every suite, then land
-Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1
+Publish-XmipChange -Message 'short precise message'   # alias xgit: each module's own tests, then land
+Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, detached
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
+Get-XmipTestStatus                                    # running, OK or FAILED, with counts
+Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
 Start-XmipTest -Suite Core.Playground -Cluster scratch -Test RoundTrip  # omit -Nodes: dealt
 Start-XmipTest -Suite * -Cluster scratch              # every suite this estate knows
 ```
@@ -647,7 +649,7 @@ updates the pins in the superproject:
 | --- | --- | --- |
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests` |
 | The Playground's own | `test/core/playground` | `cargo test` in `test/core/playground` |
-| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate` |
+| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
 | The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
 Before a change lands, `cargo fmt`, `cargo clippy --workspace --all-targets
@@ -665,6 +667,14 @@ A third party adds a suite by dropping a declaration in `test/suite` —
 `provider`, `name` and the `command` that starts it — with no edit to Xmip's
 own source.
 Omit `-Test` and the whole suite runs, for every suite and every provider.
+
+Both of Xmip's suites start detached and give the prompt back at once. The
+estate's runs Pester in a `pwsh` of its own, with no window, and writes its
+record and log under `.local-work/estate`: `Get-XmipTestStatus` lists it beside
+the rolls as running, OK or FAILED with its counts, `Get-XmipTestResult -Suite
+Core.Estate` returns what failed, path and message, and `Stop-XmipTest -Suite
+Core.Estate` ends it (ADR-0059, amendment 2026-09-25). Nothing starts itself:
+Start starts, Status observes, Stop stops.
 
 `-Test` takes wildcards, as every filter parameter in the module does:
 `-Test Round*` is RoundTrip, `-Test *` is every test and says the same as
@@ -754,9 +764,9 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a third party's `<Provider>.<Name>`. `-Suite` takes wildcards. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a third party's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
-| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built into the session's own directory on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
+| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built into the session's own directory on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
 | `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |

@@ -666,3 +666,40 @@ provider*, and *ACME is for the certificate provider*.
   `partner_create_v1`.
 - **ACME still means RFC 8555**, and the owner's quoted words keep his
   spelling, as clause 5 of the amendment above already had it.
+
+## Amendment, 2026-09-25: the estate's suite runs detached, as a roll does
+
+The owner: `Start-XmipTest -Suite Core.Estate` held his console for about ten
+minutes. It ran Pester in a thread job and waited for it, while a roll starts in
+the background and returns, and his rule since 2026-09-12 is that nothing starts
+itself: Start starts, Status observes, Stop stops.
+
+1. **`Start-XmipTest -Suite Core.Estate` starts the suite in a pwsh of its own
+   and returns at once** with the run's `Xmip.TestStatus`, saying in words
+   where it runs, its pid and its log. `pwsh -NoProfile` from the session's own
+   `$PSHOME`, no window on Windows, detached from the console, so it outlives
+   it; the test files' own removal and re-import of the module happens in that
+   process and cannot reach the console's.
+2. **The run records itself, as a roll does.** `estate-<start time>.toml` under
+   `.local-work/estate` (`Get-XmipPlaygroundLayout`'s `Estate`), beside its
+   log: the suite, the pid, when it started, the files named. When Pester
+   returns, the run writes its verdict over it — `state` OK or FAILED, the
+   passed, failed and skipped counts, the duration, and every failure's file,
+   path and message. The module reads it through `Get-TomlValue`. A run whose
+   process is gone with no verdict is FAILED, never running and never OK. A new
+   run clears the records of runs that have ended.
+3. **Observed and stopped by the cmdlets that observe and stop a roll.**
+   `Get-XmipTestStatus` lists the estate run beside the rolls, with `State`
+   running, OK or FAILED and `Tally` the counts. `Get-XmipTestResult -Suite
+   Core.Estate` returns one `Xmip.TestResult` per failed test of the latest
+   run and says OK in words when nothing failed. `Stop-XmipTest -Id <pid>` or
+   `-Suite Core.Estate` ends its pwsh and whatever that started, and takes its
+   record. Two parameters, `-Suite` on `Get-XmipTestResult` and on
+   `Stop-XmipTest`, and no new cmdlet (clause 5).
+4. **The landing gate is unchanged.** `Publish-XmipChange` never went through
+   `Start-XmipTest`: it verifies each changed module with its own tests, and a
+   module's Pester tests run through `Invoke-Pester` in `Test-XmipDotnetModule`,
+   which waits, because a gate needs its verdict before it lands anything.
+
+This overtakes clause 17's *the estate a Pester run that blocks*: a group run
+now starts both Xmip suites detached and returns at once.

@@ -28,26 +28,28 @@
           <TableColumnHeader><Label>Cluster</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>7</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Tests</Label><Width>12</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Nodes</Label><Width>15</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>15</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Worst</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Nodes</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Online</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Worst or tally</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($null -eq $_.Cluster) { 'by hand' } else { $_.Cluster }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } else { $_.Cluster }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.Rounds) { '' } elseif ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><PropertyName>Worst</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.Nodes) { '' } elseif ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.OnlineNodes) { '' } elseif ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

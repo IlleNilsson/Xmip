@@ -25,16 +25,25 @@ function Get-XmipTestResult {
             and computes nothing but the split — the judgement is the roll's
             (ADR-0027 clause 6).
 
+            -Suite Core.Estate reads the estate's Pester suite instead: the
+            latest run Start-XmipTest -Suite Core.Estate started, one object
+            per test that failed, with the path Pester names it by in Name
+            and its message in Message. A run that passed says OK in words
+            and returns nothing; one still running says so and returns
+            nothing, since it has no verdict yet.
+
         .PARAMETER Path
             The snapshot file, or a directory holding exactly one
             `<cluster>-snapshot.toml`; with more than one cluster there, name
             the file. Defaults to `.local-work/playground` under the
-            repository.
+            repository. For -Suite Core.Estate alone, the directory of its
+            run records, `.local-work/estate` unless said.
 
         .PARAMETER Test
             Only these tests, by the names Start-XmipTest takes: RoundTrip,
             LowLatency, HeavyLoad, Retention, Filing, ExclusiveClaim,
             DailyBacklog; or node, for the cluster's rollup of its nodes.
+            For Core.Estate, the Pester files by name: Toml, XmipTest.
             Wildcards allowed, as -Node takes them.
 
         .PARAMETER Node
@@ -43,7 +52,16 @@ function Get-XmipTestResult {
         .PARAMETER Worst
             Only the single worst record, by the order every surface ranks by
             (ScopeTree.Worst): the worse mood, then the higher severity, then
-            the scope.
+            the scope. For Core.Estate, the first failure.
+
+        .PARAMETER Suite
+            Which suite's results: Core.Playground, the default, or
+            Core.Estate, as Start-XmipTest -Suite names them, wildcards
+            allowed. A provider's suite reports through its own command and
+            is REFUSED here, naming it.
+
+        .EXAMPLE
+            Get-XmipTestResult -Suite Core.Estate
 
         .EXAMPLE
             Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -66,10 +84,46 @@ function Get-XmipTestResult {
         [string[]] $Node,
 
         [Parameter()]
-        [switch] $Worst
+        [switch] $Worst,
+
+        [Parameter()]
+        [SupportsWildcards()]
+        [string] $Suite = $script:XmipPlaygroundSuite
     )
 
     $ErrorActionPreference = 'Stop'
+
+    # Which suite is read as Start-XmipTest reads it, so Estate and
+    # Core.Estate are one; a snapshot is the Playground's, a record of
+    # failures the estate's, and a provider's suite reports through its own
+    # command.
+    [object[]] $known = @(Get-XmipTestSuite)
+    [string] $refused = Get-XmipTestSuiteRefusal -Name $Suite -Known $known
+
+    if ($refused -ne '') {
+        Write-Error $refused
+        return
+    }
+
+    [object[]] $matched = @(Get-XmipNamedTestSuite -Name $Suite -Known $known)
+
+    foreach ($one in @($matched | Where-Object { $_.Kind -eq 'command' })) {
+        Write-Error ("REFUSED. $($one.Name) reports through its provider's own command, " +
+            "$($one.Command); Xmip keeps no record of it.")
+    }
+
+    [bool] $rolls = @($matched | Where-Object { $_.Kind -eq 'roll' }).Count -gt 0
+
+    # -Path is the estate's record directory only when the estate alone was
+    # asked for; beside the Playground it is the snapshot's.
+    if (@($matched | Where-Object { $_.Kind -eq 'pester' }).Count -gt 0) {
+        [string] $area = if ($rolls) { '' } else { $Path }
+        Get-XmipEstateResult -Path $area -Test $Test -Worst:$Worst
+    }
+
+    if (-not $rolls) {
+        return
+    }
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = (Get-XmipPlaygroundLayout).Area

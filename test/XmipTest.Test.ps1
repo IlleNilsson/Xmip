@@ -27,7 +27,7 @@ BeforeAll {
 
         return ((
                 'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1',
-                'Start-XmipPlaygroundRoll.ps1' | ForEach-Object {
+                'Start-XmipEstateSuite.ps1', 'Start-XmipPlaygroundRoll.ps1' | ForEach-Object {
                     Get-Content -Raw -LiteralPath (Join-Path $module $_)
                 }
             ) -join "`n")
@@ -200,14 +200,16 @@ Describe 'Start, Get and Stop, and nothing else' {
             Should -Throw -ExpectedMessage $expected
     }
 
-    It 'runs the estate suite in its own runspace, never in the module it tests' {
+    It 'runs the estate suite in a pwsh of its own, never in the module it tests' {
         # 2026-09-12: these files begin by removing Xmip and importing it
         # afresh. Run from inside the module, the suite tore down the module
-        # that was running it, and every later call from the console found a
-        # hollow module. A thread job keeps the runspace apart.
+        # that was running it. A thread job kept the runspace apart and held
+        # the console until it ended: ten minutes, on 2026-09-25. A process
+        # of its own keeps both apart, and nothing waits for it.
         [string] $door = Get-XmipStartSource
 
-        $door | Should -Match 'Start-ThreadJob' -Because 'the suite removes the module it runs in'
+        $door | Should -Match '-EncodedCommand' -Because 'the suite removes the module it runs in'
+        $door | Should -Not -Match 'Start-ThreadJob|Receive-Job'
         $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
     }
 
@@ -853,9 +855,9 @@ Describe 'A suite carries its provider' {
         # is how a parameter announces it, and Get-Help shows it.
         [hashtable] $filters = @{
             'Start-XmipTest'     = @('Suite', 'Test')
-            'Get-XmipTestResult' = @('Test', 'Node')
+            'Get-XmipTestResult' = @('Test', 'Node', 'Suite')
             'Get-XmipTestStatus' = @('Cluster')
-            'Stop-XmipTest'      = @('Cluster', 'Test')
+            'Stop-XmipTest'      = @('Cluster', 'Test', 'Suite')
             'Get-XmipTestNode'   = @('Name')
             'Get-XmipProcess'    = @('Name')
         }
@@ -1462,6 +1464,168 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
                 Should -Throw -ExpectedMessage $none
             { Select-XmipTestRoll -Running @() -Test RoundTrip -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*Nothing is rolling.*'
+        }
+    }
+
+    It 'picks by suite as Start-XmipTest names it, and names a run with no cluster' {
+        # The estate's Pester run has no cluster; -Suite is how it is named
+        # among the runs, and it is spelled as Start-XmipTest spells it.
+        [object[]] $running = @(
+            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
+            [PSCustomObject]@{ Id = 77; Cluster = $null; Suite = 'Core.Estate'; Tests = @() }
+        )
+
+        InModuleScope Xmip -Parameters @{ Running = $running } {
+            param($Running)
+
+            @(Select-XmipTestRoll -Running $Running -Suite Estate).Id | Should -Be 77
+            @(Select-XmipTestRoll -Running $Running -Suite 'Core.*').Count | Should -Be 2
+
+            [string] $nothing = '*REFUSED. No run of a suite matching Nope* is running.*' +
+                'C1 running RoundTrip; Core.Estate 77 running the whole suite.*'
+            { Select-XmipTestRoll -Running $Running -Suite 'Nope*' -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage $nothing
+        }
+    }
+}
+
+Describe 'A run of the estate suite is started, observed and stopped like a roll' {
+    <#
+        The owner, 2026-09-25: Start-XmipTest -Suite Core.Estate held his
+        console for ten minutes. It runs in a pwsh of its own now and writes
+        a record; these check the start without running the estate's suite,
+        over a directory of two tiny test files, and the record without a
+        process at all.
+    #>
+    BeforeAll {
+        $script:Tiny = Join-Path $TestDrive 'tiny'
+        $script:Area = Join-Path $TestDrive 'estate'
+        New-Item -ItemType Directory -Path $script:Tiny, $script:Area | Out-Null
+
+        Set-Content -LiteralPath (Join-Path $script:Tiny 'Kept.Test.ps1') -Encoding utf8 -Value @(
+            "Describe 'kept' { It 'holds' { 1 | Should -Be 1 } }"
+        )
+        Set-Content -LiteralPath (Join-Path $script:Tiny 'Broken.Test.ps1') -Encoding utf8 -Value @(
+            "Describe 'broken' { It 'breaks' { 1 | Should -Be 2 } }"
+        )
+    }
+
+    It 'starts in its own pwsh, returns at once running, and writes the verdict itself' {
+        [hashtable] $given = @{ Tiny = $script:Tiny; Area = $script:Area }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Tiny, $Area)
+
+            $real = Get-XmipPlaygroundLayout
+            Mock -CommandName Get-XmipPlaygroundLayout -MockWith {
+                [PSCustomObject]@{ Root = $real.Root; Estate = $Area; Suffix = $real.Suffix }
+            }
+
+            [datetime] $asked = Get-Date
+            $run = Start-XmipEstateSuite -Path $Tiny -Test 'Kept', 'Brok*' 6>$null
+
+            ((Get-Date) - $asked).TotalSeconds | Should -BeLessThan 15 -Because 'nothing waits'
+            $run.Suite | Should -Be 'Core.Estate'
+            $run.Kind | Should -Be 'pester'
+            $run.State | Should -Be 'running'
+            @($run.Tests) | Should -Be @('Kept', 'Broken')
+            Test-Path -LiteralPath $run.Record | Should -BeTrue
+
+            [datetime] $until = (Get-Date).AddMinutes(3)
+
+            while ((Get-Date) -lt $until -and
+                (Get-XmipEstateRun -Path $Area | Where-Object Id -EQ $run.Id).State -eq 'running') {
+                Start-Sleep -Milliseconds 500
+            }
+
+            $ended = Get-XmipEstateRun -Path $Area | Where-Object Id -EQ $run.Id
+            $ended.State | Should -Be 'FAILED' -Because (Get-Content -Raw $ended.Log)
+            $ended.Passed | Should -Be 1
+            $ended.Failed | Should -Be 1
+
+            [object[]] $failed = @(Get-XmipTestResult -Suite Core.Estate -Path $Area)
+            $failed.Count | Should -Be 1
+            $failed[0].Test | Should -Be 'Broken'
+            $failed[0].Name | Should -Be 'broken.breaks'
+            $failed[0].Message | Should -BeLike '*Expected 2*'
+            @(Get-XmipTestResult -Suite Core.Estate -Path $Area -Test 'Kept').Count | Should -Be 0
+        }
+    }
+
+    It 'refuses a file pattern that matches nothing, before anything starts' {
+        InModuleScope Xmip -Parameters @{ Tiny = $script:Tiny } {
+            param($Tiny)
+
+            Mock -CommandName Start-Process -MockWith { }
+
+            { Start-XmipEstateSuite -Path $Tiny -Test 'Nope*' } |
+                Should -Throw -ExpectedMessage 'REFUSED. No test matches Nope*Broken, Kept*'
+            Should -Invoke -CommandName Start-Process -Times 0
+        }
+    }
+
+    It 'reads a record, says a run that died without a verdict FAILED, and never OK' {
+        InModuleScope Xmip -Parameters @{ Area = (Join-Path $TestDrive 'died') } {
+            param($Area)
+
+            New-Item -ItemType Directory -Path $Area | Out-Null
+            Set-Content -LiteralPath (Join-Path $Area 'estate-20260925-120000-000.toml') -Value @(
+                'suite = "Core.Estate"'
+                'pid = 2000000000'
+                'started = "2026-09-25T10:00:00.0000000Z"'
+                'tests = []'
+                'log = "x.log"'
+            )
+
+            $run = Get-XmipEstateRun -Path $Area
+            $run.State | Should -Be 'FAILED'
+            $run.Fault | Should -BeLike '*without a verdict*'
+
+            (Get-XmipEstateResult -Path $Area).Message | Should -BeLike '*without a verdict*'
+
+            Remove-XmipEstateFinished -Path $Area
+            @(Get-XmipEstateRun -Path $Area).Count | Should -Be 0
+        }
+    }
+
+    It 'stops a running one, its pwsh and its record, and refuses one that ended' {
+        InModuleScope Xmip -Parameters @{ Area = (Join-Path $TestDrive 'stop') } {
+            param($Area)
+
+            New-Item -ItemType Directory -Path $Area | Out-Null
+            [hashtable] $sleeping = @{
+                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipPlaygroundLayout).Suffix)"
+                ArgumentList = @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120')
+                PassThru     = $true
+            }
+
+            if ($IsWindows) {
+                $sleeping.WindowStyle = 'Hidden'
+            }
+
+            $process = Start-Process @sleeping
+            [hashtable] $start = @{
+                Record  = Join-Path $Area 'estate-20260925-120000-001.toml'
+                Suite   = 'Core.Estate'
+                Path    = $Area
+                Log     = Join-Path $Area 'estate-20260925-120000-001.log'
+                Id      = $process.Id
+                Started = $process.StartTime
+            }
+            Write-XmipEstateStart @start
+
+            $run = Get-XmipEstateRun -Path $Area
+            $run.State | Should -Be 'running'
+
+            Stop-XmipEstateRun -Run $run
+            $process.HasExited | Should -BeTrue
+            Test-Path -LiteralPath $start.Record | Should -BeFalse
+
+            Mock -CommandName Get-XmipTestStatus -MockWith {
+                [PSCustomObject]@{ Id = 5; Kind = 'pester'; State = 'OK'; Suite = 'Core.Estate' }
+            }
+            { Stop-XmipTest -Id 5 -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED*run 5 has ended (OK)*'
         }
     }
 }

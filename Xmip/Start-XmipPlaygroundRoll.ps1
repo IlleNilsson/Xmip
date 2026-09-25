@@ -383,7 +383,8 @@ function Start-XmipPlaygroundRoll {
 
     if ($null -ne $prompt) {
         [string[]] $beside = @(
-            Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot
+            Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
         )
         $prompt::Follow($environment.XMIP_PLAYGROUND_SNAPSHOT, $beside)
     }

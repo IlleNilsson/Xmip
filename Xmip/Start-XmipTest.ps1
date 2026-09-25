@@ -15,8 +15,8 @@ function Start-XmipTest {
             does (ADR-0011): Core.Playground is a roll that runs detached
             until you stop it, Get-XmipTestStatus says what runs and
             Stop-XmipTest ends it; Core.Estate is the Pester suite under
-            test/, the estate's memory of every past defect, which runs here
-            and now, says OK or FAILED and returns the Pester result.
+            test/, the estate's memory of every past defect, which runs in a
+            pwsh of its own, detached, and says OK or FAILED when it ends.
             A third party's suite is <Provider>.<Name> and joins by a
             declaration rather than by an edit to Xmip.
 
@@ -62,8 +62,8 @@ function Start-XmipTest {
 
             Several suites matched run one after another in the order they
             are listed, each returning what it returns — the Playground a
-            detached roll that comes back at once, the estate a Pester run
-            that blocks, a provider's whatever its command gives — so a
+            detached roll, the estate a detached Pester run, both back at
+            once, a provider's whatever its command gives — so a
             caller reads the stream by type. It is said in words which are
             about to run and which did not start; one suite failing to start
             never stops the rest. A switch that belongs to one suite alone is
@@ -222,7 +222,7 @@ function Start-XmipTest {
             Start-XmipTest -Suite Core.Estate
 
         .EXAMPLE
-            (Start-XmipTest -Suite Core.Estate).Failed | Format-Table ExpandedPath
+            Get-XmipTestResult -Suite Core.Estate | Format-Table -Property Test, Name
 
         .EXAMPLE
             Start-XmipTest -Suite Example.Playground -Cluster orders
@@ -237,7 +237,7 @@ function Start-XmipTest {
             Start-XmipTest -Suite *Play* -Cluster orders
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
-    [OutputType('Xmip.TestStatus', 'Pester.Run')]
+    [OutputType('Xmip.TestStatus')]
     param(
         # The sentence is "start the Playground's HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).

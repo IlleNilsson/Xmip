@@ -23,6 +23,10 @@ function Get-XmipPlaygroundLayout {
             amendment 2026-09-20). They are hard links to the built binaries,
             never copies of the repository, and they are device-local like
             everything else a run writes here.
+
+            Estate is where a run of the estate's Pester suite writes its
+            record and its log: .local-work/estate, beside the Playground's
+            area and not inside it, since it is no roll's.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -57,6 +61,7 @@ function Get-XmipPlaygroundLayout {
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
         Image      = Join-Path -Path $root -ChildPath '.local-work/playground/image'
+        Estate     = Join-Path -Path $root -ChildPath '.local-work/estate'
         Suffix     = $suffix
     }
 }
