@@ -151,6 +151,16 @@ transport capability held for HTTP and SMTP went with it, to `net::head`,
 and a network failure reaches a transport's `?` through
 `From<NetError> for TransportError`, judged by its kind.
 
+Done 2026-09-25, later the same day: HTTP/2 joined it. `net::http2` is the
+one HTTP/2 codec, beside `net::http` and carrying the same `Request` and
+`Response`, trailers included, so a caller does not care which version a
+connection speaks. What stays http's is choosing the version per
+connection — ALPN over TLS through `xmip-core-library-tls`, prior knowledge
+in the clear where a Location says `h2c` — and a request served, which
+answers a connection that opens with HTTP/2's preface in HTTP/2 and any
+other in HTTP/1.1. The technologies riding on HTTP connect as before and
+speak HTTP/1.1 unchanged (ADR-0043, amendment 2026-09-25).
+
 ## Amendment, 2026-09-24: a dialect is a choice, not a copy
 
 Clause 2 left each SQL technology "its own quoting". Five crates read that as

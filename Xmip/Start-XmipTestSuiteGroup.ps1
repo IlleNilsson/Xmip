@@ -36,8 +36,8 @@ function Start-XmipTestSuiteGroup {
             pattern chose the group rather than an operator naming one suite.
 
             A switch that belongs to the Playground alone is dropped for the
-            estate's Pester suite rather than refused — -Suite * -Cluster Z3
-            is not a mistake about -Cluster; it is a roll on Z3 with the
+            estate's Pester suite rather than refused — -Suite * -Cluster C1
+            is not a mistake about -Cluster; it is a roll on C1 with the
             estate's files beside it. A provider's command keeps everything,
             since only the provider knows what its command takes.
 

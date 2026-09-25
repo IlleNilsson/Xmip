@@ -716,8 +716,7 @@ runs under any Service Identity, a gMSA least of all.
 
 | step | what |
 |---|---|
-| 1 | the node installs as a Windows service under a gMSA (`DOMAIN
-ame$`, no password), refusing in words when the host cannot retrieve the account's password |
+| 1 | the node installs as a Windows service under a gMSA (`DOMAIN\name$`, no password), refusing in words when the host cannot retrieve the account's password |
 | 2 | the technologies that reach a counterparty as the node — mssql integrated security, smb, ldap, http's Negotiate — authenticate with the service's own Kerberos ticket, and a test proves each on a domain |
 | 3 | Windows containers and Kubernetes Windows pods: the credential spec a deployment names |
 | 4 | Linux: an AD-joined host with a gMSA ticket fetched by a daemon (e.g. `credentials-fetcher`), verified on AlmaLinux before it is claimed |
@@ -739,6 +738,26 @@ and no engine.
 | 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
 | 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
 | 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SurfaceTls` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
+
+## 30. HTTP/3 is declared and not built
+
+`architecture.toml` declares the http technology over *IETF RFC 9110, with
+the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents*. HTTP/1.1 is
+`net::http` and HTTP/2 `net::http2` since 2026-09-25 (ADR-0043 and ADR-0044,
+amendments 2026-09-25), the version chosen per connection by ALPN or prior
+knowledge. HTTP/3 is not: it does not ride TCP at all.
+
+| step | what |
+|---|---|
+| 1 | QUIC, RFC 9000, over UDP: packets and their numbers, connection IDs, streams and their flow control, loss detection and congestion control (RFC 9002) — a transport in its own right, and where it lives decided first (a library beside `net`, or a transport technology) |
+| 2 | QUIC's TLS, RFC 9001: the TLS 1.3 handshake carried in CRYPTO frames and packet protection, through `xmip-core-library-tls`, hybrid key exchange kept (ADR-0063) |
+| 3 | HTTP/3, RFC 9114: its frames on QUIC streams, the control and unidirectional streams, and `Alt-Svc` or HTTPS records to discover it |
+| 4 | QPACK, RFC 9204: the header compression HTTP/3 uses in place of HPACK, with its encoder and decoder streams |
+| 5 | the http transport offers `h3` where a service advertises it, and falls back to HTTP/2 or HTTP/1.1 over TCP where UDP is blocked |
+
+**Open for the owner before step 1:** whether QUIC is hand-written like the
+rest of the estate — the largest protocol it would hold — or taken from a
+crate, which today means an async runtime the estate does not carry.
 
 ---
 

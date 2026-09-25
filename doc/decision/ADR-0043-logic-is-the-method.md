@@ -95,3 +95,32 @@ names an operation as an endpoint, a cluster and a command, and types the
 arguments with the cluster's own data model in TLV. `xmip-core-logic-matter`
 implements the four methods over that, mounted beside `soap`, `http-api` and
 `grpc`, and reads its bytes through the transport the node gives it.
+
+## Amendment, 2026-09-25: gRPC rides HTTP/2
+
+The consequence *gRPC rides HTTP/2 and the `http` transport speaks HTTP/1.1
+today* is withdrawn. The owner asked on 2026-09-25 why HTTP/2 was not in
+the estate when `architecture.toml` declared the http technology over
+HTTP/1.1, HTTP/2 and HTTP/3; the connection this record left *the
+transport's to grow* has grown.
+
+- **HTTP/2 is `net::http2`** in `xmip-core-library-net`, beside HTTP/1.1
+  (ADR-0044, amendment 2026-09-24): RFC 9113's frames, settings, stream
+  states, flow control and `GOAWAY`, and RFC 7541's HPACK, both halves,
+  synchronous and hand-written like the rest of the estate.
+- **The http transport picks the version per connection**: by ALPN over
+  TLS, which `xmip-core-library-tls` offers and selects, and by prior
+  knowledge in the clear where a Location is configured for `h2c`. RFC 9113
+  removed HTTP/1.1's `Upgrade`, and there is none.
+- **A reply carries trailers.** `Reply` gains `trailers` beside its headers
+  and body, since HTTP/2 writes a header block after the body and gRPC puts
+  its status there: `grpc` writes `grpc-status` and `grpc-message` as
+  trailers and reads them there first, then from the only header block of
+  a Trailers-Only reply. The other technologies write none.
+- **The technology still never sees a socket.** Its tests call a method
+  across a loopback HTTP/2 connection — the request on a stream of its own,
+  `content-type: application/grpc`, the status in the trailers — with the
+  connection held by the test, as a transport holds it.
+
+HTTP/3 is not built: QUIC is a transport of its own, and it is
+`doc/planning/open-problems.md` problem 30.

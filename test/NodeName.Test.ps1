@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 <#
-    No node in the estate's code, tests, fixtures or help is named like a role.
+    No node in the estate's code, tests or fixtures is named like a role.
 
     The owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node names* (ADR-0056,
     amendment), and a node's role comes from its declared capability, never its
@@ -29,6 +29,21 @@
     doc/decision/, in every language the estate writes and every text it
     keeps beside the code. The records under doc/decision/ are history and
     quote the owner as he spoke; they are not searched.
+
+    What a person reads to learn a command is the one place such a name
+    belongs. The owner, 2026-09-25: he names clusters Cn and nodes Rn, Pn and
+    Sn when he tests — *That is why I use Cn, Rn, Pn, Sn. No confusion* — and
+    help examples and the README show C1, R1, P1, S1 as parameter values
+    (ADR-0056, amendment 2026-09-25). So a name is allowed, and only, in:
+
+    - a README.md;
+    - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
+      .ps1 or .psm1 that is not a test;
+    - a binary's usage text: a Rust `const USAGE`, and the `Text` of a C#
+      Usage.cs, to the line that closes the string.
+
+    Everywhere else — code, tests, fixtures and every other document — a node
+    keeps a name that carries no meaning.
 
     Two kinds of token are not node names and are said here once:
     $script:Word, the products and specifications the estate integrates with,
@@ -98,10 +113,90 @@ BeforeAll {
 
     <#
         .SYNOPSIS
+        The indexes of the lines of a file that are help a person reads, where
+        the owner's example names belong: all of a README.md, the .EXAMPLE
+        and .PARAMETER sections of a script's help, a binary's usage text.
+    #>
+    function Get-NodeNameHelpLine([string] $Path, [string[]] $Line) {
+        [string] $leaf = ($Path -split '/')[-1]
+        [string] $extension = [IO.Path]::GetExtension($leaf)
+        [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
+
+        if ($leaf -eq 'README.md') {
+            return 0..([Math]::Max($Line.Count - 1, 0))
+        }
+
+        if ($extension -in '.ps1', '.psm1' -and -not $test) {
+            [bool] $inHelp = $false
+            [string] $section = ''
+
+            for ([int] $at = 0; $at -lt $Line.Count; $at++) {
+                if (-not $inHelp -and $Line[$at] -match '^\s*<#') {
+                    $inHelp = $true
+                    $section = ''
+                }
+
+                if ($inHelp) {
+                    if ($Line[$at] -match '^\s*\.([A-Za-z]+)\b') {
+                        $section = $Matches[1].ToUpperInvariant()
+                    }
+
+                    if ($section -in 'EXAMPLE', 'PARAMETER') {
+                        $at
+                    }
+
+                    if ($Line[$at] -match '#>') {
+                        $inHelp = $false
+                    }
+                }
+            }
+
+            return
+        }
+
+        [string] $opens = switch ($extension) {
+            '.rs' { '^\s*(pub\s+)?const\s+USAGE\s*:' }
+            '.cs' { if ($leaf -eq 'Usage.cs') { '^\s*public\s+const\s+string\s+Text\s*=' } }
+        }
+
+        if (-not $opens) {
+            return
+        }
+
+        [bool] $inUsage = $false
+
+        for ([int] $at = 0; $at -lt $Line.Count; $at++) {
+            if (-not $inUsage -and $Line[$at] -match $opens) {
+                $inUsage = $true
+            }
+
+            if ($inUsage) {
+                $at
+
+                if ($Line[$at] -match '";\s*$') {
+                    $inUsage = $false
+                }
+            }
+        }
+    }
+
+    <#
+        .SYNOPSIS
         Every place a line names a node like a role, as file:line: place.
+        Help a person reads is passed over (Get-NodeNameHelpLine).
     #>
     function Find-NodeName([string] $Path, [string[]] $Line) {
+        $help = [Collections.Generic.HashSet[int]]::new()
+
+        foreach ($at in @(Get-NodeNameHelpLine -Path $Path -Line $Line)) {
+            [void] $help.Add([int] $at)
+        }
+
         for ([int] $at = 0; $at -lt $Line.Count; $at++) {
+            if ($help.Contains($at)) {
+                continue
+            }
+
             foreach ($place in $script:Place.Keys) {
                 foreach ($match in [regex]::Matches($Line[$at], $script:Place[$place])) {
                     [string] $token = @($match.Groups | Select-Object -Skip 1 |
@@ -117,7 +212,7 @@ BeforeAll {
 }
 
 Describe 'A node is never named like a role' {
-    It 'finds no node named a stage letter and digits in code, tests, fixtures or help' {
+    It 'finds no node named a stage letter and digits in code, tests, fixtures or documents' {
         [string[]] $found = @(
             foreach ($tree in $script:Tree) {
                 [string] $at = Join-Path $script:Root $tree
@@ -140,7 +235,8 @@ Describe 'A node is never named like a role' {
         )
 
         $found | Should -BeNullOrEmpty -Because (
-            'a node''s name carries no meaning; name it alpha, beta, gamma (ADR-0056)')
+            ('a node''s name carries no meaning outside help a person reads; ' +
+                'name it alpha, beta, gamma (ADR-0056)'))
     }
 
     It 'recognizes each place a node''s name stands' {
@@ -165,6 +261,45 @@ Describe 'A node is never named like a role' {
             Should -BeNullOrEmpty -Because 'Amazon S3 is a service, not a node'
         @(Find-NodeName -Path 'sample' -Line '[R:12 P:11 S:10]') |
             Should -BeNullOrEmpty -Because 'a stage letter and its rate are not a name'
+    }
+
+    It 'allows the owner''s names in help and refuses the same name in code' {
+        [string] $role = 'R' + '1'
+        [string] $example = "Start-XmipTest -Cluster C1 -Nodes $role, beta"
+        [string[]] $script = @(
+            'function Start-Sample {'
+            '    <#'
+            '        .DESCRIPTION'
+            "            $example"
+            '        .PARAMETER Nodes'
+            "            $example"
+            '        .EXAMPLE'
+            "            $example"
+            '    #>'
+            "    $example"
+            '}'
+        )
+
+        [string[]] $found = @(Find-NodeName -Path 'Xmip/Start-Sample.ps1' -Line $script)
+        $found | Should -HaveCount 2 -Because 'the description and the body are not help examples'
+        $found[0] | Should -BeLike 'Xmip/Start-Sample.ps1:4:*'
+        $found[1] | Should -BeLike 'Xmip/Start-Sample.ps1:10:*'
+
+        @(Find-NodeName -Path 'test/Start-Sample.Test.ps1' -Line $script) |
+            Should -HaveCount 4 -Because 'a test''s names are parameters, never examples'
+        @(Find-NodeName -Path 'module/core/example/README.md' -Line $example) |
+            Should -BeNullOrEmpty -Because 'a README shows the owner''s names'
+        @(Find-NodeName -Path 'doc/guide.md' -Line $example) |
+            Should -Not -BeNullOrEmpty -Because 'only a README.md is help'
+
+        [string[]] $rust = @(
+            'const USAGE: &str = "usage: cluster --nodes <a,b> \'
+            "     example: cluster --nodes $role=receive,beta=send`";"
+            "let given = [`"--nodes`", `"$role=receive`"];"
+        )
+        [string[]] $inRust = @(Find-NodeName -Path 'test/core/sample/src/main.rs' -Line $rust)
+        $inRust | Should -HaveCount 1 -Because 'a usage text is help and the line after it is code'
+        $inRust[0] | Should -BeLike '*main.rs:3:*'
     }
 
     It 'lists only value files that exist and still hold such a token' {

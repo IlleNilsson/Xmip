@@ -189,7 +189,10 @@ function Remove-XmipPlaygroundImage {
         Remove-Item -LiteralPath $file.FullName -Force -ErrorAction SilentlyContinue
     }
 
-    Remove-Item -LiteralPath $area -Force -ErrorAction SilentlyContinue
+    # Recurse, so a folder with anything left in it is removed rather than
+    # asked about: the question failed a non-interactive session outright
+    # (2026-09-25). A file still held open stays, and so does its folder.
+    Remove-Item -LiteralPath $area -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
 }
 
 function Test-XmipPlaygroundOwnImage {
