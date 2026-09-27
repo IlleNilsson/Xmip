@@ -91,8 +91,9 @@ which Event types, scopes and metadata it may receive (runtime-model section
   the gate is `authorize::authorize`, asked once at subscribe as a Send at
   the scope reached, each type as the Contract; `SameProcess` admits a
   program in this process. Every subscription, delivery, refusal and forward
-  is recorded through `ProgramAudit` on one keeping thread
-  (`audit_queue.rs`), so no Event waits for a disk; unsubscribing settles it.
+  is recorded through `ProgramAudit`, handed to the audit capability's
+  keeper (`audit::keeper`, amendment 2026-09-27), so no Event waits for a
+  disk and an unsubscribe never does either.
 - **In process (clause 2).** `hub::Hub` fans out through a bounded queue per
   subscription and never waits for one; `next` wakes on arrival; `listen`
   calls back on its own thread. `xmip_operate.h` section 11 (ADR-0027,
@@ -142,6 +143,17 @@ and *just hide, encapsulate it. We are offline first.* The standard stays on
 the wire (clause 3) and is encapsulated: everywhere Xmip speaks — code, help,
 surfaces, records — it is the Event wire form. Delivery assumes no network
 beyond the ones the cluster is configured with.
+
+## Amendment, 2026-09-27: audit's keeper, and an unsubscribe that does not wait
+
+Recording without blocking the caller is the audit capability's, not
+eventing's: the thread that keeps records in order moved from
+`xmip-core-event` to `xmip-core-audit` as `keeper` (`later`, `settle`), and
+eventing hands its records to it. Dropping a subscription no longer settles
+the keeper — the dropping thread is the program's and a disk is not its
+business. A direct `ProgramAudit::record` settles first instead, so a
+program's records are kept in the order it made them and the record of its
+stop after everything it handed over before.
 
 ## Provenance
 

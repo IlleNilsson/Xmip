@@ -481,7 +481,7 @@ is `XMIP_E_AUTH` with the gate's sentence written as `xmip_validate_v1`
 writes its report. It touches no snapshot, so clause 6 is not in play: a
 publisher never waits for a subscriber, and `next` wakes on arrival.
 
-The runtime's `src/ffi/event.rs` and `src/ffi/event/header.rs` implement
+The runtime's `src/ffi/event.rs` and `src/ffi/event/crossing.rs` implement
 them; `xmip-core-abi`'s `operate::event` declares their shapes, and the
 runtime's tests fail to compile if an export drifts; `Xmip.Abi` binds them
 once for .NET, and C, C++, Java and Python bind the header beside it.

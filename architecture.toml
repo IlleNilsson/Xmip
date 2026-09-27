@@ -236,7 +236,7 @@ dependency = []
     description = "HL7 v2 ER7 shape: segments as parts named by their tag, MSH-9 as the announced type. A xmip-core-message technology."
     [xmip.core.message.json]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec"]
     [xmip.core.message.multipart]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec"]
@@ -255,7 +255,7 @@ dependency = []
     specification = "OASIS Universal Business Language"
     [xmip.core.message.xml]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec"]
 
   [xmip.core.context]
   description = "Message Context values and metadata, and every name a property travels under when one layer writes it and another reads it: what a transport says about an arrival for the identity gates, and what the runtime writes for a route (context::property)."
@@ -480,7 +480,7 @@ dependency = []
     dependency = ["xmip-core-transport-m-bus", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.redpanda]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-kafka", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-transport-kafka", "xmip-core-transport-http", "xmip-core-library-net", "xmip-core"]
     specification = "Apache Kafka wire protocol, with Redpanda admin extensions"
     [xmip.core.transport.snmp]
     maturity = "scaffolded"
@@ -897,21 +897,21 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context"]
+  dependency = ["xmip-core-context", "xmip-core"]
 
   [xmip.core.promote]
   description = "Common Path-based promotion into Message Context."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path"]
+  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path", "xmip-core"]
 
   [xmip.core.demote]
   description = "Common Path-based demotion into Message or artifact configuration."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path"]
+  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path", "xmip-core"]
 
   [xmip.core.identify]
   description = "Common transport-level and message-level identification functionality."
@@ -1105,7 +1105,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-path"]
+  dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-path", "xmip-core"]
     [xmip.core.route.content]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-path"]
@@ -1114,7 +1114,7 @@ dependency = []
     dependency = ["xmip-core-message", "xmip-core-path"]
     [xmip.core.route.contract]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path"]
+    dependency = ["xmip-core-message", "xmip-core", "xmip-core-path"]
     [xmip.core.route.header]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path"]
@@ -1339,12 +1339,12 @@ dependency = []
     [xmip.core.archive.mssql]
     description = "SQL Server archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-mssql"]
+    dependency = ["xmip-core-transport-mssql", "xmip-core-transport"]
     specification = "T-SQL over TDS 7.4, through the mssql transport client"
     [xmip.core.archive.mysql]
     description = "MySQL and MariaDB archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-mysql"]
+    dependency = ["xmip-core-transport-mysql", "xmip-core-transport"]
     specification = "SQL over the MySQL client/server protocol, through the mysql transport client"
     [xmip.core.archive.parquet]
     description = "Parquet archive target: retained items written as Apache Parquet files. The default archive technology (owner, 2026-09-07). A xmip-core-archive technology."
@@ -1375,6 +1375,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
+  dependency = ["xmip-core"]
     [xmip.core.resilience.bulkhead]
     maturity = "scaffolded"
     [xmip.core.resilience.circuit-breaker]
