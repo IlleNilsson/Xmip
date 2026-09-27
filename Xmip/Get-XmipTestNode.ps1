@@ -10,10 +10,11 @@ function Get-XmipTestNode {
 
         .DESCRIPTION
             A node is a process running the Playground's own node binary
-            (ADR-0028 clause 2). What it is doing is read from its command
-            line: its name, stress level, what it declared it can do, whether
-            it may assume the internet, its rounds, the directory it shares
-            with its cluster and where it publishes. Parent is the roll the
+            (ADR-0028 clause 2). What it is doing is what it declared where it
+            started (ADR-0053), read by the node: its name, stress level, what
+            it declared it can do, whether it may assume the internet, its
+            rounds and interval, the directory it shares with its cluster and
+            where it publishes. Parent is the roll the
             node belongs to — the cluster process spawns it and the roll
             spawns the cluster (the owner, 2026-09-19), so the roll is its
             grandparent — or null for one started by Start-XmipTestNode or by
@@ -55,7 +56,7 @@ function Get-XmipTestNode {
         Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Node -Kind Node
     )
 
-    [hashtable] $declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
+    [hashtable] $declared = Read-XmipProcessDeclaration
 
     foreach ($process in $processes) {
         $node = ConvertTo-XmipTestNode -Process $process -Declared $declared
@@ -89,13 +90,11 @@ function ConvertTo-XmipTestNode {
         [hashtable] $Declared
     )
 
-    [string] $line = try { $Process.CommandLine } catch { '' }
-    [hashtable] $flags = Read-XmipTestNodeCommandLine -CommandLine "$line"
     [hashtable] $known = if ($null -ne $Declared) {
         $Declared
     }
     else {
-        Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
+        Read-XmipProcessDeclaration
     }
     $parent = try { $Process.Parent } catch { $null }
 
@@ -122,22 +121,26 @@ function ConvertTo-XmipTestNode {
     }
 
     [bool] $ofRoll = (Get-XmipPlaygroundImageKind -Name $named) -eq 'Roll'
+    # What the node was started with is what it declared (ADR-0053): the
+    # node binary says its flags in its declaration, and nothing here reads
+    # its command line. A node that declared nothing says nothing.
     $said = $known[$Process.Id]
+    [string] $interval = [string](Get-TomlValue -Node $said -Name 'interval_ms' -Default '')
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'
         Suite      = $script:XmipPlaygroundSuite
-        Name       = $flags.Name
+        Name       = Get-TomlValue -Node $said -Name 'node'
         Id         = $Process.Id
-        Stress     = $flags.Stress
-        Capability = $flags.Capability
-        Online     = $flags.Online
-        Rounds     = $flags.Rounds
-        Interval   = $flags.Interval
+        Stress     = Get-TomlValue -Node $said -Name 'stress'
+        Capability = [string](Get-TomlValue -Node $said -Name 'capability' -Default '')
+        Online     = [string](Get-TomlValue -Node $said -Name 'online' -Default '') -eq 'true'
+        Rounds     = [int](Get-TomlValue -Node $said -Name 'rounds' -Default 0)
+        Interval   = if ($interval) { [timespan]::FromMilliseconds([int] $interval) } else { $null }
         Parent     = if ($ofRoll) { $above } else { $null }
         Location   = [string](Get-TomlValue -Node $said -Name 'location' -Default '')
-        Shared     = $flags.Shared
-        Snapshot   = $flags.Snapshot
+        Shared     = Get-TomlValue -Node $said -Name 'shared'
+        Snapshot   = Get-TomlValue -Node $said -Name 'snapshot'
         StartTime  = $Process.StartTime
     }
 }

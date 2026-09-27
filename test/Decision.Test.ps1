@@ -18,7 +18,7 @@
 
 BeforeAll {
     [int] $script:ProvenanceFloor = 1
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:DecisionRoot = Join-Path $script:Root 'doc/decision'
     $script:IndexPath = Join-Path $script:DecisionRoot 'README.md'
     $script:Index = Get-Content -LiteralPath $script:IndexPath -Raw
@@ -318,8 +318,6 @@ Describe 'The index agrees with the records about status' {
 
 Describe 'The index is generated, not written' {
     BeforeAll {
-        Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
-
         [PSCustomObject[]] $script:Declared = @(
             Get-XmipDecisionRecord -DecisionRoot $script:DecisionRoot
         )

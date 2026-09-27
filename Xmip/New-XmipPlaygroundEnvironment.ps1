@@ -263,20 +263,14 @@ function New-XmipPlaygroundEnvironment {
         [string] $Image,
 
         [Parameter(Mandatory)]
-        [string] $Snapshot,
-
-        [Parameter(Mandatory)]
-        [string] $History,
-
-        [Parameter(Mandatory)]
-        [string] $Activity
+        [string] $Area
     )
 
+    # The roll names its snapshot, history and activity in the area itself
+    # (Get-XmipPlaygroundPublication asks it where).
     [hashtable] $environment = @{
-        XMIP_PLAYGROUND_STRESS   = $Stress.ToLowerInvariant()
-        XMIP_PLAYGROUND_SNAPSHOT = $Snapshot
-        XMIP_PLAYGROUND_HISTORY  = $History
-        XMIP_PLAYGROUND_ACTIVITY = $Activity
+        XMIP_PLAYGROUND_STRESS = $Stress.ToLowerInvariant()
+        XMIP_PLAYGROUND_AREA   = $Area
     }
 
     # Nothing named is the whole suite (the owner, 2026-09-19), and

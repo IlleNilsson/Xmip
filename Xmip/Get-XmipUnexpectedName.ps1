@@ -35,8 +35,8 @@ function Get-XmipTemplate {
         $Manifest
     )
 
-    $crate = Get-TomlValue $Manifest 'crate' $null
-    $declared = Get-TomlValue $crate 'template' $null
+    $crate = Get-TomlValue -Node $Manifest -Name 'crate' -Default $null
+    $declared = Get-TomlValue -Node $crate -Name 'template' -Default $null
 
     if ($null -eq $declared) {
         return @{}
@@ -45,35 +45,10 @@ function Get-XmipTemplate {
     $templates = @{}
 
     foreach ($language in (Get-TomlKey -Node $declared)) {
-        $templates[$language] = [string](Get-TomlValue $declared $language '')
+        $templates[$language] = [string](Get-TomlValue -Node $declared -Name $language -Default '')
     }
 
     return $templates
-}
-
-
-<#
-    .SYNOPSIS
-    Repositories the manifest says were retired.
-
-    .DESCRIPTION
-    Those still on GitHub would otherwise report as drift for as long as they
-    exist, and a warning that is always there is a warning nobody reads. One
-    deleted since (xmip-core-exclusiveness, 2026-09-21) is simply not there.
-#>
-function Get-XmipRetiredName {
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        $Manifest
-    )
-
-    return @(
-        @(Get-TomlValue $Manifest 'retired' @()) |
-            ForEach-Object { [string](Get-TomlValue $_ 'name' '') } |
-            Where-Object { $_ }
-    )
 }
 
 
@@ -105,11 +80,7 @@ function Get-XmipUnexpectedName {
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyCollection()]
-        [string[]] $Template = @(),
-
-        [Parameter(Mandatory = $false)]
-        [AllowEmptyCollection()]
-        [string[]] $Retired = @()
+        [string[]] $Template = @()
     )
 
     $declaredSet = [System.Collections.Generic.HashSet[string]]::new(
@@ -127,13 +98,6 @@ function Get-XmipUnexpectedName {
         }
     }
 
-    # Retired repositories are archived rather than deleted, so they stay
-    # visible. Reporting them forever would train a reader to ignore the
-    # warning that also reports real drift.
-    foreach ($name in $Retired) {
-        [void] $declaredSet.Add($name)
-    }
-
     return @(
         $Actual |
             Where-Object { $_ -like 'xmip-*' -and -not $declaredSet.Contains($_) } |
@@ -147,7 +111,7 @@ function Get-XmipUnexpectedName {
     A case-insensitive set of the names on a collection of manifest entries.
 
     .DESCRIPTION
-    Get-ActualRepositories returns GitHub repository objects, not names.
+    Get-XmipGitHubRepository returns GitHub repository objects, not names.
     Declaring the caller's parameter [string[]] coerced them to type names and
     matched nothing, which reported every repository as waiting on creation.
 #>
@@ -162,8 +126,8 @@ function Get-XmipNameSet {
 
     $names = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
-    foreach ($entry in @(ConvertTo-Array $Entries)) {
-        [void] $names.Add([string](Get-PropertyValue $entry 'name'))
+    foreach ($entry in @(ConvertTo-XmipArray -Value $Entries)) {
+        [void] $names.Add([string](Get-XmipPropertyValue -Object $entry -Name 'name'))
     }
 
     return $names
@@ -193,9 +157,15 @@ function Split-XmipDrift {
 
     [hashtable] $maturityOf = @{}
 
-    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
-        [string] $name = [string](Get-PropertyValue $repository 'name')
-        $maturityOf[$name] = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+    [object[]] $declared = @(
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @()
+    )
+
+    foreach ($repository in $declared) {
+        [string] $name = [string](Get-XmipPropertyValue -Object $repository -Name 'name')
+        $maturityOf[$name] = [string](
+            Get-XmipPropertyValue -Object $repository -Name 'maturity' -Default 'reserved'
+        )
     }
 
     $actionable = [System.Collections.Generic.List[object]]::new()

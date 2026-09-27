@@ -147,10 +147,7 @@ function Test-XmipModule {
             # *failed*, and returning one that could not be tested made the
             # caller stop the entire run. Cannot be verified here and did not
             # fail are different answers, and only one should halt the estate.
-            [bool] $dotnet = @(
-                Get-ChildItem -Path $path -Filter '*.csproj' -Recurse -File |
-                    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
-            ).Count -gt 0
+            [bool] $dotnet = @(Find-XmipFile -Path $path -Filter '*.csproj').Count -gt 0
 
             $selfVerify = Join-Path -Path $path -ChildPath 'verify.ps1'
 

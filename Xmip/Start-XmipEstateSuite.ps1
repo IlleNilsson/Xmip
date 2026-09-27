@@ -279,12 +279,8 @@ function Write-XmipEstateStart {
         log     = $Log
     }
 
-    Import-Module PSToml -ErrorAction Stop
-
-    [string] $text = ConvertTo-Toml -InputObject $written -Depth 4
-
     try {
-        Out-File -InputObject $text -LiteralPath $Record -Encoding utf8 -NoClobber -ErrorAction Stop
+        Write-XmipToml -Path $Record -Value $written -NoClobber
     }
     catch {
         if (-not (Test-Path -LiteralPath $Record)) {

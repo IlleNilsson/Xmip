@@ -64,7 +64,7 @@ through `Get-XmipPesterConfiguration` — every run, the gate and
 tool. The owner's ruling, 2026-09-11: the tool's convention is not the estate's.
 The verb is Start: Xmip's tests are suites a person starts, the Playground and
 the estate's Pester suite alike. Invoke is for crossing a boundary — another
-language, process or computer, as `Invoke-Cargo` crosses into cargo — and a
+language, process or computer, as `Invoke-XmipCargo` crosses into cargo — and a
 test run crosses none (the owner, 2026-09-12).
 
 ## 2. Functions
@@ -318,7 +318,7 @@ same redirect:
 | Rule | Section | Enforced |
 | --- | --- | --- |
 | Line over 100 characters | 1 | yes, with a per-file ratchet |
-| A file of the module over 400 lines, less its recorded debt | 1 | yes |
+| A file of the module over 400 lines | 1 | yes |
 | Backtick line continuation | 3 | yes |
 | A loop variable that is a parameter | 4 | yes |
 | A local written under another spelling of a parameter | 4 | yes |
@@ -356,7 +356,7 @@ it interrupted waited.
 A rule whose only output is maintenance of its own exception list is not
 enforcing anything.
 
-Length was also the wrong measure. `New-TransactionReport` is thirty-eight lines
+Length was also the wrong measure. `New-XmipTransactionReport` is thirty-eight lines
 of which twenty are a single hashtable literal — that is a shape, not
 complexity — while a short function with deeply nested branches sails through.
 So the report prints **branches** beside length: `if` and `elseif` clauses,

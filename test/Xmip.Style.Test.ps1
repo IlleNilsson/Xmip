@@ -26,7 +26,7 @@
 [int] $script:MaximumFunctionLines = 35
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     [int] $script:MaximumLineLength = 100
     [int] $script:MaximumFunctionLines = 35
 
@@ -428,9 +428,9 @@ Describe 'PowerShell style, section 1: layout' {
         #>
         $script:LineRatchet = @{
             'Decision.Test.ps1'           = 1
-            'Documentation.Test.ps1'      = 5
-            'Publish-XmipChange.Test.ps1' = 2
-            'Sync-XmipEstate.Test.ps1'    = 5
+            'Documentation.Test.ps1'      = 4
+            'Publish-XmipChange.Test.ps1' = 1
+            'Sync-XmipEstate.Test.ps1'    = 4
         }
     }
 
@@ -473,23 +473,14 @@ Describe 'PowerShell style, section 1: layout' {
 Describe 'PowerShell style, section 1: a file has one subject' {
     BeforeAll {
         <#
-            The file ratchet. CONTRIBUTING has said since August that files
-            are at most 400 production lines, enforced by the tests; for Rust
-            they were, and for PowerShell nothing looked. On 2026-09-22, when
-            the owner asked for the estate to be consolidated, nine files of
-            the module were over it, the largest nearly four times. Two were
-            split that day; the rest are recorded here.
-
-            Production means the module under Xmip/: a test file is not
-            production, as a Rust file's tests are not. Each entry is a file's
-            recorded length; it may only shrink, a file not listed must be at
-            or under the limit, and deleting an entry is the goal.
+            CONTRIBUTING has said since August that files are at most 400
+            production lines, enforced by the tests; for Rust they were, and
+            for PowerShell nothing looked. On 2026-09-22 nine files of the
+            module were over it; the last, Start-XmipTest.ps1, came within it
+            on 2026-09-27. Production means the module under Xmip/: a test
+            file is not production, as a Rust file's tests are not.
         #>
         [int] $script:MaximumFileLines = 400
-
-        $script:FileRatchet = @{
-            'Start-XmipTest.ps1' = 474
-        }
 
         [string] $module = Join-Path $script:Root 'Xmip'
         $script:ProductionFiles = @(
@@ -497,45 +488,20 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         )
     }
 
-    It 'keeps every file of the module at or under 400 lines, less recorded debt' {
+    It 'keeps every file of the module at or under 400 lines' {
         [string[]] $over = @(
             foreach ($file in $script:ProductionFiles) {
                 [int] $length = @(Get-Content -LiteralPath $file.FullName).Count
-                [int] $allowed = $script:MaximumFileLines
 
-                if ($script:FileRatchet.ContainsKey($file.Name)) {
-                    $allowed = $script:FileRatchet[$file.Name]
-                }
-
-                if ($length -gt $allowed) {
-                    "$($file.Name) is $length lines, allowed $allowed"
+                if ($length -gt $script:MaximumFileLines) {
+                    "$($file.Name) is $length lines"
                 }
             }
         )
 
         $over.Count | Should -Be 0 -Because (
-            "split by subject rather than recording more debt:`n" + ($over -join "`n")
+            "split by subject:`n" + ($over -join "`n")
         )
-    }
-
-    It 'records no longer a file than it still is' {
-        foreach ($name in $script:FileRatchet.Keys) {
-            [object] $file = $script:ProductionFiles | Where-Object { $_.Name -eq $name }
-            [int] $actual = 0
-
-            if ($file) {
-                $actual = @(Get-Content -LiteralPath $file.FullName).Count
-            }
-
-            [string] $because = if ($actual -le $script:MaximumFileLines) {
-                "$name is within the limit now; remove its entry"
-            }
-            else {
-                "$name changed; move its entry to $actual"
-            }
-
-            $actual | Should -BeExactly $script:FileRatchet[$name] -Because $because
-        }
     }
 }
 
@@ -721,7 +687,7 @@ Describe 'PowerShell style, section 2: functions' {
 
         A rule whose only output is maintenance of its own exception list is
         not enforcing anything. Length was also the wrong measure:
-        New-TransactionReport is thirty-eight lines of which twenty are one
+        New-XmipTransactionReport is thirty-eight lines of which twenty are one
         hashtable literal, which is a shape rather than complexity.
 
         What replaces it is a report, not a gate. Length and decision points

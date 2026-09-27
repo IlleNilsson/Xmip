@@ -8,13 +8,13 @@
 
       2026-08-27  Publish-XmipPin was added and never exported. The command
                   documented as the repair path did not exist.
-      2026-08-27  ModuleVersion went to 1.8.0 in the manifest and stayed 1.7.0
-                  in the module, which is the number the manifest gate reads.
       2026-08-27  Sort-XmipModuleDependency emitted one module out of three.
 
-    None of those needed a running estate to catch. Two are the manifest and the
-    module disagreeing with each other, and a test can read both. The third is a
-    pure function over a fixture.
+    Neither needed a running estate to catch. The first is the manifest and the
+    module disagreeing with each other, and a test can read both. The second is
+    a pure function over a fixture. The version has one home, Xmip.psd1, which
+    the module reads from its own module object, so there is nothing to hold
+    equal.
 
     That is what this file is: the cheap checks that would have caught what was
     actually shipped, rather than a thorough suite that would not have.
@@ -27,7 +27,7 @@ BeforeAll {
     $script:AuditBefore = $env:XMIP_AUDIT_DIRECTORY
     $env:XMIP_AUDIT_DIRECTORY = Join-Path -Path $TestDrive -ChildPath 'audit'
 
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
 
     <#
@@ -51,17 +51,8 @@ BeforeAll {
                     Get-Content -Raw -LiteralPath (Join-Path $script:ModuleRoot $_)
                 }) -join "`n")
     }
+
     $script:ManifestPath = Join-Path $script:ModuleRoot 'Xmip.psd1'
-
-    # Every copy first, then one import.
-    #
-    # Pester runs the whole test/ directory in one session and several files
-    # import this module. Two loaded copies make InModuleScope throw "Multiple
-    # script or manifest modules named 'Xmip' are currently loaded" — which
-    # reads as a broken test and is a dirty session.
-    Get-Module -Name Xmip -All | Remove-Module -Force -ErrorAction SilentlyContinue
-    Import-Module $script:ManifestPath -Force
-
     $script:Manifest = Import-PowerShellDataFile -Path $script:ManifestPath
     $script:Module = Get-Module -Name Xmip
 }
@@ -111,16 +102,6 @@ Describe 'What the module says it exports' {
             $verb = ($name -split '-', 2)[0]
             $approved | Should -Contain $verb -Because "$name would warn on import"
         }
-    }
-}
-
-Describe 'The version' {
-    It 'is the same in the manifest and in the module' {
-        # $script:XmipVersion is what Assert-XmipManifestVersion compares
-        # minimumScriptVersion against. When the two drift, the manifest gate
-        # reads a number nobody bumped.
-        $psm1 = Get-Content (Join-Path $script:ModuleRoot 'Xmip.psm1') -Raw
-        $psm1 | Should -Match "XmipVersion = \[version\]::Parse\('$([regex]::Escape($script:Manifest.ModuleVersion))'\)"
     }
 }
 

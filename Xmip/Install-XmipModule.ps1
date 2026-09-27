@@ -75,7 +75,7 @@ function Install-XmipModule {
     [string] $modulePath = Get-XmipUserModulePath
     [string] $target = Join-Path $modulePath 'Xmip'
 
-    Write-Step -Message "Linking $target to $source"
+    Write-XmipStep -Message "Linking $target to $source"
 
     if (Test-Path -LiteralPath $target) {
         [System.IO.DirectoryInfo] $existing = [System.IO.DirectoryInfo]::new($target)
@@ -118,5 +118,5 @@ function Install-XmipModule {
 
     New-Item @link | Out-Null
 
-    Write-Step -Message 'Linked. Import-Module Xmip now works from any location.'
+    Write-XmipStep -Message 'Linked. Import-Module Xmip now works from any location.'
 }

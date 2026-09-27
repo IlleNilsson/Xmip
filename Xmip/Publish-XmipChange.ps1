@@ -270,10 +270,8 @@ function Publish-XmipChange {
             $selfVerify = Join-Path -Path $modulePath -ChildPath 'verify.ps1'
 
             [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
-                (Test-Path -LiteralPath $selfVerify) -or @(
-                Get-ChildItem -Path $modulePath -Filter '*.csproj' -Recurse -File |
-                    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
-            ).Count -gt 0
+                (Test-Path -LiteralPath $selfVerify) -or
+                @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
 
             if (-not $All -and -not $verifiable) {
                 $why = "SKIPPED. $module has no Cargo.toml, no project and no verify.ps1 to verify."

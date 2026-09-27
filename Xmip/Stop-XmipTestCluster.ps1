@@ -65,7 +65,7 @@ function Stop-XmipTestCluster {
         return
     }
 
-    [hashtable] $declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
+    [hashtable] $declared = Read-XmipProcessDeclaration
 
     foreach ($id in @($declared.Keys)) {
         $said = $declared[$id]
@@ -90,7 +90,12 @@ function Test-XmipClusterLocation {
         .SYNOPSIS
             Whether a declared location is the cluster's scope root or inside
             it: xmip:///C1 and xmip:///C1/node/node-01 are C1's, and
-            xmip:///C10/node/node-01 is not. Pure.
+            xmip:///C10/node/node-01 is not.
+
+        .DESCRIPTION
+            Containment is observe::Scope's rule, asked of the runtime through
+            Xmip.Surface's ScopeTree.Beneath (xmip_scope_contains_v1), as every
+            other surface asks it; this module keeps no copy of it.
 
         .PARAMETER Location
             The location a process declared (ADR-0053).
@@ -114,7 +119,7 @@ function Test-XmipClusterLocation {
         return $false
     }
 
-    [string] $root = "xmip:///$Cluster"
+    Import-XmipOperatorModule
 
-    return $Location -eq $root -or $Location.StartsWith("$root/", [StringComparison]::Ordinal)
+    return [Xmip.Surface.ScopeTree]::Beneath($Location, "xmip:///$Cluster")
 }

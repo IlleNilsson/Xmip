@@ -1,17 +1,24 @@
 #Requires -Version 7.6.5
 
 # ConvertFrom-Toml has returned a dictionary in one version of PSToml and an
-# object in the next. The module reads TOML through one pair, Get-TomlKey and
-# Get-TomlValue in Xmip.psm1, and every reader of a TOML file goes through it,
-# so which shape the installed PSToml returns is nobody's business. This holds
-# the pair on both shapes, and the readers that once asked for one of them.
+# object in the next. The module reads a TOML file in one place, Read-XmipToml
+# in Xmip/Read-XmipToml.ps1, and writes one in one place, Write-XmipToml; what it read is
+# read through one pair, Get-TomlKey and Get-TomlValue, so which shape the
+# installed PSToml returns is nobody's business. This holds the pair on both
+# shapes, the readers that once asked for one of them, and the one place.
 
 BeforeAll {
-    Import-Module (Join-Path $PSScriptRoot '..' 'Xmip' 'Xmip.psd1') -Force
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     # The same document in both shapes PSToml has returned.
     function New-TomlShape {
-        param([Parameter(Mandatory)] [string] $Shape, [Parameter(Mandatory)] [hashtable] $Value)
+        param(
+            [Parameter(Mandatory = $true)]
+            [string] $Shape,
+
+            [Parameter(Mandatory = $true)]
+            [hashtable] $Value
+        )
 
         $ordered = [ordered]@{}
         foreach ($key in $Value.Keys) {
@@ -76,39 +83,41 @@ Describe 'Reading a TOML node, whichever shape PSToml returned' -ForEach @(
             }
         } | Should -Throw '*declares no command*'
     }
-
-    It 'reads a process declaration and drops one whose process is gone (<Shape>)' {
-        $mine = New-TomlShape -Shape $Shape -Value @{ pid = $PID; purpose = 'test' }
-        Mock ConvertFrom-Toml -ModuleName Xmip { $mine }.GetNewClosure()
-        Mock Get-Process -ModuleName Xmip {
-            [pscustomobject] @{ ProcessName = 'xmip-test'; Id = $Id }
-        }
-        [string] $directory = Join-Path $TestDrive "process-$Shape"
-        New-Item -ItemType Directory -Path $directory | Out-Null
-        Set-Content -LiteralPath (Join-Path $directory 'xmip-test.toml') -Value '# mock'
-
-        $byId = InModuleScope Xmip -Parameters @{ Path = $directory } {
-            param($Path)
-            Read-XmipProcessDeclaration -Path $Path
-        }
-
-        $byId.Keys | Should -Be @($PID)
-        InModuleScope Xmip -Parameters @{ Said = $byId[$PID] } {
-            param($Said)
-            Get-TomlValue -Node $Said -Name 'purpose' | Should -Be 'test'
-        }
-    }
 }
 
 Describe 'Where TOML is read' {
+    It 'is in Read-XmipToml.ps1 alone: one reader and one writer' {
+        # About twenty-five copies of `Import-Module PSToml; Get-Content -Raw |
+        # ConvertFrom-Toml` and a regular expression reading one key stood
+        # where Read-XmipToml does now (2026-09-27).
+        [string] $module = Join-Path $script:Root 'Xmip'
+        [string] $parse = 'ConvertFrom-Toml|ConvertTo-Toml|Import-Module (-Name )?PSToml'
+        [string[]] $parsing = @(
+            Get-ChildItem -LiteralPath $module -Filter '*.ps1' -File |
+                Where-Object { $_.Name -ne 'Read-XmipToml.ps1' } |
+                Where-Object {
+                    [string[]] $code = @(
+                        Get-Content -LiteralPath $_.FullName |
+                            Where-Object { $_ -notmatch '^\s*#' }
+                    )
+
+                    ($code -join "`n") -match $parse
+                } |
+                ForEach-Object Name
+        )
+
+        [string] $because = 'Read-XmipToml and Write-XmipToml are the one place'
+        $parsing | Should -BeNullOrEmpty -Because $because
+    }
+
     It 'is through Get-TomlValue, and no reader asks a document for its shape' {
-        # A reader that calls .Contains( or .Keys on what ConvertFrom-Toml
+        # A reader that calls .Contains( or .Keys on what Read-XmipToml
         # returned works with one shape of PSToml and breaks on the other.
-        [string] $module = Join-Path $PSScriptRoot '..' 'Xmip'
+        [string] $module = Join-Path $script:Root 'Xmip'
         [string[]] $asking = @(
             Get-ChildItem -LiteralPath $module -Filter '*.ps1' -File |
                 Where-Object {
-                    (Get-Content -LiteralPath $_.FullName -Raw) -match 'ConvertFrom-Toml'
+                    (Get-Content -LiteralPath $_.FullName -Raw) -match 'Read-XmipToml'
                 } |
                 Where-Object {
                     (Get-Content -LiteralPath $_.FullName -Raw) -match

@@ -56,7 +56,7 @@ function Get-XmipPlaygroundProcess {
         [string] $Kind
     )
 
-    [hashtable] $declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
+    [hashtable] $declared = Read-XmipProcessDeclaration
     [System.Collections.Generic.List[int]] $found = @()
     [bool] $byKind = $PSBoundParameters.ContainsKey('Kind')
 
@@ -133,7 +133,7 @@ function Test-XmipPlaygroundBinary {
     )
 
     if ($null -eq $Declared) {
-        $Declared = Read-XmipProcessDeclaration -Path (Get-XmipProcessDirectory)
+        $Declared = Read-XmipProcessDeclaration
     }
 
     $said = $Declared[$Process.Id]

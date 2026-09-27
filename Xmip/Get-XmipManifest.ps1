@@ -37,13 +37,10 @@ function Expand-XmipManifestFromTree {
     $repositories = [Collections.Generic.List[object]]::new()
 
     [hashtable] $walk = @{
-        Node             = $estate
-        Default          = $default
-        Crate            = $crate
-        FallbackMaturity = [string](
-            Get-TomlValue -Node $default -Name 'maturity' -Default 'reserved'
-        )
-        Into             = $repositories
+        Node    = $estate
+        Default = $default
+        Crate   = $crate
+        Into    = $repositories
     }
 
     Expand-XmipEstate @walk
@@ -104,8 +101,11 @@ function Assert-XmipManifestVersion {
     )
 
     if (-not [string]::IsNullOrWhiteSpace($required)) {
-        if ($script:XmipVersion -lt [version]::Parse($required)) {
-            throw "Manifest requires script version $required; this module is $script:XmipVersion."
+        # Xmip.psd1 holds the number; the module object carries it.
+        [version] $version = $ExecutionContext.SessionState.Module.Version
+
+        if ($version -lt [version]::Parse($required)) {
+            throw "Manifest requires script version $required; this module is $version."
         }
     }
 
@@ -157,15 +157,7 @@ function Get-XmipManifest {
         throw "The manifest must be TOML: $Path"
     }
 
-    if (-not (Get-Module -ListAvailable -Name PSToml)) {
-        throw ('Reading a TOML manifest needs PSToml. ' +
-            'Run Install-XmipPrerequisite -Role developer -Install.')
-    }
-
-    Import-Module PSToml -ErrorAction Stop
-
-    [string] $text = Get-Content -LiteralPath $Path -Raw -Encoding utf8
-    $source = ConvertFrom-Toml -InputObject $text
+    $source = Read-XmipToml -Path $Path
 
     Assert-XmipManifestVersion -Source $source -Path $Path
 
@@ -191,16 +183,14 @@ function Assert-XmipRepositoryEntry {
         [bool] $CrateMustMatchRepository
     )
 
-    [string] $name = [string](Get-PropertyValue -Object $Repository -Name 'name')
-    [string] $description = [string](Get-PropertyValue -Object $Repository -Name 'description')
+    [string] $name = [string](Get-XmipPropertyValue -Object $Repository -Name 'name')
+    [string] $description = [string](Get-XmipPropertyValue -Object $Repository -Name 'description')
     [string] $maturity = [string](
-        Get-PropertyValue -Object $Repository -Name 'maturity' -Default 'reserved'
+        Get-XmipPropertyValue -Object $Repository -Name 'maturity' -Default 'reserved'
     )
 
-    $primaryCrate = (
-        Get-PropertyValue -Object $Repository -Name 'primaryCrate' -Default ([pscustomobject]@{})
-    )
-    [string] $crateName = [string](Get-PropertyValue -Object $primaryCrate -Name 'name')
+    $primaryCrate = Get-XmipPropertyValue -Object $Repository -Name 'primaryCrate' -Default @{}
+    [string] $crateName = [string](Get-XmipPropertyValue -Object $primaryCrate -Name 'name')
 
     if ($name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') {
         throw "Invalid repository name: $name"
@@ -227,7 +217,7 @@ function Assert-XmipRepositoryEntry {
     }
 
     [object[]] $dependencies = @(
-        Get-PropertyValue -Object $Repository -Name 'dependencies' -Default @()
+        Get-XmipPropertyValue -Object $Repository -Name 'dependencies' -Default @()
     )
 
     foreach ($dependency in $dependencies) {
@@ -255,11 +245,11 @@ function Test-XmipManifest {
         $Manifest
     )
 
-    Write-Step -Message 'Validating architecture manifest'
+    Write-XmipStep -Message 'Validating architecture manifest'
 
-    [string] $owner = [string](Get-PropertyValue -Object $Manifest -Name 'owner')
+    [string] $owner = [string](Get-XmipPropertyValue -Object $Manifest -Name 'owner')
     [object[]] $repositories = @(
-        Get-PropertyValue -Object $Manifest -Name 'repositories' -Default @()
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @()
     )
 
     if ([string]::IsNullOrWhiteSpace($owner)) {
@@ -271,7 +261,7 @@ function Test-XmipManifest {
     }
 
     [string[]] $names = @(
-        $repositories | ForEach-Object { [string](Get-PropertyValue -Object $_ -Name 'name') }
+        $repositories | ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') }
     )
 
     [object[]] $duplicates = @($names | Group-Object | Where-Object { $_.Count -gt 1 })

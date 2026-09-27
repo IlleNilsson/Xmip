@@ -7,8 +7,8 @@
 
 .DESCRIPTION
     Until 2026-09-23 the module ran git five ways: Invoke-Git, Test-GitCommand
-    and Get-GitLine in Invoke-Distribute.ps1, Invoke-Native in
-    Invoke-GitHubApi.ps1, and `& git` written out forty times. The written-out
+    and Get-GitLine in Invoke-XmipDistribution.ps1, Invoke-Native in
+    Invoke-XmipGitHubApi.ps1, and `& git` written out forty times. The written-out
     calls checked $LASTEXITCODE where someone remembered to: Publish-XmipPin
     checked it only after a push, so a commit that failed, followed by a push
     with nothing to push, reported the estate pinned (open-problems.md,

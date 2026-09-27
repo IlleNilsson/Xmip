@@ -333,3 +333,28 @@ location a process declared is not.
 `test/XmipTest.Test.ps1` holds it: a stopped roll ends every process
 declared in its cluster and nothing declared in another. The owner's report
 is the lead's, 2026-09-25; the rule is the assistant's drafting.
+
+## Amendment, 2026-09-27: one declaration, written and read by the node
+
+Clause 3 said the declaration was written twice, `Declaration` in
+`xmip-core-node` and `ProcessDeclaration` in `Xmip.Surface`, and the estate's
+PowerShell module read the files with a TOML reader and a directory rule of
+its own; a Playground node's flags were read by parsing its command line
+again, with a copy of the node binary's defaults. Code is placed once
+(CONTRIBUTING), so:
+
+- The declaration's file, its directory, its purpose words and its reading
+  are `xmip-core-node`'s alone (`Declaration`, `standing`). The runtime's
+  library forwards them as `xmip_process_declare_v1` and
+  `xmip_process_declarations_v1` (`xmip_operate.h` section 13); .NET binds
+  them as `RuntimeProcesses`, `ProcessDeclaration` declares and lists through
+  them, and `Read-XmipProcessDeclaration` calls that and only judges which
+  processes still run.
+- A purpose is `test` or `runtime`, exactly, as a stage's word is. A process
+  whose starter states nothing is runtime; one that states another word is
+  REFUSED, naming the words there are, rather than taken for runtime.
+- A declaration may say more than the three things, key to text. A
+  Playground node says the flags it was started with — `node`, `shared`,
+  `stress`, `rounds`, `snapshot`, `interval_ms`, `capability`, `online` — and
+  `Get-XmipTestNode` reads them from the declaration; no command line is
+  parsed.

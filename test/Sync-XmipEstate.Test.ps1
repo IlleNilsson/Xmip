@@ -2,7 +2,7 @@
 #requires -Version 7.6.5
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
 
     # Every file that can be dot-sourced or invoked directly, and so must carry
@@ -16,86 +16,60 @@ BeforeAll {
         'Publish-XmipChange.ps1'
     )
 
-    Import-Module (Join-Path $script:ModuleRoot 'Xmip.psd1') -Force
+    # Read once: every test below asks the same manifest.
+    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+
+    # What the estate actually checks out, from .gitmodules rather than from
+    # the manifest: the tests that compare the two would pass comparing the
+    # manifest with itself while a clone disagreed.
+    $script:Submodule = @(
+        InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+            param($Root)
+            Get-XmipSubmodule -Root $Root
+        }
+    )
 }
 
 Describe 'The manifest' {
     It 'is TOML, and the estate expands from it' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-        @($manifest.repositories).Count | Should -BeGreaterThan 200
+        @($script:Manifest.repositories).Count | Should -BeGreaterThan 200
     }
 
     It 'names every repository from its position in the tree' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
         # The path is the name: dots become hyphens and nothing else happens.
-        @($manifest.repositories | Where-Object { $_.name -notlike 'xmip-*' }).Count |
+        @($script:Manifest.repositories | Where-Object { $_.name -notlike 'xmip-*' }).Count |
             Should -Be 0
     }
 
     It 'gives every repository a domain, a role and a maturity' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
         foreach ($property in 'architecturalDomain', 'repositoryRole', 'maturity') {
-            @($manifest.repositories | Where-Object { -not $_.$property }).Count |
+            @($script:Manifest.repositories | Where-Object { -not $_.$property }).Count |
                 Should -Be 0 -Because "every repository needs $property"
         }
     }
 
     It 'has no duplicate repository names' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-        $names = @($manifest.repositories.name)
+        $names = @($script:Manifest.repositories.name)
         $names.Count | Should -Be (@($names | Sort-Object -Unique).Count)
     }
 
-    It 'states a maturity on every repository rather than inheriting one' {
+    It 'refuses a repository that states no maturity rather than inheriting one' {
         # `reserved` was the [default] until 2026-09-19, so a repository that
         # declared nothing read as deliberately reserved. 156 read that way and
         # 79 of them were composed and holding source — the manifest filed
-        # built work as un-started. The default is gone; this is what keeps it
-        # gone, and it reads the TOML rather than the expansion because the
-        # expansion is where the inheriting happened. ADR-0060, amendment
+        # built work as un-started. The reader refuses a silent one now, so
+        # reading the manifest above is the check. ADR-0060, amendment
         # 2026-09-19.
-        Import-Module PSToml -ErrorAction Stop
-
-        [string] $path = Join-Path $script:Root 'architecture.toml'
-        $toml = ConvertFrom-Toml -InputObject (Get-Content -LiteralPath $path -Raw)
-
-        [string] $never = 'a defaulted maturity is a repository that never said'
-        $toml.default.Contains('maturity') | Should -BeFalse -Because $never
-
-        # Keys that describe a repository, so a table at one of them is not a
-        # child of it. The same list Xmip.psm1 holds as $script:XmipMetadataKey.
-        [string[]] $metadata = @(
-            'description', 'architecturalDomain', 'repositoryRole'
-            'maturity', 'dependency', 'primaryLanguage'
+        [string] $path = Join-Path $TestDrive 'silent.toml'
+        Set-Content -LiteralPath $path -Encoding utf8 -Value @(
+            'schemaVersion = "2.0.0"'
+            '[xmip.core]'
+            'maturity = "scaffolded"'
+            '[xmip.core.transport]'
+            'description = "Says nothing of how far it is."'
         )
 
-        [string[]] $silent = @()
-        $pending = [Collections.Generic.Queue[hashtable]]::new()
-
-        foreach ($provider in $toml.xmip.Keys) {
-            $pending.Enqueue(@{ Name = "xmip-$provider"; Node = $toml.xmip[$provider] })
-        }
-
-        while ($pending.Count -gt 0) {
-            $entry = $pending.Dequeue()
-
-            if (-not $entry.Node.Contains('maturity')) {
-                $silent += [string] $entry.Name
-            }
-
-            foreach ($key in $entry.Node.Keys) {
-                $child = $entry.Node[$key]
-
-                if ($child -isnot [Collections.IDictionary]) { continue }
-                if ($key -in $metadata) { continue }
-
-                $pending.Enqueue(@{ Name = "$($entry.Name)-$key"; Node = $child })
-            }
-        }
-
-        [string] $detail = $silent -join "`n"
-
-        $silent.Count | Should -Be 0 -Because "these inherit a maturity:`n$detail"
+        { Get-XmipManifest -Path $path } | Should -Throw '*xmip-core-transport states no maturity*'
     }
 }
 
@@ -123,13 +97,13 @@ Describe 'Sync-XmipEstate' {
 
     It 'never issues a DELETE, however the estate drifts' {
         $script = Get-Content (Join-Path $script:ModuleRoot 'Sync-XmipEstate.ps1') -Raw
-        # The call site, not the ValidateSet. Invoke-GitHubApi declares DELETE as
+        # The call site, not the ValidateSet. Invoke-XmipGitHubApi declares DELETE as
         # a legal verb so the helper stays general; what must never appear is
         # anything actually invoking it. Matching the declaration was the first
         # version of this test and it failed on its own scaffolding.
         [string] $never = 'Sync-XmipEstate reconciles; it does not remove repositories'
 
-        $script | Should -Not -Match 'Invoke-GitHubApi\s+DELETE' -Because $never
+        $script | Should -Not -Match 'Invoke-XmipGitHubApi\s+DELETE' -Because $never
         $script | Should -Not -Match 'Method\s*=\s*.DELETE.' -Because 'nor by hand'
     }
 
@@ -176,11 +150,9 @@ Describe 'The module is the entry point' {
 
 Describe 'ADR-0021: current platforms only, enforced' {
     BeforeAll {
-        Import-Module PSToml -ErrorAction Stop
-        [string] $prerequisitePath = Join-Path $script:Root 'prerequisite.toml'
-        [string] $prerequisiteText = Get-Content $prerequisitePath -Raw -Encoding utf8
-
-        $script:Prereq = ConvertFrom-Toml -InputObject $prerequisiteText
+        $script:Prereq = InModuleScope Xmip {
+            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
+        }
     }
 
     It 'declares a minimum for every platform the ADR names' {
@@ -214,8 +186,10 @@ Describe 'ADR-0021: current platforms only, enforced' {
             ForEach-Object { Join-Path $script:Root $_ }
         [object[]] $files = @(
             Get-Item -LiteralPath (Join-Path $script:Root 'rust-toolchain.toml')
-            Get-ChildItem -Path $folders -Filter 'rust-toolchain.toml' -File -Recurse |
-                Where-Object { $_.FullName -notmatch '[\\/]target[\\/]' }
+            InModuleScope Xmip -Parameters @{ Folders = $folders } {
+                param($Folders)
+                Find-XmipFile -Path $Folders -Filter 'rust-toolchain.toml'
+            }
         )
 
         [string[]] $pinned = @(
@@ -278,20 +252,8 @@ Describe 'ADR-0021: current platforms only, enforced' {
 
 Describe 'The estate is more than its modules' {
     BeforeAll {
-        Import-Module PSToml -ErrorAction Stop
-
-        $script:Architecture = ConvertFrom-Toml -InputObject (
-            Get-Content (Join-Path $script:Root 'architecture.toml') -Raw -Encoding utf8
-        )
-
-        # What the estate actually checks out, read from .gitmodules rather than
-        # from the manifest. The two tests below compare them, and a comparison
-        # of the manifest against itself would pass while a clone disagreed.
-        $script:Mounted = @(
-            Get-Content (Join-Path $script:Root '.gitmodules') |
-                Where-Object { $_ -match '^\s*url\s*=' } |
-                ForEach-Object { ($_ -split '/')[-1].Trim() -replace '\.git$' }
-        )
+        $script:Template = $script:Manifest.crate.template
+        $script:Mounted = @($script:Submodule | ForEach-Object { $_.Repository })
     }
 
     It 'declares a template for every language a module can be written in' {
@@ -300,7 +262,7 @@ Describe 'The estate is more than its modules' {
         # that morning. Repository creation posted to a URL that 404s, and the
         # drift check exempted a name nothing has while reporting both real
         # templates as unexpected.
-        $templates = $script:Architecture.crate.template
+        $templates = $script:Template
 
         $templates | Should -Not -BeNullOrEmpty
         $templates.Keys | Should -Contain 'rust'
@@ -308,49 +270,10 @@ Describe 'The estate is more than its modules' {
     }
 
     It 'names every template as owner/name' {
-        foreach ($language in $script:Architecture.crate.template.Keys) {
-            [string] $name = $script:Architecture.crate.template.$language
+        foreach ($language in $script:Template.Keys) {
+            [string] $name = $script:Template.$language
 
             $name | Should -Match '^[^/]+/[^/]+$' -Because "$language must be owner/name"
-        }
-    }
-
-    It 'gives every retired repository a reason' {
-        # An entry with no reason is indistinguishable from a repository
-        # somebody forgot to declare, which is the thing drift exists to find.
-        foreach ($entry in @($script:Architecture.retired)) {
-            [string] $name = $entry.name
-
-            $name | Should -Not -BeNullOrEmpty
-            $entry.reason | Should -Not -BeNullOrEmpty -Because "$name needs a reason"
-            $entry.on | Should -Not -BeNullOrEmpty -Because "$name needs a date"
-        }
-    }
-
-    It 'does not declare a retired repository as a live module' {
-        # Retired and declared at once means the drift check would call it
-        # missing and the retirement list would call it expected.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-        $live = @($manifest.repositories.name)
-
-        foreach ($entry in @($script:Architecture.retired)) {
-            $live | Should -Not -Contain $entry.name -Because "$($entry.name) is retired"
-        }
-    }
-
-    It 'does not mount a retired repository as a submodule' {
-        # The defect this catches, on 2026-08-29: ADR-0024 retired
-        # xmip-core-exclusiveness and it was taken out of the manifest, the root
-        # Cargo.toml features and dependencies, and server-profile — and left in
-        # .gitmodules. Every clone of the estate went on checking out a module
-        # the manifest said was gone, and nothing failed, because a submodule
-        # nobody depends on still builds.
-        #
-        # Retiring a repository and unmounting it are separate actions. The test
-        # above reads the manifest against itself and cannot see the second one.
-        foreach ($entry in @($script:Architecture.retired)) {
-            $script:Mounted |
-                Should -Not -Contain $entry.name -Because "$($entry.name) is retired and still mounted"
         }
     }
 
@@ -369,7 +292,7 @@ Describe 'The estate is more than its modules' {
         # and by luck in equal measure, and the construction is invisible in the
         # tree, which is why it was reported as a bug by someone reading the
         # tree. This is the guarantee.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = $script:Manifest
 
         $mounts = & (Get-Module Xmip) {
             param($Repositories, $Declared)
@@ -434,11 +357,7 @@ Describe 'The estate is more than its modules' {
         # module/foundation/ and module/platform/; every other module is
         # module/<provider>/<domain>/; a Playground is test/<provider>/; a
         # template belongs to no provider and stays at template/<language>.
-        [string] $modules = Get-Content -Raw (Join-Path $script:Root '.gitmodules')
-        [string[]] $path = [regex]::Matches($modules, '(?m)^\s*path = (\S+)') |
-            ForEach-Object { $_.Groups[1].Value }
-
-        foreach ($at in $path) {
+        foreach ($at in @($script:Submodule | ForEach-Object { $_.Path })) {
             [string] $shape = '^(module/(foundation|platform)/[a-z0-9-]+|' +
                 'module/(?!foundation/|platform/)[a-z0-9]+/[a-z]+/[a-z0-9-]+|' +
                 'test/[a-z0-9]+/playground|template/[a-z]+|sdk)$'
@@ -450,10 +369,8 @@ Describe 'The estate is more than its modules' {
         # The other direction, and the reason the first was survivable for two
         # days: a submodule is only visible to somebody who lists them, and the
         # estate is dozens of them.
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-
-        [string[]] $declared = @($manifest.repositories.name) + @(
-            $script:Architecture.crate.template.Values |
+        [string[]] $declared = @($script:Manifest.repositories.name) + @(
+            $script:Template.Values |
                 ForEach-Object { ($_ -split '/')[-1] }
         )
 
@@ -467,8 +384,7 @@ Describe 'What the manifest tells GitHub' {
     # GitHub refuses a description over 350 characters; three were written
     # longer on 2026-09-24 and found only when -Configure stopped on one.
     It 'gives every repository a description GitHub takes' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-        [string[]] $long = @($manifest.repositories |
+        [string[]] $long = @($script:Manifest.repositories |
                 Where-Object { "$($_.description)".Length -gt 350 } |
                 ForEach-Object { "$($_.name) ($("$($_.description)".Length))" })
 
@@ -482,8 +398,8 @@ Describe 'Configuring repositories' {
     # ones before it had changed (found 2026-09-24).
     It 'configures only what -Only names, and judges every description first' {
         InModuleScope Xmip {
-            Mock Invoke-GitHubApi { }
-            Mock Write-Step { }
+            Mock Invoke-XmipGitHubApi { }
+            Mock Write-XmipStep { }
             $manifest = [pscustomobject]@{
                 owner        = 'example'
                 repositories = @(
@@ -496,12 +412,12 @@ Describe 'Configuring repositories' {
             $report = [ordered]@{ missing = @(); operations = @{ configured = 0; skipped = 0 } }
             [hashtable] $estate = @{ Manifest = $manifest; Report = $report; GitHub = $github }
 
-            Invoke-ConfigureRepositories @estate -Only 'xmip-b'
-            Should -Invoke Invoke-GitHubApi -Times 1 -Exactly
+            Set-XmipRepository @estate -Only 'xmip-b'
+            Should -Invoke Invoke-XmipGitHubApi -Times 1 -Exactly
             $report.operations.configured | Should -Be 1
 
-            { Invoke-ConfigureRepositories @estate -Only 'xmip-z' } | Should -Throw '*not declared*'
-            { Invoke-ConfigureRepositories @estate } | Should -Throw '*350 characters*xmip-long*'
+            { Set-XmipRepository @estate -Only 'xmip-z' } | Should -Throw '*not declared*'
+            { Set-XmipRepository @estate } | Should -Throw '*350 characters*xmip-long*'
         }
     }
 }

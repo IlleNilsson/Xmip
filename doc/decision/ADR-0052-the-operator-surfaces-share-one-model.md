@@ -1015,7 +1015,7 @@ is the model's — and each face now renders it; neither writes it.
   **nothing at a scope** is `English.NothingAt`'s sentence on both faces.
 
 Each rule is tested once, where it lives — `Xmip.Surface.Test` and
-`Xmip.Abi.Tests` — and the faces' tests call through it. What the estate
+`Xmip.Abi.Test` — and the faces' tests call through it. What the estate
 module (`Xmip/`, the script module) repeats of `Xmip.Surface` — a node's
 declared capability, a snapshot read record by record, the worst leaf — is
 not moved: no record says whether that module may load a built assembly, and
@@ -1081,7 +1081,7 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
 - **Each rule is tested once, where it is written** — `observe`'s `scope.rs`
   and `health.rs`, `node`'s `stage.rs` — and the runtime's `rule.rs` (`src/ffi/`) proves
   each export forwards and has the shape `xmip-core-abi` declares.
-  `Xmip.Abi.Tests` proves the crossing, `Xmip.Surface.Test` that the surface
+  `Xmip.Abi.Test` proves the crossing, `Xmip.Surface.Test` that the surface
   returns what the export returns, and `test/XmipTest.Test.ps1` and
   `Xmip.Gui.Test`'s `StylesheetTest` that no copy is written again.
 
@@ -1139,7 +1139,7 @@ Tested once where each is written — `observe`'s `health.rs`, `counted.rs`,
 `capability.rs`, `topology.rs`, `publication.rs`, `curve.rs` and `recent.rs`, `node`'s `stage.rs` and
 `capability.rs`, `message`'s `lib.rs` — with the runtime's `rule.rs`,
 `rule/node.rs` and `publication.rs` proving each export forwards and has the
-declared shape, `Xmip.Abi.Tests` the crossing, and `Xmip.Surface.Test` that
+declared shape, `Xmip.Abi.Test` the crossing, and `Xmip.Surface.Test` that
 the surface answers what the export answers.
 
 ## Amendment, 2026-09-25: the surfaces audit through one class
@@ -1268,7 +1268,7 @@ Four things left over from the amendment above, each fixed in its own layer.
   labeled *outside*, and the inspector names that end the same way.
 
 Proved by `observe`'s `topology.rs`, the runtime's `ffi/topology.rs` and
-`wire.rs`, `Xmip.Abi.Tests` (`RuntimeRulesTests`, `OperateAbiTests`),
+`wire.rs`, `Xmip.Abi.Test` (`RuntimeRulesTest`, `OperateAbiTest`),
 `Xmip.Surface.Test` (`EnglishTest`, `ClusterSnapshotTest`: the fixture's
 three nodes) and `Xmip.Gui.Test` (`ClusterTopologyTest`: the Monitor's three
 nodes, an open node framed with its traffic outside; `ThreeViewsTest`: the
@@ -1297,7 +1297,7 @@ the prefix every record shares, and `ScopeIndex` files a record under
 more.
 
 Proved by `observe`'s `scope.rs`, the runtime's `ffi/rule.rs`,
-`Xmip.Abi.Tests` (`RuntimeRulesTests`, `OperateAbiTests`),
+`Xmip.Abi.Test` (`RuntimeRulesTest`, `OperateAbiTest`),
 `Xmip.Surface.Test` (`ScopeTreeTest`: the surface returns what the export
 returns), `Xmip.Gui.Test` (`TwoClustersTest`: a Monitor row names `gamma`,
 the rollup no node and no row the cluster) and the PowerShell prompt's

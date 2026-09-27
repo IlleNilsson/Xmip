@@ -51,7 +51,7 @@
 #>
 
 BeforeAll {
-    $script:Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     [string] $name = '[RPS][0-9]+'
     [string] $quote = '[''"`]'

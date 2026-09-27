@@ -123,38 +123,98 @@ function Submit-XmipModule {
             Invoke-XmipGit -At $path -Arguments @('checkout', '-B', 'main', '--quiet') | Out-Null
         }
 
-        # Each step announced before it runs, not after.
-        #
-        # The first attempt at this put one line before the push and learned
-        # nothing, because the run was stalling in `git add -A` — which walks
-        # the entire working tree and stats every file under an ignored
-        # target/. A trace after the slow step reports only the steps that
-        # finished, which is the opposite of what a stall needs.
         Write-Host "   staging $name..." -ForegroundColor DarkGray
-        Invoke-XmipGit -At $path -Arguments @('add', '-A') | Out-Null
+        [string[]] $staged = @(Submit-XmipRepositoryChange -At $path -Message $Message)
 
         # A host whose own files are clean is dirty only through its nested
         # modules, which land on their own after it, and it is pinned to them
         # at the end. Until 2026-09-22 this committed anyway: git refused,
         # printed its status, and that status went down the pipeline as the
         # names of modules landed, while the refusal itself was never read.
-        if (Invoke-XmipGit -At $path -Arguments @('diff', '--cached', '--quiet') -Test) {
+        if ($staged.Count -eq 0) {
             [string] $note = '   nothing of its own to commit; its nested modules land next'
             Write-Host $note -ForegroundColor DarkGray
             continue
         }
 
-        Write-Host '   committing...' -ForegroundColor DarkGray
-        Invoke-XmipGit -At $path -Arguments @('commit', '-m', $Message, '--quiet') | Out-Null
-
-        Write-Host '   pushing to origin...' -ForegroundColor DarkGray
-        # A failed push throws: anything before it is already on origin, so
-        # fixing it and running again is safe.
-        Invoke-XmipGit -At $path -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
-
         Write-Host "   OK, landed" -ForegroundColor Green
         $name
     }
+}
+
+
+function Submit-XmipRepositoryChange {
+    <#
+        .SYNOPSIS
+            Stages everything in one repository, commits it and pushes main;
+            returns what was staged, and does nothing more when that is
+            nothing.
+
+        .DESCRIPTION
+            The estate's one commit-and-push: a module when it lands, a
+            parent when it pins its nested modules, and the superproject when
+            it pins the modules. What is staged, not what is dirty: `git
+            status` reports a submodule as modified when the only change is an
+            untracked file inside it, which the parent cannot stage.
+
+            The subject is the caller's message, or "Pin N module(s)" when
+            there is none (Resolve-XmipCommitSubject). Each step throws on
+            its own, the commit as much as the push: until 2026-09-23 only
+            the push was checked, and a failed commit followed by a push with
+            nothing new reported the parent pinned. A failed push leaves
+            everything before it on origin, so fixing it and running again is
+            safe.
+
+            Each step is announced before it runs, not after: the first trace
+            of a stalled landing put one line before the push and learned
+            nothing, because the stall was in `git add -A`, which walks the
+            whole working tree and stats every file under an ignored target/.
+
+        .PARAMETER At
+            The repository's working tree.
+
+        .PARAMETER Message
+            The commit's subject; empty for a pin outside a landing.
+
+        .PARAMETER Saying
+            Said once something is staged, before the commit: what this
+            commit is, for the operator.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $At,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $Message = '',
+
+        [Parameter(Mandatory = $false)]
+        [string] $Saying = ''
+    )
+
+    Invoke-XmipGit -At $At -Arguments @('add', '-A') | Out-Null
+    [string[]] $asked = @('diff', '--cached', '--name-only')
+    [string[]] $staged = @(Invoke-XmipGit -At $At -Arguments $asked)
+
+    if ($staged.Count -eq 0) {
+        return
+    }
+
+    [string] $subject = Resolve-XmipCommitSubject -Staged $staged -Message $Message
+
+    if ($Saying -ne '') {
+        Write-Host $Saying -ForegroundColor DarkGray
+    }
+
+    Write-Host '   committing...' -ForegroundColor DarkGray
+    Invoke-XmipGit -At $At -Arguments @('commit', '-m', $subject, '--quiet') | Out-Null
+
+    Write-Host '   pushing to origin...' -ForegroundColor DarkGray
+    Invoke-XmipGit -At $At -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
+
+    return $staged
 }
 
 

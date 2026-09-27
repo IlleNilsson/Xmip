@@ -10,9 +10,8 @@
 #>
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
     <#
         .SYNOPSIS

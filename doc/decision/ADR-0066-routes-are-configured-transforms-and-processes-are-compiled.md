@@ -88,9 +88,8 @@ which `architecture.toml`'s policy lets depend on a capability and never on
 a technology. Path is what route (its `content` technology) and transform
 already build on, and its parser cursor is shared with FHIRPath
 (ADR-0044); FHIRPath stays its own language. `xmip-core-path-predicate`,
-whose one caller was the retired `expression` technology, is retired and
-unmounted (`architecture.toml` `[[retired]]`); its GitHub repository is
-untouched.
+whose one caller was the retired `expression` technology, is undeclared
+and unmounted; its GitHub repository is untouched.
 
 - **The grammar.** Names bare with their prefixes, a run of `.`, `:`, `/`
   or `-` joining two word characters, so `header:http.x-channel` is one

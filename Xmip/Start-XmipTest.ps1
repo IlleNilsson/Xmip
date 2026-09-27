@@ -37,10 +37,9 @@ function Start-XmipTest {
 
             The roll, cluster and node binaries are built first, a no-op when
             they are current, so a roll never runs yesterday's scenarios. The
-            roll's own output goes
-            to `roll-<start time>.log` and `.err` under -Path, one line per
-            round; the run record `roll-<pid>.toml` beside them says which log
-            is whose.
+            roll's own output goes to `roll-<start time>.log` and `.err` under
+            -Path, one line per round; the run record `roll-<pid>.toml` beside
+            them says which log is whose.
 
         .PARAMETER Suite
             Which test suite to run: Core.Playground (the default) or
@@ -63,12 +62,12 @@ function Start-XmipTest {
             Several suites matched run one after another in the order they
             are listed, each returning what it returns — the Playground a
             detached roll, the estate a detached Pester run, both back at
-            once, a provider's whatever its command gives — so a
-            caller reads the stream by type. It is said in words which are
-            about to run and which did not start; one suite failing to start
-            never stops the rest. A switch that belongs to one suite alone is
-            not a fault when a pattern chose the group: -Suite * -Cluster C1
-            rolls on C1 and runs the estate's Pester files beside it.
+            once, a provider's whatever its command gives — so a caller reads
+            the stream by type. It is said in words which are about to run and
+            which did not start; one suite failing to start never stops the
+            rest. A switch that belongs to one suite alone is not a fault when
+            a pattern chose the group: -Suite * -Cluster C1 rolls on C1 and
+            runs the estate's Pester files beside it.
 
             A third party adds a suite by dropping a declaration in
             test/suite, with no edit to Xmip's own source. Example stands in
@@ -219,12 +218,6 @@ function Start-XmipTest {
             Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Estate
-
-        .EXAMPLE
-            Get-XmipTestResult -Suite Core.Estate | Format-Table -Property Test, Name
-
-        .EXAMPLE
             Start-XmipTest -Suite Example.Playground -Cluster C1
 
         .EXAMPLE
@@ -253,20 +246,12 @@ function Start-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            # A completer runs in the caller's scope and not the module's, so
-            # the suites are asked of the module itself. The -Test completer
-            # below calls straight out because Get-XmipRepositoryRoot is
-            # exported and Get-XmipTestSuite deliberately is not: a suite is a
-            # parameter of Start-XmipTest, never a cmdlet of its own.
+            # A completer runs in the caller's scope, so the module is asked.
             $module = Get-Module -Name Xmip | Select-Object -First 1
 
-            if ($null -eq $module) {
-                return
+            if ($null -ne $module) {
+                & $module { param($Word) Get-XmipTestSuiteChoice -Word $Word } $wordToComplete
             }
-
-            & $module { Get-XmipTestSuite } |
-                ForEach-Object { $_.Name } |
-                Where-Object { $_ -like "$wordToComplete*" }
         })]
         [string] $Suite = 'Core.Playground',
 
@@ -282,14 +267,13 @@ function Start-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            # Asked of the module, as -Suite's completer asks (Get-XmipTestChoice).
+            # Asked of the module, as -Suite's completer asks.
             $module = Get-Module -Name Xmip | Select-Object -First 1
             [string] $asked = "$($fakeBoundParameters['Suite'])"
+            [scriptblock] $choice = { param($Suite, $Word) Get-XmipTestChoice @PSBoundParameters }
 
             if ($null -ne $module) {
-                & $module {
-                    param($Asked, $Word) Get-XmipTestChoice -Suite $Asked -Word $Word
-                } $asked $wordToComplete
+                & $module $choice $asked $wordToComplete
             }
         })]
         [string[]] $Test = @(),
@@ -386,64 +370,9 @@ function Start-XmipTest {
         return Start-XmipProviderSuite -Suite $chosen -Bound $PSBoundParameters
     }
 
-    # A pattern selects among the suite's tests: -Test Round* is RoundTrip and
-    # -Test * is every one, which is exactly what omitting -Test means. Done
-    # here so the run record carries the tests rather than the pattern, and so
-    # a pattern matching nothing is refused before anything is built.
-    if (Test-XmipWholeSuite -Test $Test) {
-        $Test = @()
-    }
-    else {
-        $Test = @(Expand-XmipTestName -Test $Test -Known @($script:XmipPlaygroundTest.Keys))
-    }
-
-    if ($OnlineNodes.Count -gt 0 -and -not $PSBoundParameters.ContainsKey('Nodes')) {
-        Write-Error '-OnlineNodes names nodes; name them all with -Nodes first.'
-        return
-    }
-
-    [int] $count = Get-XmipNodeCount -Nodes $Nodes
-    [hashtable] $selection = @{
-        Nodes          = $Nodes
-        OnlineNodes    = $OnlineNodes
-        NodeCapability = $NodeCapability
-        Test           = $Test
-        Named          = $PSBoundParameters.ContainsKey('Nodes')
-    }
-    [string] $refused = Get-XmipNodeSelectionRefusal @selection
-
-    if ($refused -ne '') {
-        Write-Error $refused
-        return
-    }
-
-    # You name the cluster; a test spawns nodes, never a cluster (the owner,
-    # 2026-09-14). Nothing here invents a name for a roll.
-    if ([string]::IsNullOrWhiteSpace($Cluster)) {
-        Write-Error 'A roll is a cluster and you name it: -Cluster <name>.'
-        return
-    }
-
-    # A count names nothing, so only names can be warned about.
-    [hashtable] $asked = @{
-        Nodes          = if ($count -ge 0) { $null } else { $Nodes }
-        Test           = $Test
-        NodeCapability = $NodeCapability
-    }
-
-    # A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn are
-    # arbitrary node names), so nodes named with no capability stated declare
-    # none. That is legal and is probably not what was meant, so it is said
-    # rather than discovered (ADR-0055 clause 5).
-    [string] $said = Get-XmipNodeCapabilityWarning @asked
-
-    if ($said -ne '') {
-        Write-Warning $said
-    }
-
-    # Everything from here is the Playground's own work — building, spawning
-    # and recording the roll — and is a function of its own since 2026-09-22.
-    # It is handed this cmdlet so -WhatIf and -Confirm still decide there.
+    # The Playground's own work: checking the choice, then building, spawning
+    # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
+    # still decide there, and a parameter nobody gave is not handed on.
     [hashtable] $playground = @{
         Caller = $PSCmdlet
         Bound  = $PSBoundParameters
@@ -461,14 +390,11 @@ function Start-XmipTest {
         PassThru = $PassThru
     }
 
-    # A parameter nobody gave is not handed on. An unbound [timespan] is
-    # $null here and a [timespan] parameter refuses $null; the roll asks
-    # -Bound what was given, never whether a value is present.
-    foreach ($key in @($playground.Keys)) {
-        if ($null -eq $playground[$key]) {
-            $playground.Remove($key)
-        }
+    $resolved = Resolve-XmipPlaygroundChoice -Choice $playground
+
+    if ($null -eq $resolved) {
+        return
     }
 
-    Start-XmipPlaygroundRoll @playground
+    Start-XmipPlaygroundRoll @resolved
 }

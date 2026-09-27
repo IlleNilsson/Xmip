@@ -97,7 +97,7 @@ function Get-XmipCargoUse {
         return [string[]] @()
     }
 
-    $toml = Get-Content -Raw -LiteralPath $cargo | ConvertFrom-Toml
+    $toml = Read-XmipToml -Path $cargo
     $table = Get-TomlValue -Node $toml -Name 'dependencies' -Default $null
 
     [string[]] $named = @(
@@ -145,9 +145,8 @@ function Get-XmipProjectUse {
     [string] $self = [string] $Owner[$Directory]
 
     [System.IO.FileInfo[]] $projects = @(
-        Get-ChildItem -LiteralPath $Directory -Recurse -Filter '*.csproj' -File |
-            Where-Object { $_.FullName -notmatch '[\\/](bin|obj|target)[\\/]' } |
-            Where-Object { $_.BaseName -notmatch '\.Tests?$' } |
+        Find-XmipFile -Path $Directory -Filter '*.csproj' |
+            Where-Object { $_.BaseName -notmatch '\.Test$' } |
             Where-Object { (Resolve-XmipOwner -Path $_.DirectoryName -Owner $Owner) -eq $self }
     )
 

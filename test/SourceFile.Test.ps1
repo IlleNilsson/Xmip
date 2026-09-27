@@ -19,9 +19,8 @@
 #>
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
     # `Get-XmipMapWeight` is the map generator's, not the module's: it is not
     # exported, so it is reached the only way an unexported function can be.

@@ -238,9 +238,8 @@ function Stop-XmipTest {
 
             Wait-Process -Id $number -Timeout 5 -ErrorAction SilentlyContinue
 
-            if (-not [string]::IsNullOrWhiteSpace($roll.Path)) {
-                [string] $record = Join-Path -Path $roll.Path -ChildPath "roll-$number.toml"
-                Remove-Item -LiteralPath $record -Force -ErrorAction SilentlyContinue
+            if (-not [string]::IsNullOrWhiteSpace($roll.Record)) {
+                Remove-Item -LiteralPath $roll.Record -Force -ErrorAction SilentlyContinue
             }
 
             # The images the tree ran under go with it. The roll took what it

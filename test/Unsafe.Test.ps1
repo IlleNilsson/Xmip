@@ -15,8 +15,7 @@
 #>
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     # The runtime keeps its whole C boundary in one folder (ADR-0050, refined
     # 2026-09-25): the operator's table and exports (ADR-0027) and the loader

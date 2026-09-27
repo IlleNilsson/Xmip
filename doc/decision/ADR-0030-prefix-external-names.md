@@ -35,7 +35,7 @@ A name is external when it enters a namespace Xmip does not own, where another
 party's name could collide with it. These are prefixed:
 
 - **Repositories and crates** — `xmip-core-*`, on GitHub and crates.io. ADR-0011.
-- **Environment variables** — `XMIP_PLAYGROUND_SNAPSHOT`, in the OS environment.
+- **Environment variables** — `XMIP_PLAYGROUND_AREA`, in the OS environment.
 - **Published commands** — `Get-XmipHistory`, in the operator's shell, where it
   would otherwise shadow or collide with a built-in (`Get-History`).
 - Anything else presented to the outside: a service name registered with the OS,

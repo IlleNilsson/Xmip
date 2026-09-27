@@ -153,10 +153,6 @@ function New-XmipMapText {
         $line += (New-XmipMapDomain @section) + @('---', '')
     }
 
-    $line += New-XmipMapRetired -Retired @(
-        Get-TomlValue -Node $Manifest -Name 'retired' -Default @()
-    )
-
     return (($line -join "`n").TrimEnd() + "`n")
 }
 
@@ -218,7 +214,7 @@ function New-XmipEstateMap {
 
     $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.toml')
     [PSCustomObject[]] $repository = @(Get-XmipEstateRepository -Root $Root)
-    [hashtable] $composed = Get-XmipEstateComposition -Root $Root
+    [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 
     [string[]] $declared = @($repository | ForEach-Object { $_.Name })
     [string[]] $extra = @($composed.Keys | Where-Object { $_ -notin $declared } | Sort-Object)
@@ -240,7 +236,6 @@ function New-XmipEstateMap {
             Repository = $repository
             Source     = $source
             Map        = $text
-            Retired    = @(Get-TomlValue -Node $manifest -Name 'retired' -Default @())
         }
 
         [string] $html = New-XmipEstatePage @page

@@ -27,52 +27,25 @@ function Get-XmipDeclaredModule {
             such module — a content contract, a transport, an archive target —
             outside the pipeline: not tested, not landed, not pinned.
 
-            So this recurses. For each declared path it emits the path, then, if
-            that submodule has a .gitmodules of its own, its nested paths with the
-            parent prefixed, so a Technology reads as its full path from the
-            estate root. Pre-order: a parent precedes its children, which keeps
-            the root order the caller had and appends the nested after each.
+            So this recurses (Get-XmipSubmodule -Recurse): a Technology reads as
+            its full path from the estate root. Pre-order: a parent precedes its
+            children, which keeps the root order and appends the nested after
+            each.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory)]
-        [string] $RepositoryRoot,
-
-        # The parent submodule's path, prefixed onto nested entries. Empty at the
-        # estate root; set only by the recursion.
-        [Parameter()]
-        [string] $Prefix = ''
+        [string] $RepositoryRoot
     )
 
-    $relative = if ($Prefix) { "$Prefix/.gitmodules" } else { '.gitmodules' }
-    $modulesFile = Join-Path -Path $RepositoryRoot -ChildPath $relative
-
-    if (-not (Test-Path -LiteralPath $modulesFile)) {
-        # A submodule with no submodules of its own is the ordinary case; only
-        # the estate root is required to have one.
-        if ($Prefix) {
-            return
-        }
-
+    # A submodule with no submodules of its own is the ordinary case; only the
+    # estate root is required to have one.
+    if (-not (Test-Path -LiteralPath (Join-Path -Path $RepositoryRoot -ChildPath '.gitmodules'))) {
         throw "No .gitmodules under $RepositoryRoot. Is that the Xmip working tree?"
     }
 
-    $matchParams = @{
-        Path    = $modulesFile
-        Pattern = '^\s*path\s*=\s*(?<path>.+)$'
-    }
-
-    $paths = @(
-        Select-String @matchParams |
-            ForEach-Object { $_.Matches[0].Groups['path'].Value.Trim() }
-    )
-
-    foreach ($path in $paths) {
-        $full = if ($Prefix) { "$Prefix/$path" } else { $path }
-        $full
-        Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot -Prefix $full
-    }
+    Get-XmipSubmodule -Root $RepositoryRoot -Recurse | ForEach-Object { $_.Path }
 }
 
 

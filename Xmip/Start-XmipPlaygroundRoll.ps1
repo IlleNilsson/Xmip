@@ -62,14 +62,13 @@ function Get-XmipPlaygroundRolling {
         [string] $Cluster
     )
 
-    [string] $named = '^\s*cluster\s*=\s*"' + [regex]::Escape($Cluster) + '"\s*$'
+    foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
+        [string] $rolledAs = [string](
+            Get-TomlValue -Node $recorded.Record -Name 'cluster' -Default ''
+        )
 
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.toml' -File)) {
-        [string] $number = $file.BaseName -replace '^roll-', ''
-
-        if ($number -match '^\d+$' -and
-            (Select-String -LiteralPath $file.FullName -Pattern $named -Quiet)) {
-            [int] $number
+        if ($rolledAs -eq $Cluster) {
+            $recorded.Id
         }
     }
 }
@@ -90,20 +89,14 @@ function Remove-XmipPlaygroundStaleRecord {
 
     $layout = Get-XmipPlaygroundLayout
 
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.toml' -File)) {
-        [string] $number = $file.BaseName -replace '^roll-', ''
-
-        if ($number -notmatch '^\d+$') {
-            continue
-        }
-
-        $process = Get-Process -Id ([int] $number) -ErrorAction SilentlyContinue
+    foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
+        $process = Get-Process -Id $recorded.Id -ErrorAction SilentlyContinue
         [bool] $alive = $null -ne $process -and
             (Get-XmipPlaygroundImageKind -Name $process.ProcessName) -eq 'Roll' -and
             (Test-XmipPlaygroundBinary -Process $process -Path $layout.Roll)
 
         if (-not $alive) {
-            Remove-Item -LiteralPath $file.FullName -Force
+            Remove-Item -LiteralPath $recorded.File -Force
         }
     }
 }
@@ -232,9 +225,7 @@ function Start-XmipPlaygroundRoll {
     [hashtable] $choice = Get-XmipPlaygroundChoice -Bound $Bound
     $choice.Stress = $Stress
     $choice.Test = $Test
-    $choice.Snapshot = Join-Path -Path $Path -ChildPath "$Cluster-snapshot.toml"
-    $choice.History = Join-Path -Path $Path -ChildPath "$Cluster-history.toml"
-    $choice.Activity = Join-Path -Path $Path -ChildPath "$Cluster-activity.toml"
+    $choice.Area = $Path
 
     [bool] $boundNodes = $Bound.ContainsKey('Nodes')
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
@@ -251,6 +242,7 @@ function Start-XmipPlaygroundRoll {
     }
 
     [string] $roll = Invoke-XmipPlaygroundBuild -Binary roll
+    $publication = Get-XmipPlaygroundPublication -Roll $roll -Cluster $Cluster -Path $Path
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Remove-XmipPlaygroundStaleRecord -Path $Path
 
@@ -358,15 +350,14 @@ function Start-XmipPlaygroundRoll {
         online      = @($OnlineNodes)
         duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }
-        snapshot    = $environment.XMIP_PLAYGROUND_SNAPSHOT
-        history     = $environment.XMIP_PLAYGROUND_HISTORY
-        activity    = $environment.XMIP_PLAYGROUND_ACTIVITY
+        snapshot    = $publication.Snapshot
+        history     = $publication.History
+        activity    = $publication.Activity
         log         = $launch.RedirectStandardOutput
     }
 
-    Import-Module PSToml -ErrorAction Stop
-    [string] $recordPath = Join-Path -Path $Path -ChildPath "roll-$($process.Id).toml"
-    ConvertTo-Toml -InputObject $record | Set-Content -LiteralPath $recordPath -Encoding utf8
+    [string] $recordPath = Get-XmipRollRecordPath -Path $Path -Id $process.Id
+    Write-XmipToml -Path $recordPath -Value $record
     [string] $declared = Get-XmipNodeCapabilityText -Nodes $Nodes -NodeCapability $NodeCapability
     [string] $roster = if ($declared -ne '') { "; roster $declared" } else { '' }
     Write-Verbose "started $what$roster as pid $($process.Id); record at $recordPath"
@@ -388,7 +379,7 @@ function Start-XmipPlaygroundRoll {
             Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot |
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
         )
-        $prompt::Follow($environment.XMIP_PLAYGROUND_SNAPSHOT, $beside)
+        $prompt::Follow($publication.Snapshot, $beside)
     }
 
     if ($PassThru) {

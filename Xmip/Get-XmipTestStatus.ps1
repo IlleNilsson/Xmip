@@ -76,15 +76,10 @@ function Get-XmipTestStatus {
 
     [object[]] $nodes = @(Get-XmipTestNode)
     [object[]] $suites = @(Get-XmipTestSuite)
-    Import-Module PSToml -ErrorAction Stop
 
     foreach ($roll in $rolls) {
-        [string] $recordPath = Join-Path -Path $Path -ChildPath "roll-$($roll.Id).toml"
-        $record = $null
-
-        if (Test-Path -LiteralPath $recordPath) {
-            $record = Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Toml
-        }
+        $recorded = Get-XmipRollRecord -Path $Path -Id $roll.Id
+        $record = if ($null -ne $recorded) { $recorded.Record } else { $null }
 
         [string] $rolledAs = [string](Get-TomlValue -Node $record -Name 'cluster' -Default '')
 
@@ -117,23 +112,28 @@ function Get-XmipTestStatus {
             $named = $ran.Name
         }
 
-        [PSCustomObject]@{
-            PSTypeName  = 'Xmip.TestStatus'
-            Suite       = if ($named -ne '') { $named } else { $script:XmipPlaygroundSuite }
-            Kind        = 'roll'
-            State       = 'running'
-            Cluster    = if ($rolledAs -ne '') { $rolledAs } else { $null }
-            Id          = $roll.Id
-            StartTime   = $roll.StartTime
-            Stress      = Get-TomlValue -Node $record -Name 'stress'
-            Tests       = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
-            Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
-            Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
-            OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
-            Worst       = if ($null -ne $worst) { $worst.State } else { $null }
-            Snapshot    = $snapshot
-            Path        = if ($null -ne $record) { $Path } else { $null }
-            Log         = Get-TomlValue -Node $record -Name 'log'
+        [hashtable] $row = @{
+            Suite    = if ($named -ne '') { $named } else { $script:XmipPlaygroundSuite }
+            Kind     = 'roll'
+            State    = 'running'
+            Id       = $roll.Id
+            Property = @{
+                Cluster     = if ($rolledAs -ne '') { $rolledAs } else { $null }
+                StartTime   = $roll.StartTime
+                Stress      = Get-TomlValue -Node $record -Name 'stress'
+                Tests       = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
+                Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
+                Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
+                OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
+                Worst       = if ($null -ne $worst) { $worst.State } else { $null }
+                Tally       = 'running'
+                Snapshot    = $snapshot
+                Path        = if ($null -ne $recorded) { $Path } else { $null }
+                Record      = if ($null -ne $recorded) { $recorded.File } else { $null }
+                Log         = Get-TomlValue -Node $record -Name 'log'
+            }
         }
+
+        New-XmipTestStatus @row
     }
 }

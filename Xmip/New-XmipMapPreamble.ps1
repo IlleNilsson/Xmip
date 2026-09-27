@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    The estate map's opening, its note on composition, and its list of the retired.
+    The estate map's opening and its note on composition.
 
 .DESCRIPTION
     Apart from New-XmipEstateMap.ps1 since 2026-09-22, when that file was 795 lines against the
@@ -12,50 +12,6 @@
 
     Style: doc/governance/powershell-style.md
 #>
-
-
-function New-XmipMapRetired {
-    <#
-        .SYNOPSIS
-            The repositories that were retired, with the date and the reason.
-
-        .DESCRIPTION
-            Here so that a reader who remembers a name and cannot find it on
-            the map is told what happened to it rather than left looking. The
-            reasons are long and are wrapped rather than put in a table, where
-            a cell cannot break a line.
-
-        .PARAMETER Retired
-            The manifest's `[[retired]]` entries.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyCollection()]
-        [object[]] $Retired
-    )
-
-    [string[]] $line = @(
-        '## Retired'
-        ''
-        'Named here because a reader who remembers one of these and cannot find'
-        'it above should be told what happened to it. Each says whether its'
-        'GitHub repository was kept or deleted.'
-        ''
-    )
-
-    foreach ($entry in $Retired) {
-        [string] $name = [string](Get-TomlValue -Node $entry -Name 'name' -Default '')
-        [string] $on = [string](Get-TomlValue -Node $entry -Name 'on' -Default '')
-        [string] $why = [string](Get-TomlValue -Node $entry -Name 'reason' -Default '')
-
-        $line += Format-XmipMapLine -Text "- **``$name``**, $on — $why" -Indent '  '
-        $line += ''
-    }
-
-    return $line
-}
 
 
 function New-XmipMapPreamble {

@@ -16,9 +16,15 @@
     An operation switch means do it. -WhatIf means do not. There is no
     -Apply: git does not work that way and neither should this.
 
+    -Deploy is local: it writes the deploy lists under deploy/ from the
+    manifest (Update-XmipDeployList).
+
 .EXAMPLE
     Import-Module ./Xmip.psm1
     Sync-XmipEstate -Create -Configure -WhatIf
+
+.EXAMPLE
+    Sync-XmipEstate -Deploy
 #>
 # The domains that start Xmip on a node: linked into the node binary, one of
 # them per estate, and so mounted with no provider in the path. Every other
@@ -79,12 +85,14 @@ function Get-XmipMountPath {
         [string[]] $Declared
     )
 
-    [string] $name = [string](Get-PropertyValue $Repository 'name')
+    [string] $name = [string](Get-XmipPropertyValue -Object $Repository -Name 'name')
 
     # An explicit mount wins over the computed path. Almost nothing declares one
     # — the path computed below is right for a module. One whose owner is
     # reserved (a library, the Playground) mounts where it says.
-    [string] $declaredMount = [string](Get-PropertyValue $Repository 'mount' '')
+    [string] $declaredMount = [string](
+        Get-XmipPropertyValue -Object $Repository -Name 'mount' -Default ''
+    )
     if ('' -ne $declaredMount) {
         return [pscustomobject]@{ Owner = ''; Mount = $declaredMount }
     }
@@ -112,8 +120,9 @@ function Get-XmipMountPath {
     # module resolves to it. Modules mount under the estate root regardless —
     # ADR-0016 has Xmip pin every module directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
+        [hashtable] $asked = @{ Name = 'architecturalDomain'; Default = 'Capability' }
         [string] $domain = [string](
-            Get-PropertyValue $Repository 'architecturalDomain' 'Capability'
+            Get-XmipPropertyValue -Object $Repository @asked
         ).ToLowerInvariant()
 
         # The leaf is what follows the provider, whoever the provider is:
@@ -144,6 +153,8 @@ function Sync-XmipEstate {
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
+        # The deploy lists under deploy/, written from the manifest.
+        [switch] $Deploy,
         [switch] $IncludeReserved,
         [switch] $Report,
         # Restrict -Create to these repository names. Without it, -Create makes
@@ -172,33 +183,24 @@ function Sync-XmipEstate {
     # unseen until 2026-09-22, when they became files of their own.
     [hashtable] $GitHub = @{ Token = $GitHubToken; BaseUri = $GitHubApiBaseUri }
 
-    # ---------------------------------------------------------------------------
-    # Schema 2.0. The tree is the data: a repository name is derived from its
-    # position, so a name cannot drift from the structure that owns it.
+    # The tree is the data: a repository name is derived from its position, so
+    # a name cannot drift from the structure that owns it.
     #
-    #   platform.xmip-core                                    -> xmip-core
     #   xmip.core.transport         -> xmip-core-transport
     #   xmip.core.transport.kafka   -> xmip-core-transport-kafka
-    #
-    # The tree is flattened into the same repository shape schema 1 produced, so
-    # everything downstream is untouched by which file it came from.
-    #
-    # ConvertFrom-Toml has returned a dictionary in one version and an object in
-    # the next. Which one it is should not be a thing this script has an opinion
-    # about, so it never asks directly.
-    # ---------------------------------------------------------------------------
 
     # No operation switch means report only. That is the safe default and it
     # needs no ceremony to reach.
-    $operating = $Create -or $Configure -or $Compose -or $Cargo
+    $operating = $Create -or $Configure -or $Compose -or $Cargo -or $Deploy
 
-    $manifest = Get-XmipManifest $ManifestPath
-    Test-XmipManifest $manifest
-    $actual = @(Get-ActualRepositories -Manifest $manifest -GitHub $GitHub)
-    $drift = New-TransactionReport $manifest $actual
+    $manifest = Get-XmipManifest -Path $ManifestPath
+    Test-XmipManifest -Manifest $manifest
+    $actual = @(Get-XmipGitHubRepository -Manifest $manifest -GitHub $GitHub)
+    $drift = New-XmipTransactionReport -Manifest $manifest -Actual $actual
     $split = Split-XmipDrift -Manifest $manifest -Missing @($drift.missing)
 
-    Write-Step "Drift: $($split.actionable.Count) missing, $($drift.unexpected.Count) unexpected"
+    [string] $drifted = "$($split.actionable.Count) missing, $($drift.unexpected.Count) unexpected"
+    Write-XmipStep -Message "Drift: $drifted"
 
     foreach ($entry in @($split.actionable)) {
         Write-Warning "MISSING: $($entry.Name)  ($($entry.Maturity))"
@@ -212,7 +214,7 @@ function Sync-XmipEstate {
         [string] $note = '{0} reserved and not created, as designed. -IncludeReserved overrides.' -f
             $split.expected.Count
 
-        Write-Step $note
+        Write-XmipStep -Message $note
     }
 
     if ($Create) {
@@ -224,14 +226,19 @@ function Sync-XmipEstate {
             Only            = $Only
         }
 
-        Invoke-CreateRepositories @creating
+        New-XmipRepository @creating
     }
     if ($Configure) {
-        Invoke-ConfigureRepositories -Manifest $manifest -Report $drift -GitHub $GitHub -Only $Only
+        Set-XmipRepository -Manifest $manifest -Report $drift -GitHub $GitHub -Only $Only
     }
-    if ($Compose) { Invoke-Compose -Manifest $manifest -Actual $actual }
-    if ($Cargo) { Invoke-Cargo }
-    if (-not $operating) { Write-Step 'Reporting only; no operation selected.' }
+    if ($Compose) { Invoke-XmipCompose -Manifest $manifest -Actual $actual }
+    if ($Cargo) { Invoke-XmipCargo }
+
+    if ($Deploy) {
+        Update-XmipDeployList -Root (Split-Path -Parent $ManifestPath) -Manifest $manifest
+    }
+
+    if (-not $operating) { Write-XmipStep -Message 'Reporting only; no operation selected.' }
 
     if ($Report) {
         $directory = Split-Path -Parent $ReportPath
@@ -240,7 +247,8 @@ function Sync-XmipEstate {
         Write-Host "Report written: $ReportPath"
     }
 
-    Write-Step "Estate reconciliation completed$(if (-not $operating) { ' (report only)' })"
+    [string] $reported = if (-not $operating) { ' (report only)' } else { '' }
+    Write-XmipStep -Message "Estate reconciliation completed$reported"
     if ($PassThru) { [pscustomobject]$drift }
 
 }
