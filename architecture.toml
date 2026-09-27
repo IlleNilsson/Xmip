@@ -272,7 +272,7 @@ dependency = []
   dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-resilience", "xmip-core"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish with content-type and a headers table, publisher confirms, consume and acknowledge; the event capability's wire events (the AMQP binding's attributes in the 0-9-1 headers table)"
     [xmip.core.transport.as2]
     maturity = "scaffolded"
@@ -283,7 +283,7 @@ dependency = []
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.ftp]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     description = "FTP and FTPS transport implementation."
     specification = "IETF RFC 959, passive mode and binary type; FTPS with the capability's TLS"
@@ -293,11 +293,11 @@ dependency = []
     dependency = ["xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-event", "xmip-core-resilience", "xmip-core"]
     specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "IETF RFC 3501: select, search, fetch, flag deleted, expunge, append"
     [xmip.core.transport.mllp]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
@@ -305,12 +305,12 @@ dependency = []
     dependency = ["xmip-core-library-codec", "xmip-core"]
     specification = "OASIS MQTT 3.1.1, QoS 0 and 1"
     [xmip.core.transport.pop3]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "IETF RFC 1939, receive only; the maildrop lock is the native claim"
     [xmip.core.transport.sftp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-tcp", "xmip-core-library-codec", "xmip-core-library-ssh", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-transport-tcp", "xmip-core-library-codec", "xmip-core-library-ssh", "xmip-core-context", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.smtp]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core"]
@@ -324,7 +324,7 @@ dependency = []
     [xmip.core.transport.activemq]
     maturity = "scaffolded"
     specification = "STOMP 1.2, the protocol ActiveMQ Classic and Artemis both listen on"
-    dependency = ["xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.aws]
     maturity = "scaffolded"
     description = "What every AWS technology speaks over HTTP: Signature Version 4, the Query API and the JSON 1.1 protocol, both sides of each. Not a transport of its own: s3, aws-sqs, aws-sns and aws-kinesis ride on it. A xmip-core-transport technology."
@@ -359,14 +359,14 @@ dependency = []
     [xmip.core.transport.dds]
     maturity = "scaffolded"
     description = "DDS transport: RTPS over UDP — DATA submessages carry a sample whole and DATA_FRAG submessages carry it in fragments reassembled by sequence number; a Location is a participant's unicast locator; an in-process reader stands in for the domain. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-udp", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-transport-udp", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "OMG Data Distribution Service, RTPS over UDP"
     [xmip.core.transport.dhcp]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "IETF RFC 2131, with DHCPv6 in RFC 8415"
     [xmip.core.transport.dicom]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     description = "DICOM transport: the DIMSE upper layer over TCP — an association, a C-STORE whose data set is one Stream, a release; a Receive Location is the storage SCP, a Send Location the SCU. A xmip-core-transport technology."
     specification = "NEMA PS3, DIMSE upper layer over TCP"
@@ -460,7 +460,7 @@ dependency = []
     dependency = ["xmip-core-transport-cotp", "xmip-core"]
     specification = "Siemens S7 communication over ISO-on-TCP. Vendor protocol, no public standard"
     [xmip.core.transport.secs-gem]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "SEMI E5 SECS-II, E30 GEM, E37 HSMS"
     [xmip.core.transport.uds]
@@ -492,7 +492,7 @@ dependency = []
     specification = "UPnP Device Architecture, Simple Service Discovery Protocol"
     [xmip.core.transport.syslog]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "IETF RFC 5424, over UDP or TCP with RFC 6587 octet counting"
     [xmip.core.transport.thread]
     maturity = "scaffolded"
@@ -523,7 +523,7 @@ dependency = []
     [xmip.core.transport.azure-event-grid]
     maturity = "scaffolded"
     description = "Azure Event Grid transport: a topic key over the REST API — publish a Stream as one wire event to a topic, receive as the webhook a subscription delivers to, answering the validation handshake — a topic endpoint is a Location. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-library-net", "xmip-core-event", "xmip-core"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-net", "xmip-core-event", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.azure-event-hubs]
     maturity = "scaffolded"
     description = "Azure Event Hubs transport: a Shared Access Signature over the REST API — send a Stream as one event to a hub or one of its partitions; reading is AMQP, and this transport says so — a hub is a Location. A xmip-core-transport technology."
@@ -543,14 +543,14 @@ dependency = []
     [xmip.core.transport.google-cloud-storage]
     maturity = "scaffolded"
     specification = "Google Cloud Storage JSON API, bearer token"
-    dependency = ["xmip-core-transport-http", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.google-pub-sub]
     maturity = "scaffolded"
     description = "Google Pub/Sub transport: a bearer token over the REST API — publish a Stream as one message to a topic, pull from a subscription and acknowledge each message once it is a Stream — a topic and a subscription are a Location. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.ibm-mq]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "IBM MQ transport: one message on a queue is one Stream — MQCONN, MQOPEN, MQPUT and MQGET on the MQ wire over TCP, against a queue manager or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.kafka]
     maturity = "scaffolded"
@@ -567,30 +567,30 @@ dependency = []
     [xmip.core.transport.mssql]
     maturity = "scaffolded"
     specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.mysql]
     maturity = "scaffolded"
     specification = "MySQL client/server protocol 4.1: handshake, native password, COM_QUERY text protocol"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.named-pipe]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     description = "Named pipe transport: one connection to a named pipe is one Stream — the Windows object under \\\\.\\pipe, a FIFO on Unix. A xmip-core-transport technology."
     [xmip.core.transport.nats]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "NATS client protocol, core at-most-once"
     [xmip.core.transport.nats-jetstream]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-nats", "xmip-core"]
+    dependency = ["xmip-core-transport-nats", "xmip-core-library-codec", "xmip-core"]
     specification = "NATS JetStream, durable streams and consumers over NATS"
     [xmip.core.transport.nfs]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "NFS transport: one file on an export is one Stream — NFS version 3 over ONC RPC on TCP, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.opc-ua]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "OPC UA transport: one node's value is one Stream — the binary encoding over TCP, a secure channel with security policy None, an anonymous session, a Read and a Write of a ByteString, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.oracle]
     maturity = "scaffolded"
@@ -599,13 +599,13 @@ dependency = []
     [xmip.core.transport.postgresql]
     maturity = "scaffolded"
     specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.rabbitmq]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1, the RabbitMQ native protocol"
     dependency = ["xmip-core-transport-amqp", "xmip-core"]
     [xmip.core.transport.redis-streams]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "Redis Streams over RESP2: XADD, XRANGE, XREAD"
     [xmip.core.transport.s3]
@@ -618,13 +618,13 @@ dependency = []
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
     [xmip.core.transport.smb]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-ntlm", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-ntlm", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "SMB transport: one file on a share is one Stream — SMB2 over TCP, one tree, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.sqlite]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.tcp]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
@@ -1404,7 +1404,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = []
+  dependency = ["xmip-core-library-codec"]
     [xmip.core.secret.dpapi]
     description = "Windows DPAPI: a key-encryption key in a file sealed by CryptProtectData under the Service Identity, readable by that identity on that machine alone. A xmip-core-secret technology."
     maturity = "scaffolded"
