@@ -441,6 +441,14 @@ available for Routing, and **every Publication is audited**.
 **Routing** evaluates a Publication against Subscriptions. A Subscription may
 target an Xmip Process, a Send Port or a Send Port Group.
 
+A Subscription's **filter** is one line of Xmip's expression language
+(ADR-0066, `xmip-core-path`'s `expression`) — `MessageType = 'Order' and not
+Amount > 1000` — compiled once, when the Application holding it is read, and
+decided from the compiled tree for every Publication. A property it names is
+read by the route technology its prefix names (ADR-0046); a value that is
+not there is *unknown*, with its reason, never a silent false, and only a
+filter that holds matches.
+
 ```text
 Publication              one event, one identity, immutable
   └── Journey            one per matched Subscription
@@ -776,6 +784,12 @@ Event receivers are identified, authenticated and authorized, preferably as
 Parties communicating through Endpoints. Authorization controls which Event
 types, Messages, Streams, Journeys and metadata a receiver may access. **Event
 delivery and its security outcome are audited.**
+
+ADR-0065 decides how a receiver subscribes, from any language: one Event model
+and one subscription rule in `xmip-core-event`, reached in process through
+`xmip_operate.h` section 11 and over the wire in the Event wire form on Xmip's own
+HTTP, Kafka and AMQP transports, at least once. An Event reaches an in-process
+subscriber within about a millisecond of being published.
 
 ## 18. Parties and Endpoints
 

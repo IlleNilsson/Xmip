@@ -479,9 +479,10 @@ the host's. `doc/specification.md` section 2 says *a module may be newer in
 module declares. Those are opposite rules for the same field. The code
 implements ADR-0012's, because ADR-0012 is the decision and the
 specification says the header wins over it only on the header's own
-statements — and the header states no rule here, only the fields. **This is
-for the owner to settle**, and it decides whether a node running an older
-Xmip may load a newer module.
+statements — and the header states no rule here, only the fields. It
+decided whether a node running an older Xmip may load a newer module.
+**Settled by the owner, 2026-09-26: it may not** — ADR-0012's reading, which
+the loader already enforced; `specification.md` section 2 now says the same.
 
 **What is still not done**, plainly:
 

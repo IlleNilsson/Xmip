@@ -296,8 +296,8 @@ is now one rule.
   `xmip_capability_published_v1` and `xmip_capability_entry_v1` (ADR-0052,
   amendment "the last cross-language copies, and a publication read once").
   A refused published declaration no longer reports the node online: it is
-  refused whole (ADR-0055). Where a declaration places work is open
-  problem 25, row o, and not moved.
+  refused whole (ADR-0055).
 
 Provenance: the case rule is the owner's, 2026-09-24. The rest is the
 assistant's drafting of problem 25's row.
+

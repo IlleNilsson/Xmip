@@ -41,7 +41,7 @@ online state.*
 ### 1. Nothing at runtime reaches for the internet
 
 A node that installs, starts, receives, processes, sends, retains and archives
-does so with no route to the internet. A transport that talks to a cloud
+does so with no route to the internet. A transport that talks to a hosted
 service talks to the endpoint it is configured with, which may be on the other
 side of the world or on the same rack; the transport does not know and does not
 need to. Nothing resolves a public name, fetches a certificate, checks a
@@ -131,3 +131,20 @@ account of how software reaches it at all.
   all open. They are named here so the gap is on the record.
 
 Agreed 2026-09-20, not yet built.
+
+## Amendment, 2026-09-26: a running Xmip depends on nothing outside itself
+
+The owner: *when Xmip runs, there shall be no internet, no external
+dependencies. Compiling, configuring, developing is a different story.*
+
+- **Running is closed.** A running cluster needs nothing outside its own
+  nodes and hosts: no internet, no service it calls to decide, no license
+  server, no public name, no registry, no key or time service it cannot run
+  without. The only far ends it talks to are the ones its Receive and Send
+  Locations are configured with, which are its work, not its dependencies.
+  Anything a node needs — its modules, its keys, its trust — is on the node
+  or in the cluster before it starts.
+- **Building is open.** Compiling, configuring and developing may use the
+  internet and any service they like: crates, toolchains, VS Code and its
+  extensions, feeds. What they produce is carried whole to where Xmip runs
+  (clause 2).

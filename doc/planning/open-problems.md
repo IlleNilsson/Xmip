@@ -291,6 +291,9 @@ for edge estates where the device that receives is the device that processes,
 and it is probably right for the purpose-compiled runtime — but it cannot be the
 only answer for a server cluster.
 
+2026-09-26: ADR-0067 gives a node one address with operate, sync and alive as
+listeners on it; option A's protocol is the sync listener.
+
 2026-09-19: the Playground hands work R -> P -> S between node processes through
 per-node inboxes in the cluster's shared directory, each hop recorded. This is
 option A rehearsed in the rig only; it rules nothing for the runtime, which stays
@@ -579,17 +582,19 @@ escaping and nothing else.
 | f | TOML string quoting | the node declaration escapes three characters; archive's copy escapes all | **Resolved 2026-09-24:** `codec::toml::{quote, unquote}` is the one TOML basic string, every control character escaped; the node's declaration and the file archive's sidecar use it, and the archive now reads a quoted key holding `=` |
 | g | msmq over https | always writes `http://`; its `tls` feature does nothing | **Resolved 2026-09-24:** msmq sends through `http::endpoint` as as2, as4 and webdav do; `msmqs://`, `https://` and `DIRECT=HTTPS://` queues go over the one TLS behind `tls`, are refused rather than sent in the clear without it, and a test holds both |
 | h | A null context value | route's `X` reads null as present, `context:X` as absent | **Resolved 2026-09-24:** `route::routable`, beside `text_of`, is the one reading; `X`, `context:X`, `header:`, `party:`, `regex:` and `content:` read a missing value and a Null as absent and refuse bytes, a test holds both spellings, and ADR-0046 records the owner's ruling |
-| i | A node's capability | parsed three ways: Playground and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). Placement is row o |
+| i | A node's capability | parsed three ways: Playground and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). |
 | j | A health colour | `SegmentRender.Traffic` maps Paused yellow and Holding red, the prompt grey and orange | **Resolved 2026-09-24:** the prompt paints `English.Color`'s name in posh-git's palette (`SegmentRender.Paint`); `Traffic` holds no table of its own and `PromptMonitor.Paint` is gone (ADR-0041, clarified) |
 | k | Scope containment | `observe` compares text, `ScopeTree` strips scheme and authority first | **Resolved 2026-09-24:** `observe::Scope` is the one implementation of containment and a scope's parts; the runtime's library forwards it (`xmip_scope_contains_v1`, `xmip_scope_parts_v1`) and `ScopeTree` calls it, so the snapshot and every surface answer by one rule; the two-writer ruling and `scope-vector.toml` are struck by the owner (ADR-0052, amendments 2026-09-24) |
 | l | Landing a pin | `Publish-XmipPin` checked only the push, so a failed commit followed by an empty push reported success | **Resolved 2026-09-23:** `Invoke-XmipGit` is the one way the module runs git, and a test refuses any other |
 | m | Reading TOML in PowerShell | three readers assume one of the two shapes PSToml has returned | **Resolved 2026-09-24:** every reader goes through `Get-TomlValue`, `Get-XmipDeclaredText` is gone, and `test/Toml.Test.ps1` holds the readers on both shapes and refuses a reader that asks for one |
 | n | Promotion at arrival | `runtime/src/arrival.rs` routes with `Promoted::from_context` rather than `route::promote`, so in a running node bytes under a bare `X` decline as nothing promoted instead of being refused, and no prefixed property (`header:`, `party:`, ...) is read at arrival | **Resolved 2026-09-25:** arrival promotes every name its Subscriptions' filters use through `route::promote` and the route technologies loaded (`Runtime::route_sources`), before the Journey opens; a Null is absent, and bytes under a bare `X` or a prefix no loaded technology provides refuse the Message (`Refused::Promotion`), and the runtime's tests hold a bare `X` of bytes, a Null and `party:sender` read at arrival (ADR-0046) |
-| o | A node's capability, twice | the Playground places by stage (receive, process, send; ADR-0056) while `cluster::select_capable_node` matches feature strings such as `transport:http` on `node::Node.capabilities` | open, the owner's to look at first (2026-09-24). The two models: **stages** — `node::Stage`, the words `receive`, `process`, `send` a node declares (ADR-0056), placed on by `Roster::with`, `receives`, `target` and `refusal` in `test/core/playground/src/roster.rs`, tied to the Playground's `Contract`; **features** — free strings such as `transport:http` in `node::Node.capabilities`, placed on by `cluster::Cluster::select_capable_node`, used by nothing that runs. Options: place on both with the feature set renamed; stages only; features only. Placement stays in the roster until ruled |
 | p | The operator surfaces' rules | the CLI and `Xmip.PowerShell` each wrote which surface to read, the runtime override, wildcard selection, the acts, the validation verdict, status meaning, the ABI boundaries, probe conformance and the mood, figure and nothing-at wording; five of them disagreed (the cmdlets took scopes literally, never used the discovery rule, reported one boundary, never judged a probe, and said `Unknown` where the CLI said `unknown`) | **Resolved 2026-09-24** (the owner: *CLI and PowerShell shall share*; *code shall be uniquely placed*): each rule is written once — in its Rust crate where the runtime owns it (scope, stage, mood word and color, worst-first order, called through `xmip_operate.h` section 7), else in `Xmip.Abi` or `Xmip.Surface` — and tested there; the cmdlets take `-Remote`, `-Snapshot`, an optional `-Library` and wildcard scopes as the executable does, and the script module loads the operator module and keeps no capability words, snapshot reader or mood ranking of its own (ADR-0052, amendments 2026-09-24) |
 | q | Where a node sits in a scope | `ScopeTree.Node` takes segment 0, so the Monitor's rows name the cluster as a record's node, and the prompt's `SegmentRender.At` reads the literal `node` segment itself: the scope's shape known in two surfaces (found 2026-09-25) | **Resolved 2026-09-25:** `observe::Scope::node` and `Scope::stage` are the one reading — the node the segment after the `node` marker beneath the cluster, never the cluster, the stage the first stage word beneath it — forwarded as `xmip_scope_node_v1` (`xmip_operate.h` section 7) and bound once in `RuntimeRules.Node`; `ScopeTree.Node`, `ScopeTree.Stage`, `ScopeIndex` and the prompt's `SegmentRender.At` call it, and a Monitor row names the node, not the cluster (ADR-0027, ADR-0052, amendments 2026-09-25) |
 | r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | the owner, 2026-09-25: the runtime writes them at arrival from properties the transport hands with `Arrived` (ADR-0046, amendment) |
 | s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Playground's `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
+| t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
+| u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dog fooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
+| v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Xmip Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Xmip Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
 
 **One concept, several copies, the same behavior.** Loopback rigs in 51
 transports over a parent that shares only the traits; `rabbitmq` rewriting
@@ -621,11 +626,15 @@ surfaces read, the topology and run header they draw, retention's policy,
 node capability and placement, and a claim by rename it documents elsewhere
 as unsafe; the runtime holds Message treatment presets `message` owns.
 
-**Dead.** Nothing depends on persist, event, audit, report, process,
-prepare, transform, assign, promote, demote, cluster or resilience; the
-runtime's `capability_registry`, `HostService`, `registration.rs`,
-`ModuleRegistry`, `RuntimeDispatcher` and the generation presets run only
-under their own tests.
+**Not dead: unwired.** *(Corrected 2026-09-26, read again rather than
+counted.)* Nothing yet calls the runtime's `registration.rs` (the service
+definition each platform's manager needs — problem 28 needs it),
+`host.rs`'s `HostService` (a module checked before it loads on first use,
+ADR-0025), `generation.rs` (a Message generation, ADR-0013) or
+`capability_registry.rs`; they are phase C's first pieces, written ahead,
+and are wired when a node runs work. `ModuleRegistry` and
+`RuntimeDispatcher`, once listed here, no longer exist. audit has users since
+2026-09-25; the other capabilities listed before wait for a running node.
 
 | option | effect |
 |---|---|
@@ -677,8 +686,9 @@ core's manifest. Whether anything is taken at a versioned tag is open again.
 | 6 | a provider quick start in the SDK's README, and a module of provider `example` built outside core's crates, loaded by a node | 4, 5 |
 | 7 | packaging a provider's module with its declaration of which SDK it was built against | 6 |
 
-The `trait_minor` disagreement is the owner's to settle before step 4 relies on
-it; `specification.md` and ADR-0012 name the two readings.
+The `trait_minor` disagreement is settled (the owner, 2026-09-26): a node
+refuses a module newer in `trait_minor` than itself, as ADR-0012 and now
+`specification.md` say (ADR-0057, amendment of 2026-09-19).
 
 ## 27. Xmip cannot obtain a certificate, and identity is tested once
 
@@ -739,6 +749,7 @@ and no engine.
 | 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
 | 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
 | 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SurfaceTls` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
+| 6 | the .NET programs' TLS through `xmip-core-library-tls`, not the platform's (the owner, 2026-09-26; ADR-0063, amendment): the web host's and the remote surface's connections terminate in the Rust library — through the runtime's library as a stream the .NET side reads and writes, or a Rust front in the web host's process — so the hybrid exchange holds on every Xmip connection |
 
 ## 30. HTTP/3 is declared and not built
 
@@ -756,9 +767,10 @@ knowledge. HTTP/3 is not: it does not ride TCP at all.
 | 4 | QPACK, RFC 9204: the header compression HTTP/3 uses in place of HPACK, with its encoder and decoder streams |
 | 5 | the http transport offers `h3` where a service advertises it, and falls back to HTTP/2 or HTTP/1.1 over TCP where UDP is blocked |
 
-**Open for the owner before step 1:** whether QUIC is hand-written like the
-rest of the estate — the largest protocol it would hold — or taken from a
-crate, which today means an async runtime the estate does not carry.
+**Decided 2026-09-26, the owner, from three (hand-written, quinn with tokio,
+not now): QUIC is hand-written** — synchronous, like the rest of the estate,
+tested against RFC 9000, 9001 and 9002, with no async runtime brought in.
+Where it lives is still step 1's first question.
 
 ---
 
@@ -791,6 +803,11 @@ D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
                         (the Cyber Resilience Act's reporting duties began
                         2026-09-11); BizTalk artifact import
 ```
+
+Phase D: the routes designer's first slice is built, 2026-09-26 (ADR-0064):
+the Xmip Application document and the node's binding in `configure`, and
+the designer in the VS Code extension; running Applications in the
+Playground is the next slice.
 
 Phase D's secrets and BizTalk import have no home in the manifest, and a
 visual mapper none in the surfaces; the owner decides each.
@@ -938,14 +955,11 @@ retires entries from stops being an order.
 8. Organization and second owner       problem 15, independent of all the above
 ```
 
-**A decision blocks item 1.** The owner raised, 2026-09-05, that "Process" is
-overloaded three ways — the Xmip Service that rules a node, the Host Service
-that does the work, and the Xmip Process a Subscription starts. terminology.md
-records a different split (Service rules, Host Service works, Xmip Process is
-the integration process). The runtime's startup code names things after the
-record. Before phases 4-9 name more of them, the record and the owner's model
-have to agree. Not yet filed as a numbered problem because it is a terminology
-correction, not an open design question — but it must be settled first.
+**The vocabulary is settled** (the owner, 2026-09-26, confirming
+`terminology.md` as written): the Xmip Service rules a node and no Message
+passes through it; Xmip Host Services do the work; an Xmip Process is the
+integration process a Subscription starts. Phases 4-9 name their code after
+it.
 
 Problems 4, 5, 7, 8 and 9 remain naming judgments with no deadline. They cost
 nothing to leave open and should not block the build work.

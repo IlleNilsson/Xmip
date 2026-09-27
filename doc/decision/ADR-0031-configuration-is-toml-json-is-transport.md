@@ -102,3 +102,15 @@ described in `module/platform/configure/doc/node-configuration.md`.
 
 Provenance: the ruling is the owner's, 2026-09-24; the wording is the
 assistant's.
+
+## Amendment, 2026-09-26: configuration lives in files, never in a database
+
+The owner, 2026-09-26: *the route rules shall be stored in the TOML
+configuration files. We do not want configuration in a database like
+BizTalk. Databases are for runtime and history, not configuration.* Every
+piece of configuration — a node's, an Xmip Application's routes and
+everything a designer draws (ADR-0064) — is a TOML file in the repository,
+read by `configure`. No database holds configuration, and nothing is
+configured by writing a row. The stores ADR-0015 names hold what happens:
+RocksDB the runtime's state, SQLite its history and the records an operator
+queries — never what was configured.

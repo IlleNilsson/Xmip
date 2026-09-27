@@ -185,7 +185,10 @@ takes them (judgment, with the survey behind it):
 8. One orchestration technology with correlation, timeouts and compensation.
 9. Polling schedules for a Receive Location (SFTP, FTP, SQL, calendar).
 10. High availability and placement.
-11. An OpenTelemetry exporter.
+11. An OpenTelemetry exporter. Built 2026-09-26 — OTLP metrics
+    (`xmip-core-observe-otlp`) and a Prometheus scrape endpoint
+    (`xmip-core-observe-prometheus`) — and waiting on item 1 for a running
+    node to hand them its figures.
 12. A signed release with an SBOM and a vulnerability policy: the Cyber
     Resilience Act's reporting duties for manufacturers began 2026-09-11.
 13. BizTalk artifact import — bindings, schemas including flat-file

@@ -137,6 +137,23 @@ thing that watches must not be able to stop the thing it watches.
 > Find the Done so it can be solved. Find the Stressed so it can be corrected
 > before it becomes Done.
 
+**What an operator's own monitoring sees.** An installation already has a
+monitoring system, and Xmip reaches it rather than asking to replace it.
+`xmip-core-observe` names the figures once — a scope's mood by its rank
+with its word beside it, its severity, and each counted kind over its
+window — and each exporter is a technology beneath it that writes those
+figures in its own format: `otlp`, OpenTelemetry metrics pushed to a
+collector over OTLP/HTTP, and `prometheus`, a scrape endpoint in the text
+exposition format. Neither keeps a list of its own, so the two cannot tell
+an operator different things. Both take each snapshot the node publishes
+as the shared handle it publishes, which costs the node a lock and nothing
+else; the OTLP exporter sends on every change from a thread of its own, and
+a scrape renders the last snapshot at the moment it arrives. They are as
+near real time as publication is: a figure reaches them when the node
+publishes it. The operating system's log is not an exporter — it is
+audit's (section 9) — and OTLP carries metrics, not traces, until
+observation holds the correlation a trace is made of (section 4).
+
 `xmip-core-report` is the historical counterpart: observation answers *what is
 happening*, reporting answers *what happened over a period*.
 

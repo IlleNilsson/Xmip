@@ -77,6 +77,22 @@ is a decision for then; nothing here builds toward it, and nothing should.
 - Internal formatting stays invariant; a reviewer treats a non-invariant format
   call outside the data boundary as a defect.
 
+## Amendment, 2026-09-26: a stream is bytes; text is Unicode, UTF-8 first
+
+The owner, 2026-09-26: *UTF in its versions is the base, UTF-8 as base*, and
+then: *streams are streams, do not enforce UTF unless asked for.*
+
+- **A payload is bytes.** A stream or Message body is carried as it arrived.
+  Nothing on the message path decodes, validates or transcodes it as text
+  unless a Contract, a transform or a technology's settings ask for text.
+- **Text Xmip reads or writes is Unicode**, in any of its encoding forms —
+  UTF-8, UTF-16 and UTF-32, either byte order. UTF-8 is the default wherever
+  no encoding is declared, and the only form of Xmip's own text:
+  configuration, logs, audit, Events, the operator surfaces.
+- **Other encodings** (Latin-1, EBCDIC and the rest in clause 2) are read and
+  written only where a partner's Contract or a technology's settings declare
+  them.
+
 ## Provenance
 
 The position is the owner's, 2026-09-06: English internally, globalization only

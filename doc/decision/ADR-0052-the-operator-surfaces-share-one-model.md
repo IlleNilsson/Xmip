@@ -1096,14 +1096,14 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
 | Concept | The one implementation | Export | Callers | Copies removed |
 |---|---|---|---|---|
 | The rollup: a parent is Fine or Holding | `observe::Health::rolled` | `xmip_health_rolled_v1` | `ScopeTree.Rolled`, and through it `Rollup`, `Branches`, `ScopeIndex`, `English.Rollup`, `MoodClass` and every face; `Snapshot::worst` in Rust | `ScopeTree.Rolled`'s own comparison; `Snapshot::worst`'s inline one |
-| Counted words and the kind a stage counts | `observe::Counted::word`, `named`, `ALL`, `at` (new `observe/src/counted.rs`, `Counted` moved there) | `xmip_counted_word_v1`, `xmip_stage_counted_v1` | `English.Kind` (the command line's figure names), `ScopeTree.CountedAt` (the board's tiles, the prompt); the Playground and the publication reader in Rust | the Playground's `counted_name`, `counted_named` and `COUNTED`; `SnapshotOperator.ParseCounted`; `ScopeTree.CountedAt`'s table; `MeasureCommand`'s six literal keys |
+| Counted words and the kind a stage counts | `observe::Counted::word`, `named`, `ALL`, `at` (new `observe/.src/counted.rs`, `Counted` moved there) | `xmip_counted_word_v1`, `xmip_stage_counted_v1` | `English.Kind` (the command line's figure names), `ScopeTree.CountedAt` (the board's tiles, the prompt); the Playground and the publication reader in Rust | the Playground's `counted_name`, `counted_named` and `COUNTED`; `SnapshotOperator.ParseCounted`; `ScopeTree.CountedAt`'s table; `MeasureCommand`'s six literal keys |
 | Whether a stage pauses, what a thing at it is called | `node::Stage::pausable`, `Stage::location` | `xmip_stage_pausable_v1`, `xmip_stage_location_v1` | `ScopeTree.Pausable` (the Cluster page's pause button), `ScopeTree.Location` (the Configuration page's kind) | `Cluster.razor`'s `IsPausable`; `Configuration.razor`'s three stage cases |
 | A node's capability evidence and a run's entry for it | `node::Capability` (`evidence`, `from_evidence`, `entry`, `from_entry`; new `node/src/capability.rs`, moved from the Playground) and where the record sits, `observe::capability` (`scope`, `declared`) | `xmip_capability_published_v1`, `xmip_capability_entry_v1` | `NodeCapability.Declared` (now given the record's scope, and null for any other record), `NodeCapability.Started`, and through them `ScopeIndex`, `RunHeader` and the Configuration page's kind | the Playground's `Capability` and its hand-built `name=a+b` in the roster and the run; `NodeCapability`'s `declares `/`; online;` parse and its `=` split; `ScopeIndex.Declaration`'s and `Configuration.razor`'s test of a leaf called `capability` |
 | The topology model and its words (node kind, origin, pattern) | `observe::topology` (`Topology`, `TopologyNode`, `TopologyLink`, `NodeKind`, `Origin`, `Pattern`), moved from the Playground | section 8, as values | the Playground draws with it; every surface reads it through the reader below | the Playground's string-typed model; `SnapshotOperator.ParseNodeKind`, `ParseOrigin`, `ParsePattern` |
 | The run header | `observe::Run`, moved from the Playground (which keeps only `run::started`, filling it) | section 8 | `RunHeader.From` | `RunHeader.Read`'s TOML walk |
 | A publication's shape: its keys, its words, what an unknown word reads as | `observe::Publication` (`of`, `whole`, `to_toml`, `read`, `snapshot`) | section 8: `xmip_publication_read_v1` and its seven companions (ADR-0027's amendment of the same date) | `SnapshotOperator` through `Xmip.Abi`'s `PublicationReader`, and the Playground's roll, cluster and nodes in Rust | the Playground's `SnapshotReport` and its readers; `SnapshotOperator`'s TOML walk (`Rows`, `Text`, `Number`, `Real`, `ParseState`, `ParseObserved`, the topology parse) |
-| The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Playground's `history_toml` | the Playground's `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
-| The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Playground's `activity_toml` | the Playground's `ActivityReport`/`ItemReport` and its own `kind_name` word list |
+| The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/.src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Playground's `history_toml` | the Playground's `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
+| The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/.src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Playground's `activity_toml` | the Playground's `ActivityReport`/`ItemReport` and its own `kind_name` word list |
 | The language server's validate entrypoint and its shape | `abi::operate::XMIP_VALIDATE_ENTRYPOINT`, `ValidateFn` (and `StartFn` beside it) | — (a Rust-to-Rust copy) | `xmip-lsp`'s `runtime.rs`; the runtime's `ffi/start.rs` proves both exports have the declared shape | `runtime.rs`'s own `ENTRYPOINT` bytes and `ValidateFn` |
 
 - **A publication is read in one place.** `SnapshotOperator` hands the file's
@@ -1221,7 +1221,8 @@ changed, and each was a fault of its own layer.
   therefore said *Nodes: none*, and `Stop-XmipTest` asked none of them to
   leave and ended their cluster under seventeen. A node that has not published
   once is now starting, not hung, for two minutes (the Playground's
-  `cluster/member.rs`); a node is its roll's by the tree or by the location it
+  `cluster/member.rs`; superseded by the amendment of 2026-09-26: ten
+  seconds, and liveness by beats rather than rounds); a node is its roll's by the tree or by the location it
   declared in the roll's cluster (ADR-0053); and after the cluster
   `Stop-XmipTest` ends every process declared in it.
 
@@ -1302,6 +1303,70 @@ returns), `Xmip.Gui.Test` (`TwoClustersTest`: a Monitor row names `gamma`,
 the rollup no node and no row the cluster) and the PowerShell prompt's
 tests.
 
+## Amendment, 2026-09-26: a node is alive by its beats, and starting for ten seconds
+
+The owner, 2026-09-26: a Playground node that has not shown it is alive
+counts as starting for **ten seconds**, after which its silence is a hang and
+the cluster restarts it. The two minutes of the amendment of 2026-09-25 were
+an agent's number, and they treated the symptom. The cluster judged a node
+silent by the rounds it published, and a brutal roll's first round takes far
+longer than ten seconds with seventeen nodes on sixteen cores, so any
+allowance measured in rounds either restarts a node that is working or waits
+minutes for one that hangs. The same day the owner set the scale: *If
+something takes more than a millisecond, apart from load, something is
+wrong.*
+
+Liveness is now separated from round completion. A node beats (the
+Playground's `heartbeat.rs`). Its first beat is the first thing it does —
+the command line read, then the beat, before it audits, declares itself or
+loads a test — and lands within milliseconds of the process being asked to
+start (tens of milliseconds measured on the owner's machine, the operating
+system's own start-up included). Then it beats every tenth of a second from
+a thread of its own. The beat travels on the channel the node already had:
+a file in the directory its publication is in, `<name>.beat` beside
+`<name>.toml`, holding when it beat and how many rounds it had finished. It
+is kept tiny and is a plain overwrite, neither flushed nor renamed, because a
+beat ten times a second must cost no more than a small write; rewriting the
+whole publication that often would not. It is the Playground's and not
+observe's, because only the cluster reads it; no surface does. The cluster
+(`cluster/liveness.rs`) tells each node the interval it judges by, and ten
+seconds stays the outer bound: a node is hung when it has not beaten within
+ten seconds of its start, or has not beaten for ten seconds — a hundred
+beats — after its last one. How long a round takes decides nothing, and neither does
+how long the cluster takes: it reads a node's beat again right before it
+judges that node, because its own pass over every publication outlasted ten
+seconds in the first live brutal roll and restarted the nodes it had read
+first.
+
+That pass was itself the defect the owner's millisecond names, and it was
+measured. On nineteen brutal nodes' publications, 2.1 MB between them, in the
+debug build `Start-XmipTest` runs: reading them took 5.5 ms, parsing them
+6.75 s, merging and the rollup 46 ms, serializing the cluster's own file
+0.64 s, and the roll's parse of that file 5.4 s. The cluster read every node's
+file every 25 ms, parsed each that had changed, rebuilt its view and
+published it every tick, whether or not anything in it had changed. Now a
+pass reads each node's beat alone, and reads and parses a node's publication
+only when the beat's round count moves (a node beats at once when it
+finishes a round, so none is missed); the view is rebuilt, and the cluster's
+file written, only when a node's round was read or what the cluster says of a
+node's process changed; and the Playground builds its dependencies
+optimized in the debug profile, since toml and serde unoptimized were twenty
+times slower. Measured again: a pass over an idle node costs about a third of
+a millisecond (a test holds it under one, and that nothing is parsed
+again), and all nineteen publications parse in 0.32 s, serialize in 0.16 s
+and re-read in 0.35 s — work done once per change, not per tick. A node
+that beats and has not finished a round is *starting: beating, its first
+round under way*; one that has not beaten is *starting, no beat yet*; a
+restart says the node stopped beating.
+
+Proved by the Playground's `cluster/liveness.rs` (ten seconds from the start,
+ten seconds after the last beat, and never a round), `heartbeat.rs` (the
+first beat is on disk when the heartbeat starts, within milliseconds, and
+beats go on between rounds), and `cluster.rs`: a spawned node's first beat
+lands within a second of the spawn — generous for a loaded runner, and not
+seconds — a node that beats but has not finished a round is never restarted,
+a node that never beats is restarted once its allowance is over, and a node
+that stops beating is restarted, a yellow.
 
 ## Alternatives considered
 
@@ -1340,3 +1405,27 @@ activity files one home are the lead's instruction of the same day.
 The instruction of 2026-09-24 — the command line and PowerShell share, and
 logic goes down the layers — is the owner's; what moved where is the
 assistant's drafting of it.
+
+The ten seconds of 2026-09-26 as the outer bound after which silence is a
+hang, the first beat within milliseconds and a beat interval well under a
+second are the owner's, the same day; separating a node's beats from its
+rounds is the lead's design. The tenth of a second, the beat file beside the
+publication and its form are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-09-26: every view drills to the problem
+
+The owner: *in the operation web one should be able to drill down to a
+problem, regardless of whether I go through the Configuration, Monitor or
+Topology view. It is all about solving the problem*, and *I do not care about
+looks, I care about data.* Every view is a way into one drill: from any item
+that is not healthy, step by step to the failing scope and its evidence — the
+reason, the Message and its Journey, the failure-time state. The path is one
+model, shared by the three views and by the CLI and PowerShell through their
+scope argument, so a problem found in one view is reached the same way from
+the others. A number a surface shows is the source's number, or it is a
+defect.
+
+Finding the problem, the owner went on, *is being able to drill down to
+locations and actual streams to find out what is faulty*: the drill ends at
+the Receive or Send Location and the Streams that passed or failed there, each
+with its arrival, outcome, reason and evidence, never at a summary.

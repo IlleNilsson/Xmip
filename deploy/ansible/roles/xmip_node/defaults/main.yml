@@ -89,7 +89,6 @@ xmip_modules:
   - { name: xmip-core-path-dot, start: false }
   - { name: xmip-core-path-jsonpath, start: false }
   - { name: xmip-core-path-fhirpath, start: false }
-  - { name: xmip-core-path-predicate, start: false }
   - { name: xmip-core-path-regex, start: false }
   # Archive, parquet the default (owner, 2026-09-07)
   - { name: xmip-core-archive-parquet, start: true }
@@ -102,10 +101,11 @@ xmip_modules:
   - { name: xmip-core-archive-s3, start: false }
   - { name: xmip-core-archive-azure-blob, start: false }
   - { name: xmip-core-archive-gcs, start: false }
+  - { name: xmip-core-observe-otlp, start: false }
+  - { name: xmip-core-observe-prometheus, start: false }
   - { name: xmip-core-route-content, start: false }
   - { name: xmip-core-route-context, start: false }
   - { name: xmip-core-route-contract, start: false }
-  - { name: xmip-core-route-expression, start: false }
   - { name: xmip-core-route-header, start: false }
   - { name: xmip-core-route-metadata, start: false }
   - { name: xmip-core-route-party, start: false }

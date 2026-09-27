@@ -81,6 +81,7 @@ BeforeAll {
     $script:Extension = @(
         '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.toml', '.md', '.json'
     )
+    $script:Candidate = [regex]::new('\b[RPS][0-9]+\b', 'Compiled')
     $script:Skip = @(
         'target', 'bin', 'obj', 'node_modules', '.ai-interaction', '.ai-work',
         '.local-work', '.git'
@@ -229,7 +230,16 @@ Describe 'A node is never named like a role' {
                         continue
                     }
 
-                    Find-NodeName -Path $path -Line @(Get-Content -LiteralPath $file)
+                    # One pass over the file's text decides whether its lines
+                    # need reading at all: most hold no stage letter and digits,
+                    # and a line-by-line match over the estate took over an hour.
+                    [string] $text = [IO.File]::ReadAllText($file)
+
+                    if (-not $script:Candidate.IsMatch($text)) {
+                        continue
+                    }
+
+                    Find-NodeName -Path $path -Line ($text -split '\r?\n')
                 }
             }
         )
