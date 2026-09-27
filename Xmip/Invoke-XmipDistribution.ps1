@@ -14,111 +14,91 @@
     Style: doc/governance/powershell-style.md
 #>
 
-function Get-RepositoryNames {
-    param([Parameter(Mandatory)] $Manifest, [switch] $ModulesOnly)
+function Get-XmipRepositoryName {
+    <#
+        The names of the declared repositories, sorted. The manifest is one
+        flat list: Expand-XmipEstate has already walked the tree. Role is what
+        separates a module from one of its technology implementations, and
+        -ModulesOnly stops at the modules, because the implementations are
+        mostly declared and not yet created and cloning them is a long walk
+        for a lot of ABSENT.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Manifest,
 
-    # The manifest is one flat list now: Expand-XmipEstate has already
-    # walked the tree. Role is what separates a module from one of its
-    # technology implementations, and -ModulesOnly stops at the modules,
-    # because the implementations are mostly declared and not yet created
-    # and cloning them is a long walk for a lot of ABSENT.
-    $repositories = @(Get-PropertyValue $Manifest 'repositories' @())
+        [Parameter(Mandatory = $false)]
+        [switch] $ModulesOnly
+    )
+
+    $repositories = @(Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @())
+
     if ($ModulesOnly) {
         $repositories = @($repositories | Where-Object {
-                [string](Get-PropertyValue $_ 'repositoryRole') -ne 'technology-implementation'
+                [string] $role = [string](
+                    Get-XmipPropertyValue -Object $_ -Name 'repositoryRole'
+                )
+                $role -ne 'technology-implementation'
             })
     }
 
     @($repositories |
-            ForEach-Object { [string](Get-PropertyValue $_ 'name') } |
+            ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') } |
             Where-Object { $_ } |
             Sort-Object -Unique)
 }
 
-function Get-RepositoryStatus {
-    param([Parameter(Mandatory)] [string] $At)
-
-    $porcelain = @(Invoke-XmipGit -At $At -Arguments @('status', '--porcelain=v1'))
-
-    # symbolic-ref answers a detached head with exit 1, which is the answer,
-    # not a failure; asked as a failure it threw before the fallback below
-    # could run (found moving the git calls onto one helper, 2026-09-23).
-    [string[]] $headRef = @('symbolic-ref', '--quiet', '--short', 'HEAD')
-    $detached = -not (Invoke-XmipGit -At $At -Arguments $headRef -Test)
-    [string[]] $name = if ($detached) { @('rev-parse', '--short', 'HEAD') } else { $headRef }
-    [string] $branch = @(Invoke-XmipGit -At $At -Arguments $name)[0]
-
-    $ahead = 0
-    $behind = 0
-
-    [string[]] $upstreamRef = @(
-        'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'
-    )
-
-    $hasUpstream = Invoke-XmipGit -At $At -Arguments $upstreamRef -Test
-
-    if ($hasUpstream) {
-        [string[]] $countArguments = @(
-            'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'
-        )
-
-        [string] $counts = @(Invoke-XmipGit -At $At -Arguments $countArguments)[0]
-        if ($counts -match '^(\d+)\s+(\d+)$') {
-            $ahead = [int]$Matches[1]
-            $behind = [int]$Matches[2]
-        }
-    }
-
-    [pscustomobject]@{
-        branch = $branch
-        detached = $detached
-        clean = $porcelain.Count -eq 0
-        changed = @($porcelain | Where-Object { $_ -notmatch '^\?\?' }).Count
-        untracked = @($porcelain | Where-Object { $_ -match '^\?\?' }).Count
-        hasUpstream = $hasUpstream
-        ahead = $ahead
-        behind = $behind
-    }
-}
-
-function Invoke-Distribute {
+function Invoke-XmipDistribution {
+    <#
+        Executes doc/planning/allocation.toml: every [[move]], and every
+        [[decision]] that carries a destination, from the source working tree
+        into the repository that owns the file. Sync-XmipRepository
+        -Distribute.
+    #>
+    [CmdletBinding()]
     param(
-        [Parameter(Mandatory)] [string] $Allocation,
-        [Parameter(Mandatory)] [string] $Source,
-        [Parameter(Mandatory)] [string] $Destination
+        [Parameter(Mandatory = $true)]
+        [string] $Allocation,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Source,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Destination
     )
 
     if (-not (Test-Path -LiteralPath $Allocation -PathType Leaf)) {
         throw "Allocation map not found: $Allocation"
     }
-    Import-Module PSToml -ErrorAction Stop
-    $map = Get-Content -LiteralPath $Allocation -Raw -Encoding utf8 | ConvertFrom-Toml
+    $map = Read-XmipToml -Path $Allocation
 
     # A move entry and a decision entry that carries a destination are the
     # same instruction wearing two names. Read both or the eleven answered
     # questions do nothing.
-    # Get-TomlValue, not Get-PropertyValue. ConvertFrom-Toml returns an
+    # Get-TomlValue, not Get-XmipPropertyValue. Read-XmipToml returns an
     # IDictionary, whose keys are not PSObject properties, so
-    # Get-PropertyValue returned @() for both sections. Distribute planned
+    # Get-XmipPropertyValue returned @() for both sections. Distribute planned
     # nothing and reported "completed" — the same defect that made
     # -IncludeOptional permanently false.
     $planned = [Collections.Generic.List[object]]::new()
-    foreach ($entry in @(Get-TomlValue $map 'move' @())) {
+    foreach ($entry in @(Get-TomlValue -Node $map -Name 'move' -Default @())) {
         $planned.Add([pscustomobject]@{
-                From = [string](Get-TomlValue $entry 'from')
-                To = [string](Get-TomlValue $entry 'to')
-                Path = [string](Get-TomlValue $entry 'path')
+                From = [string](Get-TomlValue -Node $entry -Name 'from')
+                To = [string](Get-TomlValue -Node $entry -Name 'to')
+                Path = [string](Get-TomlValue -Node $entry -Name 'path')
                 Source = 'move'
             })
     }
-    foreach ($entry in @(Get-TomlValue $map 'decision' @())) {
-        $to = [string](Get-TomlValue $entry 'to')
+    foreach ($entry in @(Get-TomlValue -Node $map -Name 'decision' -Default @())) {
+        $to = [string](Get-TomlValue -Node $entry -Name 'to')
         if (-not $to) { continue }
         $planned.Add([pscustomobject]@{
-                From = [string](Get-TomlValue $entry 'path')
+                From = [string](Get-TomlValue -Node $entry -Name 'path')
                 To = $to
-                Path = [string](Get-TomlValue $entry 'newPath')
-                Source = "decision $([string](Get-TomlValue $entry 'question'))"
+                Path = [string](Get-TomlValue -Node $entry -Name 'newPath')
+                Source = "decision $([string](Get-TomlValue -Node $entry -Name 'question'))"
             })
     }
 

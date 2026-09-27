@@ -6,35 +6,38 @@
 # declarations are, and that a killed process's declaration does not outlive it.
 
 BeforeAll {
-    Import-Module (Join-Path $PSScriptRoot '..' 'Xmip' 'Xmip.psd1') -Force
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 }
 
 Describe 'Where a System Process declares itself' {
-    It 'is the directory the node names' {
+    It 'is the directory the node names, and this module keeps no rule for it' {
+        # The rule is xmip-core-node's, tested there; the listing reads where
+        # the node says (xmip_operate.h section 13). Until 2026-09-27 this
+        # module kept the rule again, and read the files with a reader of its own.
         InModuleScope Xmip {
-            [string] $before = $env:XMIP_PROCESS_DIRECTORY
+            Get-Command -Name 'Get-XmipProcessDirectory' -ErrorAction SilentlyContinue |
+                Should -BeNullOrEmpty
+
+            Import-XmipOperatorModule
+            [string] $named = [Environment]::GetEnvironmentVariable('XMIP_PROCESS_DIRECTORY')
+            [string] $expected = if ([string]::IsNullOrEmpty($named)) {
+                Join-Path ([System.IO.Path]::GetTempPath()) 'xmip' 'process'
+            }
+            else {
+                $named
+            }
+
+            # The same directory, however each side spells the temporary one.
+            [string] $read = [Xmip.Surface.ProcessDeclaration]::Standing($null).Directory
+            [string] $marker = "marker-$([System.Guid]::NewGuid().ToString('n'))"
+            New-Item -ItemType Directory -Path $expected -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $expected $marker) | Out-Null
 
             try {
-                $env:XMIP_PROCESS_DIRECTORY = 'D:\somewhere\process'
-                Get-XmipProcessDirectory | Should -Be 'D:\somewhere\process'
+                Test-Path -LiteralPath (Join-Path $read $marker) | Should -BeTrue -Because $read
             }
             finally {
-                $env:XMIP_PROCESS_DIRECTORY = $before
-            }
-        }
-    }
-
-    It 'is xmip/process under the temporary directory when the node names none' {
-        InModuleScope Xmip {
-            [string] $before = $env:XMIP_PROCESS_DIRECTORY
-
-            try {
-                $env:XMIP_PROCESS_DIRECTORY = ''
-                [string] $expected = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip' 'process'
-                Get-XmipProcessDirectory | Should -Be $expected
-            }
-            finally {
-                $env:XMIP_PROCESS_DIRECTORY = $before
+                Remove-Item -LiteralPath (Join-Path $expected $marker) -Force
             }
         }
     }

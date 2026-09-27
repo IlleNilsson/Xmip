@@ -92,7 +92,7 @@ function Sync-XmipRepository {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    # Get-PropertyValue is the module's, from Xmip.psm1 — this script is dot-sourced
+    # Get-XmipPropertyValue is the module's, from Xmip.psm1 — this script is dot-sourced
     # into that scope, so the local copy that used to shadow it was pure redundancy
     # (removed 2026-09-06).
 
@@ -111,16 +111,16 @@ function Sync-XmipRepository {
             Destination = [IO.Path]::GetFullPath($DestinationPath)
         }
 
-        $distributed = Invoke-Distribute @distribution
+        $distributed = Invoke-XmipDistribution @distribution
         if ($PassThru) { $distributed }
         return
     }
 
-    $manifest = Get-XmipManifest $ManifestPath
-    $owner = [string](Get-PropertyValue $manifest 'owner')
+    $manifest = Get-XmipManifest -Path $ManifestPath
+    $owner = [string](Get-XmipPropertyValue -Object $manifest -Name 'owner')
     if (-not $owner) { throw 'Manifest owner is missing.' }
 
-    $repositoryNames = @(Get-RepositoryNames -Manifest $manifest -ModulesOnly:$ModulesOnly)
+    $repositoryNames = @(Get-XmipRepositoryName -Manifest $manifest -ModulesOnly:$ModulesOnly)
     if ($repositoryNames.Count -eq 0) { throw 'Manifest contains no repositories.' }
 
     $operation = switch ($PSCmdlet.ParameterSetName) {
@@ -205,8 +205,8 @@ function Sync-XmipRepository {
             throw "Destination path exists but is not a Git repository: $repositoryPath"
         }
         elseif ($operation -eq 'Status') {
-            $repositoryStatus = Get-RepositoryStatus -At $repositoryPath
-            $branchName = $repositoryStatus.branch
+            $repositoryStatus = Get-XmipRepositoryStatus -At $repositoryPath
+            $branchName = $repositoryStatus.Branch
             # No type constraint on $statusValue: it is reset to $null at the
             # top of each iteration, and constraining it to [string] would turn
             # that reset into '' for every later repository.
@@ -214,21 +214,21 @@ function Sync-XmipRepository {
             [string] $position = 'no upstream'
             [string] $head = $branchName
 
-            if ($repositoryStatus.clean) {
+            if ($repositoryStatus.Clean) {
                 $statusValue = 'clean'
             }
 
-            if ($repositoryStatus.hasUpstream) {
+            if ($repositoryStatus.HasUpstream) {
                 $position = 'ahead {0}, behind {1}' -f
-                    $repositoryStatus.ahead, $repositoryStatus.behind
+                    $repositoryStatus.AheadBy, $repositoryStatus.BehindBy
             }
 
-            if ($repositoryStatus.detached) {
+            if ($repositoryStatus.Detached) {
                 $head = "detached $branchName"
             }
 
             [string] $counts = 'changed {0}; untracked {1}' -f
-                $repositoryStatus.changed, $repositoryStatus.untracked
+                $repositoryStatus.Changed, $repositoryStatus.Untracked
 
             Write-Host "STATUS: $repositoryName [$head] $statusValue; $position; $counts"
         }
@@ -297,13 +297,13 @@ function Sync-XmipRepository {
             branch = $branchName
             branches = $branches
             status = $statusValue
-            clean = if ($repositoryStatus) { $repositoryStatus.clean } else { $null }
-            detached = if ($repositoryStatus) { $repositoryStatus.detached } else { $null }
-            changed = if ($repositoryStatus) { $repositoryStatus.changed } else { $null }
-            untracked = if ($repositoryStatus) { $repositoryStatus.untracked } else { $null }
-            hasUpstream = if ($repositoryStatus) { $repositoryStatus.hasUpstream } else { $null }
-            ahead = if ($repositoryStatus) { $repositoryStatus.ahead } else { $null }
-            behind = if ($repositoryStatus) { $repositoryStatus.behind } else { $null }
+            clean = if ($repositoryStatus) { $repositoryStatus.Clean } else { $null }
+            detached = if ($repositoryStatus) { $repositoryStatus.Detached } else { $null }
+            changed = if ($repositoryStatus) { $repositoryStatus.Changed } else { $null }
+            untracked = if ($repositoryStatus) { $repositoryStatus.Untracked } else { $null }
+            hasUpstream = if ($repositoryStatus) { $repositoryStatus.HasUpstream } else { $null }
+            ahead = if ($repositoryStatus) { $repositoryStatus.AheadBy } else { $null }
+            behind = if ($repositoryStatus) { $repositoryStatus.BehindBy } else { $null }
         })
     }
 

@@ -190,6 +190,7 @@ function New-XmipRepositoryEntry {
         dependencies        = @($Dependencies)
         mount               = $Mount
         optional            = $Optional
+        primaryLanguage     = $Language
         primaryCrate        = New-XmipCrateDescriptor @crateArguments
         github              = New-XmipGitHubDescriptor -Default $Default -Topics $Topics
         submodule           = [pscustomobject]@{ enabled = $false }
@@ -210,13 +211,19 @@ function Resolve-XmipNodeFacts {
         $Node,
 
         [Parameter(Mandatory = $true)]
-        [string[]] $Path,
-
-        [Parameter(Mandatory = $true)]
-        [string] $FallbackMaturity
+        [string[]] $Path
     )
 
     [string] $name = 'xmip-' + ($Path -join '-')
+
+    # Every repository states its own maturity; none is defaulted, because a
+    # default made "nobody said" read as "deliberately reserved" (ADR-0060,
+    # amendment 2026-09-19).
+    [string] $maturity = [string](Get-TomlValue -Node $Node -Name 'maturity' -Default '')
+
+    if ([string]::IsNullOrWhiteSpace($maturity)) {
+        throw "$name states no maturity. Every repository states its own (ADR-0060)."
+    }
     [bool] $isImplementation = ($Path.Count -ge 3)
     [string] $parent = ''
 
@@ -262,9 +269,7 @@ function Resolve-XmipNodeFacts {
         )
         Domain       = $domain
         Role         = $role
-        Maturity     = [string](
-            Get-TomlValue -Node $Node -Name 'maturity' -Default $FallbackMaturity
-        )
+        Maturity     = $maturity
         Dependencies = $dependency
         Language     = [string](Get-TomlValue -Node $Node -Name 'primaryLanguage' -Default '')
         Topics       = $topics
@@ -332,15 +337,12 @@ function Expand-XmipEstate {
         $Crate,
 
         [Parameter(Mandatory = $true)]
-        [string] $FallbackMaturity,
-
-        [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [Collections.Generic.List[object]] $Into
     )
 
     if ($Path.Count -ge 1) {
-        $facts = Resolve-XmipNodeFacts -Node $Node -Path $Path -FallbackMaturity $FallbackMaturity
+        $facts = Resolve-XmipNodeFacts -Node $Node -Path $Path
 
         [hashtable] $entry = @{
             Name         = $facts.Name
@@ -370,12 +372,11 @@ function Expand-XmipEstate {
         }
 
         [hashtable] $recursion = @{
-            Node             = $child
-            Path             = ($Path + $key)
-            Default          = $Default
-            Crate            = $Crate
-            FallbackMaturity = $FallbackMaturity
-            Into             = $Into
+            Node    = $child
+            Path    = ($Path + $key)
+            Default = $Default
+            Crate   = $Crate
+            Into    = $Into
         }
 
         Expand-XmipEstate @recursion

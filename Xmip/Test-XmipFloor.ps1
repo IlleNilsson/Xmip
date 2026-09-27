@@ -149,17 +149,46 @@ function Test-XmipFloor {
     return $false
 }
 
-function Resolve-XmipRole($RoleTable, [string] $Name) {
-    # Roles are cumulative and declared in the manifest, not here.
+function Resolve-XmipRole {
+    <#
+        The role asked for and every role it includes, transitively. Roles
+        are cumulative and declared in the manifest, not here.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Collections.Generic.List[string]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        $RoleTable,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
     $seen = [Collections.Generic.List[string]]::new()
-    function Walk([string] $current) {
-        if ($seen.Contains($current)) { return }
+    $pending = [Collections.Generic.Stack[string]]::new()
+    $pending.Push($Name)
+
+    while ($pending.Count -gt 0) {
+        [string] $current = $pending.Pop()
+
+        if ($seen.Contains($current)) {
+            continue
+        }
+
         $seen.Add($current)
-        foreach ($parent in @(Get-TomlValue (Get-TomlValue $RoleTable $current) 'include' @())) {
-            if ($parent) { Walk ([string]$parent) }
+        $role = Get-TomlValue -Node $RoleTable -Name $current
+
+        # Pushed last first, so they are walked in the order they are declared.
+        [object[]] $includes = @(Get-TomlValue -Node $role -Name 'include' -Default @())
+
+        for ([int] $index = $includes.Count - 1; $index -ge 0; $index--) {
+            if ($includes[$index]) {
+                $pending.Push([string] $includes[$index])
+            }
         }
     }
-    Walk $Name
+
     return $seen
 }
 

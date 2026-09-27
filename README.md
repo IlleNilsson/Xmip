@@ -779,7 +779,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the deploy lists. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
@@ -798,6 +798,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 Sync-XmipEstate                                       # report drift
 Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
 Sync-XmipEstate -Compose                              # wire the submodule tree locally
+Sync-XmipEstate -Deploy                               # the deploy lists under deploy/
 Sync-XmipRepository -Status                           # dirty, ahead, behind
 Get-XmipStatus
 ```

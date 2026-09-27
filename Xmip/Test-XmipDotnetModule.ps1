@@ -112,10 +112,7 @@ function Test-XmipDotnetModule {
         [string] $Name
     )
 
-    [System.IO.FileInfo[]] $project = @(
-        Get-ChildItem -Path $Path -Filter '*.csproj' -Recurse -File |
-            Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' }
-    )
+    [System.IO.FileInfo[]] $project = @(Find-XmipFile -Path $Path -Filter '*.csproj')
 
     # Built into a temporary directory, never into the project's own bin/.
     #
@@ -144,11 +141,9 @@ function Test-XmipDotnetModule {
         }
     }
 
-    # `.Test.csproj`, singular, like every test file in the estate. The plural
-    # is tolerated until `Xmip.Abi.Tests` can be renamed: an editor's build
-    # host held its directory on 2026-09-11.
+    # `.Test.csproj`, singular, like every test file in the estate.
     [System.IO.FileInfo[]] $suite = @(
-        $project | Where-Object { $_.Name -match '\.Tests?\.csproj$' }
+        $project | Where-Object { $_.Name -match '\.Test\.csproj$' }
     )
 
     foreach ($csproj in $suite) {

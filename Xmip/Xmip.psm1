@@ -3,12 +3,12 @@
 
 <#
 .SYNOPSIS
-    Reads the Xmip manifest and flattens the estate.
+    The Xmip estate's tooling module.
 
 .DESCRIPTION
-    Shared by the three command files. All of them need to know what the estate
-    is, and copies of that knowledge drift — which is exactly what
-    architecture.toml and architecture.json did before the JSON one was deleted.
+    The module's root: the helpers every command file dot-sourced below
+    shares. All of the commands need to know what the estate is, and copies
+    of that knowledge drift.
 
     The tree is the data. xmip.core.transport.ftp is xmip-core-transport-ftp:
     dots become hyphens and nothing else happens.
@@ -17,11 +17,6 @@
 #>
 
 Set-StrictMode -Version Latest
-
-# One version for the whole module. The reader enforces minimumScriptVersion, so
-# the reader owns the number; a copy inside Sync-XmipEstate's body was invisible
-# from here and the check silently had nothing to compare against.
-[version] $script:XmipVersion = [version]::Parse('1.21.0')
 
 # The manifest schema this module understands. Major is the compatibility
 # boundary: 2.x is the tree-is-the-name schema, and a 3.0 manifest will mean
@@ -53,8 +48,6 @@ Set-StrictMode -Version Latest
     'implemented'
     'verified'
     'supported'
-    'deprecated'
-    'retired'
 )
 
 
@@ -130,7 +123,7 @@ function Find-XmipRepositoryRoot {
 }
 
 
-function Write-Step {
+function Write-XmipStep {
     [CmdletBinding()]
     [OutputType([void])]
     param(
@@ -142,7 +135,7 @@ function Write-Step {
 }
 
 
-function Get-PropertyValue {
+function Get-XmipPropertyValue {
     <#
         Reads a property from a PSObject, returning $Default when the object,
         the property or its value is absent.
@@ -178,7 +171,7 @@ function Get-PropertyValue {
 }
 
 
-function ConvertTo-Array {
+function ConvertTo-XmipArray {
     <#
         Wraps a value as an array, turning $null into an empty array rather than
         an array containing $null.
@@ -199,92 +192,39 @@ function ConvertTo-Array {
 }
 
 
-function Get-TomlKey {
-    <#
-        Lists the keys of a TOML node. ConvertFrom-Toml has returned a dictionary
-        in one version of PSToml and a PSObject in the next, so nothing here asks
-        which it is.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [AllowNull()]
-        $Node
-    )
-
-    if ($null -eq $Node) {
-        return @()
-    }
-
-    if ($Node -is [System.Collections.IDictionary]) {
-        return @($Node.Keys)
-    }
-
-    return @($Node.PSObject.Properties.Name)
-}
-
-
-function Get-TomlValue {
-    <#
-        Reads one key from a TOML node, dictionary-shaped or object-shaped,
-        returning $Default when absent or null.
-    #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [AllowNull()]
-        $Node,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Name,
-
-        [Parameter(Mandatory = $false)]
-        $Default = $null
-    )
-
-    if ($null -eq $Node) {
-        return $Default
-    }
-
-    if ($Node -is [System.Collections.IDictionary]) {
-        if ($Node.Contains($Name) -and $null -ne $Node[$Name]) {
-            return $Node[$Name]
-        }
-
-        return $Default
-    }
-
-    return (Get-PropertyValue -Object $Node -Name $Name -Default $Default)
-}
-
-
-# The commands. Dot-sourced rather than duplicated, so they see the manifest
-# reader above and the module is the single thing anyone imports.
+# The commands. Dot-sourced rather than duplicated, so they see the helpers
+# above and the module is the single thing anyone imports. The TOML reader
+# comes first: every other file reads through it.
 #
 # Install-XmipPrerequisite is here despite the bootstrap look of it: this module loads
 # without PSToml, because Get-XmipManifest imports PSToml when called rather than
 # at import time. So a bare machine can import the module and ask what it is
 # missing. PowerShell itself is the only prerequisite Xmip cannot install, and
 # #requires states that floor.
+. (Join-Path $PSScriptRoot 'Read-XmipToml.ps1')
 . (Join-Path $PSScriptRoot 'Expand-XmipEstate.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipManifest.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipFloor.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipPrerequisite.ps1')
+. (Join-Path $PSScriptRoot 'Install-XmipEventSource.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipPrerequisiteResult.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipComposePlan.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipUnexpectedName.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipCrateFinding.ps1')
-. (Join-Path $PSScriptRoot 'Invoke-GitHubApi.ps1')
-. (Join-Path $PSScriptRoot 'Invoke-CreateRepositories.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipGitHubApi.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipTransactionReport.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipRepository.ps1')
 . (Join-Path $PSScriptRoot 'Invoke-XmipGit.ps1')
 . (Join-Path $PSScriptRoot 'Move-XmipSubmodule.ps1')
-. (Join-Path $PSScriptRoot 'Invoke-Compose.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipCompose.ps1')
+. (Join-Path $PSScriptRoot 'Update-XmipDeployList.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')
-. (Join-Path $PSScriptRoot 'Invoke-Distribute.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipDistribution.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipRepository.ps1')
 . (Join-Path $PSScriptRoot 'Publish-XmipChange.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipStatus.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipSubmodule.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipDeclaredModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipDotnetModule.ps1')
@@ -319,10 +259,12 @@ function Get-TomlValue {
 . (Join-Path $PSScriptRoot 'Get-XmipNodeCapability.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeComplement.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
-. (Join-Path $PSScriptRoot 'Read-XmipTestNodeCommandLine.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipRollRecord.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipTestStatus.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTestSuiteGroup.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipEstateSuite.ps1')
 . (Join-Path $PSScriptRoot 'Complete-XmipEstateRun.ps1')
+. (Join-Path $PSScriptRoot 'Resolve-XmipPlaygroundChoice.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipPlaygroundRoll.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
@@ -340,35 +282,7 @@ function Get-TomlValue {
 . (Join-Path $PSScriptRoot 'Stop-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipProcess.ps1')
 
-[string[]] $script:XmipExport = @(
-    'Install-XmipPrerequisite'
-    'Sync-XmipEstate'
-    'Sync-XmipRepository'
-    'Get-XmipManifest'
-    'Test-XmipManifest'
-    'Expand-XmipEstate'
-    'Get-XmipRepositoryRoot'
-    'Install-XmipModule'
-    'Publish-XmipChange'
-    'Publish-XmipPin'
-    'Get-XmipStatus'
-    'Get-XmipDecisionRecord'
-    'New-XmipDecisionIndex'
-    'Get-XmipEstateRepository'
-    'Get-XmipSourceFile'
-    'New-XmipEstateMap'
-    'Get-XmipHistory'
-    'Start-XmipTest'
-    'Get-XmipTestStatus'
-    'Stop-XmipTest'
-    'Start-XmipTestNode'
-    'Get-XmipTestNode'
-    'Stop-XmipTestNode'
-    'Get-XmipTestResult'
-    'Start-XmipOperationWeb'
-    'Get-XmipOperationWeb'
-    'Stop-XmipOperationWeb'
-    'Get-XmipProcess'
-)
-
-Export-ModuleMember -Function $script:XmipExport -Alias @('xmip-git', 'xgit')
+# Xmip.psd1 is the one home of the version and of what is exported: the
+# manifest filters what this exports down to FunctionsToExport and
+# AliasesToExport, and a function reads the version from its module object.
+Export-ModuleMember -Function '*' -Alias '*'

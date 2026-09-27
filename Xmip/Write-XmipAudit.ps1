@@ -110,21 +110,8 @@ function Write-XmipAudit {
         return
     }
 
-    $said = [System.Collections.Generic.Dictionary[string, string]]::new()
-
-    # A value is said as text: a list joined, a table as its pairs.
-    foreach ($key in $Property.Keys) {
-        $value = $Property[$key]
-        $said[[string] $key] = if ($value -is [System.Collections.IDictionary]) {
-            @($value.Keys | ForEach-Object { "$_=$($value[$_])" }) -join ', '
-        }
-        elseif ($value -is [System.Collections.IEnumerable] -and $value -isnot [string]) {
-            @($value) -join ', '
-        }
-        else {
-            [string] $value
-        }
-    }
+    # A value is said as text by the one flattening the cmdlets use too.
+    $said = [Xmip.Surface.ProgramAudit]::Properties($Property)
 
     $audit = [Xmip.Surface.ProgramAudit]::new('Xmip', $null)
 

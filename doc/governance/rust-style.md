@@ -67,7 +67,7 @@ breaking.
 | --- | --- | --- |
 | Formatting | — | yes, by `Publish-XmipChange` at landing |
 | Clippy, `-D warnings` | — | yes, by `Publish-XmipChange` at landing |
-| File over 400 lines before `#[cfg(test)]` | 1, 2 | yes, with a ratchet |
+| File over 400 lines before `#[cfg(test)]` | 1, 2 | yes |
 | Function length | 3 | **warned by clippy, never gated** |
 | A filename repeating its crate | 5 | yes |
 | `mod.rs` | 5 | yes |
@@ -82,16 +82,13 @@ genuinely doing too much.
 ### Length is a strict recommendation
 
 **400 is not a law.** It is where the estate settled, and a file with a genuine
-reason to be longer may be longer. `arrival.rs` is the standing example: it runs
-ADR-0013's lifecycle in its order, from bytes to a dispatch, and splitting it
-would put the three gates in three files when the order between them is the
-whole subject.
+reason to be longer may be longer.
 
-What breaking it costs is a sentence. Every recorded exception carries a reason
-and the test requires one, for the same argument `architecture.toml` makes about
-`[[retired]]` — an entry with no reason cannot be told from something nobody got
-round to. That cost is what keeps exceptions rare, and rare is the goal rather
-than zero.
+What breaking it costs is a sentence. No file is over the gate, and the test
+holds no list of exceptions; an agreed one is written into the test beside the
+gate with its reason, because an exception with no reason cannot be told from
+something nobody got round to. That cost is what keeps exceptions rare, and
+rare is the goal rather than zero.
 
 **The reason is agreed before the exception is written, not offered after it.**
 A recommendation this strong is broken by asking the estate's owner and being
@@ -104,42 +101,6 @@ decision already taken is not a reason, it is a defense.
 The same holds for line length in `powershell-style.md`. Neither is a rule that
 good code never breaks; both are rules that good code breaks knowingly and says
 so.
-
-### The ratchet, and why it is not a waiver list
-
-**No file exceeds the gate today.** The list is empty, and that is the state to
-keep it in.
-
-Three came off, and none of the removals needed an argument:
-
-```text
-foundation/core/src/identity.rs   705  ->  seven files, largest 240
-capabilities/route/src/lib.rs     680  ->  six files, largest 274
-platform/runtime/src/arrival.rs   440  ->  arrival.rs 347, outcome.rs 113
-```
-
-`route/lib.rs` had the split written into it already, as banner comments naming
-five sections. The comments were doing a file's job.
-
-`arrival.rs` is the one worth reading twice. Its exception was standing on a
-reason written after the fact — that the three gates belong in one file because
-their order is the subject. That is a decent argument, and it was still a
-justification composed to keep something rather than agreed before doing it. The
-file was split instead, and the argument turned out not to be needed: `arrive`
-keeps the whole lifecycle in its order, and what left was `Refused` and
-`Arrived`, which are read by callers that never run a gate.
-
-**A ratchet may only shrink.** The test fails if any of them grows, and fails if
-a file not on the list exceeds the gate. Removing an entry is the only edit that
-does not need a reason.
-
-That is the difference from the waiver list `powershell-style.md` buried. A
-waiver list absorbs new violations and its maintenance becomes the work. A
-ratchet cannot: the only way to change it in the direction the code is drifting
-is to fix the file.
-
-*`arrival.rs` is on that list because of work done on 2026-08-27, in the same
-session that wrote this document. It is recorded rather than excused.*
 
 ## 5. A file is named for what it defines, in the estate's own words
 

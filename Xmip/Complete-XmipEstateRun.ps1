@@ -105,9 +105,7 @@ function Complete-XmipEstateRun {
         failures   = @(Get-XmipEstateFailure -Result $Result)
     }
 
-    Import-Module PSToml -ErrorAction Stop
-    ConvertTo-Toml -InputObject $written -Depth 4 |
-        Set-Content -LiteralPath $Record -Encoding utf8
+    Write-XmipToml -Path $Record -Value $written
 }
 
 

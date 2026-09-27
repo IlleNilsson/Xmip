@@ -45,8 +45,7 @@ function Read-XmipTestSuiteDeclaration {
         [string] $Path
     )
 
-    Import-Module PSToml -ErrorAction Stop
-    $declared = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Toml
+    $declared = Read-XmipToml -Path $Path
 
     [hashtable] $said = @{
         provider = [string](Get-TomlValue -Node $declared -Name 'provider' -Default '')

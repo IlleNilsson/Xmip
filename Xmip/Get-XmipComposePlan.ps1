@@ -99,48 +99,6 @@ function Get-XmipPinnedCommit {
 
 <#
     .SYNOPSIS
-    Where each repository is currently mounted, by repository name.
-
-    .DESCRIPTION
-    Reads .gitmodules. A repository whose architecturalDomain changes gets a new
-    computed mount path, and without this the old mount is invisible: -Compose
-    only ever added, so a moved module stayed where it was until someone ran
-    git mv by hand.
-#>
-function Get-XmipMountedPath {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root
-    )
-
-    [hashtable] $mounted = @{}
-    [string] $file = Join-Path $Root '.gitmodules'
-
-    if (-not (Test-Path -LiteralPath $file)) {
-        return $mounted
-    }
-
-    [string] $path = ''
-
-    foreach ($line in (Get-Content -LiteralPath $file)) {
-        if ($line -match '^\s*path\s*=\s*(.+?)\s*$') {
-            $path = $Matches[1]
-            continue
-        }
-
-        if ($line -match '^\s*url\s*=\s*.+/([^/]+?)(\.git)?\s*$') {
-            $mounted[$Matches[1]] = $path
-        }
-    }
-
-    return $mounted
-}
-
-
-<#
-    .SYNOPSIS
     What can be composed now, what is mounted, and what is waiting.
 
     .DESCRIPTION
@@ -167,8 +125,8 @@ function Get-XmipComposePlan {
 
     $exists = Get-XmipNameSet -Entries $Actual
     [string[]] $declared = @(
-        Get-PropertyValue $Manifest 'repositories' @() |
-            ForEach-Object { [string](Get-PropertyValue $_ 'name') }
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @() |
+            ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') }
     )
 
     $ready = [System.Collections.Generic.List[object]]::new()
@@ -176,19 +134,12 @@ function Get-XmipComposePlan {
     [hashtable] $where = Get-XmipMountedPath -Root $Root
     [int] $mounted = 0
     [int] $waiting = 0
-    [int] $retiredCount = 0
+    [object[]] $repositories = @(
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @()
+    )
 
-    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
-        [string] $name = [string](Get-PropertyValue $repository 'name')
-        [string] $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
-
-        # A deprecated or retired repository still exists on GitHub, so without
-        # this it gets mounted straight back after someone removes it.
-        if ($maturity -in 'deprecated', 'retired') {
-            $retiredCount++
-            continue
-        }
-
+    foreach ($repository in $repositories) {
+        [string] $name = [string](Get-XmipPropertyValue -Object $repository -Name 'name')
         $mount = Get-XmipMountPath -Repository $repository -Declared $declared
 
         # Waiting: not created yet, or owned by a module that must itself be
@@ -220,6 +171,5 @@ function Get-XmipComposePlan {
         misplaced = @($misplaced.ToArray())
         mounted   = $mounted
         waiting   = $waiting
-        retired   = $retiredCount
     }
 }

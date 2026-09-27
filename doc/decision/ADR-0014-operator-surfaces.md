@@ -582,4 +582,4 @@ are given.
 The GitHub repository this record deprecated on 2026-08-26 is deleted, on the
 owner's word: *xmip-core-webapi can be deleted.* Nothing is released, and
 `xmip-core-logic-http-api` over `xmip-core-transport-http` is the web API. The
-reason it went is kept here and in the manifest's `[[retired]]` entry.
+reason it went is kept here.

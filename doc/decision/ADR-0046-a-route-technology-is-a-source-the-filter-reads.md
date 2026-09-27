@@ -216,8 +216,8 @@ trait and the one reading, `route::routable`, do not change.
 4. **Seven technologies.** `expression` read a predicate as a property and
    yielded `true` or `false` for a filter to compare: a filter inside a
    filter, and a second grammar. A filter is itself the expression now, so
-   `xmip-core-route-expression` is retired (`architecture.toml`
-   `[[retired]]`) and unmounted from `xmip-core-route`; `starts-with` is
+   `xmip-core-route-expression` is undeclared and unmounted from
+   `xmip-core-route`; `starts-with` is
    `like 'x%'`. Decision 3's eight are seven: `content`, `context`,
    `contract`, `header`, `metadata`, `party` and `regex`. The predicate
    technology `expression` drove, `xmip-core-path-predicate`, is retired

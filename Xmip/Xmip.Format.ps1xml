@@ -367,5 +367,31 @@
         </TableRowEntries>
       </TableControl>
     </View>
+    <View>
+      <Name>Xmip.SourceFile</Name>
+      <ViewSelectedBy>
+        <TypeName>Xmip.SourceFile</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Language</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Code</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Tests</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Total</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Path</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Language</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Code</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Tests</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Total</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Path</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
   </ViewDefinitions>
 </Configuration>

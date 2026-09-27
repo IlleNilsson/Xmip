@@ -19,51 +19,6 @@
     Style: doc/governance/powershell-style.md
 #>
 
-function Get-XmipEstateComposition {
-    <#
-        .SYNOPSIS
-            Every submodule mounted in this working tree, name to path.
-
-        .DESCRIPTION
-            Both levels. A technology's path is relative to its parent's mount
-            and is rejoined against it, so every value is one path from the
-            repository root. A module that is declared but not checked out
-            contributes nothing and is not an error here.
-
-        .PARAMETER Root
-            The repository root.
-    #>
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root
-    )
-
-    [hashtable] $module = Get-XmipMountedPath -Root $Root
-    [hashtable] $all = @{}
-
-    foreach ($name in $module.Keys) {
-        [string] $mount = [string] $module[$name]
-        $all[$name] = $mount
-
-        [string] $directory = Join-Path $Root $mount
-
-        if (-not (Test-Path -LiteralPath (Join-Path $directory '.gitmodules'))) {
-            continue
-        }
-
-        [hashtable] $inside = Get-XmipMountedPath -Root $directory
-
-        foreach ($child in $inside.Keys) {
-            $all[$child] = "$mount/$($inside[$child])"
-        }
-    }
-
-    return $all
-}
-
-
 function Get-XmipEstateRepository {
     <#
         .SYNOPSIS
@@ -99,7 +54,7 @@ function Get-XmipEstateRepository {
     }
 
     $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.toml')
-    [hashtable] $composed = Get-XmipEstateComposition -Root $Root
+    [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 
     # Every mount's full path to the repository at it, so a .NET project
     # reference resolves to the repository that holds the project it names.

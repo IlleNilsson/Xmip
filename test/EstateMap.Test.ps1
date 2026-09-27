@@ -19,10 +19,9 @@
 #>
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:MapPath = Join-Path $script:Root 'doc/architecture/estate-map.md'
 
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
 
     $script:Map = Get-Content -LiteralPath $script:MapPath -Raw
 
@@ -221,26 +220,6 @@ Describe 'The map names every repository' {
         [string] $detail = $missing -join "`n"
 
         $missing.Count | Should -Be 0 -Because "not on the map:`n$detail"
-    }
-
-    It 'names every retired repository with its date' {
-        # So that a reader who remembers a name and cannot find it above is
-        # told what happened to it rather than left looking. Three of these
-        # were unmounted on 2026-09-19 and the section 7 tree kept drawing
-        # them.
-        Import-Module PSToml -ErrorAction Stop
-
-        [string] $path = Join-Path $script:Root 'architecture.toml'
-        $manifest = ConvertFrom-Toml -InputObject (Get-Content -LiteralPath $path -Raw)
-
-        [object[]] $retired = @($manifest.retired)
-
-        $retired.Count | Should -BeGreaterThan 0
-
-        foreach ($entry in $retired) {
-            $script:Map | Should -Match ([regex]::Escape([string] $entry.name))
-            $script:Map | Should -Match ([regex]::Escape([string] $entry.on))
-        }
     }
 
     It 'puts every technology under the repository that hosts it' {

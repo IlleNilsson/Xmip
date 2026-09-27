@@ -191,7 +191,7 @@ corrects the declarations where the evidence is mechanical.
 
 ### 1. What each word means
 
-The estate validates twelve maturity words in `Xmip/Xmip.psm1`
+The estate validates ten maturity words in `Xmip/Xmip.psm1`
 (`$script:XmipMaturity`) and has never said what any of them means.
 `repository-model.md` section 3 names three of them in passing and points at
 that list. Below is the whole ladder. It is read top to bottom and each rung
@@ -217,10 +217,6 @@ assumes the ones above it.
 - **`verified`** — implemented, with its own tests, and they pass.
 - **`supported`** — verified, released, and carrying a compatibility promise.
   Breaking it needs a record.
-- **`deprecated`** — still present and no longer to be used. A replacement is
-  named.
-- **`retired`** — gone. A `[[retired]]` entry with a date and a reason; the
-  GitHub repository is archived rather than deleted (ADR-0024).
 
 `created`, `configured`, `submodule` and `workspace` are the reconciliation
 stages `Sync-XmipEstate` walks, and no repository declares any of them today.
@@ -409,3 +405,32 @@ the owner quoted that day came from it; `estate-map.md` was current.
    left implied — and `test/Dependency.Test.ps1` fails the day a build and
    its list part again. The page's table of disagreements says *None* while
    that holds.
+
+## Amendment, 2026-09-26: nothing is retired, it is deleted
+
+The owner, 2026-09-26: *There is no need to mark things deprecated, we are not
+GA, just delete it.* Until the first release a repository that is wrong is
+taken out of the manifest, and nothing records where it was; git does.
+
+1. **The ladder ends at `supported`.** The words `deprecated` and `retired`
+   are gone from the ones `Xmip/Xmip.psm1` validates, and from the list in
+   the amendment of 2026-09-19 above.
+2. **The manifest's `[[retired]]` list is gone**, with everything that read
+   it: the drift check's exemption, the map's and the page's Retired section,
+   and the tests that held its entries to a date and a reason.
+3. **A GitHub repository the manifest no longer declares is reported as
+   unexpected** by `Sync-XmipEstate` for as long as it exists. That is true,
+   and deleting one on GitHub stays the owner's call
+   (repository-model.md section 8).
+
+## Amendment, 2026-09-27: the deploy lists are generated too
+
+`deploy/dsc/xmip-node.dsc.yaml` and `deploy/ansible/roles/xmip_node/defaults/main.yml`
+named every technology a node carries and which start, by hand, and
+`test/Deploy.Test.ps1` held them equal to the manifest: a second copy held by a
+test, which CONTRIBUTING forbids. The manifest now says both. Every technology
+it declares at `scaffolded` or beyond is carried, as the owner's rule of
+2026-09-08 has it, and its new `[deploy]` table's `started` list says which
+start. `Sync-XmipEstate -Deploy` writes the two lists, leaving the rest of each
+file as the operator wrote it, and `test/Deploy.Test.ps1` fails when a file is
+not what it would write.

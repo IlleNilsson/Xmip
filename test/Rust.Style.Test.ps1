@@ -22,96 +22,26 @@
 [int] $script:MaximumFileLines = 400
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     [int] $script:MaximumFileLines = 400
 
     # The counter used to live here, where nothing else could reach it, and
     # the estate map needed the same number. Two counters disagree within a
     # week — ADR-0020 clause 5 — so it moved into the module and this calls
-    # it. `Get-XmipSourceFile` reads `module/`, `test/` and `template/`, and
-    # the template is Rust every new repository is generated from, so a rule
-    # it breaks is a rule every new repository starts out breaking.
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
-
-    # The ratchet, rust-style.md section 4. Empty, which is the intended state.
-    #
-    # Length is a strict recommendation: a file that must be longer may be
-    # longer, with the owner's agreement first and the reason recorded here as
-    # @{ Lines = <n>; Reason = '<why>' }. An entry with no reason cannot be
-    # told from a file nobody got round to splitting, and a reason composed
-    # after the fact is a defence, not a reason — arrival.rs stood on one for
-    # a day and was split instead (347 + outcome.rs at 113, 2026-08-30).
-    #
-    # Three entries have come and gone, none needing an argument to remove:
-    #
-    #   foundation/core/src/identity.rs   705 -> seven files, largest 240
-    #   capabilities/route/src/lib.rs     680 -> six files, largest 274
-    #   platform/runtime/src/arrival.rs   440 -> split, above
-    $script:Ratchet = @{ }
-
+    # it. `Get-XmipSourceFile` reads `module/`, `test/`, `template/` and
+    # `sdk/`, and the template is Rust every new repository is generated
+    # from, so a rule it breaks is a rule every new repository starts out
+    # breaking.
     $script:Files = @(Get-XmipSourceFile -Root $script:Root -Language Rust)
 }
 
 Describe 'Rust style, section 1: a file has one subject' {
     It "gates every file at or under $script:MaximumFileLines lines of code" {
-        $over = @(
-            $script:Files |
-                Where-Object { $_.Code -gt $script:MaximumFileLines } |
-                Where-Object { -not $script:Ratchet.ContainsKey($_.Path) }
-        )
+        $over = @($script:Files | Where-Object { $_.Code -gt $script:MaximumFileLines })
 
         [string] $detail = ($over | ForEach-Object { "$($_.Path) is $($_.Code)" }) -join "`n"
 
-        $over.Count |
-            Should -Be 0 -Because "these are over the gate and not on the ratchet:`n$detail"
-    }
-
-    It 'keeps every ratcheted file from growing' {
-        foreach ($path in $script:Ratchet.Keys) {
-            $file = $script:Files | Where-Object Path -eq $path
-
-            if (-not $file) {
-                # Gone, split, or renamed. All three are the outcome the ratchet
-                # exists to produce.
-                continue
-            }
-
-            [int] $allowed = $script:Ratchet[$path].Lines
-            [string] $because =
-                "$path is recorded at $allowed lines; growing past it is a deliberate edit"
-
-            $file.Code | Should -BeLessOrEqual $allowed -Because $because
-        }
-    }
-
-    It 'gives every recorded exception a reason' {
-        # Length is a strict recommendation. Breaking it is allowed and costs a
-        # sentence, which is what keeps it rare — the same instrument as
-        # [[retired]] in architecture.toml, where a reason is required because
-        # an entry without one cannot be told from an oversight.
-        foreach ($path in $script:Ratchet.Keys) {
-            [string] $why = "$path exceeds the recommendation and must say why"
-
-            $script:Ratchet[$path].Reason | Should -Not -BeNullOrEmpty -Because $why
-
-            ($script:Ratchet[$path].Reason).Length |
-                Should -BeGreaterThan 30 -Because "$path needs a reason, not a word"
-        }
-    }
-
-    It 'has no ratchet entry for a file that no longer needs one' {
-        # The entry outlived the problem. Removing it is the point.
-        foreach ($path in $script:Ratchet.Keys) {
-            $file = $script:Files | Where-Object Path -eq $path
-
-            if (-not $file) {
-                continue
-            }
-
-            [string] $because = "$path is now $($file.Code) lines; take it off the ratchet"
-
-            $file.Code | Should -BeGreaterThan $script:MaximumFileLines -Because $because
-        }
+        $over.Count | Should -Be 0 -Because "these are over the gate:`n$detail"
     }
 }
 
@@ -216,43 +146,22 @@ Describe 'The style document describes what is enforced' {
     It 'states the same gate this file enforces' {
         $script:Document | Should -Match "over $script:MaximumFileLines lines"
     }
-
-    It 'lists every ratcheted file' {
-        foreach ($path in $script:Ratchet.Keys) {
-            # The document and the test must not drift. A ratchet nobody can
-            # read is a waiver list with better manners.
-            #
-            # Both sets of parentheses are load-bearing. Without the inner pair
-            # PowerShell reads the comma as an argument separator and hands
-            # Escape two arguments, which has no overload.
-            [string] $relative = ($path -replace '^module/', '')
-
-            $script:Document | Should -Match ([regex]::Escape($relative))
-            $script:Document | Should -Match 'strict recommendation'
-        }
-    }
 }
 
 Describe 'ADR-0021: one edition, and the manifest knows which' {
     BeforeAll {
-        [string] $script:Root = Join-Path $PSScriptRoot '..'
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
-        Import-Module PSToml -ErrorAction Stop
-
-        [hashtable] $script:Manifest =
-            Get-Content -LiteralPath (Join-Path $script:Root 'architecture.toml') -Raw |
-                ConvertFrom-Toml
-
-        [string] $script:Declared = $script:Manifest.crate.edition
+        [string] $script:Declared = $manifest.crate.edition
 
         # Every crate the estate ships: the modules, the template every new
         # repository is generated from, and the platform crate that assembles
-        # them. target/ is build output and holds vendored manifests that
-        # nobody here wrote.
+        # them. Build output and the working areas are never walked.
         [System.IO.FileInfo[]] $script:Crate = @(
-            Get-ChildItem -Path $script:Root -Filter 'Cargo.toml' -Recurse -File |
-                Where-Object { $_.FullName -notmatch '[\/]target[\/]' } |
-                Sort-Object FullName
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                Find-XmipFile -Path $Root -Filter 'Cargo.toml'
+            }
         )
     }
 
@@ -302,11 +211,6 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
         foreach ($file in $script:Crate) {
             [string] $text = Get-Content -LiteralPath $file.FullName -Raw
 
-            # Scratch crates in the working area are nobody's build.
-            if ($file.FullName -match '[\\/]\.ai-interaction[\\/]') {
-                continue
-            }
-
             if ($text -notmatch '(?m)^\[workspace\]' -or $text -notmatch '(?m)^\[package\]') {
                 continue
             }
@@ -317,115 +221,5 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
         }
 
         $missing.Count | Should -Be 0 -Because ($missing -join "`n")
-    }
-}
-
-Describe 'ADR-0021: the .NET surfaces are on the latest target' {
-    BeforeAll {
-        [string] $script:Root = Join-Path $PSScriptRoot '..'
-
-        Import-Module PSToml -ErrorAction Stop
-
-        [hashtable] $script:Toml =
-            Get-Content -LiteralPath (Join-Path $script:Root 'architecture.toml') -Raw |
-                ConvertFrom-Toml
-
-        [hashtable] $script:Policy = $script:Toml.project
-
-        # Every .NET project the estate ships, plus the template every new
-        # repository is generated from. obj/ and bin/ hold generated manifests.
-        [System.IO.FileInfo[]] $script:Csproj = @(
-            Get-ChildItem -Path $script:Root -Filter '*.csproj' -Recurse -File |
-                Where-Object { $_.FullName -notmatch '[\/](obj|bin)[\/]' } |
-                Sort-Object FullName
-        )
-
-        <#
-            .SYNOPSIS
-            The target framework in force for a project file.
-
-            .DESCRIPTION
-            A project may set it or inherit it from a Directory.Build.props
-            beside or above it — the template does the second, deliberately,
-            because two manifests that must agree eventually stop agreeing.
-            Returns '' when neither states one.
-        #>
-        function Get-TargetFramework {
-            [CmdletBinding()]
-            [OutputType([string])]
-            param(
-                [Parameter(Mandatory = $true)]
-                [System.IO.FileInfo] $File
-            )
-
-            [string] $text = Get-Content -LiteralPath $File.FullName -Raw
-
-            if ($text -match '<TargetFramework>([^<]+)</TargetFramework>') {
-                return $Matches[1]
-            }
-
-            [System.IO.DirectoryInfo] $folder = $File.Directory
-
-            while ($null -ne $folder) {
-                [string] $props = Join-Path $folder.FullName 'Directory.Build.props'
-
-                if (Test-Path -LiteralPath $props) {
-                    [string] $shared = Get-Content -LiteralPath $props -Raw
-
-                    if ($shared -match '<TargetFramework>([^<]+)</TargetFramework>') {
-                        return $Matches[1]
-                    }
-                }
-
-                $folder = $folder.Parent
-            }
-
-            return ''
-        }
-    }
-
-    It 'declares a target framework in the manifest' {
-        [string]::IsNullOrWhiteSpace($script:Policy.targetFramework) | Should -BeFalse
-    }
-
-    It 'gives every project the target the manifest declares' {
-        # The exception is declared, not assumed. A project under a module
-        # named by hostedBy is loaded by a host that owns the runtime — pwsh
-        # runs .NET 10 and refuses a net11.0 assembly at Import-Module — so it
-        # targets hostedTargetFramework, and so does the one .NET binding it
-        # loads (abi, ADR-0014 amendment 2026-09-09). Everything else takes
-        # the latest.
-        [string[]] $wrong = @()
-        [string] $hosts = @($script:Policy.hostedBy) -join '|'
-
-        foreach ($file in $script:Csproj) {
-            [string] $where = $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
-            [bool] $hosted = $where -match "[\\/]($hosts)[\\/]"
-
-            [string] $expected = if ($hosted) {
-                $script:Policy.hostedTargetFramework
-            }
-            else {
-                $script:Policy.targetFramework
-            }
-
-            [string] $actual = Get-TargetFramework -File $file
-
-            # A platform suffix is the version, not a different version. A MAUI
-            # Windows app must target net11.0-windows10.0.19041.0 — the suffix
-            # is required by the framework, not drift from it — so the declared
-            # target is a prefix the actual one must start with. net11.0 still
-            # refuses net10.0. Added when the desktop host landed, 2026-09-05.
-            [string] $suffix = "$expected-"
-            [bool] $ok =
-                $actual -eq $expected -or
-                $actual.StartsWith($suffix, [System.StringComparison]::Ordinal)
-
-            if (-not $ok) {
-                $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
-            }
-        }
-
-        $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
     }
 }

@@ -188,9 +188,9 @@ that was true until 2026-08-27, when it became one template per language.*
 
 Repository existence is independent of implementation maturity. The manifest
 uses two words today — `reserved`, for a repository that is named and nothing
-more, and `scaffolded` — and a repository that has been retired is a
-`[[retired]]` entry with its reason. The full vocabulary the estate module
-validates, from `reserved` through `supported` to `retired`, is declared once
+more, and `scaffolded` — and a repository that is gone is simply not declared.
+The full vocabulary the estate module validates, from `planned` through
+`supported`, is declared once
 in `Xmip/Xmip.psm1`, and what each word means is defined once in ADR-0060,
 amendment 2026-09-19.
 
@@ -545,6 +545,7 @@ and on disk:
 Sync-XmipEstate -Create      # remote: create what the manifest names and GitHub lacks
 Sync-XmipEstate -Configure   # remote: description, topics, features
 Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
+Sync-XmipEstate -Deploy      # local: the deploy lists under deploy/, from the manifest
 ```
 
 **A reserved repository that does not exist is not drift.** It is section 3
@@ -574,8 +575,7 @@ and no plan mode — git does not work that way and neither should this. With no
 operation switch at all it reports and stops, which is the safe default and
 needs no ceremony to reach.
 
-It reports missing repositories, unexpected repositories, deprecated and
-retired repositories, active references to deprecated items, repository setting
+It reports missing repositories, unexpected repositories, repository setting
 drift, and missing or unexpected submodules.
 
 **It never deletes a repository.** Nothing in the tooling does.

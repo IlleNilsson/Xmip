@@ -71,14 +71,14 @@ fromSurface = [
 # ===========================================================================
 
 # [[moved]] is past tense: performed on 2026-08-26 and kept for the reasons
-# rather than the instruction. Invoke-Distribute reads [[move]] and
+# rather than the instruction. Invoke-XmipDistribution reads [[move]] and
 # [[decision]], so these no longer plan anything — and the Allocation tests stop
 # reporting a source as missing when its absence is the point.
 #
 # Rewritten 2026-08-26. This section was written when every module repository
 # was an empty template. Thirty of the forty-two now contain working Rust, so
 # half of what follows was a move into an occupied destination — which
-# Invoke-Distribute reports as target-exists and skips, silently, having said
+# Invoke-XmipDistribution reports as target-exists and skips, silently, having said
 # "Distribute completed".
 #
 # The estate holds two implementations of the same domain and neither is simply
@@ -88,7 +88,7 @@ fromSurface = [
 # the previous-journey link, which the root has never had.
 #
 # So a [[move]] is only correct where the destination is empty. Everything else
-# is a [[merge]], which is a judgement per file and inert to Invoke-Distribute
+# is a [[merge]], which is a judgement per file and inert to Invoke-XmipDistribution
 # by design — a merge must not be performed by a tool that can only overwrite.
 #
 # No Cargo.toml moves survive. Every module already has one, current, with
@@ -343,7 +343,7 @@ reason = "One lock for the assembly."
 # include/xmip_module.h was [[keep]] here with a note saying it arguably
 # belonged in xmip-core-abi. Decision 2 in section 7 answered that and moves it.
 # The keep entry stayed behind and contradicted the decision — inert, because
-# Invoke-Distribute reads [[move]] and [[decision]] only, but a file cannot be
+# Invoke-XmipDistribution reads [[move]] and [[decision]] only, but a file cannot be
 # both kept and moved and have the map mean anything.
 
 # ===========================================================================
@@ -361,7 +361,7 @@ reason = "One lock for the assembly."
 #
 # Only two documents genuinely belong to another repository today. Everything
 # else is either one of the six, or waiting to be merged into one of the six —
-# see section 3b, which is a plan and not an instruction: Invoke-Distribute
+# see section 3b, which is a plan and not an instruction: Invoke-XmipDistribution
 # reads [[move]] and [[decision]] only.
 
 [[moved]]
@@ -401,7 +401,7 @@ Update the link in the same commit as the move.
 # should be deleted until someone has read both and confirmed the content
 # survived. That check is the work; this table is only the list.
 #
-# These are inert to Invoke-Distribute by design. A file that is about to be
+# These are inert to Invoke-XmipDistribution by design. A file that is about to be
 # merged must not first be moved to another repository.
 
 [[moved]]
@@ -803,8 +803,6 @@ path = ".github/ci-trigger.md"
 path = "asset/brand/xmip-logo.png"
 [[keep]]
 path = "test/Sync-XmipEstate.Test.ps1"
-[[keep]]
-path = "test/Sync-XmipEstate.StrictMode.Test.ps1"
 [[remove]]
 path = "install/install-local.ps1"
 [[remove]]
@@ -898,7 +896,7 @@ as provenance is a folder nobody greps.
 #       doc/planning/open-problems.md instead.
 #
 # The entries below are what was found, kept as the record of where each item
-# came from. They are inert to Invoke-Distribute.
+# came from. They are inert to Invoke-XmipDistribution.
 
 [[unmined]]
 subject = "The Xmip URI"
@@ -1102,7 +1100,7 @@ arrived, written against xmip-module-api, which ADR-0012 clause 10 retires.
 
 Also the entry that broke a Distribute run: it named the crate directory rather
 than a file, so `git rm` without -r threw after eleven other moves had already
-been made. Invoke-Distribute now validates the whole plan before performing any
+been made. Invoke-XmipDistribution now validates the whole plan before performing any
 of it.
 
 *The reasoning this replaced, kept because that is what this file is for:*

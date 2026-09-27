@@ -15,7 +15,7 @@
     Style: doc/governance/powershell-style.md
 #>
 
-function Invoke-Compose {
+function Invoke-XmipCompose {
     # Short on purpose: the plan is computed at file scope, so this only
     # performs it. ShouldProcess is why it cannot move out with the rest.
     [CmdletBinding()]
@@ -28,10 +28,10 @@ function Invoke-Compose {
         [object[]] $Actual
     )
 
-    Assert-Command 'git'
+    Assert-XmipCommand -Name 'git'
 
     [string] $root = Get-XmipRepositoryRoot
-    [string] $owner = [string](Get-PropertyValue $Manifest 'owner')
+    [string] $owner = [string](Get-XmipPropertyValue -Object $Manifest -Name 'owner')
     $plan = Get-XmipComposePlan -Manifest $Manifest -Actual $Actual -Root $root
     [int] $added = 0
 
@@ -79,22 +79,22 @@ function Invoke-Compose {
     }
 
     [string] $summary =
-        ('Compose: {0} added, {1} moved, {2} refused, {3} already mounted, {4} waiting, ' +
-        '{5} deprecated') -f $added, $moved, $refused, $plan.mounted, $plan.waiting, $plan.retired
+        'Compose: {0} added, {1} moved, {2} refused, {3} already mounted, {4} waiting' -f
+        $added, $moved, $refused, $plan.mounted, $plan.waiting
 
-    Write-Step $summary
+    Write-XmipStep -Message $summary
 
     if (0 -lt $added) {
-        Write-Step 'Review .gitmodules, then commit. Nothing was pushed.'
+        Write-XmipStep -Message 'Review .gitmodules, then commit. Nothing was pushed.'
     }
 }
 
-function Invoke-Cargo {
+function Invoke-XmipCargo {
     # Rewrites nothing that is already right, so it is safe to run twice.
     [CmdletBinding()]
     param()
 
-    Assert-Command 'git'
+    Assert-XmipCommand -Name 'git'
 
     [string] $root = Get-XmipRepositoryRoot
     [hashtable] $mountOf = Get-XmipMountedPath -Root $root
@@ -173,12 +173,13 @@ function Invoke-Cargo {
     }
 
     if (0 -lt $rooted) {
-        Write-Step "Cargo: $rooted modules made their own workspace root"
+        Write-XmipStep -Message "Cargo: $rooted modules made their own workspace root"
     }
 
-    Write-Step "Cargo: $revs dependency revs in $($edits.Count) files"
+    Write-XmipStep -Message "Cargo: $revs dependency revs in $($edits.Count) files"
 
     if (0 -lt $edits.Count) {
-        Write-Step 'Each module is its own repository. Commit and push them individually.'
+        [string] $note = 'Each module is its own repository. Commit and push them individually.'
+        Write-XmipStep -Message $note
     }
 }

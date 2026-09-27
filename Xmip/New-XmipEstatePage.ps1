@@ -134,9 +134,6 @@ function New-XmipEstatePage {
 
         .PARAMETER Map
             The generated estate-map.md, whose tree the page shows as it is.
-
-        .PARAMETER Retired
-            The manifest's `[[retired]]` entries.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -152,11 +149,7 @@ function New-XmipEstatePage {
         [PSCustomObject[]] $Source,
 
         [Parameter(Mandatory = $true)]
-        [string] $Map,
-
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyCollection()]
-        [object[]] $Retired
+        [string] $Map
     )
 
     [PSCustomObject[]] $mounted = @($Repository | Where-Object { $_.Mounted })
@@ -229,17 +222,6 @@ function New-XmipEstatePage {
         tree      = $tree
         modules   = $drawn
         outside   = $outside
-        retired   = @(
-            foreach ($gone in $Retired) {
-                [string] $name = [string](Get-TomlValue -Node $gone -Name 'name' -Default '')
-
-                @{
-                    name   = ConvertTo-XmipEstateShortName -Name $name
-                    on     = [string](Get-TomlValue -Node $gone -Name 'on' -Default '')
-                    reason = [string](Get-TomlValue -Node $gone -Name 'reason' -Default '')
-                }
-            }
-        )
     }
 
     # Inside a <script>, `</` would end it. JSON allows the escaped slash.

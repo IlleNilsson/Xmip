@@ -121,3 +121,66 @@ function Invoke-XmipPlaygroundBuild {
 
     return $path
 }
+
+
+function Get-XmipPlaygroundPublication {
+    <#
+        .SYNOPSIS
+            Where the roll of a cluster publishes its snapshot, history and
+            activity in an area, as the roll itself says.
+
+        .DESCRIPTION
+            The names are the Playground's to decide (environment.rs,
+            publish_paths), so this asks the roll binary —
+            `xmip-playground-roll --publication <cluster> <area>`, which
+            prints them and starts nothing — rather than naming the files a
+            second time. Refused in words when the roll cannot answer.
+
+        .PARAMETER Roll
+            The roll binary, from Invoke-XmipPlaygroundBuild.
+
+        .PARAMETER Cluster
+            The cluster the roll rolls as.
+
+        .PARAMETER Path
+            The area the roll publishes in, as XMIP_PLAYGROUND_AREA tells it.
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Roll,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster,
+
+        [Parameter(Mandatory)]
+        [string] $Path
+    )
+
+    # The exit code is read here, so the refusal names the roll and what it
+    # said (ADR-0055). Assigned in this scope alone.
+    $PSNativeCommandUseErrorActionPreference = $false
+    [string[]] $said = @(& $Roll '--publication' $Cluster $Path 2>&1 | ForEach-Object { "$_" })
+
+    if ($LASTEXITCODE -ne 0) {
+        throw ("REFUSED: $Roll could not say where cluster $Cluster publishes " +
+            "(exit $LASTEXITCODE): $($said -join ' ')")
+    }
+
+    [hashtable] $where = @{}
+
+    foreach ($line in $said) {
+        [string[]] $pair = $line.Split('=', 2)
+
+        if ($pair.Count -eq 2) {
+            $where[$pair[0].Trim()] = $pair[1].Trim()
+        }
+    }
+
+    return [PSCustomObject] @{
+        Snapshot = [string] $where['snapshot']
+        History  = [string] $where['history']
+        Activity = [string] $where['activity']
+    }
+}

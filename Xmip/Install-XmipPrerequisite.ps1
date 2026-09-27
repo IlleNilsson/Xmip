@@ -1,8 +1,8 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 
-# Dot-sourced by Xmip.psm1, which supplies Get-TomlValue, Get-TomlKey and
-# Write-Step. Import-Module ./Xmip.psm1 rather than running this file directly.
+# Dot-sourced by Xmip.psm1; the module supplies Read-XmipToml, Get-TomlValue, Get-TomlKey and
+# Write-XmipStep. Import-Module ./Xmip.psm1 rather than running this file directly.
 
 <#
 .SYNOPSIS
@@ -73,44 +73,53 @@ function Install-XmipPrerequisite {
             return
         }
     }
-    Import-Module PSToml -ErrorAction Stop
+    Import-XmipToml
 
     if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
         throw "Prerequisite manifest not found: $ManifestPath"
     }
 
-    [string] $manifestText = Get-Content -LiteralPath $ManifestPath -Raw -Encoding utf8
-    $manifest = ConvertFrom-Toml -InputObject $manifestText
+    $manifest = Read-XmipToml -Path $ManifestPath
     $os = Get-XmipOperatingSystem
-    $manager = Get-XmipPackageManager $os
-    $roles = Resolve-XmipRole (Get-TomlValue $manifest 'role') $Role
-    $prerequisites = Get-TomlValue $manifest 'prerequisite'
+    $manager = Get-XmipPackageManager -OperatingSystem $os
+    $roles = Resolve-XmipRole -RoleTable (Get-TomlValue -Node $manifest -Name 'role') -Name $Role
+    $prerequisites = Get-TomlValue -Node $manifest -Name 'prerequisite'
 
     [string] $managerName = if ($manager) { $manager } else { 'no package manager found' }
-    Write-Step "$os, $managerName, roles: $($roles -join ', ')"
-    if (-not $Install) { Write-Step 'Reporting only. Add -Install to act.' }
+    Write-XmipStep -Message "$os, $managerName, roles: $($roles -join ', ')"
+    if (-not $Install) { Write-XmipStep -Message 'Reporting only. Add -Install to act.' }
     Write-Host ''
 
     $results = [Collections.Generic.List[object]]::new()
-    function Record([string] $Name, [string] $Status, [string] $Detail) {
-        $results.Add([pscustomobject]@{
-                PSTypeName = 'Xmip.Prerequisite'
-                name       = $Name
-                status     = $Status
-                detail     = $Detail
-            })
+    function Add-XmipPrerequisiteResult {
+        [CmdletBinding()]
+        [OutputType([void])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [string] $Name,
+
+            [Parameter(Mandatory = $true)]
+            [string] $Status,
+
+            [Parameter(Mandatory = $false)]
+            [AllowEmptyString()]
+            [string] $Detail = ''
+        )
+
+        $results.Add((New-XmipPrerequisiteResult -Name $Name -Status $Status -Detail $Detail))
     }
 
-    foreach ($name in (Get-TomlKey $prerequisites)) {
-        $item = Get-TomlValue $prerequisites $name
-        if (-not $roles.Contains([string](Get-TomlValue $item 'role'))) { continue }
+    foreach ($name in (Get-TomlKey -Node $prerequisites)) {
+        $item = Get-TomlValue -Node $prerequisites -Name $name
+        if (-not $roles.Contains([string](Get-TomlValue -Node $item -Name 'role'))) { continue }
 
         # Get-TomlValue, not PSObject.Properties: ConvertFrom-Toml returns an
         # IDictionary and PSObject.Properties does not enumerate its keys, so the
         # old membership tests were always false and -IncludeOptional did nothing.
-        $optional = [bool](Get-TomlValue $item 'optional' $false)
-        $minimum = [string](Get-TomlValue $item 'minimum' '')
-        $found = Test-XmipCommand ([string](Get-TomlValue $item 'probe' ''))
+        $optional = [bool](Get-TomlValue -Node $item -Name 'optional' -Default $false)
+        $minimum = [string](Get-TomlValue -Node $item -Name 'minimum' -Default '')
+        [string] $probe = [string](Get-TomlValue -Node $item -Name 'probe' -Default '')
+        $found = Test-XmipCommand -Probe $probe
 
         # Some installers keep what they install off PATH — LLVM's libclang,
         # Visual Studio's link.exe — so a probe by command reported them
@@ -118,8 +127,12 @@ function Install-XmipPrerequisite {
         # entry may name where an installed copy sits; wildcards and
         # %VARIABLES% are expanded, and the first path that exists is enough.
         if (-not $found) {
-            $bySystem = Get-TomlValue $item $os $null
-            foreach ($pattern in @(Get-TomlValue $bySystem 'present_path' @())) {
+            $bySystem = Get-TomlValue -Node $item -Name $os -Default $null
+            [object[]] $present = @(
+                Get-TomlValue -Node $bySystem -Name 'present_path' -Default @()
+            )
+
+            foreach ($pattern in $present) {
                 [string] $expanded = [Environment]::ExpandEnvironmentVariables([string]$pattern)
                 $hit = Get-Item -Path $expanded -ErrorAction SilentlyContinue |
                     Select-Object -First 1
@@ -133,12 +146,13 @@ function Install-XmipPrerequisite {
         if ($found) {
             if (Test-XmipFloor -Name $name -Found $found -Minimum $minimum) {
                 Write-Host "PRESENT: $name  ($found)"
-                Record $name 'present' $found
+                Add-XmipPrerequisiteResult -Name $name -Status 'present' -Detail $found
             }
             else {
                 Write-Warning ("OUTDATED: $name is $found; " +
                     "Xmip requires $minimum or later. ADR-0021.")
-                Record $name 'outdated' "$found < $minimum"
+                [string] $below = "$found < $minimum"
+                Add-XmipPrerequisiteResult -Name $name -Status 'outdated' -Detail $below
             }
             continue
         }
@@ -149,8 +163,8 @@ function Install-XmipPrerequisite {
         }
 
         # Gallery modules install by name and carry no per-system table.
-        if ([string](Get-TomlValue $item 'source' '') -eq 'psgallery') {
-            $id = [string](Get-TomlValue $item 'id' $name)
+        if ([string](Get-TomlValue -Node $item -Name 'source' -Default '') -eq 'psgallery') {
+            $id = [string](Get-TomlValue -Node $item -Name 'id' -Default $name)
             $present = @(Get-Module -ListAvailable -Name $id)
             $good = $present -and (-not $minimum -or
                 ($present | Where-Object { $_.Version -ge [version]$minimum }))
@@ -166,7 +180,7 @@ function Install-XmipPrerequisite {
 
             if ($good) {
                 Write-Host "PRESENT: $name  ($newest)"
-                Record $name 'present' 'psgallery'
+                Add-XmipPrerequisiteResult -Name $name -Status 'present' -Detail 'psgallery'
             }
             elseif (-not $Install) {
                 [string] $why = 'MISSING: {0}' -f $name
@@ -176,7 +190,8 @@ function Install-XmipPrerequisite {
                 }
 
                 Write-Warning "$why; Xmip requires $minimum or later. ADR-0021."
-                Record $name $(if ($present) { 'outdated' } else { 'missing' }) 'psgallery'
+                [string] $status = if ($present) { 'outdated' } else { 'missing' }
+                Add-XmipPrerequisiteResult -Name $name -Status $status -Detail 'psgallery'
             }
             elseif ($PSCmdlet.ShouldProcess($id, 'Install from the PowerShell Gallery')) {
                 Write-Host "INSTALL: $name"
@@ -193,36 +208,44 @@ function Install-XmipPrerequisite {
                 }
 
                 Install-Module @fromGallery
-                Record -Name $name -Status 'installed' -Detail 'psgallery'
+                Add-XmipPrerequisiteResult -Name $name -Status 'installed' -Detail 'psgallery'
             }
-            else { Record $name 'would-install' 'psgallery' }
+            else {
+                Add-XmipPrerequisiteResult -Name $name -Status 'would-install' -Detail 'psgallery'
+            }
             continue
         }
 
-        $spec = Get-TomlValue $item $os $null
+        $spec = Get-TomlValue -Node $item -Name $os -Default $null
         if ($null -eq $spec) {
             Write-Host "NOT APPLICABLE: $name on $os"
-            Record $name 'not-applicable' $os
+            Add-XmipPrerequisiteResult -Name $name -Status 'not-applicable' -Detail $os
             continue
         }
 
-        $command = [string](Get-TomlValue $spec 'command' '')
+        $command = [string](Get-TomlValue -Node $spec -Name 'command' -Default '')
         if ($command) {
             Write-Warning "MANUAL: $name -> $command"
-            Record $name 'manual' $command
+            Add-XmipPrerequisiteResult -Name $name -Status 'manual' -Detail $command
             continue
         }
 
-        $package = if ($manager) { [string](Get-TomlValue $spec $manager '') } else { '' }
+        [string] $package = ''
+
+        if ($manager) {
+            $package = [string](Get-TomlValue -Node $spec -Name $manager -Default '')
+        }
+
         if (-not $package) {
-            $fallback = [string](Get-TomlValue $spec 'fallback' '')
+            $fallback = [string](Get-TomlValue -Node $spec -Name 'fallback' -Default '')
             if ($fallback) {
                 Write-Warning "MANUAL: $name is not packaged for $manager on $os. See $fallback"
-                Record $name 'manual' $fallback
+                Add-XmipPrerequisiteResult -Name $name -Status 'manual' -Detail $fallback
             }
             else {
                 Write-Warning "UNAVAILABLE: $name has no entry for $manager on $os"
-                Record $name 'unavailable' ([string]$manager)
+                [string] $unpackaged = [string] $manager
+                Add-XmipPrerequisiteResult -Name $name -Status 'unavailable' -Detail $unpackaged
             }
             continue
         }
@@ -243,44 +266,44 @@ function Install-XmipPrerequisite {
             'zypper' { @('install', '-y', $package) }
             'pacman' { @('-S', '--noconfirm', $package) }
         }
-        $override = [string](Get-TomlValue $spec 'override' '')
+        $override = [string](Get-TomlValue -Node $spec -Name 'override' -Default '')
         if ($override) { $arguments += @('--override', $override) }
 
         $line = "$manager $($arguments -join ' ')"
-        $needsElevation = [bool](Get-TomlValue $spec 'elevation' $false) -or
+        $needsElevation = [bool](Get-TomlValue -Node $spec -Name 'elevation' -Default $false) -or
             ($os -eq 'linux' -and $manager -ne 'brew')
 
         if ($needsElevation) {
             Write-Warning "NEEDS ELEVATION: $name"
             Write-Host "    $line"
-            Record $name 'needs-elevation' $line
+            Add-XmipPrerequisiteResult -Name $name -Status 'needs-elevation' -Detail $line
             continue
         }
         if (-not $Install) {
             Write-Warning "MISSING: $name"
             Write-Host "    $line"
-            Record $name 'missing' $line
+            Add-XmipPrerequisiteResult -Name $name -Status 'missing' -Detail $line
             continue
         }
         if ($PSCmdlet.ShouldProcess($name, $line)) {
             Write-Host "INSTALL: $name"
             & $manager @arguments
-            Record $name 'installed' $line
+            Add-XmipPrerequisiteResult -Name $name -Status 'installed' -Detail $line
         }
-        else { Record $name 'would-install' $line }
+        else { Add-XmipPrerequisiteResult -Name $name -Status 'would-install' -Detail $line }
     }
 
     # Rust components are a second step: rustup installs the toolchain, and the
     # components come from rustup rather than from any package manager.
-    $rust = Get-TomlValue $prerequisites 'rust' $null
-    if ($rust -and $roles.Contains([string](Get-TomlValue $rust 'role')) -and
+    $rust = Get-TomlValue -Node $prerequisites -Name 'rust' -Default $null
+    if ($rust -and $roles.Contains([string](Get-TomlValue -Node $rust -Name 'role')) -and
         (Get-Command rustup -ErrorAction SilentlyContinue)) {
         # The channel, current. Every rust-toolchain.toml names the stable
         # channel, and rustup resolves that to whatever stable it last
         # installed: on 2026-09-22 this machine built on March's 1.94.1 while
         # stable was 1.98.1, and nothing said so. ADR-0021 is latest stable,
         # so an old one is outdated exactly as a version below a floor is.
-        [string] $channel = [string](Get-TomlValue $rust 'channel' '')
+        [string] $channel = [string](Get-TomlValue -Node $rust -Name 'channel' -Default '')
 
         if ($channel) {
             $state = Get-XmipRustChannel -Channel $channel
@@ -292,7 +315,9 @@ function Install-XmipPrerequisite {
             elseif ($state.Latest) {
                 Write-Warning ("OUTDATED: $($state.Toolchain) is $($state.Current); " +
                     "$channel is $($state.Latest). ADR-0021.")
-                Record "rust ($channel)" 'outdated' "$($state.Current) < $($state.Latest)"
+                [string] $behind = "$($state.Current) < $($state.Latest)"
+                [string] $rust = "rust ($channel)"
+                Add-XmipPrerequisiteResult -Name $rust -Status 'outdated' -Detail $behind
 
                 if ($Install -and $PSCmdlet.ShouldProcess($state.Toolchain, 'rustup update')) {
                     Write-Host "INSTALL: $($state.Toolchain) $($state.Latest)"
@@ -304,7 +329,7 @@ function Install-XmipPrerequisite {
             }
         }
 
-        foreach ($component in @(Get-TomlValue $rust 'component' @())) {
+        foreach ($component in @(Get-TomlValue -Node $rust -Name 'component' -Default @())) {
             if (-not $Install) {
                 Write-Host "COMPONENT: $component (rustup component add $component)"
                 continue
@@ -316,69 +341,22 @@ function Install-XmipPrerequisite {
         }
     }
 
-    # The event source the operating system's log is written under when audit
-    # cannot persist a record (ADR-0062). Windows only. Registering it needs
-    # elevation once and this never elevates: an elevated -Install registers
-    # it, anything else says so and prints the line. Until it is registered
-    # the fallback writes under .NET Runtime and says so in the entry. The
-    # name is the ABI header's XMIP_EVENT_SOURCE, read where it is declared:
-    # the prerequisites run before anything is built, so there is no binding
-    # yet to ask.
-    $eventSource = Get-TomlValue $manifest 'eventSource' $null
+    # The event source the audit fallback writes under (ADR-0062).
+    [hashtable] $source = @{
+        Manifest     = $manifest
+        ManifestPath = $ManifestPath
+        Role         = @($roles)
+        Install      = $Install
+        Caller       = $PSCmdlet
+    }
 
-    if ($IsWindows -and $eventSource -and
-        $roles.Contains([string](Get-TomlValue $eventSource 'role'))) {
-        [string] $header = Join-Path -Path (Split-Path -Parent $ManifestPath) -ChildPath (
-            'module/foundation/abi/include/xmip_operate.h')
-        $declared = Select-String -LiteralPath $header -Pattern (
-            '^#define\s+XMIP_EVENT_SOURCE\s+"([^"]+)"') | Select-Object -First 1
-
-        if ($null -eq $declared) {
-            throw "XMIP_EVENT_SOURCE is not declared in $header."
-        }
-
-        [string] $sourceName = $declared.Matches[0].Groups[1].Value
-        [string] $sourceLog = [string](Get-TomlValue $eventSource 'log')
-        [string] $label = "event source $sourceName"
-        [string] $line = ("[System.Diagnostics.EventLog]::CreateEventSource(" +
-            "'$sourceName', '$sourceLog')")
-        [bool] $registered = $false
-
-        # Asked unelevated about a source that is not there, EventLog searches
-        # the Security log too and is refused; that is "not registered".
-        try { $registered = [System.Diagnostics.EventLog]::SourceExists($sourceName) }
-        catch { $registered = $false }
-
-        $principal = [Security.Principal.WindowsPrincipal](
-            [Security.Principal.WindowsIdentity]::GetCurrent())
-        [bool] $elevated = $principal.IsInRole(
-            [Security.Principal.WindowsBuiltInRole]::Administrator)
-
-        if ($registered) {
-            Write-Host "PRESENT: $label  ($sourceLog)"
-            Record $label 'present' $sourceLog
-        }
-        elseif (-not $elevated) {
-            Write-Warning "NEEDS ELEVATION: $label"
-            Write-Host "    $line"
-            Record $label 'needs-elevation' $line
-        }
-        elseif (-not $Install) {
-            Write-Warning "MISSING: $label"
-            Write-Host "    $line"
-            Record $label 'missing' $line
-        }
-        elseif ($PSCmdlet.ShouldProcess($label, $line)) {
-            Write-Host "INSTALL: $label"
-            [System.Diagnostics.EventLog]::CreateEventSource($sourceName, $sourceLog)
-            Record $label 'installed' $line
-        }
-        else { Record $label 'would-install' $line }
+    foreach ($said in @(Install-XmipEventSource @source)) {
+        $results.Add($said)
     }
 
     Write-Host ''
     $summary = $results | Group-Object status | ForEach-Object { "$($_.Name)=$($_.Count)" }
-    Write-Step "Prerequisites: $($summary -join '  ')"
+    Write-XmipStep -Message "Prerequisites: $($summary -join '  ')"
 
     if ($PassThru) { $results }
 

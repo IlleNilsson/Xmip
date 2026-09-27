@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 177759 lines of production
+Where each repository mounts and what it holds: 178345 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -313,13 +313,13 @@ hold no source to count.
 │   │   │   ├── tls                              284
 │   │   │   └── ssh                              169
 │   │   └── operation/
-│   │       ├── cli                             3050
-│   │       ├── gui                             2677
+│   │       ├── cli                             3011
+│   │       ├── gui                             2795
 │   │       │   └── vscode                      1471
-│   │       ├── powershell                      2247  C# 1450 · PowerShell 797
 │   │       ├── observe                         2047
 │   │       │   ├── otlp                         574
 │   │       │   └── prometheus                   328
+│   │       ├── powershell                      1443  C# 1443 · PowerShell 0
 │   │       ├── audit                            878
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                15238  C# 13584 · Rust 1429 · PowerShell 225
+│   │   ├── abi                                16231  C# 14537 · Rust 1469 · PowerShell 225
 │   │   ├── event                               2687
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -360,21 +360,21 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
+│   │   ├── node                                 688
 │   │   ├── context                              563
-│   │   ├── node                                 503
 │   │   ├── journey                              350
 │   │   ├── party                                186
 │   │   ├── stream                                38
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             5598
+│       ├── runtime                             5734
 │       ├── configure                           1357
 │       └── persist                              701
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                          9564
+        └── playground                          9561
 ```
 
 ---
@@ -648,64 +648,3 @@ All 2 composed in `module/platform/persist`.
 - **scaffolded**, 2 — rocksdb, sqlite
 
 ---
-
-## Retired
-
-Named here because a reader who remembers one of these and cannot find
-it above should be told what happened to it. Each says whether its
-GitHub repository was kept or deleted.
-
-- **`xmip-core-exclusiveness`**, 2026-08-27 — ADR-0024. ResourceClaim in
-  xmip-core-transport replaces it. The GitHub repository was deleted on
-  2026-09-21 on the owner's word — nothing is released, and ADR-0017 and
-  ADR-0024 keep the record of why it existed and why it went.
-
-- **`xmip-core-webapi`**, 2026-09-06 — ADR-0014 amendment 2026-08-26. The web
-  API belongs to the Logic axis (xmip-core-logic-http-api over
-  xmip-core-transport-http), not a module of its own; it was declared, mounted
-  nowhere, and deprecated. The GitHub repository was deleted on 2026-09-22 on
-  the owner's word; xmip-core-logic-http-api is the web API, and ADR-0014
-  keeps the record of why.
-
-- **`xmip-core-migrate`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
-  owner's instruction. One lib.rs with no implementation and no consumer; a
-  name the estate paid for on every clone, landing and survey. The GitHub
-  repository is retained by the owner's rule of 2026-09-22 as the only home
-  for Xmip's own migration code — moving integrations from other platforms
-  onto Xmip; none has been written yet. A third party may keep its own under
-  its own provider name (ADR-0011). The first of it brings the mount back.
-
-- **`xmip-core-schedule`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
-  owner's instruction. Six lines and no public API; clause 7 of that record
-  kept it and the amendment supersedes clause 7. The GitHub repository is
-  retained by the owner's rule of 2026-09-22, and it is the only home for
-  Xmip's own scheduling code — what decides when work runs: a timer, an
-  interval, a polled pickup; none has been written yet. A third party may keep
-  its own under its own provider name (ADR-0011). The first of it brings the
-  mount back.
-
-- **`xmip-core-diagnose`**, 2026-09-19 — ADR-0058 amendment 2026-09-19, on the
-  owner's instruction. One lib.rs with no implementation and no consumer. The
-  GitHub repository is retained by the owner's rule of 2026-09-22, and it is
-  the only home for Xmip's own diagnosis code — explaining why a running node,
-  Journey or endpoint is in the state it is; none has been written yet. A
-  third party may keep its own under its own provider name (ADR-0011).
-  ADR-0025 names diagnosis as an Operation capability. The first of it brings
-  the mount back.
-
-- **`xmip-core-route-expression`**, 2026-09-26 — ADR-0066. A Subscription's
-  filter is itself one line of Xmip's expression language (xmip-core-path's
-  expression), so a route technology that evaluated a predicate as a property,
-  `expression:<predicate>`, was a filter inside a filter and a second grammar;
-  its one reader, the context read as a structure, went with it. Unmounted
-  from xmip-core-route; the GitHub repository is untouched until the owner
-  says otherwise.
-
-- **`xmip-core-path-predicate`**, 2026-09-26 — ADR-0066. Its grammar was one
-  of three for one job and its engine parsed on every read; it became Xmip's
-  one expression language, and that language moved into xmip-core-path itself,
-  because configure, a platform service, reads the compiled tree for the
-  designer's rows and a platform service depends on a capability, never on a
-  technology (policy above). Its PathEngine had one caller, the retired
-  xmip-core-route-expression. Unmounted from xmip-core-path; the GitHub
-  repository is untouched until the owner says otherwise.

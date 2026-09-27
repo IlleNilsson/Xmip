@@ -103,45 +103,26 @@ hostedBy = ["powershell", "abi"]
 rust = "IlleNilsson/xmip-template-rust"
 dotnet = "IlleNilsson/xmip-template-dotnet"
 
-# Repositories that existed, were retired, and are archived rather than deleted.
-#
-# Without this a retirement reports as drift forever, and a warning that is
-# always there is a warning nobody reads. The reason is required: an entry with
-# no reason is indistinguishable from a repository somebody forgot to declare.
-[[retired]]
-name = "xmip-core-exclusiveness"
-on = "2026-08-27"
-reason = "ADR-0024. ResourceClaim in xmip-core-transport replaces it. The GitHub repository was deleted on 2026-09-21 on the owner's word — nothing is released, and ADR-0017 and ADR-0024 keep the record of why it existed and why it went."
-
-[[retired]]
-name = "xmip-core-webapi"
-on = "2026-09-06"
-reason = "ADR-0014 amendment 2026-08-26. The web API belongs to the Logic axis (xmip-core-logic-http-api over xmip-core-transport-http), not a module of its own; it was declared, mounted nowhere, and deprecated. The GitHub repository was deleted on 2026-09-22 on the owner's word; xmip-core-logic-http-api is the web API, and ADR-0014 keeps the record of why."
-
-[[retired]]
-name = "xmip-core-migrate"
-on = "2026-09-19"
-reason = "ADR-0058 amendment 2026-09-19, on the owner's instruction. One lib.rs with no implementation and no consumer; a name the estate paid for on every clone, landing and survey. The GitHub repository is retained by the owner's rule of 2026-09-22 as the only home for Xmip's own migration code — moving integrations from other platforms onto Xmip; none has been written yet. A third party may keep its own under its own provider name (ADR-0011). The first of it brings the mount back."
-
-[[retired]]
-name = "xmip-core-schedule"
-on = "2026-09-19"
-reason = "ADR-0058 amendment 2026-09-19, on the owner's instruction. Six lines and no public API; clause 7 of that record kept it and the amendment supersedes clause 7. The GitHub repository is retained by the owner's rule of 2026-09-22, and it is the only home for Xmip's own scheduling code — what decides when work runs: a timer, an interval, a polled pickup; none has been written yet. A third party may keep its own under its own provider name (ADR-0011). The first of it brings the mount back."
-
-[[retired]]
-name = "xmip-core-diagnose"
-on = "2026-09-19"
-reason = "ADR-0058 amendment 2026-09-19, on the owner's instruction. One lib.rs with no implementation and no consumer. The GitHub repository is retained by the owner's rule of 2026-09-22, and it is the only home for Xmip's own diagnosis code — explaining why a running node, Journey or endpoint is in the state it is; none has been written yet. A third party may keep its own under its own provider name (ADR-0011). ADR-0025 names diagnosis as an Operation capability. The first of it brings the mount back."
-
-[[retired]]
-name = "xmip-core-route-expression"
-on = "2026-09-26"
-reason = "ADR-0066. A Subscription's filter is itself one line of Xmip's expression language (xmip-core-path's expression), so a route technology that evaluated a predicate as a property, `expression:<predicate>`, was a filter inside a filter and a second grammar; its one reader, the context read as a structure, went with it. Unmounted from xmip-core-route; the GitHub repository is untouched until the owner says otherwise."
-
-[[retired]]
-name = "xmip-core-path-predicate"
-on = "2026-09-26"
-reason = "ADR-0066. Its grammar was one of three for one job and its engine parsed on every read; it became Xmip's one expression language, and that language moved into xmip-core-path itself, because configure, a platform service, reads the compiled tree for the designer's rows and a platform service depends on a capability, never on a technology (policy above). Its PathEngine had one caller, the retired xmip-core-route-expression. Unmounted from xmip-core-path; the GitHub repository is untouched until the owner says otherwise."
+# What a node starts, of the technologies it carries: the transports and
+# contracts a plain HTTP and file node needs; the rest are present and stopped
+# until a Location names them. Sync-XmipEstate -Deploy writes this, with every
+# technology declared scaffolded or beyond, into deploy/dsc and deploy/ansible.
+[deploy]
+started = [
+  "xmip-core-transport-file",
+  "xmip-core-transport-tcp",
+  "xmip-core-transport-udp",
+  "xmip-core-transport-http",
+  "xmip-core-contract-csv",
+  "xmip-core-contract-json-schema",
+  "xmip-core-contract-xml-schema",
+  "xmip-core-contract-regex",
+  "xmip-core-logic-http-api",
+  "xmip-core-path-json-pointer",
+  "xmip-core-path-xpath",
+  "xmip-core-path-index",
+  "xmip-core-archive-parquet",
+]
 
 [policy]
 acyclic = true
@@ -815,9 +796,6 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
     specification = "IETF RFC 9535"
-    # xmip.core.path.predicate is retired: Xmip's expression language is the
-    # capability's own now (ADR-0066), so configure, a platform service, can
-    # read it. See [[retired]] above.
     [xmip.core.path.regex]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
@@ -1142,9 +1120,6 @@ dependency = []
     [xmip.core.route.contract]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-context"]
-    # xmip.core.route.expression is retired: a filter is itself an expression
-    # now (ADR-0066), so a technology that read a predicate as a property is
-    # a filter inside a filter. See [[retired]] above.
     [xmip.core.route.header]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-context"]
@@ -1456,24 +1431,6 @@ dependency = []
     maturity = "reserved"
     [xmip.core.secret.aws-kms]
     maturity = "reserved"
-
-# xmip.core.exclusiveness is retired. ADR-0024.
-#
-# It held a lease inside Xmip and could never say where a cluster-wide one
-# would live: per-node persistence proves nothing to another node, and every
-# external coordinator that could have held it makes Xmip depend on somebody
-# else's cluster to answer a question about its own. ResourceClaim in
-# xmip-core-transport replaces it — the endpoint's own atomic claim, which is
-# cluster-wide because the endpoint is one thing however many nodes are asking.
-
-# xmip.core.migrate, xmip.core.schedule and xmip.core.diagnose are retired as
-# declarations. ADR-0058, amendment 2026-09-19.
-#
-# Each held one lib.rs whose whole body was a doc comment ending "No public
-# ... API is implemented yet", and nothing in the estate depended on any of
-# them. The three GitHub repositories are untouched; see [[retired]] above.
-# What brings one back is a first implementation, and the record that plans it
-# keeps the name in the meantime.
 
 # Platform services. These existed as crates with no module, so nothing would
 # have created a repository for them. Descriptions taken from what the crates

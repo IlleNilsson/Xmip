@@ -15,65 +15,34 @@
     Style: doc/governance/powershell-style.md
 #>
 
-function New-TransactionReport($Manifest, $Actual) {
-    $desired = @{}
-    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
-        $desired[[string](Get-PropertyValue $repository 'name')] = $repository
-    }
-
-    $actualMap = @{}
-    foreach ($repository in @(ConvertTo-Array $Actual)) {
-        if ($null -ne $repository) {
-            $actualMap[[string](Get-PropertyValue $repository 'name')] = $repository
-        }
-    }
-
-    [hashtable] $unexpectedQuery = @{
-        Actual   = @($actualMap.Keys)
-        Declared = @($desired.Keys)
-        Template = @((Get-XmipTemplate -Manifest $Manifest).Values)
-        Retired  = @(Get-XmipRetiredName -Manifest $Manifest)
-    }
-
-    return [ordered]@{
-        generatedAtUtc = [DateTime]::UtcNow.ToString('o')
-        scriptVersion = $script:XmipVersion.ToString()
-        schemaVersion = [string](Get-PropertyValue $Manifest 'schemaVersion' 'unversioned')
-        architectureVersion = [string](
-            Get-PropertyValue $Manifest 'architectureVersion' 'unversioned'
-        )
-        owner = [string](Get-PropertyValue $Manifest 'owner')
-        desiredCount = $desired.Count
-        actualCount = @($actualMap.Keys | Where-Object { $desired.ContainsKey($_) }).Count
-        missing = @($desired.Keys | Where-Object { -not $actualMap.ContainsKey($_) } | Sort-Object)
-
-        unexpected = @(Get-XmipUnexpectedName @unexpectedQuery)
-        deprecated = @()
-        retired = @()
-        operations = [ordered]@{
-            created = 0
-            configured = 0
-            metadataWritten = 0
-            commits = 0
-            pushes = 0
-            skipped = 0
-        }
-    }
-}
 
 function New-XmipGitHubRepository {
     param(
-        [Parameter(Mandatory)] $Repository,
-        [Parameter(Mandatory)] [string] $Owner,
-        [Parameter(Mandatory)] [ValidateSet('User','Organization')] [string] $OwnerType,
+        [Parameter(Mandatory = $true)]
+        $Repository,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Owner,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('User', 'Organization')]
+        [string] $OwnerType,
+
+        [Parameter(Mandatory = $false)]
         [hashtable] $Template = @{},
-        [Parameter(Mandatory)] [hashtable] $GitHub
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $GitHub
     )
 
-    $name = [string](Get-PropertyValue $Repository 'name')
-    $description = [string](Get-PropertyValue $Repository 'description')
-    $wanted = Get-PropertyValue $Repository 'github' ([pscustomobject]@{})
-    $visibility = [string](Get-PropertyValue $wanted 'visibility' 'public')
+    $name = [string](Get-XmipPropertyValue -Object $Repository -Name 'name')
+    $description = [string](Get-XmipPropertyValue -Object $Repository -Name 'description')
+    $wanted = (
+        Get-XmipPropertyValue -Object $Repository -Name 'github' -Default @{}
+    )
+    $visibility = [string](
+        Get-XmipPropertyValue -Object $wanted -Name 'visibility' -Default 'public'
+    )
     if ($visibility -notin @('public','private','internal')) {
         throw "Unsupported GitHub visibility '$visibility' for '$name'."
     }
@@ -82,15 +51,21 @@ function New-XmipGitHubRepository {
     }
 
     $settings = [ordered]@{
-        has_issues = [bool](Get-PropertyValue $wanted 'hasIssues' $true)
-        has_projects = [bool](Get-PropertyValue $wanted 'hasProjects' $false)
-        has_wiki = [bool](Get-PropertyValue $wanted 'hasWiki' $false)
+        has_issues = [bool](Get-XmipPropertyValue -Object $wanted -Name 'hasIssues' -Default $true)
+        has_projects = [bool](
+            Get-XmipPropertyValue -Object $wanted -Name 'hasProjects' -Default $false
+        )
+        has_wiki = [bool](Get-XmipPropertyValue -Object $wanted -Name 'hasWiki' -Default $false)
     }
 
     # One template per language. A module generated from the wrong one
     # arrives holding a Cargo.toml it will never build. ADR-0014 clause 14.
-    $primaryCrate = Get-PropertyValue $Repository 'primaryCrate' ([pscustomobject]@{})
-    $language = [string](Get-PropertyValue $primaryCrate 'language' 'rust')
+    $primaryCrate = (
+        Get-XmipPropertyValue -Object $Repository -Name 'primaryCrate' -Default @{}
+    )
+    $language = [string](
+        Get-XmipPropertyValue -Object $primaryCrate -Name 'language' -Default 'rust'
+    )
     [string] $chosen = ''
 
     if ($Template.ContainsKey($language)) {
@@ -119,10 +94,20 @@ function New-XmipGitHubRepository {
             private = ($visibility -eq 'private')
         }
 
-        $created = Invoke-GitHubApi POST "/repos/$chosen/generate" $body -GitHub $GitHub
+        [hashtable] $generate = @{
+            Path   = "/repos/$chosen/generate"
+            Body   = $body
+            GitHub = $GitHub
+        }
+        $created = Invoke-XmipGitHubApi -Method POST @generate
 
         # generate takes none of the feature switches, so they follow.
-        $null = Invoke-GitHubApi PATCH "/repos/$Owner/$name" $settings -GitHub $GitHub
+        [hashtable] $switches = @{
+            Path   = "/repos/$Owner/$name"
+            Body   = $settings
+            GitHub = $GitHub
+        }
+        $null = Invoke-XmipGitHubApi -Method PATCH @switches
         return $created
     }
 
@@ -130,16 +115,18 @@ function New-XmipGitHubRepository {
         name = $name
         description = $description
         private = ($visibility -eq 'private')
-        auto_init = [bool](Get-PropertyValue $wanted 'autoInitialize' $true)
+        auto_init = [bool](
+            Get-XmipPropertyValue -Object $wanted -Name 'autoInitialize' -Default $true
+        )
     }
     foreach ($key in $settings.Keys) { $body[$key] = $settings[$key] }
     if ($OwnerType -eq 'Organization') { $body.visibility = $visibility }
 
     $path = if ($OwnerType -eq 'Organization') { "/orgs/$Owner/repos" } else { '/user/repos' }
-    return Invoke-GitHubApi POST $path $body -GitHub $GitHub
+    return Invoke-XmipGitHubApi -Method POST -Path $path -Body $body -GitHub $GitHub
 }
 
-function Invoke-ConfigureRepositories {
+function Set-XmipRepository {
     <#
         Repository settings only: description, topics and the feature switches.
         All of it is the GitHub API, so nothing is cloned and nothing is built.
@@ -151,9 +138,16 @@ function Invoke-ConfigureRepositories {
         setting existed.
     #>
     param(
-        [Parameter(Mandatory)] $Manifest,
-        [Parameter(Mandatory)] [System.Collections.IDictionary] $Report,
-        [Parameter(Mandatory)] [hashtable] $GitHub,
+        [Parameter(Mandatory = $true)]
+        $Manifest,
+
+        [Parameter(Mandatory = $true)]
+        [System.Collections.IDictionary] $Report,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $GitHub,
+
+        [Parameter(Mandatory = $false)]
         [string[]] $Only = @()
     )
 
@@ -161,49 +155,61 @@ function Invoke-ConfigureRepositories {
         throw '-Configure requires -GitHubToken or GITHUB_TOKEN.'
     }
 
-    $owner = [string](Get-PropertyValue $Manifest 'owner')
+    $owner = [string](Get-XmipPropertyValue -Object $Manifest -Name 'owner')
     $missing = [Collections.Generic.HashSet[string]]::new(
         [string[]]@($Report.missing), [StringComparer]::OrdinalIgnoreCase)
 
     # -Only narrows configuring as it narrows creating: it was ignored here, so
     # creating two repositories reconfigured all of them (found 2026-09-24).
-    [object[]] $declared = @(Get-PropertyValue $Manifest 'repositories' @())
-    [string[]] $names = @($declared | ForEach-Object { [string](Get-PropertyValue $_ 'name') })
+    [object[]] $declared = @(
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @()
+    )
+    [string[]] $names = @(
+        $declared | ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') }
+    )
     foreach ($wanted in $Only) {
         if ($wanted -notin $names) {
             throw "-Only '$wanted' is not declared in the manifest; nothing is configured by guess."
         }
     }
     [object[]] $chosen = @($declared | Where-Object {
-            $Only.Count -eq 0 -or [string](Get-PropertyValue $_ 'name') -in $Only })
+            $Only.Count -eq 0 -or [string](Get-XmipPropertyValue -Object $_ -Name 'name') -in $Only
+        })
 
     # GitHub refuses a description over 350 characters, and refused it after
     # every repository before it was configured. Every one is judged first.
     [string[]] $long = @($chosen | Where-Object {
-            ([string](Get-PropertyValue $_ 'description')).Length -gt 350 } |
-            ForEach-Object { [string](Get-PropertyValue $_ 'name') })
+            ([string](Get-XmipPropertyValue -Object $_ -Name 'description')).Length -gt 350 } |
+            ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') })
     if ($long.Count -gt 0) {
         throw ("REFUSED: GitHub takes a description of 350 characters or fewer, and " +
             "architecture.toml gives more for $($long -join ', ').")
     }
 
     foreach ($repository in $chosen) {
-        $name = [string](Get-PropertyValue $repository 'name')
+        $name = [string](Get-XmipPropertyValue -Object $repository -Name 'name')
 
         # Nothing to configure on a repository that does not exist.
         if ($missing.Contains($name)) { continue }
 
-        $wanted = Get-PropertyValue $repository 'github' ([pscustomobject]@{})
-        $topics = @(ConvertTo-Array (Get-PropertyValue $wanted 'topics' @()) |
+        $wanted = (
+            Get-XmipPropertyValue -Object $repository -Name 'github' -Default @{}
+        )
+        $declaredTopics = Get-XmipPropertyValue -Object $wanted -Name 'topics' -Default @()
+        $topics = @(ConvertTo-XmipArray -Value $declaredTopics |
                 ForEach-Object { ([string]$_).ToLowerInvariant() } |
                 Where-Object { $_ -match '^[a-z0-9][a-z0-9-]{0,49}$' } |
                 Select-Object -Unique)
 
         $settings = [ordered]@{
-            description = [string](Get-PropertyValue $repository 'description')
-            has_issues = [bool](Get-PropertyValue $wanted 'hasIssues' $true)
-            has_projects = [bool](Get-PropertyValue $wanted 'hasProjects' $false)
-            has_wiki = [bool](Get-PropertyValue $wanted 'hasWiki' $false)
+            description = [string](Get-XmipPropertyValue -Object $repository -Name 'description')
+            has_issues = [bool](
+                Get-XmipPropertyValue -Object $wanted -Name 'hasIssues' -Default $true
+            )
+            has_projects = [bool](
+                Get-XmipPropertyValue -Object $wanted -Name 'hasProjects' -Default $false
+            )
+            has_wiki = [bool](Get-XmipPropertyValue -Object $wanted -Name 'hasWiki' -Default $false)
         }
 
         if (-not $PSCmdlet.ShouldProcess("$owner/$name", 'Configure repository')) {
@@ -211,26 +217,45 @@ function Invoke-ConfigureRepositories {
             continue
         }
 
-        Write-Step "Configuring $owner/$name"
-        $null = Invoke-GitHubApi PATCH "/repos/$owner/$name" $settings -GitHub $GitHub
+        Write-XmipStep -Message "Configuring $owner/$name"
+        [hashtable] $configure = @{
+            Path   = "/repos/$owner/$name"
+            Body   = $settings
+            GitHub = $GitHub
+        }
+        $null = Invoke-XmipGitHubApi -Method PATCH @configure
 
         # Topics are their own endpoint and replace wholesale, which is what
         # makes the manifest authoritative rather than additive.
         if ($topics.Count) {
             $named = [ordered]@{ names = $topics }
-            $null = Invoke-GitHubApi PUT "/repos/$owner/$name/topics" $named -GitHub $GitHub
+            [hashtable] $replace = @{
+                Path   = "/repos/$owner/$name/topics"
+                Body   = $named
+                GitHub = $GitHub
+            }
+            $null = Invoke-XmipGitHubApi -Method PUT @replace
         }
 
         $Report.operations.configured++
     }
 }
 
-function Invoke-CreateRepositories {
+function New-XmipRepository {
     param(
-        [Parameter(Mandatory)] $Manifest,
-        [Parameter(Mandatory)] [System.Collections.IDictionary] $Report,
-        [Parameter(Mandatory)] [hashtable] $GitHub,
+        [Parameter(Mandatory = $true)]
+        $Manifest,
+
+        [Parameter(Mandatory = $true)]
+        [System.Collections.IDictionary] $Report,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $GitHub,
+
+        [Parameter(Mandatory = $false)]
         [switch] $IncludeReserved,
+
+        [Parameter(Mandatory = $false)]
         [string[]] $Only = @()
     )
 
@@ -238,16 +263,16 @@ function Invoke-CreateRepositories {
         throw '-Create requires -GitHubToken or GITHUB_TOKEN.'
     }
 
-    $owner = [string](Get-PropertyValue $Manifest 'owner')
-    $ownerInfo = Invoke-GitHubApi GET "/users/$owner" -GitHub $GitHub
-    $ownerType = [string](Get-PropertyValue $ownerInfo 'type')
+    $owner = [string](Get-XmipPropertyValue -Object $Manifest -Name 'owner')
+    $ownerInfo = Invoke-XmipGitHubApi -Method GET -Path "/users/$owner" -GitHub $GitHub
+    $ownerType = [string](Get-XmipPropertyValue -Object $ownerInfo -Name 'type')
     if ($ownerType -notin @('User','Organization')) {
         throw "Unsupported GitHub owner type '$ownerType' for '$owner'."
     }
 
     if ($ownerType -eq 'User') {
-        $currentUser = Invoke-GitHubApi GET '/user' -GitHub $GitHub
-        $currentLogin = [string](Get-PropertyValue $currentUser 'login')
+        $currentUser = Invoke-XmipGitHubApi -Method GET -Path '/user' -GitHub $GitHub
+        $currentLogin = [string](Get-XmipPropertyValue -Object $currentUser -Name 'login')
         if ($currentLogin -ine $owner) {
             throw ("Authenticated GitHub user '$currentLogin' cannot create repositories " +
                 "for '$owner'.")
@@ -268,21 +293,29 @@ function Invoke-CreateRepositories {
     # repository that needed it.
     foreach ($language in @($template.Keys | Sort-Object)) {
         [string] $name = $template[$language]
-        $templateInfo = Invoke-GitHubApi GET "/repos/$name" -GitHub $GitHub
+        $templateInfo = Invoke-XmipGitHubApi -Method GET -Path "/repos/$name" -GitHub $GitHub
 
-        if (-not [bool](Get-PropertyValue $templateInfo 'is_template' $false)) {
+        [bool] $isTemplate = [bool](
+            Get-XmipPropertyValue -Object $templateInfo -Name 'is_template' -Default $false
+        )
+
+        if (-not $isTemplate) {
             [string] $message = "'$name' is not marked as a template repository. Enable " +
                 'Settings, Template repository on it, or remove it from crate.template.'
 
             throw $message
         }
 
-        Write-Step "Template for $language`: $name"
+        Write-XmipStep -Message "Template for $language`: $name"
     }
 
     $desired = @{}
-    foreach ($repository in @(Get-PropertyValue $Manifest 'repositories' @())) {
-        $desired[[string](Get-PropertyValue $repository 'name')] = $repository
+    [object[]] $declared = @(
+        Get-XmipPropertyValue -Object $Manifest -Name 'repositories' -Default @()
+    )
+
+    foreach ($repository in $declared) {
+        $desired[[string](Get-XmipPropertyValue -Object $repository -Name 'name')] = $repository
     }
 
     if ($Only.Count -gt 0) {
@@ -303,16 +336,18 @@ function Invoke-CreateRepositories {
         $repository = $desired[$name]
         if ($null -eq $repository) { throw "Missing repository definition for '$name'." }
 
-        $maturity = [string](Get-PropertyValue $repository 'maturity' 'reserved')
+        $maturity = [string](
+            Get-XmipPropertyValue -Object $repository -Name 'maturity' -Default 'reserved'
+        )
         if ($maturity -eq 'reserved' -and -not $IncludeReserved) {
             Write-Warning "SKIPPED RESERVED: $name"
             $Report.operations.skipped++
             continue
         }
 
-        $existing = Test-GitHubRepositoryExists -Owner $owner -Name $name -GitHub $GitHub
+        $existing = Test-XmipGitHubRepository -Owner $owner -Name $name -GitHub $GitHub
         if ($existing.Exists) {
-            Write-Step "Repository already exists: $owner/$name"
+            Write-XmipStep -Message "Repository already exists: $owner/$name"
             $Report.actualCount++
             $Report.missing = @($Report.missing | Where-Object { $_ -ine $name })
             $Report.operations.skipped++
@@ -324,7 +359,7 @@ function Invoke-CreateRepositories {
             continue
         }
 
-        Write-Step "Creating repository $owner/$name"
+        Write-XmipStep -Message "Creating repository $owner/$name"
         [hashtable] $creation = @{
             Repository = $repository
             Owner      = $owner
@@ -333,12 +368,12 @@ function Invoke-CreateRepositories {
         }
 
         $created = New-XmipGitHubRepository @creation -GitHub $GitHub
-        $createdName = [string](Get-PropertyValue $created 'name')
+        $createdName = [string](Get-XmipPropertyValue -Object $created -Name 'name')
         if ($createdName -ine $name) {
             throw "GitHub returned repository '$createdName' while creating '$name'."
         }
 
-        $verification = Test-GitHubRepositoryExists -Owner $owner -Name $name -GitHub $GitHub
+        $verification = Test-XmipGitHubRepository -Owner $owner -Name $name -GitHub $GitHub
         if (-not $verification.Exists) {
             throw "Repository '$owner/$name' was not visible after creation."
         }

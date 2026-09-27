@@ -6,10 +6,10 @@
     Moving a submodule inside the estate, and repairing what the move leaves wrong.
 
 .DESCRIPTION
-    Lifted out of Invoke-Compose.ps1 on 2026-09-23, when moving every module under
+    Lifted out of Invoke-XmipCompose.ps1 on 2026-09-23, when moving every module under
     module/core/ taught it what Windows, editors and git itself do to a
     submodule that moves: held directories, half-finished git mv, nested git
-    directories counted from the old depth. Invoke-Compose asks; this moves.
+    directories counted from the old depth. Invoke-XmipCompose asks; this moves.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -51,16 +51,24 @@ function Repair-XmipSubmoduleLink {
     )
 
     [string] $modules = Join-Path $Root '.gitmodules'
-    [string] $text = Get-Content -LiteralPath $modules -Raw
+    $moved = Get-XmipSubmodule -Root $Root | Where-Object { $_.Path -eq $From } |
+        Select-Object -First 1
 
-    $text = $text.Replace("[submodule `"$From`"]", "[submodule `"$To`"]")
-    $text = $text.Replace("path = $From`n", "path = $To`n")
-    Set-Content -LiteralPath $modules -Value $text -NoNewline
+    if ($null -ne $moved) {
+        [string[]] $path = @('config', '--file', $modules, "submodule.$($moved.Name).path", $To)
+        Invoke-XmipGit -At $Root -Arguments $path | Out-Null
+    }
 
-    # The estate's config may not name the submodule at all; then there is
-    # nothing to rename, and that is not a failure.
-    [string[]] $rename = @('config', '--rename-section', "submodule.$From", "submodule.$To")
-    Invoke-XmipGit -At $Root -Arguments $rename -Test | Out-Null
+    # A section named for its path is renamed with it, in .gitmodules and in
+    # the estate's config; the estate's config may not name the submodule at
+    # all, and then there is nothing to rename, which is not a failure.
+    if ($null -ne $moved -and $moved.Name -eq $From) {
+        [string[]] $section = @("submodule.$From", "submodule.$To")
+        [string[]] $inFile = @('config', '--file', $modules, '--rename-section') + $section
+        Invoke-XmipGit -At $Root -Arguments $inFile | Out-Null
+        Invoke-XmipGit -At $Root -Arguments (@('config', '--rename-section') + $section) -Test |
+            Out-Null
+    }
 
     Repair-XmipGitPointer -Root $Root -Path $To
 

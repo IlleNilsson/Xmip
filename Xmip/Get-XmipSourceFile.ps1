@@ -24,10 +24,11 @@
     '.ps1' = 'PowerShell'
 }
 
-# Build output, fetched packages and the assistant's scratch. Nobody wrote
-# these and they would dominate every count that included them.
+# Build output, fetched packages, git's own directory and the working areas.
+# Nobody wrote these and they would dominate every count that included them;
+# Find-XmipFile never descends into one.
 [string[]] $script:XmipSourceSkip = @(
-    'target', 'bin', 'obj', 'node_modules', '.ai-interaction', '.ai-work',
+    'target', 'bin', 'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work',
     '.local-work'
 )
 
@@ -90,6 +91,78 @@ function Measure-XmipSourceCode {
     }
 
     return $Line.Count
+}
+
+
+function Find-XmipFile {
+    <#
+        .SYNOPSIS
+            Every file under the given directories whose name matches, never
+            looking inside build output or the working areas.
+
+        .DESCRIPTION
+            The estate's one walk of its own trees: the source count below,
+            the landing's question whether a module holds a .NET project, the
+            projects a surface builds and what a repository's build uses, and
+            the tests that read every Cargo.toml or project. A directory named
+            in $script:XmipSourceSkip is pruned before it is entered, so a
+            built tree is walked as fast as a clean one; a link is not
+            followed, as Get-ChildItem -Recurse does not. Depth first, each
+            directory's files before its subdirectories, both in name order.
+
+        .PARAMETER Path
+            The directories to walk. One that does not exist is skipped.
+
+        .PARAMETER Filter
+            A file name pattern, as Get-ChildItem -Filter takes it.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.IO.FileInfo])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]] $Path,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Filter
+    )
+
+    foreach ($start in $Path) {
+        [System.IO.DirectoryInfo] $directory = [System.IO.DirectoryInfo]::new($start)
+
+        if ($directory.Exists) {
+            Find-XmipFileBelow -Directory $directory -Filter $Filter
+        }
+    }
+}
+
+
+function Find-XmipFileBelow {
+    <#
+        .SYNOPSIS
+            Find-XmipFile's walk of one directory.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.IO.FileInfo])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.DirectoryInfo] $Directory,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Filter
+    )
+
+    $Directory.GetFiles($Filter) | Sort-Object -Property Name
+
+    [System.IO.DirectoryInfo[]] $children = @(
+        $Directory.GetDirectories() |
+            Where-Object { $_.Name -notin $script:XmipSourceSkip } |
+            Where-Object { -not $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint) } |
+            Sort-Object -Property Name
+    )
+
+    foreach ($child in $children) {
+        Find-XmipFileBelow -Directory $child -Filter $Filter
+    }
 }
 
 
@@ -156,15 +229,11 @@ function Get-XmipSourceFile {
         return
     }
 
-    Get-ChildItem -LiteralPath $tree -Recurse -File |
+    Find-XmipFile -Path $tree -Filter '*' |
         Where-Object { $script:XmipSourceLanguage.ContainsKey($_.Extension) } |
         Where-Object {
             [string] $said = $script:XmipSourceLanguage[$_.Extension]
             $said -in $wanted
-        } |
-        Where-Object {
-            [string] $within = [IO.Path]::GetRelativePath($Root, $_.DirectoryName)
-            -not ($within -split '[\\/]' | Where-Object { $_ -in $script:XmipSourceSkip })
         } |
         ForEach-Object {
             [string[]] $line = @(Get-Content -LiteralPath $_.FullName)

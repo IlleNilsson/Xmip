@@ -28,15 +28,14 @@
 [int] $script:ExtraCeiling = 0
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:AllocationPath = Join-Path $script:Root 'doc/planning/allocation.toml'
     [int] $script:ExtraCeiling = 0
 
-    Import-Module PSToml -ErrorAction Stop
-    Import-Module (Join-Path $script:Root 'Xmip/Xmip.psd1') -Force
-
-    [string] $text = Get-Content -LiteralPath $script:AllocationPath -Raw -Encoding utf8
-    $script:Allocation = ConvertFrom-Toml -InputObject $text -ErrorAction Stop
+    $script:Allocation = InModuleScope Xmip -Parameters @{ Path = $script:AllocationPath } {
+        param($Path)
+        Read-XmipToml -Path $Path
+    }
 
     if ($null -eq $script:Allocation) {
         # Without this, a parse failure surfaces as six tests each saying

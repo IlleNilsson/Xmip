@@ -16,7 +16,8 @@
 # do), not a concept left ambiguous, so it does not count.
 
 BeforeAll {
-    $script:DocsRoot = (Resolve-Path (Join-Path $PSScriptRoot '..' 'doc')).Path
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
+    $script:DocsRoot = Join-Path $script:Root 'doc'
 
     # Built in pieces so each rule is legible and no line runs long.
     $mtn = '(?<!["`*-])'                          # not a mention or a cmdlet's noun, before

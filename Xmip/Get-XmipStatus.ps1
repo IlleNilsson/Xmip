@@ -59,8 +59,6 @@ function Get-XmipStatus {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    Import-XmipPoshGit
-
     # The platform repository first. It is a repository like the others, and it
     # holds the PowerShell module, the decision records and the assembly — the
     # things most likely to be uncommitted while every submodule is clean.
@@ -76,35 +74,15 @@ function Get-XmipStatus {
             continue
         }
 
-        Push-Location -LiteralPath $path
-
-        try {
-            $git = Get-GitStatus
-        }
-        finally {
-            Pop-Location
-        }
-
-        if (-not $git) {
+        if (-not (Test-Path -LiteralPath (Join-Path -Path $path -ChildPath '.git'))) {
             Write-Warning "$module is not a git repository."
             continue
         }
 
-        # posh-git for what porcelain does not have — branch, ahead, behind —
-        # and porcelain for the files.
-        #
-        # Not both from posh-git. Get-GitStatus disables file status for
-        # repositories it judges large and still answers HasWorking: False, so
-        # its Index and Working sets read as "clean" when they mean "not
-        # counted". On 2026-08-27 that hid two modified modules and cost three
-        # rounds of a red build.
-        [string[]] $porcelain = @(Invoke-XmipGit -At $path -Arguments @('status', '--porcelain'))
-        $changed = @($porcelain | Where-Object { $_ })
-        $files = @($changed | ForEach-Object { $_.Substring(3).Trim('"') } | Sort-Object -Unique)
+        $git = Get-XmipRepositoryStatus -At $path
+        $files = @($git.Entry | ForEach-Object { $_.Path } | Sort-Object -Unique)
 
-        $behind = $git.BehindBy -gt 0
-
-        if ($files.Count -eq 0 -and -not $behind -and $git.AheadBy -eq 0) {
+        if ($files.Count -eq 0 -and $git.BehindBy -eq 0 -and $git.AheadBy -eq 0) {
             continue
         }
 
@@ -124,55 +102,135 @@ function Get-XmipStatus {
             continue
         }
 
-        foreach ($line in $changed) {
-            $file = $line.Substring(3).Trim('"')
-
+        foreach ($entry in $git.Entry) {
             [PSCustomObject]@{
                 PSTypeName = 'Xmip.Status'
                 Module     = $module
                 Branch     = $git.Branch
-                State      = $line.Substring(0, 2)
-                Path       = $file
-                Suspicious = [bool] (Test-XmipBuildOutput -Path $file)
+                State      = $entry.State
+                Path       = $entry.Path
+                Suspicious = [bool] (Test-XmipBuildOutput -Path $entry.Path)
             }
         }
     }
 }
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
-
-function Import-XmipPoshGit {
+function Get-XmipRepositoryStatus {
     <#
         .SYNOPSIS
-            Loads posh-git, and says how to get it when it is absent.
+            Where one repository stands: its branch, its upstream, how far
+            ahead and behind, and every changed file.
 
         .DESCRIPTION
-            Imported on demand rather than declared in RequiredModules, for the
-            same reason PSToml is: this module has to load on a machine that
-            does not have its prerequisites yet, because
-            Install-XmipPrerequisite is how they arrive.
+            The estate's one reading of a repository's status, from one
+            `git status --porcelain=v2 --branch`: Get-XmipStatus lists it for
+            every repository, Sync-XmipRepository -Status prints it, and the
+            pin asks it whether a committed pin is still to push.
+
+            Branch is the branch, or the short commit when HEAD is detached,
+            which Detached then says. HasUpstream is false for a branch that
+            tracks nothing, and AheadBy and BehindBy are then 0. Entry is one
+            object per changed path, State the two-letter code of
+            `git status --short` ('??' for untracked) and Path the path, the
+            new one for a rename. Changed counts tracked changes, Untracked
+            the rest; Clean is true when there are none of either.
+
+        .PARAMETER At
+            The repository's working tree.
     #>
     [CmdletBinding()]
-    param()
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $At
+    )
 
-    if (Get-Module -Name posh-git) {
+    [string[]] $said = @(
+        Invoke-XmipGit -At $At -Arguments @('status', '--porcelain=v2', '--branch')
+    )
+    [hashtable] $branch = @{}
+    [object[]] $entry = @(
+        foreach ($line in $said) {
+            if ($line -match '^# branch\.(\S+) (.*)$') {
+                $branch[$Matches[1]] = $Matches[2]
+                continue
+            }
+
+            ConvertFrom-XmipStatusLine -Line $line
+        }
+    )
+
+    [string] $head = [string] $branch['head']
+    [bool] $detached = $head -eq '(detached)'
+    [int] $ahead = 0
+    [int] $behind = 0
+
+    if ([string] $branch['ab'] -match '^\+(\d+) -(\d+)$') {
+        $ahead = [int] $Matches[1]
+        $behind = [int] $Matches[2]
+    }
+
+    if ($detached) {
+        $head = ([string] $branch['oid']).Substring(0, 7)
+    }
+
+    [int] $untracked = @($entry | Where-Object { $_.State -eq '??' }).Count
+
+    return [pscustomobject] @{
+        Branch      = $head
+        Detached    = $detached
+        HasUpstream = $branch.ContainsKey('upstream')
+        AheadBy     = $ahead
+        BehindBy    = $behind
+        Entry       = $entry
+        Changed     = $entry.Count - $untracked
+        Untracked   = $untracked
+        Clean       = $entry.Count -eq 0
+    }
+}
+
+
+function ConvertFrom-XmipStatusLine {
+    <#
+        .SYNOPSIS
+            One changed path from a line of `git status --porcelain=v2`, as
+            State and Path; nothing for a line that names no path.
+
+        .DESCRIPTION
+            Version 2 puts a fixed number of fields before the path, by the
+            line's kind: eight for an ordinary change, nine for a rename or a
+            copy (whose original path follows a tab), ten for an unmerged path.
+            Its '.' for an unchanged side is the ' ' of the short format.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string] $Line
+    )
+
+    [hashtable] $fields = @{ '1' = 8; '2' = 9; 'u' = 10 }
+    [string] $kind = if ($Line.Length -gt 1) { $Line.Substring(0, 1) } else { '' }
+    [string] $state = ''
+    [string] $path = ''
+
+    if ($kind -eq '?' -or $kind -eq '!') {
+        $state = "$kind$kind"
+        $path = $Line.Substring(2)
+    }
+    elseif ($fields.ContainsKey($kind)) {
+        [string[]] $part = $Line.Split(' ', $fields[$kind] + 1)
+        $state = $part[1].Replace('.', ' ')
+        $path = $part[-1].Split("`t")[0]
+    }
+    else {
         return
     }
 
-    if (-not (Get-Module -ListAvailable -Name posh-git)) {
-        throw @'
-posh-git is not installed.
-
-    Install-XmipPrerequisite -Role operator
-
-or, on its own:
-
-    Install-Module posh-git -Scope CurrentUser
-'@
+    return [pscustomobject] @{
+        State = $state
+        Path  = $path.Trim('"')
     }
-
-    Import-Module -Name posh-git -ErrorAction Stop
 }

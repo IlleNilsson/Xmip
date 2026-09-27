@@ -313,11 +313,10 @@ Declaring a thing and mounting a thing are two acts, and only the second one
 has a running cost.
 
 **The three GitHub repositories still exist and are untouched.** Only their
-mounts are gone. `architecture.toml` moves each to `[[retired]]`, which is the
-estate's own mechanism for a repository that is archived rather than deleted —
-without it the retirement reports as drift forever (ADR-0024, and the
-`xmip-core-exclusiveness` episode that taught the estate retiring and
-unmounting are separate actions). Nothing in this record deletes a repository;
+mounts and declarations are gone, and while they exist on GitHub
+`Sync-XmipEstate` reports them as unexpected, which is true: the manifest's
+list of retired repositories that once hid them is gone too (ADR-0060,
+amendment 2026-09-26). Nothing in this record deletes a repository;
 repository-model.md section 8 still holds, and whether these three should be
 deleted on GitHub is the owner's call and nobody else's.
 

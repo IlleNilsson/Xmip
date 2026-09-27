@@ -24,26 +24,24 @@ BeforeAll {
 
         .DESCRIPTION
         One file of 944 lines until 2026-09-22 and a family now: the cmdlet,
-        the suite groups, and the Playground roll it hands its work to. A test
-        asking what the start does reads all three, so it does not care which
-        file a line moved to.
+        the suite groups, the estate's suite, the Playground's checks and the
+        roll it hands its work to. A test asking what the start does reads all
+        of them, so it does not care which file a line moved to.
     #>
     function Get-XmipStartSource {
         [string] $module = Join-Path (Get-XmipRepositoryRoot) 'Xmip'
 
-        return ((
-                'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1',
-                'Start-XmipEstateSuite.ps1', 'Start-XmipPlaygroundRoll.ps1' | ForEach-Object {
+        [string[]] $family = @(
+            'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1', 'Start-XmipEstateSuite.ps1'
+            'Resolve-XmipPlaygroundChoice.ps1', 'Start-XmipPlaygroundRoll.ps1'
+        )
+
+        return (($family | ForEach-Object {
                     Get-Content -Raw -LiteralPath (Join-Path $module $_)
-                }
-            ) -join "`n")
+                }) -join "`n")
     }
 
-    $script:Root = Join-Path $PSScriptRoot '..'
-    $script:ManifestPath = Join-Path $script:Root 'Xmip/Xmip.psd1'
-
-    Get-Module -Name Xmip -All | Remove-Module -Force -ErrorAction SilentlyContinue
-    Import-Module $script:ManifestPath -Force
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 }
 
 Describe 'Start, Get and Stop, and nothing else' {
@@ -272,11 +270,11 @@ Describe 'Start, Get and Stop, and nothing else' {
 Describe 'The environment a roll is started with' {
     It 'sets only what was chosen, with the names the roll reads' {
         InModuleScope Xmip {
-            $least = @{ Stress = 'Harsh'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $least = @{ Stress = 'Harsh'; Area = 'a' }
             $environment = New-XmipPlaygroundEnvironment @least
 
             $environment.XMIP_PLAYGROUND_STRESS | Should -Be 'harsh'
-            $environment.XMIP_PLAYGROUND_SNAPSHOT | Should -Be 's'
+            $environment.XMIP_PLAYGROUND_AREA | Should -Be 'a'
             $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_ONLINE_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
@@ -299,9 +297,7 @@ Describe 'The environment a roll is started with' {
                 TimeFactor     = 9.5e-6
                 LoadBytes      = '512mb'
                 Image          = 'i'
-                Snapshot       = 's'
-                History        = 'h'
-                Activity       = 'a'
+                Area           = 'a'
             }
             $environment = New-XmipPlaygroundEnvironment @chosen
 
@@ -325,7 +321,7 @@ Describe 'The environment a roll is started with' {
         # can only be a count; the roll names those nodes and deals them over
         # receive, process and send, as it does for an omitted -Nodes.
         InModuleScope Xmip {
-            $common = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $common = @{ Stress = 'Calm'; Area = 'a' }
 
             $counted = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 6
             $named = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 'east', 'west'
@@ -345,8 +341,7 @@ Describe 'The environment a roll is started with' {
 
     It 'names nodes, one process each, and an empty list is no nodes' {
         InModuleScope Xmip {
-            $none = @{ Stress = 'Harsh'; Nodes = @(); Snapshot = 's'; History = 'h' }
-            $none.Activity = 'a'
+            $none = @{ Stress = 'Harsh'; Nodes = @(); Area = 'a' }
             $environment = New-XmipPlaygroundEnvironment @none
 
             $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
@@ -567,9 +562,8 @@ Describe 'The environment a roll is started with' {
             Get-XmipNodeCapabilityRefusal | Should -Be ''
 
             $chosen = @{
-                Stress = 'Calm'; Nodes = @('alpha', 'gamma'); Snapshot = 's'; History = 'h'
+                Stress = 'Calm'; Nodes = @('alpha', 'gamma'); Area = 'a'
             }
-            $chosen.Activity = 'a'
             $chosen.NodeCapability = @{ alpha = 'receive'; gamma = 'send' }
             { New-XmipPlaygroundEnvironment @chosen } |
                 Should -Throw -ExpectedMessage '*no node declares process.*'
@@ -812,7 +806,7 @@ Describe 'A suite carries its provider' {
 
             # Playground: no scenarios named is every scenario, which the
             # roll reads from the variable being unset.
-            $whole = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $whole = @{ Stress = 'Calm'; Area = 'a' }
             $environment = New-XmipPlaygroundEnvironment @whole
 
             $environment.ContainsKey('XMIP_PLAYGROUND_SCENARIOS') | Should -BeFalse
@@ -849,7 +843,7 @@ Describe 'A suite carries its provider' {
 
             # -Test * is the whole suite, exactly as omitting it is: neither
             # sets XMIP_PLAYGROUND_SCENARIOS, which is how the roll is told.
-            $whole = @{ Stress = 'Calm'; Snapshot = 's'; History = 'h'; Activity = 'a' }
+            $whole = @{ Stress = 'Calm'; Area = 'a' }
             $star = New-XmipPlaygroundEnvironment @whole -Test '*'
             $none = New-XmipPlaygroundEnvironment @whole
 
@@ -899,51 +893,54 @@ Describe 'A suite carries its provider' {
 }
 
 Describe 'What a node was started with' {
-    It 'is read back from its command line, quoted paths whole' {
+    It 'is what it declared, and no command line is read' {
+        # The node binary declares its flags where it starts (ADR-0053), read
+        # back by the node through the runtime's library. Until 2026-09-27 this
+        # module parsed the node's command line with a copy of its defaults
+        # and of the words --online takes.
         InModuleScope Xmip {
-            [string] $line = '"D:\a b\xmip-playground-node.exe" --name node-03 ' +
-                '--shared "D:\a b\shared" ' +
-                '--stress harsh --rounds 0 --snapshot "D:\a b\node-03.toml" ' +
-                '--interval-ms 500 --can process,send --online true'
-            $flags = Read-XmipTestNodeCommandLine -CommandLine $line
+            Get-Command -Name 'Read-XmipTestNodeCommandLine' -ErrorAction SilentlyContinue |
+                Should -BeNullOrEmpty
 
-            $flags.Name | Should -Be 'node-03'
-            $flags.Shared | Should -Be 'D:\a b\shared'
-            $flags.Stress | Should -Be 'harsh'
-            $flags.Rounds | Should -Be 0
-            $flags.Snapshot | Should -Be 'D:\a b\node-03.toml'
-            $flags.Interval | Should -Be ([timespan]::FromMilliseconds(500))
-            $flags.Capability | Should -Be 'process,send'
-            $flags.Online | Should -BeTrue
+            $self = Get-Process -Id $PID
+            [hashtable] $declared = @{
+                $PID = [ordered]@{
+                    name        = 'xmip-playground-C1-node-node-03'
+                    location    = 'xmip:///C1/node/node-03'
+                    purpose     = 'test'
+                    node        = 'node-03'
+                    shared      = 'D:\a b\shared'
+                    stress      = 'harsh'
+                    rounds      = '0'
+                    snapshot    = 'D:\a b\node-03.toml'
+                    interval_ms = '500'
+                    capability  = 'process,send'
+                    online      = 'true'
+                }
+            }
+
+            $node = ConvertTo-XmipTestNode -Process $self -Declared $declared
+
+            $node.Name | Should -Be 'node-03'
+            $node.Shared | Should -Be 'D:\a b\shared'
+            $node.Stress | Should -Be 'harsh'
+            $node.Rounds | Should -Be 0
+            $node.Snapshot | Should -Be 'D:\a b\node-03.toml'
+            $node.Interval | Should -Be ([timespan]::FromMilliseconds(500))
+            $node.Capability | Should -Be 'process,send'
+            $node.Online | Should -BeTrue
+            $node.Location | Should -Be 'xmip:///C1/node/node-03'
         }
     }
 
-    It 'defaults the way the node binary does when a flag is absent' {
+    It 'says nothing for a node that declared nothing, rather than a guess' {
         InModuleScope Xmip {
-            [string] $line = 'xmip-playground-node.exe --name n --rounds 3'
-            $flags = Read-XmipTestNodeCommandLine -CommandLine $line
+            $node = ConvertTo-XmipTestNode -Process (Get-Process -Id $PID) -Declared @{}
 
-            $flags.Interval | Should -Be ([timespan]::FromMilliseconds(250))
-            $flags.Online | Should -BeFalse
-            $flags.Rounds | Should -Be 3
-            $flags.Capability | Should -Be ''
-        }
-    }
-
-    It 'reads the capability a node declared, and an empty one is no stage' {
-        # ADR-0056: a node declares what it can do and nothing is read out of
-        # its name. The cluster passes --can to every node it spawns, empty
-        # for one that declared no stage and runs whole tests itself.
-        InModuleScope Xmip {
-            $one = Read-XmipTestNodeCommandLine -CommandLine (
-                'xmip-playground-node.exe --name alpha --can receive --online true')
-            $one.Capability | Should -Be 'receive'
-            $one.Online | Should -BeTrue
-
-            $none = Read-XmipTestNodeCommandLine -CommandLine (
-                'xmip-playground-node.exe --name n1 --can "" --online false')
-            $none.Capability | Should -Be ''
-            $none.Online | Should -BeFalse
+            $node.Name | Should -BeNullOrEmpty
+            $node.Interval | Should -BeNullOrEmpty
+            $node.Online | Should -BeFalse
+            $node.Capability | Should -Be ''
         }
     }
 }

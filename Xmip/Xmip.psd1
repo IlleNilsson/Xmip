@@ -26,9 +26,8 @@
     #
     #   PSToml     reads architecture.toml and prerequisite.toml. PowerShell has
     #              no built-in TOML parser.
-    #   posh-git   reads git state as objects. Ahead and behind counts are not
-    #              in `git status --porcelain`, so Get-XmipStatus would
-    #              otherwise answer a narrower question than the prompt does.
+    #   posh-git   the prompt: branch, ahead, behind and changes in front of
+    #              every command. Get-XmipStatus asks git itself.
     #
     # Deliberately not RequiredModules: that would make both hard import-time
     # dependencies, and Install-XmipPrerequisite exists precisely to be runnable

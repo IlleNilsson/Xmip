@@ -11,11 +11,10 @@
 #>
 
 BeforeAll {
-    $script:Root = Join-Path $PSScriptRoot '..'
+    . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
     $script:Readme = Get-Content (Join-Path $script:Root 'README.md') -Raw
 
-    Import-Module (Join-Path $script:ModuleRoot 'Xmip.psd1') -Force
 }
 
 Describe 'README names only commands that exist' {
@@ -261,10 +260,9 @@ Describe 'The setup procedure is present' {
     }
 
     It 'states the PowerShell floor that prerequisite.toml declares' {
-        Import-Module PSToml -ErrorAction Stop
-
-        [string] $prerequisitePath = Join-Path $script:Root 'prerequisite.toml'
-        $prerequisite = ConvertFrom-Toml -InputObject (Get-Content $prerequisitePath -Raw -Encoding utf8)
+        $prerequisite = InModuleScope Xmip {
+            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
+        }
         [string] $floor = [string] $prerequisite.prerequisite.powershell.minimum
 
         [string] $because = 'a reader must be told the same floor the tooling enforces'

@@ -57,10 +57,8 @@ function Get-XmipEstateRun {
         return
     }
 
-    Import-Module PSToml -ErrorAction Stop
-
     foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'estate-*.toml' -File)) {
-        $record = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Toml
+        $record = Read-XmipToml -Path $file.FullName
         ConvertTo-XmipEstateRun -Record $record -File $file.FullName -Area $Path
     }
 }
@@ -72,7 +70,7 @@ function ConvertTo-XmipEstateRun {
             One estate run record as an Xmip.TestStatus.
 
         .PARAMETER Record
-            The record, as ConvertFrom-Toml read it.
+            The record, as Read-XmipToml read it.
 
         .PARAMETER File
             The record's own path.
@@ -122,30 +120,26 @@ function ConvertTo-XmipEstateRun {
         "$passed passed, $failed failed, $skipped skipped in $([int] $seconds) s"
     }
 
-    return [PSCustomObject]@{
-        PSTypeName  = 'Xmip.TestStatus'
-        Suite       = [string](Get-TomlValue -Node $Record -Name 'suite' -Default '')
-        Kind        = 'pester'
-        State       = $state
-        Cluster     = $null
-        Id          = $id
-        StartTime   = $started.ToLocalTime()
-        Stress      = $null
-        Tests       = @(Get-TomlValue -Node $Record -Name 'tests' -Default @())
-        Rounds      = $null
-        Nodes       = $null
-        OnlineNodes = $null
-        Worst       = $null
-        Tally       = $tally
-        Passed      = $passed
-        Failed      = $failed
-        Skipped     = $skipped
-        Fault       = $fault
-        Snapshot    = $null
-        Path        = $Area
-        Record      = $File
-        Log         = [string](Get-TomlValue -Node $Record -Name 'log' -Default '')
+    [hashtable] $row = @{
+        Suite    = [string](Get-TomlValue -Node $Record -Name 'suite' -Default '')
+        Kind     = 'pester'
+        State    = $state
+        Id       = $id
+        Property = @{
+            StartTime = $started.ToLocalTime()
+            Tests     = @(Get-TomlValue -Node $Record -Name 'tests' -Default @())
+            Tally     = $tally
+            Passed    = $passed
+            Failed    = $failed
+            Skipped   = $skipped
+            Fault     = $fault
+            Path      = $Area
+            Record    = $File
+            Log       = [string](Get-TomlValue -Node $Record -Name 'log' -Default '')
+        }
     }
+
+    return (New-XmipTestStatus @row)
 }
 
 
@@ -242,7 +236,7 @@ function Get-XmipEstateResult {
         return
     }
 
-    $record = Get-Content -LiteralPath $run.Record -Raw | ConvertFrom-Toml
+    $record = Read-XmipToml -Path $run.Record
     [object[]] $results = @(
         foreach ($failure in @(Get-TomlValue -Node $record -Name 'failures' -Default @())) {
             New-XmipEstateResult -Run $run -Failure $failure

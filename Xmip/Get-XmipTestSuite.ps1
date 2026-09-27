@@ -368,9 +368,29 @@ function Get-XmipTestChoice {
             ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
     }
     else {
-        'RoundTrip', 'LowLatency', 'HeavyLoad', 'Retention'
-        'Filing', 'ExclusiveClaim', 'DailyBacklog'
+        @($script:XmipPlaygroundTest.Keys)
     }
 
     $names | Where-Object { $_ -like "$Word*" }
+}
+
+
+function Get-XmipTestSuiteChoice {
+    <#
+        .SYNOPSIS
+            The suites Start-XmipTest's -Suite completes to. Private; a
+            completer runs in the caller's scope, so it asks the module.
+
+        .PARAMETER Word
+            What has been typed of the suite.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Word = ''
+    )
+
+    Get-XmipTestSuite | ForEach-Object { $_.Name } | Where-Object { $_ -like "$Word*" }
 }
