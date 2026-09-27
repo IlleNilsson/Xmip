@@ -265,17 +265,54 @@ function Test-XmipPesterSuite {
 
     Write-Host "   running $($suite.Count) Pester file(s)..." -ForegroundColor DarkGray
 
-    $result = Invoke-Pester -Configuration (Get-XmipPesterConfiguration -Path $tests)
+    # In a fresh pwsh, at its top level: called from here, Pester would run
+    # inside this module's scope, and a test that imports a module imports it
+    # there rather than into the session it tests (2026-09-27: the prompt's
+    # chaining test failed only under xgit for that reason).
+    [string] $manifest = Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1'
+    [string] $run = @'
+param($Manifest, $Tests)
+$xmip = Import-Module -Name $Manifest -PassThru
+$configuration = & $xmip { param($Path) Get-XmipPesterConfiguration -Path $Path } $Tests
+$result = Invoke-Pester -Configuration $configuration
+[pscustomobject] @{
+    Passed = $result.PassedCount
+    Failed = $result.FailedCount
+    Names  = @($result.Failed | ForEach-Object { $_.ExpandedPath })
+} | ConvertTo-Json -Compress
+'@
+    [string] $script = Join-Path -Path ([System.IO.Path]::GetTempPath()) `
+        -ChildPath "xmip-pester-$([guid]::NewGuid()).ps1"
+    Set-Content -LiteralPath $script -Value $run
 
-    [string] $tally = "   $($result.PassedCount) passed, $($result.FailedCount) failed"
+    try {
+        [string[]] $said = @(& pwsh -NoProfile -NonInteractive -File $script `
+                -Manifest $manifest -Tests $tests 2>&1 | ForEach-Object { "$_" })
+    }
+    finally {
+        Remove-Item -LiteralPath $script -ErrorAction SilentlyContinue
+    }
+
+    [string] $last = $said | Where-Object { $_ -like '{*' } | Select-Object -Last 1
+
+    if (-not $last) {
+        $said | ForEach-Object { Write-Host "   $_" -ForegroundColor Red }
+        Write-Host '   FAILED. The Pester run gave no verdict.' -ForegroundColor Red
+
+        return $false
+    }
+
+    $result = $last | ConvertFrom-Json
+
+    [string] $tally = "   $($result.Passed) passed, $($result.Failed) failed"
 
     Write-Host $tally -ForegroundColor DarkGray
 
-    foreach ($failure in $result.Failed) {
-        Write-Host "   FAILED $($failure.ExpandedPath)" -ForegroundColor Red
+    foreach ($failure in $result.Names) {
+        Write-Host "   FAILED $failure" -ForegroundColor Red
     }
 
-    return ($result.FailedCount -eq 0)
+    return ($result.Failed -eq 0)
 }
 
 
