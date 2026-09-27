@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 178629 lines of production
+Where each repository mounts and what it holds: 178625 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -234,7 +234,7 @@ hold no source to count.
 │   │   │   │   ├── asyncapi                     243
 │   │   │   │   ├── schematron                   239
 │   │   │   │   ├── regex                        207
-│   │   │   │   ├── csv                          144
+│   │   │   │   ├── csv                          140
 │   │   │   │   ├── java                         113
 │   │   │   │   ├── python                       100
 │   │   │   │   ├── rust                          83
