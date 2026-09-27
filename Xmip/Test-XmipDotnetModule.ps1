@@ -281,13 +281,15 @@ $result = Invoke-Pester -Configuration $configuration
     Names  = @($result.Failed | ForEach-Object { $_.ExpandedPath })
 } | ConvertTo-Json -Compress
 '@
-    [string] $script = Join-Path -Path ([System.IO.Path]::GetTempPath()) `
-        -ChildPath "xmip-pester-$([guid]::NewGuid()).ps1"
+    [string] $file = "xmip-pester-$([guid]::NewGuid()).ps1"
+    [string] $script = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $file
     Set-Content -LiteralPath $script -Value $run
+    [string[]] $arguments = @(
+        '-NoProfile', '-NonInteractive', '-File', $script, '-Manifest', $manifest, '-Tests', $tests
+    )
 
     try {
-        [string[]] $said = @(& pwsh -NoProfile -NonInteractive -File $script `
-                -Manifest $manifest -Tests $tests 2>&1 | ForEach-Object { "$_" })
+        [string[]] $said = @(& pwsh @arguments 2>&1 | ForEach-Object { "$_" })
     }
     finally {
         Remove-Item -LiteralPath $script -ErrorAction SilentlyContinue
