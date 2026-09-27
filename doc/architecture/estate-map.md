@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 178145 lines of production
+Where each repository mounts and what it holds: 178629 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -84,7 +84,7 @@ hold no source to count.
 │   │   │   │   ├── saml                         953
 │   │   │   │   ├── ntlm                         604
 │   │   │   │   ├── kerberos                     581
-│   │   │   │   ├── ldap                         530
+│   │   │   │   ├── ldap                         518
 │   │   │   │   ├── oauth2                       471
 │   │   │   │   ├── digest                       464
 │   │   │   │   ├── ssh-key                      414
@@ -99,7 +99,7 @@ hold no source to count.
 │   │   │   │   ├── mutual-tls                    97
 │   │   │   │   ├── basic                         88
 │   │   │   │   └── password                      80
-│   │   │   ├── transport                       2337
+│   │   │   ├── transport                       2575
 │   │   │   │   ├── opc-ua                      2375
 │   │   │   │   ├── amqp                        2343
 │   │   │   │   ├── mssql                       2115
@@ -108,19 +108,19 @@ hold no source to count.
 │   │   │   │   ├── smb                         1680
 │   │   │   │   ├── nfs                         1650
 │   │   │   │   ├── kafka                       1606
-│   │   │   │   ├── snmp                        1409
+│   │   │   │   ├── snmp                        1416
 │   │   │   │   ├── oracle                      1333
 │   │   │   │   ├── ibm-mq                      1331
 │   │   │   │   ├── postgresql                  1274
 │   │   │   │   ├── nats-jetstream              1154
 │   │   │   │   ├── canopen                     1122
-│   │   │   │   ├── as4                         1099
+│   │   │   │   ├── http                        1117
+│   │   │   │   ├── as4                         1106
 │   │   │   │   ├── s7comm                      1084
 │   │   │   │   ├── io-link                     1070
-│   │   │   │   ├── http                        1025
 │   │   │   │   ├── iec-61850                   1008
 │   │   │   │   ├── dicom                        965
-│   │   │   │   ├── dns                          951
+│   │   │   │   ├── dns                          956
 │   │   │   │   ├── ethercat                     949
 │   │   │   │   ├── peppol                       941
 │   │   │   │   ├── webdav                       935
@@ -132,68 +132,68 @@ hold no source to count.
 │   │   │   │   ├── wireless-hart                859
 │   │   │   │   ├── bluetooth                    855
 │   │   │   │   ├── uds                          833
+│   │   │   │   ├── aws-sns                      830
 │   │   │   │   ├── lorawan                      826
 │   │   │   │   ├── ethernet-ip                  824
 │   │   │   │   ├── j1939                        815
-│   │   │   │   ├── aws-sns                      810
 │   │   │   │   ├── profinet                     800
 │   │   │   │   ├── redis-streams                787
-│   │   │   │   ├── dhcp                         784
+│   │   │   │   ├── dhcp                         783
+│   │   │   │   ├── aws-kinesis                  776
+│   │   │   │   ├── azure-event-grid             772
 │   │   │   │   ├── thread                       758
-│   │   │   │   ├── aws-kinesis                  756
-│   │   │   │   ├── azure-event-grid             752
 │   │   │   │   ├── imap                         752
+│   │   │   │   ├── google-pub-sub               747
+│   │   │   │   ├── azure-service-bus            741
 │   │   │   │   ├── ftp                          740
 │   │   │   │   ├── zigbee                       735
 │   │   │   │   ├── knx                          730
 │   │   │   │   ├── cotp                         728
-│   │   │   │   ├── google-pub-sub               727
-│   │   │   │   ├── azure-service-bus            721
-│   │   │   │   ├── as2                          712
+│   │   │   │   ├── as2                          718
 │   │   │   │   ├── nats                         699
-│   │   │   │   ├── coap                         678
-│   │   │   │   ├── aws-sqs                      675
+│   │   │   │   ├── aws-sqs                      695
+│   │   │   │   ├── coap                         676
 │   │   │   │   ├── iso-tp                       660
 │   │   │   │   ├── mdns                         639
+│   │   │   │   ├── azure-blob                   627
 │   │   │   │   ├── dds                          626
+│   │   │   │   ├── s3                           622
 │   │   │   │   ├── redpanda                     619
 │   │   │   │   ├── pop3                         612
 │   │   │   │   ├── wireless-m-bus               610
-│   │   │   │   ├── azure-blob                   607
-│   │   │   │   ├── s3                           602
-│   │   │   │   ├── syslog                       601
+│   │   │   │   ├── google-cloud-storage         603
+│   │   │   │   ├── syslog                       600
 │   │   │   │   ├── obd-ii                       599
-│   │   │   │   ├── ssdp                         588
-│   │   │   │   ├── google-cloud-storage         583
+│   │   │   │   ├── ssdp                         587
+│   │   │   │   ├── msmq                         532
 │   │   │   │   ├── ethernet                     528
-│   │   │   │   ├── msmq                         526
 │   │   │   │   ├── aws                          525
-│   │   │   │   ├── azure-event-hubs             498
+│   │   │   │   ├── azure-event-hubs             518
 │   │   │   │   ├── smtp                         491
-│   │   │   │   ├── named-pipe                   471
 │   │   │   │   ├── dnp3                         458
 │   │   │   │   ├── iec-60870-5-104              457
 │   │   │   │   ├── serial                       455
+│   │   │   │   ├── named-pipe                   441
 │   │   │   │   ├── websocket                    439
 │   │   │   │   ├── azure                        436
 │   │   │   │   ├── can-bus                      408
 │   │   │   │   ├── sqlite                       361
 │   │   │   │   ├── modbus                       357
-│   │   │   │   ├── unix-socket                  335
-│   │   │   │   ├── bacnet                       278
+│   │   │   │   ├── unix-socket                  273
+│   │   │   │   ├── bacnet                       266
 │   │   │   │   ├── mllp                         241
 │   │   │   │   ├── rabbitmq                     240
-│   │   │   │   ├── udp                          178
+│   │   │   │   ├── udp                          164
 │   │   │   │   ├── tcp                          153
 │   │   │   │   └── file                         139
-│   │   │   ├── path                            2165
-│   │   │   │   ├── fhirpath                     742
-│   │   │   │   ├── jsonpath                     724
-│   │   │   │   ├── dot                          355
-│   │   │   │   ├── xpath                        255
-│   │   │   │   ├── regex                        253
-│   │   │   │   ├── index                        216
-│   │   │   │   └── json-pointer                 144
+│   │   │   ├── path                            2431
+│   │   │   │   ├── jsonpath                     660
+│   │   │   │   ├── fhirpath                     614
+│   │   │   │   ├── dot                          291
+│   │   │   │   ├── index                        158
+│   │   │   │   ├── regex                        158
+│   │   │   │   ├── json-pointer                  60
+│   │   │   │   └── xpath                         49
 │   │   │   ├── identify                        1397
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
@@ -214,25 +214,25 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── ssh-key                       81
 │   │   │   │   └── mac                           71
-│   │   │   ├── contract                         869  Rust 763 · PowerShell 106
+│   │   │   ├── contract                        1012  Rust 906 · PowerShell 106
 │   │   │   │   ├── graphql-schema               846
-│   │   │   │   ├── xml-schema                   762
-│   │   │   │   ├── avro                         741
-│   │   │   │   ├── toon                         719
-│   │   │   │   ├── sql                          709
-│   │   │   │   ├── protobuf                     671
-│   │   │   │   ├── json-schema                  610
+│   │   │   │   ├── xml-schema                   759
+│   │   │   │   ├── avro                         748
+│   │   │   │   ├── json-schema                  746
+│   │   │   │   ├── toon                         711
+│   │   │   │   ├── sql                          710
+│   │   │   │   ├── protobuf                     691
 │   │   │   │   ├── fixed-width                  512
-│   │   │   │   ├── edi-edifact                  469
-│   │   │   │   ├── schematron                   455
-│   │   │   │   ├── edi-x12                      454
+│   │   │   │   ├── edi-edifact                  470
+│   │   │   │   ├── edi-x12                      455
 │   │   │   │   ├── wsdl                         390
-│   │   │   │   ├── openapi                      378
+│   │   │   │   ├── openapi                      385
 │   │   │   │   ├── yaml                         368
 │   │   │   │   ├── hl7-v2                       329
 │   │   │   │   ├── toml                         314
-│   │   │   │   ├── fhir                         290
-│   │   │   │   ├── asyncapi                     242
+│   │   │   │   ├── fhir                         294
+│   │   │   │   ├── asyncapi                     243
+│   │   │   │   ├── schematron                   239
 │   │   │   │   ├── regex                        207
 │   │   │   │   ├── csv                          144
 │   │   │   │   ├── java                         113
@@ -242,14 +242,14 @@ hold no source to count.
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
-│   │   │   ├── route                            562
-│   │   │   │   ├── metadata                     101
-│   │   │   │   ├── content                       91
-│   │   │   │   ├── contract                      75
-│   │   │   │   ├── regex                         70
-│   │   │   │   ├── header                        66
-│   │   │   │   ├── party                         65
-│   │   │   │   └── context                       43
+│   │   │   ├── route                            631
+│   │   │   │   ├── metadata                     124
+│   │   │   │   ├── contract                      86
+│   │   │   │   ├── content                       80
+│   │   │   │   ├── regex                         76
+│   │   │   │   ├── party                         69
+│   │   │   │   ├── header                        68
+│   │   │   │   └── context                       47
 │   │   │   ├── secret                           497
 │   │   │   │   ├── dpapi                        328
 │   │   │   │   ├── file                         223
@@ -281,43 +281,43 @@ hold no source to count.
 │   │   │   ├── receive                          174
 │   │   │   ├── logic                            156
 │   │   │   │   ├── matter                      1129
-│   │   │   │   ├── soap                         273
+│   │   │   │   ├── soap                         274
 │   │   │   │   ├── http-api                     259
 │   │   │   │   └── grpc                         215
 │   │   │   ├── send                             143
-│   │   │   ├── demote                            82
-│   │   │   ├── promote                           48
+│   │   │   ├── demote                           106
+│   │   │   ├── promote                           75
 │   │   │   ├── process                           40
 │   │   │   │       declared, not built 14
 │   │   │   │       bash  c  command  cpp  dotnet  go  grpc  http  java  lua
 │   │   │   │       powershell  python  rust  wasm
+│   │   │   ├── transform                         33
+│   │   │   │       declared, not built 17
+│   │   │   │       c  cpp  dotnet  go  handlebars  java  jolt  jq  jsonata
+│   │   │   │       liquid  mustache  python  rust  tera  wasm  xquery  xslt
 │   │   │   ├── prepare                           29
 │   │   │   │       declared, not built 20
 │   │   │   │       base64  bzip2  canonicalize  charset  checksum  chunking
 │   │   │   │       decrypt  deflate  encrypt  envelope  framing  gzip  hash
 │   │   │   │       line-ending  quoted-printable  sign  tar  verify-signature
 │   │   │   │        zip  zstd
-│   │   │   ├── transform                         29
-│   │   │   │       declared, not built 17
-│   │   │   │       c  cpp  dotnet  go  handlebars  java  jolt  jq  jsonata
-│   │   │   │       liquid  mustache  python  rust  tera  wasm  xquery  xslt
 │   │   │   ├── assign                            28
 │   │   │   └── retain                            27
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             4331
-│   │   │   ├── codec                           2259
+│   │   │   ├── net                             4426
+│   │   │   ├── codec                           2301
 │   │   │   ├── ntlm                             804
 │   │   │   ├── asn1                             497
-│   │   │   ├── tls                              284
+│   │   │   ├── tls                              333
 │   │   │   └── ssh                              169
 │   │   └── operation/
 │   │       ├── cli                             3011
 │   │       ├── gui                             2795
 │   │       │   └── vscode                      1471
 │   │       ├── observe                         2047
-│   │       │   ├── otlp                         574
+│   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      1443  C# 1443 · PowerShell 0
 │   │       ├── audit                            878
@@ -364,17 +364,17 @@ hold no source to count.
 │   │   ├── context                              563
 │   │   ├── journey                              350
 │   │   ├── party                                186
-│   │   ├── stream                                38
+│   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             5734
+│       ├── runtime                             5733
 │       ├── configure                           1357
 │       └── persist                              701
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                          9561
+        └── playground                          9557
 ```
 
 ---

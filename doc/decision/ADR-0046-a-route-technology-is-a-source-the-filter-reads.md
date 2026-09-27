@@ -6,6 +6,8 @@
   and `context:X` alike, through one `route::routable`
 - Amended: 2026-09-26 — a filter is one line of the expression language
   (ADR-0066), a missing value is unknown, and `expression` is retired
+- Amended: 2026-09-27 — a technology compiles a name once and reads the
+  compiled form per Message; only the names the filters use are gathered
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -236,3 +238,58 @@ names what it replaces. What routing does with it — the literal's kind
 standing for the stated type, `not` of unknown staying unknown, the
 retirement of `expression` — is the assistant's reading of that record,
 built the same day; each is the owner's to strike.
+
+## Amendment, 2026-09-27: a name is compiled once, and only what the filters use is gathered
+
+The owner's rule of 2026-09-26 — anything on the message path that takes
+over a millisecond beyond its load is a defect — found three costs in
+decision 2 as built: every `regex:` property compiled its pattern for every
+Message, every `content:` property parsed the whole payload again, and the
+gathering rendered the whole context to text before reading the names a
+filter uses. Decision 2's trait changes shape; what it reads, and the one
+reading `route::routable`, do not.
+
+1. **`Source` compiles; a `Reading` reads.** `technology()` stays. `read`
+   becomes two steps: `compile(name)`, once, when configuration is read,
+   yields a `Reading` — a pattern compiled, a path compiled through the path
+   engine, a context key built, a metadata name decided — and
+   `Reading::read(&Message, content)` answers each Message from it. A
+   refusal of a name is found as it compiles.
+2. **The gathering is compiled once.** `route::Gathering` replaces
+   `promote(&Message, sources, properties)`: `Gathering::of` takes the names
+   every Subscription's filter uses, each once, and compiles each through
+   the source its prefix names; the runtime builds it with its `Runtime`,
+   never per arrival. `Gathering::promote` reads each compiled name into the
+   promoted set, and nothing else: the promoted set is no longer filled from
+   the whole context first, so a context value no filter names is never
+   rendered, and `Promoted::from_context` is gone. What a filter can see is
+   unchanged, because a filter reads only the names it uses.
+3. **Content is parsed once per Message.** The first section's content
+   reaches every reading as `path::Content`, parsed at most once per form
+   however many properties read it; `content:dot:a` and
+   `content:jsonpath:$.b` share one JSON parse. `content` reads through the
+   one path engine it is configured with, in whichever languages that
+   engine carries, and names none itself.
+4. **Refusal is where it was.** A name that cannot be compiled — a prefix no
+   loaded technology provides, a name its technology refuses — is kept as
+   that refusal and refuses each Message at arrival with the reason, as the
+   owner confirmed on 2026-09-26; refusing the node at start instead is
+   ADR-0066 clause 1's open half.
+5. **One extraction, one rendering.** `regex:` extracts through
+   `xmip-core-path-regex`'s `Pattern`, the one the `regex` path language
+   compiles, so a trailing `#name` picks a named group and a group that took
+   no part in the match promotes nothing rather than the whole match. A
+   value's text is `ScalarValue::text` in `xmip-core`, which
+   `route::routable` calls; `route::text_of` is gone.
+
+Held by `xmip-core-route`'s tests (a name compiled once and ten thousand
+Messages read from it, well under a millisecond each on a debug build; only
+the names the filters use gathered), `xmip-core-route-content`'s (content
+parsed once per Message however many properties read it) and the runtime's
+arrival tests.
+
+### Provenance of the amendment of 2026-09-27
+
+The owner's rule of 2026-09-26 on the message path, applied by the
+assistant in the performance wave of 2026-09-27; the shape of the trait is
+the assistant's, and the owner's to strike.
