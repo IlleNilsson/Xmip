@@ -9,7 +9,7 @@
   one that had two writers is struck; and the last copies, the same day),
   ADR-0041 (a mood's color name and its rollup), ADR-0056 (the stage words,
   a node's evidence and its run entry), ADR-0062 (section 9, a program's
-  audit record)
+  audit record), ADR-0065 (section 11, Events subscribed)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
 ## In brief
@@ -454,6 +454,37 @@ cluster's or a node's name is never a stage. The runtime's
 `src/ffi/rule.rs` implements it, `xmip-core-abi`'s `operate::rule` declares
 its shape (`ScopeNodeFn`), and `Xmip.Abi`'s `RuntimeRules.Node` binds it;
 ADR-0052's amendment of the same date says who calls it.
+
+
+## Amendment, 2026-09-26: section 11, Events subscribed
+
+ADR-0065: Events are subscribed from any language, in process through this
+boundary. `xmip_operate.h` gains a section 11 of six symbols, each a separate
+optional export under section 7's rules — `XMIP_OPERATE_VERSION` unchanged —
+and each a thin forwarder into `xmip-core-event`'s process hub:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_event_subscribe_v1` | `event::hub::Hub::subscribe` |
+| `xmip_event_listen_v1` | `event::hub::Subscription::listen` |
+| `xmip_event_next_v1` | `event::hub::Subscription::next` |
+| `xmip_event_batch_free_v1` | releases what `next` handed over |
+| `xmip_event_unsubscribe_v1` | drops the subscription or listener |
+| `xmip_event_publish_v1` | `event::hub::Hub::publish` |
+
+**Unlike section 7 it holds something, and says so, as section 8 does:** a
+subscription is a handle, and a drained batch is a handle whose Events borrow
+from it until it is freed. The header adds `XmipAction` and `XmipOutcome`,
+the `XmipEvent` and `XmipEventFilter` structs and a callback type. A
+subscriber is a Party, authorized by the gate when it subscribes; a refusal
+is `XMIP_E_AUTH` with the gate's sentence written as `xmip_validate_v1`
+writes its report. It touches no snapshot, so clause 6 is not in play: a
+publisher never waits for a subscriber, and `next` wakes on arrival.
+
+The runtime's `src/ffi/event.rs` and `src/ffi/event/header.rs` implement
+them; `xmip-core-abi`'s `operate::event` declares their shapes, and the
+runtime's tests fail to compile if an export drifts; `Xmip.Abi` binds them
+once for .NET, and C, C++, Java and Python bind the header beside it.
 
 
 ## Alternatives considered

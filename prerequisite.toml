@@ -148,6 +148,7 @@ role = "developer"
 note = "Rust compiles but cannot link without a system toolchain, and the failure appears at the linker rather than the compiler, which reads as a Rust problem and is not one."
 
 [prerequisite.linker.windows]
+present_path = ['%ProgramFiles(x86)%\Microsoft Visual Studio\*\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe', '%ProgramFiles%\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe']
 winget = "Microsoft.VisualStudio.BuildTools"
 override = "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 elevation = true
@@ -326,6 +327,7 @@ each engine is a technology under persist).
 """
 
 [prerequisite.libclang.windows]
+present_path = ['%LIBCLANG_PATH%\libclang.dll', '%ProgramFiles%\LLVM\bin\libclang.dll']
 winget = "LLVM.LLVM"
 elevation = true
 note = "A machine-scope installer; winget offers no per-user one, so the install prompts for elevation. It puts clang and libclang.dll in C:\\Program Files\\LLVM\\bin, where bindgen looks first."

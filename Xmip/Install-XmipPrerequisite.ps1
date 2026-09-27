@@ -112,6 +112,21 @@ function Install-XmipPrerequisite {
         $minimum = [string](Get-TomlValue $item 'minimum' '')
         $found = Test-XmipCommand ([string](Get-TomlValue $item 'probe' ''))
 
+        # Some installers keep what they install off PATH — LLVM's libclang,
+        # Visual Studio's link.exe — so a probe by command reported them
+        # missing on a machine that builds with them (2026-09-26). A platform
+        # entry may name where an installed copy sits; wildcards and
+        # %VARIABLES% are expanded, and the first path that exists is enough.
+        if (-not $found) {
+            $bySystem = Get-TomlValue $item $os $null
+            foreach ($pattern in @(Get-TomlValue $bySystem 'present_path' @())) {
+                [string] $expanded = [Environment]::ExpandEnvironmentVariables([string]$pattern)
+                $hit = Get-Item -Path $expanded -ErrorAction SilentlyContinue |
+                    Select-Object -First 1
+                if ($hit) { $found = "present at $($hit.FullName)"; break }
+            }
+        }
+
         # Probe before honouring optional. Optional means you need not have it,
         # not that any version will do — a machine with an older .NET installed
         # would otherwise build the GUI surfaces against it and never be told.

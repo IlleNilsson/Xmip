@@ -80,6 +80,34 @@ and it cost real work.
   calls across it. The owner, 2026-09-24: *Code shall be uniquely placed,
   used by others, whom in turn has unique code used by others. It is common
   sense.*
+- **Rust is here for one reason: memory-safe performance.** Anything that
+  takes more than a millisecond, apart from the load it carries, is a defect
+  to find, not a timeout to raise. A wait a test needs, a start a process
+  needs, a check a surface makes: each is measured, and a second where a
+  millisecond would do is reported as a fault. The owner, 2026-09-26: *We are
+  using Rust for one reason, memory safe performance* — and *if something
+  takes more than a millisecond, apart from load, something is wrong.* And
+  the same day, for the whole message path: *everything — stream, message,
+  receive, process, send, observe, event — has to be near, very near real
+  time; payloads are excused depending on size and complexity.* What Xmip
+  does around a payload is measured in milliseconds; only the work on the
+  payload itself may take longer, in proportion to what it is. The
+  operator tools are built another way for another reason: *CLI, PowerShell
+  and Web operation tools are built on .NET for the tooling and ease of
+  development* (the same day).
+- **Xmip uses its own toolchain — dogfooding as much as possible.** Where
+  Xmip has an implementation of something, Xmip's own programs and tools use
+  it rather than the platform's or a third party's: TLS through
+  `xmip-core-library-tls`, not the operating system's stack; a format through
+  Xmip's reader; a connection through Xmip's transport. A tool that takes
+  the platform's way instead records why. The owner, 2026-09-26: *Xmip shall
+  use its own tool chain, dog fooding as much as possible.*
+- **Until the first release, nothing is deprecated: it is deleted.** A word,
+  a technology, a parameter or a file that is wrong goes, with every use of
+  it, in the same change; nothing is marked obsolete, kept for
+  compatibility or explained where it used to be. Git remembers what was.
+  The owner, 2026-09-26: *There is no need to mark things deprecated, we are
+  not GA, just delete it.*
 - Ask the owner before breaking any recommendation, deleting non-trivial
   content, or deciding anything two records disagree on. He answers fast and
   dislikes discovering decisions after the fact far more than being asked.

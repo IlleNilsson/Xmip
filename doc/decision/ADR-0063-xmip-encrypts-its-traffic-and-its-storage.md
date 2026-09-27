@@ -142,3 +142,20 @@ the platform's key store, pluggable, one `secret` capability.
 AES-256-GCM, the keyed hash for lookup keys, the rule that a customer's
 database is the customer's, and each platform's key store named in clause 4. Each is the owner's to
 strike.
+
+## Amendment, 2026-09-26: every Xmip connection goes through Xmip's TLS
+
+The web host and the remote surfaces were given TLS on 2026-09-25 through
+.NET's own stack — SChannel on Windows, OpenSSL elsewhere — which negotiates
+whatever the operating system offers and not the library's
+X25519MLKEM768-first exchange. Asked whether that was acceptable, the owner,
+2026-09-26, chose from two: **it must use Xmip's TLS.** Every connection an
+Xmip program makes or accepts — the .NET surfaces included — terminates in
+`xmip-core-library-tls`, so the hybrid key exchange, the trust store and the
+certificate rules are one implementation (clause 1, and the rule that code
+is placed once). How the .NET programs reach the library is problem 29,
+step 6.
+
+The owner restated the reason the same day, wider than TLS: *Xmip shall use
+its own tool chain, dog fooding as much as possible* — now a hard-learned
+rule in `CONTRIBUTING.md`.

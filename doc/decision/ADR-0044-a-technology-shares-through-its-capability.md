@@ -194,3 +194,24 @@ The rule is the assistant's drafting of the owner's instruction of 2026-09-09
 to consolidate, on the direction repository-model.md section 4 already fixed.
 The socket.rs move of 2026-09-08 is its first instance, recorded here after
 the fact.
+
+## Amendment, 2026-09-26: the settings declaration lives in the capability
+
+ADR-0064's amendment of 2026-09-26 has every technology declare its own
+settings, so a Location's form, its validation at start and the
+technology's own reading of them are one declaration. What every technology
+shares of that goes up, as clause 1 says: the **shape** — a setting's name,
+kind, default or requirement, meaning and the side that reads it — and the
+one reading of a Location's values through it are `xmip-core`'s `settings`,
+the lowest crate every capability already reaches, because a transport's
+settings and a contract's are the same subject. How a technology of one
+capability takes them is that **capability's**: `transport::Configured`
+(`configured.rs`: `SETTINGS` and the one constructor from what it read),
+and `contract::ContractFactory::settings` beside `load`. What stays in the
+technology is its declaration and nothing else: no technology parses a
+setting by hand, and no layer above it — `configure`, the runtime, the
+language server, the desktop editor — keeps a list of what a technology
+takes.
+
+Provenance: the owner's requirement, 2026-09-26 (ADR-0064); the placement is
+the assistant's drafting of clause 1.

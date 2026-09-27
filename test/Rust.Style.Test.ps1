@@ -291,6 +291,33 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
 
         $wrong.Count | Should -Be 0 -Because $because
     }
+
+    It 'builds dependencies optimized in every workspace root' {
+        # rust-style.md section 5b (the owner, 2026-09-26): a debug build of
+        # the codec's base64 took seconds where a release build took
+        # milliseconds, and tests timed out for it. A workspace root is the
+        # only place a profile is read, so every one carries it.
+        [string[]] $missing = @()
+
+        foreach ($file in $script:Crate) {
+            [string] $text = Get-Content -LiteralPath $file.FullName -Raw
+
+            # Scratch crates in the working area are nobody's build.
+            if ($file.FullName -match '[\\/]\.ai-interaction[\\/]') {
+                continue
+            }
+
+            if ($text -notmatch '(?m)^\[workspace\]' -or $text -notmatch '(?m)^\[package\]') {
+                continue
+            }
+
+            if ($text -notmatch '(?m)^\[profile\.dev\.package\."\*"\]\s*\r?\nopt-level\s*=\s*3') {
+                $missing += $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
+            }
+        }
+
+        $missing.Count | Should -Be 0 -Because ($missing -join "`n")
+    }
 }
 
 Describe 'ADR-0021: the .NET surfaces are on the latest target' {

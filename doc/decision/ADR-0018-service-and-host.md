@@ -227,3 +227,12 @@ terminology.md arbitrates such a collision, so the phases are renamed to
 Services**, which is what phase 3's tree already validated. The state and phase
 enums in `service.rs` were renamed to match. No behavior changed; the names now
 say what the phases do.
+
+## Amendment, 2026-09-26: the executable is the estate root's
+
+The Xmip Service had no executable. The owner, 2026-09-26, chose from two
+(the root `xmip` crate, or a new repository): **the root crate.** `xmip-service`
+is a binary of the estate's root crate, the assembly that already carries the
+server and tiny profiles; it links the technologies a deployment needs by
+build feature, because `xmip-core-runtime`, a Platform crate, may depend on
+no technology. The runtime stays a library the binary drives.

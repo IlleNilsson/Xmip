@@ -372,8 +372,10 @@ repositories are scaffolded and not yet written. The manifest records that
 distinction for every repository, and it belongs in every technical
 evaluation. [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
 lists what is undecided, in order, with options and a recommendation for
-each. A visual designer is not built; the Monitor view is the first operator
-screen, with the Configuration tree and the Topology beside it.
+each. Routes are drawn in VS Code's designer and held in an Xmip Application
+(ADR-0064); Events are subscribed from any language (ADR-0065) and exported
+over OTLP and Prometheus. The Monitor view is the first operator screen, with
+the Configuration tree and the Topology beside it.
 
 *Note.* The designs Xmip departs from are named in the decision records where
 the departure was decided.

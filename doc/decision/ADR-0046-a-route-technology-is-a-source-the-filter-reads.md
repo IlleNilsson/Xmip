@@ -4,6 +4,8 @@
 - Date: 2026-09-10
 - Amended: 2026-09-24 — a `Null` is absent and bytes are refused, under `X`
   and `context:X` alike, through one `route::routable`
+- Amended: 2026-09-26 — a filter is one line of the expression language
+  (ADR-0066), a missing value is unknown, and `expression` is retired
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -28,6 +30,9 @@ beside the bytes, `metadata` reads what the Message knows about itself,
 any text value. The prefix on a property names its source; no prefix is
 context, which is what routing has always read. The capability owns the split
 and the gathering; a technology owns one reading.**
+
+*Amended 2026-09-26: seven. `expression` is retired, because a filter is
+itself one line of Xmip's expression language (ADR-0066).*
 
 ## Context
 
@@ -171,3 +176,63 @@ the Message Context once, as `<protocol>.header.<name>` through
 `context::property::header`, case folded where the protocol folds it. No
 transport writes into a context. Chosen from two: the runtime at arrival, or
 each transport. Not yet built (problem 25, row r).
+
+*Confirmed by the owner, 2026-09-26:* a Message whose Subscription filter
+names a value that cannot be read — bytes where text is read, or a prefix no
+loaded technology provides — is **refused at arrival**, before any Journey
+opens, with the reason and audited, as the runtime has done since problem
+25 row n was resolved. Chosen from two: refuse at arrival, or accept it and
+let that Subscription not match.
+
+## Amendment, 2026-09-26: a filter is one expression, and `expression` is retired
+
+ADR-0066 clause 2 gave Xmip one expression language and named the three
+grammars it replaces. For routing that changes four things; decision 2's
+trait and the one reading, `route::routable`, do not change.
+
+1. **The filter is one line of the language.** `route::Predicate`,
+   `route::Value` and `route::Test` are gone. A Subscription's `filter` is
+   the compiled expression of `xmip-core-path`
+   (`path::expression::Expression`), read from its text as the Application
+   loads —
+   `filter = "MessageType = 'Order' and not Amount > 1000 and
+   header:http.x-channel = 'web'"` — and `route::publish` decides it from
+   the tree, never parsing again. Each property a filter names is still one
+   of this record's prefixed names, read through `route::promote`; a name
+   holding what a bare word cannot is written in double quotes
+   (`"regex:OrderNo:^INV-(\d+)$" = 12345`).
+2. **The literal states the kind.** Where the Subscription used to state a
+   value's type (`value = { integer = 1000 }`), the literal's spelling does:
+   `Amount > 1000` reads Amount as an integer, `Amount = '1000'` as text. A
+   promoted value is still never guessed: it is text until the literal it
+   meets gives it a kind, and text that will not read as that kind is said
+   in the sentence routing always gave.
+3. **A value that is not there is unknown.** A property nothing promoted,
+   or one that will not read as the kind asked, is *unknown* with the reason
+   routing always gave (`nothing promoted Region`), in SQL's three truths;
+   only *true* matches. One behavior changes with it: `not` of unknown is
+   unknown, so `not Region = 'SE'` no longer matches a Message with no
+   Region — it declines, saying nothing promoted Region.
+4. **Seven technologies.** `expression` read a predicate as a property and
+   yielded `true` or `false` for a filter to compare: a filter inside a
+   filter, and a second grammar. A filter is itself the expression now, so
+   `xmip-core-route-expression` is retired (`architecture.toml`
+   `[[retired]]`) and unmounted from `xmip-core-route`; `starts-with` is
+   `like 'x%'`. Decision 3's eight are seven: `content`, `context`,
+   `contract`, `header`, `metadata`, `party` and `regex`. The predicate
+   technology `expression` drove, `xmip-core-path-predicate`, is retired
+   with it: its grammar became the language, which lives in `xmip-core-path`
+   itself (ADR-0066).
+
+Held by `xmip-core-route`'s tests (`not` of unknown, the literal's kind, a
+filter that does not compile refused as the Subscription is read), each
+technology's own, and the runtime's
+`a_filter_that_does_not_compile_refuses_the_node_at_start`.
+
+### Provenance of the amendment of 2026-09-26
+
+ADR-0066, accepted by the owner on 2026-09-26, decides the language and
+names what it replaces. What routing does with it — the literal's kind
+standing for the stated type, `not` of unknown staying unknown, the
+retirement of `expression` — is the assistant's reading of that record,
+built the same day; each is the owner's to strike.

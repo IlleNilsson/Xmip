@@ -198,6 +198,25 @@ the list of those files, one per crate, fails on any other file that allows
 unsafe code or crate that lowers the lint without one, and fails on a block without its `SAFETY`
 comment.
 
+## 5b. Dependencies build optimized, even in a debug build
+
+Every crate that is its own workspace root carries
+
+```toml
+[profile.dev.package."*"]
+opt-level = 3
+```
+
+so what a crate depends on runs at near release speed in a debug build,
+while the crate's own code stays debuggable. Unoptimized, a parser such as
+`toml` runs about twenty times slower; that, not Xmip, was behind a week of
+tests failing on time and a cluster that judged healthy nodes hung
+(2026-09-25). The owner, 2026-09-26, chose it for every crate over the
+Playground alone, under the rule that anything over a millisecond apart from
+load is a defect (`CONTRIBUTING.md`). The first build after a dependency
+changes takes longer; every build after it is cached. `test/Rust.Style.Test.ps1`
+holds every workspace root to it.
+
 ## 6. What this does not enforce
 
 Module layout beyond file length, whether a `struct` should have been three, and

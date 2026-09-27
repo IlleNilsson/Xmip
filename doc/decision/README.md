@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty-three decisions, read as one document.
+Sixty-seven decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -193,6 +193,46 @@ Log, the systemd journal or syslog on Linux, the unified log on macOS.
 Nothing an Xmip program does fails silently.**
 
 → [Every Xmip tool audits, in full](ADR-0062-every-xmip-tool-audits.md)
+
+### How a program in another language learns what Xmip did
+
+**One Event model and one subscription rule, in Rust, in `xmip-core-event`.
+A program subscribes two ways, both through that one rule: in process,
+through a subscribe call in the runtime's C library — C and C++ through the
+header, .NET through `Xmip.Abi`, Java through its foreign-function API,
+Python through ctypes, and any language that can call C — or over the wire,
+in the Event wire form delivered through Xmip's own transports, which any language's
+ordinary client receives. Every subscriber is a Party, authorized for what it
+may see, and every delivery is audited.**
+
+→ [Events are subscribed from any language, in full](ADR-0065-events-are-subscribed-from-any-language.md)
+
+### When each kind of design becomes something that runs, and the one
+
+expression language they share
+
+**A route is configuration: its filter is text in the Xmip Application's
+TOML, compiled once when a node starts and evaluated from the compiled form.
+A transform and an Xmip Process are code: what a developer
+designs is compiled at design time into an artifact a node loads, so a
+mistake in one is found when it is built, not when a Message arrives. Both
+use one expression language, Xmip's own and deliberately small, owned by one
+crate.**
+
+→ [Routes are configured; transforms and processes are compiled, in full](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md)
+
+### How many network addresses a node needs, and which
+
+**A node needs one IP address, and by default it is the host's own. Its
+planes — operate (the operator surfaces), sync (node to node: claims, state,
+Events) and alive (the heartbeat) — are separate listeners on that address,
+each its own port and socket, so none waits behind another. An operator may
+give Xmip a dedicated address, or any listener its own, and may add a second
+link for the heartbeat; nothing requires either. There is no floating cluster
+address: the cluster is reached through a name that lists its nodes, and any
+node answers.**
+
+→ [A node has one address, in full](ADR-0067-a-node-has-one-address.md)
 
 ---
 
@@ -406,6 +446,9 @@ beside the bytes, `metadata` reads what the Message knows about itself,
 any text value. The prefix on a property names its source; no prefix is
 context, which is what routing has always read. The capability owns the split
 and the gathering; a technology owns one reading.**
+
+*Amended 2026-09-26: seven. `expression` is retired, because a filter is
+itself one line of Xmip's expression language (ADR-0066).*
 
 → [A route technology is a source the filter reads, in full](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md)
 
@@ -850,6 +893,20 @@ runs the whole suite, for every suite and every provider.**
 
 → [A test suite carries its provider, in full](ADR-0059-a-test-suite-carries-its-provider.md)
 
+### How a developer designs routes, transforms and processes, and where the
+
+design lives
+
+**A developer designs graphically in VS Code, as in BizTalk: routes first,
+then transforms, then processes. What they draw belongs to an Xmip Application —
+the integration, drawn once and deployed to whichever nodes run it — and a
+node's configuration binds it: which Application, on which node, with which
+addresses. Every design is a text document in the repository; the designer
+is a view of that text, its rules are Xmip's own in the Rust language server,
+and only the drawing is in the extension.**
+
+→ [Developers design in VS Code, in full](ADR-0064-developers-design-in-vs-code.md)
+
 ---
 
 ## 6. How the work is done
@@ -911,6 +968,7 @@ You have a word. This gives you the decision that governs it.
 | Activity, recent items | [Recent activity](ADR-0032-recent-activity.md) |
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
+| alive | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
@@ -921,11 +979,14 @@ You have a word. This gives you the decision that governs it.
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | authenticator | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | authorizer | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
+| binding | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Claim, claimable artifact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
+| compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
+| compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | configuration | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
@@ -937,6 +998,7 @@ You have a word. This gives you the decision that governs it.
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| designer | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Development node | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | directory of many usages | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
@@ -947,7 +1009,9 @@ You have a word. This gives you the decision that governs it.
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
+| Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| expression | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | feature capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
@@ -968,10 +1032,12 @@ You have a word. This gives you the decision that governs it.
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| language binding | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | late failure | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | license boundary | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | License, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
+| listener | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
@@ -988,6 +1054,7 @@ You have a word. This gives you the decision that governs it.
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | near end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
+| Node address | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | node capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
@@ -996,6 +1063,7 @@ You have a word. This gives you the decision that governs it.
 | Offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | online capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | online, the switch | [Offline is the default](ADR-0045-offline-is-the-default.md) |
+| operate | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
@@ -1004,6 +1072,7 @@ You have a word. This gives you the decision that governs it.
 | part | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| plane | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Platform is not the default | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
@@ -1031,6 +1100,7 @@ You have a word. This gives you the decision that governs it.
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
+| second link | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | service principal name, SPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
@@ -1044,13 +1114,16 @@ You have a word. This gives you the decision that governs it.
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
+| subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | suite declaration | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
+| sync | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the carrier technology | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
+| the Event wire form | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | the Foundation-Platform test | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | the key home | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
@@ -1072,6 +1145,7 @@ You have a word. This gives you the decision that governs it.
 | vtable shim | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Wave two | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
+| Xmip Application | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Xmip tool | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
@@ -1162,3 +1236,7 @@ is nowhere else.
 | [0061](ADR-0061-a-provider-builds-against-the-sdk.md) | A provider builds against the capabilities; the SDK simulates | |
 | [0062](ADR-0062-every-xmip-tool-audits.md) | Every Xmip tool audits | |
 | [0063](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) | Xmip encrypts its own traffic and its own storage | |
+| [0064](ADR-0064-developers-design-in-vs-code.md) | Developers design in VS Code | |
+| [0065](ADR-0065-events-are-subscribed-from-any-language.md) | Events are subscribed from any language | |
+| [0066](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) | Routes are configured; transforms and processes are compiled | |
+| [0067](ADR-0067-a-node-has-one-address.md) | A node has one address | |

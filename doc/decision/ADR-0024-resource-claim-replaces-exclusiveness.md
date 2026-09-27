@@ -195,3 +195,21 @@ solve. Clause 6 costs one configuration field.
 **Keep `ExclusiveScope::Cluster` and refuse it at runtime.** Honest, and it
 leaves a type that can express a request the system will always deny. A
 vocabulary that names impossible things gets used to describe them.
+
+## Amendment, 2026-09-26: a file is claimed by an atomic rename
+
+Clause 2 claimed a local file by opening it with exclusive sharing and
+holding the handle, and clause 5 rejected renaming at claim time; the
+Suggested order and problem 23 said the opposite. Asked to settle it, the
+owner, 2026-09-26, chose from two (the exclusive open, or an atomic rename):
+**an atomic rename.** A node claims a file by renaming it, in one step, to a
+name that says which node took it; whichever rename succeeds owns the file,
+on a local disk and on a network share alike, where locks are unreliable.
+Clauses 2 and 5 are superseded on this point.
+
+What the rename costs, and so what it carries: a node that dies after the
+rename leaves a claimed file behind. The claimed name records the node and
+the time, and a node that starts, or the cluster, returns a claim whose
+owner is gone to the inbox — a recovery the exclusive open never needed.
+`transport/.src/claim.rs` and the file transport follow in phase C's first
+slice.

@@ -82,7 +82,7 @@ Context already said of installing one.
 The open question above — *whether the RocksDB-style shape is filled by
 RocksDB or by a pure Rust store* — is answered by the owner, 2026-09-25:
 **RocksDB**, for the runtime store (Messages, Journeys, checkpoints), and an
-embedded SQLite for the management store, the two shapes
+embedded SQLite for the management store, which holds history and records, never configuration (ADR-0031, amendment 2026-09-26), the two shapes
 `database-selection.md` chose before it was folded away on 2026-08-25.
 
 He asked for it believing it was already there. It had been: a RocksDB
