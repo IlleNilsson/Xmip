@@ -61,7 +61,8 @@ runtime as the node starts (`start.rs`,
 loaded technology reads is still refused at arrival, before any Journey
 opens, as the owner confirmed in ADR-0046 the same day: the runtime holds no
 set of loaded route technologies at start yet (the `Runtime`'s
-`route_sources` are assembled only where a Message is routed), so that half
+`gathering` is compiled only where a `Runtime` is built; ADR-0046, amended
+2026-09-27), so that half
 of this clause waits for the runtime to load route technologies as modules
 (ADR-0018 phases 4 to 9). Transforms and Xmip Processes: not built.
 

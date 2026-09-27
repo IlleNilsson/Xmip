@@ -648,7 +648,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi", "xmip-core-library-net"]
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -698,7 +698,7 @@ dependency = []
     primaryLanguage = "java"
     [xmip.core.contract.json-schema]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.contract.openapi]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -731,7 +731,7 @@ dependency = []
     specification = "WSDL 1.1 and 2.0, every reference landing"
     [xmip.core.contract.xml-schema]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
 
     # TOML and YAML are configuration formats, not messages; what the estate
     # needs of them is a contract (ADR-0047, owner 2026-09-10).
@@ -780,25 +780,25 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
     [xmip.core.path.dot]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core", "xmip-core-contract"]
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
     [xmip.core.path.fhirpath]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-library-codec"]
     specification = "HL7 FHIRPath, the normative core over FHIR JSON"
     [xmip.core.path.index]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
     [xmip.core.path.json-pointer]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core", "xmip-core-contract"]
     [xmip.core.path.jsonpath]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-library-codec"]
     specification = "IETF RFC 9535"
     [xmip.core.path.regex]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core", "xmip-core-contract"]
     specification = "A regular expression over text: the first match or a named group reads, a match writes"
     [xmip.core.path.xpath]
     maturity = "scaffolded"
@@ -856,7 +856,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-contract", "xmip-core-message"]
+  dependency = ["xmip-core", "xmip-core-contract", "xmip-core-message", "xmip-core-stream"]
     [xmip.core.transform.c]
     maturity = "reserved"
     [xmip.core.transform.cpp]
@@ -1006,7 +1006,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec"]
     [xmip.core.authenticate.ldap]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-net"]
     [xmip.core.authenticate.mutual-tls]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
@@ -1108,30 +1108,25 @@ dependency = []
   dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-path"]
     [xmip.core.route.content]
     maturity = "scaffolded"
-    dependency = [
-        "xmip-core-message",
-        "xmip-core-path",
-        "xmip-core-path-dot",
-        "xmip-core-path-jsonpath",
-    ]
+    dependency = ["xmip-core-message", "xmip-core-path"]
     [xmip.core.route.context]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core-message", "xmip-core-path"]
     [xmip.core.route.contract]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path"]
     [xmip.core.route.header]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path"]
     [xmip.core.route.metadata]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message"]
+    dependency = ["xmip-core-message", "xmip-core-path"]
     [xmip.core.route.party]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core-message", "xmip-core-context", "xmip-core-path"]
     [xmip.core.route.regex]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core-message", "xmip-core-path", "xmip-core-path-regex"]
 
   [xmip.core.process]
   description = "Common Process execution functionality."
