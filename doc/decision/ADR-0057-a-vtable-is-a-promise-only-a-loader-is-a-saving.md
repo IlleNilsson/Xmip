@@ -234,9 +234,9 @@ fixed its shape, so the table would be transcription rather than design. It
 loses to `authenticate` on size, six technologies against eighteen, and on
 demand: nobody outside Xmip wants to write a retry policy, and several
 people want to write a mechanism. Note that only its module-side trait is
-ABI-friendly; `ResilienceExecutor::execute<T, E, F>` is generic over a
-closure, which specification section 12 forbids outright, so that half stays
-inside Xmip whatever happens.
+ABI-friendly; `execute` is generic over a closure, which specification
+section 12 forbids outright, so that half stays inside Xmip whatever
+happens.
 
 ### 8. The order of work, and the risk in each step
 

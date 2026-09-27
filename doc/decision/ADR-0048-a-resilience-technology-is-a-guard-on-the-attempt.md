@@ -76,6 +76,18 @@ already declares.
   problem's question about the tier stays open.
 - Problem 10's rule is honored: the trait landed before any repository.
 
+## Amendment, 2026-09-27: the guards are the surface, and read one failure
+
+The first consequence is amended. `ResiliencePolicy`, `ResilienceExecutor`
+and `ResilienceClassifier` had no caller: the guards are built by the
+technologies' own constructors, `execute` is what runs in-process, and
+whether a failure may be retried is the failure's own property. They are
+deleted, with `RetryPolicy`, `TimeoutPolicy` and the `from_policy`
+constructors that were their only readers. What an attempt failed with is
+`xcore::Failure`, the one retryable failure (ADR-0037, amendment
+2026-09-27); `resilience` keeps `Guard`, `Attempt`, `Decision`, `Guarded`
+and `execute`.
+
 ## Provenance
 
 The sentence and the trait are the assistant's, 2026-09-10, under the owner's

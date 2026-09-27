@@ -61,6 +61,30 @@ forced through the macro.
 - New capability crates declare their error in one line instead of copying three
   impls, so the pattern stops spreading.
 
+## Amendment, 2026-09-27: one retryable failure
+
+Whether a failure is worth retrying was still modeled five times: `send`'s
+`SendError` and `process`'s `ProcessError` through
+`declare_retryable_error!`, `transport`'s hand-written
+`TransportError` (the same two fields and constructors, a different
+`Display`), `resilience`'s `Failure` with a `FailureKind`, and a
+`ResilienceClassifier` nothing implemented. Clauses 2 and 3 are amended:
+
+- **`xmip-core` holds the one retryable failure, `Failure`**
+  (`src/error.rs`): `message`, `retryable`, `retryable` / `permanent`
+  constructors, `at` to say where it was met without losing the judgement,
+  and a `Display` that writes the judgement after the message —
+  `the peer hung up (retryable)` — as transport's did. A send answers with
+  it, and the resilience guards judge an attempt by it.
+- **`declare_retryable_error!(Name)` declares a crate's own name for that
+  shape** and a conversion into `Failure` that keeps the judgement. It is for
+  a crate that must convert its dependencies' errors into its own with `?`,
+  which only a type it owns can do: `transport` declares `TransportError`
+  with it and keeps `classify` and its `From` conversions beside it. Clause
+  3's exception is withdrawn; nothing writes the shape by hand.
+- `SendError` and `ProcessError` are deleted; `SendTransport::send` and
+  `XmipProcess::execute` answer with `Failure`.
+
 ## Provenance
 
 The finding is the consolidation survey's, 2026-09-06; the owner directed the
