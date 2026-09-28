@@ -90,3 +90,12 @@ Whether a failure is worth retrying was still modeled five times: `send`'s
 The finding is the consolidation survey's, 2026-09-06; the owner directed the
 whole safe consolidation batch be run. The two-macro shape and the decision to
 leave transport's richer error alone are the assistant's drafting of it.
+
+## Amendment, 2026-09-28: a send answers with the transport's failure
+
+`xmip-core-send`'s `SendTransport` is deleted as a second transport trait
+that no technology implemented; a Send Location sends through
+`xmip-core-transport`'s `Transport::send`, which answers with
+`TransportError`, declared by `declare_retryable_error!` and converting into
+`Failure` with its judgement kept. Departure records that judgement on each
+failed departure (`Departed::Failed`).

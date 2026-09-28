@@ -236,3 +236,32 @@ is a binary of the estate's root crate, the assembly that already carries the
 server and tiny profiles; it links the technologies a deployment needs by
 build feature, because `xmip-core-runtime`, a Platform crate, may depend on
 no technology. The runtime stays a library the binary drives.
+
+## Amendment, 2026-09-28: the nine phases run
+
+The owner, 2026-09-28: *The runtime starts on a node, loading all modules
+needed to work according to dependencies and configuration.*
+`xmip-core-runtime`'s `running::Running::start` runs clause 4's nine phases
+over a node's configuration and the technologies the program starting it
+linked (`linked::Linked`): phases 1 to 3 read, build and validate — every
+Location held to its technology's settings declaration, and a transport, an
+accepted mechanism or a filter name the program was not built with refused
+there; phase 4 plans the Host Services the started Modules need
+(`host::plan`, one host-type rule); phase 5 starts the one this process is,
+the in-process host, and refuses a Module needing a Host Process of its own,
+which nothing spawns yet; phase 6 loads each technology the configuration
+names once and opens each started library once (ADR-0025, ADR-0057); phase
+7 registers each capability once; phase 8 is the execution tree's; phase 9
+builds each Location's transport once and serves every Receive Location on
+a thread of its own. `Running::stop` is clause 12 for one process: drain
+(each Receive Location takes nothing more once its current receive
+returns), finish (what it took is carried whole), release (transports and
+Modules let go), exit.
+
+What is not built: the master supervising Host Processes, registration
+(`registration.rs` generates what a service manager is told, and nothing
+applies it), and the executable the amendment of 2026-09-26 decides —
+`xmip-service` in the root crate — so the program starting a node today is
+the runtime's own test. `service.rs` keeps the phase names; the plan type
+and the service state that restated phases 1 to 3 are deleted, and
+`start::start`, what `xmip_start_v1` runs, is those three phases alone.

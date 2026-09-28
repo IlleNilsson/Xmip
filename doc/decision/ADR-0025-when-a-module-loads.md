@@ -166,3 +166,20 @@ be got wrong.
 43 modules declare something the manifest already knows. A default that reads
 from `architecturalDomain` cannot drift from the domain, because it is the
 domain.
+
+## Amendment, 2026-09-28: a node loads what its configuration names, once
+
+Built in `xmip-core-runtime` (`running.rs`, `startup.rs`, `library.rs`).
+At phase 6 a node loads every technology its configuration names — the
+transport of each started Location, the route technology of each prefix a
+filter uses, the authenticator of each mechanism a Receive Location accepts
+— once however many Locations use it, from what the program starting it
+linked, and carries each one's settings declaration into the catalogue as it
+loads (ADR-0064). Every `[[modules]]` entry it starts is opened from its
+library once through the C ABI under the `dynamic-loading` feature, and
+refused without it. All of these are Capabilities, eager by clause 1; the
+node loads no Operations Module, so clause 3's delayed load is still not
+exercised, and a deployed node reads no `architecture.toml`, so where it
+learns a Module's domain, or an explicit timing, is open. Dependencies
+between technologies are resolved when the program is built (Cargo) or are
+inside a loaded library; a descriptor declares none.

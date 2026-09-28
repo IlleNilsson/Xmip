@@ -293,3 +293,13 @@ arrival tests.
 The owner's rule of 2026-09-26 on the message path, applied by the
 assistant in the performance wave of 2026-09-27; the shape of the trait is
 the assistant's, and the owner's to strike.
+
+## Amendment, 2026-09-28: a node refuses an unreadable name as it starts
+
+Point 4 of the amendment of 2026-09-27 named refusing the node at start as
+ADR-0066 clause 1's open half. It is built: a running node compiles its
+gathering once through the route technologies the program starting it
+linked, and refuses to start while a name does not compile
+(`Gathering::refusals`, `xmip-core-runtime`'s `startup.rs`). A gathering
+used without asking still refuses each Message at arrival with the same
+reason.

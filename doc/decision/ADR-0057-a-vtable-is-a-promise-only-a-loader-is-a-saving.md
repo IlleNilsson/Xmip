@@ -510,3 +510,32 @@ the loader already enforced; `specification.md` section 2 now says the same.
   thread started — and specification section 3's four conditions are not
   *checked*, they are *satisfied by construction*. A module that starts a
   thread would break that, and nothing here would notice.
+
+## Amendment, 2026-09-28: a node loads, and one check judges
+
+The owner, 2026-09-28: *No code should be duplicated.*
+
+- **Something calls the loader.** A node opens every `[[modules]]` entry it
+  starts through `LoadedModule::open` at startup phase 6, drives the
+  contract table's `configure` and `start`, and `stop`s it before letting
+  the library go (`xmip-core-runtime`'s `library.rs`). Only the contract
+  table has a host side, so a Module claiming another trait is refused.
+- **One module-load check.** ADR-0012's compatibility rule is `abi::accepts`,
+  beside `abi::validate_module_abi` in `xmip-core-abi`, and the loader calls
+  it; the runtime's `compatibility.rs` and `host::dynamic::verify_dynamic_module`
+  are deleted. A manifest naming an entrypoint other than the header's is
+  refused.
+- **A node uses a technology.** The Consequences' *a node still cannot use a
+  technology* no longer holds: the program starting a node links the
+  technologies it needs and hands them over (`linked::Linked`), and the node
+  takes what its configuration names. Transports are linked, since the
+  transport table has no host side yet.
+- **Consequences question (a) is answered by the ruling.** `receive`'s
+  `ReceiveTransport` and `ReceivePublisher` and `send`'s `SendTransport` are
+  deleted: `xmip-core-transport`'s `Transport` is the one transport trait,
+  and neither `receive` nor `send` gets a table.
+
+`xmip-core-abi`'s .NET `ModuleProbe.Complaint` still judges a descriptor by
+a rule of its own, which disagrees with `validate_module_abi` about a core
+module that names a standard; it is the owner's to rule which reading holds
+before the probe calls the one check.

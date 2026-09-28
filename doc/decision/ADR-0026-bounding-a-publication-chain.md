@@ -206,3 +206,10 @@ eventually*, is the owner's from the same place.
 The default of 32 in clause 3 is the assistant's and is the weakest thing here.
 It is recorded as a starting point rather than a finding, and it is the one
 number in this record that should be expected to change.
+
+## Amendment, 2026-09-28: the handler types are gone
+
+`HandlerInvocation`, `HandlerResult` and `HandlerStatus`, cited in Context,
+are deleted from `xmip-core-abi`: they served a dispatcher nothing called.
+The point they illustrated stands — no publish call crosses the ABI, and
+the chain's depth is a runtime fact no Module sees.
