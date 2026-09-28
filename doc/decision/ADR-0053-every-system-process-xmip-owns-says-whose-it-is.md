@@ -358,3 +358,12 @@ again, with a copy of the node binary's defaults. Code is placed once
   `stress`, `rounds`, `snapshot`, `interval_ms`, `capability`, `online` — and
   `Get-XmipTestNode` reads them from the declaration; no command line is
   parsed.
+
+## Amendment, 2026-09-28: `xmip-service` declares itself
+
+`xmip-service` (ADR-0018, amendment 2026-09-28) declares the name its image
+has, the location `xmip:///<cluster>/node/<node>` of the node it runs, and
+its purpose. The purpose is runtime unless whoever started it passes
+`--purpose test`; any other word is REFUSED, and a test starting it passes
+`test`. It declares once the node accepts work and removes the declaration
+after the drain, and it adds the `configuration` it was started with.

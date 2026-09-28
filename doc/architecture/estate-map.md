@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 179553 lines of production
+Where each repository mounts and what it holds: 179734 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -367,7 +367,7 @@ hold no source to count.
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             6831
+│       ├── runtime                             7012
 │       ├── configure                           1405
 │       └── persist                              705
 │           ├── sqlite                           107

@@ -542,6 +542,22 @@ registers the `Xmip` event source the audit fallback writes under, when run
 elevated with `-Install`. A prerequisite below
 its floor fails the command.
 
+A node runs as `xmip-service`, the Xmip Service, the one program the
+operating system starts
+([ADR-0018](doc/decision/ADR-0018-service-and-host.md)):
+`xmip-service --configuration <path>` under the operating system's service
+manager, or with `--console` in a terminal. It runs as a Windows service on
+Windows, a systemd unit on Linux and a launchd daemon on macOS. Every stop
+drains the node the same way and exits 0. On Windows the stop is the Service
+Control Manager's Stop. On Linux and macOS it is SIGTERM. In a console it is
+Ctrl+C. A node it cannot start is refused in words with exit code 2, and no
+service manager restarts that. `xmip-service --configuration <path>
+--definition` prints what this platform's service manager is told about the
+node's service: the systemd unit, the launchd property list, or the
+`sc.exe create` arguments. The build links the transports that
+`architecture.toml`'s `[deploy]` table starts, by feature; a Location naming
+another transport is refused when the node starts.
+
 ### Configuration and control
 
 Configuration is TOML on disk; JSON is used only on the wire
@@ -718,6 +734,7 @@ architecture.toml     the estate: every repository, named by its position in the
 prerequisite.toml     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
 Xmip/                 the estate's PowerShell module
+.src/                 the assembly crate xmip, and xmip-service, the Xmip Service
 module/               the modules: foundation/ and platform/ start a node, the rest
                       at module/<provider>/<domain>/<leaf>
 test/                 the estate's Pester suite; test/core/playground is the Playground

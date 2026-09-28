@@ -790,7 +790,15 @@ knowledge. HTTP/3 is not: it does not ride TCP at all.
 **Decided 2026-09-26, the owner, from three (hand-written, quinn with tokio,
 not now): QUIC is hand-written** — synchronous, like the rest of the estate,
 tested against RFC 9000, 9001 and 9002, with no async runtime brought in.
-Where it lives is still step 1's first question.
+
+**Where it lives, decided 2026-09-28 (the owner: *do what you think is best;
+the developer, the end user, should not need to write code unless they really
+need to*): a library, `xmip-core-library-quic` under `module/core/library`,
+beside `tls` and `ssh`** — not a transport technology. QUIC is a layer other
+technologies ride, as TLS and SSH are: the http transport takes `h3` from it,
+and a later technology on QUIC does the same. An operator never sees it as a
+thing to pick; they configure the http transport, and `h3` is offered where a
+service advertises it (step 5). No one writes code to get HTTP/3.
 
 ---
 

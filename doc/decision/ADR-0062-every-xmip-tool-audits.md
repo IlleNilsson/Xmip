@@ -135,3 +135,13 @@ when auditing fails.
 the call path in clause 2, the platform logs named in clause 3 and the
 event source's name, and clause 4's wording. Written on the day of the
 failure that prompted it.
+
+## Amendment, 2026-09-28: the Xmip Service audits
+
+`xmip-service` (ADR-0018, amendment 2026-09-28) joins clause 1's programs,
+calling `ProgramAudit` directly. It records `start` with its node,
+configuration and purpose, and `stop` with who stopped it (the console, the
+service manager, the Service Control Manager, or the system shutting down),
+how long the drain took in milliseconds, and the counts of what became of
+every Stream. A refused start, a failed declaration and every panic are
+failures.
