@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 178533 lines of production
+Where each repository mounts and what it holds: 179553 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -242,7 +242,7 @@ hold no source to count.
 │   │   │   │   ├── c                             29
 │   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
-│   │   │   ├── route                            631
+│   │   │   ├── route                            643
 │   │   │   │   ├── metadata                     124
 │   │   │   │   ├── contract                      86
 │   │   │   │   ├── content                       80
@@ -271,13 +271,11 @@ hold no source to count.
 │   │   │   │   ├── acl                          147
 │   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
-│   │   │   ├── receive                          174
 │   │   │   ├── logic                            156
 │   │   │   │   ├── matter                      1129
 │   │   │   │   ├── soap                         274
 │   │   │   │   ├── http-api                     259
 │   │   │   │   └── grpc                         215
-│   │   │   ├── send                             145
 │   │   │   ├── resilience                       129
 │   │   │   │   ├── circuit-breaker              135
 │   │   │   │   ├── rate-limit                   108
@@ -286,11 +284,13 @@ hold no source to count.
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
 │   │   │   ├── demote                           108
-│   │   │   ├── promote                           77
+│   │   │   ├── receive                          104
+│   │   │   ├── send                              88
 │   │   │   ├── process                           42
 │   │   │   │       declared, not built 14
 │   │   │   │       bash  c  command  cpp  dotnet  go  grpc  http  java  lua
 │   │   │   │       powershell  python  rust  wasm
+│   │   │   ├── assign                            39
 │   │   │   ├── transform                         33
 │   │   │   │       declared, not built 17
 │   │   │   │       c  cpp  dotnet  go  handlebars  java  jolt  jq  jsonata
@@ -301,10 +301,10 @@ hold no source to count.
 │   │   │   │       decrypt  deflate  encrypt  envelope  framing  gzip  hash
 │   │   │   │       line-ending  quoted-printable  sign  tar  verify-signature
 │   │   │   │        zip  zstd
-│   │   │   ├── assign                            28
-│   │   │   └── retain                            27
-│   │   │           declared, not built 5
-│   │   │           azure-blob  file  gcs  s3  sql
+│   │   │   ├── retain                            27
+│   │   │   │       declared, not built 5
+│   │   │   │       azure-blob  file  gcs  s3  sql
+│   │   │   └── promote                           10
 │   │   ├── library/
 │   │   │   ├── net                             4888
 │   │   │   ├── codec                           2604
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                16231  C# 14537 · Rust 1469 · PowerShell 225
+│   │   ├── abi                                16274  C# 14537 · Rust 1512 · PowerShell 225
 │   │   ├── event                               2637
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -367,8 +367,8 @@ hold no source to count.
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             5731
-│       ├── configure                           1357
+│       ├── runtime                             6831
+│       ├── configure                           1405
 │       └── persist                              705
 │           ├── sqlite                           107
 │           └── rocksdb                          105

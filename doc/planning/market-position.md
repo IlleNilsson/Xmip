@@ -168,7 +168,9 @@ place, so the survey and its correction can both be read.
 takes them (judgment, with the survey behind it):
 
 1. A node that runs: phases 4-9, a technology in a node, a real Receive
-   Location. Every row below depends on it.
+   Location — built in the runtime on 2026-09-28 and driven by its tests;
+   the executable that starts one outside a test is next. Every row below
+   depends on it.
 2. Transformation. BizTalk estates are thousands of XSLT 1.0 maps; CData sells
    reusing them and Microsoft ships a map converter. All seventeen `transform`
    technologies are reserved.

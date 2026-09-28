@@ -617,7 +617,7 @@ a test.
 
 **Done 2026-09-24, phase B's second wave.** The transport capability holds the one far-end rig (`Listening`, `Bound`, `Held`, `Standing`, `both_ends`, `poke`, `ceiling::within`), and 84 technologies keep only what their far end does (ADR-0051, amendment). `xmip-core-library-ntlm` is the NTLM layout for identify, both gates and SMB; `context::property` holds every name one layer writes and another reads; `authenticate::secret` is the one secret store (ADR-0050, ADR-0019, amendments). `xmip-core-library-net` holds the authority, the minimal HTTP/1.1 client, MAC notation, percent-encoding and a path as a URI; codec gained MIME and UTF-16. dns owns the DNS codec, canopen the SDO, http the message webdav writes; `archive/sqlite` is `SqlArchive<Sqlite>`. The rollup, counted words, stage facts, capability evidence, topology, run header and the publication, history and activity formats are each written once in `observe` or `node`, and the surfaces read them through `xmip_operate.h` sections 7 and 8 (ADR-0052, ADR-0027). Found and fixed: percent-decoders took a sign, the snapshot reader counted an unknown kind as streams, msmq split MIME mid-line, EtherCAT cut an SDO to four bytes, the topology drew parents in a leaf's mood.
 
-**Still to do in phase B:** row r (headers at arrival); dead code, for the owner to rule on.
+**Still to do in phase B:** row r (headers at arrival).
 
 **Done 2026-09-27 and 2026-09-28:** one body ceiling `net::MAX_BODY` and one refusal `net::ceiling::within`; one TCP connect `net::connect`; one target reading `net::Target`, technologies declaring their `Schemes` (no `as_http`, websocket and `msmq::queue_url` read through it); one form and query reader `net::percent::decode_pairs`, which `aws::query` calls; redpanda through `http::endpoint::Connections` and `http::status::judge`; as2 and as4 answering through `http::server::serve_one_from`, which hands them the peer; Receive Locations keep their listener (`transport::kept`, `transport::serving`) and connected sessions share one pool (`transport::pool`).
 
@@ -628,15 +628,33 @@ surfaces read, the topology and run header they draw, retention's policy,
 node capability and placement, and a claim by rename it documents elsewhere
 as unsafe; the runtime holds Message treatment presets `message` owns.
 
-**Not dead: unwired.** *(Corrected 2026-09-26, read again rather than
-counted.)* Nothing yet calls the runtime's `registration.rs` (the service
-definition each platform's manager needs — problem 28 needs it),
-`host.rs`'s `HostService` (a module checked before it loads on first use,
-ADR-0025), `generation.rs` (a Message generation, ADR-0013) or
-`capability_registry.rs`; they are phase C's first pieces, written ahead,
-and are wired when a node runs work. `ModuleRegistry` and
-`RuntimeDispatcher`, once listed here, no longer exist. audit has users since
-2026-09-25; the other capabilities listed before wait for a running node.
+**Wired, 2026-09-28** (the owner: *The runtime starts on a node, loading all
+modules needed to work according to dependencies and configuration. […] No
+code should be duplicated*). `running::Running::start` runs ADR-0018's nine
+phases and serves the message path: `host.rs` plans the Host Services by one
+host-type rule, `capability_registry.rs` registers each capability once,
+`library.rs` opens each started library through `ffi/loaded_module.rs` and
+`ffi/loaded_contract.rs`, `catalogue::carry` is called as each technology
+loads, the `Runtime` is built once and every Receive Location runs
+`arrival::arrive` and `departure::depart` through `message_path::carry`.
+Deleted as second copies: the runtime's `ModuleRegistry`,
+`plan_host_services`, `RuntimeDispatcher` and `RuntimeNode` (with `abi`'s
+`HandlerInvocation`, `HandlerResult` and `HandlerStatus`, which served only
+that dispatcher), the host-type rule in `HostService::from_manifest`,
+`host::dynamic::verify_dynamic_module` and `compatibility.rs` (one check,
+`abi::accepts` beside `abi::validate_module_abi`), `service.rs`'s phases-1-3
+plan, `receive`'s `ReceiveLocation`, `ReceiveTransport` and
+`ReceivePublisher` and `send`'s `SendLocation` and `SendTransport` (the
+Location is `configure`'s `ConfiguredLocation`, the transport trait is
+`transport::Transport`), and `promote`'s code (route's `Gathering` is the one
+promotion; whether `xmip-core-promote` stays mounted is the owner's).
+`assign` reads a missing or `Null` source as absent (ADR-0046). Still
+unwired, each waiting on something not built: `registration.rs` (the
+installer, problem 28), `generation.rs`'s assignment and transformation and
+the `assign`, `demote`, `prepare`, `process` and `transform` traits (an
+Xmip Process or a transform compiled at design time, ADR-0066 clause 4), and the
+`xmip-service` executable that would start a node outside a test (ADR-0018,
+amendment 2026-09-26).
 
 | option | effect |
 |---|---|
@@ -683,7 +701,7 @@ core's manifest. Whether anything is taken at a versioned tag is open again.
 | 1 | the SDK repository created and mounted at the root; ADR-0061; CONTRIBUTING's boundary sentence — **done 2026-09-24** | 3 |
 | 2 | the export that wraps a Rust contract in its table, in the contract capability — **done 2026-09-24**: `contract/rust` is the worked example, and the runtime's loader opens it (the trait moved into the SDK that morning and back the same day) | 2, first trait |
 | 3 | an export for each other table the header declares — transport, message, path — in the capability each belongs to; the transport trait's shape and the table's differ, and neither gives: ADR-0057 clause 9, accepted 2026-09-20, keeps the published tables and the ergonomic Rust traits, and the export absorbs the difference | 2 |
-| 4 | the runtime loads every table the header declares, from the library a node's configuration names | 1 |
+| 4 | the runtime loads every table the header declares, from the library a node's configuration names — **the contract table since 2026-09-28**: a node opens each `[[modules]]` library it starts and drives its lifecycle; transport, message and path wait on step 3 | 1 |
 | 5 | the tag: a test holding `sdk-v…` to the traits it describes, and the landing tagging the SDK when it changes | 2 |
 | 6 | a provider quick start in the SDK's README, and a module of provider `example` built outside core's crates, loaded by a node | 4, 5 |
 | 7 | packaging a provider's module with its declaration of which SDK it was built against | 6 |
@@ -840,43 +858,26 @@ retires entries from stops being an order.
   stood as undone until 2026-09-08 while the screen existed; retired then.
 
 ```text
-1. Run a node for real                 the runtime does startup phases 1-3 —
-                                       read, build, validate. Phases 4-9 (start
-                                       the host services, load modules, accept
-                                       work) turn edge-01's rows from yellow to
-                                       green, make the throughput cards real,
-                                       and are what the Playground needs to
-                                       exercise anything. Blocked on the
-                                       vocabulary question below — and, since
-                                       2026-09-19, on something larger that
-                                       had never been stated: **a node cannot
-                                       use a single technology.**
-                                       `xmip-core-runtime` has sixteen Xmip
-                                       dependencies and not one of them is a
-                                       technology; the root assembly has none
-                                       either; the only place the two hundred
-                                       technologies are linked is
-                                       `test/core/playground`, with one hundred
-                                       and twenty-three. They can now be
-                                       loaded instead: ADR-0057 step 2
-                                       landed on 2026-09-19 and
-                                       `xmip-core-runtime` opens a shared
-                                       library, resolves
-                                       `xmip_create_module_v1`, holds the
-                                       descriptor to what the loading
-                                       capability requires and drives the
-                                       contract table through it, behind the
-                                       `dynamic-loading` feature. It has
-                                       opened the Rust and the C contract
-                                       technology with the same code. What
-                                       is still missing is a node that does
-                                       it: `start.rs` performs phases 1-3
-                                       and says in every record that 4-9 are
-                                       not built, so nothing asks for a
-                                       Module yet. Phases 4-9 still have
-                                       nothing to start once the vocabulary
-                                       is settled, for a smaller reason
-                                       than before
+1. Run a node for real                 the runtime runs all nine startup
+                                       phases (2026-09-28):
+                                       `running::Running::start` takes a
+                                       node's configuration and the
+                                       technologies the program starting it
+                                       linked, loads each once (a library
+                                       through the C ABI), and serves every
+                                       Receive Location through arrival,
+                                       routing and departure until it is
+                                       stopped; a test starts a node over
+                                       loopback tcp and carries two hundred
+                                       Messages, about a millisecond each in
+                                       a debug build. What is left is a
+                                       program that does it outside a test —
+                                       `xmip-service`, the root crate's
+                                       executable (ADR-0018, amendment
+                                       2026-09-26) — and the Playground
+                                       running Applications on it; the
+                                       surfaces' `xmip_start_v1` still plans
+                                       and does not run (problem 20)
 2. Protocol implementations            eighty-two of eighty-four transports,
                                        every contract, message, route, logic,
                                        resilience, path and archive technology

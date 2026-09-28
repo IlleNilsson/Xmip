@@ -172,7 +172,7 @@ dependency = []
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = []
 
   # Simulators and emulators a module is tested on, and the local ACME server
   # for tests; no trait — each stays in its capability (ADR-0061, amended
@@ -900,11 +900,11 @@ dependency = []
   dependency = ["xmip-core-context", "xmip-core"]
 
   [xmip.core.promote]
-  description = "Common Path-based promotion into Message Context."
+  description = "Promotion into what a Subscription reads; implemented once, by xmip-core-route's Gathering, so this repository holds no code."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path", "xmip-core"]
+  dependency = []
 
   [xmip.core.demote]
   description = "Common Path-based demotion into Message or artifact configuration."
@@ -1092,13 +1092,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = [
-      "xmip-core",
-      "xmip-core-authenticate",
-      "xmip-core-context",
-      "xmip-core-identify",
-      "xmip-core-stream",
-  ]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-stream"]
 
   [xmip.core.route]
   description = "Common publication, subscription and routing functionality."
@@ -1168,7 +1162,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-message", "xmip-core-party", "xmip-core-stream"]
+  dependency = ["xmip-core"]
 
   [xmip.core.node]
   description = "Xmip Node model, roles and capabilities."
@@ -1438,7 +1432,7 @@ dependency = []
 # repositories for 10 KB that always change together would be ceremony.
 # ADR-0018.
   [xmip.core.runtime]
-  description = "The Xmip Service and the Xmip Host Services it spawns: configuration, execution tree, startup validation, host process plans, capability and module registries."
+  description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; and the native library the operator surfaces load."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
@@ -1462,6 +1456,7 @@ dependency = []
       "xmip-core-route",
       "xmip-core-send",
       "xmip-core-stream",
+      "xmip-core-transport",
   ]
 
   [xmip.core.persist]

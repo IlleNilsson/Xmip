@@ -1002,9 +1002,13 @@ Xmip Host Service, each within itself
 Phase 3 validates every Definition against the capability contracts it
 requires and every reference between Instances, so a configuration error is a
 startup failure, not a first-message failure: a Receive Location naming a Send
-Port that does not exist is refused before a Stream ever arrives. What each
-phase does in code is `StartupPhase` in `xmip-core-runtime`
-(`module/platform/runtime/src/service.rs`).
+Port that does not exist is refused before a Stream ever arrives. The phases
+are `StartupPhase` in `xmip-core-runtime`
+(`module/platform/runtime/src/service.rs`), and `running::Running::start`
+runs them (`module/platform/runtime/src/running.rs`): it loads each Module a
+node's configuration names once, from what the program starting the node
+linked or from its library, and serves every Receive Location until the node
+stops.
 
 ## 22. The Xmip Process
 

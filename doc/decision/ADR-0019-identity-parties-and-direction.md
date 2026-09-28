@@ -444,3 +444,17 @@ problem 28.
 
 The owner's, the requirement; the platform list and the unverified Linux
 route are the assistant's.
+
+## Amendment, 2026-09-28: a Receive Location's closed set is configured
+
+Clause 1's closed set is read from the Location's configuration:
+`accept.mechanism` on a `ConfiguredLocation` (`xmip-core-configure`), each
+mechanism by the name it declares. A node that starts one builds its gate
+once (`ReceiveGate::of` in `xmip-core-runtime`) and refuses a mechanism no
+authenticator it was built with verifies; `accept` on a Send Location is
+refused. Clause 1's `party` list is refused rather than read, because a
+node's configuration names no Party yet, and clause 7's `identity` table is
+not read yet, so every Receive Location keeps the defaults `none` and
+`accept`. `xmip-core-receive`'s `ReceiveLocation`, a second model of a
+Location that nothing configured, is deleted; the Location is the
+configuration's.

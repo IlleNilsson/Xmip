@@ -198,3 +198,11 @@ clause 4, chosen from the two named there.
 **The assistant's**: clause 2's language, drawn from the two studies, and
 clause 3; the owner accepted clause 1 as the frame with *if you do not have a
 better idea*, and each of 2 and 3 is his to strike.
+
+## Amendment, 2026-09-28: clause 1's other half
+
+A running node compiles its Subscriptions' filters once, through the route
+technologies its program linked, and refuses to start while a filter names
+what none of them reads (`xmip-core-runtime`'s `startup.rs`,
+`what_the_program_was_not_built_with_refuses_the_node_at_start`), as clause
+1 decides. The route gathering is built once, with the node's `Runtime`.

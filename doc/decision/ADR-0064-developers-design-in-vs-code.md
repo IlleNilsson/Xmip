@@ -185,3 +185,14 @@ slice draws. The runtime names no technology (`architecture.toml`: a
 platform service depends on no technology repository), so a technology
 enters its catalogue through `catalogue::carry`; which technologies the
 runtime library the surfaces load carries is the owner's to decide.
+
+## Amendment, 2026-09-28: a node carries what it loads
+
+`catalogue::carry` is called when a node loads a technology
+(`xmip-core-runtime`, startup phase 6), so the catalogue answers what a node
+in this process loaded, and every validation in the process holds a
+Location to it. A node that starts also holds each Location to the
+declarations of every transport its program linked, before anything loads.
+The runtime library the surfaces load runs no node and carries nothing
+(ADR-0018, amendment 2026-09-28; open problem 20); which technologies it
+should carry is still the owner's to decide.

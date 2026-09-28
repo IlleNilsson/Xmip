@@ -50,3 +50,18 @@ Targets only care which identity Xmip exposes when sending.
 Identity resolution is part of send runtime, not receive runtime.
 
 Transport handlers receive the resolved send identity and apply it using their own technology-specific mechanism.
+
+## Amendment, 2026-09-28: resolved at departure, not yet handed over
+
+The runtime's departure walks the chain for every Send Location a Message
+reaches (`SendChain::resolve`, `xmip-core-runtime`'s `departure.rs`) and
+records on each departure the level that decided and the value of the
+identity that Party holds for sending (`Departed::Sent`'s `presented_from`
+and `presented`). The Rule's last sentence is not built: a Send Location's
+transport is built through `xmip-core-transport`'s one trait, whose `send`
+takes a target and bytes and no identity, and `xmip-core-send`'s
+`SendTransport`, which carried one and which no technology implemented, is
+deleted as a second transport trait (the owner, 2026-09-28: *no code should
+be duplicated*). A Location presents what its own settings give its
+technology. Whether the one trait's `send` gains the resolved identity is the
+owner's to decide.
