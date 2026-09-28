@@ -429,3 +429,32 @@ and `uint64` are codec's own — as `SshRead` over codec's cursor and
 
 The owner's, 2026-09-24: the library, its name and where it mounts. The
 assistant chose its shape.
+
+## Amendment, 2026-09-28: SSH is the library, whole
+
+Asked for by the lead of the 2026-09-27 performance wave, from the audit
+that found SSH written three times; **the owner has not yet ruled on it**,
+and the clause of 2026-09-25 it replaces was his. `xmip-core-library-ssh`
+now holds SSH, not only its wire types:
+
+- **The transport layer moved down.** The binary packet protocol, the
+  cipher suite and key derivation, the key exchange, user authentication
+  and the session channel — some fourteen hundred lines — sat in the SFTP
+  transport, which is one protocol riding on SSH, not SSH. They are the
+  library's; the channel takes the subsystem's name, so SFTP asks for
+  `sftp` and the next protocol over SSH asks for its own. What is the SFTP
+  transport's is the file protocol, its client and its in-process far end.
+- **One key reader, strict.** A key blob, the check of a signature blob
+  made with it, the signature blob itself, the `SHA256:` fingerprint and
+  the RFC 4252 signed data are the library's (`key::PublicKey`,
+  `Fingerprint`, `userauth::SignedData`). The SFTP transport checked a host
+  key and a user's key with a lenient Ed25519 verification and the gate with
+  a strict one; every check is strict now. The identifier read a
+  fingerprint with a base64 alphabet of its own; it reads `Fingerprint`.
+- **What a key concludes stays with its gate.** The `authorized_keys` line,
+  a key narrowed to one user and the verdict are the gate's; which user an
+  arrival names is the transport's.
+
+A refusal is `net::NetError`, so the transport capability takes it with the
+`From` it already has and judges a connection's failure retryable by its
+kind.

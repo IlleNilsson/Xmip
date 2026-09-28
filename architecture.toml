@@ -269,7 +269,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-resilience", "xmip-core"]
+  dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
@@ -290,7 +290,7 @@ dependency = []
     [xmip.core.transport.http]
     maturity = "scaffolded"
     description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. The event capability's wire event webhook. A xmip-core-transport technology."
-    dependency = ["xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-event", "xmip-core-resilience", "xmip-core"]
+    dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-event", "xmip-core-resilience", "xmip-core"]
     specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
       dependency = ["xmip-core-library-net", "xmip-core"]
@@ -302,7 +302,7 @@ dependency = []
     specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "OASIS MQTT 3.1.1, QoS 0 and 1"
     [xmip.core.transport.pop3]
       dependency = ["xmip-core-library-net", "xmip-core"]
@@ -340,21 +340,21 @@ dependency = []
     specification = "ASHRAE 135, also ISO 16484-5"
     [xmip.core.transport.bluetooth]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "Bluetooth transport: RFCOMM over L2CAP — a Stream is the information of one data link connection, opened with SABM, carried in UIH frames and closed with DISC; a loopback radio stands in for the controller. A xmip-core-transport technology."
     specification = "Bluetooth SIG Core Specification"
     [xmip.core.transport.canopen]
     maturity = "scaffolded"
     description = "CANopen transport: CiA 301 over CAN — NMT, expedited and segmented SDO to an object dictionary index and subindex, PDO mapping at its minimum; a Stream travels as a domain object. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-can-bus", "xmip-core"]
+    dependency = ["xmip-core-transport-can-bus", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     specification = "CiA 301"
     [xmip.core.transport.coap]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "IETF RFC 7252"
     [xmip.core.transport.cotp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "IETF RFC 1006, ISO transport over TCP, TPKT and COTP"
     [xmip.core.transport.dds]
     maturity = "scaffolded"
@@ -375,13 +375,13 @@ dependency = []
     dependency = ["xmip-core-library-codec", "xmip-core"]
     specification = "IEEE 1815: link frames with CRC, transport segments, unconfirmed user data over TCP"
     [xmip.core.transport.dns]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core", "xmip-core-library-net"]
     maturity = "scaffolded"
     specification = "IETF RFC 1035, dynamic update RFC 2136 carrying TXT payloads, EDNS RFC 6891"
     [xmip.core.transport.ethercat]
     maturity = "scaffolded"
     description = "EtherCAT transport: IEC 61158 Type 12 over raw Ethernet — datagrams with command, index, address, length and working counter, several to a frame, and a CoE mailbox transfer for a Stream larger than one. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-ethernet", "xmip-core-transport-canopen", "xmip-core"]
+    dependency = ["xmip-core-transport-ethernet", "xmip-core-transport-canopen", "xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     specification = "IEC 61158 Type 12, IEC 61784-2 communication profile CPF 12"
     exclusive = "node"
     [xmip.core.transport.ethernet]
@@ -393,12 +393,12 @@ dependency = []
     [xmip.core.transport.ethernet-ip]
     maturity = "scaffolded"
     description = "EtherNet/IP transport: ODVA encapsulation over TCP — RegisterSession, SendRRData with common packet format items, CIP explicit messaging that gets or sets an assembly attribute carrying the Stream. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-tcp", "xmip-core"]
+    dependency = ["xmip-core-transport-tcp", "xmip-core", "xmip-core-library-net"]
     specification = "ODVA Common Industrial Protocol over Ethernet"
     [xmip.core.transport.hart]
     maturity = "scaffolded"
     specification = "FieldComm Group HART, IEC 61784-1 communication profile CPF 9"
-    dependency = ["xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-sdk", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.iec-60870-5-104]
       dependency = ["xmip-core"]
     maturity = "scaffolded"
@@ -406,24 +406,24 @@ dependency = []
     [xmip.core.transport.iec-61850]
     maturity = "scaffolded"
     description = "IEC 61850 transport: MMS over ISO transport on TCP — initiate, a write and a read of a domain variable as an octet string, conclude — and GOOSE, the publisher's frame on raw Ethernet with a Stream as its data set. A xmip-core-transport technology."
-    dependency = ["xmip-core-library-asn1", "xmip-core-transport-cotp", "xmip-core-transport-ethernet", "xmip-core"]
+    dependency = ["xmip-core-library-asn1", "xmip-core-transport-cotp", "xmip-core-transport-ethernet", "xmip-core-library-net", "xmip-core"]
     specification = "IEC 61850. MMS over COTP, GOOSE and Sampled Values on raw Ethernet"
     [xmip.core.transport.io-link]
     maturity = "scaffolded"
     description = "IO-Link transport: IEC 61131-9 over a serial line — M-sequences of type 0, 1 and 2, ISDU read and write of parameters, and the process data cycle; a Stream travels as one ISDU. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-serial", "xmip-core"]
+    dependency = ["xmip-core-transport-serial", "xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     specification = "IEC 61131-9, single-drop digital communication interface"
     [xmip.core.transport.iso-tp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core", "xmip-core-library-net"]
     specification = "ISO 15765-2, segmentation for payloads larger than a CAN frame"
     [xmip.core.transport.j1939]
     maturity = "scaffolded"
     description = "J1939 transport: SAE J1939 over CAN — 29-bit identifiers of priority, parameter group and source address, and the transport protocol, BAM and RTS/CTS, for a payload of up to 1785 bytes. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     specification = "SAE J1939"
     [xmip.core.transport.knx]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     description = "KNX transport: KNXnet/IP tunnelling over UDP — a connection, tunnelling requests acknowledged in sequence, cEMI L_Data frames to a group address; a Stream longer than one telegram travels as a sequence of extended frames; an in-process tunnelling server stands in for the interface. A xmip-core-transport technology."
     specification = "EN 50090, also ISO/IEC 14543-3"
@@ -435,16 +435,16 @@ dependency = []
     [xmip.core.transport.m-bus]
     maturity = "scaffolded"
     description = "M-Bus transport: EN 13757 wired metering over a serial line — short and long frames, SND_UD and REQ_UD2 answered by RSP_UD, a Stream as variable data records across as many telegrams as it takes; meters on the serial technology's multi-drop bus stand in for the line. A xmip-core-transport technology."
-    dependency = ["xmip-core-sdk", "xmip-core", "xmip-core-transport-serial"]
+    dependency = ["xmip-core-sdk", "xmip-core-library-net", "xmip-core", "xmip-core-transport-serial"]
     specification = "EN 13757, wired metering bus"
     [xmip.core.transport.mdns]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-dns", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-transport-dns", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "IETF RFC 6762, with DNS-SD in RFC 6763"
     [xmip.core.transport.obd-ii]
     maturity = "scaffolded"
     description = "OBD-II transport: SAE J1979 over ISO-TP — mode 01 parameters and mode 09 vehicle information asked at the functional address 0x7DF and answered from 0x7E8; a Receive Location polls one, a Send Location answers one as the ECU. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     specification = "ISO 15031 and ISO 15765, emissions diagnostics over CAN"
     [xmip.core.transport.peppol]
     maturity = "scaffolded"
@@ -453,11 +453,11 @@ dependency = []
     [xmip.core.transport.profinet]
     maturity = "scaffolded"
     description = "PROFINET transport: IEC 61158 real-time class 1 over raw Ethernet — DCP identify and set, cyclic frames with a FrameID and the APDU status trailer; a Stream rides in the IO data across as many cycles as it takes. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-ethernet", "xmip-core"]
+    dependency = ["xmip-core-transport-ethernet", "xmip-core-library-net", "xmip-core"]
     specification = "IEC 61158 and IEC 61784. Real-time classes bypass IP"
     [xmip.core.transport.s7comm]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-cotp", "xmip-core"]
+    dependency = ["xmip-core-transport-cotp", "xmip-core", "xmip-core-library-net"]
     specification = "Siemens S7 communication over ISO-on-TCP. Vendor protocol, no public standard"
     [xmip.core.transport.secs-gem]
       dependency = ["xmip-core-library-net", "xmip-core"]
@@ -466,13 +466,13 @@ dependency = []
     [xmip.core.transport.uds]
     maturity = "scaffolded"
     description = "UDS transport: ISO 14229 diagnostics over ISO-TP — a Send Location writes a data identifier, by WriteDataByIdentifier or a download in TransferData blocks; a Receive Location serves one as an ECU would, and the bytes written to it arrive as a Stream. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-transport-iso-tp", "xmip-core-transport-can-bus", "xmip-core-sdk", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     specification = "ISO 14229, unified diagnostic services"
     [xmip.core.transport.wireless-hart]
     maturity = "scaffolded"
     description = "WirelessHART transport: the HART command set in TDMA-framed DLPDUs over IEEE 802.15.4 — a Stream written and read in chunks through the device-specific commands hart defines, the network and transport layers around them; a loopback radio and its slots stand in for the gateway. A xmip-core-transport technology."
     specification = "IEC 62591"
-    dependency = ["xmip-core-transport-hart", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-transport-hart", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.wireless-m-bus]
     maturity = "scaffolded"
     description = "Wireless M-Bus transport: EN 13757-4 over the air — the link layer frame of length, control, manufacturer, address and control information with a CRC per block, carrying the same records and the same meter as wired M-Bus; a loopback radio stands in for the receiver. A xmip-core-transport technology."
@@ -484,11 +484,11 @@ dependency = []
     specification = "Apache Kafka wire protocol, with Redpanda admin extensions"
     [xmip.core.transport.snmp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     specification = "IETF SNMPv3, RFC 3411 through RFC 3418"
     [xmip.core.transport.ssdp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "UPnP Device Architecture, Simple Service Discovery Protocol"
     [xmip.core.transport.syslog]
     maturity = "scaffolded"
@@ -496,18 +496,18 @@ dependency = []
     specification = "IETF RFC 5424, over UDP or TCP with RFC 6587 octet counting"
     [xmip.core.transport.thread]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     description = "Thread transport: IPv6 and UDP over IEEE 802.15.4 with 6LoWPAN — a Stream is one UDP datagram, whole in a frame or in FRAG1 and FRAGN fragments reassembled by datagram tag; a loopback radio stands in for the mesh. A xmip-core-transport technology."
     specification = "Thread Group Thread, IPv6 over IEEE 802.15.4"
     [xmip.core.transport.zigbee]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     maturity = "scaffolded"
     description = "Zigbee transport: APS framing over the network layer — a Stream is one APS data frame, or a fragmented transmission of numbered blocks acknowledged by the receiver; a loopback radio stands in for the coordinator. A xmip-core-transport technology."
     specification = "Connectivity Standards Alliance Zigbee"
     [xmip.core.transport.aws-sns]
     maturity = "scaffolded"
     description = "Amazon SNS transport: Signature Version 4 over the Query API — publish a Stream as a message to a topic, and receive as the HTTP endpoint a subscription delivers to, confirming itself and taking each notification as a Stream — a topic ARN is a Location. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-transport-http", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core", "xmip-core-library-codec"]
     [xmip.core.transport.aws-sqs]
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core"]
@@ -535,7 +535,7 @@ dependency = []
     [xmip.core.transport.can-bus]
     maturity = "scaffolded"
     specification = "ISO 11898, classical CAN frames; SocketCAN on Linux, an in-process loopback bus everywhere"
-    dependency = ["xmip-core-sdk", "xmip-core"]
+    dependency = ["xmip-core-sdk", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.file]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core"]
@@ -554,7 +554,7 @@ dependency = []
     description = "IBM MQ transport: one message on a queue is one Stream — MQCONN, MQOPEN, MQPUT and MQGET on the MQ wire over TCP, against a queue manager or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.kafka]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
     specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events"
     [xmip.core.transport.modbus]
       dependency = ["xmip-core"]
@@ -582,7 +582,7 @@ dependency = []
     specification = "NATS client protocol, core at-most-once"
     [xmip.core.transport.nats-jetstream]
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-nats", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-transport-nats", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "NATS JetStream, durable streams and consumers over NATS"
     [xmip.core.transport.nfs]
     maturity = "scaffolded"
@@ -594,7 +594,7 @@ dependency = []
     description = "OPC UA transport: one node's value is one Stream — the binary encoding over TCP, a secure channel with security policy None, an anonymous session, a Read and a Write of a ByteString, against a server or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.oracle]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
     description = "Oracle transport: one row of a query is one Stream, a send is one INSERT; TNS and TTC against a listener, as mssql and mysql are built. A xmip-core-transport technology."
     [xmip.core.transport.postgresql]
     maturity = "scaffolded"
@@ -603,7 +603,7 @@ dependency = []
     [xmip.core.transport.rabbitmq]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1, the RabbitMQ native protocol"
-    dependency = ["xmip-core-transport-amqp", "xmip-core"]
+    dependency = ["xmip-core-transport-amqp", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.redis-streams]
       dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
@@ -628,7 +628,7 @@ dependency = []
     maturity = "scaffolded"
     specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core", "xmip-core-library-net"]
     maturity = "scaffolded"
     specification = "IETF RFC 768"
     [xmip.core.transport.unix-socket]
@@ -969,7 +969,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-message", "xmip-core-library-codec", "xmip-core-context"]
     [xmip.core.identify.ssh-key]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-library-ssh"]
     [xmip.core.identify.transport]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -1541,7 +1541,7 @@ dependency = []
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec"]
+  dependency = []
   mount = "module/core/library/asn1"
 
 
@@ -1573,11 +1573,11 @@ dependency = []
 
 
   [xmip.core.library.ssh]
-  description = "The SSH wire types of RFC 4251 section 5, read and written: boolean, uint32, uint64, string, mpint and name-list. One encoding where the SFTP transport and the ssh-key gate each carried a reader of their own until 2026-09-24. What a message means stays with the protocol or the gate that reads it."
+  description = "SSH for Xmip: RFC 4251 wire types, the RFC 4253 transport layer (curve25519-sha256, ssh-ed25519, aes256-ctr, hmac-sha2-256), RFC 4252 user authentication and its signed data, an RFC 4254 session channel with a subsystem, and the keys, strict Ed25519 signatures and fingerprints SFTP and the ssh-key identifier and gate call."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-net"]
   mount = "module/core/library/ssh"
 
 
@@ -1650,6 +1650,7 @@ dependency = []
       "xmip-core-contract-xml-schema",
       "xmip-core-identify",
       "xmip-core-library-codec",
+      "xmip-core-library-net",
       "xmip-core-message",
       "xmip-core-node",
       "xmip-core-observe",
