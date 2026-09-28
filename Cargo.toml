@@ -10,7 +10,8 @@ resolver = "2"
 [package]
 # The platform repository is Xmip, so its primary crate is xmip. It holds no
 # behaviour of its own: contracts, journey_model, route and vertical_slice went
-# to the repositories that own them on 2026-08-26. What is left is the assembly.
+# to the repositories that own them on 2026-08-26. What is left is the assembly,
+# and xmip-service, the program that starts a node from it.
 name = "xmip"
 version = "0.1.1"
 edition = "2024"
@@ -23,6 +24,22 @@ name = "xmip"
 # A directory of many usages keeps its source aside (ADR-0049).
 path = ".src/lib.rs"
 
+# The Xmip Service (ADR-0018, amendment 2026-09-26): the one program the
+# operating system starts, named as ADR-0053 names it. It starts a node from
+# its configuration with the technologies this build linked, and a stop from
+# the service manager or the console drains it.
+[[bin]]
+name = "xmip-service"
+path = ".src/service/main.rs"
+required-features = ["node", "audit"]
+
+# Starts xmip-service in a console over loopback, carries Messages to it and
+# stops it the way a terminal or a service manager does.
+[[test]]
+name = "xmip-service"
+path = ".src/test/service_stop.rs"
+required-features = ["node", "audit", "transport-tcp"]
+
 [features]
 default = ["server-profile"]
 
@@ -33,7 +50,7 @@ default = ["server-profile"]
 # Deployment profiles are deliberately absent. IoT device, edge node, single
 # server, cluster, cloud node and hybrid select modules at run time, and module
 # selection is configuration. That belongs in TOML, not here.
-server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform"]
+server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform", "transport-file", "transport-http", "transport-tcp", "transport-udp"]
 
 # The same composition as server-profile today. What will separate them is an
 # interactive host and a local GUI host, and neither exists yet. The name is
@@ -68,6 +85,15 @@ report = ["dep:xmip-report"]
 resilience = ["dep:xmip-resilience"]
 retain = ["dep:xmip-retain"]
 transform = ["dep:xmip-transform"]
+
+# The transports xmip-service links and hands to the node it starts
+# (`xmip_runtime::linked::Linked`); a Location naming one the build left out
+# is refused as the node starts. The server profile links the transports
+# architecture.toml's [deploy] table starts, and no other.
+transport-file = ["dep:xmip-transport-file"]
+transport-http = ["dep:xmip-transport-http"]
+transport-tcp = ["dep:xmip-transport-tcp"]
+transport-udp = ["dep:xmip-transport-udp"]
 
 [dependencies]
 xmip-abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xmip-core-abi", branch = "main" }
@@ -104,6 +130,27 @@ xmip-send = { package = "xmip-core-send", git = "https://github.com/IlleNilsson/
 xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
 xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }
 xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
+xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
+xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
+xmip-transport-tcp = { package = "xmip-core-transport-tcp", git = "https://github.com/IlleNilsson/xmip-core-transport-tcp", branch = "main", optional = true }
+xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://github.com/IlleNilsson/xmip-core-transport-udp", branch = "main", optional = true }
+# xmip-service's console stop on every platform: Ctrl+C and Ctrl+Break in a
+# Windows console, SIGINT, SIGTERM and SIGHUP on Linux and macOS, which is how
+# systemd and launchd stop a service. Its unsafe is its own; this crate has none.
+ctrlc = { version = "3.5", features = ["termination"] }
+
+[target.'cfg(windows)'.dependencies]
+# xmip-service under the Windows Service Control Manager: the dispatcher, the
+# control handler a Stop or a Shutdown arrives on, and the status it reports.
+windows-service = "0.8"
+
+[lints.rust]
+# The assembly writes no unsafe; what crosses a C interface does so in the
+# crates the estate lists (ADR-0050).
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
 
 [profile.dev.package."*"]
 opt-level = 3

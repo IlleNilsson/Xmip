@@ -6,6 +6,10 @@
 //! repositories that own it on 2026-08-26; `doc/planning/allocation.toml` is
 //! the ledger of where each part went and why.
 //!
+//! Its one program is `xmip-service` (`.src/service/`), the Xmip Service,
+//! which starts a node with the technologies the build profile linked
+//! (ADR-0018, amendment 2026-09-26).
+//!
 //! The re-exports below the fold are behind features and a build profile
 //! selects a set of them. The ones above are always present: without them
 //! there is nothing to configure.

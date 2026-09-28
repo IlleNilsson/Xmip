@@ -215,3 +215,18 @@ takes.
 
 Provenance: the owner's requirement, 2026-09-26 (ADR-0064); the placement is
 the assistant's drafting of clause 1.
+
+## Amendment, 2026-09-28: every TCP connection sends at once
+
+Every TCP connection Xmip opens or accepts has Nagle's algorithm off: the
+one connect, `net::connect`, and the one accept, `transport::socket`, set it,
+and no technology sets it again. Xmip writes a message as a head and then a
+body; with Nagle on, the body waits for the peer's delayed acknowledgement of
+the head — forty milliseconds a message on Linux — which the millisecond rule
+calls a defect. The cost, many small packets, belongs to a program that
+writes a byte at a time, and Xmip does not. So it is off on every
+connection, not only where latency is asked for, and it is not a setting: a
+knob no one needs is one someone gets wrong.
+
+Provenance: the owner, 2026-09-28, asked the pros and cons and left the
+choice to the assistant (*I let you decide*); the assistant chose this.

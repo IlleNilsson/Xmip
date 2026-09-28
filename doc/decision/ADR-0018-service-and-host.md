@@ -265,3 +265,55 @@ applies it), and the executable the amendment of 2026-09-26 decides —
 the runtime's own test. `service.rs` keeps the phase names; the plan type
 and the service state that restated phases 1 to 3 are deleted, and
 `start::start`, what `xmip_start_v1` runs, is those three phases alone.
+
+## Amendment, 2026-09-28: `xmip-service` runs a node on all three platforms
+
+The owner, 2026-09-28: *the runtime starts on Windows, Linux and OS X. So the
+equivalent for all three OSes.* `xmip-service` is built in the estate root
+crate (`.src/service/`), as the amendment of 2026-09-26 decided:
+
+```text
+xmip-service --configuration <path> [--console] [--purpose test|runtime]
+xmip-service --configuration <path> --definition
+```
+
+It calls `Running::start` with the technologies its build linked. These are
+the transports `architecture.toml`'s `[deploy]` table starts (`file`,
+`http`, `tcp` and `udp`), each a feature of the server profile. It serves
+until a stop arrives and then calls `Running::stop`, which is clause 12's
+drain for one process, and exits 0. Every stop arrives on one channel and is
+the same drain:
+
+- **Windows**: the Service Control Manager's Stop or Shutdown (the
+  `windows-service` crate's dispatcher and control handler). The service
+  reports start pending, running once the node accepts work, stop pending
+  and stopped.
+- **Linux, as a systemd unit, and macOS, as a launchd daemon**: SIGTERM,
+  which is how both stop a service. The unit is `Type=notify`, and systemd
+  hears `READY=1` once phase 9 accepts work and `STOPPING=1` when the drain
+  begins.
+- **A console, `--console`, on every platform**: Ctrl+C, and on Linux and
+  macOS SIGTERM and SIGHUP as well (the `ctrlc` crate).
+
+A node it cannot start is refused in words with exit code 2
+(`registration::REFUSED`). The unit carries `RestartPreventExitStatus=2`,
+so a service manager does not restart a configuration that will still be
+wrong. Nothing in Xmip restarts anything; the service manager owns restarts.
+The process declares itself as `xmip:///<cluster>/node/<node>` (ADR-0053)
+and audits its start, its stop with whoever stopped it, how long the drain
+took, what became of every Stream, and every failure (ADR-0062).
+`--definition` prints what `registration.rs` generates for this platform, so
+an installer registers what the runtime writes rather than a copy of it.
+Registering remains the installer's job, and elevation remains open.
+
+A test in the root crate (`.src/test/service_stop.rs`) starts it in a
+console over loopback, carries Messages to it, sends Ctrl+C on Windows and
+SIGTERM on Linux, and holds the drain, exit code 0 and the audit to a bound.
+The Service Control Manager's controls are tested at the handler.
+macOS compiles by `cfg` and has not been run.
+
+What it cannot do yet: the build links no authenticator, policy or
+identifier, because a node configuration cannot yet say how one is set up.
+A Receive Location that accepts nothing therefore refuses every Stream at
+its gate. The node receives and counts every Message, and carries none
+onward until the configuration can name its gates.
