@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 179734 lines of production
+Where each repository mounts and what it holds: 179739 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -314,7 +314,7 @@ hold no source to count.
 │   │   │   └── tls                              333
 │   │   └── operation/
 │   │       ├── cli                             3011
-│   │       ├── gui                             2795
+│   │       ├── gui                             2778
 │   │       │   └── vscode                      1471
 │   │       ├── observe                         2057
 │   │       │   ├── otlp                         578
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                16274  C# 14537 · Rust 1512 · PowerShell 225
+│   │   ├── abi                                16296  C# 14559 · Rust 1512 · PowerShell 225
 │   │   ├── event                               2637
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
