@@ -3,7 +3,10 @@
 - Status: Accepted
 - Accepted: 2026-09-26, the owner, from the options named below
 - Date: 2026-09-26
-- Related: ADR-0012 (the module boundary is a C ABI), ADR-0019 (Parties and
+- Related: ADR-0052 (the operator surfaces; the Subscriptions view, its
+  amendment 2026-09-29), ADR-0009 (roles: an Operator acts on a
+  subscription, an Observer watches), ADR-0012 (the module boundary is a C
+  ABI), ADR-0019 (Parties and
   identity), ADR-0027 (the operator boundary, `xmip_operate.h`), ADR-0052
   (code placed once), ADR-0062 (every tool audits), ADR-0063 (Xmip's own
   TLS), `doc/architecture/runtime-model.md` section 17 (Eventing),
@@ -15,7 +18,7 @@
 - Subject: How a program in another language learns what Xmip did
 - Name: Events are subscribed from any language
 - Order: 15
-- Concepts: Event; subscription; the Event wire form; language binding
+- Concepts: Event; subscription; the Event wire form; language binding; Event subscription
 
 **One Event model and one subscription rule, in Rust, in `xmip-core-event`.
 A program subscribes two ways, both through that one rule: in process,
@@ -154,6 +157,81 @@ the keeper — the dropping thread is the program's and a disk is not its
 business. A direct `ProgramAudit::record` settles first instead, so a
 program's records are kept in the order it made them and the record of its
 stop after everything it handed over before.
+
+## Amendment, 2026-09-29: an operator sees every subscription, and pauses, resumes and removes one
+
+The owner: *Now we need operation to have a view of event subscriptions.
+Subscriber, Cluster, Node, Action. One should be able to pause, resume and
+remove event subscriptions.* What follows is the assistant's drafting, each
+point the owner's to overrule.
+
+- **What a hub holds is listed.** `Hub::standing` answers each open
+  subscription as `observe::Subscription`: the node whose hub holds it and
+  its number there, which together name it; the subscriber, by the name its
+  Party was declared with (`party::Party`, carried by
+  `Subscriber::declared`), and the Party's identifier beside it — a
+  subscriber known by its identifier alone is shown by it, and no name is
+  made from one; what
+  it subscribes to in words (`Filter::said`: every Event, or the types, then
+  the outcomes) and the scope it reaches; its state, active or paused; and
+  its queue's counts — queued against capacity, delivered, and missed, what
+  a full queue refused since it was made.
+- **Pause, resume, remove** (`act::Act`, `Hub::act`, the one place an act is
+  applied). Paused, a subscription stays and keeps queuing up to its
+  capacity, and nothing is handed over — a drain waits until it is resumed,
+  closed or out of time; what a full queue refuses meanwhile is counted as
+  missed, as it always was. Resumed, it hands over what queued, waking a
+  waiting drain at once. Removed, it is closed and gone from the hub, and
+  its holder's next drain, or its listener's thread, finds it closed. Each
+  act is recorded in the subscriber's own audit with who took it
+  (`event.pause`, `event.resume`, `event.remove`), and an act on a
+  subscription that is not there is REFUSED in words. Who may act is the
+  surface's to decide by role (ADR-0009): the hub applies what reaches it.
+- **How an act reaches the node.** A surface over a live node calls the
+  runtime's library in that node's process, as a scope's pause does:
+  `xmip_event_subscriptions_v1` and `xmip_event_subscription_act_v1`
+  (`xmip_operate.h` section 11), bound as `RuntimeSubscriptions`, reached by
+  `NativeOperator` and, from another machine, through the web host's
+  surface hub (`RemoteOperator`). A surface over a snapshot touches no node,
+  and a scope's pause there is declined; a subscription's act is not, because
+  its publication says where its publisher takes orders
+  (`observe::Publication::orders`): the surface leaves an `order::Order`
+  there through `xmip_event_subscription_order_v1`, and the node that holds
+  the subscription takes it at its next look and applies it as above. The
+  file, its place and its shape are the event crate's alone.
+- **The snapshot carries the subscriptions.** A node records what its hub
+  holds in its snapshot (`Snapshot::record_subscription`), a publication
+  writes them as `[[subscriptions]]`, the Playground's cluster and roll merge
+  them as they merge health, and a surface reads them through
+  `xmip_publication_subscriptions_v1`. None is persisted: a subscription
+  lives in its process's hub, and the snapshot says what the hub held when
+  it was taken.
+- **Every Playground node subscribes two Parties**, through the hub and
+  nothing of its own: *operations* hears every Event on the node and is
+  called back; *on-call* hears the failures and is drained each round. A
+  node raises an Event for each stage it serves whose failing pairs changed
+  since the round before, and takes its orders under the directory the
+  cluster shares. The subscriptions are real: a paused one is seen to fill.
+- **The view.** A fifth view in both GUIs, *Subscriptions*: subscriber,
+  cluster, node, action, then state, queued, delivered, missed and since;
+  ordered by any column from its head, narrowed by the scope-pattern box
+  over each subscription's node and reach, drilled cluster → node →
+  subscription, every step a link carrying the cluster; bounded rows, no
+  Virtualize. `SubscriptionQuery` (`Xmip.Surface`) is the one drill, filter
+  and order every surface asks. An Operator is offered pause, resume and
+  remove, each recorded in the host's audit as `subscription.<act>`; an
+  Observer is shown the list and no act. `xmip-cli subscriptions` lists and,
+  with `--pause`, `--resume` or `--remove` on one named by `--location` and
+  `--id`, acts; `Get-XmipSubscription` is the one cmdlet for the noun, the
+  act a parameter set with `-WhatIf`.
+- **Not yet.** No Playground node forwards over the wire, so every
+  subscription the view lists is in process. A snapshot lists what its
+  publisher last published, so an act left for a node shows within a round,
+  not at once.
+
+Provenance: the owner's requirement, quoted; the model, the order
+through the publication, the Playground's Parties and the view's form are
+the assistant's, for the owner to overrule.
 
 ## Provenance
 

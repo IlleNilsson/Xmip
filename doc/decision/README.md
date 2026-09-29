@@ -838,8 +838,8 @@ library is found, how a status is said in English, how a TOML document is
 read — is one .NET library, `Xmip.Surface`, beside the binding in
 `xmip-core-abi`, and every .NET surface is a thin face over it. A scope that
 is Holding says why on the spot: the worst leaf beneath it and that leaf's
-evidence, at the banner, at the tile, at the row. The web GUI monitors and
-does nothing else. Paused is a mood. The surface a host reads is chosen in
+evidence, at the banner, at the tile, at the row. The web GUI offers what
+the desktop offers, by role (amendment 2026-09-14). Paused is a mood. The surface a host reads is chosen in
 its configuration, never guessed from a file in a temp directory.**
 
 → [The operator surfaces share one model, in full](ADR-0052-the-operator-surfaces-share-one-model.md)
@@ -1010,6 +1010,7 @@ You have a word. This gives you the decision that governs it.
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
+| Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | expression | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |

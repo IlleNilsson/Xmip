@@ -15,7 +15,9 @@
   (a node declares what it can do; its copies corrected 2026-09-24, its
   evidence and run entry moved to the node crate the same day), ADR-0019
   (identity, Parties and direction; the Topology draws its Parties since the
-  amendment of 2026-09-29)
+  amendment of 2026-09-29), ADR-0065 (Events subscribed; the Subscriptions
+  view, its amendment 2026-09-29), ADR-0009 (roles; both GUIs take the role
+  by one rule since 2026-09-29)
 
 ## In brief
 
@@ -34,8 +36,8 @@ library is found, how a status is said in English, how a TOML document is
 read — is one .NET library, `Xmip.Surface`, beside the binding in
 `xmip-core-abi`, and every .NET surface is a thin face over it. A scope that
 is Holding says why on the spot: the worst leaf beneath it and that leaf's
-evidence, at the banner, at the tile, at the row. The web GUI monitors and
-does nothing else. Paused is a mood. The surface a host reads is chosen in
+evidence, at the banner, at the tile, at the row. The web GUI offers what
+the desktop offers, by role (amendment 2026-09-14). Paused is a mood. The surface a host reads is chosen in
 its configuration, never guessed from a file in a temp directory.**
 
 ## Context
@@ -1512,3 +1514,30 @@ date, is the record; what it changes here:
 
 Provenance: the owner's requirement; the form, the fourth link and the move
 are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-09-29: a fifth view, the Subscriptions, and the role both hosts take
+
+The owner: *Now we need operation to have a view of event subscriptions.
+Subscriber, Cluster, Node, Action. One should be able to pause, resume and
+remove event subscriptions.* ADR-0065, amendment of this date, is the
+record; what it changes here:
+
+- **Five views.** `TopNav` links Configuration, Monitor, Topology, Audit
+  and Subscriptions, in both hosts. The Subscriptions view is a
+  `ClusterView` like the others, and it reads through
+  `IOperatorSurface.Subscriptions` and acts through `IOperatorSurface.Act`;
+  its drill, pattern and order are `SubscriptionQuery`'s and in the address,
+  written by `ScopeLink.Subscriptions`, as the Audit view's are.
+- **The role is wired as the amendment of 2026-09-14 ruled.** Until this
+  date the web host was hard-wired Observer, two weeks after this record
+  and ADR-0014 said the web offers every role. Both hosts now take the role
+  by one rule, `RoleContext.Assigned` in `Xmip.Gui`: a role the run states,
+  `Role` in `xmip.gui.toml` else `XMIP_ROLE`, is the role, and a word that is
+  no role is Observer; a run that states none has its role from the
+  directory, and with none configured the tester holds every role
+  (ADR-0009, amendment 2026-09-14, *the tester is God*). An Operator is
+  offered the acts; an Observer is shown the list and no act.
+
+Provenance: the owner's requirement; the fifth link and the one role rule
+are the assistant's drafting of what the records of 2026-09-14 ruled, for
+the owner to overrule.

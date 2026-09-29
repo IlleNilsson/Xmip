@@ -493,7 +493,7 @@ shared library, so they cannot disagree.
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, Linux and macOS. |
 
-Both GUIs show four views: Monitor, the default, the board that follows
+Both GUIs show five views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
 tree of the whole cluster, held still; Topology, the cluster's own
 communication, with the Parties that send into it on the left and those it
@@ -501,7 +501,12 @@ delivers to on the right; and Audit, what every Xmip program recorded, drilled
 cluster → node → program → record, sorted by any column and filtered by scope
 pattern, severity, action and time, all in the address
 ([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md), amendment
-2026-09-29). From any row the drill-down goes through the configuration
+2026-09-29); and Subscriptions, every Event subscription the cluster's nodes
+hold — the subscriber, a Party; the cluster and the node that holds it; the
+action it subscribes to; its state and what its queue did — drilled cluster →
+node → subscription, where an Operator pauses, resumes and removes one
+([ADR-0065](doc/decision/ADR-0065-events-are-subscribed-from-any-language.md),
+amendment 2026-09-29). From any row the drill-down goes through the configuration
 that declared the scope and ends at that configuration
 ([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
 amendment 2026-09-14).
@@ -511,6 +516,9 @@ remoting session proved, or the account behind an SSH key. An Observer
 watches; an Operator also pauses, resumes and configures; a Developer also
 opens the specific point's configuration from its scope
 ([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
+Both GUIs take it by one rule: a role the run states (`Role` in
+`xmip.gui.toml`, else `XMIP_ROLE`) is the role, and with none stated and no
+directory configured the tester holds every role.
 Observation reads snapshots the runtime publishes and never enters the
 message path. Audit is the durable record of actions and outcomes; a live
 monitor is not a replacement for it.
@@ -576,9 +584,11 @@ provisioning at a public edge. Online access is a declared choice, never a
 side effect of deployment.
 
 The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,
-`list` and `show` over a scope, `xmip-cli validate <file>`, and `xmip-cli
-audit`, what every Xmip program recorded, filtered by the Audit view's words;
-the PowerShell module answers the same as objects, the audit included. Pause and resume are the two acts the
+`list` and `show` over a scope, `xmip-cli validate <file>`, `xmip-cli
+audit`, what every Xmip program recorded, filtered by the Audit view's words,
+and `xmip-cli subscriptions`, the Event subscriptions the nodes hold, with
+`--pause`, `--resume` or `--remove` on one; the PowerShell module answers the
+same as objects, the audit and the subscriptions included. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built

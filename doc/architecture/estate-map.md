@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 182733 lines of production
+Where each repository mounts and what it holds: 185881 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -313,17 +313,17 @@ hold no source to count.
 │   │   │   ├── asn1                             526
 │   │   │   └── tls                              333
 │   │   └── operation/
-│   │       ├── cli                             3653
-│   │       ├── gui                             3032
+│   │       ├── cli                             4187
+│   │       ├── gui                             3278
 │   │       │   └── vscode                      1471
-│   │       ├── observe                         2157
+│   │       ├── observe                         2352
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
+│   │       ├── powershell                      1924  C# 1924 · PowerShell 0
 │   │       ├── audit                           1726
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── powershell                      1699  C# 1699 · PowerShell 0
 │   │       ├── archive                          632
 │   │       │   ├── sql                          256
 │   │       │   ├── file                         254
@@ -339,8 +339,8 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                16859  C# 15097 · Rust 1537 · PowerShell 225
-│   │   ├── event                               2637
+│   │   ├── abi                                17815  C# 16007 · Rust 1583 · PowerShell 225
+│   │   ├── event                               3224
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                1943
@@ -367,14 +367,14 @@ hold no source to count.
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             7153
+│       ├── runtime                             7349
 │       ├── configure                           1405
 │       └── persist                              705
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                          9772
+        └── playground                          9981
 ```
 
 ---
