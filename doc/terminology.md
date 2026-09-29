@@ -137,6 +137,10 @@ each side it is on: left of the nodes whose receive stages it sends into,
 right of the nodes whose send stages deliver to it (ADR-0052, amendment
 2026-09-29).
 
+Another system or organization that sends to or receives from Xmip is a
+**Party**, plural **Parties**, and the estate has no other word for it. The
+owner, 2026-09-29: *Partner is the wrong word. It is Party, plural Parties.*
+
 | Term | Meaning |
 | --- | --- |
 | **Transport identity** | Who opened the connection. Read before Message creation. Mandatory. |
@@ -186,7 +190,7 @@ detected**, because nothing outside Xmip is watching on Xmip's behalf. What
 replaces it is collection — and the difference matters operationally, not just
 grammatically. A pushed departure fails at Xmip and is Xmip's to retry; a
 collected one waits, and its failure mode is nobody turning up. Reported as one
-number, an unreachable partner and an idle one look identical.
+number, an unreachable Party and an idle one look identical.
 
 Between the two sits the **ToDo**, which holds every Stream, Message and Journey
 until *every* departure is settled. A Journey with two destinations reached and

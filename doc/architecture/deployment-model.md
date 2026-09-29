@@ -185,7 +185,7 @@ strictly an estate applies them, and is declared once per cluster.
 | Profile | For | Means |
 | --- | --- | --- |
 | `standard` | small estates, internal traffic | process isolation per identity context; violations block startup |
-| `enterprise` | multi-tenant or partner-facing | the above, plus mandatory Service Identity separation per runtime role |
+| `enterprise` | multi-tenant or party-facing | the above, plus mandatory Service Identity separation per runtime role |
 | `regulated` | government, defense, healthcare, finance | the above, plus node-level isolation for `highAssurance` identity contexts, fail-closed everywhere, and mandatory compliance reporting |
 
 Three properties are worth stating plainly, because each is a place a profile

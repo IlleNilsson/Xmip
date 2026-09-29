@@ -211,15 +211,18 @@ function Assert-XmipModuleCurrent {
     [CmdletBinding()]
     param()
 
-    $newest = Get-ChildItem -LiteralPath $PSScriptRoot -File -Include '*.ps1', '*.psm1', '*.psd1' -Recurse |
+    [string[]] $kinds = '*.ps1', '*.psm1', '*.psd1'
+    $newest = Get-ChildItem -LiteralPath $PSScriptRoot -File -Include $kinds -Recurse |
         Sort-Object -Property LastWriteTime -Descending |
         Select-Object -First 1
 
     if ($newest -and $newest.LastWriteTime -gt $script:XmipImportedAt) {
-        throw ("REFUSED. This session's Xmip module was imported at " +
-            "$($script:XmipImportedAt.ToString('yyyy-MM-dd HH:mm')) and $($newest.Name) changed at " +
-            "$($newest.LastWriteTime.ToString('yyyy-MM-dd HH:mm')). Close this Xmip PowerShell Console and open a new one: " +
-            'Import-Module -Force reloads the scripts but not the assemblies .NET already holds.')
+        [string] $imported = $script:XmipImportedAt.ToString('yyyy-MM-dd HH:mm')
+        [string] $changed = $newest.LastWriteTime.ToString('yyyy-MM-dd HH:mm')
+        throw ("REFUSED. This session's Xmip module was imported at $imported and " +
+            "$($newest.Name) changed at $changed. Close this Xmip PowerShell Console and " +
+            'open a new one: Import-Module -Force reloads the scripts but not the ' +
+            'assemblies .NET already holds.')
     }
 }
 

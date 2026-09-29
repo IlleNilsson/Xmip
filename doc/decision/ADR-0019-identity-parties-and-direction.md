@@ -58,12 +58,12 @@ declare is refused at authentication. It is not attempted against the other
 configured mechanisms, and it is not attempted at all.
 
 ```toml
-[receive.location.partner-x]
+[receive.location.party-x]
 transport = "https"
 
-  [receive.location.partner-x.accept]
+  [receive.location.party-x.accept]
   mechanism = ["mutual-tls", "oauth2"]
-  party     = ["partner-x"]
+  party     = ["party-x"]
 ```
 
 Trying every configured mechanism against every caller is how credential
@@ -125,10 +125,10 @@ not a role; it is the actor, per ADR-0007 and ADR-0008, and its identities are
 how it is recognized.
 
 ```text
-Party  partner-x
-  identity  mutual-tls    CN=partner-x.example        accepted on receive
-  identity  oauth2        sub=partner-x               accepted on receive
-  identity  edi-x12       ISA06=PARTNERX              accepted on receive
+Party  party-x
+  identity  mutual-tls    CN=party-x.example        accepted on receive
+  identity  oauth2        sub=party-x               accepted on receive
+  identity  edi-x12       ISA06=PARTYX              accepted on receive
   identity  sftp-key      SHA256:...                  presented on send
 ```
 
@@ -138,13 +138,13 @@ Party  partner-x
   the transport handler applies it.
 
 One registry, two directions. The alternative — credentials configured inline
-on every Receive and Send Location — means a partner's certificate rotation is
+on every Receive and Send Location — means a Party's certificate rotation is
 a search across the estate rather than one edit, and it means nothing can
-answer "what does partner-x use to reach us, and what do we use to reach them".
+answer "what does party-x use to reach us, and what do we use to reach them".
 
 A Party's identities are **per direction and per mechanism**, because they
-genuinely differ: the certificate a partner presents to Xmip is not the
-certificate Xmip presents to that partner.
+genuinely differ: the certificate a Party presents to Xmip is not the
+certificate Xmip presents to that Party.
 
 Security roles remain separate from Party identity, per ADR-0009. A Party is
 recognized; a role is granted. Resolving a credential to a Party answers
@@ -228,7 +228,7 @@ plus what to do when alignment fails. The same problem, a decade in production
 on internet mail, standardized as RFC 9989.
 
 ```toml
-[receive.location.partner-x.identity]
+[receive.location.party-x.identity]
 alignment      = "none"      # none | relaxed | strict
 onMisalignment = "accept"    # accept | quarantine | reject
 ```
@@ -251,7 +251,7 @@ rather than a policy decision — which is precisely how this goes wrong in
 products that ship the other default.
 
 Because alignment is expressed at the Party rather than at the credential,
-`relaxed` is meaningful: a partner reaching Xmip through two endpoints with two
+`relaxed` is meaningful: a Party reaching Xmip through two endpoints with two
 certificates is still one Party, and still aligned with its own `ISA06`.
 
 Two degenerate cases close the rule:
@@ -259,7 +259,7 @@ Two degenerate cases close the rule:
 - **No message identity.** The transport identity is authoritative for both
   questions and alignment is vacuously satisfied. This is most of the estate.
 - **No presented transport identity.** The circumstance *is* the transport
-  identity — implied, and authenticated as such. A partner drop folder is not
+  identity — implied, and authenticated as such. A Party drop folder is not
   an absence of identity.
 
 ### 8. A Stream arrives three ways, and an identity is established three ways
@@ -275,7 +275,7 @@ this schedule, this credential Xmip used to go and get it) or **detected** (read
 out of what arrived — `ISA06`, a signature, an envelope).
 
 **Both are recorded, and neither implies the other.** A pushed Stream can yield
-a detected identity: a partner posts an X12 interchange over plain HTTP and the
+a detected identity: a Party posts an X12 interchange over plain HTTP and the
 only name anywhere is inside the envelope. A scheduled pickup can only ever
 yield an inferred identity, because there was nobody there to pass anything —
 and the credential in play was Xmip's own, which proves something about Xmip and

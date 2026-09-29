@@ -77,7 +77,7 @@ Authorization    whether that authenticated identity may send, post or poll
                  a Stream into Xmip
 ```
 
-An implied identity is still authenticated. A Receive Location configured as a partner's drop
+An implied identity is still authenticated. A Receive Location configured as a Party's drop
 presents no credential, so authentication verifies the circumstance that implies it — the
 path, the permissions, the source address. "No credential" means different evidence, not
 absent verification.

@@ -158,7 +158,7 @@ made.
 
 **Isolate by Party rather than by identity context.** Simpler to explain, and
 wrong: one Party legitimately holds several credentials, and ADR-0019 depends on
-that. Isolating by Party would either over-isolate a single trading partner or
+that. Isolating by Party would either over-isolate a single Party or
 under-isolate two contexts that happen to belong to the same one.
 
 **Warn rather than block.** The conventional choice and the reason convention is

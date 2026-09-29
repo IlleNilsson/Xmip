@@ -89,9 +89,9 @@ module's provisioning half), not a transport.
 
 Recorded already in ADR-0028 and restated here as a constraint on clause 2: ACME
 with Let's Encrypt issues **public, domain-validated** certificates over HTTP. It
-does not cover mutual-TLS against a private partner, an internal certificate
+does not cover mutual-TLS against a private Party, an internal certificate
 authority, client certificates, or any non-public endpoint. Those remain, and
-for high-assurance partner integration the **internal CA + mutual-TLS** path is
+for high-assurance Party integration the **internal CA + mutual-TLS** path is
 the default; Let's Encrypt is prioritized for the public edge, not made
 universal.
 
@@ -183,7 +183,7 @@ the record had said post-quantum before; this does.
 - **The policy is the node's, in three words.** `Ignored`, a legacy
   verifier's view; `WherePresent`, the default, where a certificate that
   carries the extensions is held to them and one that does not is taken on
-  its classical signature, so a partner may move before the node requires
+  its classical signature, so a Party may move before the node requires
   it; `Required`, every certificate on the path, anchor included, or
   refused saying which one lacks it. A certificate carrying an alternative
   signature its issuer has no alternative key for, or by an algorithm this

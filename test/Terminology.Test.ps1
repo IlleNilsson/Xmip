@@ -61,6 +61,21 @@ Describe 'Terminology: the glossary carries the disambiguation' {
     }
 }
 
+Describe 'Terminology: another system is a Party' {
+    It 'keeps the word partner out of the records but for the ruling that retired it' {
+        # The owner, 2026-09-29: Party, plural Parties. The ruling quotes the
+        # old word once, in terminology.md; nothing else in doc/ may use it.
+        [string] $ruling = '*Partner is the wrong word. It is Party, plural Parties.*'
+        $records = Get-ChildItem -Path $script:DocsRoot -Recurse -Filter *.md
+        [string[]] $uses = foreach ($file in $records) {
+            $text = (Get-Content -Raw -LiteralPath $file.FullName).Replace($ruling, '')
+            if ($text -match '(?i)partner') { $file.FullName }
+        }
+
+        $uses | Should -BeNullOrEmpty -Because 'the estate says Party, plural Parties'
+    }
+}
+
 Describe 'Terminology: a settled but overloaded word stays qualified' {
     It 'does not let a bare watchword grow past its frozen ceiling' {
         foreach ($w in $script:Watchwords) {

@@ -202,7 +202,7 @@ Virtualization would add a dependency to the one tool whose job is to have none.
 — it still happens — but it finds a regression at release rather than the hour
 it landed, and it produces no measurement in between.
 
-**Exercising against external systems.** Real partners, real brokers. Rejected
+**Exercising against external systems.** Real Parties, real brokers. Rejected
 as the default: the Playground has to run on a laptop with no network. Xmip's
 own transports are the counterparty, and an external system is an optional
 extra target when one is available.

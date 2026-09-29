@@ -622,8 +622,8 @@ estate already centralizes shared types in `foundation/core` (`Severity`,
 **Xmip is an integration platform, not an end-user application, so it carries no
 product internationalization — no translated UI, no localized messages. English
 throughout code, logs, health, documentation and scope URIs. Globalization
-matters only at the data boundary, where Xmip parses or formats a partner's data,
-and there the locale is the partner's declared convention, never the server's.**
+matters only at the data boundary, where Xmip parses or formats a Party's data,
+and there the locale is the Party's declared convention, never the server's.**
 
 → [Locale-neutral internally, in full](ADR-0038-locale-neutral-internally.md)
 

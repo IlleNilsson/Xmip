@@ -825,7 +825,7 @@ C. A node runs          the 2026-09-05 item 1 below, in the smallest honest
                         Xmip Process branch in departure; checkpoint, resume
 D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
                         tracking, message search and resubmit; EDI
-                        acknowledgements and trading-partner agreements;
+                        acknowledgements and Party agreements;
                         sign, encrypt, compress (prepare); secrets; an
                         OpenTelemetry exporter; a signed release with an SBOM
                         (the Cyber Resilience Act's reporting duties began
@@ -1104,7 +1104,7 @@ There is no cluster-scope lease to place because there is no lease.
 `xmip-core-exclusiveness` is retired and `ResourceClaim` in
 `xmip-core-transport` replaces it: the endpoint's own atomic claim is
 cluster-wide already, because the endpoint is one thing however many nodes are
-asking, and the shared write path it needs is the partner's storage rather than
+asking, and the shared write path it needs is the Party's storage rather than
 Xmip's.
 
 All four options recorded here shared one assumption — that Xmip had to keep

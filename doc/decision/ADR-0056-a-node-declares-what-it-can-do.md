@@ -62,7 +62,7 @@ Three records point at a thing none of them defines. This one defines it.
    - **Online capability** — whether a route off this machine may be
      assumed. ADR-0045 makes offline the default, so this is the one
      capability whose absence is the normal case. Work that must reach
-     ACME, an OCSP responder or a partner endpoint requires it.
+     ACME, an OCSP responder or a Party endpoint requires it.
    - **Feature capability** — what the node can actually do with a
      Stream: the transports, contracts, paths, archives and logic its
      Modules registered. A Journey that decodes EDIFACT requires a node

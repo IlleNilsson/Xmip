@@ -30,8 +30,8 @@ built: *identification and authentication by user and service principal
 name should be supported where it can.*
 
 Nothing in the record had named either. The same two things were already
-arriving under many names. A person or an account is `jane@partner-x.example`
-to a directory, `PARTNERX\jane` to an older Windows logon, a client
+arriving under many names. A person or an account is `jane@party-x.example`
+to a directory, `PARTYX\jane` to an older Windows logon, a client
 principal to Kerberos, the `upn` claim to an identity provider and an
 alternative name on a smart-card certificate. A service is
 `HTTP/xmip.example@EXAMPLE.COM` to Kerberos, a target name to NTLM and an
@@ -132,8 +132,8 @@ checked on disk.
 - **The second gate compares accounts, not strings.** `windows` is rebuilt
   over the capability's type and its own parsing is gone; `ldap` can bind
   by the user principal name itself, as Active Directory accepts, beside
-  its DN template; `ntlm` meets a claim of `jane@partnerx` with a message
-  for user `jane` in domain `PARTNERX`; `kerberos` compares the ticket's
+  its DN template; `ntlm` meets a claim of `jane@partyx` with a message
+  for user `jane` in domain `PARTYX`; `kerberos` compares the ticket's
   service through `ServicePrincipalName::is` and hands the client out as a
   `UserPrincipalName`; `oidc`, `oauth2` and `saml` take an expected user
   principal name and refuse another account naming both. `certificate`

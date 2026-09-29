@@ -73,7 +73,7 @@ pub trait ResourceClaim: Send + Sync {
 
 **The endpoint is one thing however many nodes are asking.** A claim taken
 there is cluster-wide without a lease, a store, or anything for Xmip to keep
-consistent across nodes — because the shared write path is the partner's
+consistent across nodes — because the shared write path is the Party's
 storage rather than Xmip's, and it is already there:
 
 | family | native claim |
