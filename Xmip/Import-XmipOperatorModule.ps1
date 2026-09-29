@@ -35,6 +35,18 @@ function Import-XmipOperatorModule {
         return
     }
 
+    # Import-Module Xmip -Force forgets the module but not its assembly: .NET
+    # never unloads one, and a second of the same name is refused (the owner's
+    # console, 2026-09-29). The one already in the process is imported again.
+    $loaded = [System.AppDomain]::CurrentDomain.GetAssemblies() |
+        Where-Object { $_.GetName().Name -eq 'Xmip.PowerShell' } |
+        Select-Object -First 1
+
+    if ($null -ne $loaded) {
+        $script:XmipOperatorModule = Import-Module -Assembly $loaded -PassThru -ErrorAction Stop
+        return
+    }
+
     [string] $source = 'module/core/operation/powershell/src/Xmip.PowerShell'
     [string] $project = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath (
         "$source/Xmip.PowerShell.csproj")

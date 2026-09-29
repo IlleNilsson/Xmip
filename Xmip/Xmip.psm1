@@ -218,7 +218,8 @@ function Assert-XmipModuleCurrent {
     if ($newest -and $newest.LastWriteTime -gt $script:XmipImportedAt) {
         throw ("REFUSED. This session's Xmip module was imported at " +
             "$($script:XmipImportedAt.ToString('yyyy-MM-dd HH:mm')) and $($newest.Name) changed at " +
-            "$($newest.LastWriteTime.ToString('yyyy-MM-dd HH:mm')). Run: Import-Module Xmip -Force")
+            "$($newest.LastWriteTime.ToString('yyyy-MM-dd HH:mm')). Open a new PowerShell window: " +
+            'Import-Module -Force reloads the scripts but not the assemblies .NET already holds.')
     }
 }
 
