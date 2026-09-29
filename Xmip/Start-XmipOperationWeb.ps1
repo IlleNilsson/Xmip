@@ -25,8 +25,8 @@ function Start-XmipOperationWeb {
             cluster they are on and move between them. Two of them publishing
             one cluster is REFUSED by the host, because a cluster rolls once.
 
-            It launches the built executable when one is present and falls back
-            to `dotnet run` from source otherwise. It binds to 127.0.0.1 by
+            It builds the web host first, as Start-XmipTest builds a roll, and
+            launches what it built, so the host is the source as it is. It binds to 127.0.0.1 by
             default rather than localhost, because a browser that cached HSTS for
             localhost from another app silently forces https and the plain-http
             server then looks dead. Get-XmipOperationWeb lists what is running and
@@ -66,10 +66,6 @@ function Start-XmipOperationWeb {
             The PEM anchors a caller's certificate must reach. Unset, the host's
             xmip.gui.toml or XMIP_TRUST_ANCHOR, else the operating system's trust
             store.
-
-        .PARAMETER FromSource
-            Run `dotnet run` from the project rather than the built executable —
-            for development, when the source is newer than the last build.
 
         .PARAMETER PassThru
             Return the Xmip.Web object for the host started.
@@ -123,9 +119,6 @@ function Start-XmipOperationWeb {
         [string] $TrustAnchor,
 
         [Parameter()]
-        [switch] $FromSource,
-
-        [Parameter()]
         [switch] $PassThru
     )
 
@@ -163,6 +156,8 @@ function Start-XmipOperationWeb {
             Write-XmipAudit -Action 'Start-XmipOperationWeb' -ErrorRecord $_
             break
         }
+
+        Assert-XmipModuleCurrent
 
         foreach ($named in $following) {
             Wait-XmipSnapshot -Path $named
@@ -255,26 +250,28 @@ function Start-XmipOperationWeb {
             return
         }
 
-        if (-not $FromSource -and (Test-Path -LiteralPath $layout.Web)) {
-            $launch = @{
-                FilePath         = $layout.Web
-                ArgumentList     = $arguments
-                WorkingDirectory = Split-Path -Parent $layout.Web
-                WindowStyle      = 'Hidden'
-                PassThru         = $true
-            }
+        # Built before every start, as Start-XmipTest builds a roll: the host
+        # runs the source as it is. Until 2026-09-29 it ran whatever bin held,
+        # and xgit builds elsewhere, so a fix landed the day before was not
+        # what the owner saw.
+        if (-not (Test-Path -LiteralPath $project)) {
+            Write-Error "No web project at $project."
+            return
         }
-        else {
-            if (-not (Test-Path -LiteralPath $project)) {
-                Write-Error "No web project at $project."
-                return
-            }
 
-            $launch = @{
-                FilePath     = 'dotnet'
-                ArgumentList = @('run', '--project', $project, '--no-launch-profile') + $arguments
-                PassThru     = $true
-            }
+        [string[]] $said = @(& dotnet build $project --verbosity quiet --nologo 2>&1)
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "REFUSED. The web host did not build:`n$($said -join "`n")"
+            return
+        }
+
+        $launch = @{
+            FilePath         = $layout.Web
+            ArgumentList     = $arguments
+            WorkingDirectory = Split-Path -Parent $layout.Web
+            WindowStyle      = 'Hidden'
+            PassThru         = $true
         }
 
         # The host's own output is kept beside its run, as a roll's is: a host
