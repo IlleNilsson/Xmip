@@ -5,7 +5,9 @@
 - Related: ADR-0006 (send-side identity inheritance), ADR-0007 (communication
   domain model), ADR-0008 (Xmip entities as actors), ADR-0009 (security roles
   versus actor capabilities), ADR-0013 (disposition and the Journey model),
-  ADR-0050 (an identity technology is one mechanism at one gate)
+  ADR-0050 (an identity technology is one mechanism at one gate), ADR-0052
+  (the operator surfaces share one model; amendment 2026-09-29, the Topology
+  draws a Party on each side of the nodes it sends to or is delivered by)
 
 ## In brief
 

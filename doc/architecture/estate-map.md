@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 179799 lines of production
+Where each repository mounts and what it holds: 180135 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -314,9 +314,9 @@ hold no source to count.
 │   │   │   └── tls                              333
 │   │   └── operation/
 │   │       ├── cli                             3011
-│   │       ├── gui                             2778
+│   │       ├── gui                             2839
 │   │       │   └── vscode                      1471
-│   │       ├── observe                         2057
+│   │       ├── observe                         2062
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      1443  C# 1443 · PowerShell 0
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                16296  C# 14559 · Rust 1512 · PowerShell 225
+│   │   ├── abi                                16336  C# 14598 · Rust 1513 · PowerShell 225
 │   │   ├── event                               2637
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -367,14 +367,14 @@ hold no source to count.
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             7012
+│       ├── runtime                             7013
 │       ├── configure                           1405
 │       └── persist                              705
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                          9543
+        └── playground                          9772
 ```
 
 ---

@@ -496,7 +496,8 @@ shared library, so they cannot disagree.
 Both GUIs show three views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
 tree of the whole cluster, held still; and Topology, the cluster's own
-communication. From any row the drill-down goes through the configuration
+communication, with the Parties that send into it on the left and those it
+delivers to on the right. From any row the drill-down goes through the configuration
 that declared the scope and ends at that configuration
 ([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
 amendment 2026-09-14).

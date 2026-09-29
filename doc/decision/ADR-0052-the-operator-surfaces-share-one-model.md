@@ -12,7 +12,9 @@
   propagate; its color name corrected 2026-09-24, its rollup exported the
   same day), ADR-0044 (a technology shares through its capability), ADR-0056
   (a node declares what it can do; its copies corrected 2026-09-24, its
-  evidence and run entry moved to the node crate the same day)
+  evidence and run entry moved to the node crate the same day), ADR-0019
+  (identity, Parties and direction; the Topology draws its Parties since the
+  amendment of 2026-09-29)
 
 ## In brief
 
@@ -1429,3 +1431,55 @@ Finding the problem, the owner went on, *is being able to drill down to
 locations and actual streams to find out what is faulty*: the drill ends at
 the Receive or Send Location and the Streams that passed or failed there, each
 with its arrival, outcome, reason and evidence, never at a summary.
+
+## Amendment, 2026-09-29: the Topology draws the Parties outside the nodes
+
+The owner: *Something is sending streams to a Xmip Node. A Xmip Node sends
+streams to somethings.* The Topology stopped at the nodes: a cluster's
+receive stages received from nothing drawn and its send stages delivered to
+nothing drawn. What is outside is drawn now, by **Party** (ADR-0019), never
+by transport far end — the Playground's receive and send stages each face 80
+and more transports, and a box per far end would be unreadable.
+
+- **A Party is a kind of topology thing.** `observe::NodeKind::Party`, word
+  `party`, is declared once in `observe::topology`, crosses as
+  `XMIP_TOPOLOGY_PARTY` (15, section 8 of `xmip_operate.h`; the runtime's
+  `wire.rs`, `Xmip.Abi`'s `TopologyNodeKind.Party`), and every surface reads
+  its word and name from the runtime as it reads every other kind's.
+- **One box per Party and side.** A Party that sends into a Receive Location
+  is drawn once, linked to each receive stage it sends into; a Party a Send
+  Location delivers to is drawn once, linked from each send stage that
+  delivers to it. Each link carries what its stage counted
+  (`Counted::at`: Streams at receive, Messages at send), its mood the worst
+  leaf beneath that stage's endpoints, and its evidence names the transport
+  that leaf is under. The Party's box is Fine or Holding over the worst it
+  faces (ADR-0041). Which side a Party is on is said by its links, never by
+  its id or its name.
+- **The Playground's Party is its own.** A Playground cluster has one Party,
+  `partner-x` — the identity its Receive Locations accept and its Send
+  Locations present (the playground's `identity::PARTY`, written once) — and
+  its test peers are the far end of every transport. It is drawn on each side
+  it is on.
+- **Senders left, receivers right.** Where Parties are drawn the canvas reads
+  as the streams run: a Party that sends left of the frame, the things inside
+  in columns each after what its links say feeds it, a Party delivered to
+  right of the frame. Without Parties the canvas is the ring it was.
+- **A Party opens to its transports.** A Party has nothing beneath it and no
+  configuration Xmip draws; opened, it is drawn where it stands, selected,
+  and the inspector lists every stage it talks to with that stage's
+  endpoints, worst first by the runtime's order, each in its state and one
+  click from its record.
+
+Proved by the playground's `topology.rs` (the Parties, their links, the
+aggregated counts and the worst leaf), `observe`'s `topology.rs`, the
+runtime's `wire.rs`, `xmip-core-abi`'s `operate/publication.rs`,
+`Xmip.Abi.Test` (`OperateAbiTest`: the header's values), `Xmip.Surface.Test`
+(`ClusterSnapshotTest`: the fixture's two Parties and their links) and
+`Xmip.Gui.Test` (`ClusterTopologyTest`: the sender left of the nodes, the
+receiver right, a Party opened to its transports).
+
+Provenance: the owner's words above and his acceptance, on 2026-09-29, of
+the proposal they answer — Party boxes left and right of the nodes, a
+Party's transports and their state in the inspector, and no box per
+transport far end. The ids, the column layout and the aggregation are the
+assistant's drafting, for the owner to overrule.
