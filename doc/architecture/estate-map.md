@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 179803 lines of production
+Where each repository mounts and what it holds: 179799 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -90,7 +90,7 @@ hold no source to count.
 │   │   │   │   ├── kafka                       1645
 │   │   │   │   ├── snmp                        1374
 │   │   │   │   ├── ibm-mq                      1368
-│   │   │   │   ├── http                        1354
+│   │   │   │   ├── http                        1350
 │   │   │   │   ├── oracle                      1343
 │   │   │   │   ├── postgresql                  1294
 │   │   │   │   ├── nats-jetstream              1131
