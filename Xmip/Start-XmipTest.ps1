@@ -315,8 +315,7 @@ function Start-XmipTest {
         [switch] $PassThru
     )
 
-    # The first failure ends the call; a cascade of twenty errors after one
-    # missing piece is what the owner saw on 2026-09-12.
+    # The first failure ends the call (a cascade of twenty errors, 2026-09-12).
     $ErrorActionPreference = 'Stop'
 
     # Every start, refusal and failure is audited (ADR-0062): under 'Stop' a

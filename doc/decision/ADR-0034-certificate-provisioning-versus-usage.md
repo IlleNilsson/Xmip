@@ -28,7 +28,7 @@ not the pipeline, and not universal.
 The owner's framing, 2026-09-06, resolving where Let's Encrypt fits: *Xmip runs
 on-premises with or without internet access, in the cloud, and on a tiny device.*
 Those deployments do not share a way to obtain a certificate — a laptop with no
-network cannot reach an ACME server; a private partner has no public domain to
+network cannot reach an ACME server; a private Party has no public domain to
 validate — but they share how a certificate is used once present. Collapsing the
 two is what made "proper Let's Encrypt in the Playground" look sensible when the
 Playground is offline by design (ADR-0028) and Let's Encrypt needs public
@@ -51,12 +51,12 @@ reachability. Separated, the question answers itself.
 | Deployment | Reachability | Provisioning source |
 | --- | --- | --- |
 | Cloud edge with a public domain | public | Let's Encrypt / ACME (domain-validated) |
-| On-premises, private partners | private | an internal certificate authority + mutual-TLS |
+| On-premises, private Parties | private | an internal certificate authority + mutual-TLS |
 | Managed cloud | platform | a platform issuer — KMS, cert-manager |
 | On-premises without internet, laptop, the Playground | offline | a self-signed or stand-in certificate authority |
 | A tiny device (Meadow-class) | provisioned into it | a certificate pushed in; no on-device ACME |
 
-The estate's default for private, high-assurance partner integration is the
+The estate's default for private, high-assurance Party integration is the
 **internal CA + mutual-TLS** (`transport/http/tls.rs` already says so). Let's
 Encrypt is prioritized for the **public-edge** source specifically (ADR-0033),
 and adds nothing to the other rows.

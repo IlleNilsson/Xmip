@@ -141,7 +141,7 @@ somewhere shared to live and had nowhere — a lease in per-node persistence
 proves nothing to another node. ADR-0024 removed the cost by removing the
 lease: a claim taken at the endpoint is cluster-wide already, because the
 endpoint is one thing however many nodes are asking. The shared write path that
-was missing turned out to be the partner's storage, and it was never Xmip's to
+was missing turned out to be the Party's storage, and it was never Xmip's to
 build.
 
 ### The queue is the store, not a broker
@@ -194,7 +194,7 @@ Ordering needs three things a claim does not supply:
 
 **An order key.** Ordered *by what*? Global ordering across a Receive Location
 serializes everything and destroys throughput. What is almost always wanted is
-ordering **per key** — per trading partner, per device, per account — so that
+ordering **per key** — per Party, per device, per account — so that
 unrelated sequences run in parallel while each sequence stays intact. The key is
 configured; there is no useful default.
 
@@ -204,7 +204,7 @@ why ordering is a queue property.
 
 **A failure policy, which nobody thinks about until it happens.** When an
 ordered item fails, either the sequence blocks behind it — order preserved,
-head-of-line blocking, one bad Message stops a partner's traffic until an
+head-of-line blocking, one bad Message stops a Party's traffic until an
 operator intervenes — or it is set aside and the sequence continues, which
 breaks the ordering that was the point. Both are defensible; **neither is a
 default that can be chosen silently**, because the first surprises an operator
@@ -423,7 +423,7 @@ Decrypt / Encrypt          Decode / Encode
 Decompress / Compress      Convert character encoding
 Extract / create archives  Normalize line endings
 Unwrap / wrap              Digitally sign or verify
-Repair explicitly configured partner quirks
+Repair explicitly configured Party quirks
 Custom Preparation Step
 ```
 
@@ -875,7 +875,7 @@ Message:
 ```text
 Schema     XML Schema, JSON Schema, RegEx, Avro, Protobuf
 Standard   EDI, HL7, FHIR and other standardized validation systems
-Custom     stakeholder, project and partner contracts, and contracts derived
+Custom     stakeholder, project and Party contracts, and contracts derived
            from standard or other custom contracts
 ```
 

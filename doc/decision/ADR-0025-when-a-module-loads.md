@@ -37,7 +37,7 @@ That is the wrong trade for the estate this replaces. **A node that cannot
 receive is down.** A node that can receive but cannot yet render a report is
 working, and the difference matters most at the moment it matters least to the
 reporting Module: a cluster coming back after an outage, where every second
-before `accept-work` is a second of partner traffic refused.
+before `accept-work` is a second of Party traffic refused.
 
 `xmip-core-runtime`'s `host.rs` already carries `mod dynamic` behind a
 `dynamic-loading` feature. It has never compiled, because `xmip-core-abi`

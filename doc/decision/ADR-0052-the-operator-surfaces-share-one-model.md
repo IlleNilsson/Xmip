@@ -1456,7 +1456,7 @@ and more transports, and a box per far end would be unreadable.
   faces (ADR-0041). Which side a Party is on is said by its links, never by
   its id or its name.
 - **The Playground's Party is its own.** A Playground cluster has one Party,
-  `partner-x` — the identity its Receive Locations accept and its Send
+  `party-x` — the identity its Receive Locations accept and its Send
   Locations present (the playground's `identity::PARTY`, written once) — and
   its test peers are the far end of every transport. It is drawn on each side
   it is on.

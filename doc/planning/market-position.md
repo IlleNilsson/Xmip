@@ -178,7 +178,7 @@ takes them (judgment, with the survey behind it):
 4. Tracking and message search: find a Message by promoted property, see its
    body, resubmit it. Every audit, report and observe sink is reserved.
 5. EDI completeness: interchange control numbers, acknowledgements (997, 999,
-   TA1, CONTRL), batching, agreement-driven validation — trading-partner
+   TA1, CONTRL), batching, agreement-driven validation — Party
    agreements in `party`.
 6. Secrets and keys: a local encrypted store, the platform key stores, PKCS#11
    and a vault. Nothing in the manifest holds a secret. **Needs a home.**

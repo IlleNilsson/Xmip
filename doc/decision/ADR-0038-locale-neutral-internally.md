@@ -16,8 +16,8 @@
 **Xmip is an integration platform, not an end-user application, so it carries no
 product internationalization — no translated UI, no localized messages. English
 throughout code, logs, health, documentation and scope URIs. Globalization
-matters only at the data boundary, where Xmip parses or formats a partner's data,
-and there the locale is the partner's declared convention, never the server's.**
+matters only at the data boundary, where Xmip parses or formats a Party's data,
+and there the locale is the Party's declared convention, never the server's.**
 
 ## Context
 
@@ -48,7 +48,7 @@ example stands for what it illustrates; the decision is unchanged.
 ### 2. Locale-aware only at the data boundary
 
 Three concerns, and only these, are locale-aware, at the edge where Xmip reads or
-writes a partner's data:
+writes a Party's data:
 
 - **Time and calendars** — time zones, daylight saving, and the ambiguity of a
   date like `01/02/2026`; the substrate for scheduling, retention windows and
@@ -56,9 +56,9 @@ writes a partner's data:
 - **Number and data formatting** — decimal separators, digit grouping, currency;
   because integration moves values between systems that format them differently.
 - **Character encoding** — UTF-8, Latin-1, EBCDIC off a mainframe EDI feed; part
-  of reading a partner's bytes as text.
+  of reading a Party's bytes as text.
 
-In each, the locale is a property of the **partner or the contract**, declared in
+In each, the locale is a property of the **Party or the contract**, declared in
 configuration, not inherited from the host the node runs on.
 
 ### 3. No i18n framework
@@ -90,7 +90,7 @@ then: *streams are streams, do not enforce UTF unless asked for.*
   no encoding is declared, and the only form of Xmip's own text:
   configuration, logs, audit, Events, the operator surfaces.
 - **Other encodings** (Latin-1, EBCDIC and the rest in clause 2) are read and
-  written only where a partner's Contract or a technology's settings declare
+  written only where a Party's Contract or a technology's settings declare
   them.
 
 ## Provenance

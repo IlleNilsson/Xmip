@@ -387,7 +387,7 @@ the comparison.
 ## Chief Information Officer
 
 Xmip is for organizations whose integration problem is not simply moving
-data, but keeping control and accountability while systems, partners,
+data, but keeping control and accountability while systems, Parties,
 regulations and deployment models change.
 
 ### The organizational case

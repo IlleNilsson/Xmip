@@ -394,11 +394,11 @@ What replaces it:
    appear nowhere else in the estate. One token across the whole estate, so a
    reader learns it once.
 
-   `vendor` and `partner` were considered and both were rejected on collision
+   `vendor` and `party` were considered and both were rejected on collision
    with the estate's own vocabulary, not on taste. ADR-0011 uses *vendor* as a
    naming concept — *a vendor name in slot 3 is unremarkable* — so
    `xmip-vendor-contract-sql` would read as a dialect rather than a publisher,
-   in the one record that governs the slot. *Partner* is a domain term of
+   in the one record that governs the slot. *Party* is a domain term of
    ADR-0019, `doc/terminology.md` and the runtime model, where it means a party
    Xmip exchanges messages with. **The choice of `Example` is the assistant's
    and is the owner's to change**; it is one token and a sweep.
@@ -606,7 +606,7 @@ morning, which is said in the open rather than smoothed over. Clause 22 — that
 bare name is accepted and canonicalized rather than refused — is the assistant's
 reading of two opposite rulings and is named there as his to strike, and it is
 the first thing to read. So is the choice of `Example` as the one literal
-stand-in token in clause 24, with `vendor` and `partner` rejected on collision
+stand-in token in clause 24, with `vendor` and `party` rejected on collision
 with ADR-0011's and ADR-0019's own vocabulary; the reasoning is stated so he can
 overrule it in one sweep. The `## In brief` block above still reads
 *`Core.Playground`, never `Playground`*. The first half was right again; the
@@ -658,12 +658,12 @@ provider*, and *ACME is for the certificate provider*.
 - **Prose and doc comments take the grammar slot**: `xmip-<provider>-transport`
   mounting at `module/<provider>/capability/transport`, and *a third party*
   where a sentence needs a noun.
-- **Where a literal is needed**, a provider is `example` and a partner or
-  tenant is `partner-x`: the mount test's declared repositories, the tenant a
+- **Where a literal is needed**, a provider is `example` and a Party or
+  tenant is `party-x`: the mount test's declared repositories, the tenant a
   claim carries (`authorize/claim`), the cloud project a Pub/Sub topic sits in
   (`transport/google-pub-sub`, five places), and a dynamic module's entry-point
   symbol in `platform/runtime`, which read `acme_create_v1` and now reads
-  `partner_create_v1`.
+  `party_create_v1`.
 - **ACME still means RFC 8555**, and the owner's quoted words keep his
   spelling, as clause 5 of the amendment above already had it.
 

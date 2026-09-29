@@ -63,7 +63,7 @@ configuration selects among.
 Whether, when and how archived data is deleted is decided by whoever owns the
 archive — a records office, a compliance regime, a downstream system — not by
 Xmip. Xmip provides the archive; the owner disposes of it. This keeps the
-platform clear of a responsibility (destroying a partner's records) that is
+platform clear of a responsibility (destroying a Party's records) that is
 theirs to hold and theirs to answer for.
 
 ### 4. The scenario matches
