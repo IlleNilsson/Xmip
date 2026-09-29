@@ -1225,7 +1225,9 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec"]
+  # xmip-core-observe for the one scope rule and the one wildcard the audit
+  # read filters by (ADR-0062, amendment 2026-09-29).
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec", "xmip-core-observe"]
     # file, syslog and windows-event-log are carried by the capability itself
     # (src/file_sink.rs, src/syslog.rs, src/windows_event_log.rs): the file is
     # every program's default sink and the other two are ADR-0062's fallback,
