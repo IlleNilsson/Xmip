@@ -132,7 +132,10 @@ Provider or Management Module capabilities.
 
 A **Party** is an actor Xmip recognizes, per ADR-0007 and ADR-0008. It holds
 the identities it is recognized by and the identities Xmip presents when
-reaching it. One registry, both directions.
+reaching it. One registry, both directions. The Topology draws a Party on
+each side it is on: left of the nodes whose receive stages it sends into,
+right of the nodes whose send stages deliver to it (ADR-0052, amendment
+2026-09-29).
 
 | Term | Meaning |
 | --- | --- |
