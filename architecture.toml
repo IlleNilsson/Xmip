@@ -1199,6 +1199,7 @@ dependency = []
       "xmip-core-library-net",
       "xmip-core-node",
       "xmip-core-observe",
+      "xmip-core-party",
       "xmip-core-resilience",
   ]
     # The wire event is the event capability's wire format, and each binding
@@ -1645,12 +1646,14 @@ dependency = []
       "xmip-core-contract-sql",
       "xmip-core-contract-wsdl",
       "xmip-core-contract-xml-schema",
+      "xmip-core-event",
       "xmip-core-identify",
       "xmip-core-library-codec",
       "xmip-core-library-net",
       "xmip-core-message",
       "xmip-core-node",
       "xmip-core-observe",
+      "xmip-core-party",
       "xmip-core-retain",
       "xmip-core-stream",
       "xmip-core-transport",

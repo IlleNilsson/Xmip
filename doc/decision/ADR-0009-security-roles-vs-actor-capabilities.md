@@ -147,6 +147,11 @@ run over a roll asks a directory like any other and is told yes, and the
 role gate has one code path, not a test-mode bypass. Which directory group
 means which role is configuration, not code, and is not yet written.
 
+*Wired 2026-09-29:* both GUIs take the role by this rule, once
+(`RoleContext.Assigned` in `Xmip.Gui`): a role the run states is the role,
+a word that is no role is Observer, and with none stated and no directory
+configured the tester holds every role (ADR-0052, amendment 2026-09-29).
+
 A test run that wants the real thing says so: `Start-XmipTest` gains
 **`-Directory`** beside `-OnlineNodes`, the owner's wording, naming the
 directory the roll authorizes its roles against — the run switch that turns
