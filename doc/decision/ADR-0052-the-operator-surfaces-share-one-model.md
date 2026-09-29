@@ -3,7 +3,8 @@
 - Status: Accepted
 - Date: 2026-09-11
 - Related: ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
-  `ProgramAudit` for every .NET surface), ADR-0014 (the operator surfaces;
+  `ProgramAudit` for every .NET surface; the Audit view reads it back, its
+  amendment 2026-09-29), ADR-0014 (the operator surfaces;
   amendments 2026-08-26, the ABI is the interface into Xmip; 2026-09-05, the
   web GUI monitors; 2026-09-09, the .NET binding is one project in
   xmip-core-abi; 2026-09-10, the configuration tool has two faces), ADR-0027
@@ -1483,3 +1484,31 @@ the proposal they answer — Party boxes left and right of the nodes, a
 Party's transports and their state in the inspector, and no box per
 transport far end. The ids, the column layout and the aggregation are the
 assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-09-29: a fourth view, the Audit, and the wildcard in Rust
+
+The owner: *The operation web needs an audit view: audited entries in the
+clusters. Drill-down, sorting and filtering.* ADR-0062, amendment of this
+date, is the record; what it changes here:
+
+- **Four views.** `TopNav` links Configuration, Monitor, Topology and
+  Audit, in both hosts. The Audit view is a `ClusterView` like the others —
+  the run line, the cluster chooser and the filter box are the same — and it
+  reads through `Xmip.Surface`'s `ProgramAudit.Read`, which calls the audit
+  capability's one reader across `xmip_audit_read_v1`; the page filters,
+  sorts and pages nothing itself. Its drill, filters, sort and page are in
+  the address, written by `ScopeLink.Audit`, so the amendment of 2026-09-19's
+  *the filter is not carried in the URL* does not hold for this view: a
+  record found is a link to send. The Monitor's crumbs link a scope to its
+  audit.
+- **The wildcard is Rust's.** The matcher clause of the amendment of
+  2026-09-19 placed in `ScopePattern` is `observe::wildcard::matches` now,
+  forwarded as `xmip_scope_matches_v1` (`xmip_operate.h` section 7) and
+  bound as `RuntimeRules.Matches`; `ScopePattern.Matches` calls it, and its
+  own copy is deleted. The audit read filters by it, and a rule is placed
+  once (the amendment of 2026-09-24). What it matches is unchanged, and
+  `ScopePatternTest` holds it; a star before a literal star now backtracks as
+  `-like` does.
+
+Provenance: the owner's requirement; the form, the fourth link and the move
+are the assistant's, for the owner to overrule.

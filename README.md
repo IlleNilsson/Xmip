@@ -201,7 +201,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    A roll is one cluster's test, and the cluster is a process the roll spawns
    (ADR-0052, amendment 2026-09-19); two rolls are two clusters side by side.
    Leave the two `Stop-` lines above until later and a second roll stands
-   beside the first. One web host serves them both, and the three views say
+   beside the first. One web host serves them both, and the views say
    which cluster they are on and move between them (ADR-0052, amendment
    2026-09-20):
 
@@ -493,11 +493,15 @@ shared library, so they cannot disagree.
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, Linux and macOS. |
 
-Both GUIs show three views: Monitor, the default, the board that follows
+Both GUIs show four views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
-tree of the whole cluster, held still; and Topology, the cluster's own
+tree of the whole cluster, held still; Topology, the cluster's own
 communication, with the Parties that send into it on the left and those it
-delivers to on the right. From any row the drill-down goes through the configuration
+delivers to on the right; and Audit, what every Xmip program recorded, drilled
+cluster → node → program → record, sorted by any column and filtered by scope
+pattern, severity, action and time, all in the address
+([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md), amendment
+2026-09-29). From any row the drill-down goes through the configuration
 that declared the scope and ends at that configuration
 ([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
 amendment 2026-09-14).
@@ -572,8 +576,9 @@ provisioning at a public edge. Online access is a declared choice, never a
 side effect of deployment.
 
 The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,
-`list` and `show` over a scope, and `xmip-cli validate <file>`; the PowerShell
-module answers the same as objects. Pause and resume are the two acts the
+`list` and `show` over a scope, `xmip-cli validate <file>`, and `xmip-cli
+audit`, what every Xmip program recorded, filtered by the Audit view's words;
+the PowerShell module answers the same as objects, the audit included. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built

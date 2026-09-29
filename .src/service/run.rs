@@ -62,6 +62,9 @@ pub fn serve(
         }
     };
     let location = format!("xmip:///{}/node/{}", running.cluster(), running.node());
+    // Every record from here carries the location it declares, so a reader
+    // knows whose it is (ADR-0062, amendment 2026-09-29).
+    audit.locate(&location);
 
     // What this process says of itself while it runs (ADR-0053); the file
     // goes when `declared` does, after the drain.

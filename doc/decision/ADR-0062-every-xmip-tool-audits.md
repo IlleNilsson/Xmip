@@ -6,8 +6,10 @@
 - Related: ADR-0014 (operator surfaces; its security clause already audits
   every remote invocation through `xmip-core-audit`), ADR-0027 (the operator
   boundary, whose sections 7 and 8 are how a .NET surface calls a rule the
-  runtime owns), ADR-0052 (the surfaces share one model), ADR-0053 (the
-  processes Xmip owns and their names), ADR-0059 (a test suite carries its
+  runtime owns), ADR-0052 (the surfaces share one model; its fourth view,
+  the Audit, since the amendment of 2026-09-29), ADR-0053 (the processes
+  Xmip owns, their names and the location each declares, which every record
+  carries since 2026-09-29), ADR-0059 (a test suite carries its
   provider), `doc/architecture/observability-model.md`,
   `module/core/operation/audit/doc/audit-record.md`
 
@@ -145,3 +147,92 @@ service manager, the Service Control Manager, or the system shutting down),
 how long the drain took in milliseconds, and the counts of what became of
 every Stream. A refused start, a failed declaration and every panic are
 failures.
+
+## Amendment, 2026-09-29: the audit is read, whose each record is, and the Audit view
+
+The owner, 2026-09-29: *The operation web needs an audit view: audited
+entries in the clusters. Drill-down, sorting and filtering.* The form was
+left to the assistant (*do your best and I'll view it*). Every program had
+audited since 2026-09-25 and nothing read the records back: an operator
+opened `audit.toml` in an editor, and nothing in a record said which cluster
+or node it belonged to except a program's name, which nothing at runtime may
+read for meaning.
+
+### 5. A record says whose it is
+
+A process that belongs somewhere in Xmip writes on every record the
+location it declares (ADR-0053 clause 3): `location = "xmip:///C1"` for a
+Playground roll and its cluster, `xmip:///C1/node/R1` for a node and for the
+Xmip Service. The one writer puts it there — `ProgramAudit::locate`, set
+once where the process declares itself and shared by every clone, the panic
+hook's among them — so no caller writes it of its own. A program that serves
+no scope — a cmdlet, a web host, the command line — writes none, and a
+reader shows its records under their host. Records written before this carry
+none and stand under their host too; nothing is inferred from their names.
+
+### 6. The audit is read in one place
+
+The reader is the capability's, beside the writer: `audit_store::read`
+reads `audit.toml` into records and keeps them, reading only what was
+appended since — the file only grows, so a view that reads again on every
+change of a cluster reads a few hundred bytes. `audit_query::AuditQuery` is
+what every surface asks, in one set of words: who (`location`, at and
+beneath a scope; `host`; `program`; one `record`), the scope `pattern` by the
+estate's one wildcard over each location, `severity`, `action`, `from` and
+`to`, `sort` by any column either way, and a bounded page. The answer counts
+what matched, carries the page, the groups one step down the drill —
+clusters and hosts, a cluster's nodes and its own programs, a node's
+programs — the actions there are to choose from, and the column and severity
+words, so no surface keeps a list of its own.
+
+The wildcard it filters by was `ScopePattern`'s, in `Xmip.Surface`, and a
+Rust reader could not call it; code is placed once, so it moved to
+`observe::wildcard`, the runtime forwards it as `xmip_scope_matches_v1`
+(`xmip_operate.h` section 7) and `ScopePattern.Matches` calls that (ADR-0052,
+amendment of this date).
+
+### 7. Every surface reads it the same way
+
+The runtime forwards the read as `xmip_audit_read_v1` (`xmip_operate.h`
+section 9, the header's JSON in memory), `Xmip.Abi`'s `RuntimeAudit.Read`
+binds it once, and `Xmip.Surface`'s `ProgramAudit.Read(AuditQuery)` is every
+.NET surface's call, reading where that program's own records go:
+
+- **The views** (web and desktop, which share `Xmip.Gui`): a fourth view,
+  **Audit**, beside Configuration, Monitor and Topology. The drill is
+  cluster → node → program → one record, each level listing the groups
+  beneath with their counts, errors and warnings, then the records — time,
+  node, program, action, phase, severity, summary — newest first, a column's
+  head sorting by it and again the other way. The filters are the scope
+  pattern box every view has, and severity, action and a time range beside
+  it. Everything is in the address, so a link reproduces the view; a page is
+  200 rows with the next and the previous a link away, never a `Virtualize`.
+  A record opens whole. Where the audit cannot be read — no directory, no
+  runtime library, a remote surface whose cluster's audit stays on its own
+  machine — the page says so in words. The Monitor's drill links each scope
+  to its audit.
+- **The command line**: `xmip-cli audit [<pattern>] --location <scope>
+  --host <name> --program <name> --record <id> --severity <word> --action
+  <word> --from <time> --to <time> --sort <column> --order
+  ascending|descending --offset <n> --limit <n> [--json]` — the file read
+  and how many matched, the groups one step down, then the records; with
+  `--record`, every field and property; with `--json`, the whole read. A
+  refused query is the capability's REFUSED sentence and exit 2; no audit
+  directory is said in words and exit 1.
+- **PowerShell**: `Get-XmipAudit [[-Pattern] <string>] [-Location <string>]
+  [-ComputerName <string>] [-Program <string>] [-AuditId <string>]
+  [-Severity <string>] [-Action <string>] [-From <datetime>] [-To <datetime>]
+  [-Sort <string>] [-Ascending] [-First <n>] [-Skip <n>]
+  [-IncludeTotalCount]`, `AuditEntry` objects with a table view. The words
+  `-Severity`, `-Sort` and `-Action` take are offered by Tab from the
+  capability's answer, never a `ValidateSet` of a copy; a wrong word is the
+  capability's REFUSED. The sentences all three surfaces say — no directory,
+  a refusal, a time to the second — are `English`'s, once.
+
+## Provenance, 2026-09-29
+
+**The owner's**: the requirement, in the words quoted above, and the form
+left to the assistant. **The assistant's**, for the owner to view and
+overrule: the location on every record and its name, the reader and its
+words, the groups, the view's columns, its filters and the page of 200, the
+move of the wildcard to Rust, and the command line's and PowerShell's forms.
