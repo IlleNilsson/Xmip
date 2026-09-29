@@ -323,6 +323,7 @@ function Start-XmipTest {
     # Write-Error ends the call in the trap, is recorded and goes on unchanged.
     trap { Write-XmipAudit -Action 'Start-XmipTest' -ErrorRecord $_; break }
     Write-XmipAudit -Action 'Start-XmipTest' -Phase Begin -Property $PSBoundParameters
+    Assert-XmipModuleCurrent
 
     # Which suites there are is read, never declared at the parameter: a
     # third party's is a file it dropped, and this session may have started

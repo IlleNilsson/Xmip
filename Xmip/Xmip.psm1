@@ -192,6 +192,36 @@ function ConvertTo-XmipArray {
 }
 
 
+# When this session read the module's files. A console keeps the module it
+# imported, and the programs it starts are built from the source as it is now:
+# on 2026-09-29 a console two days old told a roll where to publish in words
+# the roll no longer read, and the roll published to the temp directory while
+# the web host waited for it in .local-work.
+[datetime] $script:XmipImportedAt = [datetime]::Now
+
+function Assert-XmipModuleCurrent {
+    <#
+    .SYNOPSIS
+        Refuses when this session's Xmip module is older than its files.
+    .DESCRIPTION
+        What starts a program built from source calls this first, so a
+        console holding yesterday's module says so instead of starting
+        today's program with yesterday's words.
+    #>
+    [CmdletBinding()]
+    param()
+
+    $newest = Get-ChildItem -LiteralPath $PSScriptRoot -File -Include '*.ps1', '*.psm1', '*.psd1' -Recurse |
+        Sort-Object -Property LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if ($newest -and $newest.LastWriteTime -gt $script:XmipImportedAt) {
+        throw ("REFUSED. This session's Xmip module was imported at " +
+            "$($script:XmipImportedAt.ToString('yyyy-MM-dd HH:mm')) and $($newest.Name) changed at " +
+            "$($newest.LastWriteTime.ToString('yyyy-MM-dd HH:mm')). Run: Import-Module Xmip -Force")
+    }
+}
+
 # The commands. Dot-sourced rather than duplicated, so they see the helpers
 # above and the module is the single thing anyone imports. The TOML reader
 # comes first: every other file reads through it.
