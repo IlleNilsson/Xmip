@@ -1787,3 +1787,18 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     and ADR-0044
 #   module/core/capability/logic/README.md, module/core/capability/logic/http-api/README.md
 #     ADR-0043's sentence, quoted in both -> a citation in each
+
+# Code moved on 2026-09-30, each part now once for both nouns an operator acts
+# on (ADR-0013, amendment 2026-09-30; ADR-0065, amendment 2026-09-30):
+#   module/foundation/event/src/order.rs
+#     the order an operator leaves for a node -> module/core/operation/observe/
+#     .src/order.rs, beside Publication::orders, with a noun and a target, so
+#     one order carries an act on an Event subscription or on a Subscription
+#   module/foundation/event/src/act.rs
+#     the acts and their words -> observe's Act and Noun (.src/order.rs); the
+#     file keeps Hub::act, the one place an act on an Event subscription is
+#     applied
+#   module/core/operation/observe/.src/subscription.rs
+#     the Event subscription's record -> .src/event_subscription.rs; its state
+#     -> .src/pause_state.rs, shared with the Subscription, whose record is
+#     .src/subscription.rs now

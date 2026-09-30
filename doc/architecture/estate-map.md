@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 185881 lines of production
+Where each repository mounts and what it holds: 189769 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -313,13 +313,13 @@ hold no source to count.
 │   │   │   ├── asn1                             526
 │   │   │   └── tls                              333
 │   │   └── operation/
-│   │       ├── cli                             4187
-│   │       ├── gui                             3278
+│   │       ├── cli                             4799
+│   │       ├── gui                             3617
 │   │       │   └── vscode                      1471
-│   │       ├── observe                         2352
+│   │       ├── observe                         2782
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      1924  C# 1924 · PowerShell 0
+│   │       ├── powershell                      2154  C# 2154 · PowerShell 0
 │   │       ├── audit                           1726
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -339,11 +339,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                17815  C# 16007 · Rust 1583 · PowerShell 225
-│   │   ├── event                               3224
+│   │   ├── abi                                18691  C# 16831 · Rust 1635 · PowerShell 225
+│   │   ├── event                               3057
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                1943
+│   │   ├── core                                1960
 │   │   ├── message                             1322
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -361,20 +361,20 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── node                                 687
-│   │   ├── context                              587
+│   │   ├── context                              636
 │   │   ├── journey                              391
 │   │   ├── party                                186
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             7349
-│       ├── configure                           1405
-│       └── persist                              705
+│       ├── runtime                             8352
+│       ├── configure                           1432
+│       └── persist                              873
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                          9981
+        └── playground                         10285
 ```
 
 ---

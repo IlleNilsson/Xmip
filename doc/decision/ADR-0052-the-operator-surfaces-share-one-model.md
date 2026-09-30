@@ -2,7 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-09-11
-- Related: ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
+- Related: ADR-0013 (a Subscription paused and resumed, the Subscriptions
+  view; its amendment 2026-09-30), ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
   `ProgramAudit` for every .NET surface; the Audit view reads it back, its
   amendment 2026-09-29), ADR-0014 (the operator surfaces;
   amendments 2026-08-26, the ABI is the interface into Xmip; 2026-09-05, the
@@ -1525,9 +1526,11 @@ record; what it changes here:
 - **Five views.** `TopNav` links Configuration, Monitor, Topology, Audit
   and Event subscriptions, in both hosts. The Event subscriptions view is a
   `ClusterView` like the others, and it reads through
-  `IOperatorSurface.Subscriptions` and acts through `IOperatorSurface.Act`;
-  its drill, pattern and order are `SubscriptionQuery`'s and in the address,
-  written by `ScopeLink.Subscriptions`, as the Audit view's are.
+  `IOperatorSurface.EventSubscriptions` and acts through
+  `IOperatorSurface.Act`; its drill, pattern and order are
+  `EventSubscriptionQuery`'s and in the address, written by
+  `ScopeLink.EventSubscriptions`, as the Audit view's are (the names since
+  2026-09-30, ADR-0065's amendment of that date).
 - **The role is wired as the amendment of 2026-09-14 ruled.** Until this
   date the web host was hard-wired Observer, two weeks after this record
   and ADR-0014 said the web offers every role. Both hosts now take the role
@@ -1550,3 +1553,41 @@ move it to before Audit tab.* The view is Event subscriptions at
 Event subscriptions, Audit, so it is not taken for a Subscription, which
 picks a published Message up (doc/terminology.md). ADR-0065's amendment of
 2026-09-29 names the view the same.
+
+## Amendment, 2026-09-30: a sixth view, the Subscriptions, before Event subscriptions
+
+The owner, 2026-09-30: *We actually need a Subscription view, for all
+subscriptions per cluster, with pause and resume, but not remove. That is
+handled with the TOML configuration files.* ADR-0013, amendment of this
+date, is the record of what a Subscription's pause holds; what it changes
+here:
+
+- **Six views.** `TopNav` links Configuration, Monitor, Topology,
+  Subscriptions, Event subscriptions and Audit, in both hosts. The
+  Subscriptions view, at `/subscriptions`, is a `ClusterView` like the
+  others: every Subscription the cluster's nodes route by, drilled cluster →
+  node → Subscription, every step a link carrying the cluster; its columns
+  the Subscription's name, cluster, node, what it subscribes to, where it
+  leads, its state, what it picked up, what it holds and since when; sorted
+  by any column from its head, narrowed by the scope-pattern box, bounded
+  rows and no Virtualize. The opened Subscription shows its entry as the TOML
+  says it and the file it comes from. It reads through
+  `IOperatorSurface.Subscriptions` and acts through `IOperatorSurface.Act`;
+  its drill, pattern and order are `SubscriptionQuery`'s and in the address.
+- **Pause and resume, and no remove.** An Operator and above are offered
+  pause and resume, each recorded in the host's audit as
+  `subscription.<act>`; an Observer is shown the list and no act, by the one
+  role rule of the amendment of 2026-09-29. No surface offers a remove, and
+  the view says in words that a Subscription is added and removed in the
+  TOML configuration of the Xmip Application that draws it.
+- **One name each.** The view named Subscriptions is this one; the one the
+  amendment of 2026-09-29 made is Event subscriptions in every identifier of
+  both hosts too — its page, its table, `ScopeLink.EventSubscriptions` — so
+  no name in a surface reads as the other noun (ADR-0065, amendment
+  2026-09-30). `xmip-cli subscriptions` and `Get-XmipSubscription` are the
+  Subscriptions'; `xmip-cli event-subscriptions` and
+  `Get-XmipEventSubscription` the Event subscriptions'.
+
+Provenance: the owner's requirement, quoted; the tab's place before Event
+subscriptions, the view's columns and form and the renames are the
+assistant's drafting, for the owner to overrule.

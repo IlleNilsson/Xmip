@@ -463,7 +463,8 @@ does none of this itself; the web GUI's server does it on the page's behalf.
 its code. Both hosts now take the role by one rule, `RoleContext.Assigned`
 in `Xmip.Gui`, as ADR-0009's amendment of 2026-09-14 says where a role comes
 from (ADR-0052, amendment 2026-09-29), and an Operator on the web pauses,
-resumes and removes an Event subscription (ADR-0065, amendment 2026-09-29).
+resumes and removes an Event subscription (ADR-0065, amendment 2026-09-29),
+and pauses and resumes a Subscription (ADR-0013, amendment 2026-09-30).
 
 ## Amendment, 2026-09-15: as few cmdlets as possible
 

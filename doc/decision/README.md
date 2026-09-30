@@ -50,6 +50,11 @@ Terminal states are `Completed`, `Failed` and `Dismissed` — the last added
 2026-08-26 so that an operator's deliberate stop is distinguishable from a
 fault.
 
+An operator pauses and resumes a Subscription, and never removes one: a
+paused Subscription holds what it matches in the node's runtime store, and
+a resume picks it up oldest first; a Subscription is added and removed in
+the TOML configuration (amendment 2026-09-30).
+
 → [The Journey model, in full](ADR-0013-journey-model.md) — **still Proposed**
 
 ### Everything that communicates is an Actor
@@ -1116,6 +1121,7 @@ You have a word. This gives you the decision that governs it.
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
 | subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
+| Subscription, paused and resumed | [The Journey model](ADR-0013-journey-model.md) |
 | suite declaration | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | sync | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
