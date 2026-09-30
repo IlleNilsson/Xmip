@@ -1515,7 +1515,7 @@ date, is the record; what it changes here:
 Provenance: the owner's requirement; the form, the fourth link and the move
 are the assistant's, for the owner to overrule.
 
-## Amendment, 2026-09-29: a fifth view, the Subscriptions, and the role both hosts take
+## Amendment, 2026-09-29: a fifth view, the Event subscriptions, and the role both hosts take
 
 The owner: *Now we need operation to have a view of event subscriptions.
 Subscriber, Cluster, Node, Action. One should be able to pause, resume and
@@ -1523,7 +1523,7 @@ remove event subscriptions.* ADR-0065, amendment of this date, is the
 record; what it changes here:
 
 - **Five views.** `TopNav` links Configuration, Monitor, Topology, Audit
-  and Subscriptions, in both hosts. The Subscriptions view is a
+  and Event subscriptions, in both hosts. The Event subscriptions view is a
   `ClusterView` like the others, and it reads through
   `IOperatorSurface.Subscriptions` and acts through `IOperatorSurface.Act`;
   its drill, pattern and order are `SubscriptionQuery`'s and in the address,
@@ -1541,3 +1541,12 @@ record; what it changes here:
 Provenance: the owner's requirement; the fifth link and the one role rule
 are the assistant's drafting of what the records of 2026-09-14 ruled, for
 the owner to overrule.
+
+## Amendment, 2026-09-30: the tab is Event subscriptions, before Audit
+
+The owner, 2026-09-30: *rename Subscriptions tab to Event subscriptions and
+move it to before Audit tab.* The view is Event subscriptions at
+`/event-subscriptions`, the tabs read Configuration, Monitor, Topology,
+Event subscriptions, Audit, so it is not taken for a Subscription, which
+picks a published Message up (doc/terminology.md). ADR-0065's amendment of
+2026-09-29 names the view the same.
