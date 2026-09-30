@@ -18,7 +18,8 @@
   (identity, Parties and direction; the Topology draws its Parties since the
   amendment of 2026-09-29), ADR-0065 (Events subscribed; the Subscriptions
   view, its amendment 2026-09-29), ADR-0009 (roles; both GUIs take the role
-  by one rule since 2026-09-29)
+  by one rule since 2026-09-29), ADR-0028 (a test run hidden by what it
+  declares; the "show test clusters" box, amendments 2026-09-30)
 
 ## In brief
 
@@ -1591,3 +1592,49 @@ here:
 Provenance: the owner's requirement, quoted; the tab's place before Event
 subscriptions, the view's columns and form and the renames are the
 assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-09-30: one "show test clusters" box on every view
+
+The owner, 2026-09-29: *When tests are run it's got to be hidable. Like when
+tests are run include a checkbox if CT cluster should be shown or not in the
+operation tools.* A cluster is hidden because its run declared itself hidden
+when it was started (ADR-0028, amendment of the same date), never because of
+its name.
+
+- **One box, where the chooser is.** The run line every view draws
+  (`RunLine`, shared by the web and the desktop) carries one checkbox, *show
+  test clusters*, beside the cluster pills it governs: on Configuration,
+  Monitor, Topology, Subscriptions, Event subscriptions and Audit alike. It
+  is off unless the address says `hidden=include`, and ticking it keeps the
+  rest of the address (`ScopeLink.Hidden`).
+- **In the address, like the cluster.** Every link a view writes carries the
+  box beside the cluster (`Carry`: the cluster where more than one is listed,
+  and `hidden=include` where the box is ticked), so a link, a reload and a
+  second tab reproduce the view. The Audit view's query says it in the same
+  word, the audit capability's `hidden=include`.
+- **Off, a hidden cluster is not there.** `ClusterSurfaces` holds every
+  cluster and lists, reaches and names only those its one rule shows
+  (`Listed`, `Several`, `For`, `Showing`, each told whether the face
+  includes what is hidden; the rule is `observe::run::shown` through
+  `RuntimeRules.Shown`, over the declaration read once with the name). A
+  hidden cluster is not a pill, an address naming it lands on the first
+  cluster listed, and no link leads to it; its audit records are neither
+  counted nor grouped. A host that holds nothing else reads a surface that
+  holds nothing and says why in its source line.
+- **On, it is there and says test.** Its pill, its audit group and each of
+  its audit records say `· test` after their name, in words
+  (`English.Test`) and outlined dashed — never a mood's colour or the
+  brand's — and its run line ends *hidden test run*.
+- **The other surfaces.** `xmip-cli audit --include-hidden`,
+  `Get-XmipAudit -IncludeHidden` and `Get-XmipTestStatus -IncludeHidden`,
+  and each record and group says `hidden` in JSON and `Hidden` as an object.
+  `xmip-cli` and the PowerShell module's other commands read the one surface
+  a line or a document states, and a surface stated is shown, hidden or not.
+
+`HiddenClusterTest` (every view, the box off and on, a CT that declared
+nothing, the audit) and `ClusterSurfacesTest` hold it.
+
+Provenance: the requirement and the checkbox are the owner's, quoted. Hiding
+by declaration is the lead's ruling under the owner's rule that nothing is
+read out of a name; the box's words, its place on the run line, the address
+word and the marking are the assistant's drafting, for the owner to overrule.

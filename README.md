@@ -659,6 +659,21 @@ You name the cluster with `-Cluster` and the nodes with `-Nodes`; nothing
 names either for you, and Xmip reads nothing in the names you choose. Two
 cluster names are two clusters side by side, each with its own web GUI.
 
+A run started with `-Hidden` declares itself hidden: an assistant's test run
+beside yours. Nothing shows it unless asked — `Get-XmipTestStatus
+-IncludeHidden`, the operator module's audit with `-IncludeHidden`, `xmip-cli
+audit --include-hidden`, and the *show test clusters* box on every view of the
+web and desktop — so `Get-XmipTestStatus | Start-XmipOperationWeb` never follows
+one, and a plain `Stop-XmipTest` leaves it running. It is hidden by what it
+declared, never by its name (ADR-0028, amendment 2026-09-30). The assistant's
+test cluster is started so, and stopped by name:
+
+```powershell
+Start-XmipTest -Suite Core.Playground -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 `
+    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -Hidden
+Stop-XmipTest -Cluster CT -IncludeHidden
+```
+
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and you get the most the rig can give: `-Stress` is

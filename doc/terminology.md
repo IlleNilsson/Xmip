@@ -49,6 +49,7 @@ type in the code and **roll** had never been written down here at all.
 | Term | Meaning |
 | --- | --- |
 | **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll runs exactly one cluster (ADR-0028), and the cluster is a process the roll spawns, not the roll itself (ADR-0052, amendment 2026-09-19). |
+| **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster called CT that declared nothing is shown (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
 | **Role** | What something is permitted or expected to be. A Node has `NodeRole` — Operational, Executing, Monitoring, Development — and an operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. |
 
 A node's **capability** is a third thing again and is not a role: it is what a

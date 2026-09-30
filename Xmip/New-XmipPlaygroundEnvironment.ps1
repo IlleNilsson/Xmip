@@ -262,6 +262,9 @@ function New-XmipPlaygroundEnvironment {
         [Parameter()]
         [string] $Image,
 
+        [Parameter()]
+        [switch] $Hidden,
+
         [Parameter(Mandatory)]
         [string] $Area
     )
@@ -349,6 +352,14 @@ function New-XmipPlaygroundEnvironment {
     # keeps the binary's own name, which is what a roll started by hand does.
     if (-not [string]::IsNullOrWhiteSpace($Image)) {
         $environment.XMIP_PLAYGROUND_IMAGES = $Image
+    }
+
+    # A run that declares itself hidden says so to the roll, which says it in
+    # its [run] table, and to the cluster and nodes it spawns, which inherit it
+    # and say it in their declarations and on every audit record (ADR-0028,
+    # amendment 2026-09-30). Unset, the run is shown, whatever it is called.
+    if ($Hidden) {
+        $environment.XMIP_PLAYGROUND_HIDDEN = 'true'
     }
 
     return $environment

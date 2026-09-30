@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 189769 lines of production
+Where each repository mounts and what it holds: 190568 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -313,14 +313,14 @@ hold no source to count.
 │   │   │   ├── asn1                             526
 │   │   │   └── tls                              333
 │   │   └── operation/
-│   │       ├── cli                             4799
-│   │       ├── gui                             3617
+│   │       ├── cli                             4848
+│   │       ├── gui                             3905
 │   │       │   └── vscode                      1471
-│   │       ├── observe                         2782
+│   │       ├── observe                         2808
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2154  C# 2154 · PowerShell 0
-│   │       ├── audit                           1726
+│   │       ├── powershell                      2164  C# 2164 · PowerShell 0
+│   │       ├── audit                           1788
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                18691  C# 16831 · Rust 1635 · PowerShell 225
+│   │   ├── abi                                18999  C# 17130 · Rust 1644 · PowerShell 225
 │   │   ├── event                               3057
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -367,14 +367,14 @@ hold no source to count.
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             8352
+│       ├── runtime                             8367
 │       ├── configure                           1432
 │       └── persist                              873
 │           ├── sqlite                           107
 │           └── rocksdb                          105
 └── test/
     └── core/
-        └── playground                         10285
+        └── playground                         10326
 ```
 
 ---

@@ -4,8 +4,9 @@
 - Date: 2026-09-18
 - Related: ADR-0011 (names), ADR-0014 (the operator surfaces; clause 8, the
   executable), ADR-0052 (clause 5, the executable), ADR-0028 (the
-  Playground spawns nodes as System Processes), ADR-0025 (module loading),
-  ADR-0045 (offline is the default)
+  Playground spawns nodes as System Processes; a hidden run's roll, cluster
+  and nodes declare `hidden = "true"` since its amendment 2026-09-30),
+  ADR-0025 (module loading), ADR-0045 (offline is the default)
 
 ## In brief
 

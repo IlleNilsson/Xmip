@@ -37,7 +37,7 @@ function Wait-XmipSnapshot {
         return
     }
 
-    [object] $rolling = Get-XmipTestStatus |
+    [object] $rolling = Get-XmipTestStatus -IncludeHidden |
         Where-Object { $_.Snapshot -and ([IO.Path]::GetFullPath($_.Snapshot) -eq $Path) } |
         Select-Object -First 1
 
@@ -58,7 +58,8 @@ function Wait-XmipSnapshot {
         # The run may end before it ever publishes — a roll refused at its
         # first round, a cluster stopped by hand. Then there is nothing to
         # wait for and saying so beats waiting out the bound.
-        [bool] $still = @(Get-XmipTestStatus | Where-Object Cluster -eq $cluster).Count -gt 0
+        [object[]] $alive = @(Get-XmipTestStatus -IncludeHidden -Cluster $cluster)
+        [bool] $still = $alive.Count -gt 0
 
         if (-not $still) {
             throw "REFUSED. $cluster stopped without publishing '$Path'."

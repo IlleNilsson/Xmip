@@ -20,8 +20,105 @@
 [string[]] $script:XmipPlaygroundOnly = @(
     'Cluster',
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
-    'Nodes', 'OnlineNodes', 'NodeCapability', 'LoadBytes', 'PassThru'
+    'Nodes', 'OnlineNodes', 'NodeCapability', 'LoadBytes', 'PassThru', 'Hidden'
 )
+
+function Resolve-XmipTestSuite {
+    <#
+        .SYNOPSIS
+            The suites a name or pattern given to Start-XmipTest names, or
+            nothing after refusing it in words.
+
+        .DESCRIPTION
+            Which suites there are is read, never declared at the parameter: a
+            third party's is a file it dropped, and this session may have
+            started before it existed. Whatever was typed, the suite says what
+            it is called: a bare Playground resolves to the Playground and the
+            record carries the canonical spelling, Core.Playground (ADR-0059,
+            amendment 2026-09-20). Part of Start-XmipTest's body until
+            2026-09-30.
+
+        .PARAMETER Name
+            What -Suite was given.
+    #>
+    [CmdletBinding()]
+    [OutputType('Xmip.TestSuite')]
+    param(
+        [Parameter(Mandatory)]
+        [SupportsWildcards()]
+        [string] $Name
+    )
+
+    [object[]] $known = @(Get-XmipTestSuite)
+    [string] $refused = Get-XmipTestSuiteRefusal -Name $Name -Known $known
+
+    if ($refused -ne '') {
+        Write-Error $refused
+        return
+    }
+
+    return Get-XmipNamedTestSuite -Name $Name -Known $known
+}
+
+function Start-XmipPesterSuite {
+    <#
+        .SYNOPSIS
+            Starts the estate's Pester suite for Start-XmipTest, refusing a
+            switch that belongs to the Playground alone.
+
+        .DESCRIPTION
+            Part of Start-XmipTest's body until 2026-09-30, when -Hidden took
+            the room that file had left. -Caller is Start-XmipTest's own
+            $PSCmdlet, so -WhatIf and -Confirm decide here as they did there.
+
+        .PARAMETER Caller
+            Start-XmipTest itself, for ShouldProcess.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+
+        .PARAMETER Suite
+            The suite's canonical name.
+
+        .PARAMETER Path
+            As Start-XmipTest takes it.
+
+        .PARAMETER Test
+            As Start-XmipTest takes it.
+    #>
+    [CmdletBinding()]
+    [OutputType('Xmip.TestStatus')]
+    param(
+        [Parameter(Mandatory)]
+        [System.Management.Automation.PSCmdlet] $Caller,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound,
+
+        [Parameter(Mandatory)]
+        [string] $Suite,
+
+        [Parameter()]
+        [string] $Path,
+
+        [Parameter()]
+        [string[]] $Test = @()
+    )
+
+    [string[]] $foreign = @($Bound.Keys | Where-Object { $_ -in $script:XmipPlaygroundOnly })
+
+    if ($foreign.Count -gt 0) {
+        Write-Error ("-$($foreign -join ', -') belong to " +
+            "$script:XmipPlaygroundSuite, not $Suite.")
+        return
+    }
+
+    if (-not $Caller.ShouldProcess("the $Suite Pester suite", 'Start')) {
+        return
+    }
+
+    return Start-XmipEstateSuite -Path $Path -Test $Test
+}
 
 function Start-XmipTestSuiteGroup {
     <#
