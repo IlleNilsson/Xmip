@@ -12,7 +12,7 @@ point of refusal.
 - Subject: Message disposition and the Journey
 - Name: The Journey model
 - Order: 2
-- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; DMQ; Journey, Journey states; Publication, Subscription matching
+- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; DMQ; Journey, Journey states; Publication, Subscription matching; Subscription, paused and resumed
 
 A Journey is a line, not a tree: a Publication produces one Journey per matched
 Subscription, and zero matches means no Journey at all. A Journey exists only
@@ -22,6 +22,11 @@ accepted disappears silently.
 Terminal states are `Completed`, `Failed` and `Dismissed` — the last added
 2026-08-26 so that an operator's deliberate stop is distinguishable from a
 fault.
+
+An operator pauses and resumes a Subscription, and never removes one: a
+paused Subscription holds what it matches in the node's runtime store, and
+a resume picks it up oldest first; a Subscription is added and removed in
+the TOML configuration (amendment 2026-09-30).
 
 ## Context
 
@@ -357,6 +362,117 @@ Journeys, filtered by state.
 
 So: **one queue, for Messages that never lived.** Everything else is a Journey
 in a terminal state, found by query and resumed from its checkpoint.
+
+## Amendment, 2026-09-30: a Subscription is paused and resumed, never removed by an act
+
+The owner, 2026-09-30: *We actually need a Subscription view, for all
+subscriptions per cluster, with pause and resume, but not remove. That is
+handled with the TOML configuration files.* And the same day, on where a
+running node finds them: *During runtime I assume you can get the
+Subscriptions from the RocksDB or SQLite.* What the code showed:
+`xmip-core-persist` (`runtime_store.rs`, `EncryptedStore` over the `rocksdb`
+and `sqlite` engines) held runtime records — Journeys, checkpoints, leases,
+deduplication — and no Subscription; the Subscriptions are the TOML
+configuration's, taken up into the runtime's execution tree
+(`execution_tree.rs`, through `configure::bind`). So, as the owner then
+steered: the Subscriptions are listed from the running node's execution tree
+— its configuration — and what an operator's pause leaves, each
+Subscription's standing and the Messages it holds, is kept in the runtime
+store through persist, the one `EncryptedStore` over whichever engine the
+node's program linked, never a side file.
+
+- **What an operator sees of one.** A Subscription is named by its node and
+  its configured name, unique on the node (`configure::bind` refuses two).
+  The node publishes each as `observe::Subscription`: the Xmip Application
+  that draws it, the file that Application was read from and its
+  `[[subscriptions]]` entry there as the file says it
+  (`configure::subscription_entry`, the developer's layout and comments
+  kept), its filter as configured, where it leads
+  (`configure::application::destination_words`), active or paused and who
+  paused it (`observe::PauseState`), what it picked up since the node
+  started, what it holds, and since when its state stands. A publication
+  writes them as `[[subscriptions]]`.
+- **A pause holds, and loses nothing** (`xmip-core-runtime`'s
+  `pickup::Pickup`). Every Message routing matches to a paused Subscription
+  is held: no Journey opens for that Subscription (clause 5) and nothing
+  departs; the Message is kept as persist's `HeldMessage`, numbered in the
+  order it was held, and counted as held. A keyed store keeps no order, so
+  the Subscription's `SubscriptionHold` carries the range of what it holds.
+  Nothing is deleted (ADR-0040): a held record is released only once its
+  Subscription has picked the Message up. The other Subscriptions a Message
+  matched pick it up as they would have. ADR-0041's pause of a scope is a
+  mood on a stage's published health and holds no Message, and a
+  Subscription has no stage scope for it to pause; this is not a second
+  pause of that one, but the first that holds Messages.
+- **A resume picks up what was held, oldest first.** Each held Message is
+  picked up as if routing had just matched it, and a Journey opens for it
+  then; while a resumed Subscription still has held Messages to pick up,
+  what it matches joins the end of them, so it picks up in the order it
+  matched. On a running node the runtime picks them up on a thread of its
+  own and departs each where its Subscription leads (`held_work.rs`):
+  departure authorizes again, now, as it always does (clause 8); the
+  identity arrival concluded is held in its words and read back through the
+  mechanism this node's authenticators declare under that name — a
+  mechanism is never built from a record — and a Message whose mechanism
+  the node no longer carries does not depart, in words.
+- **A pause survives a restart.** The records said nothing of a pause
+  outliving its process: a scope's pause lives in the published snapshot and
+  is gone with it. The owner's steer settles it for a Subscription: its
+  `SubscriptionHold` — paused, by whom, since when, the range it holds — is
+  written on every act and every hold and read back as the node takes its
+  Subscriptions up, so one paused before a restart is paused after it,
+  holding what it held, and one resumed whose held Messages were not all
+  picked up when the node stopped picks them up as it starts. A node whose
+  program linked no runtime store holds in memory, for the node's life.
+- **No remove.** A Subscription is configuration, drawn in an Xmip
+  Application (ADR-0064) and added and removed in its TOML. `observe::Noun`
+  says which acts each noun takes — a Subscription pause and resume, an
+  Event subscription those and remove — and a remove of a Subscription is
+  refused in words on every path, naming the TOML configuration. No
+  surface offers one, and each says why.
+- **Who acts, and the record of it.** An Operator and above act (ADR-0009);
+  an Observer sees the list and no act. Every act is recorded in the node's
+  audit (ADR-0062) as `subscription.pause` or `subscription.resume`, with
+  the node, the Subscription, who acted and what it held, and in the host's
+  audit by the surface that asked. An act on a Subscription the node is not
+  configured with is refused in words.
+- **How an act reaches the node** is the Event subscriptions' way
+  (ADR-0065, amendment 2026-09-29), generalized rather than copied: a
+  surface over a live node calls the runtime's library in the node's
+  process (`xmip_subscriptions_v1`, `xmip_subscription_act_v1`,
+  `xmip_operate.h` section 14); a surface over a snapshot leaves an
+  `observe::Order` where the publication says its publisher takes orders
+  (`xmip_order_v1`), and the node takes it at its next round. The order,
+  its file and the acts' words moved from `xmip-core-event` to `observe`,
+  one for both nouns; `xmip_order_v1` replaced
+  `xmip_event_subscription_order_v1`. A read publication's Subscriptions are
+  `xmip_publication_subscriptions_v1`, the plain name now this noun's, and
+  its Event subscriptions `xmip_publication_event_subscriptions_v1`.
+- **The Playground configures real ones.** Its RoundTrip test is an Xmip
+  Application, `configuration/round-trip.application.toml`: four
+  Subscriptions, one per family of content contracts, each to the Send Port
+  the send stage serves. The node that declared process writes it and a
+  node configuration binding it into the run's shared directory, reads both
+  through `runtime::start::read` and the execution tree as a node does,
+  routes every pair its process stage hands on through the runtime's
+  pickup, keeps what a paused one holds in a `RocksDB` runtime store sealed
+  under the machine's key store (DPAPI on Windows, a private file on Unix),
+  and publishes its Subscriptions with its snapshot. A paused one is seen to
+  hold; a resumed one is seen to drain.
+- **The surfaces.** A view in both GUIs, *Subscriptions*, before *Event
+  subscriptions* (ADR-0052, amendment 2026-09-30); `xmip-cli subscriptions`
+  and `Get-XmipSubscription` list, and pause or resume one named by its
+  node and name. `Xmip.Surface`'s `SubscriptionQuery` is the one drill,
+  filter and order they ask, `SubscriptionAct` holds pause and resume and
+  nothing else, and `IOperatorSurface.Subscriptions` and `.Act` are the
+  calls every surface makes. So that each noun has one name, every name that
+  meant the Event kind says Event now (ADR-0065, amendment 2026-09-30).
+
+Provenance: the owner's requirement and steer, quoted; what the code
+showed; the record's form — the hold's place in the runtime, the persisted
+shapes, the order in pickup, the restart rule, the order's move to
+`observe`, the Playground's Application — is the assistant's drafting, for
+the owner to overrule.
 
 ## Open
 

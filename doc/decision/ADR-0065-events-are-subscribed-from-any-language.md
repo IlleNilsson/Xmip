@@ -4,7 +4,8 @@
 - Accepted: 2026-09-26, the owner, from the options named below
 - Date: 2026-09-26
 - Related: ADR-0052 (the operator surfaces; the Event subscriptions view, its
-  amendment 2026-09-29), ADR-0009 (roles: an Operator acts on a
+  amendment 2026-09-29), ADR-0013 (a Subscription, which this is not; its
+  amendment 2026-09-30 shares the act and the order), ADR-0009 (roles: an Operator acts on a
   subscription, an Observer watches), ADR-0012 (the module boundary is a C
   ABI), ADR-0019 (Parties and
   identity), ADR-0027 (the operator boundary, `xmip_operate.h`), ADR-0052
@@ -166,7 +167,7 @@ remove event subscriptions.* What follows is the assistant's drafting, each
 point the owner's to overrule.
 
 - **What a hub holds is listed.** `Hub::standing` answers each open
-  subscription as `observe::Subscription`: the node whose hub holds it and
+  subscription as `observe::EventSubscription`: the node whose hub holds it and
   its number there, which together name it; the subscriber, by the name its
   Party was declared with (`party::Party`, carried by
   `Subscriber::declared`), and the Party's identifier beside it — a
@@ -176,8 +177,8 @@ point the owner's to overrule.
   the outcomes) and the scope it reaches; its state, active or paused; and
   its queue's counts — queued against capacity, delivered, and missed, what
   a full queue refused since it was made.
-- **Pause, resume, remove** (`act::Act`, `Hub::act`, the one place an act is
-  applied). Paused, a subscription stays and keeps queuing up to its
+- **Pause, resume, remove** (`observe::Act`, `Hub::act`, the one place an
+  act is applied). Paused, a subscription stays and keeps queuing up to its
   capacity, and nothing is handed over — a drain waits until it is resumed,
   closed or out of time; what a full queue refuses meanwhile is counted as
   missed, as it always was. Resumed, it hands over what queued, waking a
@@ -190,20 +191,21 @@ point the owner's to overrule.
 - **How an act reaches the node.** A surface over a live node calls the
   runtime's library in that node's process, as a scope's pause does:
   `xmip_event_subscriptions_v1` and `xmip_event_subscription_act_v1`
-  (`xmip_operate.h` section 11), bound as `RuntimeSubscriptions`, reached by
+  (`xmip_operate.h` section 11), bound as `RuntimeEventSubscriptions`, reached by
   `NativeOperator` and, from another machine, through the web host's
   surface hub (`RemoteOperator`). A surface over a snapshot touches no node,
   and a scope's pause there is declined; a subscription's act is not, because
   its publication says where its publisher takes orders
-  (`observe::Publication::orders`): the surface leaves an `order::Order`
-  there through `xmip_event_subscription_order_v1`, and the node that holds
-  the subscription takes it at its next look and applies it as above. The
-  file, its place and its shape are the event crate's alone.
+  (`observe::Publication::orders`): the surface leaves an `observe::Order`
+  there through `xmip_order_v1` (section 14), and the node that holds the
+  subscription takes it at its next look and applies it as above. The file,
+  its place and its shape are `observe`'s alone, one order for an Event
+  subscription and a Subscription (amendment 2026-09-30).
 - **The snapshot carries the subscriptions.** A node records what its hub
-  holds in its snapshot (`Snapshot::record_subscription`), a publication
-  writes them as `[[subscriptions]]`, the Playground's cluster and roll merge
-  them as they merge health, and a surface reads them through
-  `xmip_publication_subscriptions_v1`. None is persisted: a subscription
+  holds in its snapshot (`Snapshot::record_event_subscription`), a
+  publication writes them as `[[event_subscriptions]]`, the Playground's
+  cluster and roll merge them as they merge health, and a surface reads them
+  through `xmip_publication_event_subscriptions_v1`. None is persisted: a subscription
   lives in its process's hub, and the snapshot says what the hub held when
   it was taken.
 - **Every Playground node subscribes two Parties**, through the hub and
@@ -217,13 +219,13 @@ point the owner's to overrule.
   ordered by any column from its head, narrowed by the scope-pattern box
   over each subscription's node and reach, drilled cluster → node →
   subscription, every step a link carrying the cluster; bounded rows, no
-  Virtualize. `SubscriptionQuery` (`Xmip.Surface`) is the one drill, filter
-  and order every surface asks. An Operator is offered pause, resume and
-  remove, each recorded in the host's audit as `subscription.<act>`; an
-  Observer is shown the list and no act. `xmip-cli subscriptions` lists and,
-  with `--pause`, `--resume` or `--remove` on one named by `--location` and
-  `--id`, acts; `Get-XmipSubscription` is the one cmdlet for the noun, the
-  act a parameter set with `-WhatIf`.
+  Virtualize. `EventSubscriptionQuery` (`Xmip.Surface`) is the one drill,
+  filter and order every surface asks. An Operator is offered pause, resume
+  and remove, each recorded in the host's audit as `event.<act>`; an
+  Observer is shown the list and no act. `xmip-cli event-subscriptions`
+  lists and, with `--pause`, `--resume` or `--remove` on one named by
+  `--location` and `--id`, acts; `Get-XmipEventSubscription` is the one
+  cmdlet for the noun, the act a parameter set with `-WhatIf`.
 - **Not yet.** No Playground node forwards over the wire, so every
   subscription the view lists is in process. A snapshot lists what its
   publisher last published, so an act left for a node shows within a round,
@@ -231,6 +233,31 @@ point the owner's to overrule.
 
 Provenance: the owner's requirement, quoted; the model, the order
 through the publication, the Playground's Parties and the view's form are
+the assistant's, for the owner to overrule.
+
+## Amendment, 2026-09-30: every name of the Event kind says Event
+
+The owner asked the same day for a view of the Subscriptions that pick a
+published Message up, with pause and resume and no remove (ADR-0013,
+amendment 2026-09-30). So that each noun has one name everywhere, every
+identifier, export, command and cmdlet of the amendment above that was
+called Subscription is named for the Event subscription, the old name
+deleted, and the plain name is the Subscription's: `observe::EventSubscription`
+(its state `observe::PauseState`, shared with the Subscription),
+`Snapshot::record_event_subscription`, `[[event_subscriptions]]`,
+`xmip_publication_event_subscriptions_v1`, the handle a subscriber holds
+`xevent::hub::EventSubscription`; in .NET `EventSubscriptionRecord`,
+`EventSubscriptionList`, `RuntimeEventSubscriptions`,
+`EventSubscriptionQuery`, `EventSubscriptionAct`,
+`EventSubscriptionOperation` and `IOperatorSurface.EventSubscriptions`; the
+view's page and table, `xmip-cli event-subscriptions` and
+`Get-XmipEventSubscription`. The act and the order moved to `observe` —
+`Act`, `Noun` and `Order` — and are one for both nouns: an Event
+subscription takes pause, resume and remove, a Subscription pause and
+resume; `xmip_order_v1` replaces `xmip_event_subscription_order_v1`, and
+the node's audit action for an act here stays `event.<act>`.
+
+Provenance: the owner's requirement of ADR-0013's amendment; the names are
 the assistant's, for the owner to overrule.
 
 ## Provenance

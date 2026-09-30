@@ -91,7 +91,12 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   Journey; publishing creates no new Message. A Message no Subscription
   picks up goes to the Dead Message Queue, which is not a dead letter
   queue: nothing failed, nothing wanted it, and it is republished once the
-  Subscription is corrected.
+  Subscription is corrected. A Subscription is configuration, added and
+  removed in the TOML of the Xmip Application that draws it; an operator
+  pauses one — what it matches is held in the node's runtime store, nothing
+  lost, surviving a restart — and resumes it, and what it held is picked up
+  oldest first
+  ([ADR-0013](doc/decision/ADR-0013-journey-model.md), amendment 2026-09-30).
   *Audited: each pickup, by which Subscription, and a Message nothing
   picked up.*
 - **Journey.** One durable line of work for a Message, begun by one
@@ -493,7 +498,7 @@ shared library, so they cannot disagree.
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, Linux and macOS. |
 
-Both GUIs show five views: Monitor, the default, the board that follows
+Both GUIs show six views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
 tree of the whole cluster, held still; Topology, the cluster's own
 communication, with the Parties that send into it on the left and those it
@@ -501,12 +506,19 @@ delivers to on the right; and Audit, what every Xmip program recorded, drilled
 cluster → node → program → record, sorted by any column and filtered by scope
 pattern, severity, action and time, all in the address
 ([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md), amendment
-2026-09-29); and Subscriptions, every Event subscription the cluster's nodes
-hold — the subscriber, a Party; the cluster and the node that holds it; the
-action it subscribes to; its state and what its queue did — drilled cluster →
-node → subscription, where an Operator pauses, resumes and removes one
+2026-09-29); Subscriptions, every Subscription the cluster's nodes route by —
+its name, the cluster and node, what it subscribes to, where it leads, active
+or paused, what it picked up and what it holds — drilled cluster → node →
+Subscription, which opens to its configuration as the TOML says and the file
+it comes from, where an Operator pauses and resumes one and nobody removes one:
+that is the TOML configuration's
+([ADR-0013](doc/decision/ADR-0013-journey-model.md), amendment 2026-09-30);
+and Event subscriptions, every Event subscription the cluster's nodes hold —
+the subscriber, a Party; the cluster and the node that holds it; the action it
+subscribes to; its state and what its queue did — drilled cluster → node →
+Event subscription, where an Operator pauses, resumes and removes one
 ([ADR-0065](doc/decision/ADR-0065-events-are-subscribed-from-any-language.md),
-amendment 2026-09-29). From any row the drill-down goes through the configuration
+amendments 2026-09-29 and 2026-09-30). From any row the drill-down goes through the configuration
 that declared the scope and ends at that configuration
 ([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
 amendment 2026-09-14).
@@ -586,9 +598,11 @@ side effect of deployment.
 The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,
 `list` and `show` over a scope, `xmip-cli validate <file>`, `xmip-cli
 audit`, what every Xmip program recorded, filtered by the Audit view's words,
-and `xmip-cli subscriptions`, the Event subscriptions the nodes hold, with
-`--pause`, `--resume` or `--remove` on one; the PowerShell module answers the
-same as objects, the audit and the subscriptions included. Pause and resume are the two acts the
+`xmip-cli subscriptions`, the Subscriptions the nodes route by, with
+`--pause` or `--resume` on one, and `xmip-cli event-subscriptions`, the Event
+subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
+one; the PowerShell module answers the same as objects, the audit, the
+Subscriptions and the Event subscriptions included. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built
