@@ -31,14 +31,14 @@ path = ".src/lib.rs"
 [[bin]]
 name = "xmip-service"
 path = ".src/service/main.rs"
-required-features = ["node", "audit"]
+required-features = ["node", "audit", "observe"]
 
 # Starts xmip-service in a console over loopback, carries Messages to it and
 # stops it the way a terminal or a service manager does.
 [[test]]
 name = "xmip-service"
 path = ".src/test/service_stop.rs"
-required-features = ["node", "audit", "transport-tcp"]
+required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocksdb"]
 
 [features]
 default = ["server-profile"]
@@ -50,7 +50,7 @@ default = ["server-profile"]
 # Deployment profiles are deliberately absent. IoT device, edge node, single
 # server, cluster, cloud node and hybrid select modules at run time, and module
 # selection is configuration. That belongs in TOML, not here.
-server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform", "transport-file", "transport-http", "transport-tcp", "transport-udp"]
+server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform", "transport-file", "transport-http", "transport-tcp", "transport-udp", "persist-rocksdb"]
 
 # The same composition as server-profile today. What will separate them is an
 # interactive host and a local GUI host, and neither exists yet. The name is
@@ -95,6 +95,19 @@ transport-http = ["dep:xmip-transport-http"]
 transport-tcp = ["dep:xmip-transport-tcp"]
 transport-udp = ["dep:xmip-transport-udp"]
 
+# The runtime store engines xmip-service links, and the node opens the one its
+# `[store]` names (ADR-0018, amendment 2026-09-30); a store naming one the
+# build left out is refused as the node starts. The server profile links
+# RocksDB, the runtime store's engine (ADR-0015, amendment 2026-09-25). Each
+# brings the key home with it: a store is always sealed (ADR-0063).
+persist-rocksdb = ["persist", "secret", "dep:xmip-persist-rocksdb"]
+persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]
+# The platform's key store (ADR-0063 clause 4): DPAPI on Windows, a private
+# file on Linux and every Unix, the keychain on macOS. Each crate is empty
+# off its own platform, so all three are linked and each builds where it
+# works.
+secret = ["dep:xmip-secret", "dep:xmip-secret-dpapi", "dep:xmip-secret-file", "dep:xmip-secret-keychain"]
+
 [dependencies]
 xmip-abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xmip-core-abi", branch = "main" }
 xmip-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", optional = true }
@@ -117,6 +130,8 @@ xmip-observe = { package = "xmip-core-observe", git = "https://github.com/IlleNi
 xmip-party = { package = "xmip-core-party", git = "https://github.com/IlleNilsson/xmip-core-party", branch = "main", optional = true }
 xmip-path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main", optional = true }
 xmip-persist = { package = "xmip-core-persist", git = "https://github.com/IlleNilsson/xmip-core-persist", branch = "main", optional = true }
+xmip-persist-rocksdb = { package = "xmip-core-persist-rocksdb", git = "https://github.com/IlleNilsson/xmip-core-persist-rocksdb", branch = "main", optional = true }
+xmip-persist-sqlite = { package = "xmip-core-persist-sqlite", git = "https://github.com/IlleNilsson/xmip-core-persist-sqlite", branch = "main", optional = true }
 xmip-prepare = { package = "xmip-core-prepare", git = "https://github.com/IlleNilsson/xmip-core-prepare", branch = "main", optional = true }
 xmip-process = { package = "xmip-core-process", git = "https://github.com/IlleNilsson/xmip-core-process", branch = "main", optional = true }
 xmip-promote = { package = "xmip-core-promote", git = "https://github.com/IlleNilsson/xmip-core-promote", branch = "main", optional = true }
@@ -126,6 +141,10 @@ xmip-resilience = { package = "xmip-core-resilience", git = "https://github.com/
 xmip-retain = { package = "xmip-core-retain", git = "https://github.com/IlleNilsson/xmip-core-retain", branch = "main", optional = true }
 xmip-route = { package = "xmip-core-route", git = "https://github.com/IlleNilsson/xmip-core-route", branch = "main" }
 xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main" }
+xmip-secret = { package = "xmip-core-secret", git = "https://github.com/IlleNilsson/xmip-core-secret", branch = "main", optional = true }
+xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.com/IlleNilsson/xmip-core-secret-dpapi", branch = "main", optional = true }
+xmip-secret-file = { package = "xmip-core-secret-file", git = "https://github.com/IlleNilsson/xmip-core-secret-file", branch = "main", optional = true }
+xmip-secret-keychain = { package = "xmip-core-secret-keychain", git = "https://github.com/IlleNilsson/xmip-core-secret-keychain", branch = "main", optional = true }
 xmip-send = { package = "xmip-core-send", git = "https://github.com/IlleNilsson/xmip-core-send", branch = "main" }
 xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
 xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }

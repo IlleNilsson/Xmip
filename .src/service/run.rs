@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 use std::process::ExitCode;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Instant;
 
 use xmip_audit::program_audit::ProgramAudit;
@@ -14,7 +14,7 @@ use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
 use crate::arguments::Arguments;
-use crate::built;
+use crate::{built, orders};
 
 /// Who stopped the node, as the stop record says it.
 pub type StoppedBy = &'static str;
@@ -50,7 +50,7 @@ pub fn serve(
     stopping: impl FnOnce(),
 ) -> Ended {
     let configuration = arguments.configuration.as_str();
-    let running = match Running::start(configuration, built::linked()) {
+    let running = match Running::start(configuration, built::linked(audit)) {
         Ok(running) => running,
         Err(refusal) => {
             fail(
@@ -62,6 +62,8 @@ pub fn serve(
         }
     };
     let location = format!("xmip:///{}/node/{}", running.cluster(), running.node());
+    let orders = orders::place(&running);
+    let place = orders.display().to_string();
     // Every record from here carries the location it declares, so a reader
     // knows whose it is (ADR-0062, amendment 2026-09-29).
     audit.locate(&location);
@@ -70,6 +72,7 @@ pub fn serve(
     // goes when `declared` does, after the drain.
     let declared = Declaration::new(program, location.as_str(), arguments.purpose)
         .with("configuration", configuration)
+        .and_then(|declaration| declaration.with("orders", place.as_str()))
         .and_then(|declaration| declaration.declare().map_err(|error| error.to_string()));
     if let Err(problem) = &declared {
         fail(
@@ -86,12 +89,26 @@ pub fn serve(
             ("node", location.as_str()),
             ("configuration", configuration),
             ("purpose", arguments.purpose.word()),
+            ("store", running.store().said()),
+            ("orders", place.as_str()),
         ],
     );
+    println!(
+        "{program}: {location} keeps its store {}",
+        running.store().said()
+    );
+    println!("{program}: {location} takes orders at {place}");
     println!("{program}: {location} accepts work");
     ready();
 
-    let by = stops.recv().unwrap_or("its stop closing");
+    let by = loop {
+        orders::take(program, audit, &running, &orders, &location);
+        match stops.recv_timeout(orders::LOOK) {
+            Ok(by) => break by,
+            Err(RecvTimeoutError::Timeout) => {}
+            Err(RecvTimeoutError::Disconnected) => break "its stop closing",
+        }
+    };
     stopping();
     let draining = Instant::now();
     let outcomes = running.stop();

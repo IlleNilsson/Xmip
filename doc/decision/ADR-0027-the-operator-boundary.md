@@ -487,6 +487,22 @@ runtime's tests fail to compile if an export drifts; `Xmip.Abi` binds them
 once for .NET, and C, C++, Java and Python bind the header beside it.
 
 
+## Amendment, 2026-09-30: the library stays loaded
+
+The runtime's library runs threads of its own that outlive every call: the
+audit keeper that section 9's records are handed to, and a listening Event
+subscription's thread. The C and C++ bindings closed the library after their
+last unsubscribe, which unmapped the code the keeper runs, and the keeper
+faulted on waking (an access violation in the bindings' verification). So
+the library stays in the process once loaded, stated in section 1: on
+Windows it pins itself as it loads (`src/ffi/resident.rs`, `DllMain`), on
+ELF systems it is linked `-z nodelete` (`build.rs`), and on macOS dyld never
+unloads a library holding thread-local variables. `FreeLibrary` and
+`dlclose` release a reference and never unmap it; a binding may still close
+the library. A test pins a system library and proves it stays mapped after
+it is freed; `verify-event-bindings.ps1` loads and closes the real one.
+
+
 ## Alternatives considered
 
 **One header for both audiences.** Rejected. It forces one version constant on

@@ -29,8 +29,16 @@
 //! `sc.exe create` arguments one per line — from `registration.rs`, the one
 //! place it is written, so an installer registers what the runtime generates.
 //!
-//! It declares itself (ADR-0053) and audits its start, its stop and every
-//! failure (ADR-0062).
+//! The node keeps its runtime store where its configuration's `[store]`
+//! says, over an engine this build linked, sealed under the platform's key
+//! store (ADR-0018, amendment 2026-09-30); a store naming an engine this
+//! build left out, or one that does not open, is refused as any node that
+//! cannot start is. While it serves it takes the orders an operator leaves
+//! for it — a pause or a resume of a Subscription — from `<data>/orders`
+//! (`orders.rs`).
+//!
+//! It declares itself (ADR-0053) and audits its start, its stop, every
+//! order and every failure (ADR-0062).
 
 mod arguments;
 mod built;
@@ -38,6 +46,7 @@ mod console;
 #[cfg(windows)]
 mod control_manager;
 mod definition;
+mod orders;
 mod readiness;
 mod run;
 

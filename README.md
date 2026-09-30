@@ -581,7 +581,13 @@ service manager restarts that. `xmip-service --configuration <path>
 node's service: the systemd unit, the launchd property list, or the
 `sc.exe create` arguments. The build links the transports that
 `architecture.toml`'s `[deploy]` table starts, by feature; a Location naming
-another transport is refused when the node starts.
+another transport is refused when the node starts. The node keeps its runtime store where its
+configuration's `[store]` says — by default RocksDB at
+`data/persistence-rocksdb`, sealed under the platform's key store — and a
+store naming an engine the build left out, or one that does not open, is
+refused the same way. A pause or resume of a Subscription reaches it as an
+order left in `data/orders`, and survives its restart
+([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md)).
 
 ### Configuration and control
 

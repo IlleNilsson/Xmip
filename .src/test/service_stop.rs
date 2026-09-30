@@ -4,6 +4,11 @@
 //! process exits 0, within a bound; it declared itself while it ran and
 //! audited its start and its stop.
 //!
+//! A node keeps its runtime store where its configuration says, and a
+//! Subscription an operator paused through an order is paused still after
+//! the service is stopped and started again (ADR-0018, amendment
+//! 2026-09-30).
+//!
 //! Every Message is received and settled. The build links no authenticator
 //! and the configuration can name none yet, so the Receive Location accepts
 //! nothing and every Message is refused at its gate, by name, and counted.
@@ -14,6 +19,7 @@ use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::mpsc::{self, Receiver};
 use std::time::{Duration, Instant};
 
+use xmip_observe::{Act, Noun, Order};
 use xmip_transport::Transport;
 use xmip_transport_tcp::TcpTransport;
 
@@ -36,13 +42,15 @@ filter = "xmip.transport.mechanism = 'circumstance'"
 
 /// Node C1-R1 takes both ends: a tcp Receive Location on `receive` and a
 /// tcp Send Port to `far`. Its Location waits a tenth of a second per
-/// receive, which is what bounds the drain.
+/// receive, which is what bounds the drain. Its data — the runtime store,
+/// its keys, its orders — is in `data` beside the configuration.
 fn node(receive: &str, far: &str) -> String {
     format!(
         r#"[service]
 name = "xmip-R1"
 cluster_name = "C1"
 node_name = "R1"
+data = "data"
 
 [[applications]]
 name = "Loopback"
@@ -311,5 +319,150 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     let said = String::from_utf8_lossy(&output.stderr);
     assert!(said.contains("xmip-core-transport-sftp"), "{said}");
     assert!(declarations(&directory).is_empty());
+    let _ = std::fs::remove_dir_all(&directory);
+}
+
+const NODE: &str = "xmip:///C1/node/R1";
+
+/// Leave `act` on the Subscription `onward` where the node takes orders.
+fn order(directory: &Path, act: Act) {
+    Order {
+        node: NODE.to_string(),
+        noun: Noun::Subscription,
+        target: "onward".to_string(),
+        act,
+        who: "C1-operator".to_string(),
+    }
+    .leave(&directory.join("data").join("orders"))
+    .expect("the order is left");
+}
+
+/// Start the service at `configuration`, act on its Subscription as each
+/// of `acts` says, hearing each answer, and stop it the operating system's
+/// way.
+fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
+    let mut child = spawned(configuration, directory);
+    let mut ending = Ending(Some(child.id()));
+    let said = lines(&mut child);
+    heard(
+        &said,
+        "keeps its store xmip-core-persist-rocksdb",
+        Duration::from_secs(10),
+    );
+    heard(
+        &said,
+        &format!("{NODE} accepts work"),
+        Duration::from_secs(10),
+    );
+    for (act, answer) in acts {
+        order(directory, *act);
+        heard(&said, answer, Duration::from_secs(2));
+    }
+    stop(&child);
+    heard(&said, "stopped by the console", Duration::from_secs(5));
+    assert!(exited(child, Duration::from_secs(5)).success());
+    ending.0 = None;
+}
+
+#[test]
+fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
+    let directory = std::env::temp_dir().join(format!("xmip-service-store-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&directory);
+    let configuration = written(&directory, &free_address());
+
+    served(
+        &configuration,
+        &directory,
+        &[(Act::Pause, "Subscription 'onward' paused by C1-operator")],
+    );
+    assert!(
+        directory.join("data").join("persistence-rocksdb").is_dir(),
+        "the store is where the layout puts it"
+    );
+    served(
+        &configuration,
+        &directory,
+        &[
+            (Act::Pause, "Subscription 'onward' was already paused"),
+            (
+                Act::Resume,
+                "Subscription 'onward' resumed by C1-operator; the 0 it held",
+            ),
+        ],
+    );
+
+    let audit =
+        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+    for said in [
+        "subscription.pause",
+        "subscription.resume",
+        "persistence-rocksdb",
+    ] {
+        assert!(audit.contains(said), "{said} in {audit}");
+    }
+    let _ = std::fs::remove_dir_all(&directory);
+}
+
+/// What the service says on stderr refusing the node at `configuration`,
+/// which must exit 2.
+fn refused(configuration: &Path, directory: &Path) -> String {
+    let output = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
+        .args([
+            "--configuration",
+            configuration.to_str().expect("UTF-8"),
+            "--console",
+        ])
+        .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
+        .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
+        .output()
+        .expect("runs");
+    assert_eq!(output.status.code(), Some(2));
+    String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+#[test]
+fn a_store_the_build_did_not_link_or_that_does_not_open_is_refused() {
+    let directory =
+        std::env::temp_dir().join(format!("xmip-service-unstored-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&directory);
+    let configuration = written(&directory, &free_address());
+    let text = std::fs::read_to_string(&configuration).expect("reads");
+
+    let unlinked = "[store]
+engine = \"xmip-core-persist-lmdb\"
+place = \"lmdb\"
+";
+    std::fs::write(
+        &configuration,
+        format!(
+            "{text}
+{unlinked}"
+        ),
+    )
+    .expect("writes");
+    let said = refused(&configuration, &directory);
+    assert!(
+        said.contains("'xmip-core-persist-lmdb', which this node was not built with"),
+        "{said}"
+    );
+
+    // A file where the engine wants its directory.
+    std::fs::write(directory.join("taken"), "not a store").expect("writes");
+    std::fs::write(
+        &configuration,
+        format!(
+            "{text}
+[store]
+place = \"taken\"
+"
+        ),
+    )
+    .expect("writes");
+    let said = refused(&configuration, &directory);
+    assert!(said.contains("did not open"), "{said}");
+    assert!(declarations(&directory).is_empty());
+    let audit =
+        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+    assert!(audit.contains("xmip-core-persist-lmdb"), "{audit}");
     let _ = std::fs::remove_dir_all(&directory);
 }
