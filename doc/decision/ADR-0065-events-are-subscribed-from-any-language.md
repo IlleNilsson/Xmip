@@ -3,7 +3,7 @@
 - Status: Accepted
 - Accepted: 2026-09-26, the owner, from the options named below
 - Date: 2026-09-26
-- Related: ADR-0052 (the operator surfaces; the Subscriptions view, its
+- Related: ADR-0052 (the operator surfaces; the Event subscriptions view, its
   amendment 2026-09-29), ADR-0009 (roles: an Operator acts on a
   subscription, an Observer watches), ADR-0012 (the module boundary is a C
   ABI), ADR-0019 (Parties and
@@ -212,7 +212,7 @@ point the owner's to overrule.
   node raises an Event for each stage it serves whose failing pairs changed
   since the round before, and takes its orders under the directory the
   cluster shares. The subscriptions are real: a paused one is seen to fill.
-- **The view.** A fifth view in both GUIs, *Subscriptions*: subscriber,
+- **The view.** A fifth view in both GUIs, *Event subscriptions*: subscriber,
   cluster, node, action, then state, queued, delivered, missed and since;
   ordered by any column from its head, narrowed by the scope-pattern box
   over each subscription's node and reach, drilled cluster → node →
