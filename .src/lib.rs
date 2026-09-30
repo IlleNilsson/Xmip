@@ -69,5 +69,7 @@ pub use xmip_report;
 pub use xmip_resilience;
 #[cfg(feature = "retain")]
 pub use xmip_retain;
+#[cfg(feature = "secret")]
+pub use xmip_secret;
 #[cfg(feature = "transform")]
 pub use xmip_transform;

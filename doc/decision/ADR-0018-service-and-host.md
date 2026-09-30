@@ -317,3 +317,64 @@ identifier, because a node configuration cannot yet say how one is set up.
 A Receive Location that accepts nothing therefore refuses every Stream at
 its gate. The node receives and counts every Message, and carries none
 onward until the configuration can name its gates.
+
+## Amendment, 2026-09-30: `xmip-service` opens the node's runtime store
+
+Since the amendment of 2026-09-30 to ADR-0013 a paused Subscription holds
+what it matches in the runtime store, so the pause and what it holds survive
+a restart. `xmip-service` opened no store: no node configuration could name
+one, and a node it ran held in memory for its own life. Now:
+
+- **The configuration names the store** in `[store]`
+  (`xmip-core-configure`'s `store.rs`, `node-configuration.md`): `engine`
+  and `key_store` by module name, as a Location names its transport, and
+  `place` and `keys`, where each keeps its bytes, relative to the
+  configuration file. Every key may be left out. The defaults follow the
+  records: the engine is `xmip-core-persist-rocksdb`, the runtime store's
+  (ADR-0015, amendment 2026-09-25), at `<data>/persistence-rocksdb`, the
+  installed layout's (`deployment-model.md` section 6); the key store is the
+  platform's (ADR-0063 clause 4) — `xmip-core-secret-dpapi` on Windows,
+  `-keychain` on macOS, `-file` on every other Unix — keeping its keys at
+  `<data>/key`, under the key-encryption key `runtime`. `<data>` is the
+  node's data directory, `[service] data`, relative to the configuration
+  file and `../data` when absent: in the installed layout (ADR-0015 clause
+  10) the `data` beside the `config` the file is in. An engine other than
+  the default names its `place`, since a default place is the default
+  engine's.
+- **The runtime opens it** (`xmip-core-runtime`'s `store.rs`). The program
+  links engines and key stores as it links transports (`Linked::engines`,
+  `Linked::key_stores`); phase 3 refuses a `[store]` naming one the program
+  was not built with, and phase 9 opens persist's `EncryptedStore` over the
+  engine and refuses a store that does not open — its directory, the
+  engine's lock held by another process, a key that does not unwrap —
+  before anything serves. A program that linked no engine, starting a node
+  that names no store, holds in memory as before; a program that opened a
+  store itself (the Playground) hands it over and that one is the node's.
+- **`xmip-service` links them by build feature**: `persist-rocksdb` in the
+  server profile, `persist-sqlite` beside it, and with either the
+  platform's key store. A refused store is the refusal every node that
+  cannot start gets: words on stderr, exit 2 (`registration::REFUSED`), and
+  the failure audited (ADR-0062). The start record says the store, and the
+  console says where it is.
+- **It takes orders.** An operator's pause or resume of a Subscription
+  reaches the service as an `observe::Order` left in `<data>/orders`, which
+  the service declares (ADR-0053, `orders`) and looks in between its waits
+  for a stop, every ten milliseconds; each is applied through the runtime's
+  act (`Pickup::act`), audited as `subscription.pause` or
+  `subscription.resume`, and said on the console. An order for an Event
+  subscription is refused in words: this process keeps no hub.
+
+The root crate's test starts the service over a configured store, pauses a
+Subscription by an order, stops it the operating system's way, starts it
+again, and hears the Subscription answer a second pause as already paused;
+a store naming an engine the build left out, and one that does not open,
+are refused with exit 2. What the pause held is not seen there: the build
+links no authenticator, so every Stream is refused at its gate before
+routing (the amendment of 2026-09-28), and that a held Message survives a
+restart is proved where Streams route, in the runtime's `pickup` and the
+Playground.
+
+Provenance: the owner, 2026-09-30, *Sort what you can*, after the gap was
+reported. The keys, their defaults, the data directory, the order place and
+the look of ten milliseconds are the assistant's drafting from the records
+named, for the owner to overrule.

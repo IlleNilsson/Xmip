@@ -31,7 +31,7 @@ pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
 }
 
 fn definition(arguments: &Arguments) -> Result<String, String> {
-    let (document, _) =
+    let (document, _, _) =
         xmip_runtime::start::read(&arguments.configuration).map_err(|unread| unread.reason)?;
     let executable = std::env::current_exe()
         .map_err(|error| format!("cannot say where this executable is: {error}"))?;
