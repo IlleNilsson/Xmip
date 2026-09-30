@@ -35,6 +35,14 @@ function Get-XmipTestStatus {
             named, not matched, where Start-XmipTest spawns one. An estate run
             rolls as no cluster, so naming one leaves it out.
 
+        .PARAMETER IncludeHidden
+            Lists the runs that declared themselves hidden too — an
+            assistant's test runs, started with Start-XmipTest -Hidden — which
+            are left out unless this is given, so Get-XmipTestStatus |
+            Start-XmipOperationWeb never follows one unasked (ADR-0028,
+            amendment 2026-09-30). A run is hidden by what it declared, never
+            by its cluster's name; Hidden says which.
+
         .EXAMPLE
             Get-XmipTestStatus
 
@@ -43,6 +51,9 @@ function Get-XmipTestStatus {
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate
+
+        .EXAMPLE
+            Get-XmipTestStatus -Cluster CT -IncludeHidden
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
@@ -52,7 +63,10 @@ function Get-XmipTestStatus {
 
         [Parameter()]
         [SupportsWildcards()]
-        [string] $Cluster = '*'
+        [string] $Cluster = '*',
+
+        [Parameter()]
+        [switch] $IncludeHidden
     )
 
     $ErrorActionPreference = 'Stop'
@@ -76,6 +90,8 @@ function Get-XmipTestStatus {
 
     [object[]] $nodes = @(Get-XmipTestNode)
     [object[]] $suites = @(Get-XmipTestSuite)
+    Import-XmipOperatorModule
+    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
 
     foreach ($roll in $rolls) {
         $recorded = Get-XmipRollRecord -Path $Path -Id $roll.Id
@@ -84,6 +100,14 @@ function Get-XmipTestStatus {
         [string] $rolledAs = [string](Get-TomlValue -Node $record -Name 'cluster' -Default '')
 
         if ($rolledAs -notlike $Cluster) {
+            continue
+        }
+
+        # Whether a run is shown is the one rule, observe::run::shown, over
+        # what the run declared (ADR-0028, amendment 2026-09-30).
+        [bool] $hidden = [bool](Get-TomlValue -Node $record -Name 'hidden' -Default $false)
+
+        if (-not $rules.Shown($hidden, [bool] $IncludeHidden)) {
             continue
         }
 
@@ -131,6 +155,7 @@ function Get-XmipTestStatus {
                 Path        = if ($null -ne $recorded) { $Path } else { $null }
                 Record      = if ($null -ne $recorded) { $recorded.File } else { $null }
                 Log         = Get-TomlValue -Node $record -Name 'log'
+                Hidden      = $hidden
             }
         }
 

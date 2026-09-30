@@ -6,9 +6,12 @@
   archive technology the way pingpong drives every transport
 - Amended: 2026-09-09, decisions 2 and 3a — difficulty: a stress level every
   scenario runs at, an eighth scenario, storm, and nodes that are processes
+- Amended: 2026-09-30 — a test run can be hidden, by what it declares
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
-  Module loads)
+  Module loads), ADR-0052 (the views' "show test clusters" box, its
+  amendment 2026-09-30), ADR-0053 and ADR-0062 (a hidden run's declarations
+  and audit records say so, since 2026-09-30)
 
 ## In brief
 
@@ -410,3 +413,55 @@ did move: the owner's rule of 2026-09-23 is that what starts a node mounts with
 no provider — `module/foundation/…`, `module/platform/…` — and everything else
 with its provider first, `module/core/capability/transport`. ADR-0016,
 amendment 2026-09-23, corrected 2026-09-24.
+
+## Amendment, 2026-09-30: a test run can be hidden, by what it declares
+
+The owner, 2026-09-29: *If you need a cluster for test purposes that is fine,
+call it CT. When tests are run it's got to be hidable. Like when tests are run
+include a checkbox if CT cluster should be shown or not in the operation
+tools.*
+
+The name is the owner's advice to whoever tests beside him; what hides the
+cluster is not. Nothing at runtime reads meaning from a name (ADR-0053; the
+owner's rule, capability not name), so a cluster called CT is shown like any
+other, and a run is hidden because it said so when it was started.
+
+- **The declaration.** `Start-XmipTest -Hidden` declares the run hidden. It
+  belongs to the Playground alone, as `-Cluster` does. The run record says
+  `hidden = true`; `XMIP_PLAYGROUND_HIDDEN` tells the roll, whose cluster and
+  nodes inherit it; the roll's `[run]` table says `hidden = true`
+  (`observe::Run::hidden`, crossing section 8's head as `hidden`); the roll,
+  its cluster and every node add `hidden = "true"` to their process
+  declarations (ADR-0053 clause 3) and say it on every audit record they
+  make (`ProgramAudit::hide`, beside `locate`; ADR-0062 clause 5). A run
+  started without it declares nothing and is shown.
+- **The rule, once.** Whether something a run made is shown is
+  `observe::run::shown`: always where the run declared nothing, and where it
+  declared itself hidden only when the reader asks to include what is
+  hidden. The audit capability's query applies it to records (`hidden`,
+  `include` or `exclude`); the runtime forwards it as `xmip_run_shown_v1`
+  (`xmip_operate.h` section 7), `RuntimeRules.Shown` binds it, and
+  `Xmip.Surface`'s `ClusterSurfaces`, `Get-XmipTestStatus` and
+  `Stop-XmipTest` call that.
+- **Hidden by default, everywhere.** `Get-XmipTestStatus` lists a hidden run
+  only with `-IncludeHidden`, so `Get-XmipTestStatus | Start-XmipOperationWeb`
+  never follows one unasked, the prompt never follows one, and a plain
+  `Stop-XmipTest` leaves it running; `Stop-XmipTest -Cluster CT
+  -IncludeHidden` or `-Id` stops it. `Get-XmipAudit -IncludeHidden` and
+  `xmip-cli audit --include-hidden` read its records. The views are ADR-0052's
+  amendment of the same date.
+- **How the assistant's test cluster is started, always:**
+  `Start-XmipTest -Suite Core.Playground -Cluster CT -Test RoundTrip
+  -Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 =
+  'send' } -Hidden`, and stopped with `Stop-XmipTest -Cluster CT
+  -IncludeHidden`.
+
+`test/HiddenRun.Test.ps1` holds the tooling's side: the declaration reaches
+the roll, a hidden run is listed only when asked, and a run called CT that
+declared nothing is listed like any other.
+
+Provenance: the requirement, CT and the checkbox are the owner's, quoted
+above. Hiding by declaration rather than by name is the lead's ruling under
+the owner's standing rule; the word `-Hidden`, `-IncludeHidden`, the fields
+and the default of hidden everywhere are the assistant's drafting, for the
+owner to overrule.

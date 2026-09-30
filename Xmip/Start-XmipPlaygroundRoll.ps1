@@ -32,7 +32,7 @@ function Get-XmipPlaygroundChoice {
 
     [string[]] $optional = @(
         'Nodes', 'OnlineNodes', 'NodeCapability'
-        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes'
+        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden'
     )
 
     foreach ($name in $optional) {
@@ -332,6 +332,7 @@ function Start-XmipPlaygroundRoll {
     Initialize-XmipAudit
     $process = Start-Process @launch
 
+    [bool] $hidden = $Bound.ContainsKey('Hidden') -and [bool] $Bound['Hidden']
     [bool] $boundDuration = $Bound.ContainsKey('Duration')
     [bool] $boundFactor = $Bound.ContainsKey('TimeFactor')
 
@@ -354,6 +355,7 @@ function Start-XmipPlaygroundRoll {
         history     = $publication.History
         activity    = $publication.Activity
         log         = $launch.RedirectStandardOutput
+        hidden      = $hidden
     }
 
     [string] $recordPath = Get-XmipRollRecordPath -Path $Path -Id $process.Id
@@ -374,7 +376,9 @@ function Start-XmipPlaygroundRoll {
     # from files on disk — a surface is stated (clause 3).
     $prompt = 'Xmip.PowerShell.PromptMonitor' -as [type]
 
-    if ($null -ne $prompt) {
+    # A hidden run is not followed: the prompt is the owner's (ADR-0028,
+    # amendment 2026-09-30).
+    if ($null -ne $prompt -and -not $hidden) {
         [string[]] $beside = @(
             Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot |
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
@@ -383,6 +387,7 @@ function Start-XmipPlaygroundRoll {
     }
 
     if ($PassThru) {
-        return Get-XmipTestStatus -Path $Path | Where-Object { $_.Id -eq $process.Id }
+        return Get-XmipTestStatus -Path $Path -IncludeHidden |
+            Where-Object { $_.Id -eq $process.Id }
     }
 }

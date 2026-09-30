@@ -24,6 +24,10 @@ function Start-XmipOperationWeb {
             starts one host that serves both, and the three views say which
             cluster they are on and move between them. Two of them publishing
             one cluster is REFUSED by the host, because a cluster rolls once.
+            Get-XmipTestStatus leaves out a run started -Hidden, so the pipe
+            never follows one unasked; Get-XmipTestStatus -IncludeHidden
+            names it too, and the views show it once "show test clusters" is
+            ticked (ADR-0028, amendment 2026-09-30).
 
             It builds the web host first, as Start-XmipTest builds a roll, and
             launches what it built, so the host is the source as it is. It binds to 127.0.0.1 by

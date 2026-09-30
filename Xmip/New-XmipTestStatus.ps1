@@ -35,7 +35,7 @@ function New-XmipTestStatus {
         .PARAMETER Property
             The rest, by name: Cluster, StartTime, Stress, Tests, Rounds,
             Nodes, OnlineNodes, Worst, Tally, Passed, Failed, Skipped, Fault,
-            Snapshot, Path, Record, Log. A name not given is null.
+            Snapshot, Path, Record, Log, Hidden. A name not given is null.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
@@ -61,7 +61,7 @@ function New-XmipTestStatus {
     [string[]] $rest = @(
         'Cluster', 'StartTime', 'Stress', 'Tests', 'Rounds', 'Nodes', 'OnlineNodes',
         'Worst', 'Tally', 'Passed', 'Failed', 'Skipped', 'Fault', 'Snapshot', 'Path',
-        'Record', 'Log'
+        'Record', 'Log', 'Hidden'
     )
 
     foreach ($name in $Property.Keys) {

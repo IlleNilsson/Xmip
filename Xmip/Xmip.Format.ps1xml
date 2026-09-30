@@ -40,7 +40,7 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } else { $_.Cluster }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } elseif ($_.Hidden) { "$($_.Cluster) test" } else { $_.Cluster }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>

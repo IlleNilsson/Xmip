@@ -191,6 +191,17 @@ function Start-XmipTest {
         .PARAMETER PassThru
             Return the Xmip.TestStatus object for the roll started.
 
+        .PARAMETER Hidden
+            Declares the run hidden, as an assistant's test run is (ADR-0028,
+            amendment 2026-09-30): its run record, [run] table, process
+            declarations and audit records say so, and the web and desktop
+            leave it out until "show test clusters" is ticked, as
+            Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
+            declaration hides it, never its name. The assistant's test cluster
+            is started so, always: Start-XmipTest -Suite Core.Playground
+            -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 -NodeCapability
+            @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -Hidden
+
         .EXAMPLE
             Start-XmipTest -Suite Core.Playground -Cluster C1
 
@@ -312,7 +323,10 @@ function Start-XmipTest {
         [string] $Path,
 
         [Parameter()]
-        [switch] $PassThru
+        [switch] $PassThru,
+
+        [Parameter()]
+        [switch] $Hidden
     )
 
     # The first failure ends the call (a cascade of twenty errors, 2026-09-12).
@@ -324,22 +338,14 @@ function Start-XmipTest {
     Write-XmipAudit -Action 'Start-XmipTest' -Phase Begin -Property $PSBoundParameters
     Assert-XmipModuleCurrent
 
-    # Which suites there are is read, never declared at the parameter: a
-    # third party's is a file it dropped, and this session may have started
-    # before it existed. Refused here, before anything is built or spawned.
-    [object[]] $known = @(Get-XmipTestSuite)
-    [string] $refused = Get-XmipTestSuiteRefusal -Name $Suite -Known $known
+    # Which suites there are is read, never declared at the parameter, and a
+    # name that names none is refused before anything is built or spawned. A
+    # pattern may name several, and then each is run in turn.
+    [object[]] $matched = @(Resolve-XmipTestSuite -Name $Suite)
 
-    if ($refused -ne '') {
-        Write-Error $refused
+    if ($matched.Count -eq 0) {
         return
     }
-
-    # Whatever was typed, the suite says what it is called: a bare Playground
-    # resolves to the Playground and the record carries the canonical
-    # spelling, Core.Playground (ADR-0059, amendment 2026-09-20). A pattern
-    # may name several, and then each is run in turn.
-    [object[]] $matched = @(Get-XmipNamedTestSuite -Name $Suite -Known $known)
 
     if ($matched.Count -gt 1) {
         return Start-XmipTestSuiteGroup -Suite $matched -Bound $PSBoundParameters
@@ -349,21 +355,8 @@ function Start-XmipTest {
     $Suite = $chosen.Name
 
     if ($chosen.Kind -eq 'pester') {
-        [string[]] $foreign = @(
-            $PSBoundParameters.Keys | Where-Object { $_ -in $script:XmipPlaygroundOnly }
-        )
-
-        if ($foreign.Count -gt 0) {
-            Write-Error ("-$($foreign -join ', -') belong to " +
-                "$script:XmipPlaygroundSuite, not $Suite.")
-            return
-        }
-
-        if (-not $PSCmdlet.ShouldProcess("the $Suite Pester suite", 'Start')) {
-            return
-        }
-
-        return Start-XmipEstateSuite -Path $Path -Test $Test
+        $pester = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters; Suite = $Suite }
+        return Start-XmipPesterSuite @pester -Path $Path -Test $Test
     }
 
     if ($chosen.Kind -eq 'command') {
