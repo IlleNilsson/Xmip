@@ -48,7 +48,9 @@ function Start-XmipOperationWeb {
         .PARAMETER Snapshot
             The snapshot file or files to monitor, one per cluster. Bound from
             the pipeline, so a Start-XmipTest -PassThru object names one and
-            two rolls on the pipeline name two.
+            two rolls on the pipeline name two. A node xmip-service runs
+            publishes its own, snapshot.toml in its data directory, and
+            Get-XmipProcess names it (ADR-0018, amendment 2026-09-30).
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087, plain http on
@@ -83,6 +85,12 @@ function Start-XmipOperationWeb {
 
         .EXAMPLE
             Get-XmipTestStatus | Start-XmipOperationWeb
+
+        .EXAMPLE
+            Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
+
+        .EXAMPLE
+            Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
 
         .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }

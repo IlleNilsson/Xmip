@@ -33,12 +33,19 @@ name = "xmip-service"
 path = ".src/service/main.rs"
 required-features = ["node", "audit", "observe"]
 
-# Starts xmip-service in a console over loopback, carries Messages to it and
-# stops it the way a terminal or a service manager does.
+# Starts xmip-service in a console over loopback, carries Messages to it,
+# reads what it publishes, acts on it as a surface does and stops it the way a
+# terminal or a service manager does.
 [[test]]
 name = "xmip-service"
-path = ".src/test/service_stop.rs"
+path = ".src/test/service/main.rs"
 required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocksdb"]
+
+# Renders every node configuration deploy/ writes and reads it the way
+# xmip-service reads its own, so a template out of step with the reader fails.
+[[test]]
+name = "deploy"
+path = ".src/test/deploy.rs"
 
 [features]
 default = ["server-profile"]
@@ -157,6 +164,11 @@ xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://githu
 # Windows console, SIGINT, SIGTERM and SIGHUP on Linux and macOS, which is how
 # systemd and launchd stop a service. Its unsafe is its own; this crate has none.
 ctrlc = { version = "3.5", features = ["termination"] }
+
+[dev-dependencies]
+# The deploy test walks a rendered configuration's keys, as configure's reader
+# writes them back, with the same TOML reader configure uses.
+toml = "0.9"
 
 [target.'cfg(windows)'.dependencies]
 # xmip-service under the Windows Service Control Manager: the dispatcher, the

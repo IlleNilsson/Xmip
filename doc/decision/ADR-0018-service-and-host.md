@@ -2,7 +2,8 @@
 
 - Status: Accepted, with open questions recorded at the end
 - Date: 2026-08-25
-- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint)
+- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint),
+  ADR-0052 (the operator surfaces read what `xmip-service` publishes; amendment 2026-09-30)
 - Read by: ADR-0027 clause 4, which makes the execution tree this record builds
   the one scope tree everything observable is addressed against
 
@@ -306,7 +307,7 @@ took, what became of every Stream, and every failure (ADR-0062).
 an installer registers what the runtime writes rather than a copy of it.
 Registering remains the installer's job, and elevation remains open.
 
-A test in the root crate (`.src/test/service_stop.rs`) starts it in a
+A test in the root crate (`.src/test/service/stop.rs`) starts it in a
 console over loopback, carries Messages to it, sends Ctrl+C on Windows and
 SIGTERM on Linux, and holds the drain, exit code 0 and the audit to a bound.
 The Service Control Manager's controls are tested at the handler.
@@ -378,3 +379,69 @@ Provenance: the owner, 2026-09-30, *Sort what you can*, after the gap was
 reported. The keys, their defaults, the data directory, the order place and
 the look of ten milliseconds are the assistant's drafting from the records
 named, for the owner to overrule.
+
+## Amendment, 2026-09-30: `xmip-service` publishes its node
+
+`xmip-service` ran a node, kept its store and took its orders, and published
+nothing: no operation surface could see a real node — its Monitor, its
+Topology, its Subscriptions — and a surface had nowhere to read where to
+leave a pause. Only the Playground's rolls published. Now the service
+publishes its node through the one publication there is (ADR-0052;
+`observe::Publication`, ADR-0027):
+
+- **What.** The runtime says what a running node is
+  (`xmip-core-runtime`'s `Running::publication`, `running/publication.rs`):
+  records beneath its location — itself, its System Process alive, what it
+  declares at `capability` (ADR-0056: receive where a Receive Location
+  starts, process where a Subscription routes, send where a Send Port
+  starts), each module loaded, each Location, each Subscription Fine or
+  Paused by whom — the figures its tally counted at the stage that counts
+  each kind (Streams at receive, Journeys at process, Messages at send, and
+  what failed at the node), its Subscriptions with their standing, and the
+  node drawn as a topology. The drawing is `observe::topology::draw` and
+  `party`, the one every publisher calls, moved there from the Playground
+  (ADR-0052, amendment of this date). A node's configuration names no Party
+  yet, so the Party on each side is drawn as `any-party`.
+- **Where.** `<data>/snapshot.toml`, beside `<data>/orders`, in the node's
+  data directory, and the publication's `orders` names that directory, so
+  a surface leaves a pause where the node takes it. The service declares the
+  file (ADR-0053, `snapshot`); `Get-XmipProcess` lists it as `Snapshot`, and
+  `Start-XmipOperationWeb` binds it by name, so an operator opens the web
+  over a node with
+  `Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb`, or with
+  `Start-XmipOperationWeb -Snapshot <data>/snapshot.toml`.
+- **How.** Whole or not at all: `observe::publication::write_atomic`, the
+  one writer, moved there from the Playground, which calls it too.
+- **When.** As the node starts to accept work; at the look after an order
+  was applied, so a pause shows in the next publication, not a round later;
+  otherwise every quarter of a second, the Playground's round. Once more
+  after the drain, saying the node stopped — the node, its System Process,
+  its modules and its Locations Done, what it declared and its
+  Subscriptions' standing kept (`running::publication::stopped`) — so a
+  surface over the file shows a stopped node, never a running one that went
+  quiet. It is written on the service's own thread between its looks for a
+  stop; no Receive Location, routing or departure waits for it. A write a
+  reader refuses for the instant it reads — Windows refuses a rename over a
+  file open without delete sharing — is asked again at the next look; one
+  still refused a round later is audited as the failure to `publish`, once,
+  not at every round (ADR-0062).
+
+The root crate's test (`.src/test/service/publication.rs`) starts the
+service over loopback with a store and a Subscription, reads the snapshot
+where the service declares it through observe's reader — the function the
+runtime's library forwards to every .NET surface
+(`xmip_publication_read_v1`) — carries Messages and sees them counted, leaves
+a pause where the publication says as a surface does, sees the next
+publication say paused within a quarter of a second, and after the stop
+reads the node Done and the pause standing.
+
+What it does not do: it writes no history or activity beside the snapshot,
+so the Monitor's curves and recent activity over a service node are empty;
+and two nodes of one cluster are two publications of one cluster, which a
+web host refuses to hold at once (ADR-0052, amendment 2026-09-19).
+
+Provenance: the gap, reported on 2026-09-30, is sorted under the owner's
+*Sort what you can* of that day. The file's name and place,
+the quarter-second cadence, the publication at an order and at the stop,
+`any-party`, and the figures' stages are the assistant's drafting from the
+records named, for the owner to overrule.

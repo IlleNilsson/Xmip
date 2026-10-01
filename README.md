@@ -560,6 +560,10 @@ PowerShell module and the monitors run on all three.
 | Desired state | `deploy/dsc/xmip-node.dsc.yaml` | `deploy/ansible/roles` | `deploy/ansible/roles` |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
+The desired-state files write the node configuration `xmip-core-configure`
+reads; `cargo test --test deploy` renders both and reads them as
+`xmip-service` does.
+
 `Install-XmipPrerequisite -Role operator` reports what a machine lacks;
 `-Install` installs it. The command never elevates: where a package requires
 administrative rights it prints the command and stops. On Windows it also
@@ -588,6 +592,18 @@ store naming an engine the build left out, or one that does not open, is
 refused the same way. A pause or resume of a Subscription reaches it as an
 order left in `data/orders`, and survives its restart
 ([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md)).
+It publishes what the node says of itself — its health and figures, its
+topology with the Parties on each side, its Subscriptions and where it takes
+orders — to `data/snapshot.toml`, every quarter of a second and at once after
+an order, and declares the file, so the operation surfaces open over it:
+
+```powershell
+Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
+Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
+xmip-cli subscriptions --snapshot /opt/xmip/data/snapshot.toml --pause --name onward
+```
+
+When the node stops, the file says it stopped.
 
 ### Configuration and control
 

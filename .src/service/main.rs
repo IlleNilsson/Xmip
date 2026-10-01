@@ -35,9 +35,13 @@
 //! build left out, or one that does not open, is refused as any node that
 //! cannot start is. While it serves it takes the orders an operator leaves
 //! for it — a pause or a resume of a Subscription — from `<data>/orders`
-//! (`orders.rs`).
+//! (`orders.rs`), and publishes what the node says of itself — its health,
+//! figures, topology and Subscriptions — to `<data>/snapshot.toml`, every
+//! quarter of a second and at once after an order, where the operation
+//! surfaces read it (`publication.rs`; ADR-0018, amendment 2026-09-30).
 //!
-//! It declares itself (ADR-0053) and audits its start, its stop, every
+//! It declares itself (ADR-0053) — its configuration, its orders and its
+//! snapshot among what it says — and audits its start, its stop, every
 //! order and every failure (ADR-0062).
 
 mod arguments;
@@ -47,6 +51,7 @@ mod console;
 mod control_manager;
 mod definition;
 mod orders;
+mod publication;
 mod readiness;
 mod run;
 

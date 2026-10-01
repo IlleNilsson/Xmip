@@ -434,3 +434,10 @@ it declares at `scaffolded` or beyond is carried, as the owner's rule of
 start. `Sync-XmipEstate -Deploy` writes the two lists, leaving the rest of each
 file as the operator wrote it, and `test/Deploy.Test.ps1` fails when a file is
 not what it would write.
+
+2026-09-30: the lists left the node configuration. The node configuration
+reader has no place for them — a node loads what its configuration names,
+from what its program linked (ADR-0025, amendment 2026-09-28) — so the DSC
+document carries them in its `metadata` and the Ansible role in
+`xmip_modules`, neither written into the file a node reads (ADR-0045,
+amendment 2026-09-30). What they are for now is open for the owner.
