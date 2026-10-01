@@ -27,6 +27,11 @@ function Get-XmipProcess {
             A process that declared nothing is still listed, by its name, with
             Declared false: the name is the rule, the declaration the courtesy.
 
+            A process that publishes a snapshot says where, and Snapshot is
+            it: an xmip-service node publishes to snapshot.toml in its data
+            directory (ADR-0018, amendment 2026-09-30), so the listing pipes
+            into Start-XmipOperationWeb, which binds Snapshot by name.
+
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
             -Name 'xmip-playground-*' is every roll, cluster and node on this
@@ -53,6 +58,9 @@ function Get-XmipProcess {
 
         .EXAMPLE
             Get-XmipProcess -Name 'xmip-playground-C1-*'
+
+        .EXAMPLE
+            Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -96,6 +104,7 @@ function Get-XmipProcess {
             Id         = $process.Id
             Purpose    = if ($stated) { (Get-Culture).TextInfo.ToTitleCase($stated) } else { '' }
             Location   = [string](Get-TomlValue -Node $said -Name 'location' -Default '')
+            Snapshot   = [string](Get-TomlValue -Node $said -Name 'snapshot' -Default '')
             Started    = $started
             Declared   = $null -ne $said
         }

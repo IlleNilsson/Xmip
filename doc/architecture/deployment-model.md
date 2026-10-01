@@ -114,10 +114,11 @@ cargo build                       a node on plain sockets only
 ```
 
 Without the feature an `https://` endpoint is refused with a message saying
-so, rather than sent in the clear. The desired-state lists in `deploy/` name
-the modules a node loads, not the features it was built with; a package built
-without `tls` and a Location configured for `https` is the operator's error
-the node reports at once.
+so, rather than sent in the clear. The node configuration `deploy/` writes
+names no feature and no module: a node loads what its configuration names
+from what its program was built with, so a package built without `tls` and a
+Location configured for `https` is the operator's error the node reports at
+once.
 
 ## 3. Runtime roles
 
@@ -319,6 +320,12 @@ installation and places the configuration; the TOML remains the node and runtime
 configuration source. A configured node has Xmip installed, both store paths
 present, config and module folders present, node TOML present, and the service
 registered and running where services are supported.
+
+The node TOML either writes is the document `xmip-core-configure` reads
+(`module/platform/configure/doc/node-configuration.md`): `[service]`, and
+nothing the reader has a default for, so the runtime store is the installed
+layout's. The estate root's `cargo test --test deploy` renders both and reads
+them as `xmip-service` does.
 
 ## 9. Recovery
 

@@ -7,7 +7,8 @@
 
 .DESCRIPTION
     deploy/dsc/xmip-node.dsc.yaml and deploy/ansible/roles/xmip_node/defaults/main.yml
-    each name every technology a node carries and which of them start. They
+    each name every technology the package carries and which of them the
+    manifest starts, outside the node configuration each writes. They
     were written by hand and held equal to architecture.toml by a test, and
     on 2026-09-09 hand-edited three times in one day. Now the manifest says
     both: every technology it declares built is carried, and its [deploy]
@@ -132,9 +133,11 @@ function New-XmipDeployList {
         .DESCRIPTION
             Only the lists are generated; the rest of each file is the
             operator's and is kept as it is. In the DSC document they are the
-            `present` and `started` arrays of the node configuration it
-            writes; in the Ansible defaults, `xmip_modules`, which ends the
-            file.
+            `present` and `started` lists of its `metadata`, which ends the
+            file; in the Ansible defaults, `xmip_modules`, which ends that
+            file. Neither is in the node configuration a template writes: a
+            node loads what its configuration names, from what its program
+            linked (ADR-0025, amendment 2026-09-28).
 
         .PARAMETER Root
             The estate root.
@@ -157,11 +160,11 @@ function New-XmipDeployList {
     [string] $dsc = Get-Content -LiteralPath (Join-Path $Root $script:XmipDeployDsc) -Raw
     [string] $ansible = Get-Content -LiteralPath (Join-Path $Root $script:XmipDeployAnsible) -Raw
 
-    [string] $indent = ' ' * 14
-    [string] $present = New-XmipDscArray -Key 'present' -Name @($technology.Name) -Indent $indent
+    [string] $present = New-XmipDscList -Key 'present' -Name @($technology.Name)
     [string[]] $startedName = @($technology | Where-Object { $_.Start } | ForEach-Object Name)
-    [string] $started = New-XmipDscArray -Key 'started' -Name $startedName -Indent $indent
-    [string] $lists = "(?ms)^ {14}present = \[.*?^ {14}\]\n^ {14}started = \[.*?^ {14}\]\n"
+    [string] $started = New-XmipDscList -Key 'started' -Name $startedName
+    [string] $lists = '(?m)^    present:(?: \[\])?\n(?:^      - .*\n)*' +
+        '^    started:(?: \[\])?\n(?:^      - .*\n)*\z'
 
     [string[]] $entry = @(
         foreach ($item in $technology) {
@@ -184,11 +187,11 @@ function New-XmipDeployList {
 }
 
 
-function New-XmipDscArray {
+function New-XmipDscList {
     <#
         .SYNOPSIS
-            One TOML array of names inside the DSC document's here-string,
-            one name to a line.
+            One YAML list of names in the DSC document's metadata, one name
+            to a line; an empty one as [].
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -198,15 +201,14 @@ function New-XmipDscArray {
 
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
-        [string[]] $Name,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Indent
+        [string[]] $Name
     )
 
-    [string[]] $line = @("$Indent$Key = [") +
-        @($Name | ForEach-Object { "$Indent  `"$_`"," }) +
-        @("$Indent]")
+    if ($Name.Count -eq 0) {
+        return "    ${Key}: []`n"
+    }
+
+    [string[]] $line = @("    ${Key}:") + @($Name | ForEach-Object { "      - $_" })
 
     return (($line -join "`n") + "`n")
 }

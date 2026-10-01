@@ -1,6 +1,7 @@
 //! The one way `xmip-service` runs a node, whichever stop it waits for:
-//! start it, declare and audit it, say it is ready, wait for the stop, drain
-//! it, audit the drain.
+//! start it, declare and audit it, publish it, say it is ready, take its
+//! orders and publish it again while it waits for the stop, drain it, audit
+//! the drain and publish that it stopped.
 
 use std::collections::BTreeMap;
 use std::process::ExitCode;
@@ -14,6 +15,7 @@ use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
 use crate::arguments::Arguments;
+use crate::publication::{self, Publisher};
 use crate::{built, orders};
 
 /// Who stopped the node, as the stop record says it.
@@ -61,9 +63,12 @@ pub fn serve(
             return Ended::Refused;
         }
     };
-    let location = format!("xmip:///{}/node/{}", running.cluster(), running.node());
+    let location = running.location();
     let orders = orders::place(&running);
     let place = orders.display().to_string();
+    let publication_path = publication::place(&running);
+    let snapshot = publication_path.display().to_string();
+    let mut publisher = Publisher::new(program, audit, &running, publication_path, &orders);
     // Every record from here carries the location it declares, so a reader
     // knows whose it is (ADR-0062, amendment 2026-09-29).
     audit.locate(&location);
@@ -73,6 +78,7 @@ pub fn serve(
     let declared = Declaration::new(program, location.as_str(), arguments.purpose)
         .with("configuration", configuration)
         .and_then(|declaration| declaration.with("orders", place.as_str()))
+        .and_then(|declaration| declaration.with("snapshot", snapshot.as_str()))
         .and_then(|declaration| declaration.declare().map_err(|error| error.to_string()));
     if let Err(problem) = &declared {
         fail(
@@ -91,6 +97,7 @@ pub fn serve(
             ("purpose", arguments.purpose.word()),
             ("store", running.store().said()),
             ("orders", place.as_str()),
+            ("snapshot", snapshot.as_str()),
         ],
     );
     println!(
@@ -98,11 +105,16 @@ pub fn serve(
         running.store().said()
     );
     println!("{program}: {location} takes orders at {place}");
+    println!("{program}: {location} publishes its snapshot at {snapshot}");
+    publisher.publish(&running);
     println!("{program}: {location} accepts work");
     ready();
 
     let by = loop {
-        orders::take(program, audit, &running, &orders, &location);
+        let applied = orders::take(program, audit, &running, &orders, &location);
+        if applied > 0 || publisher.due() {
+            publisher.publish(&running);
+        }
         match stops.recv_timeout(orders::LOOK) {
             Ok(by) => break by,
             Err(RecvTimeoutError::Timeout) => {}
@@ -130,14 +142,16 @@ pub fn serve(
     ];
     properties.extend(counts.iter().map(|(name, count)| (*name, count.as_str())));
     record(audit, "stop", ExecutionPhase::Finished, &properties);
-    println!(
-        "{program}: {location} stopped by {by}, drained in {drained} ms: {}",
+    let said = format!(
+        "stopped by {by}, drained in {drained} ms: {}",
         counts
             .iter()
             .map(|(name, count)| format!("{name} {count}"))
             .collect::<Vec<_>>()
             .join(", ")
     );
+    publisher.stopped(&said);
+    println!("{program}: {location} {said}");
     drop(declared);
     Ended::Stopped
 }

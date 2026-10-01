@@ -171,9 +171,10 @@ Artifact Definition or a module-provided validation capability.
 
 ## 14. The node configuration format
 
-Two shapes are in the tree and they disagree. `[[modules]]` in the node TOML
-against the Ansible template in `deploy/ansible/roles/xmip_node/templates/`,
-which composes a different structure.
+One shape is in the tree: the flat node TOML `xmip-core-configure` reads. The
+DSC document and the Ansible template under `deploy/` write it, and the
+estate root's `cargo test --test deploy` reads what they render
+(2026-09-30). What is open is whether it stays flat.
 
 The `_origins` design export, mined 2026-08-26, proposed a third — and it is
 the most complete of the three, so it belongs in the comparison rather than in

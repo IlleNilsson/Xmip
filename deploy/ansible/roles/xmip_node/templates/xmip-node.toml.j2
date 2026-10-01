@@ -1,28 +1,12 @@
-[node]
-name = "{{ xmip_node_name }}"
-cluster = "{{ xmip_cluster_name }}"
+# The node configuration xmip-core-configure reads
+# (module/platform/configure/doc/node-configuration.md). What the reader has
+# a default for is left to it: the data directory is the `data` beside this
+# file's `config`, and the runtime store is RocksDB there, sealed by the
+# platform's key store (ADR-0018, amendment 2026-09-30).
+[service]
+name = "{{ xmip_service_name }}"
+cluster_name = "{{ xmip_cluster_name }}"
+node_name = "{{ xmip_node_name }}"
 # ADR-0045: a node may assume no route to the internet unless the operator
 # says so; nothing at runtime reaches out.
-online = {{ xmip_online | default(false) | lower }}
-
-[storage]
-persistence_engine = "{{ xmip_persistence_engine }}"
-persistence_path = "{{ xmip_install_root }}/data/persistence-rocksdb"
-management_engine = "{{ xmip_management_engine }}"
-management_path = "{{ xmip_install_root }}/data/management.sqlite"
-
-[modules]
-load_from = "{{ xmip_install_root }}/modules"
-# The technologies this node carries and which of them start. Rendered from
-# xmip_modules in the role's defaults; a playbook overrides the list for a
-# node that carries less.
-present = [
-{% for module in xmip_modules %}
-  "{{ module.name }}",
-{% endfor %}
-]
-started = [
-{% for module in xmip_modules if module.start %}
-  "{{ module.name }}",
-{% endfor %}
-]
+online = {{ xmip_online | lower }}

@@ -148,3 +148,14 @@ dependencies. Compiling, configuring, developing is a different story.*
   internet and any service they like: crates, toolchains, VS Code and its
   extensions, feeds. What they produce is carried whole to where Xmip runs
   (clause 2).
+
+## Amendment, 2026-09-30: the deploy files write `[service]`
+
+The drift the Consequences left for problem 14 is closed. The DSC document
+and the Ansible role's template write the node configuration
+`xmip-core-configure` reads: `[service]` with `name`, `cluster_name`,
+`node_name` and `online = false`, and nothing the reader has a default for
+— no `[node]`, no `[storage]`, no module lists, and `[store]` left to the
+installed layout's (ADR-0018, amendment 2026-09-30). The estate root's
+`cargo test --test deploy` renders both and reads them as `xmip-service`
+does, and fails on a key the reader does not keep.

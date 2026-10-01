@@ -19,7 +19,9 @@
   amendment of 2026-09-29), ADR-0065 (Events subscribed; the Subscriptions
   view, its amendment 2026-09-29), ADR-0009 (roles; both GUIs take the role
   by one rule since 2026-09-29), ADR-0028 (a test run hidden by what it
-  declares; the "show test clusters" box, amendments 2026-09-30)
+  declares; the "show test clusters" box, amendments 2026-09-30), ADR-0018
+  (`xmip-service` publishes its node; its amendment 2026-09-30, and this
+  record's of the same date, the drawing in observe)
 
 ## In brief
 
@@ -1638,3 +1640,39 @@ Provenance: the requirement and the checkbox are the owner's, quoted. Hiding
 by declaration is the lead's ruling under the owner's rule that nothing is
 read out of a name; the box's words, its place on the run line, the address
 word and the marking are the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-09-30: a running node publishes, and the drawing is observe's
+
+`xmip-service` publishes the node it runs (ADR-0018, amendment of this
+date), so the views show a real node and not only a Playground roll. What it
+changes here:
+
+- **One drawing.** The cluster, its nodes, their stages and the endpoints
+  beneath them (the amendment of 2026-09-14, ruling 3), and the Parties on
+  each side (the amendment of 2026-09-29), are drawn by
+  `observe::topology::draw` and `observe::topology::party` — moved there
+  from the Playground, which drew them alone until this date. The Playground
+  calls them and adds only what a roll has: its handoffs and its shared
+  store. A running node calls them through `Running::publication`. Which
+  Party is the publisher's to say: the Playground's `party-x`, and a node's
+  `any-party` while its configuration can name none. An endpoint is the
+  segment beneath a stage: a transport in a roll, a Location on a node.
+- **One writer.** Every publication is written whole or not at all by
+  `observe::publication::write_atomic` (`Publication::write`), moved there
+  from the Playground.
+- **A node's publication.** Its `node` is the node's location,
+  `xmip:///<cluster>/node/<name>`, and a face names its cluster by the one
+  first segment its scopes share, as it names any publication without a
+  `[run]`. Its `orders` is the node's own, so the Subscriptions view acts on
+  a service node as on a roll. `Get-XmipProcess` lists the file a process
+  declared it publishes as `Snapshot`, which `Start-XmipOperationWeb` binds.
+
+`observe`'s `topology/draw.rs` and `publication.rs`, the runtime's
+`running/publication.rs` and the root crate's
+`.src/test/service/publication.rs` prove it; the Playground's topology
+tests hold the roll's picture unchanged.
+
+Provenance: the requirement is ADR-0018's amendment of this date; moving the
+drawing and the writer instead of copying them follows the owner's rule that
+code is placed once (`CONTRIBUTING.md`). The wording is the assistant's
+drafting, for the owner to overrule.

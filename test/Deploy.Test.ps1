@@ -1,8 +1,8 @@
 #Requires -Version 7.6.5
 
 # The deploy lists are the manifest's. deploy/dsc/xmip-node.dsc.yaml and
-# deploy/ansible/roles/xmip_node/defaults/main.yml each name every technology a
-# node carries and which start, and the owner's rule (2026-09-08) is that every
+# deploy/ansible/roles/xmip_node/defaults/main.yml each name every technology the
+# package carries and which start, and the owner's rule (2026-09-08) is that every
 # technology landed goes into both. They were hand-edited three times on
 # 2026-09-09 and then held equal to architecture.toml by this file; now
 # Sync-XmipEstate -Deploy writes them (Update-XmipDeployList), and this fails

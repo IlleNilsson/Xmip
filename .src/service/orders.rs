@@ -31,8 +31,15 @@ pub fn place(running: &Running) -> PathBuf {
 }
 
 /// Take every order left for the node at `node` in `orders`, oldest first,
-/// and apply each.
-pub fn take(program: &str, audit: &ProgramAudit, running: &Running, orders: &Path, node: &str) {
+/// and apply each; how many were applied.
+pub fn take(
+    program: &str,
+    audit: &ProgramAudit,
+    running: &Running,
+    orders: &Path,
+    node: &str,
+) -> usize {
+    let mut applied_count = 0;
     for taken in Order::take(orders, node) {
         let applied = taken
             .map_err(|problem| format!("an order no node can take: {problem}"))
@@ -45,8 +52,12 @@ pub fn take(program: &str, audit: &ProgramAudit, running: &Running, orders: &Pat
                 )),
             });
         match applied {
-            Ok(said) => println!("{program}: {said}"),
+            Ok(said) => {
+                applied_count += 1;
+                println!("{program}: {said}");
+            }
             Err(problem) => run::fail(audit, "order", &format!("{program}: {problem}")),
         }
     }
+    applied_count
 }
