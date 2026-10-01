@@ -14,13 +14,21 @@ Xmip runs from a microcontroller to a provider's virtual machines, and the
 range is said as **five targets**, each a profile under
 `deploy/profile/target` (ADR-0015, amendment 2026-10-01):
 
-| Target | What it is | Store and key store |
+| Target | What it is | Key store |
 | --- | --- | --- |
-| `device` | a Meadow-class microcontroller: bare metal, no_std, no TLS server | none: it keeps no runtime store |
-| `edge` | a Raspberry Pi, industrial PC or gateway under systemd, headless | SQLite; the file key store |
-| `computer` | a person's own Windows or Mac machine, one node of its own | SQLite; DPAPI or the keychain |
-| `server` | an on-premises Windows or Linux machine running the service | RocksDB; DPAPI or the file key store |
-| `hosted` | a virtual machine or container at a hosting provider, headless | RocksDB; the file key store |
+| `device` | a Meadow-class microcontroller: bare metal, no_std, no TLS server | none: it keeps no store |
+| `edge` | a Raspberry Pi, industrial PC or gateway under systemd, headless | the file key store |
+| `computer` | a person's own Windows or Mac machine, one node of its own | DPAPI or the keychain |
+| `server` | an on-premises Windows or Linux machine running the service | DPAPI or the file key store |
+| `hosted` | a virtual machine or container at a hosting provider, headless | the file key store |
+
+**No target's nodes open a database of their own**: every node calls Xmip
+Storage, the nodes declaring the Storage role (sections 3 and 7). Behind
+them is a database server IT runs, or, on a single machine or an edge site,
+one embedded Storage node keeping both RocksDB, for the runtime database,
+and SQLite, for the administration database. The pairing of `edge` and
+`computer` with SQLite as the runtime store is superseded (ADR-0015,
+amendment 2026-10-01).
 
 **A cluster and a hybrid are arrangements of nodes, not targets.** An
 on-premises cluster is servers; a hybrid deployment is servers on one side
@@ -76,6 +84,12 @@ Modbus still does not mean Xmip runs on it.
 Recovered from the `_origins` design export, 2026-08-26. The target list existed
 nowhere else, and ARM and industrial hardware are exactly the two nobody adds
 retroactively without regret.
+
+**The code and its tests are as operating-system agnostic as they can be**
+(the owner, 2026-10-01: *it has to be as OS agnostic as it can*). Running the
+tests on Windows alone is temporary: *We are temporarily only running Windows
+tests, for time reasons. When we are over this hurdle we will run at least
+Windows & Linux. I do not have an OS X machine.*
 
 ## 2. Two ways to build the runtime
 
@@ -150,7 +164,7 @@ once.
 
 A node declares its roles, and they are the one vocabulary for what a node is
 for — at run time, in a deployment, and in what its program is built with
-(`node::NodeRole`; ADR-0056, amendment 2026-10-01). Seven:
+(`node::NodeRole`; ADR-0056, amendments 2026-10-01). Eight:
 
 | Role | Serves | May | Examples |
 | --- | --- | --- | --- |
@@ -161,6 +175,7 @@ for — at run time, in a deployment, and in what its program is built with
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
 | **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history |
 | **Development** | no stage | exercise Xmip from outside | the Playground (ADR-0028) |
+| **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Journey, hand it on, write an audit record |
 
 **Executing is the sum of receiving, processing and sending** (the owner,
 2026-10-01: *Leave Executing as a sum of Receiving, Processing and Sending.
@@ -180,6 +195,16 @@ Hosted worker      Receiving + Operational, or Processing + Sending
 ```
 
 These are deployment choices, not separate runtime models.
+
+**Storage is the doorway to all storage** (the owner, 2026-10-01: *to have
+one or more Xmip Nodes with role Storage would be a safety… Xmip could just
+do a round robin over Xmip Nodes roled Storage*). Every other node calls the
+Storage nodes' operations — **Xmip Storage** — and never a database directly,
+reaching them round robin; more than one Storage node is the safety. Whether
+a Storage node also carries the database is IT's question (section 7). A
+one-node deployment is its own Storage node. The role is
+recorded ahead of the code: `node::NodeRole` gains it in the build that
+follows (ADR-0056, amendment 2026-10-01, the Storage role).
 
 **Executor, Reader and Writer are gone.** This section named three runtime
 roles until 2026-10-01 — Executor, Reader, Writer — for the subject
@@ -312,30 +337,156 @@ xmip/
 It creates the layout, initializes both databases, installs default
 configuration, and registers the Xmip Service where services exist.
 
-## 7. Two databases, and why
+**Only an embedded Storage node keeps the stores in its `data/`** (section
+7). A node without the Storage role keeps neither and reaches Xmip Storage
+over Xmip's TLS (ADR-0063, amendment 2026-10-01); a Storage node in front of
+a database server keeps none either, the server's files being IT's. A
+one-node deployment is its own embedded Storage node, so its layout is the
+one above.
 
-| | Runtime persistence | Management |
+## 7. Two databases, and why — behind Xmip Storage
+
+Decided by the owner, 2026-10-01, validated part by part with the assistant,
+and re-decided later the same day.
+
+**Xmip Storage is the doorway.** The nodes declaring the Storage role
+(section 3) serve every storage operation — write a Stream chunk, write a
+Message, claim a Journey, hand it on, write an audit record — and every
+other node calls them, never a database directly,
+round robin over the Storage nodes (the owner: *to have one or more Xmip
+Nodes with role Storage would be a safety… Xmip could just do a round robin
+over Xmip Nodes roled Storage*). The records are the cluster's, not a node's
+(the owner: *There is nothing local about either RocksDB or SQLite, they are
+cluster services running on one or more nodes*; *All DB records have to be
+central and clusterable, if one node fails another one should be able to
+pick up*).
+
+**Xmip Storage always keeps two databases, whatever the backend** (the owner:
+*We still need the distinction between runtime and administration databases,
+regardless of backend database technology*):
+
+| | The runtime database | The administration database |
 | --- | --- | --- |
-| Engine | RocksDB, `xmip-core-persist-rocksdb` | SQLite, `xmip-core-persist-sqlite` |
-| Optimized for | high write volume, replay from a known state | queryable administration views |
-| Source of truth for | **replay** | **administration** |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time — never configuration |
+| Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time |
+| On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` |
+| Behind a database server | a database of its own on IT's server | a separate database on IT's server, which IT may place on another server |
 
-**Runtime persistence** holds Messages, Stream references or payloads per
-policy, correlation identifiers and history, process state, retry state, failure
-state, replay checkpoints, recovery state and runtime audit records.
+**Runtime matter is central** in the runtime database — the Ledger, its
+claims and its state — so another node with matching node roles can pick up.
 
-**Management** holds node registration, cluster membership, installed Modules,
-available Handlers and Extensions, configuration versions, deployment state,
-operator metadata and management audit.
+**The administration database holds what must be shared and kept over
+time, and no configuration:**
 
-They are separate databases and stay separate. Their access patterns are
-opposites — one is written constantly and read by key, the other is written
-rarely and queried arbitrarily — and one engine serving both serves neither.
-The owner chose the two engines on 2026-09-25 (ADR-0015, amendment); each is
-a technology under `xmip-core-persist`, so a device build can leave RocksDB
-and its C++ toolchain out.
+- administration: node registration, cluster membership, installed Modules,
+  available Handlers and Extensions, configuration versions and deployment
+  state;
+- operator state: what is paused, by whom and when — every node honors a
+  pause;
+- audit, moved there from the runtime database by the audit keeper — on
+  every backend (the owner: *RocksDB is the first storage for audit records,
+  then transferred to SQLite, RocksDB for speed, SQLite for persistence over
+  time*). The `audit.toml` file sink is replaced by this, for the tools
+  outside a node as well — the cmdlets, the operation web and `xmip-cli`
+  write to the cluster's Storage nodes (ADR-0062, amendment 2026-10-01); the
+  operating system's log stays the fallback (ADR-0062 clause 3).
 
-**Both are encrypted, above the engine** (ADR-0063 clause 2). Persist's
+**They are separate databases and stay separate, whatever engine holds
+them.** Their access patterns are opposites — one is written constantly and
+read by key, the other is written rarely and queried arbitrarily — and one
+database serving both serves neither. That holds for RocksDB and SQLite on an
+embedded Storage node and for two databases on a server alike.
+
+**What is behind Xmip Storage is IT's to design** (the owner: *The storage
+node may or may not carry the SQL storage, it is an IT-infrastructure
+question… How IT-infrastructure designs their Database servers is their
+concern*). Two forms are decided:
+
+| | A shared database server (option A) | One embedded Storage node |
+| --- | --- | --- |
+| For | a cluster | a single machine, an edge site |
+| What | database servers IT runs on the internal network — PostgreSQL first, through `xmip-core-persist-postgresql`; SQL Server later | RocksDB and SQLite through `xmip-core-persist`, in the node's `data/` |
+| Clustering, failover, backup | IT's | **none**: no failover, stated plainly |
+| A claim | a conditional update: set the owner where the owner is empty or lapsed | the same condition, in RocksDB on the one node |
+| A write counts | once the runtime database has committed it | once it is synced to disk; group commit shares one sync among concurrent writes |
+
+**PostgreSQL is the first database server Xmip Storage supports** (the
+owner, 2026-10-01: *Don't leave out the elephant, Postgres*), as a persist
+technology, `xmip-core-persist-postgresql`, reusing the PostgreSQL wire
+protocol the estate already speaks in its PostgreSQL transport — one
+implementation, no async runtime. SQL Server follows later.
+
+**A node finds its Storage nodes from its TOML** (the owner, 2026-10-01,
+asked whether a node should find them from a list of their addresses in its
+TOML, tried round robin: *Yes*): the node's configuration lists their
+addresses, for example
+`[storage] nodes = ["storage-1.example:7443", "storage-2.example:7443"]`, and
+the node tries them round robin.
+
+Option A is chosen (the owner: *Go ahead*). **Every write counts only once the
+database has it durably** (the owner: *Safe way*), the hand-ons between steps
+included.
+
+**A Storage node under test** (the owner, 2026-10-01: *for testing purposes
+the Xmip Nodes of Storage type can use SQLite in memory for administration
+and RocksDB for runtime*) keeps its administration database in SQLite in
+memory and its runtime database in RocksDB, on disk in the test's directory,
+so a kill test still proves the runtime database durable.
+
+**The engine is no longer a node's choice.** The `[store] engine` choice is
+removed: an embedded Storage node's runtime database is always RocksDB, and
+the record of 2026-09-30 that let a node name SQLite as its runtime engine
+is superseded (ADR-0015 and ADR-0018, amendments 2026-10-01).
+
+**Configuration is a node's own execution tree, in memory** (the owner,
+2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
+will not go in use until thread or process is started, reused… But runtime
+matter has to be central so other nodes with matching NodeRoles can pick
+up*; and, on the in-memory database he had first
+asked for, *So no in-memory database it is*). Each node reads its TOML
+configuration once, as it starts, and holds it as its **execution tree** —
+its Locations, its Subscriptions with their compiled filters, its Xmip
+Processes, its Send Ports — which `build_execution_tree` in
+`xmip-core-runtime` already builds; that tree is the node's configuration at
+runtime. It is not central and not in Xmip Storage. A changed TOML file takes
+effect when the thread or Host Service that uses it is started again, never
+mid-flight; the operation tools and editors change the TOML file, never a
+database. An in-memory database would be a second copy of the tree, added
+only if something needs to query configuration in ways the tree does not
+answer (ADR-0031, amendment 2026-10-01). This agrees with ADR-0031's ruling
+of 2026-09-26: *Databases are for
+runtime and history, not configuration.*
+
+**Later, only if option A's latency is too slow:**
+
+- **Option C** — an embedded engine on each Storage node, Xmip copying from a
+  claimed primary to standbys asynchronously, and a witness holding the
+  claim on which node is primary. It would bring into Xmip what A leaves to
+  IT: ordered replication, a promote command, epoch fencing (each promotion
+  raising an epoch, and a write carrying an older one refused), and a loss
+  window — writes not yet copied when the primary dies.
+- **Option D** — C for the hot runtime database, A for the administration
+  database and its history.
+
+**Rejected: option B**, an embedded engine on a shared disk. RocksDB is not
+supported on network file systems.
+
+The owner chose RocksDB and SQLite as the embedded engines on 2026-09-25
+(ADR-0015, amendment); each is a technology under `xmip-core-persist`, so a
+device build, which keeps no store, leaves both out.
+
+**Encryption** (the owner, 2026-10-01: *Xmip encrypts to Xmip Node with
+Role/Type Storage, from there it is the IT infrastructure/operations to
+decide*; and for the embedded Storage node, *Well then Xmip has to support
+encryption of that*): everything between a node and a Storage node travels
+over Xmip's own TLS; behind a database server IT runs, encryption at rest is
+IT's and operations' decision — SQL Server's Transparent Data Encryption or
+encrypted disks, for example; on an embedded Storage node, test nodes
+included, Xmip encrypts its own files at rest itself (ADR-0063 clauses 1 to 3,
+amendment 2026-10-01).
+
+**On an embedded Storage node both are encrypted, above the engine**
+(ADR-0063 clause 2). Persist's
 `EncryptedStore` seals every record with AES-256-GCM before either engine
 sees it and looks it up by a keyed hash, so neither file holds what is stored
 or what it is stored under; the data key is wrapped by the key home,
@@ -396,7 +547,7 @@ What must be persisted to resume safely:
 Journey state        where the work is
 Checkpoint           the last safe execution point
 Wait conditions      which Events or correlations it is waiting for
-Recovery lease       which node is currently recovering it
+Claim                which node holds it, and until when
 Deduplication record which source fingerprints and Messages were already accepted
 Audit position       how far the work has been audited
 ```
@@ -408,8 +559,9 @@ Xmip Service starts
     -> read configuration
     -> validate the execution tree
     -> start Host Services, which load Modules and register capabilities
-    -> scan persisted active, waiting and suspended work
-    -> acquire a recovery lease per Journey
+    -> start each Host Service's pools
+    -> find lapsed work: claims nobody renewed
+    -> claim it through Xmip Storage
     -> restore the checkpoint
     -> resume, or keep waiting
     -> continue the audit
@@ -417,18 +569,53 @@ Xmip Service starts
 
 **Recovery is cluster-scoped.** Any capable node may resume work if it can
 satisfy the required capabilities. **The same Journey must never be recovered by
-two nodes at once**, and how that is guaranteed is **open**.
+two nodes at once** — open until 2026-10-01, and answered then by claims
+through Xmip Storage (the owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day).
 
-ADR-0017 answered it with a cluster-wide lease and ADR-0024 retired that record:
-a lease in per-node persistence proves nothing to another node, which is why
-`ExclusiveScope::Cluster` was never servable. ADR-0024's answer — claim the
-artifact at the endpoint — settles arrivals and settles nothing here, because a
+**A claim is a time-limited conditional update in the database behind Xmip
+Storage** — set the owner where the owner is empty or lapsed — renewed while
+the work runs. A node that dies stops renewing; its claims lapse, and any
+other node capable of the work claims it and resumes from the last finished
+step. Two nodes cannot both hold it, because the update is conditional in
+the one database every Storage node is in front of. The owner recalled this
+as the old exclusiveness; the word is ADR-0024's, a claim.
+
+ADR-0017 answered this with a cluster-wide lease, and ADR-0024 retired that
+record: a lease in per-node persistence proves nothing to another node.
+ADR-0024's claim at the endpoint settles arrivals and nothing here, because a
 Journey mid-flight is Xmip's own state and has no endpoint to claim it at.
+The database behind Xmip Storage is that missing one place, and a
+time-limited claim is right there for the reason the endpoint's own claims
+end on their own — a dead holder must let go without anyone's help (ADR-0024,
+amendment 2026-10-01).
 
-This is the same open problem as *work does not move by itself* in
-`runtime-model.md` section 3: a Message in node A's ToDo is node A's work, and
-moving it is an explicit act nobody has designed. Recovery is that act under a
-different name.
+**Every hand-on is one atomic write**: the step's result, the next Journey
+and the claim released, together. On start a Host Service starts its pools,
+finds lapsed work, restores checkpoints, resumes or keeps waiting, and
+continues the audit. **Shutdown drains** and gives its claims back
+explicitly, rather than leaving them to lapse (ADR-0018 clause 12). **The
+Xmip Service dying stops no work** (ADR-0018 clause 5). **A Storage node
+dying stops no work either** while another is left: every node reaches the
+next one round robin. **The database server's failover is IT's.** An
+embedded Storage node has none: while it is down, its site stores nothing.
+
+### What Xmip does, and what the infrastructure does
+
+The owner, 2026-10-01: *Now we are getting into failover and load balancing
+which will be IT-infrastructure functionality, unless you think it is easy to
+implement.* The split agreed, as re-decided later that day:
+
+| Xmip | IT infrastructure |
+| --- | --- |
+| Xmip Storage: the storage operations every node calls, on one or more Storage nodes | the database server behind them: its clustering, failover and backup |
+| round robin over the Storage nodes | load balancing incoming traffic |
+| claims: conditional, time-limited, renewed while working | |
+| one atomic write per hand-on, counted once the database has it durably | |
+
+Replication between Storage nodes, a promote command and epoch fencing are
+not Xmip's under option A; they are option C's, recorded in section 7 for
+later, only if A's latency is too slow.
 
 Xmip cannot own every bad decision in configuration or custom code, but it
 mitigates avoidable loss:

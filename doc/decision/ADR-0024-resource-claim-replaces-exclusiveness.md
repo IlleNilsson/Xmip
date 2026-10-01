@@ -3,7 +3,9 @@
 - Status: Accepted
 - Date: 2026-08-27
 - Supersedes: ADR-0017 (Exclusiveness)
-- Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary)
+- Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
+  ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
+  Xmip Storage), ADR-0056 (amendment 2026-10-01: the Storage role)
 
 ## In brief
 
@@ -11,7 +13,8 @@
 - Subject: A claim at the endpoint, not a lease inside Xmip
 - Name: A claim at the endpoint
 - Order: 7
-- Concepts: Claim, claimable artifact; Exclusiveness, leases, renewal (retired)
+- Concepts: Claim, claimable artifact; Exclusiveness, leases, renewal (retired);
+  Journey claim
 - Note: supersedes ADR-0017
 
 `xmip-core-exclusiveness` is retired — the module, the repository, the four
@@ -177,9 +180,11 @@ lease expiry was invented to provide, obtained without inventing it.
   two nodes at once and pointed at ADR-0017's cluster lease for the guarantee.
   Claiming an artifact settles arrivals and settles nothing here: a Journey
   mid-flight is Xmip's own state and has no endpoint to claim it at. It is the
-  same problem as *work does not move by itself* — a Message in node A's ToDo is
-  node A's work — under a second name, and it belongs with however that is
-  eventually designed rather than with a lease reinstated for one case.
+  same problem as *work does not move by itself* — a Message in a store one
+  node wrote was that node's work — under a second name, and it belongs with
+  however that is eventually designed rather than with a lease reinstated for
+  one case. *Closed by the amendment of 2026-10-01: a Journey is claimed
+  through Xmip Storage.*
 - The acquisition queue, fairness and acquisition timeout of ADR-0017 clauses 13
   and 14 go too. Nothing queues for an artifact: a node that finds one claimed
   takes the next one, which is clause 4's point about not claiming the
@@ -213,3 +218,42 @@ the time, and a node that starts, or the cluster, returns a claim whose
 owner is gone to the inbox — a recovery the exclusive open never needed.
 `transport/.src/claim.rs` and the file transport follow in phase C's first
 slice.
+
+## Amendment, 2026-10-01: a Journey is claimed through Xmip Storage
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day: *to have one or more Xmip Nodes
+with role Storage would be a safety… Xmip could just do a round robin over
+Xmip Nodes roled Storage*; *The storage node may or may not carry the SQL
+storage, it is an IT-infrastructure question… How IT-infrastructure designs
+their Database servers is their concern*; and, on a shared database server
+IT runs, option A, *Go ahead*. Also *All DB records have to be
+central and clusterable, if one node fails another one should be able to
+pick up*; and on the split, *Now we are getting into failover and load
+balancing which will be IT-infrastructure functionality, unless you think it
+is easy to implement*. The owner recalled the mechanism as the old
+exclusiveness; the word is this record's, a claim.
+
+The Consequences left Journey recovery across nodes open, because a Journey
+mid-flight is Xmip's own state and has no endpoint to claim it at. Every node
+now reaches the Ledger through Xmip Storage, the nodes declaring the Storage
+role, and behind them one database — a server IT runs, or one embedded
+Storage node (`runtime-model.md` section 3). **A Journey is claimed there**:
+a conditional update — set the owner where the owner is empty or lapsed —
+time-limited, renewed while the work runs. A dead node's claims lapse, and
+another capable node claims and resumes from the last finished step.
+
+**Why a time-limited claim, when this record retired leases.** The lease was
+retired because it lived in per-node persistence, which proves nothing to
+another node, and because an artifact already had an owner — the endpoint —
+that knew more than Xmip did. Neither holds for a Journey. Its state has no
+endpoint; the database behind Xmip Storage is the one place every node's
+claim is decided, so a conditional update there is seen by all of them, as a
+claim at the endpoint is. And the holder may die without a word, so the
+claim must end on its own: the endpoint's claims do that on the endpoint's
+terms (clause 7), and a claim in the database does it by its time limit. For
+an artifact at an endpoint this record stands unchanged.
+
+The database server's failover is IT's (`deployment-model.md` section 9). Epoch
+fencing belongs to option C, recorded for later in `deployment-model.md`
+section 7, and is not part of this decision.

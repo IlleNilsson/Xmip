@@ -206,3 +206,86 @@ document and the Ansible role each name the site their node is built from,
 Five example sites, one per target: `hospital-interface` (server),
 `factory-gateway` (edge), `personal-computer` (computer), `b2b-exchange`
 (hosted) and `field-sensor` (device, refused as above).
+
+## Amendment, 2026-10-01: Xmip Storage, and RocksDB always the embedded runtime engine
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day: *to have one or more Xmip Nodes
+with role Storage would be a safety… Xmip could just do a round robin over
+Xmip Nodes roled Storage*; *The storage node may or may not carry the SQL
+storage, it is an IT-infrastructure question… How IT-infrastructure designs
+their Database servers is their concern*; and, on a shared database server
+IT runs, option A, *Go ahead*. The split of the
+embedded store is his too: *RocksDB is the first storage for audit records,
+then transferred to SQLite, RocksDB for speed, SQLite for persistence over
+time*.
+
+**No node opens a database of its own.** Every node calls Xmip Storage, the
+nodes declaring the Storage role (ADR-0056, amendment of this date), round
+robin. Xmip Storage always keeps two databases, the runtime database (the
+Ledger) and the administration database (the owner: *We still need the
+distinction between runtime and administration databases, regardless of
+backend database technology*). Behind the Storage nodes is one of two forms
+(`deployment-model.md` section 7):
+
+- **a shared database server IT runs** on the internal network —
+  PostgreSQL first, SQL Server later — chosen as option A; the two databases are
+  separate databases there, which IT may place on different servers, and
+  their clustering, failover and backup are IT's;
+- **one embedded Storage node**, for a single machine and an edge site:
+  RocksDB for the runtime database and SQLite for the administration
+  database, both through `xmip-core-persist`, with no failover.
+
+**On the embedded Storage node the runtime engine is always RocksDB.** SQLite
+is never the runtime engine there; it is the administration database. On
+every backend the audit keeper moves audit records from the runtime database
+to the administration database. So the earlier amendment of this
+date is superseded where it paired `edge` and `computer` with SQLite as
+their store, and the `[store] engine` choice of ADR-0018's amendment of
+2026-09-30 is removed (ADR-0018, amendment of this date). The device target
+keeps no store and carries neither engine. What the 2026-09-25 amendment
+priced — a C++ toolchain and libclang in every build with the runtime store,
+harder cross-compilation to arm64 — is priced wherever an embedded Storage
+node is built.
+
+**A Storage node under test** (the owner, 2026-10-01: *for testing purposes
+the Xmip Nodes of Storage type can use SQLite in memory for administration
+and RocksDB for runtime*) keeps its administration database in SQLite in
+memory and its runtime database in RocksDB, on disk in the test's directory,
+so a kill test still proves the runtime database durable.
+
+**Configuration is a node's own execution tree, in memory** (the owner,
+2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
+will not go in use until thread or process is started, reused… But runtime
+matter has to be central so other nodes with matching NodeRoles can pick
+up*; and, on the in-memory database he had first
+asked for, *So no in-memory database it is*). Each node reads its TOML
+configuration once, as it starts, and holds it as its **execution tree** —
+its Locations, its Subscriptions with their compiled filters, its Xmip
+Processes, its Send Ports — which `build_execution_tree` in
+`xmip-core-runtime` already builds; that tree is the node's configuration at
+runtime. It is not central and not in Xmip Storage. A changed TOML file takes
+effect when the thread or Host Service that uses it is started again, never
+mid-flight; the operation tools and editors change the TOML file, never a
+database. An in-memory database would be a second copy of the tree, added
+only if something needs to query configuration in ways the tree does not
+answer (ADR-0031, amendment 2026-10-01).
+
+**Later, only if option A's latency is too slow:** option C, an embedded
+engine per Storage node with Xmip copying from a claimed primary to standbys
+and a witness holding the claim, and option D, C for the hot Ledger and A
+for history. **Rejected:** option B, an embedded engine on a shared disk —
+RocksDB is not supported on network file systems.
+
+**PostgreSQL is the first database server Xmip Storage supports** (the
+owner, 2026-10-01: *Don't leave out the elephant, Postgres*), as a persist
+technology, `xmip-core-persist-postgresql`, reusing the PostgreSQL wire
+protocol the estate already speaks in its PostgreSQL transport — one
+implementation, no async runtime. SQL Server follows later. A Storage node
+in front of a database server is built with it. This closes the question
+this amendment had left open.
+
+Audit is written through Xmip Storage (ADR-0062, amendment of this date),
+and Xmip Storage is reached over Xmip's TLS (ADR-0063, amendment of this
+date). The target profiles under `deploy/profile/target` still name SQLite
+for `edge` and `computer`; the code follows this record.

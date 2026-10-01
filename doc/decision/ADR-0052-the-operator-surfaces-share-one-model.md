@@ -3,7 +3,8 @@
 - Status: Accepted
 - Date: 2026-09-11
 - Related: ADR-0013 (a Subscription paused and resumed, the Subscriptions
-  view; its amendment 2026-09-30), ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
+  view; its amendment 2026-09-30; the Dead Message Queue as Ledger state and
+  its view, its amendment 2026-10-01), ADR-0062 (every Xmip tool audits, through `Xmip.Surface`'s
   `ProgramAudit` for every .NET surface; the Audit view reads it back, its
   amendment 2026-09-29), ADR-0014 (the operator surfaces;
   amendments 2026-08-26, the ABI is the interface into Xmip; 2026-09-05, the
@@ -1692,3 +1693,25 @@ through `xmip_role_declared_v1`, `NodeCapability.Stages` reads which stages
 a node serves through `xmip_role_stages_v1`, and the script module's
 `ConvertTo-XmipNodeRole`, its RoundTrip refusal and its roster reading call
 them (ADR-0027, amendment of the same day). No surface writes a role word.
+
+## Amendment, 2026-10-01: a seventh view, the Dead Message Queue — decided, to be built
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant: he wants a new operation view, **Dead Message Queue**.
+
+An accepted Message that no Subscription matched is Ledger state with its
+receive context, validation results, promoted properties and each
+Subscription's reason for declining (ADR-0013, amendment of this date;
+`runtime-model.md` section 9). The view:
+
+- **Lists it per cluster and node**, as every view drills.
+- **Opens one** to show its promoted properties and every Subscription's
+  decline.
+- **Offers Replay as an Operator act**, once a Subscription is added or
+  fixed: the Message is re-published with the context it accumulated. An
+  Observer sees the list and no act, by the one role rule of the amendment of
+  2026-09-29.
+
+Decided and not built. Its place among the tabs, its columns, and the
+command line's and PowerShell's forms are for the build to propose, and every
+surface follows in the same change (ADR-0014).

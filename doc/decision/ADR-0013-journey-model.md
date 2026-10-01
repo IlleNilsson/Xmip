@@ -12,7 +12,7 @@ point of refusal.
 - Subject: Message disposition and the Journey
 - Name: The Journey model
 - Order: 2
-- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; DMQ; Journey, Journey states; Publication, Subscription matching; Subscription, paused and resumed
+- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; Dead Message Queue, DMQ; Journey, Journey states; Publication, Subscription matching; Subscription, paused and resumed
 
 A Journey is a line, not a tree: a Publication produces one Journey per matched
 Subscription, and zero matches means no Journey at all. A Journey exists only
@@ -24,9 +24,12 @@ Terminal states are `Completed`, `Failed` and `Dismissed` — the last added
 fault.
 
 An operator pauses and resumes a Subscription, and never removes one: a
-paused Subscription holds what it matches in the node's runtime store, and
-a resume picks it up oldest first; a Subscription is added and removed in
-the TOML configuration (amendment 2026-09-30).
+paused Subscription holds what it matches in the Ledger, and a resume picks
+it up oldest first; a Subscription is added and removed in the TOML
+configuration (amendments 2026-09-30 and 2026-10-01). An accepted Message no
+Subscription matched is Dead Message Queue state in the Ledger, replayed by
+an Operator, and the sender is acknowledged after the whole receive cycle
+(amendment 2026-10-01).
 
 ## Context
 
@@ -484,9 +487,13 @@ the owner to overrule.
   own. **This needs a ruling; it is not resolved here.**
 - **Which module owns the Xmip DMQ.** Retention ages things out on policy; an accepted Message
   shall never disappear. Those pull in opposite directions.
+  *Where it lives is answered 2026-10-01: Ledger state (amendment of that date). Which module
+  owns it is still open.*
 - **"Final disposition" versus replay.** An operator who adds the missing Subscription will
   want to replay from the DMQ, where a faulty Stream is replayable. Either "final" means its
   Journey ends there, or the asymmetry needs a reason.
+  *Answered 2026-10-01: Replay from the Dead Message Queue is an Operator act (amendment of
+  that date).*
 - **`JourneyState` cannot distinguish a sender's bad data from a broken system.** The ABI makes
   that distinction — `XMIP_E_MALFORMED` versus `XMIP_E_IO` — because they wake different
   people. `Failed` covers both.
@@ -507,3 +514,38 @@ likely to need correction.
 An earlier revision of this ADR described a single security gate and placed Accept at
 Validation. Both were wrong: v1.2 specifies two security passes with Message creation between
 them, and `message-disposition.md` places Accept at Message creation. Corrected here.
+
+## Amendment, 2026-10-01: the Dead Message Queue is Ledger state, and the sender is acknowledged after the receive cycle
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant; his words are quoted where they decided.
+
+- **Acknowledgement after the whole receive cycle** (the owner: *On arrival
+  each Stream is written to the node's Ledger and then when the Receive cycle
+  is complete, Promote, Validate and what not then the sender is
+  acknowledged*). The lifecycle above runs inside the receive call, with the
+  Stream written to the Ledger in chunks through Xmip Storage right
+  after transport authorization and before Preparation Steps; Publication
+  writes the Message record, audited; then the sender is acknowledged. Data
+  Transfer and Batch Load are acknowledged once accepted and validated; a
+  Composite interaction holds the call until the response an Xmip Process
+  produced (`runtime-model.md` section 5). Clauses 1 to 3 stand: a refusal
+  at the transport keeps nothing, the Stream is kept from Message creation
+  on, and a Message failing Validation is kept and answered where the
+  protocol can, with no Journey.
+- **The Dead Message Queue is Ledger state** (clause 4). A Publication that
+  matched nothing is kept in the Ledger (`runtime-model.md` section 3) with
+  its receive context, validation results, promoted properties and each
+  Subscription's reason for declining — not in a store of its own. This
+  answers where it lives; which module owns it stays open below.
+- **Replay from it is an Operator act**, once a Subscription is added or
+  fixed, from a new view, **Dead Message Queue** (ADR-0052, amendment of this
+  date). That answers the open question *"final disposition" versus replay*:
+  the Message is re-published by an Operator's Replay, as the amendment of
+  2026-08-26 describes re-publishing.
+- **Routing writes atomically.** The Publication is marked routed and its
+  Journeys created in one atomic write; nothing is deduplicated (clause 4c).
+- **A paused Subscription's Journey is written and held** until the
+  Subscription is resumed, and picked up oldest first. This supersedes the
+  amendment of 2026-09-30 where it said no Journey opens for a paused
+  Subscription until it resumes; the rest of that amendment stands.

@@ -109,48 +109,129 @@ below — they are constantly confused and are not the same guarantee.
 it, which is what makes replay from a checkpoint meaningful and what makes
 "an accepted Message shall never disappear" achievable rather than aspirational.
 
-### The ToDo
+### The Ledger
 
-The queue has a name: **the ToDo**, and there is **one per node**.
+The queue has a name: **the Ledger** (the owner, 2026-10-01: *ToDo is a bad
+name, propose a better one*; the assistant proposed Ledger; the owner:
+*Ledger is good*). It holds every Stream, written in chunks, every Message
+and every Journey, with the state of each Xmip Process, retry, failure and
+replay state, and the Messages a paused Subscription holds.
 
-BizTalk called its equivalent the MessageBox, and it is the right comparison for
-the same reason it is the right warning. The MessageBox was a shared SQL
-database holding every message and every subscription for the whole group, and
-it was where BizTalk went to die under load — every scale-out story ended in
-"add another MessageBox and partition across them", which is an admission that
-the design put a cluster-wide write hotspot at the center of the runtime.
+**The Ledger belongs to the cluster, not to a node** (the owner, 2026-10-01:
+*There is nothing local about either RocksDB or SQLite, they are cluster
+services running on one or more nodes*; and *All DB records have to be
+central and clusterable, if one node fails another one should be able to
+pick up*).
 
-**A ToDo belongs to one node and is written only by that node.** There is no
-shared write path, so there is nothing to contend for and nothing to partition
-later. It falls out of `deployment-model.md` section 7 rather than being an
-extra decision: an *embedded* store is per-node by definition.
+**Xmip Storage is the doorway to it.** The nodes declaring the **Storage**
+role (`deployment-model.md` sections 3 and 7) serve every storage operation —
+write a Stream chunk, write a Message, claim a Journey, hand it on, write an
+audit record — and every other node calls those operations, never a database
+directly. A node reaches the Storage nodes
+round robin, from the list of their addresses in its TOML, and more than
+one Storage node is the safety (the owner: *to
+have one or more Xmip Nodes with role Storage would be a safety… Xmip could
+just do a round robin over Xmip Nodes roled Storage*).
 
-It also means the smallest deployment is coherent. A purpose-compiled runtime on
-a sensor gateway has a ToDo, no cluster, no broker, and the same execution
-model as a forty-node estate.
+**What is behind the Storage nodes is decided per site** (the owner, later on
+2026-10-01: *The storage node may or may not carry the SQL storage, it is an
+IT-infrastructure question… How IT-infrastructure designs their Database
+servers is their concern*). Two forms are decided:
 
-One thing this costs, and it is real:
+- **A shared database server** that IT runs on the internal network —
+  PostgreSQL first, SQL Server later — chosen as option A (the owner: *Go
+  ahead*). Its clustering, failover and backup are IT's.
+- **One embedded Storage node**, RocksDB and SQLite through
+  `xmip-core-persist`, for a single machine and an edge site. **It has no
+  failover**: when that node is gone, so is the site's storage until it
+  returns. A sensor gateway is its own Storage node, so it has a Ledger, no
+  broker, and the same execution model as a forty-node estate.
 
-**Work does not move by itself.** A Message in node A's ToDo is node A's
-work. Distributing across nodes is now an explicit act rather than a consequence
-of everyone reading one table, and how that act happens is not yet designed. It
-is recorded in `doc/planning/open-problems.md`.
+**Either way Xmip Storage keeps two databases** (the owner: *We still need
+the distinction between runtime and administration databases, regardless of
+backend database technology*): the **runtime database**, which is the
+Ledger, and the **administration database** — RocksDB and SQLite on an
+embedded Storage node, two separate databases on IT's servers behind option
+A (`deployment-model.md` section 7). Runtime matter is central there, so
+another node with matching node roles can pick up; the administration
+database keeps what must be shared and kept over time — audit history,
+operator state, deployment state, cluster membership — and no configuration.
 
-*It used to cost two.* The second was cluster-wide exclusiveness, which needed
-somewhere shared to live and had nowhere — a lease in per-node persistence
-proves nothing to another node. ADR-0024 removed the cost by removing the
-lease: a claim taken at the endpoint is cluster-wide already, because the
-endpoint is one thing however many nodes are asking. The shared write path that
-was missing turned out to be the Party's storage, and it was never Xmip's to
-build.
+**Configuration is a node's own execution tree, in memory** (the owner,
+2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
+will not go in use until thread or process is started, reused… But runtime
+matter has to be central so other nodes with matching NodeRoles can pick
+up*; and, on the in-memory database he had first
+asked for, *So no in-memory database it is*). Each node reads its TOML
+configuration once, as it starts, and holds it as its **execution tree** —
+its Locations, its Subscriptions with their compiled filters, its Xmip
+Processes, its Send Ports — which `build_execution_tree` in
+`xmip-core-runtime` already builds; that tree is the node's configuration at
+runtime. It is not central and not in Xmip Storage. A changed TOML file takes
+effect when the thread or Host Service that uses it is started again, never
+mid-flight; the operation tools and editors change the TOML file, never a
+database. An in-memory database would be a second copy of the tree, added
+only if something needs to query configuration in ways the tree does not
+answer (ADR-0031, amendment 2026-10-01).
+
+**Encryption** (the owner, 2026-10-01: *Xmip encrypts to Xmip Node with
+Role/Type Storage, from there it is the IT infrastructure/operations to
+decide*; and for the embedded Storage node, *Well then Xmip has to support
+encryption of that*): everything between a node and a Storage node travels
+over Xmip's own TLS; behind a database server IT runs, encryption at rest is
+IT's and operations' decision — SQL Server's Transparent Data Encryption or
+encrypted disks, for example; on an embedded Storage node, test nodes
+included, Xmip encrypts its own files at rest itself (ADR-0063, amendment
+2026-10-01; `deployment-model.md` section 7).
+
+**The comparison is BizTalk's MessageBox, and so is the warning.** The
+MessageBox was a shared SQL database holding every message and every
+subscription for the whole group, and it was where BizTalk went to die under
+load — every scale-out story ended in "add another MessageBox and partition
+across them", which is an admission that the design put a cluster-wide write
+hotspot at the center of the runtime. Said honestly, option A is a shared
+database too, and its write rate is the cluster's limit. What differs is the
+doorway: no node writes the database directly, so Xmip Storage's operations
+are the only access pattern the database meets, and how the database is
+built, clustered and tuned for them is IT's. If A's latency proves too slow,
+two forms are recorded for later, and only for then
+(`deployment-model.md` section 7): C, an embedded engine per Storage node
+with Xmip copying from a claimed primary to standbys, and D, C for the hot
+Ledger with A for history.
+
+**Every Ledger write counts only once the database has it durably** (the
+owner, 2026-10-01: *Safe way*), the hand-ons between steps included. Behind a
+database server that is its commit; on the embedded Storage node it is a sync
+to disk, and group commit lets many concurrent writes share one sync.
+
+**Work moves by claim.** A node takes a Journey, or a Publication to route, by
+a claim through Xmip Storage: a conditional update in the database — set the
+owner where the owner is empty or lapsed — time-limited, and renewed while
+the work runs. A node that dies stops renewing, its claims lapse, and any
+other node capable of the work claims it and resumes from the last finished
+step. Every hand-on is one atomic write — the step's result, the next Journey
+and the claim released together — so a lapse never finds half a step. What
+Xmip does and what IT's infrastructure does is `deployment-model.md`
+section 9.
+
+*It used to cost two things.* The first was that work did not move by itself:
+a store written by one node was that node's, and moving its work was an act
+nobody had designed — the contradiction with section 22's *Process State
+belongs to the cluster*, resolved in section 23 note 12. The second was
+cluster-wide exclusiveness for arrivals, which ADR-0024 removed by claiming
+the artifact at the endpoint, where the Party's storage is the shared write
+path. A Journey's claim is the other case: Xmip's own state has no endpoint,
+and the database behind Xmip Storage is where it is claimed (ADR-0024,
+amendment 2026-10-01). The owner recalled it as the old exclusiveness; the
+word is ADR-0024's, a claim.
 
 ### The queue is the store, not a broker
 
-**Xmip has no message broker and needs none.** The ToDo is not a component.
+**Xmip has no message broker and needs none.** The Ledger is not a broker.
 It is the shape of the persistence model:
 
 ```text
-Stream written to runtime persistence
+Stream written to the Ledger, in chunks
     Message record created, referencing that Stream
         Journey record created when the Message reaches a Receive Port
 ```
@@ -160,13 +241,17 @@ completing work is a state transition. That is a queue in every sense that
 matters — durable, ordered where ordering is configured, survives restart — and
 it is MSMQ, MQ Series or RabbitMQ in none of them.
 
-This is the same argument ADR-0024 makes about claiming an artifact. Xmip
-already requires a durable store; making it also require somebody else's broker
-would mean depending on another system's cluster to answer a question about its
-own. The engine choice in `deployment-model.md` section 7 follows from this and
-not the other way round: high write volume, read by key, replay from a known
-state *is* the access pattern of a work queue, which is why runtime persistence
-is a RocksDB-style embedded key/value store.
+Xmip already requires a durable store, and a broker beside it would be a
+second system to run for a question the store already answers. That holds
+offline, and offline means no internet — the internal network and a site's
+own servers are fine (the owner's correction, 2026-10-01; ADR-0045). So a
+database server a site runs on its own network, behind Xmip Storage, is the
+site's infrastructure, as its network and its disks are, and not a
+dependency on somebody else's cloud. Xmip still needs no broker. The access
+pattern is a work queue's — high write volume, read by key, replay from a
+known state — which is what the embedded Storage node's RocksDB is chosen for
+and what Xmip Storage's operations ask of a database server
+(`deployment-model.md` section 7).
 
 **The manifest will mislead someone about this.** `xmip-core-transport-msmq`,
 `-rabbitmq`, `-kafka`, `-ibm-mq` and a dozen more exist — as **integration
@@ -199,7 +284,7 @@ unrelated sequences run in parallel while each sequence stays intact. The key is
 configured; there is no useful default.
 
 **In-sequence selection.** The holder takes the next item for that key, not the
-next available item. That is a different query against the ToDo, and it is
+next available item. That is a different query against the Ledger, and it is
 why ordering is a queue property.
 
 **A failure policy, which nobody thinks about until it happens.** When an
@@ -208,7 +293,13 @@ head-of-line blocking, one bad Message stops a Party's traffic until an
 operator intervenes — or it is set aside and the sequence continues, which
 breaks the ordering that was the point. Both are defensible; **neither is a
 default that can be chosen silently**, because the first surprises an operator
-with a stall and the second surprises them with reordering.
+with a stall and the second surprises them with reordering. A Sequential
+sequence's failure policy, block or skip, must therefore be configured, never
+left to a silent default (the owner, 2026-10-01, accepting it for the send
+side, section 10). Configuration states both on the Send Port, as
+`order_key` and `on_failure`, and a Sequential one without `on_failure` is
+refused at startup (section 20, *Where the runtime's settings are
+configured*).
 
 ### Execution style
 
@@ -220,10 +311,11 @@ Parallel      many at once, no ordering guarantee
 Concurrent    many in flight, interleaved, no ordering guarantee
 ```
 
-**Sequential enforcement is state-based and durable.** The sequence position
-lives in the ToDo, not in the memory of whatever is currently running it. A
-node that dies mid-sequence loses nothing: the position is on disk, another node
-takes the claim and continues from it. Enforcing order through in-memory
+**Sequential enforcement is state-based and durable.** The sequence position,
+by order key, lives in the Ledger, not in the memory of whatever is currently
+running it. A node that dies mid-sequence loses nothing: the position is
+behind Xmip Storage, its claim lapses, and another node claims it and
+continues from it. Enforcing order through in-memory
 state would mean a restart either replays or skips, and neither is acceptable
 for something whose entire purpose is that the order held.
 
@@ -235,6 +327,72 @@ This is not new. It was recorded in the earliest architecture, carried in
 `Xmip-Exclusiveness-Architecture.md`, retired with ADR-0017 — which is why it speaks of
 tasks being *durably queued* — and was dropped from every consolidated
 document. Restored 2026-08-26 after the owner noticed its absence.
+
+### Threads, pools and chunks
+
+Decided by the owner, 2026-10-01, validated part by part with the assistant.
+
+**Threads, not fibers.** The owner asked *What about using Fibers instead of
+Threads?*, and threads were agreed; fibers are revisited only if measurement
+shows thread switching dominating.
+
+**A dynamic, bounded pool per step** (the owner: *Go with the dynamic,
+bounded pool*). Each step of the message path — receive per Receive Location,
+routing, the Xmip Process step, send — runs on a pool of its own. A
+CPU-bound step's pool is capped at the machine's core count. An I/O-bound
+step's pool grows while work waits, up to a configured maximum — the
+bulkhead, ADR-0018 clause 11 — and never below one thread; it shrinks after
+a configured idle time. Threads are started ahead of need, never per
+Message.
+
+**Steps hand on through the Ledger.** A step's result is serialized into
+the Ledger through Xmip Storage, and the next step's thread deserializes it
+from there. The owner's
+description: *every sub action starts a new thread, in between the stream
+shall be serialized and then on every sub a new thread deserializes the
+message from RocksDB* — realized as pools, which the owner accepted. **A
+waiting Xmip Process and a retry waiting for its backoff hold no thread**:
+their state and due time are in the Ledger, and a pool's thread picks them up
+when they are due.
+
+**A Stream is written in chunks, never whole in memory** (the owner: *A
+stream can't be written completely to memory and then into the RocksDB
+Ledger. It has to be done in calculated chunks depending on how much memory
+is available*). The chunk size is calculated from the memory available, and
+every gate — preparation, promotion, deserialization, validation,
+transformation, serialization, demotion — reads chunk by chunk.
+
+**Executing keeps the hops in one process.** A node declaring the executing
+role runs receiving, processing and sending in one Host Service for low
+latency (ADR-0056 and ADR-0018 clause 10a, amendments 2026-10-01); the steps
+still hand on through the Ledger.
+
+**Platforms.** The code and its tests are as operating-system agnostic as
+they can be (the owner: *it has to be as OS agnostic as it can*). Test runs
+on Windows alone are temporary (the owner: *We are temporarily only running
+Windows tests, for time reasons. When we are over this hurdle we will run at
+least Windows & Linux. I do not have an OS X machine*).
+
+### What proves it
+
+The tests the design is held to, decided with it on 2026-10-01 and not yet
+written. A test's Storage node keeps its administration database in SQLite in
+memory and its runtime database in RocksDB, on disk in the test's directory,
+so the kill test still proves the runtime database durable (the owner: *for
+testing purposes the Xmip Nodes of Storage type can use SQLite in memory for
+administration and RocksDB for runtime*).
+
+- a kill at each step: nothing lost, and a repeat only where at-least-once
+  allows one (section 15);
+- node failover by a lapsed claim: another node resumes from the last
+  finished step;
+- Storage round robin: a Storage node stopped, and every other node carries
+  on through the next one (`deployment-model.md` section 9);
+- a Stream far larger than the memory allowed passes, with memory bounded;
+- pools grow to their maximum and shrink when idle, and a CPU-bound pool
+  never exceeds the core count;
+- the sync's latency measured idle and under load, and reported;
+- the Dead Message Queue and its replay (section 9).
 
 ## 4. Actors and Communication Domains
 
@@ -370,6 +528,45 @@ inspect the Stream and Context before deciding whether it applies. Identity,
 Parties and the two layers are ADR-0019's; what Xmip *retains* at each refusal
 is ADR-0013's.
 
+### How a receive runs
+
+Decided by the owner, 2026-10-01, validated part by part with the assistant.
+
+Each Receive Location has a bounded pool of I/O threads (section 3), and one
+thread carries a Stream through the whole receive call:
+
+```text
+transport identification, authentication, authorization
+                         refused: nothing is kept
+-> the Stream into the Ledger, in chunks, through Xmip Storage
+-> Preparation Steps     a prepared Stream is a new Stream
+-> Message creation and default promotion
+                         configuration may inspect Stream and Context
+-> optional message identification, authentication, authorization
+-> Contract implication
+-> optional deserialization
+                         processing depth decides how far (section 7)
+-> Validation
+-> Publication           the Message record in the Ledger, audited
+-> acknowledgement
+```
+
+**The sender is acknowledged after the whole receive cycle** (the owner: *On
+arrival each Stream is written to the node's Ledger and then when the Receive
+cycle is complete, Promote, Validate and what not then the sender is
+acknowledged*). Data Transfer and Batch Load are acknowledged once the Message
+is accepted and validated; a Composite interaction holds the call until the
+response an Xmip Process produced (section 11).
+
+Refusals before Publication are audited receive failures. From Message
+creation on the Stream is kept; a Message failing Validation is kept and
+answered where the protocol can; no Journey exists (ADR-0013 clauses 1 to 3).
+
+**Where it is configured.** A Receive Port (section 6), a Receive
+Location's interaction type and processing depth (section 7), and retention
+and audit policy per Port and Location (section 16) are configured as
+section 20, *Where the runtime's settings are configured*, says.
+
 ## 6. Receive Port and Receive Locations
 
 A **Receive Port** is the logical common ingress for information of one
@@ -462,12 +659,39 @@ Journeys are independent because the world is. If a Process succeeds and an
 SFTP Send fails, the file cannot be un-sent. There is no transaction across a
 Send Location, so there is none across a Publication.
 
-**Zero matches produces zero Journeys**, and the Message goes to the Xmip DMQ
-with its receive context, validation results, correlation and trace references,
-audit references, failure reason, timestamps, artifact identities and
-subscription evaluation metadata. That metadata is the point: when nothing
-matched, the operator's question is "what were the promoted properties, and
-which Subscription nearly matched?" — not "what was in the body".
+**Zero matches produces zero Journeys**, and the Message goes to the Dead
+Message Queue with its receive context, validation results, correlation and
+trace references, audit references, failure reason, timestamps, artifact
+identities and subscription evaluation metadata. That metadata is the point:
+when nothing matched, the operator's question is "what were the promoted
+properties, and which Subscription nearly matched?" — not "what was in the
+body".
+
+### How routing runs
+
+Decided by the owner, 2026-10-01, validated part by part with the assistant.
+
+A routing pool, capped at the core count (section 3), claims a Publication
+and matches its promoted properties against the compiled Subscription
+filters. One Journey per match is written to the Ledger. A paused
+Subscription's Journey is written and held until the Subscription is
+resumed, and the held ones are picked up oldest first. The chain is recorded
+and bounded (ADR-0026). A Sequential artifact's position, by its order key,
+is in the Ledger. Nothing is deduplicated. **The Publication is marked routed
+and its Journeys created in one atomic write**, so a routing node that dies
+leaves either a Publication to route again or its Journeys, never half.
+
+**The Dead Message Queue is Ledger state**, not a place beside it: a
+Publication that matched nothing is kept in the Ledger with its receive
+context, validation results, promoted properties and, for each Subscription,
+its reason for declining. An operation view, **Dead Message Queue**, lists it
+per cluster and node, opens one to show its properties and the declines, and
+offers Replay as an Operator act once a Subscription is added or fixed
+(ADR-0052, amendment 2026-10-01; decided, to be built).
+
+**Routing matches against the compiled filters in the node's execution
+tree** (section 3), read from the TOML once as the node starts — decided by
+the owner, 2026-10-01: *So no in-memory database it is*.
 
 ### Duplicates are a business decision
 
@@ -578,6 +802,41 @@ Send Location -> Send Port -> Send Port Group -> Xmip Sending Process
 First one found wins, and it is resolved independently of any receive-side
 identity.
 
+### How a send runs
+
+Decided by the owner, 2026-10-01, validated part by part with the assistant.
+
+A Send pool — I/O-bound, bounded as a bulkhead (section 3) — claims a Journey
+destined for a Send Port. A Send Port Group is only a named set: routing
+already made one Journey per Send Port in it. The Send Port may transform,
+never assign, and picks its Send Locations in configured order. The Send
+Location validates the outgoing Contract while the Message is still
+structured, serializes and demotes in chunks, presents the identity found
+first along the chain above, and delivers on a kept connection.
+
+Retries are on the active Send Location; failover follows the Send Port's
+policy. When every Send Location has failed the Journey is `Failed` and its
+Message stays with it — it does not go to the Dead Message Queue. A response
+from the far end is an ingress — identified, authenticated, authorized and
+audited — and continues the same Journey (section 11). The Journey's end is
+written with its outcome, an Event is produced per outcome (section 17), and
+its audit is written through Xmip Storage (section 16).
+
+The owner accepted four additions:
+
+- **A retry waiting for its backoff holds no thread.** Its due time is
+  written to the Ledger, and the Send pool picks it up when it is due.
+- **The deduplication key is the Journey id**, not the Message id: one
+  Message may have several Journeys, each delivered once (section 15).
+- **A Sequential sequence's failure policy, block or skip, must be
+  configured** — never a silent default (section 3).
+- **A large Message's outgoing Contract validates streaming**, chunk by
+  chunk, or that Send Location refuses to start.
+
+**Where it is configured.** The Send Port's policy — the order of its Send
+Locations, retry and failover — is configured as section 20, *Where the
+runtime's settings are configured*, says.
+
 ## 11. Responses, in both directions
 
 The symmetry is exact, and it is the clearest statement of what Ports and
@@ -633,9 +892,9 @@ A Failed Journey retains its Message, Stream, Receive Port, Receive Location,
 failure stage, failure reason and the audit and retention references needed to
 diagnose it. The state answers *where* the Journey is; the cause answers *why*.
 
-**A failed Journey does not send its Message to the DMQ.** If a Message matched
-three Subscriptions and one Journey failed, the Message *was* routed. Only a
-Message matching zero Subscriptions is undeliverable.
+**A failed Journey does not send its Message to the Dead Message Queue.** If a
+Message matched three Subscriptions and one Journey failed, the Message *was*
+routed. Only a Message matching zero Subscriptions is undeliverable.
 
 ## 13. Journey control
 
@@ -702,10 +961,11 @@ rather than per transport.
 everywhere else.** Which one applies is a property of the endpoint, not a
 setting, and Xmip does not offer a switch that promises otherwise.
 
-Internally, exactly-once holds: the durable claim of ADR-0017 means one runtime
-owns a unit of work, execution checkpoints in `xmip-core-persist` mean a
-recovered Journey resumes rather than restarts, and Messages are immutable so a
-resumed Journey cannot half-produce one.
+Internally, exactly-once holds: a claim through Xmip Storage (section 3)
+means one node owns a unit of work, and every hand-on is one atomic write;
+execution checkpoints in `xmip-core-persist` mean a recovered Journey resumes
+rather than restarts, and Messages are immutable so a resumed Journey cannot
+half-produce one.
 
 Externally it depends on what the far side supports. A queue with
 acknowledgment and a deduplication window can be delivered to exactly once. An
@@ -717,6 +977,13 @@ The rule that follows, and the reason this is stated at all:
 > **Where Xmip cannot guarantee exactly-once, it guarantees at-least-once and
 > says so.** It never silently degrades to at-most-once by treating an
 > unacknowledged send as delivered.
+
+A Journey is marked delivered only after the far end confirms. Where the far
+end can deduplicate, the key Xmip hands it is the **Journey id**, not the
+Message id (the owner, 2026-10-01): a Message matched by two Subscriptions to
+one endpoint is two deliveries, and a retry of one Journey is the same
+delivery. A retry waiting for its backoff holds no thread; its due time is in
+the Ledger (section 3).
 
 At-most-once — losing a Message to avoid duplicating it — is never a default. An
 integration platform that quietly drops work is worse than one that occasionally
@@ -747,6 +1014,14 @@ Success             Failure
 
 **Entry and outcome are audited; execution internals are not.** Custom code and
 Extensions may emit additional audit events at any meaningful stage.
+
+**An audit record is written through Xmip Storage** (section 3), to the
+runtime database first, and the audit keeper moves it to the administration
+database, where it is kept over time — on every backend (the owner,
+2026-10-01: *RocksDB is the first storage for audit records, then transferred
+to SQLite, RocksDB for speed, SQLite for persistence over time*). The
+operating system's log stays the fallback when it cannot be written
+(ADR-0062, amendment 2026-10-01).
 
 **Retention** (`xmip-core-retain`) holds what Audit needs to show: Messages,
 Streams or durable Stream references, lineage, Journey execution positions,
@@ -889,6 +1164,79 @@ runtime configuration never constructs Contract inheritance.**
 and Artifacts. A Receive Location selects, by reference: Transport Handler,
 Content Handler, Contract, accepted identities and mechanisms, authorization,
 interaction type, response behavior, and audit and retention policy.
+
+### Where the runtime's settings are configured
+
+Six things the runtime needs had no place in configuration: Receive Ports,
+a Receive Location's interaction type and processing depth, the Send Port's
+policy, the order key and a Sequential failure policy, Parties on a node,
+and retention and audit policy per Port and Location. The owner,
+2026-10-01: *sort it and present a solution*. The assistant presented one;
+the owner: *If there are no questions, write it down.* Two points were then
+asked one at a time, and the owner answered each *Yes*: interaction type,
+and processing depth with it, sit on the Receive Location, as section 6
+says; and audit policy works like retention, a node default overridable per
+Port and per Location.
+
+In an Xmip Application's document:
+
+```toml
+[[receive_ports]]
+name = "Invoices"
+
+[[receive_locations]]
+name         = "InvoicesHttp"
+receive_port = "Invoices"         # a Location without a Port is refused
+interaction  = "data-transfer"    # composite | data-transfer | batch-load
+depth        = "light"            # transfer | light | context
+
+[[send_ports]]
+name            = "ErpOut"
+send_locations  = ["ErpPrimary", "ErpBackup"]       # tried in order
+retry           = { attempts = 3, backoff = "5s" }  # on the active Location
+failover        = "next"          # next | none
+execution_style = "sequential"
+order_key       = "party"         # for example, per Party
+on_failure      = "block"         # block | skip
+```
+
+- **A Receive Port** is named, and keeps Message creation and Publication
+  (section 6). Each Receive Location names its `receive_port`; a Location
+  without one is refused.
+- **A Receive Location** states its `interaction`, which decides when the
+  sender is acknowledged (section 5), and its `depth`, which decides how far
+  the receive gates read (section 7).
+- **A Send Port** names its `send_locations`, tried in order; `retry`
+  applies to the active Location; `failover` is `next` or `none`
+  (section 10). It states its `execution_style`, its `order_key` and its
+  `on_failure`; a Sequential Send Port without `on_failure` is refused at
+  startup, because section 3 allows no silent default.
+
+In a node's configuration:
+
+```toml
+[[parties]]
+name       = "Supplier"
+identities = ["..."]              # ADR-0019
+
+[receive_locations.accept]
+party = ["Supplier"]
+
+[retention]
+default = "30d"                   # overridable per Port
+
+[audit]
+default = "..."                   # overridable per Port and per Location
+```
+
+- **Parties** are named with their identities (ADR-0019), so a Receive
+  Location's accepted Parties read as names.
+- **Retention** has a node default, overridable per Port (section 16).
+- **Audit policy follows retention**: a node default, overridable per
+  Receive or Send Port and per Location (section 16). The policy's words are
+  the audit capability's.
+
+Recorded in ADR-0031, amendment 2026-10-01, the configuration's record.
 
 ### Validation gates
 
@@ -1040,6 +1388,22 @@ That is the whole reason a waiting Process is not a long-running thread. A
 Process waiting three days for a response occupies no thread and survives
 every restart in between.
 
+**The cluster persistence is the Ledger** (section 3), behind Xmip Storage
+(the owner, 2026-10-01, validated part by part with the assistant). A pool
+for the Xmip Process step (section 3) claims a Journey destined for one
+Xmip Process. Its state is in the Ledger, never in thread memory, and is
+checkpointed at every Stage. Waiting releases its thread; a Correlation Rule
+resumes it on any capable node. Assignment belongs to an Xmip Process alone.
+New content is a new Stream, written in chunks, and a new Message
+generation. Validation gates stand at its input and output (section 20).
+Publishing back goes through routing again, with the chain recorded
+(section 9). A Composite response returns through the Receive Port to the
+Receive Location holding the call (section 11). The end of every execution
+scope is audited with its outcome.
+
+**Not yet built:** running Stages — the Xmip Process engine itself — is work
+of its own.
+
 ### Stages
 
 A **Stage** is a named phase inside a Process Instance. **Stages are not
@@ -1067,8 +1431,8 @@ None   Transactional   BusinessProcess
 `ExecutionScope` describes execution semantics and applies whether the work
 happens inside a Process or in a publish/subscribe path. When a scope ends,
 Xmip must produce an explicit outcome — a published Message, a sent Message,
-completed work, a failure, or placement in the DMQ. **The end of an execution
-scope is always audited.**
+completed work, a failure, or placement in the Dead Message Queue. **The end
+of an execution scope is always audited.**
 
 ### Process outcome
 
@@ -1158,7 +1522,7 @@ model lacked.
 v1.0 and Baseline-Current both said the Journey becomes Dead with a Routing
 cause. ADR-0013 says a Publication produces zero, one or N Journeys, so zero
 matches means no Journey exists to become Dead, and the Message goes to the
-Xmip DMQ.
+Dead Message Queue.
 
 *Resolved:* ADR-0013. Baseline-Current had already hedged toward it — "when no
 Subscription matches *after a Journey has begun*" — which is a sentence written
@@ -1263,6 +1627,25 @@ among supported languages.
 *Resolved as a defect in the third.* Node.js and JavaScript server solutions
 are not a target module technology.
 
+### Within this document
+
+**12. Whether the work store is a node's or the cluster's.** Noted
+2026-10-01. Section 3 said *a ToDo belongs to one node and is written only by
+that node*, *an embedded store is per-node by definition*, and *work does not
+move by itself*. Section 22 said *Process State belongs to the cluster*, its
+state persisted *through cluster persistence*, and execution ownership *may
+move between valid nodes*. Both could not hold: state in a store one node
+writes cannot be continued by another node when that node fails.
+
+*Resolved:* the cluster, by the owner, 2026-10-01: *There is nothing local
+about either RocksDB or SQLite, they are cluster services running on one or
+more nodes*, and *All DB records have to be central and clusterable, if one
+node fails another one should be able to pick up*. The ToDo is renamed the
+Ledger; every node reaches it through Xmip Storage, the nodes declaring the
+Storage role, in front of a database server IT runs or, on a single machine,
+an embedded Storage node; and work moves by a time-limited claim in that
+database. Section 3 is rewritten accordingly; section 22 stands.
+
 ## 24. Governing principles
 
 1. Streams are immutable. Messages and Journeys accumulate context and history;
@@ -1274,7 +1657,7 @@ are not a target module technology.
 5. Every Publication is audited.
 6. A Publication produces zero, one or N Journeys — one per matched
    Subscription. A Journey is a line, not a tree.
-7. Zero matches means the Xmip DMQ, not a failed Journey.
+7. Zero matches means the Dead Message Queue, not a failed Journey.
 8. Retry continues the same Journey from the failed audited stage.
 9. Replay creates a new Journey from an audited historical source, unchanged.
 10. Audit uses retention to inspect and replay retained Messages and Streams.

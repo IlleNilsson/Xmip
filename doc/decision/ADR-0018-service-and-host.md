@@ -2,7 +2,11 @@
 
 - Status: Accepted, with open questions recorded at the end
 - Date: 2026-08-25
-- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint),
+- Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces),
+  ADR-0024 (a claim at the endpoint; a Journey's claim through Xmip Storage,
+  amendment 2026-10-01),
+  ADR-0015 (amendment 2026-10-01: Xmip Storage; RocksDB always the embedded
+  runtime engine),
   ADR-0052 (the operator surfaces read what `xmip-service` publishes; amendment 2026-09-30),
   ADR-0056 (amendment 2026-10-01: clause 10a's combination is the executing role)
 - Read by: ADR-0027 clause 4, which makes the execution tree this record builds
@@ -461,3 +465,95 @@ declares only one of the three hands every Journey on to another process, and
 pays the hops this clause prices. Still no `low_latency` flag: the role is the
 choice, and the trade stays the operator's. The clause's reasoning stands;
 only the names changed.
+
+## Amendment, 2026-10-01: pools per step, the Ledger, and claims through Xmip Storage
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided for storage later the same day; his words are
+quoted where they decided.
+
+**Threads, not fibers.** The owner asked *What about using Fibers instead of
+Threads?*; threads were agreed, fibers to be revisited only if measurement
+shows thread switching dominating.
+
+**A Host Service runs a dynamic, bounded pool per step** (the owner: *Go with
+the dynamic, bounded pool*): a bounded pool of I/O threads per Receive
+Location, a routing pool, a pool for the Xmip Process step, a Send pool. A
+CPU-bound step's pool is capped at the core count. An I/O-bound step's pool
+grows while work waits, up to a configured maximum — the bulkhead of clause
+11 — never below one thread, and shrinks after a configured idle time.
+Threads are started ahead of need, never per Message. Steps hand on through
+the Ledger, serialized through Xmip Storage and deserialized by the next
+step's thread (the owner: *every sub action starts a new thread, in between
+the stream shall be serialized and then on every sub a new thread
+deserializes the message from RocksDB* — realized as pools, which he
+accepted). A waiting Xmip Process and a retry waiting for its backoff hold
+no thread; their state and due time are in the Ledger. A Stream is written
+in chunks sized from the memory available, never whole in memory
+(`runtime-model.md` section 3).
+
+**Clause 10a's executing role** — receiving, processing and sending in one
+Host Service for low latency — is the amendment of 2026-10-01 above.
+
+**Every Ledger write counts only once the database has it durably** (the
+owner: *Safe way*), the hand-ons between steps included: behind a database
+server its commit, on the embedded Storage node a sync to disk, where group
+commit lets concurrent writes share one sync.
+
+**Clause 3's claim, for a Journey, is taken through Xmip Storage**, not at an
+endpoint: a conditional update in the database behind it — set the owner
+where the owner is empty or lapsed — time-limited and renewed while the work
+runs (ADR-0024, amendment of this date). Clause 3 stands for arrivals, whose
+claim is the endpoint's.
+
+**Clause 5, sharpened.** The Xmip Service dying stops no work, as before. A
+Host Service dying stops renewing its claims; they lapse, and any capable
+node resumes from the last finished step. A Storage node dying stops no work
+while another is left, every node reaching the next round robin; the
+database server's failover is IT's, and an embedded Storage node has none
+(`deployment-model.md` section 9).
+
+**Clause 12, sharpened.** Every hand-on is one atomic write — the result, the
+next Journey and the claim released together. On start a Host Service starts
+its pools, finds lapsed work, restores checkpoints, resumes or keeps waiting,
+and continues the audit. Shutdown drains and gives its claims back
+explicitly — *release* in clause 12 — rather than leaving them to lapse.
+
+**The store's engine is no longer a choice.** The amendment of 2026-09-30
+named the engine in `[store] engine`, defaulting to RocksDB and allowing
+SQLite, with `persist-sqlite` built for an edge or computer site. That choice
+is superseded: a node calls Xmip Storage and opens no database of its own;
+an embedded Storage node's runtime database is always RocksDB, with SQLite
+as its administration database (ADR-0015, amendment of this date). A
+Storage node under test keeps its administration database in SQLite in
+memory and its runtime database in RocksDB on disk in the test's directory
+(the owner: *for testing purposes the Xmip Nodes of Storage type can use
+SQLite in memory for administration and RocksDB for runtime*).
+
+**Configuration is a node's own execution tree, in memory** (the owner,
+2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
+will not go in use until thread or process is started, reused… But runtime
+matter has to be central so other nodes with matching NodeRoles can pick
+up*; and, on the in-memory database he had first
+asked for, *So no in-memory database it is*). Each node reads its TOML
+configuration once, as it starts, and holds it as its **execution tree** —
+its Locations, its Subscriptions with their compiled filters, its Xmip
+Processes, its Send Ports — which `build_execution_tree` in
+`xmip-core-runtime` already builds; that tree is the node's configuration at
+runtime. It is not central and not in Xmip Storage. A changed TOML file takes
+effect when the thread or Host Service that uses it is started again, never
+mid-flight; the operation tools and editors change the TOML file, never a
+database. An in-memory database would be a second copy of the tree, added
+only if something needs to query configuration in ways the tree does not
+answer (ADR-0031, amendment 2026-10-01). So a Host Service takes up a
+changed configuration only when it is started again, under clause 6's reattach and clause 13's
+reconciliation; nothing changes beneath work in flight.
+
+**A node finds its Storage nodes from its TOML** (the owner, 2026-10-01,
+asked whether a node should find them from a list of their addresses in its
+TOML, tried round robin: *Yes*): the node's configuration lists their
+addresses, for example
+`[storage] nodes = ["storage-1.example:7443", "storage-2.example:7443"]`, and
+the node tries them round robin. This closes the question this amendment had left open; the node
+configuration's document follows in the build. The code follows this
+record.

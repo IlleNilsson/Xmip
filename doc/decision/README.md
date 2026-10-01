@@ -51,9 +51,12 @@ Terminal states are `Completed`, `Failed` and `Dismissed` — the last added
 fault.
 
 An operator pauses and resumes a Subscription, and never removes one: a
-paused Subscription holds what it matches in the node's runtime store, and
-a resume picks it up oldest first; a Subscription is added and removed in
-the TOML configuration (amendment 2026-09-30).
+paused Subscription holds what it matches in the Ledger, and a resume picks
+it up oldest first; a Subscription is added and removed in the TOML
+configuration (amendments 2026-09-30 and 2026-10-01). An accepted Message no
+Subscription matched is Dead Message Queue state in the Ledger, replayed by
+an Operator, and the sender is acknowledged after the whole receive cycle
+(amendment 2026-10-01).
 
 → [The Journey model, in full](ADR-0013-journey-model.md) — **still Proposed**
 
@@ -100,6 +103,8 @@ Consul, etcd, Redis or ZooKeeper.
 → [Exclusiveness, in full](ADR-0017-exclusiveness.md) — **superseded by [ADR-0024](ADR-0024-resource-claim-replaces-exclusiveness.md)**
 
 ### A claim at the endpoint, not a lease inside Xmip
+
+Journey claim
 
 `xmip-core-exclusiveness` is retired — the module, the repository, the four
 scopes, the lease and its renewal. `ResourceClaim` in `xmip-core-transport`
@@ -172,7 +177,8 @@ the parent is displeased and reports `Holding` — drill in. A parent is only ev
 
 ### What a node says it can do, in the terms work is matched against
 
-authentication capability; runtime capability; placement criteria
+authentication capability; runtime capability; placement criteria;
+  Storage role, Xmip Storage
 
 **A node declares its capabilities, and work is placed on a node whose
 capabilities satisfy what the work requires. There are four kinds: online,
@@ -999,6 +1005,7 @@ You have a word. This gives you the decision that governs it.
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
+| Dead Message Queue, DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | decision | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | declared maturity | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | declared repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
@@ -1010,7 +1017,6 @@ You have a word. This gives you the decision that governs it.
 | directory of many usages | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
-| DMQ | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
