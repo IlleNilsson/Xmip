@@ -18,8 +18,8 @@
 
     - a scope or process name: node/<name>, node-<name>, handoff/<name>;
     - a handoff: <name>-><name>;
-    - a declaration: <name>=receive, as --nodes, a roster and [run] say it;
-    - a -NodeCapability entry: <name> = 'receive';
+    - a declaration: <name>=receiving, as --nodes, a roster and [run] say it;
+    - a -NodeRole entry: <name> = 'receiving';
     - a parameter or flag that names nodes: -Nodes, -OnlineNodes, -Node,
       -Name, --name, --nodes, --online;
     - a quoted or backticked name on its own, as a list, a fixture key, an
@@ -55,13 +55,18 @@ BeforeAll {
 
     [string] $name = '[RPS][0-9]+'
     [string] $quote = '[''"`]'
+    # The role words a node declares and the stage words it declared before
+    # them (ADR-0056, amendment 2026-10-01): a name beside either stands where
+    # a node's name stands.
+    [string] $role = 'operational|monitoring|receiving|processing|sending|executing|' +
+        'development|receive|process|send'
 
     # Where a node's name stands, each place named for the failure message.
     $script:Place = [ordered]@{
         'a scope or process name'   = "(node|handoff)[/-]($name)\b"
         'a handoff'                 = "\b($name)->|->($name)\b"
-        'a declaration'             = "\b($name)=(receive|process|send)\b"
-        'a -NodeCapability entry'   = "\b($name)\s*=\s*$quote(receive|process|send)"
+        'a declaration'             = "\b($name)=($role)\b"
+        'a -NodeRole entry'         = "\b($name)\s*=\s*$quote($role)"
         'a parameter naming nodes'  =
             "(-Nodes|-OnlineNodes|-Node|-Name|--name|--nodes|--online)\s+$quote?($name)\b"
         'a quoted name'             = "$quote($name)$quote"
@@ -256,8 +261,8 @@ Describe 'A node is never named like a role' {
         [string[]] $sample = @(
             "scope = `"xmip:///C1/node/$role/receive`""
             "xmip-playground-C1-node-$role"
-            "--nodes $role=receive,beta=send"
-            "-NodeCapability @{ $role = 'receive' }"
+            "--nodes $role=receiving,beta=sending"
+            "-NodeRole @{ $role = 'receiving' }"
             "Start-XmipTest -Nodes $role, beta"
             "nodes = [`"$role`"]"
             "id = `"alpha->$role`""
@@ -304,8 +309,8 @@ Describe 'A node is never named like a role' {
 
         [string[]] $rust = @(
             'const USAGE: &str = "usage: cluster --nodes <a,b> \'
-            "     example: cluster --nodes $role=receive,beta=send`";"
-            "let given = [`"--nodes`", `"$role=receive`"];"
+            "     example: cluster --nodes $role=receiving,beta=sending`";"
+            "let given = [`"--nodes`", `"$role=receiving`"];"
         )
         [string[]] $inRust = @(Find-NodeName -Path 'test/core/sample/src/main.rs' -Line $rust)
         $inRust | Should -HaveCount 1 -Because 'a usage text is help and the line after it is code'

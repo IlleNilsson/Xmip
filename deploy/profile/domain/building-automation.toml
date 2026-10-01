@@ -1,0 +1,18 @@
+# The building-automation domain: buildings, meters and the devices in them.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Buildings, meters and the devices in them: BACnet, KNX, M-Bus, Matter."
+
+standards = [
+  "bacnet",
+  "knx",
+  "m-bus",
+  "wireless-m-bus",
+  "zigbee",
+  "thread",
+  "matter",
+  "lorawan",
+  "bluetooth",
+]

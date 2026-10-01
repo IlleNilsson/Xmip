@@ -5,17 +5,17 @@ Set-StrictMode -Version Latest
 function ConvertFrom-XmipRosterText {
     <#
         .SYNOPSIS
-            The nodes and the capabilities a roster text says, as -Nodes and
-            -NodeCapability take them. Pure.
+            The nodes and the roles a roster text says, as -Nodes and
+            -NodeRole take them. Pure.
 
         .DESCRIPTION
             The text is the roll's own spelling of a roster
-            (test/core/playground/src/roster.rs): name, or name=capability, or
-            name=capability+capability, comma separated. Every node named is
+            (test/core/playground/src/roster.rs): name, or name=role, or
+            name=role+role, comma separated. Every node named is
             in the table, declaring nothing where it declared nothing, so
             nothing downstream falls back to reading a letter off a name
             (ADR-0056). An unknown word is REFUSED by
-            ConvertTo-XmipNodeCapability.
+            ConvertTo-XmipNodeRole.
 
         .PARAMETER Text
             The roster, as the roll writes it.
@@ -42,25 +42,28 @@ function ConvertFrom-XmipRosterText {
         [string] $name = $parts[0].Trim()
         $nodes += $name
         $declared[$name] = if ($parts.Count -gt 1) {
-            ConvertTo-XmipNodeCapability -Capability $parts[1]
+            ConvertTo-XmipNodeRole -Role $parts[1]
         }
         else {
             ''
         }
     }
 
-    # Whether the message path is covered: receive, process and send declared
-    # somewhere among them. A complement too small to cover it declares no
-    # stage at all, and the roll then runs RoundTrip whole (complement.rs).
-    [string[]] $words = @(
-        $declared.Values | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' }
-    )
+    # Whether the message path is covered: receive, process and send served
+    # somewhere among them, by the stages each role serves (node::NodeRole,
+    # called in the runtime). A complement too small to cover it declares no
+    # role at all, and the roll then runs RoundTrip whole (complement.rs).
     Import-XmipOperatorModule
-    [string[]] $missing = @([Xmip.Surface.ScopeTree]::Stages | Where-Object { $_ -notin $words })
+    [string[]] $served = @(
+        $declared.Values |
+            Where-Object { $_ -ne '' } |
+            ForEach-Object { [Xmip.Surface.NodeCapability]::Started("n=$_").Stages }
+    )
+    [string[]] $missing = @([Xmip.Surface.ScopeTree]::Stages | Where-Object { $_ -notin $served })
 
     return [PSCustomObject]@{
         Nodes          = $nodes
-        NodeCapability = $declared
+        NodeRole       = $declared
         Text           = $Text
         Covers         = ($missing.Count -eq 0)
     }

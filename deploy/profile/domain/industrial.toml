@@ -1,0 +1,28 @@
+# The industrial domain: factories, plants, grids and process control.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Factories, plants, grids and process control: fieldbuses and SCADA."
+
+standards = [
+  "modbus",
+  "opc-ua",
+  "mqtt",
+  "iec-60870-5-104",
+  "iec-61850",
+  "dnp3",
+  "profinet",
+  "ethercat",
+  "ethernet-ip",
+  "s7comm",
+  "cotp",
+  "secs-gem",
+  "hart",
+  "wireless-hart",
+  "io-link",
+  "canopen",
+  "dds",
+  "coap",
+  "serial",
+]

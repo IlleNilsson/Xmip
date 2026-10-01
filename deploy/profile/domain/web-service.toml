@@ -1,0 +1,20 @@
+# The web-service domain: services called over the web.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Services called over the web: HTTP APIs, SOAP, gRPC, GraphQL, WebSocket."
+
+standards = [
+  "http",
+  "http-api",
+  "soap",
+  "wsdl",
+  "grpc",
+  "openapi",
+  "asyncapi",
+  "graphql-schema",
+  "websocket",
+  "form-urlencoded",
+  "multipart",
+]

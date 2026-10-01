@@ -75,9 +75,9 @@ function ConvertTo-XmipTestName {
 
     .DESCRIPTION
     -Nodes says which nodes by name, or how many by count, and the two allow
-    different things: names can be given capabilities and marked online,
+    different things: names can be given roles and marked online,
     while a count leaves the naming and the dealing to the roll, so there is
-    no name for -OnlineNodes or -NodeCapability to hold on to.
+    no name for -OnlineNodes or -NodeRole to hold on to.
 
     Said at the door and before anything is built (ADR-0055), by the one
     function both Start-XmipTest and the environment ask, so they cannot
@@ -89,11 +89,11 @@ function ConvertTo-XmipTestName {
     .PARAMETER OnlineNodes
     What -OnlineNodes was given.
 
-    .PARAMETER NodeCapability
-    What -NodeCapability was given.
+    .PARAMETER NodeRole
+    What -NodeRole was given.
 
     .PARAMETER Test
-    What -Test was given, for the capability the path needs.
+    What -Test was given, for the roles the path needs.
 
     .PARAMETER Named
     True where -Nodes was given at all, however it was given.
@@ -114,7 +114,7 @@ function Get-XmipNodeSelectionRefusal {
 
         [Parameter()]
         [AllowNull()]
-        [hashtable] $NodeCapability,
+        [hashtable] $NodeRole,
 
         [Parameter()]
         [AllowEmptyCollection()]
@@ -127,30 +127,30 @@ function Get-XmipNodeSelectionRefusal {
 
     [int] $count = Get-XmipNodeCount -Nodes $Nodes
 
-    if ($NodeCapability -and -not $Named) {
-        return '-NodeCapability names nodes; name them all with -Nodes first.'
+    if ($NodeRole -and -not $Named) {
+        return '-NodeRole names nodes; name them all with -Nodes first.'
     }
 
-    if ($count -ge 0 -and ($OnlineNodes -or $NodeCapability)) {
+    if ($count -ge 0 -and ($OnlineNodes -or $NodeRole)) {
         return ('-Nodes <count> leaves the naming to the roll, so -OnlineNodes and ' +
-            '-NodeCapability have no names to hold on to. Name the nodes instead.')
+            '-NodeRole have no names to hold on to. Name the nodes instead.')
     }
 
     if ($Named -and $count -lt 0) {
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
-        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
+        Assert-XmipNodeRole -Nodes $Nodes -NodeRole $NodeRole
     }
 
-    # A node declares what it can do (ADR-0056), and RoundTrip across nodes
-    # needs receive, process and send declared somewhere. A count is dealt by
+    # A node declares its roles (ADR-0056), and RoundTrip across nodes needs
+    # receive, process and send served somewhere. A count is dealt by
     # the roll, so only names can leave a stage undeclared.
     [hashtable] $asked = @{
         Nodes          = if ($count -ge 0) { $null } else { $Nodes }
         Test           = $Test
-        NodeCapability = $NodeCapability
+        NodeRole       = $NodeRole
     }
 
-    return Get-XmipNodeCapabilityRefusal @asked
+    return Get-XmipNodeRoleRefusal @asked
 }
 
 
@@ -245,7 +245,7 @@ function New-XmipPlaygroundEnvironment {
 
         [Parameter()]
         [AllowNull()]
-        [hashtable] $NodeCapability,
+        [hashtable] $NodeRole,
 
         [Parameter()]
         [string] $Cluster,
@@ -305,13 +305,13 @@ function New-XmipPlaygroundEnvironment {
     elseif ($null -ne $Nodes) {
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
         Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
-        Assert-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability
+        Assert-XmipNodeRole -Nodes $Nodes -NodeRole $NodeRole
         [hashtable] $asked = @{
             Nodes          = $Nodes
             Test           = $Test
-            NodeCapability = $NodeCapability
+            NodeRole       = $NodeRole
         }
-        [string] $refusal = Get-XmipNodeCapabilityRefusal @asked
+        [string] $refusal = Get-XmipNodeRoleRefusal @asked
 
         if ($refusal -ne '') {
             throw $refusal
@@ -321,13 +321,13 @@ function New-XmipPlaygroundEnvironment {
             $environment.XMIP_PLAYGROUND_NODES = '0'
         }
         else {
-            # What each node declares it can do (ADR-0056), and only what
-            # -NodeCapability stated: a node's name says nothing (the owner,
+            # The roles each node declares (ADR-0056), and only what
+            # -NodeRole stated: a node's name says nothing (the owner,
             # 2026-09-20: Rn, Pn and Sn are arbitrary node names).
             $environment.XMIP_PLAYGROUND_NODE_NAMES = $Nodes -join ','
             $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
-            $environment.XMIP_PLAYGROUND_NODE_CAPABILITIES =
-                Get-XmipNodeCapabilityText -Nodes $Nodes -NodeCapability $NodeCapability
+            $environment.XMIP_PLAYGROUND_NODE_ROLES =
+                Get-XmipNodeRoleText -Nodes $Nodes -NodeRole $NodeRole
         }
     }
 

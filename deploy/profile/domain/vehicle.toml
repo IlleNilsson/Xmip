@@ -1,0 +1,8 @@
+# The vehicle domain: vehicles and the buses in them.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Vehicles and the buses in them: CAN, J1939, OBD-II."
+
+standards = ["can-bus", "j1939", "iso-tp", "obd-ii"]

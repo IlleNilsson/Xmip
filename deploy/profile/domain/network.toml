@@ -1,0 +1,23 @@
+# The network domain: the network itself and what runs it.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "The network itself and what runs it: sockets, addresses, names, discovery, logs."
+
+standards = [
+  "tcp",
+  "udp",
+  "uds",
+  "unix-socket",
+  "named-pipe",
+  "ethernet",
+  "ip",
+  "mac",
+  "dns",
+  "dhcp",
+  "mdns",
+  "ssdp",
+  "snmp",
+  "syslog",
+]

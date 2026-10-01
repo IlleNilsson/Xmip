@@ -1,0 +1,12 @@
+# A site: a sensor in the field on a Meadow-class board, read over Modbus by
+# the gateway that serves it (ADR-0015, amendment 2026-10-01).
+# Build-XmipService -Site field-sensor refuses it, saying why and what
+# builds for a device instead: xmip-core alone, no_std.
+
+description = "A field sensor on a microcontroller, read by a gateway."
+
+target = "device"
+
+roles = ["sending"]
+
+domains = ["industrial"]

@@ -1,6 +1,8 @@
 //! The technologies this build of `xmip-service` linked, handed to the node
-//! it starts (`xmip_runtime::linked::Linked`). The build profile decides
-//! which: each is a feature of this crate, and the node takes only what its
+//! it starts (`xmip_runtime::linked::Linked`). The site it was built for
+//! decides which (ADR-0015, amendment 2026-10-01): each is a feature of this
+//! crate, set by `Build-XmipService` from the site's target, roles and
+//! domains, and the node takes only what its
 //! configuration names; a Location naming one this build left out is refused
 //! as the node starts.
 //!

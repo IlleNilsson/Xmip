@@ -1,0 +1,22 @@
+# The managed-service domain: the managed services a hosting provider sells.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "The managed services a hosting provider sells: queues, topics, buckets."
+
+standards = [
+  "aws",
+  "aws-kinesis",
+  "aws-sns",
+  "aws-sqs",
+  "s3",
+  "azure",
+  "azure-blob",
+  "azure-event-grid",
+  "azure-event-hubs",
+  "azure-service-bus",
+  "google-cloud-storage",
+  "google-pub-sub",
+  "gcs",
+]

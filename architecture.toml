@@ -103,27 +103,6 @@ hostedBy = ["powershell", "abi"]
 rust = "IlleNilsson/xmip-template-rust"
 dotnet = "IlleNilsson/xmip-template-dotnet"
 
-# What a node starts, of the technologies it carries: the transports and
-# contracts a plain HTTP and file node needs; the rest are present and stopped
-# until a Location names them. Sync-XmipEstate -Deploy writes this, with every
-# technology declared scaffolded or beyond, into deploy/dsc and deploy/ansible.
-[deploy]
-started = [
-  "xmip-core-transport-file",
-  "xmip-core-transport-tcp",
-  "xmip-core-transport-udp",
-  "xmip-core-transport-http",
-  "xmip-core-contract-csv",
-  "xmip-core-contract-json-schema",
-  "xmip-core-contract-xml-schema",
-  "xmip-core-contract-regex",
-  "xmip-core-logic-http-api",
-  "xmip-core-path-json-pointer",
-  "xmip-core-path-xpath",
-  "xmip-core-path-index",
-  "xmip-core-archive-parquet",
-]
-
 [policy]
 acyclic = true
 rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "Operation repositories consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
@@ -1458,6 +1437,7 @@ dependency = []
       "xmip-core-persist",
       "xmip-core-receive",
       "xmip-core-route",
+      "xmip-core-secret",
       "xmip-core-send",
       "xmip-core-stream",
       "xmip-core-transport",

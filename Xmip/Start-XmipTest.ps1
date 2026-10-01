@@ -121,18 +121,18 @@ function Start-XmipTest {
             the roll names and deals over the message path itself, as it does
             for an omitted -Nodes. A name starts with a letter, so a lone
             number is a count, and a count is refused with -OnlineNodes or
-            -NodeCapability, which need names. What each node does is the
-            capability it is started with (ADR-0056), stated with
-            -NodeCapability. A name says nothing about it: the owner,
+            -NodeRole, which need names. What each node does is the
+            roles it is started with (ADR-0056), stated with
+            -NodeRole. A name says nothing about it: the owner,
             2026-09-20, *Rn, Pn and Sn are arbitrary node names*. The names
             are the tester's: these examples call clusters C1, C2 and nodes
             R1, P1, S1, as the owner does when he tests (2026-09-25), a
             reminder to the person and never to Xmip. A node given no
-            capability declares none and runs the shared-directory tests
+            role declares none and runs the shared-directory tests
             whole, which is said in words where RoundTrip was asked for.
             RoundTrip across nodes hands each pair from receive to process to
-            send between the processes, so each capability must be declared
-            somewhere; it is REFUSED otherwise, naming the capability, before
+            send between the processes, so each stage must be served
+            somewhere; it is REFUSED otherwise, naming the role, before
             anything starts. An empty list, @(), is no nodes at any level.
 
             A node's name is also the last word of its process name —
@@ -145,22 +145,27 @@ function Start-XmipTest {
             Omit it and the level brings its full complement (ADR-0059,
             amendment 2026-09-19): its own count of nodes — one, three, ten or
             forty, scaled to the machine's headroom — named node-01 up and
-            dealt receive, process, send and round again, so the message path
-            is covered and the run never refuses a roster it composed itself.
-            A level with fewer than three nodes cannot cover the path; those
-            nodes declare no stage, RoundTrip runs whole in the roll, and it is
-            said. The run record and the [run] table carry the nodes resolved.
+            dealt receiving, processing, sending and round again, so the
+            message path is covered and the run never refuses a roster it
+            composed itself. A level with fewer than three nodes cannot cover
+            the path; those nodes declare no role, RoundTrip runs whole in the
+            roll, and it is said. The run record and the [run] table carry the nodes resolved.
 
-        .PARAMETER NodeCapability
-            What each node declares it can do, stated per node: -Nodes R1, P1
-            -NodeCapability @{ R1 = 'receive'; P1 = 'process,send' }. The values
-            are receive, process and send, lowercase exactly, by comma or plus;
-            any other word ('Send' too), or a node -Nodes does not name, is
-            REFUSED before anything starts. A node the table does not name
-            declares nothing. This is the only way a named node gets a
-            capability; omit -Nodes instead and the level's complement deals
-            them over the whole message path. ADR-0056 names two further kinds
-            of capability, authentication and runtime, which the Playground does not model.
+        .PARAMETER NodeRole
+            The roles each node declares, stated per node: -Nodes R1, P1
+            -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' }, or
+            @{ E1 = 'executing' }. The roles are node::NodeRole's (ADR-0056, amendment 2026-10-01):
+            receiving, processing and sending serve one stage of the message
+            path each, and executing serves all three in one process, the
+            low-latency choice — each pair it receives stays in it to the end;
+            operational, monitoring and development serve no stage. Lowercase
+            exactly, by comma or plus; any other word ('Sending' and the old
+            'receive' too), or a node -Nodes does not name, is REFUSED before
+            anything starts. A node the table does not name declares nothing.
+            This is the only way a named node gets a role; omit -Nodes instead
+            and the level's complement deals them over the whole message path.
+            ADR-0056 names two further kinds of capability, authentication and
+            runtime, which the Playground does not model.
 
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
@@ -199,8 +204,8 @@ function Start-XmipTest {
             Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
             declaration hides it, never its name. The assistant's test cluster
             is started so, always: Start-XmipTest -Suite Core.Playground
-            -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 -NodeCapability
-            @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -Hidden
+            -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
+            @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Playground -Cluster C1
@@ -213,14 +218,14 @@ function Start-XmipTest {
                 Start-XmipOperationWeb
 
         .EXAMPLE
-            # The names are the tester's; -NodeCapability says what each does.
+            # The names are the tester's; -NodeRole says what each does.
             Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, P1, S1
-                -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }
+                -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
 
         .EXAMPLE
             Start-XmipTest -Test RoundTrip -Cluster C2 -Nodes R1, R2, P1, S1
-                -OnlineNodes R1, S1 -NodeCapability @{ R1 = 'receive'
-                    R2 = 'receive'; P1 = 'process'; S1 = 'send' }
+                -OnlineNodes R1, S1 -NodeRole @{ R1 = 'receiving'
+                    R2 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
@@ -306,7 +311,7 @@ function Start-XmipTest {
 
         [Parameter()]
         [AllowNull()]
-        [hashtable] $NodeCapability,
+        [hashtable] $NodeRole,
 
         [Parameter()]
         [string[]] $OnlineNodes = @(),
@@ -376,7 +381,7 @@ function Start-XmipTest {
         Duration = $Duration
         TimeFactor = $TimeFactor
         Nodes = $Nodes
-        NodeCapability = $NodeCapability
+        NodeRole = $NodeRole
         OnlineNodes = $OnlineNodes
         Cluster = $Cluster
         Path = $Path

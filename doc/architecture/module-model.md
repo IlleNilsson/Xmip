@@ -39,7 +39,7 @@ boundary — comparable to a loaded assembly in .NET or a classpath element in
 Java.
 
 **One Module Definition yields many Module Instances**, across nodes,
-processes, containers, isolation boundaries and deployment profiles. A
+processes, containers, isolation boundaries and targets. A
 Definition binds to a Module *Instance*, not to an abstract module name, which
 is what makes "which copy of the FTP handler actually ran this" answerable.
 
@@ -140,7 +140,7 @@ specification's: `module/foundation/abi/doc/specification.md` section 3,
 is installed by placing its package and manifest where the runtime can discover
 it, or by registering it through Xmip deployment tooling.
 
-Modules may also be Rust crates compiled in, where the deployment profile calls
+Modules may also be Rust crates compiled in, where a site's target calls
 for a purpose-compiled runtime — the ABI exists so that the dynamic case is
 possible, not so that it is mandatory.
 
@@ -301,8 +301,9 @@ manifest, trust, platform and configured policy.
 There is **no low-latency host type.** Earlier drafts listed one alongside the
 32-bit and 64-bit cases, as though latency were a property a process could
 declare. ADR-0018 clause 10a settled it: latency is bought with isolation and
-paid for in process hops. A Host Service configured as Reader, Executor *and*
-Writer runs a whole Journey without crossing a boundary; three Host Services
+paid for in process hops. A node that is executing — receiving, processing
+and sending in one process (ADR-0056, amendment 2026-10-01) — runs a whole
+Journey without crossing a boundary; three Host Services
 doing the same work pay three hops. The role combination in
 `deployment-model.md` is the real control, and a boolean was never going to be.
 
@@ -336,7 +337,8 @@ persistence** is authoritative for administration.
 
 ## 13. Deployment targets do not change any of this
 
-IoT device, edge node, single on-premises server, on-premises cluster, cloud
-node, cloud cluster, hybrid — these are deployment profiles, not runtime models.
+Device, edge, computer, server and hosted — and the clusters and hybrids
+arranged from them — are targets a site builds for, not runtime models.
 **The semantics above hold identically on all of them**, which is the entire
-reason for keeping the runtime small. `deployment-model.md` owns the profiles.
+reason for keeping the runtime small. `deployment-model.md` owns the
+targets, and ADR-0015's amendment of 2026-10-01 how a site is built.

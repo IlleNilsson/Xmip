@@ -717,8 +717,10 @@ bespoke remote control protocol.
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
 release. A portable archive for people who want no installer at all. x86-64 and
-arm64 on both — **arm64 is not optional**, because the IoT and embedded profiles
-require it.
+arm64 on both — **arm64 is not optional**, because the edge target, an IoT
+gateway or a Raspberry Pi, requires it. What a package is built with is its
+site's: a target, node roles and domains, turned into a build by
+`Build-XmipService` (amendment 2026-10-01).
 
 → [Packaging and distribution, in full](ADR-0015-packaging.md)
 
@@ -1062,6 +1064,7 @@ You have a word. This gives you the decision that governs it.
 | no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Node address | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | node capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
+| node role | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -1125,6 +1128,7 @@ You have a word. This gives you the decision that governs it.
 | suite declaration | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | sync | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
+| target, domain, site | [Packaging and distribution](ADR-0015-packaging.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |

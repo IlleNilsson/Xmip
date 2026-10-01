@@ -48,27 +48,19 @@ name = "deploy"
 path = ".src/test/deploy.rs"
 
 [features]
-default = ["server-profile"]
-
-# A build profile decides what is compiled in. Selection happens at build and
-# packaging time; any other composition of the modules below is a custom build,
-# which runtime-profiles.md calls a purpose-compiled runtime.
+# Nothing by default. A plain `cargo build` is the assembly library with the
+# modules every node has; xmip-service is built from a site (deploy/site) by
+# Build-XmipService, which sets exactly the features below that the site's
+# target, roles and domains need (ADR-0015, amendment 2026-10-01). The
+# root's own tests take `--all-features`.
 #
-# Deployment profiles are deliberately absent. IoT device, edge node, single
-# server, cluster, cloud node and hybrid select modules at run time, and module
-# selection is configuration. That belongs in TOML, not here.
-server-profile = ["archive", "assign", "audit", "authenticate", "authorize", "cluster", "contract", "demote", "event", "identify", "node", "observe", "party", "path", "persist", "prepare", "process", "promote", "report", "resilience", "retain", "transform", "transport-file", "transport-http", "transport-tcp", "transport-udp", "persist-rocksdb"]
-
-# The same composition as server-profile today. What will separate them is an
-# interactive host and a local GUI host, and neither exists yet. The name is
-# declared so packaging has a stable target and the difference lands somewhere
-# decided when it arrives.
-desktop-profile = ["server-profile"]
-
-# Replaces iot-profile and embedded-profile, which were identical to each other
-# and to this. Empty on purpose: the modules a forwarder cannot do without are
-# not optional, so what makes a build tiny is everything it leaves out.
-tiny-profile = []
+# The two fit as two steps. The build sets what is possible: the profiles
+# under deploy/profile decide which of these features a site's program
+# carries. The node's TOML picks from that at run time: which Locations,
+# transports and store it starts, and a name the build left out is refused
+# as the node starts. Module selection is configuration; module presence is
+# the build's.
+default = []
 
 archive = ["dep:xmip-archive"]
 assign = ["dep:xmip-assign"]
@@ -95,8 +87,8 @@ transform = ["dep:xmip-transform"]
 
 # The transports xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
-# is refused as the node starts. The server profile links the transports
-# architecture.toml's [deploy] table starts, and no other.
+# is refused as the node starts. A site links the ones its domains serve
+# (deploy/profile/domain).
 transport-file = ["dep:xmip-transport-file"]
 transport-http = ["dep:xmip-transport-http"]
 transport-tcp = ["dep:xmip-transport-tcp"]
@@ -104,9 +96,11 @@ transport-udp = ["dep:xmip-transport-udp"]
 
 # The runtime store engines xmip-service links, and the node opens the one its
 # `[store]` names (ADR-0018, amendment 2026-09-30); a store naming one the
-# build left out is refused as the node starts. The server profile links
-# RocksDB, the runtime store's engine (ADR-0015, amendment 2026-09-25). Each
-# brings the key home with it: a store is always sealed (ADR-0063).
+# build left out is refused as the node starts. A site's target links its
+# engine (deploy/profile/target): RocksDB on a server or a hosted node
+# (ADR-0015, amendments 2026-09-25 and 2026-10-01), SQLite on an edge
+# machine or a person's computer. Each brings the key home with it: a store
+# is always sealed (ADR-0063).
 persist-rocksdb = ["persist", "secret", "dep:xmip-persist-rocksdb"]
 persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]
 # The platform's key store (ADR-0063 clause 4): DPAPI on Windows, a private

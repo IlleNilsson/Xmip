@@ -9,7 +9,10 @@
   technology is one mechanism at one gate), ADR-0025 (module loading),
   ADR-0052 (a node carries the roles suitable for its purpose; amendments
   2026-09-24, the surfaces call the node crate's parse, and the node's
-  evidence and run entry), ADR-0009 (configuration)
+  evidence and run entry), ADR-0009 (configuration), ADR-0018 (clause 10a;
+  amendment 2026-10-01, executing is the low-latency role), ADR-0015
+  (amendment 2026-10-01, a role picks what a build carries), ADR-0027
+  (amendment 2026-10-01, the role exports)
 
 ## In brief
 
@@ -17,7 +20,7 @@
 - Subject: What a node says it can do, in the terms work is matched against
 - Name: A node declares what it can do
 - Order: 13
-- Concepts: node capability; online capability; feature capability;
+- Concepts: node capability; node role; online capability; feature capability;
   authentication capability; runtime capability; placement criteria
 
 **A node declares its capabilities, and work is placed on a node whose
@@ -301,3 +304,88 @@ is now one rule.
 Provenance: the case rule is the owner's, 2026-09-24. The rest is the
 assistant's drafting of problem 25's row.
 
+
+## Amendment, 2026-10-01: a node declares its roles, and the stages are theirs
+
+The owner, 2026-10-01, on the node roles: *Thats it and I want to add
+Receiving, Processing and Sending. Leave Executing as a sum of Receiving,
+Processing and Sending. Executing would be used for Low Latency.* And on the
+profiles the same roles now pick a build by: *We can try that and add runtime
+role perspective and target node type* (ADR-0015, amendment of the same day).
+
+`NodeRole` had four roles — Operational, Monitoring, Executing, Development —
+and the rig declared, beside them and under another name, the stages a node
+serves: `--can receive`, `-NodeCapability @{ alpha = 'receive' }`, the
+`[run].capabilities` entries, the `declares receive,send` evidence. They were
+the same thing: what a node is for on the message path. One thing has one
+name, and the name is the role.
+
+- **Seven roles** (`node::NodeRole`, `module/foundation/node/src/role.rs`):
+  operational, monitoring, receiving, processing, sending, executing,
+  development. Receiving, processing and sending each serve one stage of the
+  message path; **executing is their sum** — all three in one process, the
+  low-latency choice, a Journey with no process hop (ADR-0018 clause 10a,
+  amended the same day). Operational, monitoring and development serve no
+  stage. `NodeRole::stages` is the one rule from a role to its stages, and
+  `NodeRole::said` the one way a set of roles is said: each once, in the
+  order above, and receiving, processing and sending together said as
+  executing, so the sum has one spelling.
+- **The declaration is the roles.** `NodeRole::declared` is the one parse —
+  words by comma or `+`, exact lowercase (the owner's rule of 2026-09-24
+  carried over), any other word REFUSED by name (ADR-0055). `node::Capability`
+  stays ADR-0056's node capability — the roles and the online capability, the
+  record at `<node>/capability` — and reads which stages a node serves from
+  its roles alone. `Stage` stays the stage of the message path and the scope
+  words, and declares nothing.
+- **Deleted, with every use:** `Stage::declared`; `xmip_stage_declared_v1`;
+  the Playground's `--can` flag; `Start-XmipTest -NodeCapability` and the
+  script module's `ConvertTo-XmipNodeCapability`, `Get-XmipNodeCapability`,
+  `Get-XmipNodeCapabilityText`, `Assert-XmipNodeCapability`,
+  `Get-XmipNodeCapabilityRefusal` and `Get-XmipNodeCapabilityWarning`;
+  `XMIP_PLAYGROUND_NODE_CAPABILITIES`; `[run].capabilities` and
+  `XMIP_RUN_CAPABILITIES`; the `capability` key of a Playground node's
+  declaration and `Get-XmipTestNode`'s `Capability`.
+- **In their place:** `-NodeRole @{ R1 = 'receiving'; P1 = 'processing';
+  S1 = 'sending' }` (or `@{ E1 = 'executing' }`), `--role`,
+  `XMIP_PLAYGROUND_NODE_ROLES`, `[run].roles` and `XMIP_RUN_ROLES`, the
+  declaration's `role` key and `Get-XmipTestNode`'s `Role`, all in role words;
+  the evidence reads `declares receiving,sending; online; …`, or `declares no
+  role`. `xmip_operate.h` section 7 gains `xmip_role_words_v1`,
+  `xmip_role_declared_v1` and `xmip_role_stages_v1`, forwarding
+  `NodeRole::WORDS`, `declared` and `stages`; `xmip_capability_published_v1`
+  and `xmip_capability_entry_v1` fill roles where they filled stages
+  (ADR-0027, amendment of the same day). `Xmip.Surface`'s `NodeCapability`
+  carries `Roles`, and `Stages` read through the runtime; `RuntimeRules`
+  binds `RoleWords` and `RoleStages`; the script module's
+  `Get-XmipNodeRole.ps1` holds the role functions, `Get-XmipNodeRoleWord`
+  among them, and keeps no word list.
+- **Executing keeps its Journey.** In the Playground a node declaring
+  executing hands each pair it received on to itself at process and at send
+  (`Roster::target`), so the whole path runs in its one process while the
+  other nodes hand on between processes — ADR-0018 clause 10a rehearsed in
+  the rig. A running `xmip-service` node says its roles from its
+  configuration (`Capability::serving`): receiving where a Receive Location
+  starts, processing where a Subscription routes, sending where a Send Port
+  starts, executing where all three do.
+- **One vocabulary for deployment too.** `deployment-model.md` section 3 named
+  three runtime roles — Executor, Reader, Writer — for the same subject. They
+  are the node roles now: Executor is receiving, processing, sending or
+  executing; Reader is monitoring; Writer is operational; development is the
+  Playground's (ADR-0028). The section's rule *do not create a role per
+  capability* named receive, process and send hosts among the capabilities it
+  kept out of the role model; the owner ruled them in, and the section says
+  so. A deployment's roles also pick what its program is built with
+  (`deploy/profile/role/<role>.toml`, one per role; ADR-0015, amendment
+  2026-10-01).
+
+**Not decided here.** How a node's TOML configuration states its roles —
+`xmip-service` derives them from its Locations today — and whether placement
+(ADR-0022's solver) matches work against roles or against the stages they
+serve. Named so the gaps are on the record.
+
+Provenance: the seven roles, the three new ones and Executing as their sum
+for low latency are the owner's, 2026-10-01, quoted above, as is the
+direction to consolidate the declaration into the role. The mapping from
+Executor, Reader and Writer, the collapsing of the three into executing, and
+the Playground's executing node keeping its pairs are the assistant's
+drafting of them.

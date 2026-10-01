@@ -20,7 +20,7 @@
 [string[]] $script:XmipPlaygroundOnly = @(
     'Cluster',
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
-    'Nodes', 'OnlineNodes', 'NodeCapability', 'LoadBytes', 'PassThru', 'Hidden'
+    'Nodes', 'OnlineNodes', 'NodeRole', 'LoadBytes', 'PassThru', 'Hidden'
 )
 
 function Resolve-XmipTestSuite {

@@ -3,7 +3,8 @@
 - Status: Accepted, with open questions recorded at the end
 - Date: 2026-08-25
 - Related: ADR-0012 (module boundary), ADR-0014 (operator surfaces), ADR-0024 (a claim at the endpoint),
-  ADR-0052 (the operator surfaces read what `xmip-service` publishes; amendment 2026-09-30)
+  ADR-0052 (the operator surfaces read what `xmip-service` publishes; amendment 2026-09-30),
+  ADR-0056 (amendment 2026-10-01: clause 10a's combination is the executing role)
 - Read by: ADR-0027 clause 4, which makes the execution tree this record builds
   the one scope tree everything observable is addressed against
 
@@ -234,7 +235,7 @@ say what the phases do.
 The Xmip Service had no executable. The owner, 2026-09-26, chose from two
 (the root `xmip` crate, or a new repository): **the root crate.** `xmip-service`
 is a binary of the estate's root crate, the assembly that already carries the
-server and tiny profiles; it links the technologies a deployment needs by
+modules' features; it links the technologies a deployment needs by
 build feature, because `xmip-core-runtime`, a Platform crate, may depend on
 no technology. The runtime stays a library the binary drives.
 
@@ -278,9 +279,9 @@ xmip-service --configuration <path> [--console] [--purpose test|runtime]
 xmip-service --configuration <path> --definition
 ```
 
-It calls `Running::start` with the technologies its build linked. These are
-the transports `architecture.toml`'s `[deploy]` table starts (`file`,
-`http`, `tcp` and `udp`), each a feature of the server profile. It serves
+It calls `Running::start` with the technologies its build linked: the
+transports its site's domains serve, of `file`, `http`, `tcp` and `udp`,
+each a feature of the root crate (ADR-0015, amendment 2026-10-01). It serves
 until a stop arrives and then calls `Running::stop`, which is clause 12's
 drain for one process, and exits 0. Every stop arrives on one channel and is
 the same drain:
@@ -351,8 +352,9 @@ one, and a node it ran held in memory for its own life. Now:
   before anything serves. A program that linked no engine, starting a node
   that names no store, holds in memory as before; a program that opened a
   store itself (the Playground) hands it over and that one is the node's.
-- **`xmip-service` links them by build feature**: `persist-rocksdb` in the
-  server profile, `persist-sqlite` beside it, and with either the
+- **`xmip-service` links them by build feature**: `persist-rocksdb` for a
+  server or hosted site, `persist-sqlite` for an edge or computer site
+  (ADR-0015, amendment 2026-10-01), and with either the
   platform's key store. A refused store is the refusal every node that
   cannot start gets: words on stderr, exit 2 (`registration::REFUSED`), and
   the failure audited (ADR-0062). The start record says the store, and the
@@ -445,3 +447,17 @@ Provenance: the gap, reported on 2026-09-30, is sorted under the owner's
 the quarter-second cadence, the publication at an order and at the stop,
 `any-party`, and the figures' stages are the assistant's drafting from the
 records named, for the owner to overrule.
+
+## Amendment, 2026-10-01: the combination in clause 10a is the executing role
+
+Clause 10a says a host configured as Reader, Executor *and* Writer runs a
+whole Journey without a hop. Those three words were `deployment-model.md`
+section 3's, and the owner, 2026-10-01, gave the node one vocabulary: *Leave
+Executing as a sum of Receiving, Processing and Sending. Executing would be
+used for Low Latency.* The combination clause 10a describes is now named:
+**executing**, a node role (`node::NodeRole`, ADR-0056, amendment
+2026-10-01) — receiving, processing and sending in one process. A node that
+declares only one of the three hands every Journey on to another process, and
+pays the hops this clause prices. Still no `low_latency` flag: the role is the
+choice, and the trade stays the operator's. The clause's reasoning stands;
+only the names changed.

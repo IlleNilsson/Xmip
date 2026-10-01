@@ -50,11 +50,25 @@ type in the code and **roll** had never been written down here at all.
 | --- | --- |
 | **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll runs exactly one cluster (ADR-0028), and the cluster is a process the roll spawns, not the roll itself (ADR-0052, amendment 2026-09-19). |
 | **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster called CT that declared nothing is shown (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
-| **Role** | What something is permitted or expected to be. A Node has `NodeRole` — Operational, Executing, Monitoring, Development — and an operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. |
+| **Role** | What something is permitted or expected to be. A Node has `NodeRole`, seven of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the Playground's (ADR-0056, amendment 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
 
-A node's **capability** is a third thing again and is not a role: it is what a
-node can do — receive, process, send, and whether it is online — declared by
-the node and never read from its name (ADR-0056).
+A node's **capability** is what it declares in ADR-0056's terms — its roles,
+which say the stages of the message path it serves, and whether it is online
+— published at `<node>/capability` and never read from its name. A **stage**
+(receive, process, send) is where a Message is on its path and a segment of a
+scope; a node does not declare a stage, its roles serve them.
+
+## Target, Domain and Site
+
+Three words for what a deployment's program is built with, each a TOML file
+under `deploy/` (ADR-0015, amendment 2026-10-01). A node's roles are the
+third axis, and are the Role row above.
+
+| Term | Meaning |
+| --- | --- |
+| **Target** | What a node's program runs on: `device` (a microcontroller, no_std), `edge` (a Raspberry Pi, industrial PC or gateway), `computer` (a person's own machine), `server` (an on-premises service) or `hosted` (a virtual machine or container at a hosting provider). A target says which store engine and key store a build carries, and what it refuses, each with its reason; a role or domain needing what it refuses is refused. A cluster and a hybrid are arrangements of nodes on targets, not targets. `deploy/profile/target`. |
+| **Domain** | What a node integrates, named by what its technologies serve: `healthcare`, `industrial`, `b2b`, `managed-service` (what a hosting provider sells), `integration` (the mechanisms every integration uses) and the rest. A domain lists standards, the leaves of technologies' positions in `architecture.toml`, and its members are every built technology with one of those leaves, across capabilities. Not a repository's architectural domain, such as Foundation or Platform (ADR-0058). `deploy/profile/domain`. |
+| **Site** | One deployment's choice of a target, its node roles and its domains, `deploy/site/<name>.toml`, and so what its `xmip-service` is built with: `Build-XmipService -Site <name>`. The build sets what is possible; the node's TOML picks from it at run time. |
 
 ## PowerShell
 

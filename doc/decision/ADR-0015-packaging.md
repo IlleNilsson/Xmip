@@ -10,13 +10,15 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI; target, domain, site
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
 release. A portable archive for people who want no installer at all. x86-64 and
-arm64 on both — **arm64 is not optional**, because the IoT and embedded profiles
-require it.
+arm64 on both — **arm64 is not optional**, because the edge target, an IoT
+gateway or a Raspberry Pi, requires it. What a package is built with is its
+site's: a target, node roles and domains, turned into a build by
+`Build-XmipService` (amendment 2026-10-01).
 
 ## Context
 
@@ -33,7 +35,7 @@ Two different things need distributing and they do not behave alike. The node is
 3. Linux is packaged as .deb and .rpm.
 4. An OCI container image is published for every release.
 5. A portable archive is published for every platform, for people who want no installer at all.
-6. Architectures are x86-64 and arm64 on both Windows and Linux. The iot and embedded profiles mean arm64 is not optional.
+6. Architectures are x86-64 and arm64 on both Windows and Linux. The edge target (amendment 2026-10-01) means arm64 is not optional.
 7. macOS is a development target: portable archive only, no service registration.
 8. MSIX is rejected. Its sandbox conflicts with a service that loads native modules out of a directory, which is what Xmip does.
 9. Every artifact for a release is built by CI from one commit.
@@ -41,7 +43,7 @@ Two different things need distributing and they do not behave alike. The node is
 
 ## Why not one format
 
-An MSI registers a Windows service and can be deployed by Group Policy, which is what a change board expects to see. A .deb or .rpm owns a systemd unit and participates in the distribution upgrade path. A container image is the only sensible answer for cloud and for edge fleets. A portable archive is what someone reaches for when they want to try Xmip without asking anyone for permission, and that matters more than it sounds for a platform that has to displace an incumbent.
+An MSI registers a Windows service and can be deployed by Group Policy, which is what a change board expects to see. A .deb or .rpm owns a systemd unit and participates in the distribution upgrade path. A container image is the only sensible answer for hosted nodes and for edge fleets. A portable archive is what someone reaches for when they want to try Xmip without asking anyone for permission, and that matters more than it sounds for a platform that has to displace an incumbent.
 
 winget covers the case Xmip most needs to win: a Windows administrator who already runs BizTalk and wants Xmip on a box this afternoon.
 
@@ -106,3 +108,101 @@ and on the AlmaLinux guest. `prerequisite.toml` declares libclang (and, on
 Linux, the C++ compiler); the first Windows build of RocksDB took some twenty
 minutes. RocksDB is built without compression, since what it stores is
 ciphertext.
+
+## Amendment, 2026-10-01: a site decides what a package is built with
+
+**Provenance.** The owner, 2026-10-01, on the proposal to replace the
+deploy files' two flat module lists with grouped profiles that decide what a
+deployment's program is built with: *We can try that and add runtime role
+perspective and target node type.* The five targets were proposed and not
+objected to; the domains were accepted as the axis to try. The names
+`hosted` and `managed-service`, the domains beyond healthcare, industrial,
+b2b and managed-service, the role compositions and the vetoes are the
+drafting's, and the owner's to strike.
+
+**What a package is built with is a site's.** A site,
+`deploy/site/<name>.toml`, picks three things, each a profile under
+`deploy/profile`, each a TOML file named by its word (ADR-0031):
+
+- **One target**, what the program runs on (`deploy/profile/target`):
+  `device`, a Meadow-class microcontroller, no_std, no store, no TLS
+  server; `edge`, a Raspberry Pi, industrial PC or gateway under systemd,
+  SQLite and the file key store; `computer`, a person's Windows or Mac
+  machine, SQLite and DPAPI or the keychain; `server`, an on-premises
+  Windows or Linux service, RocksDB and DPAPI or the file key store; and
+  `hosted`, a virtual machine or container at a hosting provider, RocksDB
+  and the file key store, headless. A target names the root crate features
+  it always brings (its store's engine, which brings the key store), the
+  features it refuses, each with a reason sentence, the Rust triples it is
+  built for, and the technologies it claims: the store engines and key
+  stores are a target's business and no domain's. A cluster and a hybrid
+  are arrangements of nodes, each on a target, and not targets
+  (deployment-model.md section 1).
+- **Node roles**, what the node is for (`deploy/profile/role`), one file
+  per `NodeRole` word (ADR-0056): `receiving`, `processing` and `sending`
+  each pull the capability features their stage needs; `executing` is their
+  sum and adds nothing (`roles = ["receiving", "processing", "sending"]`);
+  `operational` brings cluster, event, persist, retain, archive and
+  resilience; `monitoring` brings event and report; `development`, the
+  Playground's, composes executing, operational and monitoring.
+  `xmip-service`'s own features — node, audit, observe — are always on, and
+  say so in one place: its `[[bin]] required-features` in `Cargo.toml`.
+- **Domains**, what it integrates (`deploy/profile/domain`): a
+  description and the standards the domain serves. A standard is the leaf
+  of a technology's position in `architecture.toml` (`hl7-v2`, `mllp`,
+  `aws-sqs`), so a domain's members are every built technology whose leaf
+  it lists, across capabilities, less what a target claims. Thirteen:
+  healthcare, industrial, building-automation, vehicle, b2b,
+  managed-service (the managed services a hosting provider sells),
+  enterprise-messaging, database, file-exchange, mail, web-service,
+  network, and integration, the mechanisms every integration uses
+  (authenticate, authorize, identify, resilience, route, the common shapes,
+  paths and observation). Every built technology is in a domain or claimed
+  by a target, and `test/Deploy.Test.ps1` fails when one is not.
+
+**One place turns a site into a build: `Build-XmipService -Site`.** The
+features are the target's, every role's (executing expanded), each domain
+technology the root crate links through a feature (a feature listing
+`dep:<alias>` whose dependency's `package` is the technology: today the
+four transports and the two store engines), and xmip-service's required
+ones; the command is `cargo build --bin xmip-service --no-default-features
+--features <them>`, run at the estate root. A domain technology
+xmip-service has no feature for yet is said under `Unlinked`, in words, and
+not refused: the build links what exists. `-WhatIf` returns the plan and the
+command and builds nothing. The rule that says which technologies are built
+moved from `Update-XmipDeployList.ps1` to `Get-XmipBuiltTechnology`, once.
+
+**The target vetoes.** A role or a domain needing a feature the target
+refuses is REFUSED in words naming the role or domain, the feature and the
+target's reason (ADR-0055): an operational node on a person's computer
+needs `cluster`, which the computer target refuses because a computer
+sleeps, roams and is shut down by its user. **A device site is refused, not
+redirected.** `xmip-service` needs the standard library and a device has
+none, so `Build-XmipService` refuses a device site, saying so and giving the
+command that does build for a device: `xmip-core` alone, no_std,
+`--target thumbv7em-none-eabihf`. A cmdlet named for xmip-service that
+quietly built something else would say one thing and do another.
+
+**The Cargo profiles are deleted.** `server-profile`, `desktop-profile`
+and `tiny-profile` were a second home for what the profiles now say, and
+`desktop-profile` was `server-profile` under another name. **`default` is
+empty**: a plain `cargo build` is the assembly library with the modules
+every node has, and a default that named the bin's features plus a store
+would have been a profile under another name. The root's own tests take
+`--all-features`, which is what the workflow runs; its site job builds each
+example site through `Build-XmipService`, and xmip-core for the device.
+
+**How it fits "module selection is configuration".** Two steps. The build
+sets what is possible: the site's profiles decide which features the
+program carries. The node's TOML picks from that at run time: which
+Locations, transports and store it starts, and a name the build left out is
+refused as the node starts (ADR-0025, amendment 2026-09-28; ADR-0018,
+amendment 2026-09-30).
+
+**The deploy lists are gone** (ADR-0060, amendment 2026-10-01): the DSC
+document and the Ansible role each name the site their node is built from,
+`metadata.xmip.site` and `xmip_site`.
+
+Five example sites, one per target: `hospital-interface` (server),
+`factory-gateway` (edge), `personal-computer` (computer), `b2b-exchange`
+(hosted) and `field-sensor` (device, refused as above).

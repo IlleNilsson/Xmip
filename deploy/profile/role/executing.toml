@@ -1,0 +1,9 @@
+# The executing role: receiving, processing and sending in one process, the
+# low-latency choice, a Journey with no process hop (NodeRole::Executing,
+# ADR-0056). It is their sum and adds nothing of its own.
+
+description = "Receiving, processing and sending in one process: the low-latency role."
+
+roles = ["receiving", "processing", "sending"]
+
+features = []
