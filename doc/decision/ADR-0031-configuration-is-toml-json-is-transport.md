@@ -3,7 +3,9 @@
 - Status: Accepted
 - Date: 2026-09-05
 - Related: ADR-0011 (module and repository naming), ADR-0030 (prefix external
-  names), ADR-0028 (the Xmip Playground), ADR-0029 (observation has history)
+  names), ADR-0028 (the Xmip Playground), ADR-0029 (observation has history),
+  ADR-0015 and ADR-0018 (amendments 2026-10-01: Xmip Storage, and a node's
+  configuration read into memory)
 
 ## In brief
 
@@ -114,3 +116,72 @@ read by `configure`. No database holds configuration, and nothing is
 configured by writing a row. The stores ADR-0015 names hold what happens:
 RocksDB the runtime's state, SQLite its history and the records an operator
 queries — never what was configured.
+
+## Amendment, 2026-10-01: a node holds its TOML as its execution tree
+
+The owner, 2026-10-01: *The TOML configuration should be read to an in memory
+database. The TOML configuration can be changed by operation tools or
+editors, but will not go in use until thread or process is started, reused.
+I guess that's why SQLite was there. But runtime matter has to be central so
+other nodes with matching NodeRoles can pick up.* Later the same day he
+decided: *So no in-memory database it is.*
+
+- **Each node reads its TOML configuration once, as it starts, and holds it
+  as its execution tree in memory** — its Locations, its Subscriptions with
+  their compiled filters, its Xmip Processes, its Send Ports — which
+  `build_execution_tree` in `xmip-core-runtime` already builds (ADR-0018
+  clause 4, phase 2). That tree is the node's configuration at runtime, and
+  routing matches against its compiled filters (`runtime-model.md`
+  section 9).
+- **No in-memory database.** One would be a second copy of the tree. It is
+  added only if something needs to query configuration in ways the tree does
+  not answer.
+- **A changed TOML file takes effect when the thread or Host Service that
+  uses it is started again**, reused, never mid-flight. The operation tools
+  and editors change the TOML file, never a database.
+- **Nothing configured is central.** Xmip Storage (ADR-0056, amendment of
+  this date) keeps runtime matter centrally — the Ledger, its claims and its
+  state — so another node with matching node roles can pick up, and its
+  administration database keeps what must be shared and kept over time:
+  audit history, operator state (what is paused, by whom, when, which every
+  node honors), deployment state and cluster membership. It holds no
+  configuration (`deployment-model.md` section 7).
+
+This agrees with the amendment of 2026-09-26: *Databases are for runtime and
+history, not configuration.* It settles the question a record of earlier the
+same day had raised, that a central database would hold configuration loaded
+at startup.
+
+Provenance: the owner's rulings, quoted. The list of what the tree holds is
+the runtime's own; the wording is the assistant's.
+
+## Amendment, 2026-10-01: where the runtime's settings are configured
+
+**Provenance.** The owner, 2026-10-01, on six settings the runtime needed and
+configuration had no place for: *sort it and present a solution*. The
+assistant presented one, and the owner: *If there are no questions, write it
+down.* Two points were then asked one at a time, and the owner answered
+each *Yes*: interaction type, and processing depth with it, sit on the
+Receive Location, as `runtime-model.md` section 6 says; and audit policy
+works like retention, `[audit] default` per node, overridable per Port and
+per Location. The key names are the assistant's drafting.
+
+The keys, all TOML (`runtime-model.md` section 20, *Where the runtime's
+settings are configured*):
+
+- **An Xmip Application's document.** `[[receive_ports]]` with `name`; each
+  `[[receive_locations]]` names its `receive_port` (refused without one) and
+  states `interaction` (`composite`, `data-transfer`, `batch-load`) and
+  `depth` (`transfer`, `light`, `context`). `[[send_ports]]` gains
+  `send_locations` (tried in order), `retry = { attempts, backoff }` on the
+  active Location, `failover` (`next`, `none`), `execution_style`,
+  `order_key` and `on_failure` (`block`, `skip`); a Sequential Send Port
+  without `on_failure` is refused at startup.
+- **A node's configuration.** `[[parties]]` with `name` and `identities`
+  (ADR-0019), so `[receive_locations.accept] party = [...]` names them;
+  `[retention] default`, overridable per Port; `[audit] default`,
+  overridable per Receive or Send Port and per Location.
+
+Each is read into the node's execution tree as it starts, like everything
+else configured (the amendment above).
+

@@ -12,7 +12,8 @@
   evidence and run entry), ADR-0009 (configuration), ADR-0018 (clause 10a;
   amendment 2026-10-01, executing is the low-latency role), ADR-0015
   (amendment 2026-10-01, a role picks what a build carries), ADR-0027
-  (amendment 2026-10-01, the role exports)
+  (amendment 2026-10-01, the role exports), ADR-0024 (amendment 2026-10-01,
+  a Journey claimed through Xmip Storage)
 
 ## In brief
 
@@ -21,7 +22,8 @@
 - Name: A node declares what it can do
 - Order: 13
 - Concepts: node capability; node role; online capability; feature capability;
-  authentication capability; runtime capability; placement criteria
+  authentication capability; runtime capability; placement criteria;
+  Storage role, Xmip Storage
 
 **A node declares its capabilities, and work is placed on a node whose
 capabilities satisfy what the work requires. There are four kinds: online,
@@ -45,8 +47,9 @@ The estate had anticipated this and never said what a capability is.
 - `deployment-model.md`: *Any capable node may resume work if it can
   satisfy the required capabilities* — and, further down, that a profile
   says *which cluster capabilities exist*.
-- `runtime-model.md` and open problem 17: a Message in node A's ToDo is
-  node A's work, and nothing moves it. Placement is the other half of that
+- `runtime-model.md` and open problem 17: a Message in node A's store is
+  node A's work, and nothing moves it (answered by the amendment of
+  2026-10-01, the Storage role). Placement is the other half of that
   question — before work can reach another node, something must say which
   node is fit to take it.
 
@@ -389,3 +392,40 @@ direction to consolidate the declaration into the role. The mapping from
 Executor, Reader and Writer, the collapsing of the three into executing, and
 the Playground's executing node keeping its pairs are the assistant's
 drafting of them.
+
+## Amendment, 2026-10-01: the Storage role
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day: *to have one or more Xmip Nodes
+with role Storage would be a safety… Xmip could just do a round robin over
+Xmip Nodes roled Storage*; *The storage node may or may not carry the SQL
+storage, it is an IT-infrastructure question… How IT-infrastructure designs
+their Database servers is their concern*; and, on a shared database server
+IT runs, option A, *Go ahead*. Also *There is nothing local about
+either RocksDB or SQLite, they are cluster services running on one or more
+nodes*.
+
+- **An eighth role, Storage.** A node declaring it is **Xmip Storage**, the
+  doorway to all storage: it serves the storage operations — write a Stream
+  chunk, write a Message, claim a Journey, hand it on, write an audit record
+  — and every other node calls them, never a database directly. Configuration
+  is not among them: each node reads its own TOML into memory (ADR-0031,
+  amendment 2026-10-01). It serves no stage of the message path.
+- **Round robin, and more than one is the safety.** A node reaches the
+  Storage nodes round robin; a Storage node that stops is passed over.
+- **What is behind them is IT's.** A database server IT runs on the internal
+  network (option A), or, for a single machine or an edge site, the Storage
+  node is embedded and keeps RocksDB and SQLite itself, with no failover
+  (`deployment-model.md` section 7). A one-node deployment is its own
+  Storage node.
+- **The executing role is unchanged** (the amendment above): receiving,
+  processing and sending in one Host Service, for low latency. Its hand-ons
+  still go through the Ledger (`runtime-model.md` section 3).
+- **The open question this record named from the Context** — a Message in
+  node A's store is node A's work, and nothing moves it — is answered: the
+  store is the cluster's, and work moves by a claim through Xmip Storage
+  (ADR-0024, amendment of this date). Which node may take the work is still
+  this record's placement.
+
+Recorded ahead of the code: `node::NodeRole` gains Storage, and the surfaces
+its word, in the build that follows.

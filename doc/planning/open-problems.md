@@ -269,13 +269,29 @@ message flow has no configuration anyone can read.
 
 ---
 
-# The ToDo
+# The Ledger
 
 ## 17. How does work reach another node?
 
-A ToDo is per node and written only by its owner, which is what removes the
-shared write path BizTalk's MessageBox never escaped. The cost is that a Message
-in node A's ToDo is node A's work, and nothing moves it.
+**Answered 2026-10-01.** The owner, validated part by part with the
+assistant: *There is nothing local about either RocksDB or SQLite, they are
+cluster services running on one or more nodes*, and *All DB records have to
+be central and clusterable, if one node fails another one should be able to
+pick up*. The work store, renamed the Ledger, belongs to the cluster: every
+node reaches it through Xmip Storage, the nodes declaring the Storage role,
+round robin, and behind them is a database server IT runs (option A, chosen)
+or, on a single machine, an embedded Storage node; work moves by a
+time-limited claim in that database (`runtime-model.md` section 3,
+`deployment-model.md` sections 7 and 9). Of the options below it is nearest
+B — a shared write path — with the difference that no node writes the
+database directly, only Xmip Storage's operations do. The database server's
+failover and the balancing of incoming traffic are IT's. Built: none of it
+yet. The question as it
+stood before the ruling:
+
+The work store was per node and written only by its owner, which was meant to
+remove the shared write path BizTalk's MessageBox never escaped. The cost was
+that a Message in node A's store was node A's work, and nothing moved it.
 
 That is fine for an estate where each node owns its own Receive Locations. It is
 not fine when a Receive node should hand processing to an Executing node, which
@@ -284,7 +300,7 @@ not fine when a Receive node should hand processing to an Executing node, which
 | option | effect |
 |---|---|
 | **A. Nodes hand off over the Xmip node-to-node protocol** | explicit, auditable, and the Journey records the hop. Needs that protocol to exist — see problem 18 |
-| **B. Receive nodes write directly into the target node's ToDo** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
+| **B. Receive nodes write directly into the target node's store** | fewest moving parts, and it reintroduces the shared write path this design exists to avoid |
 | **C. Work stays where it lands; placement decides at receive time** | no movement at all. Requires the receive-side configuration to know the whole topology, and a saturated node cannot shed load |
 
 **Lean: A.** B is the BizTalk shape wearing a different name. C is defensible
@@ -438,8 +454,9 @@ is decided and recorded; almost none of it is built, and nothing demonstrates it
 
 **Decided (recorded, coherent).** *Durability precedes execution*
 (`runtime-model.md`): nothing runs on arrival, every Stream, Message and Journey
-is written to per-node persistence before anything acts on it, so an accepted
-Message cannot be lost to a crash. A non-terminal Journey resumes from its last
+is written to the Ledger, synced, before anything acts on it, so an accepted
+Message cannot be lost to a crash: a write counts only once the database
+behind Xmip Storage has it durably (2026-10-01). A non-terminal Journey resumes from its last
 checkpoint, position and Message generation together (ADR-0013). Exactly-once is
 internal — one runtime owns a unit of work by the durable claim (ADR-0024),
 checkpoints bound reprocessing — so delivery is at-least-once and edge effects
@@ -456,8 +473,12 @@ recovery is not executable today: the contracts exist, the durable store behind
 them does not.
 
 **Open (recorded as open).** Cross-node Journey recovery is left open by ADR-0024
-— a Journey mid-flight in node A's ToDo is node A's work, and moving it to node B
-when A dies ("work does not move by itself", Problem 17) is undesigned. A device
+— a Journey mid-flight in node A's store is node A's work, and moving it to node B
+when A dies ("work does not move by itself", Problem 17) is undesigned.
+*Decided 2026-10-01, not built:* the Ledger is the cluster's, and a dead node's
+time-limited claims lapse so another node resumes (ADR-0024, amendment
+2026-10-01); a kill test at each step and the failover tests are the proofs
+owed (`runtime-model.md` section 3). A device
 mount that vanishes after a claim-rename but before completion is the same gap in
 the attached-device case. Single-node restart recovers; failover does not.
 

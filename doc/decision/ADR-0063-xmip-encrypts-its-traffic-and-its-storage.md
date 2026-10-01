@@ -4,7 +4,9 @@
 - Accepted: 2026-09-25, the owner, in the words quoted below
 - Date: 2026-09-25
 - Related: ADR-0015 (packaging; amendment 2026-09-25, the engine is
-  RocksDB), ADR-0033 (certificates on Receive and Send; TLS is
+  RocksDB; amendment 2026-10-01, Xmip Storage and the embedded engines),
+  ADR-0056 (amendment 2026-10-01, the Storage role, reached over this
+  record's TLS), ADR-0033 (certificates on Receive and Send; TLS is
   `xmip-core-library-tls` and its key exchange hybrid), ADR-0034 (provisioning
   versus usage), ADR-0052 (the surfaces, local and remote), ADR-0062 (every
   tool audits), `doc/planning/open-problems.md` problems 17, 18 and 29
@@ -159,3 +161,37 @@ step 6.
 The owner restated the reason the same day, wider than TLS: *Xmip shall use
 its own tool chain, dog fooding as much as possible* — now a hard-learned
 rule in `CONTRIBUTING.md`.
+
+## Amendment, 2026-10-01: Xmip Storage is reached over Xmip's TLS
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day: *to have one or more Xmip Nodes
+with role Storage would be a safety… Xmip could just do a round robin over
+Xmip Nodes roled Storage*; *The storage node may or may not carry the SQL
+storage, it is an IT-infrastructure question… How IT-infrastructure designs
+their Database servers is their concern*; and, on a shared database server
+IT runs, option A, *Go ahead*.
+
+Every node now reaches storage through Xmip Storage, the nodes declaring the
+Storage role, round robin (ADR-0056 and ADR-0015, amendments 2026-10-01;
+`deployment-model.md` section 7). A node calling Xmip Storage is Xmip's own
+traffic between its parts, so it is mutual TLS through
+`xmip-core-library-tls` under clause 1 and the amendment of 2026-09-26.
+
+**Where Xmip's encryption stops** — settled by the owner, 2026-10-01: *Xmip
+encrypts to Xmip Node with Role/Type Storage, from there it is the IT
+infrastructure/operations to decide*; and for the embedded Storage node, kept
+for tests and for single-machine and edge sites: *Well then Xmip has to
+support encryption of that*.
+
+1. **In transit, Xmip encrypts up to the Storage node.** Everything between
+   a node and a Storage node travels over Xmip's own TLS (clause 1).
+2. **Behind a database server IT runs, encryption is IT's.** From the
+   Storage node on — its connection to the server and the data at rest
+   there — IT and operations decide, for example SQL Server's Transparent
+   Data Encryption or encrypted disks. That is clause 3: someone else's
+   database is theirs.
+3. **On an embedded Storage node Xmip encrypts its own files at rest
+   itself**: every record is sealed by persist's `EncryptedStore` before
+   RocksDB or SQLite sees it, as clause 2 says and as built today, and a
+   Storage node under test is no exception.

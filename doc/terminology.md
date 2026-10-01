@@ -24,7 +24,7 @@ unless the surrounding context makes the meaning unavoidable.
 | **Binding** | What a node's configuration says about an Xmip Application it runs: that it runs it, and the environment's side of it — addresses, credentials, which node takes which Receive and Send Location. The design is the Application's; the binding is the node's. ADR-0064. |
 | **Transform** | What turns one Message's content into another's. Designed in VS Code, compiled at design time into a native module (ADR-0066). |
 | **Expression** | One line of Xmip's own expression language, shaped like SQL's WHERE clause: `MessageType = 'Order' and not Amount > 1000`. A Subscription's filter is one; a Transform's conditions and an Xmip Process's decisions will be. Compiled once into a tree and decided in three truths — true, false and *unknown*, where a value that is not there is unknown with its reason, never a silent false. `xmip-core-path`'s `expression`; ADR-0066. |
-| **Subscription** | What picks a published Message up and opens a Journey into an Xmip Process, a Send Port or a Send Port Group: a filter and a destination, drawn in an Xmip Application and bound by a node's configuration, and added and removed in that TOML and nowhere else (ADR-0013, ADR-0064). An operator lists them and pauses or resumes one — never removes one — in the Subscriptions view, `xmip-cli subscriptions` and `Get-XmipSubscription`; a paused one holds what it matches in the node's runtime store, and a resume picks it up oldest first (ADR-0013, amendment 2026-09-30). It is not an **Event subscription**. |
+| **Subscription** | What picks a published Message up and opens a Journey into an Xmip Process, a Send Port or a Send Port Group: a filter and a destination, drawn in an Xmip Application and bound by a node's configuration, and added and removed in that TOML and nowhere else (ADR-0013, ADR-0064). An operator lists them and pauses or resumes one — never removes one — in the Subscriptions view, `xmip-cli subscriptions` and `Get-XmipSubscription`; a paused one holds what it matches in the Ledger, and a resume picks it up oldest first (ADR-0013, amendments 2026-09-30 and 2026-10-01). It is not an **Event subscription**. |
 | **Event subscription** | A Party's standing request to be told what Xmip did: a filter over Event types, outcomes, a scope and a Party, held with a bounded queue in the hub of the process that took it, and never persisted (ADR-0065). An operator lists them, and pauses, resumes and removes one, in the Event subscriptions view, `xmip-cli event-subscriptions` and `Get-XmipEventSubscription` (amendments 2026-09-29 and 2026-09-30). It is not a **Subscription**, which picks a published Message up and opens a Journey; where either could be meant, say Event subscription. |
 | **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
@@ -50,7 +50,7 @@ type in the code and **roll** had never been written down here at all.
 | --- | --- |
 | **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll runs exactly one cluster (ADR-0028), and the cluster is a process the roll spawns, not the roll itself (ADR-0052, amendment 2026-09-19). |
 | **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster called CT that declared nothing is shown (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
-| **Role** | What something is permitted or expected to be. A Node has `NodeRole`, seven of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the Playground's (ADR-0056, amendment 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
+| **Role** | What something is permitted or expected to be. A Node has `NodeRole`, eight of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the Playground's; Storage is Xmip Storage, the doorway every other node calls for all storage (ADR-0056, amendments 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
 
 A node's **capability** is what it declares in ADR-0056's terms — its roles,
 which say the stages of the message path it serves, and whether it is online
@@ -66,7 +66,7 @@ third axis, and are the Role row above.
 
 | Term | Meaning |
 | --- | --- |
-| **Target** | What a node's program runs on: `device` (a microcontroller, no_std), `edge` (a Raspberry Pi, industrial PC or gateway), `computer` (a person's own machine), `server` (an on-premises service) or `hosted` (a virtual machine or container at a hosting provider). A target says which store engine and key store a build carries, and what it refuses, each with its reason; a role or domain needing what it refuses is refused. A cluster and a hybrid are arrangements of nodes on targets, not targets. `deploy/profile/target`. |
+| **Target** | What a node's program runs on: `device` (a microcontroller, no_std), `edge` (a Raspberry Pi, industrial PC or gateway), `computer` (a person's own machine), `server` (an on-premises service) or `hosted` (a virtual machine or container at a hosting provider). A target says whether a build can be an embedded Storage node — RocksDB and SQLite, never one for the other (ADR-0015, amendment 2026-10-01) — which key store it carries, and what it refuses, each with its reason; a role or domain needing what it refuses is refused. A cluster and a hybrid are arrangements of nodes on targets, not targets. `deploy/profile/target`. |
 | **Domain** | What a node integrates, named by what its technologies serve: `healthcare`, `industrial`, `b2b`, `managed-service` (what a hosting provider sells), `integration` (the mechanisms every integration uses) and the rest. A domain lists standards, the leaves of technologies' positions in `architecture.toml`, and its members are every built technology with one of those leaves, across capabilities. Not a repository's architectural domain, such as Foundation or Platform (ADR-0058). `deploy/profile/domain`. |
 | **Site** | One deployment's choice of a target, its node roles and its domains, `deploy/site/<name>.toml`, and so what its `xmip-service` is built with: `Build-XmipService -Site <name>`. The build sets what is possible; the node's TOML picks from it at run time. |
 
@@ -209,10 +209,11 @@ grammatically. A pushed departure fails at Xmip and is Xmip's to retry; a
 collected one waits, and its failure mode is nobody turning up. Reported as one
 number, an unreachable Party and an idle one look identical.
 
-Between the two sits the **ToDo**, which holds every Stream, Message and Journey
-until *every* departure is settled. A Journey with two destinations reached and
-one awaiting collection is unfinished, and the ToDo is the only place that state
-can live without lying about it in one direction or the other.
+Between the two sits the **Ledger**, which holds every Stream, Message and
+Journey until *every* departure is settled. A Journey with two destinations
+reached and one awaiting collection is unfinished, and the Ledger is the only
+place that state can live without lying about it in one direction or the
+other.
 
 How a Stream arrived is separate from how its identity was established — see
 *Identity, Party and direction* above, and ADR-0019 clause 8.
@@ -253,37 +254,70 @@ message metadata, section metadata, stream references or stored streams as
 policy requires, Instance context, failure reason, failure classification, time
 of failure, and the runtime place where the failure occurred.
 
-It exists so Xmip can inspect, report, recover, retry, move to the Xmip DMQ, or
-explain what failed and why.
+It exists so Xmip can inspect, report, recover, retry, move to the Dead Message
+Queue, or explain what failed and why.
 
-## ToDo
+## Ledger
 
-The durable work store on a node. **One per node**, embedded, and written only
-by the node that owns it.
+The durable work store of a cluster: Xmip Storage's **runtime database**.
+Named on 2026-10-01 (the owner: *ToDo is a bad name, propose a better one*;
+the assistant proposed Ledger; the owner: *Ledger is good*).
 
-Every Stream, Message and Journey lives in it until completion or retention, and
-is archived before either. Selecting work is a query over state; completing work
-is a state transition. That makes it a queue in every sense that matters —
-durable, survives restart, ordered where ordering is configured — while being no
-kind of message broker.
+Every Stream, in chunks, every Message and every Journey lives in it until
+completion or retention, and is archived before either, with claims, the
+state of each Xmip Process, retry, failure and replay state, the Messages a
+paused Subscription holds, and audit records as first written. Selecting
+work is a query over state; completing work is a state transition. That
+makes it a queue in every sense that matters — durable, survives restart,
+ordered where ordering is configured — while being no kind of message
+broker. A write counts only once the database has it durably.
 
-**The comparison is BizTalk's MessageBox, and so is the warning.** BizTalk's was
-one shared SQL database holding every message and subscription for the whole
-group, which made it the contention point the entire product was eventually
-tuned around. A ToDo is per node, so there is no shared write path to
-contend for and nothing to partition later.
+**It belongs to the cluster, not to a node.** Every node reaches it through
+Xmip Storage, and works on it by a time-limited claim, so when a node dies
+another picks its work up. Behind Xmip Storage it is a database on a server
+IT runs, or RocksDB on an embedded Storage node.
+
+**The comparison is BizTalk's MessageBox, and so is the warning.** BizTalk's
+was one shared SQL database holding every message and subscription for the
+whole group, which made it the contention point the entire product was
+eventually tuned around. Behind a database server the Ledger is a shared
+database too, and its write rate is the cluster's limit; what differs is
+that no node writes it directly, only Xmip Storage's operations do.
 
 It is not a broker, and Xmip requires none. `xmip-core-transport-rabbitmq`,
 `-msmq`, `-kafka` and `-ibm-mq` are integration targets — things Xmip talks to
 on somebody's behalf — not infrastructure it runs on.
 
-Engine and layout are in `architecture/deployment-model.md` section 7; the
-execution model it implements is `architecture/runtime-model.md` section 3.
+The databases, the roles and the split with IT's infrastructure are in
+`architecture/deployment-model.md` sections 3, 7 and 9; the execution model it
+implements is `architecture/runtime-model.md` section 3.
+
+## Xmip Storage
+
+The doorway to all storage: the nodes declaring the **Storage** role, whose
+operations — write a Stream chunk, write a Message, claim a Journey, hand it
+on, write an audit record — every other node calls,
+never a database directly, round robin over the Storage nodes. More than one
+Storage node is the safety. It always keeps two databases, whatever the
+backend: the **runtime database**, which is the Ledger, and the
+**administration database** — administration, deployment state, cluster
+membership, operator state, and audit kept over time, moved there by the
+audit keeper; never configuration, which each node reads from its TOML once
+as it starts and holds as its execution tree in memory (ADR-0031, amendment
+2026-10-01). Behind it is a database server IT
+runs (option A, PostgreSQL first), the two databases separate on IT's servers, or, for a
+single machine or an edge site, an **embedded Storage node** keeping RocksDB
+and SQLite itself, with no failover (the owner, 2026-10-01). Xmip encrypts up
+to the Storage node, over its own TLS; behind a database server, encryption
+at rest is IT's; an embedded Storage node, test nodes included, encrypts its
+own files itself (ADR-0063, amendment 2026-10-01).
 
 ## Xmip DMQ
 
 **Dead Message Queue.** Where an accepted Message goes when **no Subscription
-matched it**.
+matched it**. It is state in the Ledger, not a store of its own: the
+Publication that matched nothing, kept with each Subscription's reason for
+declining (`architecture/runtime-model.md` section 9).
 
 The expansion was written down for the first time on 2026-08-26. Every document
 in the repository used the abbreviation and none defined it, including this one,

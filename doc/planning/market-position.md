@@ -235,7 +235,7 @@ declares them .NET 11 and `xmip-template-dotnet` now exists, so the obstacle is
 work rather than a decision.
 
 **Judgment, not fact:** this gap is wider than any runtime feature currently
-open, including ToDo.
+open, including the Ledger.
 
 ## What to say out loud
 

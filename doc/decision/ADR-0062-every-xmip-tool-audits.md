@@ -11,7 +11,9 @@
   Xmip owns, their names and the location each declares, which every record
   carries since 2026-09-29), ADR-0059 (a test suite carries its
   provider), ADR-0028 (a hidden run's records say `hidden = "true"` and are
-  read only when a query includes them, its amendment 2026-09-30), `doc/architecture/observability-model.md`,
+  read only when a query includes them, its amendment 2026-09-30), ADR-0015
+  (amendment 2026-10-01: Xmip Storage, where audit is written since this
+  record's amendment of that date), `doc/architecture/observability-model.md`,
   `module/core/operation/audit/doc/audit-record.md`
 
 ## In brief
@@ -237,3 +239,44 @@ left to the assistant. **The assistant's**, for the owner to view and
 overrule: the location on every record and its name, the reader and its
 words, the groups, the view's columns, its filters and the page of 200, the
 move of the wildcard to Rust, and the command line's and PowerShell's forms.
+
+## Amendment, 2026-10-01: audit is written through Xmip Storage
+
+**Provenance.** The owner, 2026-10-01, validated part by part with the
+assistant, and re-decided later the same day: *to have one or more Xmip Nodes
+with role Storage would be a safety… Xmip could just do a round robin over
+Xmip Nodes roled Storage*; *The storage node may or may not carry the SQL
+storage, it is an IT-infrastructure question… How IT-infrastructure designs
+their Database servers is their concern*; and, on a shared database server
+IT runs, option A, *Go ahead*. On the embedded store: *RocksDB is
+the first storage for audit records, then transferred to SQLite, RocksDB for
+speed, SQLite for persistence over time.*
+
+- **Where a record goes.** An audit record is written through Xmip Storage,
+  the nodes declaring the Storage role (ADR-0056, amendment of this date),
+  like every other record of the cluster (`runtime-model.md` section 16).
+- **Runtime database first, administration database after**, on every
+  backend: the record is written to the runtime database, and the audit
+  keeper moves it to the administration database, where it is kept over
+  time (the owner: *We still need the distinction between runtime and
+  administration databases, regardless of backend database technology*). On
+  an embedded Storage node those are RocksDB and SQLite; behind a database
+  server they are two separate databases on IT's servers
+  (`deployment-model.md` section 7).
+- **The file sink is replaced.** `ProgramAudit`'s `FileSink`, `audit.toml`,
+  and the reader over it (clause 6) give way to Xmip Storage; the code
+  follows this record.
+- **Clause 3 stands.** When audit cannot persist, the record goes to the
+  operating system's log, as before.
+
+**A program outside a node writes to the cluster's Storage nodes too.**
+Asked whether the cmdlets, the operation web and the command line reach
+Xmip Storage, the owner, 2026-10-01: *It is going to be in the cluster as an
+Xmip Node with Role/Type Storage.* A tool's audit is written to the
+cluster's Storage nodes, never to a file. A tool already works against a
+cluster or a node — the operation web follows a cluster, a cmdlet or
+`xmip-cli` names a node — so it asks that node for its Storage nodes and
+writes to them round robin. With no cluster reachable, the operating
+system's log takes the record (clause 3). How a tool finds the Storage
+nodes — asking the node it works against for its list, then round robin —
+is the assistant's drafting, for the owner to overrule.
