@@ -14,7 +14,8 @@
   propagate; its color name corrected 2026-09-24, its rollup exported the
   same day), ADR-0044 (a technology shares through its capability), ADR-0056
   (a node declares what it can do; its copies corrected 2026-09-24, its
-  evidence and run entry moved to the node crate the same day), ADR-0019
+  evidence and run entry moved to the node crate the same day; a node is
+  shown by its roles since 2026-10-01), ADR-0019
   (identity, Parties and direction; the Topology draws its Parties since the
   amendment of 2026-09-29), ADR-0065 (Events subscribed; the Subscriptions
   view, its amendment 2026-09-29), ADR-0009 (roles; both GUIs take the role
@@ -1676,3 +1677,18 @@ Provenance: the requirement is ADR-0018's amendment of this date; moving the
 drawing and the writer instead of copying them follows the owner's rule that
 code is placed once (`CONTRIBUTING.md`). The wording is the assistant's
 drafting, for the owner to overrule.
+
+## Amendment, 2026-10-01: a node is shown by its roles
+
+What every surface says of a node's declaration — the run line, the
+topology's inspector, the configuration tree's `capability` row,
+`Get-XmipTestNode`, `xmip-cli health` — now says its roles: `nodes
+alpha=receiving beta=processing+sending gamma=sending`, `receiving ·
+online`, `no role · offline` (ADR-0056, amendment 2026-10-01). The ruling of
+2026-09-19 that *a node carries the roles suitable for its purpose* is now
+literal: the roles are `NodeRole`'s, and the stage words the rig declared in
+their place are gone. `NodeCapability.Ordered` calls `NodeRole::declared`
+through `xmip_role_declared_v1`, `NodeCapability.Stages` reads which stages
+a node serves through `xmip_role_stages_v1`, and the script module's
+`ConvertTo-XmipNodeRole`, its RoundTrip refusal and its roster reading call
+them (ADR-0027, amendment of the same day). No surface writes a role word.

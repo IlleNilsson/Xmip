@@ -1,0 +1,19 @@
+# The enterprise-messaging domain: the message brokers an enterprise runs.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "The message brokers an enterprise runs: Kafka, AMQP, IBM MQ, NATS."
+
+standards = [
+  "kafka",
+  "redpanda",
+  "amqp",
+  "rabbitmq",
+  "activemq",
+  "ibm-mq",
+  "msmq",
+  "nats",
+  "nats-jetstream",
+  "redis-streams",
+]

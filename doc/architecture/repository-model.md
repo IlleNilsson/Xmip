@@ -545,7 +545,6 @@ and on disk:
 Sync-XmipEstate -Create      # remote: create what the manifest names and GitHub lacks
 Sync-XmipEstate -Configure   # remote: description, topics, features
 Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
-Sync-XmipEstate -Deploy      # local: the deploy lists under deploy/, from the manifest
 ```
 
 **A reserved repository that does not exist is not drift.** It is section 3

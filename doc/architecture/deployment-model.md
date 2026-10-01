@@ -10,19 +10,29 @@ databases in almost the same words.
 
 ## 1. The deployment range
 
-```text
-IoT device            Cloud node
-Edge node             Cloud cluster
-Single on-prem server Hybrid on-prem/cloud
-On-prem cluster
-```
+Xmip runs from a microcontroller to a provider's virtual machines, and the
+range is said as **five targets**, each a profile under
+`deploy/profile/target` (ADR-0015, amendment 2026-10-01):
+
+| Target | What it is | Store and key store |
+| --- | --- | --- |
+| `device` | a Meadow-class microcontroller: bare metal, no_std, no TLS server | none: it keeps no runtime store |
+| `edge` | a Raspberry Pi, industrial PC or gateway under systemd, headless | SQLite; the file key store |
+| `computer` | a person's own Windows or Mac machine, one node of its own | SQLite; DPAPI or the keychain |
+| `server` | an on-premises Windows or Linux machine running the service | RocksDB; DPAPI or the file key store |
+| `hosted` | a virtual machine or container at a hosting provider, headless | RocksDB; the file key store |
+
+**A cluster and a hybrid are arrangements of nodes, not targets.** An
+on-premises cluster is servers; a hybrid deployment is servers on one side
+and hosted nodes on the other, joined as one cluster or as Parties to each
+other. Each node in either is built for its own target.
 
 **The runtime semantics are identical on all of them.** What varies is which
-Modules are loaded, which persistence and observability providers are
-configured, and which capabilities exist across the cluster — the union of what
-its nodes declare, in ADR-0056's four kinds: online, feature, authentication
-and runtime. A profile is a packaging and configuration choice, never a
-different product.
+Modules are linked and loaded, which persistence and observability providers
+are configured, and which capabilities exist across the cluster — the union
+of what its nodes declare, in ADR-0056's four kinds: online, feature,
+authentication and runtime. A target is a packaging and configuration
+choice, never a different product.
 
 The laws that hold everywhere:
 
@@ -34,19 +44,21 @@ The laws that hold everywhere:
 - A Send Port resolves to Send Locations.
 - Preservation, lineage, checkpoints and recovery span the runtime.
 
-`runtime-model.md` owns those; they are repeated here because the profiles are
-where people expect them to be negotiable, and they are not.
+`runtime-model.md` owns those; they are repeated here because the targets
+are where people expect them to be negotiable, and they are not.
 
 ### Build targets
 
-The range above is where Xmip is deployed. This is what it is compiled for:
+Each target names the Rust triples it is built for. Across them, this is
+what Xmip is compiled for:
 
-| Target | Notes |
+| Platform | Notes |
 | --- | --- |
-| Windows x64 | |
-| Linux x64 | |
-| macOS, Apple silicon and x64 | developer machines primarily |
-| Linux ARM64 | Raspberry Pi class and upward, and most edge hardware |
+| Windows x64 | `computer`, `server` |
+| Linux x64 | `edge`, `server`, `hosted` |
+| macOS, Apple silicon and x64 | `computer`; developer machines primarily |
+| Linux ARM64 | `edge`, `server`, `hosted`: Raspberry Pi class and upward, and most edge hardware |
+| Cortex-M, `thumbv7em-none-eabihf` | `device`: `xmip-core` alone, no_std |
 | Industrial and defense hardware | the constrained case; see below |
 
 ARM and the industrial targets are the two that change decisions rather than
@@ -81,9 +93,23 @@ That is allowed where the target benefits from a smaller footprint, fewer
 files, simpler installation, stricter security, constrained hardware, offline
 deployment or deterministic behavior.
 
+**A purpose-compiled runtime is a site's build.** A site,
+`deploy/site/<name>.toml`, picks one target, the node roles it serves
+(`deploy/profile/role`, one per `NodeRole` word; executing is receiving,
+processing and sending in one process) and the domains it integrates
+(`deploy/profile/domain`: healthcare, industrial, b2b, managed-service and
+the rest, each naming the standards it serves). `Build-XmipService -Site`
+turns it into one `cargo build` of `xmip-service`: the target's features,
+every role's, each domain technology the build can link, and the
+program's own. The target vetoes: a role or a domain needing a feature the
+target refuses is refused in words, with the target's reason, and a device
+site is refused because `xmip-service` needs the standard library — what
+builds for a device is `xmip-core` alone.
+
 ```text
-Profile selection happens at build and packaging time.
-Runtime profiles are not git branches.
+The build sets what is possible: the site's target, roles and domains.
+The node's TOML picks from it at run time: what a node starts.
+Sites are files, not git branches.
 ```
 
 A purpose-compiled runtime still behaves according to Xmip Definitions and
@@ -120,33 +146,57 @@ from what its program was built with, so a package built without `tls` and a
 Location configured for `https` is the operator's error the node reports at
 once.
 
-## 3. Runtime roles
+## 3. Node roles
 
-Three roles, deliberately few:
+A node declares its roles, and they are the one vocabulary for what a node is
+for — at run time, in a deployment, and in what its program is built with
+(`node::NodeRole`; ADR-0056, amendment 2026-10-01). Seven:
 
-| Role | May | Examples |
-| --- | --- | --- |
-| **Executor** | run Artifact Instances and do Xmip work | receive, deserialize, transform, promote, publish, process, serialize, send |
-| **Reader** | inspect runtime state | Message Context, artifact state, lineage, logs, metrics, health, publication history, Subscription Instance history |
-| **Writer** | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message, change operational state |
+| Role | Serves | May | Examples |
+| --- | --- | --- | --- |
+| **Receiving** | the receive stage | take Streams in and make Messages | a Receive Location, deserialize, promote, publish |
+| **Processing** | the process stage | route and transform by Subscription | a Subscription, an Xmip Process, transform |
+| **Sending** | the send stage | deliver Messages out | a Send Port, demote, serialize, send |
+| **Executing** | all three, in one process | everything the three may | a whole Journey with no process hop: the low-latency choice |
+| **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
+| **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history |
+| **Development** | no stage | exercise Xmip from outside | the Playground (ADR-0028) |
+
+**Executing is the sum of receiving, processing and sending** (the owner,
+2026-10-01: *Leave Executing as a sum of Receiving, Processing and Sending.
+Executing would be used for Low Latency*). A node that declares the three is
+executing, and is said so: one thing has one name. It is what buys latency —
+a Journey whose receive, process and send run in one process crosses no
+process boundary — per ADR-0018 clause 10a. A node declaring one of the three
+hands every Journey on, and pays the hop.
 
 Roles combine per deployment:
 
 ```text
-Edge node          Executor + Reader + Writer
-Monitor component  Reader
-Recovery component Reader + Writer + Executor
-Cloud worker       Executor + Writer
+Edge node          Executing + Monitoring + Operational
+Monitor component  Monitoring
+Recovery component Monitoring + Operational + Executing
+Hosted worker      Receiving + Operational, or Processing + Sending
 ```
 
-These are deployment choices, not separate runtime models. The combination is
-also what buys latency: a Host Service that is Reader, Executor *and* Writer
-runs a whole Journey without a process hop, per ADR-0018 clause 10a.
+These are deployment choices, not separate runtime models.
 
-**Do not create a role per capability.** Receive host, send host, process host,
+**Executor, Reader and Writer are gone.** This section named three runtime
+roles until 2026-10-01 — Executor, Reader, Writer — for the subject
+`NodeRole` names, and two vocabularies for one thing is one too many.
+Executor is receiving, processing, sending or executing; Reader is
+monitoring; Writer is operational; development had no counterpart. The rule
+that stood here — *do not create a role per capability*, with receive, send
+and process hosts named among the capabilities it kept out — is overruled for
+those three by the owner's ruling above. It stands for the rest:
 preservation host, recovery coordinator and cluster coordinator are
-capabilities or operational responsibilities. They are implemented by Artifact
+capabilities or operational responsibilities, implemented by Artifact
 Instances, Modules or profiles, and they do not extend the role model.
+
+**A role also picks what is built.** `deploy/profile/role/<role>.toml`, one
+per role, says which capabilities a deployment's program carries for it, and
+a site names its roles beside its target and its domains (ADR-0015,
+amendment 2026-10-01).
 
 Runtime roles are also **not human roles**. Observer, Operator, Developer,
 Administrator and Architect are people. A scoped human role such as Edge
@@ -164,13 +214,14 @@ trust boundary     what may it touch?
 isolation boundary what can it infect if compromised?
 ```
 
-> Executor is not one trust level. Executor is scoped by isolation boundary.
+> Executing is not one trust level. A node serving the message path —
+> receiving, processing, sending, executing — is scoped by isolation boundary.
 
 The rules:
 
-1. A Reader cannot execute artifact behavior.
-2. A Writer cannot load arbitrary Module code.
-3. An Executor cannot automatically affect another Executor.
+1. A monitoring node cannot execute artifact behavior.
+2. An operational node cannot load arbitrary Module code.
+3. A node serving the message path cannot automatically affect another.
 4. Untrusted Modules run isolated — separate process, container or sandbox.
 5. Artifact Instances share process memory only inside an explicit trust
    boundary.

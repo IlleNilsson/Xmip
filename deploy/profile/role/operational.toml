@@ -1,0 +1,16 @@
+# The operational role: changes runtime state or an operational outcome:
+# claims, checkpoints, retries, resumes, suspends (NodeRole::Operational,
+# ADR-0056). The root crate's capability features a node in this role is
+# built with; xmip-service's own (node, audit, observe) are its [[bin]]
+# required-features and always on.
+
+description = "Changes runtime state or an operational outcome."
+
+features = [
+  "archive",
+  "cluster",
+  "event",
+  "persist",
+  "resilience",
+  "retain",
+]

@@ -8,7 +8,8 @@
   `observe::Scope`, and the surfaces call the runtime's exports; the earlier
   one that had two writers is struck; and the last copies, the same day),
   ADR-0041 (a mood's color name and its rollup), ADR-0056 (the stage words,
-  a node's evidence and its run entry), ADR-0062 (section 9, a program's
+  a node's evidence and its run entry; amendment 2026-10-01, the role
+  words, their parse and the stages a role serves), ADR-0062 (section 9, a program's
   audit record), ADR-0065 (section 11, Events subscribed)
 - Amends: ADR-0012 (a second header, and one rename in the first)
 
@@ -541,3 +542,24 @@ assistant's and is the clause most worth arguing with: it decides that the
 estate has no cluster-wide view except the one a surface assembles, and an
 operator who wants a single pane of glass will feel that before anyone else
 does.
+
+## Amendment, 2026-10-01: section 7 reads roles, not stage words
+
+A node declares its roles now, and the stage words it used to declare are
+gone (ADR-0056, amendment 2026-10-01). Section 7 changes with it, each
+symbol still a thin forwarder and `XMIP_OPERATE_VERSION` unchanged:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_role_words_v1` | `node::NodeRole::WORDS` |
+| `xmip_role_declared_v1` | `node::NodeRole::declared` |
+| `xmip_role_stages_v1` | `node::NodeRole::stages` |
+
+`xmip_stage_declared_v1` is deleted, not deprecated: pre-GA, a wrong thing
+goes with every use. `xmip_stage_words_v1` stays — the stage words are the
+scope segments a stage is named by. `xmip_capability_published_v1` and
+`xmip_capability_entry_v1` keep their shapes and fill the node's roles where
+they filled its stages; a word that is no role is `XMIP_E_INVALID` with the
+refusal written as `xmip_role_declared_v1` writes one. Section 8's run list
+`XMIP_RUN_CAPABILITIES` is `XMIP_RUN_ROLES`, the same value, read from
+`[run].roles`.

@@ -1,0 +1,8 @@
+# The mail domain: mail sent and collected.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Mail sent and collected: SMTP, IMAP, POP3."
+
+standards = ["smtp", "imap", "pop3"]

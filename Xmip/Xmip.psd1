@@ -40,6 +40,7 @@
         'Install-XmipPrerequisite'
         'Sync-XmipEstate'
         'Sync-XmipRepository'
+        'Build-XmipService'
         'Get-XmipManifest'
         'Get-XmipRepositoryRoot'
         'Test-XmipManifest'

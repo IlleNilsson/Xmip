@@ -1,0 +1,84 @@
+# The integration domain: the mechanisms every integration uses, whatever it
+# serves (ADR-0015, amendment 2026-10-01). Its members are every built
+# technology whose leaf in architecture.toml is a standard below, across
+# capabilities, less what a target claims.
+
+description = """\
+  The mechanisms every integration uses: who is calling, what they may do, \
+  guards on an attempt, routes, common shapes and paths, observation."""
+
+standards = [
+  # Who is calling and how they prove it: authenticate and identify.
+  "api-key",
+  "basic",
+  "bearer",
+  "certificate",
+  "cookie",
+  "digest",
+  "endpoint",
+  "header",
+  "jwt",
+  "kerberos",
+  "ldap",
+  "message",
+  "mutual-tls",
+  "ntlm",
+  "oauth2",
+  "oidc",
+  "pam",
+  "password",
+  "saml",
+  "scram",
+  "ssh-key",
+  "username",
+  "windows",
+  # What they may do: authorize.
+  "abac",
+  "acl",
+  "artifact",
+  "cedar",
+  "claim",
+  "location",
+  "opa",
+  "policy",
+  "rbac",
+  "role",
+  "scope",
+  # Shared by authorize, identify and route.
+  "contract",
+  "party",
+  "transport",
+  # Guards on an attempt: resilience.
+  "bulkhead",
+  "circuit-breaker",
+  "fallback",
+  "rate-limit",
+  "retry",
+  "timeout",
+  # What a filter reads: route.
+  "content",
+  "context",
+  "metadata",
+  "regex",
+  # Common shapes, schemas and paths: contract, message, path.
+  "avro",
+  "binary",
+  "json",
+  "json-schema",
+  "protobuf",
+  "schematron",
+  "text",
+  "toml",
+  "toon",
+  "xml",
+  "xml-schema",
+  "yaml",
+  "dot",
+  "index",
+  "json-pointer",
+  "jsonpath",
+  "xpath",
+  # Observation leaving the node: observe.
+  "otlp",
+  "prometheus",
+]

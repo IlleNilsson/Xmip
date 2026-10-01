@@ -31,7 +31,7 @@ function Get-XmipPlaygroundChoice {
     [hashtable] $chosen = @{}
 
     [string[]] $optional = @(
-        'Nodes', 'OnlineNodes', 'NodeCapability'
+        'Nodes', 'OnlineNodes', 'NodeRole'
         'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden'
     )
 
@@ -152,7 +152,7 @@ function Start-XmipPlaygroundRoll {
         .PARAMETER Nodes
             As Start-XmipTest takes it, already checked there.
 
-        .PARAMETER NodeCapability
+        .PARAMETER NodeRole
             As Start-XmipTest takes it, already checked there.
 
         .PARAMETER OnlineNodes
@@ -198,7 +198,7 @@ function Start-XmipPlaygroundRoll {
         [string[]] $Nodes,
 
         [Parameter(Mandatory = $false)]
-        [hashtable] $NodeCapability,
+        [hashtable] $NodeRole,
 
         [Parameter(Mandatory = $false)]
         [string[]] $OnlineNodes,
@@ -266,18 +266,18 @@ function Start-XmipPlaygroundRoll {
     if (-not $boundNodes) {
         $complement = Get-XmipNodeComplement -Roll $roll -Stress $Stress
         $Nodes = $complement.Nodes
-        $NodeCapability = $complement.NodeCapability
+        $NodeRole = $complement.NodeRole
         $choice.Nodes = $Nodes
-        $choice.NodeCapability = $NodeCapability
+        $choice.NodeRole = $NodeRole
 
         # A complement that refused itself would be no answer at all, so this
         # asks before anything is spawned, as a named roster is asked.
         $asked = @{
             Nodes          = $Nodes
             Test           = $Test
-            NodeCapability = $NodeCapability
+            NodeRole       = $NodeRole
         }
-        [string] $composed = Get-XmipNodeCapabilityRefusal @asked
+        [string] $composed = Get-XmipNodeRoleRefusal @asked
 
         if ($composed -ne '') {
             Write-Error $composed
@@ -291,10 +291,11 @@ function Start-XmipPlaygroundRoll {
         if ($roundTrip -and -not $complement.Covers) {
             Write-Warning ("The $($Stress.ToLowerInvariant()) level brings " +
                 "$($Nodes.Count) node(s) on this machine, too few for receive, " +
-                'process and send: they declare no stage and RoundTrip runs whole ' +
-                'in the roll. Name -Nodes and state -NodeCapability ' +
-                "@{ alpha = 'receive'; beta = 'process'; gamma = 'send' } " +
-                'to split the message path.')
+                'process and send: they declare no role and RoundTrip runs whole ' +
+                'in the roll. Name -Nodes and state -NodeRole ' +
+                "@{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' } " +
+                "to split the message path, or @{ alpha = 'executing' } to keep it " +
+                'in one process.')
         }
     }
 
@@ -360,7 +361,7 @@ function Start-XmipPlaygroundRoll {
 
     [string] $recordPath = Get-XmipRollRecordPath -Path $Path -Id $process.Id
     Write-XmipToml -Path $recordPath -Value $record
-    [string] $declared = Get-XmipNodeCapabilityText -Nodes $Nodes -NodeCapability $NodeCapability
+    [string] $declared = Get-XmipNodeRoleText -Nodes $Nodes -NodeRole $NodeRole
     [string] $roster = if ($declared -ne '') { "; roster $declared" } else { '' }
     Write-Verbose "started $what$roster as pid $($process.Id); record at $recordPath"
 

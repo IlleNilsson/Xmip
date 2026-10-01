@@ -1,0 +1,9 @@
+# The development role: the Playground's, exercising Xmip from outside
+# (NodeRole::Development, ADR-0028, ADR-0056). It is built with everything
+# a node can be, so what it exercises is what any other build links.
+
+description = "The Playground's: exercises Xmip from outside."
+
+roles = ["executing", "operational", "monitoring"]
+
+features = []

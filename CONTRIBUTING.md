@@ -222,7 +222,6 @@ the whole estate in one step, and is what a session should normally use.
 ```powershell
 Sync-XmipEstate -Compose   # mount and move
 Sync-XmipEstate -Cargo     # dependency revs from the submodule pins
-Sync-XmipEstate -Deploy    # the deploy lists from the manifest
 ```
 
 ## Commit messages

@@ -441,3 +441,18 @@ from what its program linked (ADR-0025, amendment 2026-09-28) — so the DSC
 document carries them in its `metadata` and the Ansible role in
 `xmip_modules`, neither written into the file a node reads (ADR-0045,
 amendment 2026-09-30). What they are for now is open for the owner.
+
+## Amendment, 2026-10-01: the deploy lists are gone
+
+The owner, 2026-10-01, on replacing the lists with grouped profiles that
+decide what a deployment's program is built with: *We can try that and add
+runtime role perspective and target node type.* What the amendment of
+2026-09-27 left open — what the lists were for once nothing read them — is
+answered: nothing. The `present` and `started` lists in the DSC document's
+`metadata`, `xmip_modules` in the Ansible defaults, the manifest's `[deploy]`
+table, `Sync-XmipEstate -Deploy` and `Update-XmipDeployList.ps1` are deleted.
+Each deploy file names the site its node is built from instead, and a site's
+target, node roles and domains decide what its `xmip-service` is built with
+(ADR-0015, amendment 2026-10-01). `test/Deploy.Test.ps1` now holds the
+profiles to the manifest: every technology it declares built is in a domain
+or claimed by a target.

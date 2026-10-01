@@ -1,0 +1,17 @@
+# The file-exchange domain: files dropped, fetched and shared.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Files dropped, fetched and shared: folders, FTP, SMB, NFS, flat files."
+
+standards = [
+  "file",
+  "ftp",
+  "sftp",
+  "smb",
+  "nfs",
+  "webdav",
+  "csv",
+  "fixed-width",
+]

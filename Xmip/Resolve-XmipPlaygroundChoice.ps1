@@ -32,7 +32,7 @@ function Resolve-XmipPlaygroundChoice {
         [hashtable] $Choice
     )
 
-    foreach ($name in 'Test', 'Nodes', 'OnlineNodes', 'NodeCapability', 'Cluster') {
+    foreach ($name in 'Test', 'Nodes', 'OnlineNodes', 'NodeRole', 'Cluster') {
         if (-not $Choice.ContainsKey($name)) {
             $Choice[$name] = $null
         }
@@ -59,7 +59,7 @@ function Resolve-XmipPlaygroundChoice {
     [hashtable] $selection = @{
         Nodes          = $Choice.Nodes
         OnlineNodes    = $Choice.OnlineNodes
-        NodeCapability = $Choice.NodeCapability
+        NodeRole       = $Choice.NodeRole
         Test           = $Choice.Test
         Named          = $Choice.Bound.ContainsKey('Nodes')
     }
@@ -81,14 +81,14 @@ function Resolve-XmipPlaygroundChoice {
     [hashtable] $asked = @{
         Nodes          = if ($count -ge 0) { $null } else { $Choice.Nodes }
         Test           = $Choice.Test
-        NodeCapability = $Choice.NodeCapability
+        NodeRole       = $Choice.NodeRole
     }
 
     # A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn are
-    # arbitrary node names), so nodes named with no capability stated declare
+    # arbitrary node names), so nodes named with no role stated declare
     # none. That is legal and is probably not what was meant, so it is said
     # rather than discovered (ADR-0055 clause 5).
-    [string] $said = Get-XmipNodeCapabilityWarning @asked
+    [string] $said = Get-XmipNodeRoleWarning @asked
 
     if ($said -ne '') {
         Write-Warning $said

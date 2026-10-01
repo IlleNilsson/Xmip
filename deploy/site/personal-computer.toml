@@ -1,0 +1,13 @@
+# A site: a node on a person's own computer, moving the files and mail that
+# person handles and keeping an eye on itself (ADR-0015, amendment
+# 2026-10-01). Build-XmipService -Site personal-computer turns it into a
+# build; the node's TOML then picks, at run time, from what the build made
+# possible.
+
+description = "A person's computer: files and mail, one node of its own."
+
+target = "computer"
+
+roles = ["executing", "monitoring"]
+
+domains = ["file-exchange", "mail", "network", "integration"]

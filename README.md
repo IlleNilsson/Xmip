@@ -195,7 +195,7 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
    ```powershell
    Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -OnlineNodes R1
+    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -OnlineNodes R1
    Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
    Get-XmipTestStatus
    Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -212,12 +212,12 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
    ```powershell
    Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
-    -NodeCapability @{ R1 = 'receive'; P1 = 'process,send' } -OnlineNodes R1
+    -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' } -OnlineNodes R1
    Get-XmipTestStatus | Start-XmipOperationWeb
    ```
 
    The second roll is a cluster called `C2` with two nodes, and `P1` carries
-   two stages because `-NodeCapability` says so, not because of its name
+   two roles because `-NodeRole` says so, not because of its name
    ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)). Its
    `R1` is not the first roll's `R1`: each cluster names its own nodes, and
    Xmip reads none of those names.
@@ -266,12 +266,13 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    the `xmip-cli` and PowerShell documents that ship in a developer's clone
    follow `C1-snapshot.toml`; roll under any other name and point them at that
    file, or let `Start-XmipTest` tell the session. Nothing in Xmip reads a
-   cluster's name or a node's: what a node does is the capability it was
-   started with
-   ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-   `-NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' }`
-   states it, or omit `-Nodes` and the level's complement deals the whole
-   message path for you. A node given no capability declares none and runs the
+   cluster's name or a node's: what a node does is the roles it was started
+   with ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)).
+   `-NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }`
+   states them — receiving, processing and sending one stage each, or
+   `executing` for all three in one process, the low-latency choice — or omit
+   `-Nodes` and the level's complement deals the whole message path for you.
+   A node given no role declares none and runs the
    shared-directory tests whole, which `Start-XmipTest` says in words before
    it starts anything. `R1` may use the internet because you said so; the
    others may not.
@@ -298,7 +299,7 @@ whether delivery completed, and why work stopped when it did not.
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
-| Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Edge, server, cluster and cloud nodes are one product. |
+| Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Device, edge, computer, server and hosted nodes, and the clusters made of them, are one product. |
 | Architectural memory | Accepted decision records and executable governance tests. | Tradeoffs survive staff and assistant turnover. |
 
 ### Message ownership and failure boundaries
@@ -409,7 +410,7 @@ regulations and deployment models change.
 - **Accountability.** Audit records responsibility and outcomes; monitoring
   shows the current state. They are separate, so a live dashboard is never
   mistaken for the historical record.
-- **Portability.** Windows, Linux and macOS are equal targets. A cloud node
+- **Portability.** Windows, Linux and macOS are equal platforms. A hosted node
   is an option, not a dependency.
 - **Inspectable architecture.** Source and decisions are available for
   security, procurement and engineering review.
@@ -562,7 +563,26 @@ PowerShell module and the monitors run on all three.
 
 The desired-state files write the node configuration `xmip-core-configure`
 reads; `cargo test --test deploy` renders both and reads them as
-`xmip-service` does.
+`xmip-service` does. Each names the site its node is built from.
+
+A site, `deploy/site/<name>.toml`, says what one deployment's program is
+built with: one **target** it runs on (`device`, `edge`, `computer`,
+`server` or `hosted`), the node **roles** it serves (`receiving`,
+`processing`, `sending`, `executing`, `operational`, `monitoring`,
+`development`) and the **domains** it integrates (`healthcare`,
+`industrial`, `b2b`, `managed-service` and the rest). The profiles under
+`deploy/profile` say what each brings, and `Build-XmipService -Site <name>`
+builds `xmip-service` with exactly that
+([ADR-0015, amendment 2026-10-01](doc/decision/ADR-0015-packaging.md)). The
+target vetoes: a role or a domain needing what the target cannot have is
+refused in words, and a device, which cannot run `xmip-service`, is told
+that what builds for it is `xmip-core` alone. The build sets what is
+possible; the node's TOML picks from it when the node starts.
+
+```powershell
+Build-XmipService -Site hospital-interface -WhatIf   # the plan and the cargo command
+Build-XmipService -Site factory-gateway -CargoArgument '--release'
+```
 
 `Install-XmipPrerequisite -Role operator` reports what a machine lacks;
 `-Install` installs it. The command never elevates: where a package requires
@@ -583,9 +603,9 @@ Ctrl+C. A node it cannot start is refused in words with exit code 2, and no
 service manager restarts that. `xmip-service --configuration <path>
 --definition` prints what this platform's service manager is told about the
 node's service: the systemd unit, the launchd property list, or the
-`sc.exe create` arguments. The build links the transports that
-`architecture.toml`'s `[deploy]` table starts, by feature; a Location naming
-another transport is refused when the node starts. The node keeps its runtime store where its
+`sc.exe create` arguments. The build links the transports its site's
+domains serve, by feature; a Location naming another transport is refused
+when the node starts. The node keeps its runtime store where its
 configuration's `[store]` says — by default RocksDB at
 `data/persistence-rocksdb`, sealed under the platform's key store — and a
 store naming an engine the build left out, or one that does not open, is
@@ -661,7 +681,7 @@ over as many node processes as you name.
 ```powershell
 Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad, LowLatency `
     -Stress Harsh -Nodes R1, R2, P1, S1 -OnlineNodes R1 `
-    -NodeCapability @{ R1 = 'receive'; R2 = 'receive'; P1 = 'process'; S1 = 'send' }
+    -NodeRole @{ R1 = 'receiving'; R2 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest -Cluster C1 -Test HeavyLoad, LowLatency
@@ -692,7 +712,7 @@ test cluster is started so, and stopped by name:
 
 ```powershell
 Start-XmipTest -Suite Core.Playground -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 = 'send' } -Hidden
+    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 Stop-XmipTest -Cluster CT -IncludeHidden
 ```
 
@@ -759,8 +779,8 @@ updates the pins in the superproject:
 | The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
 Before a change lands, `cargo fmt`, `cargo clippy --workspace --all-targets
--- -D warnings` and the suite must pass. Until the first Linear release, work
-commits directly to `main`
+--all-features -- -D warnings` (nothing is on by default) and the suite must
+pass. Until the first Linear release, work commits directly to `main`
 ([release-model.md](doc/governance/release-model.md)).
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
@@ -805,7 +825,8 @@ Xmip/                 the estate's PowerShell module
 module/               the modules: foundation/ and platform/ start a node, the rest
                       at module/<provider>/<domain>/<leaf>
 test/                 the estate's Pester suite; test/core/playground is the Playground
-deploy/               Ansible roles and a DSC configuration for a node
+deploy/               the sites and profiles a build is made from (site/, profile/),
+                      Ansible roles and a DSC configuration for a node
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```
@@ -863,8 +884,9 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the deploy lists. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
@@ -882,7 +904,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 Sync-XmipEstate                                       # report drift
 Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
 Sync-XmipEstate -Compose                              # wire the submodule tree locally
-Sync-XmipEstate -Deploy                               # the deploy lists under deploy/
+Build-XmipService -Site hospital-interface -WhatIf    # what a site builds, without building
 Sync-XmipRepository -Status                           # dirty, ahead, behind
 Get-XmipStatus
 ```

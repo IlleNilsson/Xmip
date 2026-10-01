@@ -32,17 +32,19 @@ jobs:
       - name: Formatting
         run: cargo fmt --all -- --check
 
+      # Every feature, because nothing is on by default: xmip-service and its
+      # tests are built from a site, and here from all of them at once.
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 
       - name: Check
-        run: cargo check --workspace --all-targets --locked
+        run: cargo check --workspace --all-targets --all-features --locked
 
       - name: Test
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --all-features --locked
 
-  profiles:
-    name: Profile checks
+  sites:
+    name: Site builds
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,15 +52,28 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Tiny profile
-        run: cargo check --workspace --no-default-features --features tiny-profile --locked
+      - name: Install PSToml
+        shell: pwsh
+        run: Install-Module -Name PSToml -Scope CurrentUser -Force
 
-      - name: Server profile
-        run: cargo check --workspace --no-default-features --features server-profile --locked
+      # Each example site through the one place a site becomes a build
+      # (ADR-0015, amendment 2026-10-01). The device's is refused, in words
+      # naming what builds for it instead, which is the next step.
+      - name: Example sites
+        shell: pwsh
+        run: |
+          Import-Module ./Xmip/Xmip.psd1
+          foreach ($site in 'hospital-interface', 'factory-gateway', 'personal-computer', 'b2b-exchange') {
+              Build-XmipService -Site $site -CargoArgument '--locked'
+          }
 
-      - name: Desktop profile
-        run: cargo check --workspace --no-default-features --features desktop-profile --locked
+      - name: Device, xmip-core alone
+        run: |
+          git submodule update --init module/foundation/core
+          cargo build --manifest-path module/foundation/core/Cargo.toml --no-default-features --features serde --target thumbv7em-none-eabihf

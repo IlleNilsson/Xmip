@@ -16,15 +16,9 @@
     An operation switch means do it. -WhatIf means do not. There is no
     -Apply: git does not work that way and neither should this.
 
-    -Deploy is local: it writes the deploy lists under deploy/ from the
-    manifest (Update-XmipDeployList).
-
 .EXAMPLE
     Import-Module ./Xmip.psm1
     Sync-XmipEstate -Create -Configure -WhatIf
-
-.EXAMPLE
-    Sync-XmipEstate -Deploy
 #>
 # The domains that start Xmip on a node: linked into the node binary, one of
 # them per estate, and so mounted with no provider in the path. Every other
@@ -153,8 +147,6 @@ function Sync-XmipEstate {
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
-        # The deploy lists under deploy/, written from the manifest.
-        [switch] $Deploy,
         [switch] $IncludeReserved,
         [switch] $Report,
         # Restrict -Create to these repository names. Without it, -Create makes
@@ -191,7 +183,7 @@ function Sync-XmipEstate {
 
     # No operation switch means report only. That is the safe default and it
     # needs no ceremony to reach.
-    $operating = $Create -or $Configure -or $Compose -or $Cargo -or $Deploy
+    $operating = $Create -or $Configure -or $Compose -or $Cargo
 
     $manifest = Get-XmipManifest -Path $ManifestPath
     Test-XmipManifest -Manifest $manifest
@@ -233,10 +225,6 @@ function Sync-XmipEstate {
     }
     if ($Compose) { Invoke-XmipCompose -Manifest $manifest -Actual $actual }
     if ($Cargo) { Invoke-XmipCargo }
-
-    if ($Deploy) {
-        Update-XmipDeployList -Root (Split-Path -Parent $ManifestPath) -Manifest $manifest
-    }
 
     if (-not $operating) { Write-XmipStep -Message 'Reporting only; no operation selected.' }
 

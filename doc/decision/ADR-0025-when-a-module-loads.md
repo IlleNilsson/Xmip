@@ -183,3 +183,8 @@ exercised, and a deployed node reads no `architecture.toml`, so where it
 learns a Module's domain, or an explicit timing, is open. Dependencies
 between technologies are resolved when the program is built (Cargo) or are
 inside a loaded library; a descriptor declares none.
+
+2026-10-01: what a program links is its site's — a target, node roles and
+domains, built by `Build-XmipService` (ADR-0015, amendment 2026-10-01); the
+deploy lists this amendment left unread are deleted (ADR-0060, amendment
+2026-10-01).

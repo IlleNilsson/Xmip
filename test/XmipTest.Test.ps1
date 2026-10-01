@@ -290,7 +290,7 @@ Describe 'The environment a roll is started with' {
                 Stress         = 'Brutal'
                 Test           = @('roundtrip', 'HeavyLoad')
                 Nodes          = @('alpha', 'beta', 'gamma')
-                NodeCapability = @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
+                NodeRole       = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
                 OnlineNodes    = @('alpha', 'gamma')
                 Cluster        = 'SN2'
                 Duration       = [timespan]::FromMinutes(15)
@@ -304,8 +304,8 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'round-trip,heavy-load'
             $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'alpha,beta,gamma'
             $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'alpha,gamma'
-            $environment.XMIP_PLAYGROUND_NODE_CAPABILITIES |
-                Should -Be 'alpha=receive,beta=process,gamma=send'
+            $environment.XMIP_PLAYGROUND_NODE_ROLES |
+                Should -Be 'alpha=receiving,beta=processing,gamma=sending'
             $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be 'SN2'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
@@ -346,7 +346,7 @@ Describe 'The environment a roll is started with' {
 
             $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_CAPABILITIES'
+            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_ROLES'
 
             { Assert-XmipNodeName -Nodes 'alpha', 'Alpha' } |
                 Should -Throw -ExpectedMessage '*named once*'
@@ -408,42 +408,44 @@ Describe 'The environment a roll is started with' {
         # The owner, 2026-09-20: "Rn, Pn and Sn are arbitrary node names."
         # Start-XmipTest kept the last shorthand in the estate for a day and
         # it is struck (ADR-0056, amendment). A node carries what
-        # -NodeCapability states for it and nothing otherwise. Pure.
+        # -NodeRole states for it and nothing otherwise. Pure.
         InModuleScope Xmip {
-            foreach ($name in 'receive', 'process', 'Send3', 'node-01', 'alpha') {
-                Get-XmipNodeCapability -Name $name | Should -Be ''
+            foreach ($name in 'receiving', 'process', 'Send3', 'node-01', 'alpha') {
+                Get-XmipNodeRole -Name $name | Should -Be ''
             }
 
-            $stated = @{ alpha = 'receive'; delta = 'process,send'; beta = @() }
-            Get-XmipNodeCapability -Name 'alpha' -NodeCapability $stated | Should -Be 'receive'
-            Get-XmipNodeCapability -Name 'delta' -NodeCapability $stated | Should -Be 'process,send'
-            Get-XmipNodeCapability -Name 'beta' -NodeCapability $stated | Should -Be ''
+            $stated = @{ alpha = 'receiving'; delta = 'processing,sending'; beta = @() }
+            Get-XmipNodeRole -Name 'alpha' -NodeRole $stated | Should -Be 'receiving'
+            Get-XmipNodeRole -Name 'delta' -NodeRole $stated | Should -Be 'processing,sending'
+            Get-XmipNodeRole -Name 'beta' -NodeRole $stated | Should -Be ''
 
-            Get-XmipNodeCapabilityText -Nodes 'alpha', 'beta', 'gamma', 'node-01' | Should -Be ''
-            Get-XmipNodeCapabilityText -Nodes 'alpha', 'beta' -NodeCapability $stated |
-                Should -Be 'alpha=receive'
-            Get-XmipNodeCapabilityText -Nodes 'alpha', 'beta' -NodeCapability @{
-                alpha = 'receive'; beta = 'process+send'
-            } | Should -Be 'alpha=receive,beta=process+send'
+            Get-XmipNodeRoleText -Nodes 'alpha', 'beta', 'gamma', 'node-01' | Should -Be ''
+            Get-XmipNodeRoleText -Nodes 'alpha', 'beta' -NodeRole $stated |
+                Should -Be 'alpha=receiving'
+            Get-XmipNodeRoleText -Nodes 'alpha', 'beta' -NodeRole @{
+                alpha = 'receiving'; beta = 'processing+sending'
+            } | Should -Be 'alpha=receiving,beta=processing+sending'
 
-            { ConvertTo-XmipNodeCapability -Capability 'relay' } |
-                Should -Throw -ExpectedMessage 'REFUSED: no capability is called relay*'
-            { Assert-XmipNodeCapability -Nodes 'alpha' -NodeCapability @{ gamma = 'send' } } |
+            { ConvertTo-XmipNodeRole -Role 'relay' } |
+                Should -Throw -ExpectedMessage 'REFUSED: no role is called relay*'
+            { Assert-XmipNodeRole -Nodes 'alpha' -NodeRole @{ gamma = 'sending' } } |
                 Should -Throw -ExpectedMessage '*-Nodes does not*'
         }
     }
 
-    It 'reads a capability by the node crate''s rule, and keeps no copy of it' {
-        # node::Stage::declared is the one parse (open problem 25, row i), and
+    It 'reads a role by the node crate''s rule, and keeps no copy of it' {
+        # node::NodeRole::declared is the one parse (open problem 25, row i;
+        # ADR-0056, amendment 2026-10-01), and
         # since 2026-09-24 the one implementation: this module asks
         # Xmip.Surface, which calls it in the runtime (xmip_operate.h section
         # 7). No word list is written here, in the surface, or anywhere but
         # the node crate (the owner, 2026-09-24: code is placed once).
         [string] $root = Get-XmipRepositoryRoot
-        [string] $list = '[''"]receive[''"],\s*[''"]process[''"],\s*[''"]send[''"]'
+        [string] $list = '[''"]receive[''"],\s*[''"]process[''"],\s*[''"]send[''"]|' +
+            '[''"]receiving[''"],\s*[''"]processing[''"],\s*[''"]sending[''"]'
 
         foreach ($copy in @(
-                'Xmip/Get-XmipNodeCapability.ps1'
+                'Xmip/Get-XmipNodeRole.ps1'
                 'Xmip/Get-XmipNodeComplement.ps1'
                 'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
                 'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')) {
@@ -452,16 +454,20 @@ Describe 'The environment a roll is started with' {
         }
 
         InModuleScope Xmip {
-            ConvertTo-XmipNodeCapability -Capability 'send + receive' | Should -Be 'receive,send'
-            ConvertTo-XmipNodeCapability -Capability @('process', 'send') |
-                Should -Be 'process,send'
+            ConvertTo-XmipNodeRole -Role 'sending + receiving' | Should -Be 'receiving,sending'
+            ConvertTo-XmipNodeRole -Role @('processing', 'sending') |
+                Should -Be 'processing,sending'
+            ConvertTo-XmipNodeRole -Role 'sending,receiving,processing' | Should -Be 'executing'
+            Get-XmipNodeRoleWord | Should -Be @(
+                'operational', 'monitoring', 'receiving', 'processing', 'sending', 'executing',
+                'development')
 
-            foreach ($said in 'Send + RECEIVE', 'receive,relay+hold') {
+            foreach ($said in 'Sending + RECEIVING', 'receiving,relay+hold', 'receive') {
                 [string] $refusal = ''
                 [Xmip.Surface.NodeCapability]::Ordered($said, [ref] $refusal) | Out-Null
 
-                $refusal | Should -BeLike 'REFUSED: no capability is called *'
-                { ConvertTo-XmipNodeCapability -Capability $said } |
+                $refusal | Should -BeLike 'REFUSED: no role is called *'
+                { ConvertTo-XmipNodeRole -Role $said } |
                     Should -Throw -ExpectedMessage $refusal
             }
         }
@@ -493,92 +499,98 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'says what nodes with no capability will do, and does not refuse it' {
+    It 'says what nodes with no role will do, and does not refuse it' {
         # ADR-0055 clause 5: running whole tests is a real answer, and it is
         # not what someone naming three nodes is likely to have meant. Said
         # before anything spawns, naming both ways to split the path.
         InModuleScope Xmip {
-            [string] $said = Get-XmipNodeCapabilityWarning -Nodes 'alpha', 'beta', 'gamma'
+            [string] $said = Get-XmipNodeRoleWarning -Nodes 'alpha', 'beta', 'gamma'
 
-            $said | Should -BeLike '*None of alpha, beta, gamma declares a stage*'
-            $said | Should -BeLike '*-NodeCapability*'
+            $said | Should -BeLike '*None of alpha, beta, gamma declares a role*'
+            $said | Should -BeLike '*-NodeRole*'
             $said | Should -BeLike '*omit -Nodes*'
 
-            # Nothing to say: a stage declared, a run without RoundTrip, or
+            # Nothing to say: a role declared, a run without RoundTrip, or
             # no nodes named at all.
-            Get-XmipNodeCapabilityWarning -Nodes 'alpha' -NodeCapability @{ alpha = 'receive' } |
+            Get-XmipNodeRoleWarning -Nodes 'alpha' -NodeRole @{ alpha = 'receiving' } |
                 Should -Be ''
-            Get-XmipNodeCapabilityWarning -Nodes 'alpha', 'beta' -Test 'HeavyLoad' | Should -Be ''
-            Get-XmipNodeCapabilityWarning | Should -Be ''
+            Get-XmipNodeRoleWarning -Nodes 'alpha', 'beta' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeRoleWarning | Should -Be ''
         }
 
         Start-XmipTest -Cluster Z9 -Nodes alpha, beta, gamma -WhatIf -WarningVariable said |
             Out-Null
-        "$said" | Should -BeLike '*declares a stage*'
+        "$said" | Should -BeLike '*declares a role*'
     }
 
-    It 'refuses RoundTrip whose nodes leave a capability undeclared, before anything starts' {
+    It 'refuses RoundTrip whose nodes leave a role undeclared, before anything starts' {
         # The path is receive to process to send between the node processes,
-        # and the refusal names the capability nobody declared, never a letter.
+        # and the refusal names the role nobody declared, never a letter.
         InModuleScope Xmip {
-            $whole = @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
-            $half = @{ alpha = 'receive'; delta = 'receive'; gamma = 'send' }
+            $whole = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
+            $half = @{ alpha = 'receiving'; delta = 'receiving'; gamma = 'sending' }
 
             $six = @{
                 Nodes          = @('alpha', 'delta', 'beta', 'epsilon', 'gamma', 'zeta')
                 Test           = 'RoundTrip'
-                NodeCapability = $whole + @{ delta = 'receive'; epsilon = 'process'; zeta = 'send' }
+                NodeRole       = $whole + @{
+                    delta = 'receiving'; epsilon = 'processing'; zeta = 'sending'
+                }
             }
-            Get-XmipNodeCapabilityRefusal @six | Should -Be ''
+            Get-XmipNodeRoleRefusal @six | Should -Be ''
 
             # The signpost an operator meets most often now that a name says
-            # nothing: it names the capability nobody declared and both ways
+            # nothing: it names the role nobody declared and both ways
             # to declare one.
             $short = @{
-                Nodes = @('alpha', 'delta', 'gamma'); Test = 'RoundTrip'; NodeCapability = $half
+                Nodes = @('alpha', 'delta', 'gamma'); Test = 'RoundTrip'; NodeRole = $half
             }
-            [string] $said = Get-XmipNodeCapabilityRefusal @short
+            [string] $said = Get-XmipNodeRoleRefusal @short
 
-            $said | Should -BeLike 'REFUSED. RoundTrip across nodes*no node declares process.*'
-            $said | Should -BeLike '*-NodeCapability*'
+            $said | Should -BeLike 'REFUSED. RoundTrip across nodes*no node declares processing.*'
+            $said | Should -BeLike '*-NodeRole*'
             $said | Should -BeLike '*omit -Nodes*'
 
-            $one = @{ Nodes = @('alpha'); NodeCapability = @{ alpha = 'receive' } }
-            Get-XmipNodeCapabilityRefusal @one | Should -BeLike '*declares process or send.*'
-            Get-XmipNodeCapabilityRefusal @one -Test 'roundtrip', 'Filing' |
+            $one = @{ Nodes = @('alpha'); NodeRole = @{ alpha = 'receiving' } }
+            Get-XmipNodeRoleRefusal @one | Should -BeLike '*declares processing or sending.*'
+            Get-XmipNodeRoleRefusal @one -Test 'roundtrip', 'Filing' |
                 Should -BeLike 'REFUSED.*'
 
             # Named for nothing, but declaring the whole path: no refusal.
-            $stated = @{ alpha = 'receive'; beta = 'process'; gamma = 'send' }
-            $named = @{ Nodes = @('alpha', 'beta', 'gamma'); NodeCapability = $stated }
-            Get-XmipNodeCapabilityRefusal @named | Should -Be ''
+            $stated = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
+            $named = @{ Nodes = @('alpha', 'beta', 'gamma'); NodeRole = $stated }
+            Get-XmipNodeRoleRefusal @named | Should -Be ''
+
+            # One executing node is the whole path in one process: no refusal.
+            $executing = @{ Nodes = @('alpha', 'beta'); NodeRole = @{ alpha = 'executing' } }
+            Get-XmipNodeRoleRefusal @executing | Should -Be ''
 
             # Not RoundTrip, nothing declared, or no nodes: nothing to refuse.
             # alpha alone declares nothing at all now, so it is the third case.
-            Get-XmipNodeCapabilityRefusal -Nodes 'alpha' -Test 'HeavyLoad' | Should -Be ''
-            Get-XmipNodeCapabilityRefusal -Nodes 'alpha' | Should -Be ''
-            Get-XmipNodeCapabilityRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
-            Get-XmipNodeCapabilityRefusal -Nodes @() | Should -Be ''
-            Get-XmipNodeCapabilityRefusal | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes 'alpha' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes 'alpha' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes @() | Should -Be ''
+            Get-XmipNodeRoleRefusal | Should -Be ''
 
             $chosen = @{
                 Stress = 'Calm'; Nodes = @('alpha', 'gamma'); Area = 'a'
             }
-            $chosen.NodeCapability = @{ alpha = 'receive'; gamma = 'send' }
+            $chosen.NodeRole = @{ alpha = 'receiving'; gamma = 'sending' }
             { New-XmipPlaygroundEnvironment @chosen } |
-                Should -Throw -ExpectedMessage '*no node declares process.*'
+                Should -Throw -ExpectedMessage '*no node declares processing.*'
         }
 
         [hashtable] $door = @{
             Test           = 'RoundTrip'
             Cluster        = 'Z8'
             Nodes          = @('alpha', 'gamma')
-            NodeCapability = @{ alpha = 'receive'; gamma = 'send' }
+            NodeRole       = @{ alpha = 'receiving'; gamma = 'sending' }
             ErrorAction    = 'Stop'
         }
 
         { Start-XmipTest @door } |
-            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares process.*'
+            Should -Throw -ExpectedMessage 'REFUSED. RoundTrip across nodes*declares processing.*'
     }
 
     It 'rolls at the hardest level when -Stress is omitted, and a named level pins it' {
@@ -607,32 +619,32 @@ Describe 'The environment a roll is started with' {
         # roster the door composed itself must never refuse itself.
         InModuleScope Xmip {
             $dealt = ConvertFrom-XmipRosterText -Text (
-                'node-01=receive,node-02=process,node-03=send,node-04=receive')
+                'node-01=receiving,node-02=processing,node-03=sending,node-04=receiving')
 
             $dealt.Nodes | Should -Be @('node-01', 'node-02', 'node-03', 'node-04')
-            $dealt.NodeCapability['node-04'] | Should -Be 'receive'
+            $dealt.NodeRole['node-04'] | Should -Be 'receiving'
             $dealt.Covers | Should -BeTrue
 
             [hashtable] $asked = @{
                 Nodes          = $dealt.Nodes
                 Test           = 'RoundTrip'
-                NodeCapability = $dealt.NodeCapability
+                NodeRole       = $dealt.NodeRole
             }
-            Get-XmipNodeCapabilityRefusal @asked | Should -Be ''
+            Get-XmipNodeRoleRefusal @asked | Should -Be ''
 
             # Too few nodes for three stages: they declare nothing, the roll
             # runs RoundTrip whole, and nothing refuses itself.
             $small = ConvertFrom-XmipRosterText -Text 'node-01,node-02'
 
             $small.Covers | Should -BeFalse
-            $small.NodeCapability['node-01'] | Should -Be ''
+            $small.NodeRole['node-01'] | Should -Be ''
             $asked.Nodes = $small.Nodes
-            $asked.NodeCapability = $small.NodeCapability
+            $asked.NodeRole = $small.NodeRole
 
-            Get-XmipNodeCapabilityRefusal @asked | Should -Be ''
+            Get-XmipNodeRoleRefusal @asked | Should -Be ''
 
             { ConvertFrom-XmipRosterText -Text 'node-01=relay' } |
-                Should -Throw -ExpectedMessage 'REFUSED: no capability is called relay*'
+                Should -Throw -ExpectedMessage 'REFUSED: no role is called relay*'
         }
 
         # The record says the nodes that were resolved, never an empty list:
@@ -914,7 +926,7 @@ Describe 'What a node was started with' {
                     rounds      = '0'
                     snapshot    = 'D:\a b\node-03.toml'
                     interval_ms = '500'
-                    capability  = 'process,send'
+                    role        = 'processing,sending'
                     online      = 'true'
                 }
             }
@@ -927,7 +939,7 @@ Describe 'What a node was started with' {
             $node.Rounds | Should -Be 0
             $node.Snapshot | Should -Be 'D:\a b\node-03.toml'
             $node.Interval | Should -Be ([timespan]::FromMilliseconds(500))
-            $node.Capability | Should -Be 'process,send'
+            $node.Role | Should -Be 'processing,sending'
             $node.Online | Should -BeTrue
             $node.Location | Should -Be 'xmip:///C1/node/node-03'
         }
@@ -940,7 +952,7 @@ Describe 'What a node was started with' {
             $node.Name | Should -BeNullOrEmpty
             $node.Interval | Should -BeNullOrEmpty
             $node.Online | Should -BeFalse
-            $node.Capability | Should -Be ''
+            $node.Role | Should -Be ''
         }
     }
 }

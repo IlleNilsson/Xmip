@@ -1,0 +1,8 @@
+# The healthcare domain: hospitals, laboratories and imaging.
+# ADR-0015, amendment 2026-10-01: its members are every built technology
+# whose leaf in architecture.toml is a standard below, across capabilities,
+# less what a target claims.
+
+description = "Hospitals, laboratories and imaging: HL7, FHIR and DICOM."
+
+standards = ["hl7-v2", "hl7-er7", "fhir", "fhirpath", "mllp", "dicom"]

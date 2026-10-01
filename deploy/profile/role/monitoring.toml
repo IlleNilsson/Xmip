@@ -1,0 +1,8 @@
+# The monitoring role: reads runtime state: health, figures, history,
+# lineage (NodeRole::Monitoring, ADR-0056). Observation and audit are
+# xmip-service's own [[bin]] required-features and always on; this role
+# adds what reports and tells.
+
+description = "Reads runtime state: health, figures, history, lineage."
+
+features = ["event", "report"]

@@ -1,0 +1,13 @@
+# A site: a hosted node trading with other businesses, receiving EDI over AS2
+# and SFTP and sending it on to a managed queue and storage (ADR-0015,
+# amendment 2026-10-01). Build-XmipService -Site b2b-exchange turns it into
+# a build; the node's TOML then picks, at run time, from what the build made
+# possible.
+
+description = "A hosted business-to-business exchange: EDI over AS2 and SFTP."
+
+target = "hosted"
+
+roles = ["receiving", "sending", "operational"]
+
+domains = ["b2b", "managed-service", "file-exchange", "web-service", "network", "integration"]

@@ -1,0 +1,19 @@
+# The processing role: serves the process stage, where a Subscription
+# routes (NodeRole::Processing, ADR-0056). The root crate's capability
+# features a node in this role is built with; xmip-service's own (node,
+# audit, observe) are its [[bin]] required-features and always on.
+
+description = "Serves the process stage: a Subscription routes here."
+
+features = [
+  "assign",
+  "contract",
+  "demote",
+  "path",
+  "persist",
+  "process",
+  "promote",
+  "resilience",
+  "retain",
+  "transform",
+]

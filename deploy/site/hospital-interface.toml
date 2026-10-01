@@ -1,0 +1,13 @@
+# A site: a hospital's interface engine on its own server, taking HL7 v2
+# over MLLP from the clinical systems and FHIR over HTTP from the new ones,
+# and delivering both onward (ADR-0015, amendment 2026-10-01).
+# Build-XmipService -Site hospital-interface turns it into a build; the
+# node's TOML then picks, at run time, from what the build made possible.
+
+description = "A hospital's interface engine: HL7 v2 over MLLP, FHIR over HTTP."
+
+target = "server"
+
+roles = ["executing", "operational", "monitoring"]
+
+domains = ["healthcare", "web-service", "network", "integration"]

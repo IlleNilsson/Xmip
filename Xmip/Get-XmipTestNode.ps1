@@ -12,7 +12,7 @@ function Get-XmipTestNode {
             A node is a process running the Playground's own node binary
             (ADR-0028 clause 2). What it is doing is what it declared where it
             started (ADR-0053), read by the node: its name, stress level, what
-            it declared it can do, whether it may assume the internet, its
+            roles it declared, whether it may assume the internet, its
             rounds and interval, the directory it shares with its cluster and
             where it publishes. Parent is the roll the
             node belongs to — the cluster process spawns it and the roll
@@ -22,12 +22,12 @@ function Get-XmipTestNode {
             (ADR-0053), xmip:///<cluster>/node/<name>, which says its
             cluster whatever the process tree says at the moment it is read.
 
-            Capability is the feature capability the node declared (ADR-0056),
-            in the words -NodeCapability takes them: 'receive',
-            'process,send', or empty for a node that declared no stage and
-            runs whole tests itself. Online is the online capability of the
-            same record. The Playground models neither authentication nor
-            runtime capability, so neither is here.
+            Role is the roles the node declared (ADR-0056, amendment
+            2026-10-01), in the words -NodeRole takes them: 'receiving',
+            'processing,sending', 'executing', or empty for a node that
+            declared no role and runs whole tests itself. Online is the online
+            capability of the same record. The Playground models neither
+            authentication nor runtime capability, so neither is here.
 
         .PARAMETER Name
             Only nodes whose name matches, wildcards allowed.
@@ -39,7 +39,7 @@ function Get-XmipTestNode {
             Get-XmipTestNode -Name 'node-0*' | Where-Object -Property Online -EQ -Value $true
 
         .EXAMPLE
-            Get-XmipTestNode | Where-Object -Property Capability -Match -Value 'send'
+            Get-XmipTestNode | Where-Object -Property Role -Match -Value 'sending'
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestNode')]
@@ -133,7 +133,7 @@ function ConvertTo-XmipTestNode {
         Name       = Get-TomlValue -Node $said -Name 'node'
         Id         = $Process.Id
         Stress     = Get-TomlValue -Node $said -Name 'stress'
-        Capability = [string](Get-TomlValue -Node $said -Name 'capability' -Default '')
+        Role       = [string](Get-TomlValue -Node $said -Name 'role' -Default '')
         Online     = [string](Get-TomlValue -Node $said -Name 'online' -Default '') -eq 'true'
         Rounds     = [int](Get-TomlValue -Node $said -Name 'rounds' -Default 0)
         Interval   = if ($interval) { [timespan]::FromMilliseconds([int] $interval) } else { $null }

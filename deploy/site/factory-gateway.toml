@@ -1,0 +1,13 @@
+# A site: a gateway on a factory floor, reading the machines over Modbus and
+# OPC UA and publishing what they say to the plant's MQTT broker
+# (ADR-0015, amendment 2026-10-01). Build-XmipService -Site factory-gateway
+# turns it into a build; the node's TOML then picks, at run time, from what
+# the build made possible.
+
+description = "A factory floor gateway: Modbus and OPC UA in, MQTT out."
+
+target = "edge"
+
+roles = ["executing"]
+
+domains = ["industrial", "network", "integration"]

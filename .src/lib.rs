@@ -7,12 +7,14 @@
 //! the ledger of where each part went and why.
 //!
 //! Its one program is `xmip-service` (`.src/service/`), the Xmip Service,
-//! which starts a node with the technologies the build profile linked
+//! which starts a node with the technologies its site's build linked
 //! (ADR-0018, amendment 2026-09-26).
 //!
-//! The re-exports below the fold are behind features and a build profile
-//! selects a set of them. The ones above are always present: without them
-//! there is nothing to configure.
+//! The re-exports below the fold are behind features, and a site selects a
+//! set of them: `Build-XmipService` turns the target, roles and domains a
+//! site under `deploy/site` picks into features (ADR-0015, amendment
+//! 2026-10-01). The ones above are always present: without them there is
+//! nothing to configure.
 
 pub use xmip_abi;
 pub use xmip_configure;
