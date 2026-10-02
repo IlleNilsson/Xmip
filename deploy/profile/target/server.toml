@@ -1,0 +1,32 @@
+# The server target: an on-premises Windows or Linux machine that runs
+# xmip-service under its service manager, alone or as one node of a cluster
+# (ADR-0015, amendment 2026-10-01). A site names it; Build-XmipService turns
+# the site into a build.
+
+description = "An on-premises Windows or Linux server running xmip-service as a service."
+
+# The Rust target triples a build for this target is made for.
+triples = [
+  "x86_64-pc-windows-msvc",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+]
+
+# The root crate's features every build for this target carries: the
+# runtime store's engine, which brings the platform's key store with it.
+features = ["persist-rocksdb"]
+
+# The technologies this target decides, not a domain: the embedded engines,
+# RocksDB for the runtime database and SQLite for the administration
+# database, and the key stores that seal them (DPAPI on Windows, a private
+# file on Linux).
+claims = [
+  "xmip-core-persist-rocksdb",
+  "xmip-core-persist-sqlite",
+  "xmip-core-secret-dpapi",
+  "xmip-core-secret-file",
+]
+
+# What this target cannot have, each feature with the reason; a role or a
+# domain needing one is refused. A server refuses nothing.
+[refuses]

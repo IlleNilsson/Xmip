@@ -47,6 +47,22 @@ required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocks
 name = "deploy"
 path = ".src/test/deploy.rs"
 
+# Xmip Storage as a node meets it: the test Storage node — RocksDB on disk,
+# SQLite in memory — in processes of its own, killed hard and reached over
+# Xmip's TLS; and the latency of a write, measured and reported.
+[[test]]
+name = "storage"
+path = ".src/test/storage/main.rs"
+required-features = ["persist-rocksdb", "persist-sqlite"]
+
+# The scripts IT runs for a database server, held to the schema Xmip Storage
+# writes them from, and Xmip Storage against a real server where a test is
+# given one (deploy/database).
+[[test]]
+name = "database"
+path = ".src/test/database.rs"
+required-features = ["persist"]
+
 [features]
 # Nothing by default. A plain `cargo build` is the assembly library with the
 # modules every node has; xmip-service is built from a site (deploy/site) by
@@ -94,13 +110,13 @@ transport-http = ["dep:xmip-transport-http"]
 transport-tcp = ["dep:xmip-transport-tcp"]
 transport-udp = ["dep:xmip-transport-udp"]
 
-# The runtime store engines xmip-service links, and the node opens the one its
-# `[store]` names (ADR-0018, amendment 2026-09-30); a store naming one the
-# build left out is refused as the node starts. A site's target links its
-# engine (deploy/profile/target): RocksDB on a server or a hosted node
-# (ADR-0015, amendments 2026-09-25 and 2026-10-01), SQLite on an edge
-# machine or a person's computer. Each brings the key home with it: a store
-# is always sealed (ADR-0063).
+# The embedded engines (ADR-0015, amendments 2026-09-25 and 2026-10-01):
+# RocksDB, the runtime database's one engine, which the node opens its
+# store over, and which every target that keeps a store links
+# (deploy/profile/target); and SQLite, an embedded Storage node's
+# administration database, which the storage role links
+# (deploy/profile/role/storage.toml). Each brings the key home with it: a
+# store is always sealed (ADR-0063).
 persist-rocksdb = ["persist", "secret", "dep:xmip-persist-rocksdb"]
 persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]
 # The platform's key store (ADR-0063 clause 4): DPAPI on Windows, a private
@@ -163,6 +179,11 @@ ctrlc = { version = "3.5", features = ["termination"] }
 # The deploy test walks a rendered configuration's keys, as configure's reader
 # writes them back, with the same TOML reader configure uses.
 toml = "0.9"
+# The storage test's certificate authority and the identities it issues, for
+# a node and a Storage node over mutual TLS: the library's identity, and
+# certificates made for the test alone.
+xmip-tls = { package = "xmip-core-library-tls", git = "https://github.com/IlleNilsson/xmip-core-library-tls", branch = "main" }
+rcgen = "0.13"
 
 [target.'cfg(windows)'.dependencies]
 # xmip-service under the Windows Service Control Manager: the dispatcher, the

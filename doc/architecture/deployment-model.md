@@ -202,9 +202,10 @@ do a round robin over Xmip Nodes roled Storage*). Every other node calls the
 Storage nodes' operations — **Xmip Storage** — and never a database directly,
 reaching them round robin; more than one Storage node is the safety. Whether
 a Storage node also carries the database is IT's question (section 7). A
-one-node deployment is its own Storage node. The role is
-recorded ahead of the code: `node::NodeRole` gains it in the build that
-follows (ADR-0056, amendment 2026-10-01, the Storage role).
+one-node deployment is its own Storage node. `node::NodeRole::Storage` is
+the role, and `xmip-core-persist`'s `storage` is Xmip Storage: its
+operations, the embedded Storage node, the wire over Xmip's TLS and the
+round robin (ADR-0056, amendment 2026-10-01, the Storage role).
 
 **Executor, Reader and Writer are gone.** This section named three runtime
 roles until 2026-10-01 — Executor, Reader, Writer — for the subject

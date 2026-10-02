@@ -375,8 +375,8 @@ least Windows & Linux. I do not have an OS X machine*).
 
 ### What proves it
 
-The tests the design is held to, decided with it on 2026-10-01 and not yet
-written. A test's Storage node keeps its administration database in SQLite in
+The tests the design is held to, decided with it on 2026-10-01. A test's
+Storage node keeps its administration database in SQLite in
 memory and its runtime database in RocksDB, on disk in the test's directory,
 so the kill test still proves the runtime database durable (the owner: *for
 testing purposes the Xmip Nodes of Storage type can use SQLite in memory for
@@ -393,6 +393,15 @@ administration and RocksDB for runtime*).
   never exceeds the core count;
 - the sync's latency measured idle and under load, and reported;
 - the Dead Message Queue and its replay (section 9).
+
+Written so far, for Xmip Storage alone (the estate root's `cargo test --test
+storage`, and `xmip-core-persist`'s own): a Storage node process killed hard
+loses no write it acknowledged, and a hand-on killed at any moment is all
+there or not at all; two claimants, one wins, a lapsed claim is taken over
+and a release frees it; a Storage node stopped or killed, and a node carries
+on through the next; the audit keeper moves each record once; and a
+write's latency, measured idle, in process and over TLS. The rest wait for
+the message path to run through the Ledger.
 
 ## 4. Actors and Communication Domains
 

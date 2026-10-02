@@ -460,7 +460,7 @@ Describe 'The environment a roll is started with' {
             ConvertTo-XmipNodeRole -Role 'sending,receiving,processing' | Should -Be 'executing'
             Get-XmipNodeRoleWord | Should -Be @(
                 'operational', 'monitoring', 'receiving', 'processing', 'sending', 'executing',
-                'development')
+                'development', 'storage')
 
             foreach ($said in 'Sending + RECEIVING', 'receiving,relay+hold', 'receive') {
                 [string] $refusal = ''

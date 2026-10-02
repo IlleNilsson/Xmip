@@ -30,10 +30,10 @@
 //! place it is written, so an installer registers what the runtime generates.
 //!
 //! The node keeps its runtime store where its configuration's `[store]`
-//! says, over an engine this build linked, sealed under the platform's key
-//! store (ADR-0018, amendment 2026-09-30); a store naming an engine this
-//! build left out, or one that does not open, is refused as any node that
-//! cannot start is. While it serves it takes the orders an operator leaves
+//! says, over `RocksDB`, the one engine, sealed under the platform's key
+//! store (ADR-0018, amendments 2026-09-30 and 2026-10-01); a build without
+//! `RocksDB`, a store naming a key store this build left out, or one that
+//! does not open, is refused as any node that cannot start is. While it serves it takes the orders an operator leaves
 //! for it — a pause or a resume of a Subscription — from `<data>/orders`
 //! (`orders.rs`), and publishes what the node says of itself — its health,
 //! figures, topology and Subscriptions — to `<data>/snapshot.toml`, every

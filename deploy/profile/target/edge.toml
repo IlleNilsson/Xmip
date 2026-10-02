@@ -1,0 +1,30 @@
+# The edge target: a Raspberry Pi class machine, an industrial PC or a
+# gateway beside the equipment it integrates, run by systemd, with no
+# desktop (ADR-0015, amendment 2026-10-01). A site names it;
+# Build-XmipService turns the site into a build.
+
+description = "A Raspberry Pi, industrial PC or gateway at the edge: Linux, systemd, headless."
+
+# The Rust target triples a build for this target is made for.
+triples = [
+  "aarch64-unknown-linux-gnu",
+  "x86_64-unknown-linux-gnu",
+  "armv7-unknown-linux-gnueabihf",
+]
+
+# The root crate's features every build for this target carries: RocksDB,
+# the runtime store's one engine, which brings the platform's key store with
+# it. A sensor gateway is its own Storage node (runtime-model.md section 3),
+# so the C++ toolchain, libclang and the arm cross-compilation RocksDB needs
+# are priced here (ADR-0015, amendment 2026-10-01: Xmip Storage, and RocksDB
+# always the embedded runtime engine).
+features = ["persist-rocksdb"]
+
+# The technologies this target decides, not a domain: the embedded engines,
+# RocksDB for the runtime database and SQLite for the administration
+# database, and the key store that seals them, a private file.
+claims = ["xmip-core-persist-rocksdb", "xmip-core-persist-sqlite", "xmip-core-secret-file"]
+
+# What this target cannot have, each feature with the reason; a role or a
+# domain needing one is refused. An edge machine refuses nothing.
+[refuses]

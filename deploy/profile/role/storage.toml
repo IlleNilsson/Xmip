@@ -1,0 +1,14 @@
+# The storage role: Xmip Storage, the doorway every other node calls for
+# all storage — write a Stream chunk, write a Message, claim a Journey,
+# hand it on, write an audit record — never a database directly
+# (NodeRole::Storage, ADR-0056, amendment 2026-10-01, the Storage role).
+# The root crate's features a node in this role is built with: persist,
+# where Xmip Storage's operations, its wire and its server are, and the
+# embedded Storage node's two engines, RocksDB for the runtime database and
+# SQLite for the administration database (deployment-model.md section 7).
+# A target says whether a build can be an embedded Storage node: one that
+# refuses either engine refuses this role.
+
+description = "Xmip Storage: serves every storage operation the other nodes call."
+
+features = ["persist", "persist-rocksdb", "persist-sqlite"]

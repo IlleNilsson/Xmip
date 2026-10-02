@@ -569,7 +569,7 @@ A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
 `server` or `hosted`), the node **roles** it serves (`receiving`,
 `processing`, `sending`, `executing`, `operational`, `monitoring`,
-`development`) and the **domains** it integrates (`healthcare`,
+`development`, `storage`) and the **domains** it integrates (`healthcare`,
 `industrial`, `b2b`, `managed-service` and the rest). The profiles under
 `deploy/profile` say what each brings, and `Build-XmipService -Site <name>`
 builds `xmip-service` with exactly that
@@ -606,10 +606,16 @@ node's service: the systemd unit, the launchd property list, or the
 `sc.exe create` arguments. The build links the transports its site's
 domains serve, by feature; a Location naming another transport is refused
 when the node starts. The node keeps its runtime store where its
-configuration's `[store]` says — by default RocksDB at
-`data/persistence-rocksdb`, sealed under the platform's key store — and a
-store naming an engine the build left out, or one that does not open, is
-refused the same way. A pause or resume of a Subscription reaches it as an
+configuration's `[store]` says — by default at `data/persistence-rocksdb`,
+RocksDB, the one engine, sealed under the platform's key store — and a
+store naming a key store the build left out, or one that does not open, is
+refused the same way. Xmip Storage — the nodes declaring the `storage` role,
+which every other node reaches round robin from its `[storage] nodes`, over
+Xmip's own mutual TLS — is built in `xmip-core-persist`'s `storage`; the
+database servers it is put in front of are set up by IT from
+[`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
+[`deploy/database/sqlserver`](deploy/database/sqlserver/README.md). A
+pause or resume of a Subscription reaches it as an
 order left in `data/orders`, and survives its restart
 ([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md)).
 It publishes what the node says of itself — its health and figures, its

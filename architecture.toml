@@ -1444,11 +1444,18 @@ dependency = []
   ]
 
   [xmip.core.persist]
-  description = "Durable runtime state behind one store contract: execution checkpoints, Journey recovery, leases and deduplication. Every record encrypted and authenticated before an engine sees it, its lookup key a keyed hash (ADR-0063)."
+  description = "Durable runtime state, and Xmip Storage: its operations over the runtime and the administration databases — Stream chunks, Messages, Journeys, claims, hand-ons, audit and the audit keeper — the embedded Storage node, the wire a node reaches a Storage node over through Xmip's mutual TLS, round robin, and the schema a database server keeps. Every embedded record encrypted and authenticated before an engine sees it, its lookup key a keyed hash (ADR-0063)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-journey", "xmip-core-secret"]
+  dependency = [
+      "xmip-core",
+      "xmip-core-journey",
+      "xmip-core-library-codec",
+      "xmip-core-library-net",
+      "xmip-core-library-tls",
+      "xmip-core-secret",
+  ]
     # The engines, each a technology under persist (ADR-0015, amendment
     # 2026-09-25), so a device build can leave RocksDB out. Each stores
     # ciphertext only: the encryption is persist's, above them, once.

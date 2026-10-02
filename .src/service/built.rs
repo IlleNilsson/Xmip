@@ -6,10 +6,10 @@
 //! configuration names; a Location naming one this build left out is refused
 //! as the node starts.
 //!
-//! Transports, and the runtime store's engines and key stores: the node
-//! opens the store its `[store]` names, and one naming an engine or a key
-//! store this build left out is refused as it starts (ADR-0018, amendment
-//! 2026-09-30). No authenticator, policy, identifier or route technology is
+//! Transports, and the runtime store's engine and key stores: the node
+//! opens its store over `RocksDB`, the one engine (ADR-0015 and ADR-0018,
+//! amendments 2026-10-01), and one this build left out, or a key store it
+//! left out, is refused as it starts (ADR-0018, amendment 2026-09-30). No authenticator, policy, identifier or route technology is
 //! linked, because the node configuration cannot yet say how one is set
 //! up: a Receive Location that accepts nothing is refused nothing at the
 //! start and takes no Stream through its gates.
@@ -22,30 +22,25 @@ use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport
 pub fn linked(audit: &ProgramAudit) -> Linked {
     Linked {
         transports: transports(),
-        engines: engines(),
+        engine: engine(),
         key_stores: key_stores(),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
 }
 
-/// The runtime store engines this build carries, each by its module name.
+/// The runtime store's engine, where this build carries it.
 #[allow(
-    unused_mut,
-    clippy::vec_init_then_push,
-    reason = "each push is a feature this build may leave out"
+    clippy::unnecessary_wraps,
+    reason = "a build without persist-rocksdb carries no engine"
 )]
-pub fn engines() -> Vec<LinkedEngine> {
-    let mut engines = Vec::new();
+pub fn engine() -> Option<LinkedEngine> {
     #[cfg(feature = "persist-rocksdb")]
-    engines.push(LinkedEngine::new("xmip-core-persist-rocksdb", |place| {
+    return Some(LinkedEngine::new(xmip_configure::store::ENGINE, |place| {
         Ok(Box::new(xmip_persist_rocksdb::RocksDb::open(place)?))
     }));
-    #[cfg(feature = "persist-sqlite")]
-    engines.push(LinkedEngine::new("xmip-core-persist-sqlite", |place| {
-        Ok(Box::new(xmip_persist_sqlite::Sqlite::open(place)?))
-    }));
-    engines
+    #[cfg(not(feature = "persist-rocksdb"))]
+    None
 }
 
 /// The key stores this build carries: the platform's (ADR-0063 clause 4),
@@ -117,17 +112,14 @@ mod tests {
 
     #[cfg(feature = "persist-rocksdb")]
     #[test]
-    fn the_default_store_is_linked_where_the_build_carries_its_engine() {
-        let engines: Vec<&str> = engines().iter().map(LinkedEngine::technology).collect();
+    fn the_store_is_linked_where_the_build_carries_its_engine() {
+        let engine = engine().map(|engine| engine.technology());
         let stores: Vec<&str> = key_stores()
             .iter()
             .map(LinkedKeyStore::technology)
             .collect();
 
-        assert!(
-            engines.contains(&xmip_configure::store::DEFAULT_ENGINE),
-            "{engines:?}"
-        );
+        assert_eq!(engine, Some(xmip_configure::store::ENGINE));
         assert!(
             stores.contains(&xmip_configure::store::PLATFORM_KEY_STORE),
             "{stores:?}"

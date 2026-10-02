@@ -1,0 +1,24 @@
+# The hosted target: a virtual machine or a container a hosting provider
+# runs, with no desktop and no person at it (ADR-0015, amendment
+# 2026-10-01). A site names it; Build-XmipService turns the site into a
+# build.
+
+description = "A virtual machine or container at a hosting provider: Linux, headless."
+
+# The Rust target triples a build for this target is made for.
+triples = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+
+# The root crate's features every build for this target carries: the
+# runtime store's engine, which brings the platform's key store with it.
+features = ["persist-rocksdb"]
+
+# The technologies this target decides, not a domain: the embedded engines,
+# RocksDB for the runtime database and SQLite for the administration
+# database, and the key store that seals them. A provider's key store is a
+# technology the node configuration names; the file key store is the one
+# every build for this target carries.
+claims = ["xmip-core-persist-rocksdb", "xmip-core-persist-sqlite", "xmip-core-secret-file"]
+
+# What this target cannot have, each feature with the reason; a role or a
+# domain needing one is refused. A hosted node refuses nothing.
+[refuses]
