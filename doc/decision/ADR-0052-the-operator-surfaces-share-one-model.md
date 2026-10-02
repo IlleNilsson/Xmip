@@ -1715,3 +1715,13 @@ Subscription's reason for declining (ADR-0013, amendment of this date;
 Decided and not built. Its place among the tabs, its columns, and the
 command line's and PowerShell's forms are for the build to propose, and every
 surface follows in the same change (ADR-0014).
+
+## Amendment, 2026-10-02: the desktop opens every cluster too
+
+The owner, 2026-10-02: *make it so that the desktop version opens multiple
+clusters too.* The amendment of 2026-09-20 had the desktop hold "its one
+surface as a set of one". It now opens its surfaces by the web host's one rule,
+`SurfaceChoice.OpenAll`: one snapshot per cluster where its `xmip.gui.toml`
+names several (`Snapshot` as a list), and moves between them as the web does.
+Configure's commands still answer one surface, the first cluster's
+(`SurfaceChoice.OpenFirst`'s rule), which is the one a node is started from.
