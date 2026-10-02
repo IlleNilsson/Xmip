@@ -427,5 +427,11 @@ nodes*.
   (ADR-0024, amendment of this date). Which node may take the work is still
   this record's placement.
 
-Recorded ahead of the code: `node::NodeRole` gains Storage, and the surfaces
-its word, in the build that follows.
+Built 2026-10-01: `node::NodeRole::Storage`, the eighth word, `storage`,
+serving no stage; the surfaces read it through `xmip_role_words_v1` as they
+read the others, and `deploy/profile/role/storage.toml` is what a Storage
+node's program is built with. Xmip Storage itself — its operations, the
+embedded Storage node, the wire over Xmip's TLS and the round robin — is
+`xmip-core-persist`'s `storage`. How a node's configuration declares the
+Storage role, and so when `xmip-service` serves Xmip Storage, is this
+record's open question on declaring roles in the TOML, named above.

@@ -190,9 +190,17 @@ fn a_store_the_build_did_not_link_or_that_does_not_open_is_refused() {
     let configuration = written(&directory, &free_address());
     let text = std::fs::read_to_string(&configuration).expect("reads");
 
+    // The engine is no node's choice (ADR-0015, amendment 2026-10-01).
+    std::fs::write(
+        &configuration,
+        format!("{text}\n[store]\nengine = \"xmip-core-persist-lmdb\"\n"),
+    )
+    .expect("writes");
+    let said = refused(&configuration, &directory);
+    assert!(said.contains("engine"), "{said}");
+
     let unlinked = "[store]
-engine = \"xmip-core-persist-lmdb\"
-place = \"lmdb\"
+key_store = \"xmip-core-secret-vault\"
 ";
     std::fs::write(
         &configuration,
@@ -204,7 +212,7 @@ place = \"lmdb\"
     .expect("writes");
     let said = refused(&configuration, &directory);
     assert!(
-        said.contains("'xmip-core-persist-lmdb', which this node was not built with"),
+        said.contains("'xmip-core-secret-vault', which this node was not built with"),
         "{said}"
     );
 
@@ -225,6 +233,6 @@ place = \"taken\"
     assert!(declarations(&directory).is_empty());
     let audit =
         std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
-    assert!(audit.contains("xmip-core-persist-lmdb"), "{audit}");
+    assert!(audit.contains("xmip-core-secret-vault"), "{audit}");
     let _ = std::fs::remove_dir_all(&directory);
 }

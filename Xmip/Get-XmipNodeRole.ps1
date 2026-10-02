@@ -9,9 +9,10 @@ function Get-XmipNodeRoleWord {
             says them. Pure.
 
         .DESCRIPTION
-            Seven roles (ADR-0056, amendment 2026-10-01): operational,
+            Eight roles (ADR-0056, amendments 2026-10-01): operational,
             monitoring, receiving, processing, sending, executing — the sum of
-            the three before it, in one process — and development. The list is
+            the three before it, in one process — development, and storage,
+            Xmip Storage, the doorway every other node calls. The list is
             the node crate's; this module keeps no copy and asks Xmip.Surface,
             which calls the runtime.
     #>

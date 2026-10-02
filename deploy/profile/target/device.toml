@@ -1,0 +1,32 @@
+# The device target: a Meadow-class microcontroller, bare metal, no
+# operating system under it (ADR-0015, amendment 2026-10-01). A site names
+# it; Build-XmipService refuses it in the words of [instead] below, and says
+# what builds for a device.
+
+description = "A Meadow-class microcontroller: bare metal, no_std, no store, no TLS server."
+
+# The Rust target triples a build for this target is made for.
+triples = ["thumbv7em-none-eabihf"]
+
+# The root crate's features every build for this target carries: none, as
+# xmip-service is not built for it.
+features = []
+
+# A device keeps no runtime store and seals none, so it claims nothing.
+claims = []
+
+# What this target cannot have, each feature with the reason.
+[refuses]
+persist = "A device keeps no runtime store: what it holds is in memory until it is sent."
+secret = "A device keeps no runtime store, so it has nothing to seal and no key store."
+cluster = "A device is an instrument a node reaches; it is no member of a cluster."
+
+# What builds for this target instead of xmip-service, and why. Its presence
+# is what refuses xmip-service here.
+[instead]
+reason = """\
+  xmip-service needs the standard library (threads, sockets, files, a \
+  clock), and a device has none; what builds for a device is xmip-core \
+  alone, no_std, which leaves the clock and the identifiers to the device."""
+manifest = "module/foundation/core/Cargo.toml"
+features = ["serde"]

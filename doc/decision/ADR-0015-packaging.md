@@ -287,5 +287,32 @@ this amendment had left open.
 
 Audit is written through Xmip Storage (ADR-0062, amendment of this date),
 and Xmip Storage is reached over Xmip's TLS (ADR-0063, amendment of this
-date). The target profiles under `deploy/profile/target` still name SQLite
-for `edge` and `computer`; the code follows this record.
+date). The target profiles follow this record since the build of the same
+day: every target that keeps a store carries RocksDB and claims both
+engines, none refuses either, and the storage role,
+`deploy/profile/role/storage.toml`, brings SQLite for the administration
+database.
+
+**An operator guide per database server** (the owner, 2026-10-01: *We have
+to give PostgreSQL and MSSQL IT-operators help in regards to settings and
+database schemas. A new readme & scripts perhaps*; and later the same day:
+*I can set us up with both PostgreSQL and MS SQL later for tests, you just
+need to prepare what I, future IT-operators have to do. A connection string,
+software to install or whatever*). Each server Xmip Storage is in front of
+has `deploy/database/<server>/`: a README for its IT operators — the
+software and the versions, the steps in order, the scripts, the settings
+Xmip depends on and why, TLS on the database connection, the connection
+string and where it goes, and pointers to what stays theirs (encryption at
+rest, backup, replication and failover) — and the scripts that make both
+databases, their schema and their least-privilege roles. The scripts are
+generated from the one schema definition the backend reads and writes by
+(`xmip-core-persist`, `storage::schema`), and `cargo test --test database`
+at the estate root fails when they differ, so the two cannot drift.
+PostgreSQL's and SQL Server's are both written now, ahead of SQL Server's
+backend; the same test runs Xmip Storage against a real server named by
+`XMIP_TEST_POSTGRESQL` or `XMIP_TEST_SQLSERVER`, and says it skipped where
+none is. A Storage node names its server in its configuration as
+`[storage.database]` — two connections,
+`<server>://<login>@<host>[:<port>]/<database>`, and the name of the secret
+the password is kept under, never the password — which is the assistant's
+drafting of the owner's *a connection string*, and his to strike.

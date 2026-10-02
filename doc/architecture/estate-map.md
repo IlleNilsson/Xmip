@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 191671 lines of production
+Where each repository mounts and what it holds: 194792 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -311,7 +311,7 @@ hold no source to count.
 │   │   │   ├── ssh                             1559
 │   │   │   ├── ntlm                             804
 │   │   │   ├── asn1                             526
-│   │   │   └── tls                              333
+│   │   │   └── tls                              452
 │   │   └── operation/
 │   │       ├── cli                             4849
 │   │       ├── gui                             3905
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                19095  C# 17214 · Rust 1656 · PowerShell 225
+│   │   ├── abi                                19097  C# 17216 · Rust 1656 · PowerShell 225
 │   │   ├── event                               3057
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -360,18 +360,18 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
-│   │   ├── node                                 820
+│   │   ├── node                                 831
 │   │   ├── context                              636
 │   │   ├── journey                              391
 │   │   ├── party                                186
 │   │   ├── stream                                86
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                             8945
-│       ├── configure                           1588
-│       └── persist                              898
-│           ├── sqlite                           107
-│           └── rocksdb                          105
+│       ├── runtime                             8949
+│       ├── persist                             3684
+│       │   ├── sqlite                           140
+│       │   └── rocksdb                          120
+│       └── configure                           1739
 └── test/
     └── core/
         └── playground                          9887

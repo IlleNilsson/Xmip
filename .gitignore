@@ -1,6 +1,10 @@
 # Rust / Cargo build output
 target/
 **/target/
+# A deployment target's profiles are not build output: the word is the
+# record's (deploy/profile/target, ADR-0015, amendment 2026-10-01), and the
+# two lines above kept them out of the repository from the day they landed.
+!deploy/profile/target/
 
 # Cargo.lock is not committed.
 #
