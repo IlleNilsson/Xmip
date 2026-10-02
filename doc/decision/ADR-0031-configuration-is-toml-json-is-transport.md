@@ -198,8 +198,18 @@ cluster: *They are shared.*
   node with a routing role routes a Message another node received.
 - **Routing reads the Subscriptions from Xmip Storage when it needs them,
   compiles their filters, and keeps them in memory until they have not been
-  used for a while**; the next use reads them again. How long *a while* is
-  is decided when it is built.
+  used for a while**; the next use reads them again. **A while is one
+  hour** (the owner, 2026-10-02, on the assistant's calculation: a miss is
+  one read from a Storage node, about 1 ms; a compiled filter is a few KB,
+  so 10,000 Subscriptions are about 40 MB; an hour keeps every route that
+  runs hourly or more often in memory, and a daily route pays one miss a
+  day).
+- **A Host Service that writes changed Subscriptions makes every node drop
+  the ones it holds** (the owner, 2026-10-02), so a route in constant use
+  does not stay stale. Xmip Storage keeps a generation of the Subscriptions,
+  raised by each change, and answers it with every Ledger write; a node
+  that sees a newer generation drops what it holds and reads again. No
+  extra round trip is made for it.
 - **TOML stays the only place configuration is written.** Xmip Storage holds
   what the Host Services read from their TOML at start, never a change of
   its own; the operation tools and editors change the TOML file, never a

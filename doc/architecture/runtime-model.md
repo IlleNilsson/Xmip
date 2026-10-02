@@ -700,8 +700,10 @@ offers Replay as an Operator act once a Subscription is added or fixed
 
 **Routing matches against the cluster's Subscriptions, read from Xmip
 Storage when needed and kept in memory, their filters compiled, until they
-have not been used for a while** (section 3) — decided by the owner,
-2026-10-02: *They are shared*.
+have not been used for an hour, or a Host Service has written changed
+Subscriptions, which every node learns from the generation Xmip Storage
+answers with each Ledger write** (section 3; ADR-0031, amendment
+2026-10-02) — decided by the owner, 2026-10-02: *They are shared*.
 
 ### Duplicates are a business decision
 
