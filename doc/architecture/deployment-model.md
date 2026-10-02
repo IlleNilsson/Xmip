@@ -368,7 +368,7 @@ regardless of backend database technology*):
 
 | | The runtime database | The administration database |
 | --- | --- | --- |
-| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time — never configuration |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts |
 | Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time |
 | On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` |
 | Behind a database server | a database of its own on IT's server | a separate database on IT's server, which IT may place on another server |
@@ -377,11 +377,13 @@ regardless of backend database technology*):
 claims and its state — so another node with matching node roles can pick up.
 
 **The administration database holds what must be shared and kept over
-time, and no configuration:**
+time:**
 
 - administration: node registration, cluster membership, installed Modules,
   available Handlers and Extensions, configuration versions and deployment
   state;
+- the Subscriptions, written from each Host Service's TOML as it starts and
+  never edited there (ADR-0031, amendment 2026-10-02);
 - operator state: what is paused, by whom and when — every node honors a
   pause;
 - audit, moved there from the runtime database by the audit keeper — on
@@ -439,24 +441,21 @@ removed: an embedded Storage node's runtime database is always RocksDB, and
 the record of 2026-09-30 that let a node name SQLite as its runtime engine
 is superseded (ADR-0015 and ADR-0018, amendments 2026-10-01).
 
-**Configuration is a node's own execution tree, in memory** (the owner,
-2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
-will not go in use until thread or process is started, reused… But runtime
-matter has to be central so other nodes with matching NodeRoles can pick
-up*; and, on the in-memory database he had first
-asked for, *So no in-memory database it is*). Each node reads its TOML
-configuration once, as it starts, and holds it as its **execution tree** —
-its Locations, its Subscriptions with their compiled filters, its Xmip
-Processes, its Send Ports — which `build_execution_tree` in
-`xmip-core-runtime` already builds; that tree is the node's configuration at
-runtime. It is not central and not in Xmip Storage. A changed TOML file takes
-effect when the thread or Host Service that uses it is started again, never
-mid-flight; the operation tools and editors change the TOML file, never a
-database. An in-memory database would be a second copy of the tree, added
-only if something needs to query configuration in ways the tree does not
-answer (ADR-0031, amendment 2026-10-01). This agrees with ADR-0031's ruling
-of 2026-09-26: *Databases are for
-runtime and history, not configuration.*
+**Configuration is TOML, read as a Host Service starts; the Subscriptions
+are shared through Xmip Storage** (the owner, 2026-10-02: *Routes are
+defined in TOML, read into Storage at Xmip Host Service startup, read from
+Storage when needed and kept in memory until "not used for a while"*, and
+*They are shared*). Each node reads its TOML configuration as it starts and
+holds its Locations, Xmip Processes and Send Ports as its **execution
+tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
+Subscriptions it writes into Xmip Storage's administration database, so any
+node with a routing role routes a Message another node received; routing
+reads them from Xmip Storage when it needs them, compiles their filters and
+keeps them in memory until they have not been used for a while. The
+operation tools and editors change the TOML file, never a database, and a
+changed TOML file takes effect when the Host Service that reads it is
+started again, never mid-flight (ADR-0031, amendments 2026-10-01 and
+2026-10-02).
 
 **Later, only if option A's latency is too slow:**
 

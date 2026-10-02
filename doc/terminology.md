@@ -302,9 +302,10 @@ Storage node is the safety. It always keeps two databases, whatever the
 backend: the **runtime database**, which is the Ledger, and the
 **administration database** — administration, deployment state, cluster
 membership, operator state, and audit kept over time, moved there by the
-audit keeper; never configuration, which each node reads from its TOML once
-as it starts and holds as its execution tree in memory (ADR-0031, amendment
-2026-10-01). Behind it is a database server IT
+audit keeper; and the Subscriptions each Host Service writes from its TOML
+as it starts, shared across the cluster. The rest of a node's configuration
+it reads from its TOML as it starts and holds as its execution tree in
+memory (ADR-0031, amendments 2026-10-01 and 2026-10-02). Behind it is a database server IT
 runs (option A, PostgreSQL first), the two databases separate on IT's servers, or, for a
 single machine or an edge site, an **embedded Storage node** keeping RocksDB
 and SQLite itself, with no failover (the owner, 2026-10-01). Xmip encrypts up

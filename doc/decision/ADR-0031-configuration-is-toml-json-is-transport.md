@@ -185,3 +185,33 @@ settings are configured*):
 Each is read into the node's execution tree as it starts, like everything
 else configured (the amendment above).
 
+
+## Amendment, 2026-10-02: Subscriptions are shared through Xmip Storage
+
+The owner, 2026-10-02: *Routes are defined in TOML, read into Storage at
+Xmip Host Service startup, read from Storage when needed and kept in memory
+until "not used for a while".* Asked whether they are shared across the
+cluster: *They are shared.*
+
+- **A Host Service writes its Subscriptions — the routes — into Xmip
+  Storage's administration database as it starts.** They are shared: any
+  node with a routing role routes a Message another node received.
+- **Routing reads the Subscriptions from Xmip Storage when it needs them,
+  compiles their filters, and keeps them in memory until they have not been
+  used for a while**; the next use reads them again. How long *a while* is
+  is decided when it is built.
+- **TOML stays the only place configuration is written.** Xmip Storage holds
+  what the Host Services read from their TOML at start, never a change of
+  its own; the operation tools and editors change the TOML file, never a
+  database. A changed TOML file takes effect when the Host Service that
+  reads it is started again, never mid-flight.
+- The rest of a node's configuration — its Locations, Xmip Processes and
+  Send Ports — is held as its execution tree in memory, as the amendment of
+  2026-10-01 says.
+
+This narrows the amendment of 2026-10-01, *Nothing configured is central*,
+and that of 2026-09-26, *No database holds configuration*: the
+Subscriptions are central, as a copy of the TOML that is never edited where
+it is held.
+
+Provenance: the owner's rulings, quoted; the wording is the assistant's.

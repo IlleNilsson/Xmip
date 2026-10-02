@@ -254,22 +254,21 @@ and RocksDB for runtime*) keeps its administration database in SQLite in
 memory and its runtime database in RocksDB, on disk in the test's directory,
 so a kill test still proves the runtime database durable.
 
-**Configuration is a node's own execution tree, in memory** (the owner,
-2026-10-01: *The TOML configuration can be changed by operation tools or editors, but
-will not go in use until thread or process is started, reused… But runtime
-matter has to be central so other nodes with matching NodeRoles can pick
-up*; and, on the in-memory database he had first
-asked for, *So no in-memory database it is*). Each node reads its TOML
-configuration once, as it starts, and holds it as its **execution tree** —
-its Locations, its Subscriptions with their compiled filters, its Xmip
-Processes, its Send Ports — which `build_execution_tree` in
-`xmip-core-runtime` already builds; that tree is the node's configuration at
-runtime. It is not central and not in Xmip Storage. A changed TOML file takes
-effect when the thread or Host Service that uses it is started again, never
-mid-flight; the operation tools and editors change the TOML file, never a
-database. An in-memory database would be a second copy of the tree, added
-only if something needs to query configuration in ways the tree does not
-answer (ADR-0031, amendment 2026-10-01).
+**Configuration is TOML, read as a Host Service starts; the Subscriptions
+are shared through Xmip Storage** (the owner, 2026-10-02: *Routes are
+defined in TOML, read into Storage at Xmip Host Service startup, read from
+Storage when needed and kept in memory until "not used for a while"*, and
+*They are shared*). Each node reads its TOML configuration as it starts and
+holds its Locations, Xmip Processes and Send Ports as its **execution
+tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
+Subscriptions it writes into Xmip Storage's administration database, so any
+node with a routing role routes a Message another node received; routing
+reads them from Xmip Storage when it needs them, compiles their filters and
+keeps them in memory until they have not been used for a while. The
+operation tools and editors change the TOML file, never a database, and a
+changed TOML file takes effect when the Host Service that reads it is
+started again, never mid-flight (ADR-0031, amendments 2026-10-01 and
+2026-10-02).
 
 **Later, only if option A's latency is too slow:** option C, an embedded
 engine per Storage node with Xmip copying from a claimed primary to standbys
