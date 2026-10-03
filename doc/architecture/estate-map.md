@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 216002 lines of production
+Where each repository mounts and what it holds: 216027 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -315,7 +315,7 @@ hold no source to count.
 │   │   └── operation/
 │   │       ├── cli                             5547
 │   │       ├── gui                             4160
-│   │       │   └── vscode                      1392
+│   │       │   └── vscode                      1417
 │   │       ├── observe                         3560
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
