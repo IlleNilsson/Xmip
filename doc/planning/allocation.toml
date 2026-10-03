@@ -813,7 +813,7 @@ path = "deploy/ansible/roles/xmip_node/defaults/main.yml"
 [[keep]]
 path = "deploy/ansible/roles/xmip_node/tasks/main.yml"
 [[keep]]
-path = "deploy/ansible/roles/xmip_node/templates/xmip-node.toml.j2"
+path = "deploy/ansible/roles/xmip_node/templates/xmip.toml.j2"
 [[keep]]
 path = "deploy/dsc/xmip-node.dsc.yaml"
 reason = "Manifest, estate tooling, packaging and deployment. The root composes; this is what composing needs."
@@ -1316,8 +1316,8 @@ may not assume the runtime supplies them.
 path = "doc/architecture/message-disposition.md"
 replacedBy = "doc/architecture/runtime-model.md"
 why = """
-Accept and Reject, ownership, and the Xmip DMQ as final disposition. Section 9
-already carries all of it, including the DMQ preservation list — receive
+Accept and Reject, ownership, and the Dead Message Queue as final disposition. Section 9
+already carries all of it, including the Dead Message Queue preservation list — receive
 context, validation results, correlation and trace references, audit
 references, failure reason, timestamps, artifact identities and subscription
 evaluation metadata — word for word.

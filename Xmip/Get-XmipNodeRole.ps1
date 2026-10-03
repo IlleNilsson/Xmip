@@ -83,7 +83,7 @@ function Get-XmipNodeRole {
             tests whole, which is a real answer and not an error;
             Start-XmipTest says so in words where RoundTrip was asked for. The
             other way to have the message path covered is to omit -Nodes, and
-            let the level's complement deal the roles by position.
+            take the test cluster's nodes with the roles its xmip.toml declares.
 
         .PARAMETER Name
             The node's name.
@@ -117,9 +117,9 @@ function Get-XmipNodeRole {
 function Get-XmipNodeRoleText {
     <#
         .SYNOPSIS
-            The roles each node declares, as the roll reads them from
-            XMIP_PLAYGROUND_NODE_ROLES: name=role+role, comma separated, nodes
-            that declare nothing left out. Pure.
+            The roles each node declares, as a roster says them:
+            name=role+role, comma separated, nodes that declare nothing left
+            out. Pure.
 
         .PARAMETER Nodes
             The nodes, by name.
@@ -274,7 +274,7 @@ function Get-XmipNodeRoleRefusal {
         "roles declared, or executing; no node declares $($missing -join ' or '). " +
         'State them with -NodeRole, one entry per node — ' +
         "-NodeRole @{ $($Nodes[0]) = 'receiving' } — or omit -Nodes and take " +
-        "the level's full complement, which deals the whole path.")
+        "the test cluster's nodes, whose xmip.toml declares their roles.")
 }
 
 function Get-XmipNodeRoleWarning {
@@ -286,7 +286,7 @@ function Get-XmipNodeRoleWarning {
 
         .DESCRIPTION
             A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn
-            are arbitrary node names), so -Nodes alpha, beta, gamma with no
+            are arbitrary node names), so three names given -Nodes with no
             -NodeRole is three nodes that declare no role. That is legal — they
             run the shared-directory tests whole and the roll runs RoundTrip
             itself — and it is probably not what the operator meant, so it is
@@ -338,5 +338,5 @@ function Get-XmipNodeRoleWarning {
         'across the nodes. A node name says nothing about what it does (ADR-0056). ' +
         "Split the message path with -NodeRole @{ $($named[0]) = 'receiving' } " +
         "and so on, or give one node 'executing', or omit -Nodes to take the " +
-        "level's full complement.")
+        "test cluster's nodes as its xmip.toml declares them.")
 }

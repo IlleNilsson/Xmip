@@ -2,96 +2,148 @@
 #requires -Version 7.6.5
 
 <#
-    No node in the estate's code, tests or fixtures is named like a role.
+    No cluster or node is named in the estate's code, tests or fixtures.
 
     The owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node names* (ADR-0056,
     amendment), and a node's role comes from its declared capability, never its
-    name. The rig and its examples kept those names anyway, until the owner,
-    2026-09-25: *Why does the test code include R1, P1 and S1, those are
-    parameters to tests!* They were replaced the same day by names that carry
-    no meaning — alpha, beta, gamma, delta, epsilon, zeta — and this file keeps
-    them from creeping back: a name that reads as a stage invites the next
-    reader to read the stage out of it, which is the defect ADR-0056 struck.
+    name. The owner, 2026-09-25: *Why does the test code include R1, P1 and S1,
+    those are parameters to tests!* That was carried out as a rename to names
+    that carry no meaning — alpha, beta, gamma, delta, epsilon, zeta — and the
+    owner, 2026-10-03: *You invented alpha and beta some time ago*;
+    *Parameters and configuration is the way to go, Xmip.toml* (ADR-0056,
+    amendment 2026-10-03). A test takes its cluster's and nodes' names from the
+    test cluster's xmip.toml through its language's one fixture — Rust's
+    configure::fixture, .NET's TestCluster, PowerShell's Get-XmipTestCluster —
+    and finds a node by what it declares or by its place. No name is written.
 
-    What is looked for is a letter R, P or S followed by digits, standing
-    where a node's name stands:
+    A literal name is looked for where a name stands:
 
-    - a scope or process name: node/<name>, node-<name>, handoff/<name>;
+    - a scope: xmip:///<cluster>, and a node in one: .../node/<node>;
+    - a process name: node-<name>, handoff/<name>;
     - a handoff: <name>-><name>;
-    - a declaration: <name>=receiving, as --nodes, a roster and [run] say it;
+    - a declaration: <name>=receiving, as --nodes and a roster say it;
     - a -NodeRole entry: <name> = 'receiving';
-    - a parameter or flag that names nodes: -Nodes, -OnlineNodes, -Node,
-      -Name, --name, --nodes, --online;
-    - a quoted or backticked name on its own, as a list, a fixture key, an
-      assertion or a help example carries it.
+    - a configured name in text a test writes: cluster_name, node_name,
+      [nodes.<name>];
+    - a parameter or flag that names a cluster or nodes: -Cluster, -Nodes,
+      -OnlineNodes, -Node, -Name, --cluster, --name, --nodes, --node,
+      --online;
+    - one of the names the owner types (Cn, Rn, Pn, Sn, CT), the Nn a test
+      once numbered its nodes with, or the struck ones (alpha … zeta),
+      quoted or backticked on its own, or standing before a / as a scope's
+      part.
 
-    Searched: module/, test/, template/, sdk/, Xmip/ and doc/ outside
+    Searched: .src/, module/, test/, template/, sdk/, Xmip/ and doc/ outside
     doc/decision/, in every language the estate writes and every text it
     keeps beside the code. The records under doc/decision/ are history and
     quote the owner as he spoke; they are not searched.
 
-    What a person reads to learn a command is the one place such a name
-    belongs. The owner, 2026-09-25: he names clusters Cn and nodes Rn, Pn and
-    Sn when he tests — *That is why I use Cn, Rn, Pn, Sn. No confusion* — and
-    help examples and the README show C1, R1, P1, S1 as parameter values
-    (ADR-0056, amendment 2026-09-25). So a name is allowed, and only, in:
+    Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
+    - an xmip.toml, a cluster's configuration;
     - a README.md;
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
       .ps1 or .psm1 that is not a test;
     - a binary's usage text: a Rust `const USAGE`, and the `Text` of a C#
-      Usage.cs, to the line that closes the string.
+      Usage.cs, to the line that closes the string;
+    - a snapshot fixture a test holds to a test cluster's xmip.toml, which
+      is configuration that test checks: $script:Held names each and the
+      test that holds it, and is held to that test in turn.
 
-    Everywhere else — code, tests, fixtures and every other document — a node
-    keeps a name that carries no meaning.
-
-    Two kinds of token are not node names and are said here once:
-    $script:Word, the products and specifications the estate integrates with,
-    and $script:Value, the files whose token is a value inside a message.
+    Two kinds of token are not names and are said here once: $script:Word,
+    the products and specifications the estate integrates with, and
+    $script:Value, the files whose token is a value inside a message.
 #>
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    [string] $name = '[RPS][0-9]+'
     [string] $quote = '[''"`]'
+    # The names the owner types and the ones invented and struck: anywhere
+    # quoted they are a name.
+    [string] $known = '(?:[CRPSN][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)'
+    # Any name, where only a name can stand.
+    [string] $literal = '[A-Za-z][A-Za-z0-9_-]*'
     # The role words a node declares and the stage words it declared before
     # them (ADR-0056, amendment 2026-10-01): a name beside either stands where
     # a node's name stands.
     [string] $role = 'operational|monitoring|receiving|processing|sending|executing|' +
-        'development|receive|process|send'
+        'development|storage|receive|process|send'
+    [string] $flag = '-Cluster|-Nodes|-OnlineNodes|-Node|--cluster|--nodes|--node|--online'
 
-    # Where a node's name stands, each place named for the failure message.
+    # Where a name stands, each place named for the failure message. Every
+    # name is captured as n; the first place to find a name on a line says it.
+    # A scope whose host is omitted addresses a kind across the estate, as
+    # xmip:///transport/ftp does (observability-model.md): a kind, not a name.
+    [string] $kind = 'transport'
     $script:Place = [ordered]@{
-        'a scope or process name'   = "(node|handoff)[/-]($name)\b"
-        'a handoff'                 = "\b($name)->|->($name)\b"
-        'a declaration'             = "\b($name)=($role)\b"
-        'a -NodeRole entry'         = "\b($name)\s*=\s*$quote($role)"
-        'a parameter naming nodes'  =
-            "(-Nodes|-OnlineNodes|-Node|-Name|--name|--nodes|--online)\s+$quote?($name)\b"
-        'a quoted name'             = "$quote($name)$quote"
+        # A name a test makes unique, a prefix and a value it formats in,
+        # is not written: the prefix alone is no name.
+        'a scope'                  =
+            "(?i:xmip):///(?!(?:$kind)/)(?>(?<n>$literal))(?![{`$])"
+        'a node in a scope'        =
+            "(?:[})]|xmip:///[^/\s]*|\$\w+)/node/(?<n>$literal)|(?<!\w)${quote}node/(?<n>$literal)"
+        'a process name'           = "(?<!\w)(?:node|handoff)[/-](?<n>$known)\b"
+        'a handoff'                =
+            "\b(?<n>$known)->|->(?<n>$known)\b|$quote(?<n>$literal)->(?<n>$literal)$quote"
+        # A query's parameter, ?phase=receive, is no declaration.
+        'a declaration'            = "(?<![\w`$\{?&])(?<n>$literal)=(?:$role)\b"
+        'a -NodeRole entry'        = "(?<![\w`$])(?<n>$known)\s*=\s*$quote(?:$role)"
+        'a configured name'        =
+            "\b(?:cluster_name|node_name)\s*[=:]\s*\\?$quote(?<n>$literal)|" +
+            "\[nodes\.(?<n>$literal)\]"
+        'a parameter naming nodes' =
+            "(?:$flag|-Name|--name)\s+$quote?(?<n>$known)\b|" +
+            "(?:$flag)\s+$quote(?<n>$literal)$quote|" +
+            "$quote--(?:cluster|nodes?|online)$quote\s*,\s*$quote(?<n>$literal)$quote"
+        'a quoted name'            = "(?<!\w)$quote(?<n>$known)$quote"
+        'a scope''s part'          = "(?<![\w-])(?<n>$known)/(?=\w)"
     }
 
     # Amazon S3, Siemens S7 and the FHIR releases: names of things Xmip talks
-    # to, never of a node.
-    $script:Word = @('S3', 'S7', 'R4', 'R5')
+    # to, never of a node; and .NET's N0, a number format.
+    $script:Word = @('S3', 'S7', 'R4', 'R5', 'N0')
 
     # A token that is a value in a document a test reads or writes.
     $script:Value = @{
-        'module/core/capability/path/dot/src/walk.rs'        = 'a SKU and a reference'
-        'module/core/capability/path/dot/src/lib.rs'         = 'a reference header'
-        'module/core/capability/path/json-pointer/src/lib.rs' = 'a reference field'
+        'module/core/capability/path/dot/src/walk.rs'             = 'a SKU and a reference'
+        'module/core/capability/path/dot/src/lib.rs'              = 'a reference header'
+        'module/core/capability/path/json-pointer/src/lib.rs'     = 'a reference field'
+        'module/core/capability/transport/.src/listed.rs'         = 'a bucket and its objects'
+        'module/core/capability/transport/aws-kinesis/src/lib.rs' = 'a record''s payload'
+        'module/core/capability/transport/mqtt/src/client_id.rs'  = 'a topic'
+        'module/core/capability/contract/toml/src/lib.rs'         = 'a layout''s type word'
+    }
+
+    # A snapshot fixture whose names a test holds to a test cluster's
+    # xmip.toml: the test's file and the test.
+    [string] $surface = 'module/foundation/abi/dotnet/Xmip.Surface.Test'
+    $script:Held = @{
+        "$surface/Fixture/cluster.toml"    = @{
+            Test = "$surface/ClusterSnapshotTest.cs"
+            Name = 'TheClusterFixtureIsTheTestClustersOwn'
+        }
+        "$surface/Fixture/snapshot.toml"   = @{
+            Test = "$surface/ClusterSnapshotTest.cs"
+            Name = 'TheNodesAreWhatThePublisherDrawsAsNodes'
+        }
+        "$surface/Fixture/cluster-c2.toml" = @{
+            Test = "$surface/ClusterSurfacesTest.cs"
+            Name = 'TheSecondFixtureIsTheSecondTestClustersOwn'
+        }
     }
 
     $script:Extension = @(
         '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.toml', '.md', '.json'
     )
-    $script:Candidate = [regex]::new('\b[RPS][0-9]+\b', 'Compiled')
+    $script:Candidate = [regex]::new(
+        '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSN][0-9]+|CT)\b|' +
+        "=(?:$role)\b|cluster_name|node_name|\[nodes\.", 'Compiled')
     $script:Skip = @(
         'target', 'bin', 'obj', 'node_modules', '.ai-interaction', '.ai-work',
         '.local-work', '.git'
     )
-    $script:Tree = @('module', 'test', 'template', 'sdk', 'Xmip', 'doc')
+    $script:Tree = @('.src', 'module', 'test', 'template', 'sdk', 'Xmip', 'doc')
     $script:Self = 'test/NodeName.Test.ps1'
 
     <#
@@ -119,16 +171,16 @@ BeforeAll {
 
     <#
         .SYNOPSIS
-        The indexes of the lines of a file that are help a person reads, where
-        the owner's example names belong: all of a README.md, the .EXAMPLE
-        and .PARAMETER sections of a script's help, a binary's usage text.
+        The indexes of the lines of a file where the owner's names belong:
+        all of an xmip.toml and a README.md, the .EXAMPLE and .PARAMETER
+        sections of a script's help, a binary's usage text.
     #>
     function Get-NodeNameHelpLine([string] $Path, [string[]] $Line) {
         [string] $leaf = ($Path -split '/')[-1]
         [string] $extension = [IO.Path]::GetExtension($leaf)
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
-        if ($leaf -eq 'README.md') {
+        if ($leaf -eq 'README.md' -or $leaf -like '*xmip.toml') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -188,8 +240,8 @@ BeforeAll {
 
     <#
         .SYNOPSIS
-        Every place a line names a node like a role, as file:line: place.
-        Help a person reads is passed over (Get-NodeNameHelpLine).
+        Every name a line writes, once, as file:line: place, name. Where the
+        owner's names belong is passed over (Get-NodeNameHelpLine).
     #>
     function Find-NodeName([string] $Path, [string[]] $Line) {
         $help = [Collections.Generic.HashSet[int]]::new()
@@ -203,13 +255,16 @@ BeforeAll {
                 continue
             }
 
+            $said = [Collections.Generic.HashSet[string]]::new()
+
             foreach ($place in $script:Place.Keys) {
                 foreach ($match in [regex]::Matches($Line[$at], $script:Place[$place])) {
-                    [string] $token = @($match.Groups | Select-Object -Skip 1 |
-                            Where-Object { $_.Value -match '^[RPS][0-9]+$' })[0].Value
+                    foreach ($capture in $match.Groups['n'].Captures) {
+                        [string] $token = $capture.Value
 
-                    if ($token -notin $script:Word) {
-                        "${Path}:$($at + 1): $place, $token"
+                        if ($token -notin $script:Word -and $said.Add($token)) {
+                            "${Path}:$($at + 1): $place, $token"
+                        }
                     }
                 }
             }
@@ -217,8 +272,8 @@ BeforeAll {
     }
 }
 
-Describe 'A node is never named like a role' {
-    It 'finds no node named a stage letter and digits in code, tests, fixtures or documents' {
+Describe 'No cluster or node is named in code or tests' {
+    It 'finds no literal cluster or node name in code, tests, fixtures or documents' {
         [string[]] $found = @(
             foreach ($tree in $script:Tree) {
                 [string] $at = Join-Path $script:Root $tree
@@ -231,13 +286,14 @@ Describe 'A node is never named like a role' {
                     [string] $path =
                         [IO.Path]::GetRelativePath($script:Root, $file) -replace '\\', '/'
 
-                    if ($path -eq $script:Self -or $script:Value.ContainsKey($path)) {
+                    if ($path -eq $script:Self -or $script:Value.ContainsKey($path) -or
+                        $script:Held.ContainsKey($path)) {
                         continue
                     }
 
                     # One pass over the file's text decides whether its lines
-                    # need reading at all: most hold no stage letter and digits,
-                    # and a line-by-line match over the estate took over an hour.
+                    # need reading at all: most hold no name, and a
+                    # line-by-line match over the estate took over an hour.
                     [string] $text = [IO.File]::ReadAllText($file)
 
                     if (-not $script:Candidate.IsMatch($text)) {
@@ -250,22 +306,36 @@ Describe 'A node is never named like a role' {
         )
 
         $found | Should -BeNullOrEmpty -Because (
-            ('a node''s name carries no meaning outside help a person reads; ' +
-                'name it alpha, beta, gamma (ADR-0056)'))
+            ('a name is configuration: take it from the test cluster''s xmip.toml ' +
+                'through the fixture, by role or place (ADR-0056, amendment 2026-10-03)'))
     }
 
-    It 'recognizes each place a node''s name stands' {
-        # Built, not written: this file is itself searched for nothing, and a
-        # literal here would be the one it must not hold.
-        [string] $role = 'R' + '1'
+    It 'recognizes each place a name stands' {
+        # Taken, not written: this file's names come from the test cluster
+        # as every test's do.
+        $cluster = Get-XmipTestCluster
+        [string] $node = $cluster.Nodes[0]
+        [string] $other = $cluster.Nodes[1]
+        [string] $struck = 'al' + 'pha'
+        [string] $any = 'la' + 'b'
         [string[]] $sample = @(
-            "scope = `"xmip:///C1/node/$role/receive`""
-            "xmip-playground-C1-node-$role"
-            "--nodes $role=receiving,beta=sending"
-            "-NodeRole @{ $role = 'receiving' }"
-            "Start-XmipTest -Nodes $role, beta"
-            "nodes = [`"$role`"]"
-            "id = `"alpha->$role`""
+            "scope = `"$($cluster.Scope)/node/$node/receive`""
+            "scope = `"xmip:///$any`""
+            "format!(`"{}/node/$any/receive`", cluster.scope())"
+            "`"node/$any/process`""
+            "xmip-playground-$($cluster.Name)-node-$node"
+            "--nodes $any=receiving,$other=sending"
+            "-NodeRole @{ $node = 'receiving' }"
+            "Start-XmipTest -Nodes $node, $other"
+            "Start-XmipTest -Cluster '$any'"
+            "[`"--cluster`", `"$any`"]"
+            "nodes = [`"$node`"]"
+            "id = `"$any->$other`""
+            "cluster_name = \`"$any\`""
+            "[nodes.$any]"
+            "holder: `"$struck`".into()"
+            "`"$struck/receive/tcp`""
+            "TestNode::join(`"$('N' + '2')`", &authority, &roster)"
         )
 
         foreach ($line in $sample) {
@@ -276,11 +346,21 @@ Describe 'A node is never named like a role' {
             Should -BeNullOrEmpty -Because 'Amazon S3 is a service, not a node'
         @(Find-NodeName -Path 'sample' -Line '[R:12 P:11 S:10]') |
             Should -BeNullOrEmpty -Because 'a stage letter and its rate are not a name'
+        @(Find-NodeName -Path 'sample' -Line 'format!("{}/node/{}", scope, node.name)') |
+            Should -BeNullOrEmpty -Because 'a name taken from the test cluster is not written'
+        @(Find-NodeName -Path 'sample' -Line 'scope = $"xmip:///follow-{Guid.NewGuid():n}";') |
+            Should -BeNullOrEmpty -Because 'a name a test makes unique is not written'
+        @(Find-NodeName -Path 'sample' -Line '`xmip:///transport/ftp?phase=receive` addresses') |
+            Should -BeNullOrEmpty -Because 'a scope with its host omitted names a kind'
+        @(Find-NodeName -Path 'sample' -Line 'let delta = before - after; // pre-alpha') |
+            Should -BeNullOrEmpty -Because 'a word in a protocol is not a name'
+        @(Find-NodeName -Path 'sample' -Line "near.send(`"`", b`"$node`")") |
+            Should -BeNullOrEmpty -Because 'a payload''s bytes are not a name'
     }
 
-    It 'allows the owner''s names in help and refuses the same name in code' {
-        [string] $role = 'R' + '1'
-        [string] $example = "Start-XmipTest -Cluster C1 -Nodes $role, beta"
+    It 'allows the owner''s names in help and configuration and refuses them in code' {
+        $cluster = Get-XmipTestCluster
+        [string] $example = "Start-XmipTest -Nodes $($cluster.Nodes[0])"
         [string[]] $script = @(
             'function Start-Sample {'
             '    <#'
@@ -301,16 +381,19 @@ Describe 'A node is never named like a role' {
         $found[1] | Should -BeLike 'Xmip/Start-Sample.ps1:10:*'
 
         @(Find-NodeName -Path 'test/Start-Sample.Test.ps1' -Line $script) |
-            Should -HaveCount 4 -Because 'a test''s names are parameters, never examples'
+            Should -HaveCount 4 -Because 'a test''s names are configuration, never examples'
         @(Find-NodeName -Path 'module/core/example/README.md' -Line $example) |
             Should -BeNullOrEmpty -Because 'a README shows the owner''s names'
+        @(Find-NodeName -Path 'test/xmip.toml' -Line "[nodes.$($cluster.Nodes[0])]") |
+            Should -BeNullOrEmpty -Because 'an xmip.toml is where a name is configured'
         @(Find-NodeName -Path 'doc/guide.md' -Line $example) |
             Should -Not -BeNullOrEmpty -Because 'only a README.md is help'
 
+        [string] $node = $cluster.Nodes[0]
         [string[]] $rust = @(
             'const USAGE: &str = "usage: cluster --nodes <a,b> \'
-            "     example: cluster --nodes $role=receiving,beta=sending`";"
-            "let given = [`"--nodes`", `"$role=receiving`"];"
+            "     example: cluster --nodes $node=receiving`";"
+            "let given = [`"--nodes`", `"$node=receiving`"];"
         )
         [string[]] $inRust = @(Find-NodeName -Path 'test/core/sample/src/main.rs' -Line $rust)
         $inRust | Should -HaveCount 1 -Because 'a usage text is help and the line after it is code'
@@ -322,10 +405,28 @@ Describe 'A node is never named like a role' {
             $script:Value.Keys | Where-Object {
                 [string] $path = Join-Path $script:Root $_
                 -not (Test-Path -LiteralPath $path) -or
-                    (Get-Content -LiteralPath $path -Raw) -notmatch '[''"][RPS][0-9]+[''"]'
+                    -not (Find-NodeName -Path $_ -Line (Get-Content -LiteralPath $path))
             }
         )
 
         $stale | Should -BeNullOrEmpty -Because 'the list says what is true'
+    }
+
+    It 'passes over only a fixture a test holds to a test cluster' {
+        foreach ($fixture in $script:Held.Keys) {
+            $held = $script:Held[$fixture]
+            [string] $leaf = Split-Path -Leaf $fixture
+            [string] $test = Join-Path $script:Root $held.Test
+
+            Test-Path -LiteralPath (Join-Path $script:Root $fixture) |
+                Should -BeTrue -Because "$fixture is listed"
+            Test-Path -LiteralPath $test | Should -BeTrue -Because "$($held.Test) holds it"
+            [string] $text = [IO.File]::ReadAllText($test)
+            $text | Should -Match "\b$($held.Name)\(" -Because "$($held.Test) holds $leaf"
+            $text | Should -Match ([regex]::Escape("`"$leaf`"")) -Because (
+                "$($held.Test) reads $leaf")
+            $text | Should -Match 'TestCluster\.Read(Other)?\(\)' -Because (
+                'it holds the fixture to a test cluster')
+        }
     }
 }

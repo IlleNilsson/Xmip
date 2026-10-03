@@ -131,7 +131,14 @@ directly. A node reaches the Storage nodes
 round robin, from the list of their addresses in its TOML, and more than
 one Storage node is the safety (the owner: *to
 have one or more Xmip Nodes with role Storage would be a safety… Xmip could
-just do a round robin over Xmip Nodes roled Storage*).
+just do a round robin over Xmip Nodes roled Storage*). The round robin is
+per statement, not per operation (the owner, 2026-10-03: *When accessing
+storage, it should be the same storage node through out a statement, even if
+it is repetitive. Writing chunk 1 to n should be regarded as one statement,
+one call against StorageN* — and the Publication and its Journeys are the
+same statement): a receive cycle's chunks, its Publication and its Journeys
+are asked of one Storage node, and one that stops answering mid-statement
+fails the statement rather than moving it to another.
 
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an
@@ -204,7 +211,19 @@ owner, 2026-10-01: *Safe way*), the hand-ons between steps included. Behind a
 database server that is its commit; on the embedded Storage node it is a sync
 to disk, and group commit lets many concurrent writes share one sync.
 
-**Work moves by claim.** A node takes a Journey, or a Publication to route, by
+**One sync per receive cycle.** A Stream's chunks are written without a sync
+of their own, and the Publication's durable write makes them durable with it:
+on the embedded Storage node one sync of `RocksDB`'s write-ahead log covers
+every write before it, and the Storage node a node reaches syncs the same way
+at the Publication. Nothing is acknowledged before the Publication commits, so
+a crash before it leaves at most chunks no Message refers to, which the
+sender, never acknowledged, sends again; an acknowledged Message has its
+Stream, its Message record and its Journeys in the Ledger. The chunks and the
+Publication are one statement, asked of one Storage node (*Xmip Storage is
+the doorway to it*, above), so the sync that covers them is that node's (the
+owner, 2026-10-03).
+
+**Work moves by claim.** A node takes a Journey by
 a claim through Xmip Storage: a conditional update in the database — set the
 owner where the owner is empty or lapsed — time-limited, and renewed while
 the work runs. A node that dies stops renewing, its claims lapse, and any
@@ -338,7 +357,8 @@ shows thread switching dominating.
 
 **A dynamic, bounded pool per step** (the owner: *Go with the dynamic,
 bounded pool*). Each step of the message path — receive per Receive Location,
-routing, the Xmip Process step, send — runs on a pool of its own. A
+with routing inside it (*How routing runs*, section 9), the Xmip Process
+step, send — runs on a pool of its own. A
 CPU-bound step's pool is capped at the machine's core count. An I/O-bound
 step's pool grows while work waits, up to a configured maximum — the
 bulkhead, ADR-0018 clause 11 — and never below one thread; it shrinks after
@@ -358,9 +378,34 @@ when they are due.
 **A Stream is written in chunks, never whole in memory** (the owner: *A
 stream can't be written completely to memory and then into the RocksDB
 Ledger. It has to be done in calculated chunks depending on how much memory
-is available*). The chunk size is calculated from the memory available, and
-every gate — preparation, promotion, deserialization, validation,
-transformation, serialization, demotion — reads chunk by chunk.
+is available*), and every gate — preparation, promotion, deserialization,
+validation, transformation, serialization, demotion — reads chunk by chunk.
+**The chunk is a fixed whole number of TCP segments** (the owner,
+2026-10-03: *The chunk size would be sized according to IP/TCP chunks with a
+multiple since IP/TCP is the major transport protocol. If useful one can do
+it per transport*; *Do it fixed*): 44 segments of 1460 bytes — Ethernet's
+1500-byte MTU less the IP and TCP headers — 64,240 bytes, just under TCP's
+classic 64 KiB window, so a Stream in flight holds about 128 KiB, the chunk
+it writes and the one it reads ahead (`xmip-core-runtime`'s `ledger::CHUNK`,
+over `xmip-core-transport`'s `TCP_SEGMENT`). A transport may declare a unit
+of its own where that is useful; none does yet.
+
+**Built for receive, 2026-10-02.** Each Receive Location carries what
+arrives on a pool of its own (`xmip-core-runtime`'s `pool`): one thread
+carries one arrival through the whole receive cycle and tells its far end
+the verdict, and the arrivals of one receive are told in the order they came,
+all of them before the transport is asked again, as the transport's contract
+has it. So a transport that hands over one arrival a receive — TCP takes one
+connection — carries one at a time, and concurrent senders share no sync
+until a transport hands over several at once. The Stream is read from the
+transport's reader into the Ledger in chunks and held as kept there, read
+back a chunk at a time. **A Receive Location's pool is calculated from the
+machine** as the node starts (the owner, 2026-10-03: *make a calculation
+according to CPU cores/threads*): at most twice the hardware threads the
+platform allots the process (`pool::Limits::receive`), since a receive
+thread waits on the Ledger's sync as well as working. A thread idle for a
+minute ends — the assistant's drafting, for the owner to overrule. No
+configuration caps a pool yet.
 
 **Executing keeps the hops in one process.** A node declaring the executing
 role runs receiving, processing and sending in one Host Service for low
@@ -391,7 +436,10 @@ administration and RocksDB for runtime*).
 - a Stream far larger than the memory allowed passes, with memory bounded;
 - pools grow to their maximum and shrink when idle, and a CPU-bound pool
   never exceeds the core count;
-- the sync's latency measured idle and under load, and reported;
+- the sync's latency measured idle and under load, and reported; the sync is
+  load, as the network is (the owner, 2026-10-03: *Go for A*), so a Message
+  carried one at a time may cost its sync and its connections, measured beside
+  it, and a millisecond more, never beyond;
 - the Dead Message Queue and its replay (section 9).
 
 Written so far, for Xmip Storage alone (the estate root's `cargo test --test
@@ -400,8 +448,13 @@ loses no write it acknowledged, and a hand-on killed at any moment is all
 there or not at all; two claimants, one wins, a lapsed claim is taken over
 and a release frees it; a Storage node stopped or killed, and a node carries
 on through the next; the audit keeper moves each record once; and a
-write's latency, measured idle, in process and over TLS. The rest wait for
-the message path to run through the Ledger.
+write's latency, measured idle, in process and over TLS. And for the receive
+path through the Ledger (`xmip-core-runtime`'s `tests/ledger.rs`): a receive
+killed after its Stream's chunks were written and before its Publication
+leaves the chunks and no Message, and every Message whose receive cycle
+completed before a kill is in the Ledger after it, with its Journeys, and
+reads back as it was received. The rest wait for the steps after receive to
+run through the Ledger.
 
 ## 4. Actors and Communication Domains
 
@@ -680,15 +733,17 @@ body".
 
 Decided by the owner, 2026-10-01, validated part by part with the assistant.
 
-A routing pool, capped at the core count (section 3), claims a Publication
-and matches its promoted properties against the compiled Subscription
-filters. One Journey per match is written to the Ledger. A paused
-Subscription's Journey is written and held until the Subscription is
+Routing runs inside the receive cycle, on the thread carrying it, before the
+sender is acknowledged (the owner, 2026-10-03: *Go with A*): the Message's
+promoted properties are matched against the compiled Subscription filters,
+one Journey per match, and the Publication — its Message and its Journeys —
+is one atomic write, in the receive cycle's one statement on one Storage node
+(section 3). No routing pool and no claim on a Publication: a node that dies
+before that write has acknowledged nothing, and the sender sends again. A
+paused Subscription's Journey is written and held until the Subscription is
 resumed, and the held ones are picked up oldest first. The chain is recorded
 and bounded (ADR-0026). A Sequential artifact's position, by its order key,
-is in the Ledger. Nothing is deduplicated. **The Publication is marked routed
-and its Journeys created in one atomic write**, so a routing node that dies
-leaves either a Publication to route again or its Journeys, never half.
+is in the Ledger. Nothing is deduplicated.
 
 **The Dead Message Queue is Ledger state**, not a place beside it: a
 Publication that matched nothing is kept in the Ledger with its receive
@@ -696,7 +751,29 @@ context, validation results, promoted properties and, for each Subscription,
 its reason for declining. An operation view, **Dead Message Queue**, lists it
 per cluster and node, opens one to show its properties and the declines, and
 offers Replay as an Operator act once a Subscription is added or fixed
-(ADR-0052, amendment 2026-10-01; decided, to be built).
+(ADR-0052, amendment 2026-10-01).
+
+Built 2026-10-03. Each node has one queue in the Ledger, found by the
+name-based identifier of `<node>/dead-message-queue`; the entry — the
+Message's identity and Stream, its node, Receive Location and time, what its
+gates concluded (the transport identity, the message identity where one was
+carried, their alignment; Contract validation adds its results when it
+lands), its promoted properties and every Subscription's decline in the
+order asked — is written in the Publication's one write, so a Message nothing
+matched is kept with why or not at all, and its sender acknowledged only
+then (`persist::storage::DeadMessage`). The queue is numbered as it is
+written and read oldest first, a page at a time, as a paused Subscription's
+is. **Replay** reads the entry, routes its promoted properties against the
+node's Subscriptions of now and, where something matches, writes the
+Journeys it opens — every one held at the end of its Subscription's queue,
+since no receive cycle is left to depart from, and picked up from there as a
+resume picks up — its audit record, and the entry taken out, as one write;
+the entry is remembered as replayed, so a Replay asked again after a lost
+answer, or a Publication asked again, writes nothing twice. A Message that
+still matches nothing stays, and the refusal names every decline. Replay
+reaches a node as Pause does, an order its node takes (`observe::Noun::
+DeadMessage`, `observe::Act::Replay`), audited; the node publishes the oldest
+hundred of its queue in its snapshot (`[[dead_messages]]`).
 
 **Routing matches against the cluster's Subscriptions, read from Xmip
 Storage when needed and kept in memory, their filters compiled, until they
@@ -1076,7 +1153,11 @@ ADR-0065 decides how a receiver subscribes, from any language: one Event model
 and one subscription rule in `xmip-core-event`, reached in process through
 `xmip_operate.h` section 11 and over the wire in the Event wire form on Xmip's own
 HTTP, Kafka and AMQP transports, at least once. An Event reaches an in-process
-subscriber within about a millisecond of being published.
+subscriber within about a millisecond of being published. Any node is the
+cluster's door (ADR-0065, amendment 2026-10-02): a subscriber on any node hears
+the matching Events of every node, each pushed one hop over the sync listener
+(ADR-0067) and Xmip's mutual TLS, only where a subscriber's filter wants it; a
+member that cannot be reached is said to be unheard, never silently missing.
 
 ## 18. Parties and Endpoints
 

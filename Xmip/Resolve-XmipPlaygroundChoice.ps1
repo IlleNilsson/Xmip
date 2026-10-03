@@ -55,7 +55,6 @@ function Resolve-XmipPlaygroundChoice {
         return $null
     }
 
-    [int] $count = Get-XmipNodeCount -Nodes $Choice.Nodes
     [hashtable] $selection = @{
         Nodes          = $Choice.Nodes
         OnlineNodes    = $Choice.OnlineNodes
@@ -77,11 +76,12 @@ function Resolve-XmipPlaygroundChoice {
         return $null
     }
 
-    # A count names nothing, so only names can be warned about.
+    # The nodes named; the test cluster's are asked where they are read
+    # (Start-XmipPlaygroundRoll).
     [hashtable] $asked = @{
-        Nodes          = if ($count -ge 0) { $null } else { $Choice.Nodes }
-        Test           = $Choice.Test
-        NodeRole       = $Choice.NodeRole
+        Nodes    = $Choice.Nodes
+        Test     = $Choice.Test
+        NodeRole = $Choice.NodeRole
     }
 
     # A node's name means nothing (the owner, 2026-09-20: Rn, Pn and Sn are

@@ -92,7 +92,8 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   picks up goes to the Dead Message Queue, which is not a dead letter
   queue: nothing failed, nothing wanted it, and it is republished once the
   Subscription is corrected. A Subscription is configuration, added and
-  removed in the TOML of the Xmip Application that draws it; an operator
+  removed in the Xmip Application that draws it, a section of the
+  cluster's one `xmip.toml`; an operator
   pauses one — what it matches is held in the node's runtime store, nothing
   lost, surviving a restart — and resumes it, and what it held is picked up
   oldest first
@@ -271,7 +272,8 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    `-NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }`
    states them — receiving, processing and sending one stage each, or
    `executing` for all three in one process, the low-latency choice — or omit
-   `-Nodes` and the level's complement deals the whole message path for you.
+   `-Nodes` and the run takes the test cluster's `test/xmip.toml` as it is,
+   whose `[nodes.R1] roles = "receiving"` and so on cover the whole path.
    A node given no role declares none and runs the
    shared-directory tests whole, which `Start-XmipTest` says in words before
    it starts anything. `R1` may use the internet because you said so; the
@@ -378,8 +380,8 @@ repositories are scaffolded and not yet written. The manifest records that
 distinction for every repository, and it belongs in every technical
 evaluation. [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
 lists what is undecided, in order, with options and a recommendation for
-each. Routes are drawn in VS Code's designer and held in an Xmip Application
-(ADR-0064); Events are subscribed from any language (ADR-0065) and exported
+each. Routes are drawn in VS Code's designer and held in an Xmip Application,
+a section of the cluster's one `xmip.toml` (ADR-0064); Events are subscribed from any language (ADR-0065) and exported
 over OTLP and Prometheus. The Monitor view is the first operator screen, with
 the Configuration tree and the Topology beside it.
 
@@ -531,7 +533,12 @@ opens the specific point's configuration from its scope
 ([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
 Both GUIs take it by one rule: a role the run states (`Role` in
 `xmip.gui.toml`, else `XMIP_ROLE`) is the role, and with none stated and no
-directory configured the tester holds every role.
+directory configured the tester holds every role. A web host refuses, in
+words and audited, every act a remote surface asks of it unless its role may
+act, and takes an act as the subject of the client certificate that reached
+it, never as a name the caller gives; over loopback, where no certificate
+is presented, as the operating system user running the host, and from
+anywhere else without one it takes none (ADR-0009, amendment 2026-10-03).
 Observation reads snapshots the runtime publishes and never enters the
 message path. Audit is the durable record of actions and outcomes; a live
 monitor is not a replacement for it.
@@ -558,7 +565,7 @@ PowerShell module and the monitors run on all three.
 | --- | --- | --- | --- |
 | PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | `deploy/dsc/xmip-node.dsc.yaml` | `deploy/ansible/roles` | `deploy/ansible/roles` |
+| Desired state | Microsoft DSC v3 (`deploy/dsc`) or Ansible (`deploy/ansible/roles`) | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The desired-state files write the node configuration `xmip-core-configure`
@@ -649,8 +656,10 @@ audit`, what every Xmip program recorded, filtered by the Audit view's words,
 `xmip-cli subscriptions`, the Subscriptions the nodes route by, with
 `--pause` or `--resume` on one, and `xmip-cli event-subscriptions`, the Event
 subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
-one; the PowerShell module answers the same as objects, the audit, the
-Subscriptions and the Event subscriptions included. Pause and resume are the two acts the
+one, and `xmip-cli dead-messages`, what each node's Dead Message Queue keeps,
+with `--message` to open one and `--replay` on it; the PowerShell module
+answers the same as objects, the audit, the Subscriptions, the Event
+subscriptions and the Dead Message Queues included. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built
@@ -675,7 +684,10 @@ isolation and whether the runtime fails closed
    published state.
 
 An accepted Message that no Subscription matched is in the Dead Message
-Queue and can be republished once the Subscription is corrected. A failed
+Queue and can be replayed once the Subscription is corrected: the Dead
+Message Queue view, `xmip-cli dead-messages` and the PowerShell module list
+it per cluster and node, open one with its promoted properties and every
+Subscription's decline, and offer Replay to an Operator. A failed
 Journey keeps its position and resumes from its checkpoint. A refused Stream
 never became a Message and remains the sender's responsibility.
 
@@ -717,17 +729,20 @@ declared, never by its name (ADR-0028, amendment 2026-09-30). The assistant's
 test cluster is started so, and stopped by name:
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 `
+Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
     -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
-Stop-XmipTest -Cluster CT -IncludeHidden
+Stop-XmipTest -Cluster C2 -IncludeHidden
 ```
 
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
-three. Omit both switches and you get the most the rig can give: `-Stress` is
-`Brutal`, and `-Nodes` is that level's full complement, dealt over receive,
-process and send so the message path runs between the node processes; in a
-real environment an orchestrator spawns nodes, never Xmip.
+three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
+give, and the nodes are the test cluster's `xmip.toml` — the file
+`XMIP_TEST_CLUSTER` names, else `test/xmip.toml` — each declaring the roles
+that file gives it, so the message path runs between the node processes.
+Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file.
+A node is configuration and there is no count (ADR-0056, amendment
+2026-10-03); in a real environment an orchestrator spawns nodes, never Xmip.
 
 Use the Playground to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries

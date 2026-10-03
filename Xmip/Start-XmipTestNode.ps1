@@ -58,7 +58,7 @@ function Start-XmipTestNode {
             started here declares no stage, whatever it is called.
 
         .EXAMPLE
-            Start-XmipTestNode -Nodes edge-1, edge-2 -Stress Harsh -Rounds 100 -PassThru
+            Start-XmipTestNode -Nodes S1, S2 -Stress Harsh -Rounds 100 -PassThru
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.TestNode')]

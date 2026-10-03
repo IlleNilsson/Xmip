@@ -88,7 +88,7 @@ function Stop-XmipTest {
             Stop-XmipTest -Cluster 'C*'
 
         .EXAMPLE
-            Stop-XmipTest -Cluster CT -IncludeHidden
+            Stop-XmipTest -Cluster C2 -IncludeHidden
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |

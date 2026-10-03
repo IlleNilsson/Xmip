@@ -4,6 +4,7 @@
 //! ```text
 //! xmip-service --configuration <path> [--console] [--purpose test|runtime]
 //! xmip-service --configuration <path> --definition
+//! xmip-service --configuration <cluster xmip.toml> --node <name> --slice
 //! ```
 //!
 //! It starts the node configured at `<path>` with the technologies this build
@@ -28,6 +29,11 @@
 //! the node's service — a systemd unit, a launchd property list, or the
 //! `sc.exe create` arguments one per line — from `registration.rs`, the one
 //! place it is written, so an installer registers what the runtime generates.
+//!
+//! `--slice` prints the node `--node` names its configuration, sliced from
+//! the cluster's `xmip.toml` at `--configuration` by `xmip-core-configure`'s
+//! one slicing (`slice.rs`; ADR-0031, amendment 2026-10-03): desired state
+//! writes each node what it prints.
 //!
 //! The node keeps its runtime store where its configuration's `[store]`
 //! says, over `RocksDB`, the one engine, sealed under the platform's key
@@ -54,6 +60,7 @@ mod orders;
 mod publication;
 mod readiness;
 mod run;
+mod slice;
 
 use std::process::ExitCode;
 
@@ -87,6 +94,7 @@ fn main() -> ExitCode {
 
     match arguments.mode {
         Mode::Definition => definition::print(&audit, &arguments),
+        Mode::Slice => slice::print(&audit, &arguments),
         Mode::Console => console::run(&program, &audit, &arguments),
         #[cfg(windows)]
         Mode::Service => control_manager::run(program, audit, arguments),

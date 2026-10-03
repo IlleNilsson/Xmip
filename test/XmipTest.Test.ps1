@@ -42,6 +42,21 @@ BeforeAll {
     }
 
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
+
+    # Every cluster and node name below is the test cluster's (ADR-0056,
+    # amendment 2026-10-03): its own name, and the first node declaring each
+    # stage of the message path. A name a case needs beyond those is built
+    # from them.
+    $script:Cluster = Get-XmipTestCluster
+    $script:Stage = @{}
+
+    foreach ($role in 'receiving', 'processing', 'sending') {
+        $script:Stage[$role] = @($script:Cluster.Nodes | Where-Object {
+                @($script:Cluster.Role[$_] -split '[,+ ]+') -contains $role
+            })[0]
+    }
+
+    $script:Named = @{ Cluster = $script:Cluster; Stage = $script:Stage }
 }
 
 Describe 'Start, Get and Stop, and nothing else' {
@@ -188,7 +203,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # the Pester suite rather than refused, because a pattern chose the
         # group; an operator who named one suite is still refused.
         [string[]] $said = @(
-            Start-XmipTest -Suite * -Cluster Z3 -Rounds 1 -WhatIf 6>&1 |
+            Start-XmipTest -Suite * -Cluster $script:Cluster.Name -Rounds 1 -WhatIf 6>&1 |
                 ForEach-Object { "$_" }
         )
 
@@ -277,37 +292,37 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_PLAYGROUND_AREA | Should -Be 'a'
             $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_ONLINE_NODES'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
+            $environment.Keys | Should -Not -Contain 'XMIP_TEST_CLUSTER'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_MAX_SECONDS'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_SCENARIOS'
             $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_CLUSTER'
         }
     }
 
-    It 'says the tests, the nodes, the online nodes and the limits the way the roll parses them' {
-        InModuleScope Xmip {
+    It 'says the tests, the cluster file, the online nodes and the limits as the roll parses them' {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            [string] $r = $Stage.receiving
+            [string] $s = $Stage.sending
             $chosen = @{
-                Stress         = 'Brutal'
-                Test           = @('roundtrip', 'HeavyLoad')
-                Nodes          = @('alpha', 'beta', 'gamma')
-                NodeRole       = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
-                OnlineNodes    = @('alpha', 'gamma')
-                Cluster        = 'SN2'
-                Duration       = [timespan]::FromMinutes(15)
-                TimeFactor     = 9.5e-6
-                LoadBytes      = '512mb'
-                Image          = 'i'
-                Area           = 'a'
+                Stress      = 'Brutal'
+                Test        = @('roundtrip', 'HeavyLoad')
+                ClusterFile = $Cluster.Path
+                OnlineNodes = @($r, $s)
+                Cluster     = $Cluster.Name
+                Duration    = [timespan]::FromMinutes(15)
+                TimeFactor  = 9.5e-6
+                LoadBytes   = '512mb'
+                Image       = 'i'
+                Area        = 'a'
             }
             $environment = New-XmipPlaygroundEnvironment @chosen
 
             $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'round-trip,heavy-load'
-            $environment.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'alpha,beta,gamma'
-            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be 'alpha,gamma'
-            $environment.XMIP_PLAYGROUND_NODE_ROLES |
-                Should -Be 'alpha=receiving,beta=processing,gamma=sending'
-            $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be 'SN2'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
+            $environment.XMIP_TEST_CLUSTER | Should -Be $Cluster.Path
+            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be "$r,$s"
+            $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be $Cluster.Name
             $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'
             $environment.XMIP_PLAYGROUND_LOAD_BYTES | Should -Be '512mb'
@@ -315,47 +330,58 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'takes how many nodes as well as which, and leaves the naming to the roll' {
-        # The owner, 2026-09-23: how many nodes in each cluster I want. A
-        # node's name starts with a letter, so a lone number is no name and
-        # can only be a count; the roll names those nodes and deals them over
-        # receive, process and send, as it does for an omitted -Nodes.
-        InModuleScope Xmip {
-            $common = @{ Stress = 'Calm'; Area = 'a' }
+    It 'writes the nodes named into the run''s cluster file, and an empty list is no nodes' {
+        # The owner, 2026-10-03: parameters and configuration, xmip.toml. A
+        # node is configuration and there is no count: what -Nodes names is
+        # written with -Cluster and -NodeRole, and read back as the roll reads
+        # it (ADR-0056, amendment 2026-10-03).
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
 
-            $counted = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 6
-            $named = New-XmipPlaygroundEnvironment @common -Cluster orders -Nodes 'east', 'west'
+            [string] $r = $Stage.receiving
+            [string] $p = $Stage.processing
+            [string] $area = Join-Path $TestDrive 'run'
+            $typed = @{
+                Cluster  = $Cluster.Name
+                Nodes    = @($r, $p)
+                NodeRole = @{ $r = 'receiving' }
+                Path     = $area
+            }
+            [string] $file = Write-XmipTestCluster @typed
+            $read = Read-XmipTestCluster -Path $file
 
-            $counted.XMIP_PLAYGROUND_NODES | Should -Be '6'
-            $counted.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
-            $named.XMIP_PLAYGROUND_NODE_NAMES | Should -Be 'east,west'
-            $named.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODES'
+            $file | Should -Be (Join-Path $area "$($Cluster.Name).xmip.toml")
+            $read.Name | Should -Be $Cluster.Name
+            [string[]] $ordinal = @($r, $p)
+            [Array]::Sort($ordinal, [StringComparer]::Ordinal)
+            $read.Nodes | Should -Be $ordinal
+            $read.Role[$r] | Should -Be 'receiving'
+            $read.Role[$p] | Should -Be ''
 
-            Get-XmipNodeCount -Nodes @('6') | Should -Be 6
-            Get-XmipNodeCount -Nodes @('0') | Should -Be 0
-            Get-XmipNodeCount -Nodes @('east', 'west') | Should -Be -1
-            Get-XmipNodeCount -Nodes @('alpha') | Should -Be -1
-            Get-XmipNodeCount -Nodes @() | Should -Be -1
+            $none = Write-XmipTestCluster -Cluster $Cluster.Name -Nodes @() -Path $area
+            (Read-XmipTestCluster -Path $none).Nodes | Should -BeNullOrEmpty
+
+            # Omitted, the test cluster's file as it is.
+            Get-XmipTestClusterPath | Should -Be $Cluster.Path
+            (Read-XmipTestCluster -Path $Cluster.Path).Nodes | Should -Be $Cluster.Nodes
         }
     }
 
-    It 'names nodes, one process each, and an empty list is no nodes' {
-        InModuleScope Xmip {
-            $none = @{ Stress = 'Harsh'; Nodes = @(); Area = 'a' }
-            $environment = New-XmipPlaygroundEnvironment @none
+    It 'refuses a node named twice, an online node not named, and a name no file can carry' {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
 
-            $environment.XMIP_PLAYGROUND_NODES | Should -Be '0'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_NAMES'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_NODE_ROLES'
+            [string] $r = $Stage.receiving
+            [string] $p = $Stage.processing
 
-            { Assert-XmipNodeName -Nodes 'alpha', 'Alpha' } |
+            { Assert-XmipNodeName -Nodes $r, $r.ToLowerInvariant() } |
                 Should -Throw -ExpectedMessage '*named once*'
-            { Assert-XmipNodeName -Nodes 'alpha' -OnlineNodes 'beta' } |
+            { Assert-XmipNodeName -Nodes $r -OnlineNodes $p } |
                 Should -Throw -ExpectedMessage '*-Nodes does not*'
             { Assert-XmipNodeName -Nodes '1st' } |
                 Should -Throw -ExpectedMessage '*starting with a letter*'
-            { Assert-XmipNodeName -Nodes 'alpha' } | Should -Not -Throw
-            { Assert-XmipNodeName -Nodes 'alpha', 'beta-2' -OnlineNodes 'beta-2' } |
+            { Assert-XmipNodeName -Nodes $r } | Should -Not -Throw
+            { Assert-XmipNodeName -Nodes $r, "$p-2" -OnlineNodes "$p-2" } |
                 Should -Not -Throw
 
             # A node's name is the last word of its process name and so a
@@ -364,7 +390,7 @@ Describe 'The environment a roll is started with' {
             # more roles, roll is something different." The marker in
             # xmip-playground-<cluster>-node-<name> carries the kind, so no
             # word is reserved and no name is refused for the shape's sake.
-            foreach ($free in 'roll', 'Cluster', 'edge-roll', 'west-cluster', 'node') {
+            foreach ($free in 'roll', 'Cluster', "$r-roll", "$p-cluster", 'node') {
                 { Assert-XmipNodeName -Nodes $free } | Should -Not -Throw
             }
         }
@@ -397,7 +423,9 @@ Describe 'The environment a roll is started with' {
 
     It 'refuses a roll without a cluster name, since the owner names the cluster' {
         # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
-        { Start-XmipTest -Suite Core.Playground -Nodes alpha -ErrorAction Stop } |
+        [string] $node = $script:Stage.receiving
+
+        { Start-XmipTest -Suite Core.Playground -Nodes $node -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*you name it*'
         (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
@@ -409,26 +437,33 @@ Describe 'The environment a roll is started with' {
         # Start-XmipTest kept the last shorthand in the estate for a day and
         # it is struck (ADR-0056, amendment). A node carries what
         # -NodeRole states for it and nothing otherwise. Pure.
-        InModuleScope Xmip {
-            foreach ($name in 'receiving', 'process', 'Send3', 'node-01', 'alpha') {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            # The words a role is said in, and the test cluster's own names,
+            # whatever their letters suggest.
+            foreach ($name in @('receiving', 'process') + $Cluster.Nodes) {
                 Get-XmipNodeRole -Name $name | Should -Be ''
             }
 
-            $stated = @{ alpha = 'receiving'; delta = 'processing,sending'; beta = @() }
-            Get-XmipNodeRole -Name 'alpha' -NodeRole $stated | Should -Be 'receiving'
-            Get-XmipNodeRole -Name 'delta' -NodeRole $stated | Should -Be 'processing,sending'
-            Get-XmipNodeRole -Name 'beta' -NodeRole $stated | Should -Be ''
+            [string] $r = $Stage.receiving
+            [string] $p = $Stage.processing
+            [string] $s = $Stage.sending
+            $stated = @{ $r = 'receiving'; $s = 'processing,sending'; $p = @() }
+            Get-XmipNodeRole -Name $r -NodeRole $stated | Should -Be 'receiving'
+            Get-XmipNodeRole -Name $s -NodeRole $stated | Should -Be 'processing,sending'
+            Get-XmipNodeRole -Name $p -NodeRole $stated | Should -Be ''
 
-            Get-XmipNodeRoleText -Nodes 'alpha', 'beta', 'gamma', 'node-01' | Should -Be ''
-            Get-XmipNodeRoleText -Nodes 'alpha', 'beta' -NodeRole $stated |
-                Should -Be 'alpha=receiving'
-            Get-XmipNodeRoleText -Nodes 'alpha', 'beta' -NodeRole @{
-                alpha = 'receiving'; beta = 'processing+sending'
-            } | Should -Be 'alpha=receiving,beta=processing+sending'
+            Get-XmipNodeRoleText -Nodes $Cluster.Nodes | Should -Be ''
+            Get-XmipNodeRoleText -Nodes $r, $p -NodeRole $stated |
+                Should -Be "$r=receiving"
+            Get-XmipNodeRoleText -Nodes $r, $p -NodeRole @{
+                $r = 'receiving'; $p = 'processing+sending'
+            } | Should -Be "$r=receiving,$p=processing+sending"
 
             { ConvertTo-XmipNodeRole -Role 'relay' } |
                 Should -Throw -ExpectedMessage 'REFUSED: no role is called relay*'
-            { Assert-XmipNodeRole -Nodes 'alpha' -NodeRole @{ gamma = 'sending' } } |
+            { Assert-XmipNodeRole -Nodes $r -NodeRole @{ $s = 'sending' } } |
                 Should -Throw -ExpectedMessage '*-Nodes does not*'
         }
     }
@@ -446,7 +481,7 @@ Describe 'The environment a roll is started with' {
 
         foreach ($copy in @(
                 'Xmip/Get-XmipNodeRole.ps1'
-                'Xmip/Get-XmipNodeComplement.ps1'
+                'Xmip/Write-XmipTestCluster.ps1'
                 'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
                 'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')) {
             Get-Content -Raw -LiteralPath (Join-Path $root $copy) |
@@ -503,38 +538,52 @@ Describe 'The environment a roll is started with' {
         # ADR-0055 clause 5: running whole tests is a real answer, and it is
         # not what someone naming three nodes is likely to have meant. Said
         # before anything spawns, naming both ways to split the path.
-        InModuleScope Xmip {
-            [string] $said = Get-XmipNodeRoleWarning -Nodes 'alpha', 'beta', 'gamma'
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
 
-            $said | Should -BeLike '*None of alpha, beta, gamma declares a role*'
+            [string[]] $three = @($Stage.receiving, $Stage.processing, $Stage.sending)
+            [string] $said = Get-XmipNodeRoleWarning -Nodes $three
+
+            $said | Should -BeLike "*None of $($three -join ', ') declares a role*"
             $said | Should -BeLike '*-NodeRole*'
             $said | Should -BeLike '*omit -Nodes*'
 
             # Nothing to say: a role declared, a run without RoundTrip, or
             # no nodes named at all.
-            Get-XmipNodeRoleWarning -Nodes 'alpha' -NodeRole @{ alpha = 'receiving' } |
+            [string] $r = $Stage.receiving
+            Get-XmipNodeRoleWarning -Nodes $r -NodeRole @{ $r = 'receiving' } |
                 Should -Be ''
-            Get-XmipNodeRoleWarning -Nodes 'alpha', 'beta' -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeRoleWarning -Nodes $three[0, 1] -Test 'HeavyLoad' | Should -Be ''
             Get-XmipNodeRoleWarning | Should -Be ''
         }
 
-        Start-XmipTest -Cluster Z9 -Nodes alpha, beta, gamma -WhatIf -WarningVariable said |
-            Out-Null
+        [hashtable] $door = @{
+            Cluster = $script:Cluster.Name
+            Nodes   = @($script:Stage.receiving, $script:Stage.processing, $script:Stage.sending)
+        }
+        Start-XmipTest @door -WhatIf -WarningVariable said | Out-Null
         "$said" | Should -BeLike '*declares a role*'
     }
 
     It 'refuses RoundTrip whose nodes leave a role undeclared, before anything starts' {
         # The path is receive to process to send between the node processes,
         # and the refusal names the role nobody declared, never a letter.
-        InModuleScope Xmip {
-            $whole = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
-            $half = @{ alpha = 'receiving'; delta = 'receiving'; gamma = 'sending' }
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            # The stages' nodes, and a second node for each built from its name.
+            [string] $r = $Stage.receiving
+            [string] $p = $Stage.processing
+            [string] $s = $Stage.sending
+            [string] $r2 = "${r}2"
+            $whole = @{ $r = 'receiving'; $p = 'processing'; $s = 'sending' }
+            $half = @{ $r = 'receiving'; $r2 = 'receiving'; $s = 'sending' }
 
             $six = @{
-                Nodes          = @('alpha', 'delta', 'beta', 'epsilon', 'gamma', 'zeta')
+                Nodes          = @($r, $r2, $p, "${p}2", $s, "${s}2")
                 Test           = 'RoundTrip'
                 NodeRole       = $whole + @{
-                    delta = 'receiving'; epsilon = 'processing'; zeta = 'sending'
+                    $r2 = 'receiving'; "${p}2" = 'processing'; "${s}2" = 'sending'
                 }
             }
             Get-XmipNodeRoleRefusal @six | Should -Be ''
@@ -543,7 +592,7 @@ Describe 'The environment a roll is started with' {
             # nothing: it names the role nobody declared and both ways
             # to declare one.
             $short = @{
-                Nodes = @('alpha', 'delta', 'gamma'); Test = 'RoundTrip'; NodeRole = $half
+                Nodes = @($r, $r2, $s); Test = 'RoundTrip'; NodeRole = $half
             }
             [string] $said = Get-XmipNodeRoleRefusal @short
 
@@ -551,41 +600,40 @@ Describe 'The environment a roll is started with' {
             $said | Should -BeLike '*-NodeRole*'
             $said | Should -BeLike '*omit -Nodes*'
 
-            $one = @{ Nodes = @('alpha'); NodeRole = @{ alpha = 'receiving' } }
+            $one = @{ Nodes = @($r); NodeRole = @{ $r = 'receiving' } }
             Get-XmipNodeRoleRefusal @one | Should -BeLike '*declares processing or sending.*'
             Get-XmipNodeRoleRefusal @one -Test 'roundtrip', 'Filing' |
                 Should -BeLike 'REFUSED.*'
 
             # Named for nothing, but declaring the whole path: no refusal.
-            $stated = @{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' }
-            $named = @{ Nodes = @('alpha', 'beta', 'gamma'); NodeRole = $stated }
+            $named = @{ Nodes = @($r, $p, $s); NodeRole = $whole }
             Get-XmipNodeRoleRefusal @named | Should -Be ''
 
             # One executing node is the whole path in one process: no refusal.
-            $executing = @{ Nodes = @('alpha', 'beta'); NodeRole = @{ alpha = 'executing' } }
+            $executing = @{ Nodes = @($r, $p); NodeRole = @{ $r = 'executing' } }
             Get-XmipNodeRoleRefusal @executing | Should -Be ''
 
             # Not RoundTrip, nothing declared, or no nodes: nothing to refuse.
-            # alpha alone declares nothing at all now, so it is the third case.
-            Get-XmipNodeRoleRefusal -Nodes 'alpha' -Test 'HeavyLoad' | Should -Be ''
-            Get-XmipNodeRoleRefusal -Nodes 'alpha' | Should -Be ''
-            Get-XmipNodeRoleRefusal -Nodes 'node-01', 'node-02' | Should -Be ''
+            # A node with no role stated declares nothing, so it is the third case.
+            Get-XmipNodeRoleRefusal -Nodes $r -Test 'HeavyLoad' | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes $r | Should -Be ''
+            Get-XmipNodeRoleRefusal -Nodes $Cluster.Nodes | Should -Be ''
             Get-XmipNodeRoleRefusal -Nodes @() | Should -Be ''
             Get-XmipNodeRoleRefusal | Should -Be ''
 
             $chosen = @{
-                Stress = 'Calm'; Nodes = @('alpha', 'gamma'); Area = 'a'
+                Nodes = @($r, $s); NodeRole = @{ $r = 'receiving'; $s = 'sending' }; Named = $true
             }
-            $chosen.NodeRole = @{ alpha = 'receiving'; gamma = 'sending' }
-            { New-XmipPlaygroundEnvironment @chosen } |
-                Should -Throw -ExpectedMessage '*no node declares processing.*'
+            Get-XmipNodeSelectionRefusal @chosen | Should -BeLike '*no node declares processing.*'
         }
 
+        [string] $r = $script:Stage.receiving
+        [string] $s = $script:Stage.sending
         [hashtable] $door = @{
             Test           = 'RoundTrip'
-            Cluster        = 'Z8'
-            Nodes          = @('alpha', 'gamma')
-            NodeRole       = @{ alpha = 'receiving'; gamma = 'sending' }
+            Cluster        = $script:Cluster.Name
+            Nodes          = @($r, $s)
+            NodeRole       = @{ $r = 'receiving'; $s = 'sending' }
             ErrorAction    = 'Stop'
         }
 
@@ -612,55 +660,42 @@ Describe 'The environment a roll is started with' {
             Should -Be @('Calm', 'Realistic', 'Harsh', 'Brutal') -Because 'a level still pins'
     }
 
-    It 'brings the level''s full complement when -Nodes is omitted, covering the path' {
-        # The complement is the roll's to compose — the count is scaled to the
-        # machine's headroom and only the rig measures it — so the door asks
-        # for it and hands it back by name. What arrives is parsed here, and a
-        # roster the door composed itself must never refuse itself.
-        InModuleScope Xmip {
-            $dealt = ConvertFrom-XmipRosterText -Text (
-                'node-01=receiving,node-02=processing,node-03=sending,node-04=receiving')
+    It 'takes the test cluster''s nodes as configured when -Nodes is omitted' {
+        # The owner, 2026-10-03: parameters and configuration, xmip.toml. An
+        # omitted -Nodes is the test cluster's file as it is, every node
+        # declaring the roles its roles key says, and asked as named nodes
+        # are: the estate's test cluster covers the path and refuses nothing.
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
 
-            $dealt.Nodes | Should -Be @('node-01', 'node-02', 'node-03', 'node-04')
-            $dealt.NodeRole['node-04'] | Should -Be 'receiving'
-            $dealt.Covers | Should -BeTrue
+            $read = Read-XmipTestCluster -Path (Get-XmipTestClusterPath)
+            $declared = @{}
+            $read.Role.Keys | ForEach-Object { $declared[$_] = $read.Role[$_] }
 
-            [hashtable] $asked = @{
-                Nodes          = $dealt.Nodes
-                Test           = 'RoundTrip'
-                NodeRole       = $dealt.NodeRole
-            }
-            Get-XmipNodeRoleRefusal @asked | Should -Be ''
-
-            # Too few nodes for three stages: they declare nothing, the roll
-            # runs RoundTrip whole, and nothing refuses itself.
-            $small = ConvertFrom-XmipRosterText -Text 'node-01,node-02'
-
-            $small.Covers | Should -BeFalse
-            $small.NodeRole['node-01'] | Should -Be ''
-            $asked.Nodes = $small.Nodes
-            $asked.NodeRole = $small.NodeRole
-
-            Get-XmipNodeRoleRefusal @asked | Should -Be ''
-
-            { ConvertFrom-XmipRosterText -Text 'node-01=relay' } |
-                Should -Throw -ExpectedMessage 'REFUSED: no role is called relay*'
+            $read.Nodes | Should -Be $Cluster.Nodes
+            $declared[$Stage.receiving] | Should -Be 'receiving'
+            Get-XmipNodeRoleRefusal -Nodes $read.Nodes -Test 'RoundTrip' -NodeRole $declared |
+                Should -Be ''
         }
 
-        # The record says the nodes that were resolved, never an empty list:
-        # an operator who typed neither switch can read what they got.
+        # The record says the nodes and the file they came from, never an
+        # empty list: an operator who typed no -Nodes can read what they got.
         [string] $door = Get-XmipStartSource
 
         $door | Should -Match '(?m)^\s*nodes\s+= @\(\$Nodes\)\s*$'
-        $door | Should -Match "node_names.+else \{ 'complement' \}"
+        $door | Should -Match "node_names.+else \{ 'configured' \}"
+        $door | Should -Match '(?m)^\s*cluster_file\s+= \$clusterFile\s*$'
     }
 
     It 'refuses an online node that was not named a node' {
-        { Start-XmipTest -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
+        [string] $r = $script:Stage.receiving
+        [string] $p = $script:Stage.processing
+
+        { Start-XmipTest -Nodes $r -OnlineNodes $p -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
-        { Start-XmipTest -OnlineNodes alpha -ErrorAction Stop } |
+        { Start-XmipTest -OnlineNodes $r -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*name them all*'
-        { Start-XmipTestNode -Nodes alpha -OnlineNodes beta -ErrorAction Stop } |
+        { Start-XmipTestNode -Nodes $r -OnlineNodes $p -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
     }
 
@@ -764,7 +799,10 @@ Describe 'A suite carries its provider' {
     }
 
     It 'starts a provider''s suite through the command it declared, and refuses one it has not' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            [string] $c = $Cluster.Name
             [hashtable] $made = @{
                 Provider = 'Example'
                 Name     = 'Playground'
@@ -788,13 +826,13 @@ Describe 'A suite carries its provider' {
             }
 
             try {
-                [hashtable] $whole = @{ Cluster = 'Z9'; Test = @() }
+                [hashtable] $whole = @{ Cluster = $c; Test = @() }
                 Start-XmipProviderSuite -Suite $theirs -Bound $whole |
-                    Should -Be 'example:Z9:'
+                    Should -Be "example:${c}:"
 
-                [hashtable] $named = @{ Cluster = 'Z9'; Test = @('Smoke') }
+                [hashtable] $named = @{ Cluster = $c; Test = @('Smoke') }
                 Start-XmipProviderSuite -Suite $theirs -Bound $named |
-                    Should -Be 'example:Z9:Smoke'
+                    Should -Be "example:${c}:Smoke"
             }
             finally {
                 Remove-Item -LiteralPath 'function:global:Start-ExampleXmipTest' -Force
@@ -910,21 +948,25 @@ Describe 'What a node was started with' {
         # back by the node through the runtime's library. Until 2026-09-27 this
         # module parsed the node's command line with a copy of its defaults
         # and of the words --online takes.
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
             Get-Command -Name 'Read-XmipTestNodeCommandLine' -ErrorAction SilentlyContinue |
                 Should -BeNullOrEmpty
 
+            [string] $p = $Stage.processing
+            [string] $location = "$($Cluster.Scope)/node/$p"
             $self = Get-Process -Id $PID
             [hashtable] $declared = @{
                 $PID = [ordered]@{
-                    name        = 'xmip-playground-C1-node-node-03'
-                    location    = 'xmip:///C1/node/node-03'
+                    name        = "xmip-playground-$($Cluster.Name)-node-$p"
+                    location    = $location
                     purpose     = 'test'
-                    node        = 'node-03'
+                    node        = $p
                     shared      = 'D:\a b\shared'
                     stress      = 'harsh'
                     rounds      = '0'
-                    snapshot    = 'D:\a b\node-03.toml'
+                    snapshot    = "D:\a b\$p.toml"
                     interval_ms = '500'
                     role        = 'processing,sending'
                     online      = 'true'
@@ -933,15 +975,15 @@ Describe 'What a node was started with' {
 
             $node = ConvertTo-XmipTestNode -Process $self -Declared $declared
 
-            $node.Name | Should -Be 'node-03'
+            $node.Name | Should -Be $p
             $node.Shared | Should -Be 'D:\a b\shared'
             $node.Stress | Should -Be 'harsh'
             $node.Rounds | Should -Be 0
-            $node.Snapshot | Should -Be 'D:\a b\node-03.toml'
+            $node.Snapshot | Should -Be "D:\a b\$p.toml"
             $node.Interval | Should -Be ([timespan]::FromMilliseconds(500))
             $node.Role | Should -Be 'processing,sending'
             $node.Online | Should -BeTrue
-            $node.Location | Should -Be 'xmip:///C1/node/node-03'
+            $node.Location | Should -Be $location
         }
     }
 
@@ -959,39 +1001,44 @@ Describe 'What a node was started with' {
 
 Describe 'What a run says' {
     BeforeAll {
-        $script:Snapshot = Join-Path $TestDrive 'playground-snapshot.toml'
-        @'
+        # The claim is the processing node's, the receive stage the
+        # receiving node's.
+        [string] $scope = $script:Cluster.Scope
+        [string] $claimed = $script:Stage.processing
+        [string] $receiver = $script:Stage.receiving
+        $script:Snapshot = Join-Path $TestDrive "$($script:Cluster.Name)-snapshot.toml"
+        @"
 source = "playground"
-node = "xmip:///playground"
+node = "$scope"
 
 [[records]]
-scope = "xmip:///playground/round-trip/tcp/json"
+scope = "$scope/round-trip/tcp/json"
 state = "fine"
 severity = 0
 evidence = "12 rounds, all whole"
 observed_unix_nanos = 1789208338038783900
 
 [[records]]
-scope = "xmip:///playground/node/node-02/exclusive-claim/file/parallel"
+scope = "$scope/node/$claimed/exclusive-claim/file/parallel"
 state = "done"
 severity = 90
 evidence = "claimed twice"
 observed_unix_nanos = 1789208338038783900
 
 [[records]]
-scope = "xmip:///playground/node/alpha/receive/tcp/json"
+scope = "$scope/node/$receiver/receive/tcp/json"
 state = "fine"
 severity = 0
 evidence = "12/12 rounds passed"
 observed_unix_nanos = 1789208338038783900
 
 [[records]]
-scope = "xmip:///playground/node"
+scope = "$scope/node"
 state = "stressed"
 severity = 40
-evidence = "node-02 restarted once"
+evidence = "$claimed restarted once"
 observed_unix_nanos = 1789208338038783900
-'@ | Set-Content -LiteralPath $script:Snapshot -Encoding utf8
+"@ | Set-Content -LiteralPath $script:Snapshot -Encoding utf8
     }
 
     It 'splits a scope into scenario, node, transport and contract' {
@@ -1006,12 +1053,12 @@ observed_unix_nanos = 1789208338038783900
         $roundTrip.Node | Should -Be ''
 
         $claim = $results | Where-Object Scenario -eq 'exclusive-claim'
-        $claim.Node | Should -Be 'node-02'
+        $claim.Node | Should -Be $script:Stage.processing
         $claim.Transport | Should -Be 'file'
         $claim.Contract | Should -Be 'parallel'
 
         # A role node's stage is RoundTrip's, published under the node.
-        $received = $results | Where-Object Node -eq 'alpha'
+        $received = $results | Where-Object Node -eq $script:Stage.receiving
         $received.Test | Should -Be 'RoundTrip'
         $received.Transport | Should -Be 'receive'
         $received.Contract | Should -Be 'tcp/json'
@@ -1024,8 +1071,12 @@ observed_unix_nanos = 1789208338038783900
 
     It 'filters by test and by node, and names the worst' {
         @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 2
-        @(Get-XmipTestResult -Path $script:Snapshot -Node 'node-*').Count | Should -Be 1
-        @(Get-XmipTestResult -Path $script:Snapshot -Node 'al*').Count | Should -Be 1
+        # A wildcard over each node's first letter picks that node alone.
+        [string] $claimed = "$($script:Stage.processing[0])*"
+        [string] $receiver = "$($script:Stage.receiving[0])*"
+
+        @(Get-XmipTestResult -Path $script:Snapshot -Node $claimed).Count | Should -Be 1
+        @(Get-XmipTestResult -Path $script:Snapshot -Node $receiver).Count | Should -Be 1
         (Get-XmipTestResult -Path $script:Snapshot -Worst).State | Should -Be 'done'
     }
 
@@ -1034,8 +1085,9 @@ observed_unix_nanos = 1789208338038783900
         # done one at 90 here and nowhere else (found 2026-09-24).
         [string] $louder = Join-Path $TestDrive 'louder'
         New-Item -ItemType Directory -Path $louder | Out-Null
+        [string] $copy = Join-Path $louder (Split-Path -Leaf $script:Snapshot)
         (Get-Content -LiteralPath $script:Snapshot -Raw) -replace 'severity = 40', 'severity = 95' |
-            Set-Content -LiteralPath (Join-Path $louder 'playground-snapshot.toml') -Encoding utf8
+            Set-Content -LiteralPath $copy -Encoding utf8
 
         (Get-XmipTestResult -Path $louder -Worst).State | Should -Be 'done'
     }
@@ -1079,10 +1131,23 @@ observed_unix_nanos = 1789208338038783900
     It 'refuses to guess between two clusters in one directory' {
         [string] $two = Join-Path $TestDrive 'two'
         New-Item -ItemType Directory -Path $two | Out-Null
-        Copy-Item -Path $script:Snapshot -Destination (Join-Path $two 'C1-snapshot.toml')
-        Copy-Item -Path $script:Snapshot -Destination (Join-Path $two 'C2-snapshot.toml')
-        { Get-XmipTestResult -Path $two -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*C1-snapshot.toml, C2-snapshot.toml*'
+        [string[]] $files = @($script:Cluster.Name, "$($script:Cluster.Name)2") |
+            ForEach-Object { "$_-snapshot.toml" }
+
+        foreach ($file in $files) {
+            Copy-Item -Path $script:Snapshot -Destination (Join-Path $two $file)
+        }
+
+        [string] $said = try {
+            Get-XmipTestResult -Path $two -ErrorAction Stop
+        }
+        catch {
+            "$_"
+        }
+
+        foreach ($file in $files) {
+            $said | Should -BeLike "*$file*"
+        }
     }
 
     It 'says where a snapshot should be when there is none' {
@@ -1093,27 +1158,31 @@ observed_unix_nanos = 1789208338038783900
 
 Describe 'A cluster rolls once' {
     It 'finds the roll already running as a cluster, and none for another name' {
-        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
-            param($Area)
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive; Name = $script:Cluster.Name } {
+            param($Area, $Name)
 
-            # 2026-09-18: three rolls as CC1 overwrote one another's snapshot.
-            # One record spells the suite as this morning wrote it and one
-            # as the estate writes it now: a run is found by its cluster,
-            # and an older record still reads (ADR-0059, 2026-09-20).
+            # 2026-09-18: three rolls of one cluster overwrote one another's
+            # snapshot. One record spells the suite as this morning wrote it
+            # and one as the estate writes it now: a run is found by its
+            # cluster, and an older record still reads (ADR-0059, 2026-09-20).
+            # The names hold one another: the test cluster's is the end of
+            # the first, which begins the second.
+            [string] $one = "$($Name[0])$Name"
+            [string] $ten = "${one}0"
             Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
                 'suite = "Playground"'
-                'cluster = "CC1"'
+                "cluster = `"$one`""
                 'pid = 4242'
             )
             Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
                 'suite = "Core.Playground"'
-                'cluster = "CC10"'
+                "cluster = `"$ten`""
                 'pid = 4343'
             )
 
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'CC1') | Should -Be @(4242)
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'CC10') | Should -Be @(4343)
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster 'C1').Count | Should -Be 0
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $one) | Should -Be @(4242)
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $ten) | Should -Be @(4343)
+            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $Name).Count | Should -Be 0
         }
     }
 }
@@ -1134,15 +1203,16 @@ Describe 'What a web host reads' {
     }
 
     It 'warns that it will not show a roll it was not pointed at, and says how to' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
+            param($Name)
+
+            $rolling = [PSCustomObject]@{ Suite = 'Core.Playground'; Cluster = $Name }
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
             Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
-            Mock -CommandName Get-XmipTestStatus -MockWith {
-                [PSCustomObject]@{ Suite = 'Core.Playground'; Cluster = 'C1' }
-            }
+            Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
 
             Start-XmipOperationWeb -WarningVariable said -WarningAction SilentlyContinue
-            "$said" | Should -BeLike '*will not show the roll C1*Get-XmipTestStatus |*'
+            "$said" | Should -BeLike "*will not show the roll $Name*Get-XmipTestStatus |*"
 
             # A snapshot that is there: ADR-0055 refuses one that is not.
             [string] $real = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-warn.toml'
@@ -1181,9 +1251,12 @@ Describe 'What a web host reads' {
         # is not there yet, and being refused for it is the tool arguing with
         # what it was just told. It waits instead, and only while the run is
         # there.
-        InModuleScope Xmip {
-            [string] $coming = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-Q1-snapshot.toml'
-            $rolling = [PSCustomObject]@{ Cluster = 'Q1'; Snapshot = $coming }
+        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
+            param($Name)
+
+            [string] $coming = Join-Path ([System.IO.Path]::GetTempPath()) (
+                "xmip-$Name-snapshot.toml")
+            $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $coming }
 
             Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
             Mock -CommandName Start-Sleep -MockWith {
@@ -1198,9 +1271,12 @@ Describe 'What a web host reads' {
     }
 
     It 'refuses a snapshot a run names and then stops without publishing' {
-        InModuleScope Xmip {
-            [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-Q2-snapshot.toml'
-            $rolling = [PSCustomObject]@{ Cluster = 'Q2'; Snapshot = $never }
+        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
+            param($Name)
+
+            [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) (
+                "xmip-$Name-never-snapshot.toml")
+            $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $never }
             $script:asked = 0
 
             Mock -CommandName Start-Sleep -MockWith { }
@@ -1210,7 +1286,7 @@ Describe 'What a web host reads' {
             }
 
             { Wait-XmipSnapshot -Path $never } |
-                Should -Throw -ExpectedMessage '*REFUSED*Q2 stopped without publishing*'
+                Should -Throw -ExpectedMessage "*REFUSED*$Name stopped without publishing*"
         }
     }
 
@@ -1340,23 +1416,35 @@ Describe 'A stopped roll leaves no node of its cluster running' {
         cluster, whatever the process tree said.
     #>
     It 'reads a declared location as the cluster''s, and a longer name as another''s' {
-        InModuleScope Xmip {
-            Test-XmipClusterLocation -Location 'xmip:///C1' -Cluster C1 | Should -BeTrue
-            Test-XmipClusterLocation -Location 'xmip:///C1/node/node-01' -Cluster C1 |
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            # A longer name the test cluster's begins.
+            [string] $c = $Cluster.Name
+            [string] $node = $Cluster.Nodes[0]
+            Test-XmipClusterLocation -Location $Cluster.Scope -Cluster $c | Should -BeTrue
+            Test-XmipClusterLocation -Location "$($Cluster.Scope)/node/$node" -Cluster $c |
                 Should -BeTrue
-            Test-XmipClusterLocation -Location 'xmip:///C10/node/node-01' -Cluster C1 |
+            Test-XmipClusterLocation -Location "$($Cluster.Scope)0/node/$node" -Cluster $c |
                 Should -BeFalse
-            Test-XmipClusterLocation -Location '' -Cluster C1 | Should -BeFalse
-            Test-XmipClusterLocation -Location 'xmip:///C1' -Cluster '' | Should -BeFalse
+            Test-XmipClusterLocation -Location '' -Cluster $c | Should -BeFalse
+            Test-XmipClusterLocation -Location $Cluster.Scope -Cluster '' | Should -BeFalse
         }
     }
 
     It 'counts a node whose parent could not be read as its cluster''s roll''s' {
-        InModuleScope Xmip {
-            $roll = [PSCustomObject]@{ Id = 4242; Cluster = 'C1' }
-            $orphan = [PSCustomObject]@{ Parent = $null; Location = 'xmip:///C1/node/node-07' }
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            [string] $node = $Cluster.Nodes[0]
+            $roll = [PSCustomObject]@{ Id = 4242; Cluster = $Cluster.Name }
+            $orphan = [PSCustomObject]@{
+                Parent = $null; Location = "$($Cluster.Scope)/node/$node"
+            }
             $child = [PSCustomObject]@{ Parent = 4242; Location = '' }
-            $other = [PSCustomObject]@{ Parent = $null; Location = 'xmip:///C2/node/node-07' }
+            $other = [PSCustomObject]@{
+                Parent = $null; Location = "$($Cluster.Scope)2/node/$node"
+            }
 
             Test-XmipTestNodeOfRoll -Node $orphan -Roll $roll | Should -BeTrue
             Test-XmipTestNodeOfRoll -Node $child -Roll $roll | Should -BeTrue
@@ -1365,26 +1453,31 @@ Describe 'A stopped roll leaves no node of its cluster running' {
     }
 
     It 'ends every process declared in the cluster, and nothing declared elsewhere' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            # The test cluster, and another whose name begins with its name.
+            [string] $c = $Cluster.Name
+            [string] $longer = "${c}0"
+            [string] $node = $Cluster.Nodes[0]
+            [hashtable] $declared = @{
+                4242 = @{ name = "xmip-playground-$c-roll"; location = $Cluster.Scope }
+                4243 = @{ name = "xmip-playground-$c-cluster"; location = $Cluster.Scope }
+                4244 = @{
+                    name     = "xmip-playground-$c-node-$node"
+                    location = "$($Cluster.Scope)/node/$node"
+                }
+                4245 = @{
+                    name     = "xmip-playground-$longer-node-$node"
+                    location = "xmip:///$longer/node/$node"
+                }
+            }
             Mock Get-XmipPlaygroundProcess { }
             Mock Wait-Process { }
             Mock Stop-Process { }
-            Mock Read-XmipProcessDeclaration {
-                @{
-                    4242 = @{ name = 'xmip-playground-C1-roll'; location = 'xmip:///C1' }
-                    4243 = @{ name = 'xmip-playground-C1-cluster'; location = 'xmip:///C1' }
-                    4244 = @{
-                        name     = 'xmip-playground-C1-node-node-01'
-                        location = 'xmip:///C1/node/node-01'
-                    }
-                    4245 = @{
-                        name     = 'xmip-playground-C10-node-node-01'
-                        location = 'xmip:///C10/node/node-01'
-                    }
-                }
-            }
+            Mock Read-XmipProcessDeclaration { $declared }
 
-            Stop-XmipTestCluster -Parent 4242 -Cluster C1
+            Stop-XmipTestCluster -Parent 4242 -Cluster $c
 
             Should -Invoke Stop-Process -Times 1 -Exactly -ParameterFilter { $Id -eq 4243 }
             Should -Invoke Stop-Process -Times 1 -Exactly -ParameterFilter { $Id -eq 4244 }
@@ -1409,12 +1502,14 @@ Describe 'What a history file holds' {
         held none, and no surface said so.
     #>
     It 'is read back point by point, oldest first' {
-        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
-            param($Area)
+        [hashtable] $given = @{ Area = $TestDrive; Scope = $script:Cluster.Scope }
 
-            [string] $path = Join-Path $Area 'Y1-history.toml'
+        InModuleScope Xmip -Parameters $given {
+            param($Area, $Scope)
+
+            [string] $path = Join-Path $Area 'history.toml'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
-                'node = "xmip:///Y1"'
+                "node = `"$Scope`""
                 '[[points]]'
                 'counted = "bytes"'
                 'observed_unix_nanos = 1757000000000000000'
@@ -1428,7 +1523,7 @@ Describe 'What a history file holds' {
             [object[]] $read = @(Get-XmipHistory -Path $path)
 
             $read.Count | Should -Be 2
-            $read[0].Node | Should -Be 'xmip:///Y1'
+            $read[0].Node | Should -Be $Scope
             $read[0].Counted | Should -Be 'bytes'
             $read[0].Value | Should -Be 1024
             @(Get-XmipHistory -Path $path -Counted messages).Value | Should -Be 7
@@ -1448,12 +1543,14 @@ Describe 'What a history file holds' {
     }
 
     It 'says in words that a producer wrote no points, rather than nothing' {
-        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
-            param($Area)
+        [hashtable] $given = @{ Area = $TestDrive; Scope = $script:Cluster.Scope }
 
-            [string] $path = Join-Path $Area 'Y2-history.toml'
+        InModuleScope Xmip -Parameters $given {
+            param($Area, $Scope)
+
+            [string] $path = Join-Path $Area 'empty-history.toml'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
-                'node = "xmip:///Y2"'
+                "node = `"$Scope`""
                 'points = []'
             )
 
@@ -1484,6 +1581,12 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
                 Tests   = $Tests
             }
         }
+
+        # Three clusters' names: the test cluster's and two built from it.
+        [string] $c = $script:Cluster.Name
+        $script:One = $c
+        $script:Two = "${c}2"
+        $script:Three = "${c}3"
     }
 
     It 'takes a test by name, and the pipeline object as -InputObject' {
@@ -1501,19 +1604,22 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
 
     It 'stops the run a cluster and a test name pick, as they were started' {
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
-            New-FakeRoll -Id 12 -Cluster C2 -Tests RoundTrip, Retention
-            New-FakeRoll -Id 13 -Cluster C3
+            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
+            New-FakeRoll -Id 12 -Cluster $script:Two -Tests RoundTrip, Retention
+            New-FakeRoll -Id 13 -Cluster $script:Three
         )
+        [hashtable] $given = @{
+            Running = $running; One = $script:One; Two = $script:Two; Three = $script:Three
+        }
 
-        InModuleScope Xmip -Parameters @{ Running = $running } {
-            param($Running)
+        InModuleScope Xmip -Parameters $given {
+            param($Running, $One, $Two, $Three)
 
-            @(Select-XmipTestRoll -Running $Running -Cluster C1 -Test RoundTrip).Id |
+            @(Select-XmipTestRoll -Running $Running -Cluster $One -Test RoundTrip).Id |
                 Should -Be 11
-            @(Select-XmipTestRoll -Running $Running -Cluster C2 -Test RoundTrip, Retention).Id |
+            @(Select-XmipTestRoll -Running $Running -Cluster $Two -Test RoundTrip, Retention).Id |
                 Should -Be 12
-            @(Select-XmipTestRoll -Running $Running -Cluster C3 -Test '*').Id |
+            @(Select-XmipTestRoll -Running $Running -Cluster $Three -Test '*').Id |
                 Should -Be 13 -Because 'a run of the whole suite is every test in it'
             @(Select-XmipTestRoll -Running $Running).Count |
                 Should -Be 3 -Because 'nothing named is every run'
@@ -1522,8 +1628,8 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
 
     It 'refuses a run that also drives a test not named, and picks nothing' {
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
-            New-FakeRoll -Id 12 -Cluster C2 -Tests RoundTrip, Retention
+            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
+            New-FakeRoll -Id 12 -Cluster $script:Two -Tests RoundTrip, Retention
         )
 
         InModuleScope Xmip -Parameters @{ Running = $running } {
@@ -1532,7 +1638,7 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
             { Select-XmipTestRoll -Running $Running -Test RoundTrip -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED*also runs Retention*Nothing was stopped*'
 
-            # C1 alone would qualify and is not picked: a refused command has
+            # The first alone would qualify and is not picked: a refused command has
             # done nothing (ADR-0055 clause 2).
             [object[]] $picked = @(
                 Select-XmipTestRoll -Running $Running -Test RoundTrip -ErrorAction SilentlyContinue
@@ -1542,17 +1648,19 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
     }
 
     It 'refuses a cluster or a test that nothing running matches, naming what is' {
-        [object[]] $running = @(New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip)
+        [object[]] $running = @(New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip)
+        [hashtable] $given = @{ Running = $running; One = $script:One; Two = $script:Two }
 
-        InModuleScope Xmip -Parameters @{ Running = $running } {
-            param($Running)
+        InModuleScope Xmip -Parameters $given {
+            param($Running, $One, $Two)
 
-            [string] $nothing = '*REFUSED. No roll matches Z9. Rolling now: C1 running RoundTrip.*'
-            { Select-XmipTestRoll -Running $Running -Cluster Z9 -ErrorAction Stop } |
+            [string] $nothing = "*REFUSED. No roll matches $Two. Rolling now: " +
+                "$One running RoundTrip.*"
+            { Select-XmipTestRoll -Running $Running -Cluster $Two -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $nothing
 
-            [string] $none = '*REFUSED. No roll on C1 runs a test matching Storm.*'
-            { Select-XmipTestRoll -Running $Running -Cluster C1 -Test Storm -ErrorAction Stop } |
+            [string] $none = "*REFUSED. No roll on $One runs a test matching Storm.*"
+            { Select-XmipTestRoll -Running $Running -Cluster $One -Test Storm -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $none
             { Select-XmipTestRoll -Running @() -Test RoundTrip -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*Nothing is rolling.*'
@@ -1563,18 +1671,18 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
         # The estate's Pester run has no cluster; -Suite is how it is named
         # among the runs, and it is spelled as Start-XmipTest spells it.
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster C1 -Tests RoundTrip
+            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
             [PSCustomObject]@{ Id = 77; Cluster = $null; Suite = 'Core.Estate'; Tests = @() }
         )
 
-        InModuleScope Xmip -Parameters @{ Running = $running } {
-            param($Running)
+        InModuleScope Xmip -Parameters @{ Running = $running; One = $script:One } {
+            param($Running, $One)
 
             @(Select-XmipTestRoll -Running $Running -Suite Estate).Id | Should -Be 77
             @(Select-XmipTestRoll -Running $Running -Suite 'Core.*').Count | Should -Be 2
 
             [string] $nothing = '*REFUSED. No run of a suite matching Nope* is running.*' +
-                'C1 running RoundTrip; Core.Estate 77 running the whole suite.*'
+                "$One running RoundTrip; Core.Estate 77 running the whole suite.*"
             { Select-XmipTestRoll -Running $Running -Suite 'Nope*' -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $nothing
         }

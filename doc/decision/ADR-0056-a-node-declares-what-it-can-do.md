@@ -435,3 +435,58 @@ embedded Storage node, the wire over Xmip's TLS and the round robin — is
 `xmip-core-persist`'s `storage`. How a node's configuration declares the
 Storage role, and so when `xmip-service` serves Xmip Storage, is this
 record's open question on declaring roles in the TOML, named above.
+
+## Amendment, 2026-10-03: one statement, one Storage node
+
+The round robin is per statement, not per operation (the owner: *When
+accessing storage, it should be the same storage node through out a
+statement, even if it is repetitive. Writing chunk 1 to n should be regarded
+as one statement, one call against StorageN*; the Publication and its
+Journeys are the same statement). A receive cycle's chunks, its Publication
+and its Journeys are asked of one Storage node, chosen round robin as the
+statement begins; one that stops answering mid-statement fails the
+statement, never moves it to another, and the sender, never acknowledged,
+sends again. So the Publication's one sync covers the chunks before it
+whatever is behind the Storage nodes (`runtime-model.md` section 3).
+
+Built 2026-10-03: `xmip-core-persist`'s `storage::statement` and
+`XmipStorage::pinned`, which `StorageClient` answers with itself bound to
+one node; the runtime's `message_path::carry` takes one statement for the
+whole receive cycle.
+
+## Amendment, 2026-10-03: names are parameters and configuration
+
+The amendment of 2026-09-25 misread the owner. *Those are parameters to
+tests!* meant that a test takes its cluster and node names as parameters; it
+was carried out as a rename, and every node in code, tests, fixtures and help
+was given an invented name — alpha, beta, gamma, delta, epsilon, zeta — which
+the owner could no more read than `north`. The owner, 2026-10-03: *You
+invented alpha and beta some time ago*; *Parameters and configuration is the
+way to go, Xmip.toml.*
+
+- **No cluster or node name is written in code or tests.** The invented names
+  are struck everywhere outside these records, as the stage letters were.
+- **A test's names come from configuration**: the test cluster's `xmip.toml`
+  (`test/xmip.toml`, ADR-0031 amendment of this date), or the one a run names
+  — `Start-XmipTest` passes `-Cluster` and `-Nodes` and the cluster file it
+  writes. One fixture per language reads it; a test finds a node by what it
+  declares or by position, never by a literal name.
+- **Where a name may stand**: in an `xmip.toml`, in a README, in the help
+  examples of a command, and in a binary's usage text — C1, R1, P1, S1 as the
+  owner types them. `test/NodeName.Test.ps1` refuses any other.
+
+Built 2026-10-03: one fixture per language — `configure::fixture`
+(`test_cluster`, `other_cluster`), .NET's `TestCluster` (`Read`,
+`ReadOther`) and PowerShell's `Get-XmipTestCluster` — reading
+`test/xmip.toml` and the second test cluster's `test/other/xmip.toml`, each
+node's roles through `configure::cluster::roles`; every literal cluster and
+node name in code and tests moved onto them, and the snapshot fixtures a
+.NET test holds to a test cluster are allowed by `test/NodeName.Test.ps1`'s
+`$script:Held`, which also catches the `Nn` shape. A Playground roll's nodes
+are its cluster file's `[nodes]` (`Roster::of_cluster`), named by
+`XMIP_TEST_CLUSTER`: `Start-XmipTest -Cluster -Nodes -NodeRole` writes the
+run's own (`Write-XmipTestCluster`), and an omitted `-Nodes` takes the test
+cluster's as it is. The node count is deleted — `-Nodes <count>`,
+`XMIP_PLAYGROUND_NODES`, `XMIP_PLAYGROUND_NODE_NAMES`,
+`XMIP_PLAYGROUND_NODE_ROLES`, `roll --roster <level>`,
+`Get-XmipNodeComplement`, `complement.rs` and `Stress::nodes`.

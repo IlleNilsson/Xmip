@@ -1,0 +1,26 @@
+# The test cluster's one configuration: what every Rust test takes its
+# cluster's and nodes' names from, through configure's fixture
+# (`configure::fixture::test_cluster`, feature `test-support`). The names
+# are the owner's parameter values and live here alone: a test names a node
+# by what it declares or by its place, never by a literal (the owner,
+# 2026-10-03). `XMIP_TEST_CLUSTER`, a path, names another file in its place.
+#
+# A cluster's xmip.toml: the shared sections once, each node's under
+# [nodes.<name>] (ADR-0031, amendment 2026-10-03). `roles` is what each node
+# declares, in `node::NodeRole`'s words (ADR-0056, amendment 2026-10-01).
+
+[service]
+name = "xmip"
+cluster_name = "C1"
+
+[nodes.R1]
+roles = "receiving"
+
+[nodes.P1]
+roles = "processing"
+
+[nodes.S1]
+roles = "sending"
+
+[nodes.S2]
+roles = "sending"

@@ -478,7 +478,8 @@ shows thread switching dominating.
 
 **A Host Service runs a dynamic, bounded pool per step** (the owner: *Go with
 the dynamic, bounded pool*): a bounded pool of I/O threads per Receive
-Location, a routing pool, a pool for the Xmip Process step, a Send pool. A
+Location, routing inside it (amendment 2026-10-03), a pool for the
+Xmip Process step, a Send pool. A
 CPU-bound step's pool is capped at the core count. An I/O-bound step's pool
 grows while work waits, up to a configured maximum — the bulkhead of clause
 11 — never below one thread, and shrinks after a configured idle time.
@@ -556,3 +557,11 @@ addresses, for example
 the node tries them round robin. This closes the question this amendment had left open; the node
 configuration's document follows in the build. The code follows this
 record.
+
+## Amendment, 2026-10-03: no routing pool
+
+Routing runs inside the receive cycle, on the Receive Location's pool, before
+the sender is acknowledged (the owner, 2026-10-03: *Go with A*; ADR-0013,
+amendment of this date). The amendment of 2026-10-01 named a routing pool
+among the pools per step; there is none. The pools are one per Receive
+Location, one for the Xmip Process step and one for send.

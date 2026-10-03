@@ -219,6 +219,30 @@ owner is gone to the inbox — a recovery the exclusive open never needed.
 `transport/.src/claim.rs` and the file transport follow in phase C's first
 slice.
 
+*Built 2026-10-03.* An external review found the file transport listing and
+opening files with no claim, so two nodes could take the same file and a
+reader could take a producer's unfinished one. How the transport learns its
+node, the owner chose the same day: *Option A* — the runtime gives every
+transport its node's identity once, as it builds it, placed once in the
+transport contract, not a node argument on every technology's constructor.
+`transport::Configured::on_node` takes the node's location
+(`transport::NodeLocation`, written by the runtime's one
+`running::publication::location`). The file transport takes a file only
+where clause 5's stability check holds — its length and modification time
+unchanged since the listing before — and claims it by renaming it to
+`<dropped name>.xmip-claim.<the node's location, percent-encoded>.<nanoseconds>`;
+`Accepted` deletes the claimed file, `Refused` and `Failed` link it back
+under its dropped name, never over a file dropped since. A node being built
+returns every claim its own name records. One finding changed the
+mechanism, not the decision: two renames of one file are not exclusive on
+Windows, which renames through a handle opened on the file first, so two
+nodes both succeed and the second moves the file from under the first. The
+rename is therefore made holding the file's turn, `<dropped
+name>.xmip-claim`, created only where it does not exist — the exclusive step
+every file system offers alike, and the one the Playground's claim already
+used. A claim left by a node that is gone and does not start again is not
+returned yet: the cluster's half of the recovery is open.
+
 ## Amendment, 2026-10-01: a Journey is claimed through Xmip Storage
 
 **Provenance.** The owner, 2026-10-01, validated part by part with the

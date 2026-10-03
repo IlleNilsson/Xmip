@@ -74,10 +74,10 @@ function ConvertTo-XmipTestName {
     Why a node selection cannot be run, or '' where it can.
 
     .DESCRIPTION
-    -Nodes says which nodes by name, or how many by count, and the two allow
-    different things: names can be given roles and marked online,
-    while a count leaves the naming and the dealing to the roll, so there is
-    no name for -OnlineNodes or -NodeRole to hold on to.
+    -Nodes names the nodes, and those names are what -NodeRole gives roles to
+    and -OnlineNodes marks online; they become the run's cluster file
+    (Write-XmipTestCluster). There is no count: a node is configuration, and
+    configuration names it (ADR-0056, amendment 2026-10-03).
 
     Said at the door and before anything is built (ADR-0055), by the one
     function both Start-XmipTest and the environment ask, so they cannot
@@ -125,29 +125,22 @@ function Get-XmipNodeSelectionRefusal {
         [switch] $Named
     )
 
-    [int] $count = Get-XmipNodeCount -Nodes $Nodes
-
     if ($NodeRole -and -not $Named) {
         return '-NodeRole names nodes; name them all with -Nodes first.'
     }
 
-    if ($count -ge 0 -and ($OnlineNodes -or $NodeRole)) {
-        return ('-Nodes <count> leaves the naming to the roll, so -OnlineNodes and ' +
-            '-NodeRole have no names to hold on to. Name the nodes instead.')
-    }
-
-    if ($Named -and $count -lt 0) {
-        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
+    if ($Named) {
+        [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
+        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
         Assert-XmipNodeRole -Nodes $Nodes -NodeRole $NodeRole
     }
 
     # A node declares its roles (ADR-0056), and RoundTrip across nodes needs
-    # receive, process and send served somewhere. A count is dealt by
-    # the roll, so only names can leave a stage undeclared.
+    # receive, process and send served somewhere.
     [hashtable] $asked = @{
-        Nodes          = if ($count -ge 0) { $null } else { $Nodes }
-        Test           = $Test
-        NodeRole       = $NodeRole
+        Nodes    = $Nodes
+        Test     = $Test
+        NodeRole = $NodeRole
     }
 
     return Get-XmipNodeRoleRefusal @asked
@@ -234,18 +227,12 @@ function New-XmipPlaygroundEnvironment {
         [string[]] $Test = @(),
 
         [Parameter()]
-        [AllowNull()]
-        [AllowEmptyCollection()]
-        [string[]] $Nodes,
+        [string] $ClusterFile,
 
         [Parameter()]
         [AllowNull()]
         [AllowEmptyCollection()]
         [string[]] $OnlineNodes,
-
-        [Parameter()]
-        [AllowNull()]
-        [hashtable] $NodeRole,
 
         [Parameter()]
         [string] $Cluster,
@@ -290,45 +277,16 @@ function New-XmipPlaygroundEnvironment {
         $environment.XMIP_PLAYGROUND_CLUSTER = $Cluster
     }
 
-    # A count says how many and leaves the naming and the dealing to the roll
-    # (the owner, 2026-09-23): `-Nodes 6` is six nodes over the message path,
-    # numbered as the level's own complement is.
-    [int] $count = Get-XmipNodeCount -Nodes $Nodes
-
-    if ($count -ge 0) {
-        $environment.XMIP_PLAYGROUND_NODES = "$count"
-    }
-
-    # Otherwise nodes are named, not numbered (the owner, 2026-09-12): a list
-    # of names is one process each; an empty list is no nodes at any level;
-    # nothing said leaves the level its own numbered nodes.
-    elseif ($null -ne $Nodes) {
+    # The nodes are the cluster's xmip.toml, each one process declaring the
+    # roles its roles key says (ADR-0056, amendment 2026-10-03): the run's
+    # own, written from -Nodes and -NodeRole, or the test cluster's. The
+    # variable is the one every test fixture reads.
+    # With them, which may assume the internet (ADR-0045), by name: none
+    # named is none online, never every node's XMIP_ONLINE.
+    if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {
+        $environment.XMIP_TEST_CLUSTER = $ClusterFile
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
-        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
-        Assert-XmipNodeRole -Nodes $Nodes -NodeRole $NodeRole
-        [hashtable] $asked = @{
-            Nodes          = $Nodes
-            Test           = $Test
-            NodeRole       = $NodeRole
-        }
-        [string] $refusal = Get-XmipNodeRoleRefusal @asked
-
-        if ($refusal -ne '') {
-            throw $refusal
-        }
-
-        if ($Nodes.Count -eq 0) {
-            $environment.XMIP_PLAYGROUND_NODES = '0'
-        }
-        else {
-            # The roles each node declares (ADR-0056), and only what
-            # -NodeRole stated: a node's name says nothing (the owner,
-            # 2026-09-20: Rn, Pn and Sn are arbitrary node names).
-            $environment.XMIP_PLAYGROUND_NODE_NAMES = $Nodes -join ','
-            $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
-            $environment.XMIP_PLAYGROUND_NODE_ROLES =
-                Get-XmipNodeRoleText -Nodes $Nodes -NodeRole $NodeRole
-        }
+        $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture

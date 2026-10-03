@@ -167,50 +167,6 @@ Artifact Definition or a module-provided validation capability.
 
 ---
 
-# Configuration
-
-## 14. The node configuration format
-
-One shape is in the tree: the flat node TOML `xmip-core-configure` reads. The
-DSC document and the Ansible template under `deploy/` write it, and the
-estate root's `cargo test --test deploy` reads what they render
-(2026-09-30). What is open is whether it stays flat.
-
-The `_origins` design export, mined 2026-08-26, proposed a third — and it is
-the most complete of the three, so it belongs in the comparison rather than in
-the bin:
-
-```text
-template.xmip.toml   reusable definitions
-cluster.xmip.toml    the artifacts the whole cluster runs
-xmip.toml            the node slice: what runs here
-```
-
-with the rule that a node slice declares *placement*, and templates and cluster
-files declare *definition*.
-
-| option | effect |
-|---|---|
-| **A. Flat node TOML with `[[modules]]`** | simplest; every node file repeats what the cluster already knows |
-| **B. Ansible template composes it** | node files are generated, not authored; couples configuration shape to one deployment tool |
-| **C. Three-file split, per the origin design** | definition and placement separate cleanly; three files to keep in step, and a resolution order to specify |
-
-**Lean: C, but not by importing it.** The separation is right — a cluster-wide
-definition repeated in forty node files is forty places to drift — and it is
-what `xmip-core-configure` and desired state in `deployment-model.md` are
-already reaching for. What C does not yet have is a resolution order: when the
-cluster file and the node slice disagree, one of them wins, and nothing says
-which.
-
-**Explicitly not decided by finding it written down.** It arrived in an early
-ChatGPT draft alongside the Artifact vocabulary and a Rust-only claim, both
-rejected. Adopting one side of an open question because a draft happened to
-answer it is how a question gets closed without being decided.
-
-Recorded here rather than acted on. `_origins/` is deleted; git holds it.
-
----
-
 # Governance
 
 ## 15. Succession
@@ -342,8 +298,9 @@ Four of its items were still true, and this register is where they belong:
   ADR-0024 dissolved the lease half; the placement half is ADR-0025's clause 6
   question and ADR-0018's Host Services, still undesigned between nodes.
 - **A typed configuration loader.** `xmip-core-configure` exists;
-  full validation against what the manifests declare does not — problem 14 is
-  the format half of this.
+  full validation against what the manifests declare does not. The format
+  half is decided: one `xmip.toml` per cluster, sliced to each node
+  (ADR-0031, amendment 2026-10-03).
 - **The management plane.** `webapi` and `gui` are empty repositories.
   `powershell` no longer is — three cmdlets over the ABI and eighteen tests
   since 2026-09-03, seven of which hold the C# binding to `xmip_module.h`
@@ -935,7 +892,7 @@ retires entries from stops being an order.
                                        yet published); Topology navigates
                                        to another cluster when allowed, a
                                        second named roll in the playground,
-                                       Start-XmipTest -Cluster orders (the
+                                       Start-XmipTest -Cluster <cluster> (the
                                        playground topology, -Cluster and the
                                        chooser that moves a view between
                                        clusters are all landed, ADR-0052,

@@ -1005,7 +1005,7 @@ You have a word. This gives you the decision that governs it.
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
-| Dead Message Queue, DMQ | [The Journey model](ADR-0013-journey-model.md) |
+| Dead Message Queue | [The Journey model](ADR-0013-journey-model.md) |
 | decision | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | declared maturity | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | declared repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |

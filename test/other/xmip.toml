@@ -1,0 +1,15 @@
+# The second test cluster: what a test of two clusters takes for the one
+# beside test/xmip.toml's, through the same fixtures (`configure::fixture`'s
+# `TestCluster::other`, .NET's `TestCluster.ReadOther`). The names are the
+# owner's parameter values and live here alone (ADR-0056, amendment
+# 2026-10-03); a test finds a node by what it declares or by its place.
+
+[service]
+name = "xmip"
+cluster_name = "C2"
+
+[nodes.R1]
+roles = "receiving"
+
+[nodes.S1]
+roles = "sending"

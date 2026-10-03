@@ -91,8 +91,9 @@ mod tests {
 
     #[test]
     fn each_manager_gets_its_own_form_of_the_one_definition() {
+        let node = xmip_configure::fixture::test_cluster().node(0).name.clone();
         let service = ServiceDefinition::for_node(
-            "alpha",
+            &node,
             "/opt/xmip/bin/xmip-service",
             "/opt/xmip/config/xmip-node.toml",
             "/opt/xmip",
@@ -101,9 +102,12 @@ mod tests {
         let unit = render(ServiceManager::Systemd, &service).expect("a unit");
         assert!(unit.contains("ExecStart=/opt/xmip/bin/xmip-service --configuration"));
         let plist = render(ServiceManager::Launchd, &service).expect("a plist");
-        assert!(plist.contains("<string>xmip-alpha</string>"));
+        assert!(plist.contains(&format!("<string>xmip-{node}</string>")));
         let scm = render(ServiceManager::WindowsScm, &service).expect("arguments");
-        assert!(scm.starts_with("create\nxmip-alpha\nbinPath= "), "{scm}");
+        assert!(
+            scm.starts_with(&format!("create\nxmip-{node}\nbinPath= ")),
+            "{scm}"
+        );
         assert!(render(ServiceManager::None, &service).is_err());
     }
 }

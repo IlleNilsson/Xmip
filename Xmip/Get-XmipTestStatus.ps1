@@ -53,7 +53,7 @@ function Get-XmipTestStatus {
             Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate
 
         .EXAMPLE
-            Get-XmipTestStatus -Cluster CT -IncludeHidden
+            Get-XmipTestStatus -Cluster C2 -IncludeHidden
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]

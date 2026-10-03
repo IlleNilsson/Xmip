@@ -200,7 +200,9 @@ These are deployment choices, not separate runtime models.
 one or more Xmip Nodes with role Storage would be a safety… Xmip could just
 do a round robin over Xmip Nodes roled Storage*). Every other node calls the
 Storage nodes' operations — **Xmip Storage** — and never a database directly,
-reaching them round robin; more than one Storage node is the safety. Whether
+reaching them round robin, one Storage node for the whole of a statement —
+a receive cycle's chunks, Publication and Journeys (the owner, 2026-10-03;
+`runtime-model.md` section 3); more than one Storage node is the safety. Whether
 a Storage node also carries the database is IT's question (section 7). A
 one-node deployment is its own Storage node. `node::NodeRole::Storage` is
 the role, and `xmip-core-persist`'s `storage` is Xmip Storage: its
@@ -509,13 +511,25 @@ document says what that costs.
 ## 8. Desired state
 
 Xmip supports Desired State Configuration for installation and node
-configuration. First targets: **Microsoft DSC v3** for Windows and
-PowerShell-driven environments, **Ansible** for Linux, server automation and
-mixed infrastructure.
+configuration through two technologies, **Microsoft DSC v3** and
+**Ansible**. Both are operating-system agnostic (the owner, 2026-10-02:
+*Microsoft DSC 3+ as Ansible is OS agnostic, just different technologies*):
+each deploys a node on Windows, Linux and macOS alike, and a site chooses
+the one its IT runs.
 
 Desired state tooling installs the package and brings a node to its configured
 state: directory layout, persistence and management store paths, module folder,
 node TOML, service registration and running state.
+
+**A cluster's configuration is one `xmip.toml`, sliced to each node as it is
+deployed** (the owner, 2026-10-03: *There is one xmip.toml file per cluster.
+When deployed the sections regarding a node will be sliced to that node*;
+ADR-0031, amendment 2026-10-03): desired state writes each node the
+cluster's shared sections and its own `[nodes.<name>]`, the node's value
+winning where both say one. Every outward and hardware assumption — the TCP
+segment, the segments a chunk holds, the receive pool's threads per
+hardware thread, idle times, the Storage client's timeouts — is configured
+there, per cluster and per node, under `[tuning]`.
 
 **Desired state configuration does not replace Xmip TOML.** It orchestrates
 installation and places the configuration; the TOML remains the node and runtime
@@ -523,11 +537,15 @@ configuration source. A configured node has Xmip installed, both store paths
 present, config and module folders present, node TOML present, and the service
 registered and running where services are supported.
 
-The node TOML either writes is the document `xmip-core-configure` reads
-(`module/platform/configure/doc/node-configuration.md`): `[service]`, and
-nothing the reader has a default for, so the runtime store is the installed
-layout's. The estate root's `cargo test --test deploy` renders both and reads
-them as `xmip-service` does.
+Both place the cluster's `xmip.toml` on the node — the site's own, or a
+starter written from a few variables — and write the node's configuration
+as `xmip-service --configuration <xmip.toml> --node <name> --slice` prints
+it: `xmip-core-configure`'s one slicing
+(`module/platform/configure/doc/cluster-configuration.md`), never one in
+YAML or a template. The node reads the document `xmip-core-configure` reads
+(`module/platform/configure/doc/node-configuration.md`). The estate root's
+`cargo test --test deploy` renders both, slices them and reads the slices
+as `xmip-service` does.
 
 ## 9. Recovery
 

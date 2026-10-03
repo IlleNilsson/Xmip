@@ -35,10 +35,11 @@ pub fn write_until_killed(node: &dyn XmipStorage) {
 /// Claims a Journey and hands it on, one after another, saying each.
 pub fn hand_on_until_killed(node: &dyn XmipStorage) {
     let lease = Duration::from_secs(300);
+    let holder = xmip_configure::fixture::test_cluster().node_scope(0);
     for number in 0..1_000_000 {
         let token = u128::from(number) + 1;
         let claim = node
-            .claim(journey(number), "xmip:///CT/node/alpha", token, lease)
+            .claim(journey(number), &holder, token, lease)
             .expect("claimed")
             .expect("free");
         say(&format!("claimed {number}"));
@@ -86,6 +87,7 @@ fn a_hand_on_killed_at_any_moment_is_all_there_or_not_at_all() {
     let last = killed_after("hand-on", &place, "handed ", 200);
     let node = test_node(&place);
     let (mut whole, mut absent) = (0, 0);
+    let other = xmip_configure::fixture::test_cluster().node_scope(1);
     for number in 0..last + 3 {
         let result = node.read_journey(journey(number)).expect("read");
         let messages: Vec<bool> = (0..3)
@@ -99,12 +101,7 @@ fn a_hand_on_killed_at_any_moment_is_all_there_or_not_at_all() {
             .read_journey(journey(number + 1_000_000))
             .expect("read");
         let free = node
-            .claim(
-                journey(number),
-                "xmip:///CT/node/beta",
-                u128::MAX,
-                Duration::ZERO,
-            )
+            .claim(journey(number), &other, u128::MAX, Duration::ZERO)
             .expect("claimed")
             .is_some();
         if result.is_some() {

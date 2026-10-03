@@ -196,3 +196,43 @@ declarations of every transport its program linked, before anything loads.
 The runtime library the surfaces load runs no node and carries nothing
 (ADR-0018, amendment 2026-09-28; open problem 20); which technologies it
 should carry is still the owner's to decide.
+
+## Amendment, 2026-10-03: one `xmip.toml`, every designer a view of it
+
+The owner, 2026-10-03: *Developers, Operators deal with the one xmip.toml
+file … VS Code's Xmip Extension shall work against this one / cluster toml
+file*; *At runtime, when they have been published/sectioned there are
+multiple.* Developers and operators author one `xmip.toml` per cluster, its
+Xmip Applications among its sections; publishing sections it into the files
+each node runs (ADR-0031, amendment of this date). The extension opens that
+one file, and every designer — Cluster, Node, Receive Port, Receive
+Location, Send Port, Send Location, Send Port Group, Prepare, Promote,
+Demote, Route, Transformation, Xmip Process — is a view of its own sections of it.
+
+Built 2026-10-03. An Xmip Application is a section of the cluster's file,
+`[[xmip_applications]]`, and nowhere else: its `name` and its lists
+(`xmip-core-configure`, `XmipApplication` in `application.rs`, `section.rs`,
+read by `parse_application`, its one reading). The separate Application
+document — its `[application]` header, a binding's `document` path and the
+`*.application.toml` files — is deleted: a binding binds the section of
+its name and refuses any other key; `binding_problems` refuses one the
+configuration does not hold and reports its design's problems, the slice
+gives a node only the sections its bindings name, and the runtime reads
+each bound section as the node starts. The Playground's RoundTrip
+Application is a section of its cluster's `configuration/xmip.toml`, and
+each node's configuration is sliced from it. The designer's views are
+configure's `views.rs` — one view per kind in the order above, each entry
+wherever the file holds it (shared, a node's own, a binding's, an
+Application section's) with its values and its path, a Route entry an
+Application section with its routes — and its edits `view_edit.rs`, made
+in place and refused where they would leave a node or an Application that
+read unable to. Section 10 of `xmip_operate.h` became
+`xmip_cluster_views_v1`, `xmip_filter_structure_v1`, `xmip_filter_text_v1`
+and `xmip_cluster_edit_v1`; `xmip-lsp` answers `xmip/views` and
+`xmip/edit` over the one file, and the extension's custom editor is the
+Xmip cluster designer, the Application designer's routes and filter rows
+its Route view. The Receive Port view lists each Application's
+`[[xmip_applications.receive_ports]]` (ADR-0031, amendment 2026-10-01,
+read by configure's `port.rs`). Prepare, Promote, Demote and
+Transformation are shown and say the configuration does not define them
+yet: no key was invented for them.

@@ -36,7 +36,7 @@ function Get-XmipTestNode {
             Get-XmipTestNode
 
         .EXAMPLE
-            Get-XmipTestNode -Name 'node-0*' | Where-Object -Property Online -EQ -Value $true
+            Get-XmipTestNode -Name 'S*' | Where-Object -Property Online -EQ -Value $true
 
         .EXAMPLE
             Get-XmipTestNode | Where-Object -Property Role -Match -Value 'sending'
@@ -109,9 +109,10 @@ function ConvertTo-XmipTestNode {
     [int] $above = if ($null -ne $parent) { $parent.Id } else { 0 }
 
     # Judged by which of the three the name is, never by the whole name: since
-    # 2026-09-20 a process carries its cluster, so xmip-playground-V1-cluster
-    # is the cluster of V1 and xmip-playground-cluster is one nobody named. A
-    # node called cluster is xmip-playground-V1-node-cluster and is neither.
+    # 2026-09-20 a process carries its cluster, so
+    # xmip-playground-<cluster>-cluster is that cluster's and
+    # xmip-playground-cluster is one nobody named. A node called cluster is
+    # xmip-playground-<cluster>-node-cluster and is neither.
     [string] $named = Resolve-XmipProcessName -Id $above -Declared $known
 
     if ((Get-XmipPlaygroundImageKind -Name $named) -eq 'Cluster') {

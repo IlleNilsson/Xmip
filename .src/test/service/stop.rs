@@ -13,18 +13,19 @@ fn a_stop_drains_the_node_and_the_service_exits_zero() {
     let mut child = spawned(&configuration, &directory);
     let mut ending = Ending(Some(child.id()));
     let said = lines(&mut child);
+    let node = node_scope();
     heard(
         &said,
-        "xmip:///C1/node/R1 accepts work",
+        &format!("{node} accepts work"),
         Duration::from_secs(10),
     );
 
     let declared = declarations(&directory);
+    let location = format!("location = \"{node}\"");
     assert!(
         declared
             .iter()
-            .any(|text| text.contains("location = \"xmip:///C1/node/R1\"")
-                && text.contains("purpose = \"test\"")),
+            .any(|text| text.contains(&location) && text.contains("purpose = \"test\"")),
         "{declared:?}"
     );
 
@@ -108,12 +109,12 @@ fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
     let said = lines(&mut child);
     heard(
         &said,
-        "keeps its store xmip-core-persist-rocksdb",
+        "reaches Xmip Storage through its own Storage node",
         Duration::from_secs(10),
     );
     heard(
         &said,
-        &format!("{NODE} accepts work"),
+        &format!("{} accepts work", node_scope()),
         Duration::from_secs(10),
     );
     for (act, answer) in acts {
@@ -131,15 +132,19 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     let directory = std::env::temp_dir().join(format!("xmip-service-store-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &free_address());
+    let operator = operator();
 
     served(
         &configuration,
         &directory,
-        &[(Act::Pause, "Subscription 'onward' paused by C1-operator")],
+        &[(
+            Act::Pause,
+            format!("Subscription 'onward' paused by {operator}").as_str(),
+        )],
     );
     assert!(
-        directory.join("data").join("persistence-rocksdb").is_dir(),
-        "the store is where the layout puts it"
+        directory.join("data").join("storage").is_dir(),
+        "its Storage node is where the layout puts it"
     );
     served(
         &configuration,
@@ -148,7 +153,7 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
             (Act::Pause, "Subscription 'onward' was already paused"),
             (
                 Act::Resume,
-                "Subscription 'onward' resumed by C1-operator; the 0 it held",
+                format!("Subscription 'onward' resumed by {operator}; the 0 it held").as_str(),
             ),
         ],
     );
@@ -158,7 +163,7 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     for said in [
         "subscription.pause",
         "subscription.resume",
-        "persistence-rocksdb",
+        "its own Storage node at",
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }
@@ -183,7 +188,7 @@ fn refused(configuration: &Path, directory: &Path) -> String {
 }
 
 #[test]
-fn a_store_the_build_did_not_link_or_that_does_not_open_is_refused() {
+fn a_storage_node_the_build_did_not_link_or_that_does_not_open_is_refused() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-unstored-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
@@ -216,18 +221,20 @@ key_store = \"xmip-core-secret-vault\"
         "{said}"
     );
 
-    // A file where the engine wants its directory.
-    std::fs::write(directory.join("taken"), "not a store").expect("writes");
-    std::fs::write(
-        &configuration,
-        format!(
-            "{text}
+    // A place is no node's choice either: the Storage node is the layout's.
+    std::fs::write(&configuration, format!("{text}
 [store]
 place = \"taken\"
-"
-        ),
-    )
-    .expect("writes");
+"))
+        .expect("writes");
+    let said = refused(&configuration, &directory);
+    assert!(said.contains("place"), "{said}");
+
+    // A file where its Storage node wants its directory.
+    std::fs::write(&configuration, &text).expect("writes");
+    std::fs::create_dir_all(directory.join("data")).expect("its data");
+    std::fs::write(directory.join("data").join("storage"), "not a Storage node")
+        .expect("writes");
     let said = refused(&configuration, &directory);
     assert!(said.contains("did not open"), "{said}");
     assert!(declarations(&directory).is_empty());

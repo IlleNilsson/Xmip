@@ -39,10 +39,11 @@ fn published_until(
 
 /// The Subscription `onward`'s standing in `publication`.
 fn onward(publication: &Publication) -> Option<PauseState> {
+    let node = node_scope();
     publication
         .subscriptions
         .iter()
-        .find(|subscription| subscription.node == NODE && subscription.name == "onward")
+        .find(|subscription| subscription.node == node && subscription.name == "onward")
         .map(|subscription| subscription.state)
 }
 
@@ -58,7 +59,8 @@ fn mood(publication: &Publication, scope: &str) -> Option<Health> {
 /// by the service, where it takes orders, every record Fine, the
 /// Subscription active, and the node drawn with its Parties.
 fn as_it_starts(first: &Publication) {
-    assert_eq!(first.node, NODE);
+    let node = node_scope();
+    assert_eq!(first.node, node);
     assert_eq!(first.source, "xmip-service");
     assert!(
         Path::new(&first.orders).ends_with(Path::new("data").join("orders")),
@@ -67,24 +69,25 @@ fn as_it_starts(first: &Publication) {
     );
     assert_eq!(onward(first), Some(PauseState::Active));
     for scope in [
-        NODE.to_string(),
-        format!("{NODE}/system-process"),
-        format!("{NODE}/capability"),
-        format!("{NODE}/receive/In"),
-        format!("{NODE}/send/Out"),
-        format!("{NODE}/process/onward"),
+        node.clone(),
+        format!("{node}/system-process"),
+        format!("{node}/capability"),
+        format!("{node}/receive/In"),
+        format!("{node}/send/Out"),
+        format!("{node}/process/onward"),
     ] {
         assert_eq!(mood(first, &scope), Some(Health::Fine), "{scope}");
     }
     let drawn = first.topology.clone().expect("the node is drawn");
+    let at = format!("node/{}", node_name());
     for (id, kind) in [
-        ("cluster", NodeKind::Cluster),
-        ("node/R1", NodeKind::Node),
-        ("node/R1/receive/In", NodeKind::Endpoint),
-        ("node/R1/process", NodeKind::Stage),
-        ("node/R1/send/Out", NodeKind::Endpoint),
-        ("party/sending/any-party", NodeKind::Party),
-        ("party/receiving/any-party", NodeKind::Party),
+        ("cluster".to_string(), NodeKind::Cluster),
+        (at.clone(), NodeKind::Node),
+        (format!("{at}/receive/In"), NodeKind::Endpoint),
+        (format!("{at}/process"), NodeKind::Stage),
+        (format!("{at}/send/Out"), NodeKind::Endpoint),
+        ("party/sending/any-party".to_string(), NodeKind::Party),
+        ("party/receiving/any-party".to_string(), NodeKind::Party),
     ] {
         assert!(
             drawn
@@ -115,6 +118,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let receive = free_address();
     let configuration = written(&directory, &receive);
     let snapshot = directory.join("data").join("snapshot.toml");
+    let node = node_scope();
 
     let mut child = spawned(&configuration, &directory);
     let mut ending = Ending(Some(child.id()));
@@ -122,14 +126,14 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     heard(&said, "publishes its snapshot at", Duration::from_secs(10));
     heard(
         &said,
-        &format!("{NODE} accepts work"),
+        &format!("{node} accepts work"),
         Duration::from_secs(10),
     );
     let declared = declarations(&directory);
     assert!(
         declared.iter().any(|text| text.contains("snapshot = ")
             && text.contains("snapshot.toml")
-            && text.contains(&format!("location = \"{NODE}\""))),
+            && text.contains(&format!("location = \"{node}\""))),
         "the service declares where it publishes: {declared:?}"
     );
 
@@ -144,8 +148,8 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
         deliver(&receive, format!("order {message}").as_bytes());
     }
     published_until(&snapshot, Duration::from_secs(5), |publication| {
-        count(publication, &format!("{NODE}/receive"), Counted::Streams) == MESSAGES
-            && count(publication, NODE, Counted::Failed) == MESSAGES
+        count(publication, &format!("{node}/receive"), Counted::Streams) == MESSAGES
+            && count(publication, &node, Counted::Failed) == MESSAGES
     });
 
     // A pause left where the publication says, as a surface leaves it.
@@ -154,7 +158,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
         noun: Noun::Subscription,
         target: "onward".to_string(),
         act: Act::Pause,
-        who: "C1-operator".to_string(),
+        who: operator(),
     }
     .leave(Path::new(&first.orders))
     .expect("the order is left");
@@ -168,7 +172,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
         "published paused in {took:?}"
     );
     assert_eq!(
-        mood(&paused, &format!("{NODE}/process/onward")),
+        mood(&paused, &format!("{node}/process/onward")),
         Some(Health::Paused)
     );
     let by = paused
@@ -176,7 +180,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
         .iter()
         .find(|subscription| subscription.name == "onward")
         .map(|subscription| subscription.by.clone());
-    assert_eq!(by.as_deref(), Some("C1-operator"));
+    assert_eq!(by, Some(operator()));
 
     stop(&child);
     heard(&said, "stopped by the console", Duration::from_secs(5));
@@ -185,13 +189,13 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
 
     // What it leaves says it stopped, and the pause stands.
     let (left, _) = published_until(&snapshot, Duration::from_secs(1), |_| true);
-    assert_eq!(mood(&left, NODE), Some(Health::Done));
+    assert_eq!(mood(&left, &node), Some(Health::Done));
     assert_eq!(
-        mood(&left, &format!("{NODE}/system-process")),
+        mood(&left, &format!("{node}/system-process")),
         Some(Health::Done)
     );
     assert_eq!(onward(&left), Some(PauseState::Paused));
-    let stopped = left.records.iter().find(|record| record.scope == NODE);
+    let stopped = left.records.iter().find(|record| record.scope == node);
     assert!(
         stopped.is_some_and(|record| record.evidence.starts_with("stopped by the console")),
         "{stopped:?}"

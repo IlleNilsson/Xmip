@@ -148,7 +148,8 @@ role gate has one code path, not a test-mode bypass. Which directory group
 means which role is configuration, not code, and is not yet written.
 
 *Wired 2026-09-29:* both GUIs take the role by this rule, once
-(`RoleContext.Assigned` in `Xmip.Gui`): a role the run states is the role,
+(`RoleContext.Assigned`, in `Xmip.Surface` since the amendment of
+2026-10-03): a role the run states is the role,
 a word that is no role is Observer, and with none stated and no directory
 configured the tester holds every role (ADR-0052, amendment 2026-09-29).
 
@@ -165,3 +166,50 @@ The kinds are the directories the remoting paths already prove against,
 and the parameter is built when the gate it feeds exists, not before: a
 parameter the playground cannot honor is a stub, and the playground does not
 simulate (ADR-0028).
+
+## Amendment, 2026-10-03: an act from elsewhere is refused server-side
+
+Found by an outside review the same day: a web host's surface hub
+(`SurfaceHub` in `Xmip.Surface.Relay`, ADR-0052, amendment 2026-09-15)
+forwarded every pause, resume and remove a remote surface asked for to the
+host's surface without asking the host's role, and took who acted from the
+caller's own argument. The TLS handshake proved a certificate and nothing was
+done with it. A host assigned Observer still acted, as anyone who said so.
+
+- **The role is enforced where an act crosses to the host.** Every act the
+  hub serves — pause and resume a scope, pause and resume a Subscription,
+  pause, resume and remove an Event subscription — passes one check,
+  `GatedOperator` in `Xmip.Surface`, a surface over the host's own: an act
+  is taken only where the host's assigned role may operate
+  (`Roles.MayOperate`, Operator and up), and refused otherwise in words —
+  `REFUSED.`, who, what, on what, and the role that refused it. Taken or
+  refused, it is an audit record of the host's (ADR-0062), with who, the
+  act, its target and the role.
+- **Who acted is what the connection proved, never what the caller said.**
+  The act is the subject of the client certificate the handshake checked
+  against the host's anchors (ADR-0063 clause 1); no hub method takes a
+  name any more, and `RemoteOperator` sends none. **On loopback without a
+  certificate, the act is the host's own user.** The owner, the same day,
+  *Go with A*: over loopback, where no client certificate is presented, an
+  act takes the identity of the logged-on operating system user running the
+  web host — `DOMAIN\user` on Windows, the user name elsewhere — because
+  only someone logged on to that machine can reach loopback. From anywhere
+  else without a certificate nothing was proven, and every act is refused,
+  whatever the host's role, rather than taken on the caller's word. The rule
+  is one, `GatedOperator.Proven`.
+- **The role moved down to the layer that enforces it.** `Role`, `Roles` and
+  `RoleContext`, with `RoleContext.Assigned`, are `Xmip.Surface`'s, beneath
+  both GUIs and the relay, not `Xmip.Gui`'s: the hub could not see the role
+  where it was. The rule is unchanged, and `AddXmipSurfaceRelay` takes the
+  host's registered `RoleContext`, else that rule's answer.
+
+What stays open is what the paragraph *Not yet enforced* above names: the
+role a host runs as is still the run's to state until a directory grants it
+to a proven principal. A certificate now proves who acts; which role that
+principal holds is the directory's question, and the gate's answer comes
+from the host's assigned role until it is asked. The screens of a host keep
+shaping what they offer by the same role in their own process.
+
+Provenance: the outside review of 2026-10-03; the check, its place and the
+refusal without a proven identity are the assistant's drafting, for the
+owner to overrule.

@@ -237,11 +237,11 @@ dependency = []
     dependency = ["xmip-core-stream", "xmip-core-library-codec"]
 
   [xmip.core.context]
-  description = "Message Context values and metadata, and every name a property travels under when one layer writes it and another reads it: what a transport says about an arrival for the identity gates, and what the runtime writes for a route (context::property)."
+  description = "Message Context values and metadata, and every name a property travels under between layers: what a transport says about an arrival for the identity gates, what the runtime writes for a route (context::property), and the identity facts' one binary form, kept in the Ledger (context::facts_record)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-library-codec"]
 
   [xmip.core.transport]
   description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
@@ -276,7 +276,7 @@ dependency = []
     maturity = "scaffolded"
     specification = "IETF RFC 3501: select, search, fetch, flag deleted, expunge, append"
     [xmip.core.transport.mllp]
-      dependency = ["xmip-core-library-net", "xmip-core"]
+      dependency = ["xmip-core-library-net", "xmip-core-contract-hl7-v2", "xmip-core"]
     maturity = "scaffolded"
     specification = "HL7 Minimal Lower Layer Protocol framing over TCP"
     [xmip.core.transport.mqtt]
@@ -603,7 +603,7 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.tcp]
-      dependency = ["xmip-core-library-net", "xmip-core"]
+      dependency = ["xmip-core"]
     maturity = "scaffolded"
     specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
@@ -620,7 +620,7 @@ dependency = []
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-library-codec"]
 
   [xmip.core.contract]
   description = "Common Contract implication, evaluation and result functionality."
@@ -1071,7 +1071,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-stream"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
 
   [xmip.core.route]
   description = "Common publication, subscription and routing functionality."
@@ -1165,7 +1165,7 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.event]
-  description = "The Xmip Event and its taxonomy, the one subscription rule, the in-process hub that delivers it through bounded queues to subscribers the authorization gate admitted, audited, and the wire event that carries it between processes: its JSON format and the HTTP, Kafka and AMQP bindings, at least once (ADR-0065)."
+  description = "The Xmip Event and its taxonomy, the one subscription rule, the in-process hub delivering it to admitted subscribers, audited, the cluster's Events over the Event link between nodes (mutual TLS, one hop), and the wire event between processes: JSON over HTTP, Kafka and AMQP, at least once (ADR-0065)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1176,6 +1176,7 @@ dependency = []
       "xmip-core-context",
       "xmip-core-library-codec",
       "xmip-core-library-net",
+      "xmip-core-library-tls",
       "xmip-core-node",
       "xmip-core-observe",
       "xmip-core-party",
@@ -1243,7 +1244,7 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-node"]
+  dependency = ["xmip-core", "xmip-core-node", "xmip-core-library-codec"]
     # Each exporter reads the figures observe names (.src/figure.rs) and
     # writes them in its own format; neither keeps a list of its own.
     [xmip.core.observe.otlp]
@@ -1444,13 +1445,12 @@ dependency = []
   ]
 
   [xmip.core.persist]
-  description = "Durable runtime state, and Xmip Storage: its operations over the runtime and the administration databases — Stream chunks, Messages, Journeys, claims, hand-ons, audit and the audit keeper — the embedded Storage node, the wire a node reaches a Storage node over through Xmip's mutual TLS, round robin, and the schema a database server keeps. Every embedded record encrypted and authenticated before an engine sees it, its lookup key a keyed hash (ADR-0063)."
+  description = "Xmip Storage: its operations over the runtime and administration databases (Stream chunks, Messages, Journeys, held Journeys, the Dead Message Queue, claims, hand-ons, audit, operator state), the embedded Storage node, the wire over mutual TLS, one Storage node per statement, and the database schema. Embedded records encrypted (ADR-0063)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
   dependency = [
       "xmip-core",
-      "xmip-core-journey",
       "xmip-core-library-codec",
       "xmip-core-library-net",
       "xmip-core-library-tls",
@@ -1615,6 +1615,7 @@ dependency = []
       "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authorize",
+      "xmip-core-authorize-party",
       "xmip-core-configure",
       "xmip-core-context",
       "xmip-core-contract",
@@ -1637,6 +1638,7 @@ dependency = []
       "xmip-core-contract-xml-schema",
       "xmip-core-event",
       "xmip-core-identify",
+      "xmip-core-journey",
       "xmip-core-library-codec",
       "xmip-core-library-net",
       "xmip-core-message",
@@ -1645,6 +1647,7 @@ dependency = []
       "xmip-core-party",
       "xmip-core-persist",
       "xmip-core-persist-rocksdb",
+      "xmip-core-persist-sqlite",
       "xmip-core-retain",
       "xmip-core-route",
       "xmip-core-runtime",

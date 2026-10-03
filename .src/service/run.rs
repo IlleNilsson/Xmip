@@ -95,17 +95,17 @@ pub fn serve(
             ("node", location.as_str()),
             ("configuration", configuration),
             ("purpose", arguments.purpose.word()),
-            ("store", running.store().said()),
+            ("storage", running.storage().said()),
             ("orders", place.as_str()),
             ("snapshot", snapshot.as_str()),
         ],
     );
-    println!(
-        "{program}: {location} keeps its store {}",
-        running.store().said()
+    say_where(
+        &format!("{program}: {location}"),
+        &running,
+        &place,
+        &snapshot,
     );
-    println!("{program}: {location} takes orders at {place}");
-    println!("{program}: {location} publishes its snapshot at {snapshot}");
     publisher.publish(&running);
     println!("{program}: {location} accepts work");
     ready();
@@ -131,6 +131,7 @@ pub fn serve(
         ("routed", outcomes.routed),
         ("unroutable", outcomes.unroutable),
         ("refused", outcomes.refused),
+        ("failed", outcomes.failed),
         ("sent", outcomes.sent),
         ("not_sent", outcomes.not_sent),
     ]
@@ -154,6 +155,16 @@ pub fn serve(
     println!("{program}: {location} {said}");
     drop(declared);
     Ended::Stopped
+}
+
+/// Say on the console where the node `who` names keeps what it keeps.
+fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str) {
+    println!(
+        "{who} reaches Xmip Storage through {}",
+        running.storage().said()
+    );
+    println!("{who} takes orders at {orders}");
+    println!("{who} publishes its snapshot at {snapshot}");
 }
 
 /// Say `problem` on stderr and record it as the failure of `action`: a
