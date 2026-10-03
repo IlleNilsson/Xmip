@@ -222,19 +222,23 @@ key_store = \"xmip-core-secret-vault\"
     );
 
     // A place is no node's choice either: the Storage node is the layout's.
-    std::fs::write(&configuration, format!("{text}
+    std::fs::write(
+        &configuration,
+        format!(
+            "{text}
 [store]
 place = \"taken\"
-"))
-        .expect("writes");
+"
+        ),
+    )
+    .expect("writes");
     let said = refused(&configuration, &directory);
     assert!(said.contains("place"), "{said}");
 
     // A file where its Storage node wants its directory.
     std::fs::write(&configuration, &text).expect("writes");
     std::fs::create_dir_all(directory.join("data")).expect("its data");
-    std::fs::write(directory.join("data").join("storage"), "not a Storage node")
-        .expect("writes");
+    std::fs::write(directory.join("data").join("storage"), "not a Storage node").expect("writes");
     let said = refused(&configuration, &directory);
     assert!(said.contains("did not open"), "{said}");
     assert!(declarations(&directory).is_empty());
