@@ -185,6 +185,20 @@ settings are configured*):
 Each is read into the node's execution tree as it starts, like everything
 else configured (the amendment above).
 
+Built 2026-10-03, the Application's keys: an Xmip Application is a section
+of the cluster's `xmip.toml` (the amendment of 2026-10-03, ADR-0064), and
+`xmip-core-configure` reads its `[[receive_ports]]`, each Receive
+Location's `receive_port`, `interaction` and `depth`, and each Send Port's
+`send_locations`, `retry`, `failover`, `execution_style`, `order_key` and
+`on_failure` (`port.rs`). A Receive Location without its Port, naming one
+the Application does not declare, or without its interaction or depth,
+and a Sequential Send Port without `on_failure`, are problems of the
+Application, refused at startup phase 3; the execution tree holds the
+Receive Ports a node's bound Receive Locations are at and the Send Ports
+it takes, with their policy. How a Send Port's `send_locations` relate to
+the one Send Location its binding gives it is not yet decided. The node's
+keys — `[[parties]]`, `[retention]`, `[audit]` — are not read yet.
+
 
 ## Amendment, 2026-10-02: Subscriptions are shared through Xmip Storage
 
@@ -225,3 +239,29 @@ Subscriptions are central, as a copy of the TOML that is never edited where
 it is held.
 
 Provenance: the owner's rulings, quoted; the wording is the assistant's.
+
+## Amendment, 2026-10-03: one `xmip.toml` per cluster, sliced to each node
+
+**Provenance.** The owner, 2026-10-03: *All these outwards, hardware
+assumptions and calculations should be configurable per cluster and node.
+Kept in the Cluster TOML file*; *There is one xmip.toml file per cluster.
+When deployed the sections regarding a node will be sliced to that node.*
+
+- **A cluster's configuration is one file, `xmip.toml`.** What the whole
+  cluster shares is in it once; what concerns one node is in that node's
+  sections, `[nodes.<name>]`.
+- **Deployment slices it.** Desired state (`deployment-model.md` section 8)
+  writes each node the cluster's shared sections and that node's own, and
+  the node reads its slice at start, as it reads its configuration today
+  (the amendment of 2026-10-01). Where both say a value, the node's wins.
+- **Every outward and hardware assumption is configured there**, per
+  cluster and per node: the TCP segment and the segments a chunk holds
+  (`runtime-model.md` section 3), the receive pool's threads per hardware
+  thread and its idle time, the Storage client's timeouts and pass-over —
+  under `[tuning]` for the cluster and `[nodes.<name>.tuning]` for a node
+  (the key names are the assistant's drafting). The built-in values are the
+  defaults where neither says; a new assumption of this kind gets its key in
+  the change that brings it.
+
+This answers open problem 14 (the node configuration format): one cluster
+file, not three, and the node's section wins.

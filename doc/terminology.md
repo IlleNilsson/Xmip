@@ -30,7 +30,7 @@ unless the surrounding context makes the meaning unavoidable.
 | **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
 Every System Process and every service Xmip owns is named `xmip-<what>` —
-`xmip-cli`, `xmip-gui-web`, `xmip-playground-orders-node-mill` — and declares its name,
+`xmip-cli`, `xmip-gui-web`, `xmip-playground-<cluster>-node-<node>` — and declares its name,
 its location and its purpose, test or runtime, so that one line finds them
 all and one line stops them all (ADR-0053). Where there are many of a kind,
 `<what>` says which: a Playground process carries its suite, its cluster and
@@ -49,7 +49,7 @@ type in the code and **roll** had never been written down here at all.
 | Term | Meaning |
 | --- | --- |
 | **Roll** | One continuous run of a test suite. The Playground rolls: it drives its tests round after round and does not stop until it is told to or its duration runs out. `Start-XmipTest` starts a roll, `Stop-XmipTest` ends one, and `xmip-playground-roll` is the System Process it runs as. A roll runs exactly one cluster (ADR-0028), and the cluster is a process the roll spawns, not the roll itself (ADR-0052, amendment 2026-09-19). |
-| **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster called CT that declared nothing is shown (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
+| **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster that declared nothing is shown whatever it is called (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
 | **Role** | What something is permitted or expected to be. A Node has `NodeRole`, eight of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the Playground's; Storage is Xmip Storage, the doorway every other node calls for all storage (ADR-0056, amendments 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
 
 A node's **capability** is what it declares in ADR-0056's terms — its roles,
@@ -313,12 +313,16 @@ to the Storage node, over its own TLS; behind a database server, encryption
 at rest is IT's; an embedded Storage node, test nodes included, encrypts its
 own files itself (ADR-0063, amendment 2026-10-01).
 
-## Xmip DMQ
+## Dead Message Queue
 
 **Dead Message Queue.** Where an accepted Message goes when **no Subscription
 matched it**. It is state in the Ledger, not a store of its own: the
 Publication that matched nothing, kept with each Subscription's reason for
-declining (`architecture/runtime-model.md` section 9).
+declining (`architecture/runtime-model.md` section 9). An Operator lists it per
+cluster and node, opens one entry and replays it once a Subscription is added
+or fixed — in the Dead Message Queue view, `xmip-cli dead-messages` and
+`Get-XmipDeadMessage`; an Observer sees the list and no act (ADR-0052,
+amendment 2026-10-01).
 
 The expansion was written down for the first time on 2026-08-26. Every document
 in the repository used the abbreviation and none defined it, including this one,
@@ -328,14 +332,14 @@ which had been using it in the definition above.
 arriving from BizTalk, MSMQ, RabbitMQ or Kafka reads three letters ending in Q
 and expects the place where failures land. In Xmip it is not:
 
-| | Goes to the DMQ |
+| | Goes to the Dead Message Queue |
 | --- | --- |
 | Accepted Message, no Subscription matched | **yes** |
 | Journey failed | no — the Journey is `Failed` and its Message stays with it |
 | Stream rejected at the receive boundary | no — no Message was created to queue |
 | Journey dismissed by an operator | no — `Dismissed`, per ADR-0013 |
 
-So the DMQ answers one question: *this arrived, Xmip took ownership, and nothing
+So the Dead Message Queue answers one question: *this arrived, Xmip took ownership, and nothing
 wanted it.* That is a routing problem, usually a missing or mistyped
 Subscription, and it is fixed by adding the Subscription and replaying — not by
 the failure-triage path that a dead letter queue implies.
@@ -353,7 +357,7 @@ than by being filed somewhere. ADR-0013 records why.
 
 The practical difference is what replay does:
 
-- **From the DMQ** — *re-publish*. Add the missing Subscription and match again
+- **From the Dead Message Queue** — *re-publish*. Add the missing Subscription and match again
   against the Message **with the context it already accumulated**. This is not
   a re-receive: envelope context, promoted properties and validation results
   are preserved and reused, and what changed is the Subscription set.

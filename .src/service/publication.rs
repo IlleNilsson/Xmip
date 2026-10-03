@@ -39,7 +39,7 @@ pub const EVERY: Duration = Duration::from_millis(250);
 
 /// Where the node publishes, beneath its data directory.
 pub fn place(running: &Running) -> PathBuf {
-    running.store().data().join("snapshot.toml")
+    running.data().join("snapshot.toml")
 }
 
 /// What publishes the node, and what it published last.

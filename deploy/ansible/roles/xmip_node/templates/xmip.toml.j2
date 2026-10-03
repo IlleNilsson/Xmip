@@ -1,0 +1,17 @@
+# The cluster's configuration, xmip.toml: the shared sections once and each
+# node's under [nodes.<name>] (ADR-0031, amendment 2026-10-03;
+# module/platform/configure/doc/cluster-configuration.md). This is the
+# starter the role writes where `xmip_cluster_configuration` names no file
+# of the cluster's own. The node's configuration is sliced from it by
+# `xmip-service --slice`, never written by hand. What the reader has a
+# default for is left to it: the data directory is the `data` beside this
+# file's `config`, sealed by the platform's key store, and every [tuning]
+# value is the built-in one.
+[service]
+name = "{{ xmip_service_name }}"
+cluster_name = "{{ xmip_cluster_name }}"
+
+[nodes.{{ xmip_node_name }}.service]
+# ADR-0045: a node may assume no route to the internet unless the operator
+# says so; nothing at runtime reaches out.
+online = {{ xmip_online | lower }}

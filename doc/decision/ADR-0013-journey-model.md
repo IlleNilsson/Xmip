@@ -12,7 +12,7 @@ point of refusal.
 - Subject: Message disposition and the Journey
 - Name: The Journey model
 - Order: 2
-- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; Dead Message Queue, DMQ; Journey, Journey states; Publication, Subscription matching; Subscription, paused and resumed
+- Concepts: Deduplication, duplicates; Dismiss, Dismissed; Previous journey; Disposition; Dead Message Queue; Journey, Journey states; Publication, Subscription matching; Subscription, paused and resumed
 
 A Journey is a line, not a tree: a Publication produces one Journey per matched
 Subscription, and zero matches means no Journey at all. A Journey exists only
@@ -452,7 +452,8 @@ node's program linked, never a side file.
   `xmip_publication_subscriptions_v1`, the plain name now this noun's, and
   its Event subscriptions `xmip_publication_event_subscriptions_v1`.
 - **The Playground configures real ones.** Its RoundTrip test is an Xmip
-  Application, `configuration/round-trip.application.toml`: four
+  Application, a section of the Playground's `configuration/xmip.toml`
+  (ADR-0064, amendment 2026-10-03): four
   Subscriptions, one per family of content contracts, each to the Send Port
   the send stage serves. The node that declared process writes it and a
   node configuration binding it into the run's shared directory, reads both
@@ -549,3 +550,25 @@ assistant; his words are quoted where they decided.
   Subscription is resumed, and picked up oldest first. This supersedes the
   amendment of 2026-09-30 where it said no Journey opens for a paused
   Subscription until it resumes; the rest of that amendment stands.
+
+## Amendment, 2026-10-03: routing runs inside the receive cycle
+
+The owner chose where routing runs (*Go with A*): inside the receive cycle,
+on the thread carrying it, before the sender is acknowledged. The Message's
+promoted properties are matched against the compiled Subscription filters,
+one Journey per match, and the Publication — the Message and its Journeys —
+is one atomic write, in the receive cycle's one statement on one Storage
+node (ADR-0056, amendment of this date). This supersedes the amendment of
+2026-10-01 where it said the Publication is marked routed and its Journeys
+created in one atomic write by a routing step that claims it: there is no
+routing pool and no claim on a Publication, and a node that dies before the
+write has acknowledged nothing, so the sender sends again. Zero matches is
+still the Dead Message Queue, decided before the acknowledgement. The rest
+of that amendment stands.
+
+Built 2026-10-03 (`runtime-model.md` section 9): a Publication that matched
+nothing carries its Dead Message Queue entry in the same atomic write, and
+Replay — the Operator's act, an order as Pause is, audited — routes the
+entry's promoted properties against the Subscriptions of now, holds each
+Journey it opens in its Subscription's queue and takes the entry out, in
+one write, once.

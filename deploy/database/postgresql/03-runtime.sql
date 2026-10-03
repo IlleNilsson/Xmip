@@ -33,13 +33,59 @@ CREATE TABLE xmip.journey (
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
 
--- the claim on each Journey: its holder, its token, when it lapses.
+-- the Journeys a paused Subscription holds, at their place in its queue, each once.
+CREATE TABLE xmip.held (
+    queue uuid NOT NULL,
+    sequence bigint NOT NULL,
+    journey uuid NOT NULL,
+    body bytea NOT NULL,
+    CONSTRAINT held_key PRIMARY KEY (queue, sequence),
+    CONSTRAINT held_unique UNIQUE (queue, journey)
+);
+
+-- each queue's first place, its next and how many it holds.
+CREATE TABLE xmip.held_places (
+    queue uuid NOT NULL,
+    first_place bigint NOT NULL,
+    next_place bigint NOT NULL,
+    held bigint NOT NULL,
+    CONSTRAINT held_places_key PRIMARY KEY (queue)
+);
+
+-- each node's Dead Message Queue: every Message nothing matched, at its place, with its receive context, what its gates concluded, its promoted properties and each Subscription's reason for declining, each once.
+CREATE TABLE xmip.dead_message (
+    queue uuid NOT NULL,
+    sequence bigint NOT NULL,
+    message uuid NOT NULL,
+    body bytea NOT NULL,
+    CONSTRAINT dead_message_key PRIMARY KEY (queue, sequence),
+    CONSTRAINT dead_message_unique UNIQUE (queue, message)
+);
+
+-- each Dead Message Queue's first place, its next and how many it holds.
+CREATE TABLE xmip.dead_message_places (
+    queue uuid NOT NULL,
+    first_place bigint NOT NULL,
+    next_place bigint NOT NULL,
+    held bigint NOT NULL,
+    CONSTRAINT dead_message_places_key PRIMARY KEY (queue)
+);
+
+-- each Message replayed from a Dead Message Queue, so a Replay asked again writes nothing twice.
+CREATE TABLE xmip.dead_message_replayed (
+    queue uuid NOT NULL,
+    message uuid NOT NULL,
+    CONSTRAINT dead_message_replayed_key PRIMARY KEY (queue, message)
+);
+
+-- the claim on each Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
 CREATE TABLE xmip.claim (
     journey uuid NOT NULL,
     holder text NOT NULL,
     token uuid NOT NULL,
     until_unix_nanos bigint NOT NULL,
     released boolean NOT NULL,
+    handed_on boolean NOT NULL,
     CONSTRAINT claim_key PRIMARY KEY (journey)
 );
 

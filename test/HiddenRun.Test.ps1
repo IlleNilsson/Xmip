@@ -3,13 +3,14 @@
 
 <#
     A test run can be hidden. The owner, 2026-09-29: *If you need a cluster for
-    test purposes that is fine, call it CT. When tests are run it's got to be
+    test purposes that is fine [...]. When tests are run it's got to be
     hidable.* Hiding is by what a run declares — Start-XmipTest -Hidden — and
     never by the name of its cluster, since nothing at runtime reads meaning
     from a name (ADR-0028 and ADR-0052, amendments 2026-09-30). These are the
     checks on the tooling's side: the declaration reaches the roll, a hidden
-    run is listed only when asked, and a run called CT that declared nothing
-    is listed like any other. The suite starts nothing.
+    run is listed only when asked, and a run of the test cluster that declared
+    nothing is listed like any other. The suite starts nothing. The names are
+    the test cluster's (ADR-0056, amendment 2026-10-03).
 #>
 
 BeforeAll {
@@ -17,6 +18,11 @@ BeforeAll {
     $env:XMIP_AUDIT_DIRECTORY = Join-Path -Path $TestDrive -ChildPath 'audit'
 
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
+
+    # The hidden run rolls as the test cluster, the shown one as a name built
+    # from it.
+    [string] $name = (Get-XmipTestCluster).Name
+    $script:Named = @{ HiddenCluster = $name; ShownCluster = "${name}2" }
 }
 
 AfterAll {
@@ -56,7 +62,11 @@ Describe 'A run declares itself hidden and is listed only when asked' {
     }
 
     It 'lists a hidden run with -IncludeHidden alone, and the others always' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($HiddenCluster, $ShownCluster)
+
+            $script:HiddenCluster = $HiddenCluster
+            $script:ShownCluster = $ShownCluster
             [System.Diagnostics.Process[]] $two = @(
                 Get-Process -Id $PID
                 Get-Process | Where-Object { $_.Id -notin 0, $PID } | Select-Object -First 1
@@ -75,7 +85,12 @@ Describe 'A run declares itself hidden and is listed only when asked' {
                     File   = "roll-$Id.toml"
                     Record = @{
                         suite    = 'Core.Playground'
-                        cluster  = if ($hidden) { 'CT' } else { 'C7' }
+                        cluster  = if ($hidden) {
+                            $script:HiddenCluster
+                        }
+                        else {
+                            $script:ShownCluster
+                        }
                         snapshot = 'nowhere-snapshot.toml'
                         hidden   = $hidden
                     }
@@ -85,17 +100,22 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             [object[]] $shown = @(Get-XmipTestStatus -Path 'a')
             [object[]] $every = @(Get-XmipTestStatus -Path 'a' -IncludeHidden)
 
-            @($shown.Cluster) | Should -Be @('C7')
-            @($every.Cluster | Sort-Object) | Should -Be @('C7', 'CT')
-            ($every | Where-Object Cluster -EQ 'CT').Hidden | Should -BeTrue
-            ($every | Where-Object Cluster -EQ 'C7').Hidden | Should -BeFalse
+            [string[]] $both = @($HiddenCluster, $ShownCluster) | Sort-Object
+
+            @($shown.Cluster) | Should -Be @($ShownCluster)
+            @($every.Cluster | Sort-Object) | Should -Be $both
+            ($every | Where-Object Cluster -EQ $HiddenCluster).Hidden | Should -BeTrue
+            ($every | Where-Object Cluster -EQ $ShownCluster).Hidden | Should -BeFalse
         }
     }
 
-    It 'lists a cluster called CT that declared nothing like any other' {
-        InModuleScope Xmip {
+    It 'lists a run of the test cluster that declared nothing like any other' {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($HiddenCluster, $ShownCluster)
+
             [System.Diagnostics.Process[]] $one = @(Get-Process -Id $PID)
             $script:One = $one
+            $script:HiddenCluster = $HiddenCluster
 
             Mock Get-XmipEstateRun { }
             Mock Get-XmipTestNode { }
@@ -104,32 +124,39 @@ Describe 'A run declares itself hidden and is listed only when asked' {
                 [PSCustomObject]@{
                     Id     = $Id
                     File   = "roll-$Id.toml"
-                    Record = @{ cluster = 'CT'; snapshot = 'nowhere-snapshot.toml' }
+                    Record = @{
+                        cluster = $script:HiddenCluster; snapshot = 'nowhere-snapshot.toml'
+                    }
                 }
             }
 
-            @(Get-XmipTestStatus -Path 'a').Cluster | Should -Be 'CT'
+            @(Get-XmipTestStatus -Path 'a').Cluster | Should -Be $HiddenCluster
         }
     }
 
     It 'stops a hidden run by filter only with -IncludeHidden, and by its id always' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($HiddenCluster, $ShownCluster)
+
+            $script:HiddenCluster = $HiddenCluster
+            $script:ShownCluster = $ShownCluster
             Mock Get-XmipTestStatus {
                 [PSCustomObject]@{
                     Id = 21; Kind = 'roll'; State = 'running'; Suite = 'Core.Playground'
-                    Cluster = 'CT'; Tests = @(); Hidden = $true; Stress = 'calm'
+                    Cluster = $script:HiddenCluster; Tests = @(); Hidden = $true; Stress = 'calm'
                 }
                 [PSCustomObject]@{
                     Id = 22; Kind = 'roll'; State = 'running'; Suite = 'Core.Playground'
-                    Cluster = 'C7'; Tests = @(); Hidden = $false; Stress = 'calm'
+                    Cluster = $script:ShownCluster; Tests = @(); Hidden = $false; Stress = 'calm'
                 }
             }
             Mock Update-XmipPromptFollowing { }
             Import-XmipOperatorModule
 
-            { Stop-XmipTest -Cluster CT -WhatIf -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*REFUSED*No roll matches CT*'
-            { Stop-XmipTest -Cluster CT -IncludeHidden -WhatIf -ErrorAction Stop } |
+            [string] $c = $HiddenCluster
+            { Stop-XmipTest -Cluster $c -WhatIf -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage "*REFUSED*No roll matches $c*"
+            { Stop-XmipTest -Cluster $c -IncludeHidden -WhatIf -ErrorAction Stop } |
                 Should -Not -Throw
             { Stop-XmipTest -Id 21 -WhatIf -ErrorAction Stop } | Should -Not -Throw
         }

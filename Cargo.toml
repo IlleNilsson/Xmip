@@ -39,7 +39,7 @@ required-features = ["node", "audit", "observe"]
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
-required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocksdb"]
+required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocksdb", "persist-sqlite"]
 
 # Renders every node configuration deploy/ writes and reads it the way
 # xmip-service reads its own, so a template out of step with the reader fails.
@@ -176,6 +176,9 @@ xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://githu
 ctrlc = { version = "3.5", features = ["termination"] }
 
 [dev-dependencies]
+# The test cluster's names, from its `xmip.toml` (`configure::fixture`;
+# ADR-0056, amendment 2026-10-03): no test writes a cluster or node name.
+xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main", features = ["test-support"] }
 # The deploy test walks a rendered configuration's keys, as configure's reader
 # writes them back, with the same TOML reader configure uses.
 toml = "0.9"

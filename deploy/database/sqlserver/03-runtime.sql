@@ -40,13 +40,64 @@ CREATE TABLE xmip.journey (
 );
 GO
 
--- the claim on each Journey: its holder, its token, when it lapses.
+-- the Journeys a paused Subscription holds, at their place in its queue, each once.
+CREATE TABLE xmip.held (
+    queue binary(16) NOT NULL,
+    sequence bigint NOT NULL,
+    journey binary(16) NOT NULL,
+    body varbinary(max) NOT NULL,
+    CONSTRAINT held_key PRIMARY KEY (queue, sequence),
+    CONSTRAINT held_unique UNIQUE (queue, journey)
+);
+GO
+
+-- each queue's first place, its next and how many it holds.
+CREATE TABLE xmip.held_places (
+    queue binary(16) NOT NULL,
+    first_place bigint NOT NULL,
+    next_place bigint NOT NULL,
+    held bigint NOT NULL,
+    CONSTRAINT held_places_key PRIMARY KEY (queue)
+);
+GO
+
+-- each node's Dead Message Queue: every Message nothing matched, at its place, with its receive context, what its gates concluded, its promoted properties and each Subscription's reason for declining, each once.
+CREATE TABLE xmip.dead_message (
+    queue binary(16) NOT NULL,
+    sequence bigint NOT NULL,
+    message binary(16) NOT NULL,
+    body varbinary(max) NOT NULL,
+    CONSTRAINT dead_message_key PRIMARY KEY (queue, sequence),
+    CONSTRAINT dead_message_unique UNIQUE (queue, message)
+);
+GO
+
+-- each Dead Message Queue's first place, its next and how many it holds.
+CREATE TABLE xmip.dead_message_places (
+    queue binary(16) NOT NULL,
+    first_place bigint NOT NULL,
+    next_place bigint NOT NULL,
+    held bigint NOT NULL,
+    CONSTRAINT dead_message_places_key PRIMARY KEY (queue)
+);
+GO
+
+-- each Message replayed from a Dead Message Queue, so a Replay asked again writes nothing twice.
+CREATE TABLE xmip.dead_message_replayed (
+    queue binary(16) NOT NULL,
+    message binary(16) NOT NULL,
+    CONSTRAINT dead_message_replayed_key PRIMARY KEY (queue, message)
+);
+GO
+
+-- the claim on each Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
 CREATE TABLE xmip.claim (
     journey binary(16) NOT NULL,
     holder nvarchar(400) NOT NULL,
     token binary(16) NOT NULL,
     until_unix_nanos bigint NOT NULL,
     released bit NOT NULL,
+    handed_on bit NOT NULL,
     CONSTRAINT claim_key PRIMARY KEY (journey)
 );
 GO

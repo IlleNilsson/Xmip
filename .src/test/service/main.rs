@@ -4,8 +4,8 @@
 //! with is here once; each test is in the file named for what it proves:
 //!
 //! - `stop.rs`: a stop drains the node and the process exits 0, within a
-//!   bound, having declared and audited itself; a node it cannot start, or a
-//!   store it cannot open, is refused with exit 2; a Subscription paused
+//!   bound, having declared and audited itself; a node it cannot start, or
+//!   a Storage node it cannot open, is refused with exit 2; a Subscription paused
 //!   through an order is paused still after a restart.
 //! - `publication.rs`: the node publishes its snapshot where it declares,
 //!   read by observe's one reader; a pause left where the snapshot says the
@@ -28,40 +28,72 @@ use xmip_transport_tcp::TcpTransport;
 
 const MESSAGES: u64 = 50;
 
-const APPLICATION: &str = r#"[application]
+/// The Loopback Application, as its section of the node's configuration.
+const APPLICATION: &str = r#"
+[[xmip_applications]]
 name = "Loopback"
 
-[[receive_locations]]
-name = "In"
+[[xmip_applications.receive_ports]]
+name = "Loopback"
 
-[[send_ports]]
+[[xmip_applications.receive_locations]]
+name = "In"
+receive_port = "Loopback"
+interaction = "data-transfer"
+depth = "light"
+
+[[xmip_applications.send_ports]]
 name = "Out"
 
-[[subscriptions]]
+[[xmip_applications.subscriptions]]
 id = "onward"
 destination = { send-port = "Out" }
 filter = "xmip.transport.mechanism = 'circumstance'"
 "#;
 
-/// Node C1-R1 takes both ends: a tcp Receive Location on `receive` and a
-/// tcp Send Port to `far`. Its Location waits a tenth of a second per
-/// receive, which is what bounds the drain. Its data — the runtime store,
-/// its keys, its orders — is in `data` beside the configuration.
+/// The test cluster, read once: a publication's poll asks for its node.
+fn test_cluster() -> &'static xmip_configure::fixture::TestCluster {
+    static CLUSTER: std::sync::OnceLock<xmip_configure::fixture::TestCluster> =
+        std::sync::OnceLock::new();
+    CLUSTER.get_or_init(xmip_configure::fixture::test_cluster)
+}
+
+/// The node the service runs as: the test cluster's first node, by name.
+fn node_name() -> String {
+    test_cluster().node(0).name.clone()
+}
+
+/// The node the service runs as, by its scope.
+fn node_scope() -> String {
+    test_cluster().node_scope(0)
+}
+
+/// Who leaves an order: the test cluster's operator.
+fn operator() -> String {
+    format!("{}-operator", test_cluster().name)
+}
+
+/// The test cluster's first node takes both ends: a tcp Receive Location
+/// on `receive` and a tcp Send Port to `far`. Its Location waits a tenth
+/// of a second per receive, which is what bounds the drain. Its data — its
+/// own Storage node, its keys, its orders — is in `data` beside the
+/// configuration.
 fn node(receive: &str, far: &str) -> String {
+    let cluster = &test_cluster().name;
+    let node = node_name();
     format!(
         r#"[service]
-name = "xmip-R1"
-cluster_name = "C1"
-node_name = "R1"
+name = "xmip-{node}"
+cluster_name = "{cluster}"
+node_name = "{node}"
 data = "data"
 
 [[applications]]
 name = "Loopback"
-document = "loopback.application.toml"
 
 [[applications.receive_locations]]
 name = "In"
-node = "R1"
+node = "{node}"
 start = true
 transport = "xmip-core-transport-tcp"
 address = "{receive}"
@@ -70,11 +102,11 @@ timeout = "100ms"
 
 [[applications.send_ports]]
 name = "Out"
-node = "R1"
+node = "{node}"
 start = true
 transport = "xmip-core-transport-tcp"
 address = "{far}"
-"#
+{APPLICATION}"#
     )
 }
 
@@ -212,8 +244,7 @@ impl Drop for Ending {
 
 fn written(directory: &Path, receive: &str) -> PathBuf {
     std::fs::create_dir_all(directory).expect("a directory");
-    std::fs::write(directory.join("loopback.application.toml"), APPLICATION).expect("writes");
-    let path = directory.join("R1.toml");
+    let path = directory.join(format!("{}.toml", node_name()));
     std::fs::write(&path, node(receive, &free_address())).expect("writes");
     path
 }
@@ -229,16 +260,14 @@ fn declarations(directory: &Path) -> Vec<String> {
         .unwrap_or_default()
 }
 
-const NODE: &str = "xmip:///C1/node/R1";
-
 /// Leave `act` on the Subscription `onward` where the node takes orders.
 fn order(directory: &Path, act: Act) {
     Order {
-        node: NODE.to_string(),
+        node: node_scope(),
         noun: Noun::Subscription,
         target: "onward".to_string(),
         act,
-        who: "C1-operator".to_string(),
+        who: operator(),
     }
     .leave(&directory.join("data").join("orders"))
     .expect("the order is left");

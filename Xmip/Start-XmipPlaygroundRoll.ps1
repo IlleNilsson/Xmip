@@ -30,9 +30,10 @@ function Get-XmipPlaygroundChoice {
 
     [hashtable] $chosen = @{}
 
+    # -Nodes and -NodeRole reach the roll as the run's cluster file
+    # (Write-XmipTestCluster), never as variables of their own.
     [string[]] $optional = @(
-        'Nodes', 'OnlineNodes', 'NodeRole'
-        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden'
+        'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden'
     )
 
     foreach ($name in $optional) {
@@ -231,7 +232,7 @@ function Start-XmipPlaygroundRoll {
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
     [string] $with = if (-not $boundNodes) {
-        ", the $($Stress.ToLowerInvariant()) level's full complement"
+        ", the nodes of $(Get-XmipTestClusterPath)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
@@ -259,43 +260,39 @@ function Start-XmipPlaygroundRoll {
         return
     }
 
-    # Omitted, -Nodes is the level's full complement, resolved here so the run
-    # record says what an operator got and the roll is told by name rather than
-    # left to decide twice (ADR-0059, amendment 2026-09-19). The count is the
-    # rig's to answer, so the rig is asked.
+    # The nodes are the cluster's xmip.toml (ADR-0056, amendment 2026-10-03):
+    # named, the run's own file is written from -Cluster, -Nodes and -NodeRole;
+    # omitted, the test cluster's is taken as it is. XMIP_TEST_CLUSTER names it
+    # to the roll, and the run record says the nodes it declares.
+    [string] $clusterFile = if ($boundNodes) {
+        Write-XmipTestCluster -Cluster $Cluster -Nodes $Nodes -NodeRole $NodeRole -Path $Path
+    }
+    else {
+        Get-XmipTestClusterPath
+    }
+
+    $configured = Read-XmipTestCluster -Path $clusterFile
+    $choice.ClusterFile = $clusterFile
+
     if (-not $boundNodes) {
-        $complement = Get-XmipNodeComplement -Roll $roll -Stress $Stress
-        $Nodes = $complement.Nodes
-        $NodeRole = $complement.NodeRole
-        $choice.Nodes = $Nodes
-        $choice.NodeRole = $NodeRole
+        $Nodes = $configured.Nodes
+        $NodeRole = @{}
+        $configured.Role.Keys | Where-Object { $configured.Role[$_] -ne '' } |
+            ForEach-Object { $NodeRole[$_] = $configured.Role[$_] }
 
-        # A complement that refused itself would be no answer at all, so this
-        # asks before anything is spawned, as a named roster is asked.
-        $asked = @{
-            Nodes          = $Nodes
-            Test           = $Test
-            NodeRole       = $NodeRole
-        }
-        [string] $composed = Get-XmipNodeRoleRefusal @asked
+        # Asked as named nodes are, before anything spawns (ADR-0055).
+        $asked = @{ Nodes = $Nodes; Test = $Test; NodeRole = $NodeRole }
+        [string] $refused = Get-XmipNodeRoleRefusal @asked
 
-        if ($composed -ne '') {
-            Write-Error $composed
+        if ($refused -ne '') {
+            Write-Error "$clusterFile`: $refused"
             return
         }
 
-        # Said, not left to be noticed (ADR-0055 clause 5): a level with fewer
-        # nodes than the path has stages runs RoundTrip whole in the roll.
-        [bool] $roundTrip = (Test-XmipWholeSuite -Test $Test) -or ('RoundTrip' -in $Test)
+        [string] $said = Get-XmipNodeRoleWarning @asked
 
-        if ($roundTrip -and -not $complement.Covers) {
-            Write-Warning ("The $($Stress.ToLowerInvariant()) level brings " +
-                "$($Nodes.Count) node(s) on this machine, too few for receive, " +
-                'process and send: they declare no role and RoundTrip runs whole ' +
-                'in the roll. Name -Nodes and state -NodeRole ' +
-                "@{ alpha = 'receiving'; beta = 'processing'; gamma = 'sending' } " +
-                "to split the message path, or @{ alpha = 'executing' } to keep it " +
-                'in one process.')
+        if ($said -ne '') {
+            Write-Warning "$clusterFile`: $said"
         }
     }
 
@@ -337,26 +334,28 @@ function Start-XmipPlaygroundRoll {
     [bool] $boundDuration = $Bound.ContainsKey('Duration')
     [bool] $boundFactor = $Bound.ContainsKey('TimeFactor')
 
-    # The nodes are the resolved ones either way: an operator who named none
-    # can read what they got, and node_names says which of the two it was.
+    # The nodes are the cluster file's either way: an operator who named none
+    # can read what they got, node_names says which of the two it was, and
+    # cluster_file where they came from.
     $record = [ordered]@{
-        suite       = $Suite
-        cluster     = $Cluster
-        pid         = $process.Id
-        started     = $process.StartTime.ToString('o')
-        stress      = $Stress.ToLowerInvariant()
-        tests       = @($Test)
-        rounds      = $Rounds
-        nodes       = @($Nodes)
-        node_names  = if ($boundNodes) { 'named' } else { 'complement' }
-        online      = @($OnlineNodes)
-        duration_s  = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
-        time_factor = if ($boundFactor) { $TimeFactor } else { 1.0 }
-        snapshot    = $publication.Snapshot
-        history     = $publication.History
-        activity    = $publication.Activity
-        log         = $launch.RedirectStandardOutput
-        hidden      = $hidden
+        suite        = $Suite
+        cluster      = $Cluster
+        pid          = $process.Id
+        started      = $process.StartTime.ToString('o')
+        stress       = $Stress.ToLowerInvariant()
+        tests        = @($Test)
+        rounds       = $Rounds
+        nodes        = @($Nodes)
+        node_names   = if ($boundNodes) { 'named' } else { 'configured' }
+        cluster_file = $clusterFile
+        online       = @($OnlineNodes)
+        duration_s   = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
+        time_factor  = if ($boundFactor) { $TimeFactor } else { 1.0 }
+        snapshot     = $publication.Snapshot
+        history      = $publication.History
+        activity     = $publication.Activity
+        log          = $launch.RedirectStandardOutput
+        hidden       = $hidden
     }
 
     [string] $recordPath = Get-XmipRollRecordPath -Path $Path -Id $process.Id
@@ -366,8 +365,9 @@ function Start-XmipPlaygroundRoll {
     Write-Verbose "started $what$roster as pid $($process.Id); record at $recordPath"
 
     # The prompt, where this session shows one, follows the roll just started:
-    # the shipped document names C1, and on 2026-09-18 a roll named CC1 left
-    # the prompt frozen on another cluster's file. Said here because this
+    # the shipped document names one cluster, and on 2026-09-18 a roll of a
+    # cluster it did not name left the prompt frozen on another cluster's
+    # file. Said here because this
     # command knows the file; nothing is loaded that is not loaded already.
     #
     # And it is told what else is rolling. The prompt reads one publication,

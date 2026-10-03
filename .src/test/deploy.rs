@@ -1,6 +1,9 @@
-//! Every node configuration `deploy/` writes — the Ansible role's template
-//! and the file the DSC document's script writes — rendered with
-//! representative values and read the way `xmip-service` reads its own:
+//! Every node configuration `deploy/` writes, rendered with representative
+//! values: the cluster's `xmip.toml` the Ansible role's template and the DSC
+//! document's script write (ADR-0031, amendment 2026-10-03), sliced to the
+//! node by `xmip_configure::slice` — what both run through
+//! `xmip-service --slice`, never a slicing of their own — and read the way
+//! `xmip-service` reads its own:
 //! `xmip_runtime::start::read`, then the execution tree against the
 //! technologies the runtime carries. The reader keeps no key it does not
 //! know, so each rendered key must also come back when the document the
@@ -20,7 +23,8 @@ use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::catalogue;
 use xmip_runtime::execution_tree::build_execution_tree;
 
-const TEMPLATE: &str = "deploy/ansible/roles/xmip_node/templates/xmip-node.toml.j2";
+const TEMPLATE: &str = "deploy/ansible/roles/xmip_node/templates/xmip.toml.j2";
+const TASKS: &str = "deploy/ansible/roles/xmip_node/tasks/main.yml";
 const DEFAULTS: &str = "deploy/ansible/roles/xmip_node/defaults/main.yml";
 const DSC: &str = "deploy/dsc/xmip-node.dsc.yaml";
 
@@ -131,6 +135,14 @@ fn holds(table: &toml::Table, path: &str) -> bool {
     false
 }
 
+/// The node `node`'s configuration sliced from the cluster's `cluster`, as
+/// `xmip-service --slice` prints it, read as below.
+fn sliced(directory: &Path, name: &str, cluster: &str, node: &str) -> XmipConfigurationDocument {
+    let text = xmip_configure::slice(cluster, node)
+        .unwrap_or_else(|problem| panic!("{name} does not slice for {node}: {problem}\n{cluster}"));
+    read(directory, name, &text)
+}
+
 /// Write `text` where an installed node keeps it, read it as `xmip-service`
 /// does, and hold every key it writes to what the reader kept.
 fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
@@ -169,21 +181,41 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
     let template = source(TEMPLATE);
 
+    for (file, text) in [(TASKS, source(TASKS)), (DSC, source(DSC))] {
+        assert!(
+            text.contains("xmip-service") && text.contains("--slice"),
+            "{file} writes the node's configuration through xmip-service --slice"
+        );
+    }
+
     let variables = defaults();
-    let installed = read(&directory, "ansible", &render(&template, &variables));
+    let installed = sliced(
+        &directory,
+        "ansible",
+        &render(&template, &variables),
+        &variables["xmip_node_name"],
+    );
     assert_eq!(installed.service.node_name, variables["xmip_node_name"]);
     assert!(!installed.service.online, "ADR-0045: offline unless said");
 
+    let test_cluster = xmip_configure::fixture::test_cluster();
+    let (cluster_name, node_name) = (&test_cluster.name, &test_cluster.node(0).name);
+    let service_name = format!("xmip-{node_name}");
     let mut given = variables.clone();
     for (name, value) in [
-        ("xmip_service_name", "xmip-R1"),
-        ("xmip_cluster_name", "C1"),
-        ("xmip_node_name", "R1"),
+        ("xmip_service_name", service_name.as_str()),
+        ("xmip_cluster_name", cluster_name.as_str()),
+        ("xmip_node_name", node_name.as_str()),
         ("xmip_online", "True"),
     ] {
         given.insert(name.to_string(), value.to_string());
     }
-    let node = read(&directory, "ansible-R1", &render(&template, &given));
+    let node = sliced(
+        &directory,
+        &format!("ansible-{node_name}"),
+        &render(&template, &given),
+        &given["xmip_node_name"],
+    );
     assert_eq!(
         (
             node.service.name.as_str(),
@@ -191,12 +223,22 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
             node.service.node_name.as_str(),
             node.service.online,
         ),
-        ("xmip-R1", "C1", "R1", true),
+        (
+            service_name.as_str(),
+            cluster_name.as_str(),
+            node_name.as_str(),
+            true
+        ),
         "each variable lands on the key it names"
     );
 
-    let sample = read(&directory, "dsc", &dsc_configuration());
-    assert!(!sample.service.online, "ADR-0045: offline unless said");
+    let cluster = dsc_configuration();
+    let slices = xmip_configure::slices(&cluster).expect("the DSC starter slices");
+    assert!(!slices.is_empty(), "the DSC starter declares its node");
+    for (node, _) in slices {
+        let sample = sliced(&directory, "dsc", &cluster, &node);
+        assert!(!sample.service.online, "ADR-0045: offline unless said");
+    }
 
     std::fs::remove_dir_all(&directory).expect("removes what it wrote");
 }

@@ -66,8 +66,8 @@ function Start-XmipTest {
             the stream by type. It is said in words which are about to run and
             which did not start; one suite failing to start never stops the
             rest. A switch that belongs to one suite alone is not a fault when
-            a pattern chose the group: -Suite * -Cluster C1 rolls on C1 and
-            runs the estate's Pester files beside it.
+            a pattern chose the group: -Suite * -Cluster <cluster> rolls on
+            that cluster and runs the estate's Pester files beside it.
 
             A third party adds a suite by dropping a declaration in
             test/suite, with no edit to Xmip's own source. Example stands in
@@ -115,13 +115,13 @@ function Start-XmipTest {
             simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
-            The nodes to simulate, by name or by count — one process each,
-            spawned by the roll's cluster process: -Nodes R1, P1, S1 is three
-            called that under one cluster called -Cluster, and -Nodes 6 is six
-            the roll names and deals over the message path itself, as it does
-            for an omitted -Nodes. A name starts with a letter, so a lone
-            number is a count, and a count is refused with -OnlineNodes or
-            -NodeRole, which need names. What each node does is the
+            The nodes to simulate, by name — one process each, spawned by the
+            roll's cluster process: -Nodes R1, P1, S1 is three called that
+            under one cluster called -Cluster. They are written, with
+            -Cluster and -NodeRole, into the run's own cluster xmip.toml,
+            <Path>/<Cluster>.xmip.toml, and XMIP_TEST_CLUSTER names it to the
+            roll: a node is configuration (ADR-0056, amendment 2026-10-03), and
+            there is no count. What each node does is the
             roles it is started with (ADR-0056), stated with
             -NodeRole. A name says nothing about it: the owner,
             2026-09-20, *Rn, Pn and Sn are arbitrary node names*. The names
@@ -142,14 +142,12 @@ function Start-XmipTest {
             roll. Anything a file cannot be called is REFUSED before a process
             starts.
 
-            Omit it and the level brings its full complement (ADR-0059,
-            amendment 2026-09-19): its own count of nodes — one, three, ten or
-            forty, scaled to the machine's headroom — named node-01 up and
-            dealt receiving, processing, sending and round again, so the
-            message path is covered and the run never refuses a roster it
-            composed itself. A level with fewer than three nodes cannot cover
-            the path; those nodes declare no role, RoundTrip runs whole in the
-            roll, and it is said. The run record and the [run] table carry the nodes resolved.
+            Omit it and the run takes the test cluster's xmip.toml as it is —
+            the file XMIP_TEST_CLUSTER names, else test/xmip.toml — every node
+            under its [nodes] one process, declaring the roles its roles key
+            says. A role the message path needs and no node declares is
+            REFUSED before anything starts, as for named nodes. The run record
+            and the [run] table carry the nodes and the cluster file.
 
         .PARAMETER NodeRole
             The roles each node declares, stated per node: -Nodes R1, P1
@@ -163,7 +161,7 @@ function Start-XmipTest {
             'receive' too), or a node -Nodes does not name, is REFUSED before
             anything starts. A node the table does not name declares nothing.
             This is the only way a named node gets a role; omit -Nodes instead
-            and the level's complement deals them over the whole message path.
+            and the test cluster's xmip.toml declares them.
             ADR-0056 names two further kinds of capability, authentication and
             runtime, which the Playground does not model.
 
@@ -204,10 +202,12 @@ function Start-XmipTest {
             Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
             declaration hides it, never its name. The assistant's test cluster
             is started so, always: Start-XmipTest -Suite Core.Playground
-            -Cluster CT -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
+            -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
             @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 
         .EXAMPLE
+            # Omitted -Nodes: the test cluster's nodes, as test/xmip.toml
+            # declares them ([nodes.R1] roles = "receiving", and so on).
             Start-XmipTest -Suite Core.Playground -Cluster C1
 
         .EXAMPLE

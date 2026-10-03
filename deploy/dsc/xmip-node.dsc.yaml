@@ -27,21 +27,35 @@ resources:
               New-Item -ItemType Directory -Force -Path "$root/data/persistence-rocksdb" | Out-Null
               New-Item -ItemType Directory -Force -Path "$root/logs" | Out-Null
               New-Item -ItemType File -Force -Path "$root/data/management.sqlite" | Out-Null
+              # The cluster's configuration, xmip.toml: one file for the
+              # whole cluster, the shared sections once and each node's under
+              # [nodes.<name>] (ADR-0031, amendment 2026-10-03). A site
+              # places its own; this starter is written where none is.
+              $cluster = "$root/config/xmip.toml"
+              $node = 'local-xmip-node'
+              if (-not (Test-Path $cluster)) {
               @'
-              # The node configuration xmip-core-configure reads
-              # (module/platform/configure/doc/node-configuration.md). What the
-              # reader has a default for is left to it: the data directory is
-              # the `data` beside this file's `config`, and the runtime store is
-              # RocksDB there, sealed by the platform's key store (ADR-0018,
-              # amendment 2026-09-30).
+              # The cluster's configuration xmip-core-configure slices
+              # (module/platform/configure/doc/cluster-configuration.md).
+              # What the reader has a default for is left to it: the data
+              # directory is the `data` beside this file's `config`, sealed
+              # by the platform's key store, and every [tuning] value is the
+              # built-in one.
               [service]
               name = "local-xmip-service"
               cluster_name = "local-xmip-cluster"
-              node_name = "local-xmip-node"
+
+              [nodes.local-xmip-node.service]
               # ADR-0045: a node may assume no route to the internet unless
               # the operator says so here; nothing at runtime reaches out.
               online = false
-              '@ | Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8
+              '@ | Set-Content -Path $cluster -Encoding UTF8
+              }
+              # The node's configuration, sliced by xmip-core-configure's
+              # one slicing through the program the node runs.
+              $slice = & "$root/bin/xmip-service" --configuration $cluster --node $node --slice
+              if ($LASTEXITCODE -ne 0) { throw "xmip-service --slice refused the node $node" }
+              $slice | Set-Content -Path "$root/config/xmip-node.toml" -Encoding UTF8
 
 # The site this node is built from (ADR-0015, amendment 2026-10-01):
 # Build-XmipService -Site builds its xmip-service with what the site's

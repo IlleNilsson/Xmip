@@ -1,8 +1,9 @@
 //! The orders an operator leaves for the node `xmip-service` runs: a pause
 //! or a resume of one of its Subscriptions (ADR-0013, amendment
-//! 2026-09-30), taken at each look and applied through the runtime's act,
-//! which records it in this process's audit and keeps what it leaves in the
-//! node's runtime store.
+//! 2026-09-30), and a Replay of a Message its Dead Message Queue keeps
+//! (ADR-0052, amendment 2026-10-01), taken at each look and applied through
+//! the runtime's act, which records it in this process's audit and writes
+//! what it leaves to Xmip Storage.
 //!
 //! They are left in `<data>/orders`, the node's data directory's
 //! (`[service] data`), as `observe::Order` writes them; the service declares
@@ -27,7 +28,7 @@ pub const LOOK: Duration = Duration::from_millis(10);
 
 /// Where the node takes its orders, beneath its data directory.
 pub fn place(running: &Running) -> PathBuf {
-    running.store().data().join("orders")
+    running.data().join("orders")
 }
 
 /// Take every order left for the node at `node` in `orders`, oldest first,
@@ -45,6 +46,7 @@ pub fn take(
             .map_err(|problem| format!("an order no node can take: {problem}"))
             .and_then(|order| match order.noun {
                 Noun::Subscription => running.pickup().act(&order.target, order.act, &order.who),
+                Noun::DeadMessage => running.pickup().replay(&order.target, &order.who),
                 Noun::EventSubscription => Err(format!(
                     "REFUSED: {node} keeps no Event subscription hub; the Event \
                      subscription '{}' is another process's",

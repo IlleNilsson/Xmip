@@ -294,7 +294,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Import-XmipOperatorModule.ps1')
 . (Join-Path $PSScriptRoot 'Write-XmipAudit.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeRole.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipNodeComplement.ps1')
+. (Join-Path $PSScriptRoot 'Write-XmipTestCluster.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipRollRecord.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipTestStatus.ps1')

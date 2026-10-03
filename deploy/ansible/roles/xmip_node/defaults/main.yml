@@ -1,8 +1,14 @@
 ---
 xmip_install_root: /opt/xmip
-# [service] in the node configuration the template writes.
-xmip_service_name: local-xmip-service
+# The cluster's xmip.toml on the controller (ADR-0031, amendment
+# 2026-10-03): one file for the whole cluster, each node's configuration
+# sliced from it on the node by `xmip-service --slice`. Left empty, the role
+# writes its starter, templates/xmip.toml.j2, from the three below.
+xmip_cluster_configuration: ""
+# The node this host is: its key under [nodes] in the cluster's file.
 xmip_node_name: local-xmip-node
+# [service] in the starter cluster file.
+xmip_service_name: local-xmip-service
 xmip_cluster_name: local-xmip-cluster
 # ADR-0045: offline unless said. Set true per node that may reach out.
 xmip_online: false

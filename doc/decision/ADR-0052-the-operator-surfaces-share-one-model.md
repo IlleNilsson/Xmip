@@ -1539,8 +1539,8 @@ record; what it changes here:
 - **The role is wired as the amendment of 2026-09-14 ruled.** Until this
   date the web host was hard-wired Observer, two weeks after this record
   and ADR-0014 said the web offers every role. Both hosts now take the role
-  by one rule, `RoleContext.Assigned` in `Xmip.Gui`: a role the run states,
-  `Role` in `xmip.gui.toml` else `XMIP_ROLE`, is the role, and a word that is
+  by one rule, `RoleContext.Assigned`, in `Xmip.Surface` since
+  2026-10-03: a role the run states, `Role` in `xmip.gui.toml` else `XMIP_ROLE`, is the role, and a word that is
   no role is Observer; a run that states none has its role from the
   directory, and with none configured the tester holds every role
   (ADR-0009, amendment 2026-09-14, *the tester is God*). An Operator is
@@ -1694,7 +1694,7 @@ a node serves through `xmip_role_stages_v1`, and the script module's
 `ConvertTo-XmipNodeRole`, its RoundTrip refusal and its roster reading call
 them (ADR-0027, amendment of the same day). No surface writes a role word.
 
-## Amendment, 2026-10-01: a seventh view, the Dead Message Queue — decided, to be built
+## Amendment, 2026-10-01: a seventh view, the Dead Message Queue — built 2026-10-03
 
 **Provenance.** The owner, 2026-10-01, validated part by part with the
 assistant: he wants a new operation view, **Dead Message Queue**.
@@ -1712,9 +1712,37 @@ Subscription's reason for declining (ADR-0013, amendment of this date;
   Observer sees the list and no act, by the one role rule of the amendment of
   2026-09-29.
 
-Decided and not built. Its place among the tabs, its columns, and the
-command line's and PowerShell's forms are for the build to propose, and every
-surface follows in the same change (ADR-0014).
+Its place among the tabs, its columns, and the command line's and
+PowerShell's forms were the build's to propose, every surface following in
+the same change (ADR-0014).
+
+What the view reads and acts through was built 2026-10-03
+(`runtime-model.md` section 9): each node keeps its queue in the Ledger and
+publishes its oldest hundred entries in its snapshot (`[[dead_messages]]`,
+`observe::DeadMessage`: node, Message, place, Receive Location, time, gate
+verdicts, promoted properties, declines), and Replay is an order on the noun
+`dead-message` with the one act `replay` (`observe::Noun::DeadMessage`),
+taken by the node as Pause is and audited.
+
+The view and its forms were built 2026-10-03, every surface in the one
+change. `Xmip.Surface` holds the one query, `DeadMessageQuery` — the drill
+(cluster, node, one Message), the scope pattern over each entry's node and
+`<node>/dead-message/<message>`, and the columns received (the default,
+oldest first), message, cluster, node, receive-location and declines — and
+the act, `DeadMessageAct.Replay`, through `IOperatorSurface.Act`: applied in
+the node's process (`xmip_dead_message_replay_v1`), left as an order over a
+snapshot, read and acted on over a remote surface, and gated by
+`GatedOperator` at the hub as every act is (the amendment of 2026-10-03
+below). The tab is **Dead Message Queue**, `/dead-messages`, after the
+Subscriptions whose declines it shows: an entry is no mood and its row is
+not painted; one opened lists its gate verdicts, promoted properties and
+declines in the order written; Replay is on every row and on the one opened
+for an Operator, audited by the host as `dead-message.replay`. The command
+line is `xmip-cli dead-messages [pattern]` with `--message <id>` to open one
+and `--replay` as the act, and PowerShell is the one cmdlet
+`Get-XmipDeadMessage` with `-Message` and `-Replay`, a table to list and a
+list view to open one. The record names the header's `location`
+`ReceiveLocation`, so it is never read as where a drill stands.
 
 ## Amendment, 2026-10-02: the desktop opens every cluster too
 
@@ -1725,3 +1753,56 @@ surface as a set of one". It now opens its surfaces by the web host's one rule,
 names several (`Snapshot` as a list), and moves between them as the web does.
 Configure's commands still answer one surface, the first cluster's
 (`SurfaceChoice.OpenFirst`'s rule), which is the one a node is started from.
+
+## Amendment, 2026-10-03: a snapshot is read once per change, and never by a render
+
+Measured 2026-10-02: one Playground cluster snapshot (2 MB, 11,504 records)
+read through `SnapshotOperator.Topology()` took 867 ms, and the Topology
+page's first render over two clusters 1,751 ms. The snapshot was already read
+once per file write; but the Playground rewrites it every tick, the page that
+rendered after a tick read it on the render, and the chooser above every view
+asks every cluster whether it still publishes, so each render read every
+changed cluster. By the millisecond rule (CONTRIBUTING) that is a defect.
+
+- **A followed snapshot is told, not asked** (the amendment of 2026-09-15
+  read for a file). While anything follows `SnapshotOperator.WatchAsync`, the
+  follow reads each new publication once, before it announces it, and every
+  question is answered from that reading without touching the file. A read
+  that meets the publisher mid-replace is tried again rather than announced.
+- **A face's set follows its snapshots.** `SurfaceChoice.OpenAll` follows
+  every snapshot it opens (`ClusterSurfaces.Follow`) until the set is
+  disposed, so the clusters a view does not show are read off the render too.
+- **The read itself is load.** The TOML reader is `toml` 1 (`observe`, from
+  0.8; the file it writes is byte for byte the same), which halves the parse;
+  `ScopeIndex.Build` walks the records in the runtime's worst-first order once
+  and orders every scope's children in one call. What remains — the parse of
+  2 MB and the index of eleven thousand records, about a quarter of a second
+  in the debug library the surfaces load — is proportional to the
+  publication. `SnapshotReadCostTest` reports it and holds the view's bound:
+  a followed view in well under a millisecond (measured 3 to 4 µs).
+
+## Amendment, 2026-10-03: an act over the hub is the proven caller's, by the host's role
+
+The amendment of 2026-09-15 said the two acts cross the wire as they cross
+the desktop, *by role once ADR-0009's gate lands*; until this date they
+crossed with no role asked at all, and as whoever the caller named. ADR-0009's
+amendment of this date is the record; what it changes here:
+
+- **The hub gates every act, once.** `SurfaceHub` serves each act through
+  `GatedOperator` in `Xmip.Surface`, a surface over the host's own that
+  reads as it reads and refuses an act, in words and audited, unless the
+  host's assigned role may operate. No hub method checks a role itself.
+- **No act carries a name across the wire.** The hub's act methods take
+  none, and `RemoteOperator` sends none; the act is the subject of the
+  client certificate the host checked; over loopback without one, the
+  operating system user the host runs as (the owner, 2026-10-03, *Go with
+  A*: only someone logged on to that machine can reach loopback); from
+  anywhere else without one, no act is taken.
+- **The role is `Xmip.Surface`'s.** `Role`, `Roles` and `RoleContext` moved
+  from `Xmip.Gui` so the relay, beneath the GUIs, can ask it.
+
+Proved in `Xmip.Surface.Test` (`SurfaceHubTest`) against a hub on a loopback
+port over the test cluster's names: an Observer host refuses every act, an
+Operator host takes each as the certificate's subject and never as the name
+the caller gave, on loopback without a certificate the act is the host's
+own user, and from elsewhere without one nothing is taken.

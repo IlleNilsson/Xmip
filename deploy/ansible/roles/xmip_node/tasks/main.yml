@@ -19,8 +19,36 @@
     state: touch
     mode: '0644'
 
-- name: Write Xmip node TOML
+- name: Write the cluster's xmip.toml, the starter
   ansible.builtin.template:
-    src: xmip-node.toml.j2
+    src: xmip.toml.j2
+    dest: "{{ xmip_install_root }}/config/xmip.toml"
+    mode: '0644'
+  when: xmip_cluster_configuration | length == 0
+
+- name: Write the cluster's xmip.toml, the cluster's own
+  ansible.builtin.copy:
+    src: "{{ xmip_cluster_configuration }}"
+    dest: "{{ xmip_install_root }}/config/xmip.toml"
+    mode: '0644'
+  when: xmip_cluster_configuration | length > 0
+
+# The one slicing is xmip-core-configure's, reached through the program the
+# node runs; nothing here takes the cluster's file apart.
+- name: Slice the node's configuration from the cluster's xmip.toml
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_install_root }}/bin/xmip-service"
+      - --configuration
+      - "{{ xmip_install_root }}/config/xmip.toml"
+      - --node
+      - "{{ xmip_node_name }}"
+      - --slice
+  register: xmip_slice
+  changed_when: false
+
+- name: Write the node's configuration
+  ansible.builtin.copy:
+    content: "{{ xmip_slice.stdout }}\n"
     dest: "{{ xmip_install_root }}/config/xmip-node.toml"
     mode: '0644'

@@ -93,8 +93,9 @@ which Event types, scopes and metadata it may receive (runtime-model section
   `observe::Scope::contains`. Built by the assistant, 2026-09-26.
 - **Authorized and audited (clause 4).** `subscriber::Subscriber` is a Party;
   the gate is `authorize::authorize`, asked once at subscribe as a Send at
-  the scope reached, each type as the Contract; `SameProcess` admits a
-  program in this process. Every subscription, delivery, refusal and forward
+  the scope reached, each type as the Contract; a program in this process
+  is admitted to nothing for being here (amendment 2026-09-26, below).
+  Every subscription, delivery, refusal and forward
   is recorded through `ProgramAudit`, handed to the audit capability's
   keeper (`audit::keeper`, amendment 2026-09-27), so no Event waits for a
   disk and an unsubscribe never does either.
@@ -268,3 +269,72 @@ chosen from the three options named there.
 **The assistant's**: clauses 2 to 4's means — the queue or callback shape,
 the bindings named, the wire form's standard, at-least-once — each
 the owner's to strike.
+
+## Amendment, 2026-10-02: any node is the cluster's door
+
+The owner, 2026-10-02: *Pub/Sub is cluster central. So when external code
+expect Subscription Events, they should be able to hook up to any node and
+expect events from the complete cluster.* The cluster's endpoint of the
+amendment of 2026-09-26 is every node of the cluster: a subscriber connects
+to whichever node it reaches and receives the Events of every node that
+match its filter and that its Party may see, exactly as it would from any
+other. It still never names a node, and a node it connects to is not the
+node it hears.
+
+Built, 2026-10-02 (the assistant's drafting, each point the owner's to
+overrule): `xmip-core-event`'s `cluster::Cluster` joins a node's hub to the
+cluster. Its sync listener (ADR-0067) answers every other member, over Xmip's
+mutual TLS (ADR-0063) agreed as `xmip-event/1`, with that node's own Events;
+and the node holds one link to each other member, pushing every subscription's
+filter down, so an Event crosses only where a filter wants it, once, one hop,
+pushed as it is raised — a member answers from its own Events only, so nothing
+loops. A Party is authorized where it subscribed; a link presents the node's
+certificate and is authorized as a node. Links are held while a member is
+followed, subscribers or not, so a subscribe costs one round trip, never a
+handshake. A member down is retried on its own link's thread, at most a
+second apart, and meanwhile is unheard; what a link's queue refused crosses
+as a count and is missed on the subscriptions it matched. A link is the
+cluster's, not a Party's: it is not listed among the Event subscriptions and
+no operator acts on it, since pausing one would silence a node for every
+subscriber at once. Measured on the owner's Windows machine,
+debug build, loopback: raised on one node to a subscriber on another, a
+median of about 0.4 ms and a 99th percentile under 0.8 ms, against 45 µs on
+the node itself — the hop adds about 0.36 ms. Not yet: which nodes are
+members, and their sync addresses, is `cluster::Membership`, which a node
+fills from Xmip Storage's administration database, and nothing writes or
+lists the membership records there yet; no node starts its sync listener or
+joins from configuration yet; and the identity a node presents to the other
+nodes is not configurable yet (as for Xmip Storage).
+
+Settled the same day, through the lead (the owner's rulings relayed, the
+means the assistant's):
+
+- **`SameProcess` is deleted**, with every use, as the amendment of
+  2026-09-26 said: every subscriber names its Party and is authorized as
+  one. Who may subscribe is one policy and nothing beside it — no second
+  Party allow-list: a hub's gate (`gate`) is the `authorize::Authorizer`s it
+  is handed (`Hub::authorize_by`), the node's as it starts, or one the
+  program hosting the hub takes from the authorize capability — "these
+  Parties" is the party technology's `PartyPolicy`, which the Playground and
+  every test hand their hub, never a copy of it. Across the C boundary the
+  trait is a callback the hosting program hands over —
+  `xmip_event_authorize_v1`, answering allow, deny or no opinion of each
+  attempt, bound in .NET (`RuntimeEvents.AuthorizeBy`), Java, Python, C and
+  C++. `Hub::process` admits nobody until it is handed one.
+- **Nothing missing reaches the subscriber silently.** Every delivery
+  carries the members not heard now — by which node, the member, since when
+  and why, `observe::Unheard` — and a change wakes a waiting drain with no
+  Event (`Delivery::unheard`, `unheard_changed`; `xmip_event_batch_unheard_v1`
+  for a batch and `xmip_event_unheard_v1` for a listener; `EventDelivery`
+  in .NET).
+- **An operator sees an unheard node.** Links stay hidden as acts, and every
+  surface shows each member a node does not hear as one read-only line
+  beside the Event subscriptions — *alpha: not hearing `<node>` since
+  `<time>`: `<why>`*, worded once by `observe::Unheard::said` and
+  `EventSubscriptionQuery.Line`: in the node's publication
+  (`[[unheard]]`), the section 11 list's `unheard`,
+  `EventSubscriptionList.Unheard`, `xmip-cli event-subscriptions` (a line,
+  and `unheard` in `--json`), `Get-XmipEventSubscription` (a warning), and
+  the web's Event subscriptions view.
+
+Provenance: the owner's ruling, quoted; the wording is the assistant's.

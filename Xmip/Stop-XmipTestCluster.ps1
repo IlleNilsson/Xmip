@@ -89,8 +89,9 @@ function Test-XmipClusterLocation {
     <#
         .SYNOPSIS
             Whether a declared location is the cluster's scope root or inside
-            it: xmip:///C1 and xmip:///C1/node/node-01 are C1's, and
-            xmip:///C10/node/node-01 is not.
+            it: xmip:///<cluster> and xmip:///<cluster>/node/<node> are the
+            cluster's, and a location under a longer name that begins with
+            the cluster's is not.
 
         .DESCRIPTION
             Containment is observe::Scope's rule, asked of the runtime through

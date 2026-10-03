@@ -16,6 +16,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use xmip_core::AuditId;
+use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::{AuditEntry, StorageClient, StorageServer, XmipStorage};
 
 use super::{TestNode, directory, heard, journey, percentiles, spawn, test_node, timed};
@@ -80,7 +81,8 @@ fn a_node_reaches_storage_over_tls_and_carries_on_past_a_killed_storage_node() {
         heard(&one_says, "serving ", Duration::from_secs(60)),
         heard(&two_says, "serving ", Duration::from_secs(60)),
     ];
-    let client = StorageClient::new(&addresses, &issue(&test), TIMEOUT).expect("a client");
+    let client =
+        StorageClient::new(&addresses, &issue(&test), TIMEOUT, PASS_OVER).expect("a client");
     for number in 0..10 {
         client
             .write_journey(&xmip_persist::storage::JourneyRecord {
@@ -173,7 +175,8 @@ fn the_latency_of_a_write_is_measured_and_reported() {
 
     let (mut child, says) = spawn("serve", &test.join("remote"));
     let address = heard(&says, "serving ", Duration::from_secs(60));
-    let client = StorageClient::new(&[address], &issue(&test), TIMEOUT).expect("a client");
+    let client =
+        StorageClient::new(&[address], &issue(&test), TIMEOUT, PASS_OVER).expect("a client");
     let (median, slowest) = percentiles(&timed(&client, 500, &body));
     eprintln!("LATENCY embedded, over TLS: median {median:?}, 99th percentile {slowest:?}");
     drop(child.stdin.take());

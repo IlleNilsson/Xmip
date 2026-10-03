@@ -6,13 +6,18 @@
 //! configuration names; a Location naming one this build left out is refused
 //! as the node starts.
 //!
-//! Transports, and the runtime store's engine and key stores: the node
-//! opens its store over `RocksDB`, the one engine (ADR-0015 and ADR-0018,
-//! amendments 2026-10-01), and one this build left out, or a key store it
-//! left out, is refused as it starts (ADR-0018, amendment 2026-09-30). No authenticator, policy, identifier or route technology is
-//! linked, because the node configuration cannot yet say how one is set
-//! up: a Receive Location that accepts nothing is refused nothing at the
-//! start and takes no Stream through its gates.
+//! Transports, and the engines and key stores of an embedded Storage node:
+//! a node that is its own Storage node opens Xmip Storage over `RocksDB`,
+//! the runtime database's one engine (ADR-0015 and ADR-0018, amendments
+//! 2026-10-01), and `SQLite`, the administration database's, which the
+//! storage role builds (`deploy/profile/role/storage.toml`), sealed under a
+//! key store this build carries; one built without either engine, or
+//! naming a key store it left out, is refused as it starts
+//! (`xmip_runtime::storage`). No authenticator,
+//! policy, identifier or route technology is linked, because the node
+//! configuration cannot yet say how one is set up: a Receive Location that
+//! accepts nothing is refused nothing at the start and takes no Stream
+//! through its gates.
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport};
@@ -23,13 +28,14 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
     Linked {
         transports: transports(),
         engine: engine(),
+        administration: administration(),
         key_stores: key_stores(),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
 }
 
-/// The runtime store's engine, where this build carries it.
+/// The runtime database's engine, where this build carries it.
 #[allow(
     clippy::unnecessary_wraps,
     reason = "a build without persist-rocksdb carries no engine"
@@ -40,6 +46,21 @@ pub fn engine() -> Option<LinkedEngine> {
         Ok(Box::new(xmip_persist_rocksdb::RocksDb::open(place)?))
     }));
     #[cfg(not(feature = "persist-rocksdb"))]
+    None
+}
+
+/// The administration database's engine, where this build carries it.
+#[allow(
+    clippy::unnecessary_wraps,
+    reason = "a build without persist-sqlite carries no administration database"
+)]
+pub fn administration() -> Option<LinkedEngine> {
+    #[cfg(feature = "persist-sqlite")]
+    return Some(LinkedEngine::new(
+        xmip_runtime::storage::ADMINISTRATION,
+        |place| Ok(Box::new(xmip_persist_sqlite::Sqlite::open(place)?)),
+    ));
+    #[cfg(not(feature = "persist-sqlite"))]
     None
 }
 

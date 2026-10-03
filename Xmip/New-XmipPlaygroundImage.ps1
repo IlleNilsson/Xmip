@@ -46,8 +46,8 @@ function Get-XmipPlaygroundImageName {
             what makes the kind a shape rather than a word a node may not be
             called. The owner, 2026-09-20: a node is a node and can have one
             or more roles, roll is something different. So
-            xmip-playground-U1-node-roll is the node called roll, and
-            xmip-playground-U1-roll is still the roll; nothing collides and no
+            xmip-playground-C1-node-roll is the node called roll, and
+            xmip-playground-C1-roll is still the roll; nothing collides and no
             name is refused (ADR-0053, amendment 2026-09-20).
     #>
     [CmdletBinding()]
@@ -266,8 +266,8 @@ function Get-XmipPlaygroundImageKind {
 
     [string] $rest = $Name.Substring($prefix.Length).ToLowerInvariant()
 
-    # The marker before the endings: xmip-playground-orders-node-roll is the
-    # node called roll, never the orders cluster's roll, and that is the whole
+    # The marker before the endings: xmip-playground-<cluster>-node-roll is
+    # the node called roll, never the cluster's roll, and that is the whole
     # point of the marker.
     if ($rest.Contains('-node-')) {
         return 'Node'
