@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 216027 lines of production
+Where each repository mounts and what it holds: 219347 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -80,33 +80,33 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       4010
+│   │   │   ├── transport                       4218
 │   │   │   │   ├── amqp                        2467
 │   │   │   │   ├── opc-ua                      2410
-│   │   │   │   ├── mssql                       1863
-│   │   │   │   ├── smb                         1831
-│   │   │   │   ├── nfs                         1802
-│   │   │   │   ├── mysql                       1763
+│   │   │   │   ├── nfs                         1974
+│   │   │   │   ├── smb                         1936
+│   │   │   │   ├── mssql                       1866
+│   │   │   │   ├── mysql                       1765
 │   │   │   │   ├── kafka                       1661
 │   │   │   │   ├── ibm-mq                      1644
 │   │   │   │   ├── http                        1533
+│   │   │   │   ├── sftp                        1446
 │   │   │   │   ├── snmp                        1421
-│   │   │   │   ├── oracle                      1392
-│   │   │   │   ├── postgresql                  1333
-│   │   │   │   ├── sftp                        1311
+│   │   │   │   ├── oracle                      1394
+│   │   │   │   ├── postgresql                  1335
 │   │   │   │   ├── as4                         1230
 │   │   │   │   ├── nats-jetstream              1210
 │   │   │   │   ├── canopen                     1135
 │   │   │   │   ├── s7comm                      1128
 │   │   │   │   ├── dns                         1112
 │   │   │   │   ├── mqtt                        1068
+│   │   │   │   ├── webdav                      1052
 │   │   │   │   ├── iec-61850                   1031
 │   │   │   │   ├── secs-gem                    1025
-│   │   │   │   ├── webdav                       987
+│   │   │   │   ├── ftp                          987
+│   │   │   │   ├── imap                         981
 │   │   │   │   ├── ethercat                     964
 │   │   │   │   ├── dicom                        948
-│   │   │   │   ├── imap                         932
-│   │   │   │   ├── ftp                          926
 │   │   │   │   ├── m-bus                        919
 │   │   │   │   ├── aws-sns                      905
 │   │   │   │   ├── hart                         901
@@ -117,6 +117,7 @@ hold no source to count.
 │   │   │   │   ├── as2                          861
 │   │   │   │   ├── aws-kinesis                  860
 │   │   │   │   ├── ethernet-ip                  855
+│   │   │   │   ├── pop3                         849
 │   │   │   │   ├── azure-event-grid             831
 │   │   │   │   ├── profinet                     824
 │   │   │   │   ├── redis-streams                820
@@ -130,25 +131,24 @@ hold no source to count.
 │   │   │   │   ├── thread                       780
 │   │   │   │   ├── aws-sqs                      767
 │   │   │   │   ├── knx                          732
-│   │   │   │   ├── pop3                         703
 │   │   │   │   ├── peppol                       697
 │   │   │   │   ├── iso-tp                       695
+│   │   │   │   ├── s3                           695
+│   │   │   │   ├── azure-blob                   681
 │   │   │   │   ├── mdns                         679
 │   │   │   │   ├── cotp                         669
 │   │   │   │   ├── io-link                      669
+│   │   │   │   ├── google-cloud-storage         663
 │   │   │   │   ├── dds                          655
 │   │   │   │   ├── iec-60870-5-104              651
-│   │   │   │   ├── s3                           645
-│   │   │   │   ├── azure-blob                   638
 │   │   │   │   ├── smtp                         638
-│   │   │   │   ├── google-cloud-storage         625
 │   │   │   │   ├── syslog                       623
 │   │   │   │   ├── obd-ii                       608
 │   │   │   │   ├── dnp3                         602
 │   │   │   │   ├── ssdp                         601
 │   │   │   │   ├── msmq                         581
 │   │   │   │   ├── coap                         564
-│   │   │   │   ├── file                         541
+│   │   │   │   ├── file                         538
 │   │   │   │   ├── modbus                       528
 │   │   │   │   ├── wireless-m-bus               517
 │   │   │   │   ├── azure-event-hubs             515
@@ -158,10 +158,10 @@ hold no source to count.
 │   │   │   │   ├── named-pipe                   476
 │   │   │   │   ├── redpanda                     468
 │   │   │   │   ├── can-bus                      459
+│   │   │   │   ├── sqlite                       456
 │   │   │   │   ├── azure                        449
 │   │   │   │   ├── websocket                    442
 │   │   │   │   ├── bacnet                       441
-│   │   │   │   ├── sqlite                       432
 │   │   │   │   ├── unix-socket                  308
 │   │   │   │   ├── rabbitmq                     303
 │   │   │   │   ├── mllp                         287
@@ -367,14 +367,14 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            12677
-│       ├── persist                             4845
+│       ├── runtime                            14836
+│       ├── persist                             4896
 │       │   ├── sqlite                           140
 │       │   └── rocksdb                          136
 │       └── configure                           3374
 └── test/
     └── core/
-        └── playground                          9968
+        └── playground                          9976
 ```
 
 ---

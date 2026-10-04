@@ -95,6 +95,9 @@ fn hand_on(number: u64, claim: xmip_persist::storage::Claim) -> HandOn {
             journey: journey(number + 1_000_000),
             body: format!("to send {number}").into_bytes(),
         }],
+        leaves: Vec::new(),
+        queued: Vec::new(),
+        kept_for_nanos: None,
     }
 }
 

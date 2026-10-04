@@ -257,11 +257,14 @@ When deployed the sections regarding a node will be sliced to that node.*
 - **Every outward and hardware assumption is configured there**, per
   cluster and per node: the TCP segment and the segments a chunk holds
   (`runtime-model.md` section 3), the receive pool's threads per hardware
-  thread and its idle time, the Storage client's timeouts and pass-over —
-  under `[tuning]` for the cluster and `[nodes.<name>.tuning]` for a node
-  (the key names are the assistant's drafting). The built-in values are the
-  defaults where neither says; a new assumption of this kind gets its key in
-  the change that brings it.
+  thread and its idle time, the Send pool's likewise and a send's claim
+  lease and scan (`send_threads_per_hardware_thread`, `send_idle`,
+  `send_lease`, `send_scan`, built 2026-10-03 with the send step,
+  `runtime-model.md` section 10), the Storage client's timeouts and
+  pass-over — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
+  for a node (the key names are the assistant's drafting). The built-in
+  values are the defaults where neither says; a new assumption of this kind
+  gets its key in the change that brings it.
 
 This answers open problem 14 (the node configuration format): one cluster
 file, not three, and the node's section wins.
