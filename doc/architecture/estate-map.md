@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 219347 lines of production
+Where each repository mounts and what it holds: 219372 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -83,14 +83,14 @@ hold no source to count.
 │   │   │   ├── transport                       4218
 │   │   │   │   ├── amqp                        2467
 │   │   │   │   ├── opc-ua                      2410
-│   │   │   │   ├── nfs                         1974
-│   │   │   │   ├── smb                         1936
+│   │   │   │   ├── nfs                         1983
+│   │   │   │   ├── smb                         1941
 │   │   │   │   ├── mssql                       1866
 │   │   │   │   ├── mysql                       1765
 │   │   │   │   ├── kafka                       1661
 │   │   │   │   ├── ibm-mq                      1644
 │   │   │   │   ├── http                        1533
-│   │   │   │   ├── sftp                        1446
+│   │   │   │   ├── sftp                        1452
 │   │   │   │   ├── snmp                        1421
 │   │   │   │   ├── oracle                      1394
 │   │   │   │   ├── postgresql                  1335
@@ -100,7 +100,7 @@ hold no source to count.
 │   │   │   │   ├── s7comm                      1128
 │   │   │   │   ├── dns                         1112
 │   │   │   │   ├── mqtt                        1068
-│   │   │   │   ├── webdav                      1052
+│   │   │   │   ├── webdav                      1056
 │   │   │   │   ├── iec-61850                   1031
 │   │   │   │   ├── secs-gem                    1025
 │   │   │   │   ├── ftp                          987
@@ -117,7 +117,7 @@ hold no source to count.
 │   │   │   │   ├── as2                          861
 │   │   │   │   ├── aws-kinesis                  860
 │   │   │   │   ├── ethernet-ip                  855
-│   │   │   │   ├── pop3                         849
+│   │   │   │   ├── pop3                         850
 │   │   │   │   ├── azure-event-grid             831
 │   │   │   │   ├── profinet                     824
 │   │   │   │   ├── redis-streams                820
