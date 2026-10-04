@@ -109,7 +109,6 @@ BeforeAll {
         'module/core/capability/path/dot/src/walk.rs'             = 'a SKU and a reference'
         'module/core/capability/path/dot/src/lib.rs'              = 'a reference header'
         'module/core/capability/path/json-pointer/src/lib.rs'     = 'a reference field'
-        'module/core/capability/transport/.src/listed.rs'         = 'a bucket and its objects'
         'module/core/capability/transport/aws-kinesis/src/lib.rs' = 'a record''s payload'
         'module/core/capability/transport/mqtt/src/client_id.rs'  = 'a topic'
         'module/core/capability/contract/toml/src/lib.rs'         = 'a layout''s type word'

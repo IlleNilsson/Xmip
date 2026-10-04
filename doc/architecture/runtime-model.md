@@ -407,6 +407,14 @@ thread waits on the Ledger's sync as well as working. A thread idle for a
 minute ends — the assistant's drafting, for the owner to overrule. No
 configuration caps a pool yet.
 
+**Built for send, 2026-10-03.** The node's Send pool is calculated the
+same way (`[tuning] send_threads_per_hardware_thread`, two by default, and
+`send_idle`), and the send step dispatches on it (section 10, *How a send
+runs*): a Journey's hand-on — Completed, Failed with why, or Recovering
+with its due time — is one atomic write through Xmip Storage, and a retry
+waiting for its backoff holds no thread, its claim kept in the Ledger to
+its due time.
+
 **Executing keeps the hops in one process.** A node declaring the executing
 role runs receiving, processing and sending in one Host Service for low
 latency (ADR-0056 and ADR-0018 clause 10a, amendments 2026-10-01); the steps
@@ -453,8 +461,17 @@ path through the Ledger (`xmip-core-runtime`'s `tests/ledger.rs`): a receive
 killed after its Stream's chunks were written and before its Publication
 leaves the chunks and no Message, and every Message whose receive cycle
 completed before a kill is in the Ledger after it, with its Journeys, and
-reads back as it was received. The rest wait for the steps after receive to
-run through the Ledger.
+reads back as it was received. And for the send step, built 2026-10-03
+(`tests/ledger/send.rs` and `send_killed.rs`): a node killed after its
+Publications and before it sent leaves every Journey it acknowledged to
+another node, which takes each up once its claim lapses and sends it; a node
+killed mid-send has every Journey it acknowledged sent once it is restarted,
+the one cut short again — at least once, never lost; a send that fails is
+written Failed with why while its sender was acknowledged all the same; a
+retry's backoff holds no thread, and a stop gives its claim back; and a
+Sequential Send Port keeps its order, blocking behind a failure or setting
+it aside as `on_failure` says. The Xmip Process step waits for a runtime
+that runs Processes.
 
 ## 4. Actors and Communication Domains
 
@@ -921,6 +938,39 @@ The owner accepted four additions:
   configured** — never a silent default (section 3).
 - **A large Message's outgoing Contract validates streaming**, chunk by
   chunk, or that Send Location refuses to start.
+
+**Built 2026-10-03** (`xmip-core-runtime`'s `send_step`), closing the
+review finding that inline sends recorded no outcome and nothing took up
+an unfinished Journey. **The receive cycle sends nothing**: it ends at the
+Publication's durable write and the acknowledgement (section 5). The
+Publication keeps every Journey that is not held in the queue of where it
+leads — a Send Port's, found by the name-based identifier of
+`<cluster>/<kind>/<name>`, the same on every node — and, where this node
+sends that Port and it is not Sequential, claims it in the same write and
+hands it to the Send pool in memory, so the send costs no sync of its own
+before it starts. Each pass tries the Port's Send Locations in configured
+order (`send_locations`, or the Location bound under the Port's name),
+`retry` on the active one and `failover = "next"` to the next, and hands on
+in one write: **Completed** and out of its queue; **Failed** with why in
+words, its Message with it — out of its queue, or kept there where a
+Sequential Port's `on_failure = "block"` stops its sequence behind it; or
+**Recovering**, its claim kept to its due time, which is the due time in
+the Ledger, the node keeping when it is due only to start it again.
+**Recovery** is a scan: as a node starts and every `[tuning] send_scan`
+after, each queue it sends is read oldest first and every Journey no live
+claim holds is claimed (`[tuning] send_lease`) and sent — one a dead node
+left, one whose send was cut short, one no node sending its Port held;
+claims of work in flight are renewed, and a stop gives back the claims of
+what waits. A Sequential Send Port has one Journey of each sequence — the
+value of its `order_key` in the Message's context — in flight at a time,
+the oldest first. A paused Subscription's resume moves each Journey it
+held to its Send Port's queue in one hand-on, and the send step sends it
+from there. The node's snapshot publishes, at `<node>/send/<Port>`, what
+was sent, what failed — the last Journey that did, and why — and what
+waits for its due time. Still open: one Journey per Send Port of a Send
+Port Group (a Group's Journey is one, sent to each Port), a Journey's
+operator Retry and Dismiss (section 13), and the deduplication key handed to
+an endpoint that deduplicates, which waits for a transport that takes one.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
