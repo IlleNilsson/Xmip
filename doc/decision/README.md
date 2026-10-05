@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty-seven decisions, read as one document.
+Sixty-eight decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -409,7 +409,9 @@ or Python (module-model.md). A Module written in a managed language needs its
 language runtime present to run. Xmip accepts loading that runtime, and the
 runtime is versioned: the Module declares which runtime and which version it
 needs, and the node provides it. A native Module brings no runtime; a managed one
-brings the runtime as a dependency.**
+brings the runtime as a dependency. In an Xmip process, .NET is invited unless
+excluded and any other runtime only when configuration invites it (amendment
+2026-10-05).**
 
 → [A Module may bring a versioned runtime, in full](ADR-0039-a-module-may-bring-a-versioned-runtime.md)
 
@@ -426,8 +428,8 @@ named: a Receive or Send Location that refers to a contract with a schema,
 pattern, layout, rules or message type bound has every Stream validated against
 it, and each departure is reported with where it happened and what refused it.
 Versions of a contract language live together in that technology's repository.
-A contract may be authored in any of the estate's declared languages; there is
-no JavaScript.**
+A contract is authored in Rust or .NET; no other runtime is hosted in an Xmip
+process unless configuration invites it (amendment 2026-10-05).**
 
 → [A contract holds well-formedness always and conformance when named, in full](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)
 
@@ -686,6 +688,17 @@ cannot rot. The hand-drawn tree in `repository-model.md` section 7 stays: it
 says where modules mount, which is a different question.**
 
 → [The estate map is generated, in full](ADR-0060-the-estate-map-is-generated.md)
+
+### How one part of Xmip reaches another
+
+**Every dependency between parts of Xmip goes through a trait in Rust or an
+interface in .NET, and the implementation is handed to the part that uses
+it — never constructed, looked up by name or found by path inside it. A part
+depends on a capability's trait, not on the technologies that implement it,
+and a provider's implementation enters through the same trait as Xmip's
+own.**
+
+→ [Every dependency is a trait, handed in, in full](ADR-0068-every-dependency-is-a-trait-handed-in.md)
 
 ---
 
@@ -1012,6 +1025,7 @@ You have a word. This gives you the decision that governs it.
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| dependency injection | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | designer | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Development node | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | directory of many usages | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
@@ -1043,6 +1057,7 @@ You have a word. This gives you the decision that governs it.
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Identity technology | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | installing offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
+| interface | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
@@ -1096,7 +1111,7 @@ You have a word. This gives you the decision that governs it.
 | process declaration | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | promoted property | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | Promotion, promoted properties | [Runtime flow](ADR-0003-runtime-flow.md) |
-| provider | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
+| provider | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md), [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | Provider before purpose | [Submodule composition](ADR-0016-submodule-composition.md) |
 | Provisioning, usage | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
 | Publication chain, depth, ceiling | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
@@ -1154,6 +1169,7 @@ You have a word. This gives you the decision that governs it.
 | the vendor crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the whole suite | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| Trait | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
@@ -1257,3 +1273,4 @@ is nowhere else.
 | [0065](ADR-0065-events-are-subscribed-from-any-language.md) | Events are subscribed from any language | |
 | [0066](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) | Routes are configured; transforms and processes are compiled | |
 | [0067](ADR-0067-a-node-has-one-address.md) | A node has one address | |
+| [0068](ADR-0068-every-dependency-is-a-trait-handed-in.md) | Every dependency is a trait, handed in | |

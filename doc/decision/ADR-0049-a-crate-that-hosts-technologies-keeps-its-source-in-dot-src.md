@@ -101,7 +101,7 @@ Cargo's own `tests`, `benches` and `examples`:
 Each moves to `.src` with the same `[lib] path` — or `[[bin]] path` for
 `xmip-lsp` — as clause 1. A Technology repository, or any crate whose
 directory is its source and Cargo's conventions and nothing else, keeps `src`
-as before: `contract/c` beside its `tests` is one usage.
+as before: `contract/rust` is one usage.
 
 The eleven Rust hosts of clause 2 moved on 2026-09-11 after the batch landed.
 `module/operation/gui` moves as soon as the editor holding its projects open

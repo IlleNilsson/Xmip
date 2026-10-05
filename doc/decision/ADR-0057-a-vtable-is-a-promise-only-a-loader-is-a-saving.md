@@ -539,3 +539,12 @@ The owner, 2026-09-28: *No code should be duplicated.*
 a rule of its own, which disagrees with `validate_module_abi` about a core
 module that names a standard; it is the owner's to rule which reading holds
 before the probe calls the one check.
+
+## Amendment, 2026-10-05: one contract module language for the proof
+
+The C contract technology the loader was first proven against is gone, with
+the C++, Go, Java and Python ones and the probe that drove them: no other
+runtime and no unchecked native code is hosted in an Xmip process unless
+configuration invites it (ADR-0018 and ADR-0042, amendments 2026-10-05).
+The loader is proven against `xmip-core-contract-rust` by the runtime's
+`ffi::loaded_contract` tests.

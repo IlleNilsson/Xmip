@@ -1,6 +1,6 @@
 # The Xmip estate
 
-350 repositories are declared and 268 of them are
+333 repositories are declared and 263 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -35,13 +35,13 @@ the estate tree, and are counted nowhere below.
 | Capability | 19 | 19 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 308 | 228 | 80 |
-| **Total** | 350 | 268 | 82 |
+| Technology | 291 | 223 | 68 |
+| **Total** | 333 | 263 | 70 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| reserved | 82 | 0 | 82 |
-| scaffolded | 268 | 268 | 0 |
+| reserved | 70 | 0 | 70 |
+| scaffolded | 263 | 263 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 226038 lines of production
+Where each repository mounts and what it holds: 225604 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -72,7 +72,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 82 of them and they
+nowhere — work not begun, not work unmounted. There are 70 of them and they
 hold no source to count.
 
 ```text
@@ -214,7 +214,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── contract                        1012  Rust 906 · PowerShell 106
+│   │   │   ├── contract                         906
 │   │   │   │   ├── graphql-schema               846
 │   │   │   │   ├── xml-schema                   759
 │   │   │   │   ├── avro                         748
@@ -235,12 +235,7 @@ hold no source to count.
 │   │   │   │   ├── schematron                   239
 │   │   │   │   ├── regex                        207
 │   │   │   │   ├── csv                          140
-│   │   │   │   ├── java                         113
-│   │   │   │   ├── python                       100
 │   │   │   │   ├── rust                          83
-│   │   │   │   ├── go                            57
-│   │   │   │   ├── c                             29
-│   │   │   │   ├── cpp                           29
 │   │   │   │   └── dotnet                        19
 │   │   │   ├── route                            643
 │   │   │   │   ├── metadata                     124
@@ -287,14 +282,13 @@ hold no source to count.
 │   │   │   ├── demote                           108
 │   │   │   ├── send                              88
 │   │   │   ├── process                           42
-│   │   │   │       declared, not built 14
-│   │   │   │       bash  c  command  cpp  dotnet  go  grpc  http  java  lua
-│   │   │   │       powershell  python  rust  wasm
+│   │   │   │       declared, not built 7
+│   │   │   │       bash  command  dotnet  grpc  http  rust  wasm
 │   │   │   ├── assign                            39
 │   │   │   ├── transform                         33
-│   │   │   │       declared, not built 17
-│   │   │   │       c  cpp  dotnet  go  handlebars  java  jolt  jq  jsonata
-│   │   │   │       liquid  mustache  python  rust  tera  wasm  xquery  xslt
+│   │   │   │       declared, not built 12
+│   │   │   │       dotnet  handlebars  jolt  jq  jsonata  liquid  mustache
+│   │   │   │       rust  tera  wasm  xquery  xslt
 │   │   │   ├── prepare                           29
 │   │   │   │       declared, not built 20
 │   │   │   │       base64  bzip2  canonicalize  charset  checksum  chunking
@@ -439,13 +433,13 @@ Things Xmip does.
 | `xmip-core-assign` | scaffolded | `module/core/capability/assign` | — |
 | `xmip-core-authenticate` | scaffolded | `module/core/capability/authenticate` | 18 |
 | `xmip-core-authorize` | scaffolded | `module/core/capability/authorize` | 14 |
-| `xmip-core-contract` | scaffolded | `module/core/capability/contract` | 27 |
+| `xmip-core-contract` | scaffolded | `module/core/capability/contract` | 22 |
 | `xmip-core-demote` | scaffolded | `module/core/capability/demote` | — |
 | `xmip-core-identify` | scaffolded | `module/core/capability/identify` | 19 |
 | `xmip-core-logic` | scaffolded | `module/core/capability/logic` | 4 |
 | `xmip-core-path` | scaffolded | `module/core/capability/path` | 7 |
 | `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 20 |
-| `xmip-core-process` | scaffolded | `module/core/capability/process` | 14 |
+| `xmip-core-process` | scaffolded | `module/core/capability/process` | 7 |
 | `xmip-core-promote` | scaffolded | `module/core/capability/promote` | — |
 | `xmip-core-receive` | scaffolded | `module/core/capability/receive` | — |
 | `xmip-core-resilience` | scaffolded | `module/core/capability/resilience` | 6 |
@@ -453,7 +447,7 @@ Things Xmip does.
 | `xmip-core-route` | scaffolded | `module/core/capability/route` | 7 |
 | `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
-| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 17 |
+| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 12 |
 | `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 86 |
 
 ### `xmip-core-authenticate`, 18 technologies
@@ -471,14 +465,13 @@ All 14 composed in `module/core/capability/authorize`.
 - **scaffolded**, 14 — abac, acl, artifact, cedar, claim, contract, location,
   opa, party, policy, rbac, role, scope, transport
 
-### `xmip-core-contract`, 27 technologies
+### `xmip-core-contract`, 22 technologies
 
-All 27 composed in `module/core/capability/contract`.
+All 22 composed in `module/core/capability/contract`.
 
-- **scaffolded**, 27 — asyncapi, avro, c, cpp, csv, dotnet, edi-edifact,
-  edi-x12, fhir, fixed-width, go, graphql-schema, hl7-v2, java, json-schema,
-  openapi, protobuf, python, regex, rust, schematron, sql, toml, toon, wsdl,
-  xml-schema, yaml
+- **scaffolded**, 22 — asyncapi, avro, csv, dotnet, edi-edifact, edi-x12,
+  fhir, fixed-width, graphql-schema, hl7-v2, json-schema, openapi, protobuf,
+  regex, rust, schematron, sql, toml, toon, wsdl, xml-schema, yaml
 
 ### `xmip-core-identify`, 19 technologies
 
@@ -510,13 +503,12 @@ Declared, and none composed: `module/core/capability/prepare` has no
   decrypt, deflate, encrypt, envelope, framing, gzip, hash, line-ending,
   quoted-printable, sign, tar, verify-signature, zip, zstd
 
-### `xmip-core-process`, 14 technologies
+### `xmip-core-process`, 7 technologies
 
 Declared, and none composed: `module/core/capability/process` has no
 `.gitmodules`.
 
-- **reserved**, 14 — bash, c, command, cpp, dotnet, go, grpc, http, java, lua,
-  powershell, python, rust, wasm
+- **reserved**, 7 — bash, command, dotnet, grpc, http, rust, wasm
 
 ### `xmip-core-resilience`, 6 technologies
 
@@ -547,13 +539,13 @@ the parent does not compose.
 - **reserved**, 5 — aws-kms*, azure-key-vault*, keyring*, pkcs11*, vault*
 - **scaffolded**, 3 — dpapi, file, keychain
 
-### `xmip-core-transform`, 17 technologies
+### `xmip-core-transform`, 12 technologies
 
 Declared, and none composed: `module/core/capability/transform` has no
 `.gitmodules`.
 
-- **reserved**, 17 — c, cpp, dotnet, go, handlebars, java, jolt, jq, jsonata,
-  liquid, mustache, python, rust, tera, wasm, xquery, xslt
+- **reserved**, 12 — dotnet, handlebars, jolt, jq, jsonata, liquid, mustache,
+  rust, tera, wasm, xquery, xslt
 
 ### `xmip-core-transport`, 86 technologies
 

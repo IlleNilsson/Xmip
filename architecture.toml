@@ -646,12 +646,6 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
     specification = "Apache Avro 1.11 schema, binary encoding and object container file"
-    [xmip.core.contract.c]
-    maturity = "scaffolded"
-    primaryLanguage = "c"
-    [xmip.core.contract.cpp]
-    maturity = "scaffolded"
-    primaryLanguage = "cpp"
     [xmip.core.contract.csv]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
@@ -665,16 +659,10 @@ dependency = []
     [xmip.core.contract.fixed-width]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
-    [xmip.core.contract.go]
-    maturity = "scaffolded"
-    primaryLanguage = "go"
     [xmip.core.contract.graphql-schema]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
     specification = "GraphQL specification October 2021: the document grammar, held at the root to a schema"
-    [xmip.core.contract.java]
-    maturity = "scaffolded"
-    primaryLanguage = "java"
     [xmip.core.contract.json-schema]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
@@ -686,9 +674,6 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core-library-codec", "xmip-core"]
     specification = "Protocol Buffers wire format and the proto3 language, imports not followed"
-    [xmip.core.contract.python]
-    maturity = "scaffolded"
-    primaryLanguage = "python"
     [xmip.core.contract.regex]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -836,17 +821,9 @@ dependency = []
   repositoryRole = "common-capability"
   maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-contract", "xmip-core-message", "xmip-core-stream"]
-    [xmip.core.transform.c]
-    maturity = "reserved"
-    [xmip.core.transform.cpp]
-    maturity = "reserved"
     [xmip.core.transform.dotnet]
     maturity = "reserved"
-    [xmip.core.transform.go]
-    maturity = "reserved"
     [xmip.core.transform.handlebars]
-    maturity = "reserved"
-    [xmip.core.transform.java]
     maturity = "reserved"
     [xmip.core.transform.jolt]
     maturity = "reserved"
@@ -857,8 +834,6 @@ dependency = []
     [xmip.core.transform.liquid]
     maturity = "reserved"
     [xmip.core.transform.mustache]
-    maturity = "reserved"
-    [xmip.core.transform.python]
     maturity = "reserved"
     [xmip.core.transform.rust]
     maturity = "reserved"
@@ -1109,27 +1084,13 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-message"]
     [xmip.core.process.bash]
     maturity = "reserved"
-    [xmip.core.process.c]
-    maturity = "reserved"
     [xmip.core.process.command]
     maturity = "reserved"
-    [xmip.core.process.cpp]
-    maturity = "reserved"
     [xmip.core.process.dotnet]
-    maturity = "reserved"
-    [xmip.core.process.go]
     maturity = "reserved"
     [xmip.core.process.grpc]
     maturity = "reserved"
     [xmip.core.process.http]
-    maturity = "reserved"
-    [xmip.core.process.java]
-    maturity = "reserved"
-    [xmip.core.process.lua]
-    maturity = "reserved"
-    [xmip.core.process.powershell]
-    maturity = "reserved"
-    [xmip.core.process.python]
     maturity = "reserved"
     [xmip.core.process.rust]
     maturity = "reserved"

@@ -55,6 +55,13 @@ technology.** The C ABI in section 10 is what makes this list possible; a
 language that cannot produce or call a stable C entry point cannot host a
 Module.
 
+Where a Module runs is ADR-0018's (amendment 2026-10-05): Rust runs on
+threads within the Xmip Host Process; .NET is invited unless excluded; any
+other runtime is never loaded into an Xmip process unless configuration
+explicitly invites it, and otherwise runs in a process of its own beside it.
+The estate's contract technologies are accordingly Rust and .NET (ADR-0042,
+amendment 2026-10-05).
+
 ## 2. What the runtime owns
 
 The minimum semantics every Xmip deployment needs, regardless of profile.

@@ -76,21 +76,15 @@ function Test-XmipChangeTree {
                 continue
             }
 
-            # A module is verifiable if it has a Cargo.toml, a project file or
-            # a verify.ps1 — the last for a repository in a language the tool
-            # does not know (ADR-0042 decision 3), whose exit code is the
-            # verdict.
+            # A module is verifiable if it has a Cargo.toml or a project file.
             [string] $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
             [string] $manifest = Join-Path -Path $modulePath -ChildPath 'Cargo.toml'
-            [string] $selfVerify = Join-Path -Path $modulePath -ChildPath 'verify.ps1'
 
             [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
-                (Test-Path -LiteralPath $selfVerify) -or
                 @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
 
             if (-not $All -and -not $verifiable) {
-                [string] $why =
-                    "SKIPPED. $module has no Cargo.toml, no project and no verify.ps1 to verify."
+                [string] $why = "SKIPPED. $module has no Cargo.toml and no project to verify."
                 Write-Host $why -ForegroundColor DarkGray
                 $skipped.Add($module)
 

@@ -4,7 +4,9 @@
 - Date: 2026-09-07
 - Related: ADR-0010 (contract and transport repository boundaries), ADR-0016
   (submodule composition, amended 2026-09-07), ADR-0011 (naming), ADR-0028 (the
-  Playground), doc/development/creating-transports-contracts-and-processes.md
+  Playground), doc/development/creating-transports-contracts-and-processes.md,
+  ADR-0018 (amendment 2026-10-05: no other runtime in an Xmip process unless
+  invited)
 
 ## In brief
 
@@ -24,8 +26,8 @@ named: a Receive or Send Location that refers to a contract with a schema,
 pattern, layout, rules or message type bound has every Stream validated against
 it, and each departure is reported with where it happened and what refused it.
 Versions of a contract language live together in that technology's repository.
-A contract may be authored in any of the estate's declared languages; there is
-no JavaScript.**
+A contract is authored in Rust or .NET; no other runtime is hosted in an Xmip
+process unless configuration invites it (amendment 2026-10-05).**
 
 ## Context
 
@@ -80,12 +82,13 @@ in `-json-schema`, every EDIFACT directory in `-edi-edifact`. A version is not a
 repository. The owner corrected the assistant's proposal of a repository per
 version on 2026-09-07.
 
-### 3. A contract in any declared language, and no JavaScript
+### 3. A contract in Rust or .NET
 
-The language entries under `xmip.core.contract` — `c`, `cpp`, `dotnet`, `go`,
-`java`, `python`, `rust` — stand. Each is the way to author a contract as a
-module in that language over the ABI (ADR-0012), the counterpart of the format
-technologies. JavaScript is absent by decision, not omission.
+The language entries under `xmip.core.contract` are `dotnet` and `rust`. Each
+is the way to author a contract as a module in that language over the ABI
+(ADR-0012), the counterpart of the format technologies. JavaScript is absent
+by decision, not omission; C, C++, Go, Java and Python were removed by the
+amendment of 2026-10-05.
 
 ## Consequences
 
@@ -105,7 +108,7 @@ technologies. JavaScript is absent by decision, not omission.
   message type today and its directories' segment tables are the next layer in
   the same repository.
 - Still declared and unbuilt: `edi-x12`, `hl7-v2`, `fhir`, `wsdl`, `openapi`,
-  `asyncapi`, `avro`, `protobuf`, `graphql-schema`, `sql`, and the seven
+  `asyncapi`, `avro`, `protobuf`, `graphql-schema`, `sql`, and the two
   language entries. The owner's next set, stated 2026-09-07: the medical
   contracts over MLLP and HTTPS, then the industrial contracts and protocols.
 
@@ -119,3 +122,35 @@ repository for all xml-schema versions and so on*; *contracts can be formed by
 other languages than dotnet, you have the list, Python, Java and what not, just
 not JavaScript*. The two-claim wording, the bind-time refusal and the
 consequences are the assistant's drafting of them.
+
+## Amendment, 2026-10-05: a contract in Rust or .NET
+
+The owner, 2026-10-05, ruled on runtimes inside Xmip's own processes
+(ADR-0018, amendment 2026-10-05): *Read it as InProcess with threads is
+default true, any other runtime has to be opt in by configuration*; *I said
+that dotnet runtime was invited unless excluded*; and *I do not want other
+runtimes to interfer with potential perfect Rust code.*
+
+A contract module is loaded into the Xmip Host Process, so decision 3 follows
+that ruling:
+
+- Rust runs on threads within the Xmip Host Process, and .NET is invited
+  unless excluded: `xmip-core-contract-rust` and `xmip-core-contract-dotnet`
+  stay.
+- The C, C++, Go, Java and Python contract technologies hosted a JVM, a Go
+  runtime, a CPython interpreter or unchecked native code inside that
+  process: the JVM through JNI and CPython through a C shim, Go through
+  cgo, C and C++ as native code with no Rust checks. They are gone, with
+  their repositories' mounts under `xmip-core-contract`, their
+  `architecture.toml` entries, the probe that drove them, xgit's `verify.ps1`
+  gate that existed only for them, and the Go toolchain in
+  `prerequisite.toml`.
+- The reserved transform and process entries in C, C++, Go, Java, Lua,
+  PowerShell and Python went with them for the same reason; the .NET ones
+  stay.
+- A program in another language at the perimeter, calling Xmip from outside
+  in its own process, needs no invitation; ADR-0065's Event bindings are
+  such programs and stay.
+
+The owner's 2026-09-07 ruling, *contracts can be formed by other languages
+than dotnet*, is superseded for contracts loaded in process.
