@@ -237,36 +237,47 @@ function Publish-XmipChange {
     Write-Host "Landing $($ordered.Count) module(s), dependencies first:" -ForegroundColor Cyan
     $ordered | ForEach-Object { Write-Host "  $_" }
 
-    # Test and land one module at a time, in order.
+    # The dependency tree is verified whole, then landed whole (the owner,
+    # 2026-10-05: *Do dependecy tree build and stop when a leaf fails*).
     #
-    # Not test-everything-then-land-everything. Dependencies resolve against
-    # `main`, so a module cannot be tested against a sibling that is still only
-    # local — it would resolve the published version and fail for a reason that
-    # is not there. The dependency has to be on origin first, which means
-    # landing happens between tests rather than after all of them.
-    #
-    # The cost is that a failure halfway leaves the earlier modules landed. That
-    # is recoverable — fix and run again — and it is the only order that can
-    # work at all.
+    # Every estate crate is patched to its working tree, so the tree verifies
+    # before anything is pushed, leaves first, and the first module that
+    # fails stops the run with nothing landed. Every build shares the estate's
+    # one build directory, `.ai-interaction/target-windows`, so a dependency
+    # such as RocksDB compiles once, not once per module.
     $landed = [System.Collections.Generic.List[string]]::new()
     $skipped = [System.Collections.Generic.List[string]]::new()
+    $verified = [System.Collections.Generic.List[string]]::new()
+    [bool] $runtimeBuilt = $false
 
-    foreach ($module in $ordered) {
+    [string] $sharedTarget = if ($env:CARGO_TARGET_DIR) {
+        $env:CARGO_TARGET_DIR
+    }
+    else {
+        Join-Path -Path $RepositoryRoot -ChildPath '.ai-interaction/target-windows'
+    }
+    [string] $previousTarget = $env:CARGO_TARGET_DIR
+    $env:CARGO_TARGET_DIR = $sharedTarget
+
+    try {
+        [string] $patch = ''
+
         if (-not $NoVerify) {
-            # A module is verifiable if it has a Cargo.toml or a project file.
-            #
-            # This used to be Cargo.toml alone, which skipped every .NET surface
-            # ADR-0014 defines — cli, powershell and gui — and left them to land
-            # under -All, unverified. Test-XmipModule builds and tests a .NET
-            # module now, so the skip belongs only to a module with neither.
-            $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$module/Cargo.toml"
-            $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
+            $patch = New-XmipLocalPatch -RepositoryRoot $RepositoryRoot
+        }
 
-            # A third way, 2026-09-07: a repository in a language the tool
-            # does not know — C, Go, Java, Python (ADR-0042 decision 3) —
-            # verifies itself through a verify.ps1 at its root, and its exit
-            # code is the verdict. The tool learns one convention rather than
-            # one toolchain per language.
+        foreach ($module in $ordered) {
+            if ($NoVerify) {
+                $verified.Add($module)
+                continue
+            }
+
+            # A module is verifiable if it has a Cargo.toml, a project file or
+            # a verify.ps1 — the last for a repository in a language the tool
+            # does not know (ADR-0042 decision 3), whose exit code is the
+            # verdict.
+            $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
+            $manifest = Join-Path -Path $modulePath -ChildPath 'Cargo.toml'
             $selfVerify = Join-Path -Path $modulePath -ChildPath 'verify.ps1'
 
             [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
@@ -281,65 +292,71 @@ function Publish-XmipChange {
                 continue
             }
 
+            # A .NET module tests against the runtime's library, which
+            # Xmip.Abi copies from the shared build directory: built once,
+            # from the working tree, before the first .NET module verifies.
+            [bool] $dotnet = -not (Test-Path -LiteralPath $manifest) -and
+                @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
+
+            if ($dotnet -and -not $runtimeBuilt) {
+                $runtimeBuilt =
+                    Build-XmipRuntimeLibrary -RepositoryRoot $RepositoryRoot -Patch $patch
+            }
+
             [hashtable] $verify = @{
                 RepositoryRoot = $RepositoryRoot
                 Module         = @($module)
                 All            = $All
+                Patch          = $patch
             }
 
             $failed = @(Test-XmipModule @verify)
 
             if ($failed.Count -gt 0) {
                 Write-Host ''
-                Write-Host "FAILED. Stopping at $module." -ForegroundColor Red
+                [string] $stop = "FAILED. Stopping at $module. Nothing landed this run."
+                Write-Host $stop -ForegroundColor Red
 
-                if ($landed.Count -gt 0) {
-                    Write-Host "  landed before it: $($landed -join ', ')" -ForegroundColor Yellow
-                    Write-Host 'Fix this one and run again; the rest will be skipped as clean.'
-                }
-                else {
-                    Write-Host 'Nothing landed this run.'
+                if ($verified.Count -gt 0) {
+                    [string] $before = "  verified before it: $($verified -join ', ')"
+                    Write-Host $before -ForegroundColor Yellow
                 }
 
-                # Once, either way.
-                #
-                # Stopping the run is right; leaving the estate unpinned is not,
-                # because the pin describes what is on origin and the modules
-                # that landed *are* on origin. And a previous run may have left
-                # gitlinks stale whether or not this one added to them, so this
-                # is not conditional on $landed. Publish-XmipPin no-ops when
-                # there is nothing to pin.
-                #
-                # -Message, because this stages the platform repository too. Its
-                # absence here is what discarded the operator's message on
-                # 2026-08-29: the subject rule was only half the defect, and the
-                # other half was never passing the subject in.
-                Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
+                Write-Host 'Fix this one and run again.'
 
-                # Verified is false here: the run stopped because a module did
-                # not verify. It said true until 2026-09-22, so a stopped run
-                # and a whole one printed the same summary.
-                [string] $stopped = "The landing stopped at $module, which did not verify."
+                # Verified is false: the run stopped because a module did not
+                # verify, and nothing was pushed.
+                [string] $stopped =
+                    "The landing stopped at $module, which did not verify; nothing landed."
                 [hashtable] $stoppedAt = @{
                     Action   = 'Publish-XmipChange'
                     Phase    = 'Failure'
                     Severity = 'Error'
                     Message  = $stopped
-                    Property = @{ Module = $module; Landed = $landed; Subject = $Message }
+                    Property = @{ Module = $module; Verified = $verified; Subject = $Message }
                 }
                 Write-XmipAudit @stoppedAt
                 Write-Error $stopped -ErrorAction Continue
 
                 return [PSCustomObject]@{
                     PSTypeName = 'Xmip.Change'
-                    Landed     = $landed.ToArray()
+                    Landed     = @()
                     Skipped    = $skipped.ToArray()
-                    Platform   = $true
+                    Platform   = $false
                     Verified   = $false
                 }
             }
-        }
 
+            $verified.Add($module)
+        }
+    }
+    finally {
+        $env:CARGO_TARGET_DIR = $previousTarget
+    }
+
+    # The whole tree verified: land it, dependencies first, without building
+    # again.
+    foreach ($module in $verified) {
         $result = @(
             Submit-XmipModule -RepositoryRoot $RepositoryRoot -Module @($module) -Message $Message
         )

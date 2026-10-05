@@ -91,6 +91,36 @@ function Get-XmipBuildableFeature {
 }
 
 
+function Build-XmipRuntimeLibrary {
+    <#
+        .SYNOPSIS
+            Builds the runtime's library from the working tree into the shared
+            build directory, where Xmip.Abi copies it for every .NET module.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [string] $Patch
+    )
+
+    [string] $runtime = Join-Path -Path $RepositoryRoot -ChildPath 'module/platform/runtime'
+    Write-Host "== the runtime's library, for the .NET modules" -ForegroundColor Cyan
+    Push-Location -LiteralPath $runtime
+
+    try {
+        & cargo --config $Patch build 2>&1 | ForEach-Object { Write-Host $_ }
+
+        $LASTEXITCODE -eq 0
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 function Test-XmipModule {
     <#
         .SYNOPSIS
@@ -121,8 +151,18 @@ function Test-XmipModule {
         [string[]] $Module,
 
         [Parameter()]
-        [switch] $All
+        [switch] $All,
+
+        # A cargo configuration from New-XmipLocalPatch: every estate crate
+        # resolved from its working tree, not from origin, so nothing is
+        # re-resolved from GitHub and the tree verifies before any push.
+        [Parameter()]
+        [string] $Patch
     )
+
+    # Every cargo call through the patch when there is one. fmt is the
+    # exception: it reads no dependency and takes no --config.
+    [string[]] $through = if ($Patch) { @('--config', $Patch) } else { @() }
 
     # $name, not $module. PowerShell variable names are case-insensitive, so
     # `foreach ($module in $Module)` iterates a parameter using the parameter's
@@ -197,8 +237,13 @@ function Test-XmipModule {
             # cargo's output is captured and only written when the module is
             # done. A prompt from git for credentials would appear on the
             # console and never in the log at all.
-            Write-Host '   resolving dependencies...' -ForegroundColor DarkGray
-            & cargo update 2>&1 | Out-Null
+            #
+            # Not under a patch: the working trees are the dependencies then,
+            # and there is nothing on origin to resolve.
+            if (-not $Patch) {
+                Write-Host '   resolving dependencies...' -ForegroundColor DarkGray
+                & cargo update 2>&1 | Out-Null
+            }
 
             Write-Host '   testing...' -ForegroundColor DarkGray
 
@@ -218,7 +263,7 @@ function Test-XmipModule {
             #
             # Write-Host inside ForEach-Object gives both: each line appears
             # when cargo emits it, and the block returns nothing.
-            & cargo test 2>&1 | ForEach-Object { Write-Host $_ }
+            & cargo @through test 2>&1 | ForEach-Object { Write-Host $_ }
             $passed = $LASTEXITCODE -eq 0
 
             # rust-style.md says CI runs cargo fmt --check. It does, in a
@@ -253,7 +298,8 @@ function Test-XmipModule {
             if ($passed) {
                 Write-Host '   checking lints...' -ForegroundColor DarkGray
 
-                & cargo clippy --all-targets -- -D warnings 2>&1 | ForEach-Object { Write-Host $_ }
+                & cargo @through clippy --all-targets -- -D warnings 2>&1 |
+                    ForEach-Object { Write-Host $_ }
                 $passed = $LASTEXITCODE -eq 0
 
                 if (-not $passed) {
@@ -281,7 +327,7 @@ function Test-XmipModule {
 
                     Write-Host $note -ForegroundColor DarkGray
 
-                    & cargo build --features ($features -join ',') 2>&1 |
+                    & cargo @through build --features ($features -join ',') 2>&1 |
                         ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
                 }

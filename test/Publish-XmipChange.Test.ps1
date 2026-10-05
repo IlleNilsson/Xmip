@@ -44,7 +44,7 @@ BeforeAll {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
-            'Publish-XmipPin.ps1'
+            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -677,4 +677,58 @@ Describe 'Test-XmipSelfVerifyingModule' {
 
 AfterAll {
     $env:XMIP_AUDIT_DIRECTORY = $script:AuditBefore
+}
+
+Describe 'The dependency tree verifies whole before anything lands' {
+    BeforeAll {
+        [string] $script:Source = Get-XmipLandingSource
+
+        # An estate of two crates, one with a copy of its manifest in build
+        # output that must not be patched in.
+        $script:Estate = Join-Path -Path $TestDrive -ChildPath 'estate'
+        foreach ($leaf in 'a', 'b') {
+            $crate = Join-Path -Path $script:Estate -ChildPath "module/foundation/$leaf"
+            $null = New-Item -ItemType Directory -Path $crate -Force
+            Set-Content -LiteralPath (Join-Path $crate 'Cargo.toml') -Value @(
+                '[package]', "name = `"xmip-core-$leaf`"", 'version = "0.1.0"'
+            )
+        }
+
+        $copy = Join-Path -Path $script:Estate -ChildPath 'module/foundation/a/target/package/x'
+        $null = New-Item -ItemType Directory -Path $copy -Force
+        Set-Content -LiteralPath (Join-Path $copy 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip-core-copy"', 'version = "0.1.0"'
+        )
+    }
+
+    It 'patches every estate crate to its working tree and nothing in build output' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
+            param($Root)
+
+            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
+            [string] $text = Get-Content -LiteralPath $patch -Raw
+
+            $text | Should -Match '\[patch\."https://github\.com/IlleNilsson/xmip-core-a"\]'
+            $text | Should -Match 'xmip-core-b = \{ path = ".+/module/foundation/b" \}'
+            $text | Should -Not -Match 'xmip-core-copy'
+        }
+    }
+
+    It 'lands only after the verification loop, so a failure pushes nothing' {
+        # 2026-10-05, the owner: *Do dependecy tree build and stop when a leaf
+        # fails*. Before, each module was pushed as soon as it verified, and a
+        # failure halfway left the estate half landed.
+        [int] $verify = $script:Source.IndexOf('Test-XmipModule @verify')
+        [int] $land = $script:Source.IndexOf('Submit-XmipModule -RepositoryRoot')
+
+        $verify | Should -BeGreaterThan 0
+        $land | Should -BeGreaterThan $verify
+        $script:Source | Should -Match 'Nothing landed this run'
+        ([regex]::Matches($script:Source, 'Submit-XmipModule -RepositoryRoot')).Count | Should -Be 1
+    }
+
+    It 'builds in the estate''s one shared build directory' {
+        $script:Source | Should -Match "\.ai-interaction/target-windows"
+        $script:Source | Should -Match '\$env:CARGO_TARGET_DIR = \$sharedTarget'
+    }
 }

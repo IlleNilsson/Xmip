@@ -152,8 +152,11 @@ Import-Module ./Xmip/Xmip.psd1 -Force
 xgit -m 'short precise message'    # alias for Publish-XmipChange
 ```
 
-Dependencies track `branch = "main"` (ADR-0005), so a module must be pushed
-before anything depending on it can be verified — the tool handles the order.
+Dependencies track `branch = "main"` (ADR-0005). The tool verifies the whole
+dependency tree first — every estate crate patched to its working tree, leaves
+first, in the one shared build directory — and stops at the first module that
+fails with nothing pushed; only when the tree is green does it land each
+module, dependencies first, and the root last.
 Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial, and
 land when `Get-XmipTestStatus` says OK; the suite is around two hundred tests
 and is the estate's memory of every past defect. It runs detached, so the
