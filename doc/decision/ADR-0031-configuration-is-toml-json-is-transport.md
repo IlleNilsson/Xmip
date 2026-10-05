@@ -268,3 +268,170 @@ When deployed the sections regarding a node will be sliced to that node.*
 
 This answers open problem 14 (the node configuration format): one cluster
 file, not three, and the node's section wins.
+
+## Amendment, 2026-10-05: Prepare, Contract, Promote, Transform and Demote on the Port and the Location
+
+**Provenance.** The owner, 2026-10-05, asked how a Receive and Send
+artifact configures Prepare, Promote, Demote and Transformation: *Look at
+BizTalk how it is done, Prepare would be PipelineComponent, Transform would
+be Map, Promote, Demote are the same terminology.* Weighing his design
+against BizTalk's: *I have a nagging feeling that one want to be able to
+perform all these steps on the Port & Location. Lets say you have two
+Receive Locations in one Receive Port. The format on one Receive Location
+may not be the same as for the other. The format shall end up as the same
+in the Receive Port. The reveser goes for Send*; on Prepare, *There could be
+cases where one want to prepeare on bot levles*; on Contracts, *I think that
+need to go on boh places for both Receive & Send. Then the designer,
+developer, end user has a posibility to place functionallity where it
+belongs for the current case*; and on validation: *Contracts does not
+decide wheter validation should be done or not. It is the configuration of
+the Receive Port, Receive Location, Send Port and Send Location*; *there
+might or might not be a contract configured. During development validation
+by a contracts is default on for Receive. For Send there might or might not
+be a contract configured. During development validation by a contracts is
+optional*; asked whether that meant the designer's default or the
+runtime's: *Yes on all.* The order of the steps within a level and the key
+names are the assistant's drafting.
+
+- **Each of the four artifacts — Receive Port, Receive Location, Send Port,
+  Send Location — may configure Prepare, a Contract, and Transform; the
+  receive pair Promote, the send pair Demote.** Every one is optional. The
+  Location speaks the format of the world outside — the Party's, the
+  endpoint's — and the Port speaks the one format of its purpose: two
+  Receive Locations of different formats meet in one format at their
+  Receive Port, and a Send Port's one format leaves through Send Locations
+  that each speak their endpoint's. BizTalk has a Location's pipeline and a
+  Port's maps; Xmip has every step at both levels.
+- **Receive runs the Location, then the Port; send runs the Port, then the
+  Location.** Prepare works on the Stream, never on a Message
+  (`runtime-model.md` section 8), so the Port's Prepare is the inner layer:
+  on receive it runs after the Location's and before Message creation, on
+  send after the Location serializes and demotes and before the Location's.
+  ```text
+  Receive  Location prepare -> Port prepare -> Message creation, default promotion
+           -> Location: Contract, validate, promote, transform
+           -> Port:     Contract, validate, promote, transform -> Publication
+  Send     Port:     Contract, validate, transform, demote
+           -> Location: transform, Contract, validate, serialize, demote
+           -> Port prepare -> Location prepare
+  ```
+- **Validation is the artifact's choice, never the Contract's.** A Contract
+  is structure the artifact may also use only to deserialize and promote.
+  Where a Receive Port or Location names a Contract, it validates unless it
+  says `validate = false`; where a Send Port or Location names one,
+  validation is optional and off unless it says `validate = true`. The
+  designer writes the same: `validate = true` when a Contract is added on
+  the receive side, the choice left open on the send side.
+- **A Transform is compiled at design time** (ADR-0066 clause 1); the
+  artifact names it. **Promote and Demote** use Content Selectors
+  (`module/core/capability/promote/doc/content-selector.md`); the Port
+  promotes and demotes in its format, the Location in its own.
+- **Startup checks the chain**: what a Location hands its Receive Port, a
+  Transform's output and what a Send Port hands its Send Location must be
+  what the next Contract names, where both are named; a mismatch is refused
+  at start, never at the first Message. A Transform, a validation or a
+  promotion that needs the content materialized is refused on a Receive
+  Location at `transfer` or `light` depth (`runtime-model.md` section 7).
+
+```toml
+[[receive_ports]]
+name     = "Orders"
+contract = "xmip-core-contract-json-schema"     # the Port's one format
+contract_settings = { reference = "schemas/order.json" }
+promote  = { OrderNumber = "order.number" }     # Content Selectors
+
+[[receive_locations]]
+name         = "OrdersEdi"
+receive_port = "Orders"
+contract     = "xmip-core-contract-edifact"     # the Party's format
+validate     = false                            # receive: true unless said
+transform    = "EdifactOrderToOrder"            # compiled at design time
+
+[[receive_locations.prepare]]                   # in order
+step     = "xmip-core-prepare-decompress"
+settings = { format = "gzip" }
+
+[[send_ports]]
+name      = "ErpOut"
+transform = "OrderToErpOrder"
+demote    = { OrderNumber = "order.number" }
+
+[[send_locations]]
+name     = "ErpPrimary"
+contract = "xmip-core-contract-xml-schema"
+validate = true                                 # send: off unless said
+demote   = { OrderNumber = "headers['X-Order']" }
+```
+
+This replaces `runtime-model.md`'s single receive gate and single send
+validation with one per level, and answers which artifact configures a
+Preparation Step, a promotion, a demotion and a Transformation. Not built.
+
+## Amendment, 2026-10-05: only the cluster's `xmip.toml` is edited
+
+**Provenance.** The owner, 2026-10-05: *node TOML files shall not be
+edited, only cluster TOML files, the files are sliced / node and
+distributed. […] Of course the node TOML files can be changed, but that
+breaks configuration rules.*
+
+- **The cluster's `xmip.toml` is the one configuration anyone edits** — by
+  hand, in the VS Code designer or in any tool. A node's `xmip-node.toml`
+  is the slice desired state writes from it (the amendment of 2026-10-03,
+  `deployment-model.md` section 8), never edited.
+- **A node's file changed by hand breaks this rule**: the next deployment
+  writes the slice over it, and until then the node runs what its cluster's
+  file does not say. No Xmip tool offers to edit a node's file.
+
+- **Save slices and ships.** The owner, the same day: *When editing is
+  done, the cluster TOML file is sliced into node TOML files and shipped to
+  each node on save.* Saving the cluster's file slices it through the one
+  slicing, `configure::slice`, and puts each node's slice on that node; a
+  changed slice takes effect as the amendment of 2026-10-01 says, when what
+  reads it starts again.
+
+The Operation Desktop's Configure page edited a node's own file, against
+this rule. The owner: *Change it, we edit the cluster TOML file, drilling
+down to nodes and artifacts from the overview of the cluster.*
+
+Built 2026-10-05, the Operation Desktop: its Configure page opens the
+cluster's file `xmip.gui.toml`'s `ClusterConfiguration` names, on an
+overview of the cluster, and drills to a node, to artifacts by kind and to
+an entry, every view and edit through `xmip_operate.h` section 10; a
+node's own document is shown with the slicing's refusal and never edited.
+Save writes the file, validates it, slices it per node through the new
+`xmip_cluster_slices_v1` and writes each slice to
+`<SliceDirectory>/<node>/xmip-node.toml`, each step audited per node; the
+desktop's own node (`Node`) is shipped and started from its slice, every
+other node is *sliced, not shipped* until a node's slice can be placed
+remotely (open problem 31). `NodeConfiguration`, `ConfigStore` and the
+node-file editor are deleted.
+
+## Amendment, 2026-10-05: a save is previewed, versioned, confirmed, watched and restarts only what changed
+
+**Provenance.** The owner, 2026-10-05, on the cluster's file against a
+BizTalk Group's management database: *Compare it to BizTalk, BizTalk Group
+but better.* The assistant proposed five points and asked them one at a
+time; the owner answered each *Yes*. The wording is the assistant's.
+
+1. **Preview before save.** Before a save the editor shows, per node, what
+   its slice changes and which threads or Host Services must start again
+   for it to take effect.
+2. **Every save is a version.** A save is numbered and audited with who
+   saved it; each node keeps its previous slice, and a node can be rolled
+   back to it.
+3. **A node confirms its slice.** A node reads and validates a slice
+   shipped to it before it uses it and answers accepted or refused, with
+   the reason; the editor shows the answer per node. Waits on open problem
+   31, placing a slice on a remote node.
+4. **Drift is seen.** Each node reports a fingerprint of the slice it runs;
+   the Monitor flags a node whose slice is not what the cluster's file
+   slices to it — one edited by hand among them.
+5. **Only what changed starts again.** A changed slice restarts the threads
+   and Host Services whose configuration changed, never the whole node; the
+   rest runs on untouched (narrowing the amendment of 2026-10-01: *a changed
+   TOML takes effect when the thread/Host Service using it restarts*).
+
+BizTalk applies a change from its Administration Console without preview,
+keeps no history, tells no one whether a host instance took it, cannot
+drift because every host reads one database — and stops when that database
+does — and restarts whole host instances. Not built.

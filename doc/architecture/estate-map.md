@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 219372 lines of production
+Where each repository mounts and what it holds: 223298 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -80,22 +80,22 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       4218
-│   │   │   │   ├── amqp                        2467
+│   │   │   ├── transport                       4237
+│   │   │   │   ├── amqp                        2556
 │   │   │   │   ├── opc-ua                      2410
 │   │   │   │   ├── nfs                         1983
 │   │   │   │   ├── smb                         1941
 │   │   │   │   ├── mssql                       1866
 │   │   │   │   ├── mysql                       1765
-│   │   │   │   ├── kafka                       1661
-│   │   │   │   ├── ibm-mq                      1644
-│   │   │   │   ├── http                        1533
+│   │   │   │   ├── ibm-mq                      1742
+│   │   │   │   ├── kafka                       1711
+│   │   │   │   ├── http                        1630
 │   │   │   │   ├── sftp                        1452
 │   │   │   │   ├── snmp                        1421
 │   │   │   │   ├── oracle                      1394
 │   │   │   │   ├── postgresql                  1335
-│   │   │   │   ├── as4                         1230
-│   │   │   │   ├── nats-jetstream              1210
+│   │   │   │   ├── nats-jetstream              1333
+│   │   │   │   ├── as4                         1310
 │   │   │   │   ├── canopen                     1135
 │   │   │   │   ├── s7comm                      1128
 │   │   │   │   ├── dns                         1112
@@ -107,31 +107,31 @@ hold no source to count.
 │   │   │   │   ├── imap                         981
 │   │   │   │   ├── ethercat                     964
 │   │   │   │   ├── dicom                        948
+│   │   │   │   ├── as2                          940
 │   │   │   │   ├── m-bus                        919
 │   │   │   │   ├── aws-sns                      905
 │   │   │   │   ├── hart                         901
+│   │   │   │   ├── nats                         898
 │   │   │   │   ├── uds                          892
 │   │   │   │   ├── j1939                        885
 │   │   │   │   ├── bluetooth                    878
 │   │   │   │   ├── lorawan                      873
-│   │   │   │   ├── as2                          861
+│   │   │   │   ├── activemq                     865
 │   │   │   │   ├── aws-kinesis                  860
 │   │   │   │   ├── ethernet-ip                  855
 │   │   │   │   ├── pop3                         850
+│   │   │   │   ├── azure-service-bus            840
 │   │   │   │   ├── azure-event-grid             831
 │   │   │   │   ├── profinet                     824
 │   │   │   │   ├── redis-streams                820
 │   │   │   │   ├── google-pub-sub               818
 │   │   │   │   ├── wireless-hart                814
 │   │   │   │   ├── dhcp                         806
-│   │   │   │   ├── activemq                     802
-│   │   │   │   ├── nats                         788
 │   │   │   │   ├── zigbee                       783
-│   │   │   │   ├── azure-service-bus            782
 │   │   │   │   ├── thread                       780
 │   │   │   │   ├── aws-sqs                      767
+│   │   │   │   ├── peppol                       749
 │   │   │   │   ├── knx                          732
-│   │   │   │   ├── peppol                       697
 │   │   │   │   ├── iso-tp                       695
 │   │   │   │   ├── s3                           695
 │   │   │   │   ├── azure-blob                   681
@@ -142,28 +142,28 @@ hold no source to count.
 │   │   │   │   ├── dds                          655
 │   │   │   │   ├── iec-60870-5-104              651
 │   │   │   │   ├── smtp                         638
+│   │   │   │   ├── msmq                         635
 │   │   │   │   ├── syslog                       623
 │   │   │   │   ├── obd-ii                       608
 │   │   │   │   ├── dnp3                         602
 │   │   │   │   ├── ssdp                         601
-│   │   │   │   ├── msmq                         581
 │   │   │   │   ├── coap                         564
 │   │   │   │   ├── file                         538
 │   │   │   │   ├── modbus                       528
+│   │   │   │   ├── redpanda                     517
 │   │   │   │   ├── wireless-m-bus               517
 │   │   │   │   ├── azure-event-hubs             515
 │   │   │   │   ├── aws                          513
 │   │   │   │   ├── serial                       497
 │   │   │   │   ├── ethernet                     482
 │   │   │   │   ├── named-pipe                   476
-│   │   │   │   ├── redpanda                     468
 │   │   │   │   ├── can-bus                      459
 │   │   │   │   ├── sqlite                       456
 │   │   │   │   ├── azure                        449
 │   │   │   │   ├── websocket                    442
 │   │   │   │   ├── bacnet                       441
+│   │   │   │   ├── rabbitmq                     353
 │   │   │   │   ├── unix-socket                  308
-│   │   │   │   ├── rabbitmq                     303
 │   │   │   │   ├── mllp                         287
 │   │   │   │   ├── udp                          201
 │   │   │   │   └── tcp                          178
@@ -313,13 +313,13 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             5547
-│   │       ├── gui                             4160
+│   │       ├── cli                             5853
+│   │       ├── gui                             4482
 │   │       │   └── vscode                      1417
-│   │       ├── observe                         3560
+│   │       ├── observe                         3584
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2392  C# 2392 · PowerShell 0
+│   │       ├── powershell                      2491  C# 2491 · PowerShell 0
 │   │       ├── audit                           1800
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                21633  C# 19657 · Rust 1751 · PowerShell 225
+│   │   ├── abi                                22783  C# 20771 · Rust 1787 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -362,19 +362,19 @@ hold no source to count.
 │   │   │   └── binary                            38
 │   │   ├── node                                 831
 │   │   ├── context                              750
-│   │   ├── journey                              527
+│   │   ├── journey                              569
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            14836
-│       ├── persist                             4896
+│       ├── runtime                            15705
+│       ├── persist                             4933
 │       │   ├── sqlite                           140
 │       │   └── rocksdb                          136
 │       └── configure                           3374
 └── test/
     └── core/
-        └── playground                          9976
+        └── playground                          9982
 ```
 
 ---

@@ -1806,3 +1806,24 @@ port over the test cluster's names: an Observer host refuses every act, an
 Operator host takes each as the certificate's subject and never as the name
 the caller gave, on loopback without a certificate the act is the host's
 own user, and from elsewhere without one nothing is taken.
+
+## Amendment, 2026-10-05: events between processes and machines over gRPC
+
+The owner, 2026-10-05, restating the amendment of 2026-09-15 for every
+process, not only the surfaces: *Of course polling is the only way in some
+circumstances, put not preffered. Events is the way to go, even between
+processes using gRPC over net pipe, even between machines using gRPC over
+TCP.*
+
+- Between two Xmip processes on one machine, a change is told over gRPC on
+  a named pipe; between machines, over gRPC on TCP. Polling stays only where
+  the far end offers nothing else.
+- The two-second fallback in `NativeOperator` that the amendment of
+  2026-09-15 kept for a rolling upgrade is compatibility, deleted
+  (delete-don't-deprecate before GA).
+
+- **SignalR is between a server and a GUI client.** The owner, asked how
+  this meets the 2026-09-15 amendment's SignalR: *SignalR is between a
+  server and a client using a GUI.* So the CLI and the PowerShell module,
+  which that amendment had follow a web host over SignalR, follow over
+  gRPC.

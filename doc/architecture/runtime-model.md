@@ -470,8 +470,15 @@ the one cut short again — at least once, never lost; a send that fails is
 written Failed with why while its sender was acknowledged all the same; a
 retry's backoff holds no thread, and a stop gives its claim back; and a
 Sequential Send Port keeps its order, blocking behind a failure or setting
-it aside as `on_failure` says. The Xmip Process step waits for a runtime
-that runs Processes.
+it aside as `on_failure` says. And, built 2026-10-04 (`tests/ledger/
+send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
+Subscription opens one Journey per Port, each in its Port's queue and sent
+or failed alone; every send carries its Journey's identifier as its key,
+the same on every try; a retry's count is kept in the Ledger and survives a
+restart; an Operator's Retry sends a failed Journey again — in its order
+where a Sequential Port blocks behind it — and Dismiss ends it Dismissed and
+lets its sequence go, each audited. The Xmip Process step waits for a
+runtime that runs Processes.
 
 ## 4. Actors and Communication Domains
 
@@ -618,17 +625,22 @@ thread carries a Stream through the whole receive call:
 transport identification, authentication, authorization
                          refused: nothing is kept
 -> the Stream into the Ledger, in chunks, through Xmip Storage
--> Preparation Steps     a prepared Stream is a new Stream
+-> Preparation Steps     the Location's, then the Port's;
+                         a prepared Stream is a new Stream
 -> Message creation and default promotion
                          configuration may inspect Stream and Context
 -> optional message identification, authentication, authorization
--> Contract implication
--> optional deserialization
+-> the Location's        Contract implication, optional deserialization,
+                         Validation, promotion, Transformation
+-> the Port's            the same, in the Port's one format
                          processing depth decides how far (section 7)
--> Validation
 -> Publication           the Message record in the Ledger, audited
 -> acknowledgement
 ```
+
+Each step at each level is optional and configured on its artifact
+(section 20, *Prepare, Contract, Promote, Transform and Demote at both
+levels*).
 
 **The sender is acknowledged after the whole receive cycle** (the owner: *On
 arrival each Stream is written to the node's Ledger and then when the Receive
@@ -664,6 +676,12 @@ FTP  Receive Location ─┘
 ```
 
 The Receive Port executes with the context of the originating Receive Location.
+
+**The Location speaks the format of its Party; the Port speaks the one
+format of its purpose.** Two Receive Locations of different formats meet in
+one format at their Receive Port: each Location may prepare, hold to a
+Contract, validate, promote and transform what it receives, and the Port
+may do the same in its own format before Publication (section 20).
 
 ## 7. Interaction and processing depth
 
@@ -705,6 +723,13 @@ Custom Preparation Step
 
 **Preparation Steps contain no Process decision logic and perform no
 Assignment.** That restriction is what keeps them composable.
+
+Preparation Steps are configured on a Location and on its Port, and work on
+the Stream at both: on receive the Location's run first and the Port's
+after, before Message creation; on send the Port's run first, after the
+Location serializes and demotes, and the Location's last. The Port's are
+the inner layer — what every Location's Stream shares — and the Location's
+the outer, what its transport or Party adds.
 
 ## 9. Publication and Routing
 
@@ -889,11 +914,18 @@ audit its actions.
 **A Send Port cannot perform Assignment.** Receive and Send artifacts hold only
 the current Message and cannot make Process decisions or create assigned
 Messages. Assignment belongs to an Xmip Process. Transformation may happen in a
-Receive Port, an Xmip Process or a Send Port.
+Receive Location or Port, an Xmip Process or a Send Port or Location.
 
 **Send Location** — one physical outbound endpoint, owning the concrete
 transport, destination, presented identity, serialization, demotion, optional
 outgoing Contract validation, delivery and optional response transport.
+
+The reverse of receive: **the Send Port speaks the one format of its
+purpose, each Send Location its endpoint's.** The Port may hold to a
+Contract, validate, transform, demote and prepare; the Location may
+transform, hold to a Contract and validate before it serializes, demote and
+prepare. Port first, then Location, the Port's Preparation Steps inside the
+Location's (section 20).
 
 A Send Port succeeds when one of its Send Locations succeeds. Retries apply to
 the active Send Location; failover moves to another per Send Port policy. If
@@ -952,10 +984,11 @@ before it starts. Each pass tries the Port's Send Locations in configured
 order (`send_locations`, or the Location bound under the Port's name),
 `retry` on the active one and `failover = "next"` to the next, and hands on
 in one write: **Completed** and out of its queue; **Failed** with why in
-words, its Message with it — out of its queue, or kept there where a
-Sequential Port's `on_failure = "block"` stops its sequence behind it; or
-**Recovering**, its claim kept to its due time, which is the due time in
-the Ledger, the node keeping when it is due only to start it again.
+words, its Message with it, kept in its queue for an operator — where a
+Sequential Port's `on_failure = "block"` stops its sequence behind it, and
+otherwise passed over; or **Recovering**, its claim kept to its due time,
+which is the due time in the Ledger, the node keeping when it is due only
+to start it again.
 **Recovery** is a scan: as a node starts and every `[tuning] send_scan`
 after, each queue it sends is read oldest first and every Journey no live
 claim holds is claimed (`[tuning] send_lease`) and sent — one a dead node
@@ -967,10 +1000,42 @@ the oldest first. A paused Subscription's resume moves each Journey it
 held to its Send Port's queue in one hand-on, and the send step sends it
 from there. The node's snapshot publishes, at `<node>/send/<Port>`, what
 was sent, what failed — the last Journey that did, and why — and what
-waits for its due time. Still open: one Journey per Send Port of a Send
-Port Group (a Group's Journey is one, sent to each Port), a Journey's
-operator Retry and Dismiss (section 13), and the deduplication key handed to
-an endpoint that deduplicates, which waits for a transport that takes one.
+waits for its due time.
+
+**Built 2026-10-04**, closing what the send step left:
+
+- **One Journey per Send Port of a Send Port Group.** A Subscription to a
+  Group opens a Journey for each Port of the Group, in the Group's order,
+  each led to its Port (the Journey's `send_port`) and queued in its Port's
+  queue, in the Publication's one write; each Port is sent, retried, failed
+  and acted on alone. A paused Subscription holds each, and a Replay from the
+  Dead Message Queue opens them the same way. A Group no Application of the
+  publishing node declares opens one Journey to the Group, which no node
+  sends.
+- **A retry's count is in the Ledger.** The active Send Location and how
+  often it was tried are the Journey's `attempts`, written with every
+  hand-on of a send, so a node restarted, or another taking the Journey up,
+  counts on from them rather than from zero.
+- **The deduplication key reaches the endpoint.** Every send carries the
+  Journey's identifier through the transport contract's `send_keyed`
+  (`xmip-core-transport`); a technology whose protocol has an identifier its
+  far end deduplicates by puts it there, its README says where, and every
+  other sends as before, at least once (section 15). Thirteen carry it:
+  HTTP (`Idempotency-Key`), AMQP and RabbitMQ (`message-id`), ActiveMQ
+  (`_AMQ_DUPL_ID`), IBM MQ (`MsgId`), MSMQ (the SRMP message id), Kafka and
+  Redpanda (the record key), Azure Service Bus (`MessageId`), NATS
+  JetStream (`Nats-Msg-Id`), AS2 (`Message-ID`), AS4 and Peppol
+  (`eb:MessageId`).
+- **Retry and Dismiss** (section 13) are an Operator's acts on a Journey
+  that failed, through the node's orders as Pause and Replay are, audited
+  with who acted and gated by role on every surface (`xmip_operate.h`
+  section 16). Each is one hand-on under a claim: Retry writes the Journey
+  Active, its tries begun anew, and moves it to the end of its Send Port's
+  queue — keeping its place where it blocks a Sequential Port, so its
+  sequence goes on in order from it; Dismiss writes it Dismissed, its
+  history kept, and takes it out of the queue, so a Sequential Port's next
+  of its order key goes. An act is taken by a node that sends the Journey's
+  Port, the one whose `<node>/send/<Port>` showed it failed.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
@@ -1053,6 +1118,11 @@ policy.
 
 **Dismiss** intentionally terminates a Journey without deleting its history,
 Messages, Streams, retention or audit.
+
+Built 2026-10-04 for a Journey that failed at its Send Port (section 10):
+Retry and Dismiss are Operator acts on it, by its identifier, through the
+node's orders, audited and gated by role (`xmip_operate.h` section 16).
+Start, Pause, Continue and Stop on one Journey are not built.
 
 ## 14. Replay
 
@@ -1381,6 +1451,62 @@ default = "..."                   # overridable per Port and per Location
 
 Recorded in ADR-0031, amendment 2026-10-01, the configuration's record.
 
+### Prepare, Contract, Promote, Transform and Demote at both levels
+
+Decided by the owner, 2026-10-05, weighed against BizTalk, whose Pipeline
+Components are Xmip's Preparation Steps and whose Maps are its
+Transformations: *one want to be able to perform all these steps on the
+Port & Location.* Each of the Receive Port, Receive Location, Send Port and
+Send Location may configure Prepare, a Contract and Transform, the receive
+pair Promote and the send pair Demote, every one optional, so a designer
+places each where it belongs for the case at hand. Receive runs the
+Location, then the Port; send the Port, then the Location; Preparation
+Steps work on the Stream at both levels (section 8).
+
+**Validation is the artifact's choice, not the Contract's.** A Contract may
+serve only to deserialize and promote. Where a receive artifact names one,
+it validates unless it says `validate = false`; where a send artifact names
+one, it validates only where it says `validate = true`. The designer writes
+the same defaults.
+
+```toml
+[[receive_ports]]
+name     = "Orders"
+contract = "xmip-core-contract-json-schema"     # the Port's one format
+contract_settings = { reference = "schemas/order.json" }
+promote  = { OrderNumber = "order.number" }     # Content Selectors
+
+[[receive_locations]]
+name         = "OrdersEdi"
+receive_port = "Orders"
+contract     = "xmip-core-contract-edifact"     # the Party's format
+validate     = false                            # receive: true unless said
+transform    = "EdifactOrderToOrder"            # compiled at design time
+
+[[receive_locations.prepare]]                   # in order
+step     = "xmip-core-prepare-decompress"
+settings = { format = "gzip" }
+
+[[send_ports]]
+name      = "ErpOut"
+transform = "OrderToErpOrder"
+demote    = { OrderNumber = "order.number" }
+
+[[send_locations]]
+name     = "ErpPrimary"
+contract = "xmip-core-contract-xml-schema"
+validate = true                                 # send: off unless said
+demote   = { OrderNumber = "headers['X-Order']" }
+```
+
+Startup checks the chain — what a Location hands its Port, a
+Transformation's output, what a Send Port hands its Send Location — against
+the next Contract named, and refuses a mismatch; and refuses a
+Transformation, validation or promotion that needs materialized content on
+a Receive Location at `transfer` or `light` depth. Recorded in ADR-0031,
+amendment 2026-10-05; the key names are the assistant's drafting. Not
+built.
+
 ### Validation gates
 
 The `Validation` step in section 5 is the receive gate. It is not the only
@@ -1514,7 +1640,7 @@ directly and does not deliver to external targets directly** — those are
 Receive and Send concerns.
 
 Assignment belongs to a Process alone. Transformation may happen in a Receive
-Port, a Process or a Send Port. Section 10 states the same rule from the Send
+Location or Port, a Process or a Send Port or Location. Section 10 states the same rule from the Send
 side.
 
 ### Process State belongs to the cluster

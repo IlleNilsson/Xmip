@@ -236,3 +236,16 @@ its Route view. The Receive Port view lists each Application's
 read by configure's `port.rs`). Prepare, Promote, Demote and
 Transformation are shown and say the configuration does not define them
 yet: no key was invented for them.
+
+## Amendment, 2026-10-05: the Operation Desktop is a view of the same file
+
+The owner, 2026-10-05: *Change it, we edit the cluster TOML file, drilling
+down to nodes and artifacts from the overview of the cluster.* The
+Operation Desktop's Configure page is a view of the cluster's `xmip.toml`
+as the VS Code designer is, through the same `xmip_operate.h` section 10,
+bound once in .NET as `RuntimeRules.Design`. Section 10 has a fifth
+export, `xmip_cluster_slices_v1`, the one slicing (`configure::slice`) for
+a surface; `xmip_cluster_views_v1` answers whether the text is a cluster's
+or a node's (`document`). The Operation Web has no editor (the owner: *I do
+not see that need for Operation Web version*). ADR-0031, amendment
+2026-10-05.
