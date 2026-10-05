@@ -44,8 +44,8 @@ The roadmap is architecture-led. Ordering may change when requirements or depend
 - Transport technologies, each shipping its Transport Handler.
 - Message technologies, each shipping its Content Handler.
 - Logic technologies for method-oriented protocols.
-- Approved Extension hosts for .NET, Java, Python, C/C++, Rust and Go.
-- PowerShell and Bash scripting support.
+- Extension hosts for Rust and .NET; another runtime only when configuration invites it (ADR-0018).
+- Bash scripting support.
 
 ## 6. Operations
 

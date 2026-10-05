@@ -297,7 +297,7 @@ whether delivery completed, and why work stopped when it did not.
 | --- | --- | --- |
 | Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
-| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module may be written in any language that can implement the ABI, kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for. |
+| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for. |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
@@ -960,8 +960,9 @@ Established architectural decisions require explicit permission before they
 change
 ([architectural-change-permission.md](doc/governance/architectural-change-permission.md)).
 A module is a crate against a C ABI
-([ADR-0012](doc/decision/ADR-0012-module-boundary.md)) and may be written in
-any language that can implement one.
+([ADR-0012](doc/decision/ADR-0012-module-boundary.md)), written in Rust or .NET;
+another runtime runs inside Xmip only when configuration invites it
+([ADR-0018](doc/decision/ADR-0018-service-and-host.md)).
 
 ---
 

@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Verifying what is not a Cargo crate: .NET projects, Pester suites and self-verifying modules.
+    Verifying what is not a Cargo crate: .NET projects and Pester suites.
 
 .DESCRIPTION
     Apart from Publish-XmipChange.ps1 since 2026-09-22, when that file had grown
@@ -158,54 +158,6 @@ function Test-XmipDotnetModule {
     }
 
     return (Test-XmipPesterSuite -Path $Path -Name $Name -Built ($project.Count -gt 0))
-}
-
-
-function Test-XmipSelfVerifyingModule {
-    <#
-        .SYNOPSIS
-            Runs a module's own verify.ps1 and reports whether it passed.
-
-        .DESCRIPTION
-            ADR-0042 decision 3 admits a contract module in C, C++, Go, Java
-            or Python over the C ABI. Teaching this tool one toolchain per
-            language would put five build systems in one file; instead a
-            repository in such a language carries a verify.ps1 at its root
-            that builds and tests with whatever prerequisite.toml declares for
-            it, and its exit code is the verdict. The script runs in the
-            module's directory, in a fresh pwsh so it cannot lean on this
-            module's state, and every line it writes is shown as it arrives.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path,
-
-        [Parameter(Mandatory)]
-        [string] $Name
-    )
-
-    [string] $script = Join-Path -Path $Path -ChildPath 'verify.ps1'
-
-    Write-Host "   verify.ps1..." -ForegroundColor DarkGray
-
-    Push-Location -LiteralPath $Path
-
-    try {
-        & pwsh -NoProfile -NonInteractive -File $script 2>&1 | ForEach-Object { Write-Host $_ }
-
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "   FAILED. $Name verify.ps1 exited $LASTEXITCODE." -ForegroundColor Red
-
-            return $false
-        }
-    }
-    finally {
-        Pop-Location
-    }
-
-    return $true
 }
 
 

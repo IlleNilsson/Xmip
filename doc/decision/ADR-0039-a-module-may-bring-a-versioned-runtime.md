@@ -21,7 +21,9 @@ or Python (module-model.md). A Module written in a managed language needs its
 language runtime present to run. Xmip accepts loading that runtime, and the
 runtime is versioned: the Module declares which runtime and which version it
 needs, and the node provides it. A native Module brings no runtime; a managed one
-brings the runtime as a dependency.**
+brings the runtime as a dependency. In an Xmip process, .NET is invited unless
+excluded and any other runtime only when configuration invites it (amendment
+2026-10-05).**
 
 ## Context
 
@@ -92,3 +94,15 @@ being dotnet, java or python, so be it.* The declaration/version, node-provision
 native-zero-runtime and isolation framing are the assistant's drafting of it, on
 the instruction to write it down, grounded in ADR-0012, ADR-0018, ADR-0022,
 ADR-0025 and module-model.md.
+
+## Amendment, 2026-10-05: in process only by invitation
+
+The owner, 2026-10-05 (ADR-0018, amendment 2026-10-05): *Read it as
+InProcess with threads is default true, any other runtime has to be opt in
+by configuration*; *I said that dotnet runtime was invited unless excluded*;
+and *I do not want other runtimes to interfer with potential perfect Rust
+code.* A Module that brings a .NET runtime is loaded into the
+Xmip Host Process unless configuration excludes it; a Module that brings a
+JVM, a Python interpreter or any other runtime is loaded there only when
+configuration explicitly invites it. The estate's Java and Python contract
+technologies are gone (ADR-0042, amendment 2026-10-05).

@@ -126,8 +126,9 @@ FHIR and HL7 are Handlers.
 
 An **Extension** is a utility capability declared by a Module and executed when
 an artifact references it. Extensions are verified during startup but not
-loaded, unless Xmip later defines a preloading policy. .NET, Java, Python, Go,
-Rust, C/C++, PowerShell, Bash and company-specific utilities are Extensions.
+loaded, unless Xmip later defines a preloading policy. Rust, .NET, Bash and
+company-specific utilities are Extensions; another runtime is hosted in an Xmip
+process only when configuration invites it (ADR-0018, amendment 2026-10-05).
 
 The distinction is purpose, not mechanism:
 

@@ -338,3 +338,30 @@ means the assistant's):
   the web's Event subscriptions view.
 
 Provenance: the owner's ruling, quoted; the wording is the assistant's.
+
+## Amendment, 2026-10-05: the bindings are the perimeter
+
+The owner, 2026-10-05, ruled on runtimes inside Xmip's own processes
+(ADR-0018, amendment 2026-10-05): *Read it as InProcess with threads is
+default true, any other runtime has to be opt in by configuration*; *As long
+as they are on the peremiter the are within Xmip Processes, otherwise they
+have to be exclusivley invited*; *I said that dotnet runtime was invited
+unless excluded*; and *I do not want other runtimes to interfer with
+potential perfect Rust code.*
+
+- "In process" in this record means the subscriber's process: a C, C++,
+  Java, Python or .NET program loads the runtime's library into itself and
+  subscribes through it. Xmip loads nothing of that program. Each is a
+  program at the perimeter, calling Xmip from outside, and needs no
+  invitation; the bindings in `xmip-core-abi` and
+  `verify-event-bindings.ps1` stay.
+- What the ruling removed is the other direction: another runtime hosted
+  inside an Xmip process. The C, C++, Go, Java and Python contract
+  technologies did that and are gone, with the reserved transform and
+  process entries in C, C++, Go, Java, Lua, PowerShell and Python (ADR-0042,
+  amendment 2026-10-05).
+- The JDK, Python and zig stay in `prerequisite.toml`, now for these
+  bindings alone; the Go toolchain served only a contract technology and is
+  gone.
+
+Provenance: the owner's ruling, quoted; the wording is the assistant's.

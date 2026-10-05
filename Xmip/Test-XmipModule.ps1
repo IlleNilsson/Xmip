@@ -165,24 +165,8 @@ function Test-XmipModule {
             # fail are different answers, and only one should halt the estate.
             [bool] $dotnet = @(Find-XmipFile -Path $path -Filter '*.csproj').Count -gt 0
 
-            $selfVerify = Join-Path -Path $path -ChildPath 'verify.ps1'
-
-            if (-not $dotnet -and (Test-Path -LiteralPath $selfVerify)) {
-                # A repository that verifies itself: its verify.ps1 builds and
-                # tests with whatever toolchain its language needs, declared in
-                # prerequisite.toml, and its exit code is the verdict.
-                Write-Host "== $name (verify.ps1)" -ForegroundColor Cyan
-
-                if (-not (Test-XmipSelfVerifyingModule -Path $path -Name $name)) {
-                    $name
-                }
-
-                continue
-            }
-
             if (-not $dotnet) {
-                [string] $why = "== $name (no Cargo.toml, no project and no verify.ps1, " +
-                    'nothing can test it)'
+                [string] $why = "== $name (no Cargo.toml and no project, nothing can test it)"
 
                 Write-Host $why -ForegroundColor DarkGray
 
