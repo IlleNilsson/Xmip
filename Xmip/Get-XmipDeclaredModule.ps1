@@ -1,6 +1,8 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 
+using namespace System.Collections.Generic
+
 <#
 .SYNOPSIS
     Which modules a landing takes, and the order their dependencies put them in.
@@ -68,11 +70,11 @@ function Get-XmipNestedParent {
         [string] $RepositoryRoot
     )
 
-    $declared = @(Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot)
+    [string[]] $declared = @(Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot)
 
-    $parents = @(
+    [string[]] $parents = @(
         $declared | Where-Object {
-            $candidate = $_
+            [string] $candidate = $_
             @($declared | Where-Object { $_ -like "$candidate/*" }).Count -gt 0
         }
     )
@@ -81,6 +83,113 @@ function Get-XmipNestedParent {
         Sort-Object -Property @{ Expression = { ($_ -split '/').Count }; Descending = $true }
 }
 
+
+function Read-XmipModuleManifest {
+    <#
+        .SYNOPSIS
+            A module's package name and the estate packages it depends on, read
+            once from its Cargo.toml for every caller.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [string] $Module
+    )
+
+    [string] $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$Module/Cargo.toml"
+
+    # No manifest, no declared dependencies.
+    if (-not (Test-Path -LiteralPath $manifest)) {
+        return [pscustomobject]@{ Package = ''; Needs = @() }
+    }
+
+    [string] $text = Get-Content -LiteralPath $manifest -Raw
+    [string] $name = ''
+
+    if ($text -match '(?m)^name\s*=\s*"(?<name>[^"]+)"') {
+        $name = $Matches['name']
+    }
+
+    # Any alias: a technology names its sibling `ethernet` or `iso_tp`, not
+    # `xmip-...`. Matching only aliases that start with xmip landed ethercat
+    # before ethernet on 2026-09-11. What decides is the package.
+    [string[]] $needs = @(
+        [regex]::Matches($text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
+            ForEach-Object {
+                [string] $body = $_.Groups['body'].Value
+
+                if ($body -match 'package\s*=\s*"(?<package>[^"]+)"') {
+                    $Matches['package']
+                }
+                else {
+                    $_.Groups['alias'].Value
+                }
+            } |
+            Where-Object { $_ -like 'xmip*' }
+    )
+
+    [pscustomobject]@{ Package = $name; Needs = $needs }
+}
+
+function Get-XmipModuleConsumer {
+    <#
+        .SYNOPSIS
+            Every module of the estate that depends, directly or through
+            others, on one of the given modules, and is not one of them.
+
+        .DESCRIPTION
+            A change to a leaf can pass its own tests and break a consumer
+            nobody touched; the landing checks these too (an external review,
+            2026-10-05).
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [string[]] $Module
+    )
+
+    [hashtable] $read = @{}
+    foreach ($name in @(Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot)) {
+        $read[$name] = Read-XmipModuleManifest -RepositoryRoot $RepositoryRoot -Module $name
+    }
+
+    [HashSet[string]] $reached = [HashSet[string]]::new()
+    foreach ($name in $Module) {
+        if ($read.ContainsKey($name) -and $read[$name].Package) {
+            [void] $reached.Add($read[$name].Package)
+        }
+    }
+
+    [List[string]] $consumers = [List[string]]::new()
+    do {
+        [bool] $grew = $false
+
+        foreach ($name in $read.Keys) {
+            [pscustomobject] $entry = $read[$name]
+
+            if ($Module -contains $name -or $consumers.Contains($name) -or -not $entry.Package) {
+                continue
+            }
+
+            if (@($entry.Needs | Where-Object { $reached.Contains($_) }).Count -gt 0) {
+                $consumers.Add($name)
+                [void] $reached.Add($entry.Package)
+                $grew = $true
+            }
+        }
+    } while ($grew)
+
+    $consumers
+}
 
 function Sort-XmipModuleDependency {
     <#
@@ -112,49 +221,26 @@ function Sort-XmipModuleDependency {
         [string[]] $Module
     )
 
-    $package = @{}
-    $needs = @{}
+    [hashtable] $package = @{}
+    [hashtable] $needs = @{}
 
     foreach ($name in $Module) {
-        $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$name/Cargo.toml"
+        [pscustomobject] $read =
+            Read-XmipModuleManifest -RepositoryRoot $RepositoryRoot -Module $name
 
-        if (-not (Test-Path -LiteralPath $manifest)) {
-            # No manifest, no declared dependencies. Lands whenever.
-            $needs[$name] = @()
-            continue
+        if ($read.Package) {
+            $package[$read.Package] = $name
         }
 
-        $text = Get-Content -LiteralPath $manifest -Raw
-
-        if ($text -match '(?m)^name\s*=\s*"(?<name>[^"]+)"') {
-            $package[$Matches['name']] = $name
-        }
-
-        # Any alias: a technology names its sibling `ethernet` or `iso_tp`, not
-        # `xmip-...`. Matching only aliases that start with xmip landed
-        # ethercat before ethernet on 2026-09-11. What decides is the package.
-        $needs[$name] = @(
-            [regex]::Matches($text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
-                ForEach-Object {
-                    $body = $_.Groups['body'].Value
-
-                    if ($body -match 'package\s*=\s*"(?<package>[^"]+)"') {
-                        $Matches['package']
-                    }
-                    else {
-                        $_.Groups['alias'].Value
-                    }
-                } |
-                Where-Object { $_ -like 'xmip*' }
-        )
+        $needs[$name] = $read.Needs
     }
 
-    $placed = [System.Collections.Generic.List[string]]::new()
-    $waiting = [System.Collections.Generic.List[string]]::new()
+    [List[string]] $placed = [List[string]]::new()
+    [List[string]] $waiting = [List[string]]::new()
     $Module | ForEach-Object { $waiting.Add($_) }
 
     while ($waiting.Count -gt 0) {
-        $ready = @(
+        [string[]] $ready = @(
             $waiting | Where-Object {
                 # Named, not $PSItem. Each nested pipeline rebinds $_ *and*
                 # $PSItem — they are the same variable — so the inner
@@ -164,9 +250,9 @@ function Sort-XmipModuleDependency {
                 # module look ready. The sort then emitted its input order,
                 # which is alphabetical, and authenticate was tested before the
                 # identify and context it depends on.
-                $candidate = $_
+                [string] $candidate = $_
 
-                $blockers = @(
+                [string[]] $blockers = @(
                     $needs[$candidate] |
                         ForEach-Object { $package[$_] } |
                         Where-Object { $_ -and $_ -ne $candidate -and $waiting.Contains($_) }

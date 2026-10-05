@@ -1,0 +1,15 @@
+# Read by every cargo build under the estate root.
+#
+# RocksDB is compiled once per version, not once per build (the owner,
+# 2026-10-05: "Compile RocksDB if there is a new version of it, otherwise I do
+# not see the need"). librocksdb-sys links the static library kept under
+# .local-work/native/rocksdb/<version>; test/NativeLibrary.Test.ps1 fails the
+# gate when the version cargo resolves is not the one kept here.
+[env]
+ROCKSDB_LIB_DIR = { value = ".local-work/native/rocksdb/11.8.1", relative = true }
+ROCKSDB_STATIC = "1"
+
+# The Windows libraries RocksDB's port layer calls (UUIDs, paths). Its own
+# build names them when it compiles RocksDB; linking the kept one, we do.
+[target.'cfg(windows)']
+rustflags = ["-l", "rpcrt4", "-l", "shlwapi"]

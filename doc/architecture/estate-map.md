@@ -55,7 +55,7 @@ the root forgot.
 
 ## The tree
 
-Where each repository mounts and what it holds: 223298 lines of production
+Where each repository mounts and what it holds: 226038 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -134,6 +134,7 @@ hold no source to count.
 │   │   │   │   ├── knx                          732
 │   │   │   │   ├── iso-tp                       695
 │   │   │   │   ├── s3                           695
+│   │   │   │   ├── file                         693
 │   │   │   │   ├── azure-blob                   681
 │   │   │   │   ├── mdns                         679
 │   │   │   │   ├── cotp                         669
@@ -148,7 +149,6 @@ hold no source to count.
 │   │   │   │   ├── dnp3                         602
 │   │   │   │   ├── ssdp                         601
 │   │   │   │   ├── coap                         564
-│   │   │   │   ├── file                         538
 │   │   │   │   ├── modbus                       528
 │   │   │   │   ├── redpanda                     517
 │   │   │   │   ├── wireless-m-bus               517
@@ -313,13 +313,13 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             5853
-│   │       ├── gui                             4482
+│   │       ├── cli                             6040
+│   │       ├── gui                             4869
 │   │       │   └── vscode                      1417
-│   │       ├── observe                         3584
+│   │       ├── observe                         3655
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2491  C# 2491 · PowerShell 0
+│   │       ├── powershell                      2547  C# 2547 · PowerShell 0
 │   │       ├── audit                           1800
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -339,7 +339,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                22783  C# 20771 · Rust 1787 · PowerShell 225
+│   │   ├── abi                                23453  C# 21412 · Rust 1816 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -367,7 +367,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            15705
+│       ├── runtime                            16919
 │       ├── persist                             4933
 │       │   ├── sqlite                           140
 │       │   └── rocksdb                          136

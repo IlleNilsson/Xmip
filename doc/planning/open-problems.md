@@ -793,6 +793,10 @@ authorized by role and audited (ADR-0067's operate listener, not built;
 problem 17's node-to-node protocol), and each node's address known to the
 desktop.
 
+**Decided 2026-10-05** (ADR-0031, amendment): the Xmip Service on the
+editor's machine pushes each slice to the node's Xmip Service over gRPC on
+TCP; the node validates and answers.
+
 ---
 
 # Suggested order

@@ -1827,3 +1827,15 @@ TCP.*
   server and a client using a GUI.* So the CLI and the PowerShell module,
   which that amendment had follow a web host over SignalR, follow over
   gRPC.
+
+## Note, 2026-10-05: a remote surface recovers on its own loop, and is told it is stale
+
+The amendment of 2026-09-15 has a remote surface follow over SignalR with
+automatic reconnect, which gives up after its last retry. `RemoteOperator`
+now tells every watch at once when its connection closes — the source
+saying unreachable and why — returns no stale publication while it is
+down, and recovers through one loop (0, 2, 10, 30 seconds, the last
+repeated) for a lost connection and a failed first one alike. That loop is
+the one place a surface asks rather than is told, because there is nothing
+to be told by while the host is unreachable. Found by an external review,
+2026-10-05.
