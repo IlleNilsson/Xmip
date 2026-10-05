@@ -97,6 +97,7 @@ fn hand_on(number: u64, claim: xmip_persist::storage::Claim) -> HandOn {
         }],
         leaves: Vec::new(),
         queued: Vec::new(),
+        requeued: Vec::new(),
         kept_for_nanos: None,
     }
 }

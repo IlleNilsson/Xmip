@@ -657,9 +657,11 @@ audit`, what every Xmip program recorded, filtered by the Audit view's words,
 `--pause` or `--resume` on one, and `xmip-cli event-subscriptions`, the Event
 subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
 one, and `xmip-cli dead-messages`, what each node's Dead Message Queue keeps,
-with `--message` to open one and `--replay` on it; the PowerShell module
+with `--message` to open one and `--replay` on it, and `xmip-cli journey`,
+`--retry` or `--dismiss` on a Journey that failed; the PowerShell module
 answers the same as objects, the audit, the Subscriptions, the Event
-subscriptions and the Dead Message Queues included. Pause and resume are the two acts the
+subscriptions and the Dead Message Queues included, and takes Retry and
+Dismiss on a failed Journey as parameters of its scope cmdlet. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built
@@ -688,7 +690,11 @@ Queue and can be replayed once the Subscription is corrected: the Dead
 Message Queue view, `xmip-cli dead-messages` and the PowerShell module list
 it per cluster and node, open one with its promoted properties and every
 Subscription's decline, and offer Replay to an Operator. A failed
-Journey keeps its position and resumes from its checkpoint. A refused Stream
+Journey keeps its position and resumes from its checkpoint; one whose every
+Send Location failed its tries waits in its Send Port's queue, named at the
+Port's scope with why, for an Operator to Retry or Dismiss — on the
+Monitor's drill at that scope, with `xmip-cli journey` or with the
+PowerShell module's scope cmdlet. A refused Stream
 never became a Message and remains the sender's responsibility.
 
 ### Rehearsal

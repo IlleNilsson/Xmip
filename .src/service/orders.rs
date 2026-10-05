@@ -1,7 +1,9 @@
 //! The orders an operator leaves for the node `xmip-service` runs: a pause
 //! or a resume of one of its Subscriptions (ADR-0013, amendment
-//! 2026-09-30), and a Replay of a Message its Dead Message Queue keeps
-//! (ADR-0052, amendment 2026-10-01), taken at each look and applied through
+//! 2026-09-30), a Replay of a Message its Dead Message Queue keeps
+//! (ADR-0052, amendment 2026-10-01), and a Retry or Dismiss of a Journey it
+//! sends that failed (`runtime-model.md` section 13), taken at each look and
+//! applied through
 //! the runtime's act, which records it in this process's audit and writes
 //! what it leaves to Xmip Storage.
 //!
@@ -47,6 +49,7 @@ pub fn take(
             .and_then(|order| match order.noun {
                 Noun::Subscription => running.pickup().act(&order.target, order.act, &order.who),
                 Noun::DeadMessage => running.pickup().replay(&order.target, &order.who),
+                Noun::Journey => running.send().act(&order.target, order.act, &order.who),
                 Noun::EventSubscription => Err(format!(
                     "REFUSED: {node} keeps no Event subscription hub; the Event \
                      subscription '{}' is another process's",

@@ -779,6 +779,20 @@ and a later technology on QUIC does the same. An operator never sees it as a
 thing to pick; they configure the http transport, and `h3` is offered where a
 service advertises it (step 5). No one writes code to get HTTP/3.
 
+## 31. No Xmip path places a node's slice on a remote node
+
+The owner, 2026-10-05 (ADR-0031, amendment): *When editing is done, the
+cluster TOML file is sliced into node TOML files and shipped to each node on
+save.* The Operation Desktop slices on save through `xmip_cluster_slices_v1`
+and writes each slice to `<SliceDirectory>/<node>/xmip-node.toml`; only its
+own node, `xmip.gui.toml`'s `Node`, counts as shipped, and every other node
+shows *sliced, not shipped*. Desired state slices on the node itself
+(`xmip-service --slice`). Missing: an operate-plane act that places a
+node's configuration through the node's listener over Xmip's TLS,
+authorized by role and audited (ADR-0067's operate listener, not built;
+problem 17's node-to-node protocol), and each node's address known to the
+desktop.
+
 ---
 
 # Suggested order
@@ -954,12 +968,15 @@ it.
 Problems 4, 5, 7, 8 and 9 remain naming judgments with no deadline. They cost
 nothing to leave open and should not block the build work.
 
+
 ---
 
 # Resolved
 
 Kept because a problem and its answer are one document. Each says what resolved
 it and when. Nothing below is work.
+
+
 
 ## 1. Eight orphaned tests hold the build red — **Resolved**
 

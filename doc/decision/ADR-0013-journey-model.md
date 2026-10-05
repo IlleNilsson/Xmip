@@ -572,3 +572,47 @@ Replay — the Operator's act, an order as Pause is, audited — routes the
 entry's promoted properties against the Subscriptions of now, holds each
 Journey it opens in its Subscription's queue and takes the entry out, in
 one write, once.
+
+## Amendment, 2026-10-04: a Send Port Group's Journeys, and Retry and Dismiss of a failed Journey
+
+**One Journey per Send Port.** Clause 5's *one Journey per matched
+Subscription* holds for a Subscription that leads to a Send Port or to an
+Xmip Process; one that leads to a Send Port Group opens a Journey for each Port of
+the Group, in the Group's order, in the Publication's one write, each led to
+its Port and kept in its Port's queue (`runtime-model.md` section 10: *A Send
+Port Group is only a named set: routing already made one Journey per Send
+Port in it*). So each Port is sent, retried, failed and dismissed alone, and
+the deduplication key — the Journey's identifier — is one per delivery to
+one endpoint, as section 15 of the runtime model has it.
+
+**A failed Journey waits for an Operator in its Send Port's queue**, and
+the Operator's acts on it are built: **Retry** writes it Active and sends it
+again from the queue, its tries begun anew; **Dismiss** writes it
+`Dismissed`, its history, Message and Stream kept, and takes it out of the
+queue. Each is one hand-on under a claim, audited with who acted, and goes
+through the node's orders as Pause and Replay do. This is not a queue of
+failed Journeys, which *There is no Dismissed queue* above rules out: it is
+the queue the Journey was always in, where a Sequential Send Port's order
+needs it, and a Dismissed Journey leaves it.
+
+**Protocol-level deduplication is honored** (clause 4c's second
+consequence): every send hands the transport the Journey's identifier, and
+a technology whose protocol has an identifier its far end deduplicates by
+puts it there.
+
+Built 2026-10-04 (`xmip-core-runtime`'s `send_step`, `xmip_operate.h`
+section 16).
+
+## Amendment, 2026-10-05: the receive gates run at the Location, then the Port
+
+The lifecycle's *Contract implication, optional deserialization,
+Validation* run once per level that configures them: the Receive
+Location's, in its Party's format, then the Receive Port's, in the Port's
+one format, each optionally promoting and transforming after; Preparation
+Steps run before Message creation, the Location's then the Port's. The
+order of the security gates and Message creation is unchanged, and a
+refusal at either level is a refusal before Publication: what clause 2 and
+clause 3 keep for it is unchanged, and the audit names the level that
+refused. Validation is the artifact's choice, on by default where a
+receive artifact names a Contract. ADR-0031, amendment 2026-10-05, the
+owner's ruling; `runtime-model.md` sections 5 and 20.
