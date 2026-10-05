@@ -264,6 +264,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Get-XmipSubmodule.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipDeclaredModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipModule.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipLocalPatch.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipDotnetModule.ps1')
 . (Join-Path $PSScriptRoot 'Submit-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Publish-XmipPin.ps1')
