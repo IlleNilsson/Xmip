@@ -1037,6 +1037,37 @@ waits for its due time.
   of its order key goes. An act is taken by a node that sends the Journey's
   Port, the one whose `<node>/send/<Port>` showed it failed.
 
+**Corrected 2026-10-05**, after an external review of the send step:
+
+- **A read is acted on only under its claim.** An operator's Retry or
+  Dismiss reads the Journey, takes its claim, and reads it again: where
+  another writer moved it between the two — another operator's act, a node
+  that sent it — the act is refused in words and nothing is written, so an
+  act never writes back a state the Journey has left. A scan of a
+  Sequential Send Port, which reads a Journey before it claims it to learn
+  its sequence, reads it again under the claim with its place in the queue,
+  and sends it only where it is still there and still to be sent.
+- **A send whose thread panics is settled.** It is written Failed with why —
+  kept in its queue for an operator, as every Journey that failed is — its
+  claim ended, counted and audited; it is never left owned, its claim
+  renewed and passed over by every scan.
+- **A scan claims no more than the Send pool can take**: its most threads,
+  less what the node has in flight. A backlog waits unclaimed in its queue
+  for a later scan rather than claimed behind the pool, and the claims of
+  work in flight are renewed on a thread of their own, every third of a
+  lease, so no scan of a backlog, however long, holds a renewal back.
+- **The Journeys that failed are discoverable.** A scan that reads a
+  Journey Failed — one that failed before the node restarted, or on another
+  node — keeps it as its Send Port's evidence; a read of the whole queue
+  forgets one dismissed or sent again elsewhere. The snapshot publishes a
+  record at `<node>/send/<Port>` for every Send Port the node sends, apart
+  from its Send Locations — until now the figures were looked up by each
+  Send Location's name, so a Port of several Locations had none — with how
+  many failed wait in its queue; and, beside its records, how many and the
+  oldest hundred of them with why. Every one is read from Xmip Storage a
+  page at a time (`xmip_operate.h` section 16), and every surface lists them
+  at the Port's scope with Retry and Dismiss on each.
+
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
 runtime's settings are configured*, says.
@@ -1122,6 +1153,10 @@ Messages, Streams, retention or audit.
 Built 2026-10-04 for a Journey that failed at its Send Port (section 10):
 Retry and Dismiss are Operator acts on it, by its identifier, through the
 node's orders, audited and gated by role (`xmip_operate.h` section 16).
+Since 2026-10-05 each is decided on the Journey as read under its claim —
+refused in words where another writer moved it after it was first read —
+and every Journey that failed at a Send Port is listed at the Port's scope,
+a page at a time from Xmip Storage, with the two acts on each (section 10).
 Start, Pause, Continue and Stop on one Journey are not built.
 
 ## 14. Replay

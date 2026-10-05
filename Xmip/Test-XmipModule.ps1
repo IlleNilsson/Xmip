@@ -91,36 +91,6 @@ function Get-XmipBuildableFeature {
 }
 
 
-function Build-XmipRuntimeLibrary {
-    <#
-        .SYNOPSIS
-            Builds the runtime's library from the working tree into the shared
-            build directory, where Xmip.Abi copies it for every .NET module.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $RepositoryRoot,
-
-        [Parameter(Mandatory)]
-        [string] $Patch
-    )
-
-    [string] $runtime = Join-Path -Path $RepositoryRoot -ChildPath 'module/platform/runtime'
-    Write-Host "== the runtime's library, for the .NET modules" -ForegroundColor Cyan
-    Push-Location -LiteralPath $runtime
-
-    try {
-        & cargo --config $Patch build 2>&1 | ForEach-Object { Write-Host $_ }
-
-        $LASTEXITCODE -eq 0
-    }
-    finally {
-        Pop-Location
-    }
-}
-
 function Test-XmipModule {
     <#
         .SYNOPSIS
@@ -157,10 +127,16 @@ function Test-XmipModule {
         # resolved from its working tree, not from origin, so nothing is
         # re-resolved from GitHub and the tree verifies before any push.
         [Parameter()]
-        [string] $Patch
+        [string] $Patch,
+
+        # Compile and lint only: for a consumer of a changed module, which is
+        # not itself landed.
+        [Parameter()]
+        [switch] $CheckOnly
     )
 
-    # Every cargo call through the patch when there is one. fmt is the
+    # Every cargo call through the patch when there is one, given after the
+    # subcommand: clippy ignores a --config given before it. fmt is the
     # exception: it reads no dependency and takes no --config.
     [string[]] $through = if ($Patch) { @('--config', $Patch) } else { @() }
 
@@ -224,6 +200,29 @@ function Test-XmipModule {
 
         Write-Host "== $name" -ForegroundColor Cyan
 
+        if ($CheckOnly) {
+            # A consumer nobody changed: compiled with its tests and linted
+            # against the changed working trees, so a broken API shows, without
+            # running its tests.
+            Push-Location -LiteralPath $path
+
+            try {
+                Write-Host '   checking as a consumer...' -ForegroundColor DarkGray
+                & cargo clippy @through --all-targets -- -D warnings 2>&1 |
+                    ForEach-Object { Write-Host $_ }
+                [bool] $checked = $LASTEXITCODE -eq 0
+            }
+            finally {
+                Pop-Location
+            }
+
+            if (-not $checked) {
+                $name
+            }
+
+            continue
+        }
+
         Push-Location -LiteralPath $path
 
         try {
@@ -263,7 +262,7 @@ function Test-XmipModule {
             #
             # Write-Host inside ForEach-Object gives both: each line appears
             # when cargo emits it, and the block returns nothing.
-            & cargo @through test 2>&1 | ForEach-Object { Write-Host $_ }
+            & cargo test @through 2>&1 | ForEach-Object { Write-Host $_ }
             $passed = $LASTEXITCODE -eq 0
 
             # rust-style.md says CI runs cargo fmt --check. It does, in a
@@ -298,7 +297,7 @@ function Test-XmipModule {
             if ($passed) {
                 Write-Host '   checking lints...' -ForegroundColor DarkGray
 
-                & cargo @through clippy --all-targets -- -D warnings 2>&1 |
+                & cargo clippy @through --all-targets -- -D warnings 2>&1 |
                     ForEach-Object { Write-Host $_ }
                 $passed = $LASTEXITCODE -eq 0
 
@@ -323,11 +322,14 @@ function Test-XmipModule {
 
                 if ($features.Count -gt 0) {
                     [string] $listed = $features -join ', '
-                    [string] $note = "   building $($features.Count) declared feature(s): $listed"
+                    [string] $note = "   testing $($features.Count) declared feature(s): $listed"
 
                     Write-Host $note -ForegroundColor DarkGray
 
-                    & cargo @through build --features ($features -join ',') 2>&1 |
+                    # Tested, not only built: a feature-gated test or a
+                    # test-only compile error escaped `cargo build` (an
+                    # external review, 2026-10-05).
+                    & cargo test @through --features ($features -join ',') 2>&1 |
                         ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
                 }

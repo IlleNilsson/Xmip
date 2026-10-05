@@ -435,3 +435,21 @@ BizTalk applies a change from its Administration Console without preview,
 keeps no history, tells no one whether a host instance took it, cannot
 drift because every host reads one database — and stops when that database
 does — and restarts whole host instances. Not built.
+
+## Amendment, 2026-10-05: the Xmip Service beside the editor ships the slices
+
+The owner, 2026-10-05, asked which side starts a slice's journey to a node
+on another machine: *The Operation Desktop, or rater the Xmip Service where
+the Operation Desktop is running on ships it.* The Xmip Service on the
+machine the editor runs on pushes each node's slice to that node's Xmip
+Service, over gRPC on TCP between machines (ADR-0052, amendment
+2026-10-05); the node validates it and answers accepted or refused (the
+amendment above, point 3). The editor never ships a slice itself. Open
+problem 31.
+
+Where each node is: the owner, asked whether its address is written under
+`[nodes.<name>]`: *The cluster knows the adresses.* The shipping Xmip
+Service learns each node's address from cluster membership — node
+registration in the administration database (`deployment-model.md`,
+*The administration database holds*) — not from `xmip.toml`.
+

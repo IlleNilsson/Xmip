@@ -1,6 +1,8 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 
+using namespace System.Collections.Generic
+
 function New-XmipLocalPatch {
     <#
         .SYNOPSIS
@@ -26,9 +28,9 @@ function New-XmipLocalPatch {
     $null = New-Item -ItemType Directory -Path $directory -Force
     [string] $patch = Join-Path -Path $directory -ChildPath 'patch.toml'
 
-    $lines = [System.Collections.Generic.List[string]]::new()
+    [List[string]] $lines = [List[string]]::new()
     $lines.Add('# Written by New-XmipLocalPatch for one landing. Never committed.')
-    $seen = [System.Collections.Generic.HashSet[string]]::new()
+    [HashSet[string]] $seen = [HashSet[string]]::new()
 
     # Build output, the assistant's working area and run output hold copies of
     # manifests; only a module's own Cargo.toml names a crate.

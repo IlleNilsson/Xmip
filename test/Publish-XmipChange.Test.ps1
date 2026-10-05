@@ -44,7 +44,8 @@ BeforeAll {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
-            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1'
+            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1',
+            'Test-XmipChangeTree.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -718,7 +719,7 @@ Describe 'The dependency tree verifies whole before anything lands' {
         # 2026-10-05, the owner: *Do dependecy tree build and stop when a leaf
         # fails*. Before, each module was pushed as soon as it verified, and a
         # failure halfway left the estate half landed.
-        [int] $verify = $script:Source.IndexOf('Test-XmipModule @verify')
+        [int] $verify = $script:Source.IndexOf('Test-XmipChangeTree @tree')
         [int] $land = $script:Source.IndexOf('Submit-XmipModule -RepositoryRoot')
 
         $verify | Should -BeGreaterThan 0
@@ -730,5 +731,61 @@ Describe 'The dependency tree verifies whole before anything lands' {
     It 'builds in the estate''s one shared build directory' {
         $script:Source | Should -Match "\.ai-interaction/target-windows"
         $script:Source | Should -Match '\$env:CARGO_TARGET_DIR = \$sharedTarget'
+    }
+}
+
+Describe 'A change is checked against what consumes it, and nothing is pushed first' {
+    BeforeAll {
+        [string] $script:Source = Get-XmipLandingSource
+    }
+
+    It 'finds every consumer of a changed module, directly or through others' {
+        # a <- b <- c, and d on its own: a change to a reaches b and c.
+        $estate = Join-Path -Path $TestDrive -ChildPath 'consumers'
+        $manifests = @{
+            'module/foundation/a' = @('[package]', 'name = "xmip-core-a"')
+            'module/foundation/b' = @('[package]', 'name = "xmip-core-b"', '[dependencies]',
+                'xmip-core-a = { git = "x", branch = "main" }')
+            'module/foundation/c' = @('[package]', 'name = "xmip-core-c"', '[dependencies]',
+                'b = { package = "xmip-core-b", git = "x", branch = "main" }')
+            'module/foundation/d' = @('[package]', 'name = "xmip-core-d"')
+        }
+        foreach ($at in $manifests.Keys) {
+            $null = New-Item -ItemType Directory -Path (Join-Path $estate $at) -Force
+            Set-Content -LiteralPath (Join-Path $estate "$at/Cargo.toml") -Value $manifests[$at]
+        }
+
+        InModuleScope Xmip -Parameters @{ Root = $estate; Every = @($manifests.Keys) } {
+            param($Root, $Every)
+
+            Mock Get-XmipDeclaredModule { $Every }
+
+            $found = @(Get-XmipModuleConsumer -RepositoryRoot $Root -Module 'module/foundation/a')
+            $found | Sort-Object | Should -Be @('module/foundation/b', 'module/foundation/c')
+
+            @(Get-XmipModuleConsumer -RepositoryRoot $Root -Module 'module/foundation/c').Count |
+                Should -Be 0
+        }
+    }
+
+    It 'pushes what an interrupted run left only after the tree verified' {
+        # The repair path (-Pin) pushes first; a landing pushes after
+        # verification, so a failure pushes nothing.
+        [int] $verify = $script:Source.IndexOf('Test-XmipChangeTree @tree')
+        [int] $late = $script:Source.LastIndexOf('Publish-XmipUnpushed -RepositoryRoot')
+
+        $late | Should -BeGreaterThan $verify
+    }
+
+    It 'fails the module whose runtime build failed rather than testing a stale library' {
+        $script:Source | Should -Match 'if \(-not \$runtimeBuilt\) \{\s+\$failed = @\(\$module\)'
+    }
+
+    It 'verifies the platform repository before it pins' {
+        [int] $platform = $script:Source.IndexOf('Test-XmipPlatform -RepositoryRoot')
+        [int] $pin = $script:Source.LastIndexOf('Publish-XmipPin -RepositoryRoot')
+
+        $platform | Should -BeGreaterThan 0
+        $platform | Should -BeLessThan $pin
     }
 }

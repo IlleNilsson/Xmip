@@ -565,3 +565,33 @@ the sender is acknowledged (the owner, 2026-10-03: *Go with A*; ADR-0013,
 amendment of this date). The amendment of 2026-10-01 named a routing pool
 among the pools per step; there is none. The pools are one per Receive
 Location, one for the Xmip Process step and one for send.
+
+## Amendment, 2026-10-05: another runtime runs out of process
+
+The owner, 2026-10-05, asked whether an Xmip Process should run in a
+process engine on another runtime: *Xmip Service or Xmip Hosts does not run
+other runtimes inhouse, they run outhouse. I know that is a performance
+penalty but that is what it takes. The only runtime, for now that I'd
+considder taking inprocess is dotnet. We will see, we can have a
+configurable switch. InProcess = true | false*
+
+- No Xmip Service or Xmip Host Service loads another language runtime — a
+  JVM, a Go or Node runtime — into its own process. Such a runtime runs in
+  a process of its own beside it, and Xmip talks to it out of process (over
+  gRPC on a named pipe on one machine, on TCP between machines; ADR-0052,
+  amendment 2026-10-05). The cost in speed is accepted.
+- **Rust runs on threads within the Xmip Host Process; .NET is invited
+  unless excluded; every other runtime is invited only by configuration.**
+  The owner, the same day: *Read it as InProcess with threads is default
+  true, any other runtime has to be opt in by configuration*; *As long as
+  they are on the peremiter the are within Xmip Processes, otherwise they
+  have to be exclusivley invited. I do not like JVM or dotnet Runtime within
+  our perfect Rust code*; and, correcting the assistant's reading: *I said
+  that dotnet runtime was invited unless excluded.* So `InProcess`
+  defaults to `true`, and .NET runs on threads within the Xmip Host Process
+  unless configuration sets it `false`; a JVM, Go, Python or any other
+  runtime is never loaded into an Xmip process unless configuration
+  explicitly invites it. Where `InProcess` lives is not decided.
+- A program in another language at the perimeter — one that calls Xmip
+  from outside, an Event subscriber among them — is its own process and
+  needs no invitation.

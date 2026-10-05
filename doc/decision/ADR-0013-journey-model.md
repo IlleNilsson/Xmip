@@ -601,7 +601,13 @@ a technology whose protocol has an identifier its far end deduplicates by
 puts it there.
 
 Built 2026-10-04 (`xmip-core-runtime`'s `send_step`, `xmip_operate.h`
-section 16).
+section 16). Corrected 2026-10-05 after an external review: an act is
+decided on the Journey as read again under its claim, and refused in words
+where another writer moved it after it was first read, so it never writes
+back a state the Journey has left; and every Journey that failed in a Send
+Port's queue is listed at the Port's scope — how many, and a page at a time
+from Xmip Storage — so an Operator acts on any of them, not only the last
+the Port's evidence names (`runtime-model.md` sections 10 and 13).
 
 ## Amendment, 2026-10-05: the receive gates run at the Location, then the Port
 

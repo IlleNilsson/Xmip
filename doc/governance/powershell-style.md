@@ -164,7 +164,11 @@ Use a splat, a pipeline, or parentheses.
 surprise you with a `$` and needs no escaping. Reserve `"..."` for interpolation
 and subexpressions.
 
-**Type local variables where the type matters.**
+**Type every variable at its first assignment, and every parameter.** The
+owner, 2026-10-05: *why aren't you treating it as a typed language when one
+can. You can say $a = 1 or $a = "1", both will still work but compute better
+or worse later, just spell out the type and we will be fine.* A
+scriptblock's parameters are typed too.
 
 ```powershell
 [version] $actual = Get-XmipReportedVersion -Text $Found

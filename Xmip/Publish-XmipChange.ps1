@@ -1,6 +1,8 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 
+using namespace System.Collections.Generic
+
 <#
 .SYNOPSIS
     What the estate's repositories need instead of `git status` and `git push`.
@@ -152,12 +154,12 @@ function Publish-XmipChange {
     # pins whatever the gitlinks say, so it can publish an unpushed module
     # exactly as the landing path could. Asking what the estate looks like is
     # the first thing either path needs.
-    $estate = @(Get-XmipStatus -RepositoryRoot $RepositoryRoot -Short)
+    [object[]] $estate = @(Get-XmipStatus -RepositoryRoot $RepositoryRoot -Short)
 
     # The platform repository is landed by the pin step rather than as a
     # module, because its commit has to be last: it records where the modules
     # ended up.
-    $status = @($estate | Where-Object { $_.Module -ne '.' -and $_.Changed -gt 0 })
+    [object[]] $status = @($estate | Where-Object { $_.Module -ne '.' -and $_.Changed -gt 0 })
 
     # Ahead means committed and not pushed — from an interrupted run, usually.
     #
@@ -168,7 +170,7 @@ function Publish-XmipChange {
     # Modules only. The platform repository being ahead is Publish-XmipPin's
     # own case and it has a branch for it — pushing the superproject here would
     # take that decision away from the step whose commit it is.
-    $unpushed = @(
+    [object[]] $unpushed = @(
         $estate | Where-Object { $_.Module -ne '.' -and $_.Changed -eq 0 -and $_.AheadBy -gt 0 }
     )
 
@@ -177,24 +179,27 @@ function Publish-XmipChange {
             'and has nothing uncommitted.')
     }
 
-    if ($unpushed.Count -gt 0) {
-        Publish-XmipUnpushed -RepositoryRoot $RepositoryRoot -Module @($unpushed.Module)
-    }
-
+    # Pushed here only on the repair path. A landing pushes them after the
+    # tree verifies, so a failure pushes nothing (an external review,
+    # 2026-10-05).
     if ($Pin) {
+        if ($unpushed.Count -gt 0) {
+            Publish-XmipUnpushed -RepositoryRoot $RepositoryRoot -Module @($unpushed.Module)
+        }
+
         Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
         return
     }
 
-    $stale = @($estate | Where-Object { $_.BehindBy -gt 0 })
+    [object[]] $stale = @($estate | Where-Object { $_.BehindBy -gt 0 })
 
     foreach ($module in $stale) {
         Write-Warning ("$($module.Module) is $($module.BehindBy) commit(s) behind origin. " +
             'Pull before landing.')
     }
 
-    $platform = @($estate | Where-Object { $_.Module -eq '.' -and $_.Changed -gt 0 })
+    [object[]] $platform = @($estate | Where-Object { $_.Module -eq '.' -and $_.Changed -gt 0 })
 
     if ($status.Count -eq 0 -and $platform.Count -eq 0) {
         Write-Host 'Nothing to land.' -ForegroundColor DarkGray
@@ -203,6 +208,18 @@ function Publish-XmipChange {
 
     if ($status.Count -eq 0) {
         Write-Host 'Only the platform repository has changes.' -ForegroundColor Cyan
+
+        if (-not $NoVerify -and -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot)) {
+            [string] $unverified = 'The platform repository did not verify; nothing landed.'
+            Write-Error $unverified -ErrorAction Continue
+
+            return
+        }
+
+        if ($unpushed.Count -gt 0) {
+            Publish-XmipUnpushed -RepositoryRoot $RepositoryRoot -Module @($unpushed.Module)
+        }
+
         Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
         # Landed is empty and that is correct: it counts modules and no module
@@ -218,7 +235,7 @@ function Publish-XmipChange {
         }
     }
 
-    $suspect = @($status | Where-Object Suspicious)
+    [object[]] $suspect = @($status | Where-Object Suspicious)
 
     if ($suspect.Count -gt 0) {
         Write-Host 'REFUSED. These have changes that look like build output:' -ForegroundColor Red
@@ -230,134 +247,56 @@ function Publish-XmipChange {
         return
     }
 
-    $ordered = @(
-        Sort-XmipModuleDependency -RepositoryRoot $RepositoryRoot -Module $status.Module
+    # What changed lands; what consumes it, unchanged, is compiled and linted
+    # against it so a broken API shows before anything is pushed.
+    [string[]] $consumers = @(
+        Get-XmipModuleConsumer -RepositoryRoot $RepositoryRoot -Module $status.Module
+    )
+    [string[]] $ordered = @(
+        Sort-XmipModuleDependency -RepositoryRoot $RepositoryRoot -Module (
+            @($status.Module) + $consumers)
     )
 
-    Write-Host "Landing $($ordered.Count) module(s), dependencies first:" -ForegroundColor Cyan
-    $ordered | ForEach-Object { Write-Host "  $_" }
+    Write-Host "Landing $($status.Count) module(s), dependencies first:" -ForegroundColor Cyan
+    $ordered | Where-Object { $consumers -notcontains $_ } | ForEach-Object { Write-Host "  $_" }
+    [string] $against = "Checking $($consumers.Count) unchanged consumer(s) against them."
+    Write-Host $against -ForegroundColor Cyan
 
     # The dependency tree is verified whole, then landed whole (the owner,
     # 2026-10-05: *Do dependecy tree build and stop when a leaf fails*).
-    #
-    # Every estate crate is patched to its working tree, so the tree verifies
-    # before anything is pushed, leaves first, and the first module that
-    # fails stops the run with nothing landed. Every build shares the estate's
-    # one build directory, `.ai-interaction/target-windows`, so a dependency
-    # such as RocksDB compiles once, not once per module.
-    $landed = [System.Collections.Generic.List[string]]::new()
-    $skipped = [System.Collections.Generic.List[string]]::new()
-    $verified = [System.Collections.Generic.List[string]]::new()
-    [bool] $runtimeBuilt = $false
-
-    [string] $sharedTarget = if ($env:CARGO_TARGET_DIR) {
-        $env:CARGO_TARGET_DIR
+    [hashtable] $tree = @{
+        RepositoryRoot = $RepositoryRoot
+        Ordered        = $ordered
+        Consumer       = $consumers
+        Platform       = $platform.Count -gt 0
+        All            = $All
+        NoVerify       = $NoVerify
+        Message        = $Message
     }
-    else {
-        Join-Path -Path $RepositoryRoot -ChildPath '.ai-interaction/target-windows'
-    }
-    [string] $previousTarget = $env:CARGO_TARGET_DIR
-    $env:CARGO_TARGET_DIR = $sharedTarget
+    [pscustomobject] $checked = Test-XmipChangeTree @tree
+    [List[string]] $landed = [List[string]]::new()
+    [List[string]] $skipped = [List[string]]::new()
+    $checked.Skipped | ForEach-Object { $skipped.Add($_) }
+    [string[]] $verified = $checked.Verified
 
-    try {
-        [string] $patch = ''
-
-        if (-not $NoVerify) {
-            $patch = New-XmipLocalPatch -RepositoryRoot $RepositoryRoot
-        }
-
-        foreach ($module in $ordered) {
-            if ($NoVerify) {
-                $verified.Add($module)
-                continue
-            }
-
-            # A module is verifiable if it has a Cargo.toml, a project file or
-            # a verify.ps1 — the last for a repository in a language the tool
-            # does not know (ADR-0042 decision 3), whose exit code is the
-            # verdict.
-            $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
-            $manifest = Join-Path -Path $modulePath -ChildPath 'Cargo.toml'
-            $selfVerify = Join-Path -Path $modulePath -ChildPath 'verify.ps1'
-
-            [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
-                (Test-Path -LiteralPath $selfVerify) -or
-                @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
-
-            if (-not $All -and -not $verifiable) {
-                $why = "SKIPPED. $module has no Cargo.toml, no project and no verify.ps1 to verify."
-                Write-Host $why -ForegroundColor DarkGray
-                $skipped.Add($module)
-
-                continue
-            }
-
-            # A .NET module tests against the runtime's library, which
-            # Xmip.Abi copies from the shared build directory: built once,
-            # from the working tree, before the first .NET module verifies.
-            [bool] $dotnet = -not (Test-Path -LiteralPath $manifest) -and
-                @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
-
-            if ($dotnet -and -not $runtimeBuilt) {
-                $runtimeBuilt =
-                    Build-XmipRuntimeLibrary -RepositoryRoot $RepositoryRoot -Patch $patch
-            }
-
-            [hashtable] $verify = @{
-                RepositoryRoot = $RepositoryRoot
-                Module         = @($module)
-                All            = $All
-                Patch          = $patch
-            }
-
-            $failed = @(Test-XmipModule @verify)
-
-            if ($failed.Count -gt 0) {
-                Write-Host ''
-                [string] $stop = "FAILED. Stopping at $module. Nothing landed this run."
-                Write-Host $stop -ForegroundColor Red
-
-                if ($verified.Count -gt 0) {
-                    [string] $before = "  verified before it: $($verified -join ', ')"
-                    Write-Host $before -ForegroundColor Yellow
-                }
-
-                Write-Host 'Fix this one and run again.'
-
-                # Verified is false: the run stopped because a module did not
-                # verify, and nothing was pushed.
-                [string] $stopped =
-                    "The landing stopped at $module, which did not verify; nothing landed."
-                [hashtable] $stoppedAt = @{
-                    Action   = 'Publish-XmipChange'
-                    Phase    = 'Failure'
-                    Severity = 'Error'
-                    Message  = $stopped
-                    Property = @{ Module = $module; Verified = $verified; Subject = $Message }
-                }
-                Write-XmipAudit @stoppedAt
-                Write-Error $stopped -ErrorAction Continue
-
-                return [PSCustomObject]@{
-                    PSTypeName = 'Xmip.Change'
-                    Landed     = @()
-                    Skipped    = $skipped.ToArray()
-                    Platform   = $false
-                    Verified   = $false
-                }
-            }
-
-            $verified.Add($module)
+    if ($checked.Failed) {
+        return [PSCustomObject]@{
+            PSTypeName = 'Xmip.Change'
+            Landed     = @()
+            Skipped    = $skipped.ToArray()
+            Platform   = $false
+            Verified   = $false
         }
     }
-    finally {
-        $env:CARGO_TARGET_DIR = $previousTarget
+
+    # The whole tree verified: push what an interrupted run left committed,
+    # then land what changed, dependencies first, without building again.
+    if ($unpushed.Count -gt 0) {
+        Publish-XmipUnpushed -RepositoryRoot $RepositoryRoot -Module @($unpushed.Module)
     }
 
-    # The whole tree verified: land it, dependencies first, without building
-    # again.
-    foreach ($module in $verified) {
-        $result = @(
+    foreach ($module in @($verified | Where-Object { $consumers -notcontains $_ })) {
+        [string[]] $result = @(
             Submit-XmipModule -RepositoryRoot $RepositoryRoot -Module @($module) -Message $Message
         )
 
