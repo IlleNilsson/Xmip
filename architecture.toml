@@ -134,6 +134,168 @@ passThroughAllowed = true
 responsibility = "Expose and invoke method-oriented protocol operations independently of transport and content representation."
 appliesTo = ["soap", "http-api", "grpc"]
 
+# What is built, one entry per user-facing capability (the owner,
+# 2026-10-06, after a documentation review found decided behavior described
+# in the present tense). `state` is one of four: `assembled` — built and in
+# the assembled service, `xmip-service`, or for an operator's act in the
+# shipped surfaces that operate it; `built` — built, not in the assembled
+# service; `decided` — decided, not built; `open` — not decided. A state is
+# a fact, so it lives here (ADR-0020 clause 5); New-XmipEstateMap renders it
+# as estate-map.md's "What is built", every key an anchor a document cites
+# beside its promise, and test/Documentation.Test.ps1 fails a citation whose
+# words this table does not say. Change a state here in the same change as
+# the code that changes it.
+
+[implementation.arrival]
+name = "Receiving a Stream through a node's gates and publishing its Message"
+state = "built"
+note = "The runtime receives through a linked transport, identifies, authenticates and authorizes, writes the Stream to the Ledger in chunks and publishes a Message with what it learned in its context. `xmip-service` links no authenticator and no authorization policy, and a Receive Location authenticates and permits nothing without them, so the assembled service refuses every Stream at its gates; the Playground and the runtime's tests hand both in."
+record = ["ADR-0019", "runtime-model.md section 5"]
+
+[implementation.arrival-validation]
+name = "Holding a Stream to a named Contract"
+state = "decided"
+note = "A node refuses to start a Receive or Send Location that names a Contract, in words: arrival holds no Stream to one yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate, and the Playground holds its generated content to them in its own harness, not at a node's Location."
+record = ["ADR-0042", "ADR-0031 (amendment 2026-10-05)"]
+
+[implementation.security-profile]
+name = "Security profiles: standard, enterprise, regulated"
+state = "decided"
+note = "No configuration key names a profile and nothing enforces identity isolation at start; the isolation rule (`IdentityContext::may_share_host_process`) is called by its tests alone."
+record = ["ADR-0022", "deployment-model.md section 4"]
+
+[implementation.certificate-usage]
+name = "Presenting and verifying certificates an operator supplies"
+state = "built"
+note = "`xmip-core-library-tls` presents and verifies PEM certificates; the web host serves https with them, and Xmip Storage's client and server speak mutual TLS with them. `xmip-service` presents none yet: it reaches only its own embedded Storage node."
+record = ["ADR-0033", "ADR-0063"]
+
+[implementation.certificate-provisioning]
+name = "Obtaining and renewing certificates (ACME, an internal authority)"
+state = "decided"
+note = "Nothing obtains or renews a certificate: there is no ACME client and no `xmip-core-provision`, and the SDK has no ACME server. Certificates are files an operator supplies. Open problem 27."
+record = ["ADR-0034", "ADR-0033"]
+
+[implementation.program-audit]
+name = "Every Xmip program audits to its audit file"
+state = "assembled"
+note = "`xmip-service`, `xmip-cli`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, the operating system's log the fallback."
+record = ["ADR-0062"]
+
+[implementation.audit-through-storage]
+name = "Audit written through Xmip Storage and kept by the audit keeper"
+state = "decided"
+note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger. The file sink is what every program writes."
+record = ["ADR-0062", "deployment-model.md section 7"]
+
+[implementation.bounded-audit-channel]
+name = "A bounded asynchronous audit channel with a capacity policy"
+state = "decided"
+note = "The keeper `xmip-core-audit` runs is an unbounded queue on one thread, used by Event delivery records alone, and a program's own record waits for it to drain; no capacity, discard, sampling or back-pressure policy exists."
+record = ["audit-record.md, Performance"]
+
+[implementation.subscription-routing]
+name = "Routing by the Subscriptions a node binds"
+state = "assembled"
+note = "A node routes every Message it publishes against the Subscriptions of the Xmip Applications it binds, their filters compiled as it starts; in the assembled service no Stream reaches routing yet (`arrival`)."
+record = ["ADR-0013", "ADR-0066"]
+
+[implementation.shared-subscriptions]
+name = "Subscriptions shared across the cluster through Xmip Storage"
+state = "decided"
+note = "No Storage record holds a Subscription and no node writes one there; Xmip Storage keeps a paused Subscription's standing and what it holds, per node. A node routes only what it received."
+record = ["ADR-0031 (amendment 2026-10-02)"]
+
+[implementation.subscription-pause]
+name = "Pausing and resuming a Subscription"
+state = "assembled"
+note = "An order the node takes: what the Subscription matches is held in Xmip Storage, surviving a restart, and picked up oldest first on resume; every surface lists Subscriptions and takes the act."
+record = ["ADR-0013 (amendments 2026-09-30, 2026-10-01)"]
+
+[implementation.process-declaration]
+name = "Declaring an Xmip Process"
+state = "assembled"
+note = "`[[xmip_processes]]` and an Application's Xmip Processes are read, validated and planned into the execution tree as a node starts, and a Subscription may lead to one; each is published as planned, not started."
+record = ["ADR-0018", "ADR-0064"]
+
+[implementation.process-execution]
+name = "Compiling an Xmip Process at design time, and running it"
+state = "decided"
+note = "Nothing compiles a design and no engine runs one: a Journey to an Xmip Process ends saying no runtime runs it yet (`xmip-core-runtime`'s `departure.rs`)."
+record = ["ADR-0066", "runtime-model.md section 22"]
+
+[implementation.module-loading]
+name = "Opening a Module at run time"
+state = "built"
+note = "The loader opens a shared library, resolves `xmip_create_module_v1`, checks its trait version and configures, starts and stops its contract table, the only table with a host side; nothing on the message path calls it. It is behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; every other technology is linked by feature, so adding one means running `Build-XmipService` again."
+record = ["ADR-0025", "ADR-0057"]
+
+[implementation.other-runtime-module]
+name = "A Module on another runtime"
+state = "decided"
+note = "A .NET Module in process, on threads, unless excluded, and another runtime in a process of its own unless configuration invites it in: no `InProcess` setting, no .NET hosting and no out-of-process channel exist, and a Host Service of its own is refused at start."
+record = ["ADR-0018 (amendment 2026-10-05)"]
+
+[implementation.resilience-guards]
+name = "The six resilience guards"
+state = "built"
+note = "Retry, timeout, circuit breaker, rate limit, bulkhead and fallback are guards `xmip-core-resilience` asks in order; the Event forwarder runs them for the http, amqp and kafka Event wires, and only tests build a guard. The timeout judges an attempt after it ended; it does not interrupt one."
+record = ["ADR-0048"]
+
+[implementation.send-port-retry]
+name = "A Send Port's retry"
+state = "assembled"
+note = "A Send Port tries each Send Location again by its `retry = { attempts, backoff }`, and a Journey whose every Location failed its tries is written Failed and waits for Retry or Dismiss."
+record = ["ADR-0013", "runtime-model.md section 10"]
+
+[implementation.send-resilience]
+name = "Guards configured on Send Port Groups, Send Ports and Send Locations"
+state = "decided"
+note = "The Polly-like pipeline on the send artifacts, a timeout that interrupts an attempt, and each transport's send completion (answered, confirmed write, unconfirmed) are decided; none is built."
+record = ["ADR-0048 (amendments 2026-10-06)"]
+
+[implementation.retention-archiving]
+name = "Archiving by retention window"
+state = "built"
+note = "`xmip-core-retain` and `xmip-core-archive` are driven by the Playground on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
+record = ["ADR-0040"]
+
+[implementation.embedded-storage]
+name = "A node as its own embedded Storage node"
+state = "assembled"
+note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, sealed under the key store `[store]` names."
+record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0063"]
+
+[implementation.storage-nodes]
+name = "Storage nodes reached over mutual TLS"
+state = "built"
+note = "`xmip-core-persist`'s Storage client and server are built and tested; `xmip-service` serves no other node, and refuses a node whose `[storage] nodes` lists any until its configuration can name the identity it presents."
+record = ["ADR-0056 (amendment 2026-10-01)"]
+
+[implementation.database-server]
+name = "Xmip Storage in front of PostgreSQL or SQL Server"
+state = "decided"
+note = "`[storage.database]` is read and checked, and IT's scripts are in `deploy/database`; no Storage node connects to either server yet."
+record = ["ADR-0015 (amendment 2026-10-01)", "deployment-model.md section 7"]
+
+[implementation.artifact-steps]
+name = "Prepare, Contract, Promote, Transform, Demote and Assignment on Ports, Locations and Xmip Processes"
+state = "decided"
+note = "The keys are decided and none is read; Assignment and Transformation have the Message's generations ready in `xmip-core-message` and the runtime's `generation.rs`, with no caller outside tests."
+record = ["ADR-0031 (amendment 2026-10-05)", "runtime-model.md section 20"]
+
+[implementation.configuration-saving]
+name = "Saving and slicing the cluster's configuration"
+state = "assembled"
+note = "The Operation Desktop saves the cluster's `xmip.toml`, validated by the runtime and audited, and slices it through `xmip_cluster_slices_v1`; desired state slices it on each node (`xmip-service --slice`). A changed slice takes effect when the node starts again."
+record = ["ADR-0031 (amendments 2026-10-01, 2026-10-05)"]
+
+[implementation.configuration-delivery]
+name = "Delivering a slice to its node, its acceptance, and restarting only what changed"
+state = "decided"
+note = "No Xmip path puts a slice on another node: the desktop delivers only to the node it starts, a node answers no accepted or refused, and a save is not versioned, watched for drift or applied by restarting only the threads or Host Services that changed. Open problem 31."
+record = ["ADR-0031 (amendments 2026-10-05)"]
+
 # The estate. Depth is the classification: xmip.<provider> is the provider
 # root repository, xmip.<provider>.<module> a module, and one level deeper an
 # implementation. Keys inside a table are its metadata; sub-tables are its

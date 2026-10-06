@@ -115,3 +115,38 @@ rest is internal Rust matters.*
 - Not built: the send artifacts' pipeline, a timeout that interrupts the
   attempt, telemetry, and Polly's missing options. The order and the keys
   are to be proposed.
+
+## Amendment, 2026-10-06: answered, confirmed and unconfirmed sends
+
+The owner, 2026-10-06: *we have to think about non Request-Respone
+protocols like FILE, (S)FTP(S) and broadcast*; and, on the design the
+assistant then drew: *do your best over Request-Respone protocols and non
+Request-Respone protocols what ever we wanna call them.* The names and the
+table are the assistant's.
+
+- **Each transport declares how its send completes** — a capability it
+  declares, never read from its name:
+  - **answered** — the far end answers, and the answer is success or
+    failure (HTTP, AS2, SOAP, gRPC);
+  - **confirmed write** — no one answers; success is the whole Stream in
+    place under its final name, written under a temporary name and moved to
+    it in one step, so a partial write is never seen as delivered (FILE,
+    FTP, FTPS, SFTP, SMB, object stores);
+  - **unconfirmed** — no one answers and no one confirms; Xmip knows only
+    that it left the node (UDP broadcast and multicast, syslog over UDP).
+- **A guard means what the kind lets it mean:**
+
+  | guard | answered | confirmed write | unconfirmed |
+  |---|---|---|---|
+  | retry | yes | yes — a failed try leaves at most its temporary name, overwritten by the next; the Journey's identifier in the name where the target allows, so a retry never makes a second copy | a local failure only; a lost datagram is never known |
+  | timeout | yes, interrupting | yes, interrupting the transfer and removing its temporary file | the local send only |
+  | circuit breaker | yes | yes — a share, server or directory gone | no: nothing reports a failure |
+  | fallback | yes | yes | yes |
+  | rate limit, concurrency limit | yes | yes | yes, above all |
+  | hedging | only where the far end deduplicates | refused: two files | refused: two datagrams |
+
+- **Configuration refuses what cannot be honored**: `xmip.toml` naming a
+  guard a Send Location's transport cannot honor is refused at start, in
+  words naming the guard, the kind and why. An unconfirmed send is said to
+  be at most once (`runtime-model.md` section 15).
+- Not built.

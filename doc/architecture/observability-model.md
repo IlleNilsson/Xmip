@@ -86,6 +86,10 @@ interaction.
 stays off the path — the envelope, the channel, what happens when capacity is
 exhausted and which conditions are never suppressible — is
 `module/core/operation/audit/doc/audit-record.md`, *Performance*.
+That design is [decided, not built](estate-map.md#bounded-audit-channel): a program
+records synchronously into its `audit.toml` today
+([built, in the assembled service](estate-map.md#program-audit)), and writing audit
+through Xmip Storage is [decided, not built](estate-map.md#audit-through-storage).
 
 ## 6. Observation
 

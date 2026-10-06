@@ -815,6 +815,19 @@ Kept as they are: the composition root, `Linked`, the core traits
 handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, event's
 `Membership` and `Wire`, `IOperatorSurface` and the hosts' DI containers.
 
+## 33. The assembled service receives nothing
+
+Found 2026-10-06 while documenting what is built: `xmip-service`
+(`.src/service/built.rs`) links no authenticator and no authorization policy,
+so every Receive Location refuses every Stream at its gates; it serves no
+Storage node and refuses a configuration listing `[storage] nodes`; and no
+PostgreSQL or SQL Server client exists. The message path is built and tested
+inside the runtime's tests, which hand it stand-in gates; the program an
+operator installs runs none of it. Needed: the identity technologies of
+ADR-0050 linked into the service and chosen by configuration (ADR-0068: handed
+in), a Storage node in the service, and the first database server client.
+`architecture.toml` `[implementation]` says the same per capability.
+
 ---
 
 # Suggested order

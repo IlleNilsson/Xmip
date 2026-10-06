@@ -141,6 +141,7 @@ function New-XmipMapText {
         ''
     ) + (New-XmipMapCount -Repository $Repository) + @('') +
         (New-XmipMapComposition) + @('---', '') +
+        (New-XmipMapImplementation -Manifest $Manifest) +
         (New-XmipMapTree -Repository $Repository -Source $Source) + @('---', '')
 
     foreach ($name in $script:XmipMapDomain) {

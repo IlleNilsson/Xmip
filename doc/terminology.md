@@ -228,9 +228,24 @@ A **Section** is a stream contained within a Message, with a section id,
 metadata and a stream reference. Sections may reuse stream references when the
 content is unchanged.
 
-A new Message is created when Xmip performs an operation that produces a new
-message state, such as assignment or transformation. **Routing alone does not
-create a new Message.**
+**The content is immutable; the Message's context grows.** Three things
+happen to a Message, and only two of them make a new one:
+
+| | What changes | Message id | Generation |
+| --- | --- | --- | --- |
+| **Enrichment** | context only: the identities settled at arrival, promoted properties, validation results, execution history | the same: the Message is rebuilt under its identifiers, never edited in place | the same |
+| **Assignment** | context: values set from a literal or another value | new, naming the one before | next; the Sections are shared |
+| **Transformation** | content: a new Stream | new, naming the one before | next |
+
+So "immutable" means the Streams a Message's Sections reference never change,
+and a recorded generation is never rewritten — not that nothing is ever
+added to what Xmip knows about it (`xmip-core-message`: *The Stream is
+immutable. The Message is not.*). Every generation is kept. **Routing alone
+does not create a new Message**, and promotion for routing is held beside
+the Message rather than in it. Enrichment at arrival is
+[built, not in the assembled service](architecture/estate-map.md#arrival); Assignment
+belongs to an Xmip Process and Transformation to the steps of a Port or
+Location, both [decided, not built](architecture/estate-map.md#artifact-steps).
 
 ## Audit and Failure Persistence
 
@@ -303,13 +318,16 @@ Storage node is the safety. It always keeps two databases, whatever the
 backend: the **runtime database**, which is the Ledger, and the
 **administration database** — administration, deployment state, cluster
 membership, operator state, and audit kept over time, moved there by the
-audit keeper; and the Subscriptions each Host Service writes from its TOML
-as it starts, shared across the cluster. The rest of a node's configuration
+audit keeper ([decided, not built](architecture/estate-map.md#audit-through-storage)); and the
+Subscriptions each Host Service writes from its TOML as it starts, shared
+across the cluster ([decided, not built](architecture/estate-map.md#shared-subscriptions)). The rest of a node's configuration
 it reads from its TOML as it starts and holds as its execution tree in
 memory (ADR-0031, amendments 2026-10-01 and 2026-10-02). Behind it is a database server IT
-runs (option A, PostgreSQL first), the two databases separate on IT's servers, or, for a
-single machine or an edge site, an **embedded Storage node** keeping RocksDB
-and SQLite itself, with no failover (the owner, 2026-10-01). Xmip encrypts up
+runs (option A, PostgreSQL first; [decided, not built](architecture/estate-map.md#database-server)),
+the two databases separate on IT's servers, or, for a single machine or an
+edge site, an **embedded Storage node** keeping RocksDB and SQLite itself,
+with no failover (the owner, 2026-10-01;
+[built, in the assembled service](architecture/estate-map.md#embedded-storage)). Xmip encrypts up
 to the Storage node, over its own TLS; behind a database server, encryption
 at rest is IT's; an embedded Storage node, test nodes included, encrypts its
 own files itself (ADR-0063, amendment 2026-10-01).
@@ -384,6 +402,19 @@ identifies the Modules to load, the Xmip Processes to start, the Xmip
 Subprocesses and their required Modules, and the Extensions to verify but not
 load. The nine phases are `architecture/runtime-model.md` section 21,
 *Startup*, from ADR-0018.
+
+## Saving, slicing, delivery, acceptance and activation
+
+Five words for what happens between an edit to the cluster's `xmip.toml`
+and a node running by it, never one for another. **Saving** writes the
+file, validated by the runtime; **slicing** takes it apart into each node's
+`xmip-node.toml`; **delivery** puts a slice on its node; **acceptance** is
+the node validating what it was given and answering; **activation** is the
+node running by it, when what reads it starts again. Saving and slicing are
+built; delivery and acceptance to another node are not, so a save that says
+OK has not reached any node but the one the desktop starts
+(`module/platform/configure/doc/cluster-configuration.md`, *Saving is not
+delivering*; ADR-0031, amendments 2026-10-05; open problem 31).
 
 ## Retired terms
 

@@ -57,7 +57,8 @@ transport acknowledgement as a successful application delivery.
 ### The terms to begin with
 
 A Stream arrives, and its arrival is audited before anything else. It is
-deserialized and validated against a Contract; if that fails, the refusal
+deserialized and validated against a Contract
+([decided, not built](doc/architecture/estate-map.md#arrival-validation)); if that fails, the refusal
 is reported, the Stream is disregarded, and the failure is audited. If it
 holds, the content is published into Xmip as a
 Message, and where a Subscription picks the Message up a Journey begins, to
@@ -65,7 +66,10 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
 
 - **Stream.** What arrives at a Receive Location: bytes from a file, a
   socket, a queue, a mailbox, the rows a SQL statement returns, a device on
-  a bus. A Stream belongs to the sender until Xmip accepts it.
+  a bus. A Stream belongs to the sender until Xmip accepts it. Receiving
+  one through a node's gates is
+  [built, not in the assembled service](doc/architecture/estate-map.md#arrival): `xmip-service`
+  links no authenticator yet, so it refuses every Stream at authentication.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
   out. Every step below carries a note of what it audits. Entry, refusal,
@@ -78,12 +82,16 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
 - **Contract.** The rules for acceptance. A Stream is deserialized and must
   be well-formed and, where a Contract is named, conform to it. A Stream
   that fails is refused: the refusal says where and why, and the Stream
-  stays the sender's responsibility.
+  stays the sender's responsibility. Holding a Stream to a named Contract
+  is [decided, not built](doc/architecture/estate-map.md#arrival-validation): until it is, a node
+  refuses to start a Location that names one.
   *Audited: the validation, and the refusal with its place and reason.*
-- **Message.** Validated content, published into Xmip. A Message is
-  immutable, written to disk before anything acts on it, and never lost.
-  Assignment and transformation do not change it; each writes a new
-  generation of it, and every generation is kept.
+- **Message.** Validated content, published into Xmip. A Message's content
+  is immutable, written to disk before anything acts on it, and never lost;
+  what Xmip learns about it at arrival is added to its context under the
+  same identifier. Assignment and transformation do not change it; each
+  writes a new generation of it, and every generation is kept
+  ([decided, not built](doc/architecture/estate-map.md#artifact-steps)).
   *Audited: entry into Xmip, once per Message.*
 - **Subscription.** What picks a published Message up: an Xmip Process, a
   Send Port or a Send Port Group declares the Messages it wants. A Message
@@ -111,7 +119,11 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   published into Xmip like any other. It is not an operating system
   process, it receives no Streams and delivers nothing outside, and its
   state belongs to the cluster, never to a thread or a node. A Journey to a
-  Send Port has no Processing.
+  Send Port has no Processing. A node declares and plans its Xmip Processes
+  ([built, in the assembled service](doc/architecture/estate-map.md#process-declaration)); compiling
+  one at design time and running it are
+  [decided, not built](doc/architecture/estate-map.md#process-execution), and a Journey to one ends
+  saying no runtime runs it yet.
   *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to an Xmip Process alone and
@@ -130,7 +142,13 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   attempt is repeated, or the work is given up. Retry, timeout, circuit
   breaker, rate limit, bulkhead and fallback are the six guards
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
-  A guard judges; it never runs the operation. Retrying and Failed are
+  A guard judges; it never runs the operation. The six exist as guards
+  ([built, not in the assembled service](doc/architecture/estate-map.md#resilience-guards)); a Send
+  Port's own retry is what a send has today
+  ([built, in the assembled service](doc/architecture/estate-map.md#send-port-retry)); the guards
+  configured on a Send Port Group, Send Port and Send Location, and a
+  timeout that interrupts an attempt, are
+  [decided, not built](doc/architecture/estate-map.md#send-resilience). Retrying and Failed are
   counted at every scope and shown on every surface.
   *Audited: every failed attempt, and the giving up, with the Message in
   its failure-time state.*
@@ -138,7 +156,10 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   retains a Message while it is live and archives it when its retention
   window passes. It never deletes. What becomes of an archive is the archive
   owner's decision, not Xmip's
-  ([ADR-0040](doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md)).
+  ([ADR-0040](doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md);
+  archiving by retention window is
+  [built, not in the assembled service](doc/architecture/estate-map.md#retention-archiving): the
+  Playground runs it, a node does not).
 - **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
   Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
   needs attention, and it carries that leaf and its evidence, so the worst
@@ -251,8 +272,9 @@ The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
    internet and the others may not (ADR-0045). `R1` is the node this
    command declared `receive` for, so it is the receiving edge — the node that
    would obtain its server certificate from Let's Encrypt over ACME, which is
-   the one online act Xmip has (ADR-0033, ADR-0034). The switch permits;
-   nothing in the Playground reaches out.
+   the one online act Xmip has (ADR-0033, ADR-0034;
+   [decided, not built](doc/architecture/estate-map.md#certificate-provisioning)). The switch
+   permits; nothing in the Playground reaches out.
 
    The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
    board that follows receive, process and send as the cluster moves. Beside
@@ -297,8 +319,8 @@ whether delivery completed, and why work stopped when it did not.
 | --- | --- | --- |
 | Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
-| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for. |
-| Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
+| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading): the loader drives the contract table alone, `xmip-service` is built without it, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Process, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
+| Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md); [decided, not built](doc/architecture/estate-map.md#arrival-validation)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
 | Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Device, edge, computer, server and hosted nodes, and the clusters made of them, are one product. |
@@ -307,7 +329,8 @@ whether delivery completed, and why work stopped when it did not.
 ### Message ownership and failure boundaries
 
 A Stream is not a Message merely because bytes arrived. Xmip accepts only
-well-formed content and, where configured, content conforming to its Contract.
+well-formed content and, where configured, content conforming to its Contract
+([decided, not built](doc/architecture/estate-map.md#arrival-validation)).
 Acceptance transfers responsibility to Xmip; durability therefore precedes
 execution. Routing creates Journeys; assignment and transformation create new
 immutable Message generations.
@@ -373,8 +396,10 @@ from it; the first has not been cut
 operator surfaces and the Playground are operational, and since 2026-09-19
 the runtime opens a Module for real: it loads the shared library, resolves
 `xmip_create_module_v1`, refuses a descriptor the loading capability's trait
-version does not admit, and drives the contract table through it — the same
-code for a C Module and a Rust one. Technologies are still linked rather
+version does not admit, and configures, starts and stops the contract
+table through it — the same code for a C Module and a Rust one
+([built, not in the assembled service](doc/architecture/estate-map.md#module-loading)); no Location
+calls a loaded contract yet. Technologies are still linked rather
 than loaded, and most technology
 repositories are scaffolded and not yet written. The manifest records that
 distinction for every repository, and it belongs in every technical
@@ -431,12 +456,16 @@ and operation semantics.
 Three security profiles, `standard`, `enterprise` and `regulated`, set
 identity isolation and whether the runtime stops rather than operate
 unobserved ([deployment-model.md](doc/architecture/deployment-model.md),
-section 4). Identity is verified per protocol against the published
+section 4; [decided, not built](doc/architecture/estate-map.md#security-profile): no
+configuration names a profile yet, and nothing enforces one). Identity is verified per protocol against the published
 standards; authorization follows it; Receive and Send identities are
 configured independently, because Xmip is the server on receive and the
-client on send. Certificates are the first mechanism built; they are
-provisioned by Let's Encrypt at a public edge and by your own authority
-elsewhere. Xmip is developed in Sweden and is source-available, which is
+client on send. Certificates are the first mechanism built: Xmip's own TLS
+presents and verifies the certificate files an operator gives it, and the
+web host serves with them; a node presents none yet
+([built, not in the assembled service](doc/architecture/estate-map.md#certificate-usage)). Provisioning
+them — by Let's Encrypt at a public edge and by your own authority
+elsewhere — is [decided, not built](doc/architecture/estate-map.md#certificate-provisioning). Xmip is developed in Sweden and is source-available, which is
 relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
@@ -549,7 +578,10 @@ Every Xmip program audits, not only the runtime
 record what they start and stop, every act taken through them and every
 failure, through `xmip-core-audit`. A program's records go to `audit.toml` in
 the directory its configuration names as `AuditDirectory`, else the one
-`XMIP_AUDIT_DIRECTORY` names; the estate's tooling uses
+`XMIP_AUDIT_DIRECTORY` names, appended before the act that recorded them
+goes on ([built, in the assembled service](doc/architecture/estate-map.md#program-audit)); writing
+them through Xmip Storage instead is
+[decided, not built](doc/architecture/estate-map.md#audit-through-storage); the estate's tooling uses
 `.local-work/audit`. When audit cannot persist a record, the operating
 system's log holds it: the Windows Event Log under the source `Xmip`, the
 journal or syslog on Linux (`journalctl -t xmip`), the unified log on macOS.
@@ -612,19 +644,27 @@ service manager restarts that. `xmip-service --configuration <path>
 node's service: the systemd unit, the launchd property list, or the
 `sc.exe create` arguments. The build links the transports its site's
 domains serve, by feature; a Location naming another transport is refused
-when the node starts. The node keeps its runtime store where its
-configuration's `[store]` says — by default at `data/persistence-rocksdb`,
-RocksDB, the one engine, sealed under the platform's key store — and a
+when the node starts. The node is its own embedded Storage node, under its
+data directory — `data/storage`, RocksDB for the runtime database and
+SQLite for the administration database, sealed under the key store
+`[store]` names, the platform's by default
+([built, in the assembled service](doc/architecture/estate-map.md#embedded-storage)) — and a
 store naming a key store the build left out, or one that does not open, is
-refused the same way. Xmip Storage — the nodes declaring the `storage` role,
-which every other node reaches round robin from its `[storage] nodes`, over
-Xmip's own mutual TLS — is built in `xmip-core-persist`'s `storage`; the
-database servers it is put in front of are set up by IT from
+refused the same way. Xmip Storage on nodes of its own — the nodes
+declaring the `storage` role, which every other node reaches round robin
+from its `[storage] nodes`, over Xmip's own mutual TLS — is built in
+`xmip-core-persist`'s `storage`, and `xmip-service` refuses a node listing
+them until its configuration can name the identity it presents
+([built, not in the assembled service](doc/architecture/estate-map.md#storage-nodes)). The
+database servers it is to be put in front of are set up by IT from
 [`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
-[`deploy/database/sqlserver`](deploy/database/sqlserver/README.md). A
+[`deploy/database/sqlserver`](deploy/database/sqlserver/README.md); a
+Storage node reads `[storage.database]` and connects to neither yet
+([decided, not built](doc/architecture/estate-map.md#database-server)). A
 pause or resume of a Subscription reaches it as an
 order left in `data/orders`, and survives its restart
-([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md)).
+([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md);
+[built, in the assembled service](doc/architecture/estate-map.md#subscription-pause)).
 It publishes what the node says of itself — its health and figures, its
 topology with the Parties on each side, its Subscriptions and where it takes
 orders — to `data/snapshot.toml`, every quarter of a second and at once after
@@ -633,7 +673,7 @@ an order, and declares the file, so the operation surfaces open over it:
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
 Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
-xmip-cli subscriptions --snapshot /opt/xmip/data/snapshot.toml --pause --name onward
+xmip-cli subscriptions --snapshot /opt/xmip/data/snapshot.toml --location xmip:///C1/node/S1 --name onward --pause
 ```
 
 When the node stops, the file says it stopped.
@@ -647,7 +687,8 @@ Configuration is TOML on disk; JSON is used only on the wire
 A node is offline unless its configuration says `online = true`
 ([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
 may reach the internet for duties that require it, such as certificate
-provisioning at a public edge. Online access is a declared choice, never a
+provisioning at a public edge
+([decided, not built](doc/architecture/estate-map.md#certificate-provisioning)). Online access is a declared choice, never a
 side effect of deployment.
 
 The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,
@@ -672,7 +713,8 @@ front of them (ADR-0009). Start, stop and restart of a scope were declined.
 
 A security profile, `standard`, `enterprise` or `regulated`, sets identity
 isolation and whether the runtime fails closed
-([deployment-model.md](doc/architecture/deployment-model.md), section 4).
+([deployment-model.md](doc/architecture/deployment-model.md), section 4;
+[decided, not built](doc/architecture/estate-map.md#security-profile)).
 
 ### Working an incident
 
@@ -796,9 +838,8 @@ Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip  # omit -Nodes
 Start-XmipTest -Suite * -Cluster C1                   # every suite this estate knows
 ```
 
-Four kinds of test, and `Publish-XmipChange` runs every one a change
-touched, in dependency order, modules first, then commits, pushes and
-updates the pins in the superproject:
+Four kinds of test. `Publish-XmipChange` runs the first three where a
+change touched them, and never the Playground:
 
 | Suite | Runs | Command |
 | --- | --- | --- |
@@ -807,9 +848,27 @@ updates the pins in the superproject:
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
 | The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
-Before a change lands, `cargo fmt`, `cargo clippy --workspace --all-targets
---all-features -- -D warnings` (nothing is on by default) and the suite must
-pass. Until the first Linear release, work commits directly to `main`
+What it runs before anything is pushed, every estate crate patched to its
+working tree and built in the one shared directory, the first failure
+stopping the run with nothing pushed:
+
+- **Each changed Rust module, leaves first:** `cargo test` with its default
+  features, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`
+  with its default features, then `cargo test --features` naming every
+  feature its `Cargo.toml` declares. Clippy is not run with those features.
+- **Each changed .NET module:** `dotnet build` of every project, `dotnet
+  test` of every `*.Test.csproj` and the module's Pester tests, the runtime
+  library built first.
+- **Each unchanged module that consumes a changed one:** `cargo clippy
+  --all-targets --features <every declared feature> -- -D warnings`, which
+  compiles it and its tests against the change; its tests do not run.
+- **The root:** its crate is tested as a changed module whenever a module
+  lands, and its `test/` suite runs when the root itself changed. A change
+  to the root alone runs `test/` and not the root crate's cargo steps.
+
+Run `Start-XmipTest -Suite Core.Estate` and a Playground roll yourself before
+landing anything non-trivial; `-NoVerify` skips every step above. Until the
+first Linear release, work commits directly to `main`
 ([release-model.md](doc/governance/release-model.md)).
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
@@ -817,8 +876,8 @@ A suite is named `<Provider>.<Name>`, like every other name in the estate
 itself — so Xmip's own two are `Core.Playground` and `Core.Estate`, and that
 is what every record, refusal and surface spells. A bare `Playground` is
 accepted and resolves to `Core.Playground`, so nothing you have typed stops
-working. A third party's suite carries its own provider: `<Provider>.<Name>`.
-A third party adds a suite by dropping a declaration in `test/suite` —
+working. A provider's suite carries its own name: `<Provider>.<Name>`.
+A provider adds a suite by dropping a declaration in `test/suite` —
 `provider`, `name` and the `command` that starts it — with no edit to Xmip's
 own source.
 Omit `-Test` and the whole suite runs, for every suite and every provider.
@@ -870,7 +929,7 @@ record; propose a new one or an amendment.
 | [`doc/terminology.md`](doc/terminology.md) | the vocabulary |
 | [`architecture/runtime-model.md`](doc/architecture/runtime-model.md) | what Xmip does at runtime |
 | [`architecture/repository-model.md`](doc/architecture/repository-model.md) | why the estate is shaped as it is |
-| [`architecture/estate-map.md`](doc/architecture/estate-map.md) | every declared repository, and whether it is mounted — generated |
+| [`architecture/estate-map.md`](doc/architecture/estate-map.md) | what of each capability is built, every declared repository, and whether it is mounted — generated |
 | [`architecture/module-model.md`](doc/architecture/module-model.md) | the module boundary, loading and isolation |
 | [`architecture/deployment-model.md`](doc/architecture/deployment-model.md) | nodes, profiles, roles, installation, recovery |
 | [`architecture/observability-model.md`](doc/architecture/observability-model.md) | audit, logs, traces, retention, observation |
@@ -922,7 +981,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a third party's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built into the session's own directory on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
@@ -961,8 +1020,10 @@ change
 ([architectural-change-permission.md](doc/governance/architectural-change-permission.md)).
 A module is a crate against a C ABI
 ([ADR-0012](doc/decision/ADR-0012-module-boundary.md)), written in Rust or .NET;
-another runtime runs inside Xmip only when configuration invites it
-([ADR-0018](doc/decision/ADR-0018-service-and-host.md)).
+another runtime runs in a process of its own beside Xmip, and inside it
+only when configuration invites it
+([ADR-0018](doc/decision/ADR-0018-service-and-host.md), amendment
+2026-10-05; [decided, not built](doc/architecture/estate-map.md#other-runtime-module)).
 
 ---
 

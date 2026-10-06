@@ -19,6 +19,12 @@ the validation gates — which described subjects the four specifications never
 covered. Those documents conflicted too, and those conflicts are in section 23
 as well.
 
+**This document states the decided design, and much of it is not built.**
+How much of each capability is built — in the assembled service, built but
+not in it, decided and not built, or open — is said once, in the
+[estate map](estate-map.md#what-is-built), and cited beside a promise here as a link
+whose words are that state.
+
 ## 1. Purpose
 
 Xmip reliably receives, moves, understands, validates, processes, delivers,
@@ -84,7 +90,9 @@ than once.*
 ### Nothing executes on arrival
 
 **Every Stream, Message and Journey is durably queued until it completes or
-retention applies, and is archived before either.** Xmip is queue-driven end to
+retention applies, and is archived before either**
+(archiving by retention window:
+[built, not in the assembled service](estate-map.md#retention-archiving)). Xmip is queue-driven end to
 end. Arrival enqueues; it does not execute.
 
 The reason is stated best plainly: **you never know when the hardware has time.**
@@ -163,13 +171,16 @@ A (`deployment-model.md` section 7). Runtime matter is central there, so
 another node with matching node roles can pick up; the administration
 database keeps what must be shared and kept over time — audit history,
 operator state, deployment state, cluster membership — and the
-Subscriptions each Host Service writes from its TOML as it starts.
+Subscriptions each Host Service writes from its TOML as it starts
+([decided, not built](estate-map.md#shared-subscriptions)).
 
 **Configuration is TOML, read as a Host Service starts; the Subscriptions
 are shared through Xmip Storage** (the owner, 2026-10-02: *Routes are
 defined in TOML, read into Storage at Xmip Host Service startup, read from
 Storage when needed and kept in memory until "not used for a while"*, and
-*They are shared*). Each node reads its TOML configuration as it starts and
+*They are shared*; [decided, not built](estate-map.md#shared-subscriptions): a node
+routes by the Subscriptions it binds,
+[built, in the assembled service](estate-map.md#subscription-routing)). Each node reads its TOML configuration as it starts and
 holds its Locations, Xmip Processes and Send Ports as its **execution
 tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
 Subscriptions it writes into Xmip Storage's administration database, so any
@@ -640,7 +651,9 @@ transport identification, authentication, authorization
 
 Each step at each level is optional and configured on its artifact
 (section 20, *Prepare, Contract, Promote, Transform and Demote at both
-levels*).
+levels*). Holding a Stream to a Contract at a Location or Port is
+[decided, not built](estate-map.md#arrival-validation): a node refuses to start a
+Location that names a Contract until it is.
 
 **The sender is acknowledged after the whole receive cycle** (the owner: *On
 arrival each Stream is written to the node's Ledger and then when the Receive
@@ -822,7 +835,11 @@ Storage when needed and kept in memory, their filters compiled, until they
 have not been used for an hour, or a Host Service has written changed
 Subscriptions, which every node learns from the generation Xmip Storage
 answers with each Ledger write** (section 3; ADR-0031, amendment
-2026-10-02) — decided by the owner, 2026-10-02: *They are shared*.
+2026-10-02) — decided by the owner, 2026-10-02: *They are shared*
+([decided, not built](estate-map.md#shared-subscriptions)). What runs today matches
+against the Subscriptions of the Applications the node itself binds,
+compiled as it starts
+([built, in the assembled service](estate-map.md#subscription-routing)).
 
 ### Duplicates are a business decision
 
@@ -1223,14 +1240,22 @@ archived evidence can be restored.
 ## 15. Resilience
 
 `xmip-core-resilience` owns the guards on an attempt (ADR-0048); its README
-names them.
+names them ([built, not in the assembled service](estate-map.md#resilience-guards):
+the Event forwarder runs them, and a Message send does not). A send has its
+Send Port's retry
+([built, in the assembled service](estate-map.md#send-port-retry)); the guards an
+operator configures on a Send Port Group, Send Port and Send Location, and
+a timeout that interrupts an attempt, are
+[decided, not built](estate-map.md#send-resilience) (ADR-0048, amendments
+2026-10-06).
 
 **Handlers report Success, Retryable Failure or Non-retryable Failure. They do
 not own retry loops.** A handler with its own retry loop cannot be governed by
 policy, and two of them compound multiplicatively.
 
 Once configured retries are exhausted the Journey fails, and an operator may
-retry later. The same primitives supervise Host Services, per ADR-0018.
+retry later. The same primitives are to supervise Host Services, per
+ADR-0018.
 
 ### Delivery semantics
 
@@ -1301,7 +1326,10 @@ database, where it is kept over time — on every backend (the owner,
 2026-10-01: *RocksDB is the first storage for audit records, then transferred
 to SQLite, RocksDB for speed, SQLite for persistence over time*). The
 operating system's log stays the fallback when it cannot be written
-(ADR-0062, amendment 2026-10-01).
+(ADR-0062, amendment 2026-10-01;
+[decided, not built](estate-map.md#audit-through-storage)). Every program writes its
+records to its `audit.toml` today
+([built, in the assembled service](estate-map.md#program-audit)).
 
 **Retention** (`xmip-core-retain`) holds what Audit needs to show: Messages,
 Streams or durable Stream references, lineage, Journey execution positions,
@@ -1311,7 +1339,9 @@ category, using time, size, count, state or hold rules.
 
 **Archiving** (`xmip-core-archive`) moves, represents, stores and restores
 retained history. Targets may include CSV, SQL, JSON, Parquet, XML, Avro, file
-systems, object stores and custom providers.
+systems, object stores and custom providers. Both are
+[built, not in the assembled service](estate-map.md#retention-archiving): the
+Playground drives them, a node does not.
 
 Audit comes first conceptually and uses retention to show Messages and their
 Streams at audited events, and to support Replay.
@@ -1410,8 +1440,9 @@ authentication, authorization, Party and Endpoint configuration.
 > Environment profiles change policy, never the security architecture.
 
 Secrets and certificates are referenced through providers and never embedded in
-configuration, logs, retention or audit. Xmip supports ACME-compatible
-certificate provisioning and renewal. **All access results are audited without
+configuration, logs, retention or audit. Xmip is to support ACME-compatible
+certificate provisioning and renewal
+([decided, not built](estate-map.md#certificate-provisioning)). **All access results are audited without
 recording secret values.**
 
 ## 20. Artifacts, Content, Contract and Configuration
@@ -1538,7 +1569,8 @@ Steps work on the Stream at both levels (section 8).
 serve only to deserialize and promote. Where a receive artifact names one,
 it validates unless it says `validate = false`; where a send artifact names
 one, it validates only where it says `validate = true`. The designer writes
-the same defaults.
+the same defaults. [Decided, not built](estate-map.md#arrival-validation): a node
+refuses a Location naming a Contract, and reads none of these keys yet.
 
 ```toml
 [[receive_ports]]
@@ -1742,7 +1774,10 @@ Receive Location holding the call (section 11). The end of every execution
 scope is audited with its outcome.
 
 **Not yet built:** running Stages — the Xmip Process engine itself — is work
-of its own.
+of its own. A node declares and plans its Xmip Processes
+([built, in the assembled service](estate-map.md#process-declaration)); compiling one
+at design time and running it are
+[decided, not built](estate-map.md#process-execution).
 
 ### Stages
 

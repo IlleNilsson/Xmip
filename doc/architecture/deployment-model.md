@@ -98,6 +98,14 @@ receive and send, process execution, Subscription matching, audit, tracing,
 persistence, clustering, management, updates and deployment tooling. It
 discovers and loads Modules on demand.
 
+What `xmip-service` is today is a purpose-compiled runtime in this sense:
+every technology it runs is linked by feature, so adding one — a transport,
+a contract, a key store — is a rebuild with `Build-XmipService`, and the
+node's TOML then names it. Its Module loader is built and drives the
+contract table alone, and the service is built without it
+([built, not in the assembled service](estate-map.md#module-loading)); Xmip Process
+execution is [decided, not built](estate-map.md#process-execution).
+
 **Purpose-compiled runtime** — a smaller build for one target: an endpoint
 collector, an industrial gateway, a CAN bus bridge, a telemetry forwarder, a
 field-site agent, a locked-down appliance, an air-gapped node. It may **link
@@ -207,7 +215,11 @@ a Storage node also carries the database is IT's question (section 7). A
 one-node deployment is its own Storage node. `node::NodeRole::Storage` is
 the role, and `xmip-core-persist`'s `storage` is Xmip Storage: its
 operations, the embedded Storage node, the wire over Xmip's TLS and the
-round robin (ADR-0056, amendment 2026-10-01, the Storage role).
+round robin (ADR-0056, amendment 2026-10-01, the Storage role). A node as
+its own embedded Storage node is
+[built, in the assembled service](estate-map.md#embedded-storage); Storage nodes
+reached over the wire are
+[built, not in the assembled service](estate-map.md#storage-nodes).
 
 **Executor, Reader and Writer are gone.** This section named three runtime
 roles until 2026-10-01 — Executor, Reader, Writer — for the subject
@@ -261,6 +273,8 @@ The rules:
 
 The seven rules above describe mechanisms. A **security profile** says how
 strictly an estate applies them, and is declared once per cluster.
+Profiles are [decided, not built](estate-map.md#security-profile): no configuration
+key names one yet, and nothing checks identity isolation at start.
 
 | Profile | For | Means |
 | --- | --- | --- |
@@ -370,7 +384,7 @@ regardless of backend database technology*):
 
 | | The runtime database | The administration database |
 | --- | --- | --- |
-| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) |
 | Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time |
 | On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` |
 | Behind a database server | a database of its own on IT's server | a separate database on IT's server, which IT may place on another server |
@@ -385,16 +399,20 @@ time:**
   available Handlers and Extensions, configuration versions and deployment
   state;
 - the Subscriptions, written from each Host Service's TOML as it starts and
-  never edited there (ADR-0031, amendment 2026-10-02);
+  never edited there (ADR-0031, amendment 2026-10-02;
+  [decided, not built](estate-map.md#shared-subscriptions));
 - operator state: what is paused, by whom and when — every node honors a
   pause;
 - audit, moved there from the runtime database by the audit keeper — on
   every backend (the owner: *RocksDB is the first storage for audit records,
   then transferred to SQLite, RocksDB for speed, SQLite for persistence over
-  time*). The `audit.toml` file sink is replaced by this, for the tools
-  outside a node as well — the cmdlets, the operation web and `xmip-cli`
-  write to the cluster's Storage nodes (ADR-0062, amendment 2026-10-01); the
-  operating system's log stays the fallback (ADR-0062 clause 3).
+  time*). The `audit.toml` file sink is to be replaced by this, for the
+  tools outside a node as well — the cmdlets, the operation web and
+  `xmip-cli` writing to the cluster's Storage nodes (ADR-0062, amendment
+  2026-10-01; [decided, not built](estate-map.md#audit-through-storage)); until then
+  every program appends to its `audit.toml`
+  ([built, in the assembled service](estate-map.md#program-audit)), and the operating
+  system's log stays the fallback (ADR-0062 clause 3).
 
 **They are separate databases and stay separate, whatever engine holds
 them.** Their access patterns are opposites — one is written constantly and
@@ -419,7 +437,8 @@ concern*). Two forms are decided:
 owner, 2026-10-01: *Don't leave out the elephant, Postgres*), as a persist
 technology, `xmip-core-persist-postgresql`, reusing the PostgreSQL wire
 protocol the estate already speaks in its PostgreSQL transport — one
-implementation, no async runtime. SQL Server follows later.
+implementation, no async runtime. SQL Server follows later. Both are
+[decided, not built](estate-map.md#database-server).
 
 **A node finds its Storage nodes from its TOML** (the owner, 2026-10-01,
 asked whether a node should find them from a list of their addresses in its
@@ -447,7 +466,9 @@ is superseded (ADR-0015 and ADR-0018, amendments 2026-10-01).
 are shared through Xmip Storage** (the owner, 2026-10-02: *Routes are
 defined in TOML, read into Storage at Xmip Host Service startup, read from
 Storage when needed and kept in memory until "not used for a while"*, and
-*They are shared*). Each node reads its TOML configuration as it starts and
+*They are shared*; [decided, not built](estate-map.md#shared-subscriptions): a node
+routes by the Subscriptions it binds,
+[built, in the assembled service](estate-map.md#subscription-routing)). Each node reads its TOML configuration as it starts and
 holds its Locations, Xmip Processes and Send Ports as its **execution
 tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
 Subscriptions it writes into Xmip Storage's administration database, so any

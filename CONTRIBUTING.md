@@ -156,8 +156,11 @@ Dependencies track `branch = "main"` (ADR-0005). Before anything is pushed,
 the tool verifies against the estate's working trees — every estate crate
 patched to its local path, in the one shared build directory: each changed
 module is tested, leaves first; every unchanged module that consumes one is
-compiled and linted with its tests against it; and a changed root runs its
-own `test/`. The first failure stops the run with nothing pushed. Only then
+compiled and linted with its tests against it; the root crate is tested
+whenever a module lands; and a changed root runs its own `test/`. A changed
+module is linted with its default features and tested with every feature it
+declares; the Playground is never run. `README.md`, *Build, test, land*,
+lists the commands. The first failure stops the run with nothing pushed. Only then
 does it push what an interrupted run left committed, land each changed
 module, dependencies first, and the root last.
 Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial, and
