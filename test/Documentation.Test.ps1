@@ -275,3 +275,109 @@ Describe 'The setup procedure is present' {
         $script:Readme | Should -Match '-Role developer'
     }
 }
+
+Describe 'A document cites what is built in the manifest''s words' {
+    # A documentation review, 2026-10-06: documents described decided
+    # behavior in the present tense where it was not built, or built and not
+    # in the assembled service. Each capability's state is declared once, in
+    # architecture.toml's [implementation], and rendered into estate-map.md;
+    # a promise cites it beside itself as a link whose words are the state.
+    # Decision records keep the words of their day and are not read here.
+    BeforeAll {
+        [string] $path = Join-Path -Path $script:Root -ChildPath 'architecture.toml'
+        [PSCustomObject] $manifest = Get-XmipManifest -Path $path
+        [PSCustomObject[]] $script:Built = @(
+            InModuleScope Xmip -Parameters @{ Manifest = $manifest } {
+                param($Manifest)
+
+                Get-XmipMapImplementation -Manifest $Manifest
+            }
+        )
+
+        [string[]] $documents = @(
+            git -C $script:Root ls-files --recurse-submodules -- '*.md' |
+                Where-Object { $_ -notmatch '^doc/decision/' } |
+                Where-Object { $_ -ne 'doc/architecture/estate-map.md' }
+        )
+        [regex] $citation = '\[([^\]]+)\]\(([^)\s#]*estate-map\.md)#([a-z0-9-]+)\)'
+
+        [PSCustomObject[]] $script:Cited = @(
+            foreach ($document in $documents) {
+                [string] $file = Join-Path $script:Root $document
+
+                if (-not (Test-Path -LiteralPath $file)) {
+                    continue
+                }
+
+                [string] $text = Get-Content -LiteralPath $file -Raw
+
+                if (-not $text) {
+                    continue
+                }
+
+                foreach ($match in $citation.Matches($text)) {
+                    [PSCustomObject] @{
+                        Document = $document
+                        Words    = ($match.Groups[1].Value -replace '\s+', ' ').Trim()
+                        Link     = $match.Groups[2].Value
+                        Key      = $match.Groups[3].Value
+                    }
+                }
+            }
+        )
+    }
+
+    It 'declares the states the documents cite' {
+        [string] $because = 'architecture.toml says what is built'
+        $script:Built.Count | Should -BeGreaterThan 10 -Because $because
+        $script:Cited.Count | Should -BeGreaterThan 30 -Because 'the documents cite it'
+    }
+
+    It 'cites an entry that exists, through a link that resolves, in its words' {
+        [hashtable] $said = @{}
+
+        foreach ($entry in $script:Built) {
+            $said[$entry.Key] = $entry.Said
+        }
+
+        [string[]] $wrong = @(
+            foreach ($one in $script:Cited) {
+                [string] $folder = Split-Path -Parent (Join-Path $script:Root $one.Document)
+                [string] $target = Join-Path $folder $one.Link
+
+                if (-not (Test-Path -LiteralPath $target)) {
+                    "$($one.Document): $($one.Link) does not resolve"
+                    continue
+                }
+
+                if ($one.Key -eq 'what-is-built') {
+                    continue
+                }
+
+                if (-not $said.ContainsKey($one.Key)) {
+                    "$($one.Document): '$($one.Key)' is no [implementation] entry"
+                    continue
+                }
+
+                if ($one.Words -ne $said[$one.Key]) {
+                    "$($one.Document): '$($one.Key)' cited as '$($one.Words)', " +
+                    "and architecture.toml says '$($said[$one.Key])'"
+                }
+            }
+        )
+
+        [string] $because = "a promise's state is the manifest's, word for word " +
+            "(case aside):`n$($wrong -join "`n")"
+
+        $wrong | Should -BeNullOrEmpty -Because $because
+    }
+
+    It 'cites every entry somewhere, so none is a state nobody reads' {
+        [string[]] $keys = @($script:Cited | ForEach-Object { $_.Key } | Sort-Object -Unique)
+        [string[]] $uncited = @(
+            $script:Built | Where-Object { $_.Key -notin $keys } | ForEach-Object { $_.Key }
+        )
+
+        $uncited | Should -BeNullOrEmpty -Because 'cite each beside the promise it qualifies'
+    }
+}

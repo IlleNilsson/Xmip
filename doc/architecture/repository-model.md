@@ -414,7 +414,7 @@ purpose (the owner, 2026-09-23):
 ```text
 Xmip/
 ├── sdk/                      simulators and emulators a module is tested on,
-│                             and the test ACME server (ADR-0061)
+│                             and the test ACME server, not built (ADR-0061)
 ├── module/
 │   ├── foundation/           what starts a node, no provider
 │   │   ├── core   abi   stream   message   context   journey

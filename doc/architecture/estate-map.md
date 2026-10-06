@@ -53,9 +53,220 @@ the root forgot.
 
 ---
 
+## What is built
+
+One state per user-facing capability, declared in the manifest's
+`[implementation]` table: built, in the assembled service — `xmip-service`, or
+for an operator's act the surfaces that operate it; built, not in the
+assembled service; decided, not built; or open. A document that promises one
+cites its state beside the promise, as a link to the entry here, and
+`test/Documentation.Test.ps1` fails a citation whose words the manifest does
+not say. The requirement stays in the document; this says how much of it is
+true now, and changes in the same change as the code that changes it.
+
+### Built, in the assembled service
+
+#### `configuration-saving`
+
+**Saving and slicing the cluster's configuration.** The Operation Desktop
+saves the cluster's `xmip.toml`, validated by the runtime and audited, and
+slices it through `xmip_cluster_slices_v1`; desired state slices it on each
+node (`xmip-service --slice`). A changed slice takes effect when the node
+starts again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
+
+#### `embedded-storage`
+
+**A node as its own embedded Storage node.** RocksDB for the runtime database
+and SQLite for the administration database under the node's data directory,
+sealed under the key store `[store]` names. Records: ADR-0015 (amendment
+2026-10-01), ADR-0063.
+
+#### `process-declaration`
+
+**Declaring an Xmip Process.** `[[xmip_processes]]` and an Application's Xmip
+Processes are read, validated and planned into the execution tree as a node
+starts, and a Subscription may lead to one; each is published as planned, not
+started. Records: ADR-0018, ADR-0064.
+
+#### `program-audit`
+
+**Every Xmip program audits to its audit file.** `xmip-service`, `xmip-cli`,
+both PowerShell modules, the web host, the language server and the Playground
+record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
+synchronously: a record is appended before `record` returns, the operating
+system's log the fallback. Records: ADR-0062.
+
+#### `send-port-retry`
+
+**A Send Port's retry.** A Send Port tries each Send Location again by its
+`retry = { attempts, backoff }`, and a Journey whose every Location failed its
+tries is written Failed and waits for Retry or Dismiss. Records: ADR-0013,
+runtime-model.md section 10.
+
+#### `subscription-pause`
+
+**Pausing and resuming a Subscription.** An order the node takes: what the
+Subscription matches is held in Xmip Storage, surviving a restart, and picked
+up oldest first on resume; every surface lists Subscriptions and takes the
+act. Records: ADR-0013 (amendments 2026-09-30, 2026-10-01).
+
+#### `subscription-routing`
+
+**Routing by the Subscriptions a node binds.** A node routes every Message it
+publishes against the Subscriptions of the Xmip Applications it binds, their
+filters compiled as it starts; in the assembled service no Stream reaches
+routing yet (`arrival`). Records: ADR-0013, ADR-0066.
+
+### Built, not in the assembled service
+
+#### `arrival`
+
+**Receiving a Stream through a node's gates and publishing its Message.** The
+runtime receives through a linked transport, identifies, authenticates and
+authorizes, writes the Stream to the Ledger in chunks and publishes a Message
+with what it learned in its context. `xmip-service` links no authenticator and
+no authorization policy, and a Receive Location authenticates and permits
+nothing without them, so the assembled service refuses every Stream at its
+gates; the Playground and the runtime's tests hand both in. Records: ADR-0019,
+runtime-model.md section 5.
+
+#### `certificate-usage`
+
+**Presenting and verifying certificates an operator supplies.**
+`xmip-core-library-tls` presents and verifies PEM certificates; the web host
+serves https with them, and Xmip Storage's client and server speak mutual TLS
+with them. `xmip-service` presents none yet: it reaches only its own embedded
+Storage node. Records: ADR-0033, ADR-0063.
+
+#### `module-loading`
+
+**Opening a Module at run time.** The loader opens a shared library, resolves
+`xmip_create_module_v1`, checks its trait version and configures, starts and
+stops its contract table, the only table with a host side; nothing on the
+message path calls it. It is behind the runtime's `dynamic-loading` feature,
+which `xmip-service` is not built with; every other technology is linked by
+feature, so adding one means running `Build-XmipService` again. Records:
+ADR-0025, ADR-0057.
+
+#### `resilience-guards`
+
+**The six resilience guards.** Retry, timeout, circuit breaker, rate limit,
+bulkhead and fallback are guards `xmip-core-resilience` asks in order; the
+Event forwarder runs them for the http, amqp and kafka Event wires, and only
+tests build a guard. The timeout judges an attempt after it ended; it does not
+interrupt one. Records: ADR-0048.
+
+#### `retention-archiving`
+
+**Archiving by retention window.** `xmip-core-retain` and `xmip-core-archive`
+are driven by the Playground on a simulated clock; a node has no retention or
+archive step and reads no `[retention]` table. Records: ADR-0040.
+
+#### `storage-nodes`
+
+**Storage nodes reached over mutual TLS.** `xmip-core-persist`'s Storage
+client and server are built and tested; `xmip-service` serves no other node,
+and refuses a node whose `[storage] nodes` lists any until its configuration
+can name the identity it presents. Records: ADR-0056 (amendment 2026-10-01).
+
+### Decided, not built
+
+#### `arrival-validation`
+
+**Holding a Stream to a named Contract.** A node refuses to start a Receive or
+Send Location that names a Contract, in words: arrival holds no Stream to one
+yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate,
+and the Playground holds its generated content to them in its own harness, not
+at a node's Location. Records: ADR-0042, ADR-0031 (amendment 2026-10-05).
+
+#### `artifact-steps`
+
+**Prepare, Contract, Promote, Transform, Demote and Assignment on Ports,
+Locations and Xmip Processes.** The keys are decided and none is read;
+Assignment and Transformation have the Message's generations ready in
+`xmip-core-message` and the runtime's `generation.rs`, with no caller outside
+tests. Records: ADR-0031 (amendment 2026-10-05), runtime-model.md section 20.
+
+#### `audit-through-storage`
+
+**Audit written through Xmip Storage and kept by the audit keeper.** Xmip
+Storage's `keep_audit` exists and is tested, and nothing calls it outside
+tests; only publication and replay records reach the Ledger. The file sink is
+what every program writes. Records: ADR-0062, deployment-model.md section 7.
+
+#### `bounded-audit-channel`
+
+**A bounded asynchronous audit channel with a capacity policy.** The keeper
+`xmip-core-audit` runs is an unbounded queue on one thread, used by Event
+delivery records alone, and a program's own record waits for it to drain; no
+capacity, discard, sampling or back-pressure policy exists. Records:
+audit-record.md, Performance.
+
+#### `certificate-provisioning`
+
+**Obtaining and renewing certificates (ACME, an internal authority).** Nothing
+obtains or renews a certificate: there is no ACME client and no
+`xmip-core-provision`, and the SDK has no ACME server. Certificates are files
+an operator supplies. Open problem 27. Records: ADR-0034, ADR-0033.
+
+#### `configuration-delivery`
+
+**Delivering a slice to its node, its acceptance, and restarting only what
+changed.** No Xmip path puts a slice on another node: the desktop delivers
+only to the node it starts, a node answers no accepted or refused, and a save
+is not versioned, watched for drift or applied by restarting only the threads
+or Host Services that changed. Open problem 31. Records: ADR-0031 (amendments
+2026-10-05).
+
+#### `database-server`
+
+**Xmip Storage in front of PostgreSQL or SQL Server.** `[storage.database]` is
+read and checked, and IT's scripts are in `deploy/database`; no Storage node
+connects to either server yet. Records: ADR-0015 (amendment 2026-10-01),
+deployment-model.md section 7.
+
+#### `other-runtime-module`
+
+**A Module on another runtime.** A .NET Module in process, on threads, unless
+excluded, and another runtime in a process of its own unless configuration
+invites it in: no `InProcess` setting, no .NET hosting and no out-of-process
+channel exist, and a Host Service of its own is refused at start. Records:
+ADR-0018 (amendment 2026-10-05).
+
+#### `process-execution`
+
+**Compiling an Xmip Process at design time, and running it.** Nothing compiles
+a design and no engine runs one: a Journey to an Xmip Process ends saying no
+runtime runs it yet (`xmip-core-runtime`'s `departure.rs`). Records: ADR-0066,
+runtime-model.md section 22.
+
+#### `security-profile`
+
+**Security profiles: standard, enterprise, regulated.** No configuration key
+names a profile and nothing enforces identity isolation at start; the
+isolation rule (`IdentityContext::may_share_host_process`) is called by its
+tests alone. Records: ADR-0022, deployment-model.md section 4.
+
+#### `send-resilience`
+
+**Guards configured on Send Port Groups, Send Ports and Send Locations.** The
+Polly-like pipeline on the send artifacts, a timeout that interrupts an
+attempt, and each transport's send completion (answered, confirmed write,
+unconfirmed) are decided; none is built. Records: ADR-0048 (amendments
+2026-10-06).
+
+#### `shared-subscriptions`
+
+**Subscriptions shared across the cluster through Xmip Storage.** No Storage
+record holds a Subscription and no node writes one there; Xmip Storage keeps a
+paused Subscription's standing and what it holds, per node. A node routes only
+what it received. Records: ADR-0031 (amendment 2026-10-02).
+
+---
+
 ## The tree
 
-Where each repository mounts and what it holds: 227216 lines of production
+Where each repository mounts and what it holds: 227308 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -333,7 +544,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                23969  C# 21928 · Rust 1816 · PowerShell 225
+│   │   ├── abi                                24061  C# 22020 · Rust 1816 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka

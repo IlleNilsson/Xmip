@@ -58,8 +58,9 @@ Module.
 Where a Module runs is ADR-0018's (amendment 2026-10-05): Rust runs on
 threads within the Xmip Host Process; .NET is invited unless excluded; any
 other runtime is never loaded into an Xmip process unless configuration
-explicitly invites it, and otherwise runs in a process of its own beside it.
-The estate's contract technologies are accordingly Rust and .NET (ADR-0042,
+explicitly invites it, and otherwise runs in a process of its own beside it
+([decided, not built](estate-map.md#other-runtime-module): a node starts no Host
+Service of its own and hosts no .NET yet). The estate's contract technologies are accordingly Rust and .NET (ADR-0042,
 amendment 2026-10-05).
 
 ## 2. What the runtime owns
@@ -150,6 +151,14 @@ it, or by registering it through Xmip deployment tooling.
 Modules may also be Rust crates compiled in, where a site's target calls
 for a purpose-compiled runtime — the ABI exists so that the dynamic case is
 possible, not so that it is mandatory.
+
+**Today installing one does require rebuilding.** The loader opens a
+library and drives its contract table, the only table with a host side, and
+`xmip-service` is built without it
+([built, not in the assembled service](estate-map.md#module-loading)): every
+technology a node runs is linked into `xmip-service` by feature, so adding
+one is a new feature of the root crate and `Build-XmipService` again, after
+which the node's TOML names it.
 
 ## 6. The manifest
 
@@ -259,7 +268,9 @@ provides reusable capability to whatever may call it.
 
 **Modules load at startup, eager or delayed per ADR-0025. Extensions are
 verified at startup where possible and loaded only when execution requires
-them.**
+them.** The registries are not built: a loaded Module's contract table is
+the one the runtime drives
+([built, not in the assembled service](estate-map.md#module-loading)).
 
 ## 9. Execution thread
 
@@ -300,7 +311,8 @@ is accepted** — not after it has been dlopened and called.
 
 A Module may run in-process, out-of-process, in a trusted or untrusted Host
 Service, and at a declared execution width — 32-bit, 64-bit, 128-bit, a qubit
-count, or native.
+count, or native. Only in-process is built; out of process is
+[decided, not built](estate-map.md#other-runtime-module).
 
 The runtime decides where, from: Host type, Artifact Definition, the Module
 manifest, trust, platform and configured policy.

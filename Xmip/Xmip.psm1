@@ -280,6 +280,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'New-XmipEstatePage.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipMapDomain.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipMapPreamble.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipMapImplementation.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipEstateMap.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipHistory.ps1')
 
