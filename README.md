@@ -27,7 +27,7 @@ in a cloud of your choice. It operates without internet access.
 | Avoid another opaque integration black box | Source-available implementation, recorded architectural decisions and machine-checked rules. |
 
 Xmip deliberately carries forward the integration-server concepts that worked
-— Receive Locations, Xmip Processes and Send Locations — while correcting the
+— Receive Locations, Work Processes and Send Locations — while correcting the
 failure modes its decision record names.
 
 This repository is the root of the Xmip estate: the manifest that names every
@@ -62,7 +62,7 @@ deserialized and validated against a Contract
 is reported, the Stream is disregarded, and the failure is audited. If it
 holds, the content is published into Xmip as a
 Message, and where a Subscription picks the Message up a Journey begins, to
-an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
+a Work Process, a Send Port or a Send Port Group. The terms, in that order:
 
 - **Stream.** What arrives at a Receive Location: bytes from a file, a
   socket, a queue, a mailbox, the rows a SQL statement returns, a device on
@@ -93,7 +93,7 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   writes a new generation of it, and every generation is kept
   ([decided, not built](doc/architecture/estate-map.md#artifact-steps)).
   *Audited: entry into Xmip, once per Message.*
-- **Subscription.** What picks a published Message up: an Xmip Process, a
+- **Subscription.** What picks a published Message up: a Work Process, a
   Send Port or a Send Port Group declares the Messages it wants. A Message
   is published once and every Subscription that matches it opens one
   Journey; publishing creates no new Message. A Message no Subscription
@@ -109,24 +109,24 @@ an Xmip Process, a Send Port or a Send Port Group. The terms, in that order:
   *Audited: each pickup, by which Subscription, and a Message nothing
   picked up.*
 - **Journey.** One durable line of work for a Message, begun by one
-  Subscription, ending at the Xmip Process's answer or at the delivery. It
+  Subscription, ending at the Work Process's answer or at the delivery. It
   checkpoints and survives a restart, and it ends Completed, Failed, or
   Dismissed when an operator stops it on purpose.
   *Audited: its beginning, each passing on, and how it ended.*
-- **Processing.** What an Xmip Process does when a Subscription starts one:
+- **Processing.** What a Work Process does when a Subscription starts one:
   a definition running step by step and answering with a Message, no
   Message, or waiting for something named; a Message it answers with is
   published into Xmip like any other. It is not an operating system
   process, it receives no Streams and delivers nothing outside, and its
   state belongs to the cluster, never to a thread or a node. A Journey to a
-  Send Port has no Processing. A node declares and plans its Xmip Processes
+  Send Port has no Processing. A node declares and plans its Work Processes
   ([built, in the assembled service](doc/architecture/estate-map.md#process-declaration)); compiling
   one at design time and running it are
   [decided, not built](doc/architecture/estate-map.md#process-execution), and a Journey to one ends
   saying no runtime runs it yet.
   *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
-  from another value, in order. It belongs to an Xmip Process alone and
+  from another value, in order. It belongs to a Work Process alone and
   creates a new Message generation, as transformation does; publishing does
   not.
   *Audited: every assignment and every transformation, with the generation
@@ -319,7 +319,7 @@ whether delivery completed, and why work stopped when it did not.
 | --- | --- | --- |
 | Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
-| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading): the loader drives the contract table alone, `xmip-service` is built without it, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Process, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
+| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading): the loader drives the contract table alone, `xmip-service` is built without it, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Service, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md); [decided, not built](doc/architecture/estate-map.md#arrival-validation)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
@@ -944,7 +944,7 @@ its `doc/` folder: the ABI specification (`module/foundation/abi`), identity
 per technology (`module/core/capability/authenticate`), adding a transport
 (`module/core/capability/transport`), adding a contract
 (`module/core/capability/contract`), the node configuration document
-(`module/platform/configure`), Xmip Process instances
+(`module/platform/configure`), Work Process instances
 (`module/core/capability/process`), the content selector
 (`module/core/capability/promote`), the audit record (`module/core/operation/audit`),
 the reports (`module/core/operation/report`) and record identifiers

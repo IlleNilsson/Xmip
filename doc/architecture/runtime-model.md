@@ -122,7 +122,7 @@ it, which is what makes replay from a checkpoint meaningful and what makes
 The queue has a name: **the Ledger** (the owner, 2026-10-01: *ToDo is a bad
 name, propose a better one*; the assistant proposed Ledger; the owner:
 *Ledger is good*). It holds every Stream, written in chunks, every Message
-and every Journey, with the state of each Xmip Process, retry, failure and
+and every Journey, with the state of each Work Process, retry, failure and
 replay state, and the Messages a paused Subscription holds.
 
 **The Ledger belongs to the cluster, not to a node** (the owner, 2026-10-01:
@@ -181,7 +181,7 @@ Storage when needed and kept in memory until "not used for a while"*, and
 *They are shared*; [decided, not built](estate-map.md#shared-subscriptions): a node
 routes by the Subscriptions it binds,
 [built, in the assembled service](estate-map.md#subscription-routing)). Each node reads its TOML configuration as it starts and
-holds its Locations, Xmip Processes and Send Ports as its **execution
+holds its Locations, Work Processes and Send Ports as its **execution
 tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
 Subscriptions it writes into Xmip Storage's administration database, so any
 node with a routing role routes a Message another node received; routing
@@ -368,7 +368,7 @@ shows thread switching dominating.
 
 **A dynamic, bounded pool per step** (the owner: *Go with the dynamic,
 bounded pool*). Each step of the message path — receive per Receive Location,
-with routing inside it (*How routing runs*, section 9), the Xmip Process
+with routing inside it (*How routing runs*, section 9), the Work Process
 step, send — runs on a pool of its own. A
 CPU-bound step's pool is capped at the machine's core count. An I/O-bound
 step's pool grows while work waits, up to a configured maximum — the
@@ -382,7 +382,7 @@ from there. The owner's
 description: *every sub action starts a new thread, in between the stream
 shall be serialized and then on every sub a new thread deserializes the
 message from RocksDB* — realized as pools, which the owner accepted. **A
-waiting Xmip Process and a retry waiting for its backoff hold no thread**:
+waiting Work Process and a retry waiting for its backoff hold no thread**:
 their state and due time are in the Ledger, and a pool's thread picks them up
 when they are due.
 
@@ -488,7 +488,7 @@ or failed alone; every send carries its Journey's identifier as its key,
 the same on every try; a retry's count is kept in the Ledger and survives a
 restart; an Operator's Retry sends a failed Journey again — in its order
 where a Sequential Port blocks behind it — and Dismiss ends it Dismissed and
-lets its sequence go, each audited. The Xmip Process step waits for a
+lets its sequence go, each audited. The Work Process step waits for a
 runtime that runs Processes.
 
 ## 4. Actors and Communication Domains
@@ -525,7 +525,7 @@ what lets one architecture serve a fleet operator and a sensor on a bus.
 ### Xmip artifacts are Actors
 
 Actor semantics do not replace or rename anything. Receive Ports, Receive
-Locations, Xmip Processes, Send Ports, Send Locations, Handlers, Nodes and
+Locations, Work Processes, Send Ports, Send Locations, Handlers, Nodes and
 Clusters remain explicit, named, versioned, configurable and deployable
 artifacts. They *gain* actor semantics when they communicate, publish,
 subscribe, own work, report status or transfer responsibility.
@@ -534,7 +534,7 @@ subscribe, own work, report status or transfer responsibility.
 | --- | --- |
 | Receive Location | receives external input and reports to its parent Receive Port |
 | Receive Port | owns the Message after receive, until another Actor takes ownership or a derived Message is created |
-| Xmip Process | may take ownership, orchestrate, assign, transform, publish, subscribe or route |
+| Work Process | may take ownership, orchestrate, assign, transform, publish, subscribe or route |
 | Send Port | owns send-side preparation and delivery decisions |
 | Send Location | performs delivery and reports the result to its Send Port |
 | Handler | an Actor when it participates in execution, capability reporting or delivery |
@@ -660,7 +660,7 @@ arrival each Stream is written to the node's Ledger and then when the Receive
 cycle is complete, Promote, Validate and what not then the sender is
 acknowledged*). Data Transfer and Batch Load are acknowledged once the Message
 is accepted and validated; a Composite interaction holds the call until the
-response an Xmip Process produced (section 11).
+response a Work Process produced (section 11).
 
 Refusals before Publication are audited receive failures. From Message
 creation on the Stream is kept; a Message failing Validation is kept and
@@ -753,7 +753,7 @@ A **Publication** is not an attempt. It is the act that makes a Message
 available for Routing, and **every Publication is audited**.
 
 **Routing** evaluates a Publication against Subscriptions. A Subscription may
-target an Xmip Process, a Send Port or a Send Port Group.
+target a Work Process, a Send Port or a Send Port Group.
 
 A Subscription's **filter** is one line of Xmip's expression language
 (ADR-0066, `xmip-core-path`'s `expression`) — `MessageType = 'Order' and not
@@ -852,7 +852,7 @@ resubmission look the same on the wire, and only the domain knows whether the
 second invoice is a duplicate or a correction. A platform that deduplicates has
 guessed, and it will be wrong silently.
 
-So a Process decides. A duplicate is not refused at a gate — it authenticates,
+So a Work Process decides. A duplicate is not refused at a gate — it authenticates,
 validates, becomes a Message and gets Journeys — and a Process that recognizes
 it stops the Journey as `Dismissed`, not `Failed`. See ADR-0013 clause 4c.
 
@@ -930,8 +930,8 @@ audit its actions.
 
 **A Send Port cannot perform Assignment.** Receive and Send artifacts hold only
 the current Message and cannot make Process decisions or create assigned
-Messages. Assignment belongs to an Xmip Process. Transformation may happen in a
-Receive Location or Port, an Xmip Process or a Send Port or Location.
+Messages. Assignment belongs to a Work Process. Transformation may happen in a
+Receive Location or Port, a Work Process or a Send Port or Location.
 
 **Send Location** — one physical outbound endpoint, owning the concrete
 transport, destination, presented identity, serialization, demotion, optional
@@ -1309,7 +1309,7 @@ boundaries. Audited by default:
 
 ```text
 Receive Location    Receive Port          Receive Port actions
-Publication         Routing               Xmip Process entry and result
+Publication         Routing               Work Process entry and result
 Assignment          Transformation        Send Port Group
 Send Port           Send Location         Response ingress
 Authentication      Authorization         Automatic Retry result
@@ -1450,7 +1450,7 @@ recording secret values.**
 **Artifacts** are configured objects that compose Modules:
 
 ```text
-Receive Port   Receive Location   Xmip Process   Assignment
+Receive Port   Receive Location   Work Process   Assignment
 Transformation   Send Port   Send Port Group   Send Location
 ```
 
@@ -1716,7 +1716,7 @@ Xmip Host Service, each within itself
  7. register-capabilities    Handlers and Extensions into its registries
  8. verify-extensions        verified, not loaded
  9. accept-work              Receive Locations poll, Send Locations ready,
-                             Xmip Processes runnable
+                             Work Processes runnable
 ```
 
 Phase 3 validates every Definition against the capability contracts it
@@ -1730,9 +1730,9 @@ node's configuration names once, from what the program starting the node
 linked or from its library, and serves every Receive Location until the node
 stops.
 
-## 22. The Xmip Process
+## 22. The Work Process
 
-An **Xmip Process** is a Definition started by a Subscription. It is not an
+An **Work Process** is a Definition started by a Subscription. It is not an
 operating-system process, and it is not a human workflow unless that workflow
 is represented by Xmip configuration and runtime state.
 
@@ -1748,7 +1748,7 @@ side.
 
 ### Process State belongs to the cluster
 
-**A Process Instance must not use thread, host process or node memory as its
+**A Process Instance must not use thread, Host Service or node memory as its
 source of truth.** Its state is persisted through cluster persistence and
 holds what is needed to continue after a wait, a timeout, a host restart, a
 node restart, a node failure, a failover or a recovery.
@@ -1762,10 +1762,10 @@ every restart in between.
 
 **The cluster persistence is the Ledger** (section 3), behind Xmip Storage
 (the owner, 2026-10-01, validated part by part with the assistant). A pool
-for the Xmip Process step (section 3) claims a Journey destined for one
-Xmip Process. Its state is in the Ledger, never in thread memory, and is
+for the Work Process step (section 3) claims a Journey destined for one
+Work Process. Its state is in the Ledger, never in thread memory, and is
 checkpointed at every Stage. Waiting releases its thread; a Correlation Rule
-resumes it on any capable node. Assignment belongs to an Xmip Process alone.
+resumes it on any capable node. Assignment belongs to a Work Process alone.
 New content is a new Stream, written in chunks, and a new Message
 generation. Validation gates stand at its input and output (section 20).
 Publishing back goes through routing again, with the chain recorded
@@ -1773,8 +1773,8 @@ Publishing back goes through routing again, with the chain recorded
 Receive Location holding the call (section 11). The end of every execution
 scope is audited with its outcome.
 
-**Not yet built:** running Stages — the Xmip Process engine itself — is work
-of its own. A node declares and plans its Xmip Processes
+**Not yet built:** running Stages — the Work Process engine itself — is work
+of its own. A node declares and plans its Work Processes
 ([built, in the assembled service](estate-map.md#process-declaration)); compiling one
 at design time and running it are
 [decided, not built](estate-map.md#process-execution).

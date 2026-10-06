@@ -16,18 +16,17 @@ unless the surrounding context makes the meaning unavoidable.
 | Term | Meaning |
 | --- | --- |
 | **System Process** | An operating system process managed by Windows, Linux, macOS, or another host operating system. |
-| **Xmip Service** | The master long-running service on a node. One per node, started by the operating system. It reads the configuration, builds and validates the execution tree, then registers, starts and supervises the Xmip Host Services. It is never in the message path: no Stream, Message or Journey passes through it. Its executable is `xmip-service`: a Windows service, a systemd unit or a launchd daemon, which any of those stops by draining the node (ADR-0018, amendment 2026-09-28). Until Host Services run in processes of their own, it runs the in-process Host Service itself. |
-| **Xmip Host Service** | A long-running service registered and started by the Xmip Service to host one or more Modules and, when required, execute Extensions. Many per node. It does the work — Receive Locations, Xmip Processes, Send Locations — and holds the claim on what it is working on. Its service name and description are generated from configuration when it is registered, so an operator reading the service list can tell what each one does. |
+| **Xmip Service** | The main service on each node, and a process: the master long-running service. One per node, started by the operating system. It reads the configuration, builds and validates the execution tree, then registers, starts and supervises the Xmip Host Services. It is never in the message path: no Stream, Message or Journey passes through it. Its executable is `xmip-service`: a Windows service, a systemd unit or a launchd daemon, which any of those stops by draining the node (ADR-0018, amendment 2026-09-28). Until Host Services run in processes of their own, it runs the in-process Host Service itself. |
+| **Xmip Host Service** | Loaded according to configuration to carry out work on incoming, executing and outgoing payload; a process. A long-running service registered and started by the Xmip Service to host one or more Modules and, when required, execute Extensions. Many per node. It does the work — Receive Locations, Xmip Work Processes, Send Locations — and holds the claim on what it is working on. Its service name and description are generated from configuration when it is registered, so an operator reading the service list can tell what each one does. |
+| **Xmip Host Subprocess** | For things we do not want to execute within an Xmip Host Service; a process. It spawns with a name of its parent's name, a dash and something readable but short (ADR-0053, amendment 2026-10-06). Nothing spawns one yet: [decided, not built](architecture/estate-map.md#host-subprocess). |
+| **Xmip Work Process** | A process that does work the designer, developer or end user has defined, from Xmip configuration and artifacts: the integration process. It may run in-process of an Xmip Host Service or an Xmip Host Subprocess. A node declares one as `[[work_processes]]` (ADR-0018, amendment 2026-10-06). |
 | **Xmip Playground** | The tool that exercises Xmip. It spawns Development nodes as System Processes on one machine — no virtualization — and drives every transport and every content contract through them continuously: Receive Locations fed, Send Locations watched, a verdict per pair published as health. It is where a transport or contract is proven, and the source of real measurement. Named by the owner, 2026-09-05; ADR-0028. |
-| **Host Process** | The System Process an Xmip Host Service runs as. The service is the registered, managed thing; the process is what the operating system schedules. |
-| **Xmip Application** | An integration as a developer designs it: its routes, and later its transforms and Xmip Processes, drawn once in VS Code and kept as text in the repository. A node's configuration binds it — which Application runs there, with which addresses and credentials. Named by the owner, 2026-09-26, BizTalk's word; ADR-0064. |
+| **Xmip Application** | An integration as a developer designs it: its routes, and later its transforms and Xmip Work Processes, drawn once in VS Code and kept as text in the repository. A node's configuration binds it — which Application runs there, with which addresses and credentials. Named by the owner, 2026-09-26, BizTalk's word; ADR-0064. |
 | **Binding** | What a node's configuration says about an Xmip Application it runs: that it runs it, and the environment's side of it — addresses, credentials, which node takes which Receive and Send Location. The design is the Application's; the binding is the node's. ADR-0064. |
 | **Transform** | What turns one Message's content into another's. Designed in VS Code, compiled at design time into a native module (ADR-0066). |
-| **Expression** | One line of Xmip's own expression language, shaped like SQL's WHERE clause: `MessageType = 'Order' and not Amount > 1000`. A Subscription's filter is one; a Transform's conditions and an Xmip Process's decisions will be. Compiled once into a tree and decided in three truths — true, false and *unknown*, where a value that is not there is unknown with its reason, never a silent false. `xmip-core-path`'s `expression`; ADR-0066. |
-| **Subscription** | What picks a published Message up and opens a Journey into an Xmip Process, a Send Port or a Send Port Group: a filter and a destination, drawn in an Xmip Application and bound by a node's configuration, and added and removed in that TOML and nowhere else (ADR-0013, ADR-0064). An operator lists them and pauses or resumes one — never removes one — in the Subscriptions view, `xmip-cli subscriptions` and `Get-XmipSubscription`; a paused one holds what it matches in the Ledger, and a resume picks it up oldest first (ADR-0013, amendments 2026-09-30 and 2026-10-01). It is not an **Event subscription**. |
+| **Expression** | One line of Xmip's own expression language, shaped like SQL's WHERE clause: `MessageType = 'Order' and not Amount > 1000`. A Subscription's filter is one; a Transform's conditions and an Xmip Work Process's decisions will be. Compiled once into a tree and decided in three truths — true, false and *unknown*, where a value that is not there is unknown with its reason, never a silent false. `xmip-core-path`'s `expression`; ADR-0066. |
+| **Subscription** | What picks a published Message up and opens a Journey into an Xmip Work Process, a Send Port or a Send Port Group: a filter and a destination, drawn in an Xmip Application and bound by a node's configuration, and added and removed in that TOML and nowhere else (ADR-0013, ADR-0064). An operator lists them and pauses or resumes one — never removes one — in the Subscriptions view, `xmip-cli subscriptions` and `Get-XmipSubscription`; a paused one holds what it matches in the Ledger, and a resume picks it up oldest first (ADR-0013, amendments 2026-09-30 and 2026-10-01). It is not an **Event subscription**. |
 | **Event subscription** | A Party's standing request to be told what Xmip did: a filter over Event types, outcomes, a scope and a Party, held with a bounded queue in the hub of the process that took it, and never persisted (ADR-0065). An operator lists them, and pauses, resumes and removes one, in the Event subscriptions view, `xmip-cli event-subscriptions` and `Get-XmipEventSubscription` (amendments 2026-09-29 and 2026-09-30). It is not a **Subscription**, which picks a published Message up and opens a Journey; where either could be meant, say Event subscription. |
-| **Xmip Process** | An integration process defined by Xmip configuration and artifacts. It belongs to Xmip runtime semantics, not to the operating system. |
-| **Xmip Subprocess** | A configured child part of an Xmip Process. It is not an operating system child process unless explicitly stated as a System Process. |
 
 Every System Process and every service Xmip owns is named `xmip-<what>` —
 `xmip-cli`, `xmip-gui-web`, `xmip-playground-<cluster>-node-<node>` — and declares its name,
@@ -38,7 +37,7 @@ what it is, so a list of twenty reads as a tree (amendment 2026-09-20).
 
 When a person writes or says **Process** without qualification and the meaning
 is not clear, the correct response is to ask whether they mean **System
-Process** or **Xmip Process**.
+Process**, an **Xmip Host Service** or an **Xmip Work Process**.
 
 ## Roll and Role
 
@@ -244,7 +243,7 @@ immutable. The Message is not.*). Every generation is kept. **Routing alone
 does not create a new Message**, and promotion for routing is held beside
 the Message rather than in it. Enrichment at arrival is
 [built, not in the assembled service](architecture/estate-map.md#arrival); Assignment
-belongs to an Xmip Process and Transformation to the steps of a Port or
+belongs to an Xmip Work Process and Transformation to the steps of a Port or
 Location, both [decided, not built](architecture/estate-map.md#artifact-steps).
 
 ## Audit and Failure Persistence
@@ -281,7 +280,7 @@ the assistant proposed Ledger; the owner: *Ledger is good*).
 
 Every Stream, in chunks, every Message and every Journey lives in it until
 completion or retention, and is archived before either, with claims, the
-state of each Xmip Process, retry, failure and replay state, the Messages a
+state of each Xmip Work Process, retry, failure and replay state, the Messages a
 paused Subscription holds, and audit records as first written. Selecting
 work is a query over state; completing work is a state transition. That
 makes it a queue in every sense that matters — durable, survives restart,
@@ -398,9 +397,8 @@ policy-driven expiry — is an open question in ADR-0013 and is not settled here
 
 **Startup** is the Xmip Service building a validated execution tree from
 configuration and starting the Xmip Host Services that do the work; the tree
-identifies the Modules to load, the Xmip Processes to start, the Xmip
-Subprocesses and their required Modules, and the Extensions to verify but not
-load. The nine phases are `architecture/runtime-model.md` section 21,
+identifies the Modules to load, the Xmip Work Processes to start and their
+required Modules, and the Extensions to verify but not load. The nine phases are `architecture/runtime-model.md` section 21,
 *Startup*, from ADR-0018.
 
 ## Saving, slicing, delivery, acceptance and activation

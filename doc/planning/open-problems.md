@@ -119,7 +119,7 @@ the lean below said would happen.*
 
 Every Journey carries a depth, a node configures a ceiling, and
 `Journey::following` — the only way a chain grows — refuses the link that
-would pass it, naming the Subscription and the Xmip Process rather than a
+would pass it, naming the Subscription and the Work Process rather than a
 number. It was cheap because the chain did not exist yet: `following` was
 called nowhere outside its own tests, so nothing publishes back into Xmip and
 nothing can loop today. The bound shipped with the chain, exactly as the lean
@@ -554,7 +554,7 @@ escaping and nothing else.
 | # | Concept | Where it diverges | One home |
 |---|---|---|---|
 | a | A Journey across a restart | `persist::DurableJourneyState` dropped `previous_journey_id`, `cause`, `depth` and entries, so a recovered Journey restarted its chain depth at zero and loop protection was off | **Resolved 2026-09-24:** persist stores `journey::Journey` whole, and a test writes and reads one two links deep |
-| b | A node's configuration | modelled four times: two trees in `configure`, a subset in `runtime/execution_tree.rs`, and the editor's own in C#, which defaults a location's `start` and `transport` where the runtime requires them, never unescapes, and matches keys by prefix | **Resolved 2026-09-24:** `configure::XmipConfigurationDocument` is the one model; the runtime's execution tree is built from it and the second tree and the runtime's startup types are gone; the desktop editor edits the document's syntax tree through `TomlDocument`, keeping comments and layout, matching keys whole, adding no `start` or `transport`, and takes its only verdict from `xmip_validate_v1`; an Xmip Process's lists default to empty (ADR-0031, amendment 2026-09-24) |
+| b | A node's configuration | modelled four times: two trees in `configure`, a subset in `runtime/execution_tree.rs`, and the editor's own in C#, which defaults a location's `start` and `transport` where the runtime requires them, never unescapes, and matches keys by prefix | **Resolved 2026-09-24:** `configure::XmipConfigurationDocument` is the one model; the runtime's execution tree is built from it and the second tree and the runtime's startup types are gone; the desktop editor edits the document's syntax tree through `TomlDocument`, keeping comments and layout, matching keys whole, adding no `start` or `transport`, and takes its only verdict from `xmip_validate_v1`; a Work Process's lists default to empty (ADR-0031, amendment 2026-09-24) |
 | c | Protocol Buffers wire rules | contract refused groups and checked only field 0; message accepted groups and capped the field number | **Resolved 2026-09-24:** one walk, `message::protobuf`, with the encoders beside it; the contract checks the schema over it, tag before value |
 | d | CSV | contract split on lines, refused a quoted line break and took a quote anywhere as opening one; message follows RFC 4180 | **Resolved 2026-09-24:** the contract reads `message::record`, and refuses a NUL byte as the shape does |
 | e | A path lexer | FHIRPath and the predicate language consume whitespace as one byte and panic on U+00A0 | **Resolved 2026-09-24:** `codec::char_reader::CharReader` is the one character reader, every position on a character boundary; the FHIRPath, predicate, JSONPath, GraphQL, SQL-contract, proto and SQL-archive lexers read through it, each tested with U+00A0, U+3000 and non-ASCII names and strings |
@@ -573,7 +573,7 @@ escaping and nothing else.
 | s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Playground's `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
 | t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
 | u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dog fooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
-| v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Xmip Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Xmip Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
+| v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Work Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Work Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
 
 **One concept, several copies, the same behavior.** Loopback rigs in 51
 transports over a parent that shares only the traits; `rabbitmq` rewriting
@@ -630,8 +630,8 @@ promotion; whether `xmip-core-promote` stays mounted is the owner's).
 `assign` reads a missing or `Null` source as absent (ADR-0046). Still
 unwired, each waiting on something not built: `registration.rs` (the
 installer, problem 28), `generation.rs`'s assignment and transformation and
-the `assign`, `demote`, `prepare`, `process` and `transform` traits (an
-Xmip Process or a transform compiled at design time, ADR-0066 clause 4), and the
+the `assign`, `demote`, `prepare`, `process` and `transform` traits (a
+Work Process or a transform compiled at design time, ADR-0066 clause 4), and the
 `xmip-service` executable that would start a node outside a test (ADR-0018,
 amendment 2026-09-26).
 
@@ -843,14 +843,14 @@ B. One home each        problem 25's list; the 2026-09-22 shims removed;
                         transport-aws and transport-azure created (approved
                         2026-09-22); dead code deleted or wired
 C. A node runs          the 2026-09-05 item 1 below, in the smallest honest
-                        sequence: the Xmip Process vocabulary settled; subscriptions
+                        sequence: the Work Process vocabulary settled; subscriptions
                         and location bindings in the configuration; file
                         claims by rename (ADR-0024); one transport trait; a
                         file-backed store that writes the Stream and Message
                         before execution; an xmip-service executable doing
                         phases 4-9 with technologies linked by feature (the
                         purpose-compiled runtime, deployment-model.md); a
-                        Xmip Process branch in departure; checkpoint, resume
+                        Work Process branch in departure; checkpoint, resume
 D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
                         tracking, message search and resubmit; EDI
                         acknowledgements and Party agreements;
@@ -948,7 +948,7 @@ retires entries from stops being an order.
                                        amendment 2026-09-20); every
                                        surface drills to the leaf; every view
                                        names the Receive Location, the
-                                       Xmip Process and the Send Location,
+                                       Work Process and the Send Location,
                                        not the transport and contract
                                        beneath; the
                                        topology draws Xmip's own configured
@@ -996,7 +996,7 @@ retires entries from stops being an order.
 
 **The vocabulary is settled** (the owner, 2026-09-26, confirming
 `terminology.md` as written): the Xmip Service rules a node and no Message
-passes through it; Xmip Host Services do the work; an Xmip Process is the
+passes through it; Xmip Host Services do the work; a Work Process is the
 integration process a Subscription starts. Phases 4-9 name their code after
 it.
 

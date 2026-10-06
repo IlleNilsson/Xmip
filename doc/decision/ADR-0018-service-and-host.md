@@ -595,3 +595,38 @@ configurable switch. InProcess = true | false*
 - A program in another language at the perimeter — one that calls Xmip
   from outside, an Event subscriber among them — is its own process and
   needs no invitation.
+
+## Amendment, 2026-10-06: every process is a process
+
+The owner agreed the process vocabulary anew on 2026-10-06. Four terms, each
+a process:
+
+- **Xmip Service** — the main service on each node.
+- **Xmip Host Service** — loaded according to configuration to carry out
+  work on incoming, executing and outgoing payload.
+- **Xmip Host Subprocess** — for things we do not want to execute within an
+  Xmip Host Service. It spawns with a name of its parent's name, a dash and
+  something readable but short (ADR-0053, amendment 2026-10-06).
+- **Xmip Work Process** — a process that does work the designer, developer
+  or end user has defined; it may run in-process of an Xmip Host Service or
+  an Xmip Host Subprocess. The owner: *In this case it means a Process that
+  does work that the designer, developer or end user has defined.* The
+  name is his, correcting a draft that wrote Worker the same day: *I
+  requested Xmip Work Process*.
+
+What follows from it:
+
+- The Xmip Work Process is what this record and the estate called an
+  Xmip Process: the integration process defined by configuration and artifacts.
+  "Xmip Process" names nothing any more; a node's `[[xmip_processes]]` is
+  `[[work_processes]]`, and every type, symbol, command word and label
+  follows (`WorkProcessConfiguration`, `WorkProcess`, `work-process`).
+- The **Xmip Subprocess**, a configured child part of an Xmip Process
+  (`xmip_subprocesses`), is deleted with every use, its type, its validation
+  and its tests. Pre-GA it is deleted, never deprecated (CONTRIBUTING).
+- The **Host Process**, the System Process a Host Service runs as, goes:
+  the Host Service is the process.
+
+Nothing spawns an Xmip Host Subprocess yet
+([decided, not built](../architecture/estate-map.md#host-subprocess)).
+`doc/terminology.md` carries the four terms.

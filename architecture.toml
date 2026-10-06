@@ -161,7 +161,7 @@ record = ["ADR-0042", "ADR-0031 (amendment 2026-10-05)"]
 [implementation.security-profile]
 name = "Security profiles: standard, enterprise, regulated"
 state = "decided"
-note = "No configuration key names a profile and nothing enforces identity isolation at start; the isolation rule (`IdentityContext::may_share_host_process`) is called by its tests alone."
+note = "No configuration key names a profile and nothing enforces identity isolation at start; the isolation rule (`IdentityContext::may_share_host_service`) is called by its tests alone."
 record = ["ADR-0022", "deployment-model.md section 4"]
 
 [implementation.certificate-usage]
@@ -213,15 +213,15 @@ note = "An order the node takes: what the Subscription matches is held in Xmip S
 record = ["ADR-0013 (amendments 2026-09-30, 2026-10-01)"]
 
 [implementation.process-declaration]
-name = "Declaring an Xmip Process"
+name = "Declaring a Work Process"
 state = "assembled"
-note = "`[[xmip_processes]]` and an Application's Xmip Processes are read, validated and planned into the execution tree as a node starts, and a Subscription may lead to one; each is published as planned, not started."
+note = "`[[work_processes]]` and an Application's Work Processes are read, validated and planned into the execution tree as a node starts, and a Subscription may lead to one; each is published as planned, not started."
 record = ["ADR-0018", "ADR-0064"]
 
 [implementation.process-execution]
-name = "Compiling an Xmip Process at design time, and running it"
+name = "Compiling a Work Process at design time, and running it"
 state = "decided"
-note = "Nothing compiles a design and no engine runs one: a Journey to an Xmip Process ends saying no runtime runs it yet (`xmip-core-runtime`'s `departure.rs`)."
+note = "Nothing compiles a design and no engine runs one: a Journey to a Work Process ends saying no runtime runs it yet (`xmip-core-runtime`'s `departure.rs`)."
 record = ["ADR-0066", "runtime-model.md section 22"]
 
 [implementation.module-loading]
@@ -279,7 +279,7 @@ note = "`[storage.database]` is read and checked, and IT's scripts are in `deplo
 record = ["ADR-0015 (amendment 2026-10-01)", "deployment-model.md section 7"]
 
 [implementation.artifact-steps]
-name = "Prepare, Contract, Promote, Transform, Demote and Assignment on Ports, Locations and Xmip Processes"
+name = "Prepare, Contract, Promote, Transform, Demote and Assignment on Ports, Locations and Work Processes"
 state = "decided"
 note = "The keys are decided and none is read; Assignment and Transformation have the Message's generations ready in `xmip-core-message` and the runtime's `generation.rs`, with no caller outside tests."
 record = ["ADR-0031 (amendment 2026-10-05)", "runtime-model.md section 20"]
@@ -295,6 +295,18 @@ name = "Delivering a slice to its node, its acceptance, and restarting only what
 state = "decided"
 note = "No Xmip path puts a slice on another node: the desktop delivers only to the node it starts, a node answers no accepted or refused, and a save is not versioned, watched for drift or applied by restarting only the threads or Host Services that changed. Open problem 31."
 record = ["ADR-0031 (amendments 2026-10-05)"]
+
+[implementation.artifact-scope]
+name = "A reading names its artifact by kind and name"
+state = "decided"
+note = "Every scope a node publishes still writes a stage and a Location or Work Process beneath its node, `…/receive/<Location>`, `…/process/<name>` and `…/send/<Location>`; none writes `ReceivePort`, `ReceiveLocation`, `WorkProcess`, `SendPortGroup`, `SendPort` or `SendLocation`, no Port is a level, no scope leaves the node out, and no reading shows the Party involved."
+record = ["ADR-0027 (amendment 2026-10-06)"]
+
+[implementation.host-subprocess]
+name = "An Xmip Host Subprocess, named for its parent"
+state = "decided"
+note = "Nothing spawns an Xmip Host Subprocess: a node runs its one in-process Host Service and refuses a Module that needs another (`xmip-core-runtime`'s `startup.rs`), so no process is named for its parent plus a dash and a short readable word."
+record = ["ADR-0018 (amendment 2026-10-06)", "ADR-0053 (amendment 2026-10-06)"]
 
 # The estate. Depth is the classification: xmip.<provider> is the provider
 # root repository, xmip.<provider>.<module> a module, and one level deeper an
@@ -1534,7 +1546,7 @@ dependency = []
 
 # The Xmip Service and the Xmip Host Service are both here. They are one idea
 # and never move independently: the Service builds the execution tree, the Host
-# Service executes a host process plan, and runtime owns both types. Separate
+# Service executes its plan, and runtime owns both types. Separate
 # repositories for 10 KB that always change together would be ceremony.
 # ADR-0018.
   [xmip.core.runtime]

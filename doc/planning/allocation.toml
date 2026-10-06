@@ -433,7 +433,7 @@ governance — a procedure, not a model — and went there instead."""
 #   module-model.md section 6       five communication layers, CANBUS
 #                                   is not below TCP or UDP              confirmed
 #   module-model.md section 12      the Rust rules                       confirmed
-#   runtime-model.md section 22     the Xmip Process, cluster state,
+#   runtime-model.md section 22     the Work Process, cluster state,
 #                                   stages, ExecutionScope               confirmed
 #
 # The mapping table in architecture-consolidation.md section 6 is the record of
@@ -464,7 +464,7 @@ why = "Twenty lines, a strict subset of definition-instance-model.md."
 [[superseded]]
 path = "doc/architecture/xmip-process.md"
 replacedBy = "doc/architecture/runtime-model.md"
-why = "Section 22, the Xmip Process. Process State belongs to cluster persistence, so execution ownership may move between nodes without the state moving."
+why = "Section 22, the Work Process. Process State belongs to cluster persistence, so execution ownership may move between nodes without the state moving."
 
 [[superseded]]
 path = "doc/architecture/business-process-runtime.md"
