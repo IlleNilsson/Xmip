@@ -794,7 +794,11 @@ promoted properties are matched against the compiled Subscription filters,
 one Journey per match, and the Publication — its Message and its Journeys —
 is one atomic write, in the receive cycle's one statement on one Storage node
 (section 3). No routing pool and no claim on a Publication: a node that dies
-before that write has acknowledged nothing, and the sender sends again. A
+before that write has acknowledged nothing, and the sender sends again. The
+write is kept by its Message: asked again after its answer was lost, it
+writes nothing and answers the claims its node still holds of it, so a
+Journey another node has moved on since is never reset (section 10,
+*Corrected 2026-10-06*). A
 paused Subscription's Journey is written and held until the Subscription is
 resumed, and the held ones are picked up oldest first. The chain is recorded
 and bounded (ADR-0026). A Sequential artifact's position, by its order key,
@@ -1120,6 +1124,37 @@ waits for its due time.
   from its absence; `blocked`; the oldest hundred — and, apart from them,
   `last_failure`, the last Journey that failed there since the node
   started, which may since have been retried or dismissed.
+- **A Publication is written once, by its Message.** Its write keeps, in
+  the same batch, that it was written and the digest of what was asked; a
+  Publication asked again — a node's request repeated after its answer was
+  lost, which a Storage client asks of the next Storage node — writes
+  nothing and answers the claims of it its node still holds under their
+  tokens, and the node sends only those. Until now a repeated Publication
+  wrote its Message and every Journey again: a Journey another node had
+  completed meanwhile was written back to where the Publication left it,
+  queued again and claimed again, completion lost and sent a second time.
+  Another Publication of a Message published before is refused; a business
+  Message published again is another Message (*Duplicates are a business
+  decision*, section 9).
+- **A renewal's answer is acted on.** A renewal that finds a claim another's
+  — it lapsed, and another node took the Journey up — stops the send: no
+  further Send Location is tried from this node, nothing is written, and
+  the loss is counted at its Send Port and audited. A renewal Xmip Storage
+  does not answer leaves the claim unconfirmed, and the Send Port is Done
+  from the first, its evidence naming Xmip Storage as what did not answer
+  and since when — the owner, 2026-10-06: *Storage is not here is a
+  flat-out error*; until then it was Stressed. The window below bounds
+  attempts and softens nothing: a claim is surely held a lease from when the
+  request that last confirmed it was asked — the Storage node counts it
+  from its own later now — so the node tries Locations only until then, on
+  its own clock, never comparing two clocks, and past it presumes the claim
+  lost, audits it once, and tries nothing more until a renewal is answered;
+  whatever it writes after is decided by the claim in Xmip Storage. A send
+  already under way is not called back: it carries the Journey's
+  identifier, the key the far end deduplicates by, so another holder's send
+  of the same Journey is the same delivery (section 15). Until now every
+  renewal's answer was dropped, and a node that had lost its claim went on
+  trying Locations.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

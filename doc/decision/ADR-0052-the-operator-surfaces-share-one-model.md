@@ -1539,12 +1539,14 @@ record; what it changes here:
 - **The role is wired as the amendment of 2026-09-14 ruled.** Until this
   date the web host was hard-wired Observer, two weeks after this record
   and ADR-0014 said the web offers every role. Both hosts now take the role
-  by one rule, `RoleContext.Assigned`, in `Xmip.Surface` since
-  2026-10-03: a role the run states, `Role` in `xmip.gui.toml` else `XMIP_ROLE`, is the role, and a word that is
-  no role is Observer; a run that states none has its role from the
-  directory, and with none configured the tester holds every role
-  (ADR-0009, amendment 2026-09-14, *the tester is God*). An Operator is
-  offered the acts; an Observer is shown the list and no act.
+  by one rule, `RoleAssignment` in `Xmip.Surface` since 2026-10-06, for
+  each proven caller: a role the run states, `Role` in `xmip.gui.toml` else
+  `XMIP_ROLE`, is the role, and a word that is no role is Observer; a run
+  that states none has its role from the directory — the Playground's fake
+  one allows the tester (ADR-0009, amendment 2026-09-14, *the tester is
+  God*) — and with no directory the role is Observer (ADR-0009, amendment
+  2026-10-06). An Operator is offered the acts; an Observer is shown the
+  list and no act.
 
 Provenance: the owner's requirement; the fifth link and the one role rule
 are the assistant's drafting of what the records of 2026-09-14 ruled, for

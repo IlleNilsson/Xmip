@@ -25,6 +25,7 @@ transport, or also validates contracts and transforms on the device.
 | Identity and TLS (X.509 and hybrid) | library; not linked in the service | written, not run | written, not run | needs a `no_std` TLS |
 | Audit | built | written, not run | written, not run | forwarded to a node |
 | Operation surfaces (CLI, PowerShell, GUI) | built | written, not run | written, not run | does not apply: observed through a node |
+| GPU for routing, transformation and processing | open | open | open | does not apply |
 | Service registration | Windows service | systemd | systemd | does not apply |
 
 *Does not apply* is where Xmip stands today, not a limit: a cell loses it once

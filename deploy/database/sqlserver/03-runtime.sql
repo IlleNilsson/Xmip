@@ -90,6 +90,14 @@ CREATE TABLE xmip.dead_message_replayed (
 );
 GO
 
+-- each Message published, with the digest of its Publication, so a Publication asked again writes nothing and resets no Journey moved on since.
+CREATE TABLE xmip.publication (
+    message binary(16) NOT NULL,
+    digest varbinary(max) NOT NULL,
+    CONSTRAINT publication_key PRIMARY KEY (message)
+);
+GO
+
 -- the claim on each Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
 CREATE TABLE xmip.claim (
     journey binary(16) NOT NULL,

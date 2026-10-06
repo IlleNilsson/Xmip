@@ -19,6 +19,15 @@ function Start-XmipOperationWeb {
             audits its own start, stop and every error it logs.
             Without -Snapshot the host reads what its own xmip.gui.toml says.
 
+            Each browser acts as the caller its connection proved — a client
+            certificate, else this machine's loopback, the user the host runs
+            as — with the role the host grants that caller (ADR-0009, amended
+            2026-10-06): the role xmip.gui.toml or XMIP_ROLE states, else the
+            directory it names, else Observer. Over a Playground roll the host
+            is told the Playground's fake directory, which allows you, the
+            tester, every role and no one else. A browser nothing proved
+            watches and acts on nothing.
+
             Several snapshots are one host over several clusters (ADR-0052,
             amendment 2026-09-20): Get-XmipTestStatus piped here over two rolls
             starts one host that serves both, and the three views say which
@@ -207,8 +216,13 @@ function Start-XmipOperationWeb {
                 $following | Where-Object { $_.StartsWith($area, $under) }
             ).Count -gt 0
 
+            # And its roles come from the Playground's fake directory, which
+            # allows the tester — you, the user the host runs as — and no one
+            # else (ADR-0009, amendments 2026-09-14 and 2026-10-06). Anywhere
+            # else an unstated role grants nothing.
             if ($rolls) {
                 $arguments += '--Xmip:Purpose=test'
+                $arguments += '--Xmip:Directory=tester'
             }
         }
 

@@ -78,6 +78,13 @@ CREATE TABLE xmip.dead_message_replayed (
     CONSTRAINT dead_message_replayed_key PRIMARY KEY (queue, message)
 );
 
+-- each Message published, with the digest of its Publication, so a Publication asked again writes nothing and resets no Journey moved on since.
+CREATE TABLE xmip.publication (
+    message uuid NOT NULL,
+    digest bytea NOT NULL,
+    CONSTRAINT publication_key PRIMARY KEY (message)
+);
+
 -- the claim on each Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
 CREATE TABLE xmip.claim (
     journey uuid NOT NULL,
