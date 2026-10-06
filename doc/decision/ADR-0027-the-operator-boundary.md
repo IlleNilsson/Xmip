@@ -563,3 +563,32 @@ they filled its stages; a word that is no role is `XMIP_E_INVALID` with the
 refusal written as `xmip_role_declared_v1` writes one. Section 8's run list
 `XMIP_RUN_CAPABILITIES` is `XMIP_RUN_ROLES`, the same value, read from
 `[run].roles`.
+
+## Amendment, 2026-10-06: a reading names its artifact by kind and name
+
+The owner, 2026-10-06: *from an operator view the technology is not
+important, it is what is failing. The readings should be like xmip uris.*
+Beneath the cluster, and beneath a node where one is named
+(`xmip:///<cluster>/node/<node>`, ADR-0053), two segments name an artifact:
+its kind, then its name.
+
+```text
+xmip:///<cluster>[/node/<node>]/ReceivePort/<name>/ReceiveLocation/<name>
+xmip:///<cluster>[/node/<node>]/WorkProcess/<name>
+xmip:///<cluster>[/node/<node>]/SendPortGroup/<name>
+xmip:///<cluster>[/node/<node>]/SendPort/<name>/SendLocation/<name>
+```
+
+- **The node is optional.** Without it the URI names that artifact on every
+  node of the cluster running it.
+- **A Port contains its Locations**, so clause 4's tree gains the Port as a
+  level.
+- **A Send Port Group stands beside its Send Ports, not above them.** A
+  Subscription to it opens one Journey per Send Port: fan-out, not
+  containment.
+- **A Party is never a segment** (clause 4). Where a configured Party is
+  involved, the reading shows it, on its face or in a tooltip.
+
+The stage segments written today, `…/receive/<Location>`,
+`…/send/<Location>` and `…/process/<name>`, are replaced, not kept beside
+([decided, not built](../architecture/estate-map.md#artifact-scope)).

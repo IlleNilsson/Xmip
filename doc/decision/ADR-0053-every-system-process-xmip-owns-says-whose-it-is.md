@@ -368,3 +368,16 @@ its purpose. The purpose is runtime unless whoever started it passes
 `--purpose test`; any other word is REFUSED, and a test starting it passes
 `test`. It declares once the node accepts work and removes the declaration
 after the drain, and it adds the `configuration` it was started with.
+
+## Amendment, 2026-10-06: a Host Subprocess is named for its parent
+
+The process vocabulary agreed with the owner on 2026-10-06 (ADR-0018,
+amendment of the same date) adds the **Xmip Host Subprocess**: a process for
+things we do not want to execute within an Xmip Host Service. It spawns with
+a name of its parent's name, a dash and something readable but short. Its
+parent is an Xmip Host Service, `xmip-host-<name>` under clause 1, so the
+Host Subprocess's name begins `xmip-` as every name here does, and clause 1's
+one line still finds and stops it.
+
+Nothing spawns a Host Subprocess yet
+([decided, not built](../architecture/estate-map.md#host-subprocess)).

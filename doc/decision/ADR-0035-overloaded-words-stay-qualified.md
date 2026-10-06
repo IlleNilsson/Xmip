@@ -101,3 +101,14 @@ as words are; how to remedy that. The three moves, the confirmation that
 `XmipProcess` is the correct qualified form, and the `XmipModule` → `Module`
 resolution are the assistant's drafting of it, on the instruction to proceed and
 to write the decision down.
+
+## Amendment, 2026-10-06: the qualified forms are Work Process and Host Subprocess
+
+The process vocabulary agreed with the owner on 2026-10-06 (ADR-0018,
+amendment of the same date) renames the integration process the
+Xmip Work Process, adds the Xmip Host Subprocess, and deletes the Xmip Subprocess and
+the Host Process. Clause 1's qualified forms are now "Work Process",
+"Host Subprocess" and "System Process", and clause 4's trait is
+`WorkProcess`: the qualified term is still the type name.
+`test/Terminology.Test.ps1` counts "Work Process" as qualified, and its
+ceiling is unchanged in kind: it falls, never rises.

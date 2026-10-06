@@ -103,7 +103,7 @@ every technology it runs is linked by feature, so adding one — a transport,
 a contract, a key store — is a rebuild with `Build-XmipService`, and the
 node's TOML then names it. Its Module loader is built and drives the
 contract table alone, and the service is built without it
-([built, not in the assembled service](estate-map.md#module-loading)); Xmip Process
+([built, not in the assembled service](estate-map.md#module-loading)); Work Process
 execution is [decided, not built](estate-map.md#process-execution).
 
 **Purpose-compiled runtime** — a smaller build for one target: an endpoint
@@ -177,7 +177,7 @@ for — at run time, in a deployment, and in what its program is built with
 | Role | Serves | May | Examples |
 | --- | --- | --- | --- |
 | **Receiving** | the receive stage | take Streams in and make Messages | a Receive Location, deserialize, promote, publish |
-| **Processing** | the process stage | route and transform by Subscription | a Subscription, an Xmip Process, transform |
+| **Processing** | the process stage | route and transform by Subscription | a Subscription, a Work Process, transform |
 | **Sending** | the send stage | deliver Messages out | a Send Port, demote, serialize, send |
 | **Executing** | all three, in one process | everything the three may | a whole Journey with no process hop: the low-latency choice |
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
@@ -384,7 +384,7 @@ regardless of backend database technology*):
 
 | | The runtime database | The administration database |
 | --- | --- | --- |
-| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Xmip Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) |
 | Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time |
 | On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` |
 | Behind a database server | a database of its own on IT's server | a separate database on IT's server, which IT may place on another server |
@@ -469,7 +469,7 @@ Storage when needed and kept in memory until "not used for a while"*, and
 *They are shared*; [decided, not built](estate-map.md#shared-subscriptions): a node
 routes by the Subscriptions it binds,
 [built, in the assembled service](estate-map.md#subscription-routing)). Each node reads its TOML configuration as it starts and
-holds its Locations, Xmip Processes and Send Ports as its **execution
+holds its Locations, Work Processes and Send Ports as its **execution
 tree**, which `build_execution_tree` in `xmip-core-runtime` builds. Its
 Subscriptions it writes into Xmip Storage's administration database, so any
 node with a routing role routes a Message another node received; routing
@@ -570,7 +570,7 @@ as `xmip-service` does.
 
 ## 9. Recovery
 
-Xmip runs on computers, and computers fail. An Xmip Process may be short-lived
+Xmip runs on computers, and computers fail. A Work Process may be short-lived
 or may represent a Journey over time, waiting for information, decisions,
 replies, timeouts or other Events.
 

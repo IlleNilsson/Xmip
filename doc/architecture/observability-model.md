@@ -95,7 +95,7 @@ through Xmip Storage is [decided, not built](estate-map.md#audit-through-storage
 
 `xmip-core-observe` produces near-real-time, navigable traffic and health data
 for the whole installation, navigable down the scope tree in section 7 —
-installation, Cluster, Node, Host Service, and the Receive Locations, Xmip
+installation, Cluster, Node, Host Service, and the Receive Locations, Work
 Processes and Send Locations beneath it.
 
 **Party and Endpoint are a second axis, not levels in that tree.** A Party is
@@ -173,7 +173,7 @@ Service already builds and validates at startup under ADR-0018:
 
 ```text
 installation → cluster → node → host service → receive location
-                                             │ xmip process
+                                             │ work process
                                              └ send location
 ```
 
@@ -209,6 +209,26 @@ Two things this is not. It is **not a transport** — nothing is sent to an
 And it is **not a replacement for trace context**: a Trace carries standard
 correlation identifiers, and the URI names the component the span belongs to.
 They answer different halves of the same question.
+
+**A reading names its artifact by kind and name** (ADR-0027, amendment
+2026-10-06): *from an operator view the technology is not important, it is
+what is failing*. Beneath the cluster, and beneath a node where one is named,
+two segments name an artifact, its kind and then its name:
+
+```text
+xmip:///<cluster>[/node/<node>]/ReceivePort/<name>/ReceiveLocation/<name>
+xmip:///<cluster>[/node/<node>]/WorkProcess/<name>
+xmip:///<cluster>[/node/<node>]/SendPortGroup/<name>
+xmip:///<cluster>[/node/<node>]/SendPort/<name>/SendLocation/<name>
+```
+
+Without the node it is that artifact on every node of the cluster running
+it. A Port contains its Locations and is a level; a Send Port Group stands
+beside its Send Ports, a fan-out and not containment; a Party is never a
+segment, and a reading shows the configured Party involved on its face or in
+a tooltip. It replaces the stage segments a node writes today,
+`…/receive/<Location>`, `…/send/<Location>` and `…/process/<name>`
+([decided, not built](estate-map.md#artifact-scope)).
 
 Recovered from the `_origins` design export, 2026-08-26, where it was the only
 addressing model Xmip had written down anywhere.

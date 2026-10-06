@@ -97,11 +97,16 @@ function Test-XmipChangeTree {
             [bool] $dotnet = -not (Test-Path -LiteralPath $manifest) -and
                 @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
 
+            # A Rust module whose tests load the runtime's library names the
+            # variable that says where it is; it gets the same fresh build.
+            [bool] $loadsRuntime = $dotnet -or
+                (Test-XmipRuntimeLibraryReader -Path $modulePath)
+
             [string[]] $failed = @()
 
             # A failed runtime build fails the module that needed it: a
             # stale library must never be tested in its place.
-            if ($dotnet -and -not $runtimeBuilt) {
+            if ($loadsRuntime -and -not $runtimeBuilt) {
                 [hashtable] $runtimeLibrary = @{
                     RepositoryRoot = $RepositoryRoot
                     Module         = 'module/platform/runtime'
@@ -112,6 +117,11 @@ function Test-XmipChangeTree {
                 if (-not $runtimeBuilt) {
                     $failed = @($module)
                 }
+
+                [string] $file = if ($IsWindows) { 'xmip_core_runtime.dll' }
+                else { 'libxmip_core_runtime.so' }
+                $env:XMIP_RUNTIME_LIBRARY =
+                    Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
             }
 
             # The runtime's tests open the Rust contract module's library:
@@ -252,6 +262,42 @@ function Test-XmipPlatform {
         ForEach-Object { Write-Host $_ }
 
     $LASTEXITCODE -eq 0
+}
+
+function Test-XmipRuntimeLibraryReader {
+    <#
+        .SYNOPSIS
+            Whether a Rust module's sources read XMIP_RUNTIME_LIBRARY, the
+            variable naming the runtime library its tests load.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path
+    )
+
+    [System.IO.FileInfo[]] $sources = @(
+        foreach ($folder in @('.src', 'src')) {
+            [string] $at = Join-Path -Path $Path -ChildPath $folder
+            if (Test-Path -LiteralPath $at) {
+                Get-ChildItem -LiteralPath $at -Recurse -Filter '*.rs' -File
+            }
+        }
+    )
+
+    if ($sources.Count -eq 0) {
+        return $false
+    }
+
+    [hashtable] $search = @{
+        LiteralPath = $sources.FullName
+        Pattern     = 'XMIP_RUNTIME_LIBRARY'
+        SimpleMatch = $true
+        Quiet       = $true
+    }
+
+    [bool] (Select-String @search)
 }
 
 function Build-XmipTestLibrary {

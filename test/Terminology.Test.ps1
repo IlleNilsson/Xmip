@@ -21,7 +21,7 @@ BeforeAll {
 
     # Built in pieces so each rule is legible and no line runs long.
     $mtn = '(?<!["`*-])'                          # not a mention or a cmdlet's noun, before
-    $qual = '(?<!(Xmip|Host|System|Sending|Receiving|Business) )'
+    $qual = '(?<!(Work|Xmip|Host|System|Sending|Receiving|Business) )'
     $mtnAfter = '(?!["`*])'                                   # not a mention, after
     $axis = '(?! (Definition|Instance))'                      # the Definition/Instance axis
 
@@ -30,7 +30,7 @@ BeforeAll {
             Word = 'Process'
             Pattern = [regex]($mtn + $qual + '\bProcess\b' + $mtnAfter + $axis)
             # Frozen 2026-09-06 at the count then present across docs. It may
-            # fall, never rise. Qualify a new one (Xmip Process / Host Process /
+            # fall, never rise. Qualify a new one (Work Process / Host Subprocess /
             # System Process / Process Definition); do not raise this number.
             Ceiling = 94
         }
@@ -55,7 +55,10 @@ Describe 'Terminology: the glossary carries the disambiguation' {
 
         $terminology | Should -Match 'Process terminology'
         $terminology | Should -Match 'bare word \*\*Process\*\* is ambiguous'
-        foreach ($sense in @('System Process', 'Xmip Service', 'Xmip Process', 'Host Process')) {
+        foreach ($sense in @(
+                'System Process', 'Xmip Service', 'Xmip Host Service',
+                'Xmip Host Subprocess', 'Xmip Work Process'
+            )) {
             $terminology | Should -Match ([regex]::Escape($sense))
         }
     }

@@ -83,7 +83,7 @@ sealed under the key store `[store]` names. Records: ADR-0015 (amendment
 
 #### `process-declaration`
 
-**Declaring an Xmip Process.** `[[xmip_processes]]` and an Application's Xmip
+**Declaring a Work Process.** `[[work_processes]]` and an Application's Work
 Processes are read, validated and planned into the execution tree as a node
 starts, and a Subscription may lead to one; each is published as planned, not
 started. Records: ADR-0018, ADR-0064.
@@ -179,10 +179,20 @@ yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate,
 and the Playground holds its generated content to them in its own harness, not
 at a node's Location. Records: ADR-0042, ADR-0031 (amendment 2026-10-05).
 
+#### `artifact-scope`
+
+**A reading names its artifact by kind and name.** Every scope a node
+publishes still writes a stage and a Location or Work Process beneath its
+node, `…/receive/<Location>`, `…/process/<name>` and `…/send/<Location>`; none
+writes `ReceivePort`, `ReceiveLocation`, `WorkProcess`, `SendPortGroup`,
+`SendPort` or `SendLocation`, no Port is a level, no scope leaves the node
+out, and no reading shows the Party involved. Records: ADR-0027 (amendment
+2026-10-06).
+
 #### `artifact-steps`
 
 **Prepare, Contract, Promote, Transform, Demote and Assignment on Ports,
-Locations and Xmip Processes.** The keys are decided and none is read;
+Locations and Work Processes.** The keys are decided and none is read;
 Assignment and Transformation have the Message's generations ready in
 `xmip-core-message` and the runtime's `generation.rs`, with no caller outside
 tests. Records: ADR-0031 (amendment 2026-10-05), runtime-model.md section 20.
@@ -225,6 +235,14 @@ read and checked, and IT's scripts are in `deploy/database`; no Storage node
 connects to either server yet. Records: ADR-0015 (amendment 2026-10-01),
 deployment-model.md section 7.
 
+#### `host-subprocess`
+
+**An Xmip Host Subprocess, named for its parent.** Nothing spawns an Xmip Host
+Subprocess: a node runs its one in-process Host Service and refuses a Module
+that needs another (`xmip-core-runtime`'s `startup.rs`), so no process is
+named for its parent plus a dash and a short readable word. Records: ADR-0018
+(amendment 2026-10-06), ADR-0053 (amendment 2026-10-06).
+
 #### `other-runtime-module`
 
 **A Module on another runtime.** A .NET Module in process, on threads, unless
@@ -235,8 +253,8 @@ ADR-0018 (amendment 2026-10-05).
 
 #### `process-execution`
 
-**Compiling an Xmip Process at design time, and running it.** Nothing compiles
-a design and no engine runs one: a Journey to an Xmip Process ends saying no
+**Compiling a Work Process at design time, and running it.** Nothing compiles
+a design and no engine runs one: a Journey to a Work Process ends saying no
 runtime runs it yet (`xmip-core-runtime`'s `departure.rs`). Records: ADR-0066,
 runtime-model.md section 22.
 
@@ -244,7 +262,7 @@ runtime-model.md section 22.
 
 **Security profiles: standard, enterprise, regulated.** No configuration key
 names a profile and nothing enforces identity isolation at start; the
-isolation rule (`IdentityContext::may_share_host_process`) is called by its
+isolation rule (`IdentityContext::may_share_host_service`) is called by its
 tests alone. Records: ADR-0022, deployment-model.md section 4.
 
 #### `send-resilience`
@@ -266,7 +284,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 227308 lines of production
+Where each repository mounts and what it holds: 227263 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -572,11 +590,11 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            17341
+│       ├── runtime                            17305
 │       ├── persist                             4933
 │       │   ├── sqlite                           140
 │       │   └── rocksdb                          136
-│       └── configure                           3374
+│       └── configure                           3365
 └── test/
     └── core/
         └── playground                          9982
