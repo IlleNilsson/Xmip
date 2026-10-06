@@ -1839,3 +1839,22 @@ repeated) for a lost connection and a failed first one alike. That loop is
 the one place a surface asks rather than is told, because there is nothing
 to be told by while the host is unreachable. Found by an external review,
 2026-10-05.
+
+## Amendment, 2026-10-06: a time span, paused and widened
+
+The owner, 2026-10-06: *The Monitoring & Topology view, during tests has to
+show that everyting is at some time. Have a time span filter of 1 minute and
+inject faults every 50 seconds would work. Then one could pause, expand the
+time span to investigate the historical errors.*
+
+- **The Monitor and the Topology view show a time span**, one minute by
+  default: what happened in the last minute decides what they show, so a
+  fault shows while it is in the span and the board returns to green after.
+- **Pause** holds the view at a moment while the cluster runs on; **widen**
+  the span — minutes, hours — to see the faults that have passed, each
+  drillable as now. Resuming returns to the live, one-minute span.
+- The span reads the history the nodes keep (ADR-0029); a fault outside
+  what history keeps is said to be outside it, never shown as green. Every
+  surface takes the span: the CLI and the PowerShell module as a parameter.
+  Not built. The Playground's fault every 50 seconds is ADR-0028's amendment
+  of the same date.

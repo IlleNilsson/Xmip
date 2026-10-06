@@ -181,10 +181,20 @@ function Test-XmipChangeTree {
             $verified.Add($module)
         }
 
-        # The platform repository's own tests, when it changed, before
-        # anything is pushed.
-        if (-not $NoVerify -and $Platform -and
-            -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot)) {
+        # The service itself — the root crate, which links every technology
+        # its features name — consumes everything, so it is built, tested and
+        # linted with its features against the working trees on every landing
+        # (an external review, 2026-10-06). Then the root's own test/, when it
+        # changed. Both before anything is pushed.
+        [hashtable] $service = @{
+            RepositoryRoot = $RepositoryRoot
+            Module         = @('.')
+            Patch          = $patch
+        }
+        [bool] $serviceBroken = -not $NoVerify -and @(Test-XmipModule @service).Count -gt 0
+
+        if ($serviceBroken -or (-not $NoVerify -and $Platform -and
+                -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot))) {
             [string] $unverified = 'The platform repository did not verify; nothing landed.'
             Write-Error $unverified -ErrorAction Continue
 

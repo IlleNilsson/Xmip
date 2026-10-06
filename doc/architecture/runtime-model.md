@@ -980,7 +980,8 @@ leads — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node
 sends that Port and it is not Sequential, claims it in the same write and
 hands it to the Send pool in memory, so the send costs no sync of its own
-before it starts. Each pass tries the Port's Send Locations in configured
+before it starts — where the pool admits it (*Corrected 2026-10-06*
+below). Each pass tries the Port's Send Locations in configured
 order (`send_locations`, or the Location bound under the Port's name),
 `retry` on the active one and `failover = "next"` to the next, and hands on
 in one write: **Completed** and out of its queue; **Failed** with why in
@@ -1051,11 +1052,11 @@ waits for its due time.
   kept in its queue for an operator, as every Journey that failed is — its
   claim ended, counted and audited; it is never left owned, its claim
   renewed and passed over by every scan.
-- **A scan claims no more than the Send pool can take**: its most threads,
-  less what the node has in flight. A backlog waits unclaimed in its queue
-  for a later scan rather than claimed behind the pool, and the claims of
-  work in flight are renewed on a thread of their own, every third of a
-  lease, so no scan of a backlog, however long, holds a renewal back.
+- **A scan claims no more than the Send pool can take.** A backlog waits
+  unclaimed in its queue rather than claimed behind the pool, and the
+  claims of work in flight are renewed on a thread of their own, every
+  third of a lease, so no scan of a backlog, however long, holds a renewal
+  back.
 - **The Journeys that failed are discoverable.** A scan that reads a
   Journey Failed — one that failed before the node restarted, or on another
   node — keeps it as its Send Port's evidence; a read of the whole queue
@@ -1067,6 +1068,41 @@ waits for its due time.
   oldest hundred of them with why. Every one is read from Xmip Storage a
   page at a time (`xmip_operate.h` section 16), and every surface lists them
   at the Port's scope with Retry and Dismiss on each.
+
+**Corrected 2026-10-06**, after a review of the same:
+
+- **Admission is the one door to the Send pool.** A Publication, a resumed
+  Subscription's move and a scan each claim a Journey only under a place
+  the pool admits: its most threads, less every Journey the node owns —
+  handed, queued, sending, or waiting for a retry's due time — and every
+  place admitted and not yet owned. What has no place stays durable and
+  unclaimed in its queue, and the queue is read again the moment a place
+  frees, so a slow far end leaves its backlog in the Ledger and what the
+  node holds in memory is bounded by the pool's threads. Until now only a
+  scan asked: a Publication claimed every Journey it opened for a Port the
+  node sends and handed it on, and the pool queued whatever came. A retry
+  waiting for its due time holds no thread but holds its place, so a far
+  end failing every send slows its node's admissions rather than filling
+  its memory.
+- **A scan claims on the send threads.** What a scan finds unclaimed in a
+  queue that is not ordered is claimed and read on the send thread its
+  place was admitted for, so a backlog's claims share their commits; until
+  now the dispatching claimed them one by one, a commit's sync each, which
+  a backlog refilled through the scan would have paid for every Journey. A
+  Sequential Send Port's scan still claims in order, one of each sequence.
+- **A Send Port with failed Journeys waiting is Done.** Its record at
+  `<node>/send/<Port>` is Done — blocked or failed, the pain an operator's
+  Retry or Dismiss solves (`observability-model.md` section 6) — while any
+  waits in its queue, the most severe of the Done where one blocks a
+  Sequential Port's sequence, and Fine once none does; what failed before
+  and was acted on is history in its figures and leaves it Fine. Until now
+  it was Fine whatever waited, and left out of what needs attention.
+- **Now and history are published apart.** Every Send Port the node sends
+  publishes its failed Journeys (`observe::FailedJourneys`) — `count` now,
+  zero where none, so a surface says *none now* from the record and never
+  from its absence; `blocked`; the oldest hundred — and, apart from them,
+  `last_failure`, the last Journey that failed there since the node
+  started, which may since have been retried or dismissed.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

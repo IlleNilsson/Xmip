@@ -465,3 +465,28 @@ above. Hiding by declaration rather than by name is the lead's ruling under
 the owner's standing rule; the word `-Hidden`, `-IncludeHidden`, the fields
 and the default of hidden everywhere are the assistant's drafting, for the
 owner to overrule.
+
+## Amendment, 2026-10-06: Parties, good and bad days, and a fault every 50 seconds
+
+The owner, 2026-10-06, on the word (there are providers and Parties, and
+nothing else) and on the tests: *we are missing parties in the tests. The
+tests need to cover possible scenarios and also look real*; on the scenarios
+first proposed —
+one Party that only fails, another always refused: *that is a bad scenario
+you painted. All parties has mostly good communication there are good and
+bad days over parties, transports and streams*; and: *The Monitoring &
+Topology view, during tests has to show that everyting is at some time.
+Have a time span filter of 1 minute and inject faults every 50 seconds
+would work. Then one could pause, expand the time span to investigate the
+historical errors.*
+
+- **Several Parties, each on several transports and streams, both
+  directions.** No Party is the failing one: every Party communicates well
+  most of the time.
+- **A fault every 50 seconds**, moving across Parties, transports and
+  streams — one Party's transport on one turn, another's stream on the
+  next — so within any one minute the board shows trouble somewhere and,
+  between faults, everything green. Clause 4a's kinds of fault and its
+  determinism stand; the cadence and the spread are new.
+- What an operator does with it is ADR-0052's amendment of the same date:
+  a one-minute span, paused and widened to investigate. Not built.

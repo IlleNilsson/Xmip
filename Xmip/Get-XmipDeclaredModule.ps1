@@ -87,8 +87,10 @@ function Get-XmipNestedParent {
 function Read-XmipModuleManifest {
     <#
         .SYNOPSIS
-            A module's package name and the estate packages it depends on, read
-            once from its Cargo.toml for every caller.
+            A module's package name, the estate packages it depends on, read
+            once from its Cargo.toml for every caller, and every path its .NET
+            projects reference (a project, or a library copied from another
+            module's build), which is how a .NET module depends on another.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -102,9 +104,35 @@ function Read-XmipModuleManifest {
 
     [string] $manifest = Join-Path -Path $RepositoryRoot -ChildPath "$Module/Cargo.toml"
 
-    # No manifest, no declared dependencies.
+    [string] $at = Join-Path -Path $RepositoryRoot -ChildPath $Module
+    [string[]] $references = @(
+        Find-XmipFile -Path $at -Filter '*.csproj' |
+            ForEach-Object {
+                [string] $project = "$_"
+                [string] $folder = Split-Path -Parent $project
+                [string] $projectText = Get-Content -LiteralPath $project -Raw
+
+                # A ProjectReference or other Include by relative path, and a
+                # path written from the project's own folder — how Xmip.Abi
+                # names the runtime's build. Globs and properties are cut at
+                # their first wildcard or property.
+                [string[]] $written = @(
+                    [regex]::Matches($projectText, 'Include="(?<path>[^"$*;]+)"') |
+                        ForEach-Object { $_.Groups['path'].Value }
+                    [regex]::Matches($projectText,
+                        '\$\(MSBuildThisFileDirectory\)(?<path>[^"$*;<]+)') |
+                        ForEach-Object { $_.Groups['path'].Value }
+                )
+
+                $written | ForEach-Object {
+                    [System.IO.Path]::GetFullPath((Join-Path -Path $folder -ChildPath $_))
+                }
+            }
+    )
+
+    # No manifest, no declared Cargo dependencies.
     if (-not (Test-Path -LiteralPath $manifest)) {
-        return [pscustomobject]@{ Package = ''; Needs = @() }
+        return [pscustomobject]@{ Package = ''; Needs = @(); References = $references }
     }
 
     [string] $text = Get-Content -LiteralPath $manifest -Raw
@@ -132,7 +160,7 @@ function Read-XmipModuleManifest {
             Where-Object { $_ -like 'xmip*' }
     )
 
-    [pscustomobject]@{ Package = $name; Needs = $needs }
+    [pscustomobject]@{ Package = $name; Needs = $needs; References = $references }
 }
 
 function Get-XmipModuleConsumer {
@@ -162,8 +190,23 @@ function Get-XmipModuleConsumer {
         $read[$name] = Read-XmipModuleManifest -RepositoryRoot $RepositoryRoot -Module $name
     }
 
+    # Each module's folder, longest first, so a referenced path is owned by
+    # the innermost module that holds it.
+    [string[]] $folders = @(
+        $read.Keys |
+            Sort-Object -Property Length -Descending |
+            ForEach-Object {
+                [System.IO.Path]::GetFullPath((Join-Path -Path $RepositoryRoot -ChildPath $_)) +
+                    [System.IO.Path]::DirectorySeparatorChar
+            }
+    )
+    [string[]] $names = @($read.Keys | Sort-Object -Property Length -Descending)
+
+    # A module is reached by its package (Cargo) and by its path (.NET).
     [HashSet[string]] $reached = [HashSet[string]]::new()
     foreach ($name in $Module) {
+        [void] $reached.Add("path:$name")
+
         if ($read.ContainsKey($name) -and $read[$name].Package) {
             [void] $reached.Add($read[$name].Package)
         }
@@ -176,13 +219,35 @@ function Get-XmipModuleConsumer {
         foreach ($name in $read.Keys) {
             [pscustomobject] $entry = $read[$name]
 
-            if ($Module -contains $name -or $consumers.Contains($name) -or -not $entry.Package) {
+            if ($Module -contains $name -or $consumers.Contains($name)) {
                 continue
             }
 
-            if (@($entry.Needs | Where-Object { $reached.Contains($_) }).Count -gt 0) {
+            [string[]] $owners = @(
+                foreach ($reference in $entry.References) {
+                    for ([int] $place = 0; $place -lt $folders.Count; $place++) {
+                        [string] $under = $reference + [System.IO.Path]::DirectorySeparatorChar
+
+                        if ($under.StartsWith($folders[$place],
+                                [System.StringComparison]::OrdinalIgnoreCase)) {
+                            "path:$($names[$place])"
+                            break
+                        }
+                    }
+                }
+            )
+
+            [bool] $uses = @($entry.Needs | Where-Object { $reached.Contains($_) }).Count -gt 0 -or
+                @($owners | Where-Object { $reached.Contains($_) }).Count -gt 0
+
+            if ($uses) {
                 $consumers.Add($name)
-                [void] $reached.Add($entry.Package)
+                [void] $reached.Add("path:$name")
+
+                if ($entry.Package) {
+                    [void] $reached.Add($entry.Package)
+                }
+
                 $grew = $true
             }
         }
