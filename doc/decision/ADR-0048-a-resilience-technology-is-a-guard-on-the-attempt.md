@@ -94,3 +94,24 @@ The sentence and the trait are the assistant's, 2026-09-10, under the owner's
 instruction to sort everything declared and not built. Nothing was put to the
 owner as a question because the record — problem 9 — had already said what
 was missing.
+
+## Amendment, 2026-10-06: Polly is the goal, on the send artifacts only
+
+The owner, 2026-10-06, asked how Xmip's resilience stands against the Polly
+open-source project as its goal, and, shown that Xmip has the basic form of
+five of Polly's strategies, no hedging, no pipeline builder, no telemetry
+and no chaos strategies, used only by three transports: *We only need Send
+Port Group, Send Port and Send Location to utilize 'polly'-resillianze. The
+rest is internal Rust matters.*
+
+- **Polly is the goal for what an operator configures**, and the place it is
+  configured is the send side alone: a Send Port Group, a Send Port and a
+  Send Location each name the guards — retry, timeout, circuit breaker,
+  fallback, rate limiting, concurrency limit, hedging — and their settings
+  in `xmip.toml`, and every send through them goes through that pipeline.
+- **Everywhere else, resilience is the code's own business**: a transport,
+  a Receive Location or Xmip Storage handles its failures inside Rust as its
+  technology needs, with nothing to configure.
+- Not built: the send artifacts' pipeline, a timeout that interrupts the
+  attempt, telemetry, and Polly's missing options. The order and the keys
+  are to be proposed.

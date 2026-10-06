@@ -186,13 +186,22 @@ function Test-XmipModule {
 
         if ($CheckOnly) {
             # A consumer nobody changed: compiled with its tests and linted
-            # against the changed working trees, so a broken API shows, without
-            # running its tests.
+            # against the changed working trees, with every feature it declares
+            # as buildable, so a broken API shows in an optional part too,
+            # without running its tests.
+            [string[]] $declared =
+                @(Get-XmipBuildableFeature -ManifestPath $manifest -Module $name)
+            [string[]] $withFeatures = @()
+
+            if ($declared.Count -gt 0) {
+                $withFeatures = @('--features', ($declared -join ','))
+            }
+
             Push-Location -LiteralPath $path
 
             try {
                 Write-Host '   checking as a consumer...' -ForegroundColor DarkGray
-                & cargo clippy @through --all-targets -- -D warnings 2>&1 |
+                & cargo clippy @through --all-targets @withFeatures -- -D warnings 2>&1 |
                     ForEach-Object { Write-Host $_ }
                 [bool] $checked = $LASTEXITCODE -eq 0
             }
