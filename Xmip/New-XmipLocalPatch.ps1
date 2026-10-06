@@ -30,36 +30,11 @@ function New-XmipLocalPatch {
 
     [List[string]] $lines = [List[string]]::new()
     $lines.Add('# Written by New-XmipLocalPatch for one landing. Never committed.')
-    [HashSet[string]] $seen = [HashSet[string]]::new()
 
-    # Build output, the assistant's working area and run output hold copies of
-    # manifests; only a module's own Cargo.toml names a crate.
-    [string] $skip = '[\\/](target|target-[^\\/]+|\.git|\.ai-interaction|' +
-        '\.local-work|node_modules)[\\/]'
-
-    [hashtable] $manifests = @{
-        LiteralPath = $RepositoryRoot
-        Filter      = 'Cargo.toml'
-        File        = $true
-        Recurse     = $true
-        ErrorAction = 'SilentlyContinue'
+    foreach ($crate in @(Get-XmipEstateCrate -RepositoryRoot $RepositoryRoot)) {
+        $lines.Add("[patch.`"https://github.com/IlleNilsson/$($crate.Name)`"]")
+        $lines.Add("$($crate.Name) = { path = `"$($crate.Directory)`" }")
     }
-
-    Get-ChildItem @manifests |
-        Where-Object { $_.FullName -notmatch $skip } |
-        ForEach-Object {
-            [string] $text = Get-Content -LiteralPath $_.FullName -Raw
-
-            if ($text -match '(?ms)^\[package\][^\[]*?^name\s*=\s*"(xmip[^"]+)"') {
-                [string] $crate = $Matches[1]
-
-                if ($seen.Add($crate)) {
-                    [string] $at = $_.DirectoryName -replace '\\', '/'
-                    $lines.Add("[patch.`"https://github.com/IlleNilsson/$crate`"]")
-                    $lines.Add("$crate = { path = `"$at`" }")
-                }
-            }
-        }
 
     Set-Content -LiteralPath $patch -Value $lines -Encoding utf8NoBOM
 

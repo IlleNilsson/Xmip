@@ -284,7 +284,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 227263 lines of production
+Where each repository mounts and what it holds: 228508 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -537,7 +537,7 @@ hold no source to count.
 │   │   │   └── asn1                             526
 │   │   └── operation/
 │   │       ├── cli                             6114
-│   │       ├── gui                             5366
+│   │       ├── gui                             5401
 │   │       │   └── vscode                      1417
 │   │       ├── observe                         3683
 │   │       │   ├── otlp                         578
@@ -562,7 +562,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                24061  C# 22020 · Rust 1816 · PowerShell 225
+│   │   ├── abi                                24567  C# 22526 · Rust 1816 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -590,8 +590,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            17305
-│       ├── persist                             4933
+│       ├── runtime                            17902
+│       ├── persist                             5040
 │       │   ├── sqlite                           140
 │       │   └── rocksdb                          136
 │       └── configure                           3365

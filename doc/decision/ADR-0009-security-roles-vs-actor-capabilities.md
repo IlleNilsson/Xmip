@@ -148,10 +148,11 @@ role gate has one code path, not a test-mode bypass. Which directory group
 means which role is configuration, not code, and is not yet written.
 
 *Wired 2026-09-29:* both GUIs take the role by this rule, once
-(`RoleContext.Assigned`, in `Xmip.Surface` since the amendment of
-2026-10-03): a role the run states is the role,
-a word that is no role is Observer, and with none stated and no directory
-configured the tester holds every role (ADR-0052, amendment 2026-09-29).
+(`RoleAssignment`, in `Xmip.Surface`, since the amendment of 2026-10-06): a
+role the run states is the role, a word that is no role is Observer, and with
+none stated the directory answers — the Playground's fake one allowing the
+tester — and with no directory the role is Observer (ADR-0052, amendment
+2026-09-29; the amendment of 2026-10-06 below).
 
 A test run that wants the real thing says so: `Start-XmipTest` gains
 **`-Directory`** beside `-OnlineNodes`, the owner's wording, naming the
@@ -198,10 +199,10 @@ done with it. A host assigned Observer still acted, as anyone who said so.
   whatever the host's role, rather than taken on the caller's word. The rule
   is one, `GatedOperator.Proven`.
 - **The role moved down to the layer that enforces it.** `Role`, `Roles` and
-  `RoleContext`, with `RoleContext.Assigned`, are `Xmip.Surface`'s, beneath
+  `RoleContext`, with the rule that assigns it, are `Xmip.Surface`'s, beneath
   both GUIs and the relay, not `Xmip.Gui`'s: the hub could not see the role
   where it was. The rule is unchanged, and `AddXmipSurfaceRelay` takes the
-  host's registered `RoleContext`, else that rule's answer.
+  host's registered assignment, else that rule's answer.
 
 What stays open is what the paragraph *Not yet enforced* above names: the
 role a host runs as is still the run's to state until a directory grants it
@@ -213,3 +214,67 @@ shaping what they offer by the same role in their own process.
 Provenance: the outside review of 2026-10-03; the check, its place and the
 refusal without a proven identity are the assistant's drafting, for the
 owner to overrule.
+
+## Amendment, 2026-10-06: every act is the proven caller's, by the caller's role
+
+Found by an outside review, the owner approving the repair the same day: the
+amendment of 2026-10-03 gated what another machine asks over the surface hub
+and left the browser's own path open. The web host took one role for its
+whole run, a run that stated none was Developer, a browser presented no
+certificate and was asked nothing, and every browser act was taken and
+audited as the account the host runs as. The certificate gate on `/surface`
+guarded remote surfaces, not the browser.
+
+- **A browser is a proven caller, by the one rule.** Every request to a web
+  host carries the caller its connection proved, `GatedOperator.Proven`: the
+  subject of a client certificate the handshake checked against the host's
+  anchors, else, over this machine's loopback, the operating system user the
+  host runs as (the owner's *Go with A* of 2026-10-03), else no one.
+  `ProvenCaller` in `Xmip.Surface.Relay` sets it as the request's user, and
+  Blazor hands it to the circuit the request opens, so a circuit is one
+  caller for its life. A browser nothing proved reads the pages (ADR-0063)
+  and acts on nothing. The desktop's caller is the user running it.
+- **The role is the caller's, by one rule for every host and the hub.**
+  `RoleAssignment` in `Xmip.Surface`: a caller nothing proved is an
+  Observer; a role the run states (`Role` in `xmip.gui.toml`, else
+  `XMIP_ROLE`) is every proven caller's, as the amendment of 2026-10-03 left
+  it until a directory is asked; else the directory the host is handed
+  (`IDirectory`, ADR-0068) answers for the caller; else Observer. **An
+  unstated role grants nothing.** `RoleContext` is the caller and that role,
+  one per browser circuit, and is what every screen offers by.
+- **The tester is God in the Playground only, by configuration.** The fake
+  directory of the amendment of 2026-09-14 is `TesterDirectory`: it allows
+  the user the host runs as every role and knows no one else. A host has it
+  only where its configuration names it, `Directory = "tester"`, which
+  `Start-XmipOperationWeb` passes to a host following a Playground roll; no
+  name of a cluster, node or file decides it. A directory kind not built is
+  no directory, so a misstatement grants nothing.
+- **Every act passes `GatedOperator`, as its caller.** The screens act
+  through the gate the hub uses — pause and resume a scope, a Subscription
+  and an Event subscription, remove an Event subscription, replay a Message,
+  retry and dismiss a Journey — not beside it: refused in words where the
+  caller's role may not act, never taken under a name the caller gives, and
+  audited as that caller, taken or refused, with the act, its target and the
+  role (ADR-0062). The screens' own role checks and their refusal text are
+  deleted; the gate is the one.
+
+What stays open is what this record has said since 2026-09-14: which
+directory group means which role, and the directories a production caller is
+proven against beyond a client certificate — Kerberos and Active Directory,
+the account behind an SSH key (ADR-0014, Reach) — are not built. Until they
+are, a run that does not state a role grants Observer outside the
+Playground.
+
+Proved in `Xmip.Surface.Test` (`BrowserCallerTest`): an anonymous browser's
+act is refused whatever the run states, an Observer is refused and audited
+as themselves, an Operator's act is taken and audited under that Operator's
+certificate subject and never the host's account, the Playground's tester
+acts by the fake directory on loopback, and every request's user over the
+wire is what its connection proved; and in `Xmip.Gui.Test`
+(`JourneyActsViewTest`): a screen's act is audited as the browser's caller,
+and one nothing proved is offered no act and the gate takes none.
+
+Provenance: the outside review of 2026-10-06 and the owner's approval of its
+repair; the per-caller assignment, the fake directory's configuration key
+and the deletion of the screens' own checks are the assistant's drafting,
+for the owner to overrule.

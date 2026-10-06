@@ -560,14 +560,18 @@ remoting session proved, or the account behind an SSH key. An Observer
 watches; an Operator also pauses, resumes and configures; a Developer also
 opens the specific point's configuration from its scope
 ([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
-Both GUIs take it by one rule: a role the run states (`Role` in
-`xmip.gui.toml`, else `XMIP_ROLE`) is the role, and with none stated and no
-directory configured the tester holds every role. A web host refuses, in
-words and audited, every act a remote surface asks of it unless its role may
-act, and takes an act as the subject of the client certificate that reached
-it, never as a name the caller gives; over loopback, where no certificate
-is presented, as the operating system user running the host, and from
-anywhere else without one it takes none (ADR-0009, amendment 2026-10-03).
+The role is the caller's: each browser, the desktop's user and each remote
+surface is the caller its connection proved — the subject of a client
+certificate the host checked, else, over loopback, the operating system user
+running the host — and one nothing proved watches and acts on nothing. Both
+GUIs and the surface hub grant a caller a role by one rule: a role the run
+states (`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's;
+else the directory the host is told (`Directory`) answers; else Observer. The
+Playground's directory is a fake one that allows the tester, and
+`Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
+gate as its caller, never under a name the caller gives, refused in words
+where the caller's role may not act and audited as that caller either way
+(ADR-0009, amendments 2026-10-03 and 2026-10-06).
 Observation reads snapshots the runtime publishes and never enters the
 message path. Audit is the durable record of actions and outcomes; a live
 monitor is not a replacement for it.

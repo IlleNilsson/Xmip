@@ -66,8 +66,17 @@ function Test-XmipChangeTree {
     try {
         [string] $patch = ''
 
+        # The libraries cargo names without a hash, removed whenever another
+        # workspace begins (Clear-XmipUnhashedLibrary says why).
+        [string[]] $unhashed = @()
+
         if (-not $NoVerify) {
             $patch = New-XmipLocalPatch -RepositoryRoot $RepositoryRoot
+            $unhashed = @(
+                Get-XmipEstateCrate -RepositoryRoot $RepositoryRoot |
+                    Where-Object -Property Unhashed |
+                    ForEach-Object -MemberName Unhashed
+            )
         }
 
         foreach ($module in $Ordered) {
@@ -111,6 +120,7 @@ function Test-XmipChangeTree {
                     RepositoryRoot = $RepositoryRoot
                     Module         = 'module/platform/runtime'
                     Patch          = $patch
+                    Library        = $unhashed
                 }
                 $runtimeBuilt = Build-XmipTestLibrary @runtimeLibrary
 
@@ -132,6 +142,7 @@ function Test-XmipChangeTree {
                     RepositoryRoot = $RepositoryRoot
                     Module         = 'module/core/capability/contract/rust'
                     Patch          = $patch
+                    Library        = $unhashed
                 }
 
                 if (Build-XmipTestLibrary @contractLibrary) {
@@ -154,6 +165,7 @@ function Test-XmipChangeTree {
             }
 
             if ($failed.Count -eq 0) {
+                Clear-XmipUnhashedLibrary -TargetDirectory $sharedTarget -Library $unhashed
                 $failed = @(Test-XmipModule @verify)
             }
 
@@ -201,6 +213,7 @@ function Test-XmipChangeTree {
             Module         = @('.')
             Patch          = $patch
         }
+        Clear-XmipUnhashedLibrary -TargetDirectory $sharedTarget -Library $unhashed
         [bool] $serviceBroken = -not $NoVerify -and @(Test-XmipModule @service).Count -gt 0
 
         if ($serviceBroken -or (-not $NoVerify -and $Platform -and
@@ -318,10 +331,15 @@ function Build-XmipTestLibrary {
         [string] $Module,
 
         [Parameter(Mandatory)]
-        [string] $Patch
+        [string] $Patch,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [string[]] $Library
     )
 
     Write-Host "== $Module's library, for the tests that load it" -ForegroundColor Cyan
+    Clear-XmipUnhashedLibrary -TargetDirectory $env:CARGO_TARGET_DIR -Library $Library
     Push-Location -LiteralPath (Join-Path -Path $RepositoryRoot -ChildPath $Module)
 
     try {

@@ -44,8 +44,8 @@ BeforeAll {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
-            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1',
-            'Test-XmipChangeTree.ps1'
+            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
+            'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -671,6 +671,90 @@ Describe 'The dependency tree verifies whole before anything lands' {
             $text | Should -Match '\[patch\."https://github\.com/IlleNilsson/xmip-core-a"\]'
             $text | Should -Match 'xmip-core-b = \{ path = ".+/module/foundation/b" \}'
             $text | Should -Not -Match 'xmip-core-copy'
+        }
+    }
+
+    It 'patches every crate one way: the absolute path of its own folder' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
+            param($Root)
+
+            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
+            [string[]] $paths = @(
+                [regex]::Matches((Get-Content -LiteralPath $patch -Raw), 'path = "([^"]+)"') |
+                    ForEach-Object { $_.Groups[1].Value }
+            )
+
+            $paths.Count | Should -Be 2
+            foreach ($path in $paths) {
+                [System.IO.Path]::IsPathFullyQualified($path) | Should -BeTrue
+                $path | Should -Not -Match '\\'
+            }
+        }
+    }
+
+    It 'leaves no workspace a cdylib crate''s unhashed rlib another workspace built' {
+        # 2026-10-06: the runtime's rlib, which cargo names without a hash
+        # because the runtime also builds a cdylib, was written by the
+        # runtime's own workspace for the tests that load its library, and the
+        # root linked it beside its own configure: two xmip_core_configure in
+        # one graph, E0308 in the deploy test.
+        $estate = Join-Path -Path $TestDrive -ChildPath 'unhashed'
+        $library = Join-Path -Path $estate -ChildPath 'module/platform/runtime'
+        $plain = Join-Path -Path $estate -ChildPath 'module/platform/configure'
+        foreach ($at in $library, $plain) {
+            $null = New-Item -ItemType Directory -Path $at -Force
+        }
+        Set-Content -LiteralPath (Join-Path $library 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip-core-runtime"', 'version = "0.1.0"', '',
+            '[lib]', 'crate-type = ["rlib", "cdylib"]'
+        )
+        Set-Content -LiteralPath (Join-Path $plain 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip-core-configure"', 'version = "0.1.0"'
+        )
+
+        $deps = Join-Path -Path $estate -ChildPath 'target/debug/deps'
+        $null = New-Item -ItemType Directory -Path $deps -Force
+        [string[]] $files = @(
+            'libxmip_core_runtime.rlib', 'libxmip_core_runtime.rmeta', 'xmip_core_runtime.dll',
+            'libxmip_core_configure-0123456789abcdef.rlib'
+        )
+        foreach ($file in $files) {
+            Set-Content -LiteralPath (Join-Path $deps $file) -Value 'x'
+        }
+
+        InModuleScope Xmip -Parameters @{ Root = $estate } {
+            param($Root)
+
+            [string[]] $unhashed = @(
+                Get-XmipEstateCrate -RepositoryRoot $Root |
+                    Where-Object -Property Unhashed |
+                    ForEach-Object -MemberName Unhashed
+            )
+            $unhashed | Should -Be @('xmip_core_runtime')
+
+            [string] $target = Join-Path -Path $Root -ChildPath 'target'
+            Clear-XmipUnhashedLibrary -TargetDirectory $target -Library $unhashed
+        }
+
+        Test-Path -LiteralPath (Join-Path $deps 'libxmip_core_runtime.rlib') | Should -BeFalse
+        Test-Path -LiteralPath (Join-Path $deps 'libxmip_core_runtime.rmeta') | Should -BeFalse
+        Test-Path -LiteralPath (Join-Path $deps 'xmip_core_runtime.dll') | Should -BeTrue
+        $hashed = Join-Path $deps 'libxmip_core_configure-0123456789abcdef.rlib'
+        Test-Path -LiteralPath $hashed | Should -BeTrue
+    }
+
+    It 'clears them before every workspace it builds in' {
+        [string] $tree = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipChangeTree.ps1')
+
+        foreach ($call in 'Test-XmipModule @verify', 'Test-XmipModule @service',
+            'cargo build --config') {
+            [int] $at = $tree.IndexOf($call)
+            $at | Should -BeGreaterThan 0
+            [string] $before = $tree.Substring(0, $at)
+            [int] $clear = $before.LastIndexOf('Clear-XmipUnhashedLibrary -TargetDirectory')
+            $clear | Should -BeGreaterThan 0
+            $before.Substring($clear) | Should -Not -Match '& cargo|Test-XmipModule @'
         }
     }
 

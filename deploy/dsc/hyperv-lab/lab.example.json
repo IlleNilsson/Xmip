@@ -1,0 +1,47 @@
+{
+  "LabId": "Xmip-HyperV-Lab",
+  "Root": "D:\\HyperV\\Xmip",
+  "ServerImage": "D:\\Images\\WindowsServer2025.vhdx",
+  "DeveloperImage": "D:\\Images\\Windows11-26H2.vhdx",
+  "CredentialPath": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\credential.xml",
+  "DomainName": "xmip.test",
+  "NetbiosName": "XMIP",
+  "Network": {
+    "SwitchName": "Xmip-Lab",
+    "Prefix": "10.77.0.0/24",
+    "Gateway": "10.77.0.1",
+    "PrefixLength": 24,
+    "EnableNat": true,
+    "DnsForwarders": ["1.1.1.1", "9.9.9.9"]
+  },
+  "PostgreSql": {
+    "Installer": "D:\\Installers\\postgresql-windows-x64.exe",
+    "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256",
+    "MajorVersion": 18,
+    "Port": 5432,
+    "Database": "xmip"
+  },
+  "Development": {
+    "PowerShellMsi": "D:\\Installers\\PowerShell-win-x64.msi",
+    "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256",
+    "RepositoryRoot": "D:\\Repos\\Xmip"
+  },
+  "Machines": [
+    {"Name": "XMIP-DC01", "Role": "DomainController", "Address": "10.77.0.10",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-FS01", "Role": "FileServer", "Address": "10.77.0.20",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-DEV01", "Role": "Developer", "Address": "10.77.0.30",
+      "MemoryGB": 12, "Cpu": 4},
+    {"Name": "XMIP-DB01", "Role": "PostgreSql", "Address": "10.77.0.41",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-DB02", "Role": "PostgreSql", "Address": "10.77.0.42",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP01", "Role": "Xmip", "Address": "10.77.0.51",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP02", "Role": "Xmip", "Address": "10.77.0.52",
+      "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP03", "Role": "Xmip", "Address": "10.77.0.53",
+      "MemoryGB": 4, "Cpu": 2}
+  ]
+}

@@ -630,3 +630,42 @@ What follows from it:
 Nothing spawns an Xmip Host Subprocess yet
 ([decided, not built](../architecture/estate-map.md#host-subprocess)).
 `doc/terminology.md` carries the four terms.
+
+## Amendment, 2026-10-06: a Publication is written once, and a lost claim stops its work
+
+A review whose findings the owner approved for repair on 2026-10-06 found
+two holes in the amendment of 2026-10-01 — *every hand-on is one atomic
+write* and *renewed while the work runs* — where an answer was lost or
+dropped.
+
+**Clause 12's atomic writes include the Publication, once.** A Publication
+is known by its Message. Its one write keeps, with the rest, that it was
+written and the digest of what was asked; asked again — a node's request
+repeated after its answer was lost — it writes nothing and answers the
+claims of it its node still holds, and the node sends only those. Until
+then a repeated Publication wrote its Journeys again, so one another node
+had completed meanwhile was reset, queued again and sent a second time.
+Another Publication of the same Message is refused; publishing a business
+Message again stays what it was, another Message with an identifier of its
+own (ADR-0013 clause 4c).
+
+**Clause 5's renewal is answered, and its answer obeyed.** A renewal that
+finds the claim another's ends the work there: no further attempt is made
+from this node and nothing is written for it, the loss counted and
+audited. A renewal Xmip Storage does not answer leaves the claim
+unconfirmed, and its Send Port is Done from the first unanswered renewal,
+its evidence naming Xmip Storage as what did not answer and since when — the
+owner, 2026-10-06: *Storage is not here is a flat-out error* — on every
+surface while it lasts; the window that follows bounds attempts and softens
+no mood: the node goes on only
+while a lease from the request that last confirmed the claim lasts, on its
+own clock, never comparing it with the Storage node's, and past it presumes
+the claim lost, audits it once and attempts nothing more until a renewal
+is answered. An external operation already under way is not called back:
+it carries the Journey's identifier, the transports' deduplication key, so
+the delivery semantics of `runtime-model.md` section 15 stand — exactly once
+where the far end deduplicates, at least once elsewhere, never at most once.
+
+`runtime-model.md` section 9 and section 10, *Corrected 2026-10-06*, say
+how each runs; `xmip-core-persist` (`storage::publication`) and
+`xmip-core-runtime` (`send_step::renewal`) hold them.
