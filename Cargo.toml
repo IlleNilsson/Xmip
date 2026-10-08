@@ -39,7 +39,7 @@ required-features = ["node", "audit", "observe"]
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
-required-features = ["node", "audit", "observe", "transport-tcp", "persist-rocksdb", "persist-sqlite"]
+required-features = ["node", "audit", "observe", "transport-tcp", "identify-ip", "persist-rocksdb", "persist-sqlite"]
 
 # Renders every node configuration deploy/ writes and reads it the way
 # xmip-service reads its own, so a template out of step with the reader fails.
@@ -101,6 +101,21 @@ resilience = ["dep:xmip-resilience"]
 retain = ["dep:xmip-retain"]
 transform = ["dep:xmip-transform"]
 
+# The identify technologies xmip-service links and hands to the node it
+# starts (`xmip_runtime::linked::Linked`): the first gate, which reads the
+# claim a Stream carries on its transport (ADR-0019 clause 5, ADR-0050
+# section 3). Each reads what a linked transport writes on its arrival and
+# needs no configuration: the socket peer (`ip`), a bearer token's subject
+# (`jwt`), an `X-API-Key` (`api-key`), a Basic credential's user
+# (`username`). A Stream is still refused at authentication until an
+# authenticator is set up. A site links those its domains name
+# (deploy/profile/domain): integration names api-key, jwt and username,
+# network names ip.
+identify-api-key = ["identify", "dep:xmip-identify-api-key"]
+identify-ip = ["identify", "dep:xmip-identify-ip"]
+identify-jwt = ["identify", "dep:xmip-identify-jwt"]
+identify-username = ["identify", "dep:xmip-identify-username"]
+
 # The transports xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
 # is refused as the node starts. A site links the ones its domains serve
@@ -140,6 +155,10 @@ xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main" 
 xmip-demote = { package = "xmip-core-demote", git = "https://github.com/IlleNilsson/xmip-core-demote", branch = "main", optional = true }
 xmip-event = { package = "xmip-core-event", git = "https://github.com/IlleNilsson/xmip-core-event", branch = "main", optional = true }
 xmip-identify = { package = "xmip-core-identify", git = "https://github.com/IlleNilsson/xmip-core-identify", branch = "main", optional = true }
+xmip-identify-api-key = { package = "xmip-core-identify-api-key", git = "https://github.com/IlleNilsson/xmip-core-identify-api-key", branch = "main", optional = true }
+xmip-identify-ip = { package = "xmip-core-identify-ip", git = "https://github.com/IlleNilsson/xmip-core-identify-ip", branch = "main", optional = true }
+xmip-identify-jwt = { package = "xmip-core-identify-jwt", git = "https://github.com/IlleNilsson/xmip-core-identify-jwt", branch = "main", optional = true }
+xmip-identify-username = { package = "xmip-core-identify-username", git = "https://github.com/IlleNilsson/xmip-core-identify-username", branch = "main", optional = true }
 xmip-journey = { package = "xmip-core-journey", git = "https://github.com/IlleNilsson/xmip-core-journey", branch = "main" }
 xmip-message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
 xmip-node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/xmip-core-node", branch = "main", optional = true }

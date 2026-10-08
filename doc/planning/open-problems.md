@@ -819,7 +819,7 @@ handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, event's
 
 Found 2026-10-06 while documenting what is built: `xmip-service`
 (`.src/service/built.rs`) links no authenticator and no authorization policy,
-so every Receive Location refuses every Stream at its gates; it serves no
+so every Receive Location refuses every Stream at authentication; it serves no
 Storage node and refuses a configuration listing `[storage] nodes`; and no
 PostgreSQL or SQL Server client exists. The message path is built and tested
 inside the runtime's tests, which hand it stand-in gates; the program an
@@ -827,6 +827,25 @@ operator installs runs none of it. Needed: the identity technologies of
 ADR-0050 linked into the service and chosen by configuration (ADR-0068: handed
 in), a Storage node in the service, and the first database server client.
 `architecture.toml` `[implementation]` says the same per capability.
+
+*Narrowed the same day.* The owner: *The first stream will come from
+somewhere, it will carry its identity via transport or on its message*, and
+*that goes for all streams*. The runtime drops nothing a transport hands
+over: what it observed of the sender, under `context::property`'s names, and
+its headers reach the first gate, and the headers the Message Context
+(`receiving/received.rs`); every receiving technology says what its arrival
+carries (`transport::ArrivalIdentity`), held by its own loopback rounds. The
+service links the identify technologies that need no configuration — `ip`,
+`jwt`, `api-key`, `username` — so a Stream's transport claim reaches the
+gate, and a refused attempt is audited with the claim, its layer and how it
+was established (ADR-0013 clause 1). What remains of the first part:
+Parties in the configuration and `accept.party`, the `location` policy, an
+authenticator the configuration sets up with its credential store, and a
+receiving transport that terminates TLS so `mutual-tls` has a peer
+certificate to verify. A message identity — an X12 `ISA06` — reaches the
+gate only after transport authentication passes and a contract or the
+`message` identifier is configured, so the service cannot show one yet; the
+runtime's tests do (`arrival.rs`).
 
 ---
 

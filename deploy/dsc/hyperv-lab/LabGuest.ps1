@@ -30,7 +30,7 @@ function Get-LabGuestFinding {
 
     [object] $system = Get-CimInstance -ClassName Win32_ComputerSystem
     [object] $os = Get-CimInstance -ClassName Win32_OperatingSystem
-    if ($Machine.Role -eq 'Developer') {
+    if ($Machine.Os -eq 'Windows11') {
         [string] $versionKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
         [string] $release = (Get-ItemProperty -LiteralPath $versionKey).DisplayVersion
         if ($os.Caption -notlike '*Windows 11*' -or $release -ne '26H2') {
@@ -103,48 +103,26 @@ function Get-LabRoleFinding {
             if ($null -eq (Get-ADGroup -Filter "Name -eq 'XmipLabUsers'")) {
                 Write-Output -InputObject 'Lab file-share group is missing.'
             }
+            foreach ($record in @(Get-LabStaticRecord)) {
+                [hashtable] $query = @{
+                    ZoneName = $Lab.DomainName
+                    Name = $record.Name
+                    RRType = 'A'
+                    ErrorAction = 'SilentlyContinue'
+                }
+                [object[]] $found = @(Get-DnsServerResourceRecord @query)
+                if (@($found | Where-Object {
+                    $_.RecordData.IPv4Address.IPAddressToString -eq $record.Address
+                }).Count -ne 1) {
+                    Write-Output -InputObject "DNS record $($record.Name) is missing or differs."
+                }
+            }
         }
         'FileServer' {
             [object] $share = Get-SmbShare -Name XmipLab -ErrorAction SilentlyContinue
             if ($null -eq $share -or $share.Path -ne 'C:\XmipLab\Share' -or
                 -not $share.EncryptData) {
                 Write-Output -InputObject 'Encrypted XmipLab SMB share is missing or differs.'
-            }
-        }
-        'PostgreSql' {
-            [object] $service = Get-Service -Name XmipPostgreSql -ErrorAction SilentlyContinue
-            if ($null -eq $service -or $service.Status -ne 'Running') {
-                Write-Output -InputObject 'PostgreSQL service is not running.'
-                return
-            }
-            [string] $bin = "C:\Program Files\PostgreSQL\$($Lab.PostgreSql.MajorVersion)\bin"
-            & "$bin\pg_isready.exe" -h 127.0.0.1 -p $Lab.PostgreSql.Port | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Output -InputObject 'PostgreSQL does not accept connections.'
-            }
-            [string] $config = 'C:\XmipLab\PostgreSql\postgresql.conf'
-            [string] $hba = 'C:\XmipLab\PostgreSql\pg_hba.conf'
-            if ((Get-Content -LiteralPath $config -Raw) -notmatch "listen_addresses = '\*'" -or
-                (Get-Content -LiteralPath $hba -Raw) -notmatch
-                [regex]::Escape("host all all $($Lab.Network.Prefix) scram-sha-256")) {
-                Write-Output -InputObject 'PostgreSQL lab listener or access rule differs.'
-            }
-            [object] $firewall = Get-NetFirewallRule -Name XmipPostgreSql
-            if ($firewall.Enabled -ne 'True') {
-                Write-Output -InputObject 'PostgreSQL firewall rule is disabled.'
-            }
-            $env:PGPASSWORD = $Secret.PostgreSqlPassword.GetNetworkCredential().Password
-            try {
-                [string] $sql = "SELECT 1 FROM pg_database WHERE datname='$($Lab.PostgreSql.Database)'"
-                [string[]] $connection = @('-U', 'postgres', '-h', '127.0.0.1',
-                    '-p', [string] $Lab.PostgreSql.Port, '-d', 'postgres', '-tAc', $sql)
-                [string] $exists = & "$bin\psql.exe" @connection
-                if ($LASTEXITCODE -ne 0 -or $exists.Trim() -ne '1') {
-                    Write-Output -InputObject 'Xmip test database is missing or authentication failed.'
-                }
-            }
-            finally {
-                Remove-Item -LiteralPath Env:PGPASSWORD -ErrorAction SilentlyContinue
             }
         }
         'Developer' {
@@ -161,13 +139,51 @@ function Get-LabRoleFinding {
             }
         }
         'Xmip' {
-            foreach ($leaf in @('bin', 'config', 'modules', 'data', 'logs')) {
-                if (-not (Test-Path -LiteralPath "C:\ProgramData\Xmip\$leaf" -PathType Container)) {
-                    Write-Output -InputObject "Xmip test directory is missing: $leaf"
-                }
-            }
+            Invoke-LabXmipNode -Operation Get
         }
     }
+}
+
+function Get-LabStaticRecord {
+    <#
+    .SYNOPSIS
+    The machines that do not register themselves in the domain's DNS: every
+    guest that is not a domain member, which the domain controller holds a
+    record for.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param()
+
+    foreach ($member in @($Lab.Machines | Where-Object Family -ne 'Windows')) {
+        Write-Output -InputObject @{
+            Name = $member.Name.ToLowerInvariant()
+            Address = $member.Address
+        }
+    }
+}
+
+function Invoke-LabXmipNode {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Get', 'Set')]
+        [string] $Operation
+    )
+
+    [string] $nodeScript = 'C:\ProgramData\XmipLab\LabXmipNode.ps1'
+    if (-not (Test-Path -LiteralPath $nodeScript -PathType Leaf)) {
+        return 'The Xmip payload is not staged on this machine.'
+    }
+    [hashtable] $node = @{
+        Operation = $Operation
+        Root = 'C:\ProgramData\Xmip'
+        Payload = 'C:\ProgramData\XmipLab\Xmip'
+        Executable = 'xmip-service.exe'
+        Node = $Machine.Name
+    }
+    & $nodeScript @node
 }
 
 function Set-LabGuestNetwork {
@@ -236,6 +252,35 @@ function Set-LabGuestRole {
             if ($null -eq (Get-ADGroup -Filter "Name -eq 'XmipLabUsers'")) {
                 New-ADGroup -Name XmipLabUsers -GroupScope Global -GroupCategory Security
             }
+            foreach ($record in @(Get-LabStaticRecord)) {
+                [hashtable] $query = @{
+                    ZoneName = $Lab.DomainName
+                    Name = $record.Name
+                    RRType = 'A'
+                    ErrorAction = 'SilentlyContinue'
+                }
+                [bool] $present = $false
+                foreach ($found in @(Get-DnsServerResourceRecord @query)) {
+                    if ($found.RecordData.IPv4Address.IPAddressToString -eq $record.Address) {
+                        $present = $true
+                        continue
+                    }
+                    [hashtable] $stale = @{
+                        ZoneName = $Lab.DomainName
+                        InputObject = $found
+                        Force = $true
+                    }
+                    Remove-DnsServerResourceRecord @stale
+                }
+                if (-not $present) {
+                    [hashtable] $add = @{
+                        ZoneName = $Lab.DomainName
+                        Name = $record.Name
+                        IPv4Address = $record.Address
+                    }
+                    Add-DnsServerResourceRecordA @add
+                }
+            }
         }
         'FileServer' {
             Install-WindowsFeature -Name FS-FileServer | Out-Null
@@ -268,9 +313,6 @@ function Set-LabGuestRole {
             }
             Set-NetFirewallRule @smbRule
         }
-        'PostgreSql' {
-            & C:\ProgramData\XmipLab\LabPostgreSql.ps1 -Lab $Lab -Secret $Secret
-        }
         'Developer' {
             [string] $pwsh = 'C:\Program Files\PowerShell\7\pwsh.exe'
             if (-not (Test-Path -LiteralPath $pwsh)) {
@@ -293,9 +335,7 @@ function Set-LabGuestRole {
             }
         }
         'Xmip' {
-            foreach ($leaf in @('bin', 'config', 'modules', 'data', 'logs')) {
-                New-Item -Path "C:\ProgramData\Xmip\$leaf" -ItemType Directory -Force | Out-Null
-            }
+            Invoke-LabXmipNode -Operation Set | Out-Null
         }
     }
 }
@@ -303,9 +343,14 @@ function Set-LabGuestRole {
 if ($Operation -eq 'Set') {
     [object] $system = Get-CimInstance -ClassName Win32_ComputerSystem
     [object] $os = Get-CimInstance -ClassName Win32_OperatingSystem
-    if (($Machine.Role -eq 'Developer' -and $os.Caption -notlike '*Windows 11*') -or
-        ($Machine.Role -ne 'Developer' -and $os.Caption -notlike '*Windows Server 2025*')) {
-        throw 'REFUSED: guest OS does not match the configured role.'
+    [string] $caption = if ($Machine.Os -eq 'Windows11') {
+        '*Windows 11*'
+    }
+    else {
+        '*Windows Server 2025*'
+    }
+    if ($os.Caption -notlike $caption) {
+        throw 'REFUSED: guest OS does not match the configured Os.'
     }
     Set-LabGuestNetwork
     if ($system.Name -ne $Machine.Name) {

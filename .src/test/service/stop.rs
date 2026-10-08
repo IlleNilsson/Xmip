@@ -63,6 +63,13 @@ fn a_stop_drains_the_node_and_the_service_exits_zero() {
         "action = \"stop\"",
         "\"by\" = \"the console\"",
         &format!("\"received\" = \"{MESSAGES}\""),
+        // Every Stream reached the gate with what its transport observed:
+        // the peer, claimed by the first gate on the transport layer,
+        // passed, and refused at authentication by name (ADR-0013 clause 1).
+        "\"xmip.transport.mechanism\" = \"ip\"",
+        "\"xmip.transport.identity\" = \"127.0.0.1\"",
+        "\"xmip.transport.established\" = \"passed\"",
+        "declares no accepted mechanism",
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }

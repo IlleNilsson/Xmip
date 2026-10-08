@@ -13,13 +13,22 @@
 //! storage role builds (`deploy/profile/role/storage.toml`), sealed under a
 //! key store this build carries; one built without either engine, or
 //! naming a key store it left out, is refused as it starts
-//! (`xmip_runtime::storage`). No authenticator,
-//! policy, identifier or route technology is linked, because the node
-//! configuration cannot yet say how one is set up: a Receive Location that
-//! accepts nothing is refused nothing at the start and takes no Stream
-//! through its gates.
+//! (`xmip_runtime::storage`).
+//!
+//! The identify technologies whose claim a linked transport carries, with
+//! no configuration (ADR-0019 clause 5, ADR-0050 section 3): the socket
+//! peer, a bearer token's subject, an API key, a Basic credential's user.
+//! Every Stream reaches the first gate with what its transport observed and
+//! its headers, and its claim is recorded with its layer and how it was
+//! established. No authenticator, policy or route technology is linked,
+//! because the node configuration cannot yet say how one is set up: a
+//! Receive Location accepts nothing, so every Stream is refused at
+//! authentication, and the refused attempt is audited with the claim it
+//! carried (ADR-0013 clause 1).
 
 use xmip_audit::program_audit::ProgramAudit;
+#[cfg(feature = "identify")]
+use xmip_identify::TransportIdentifier;
 use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport};
 
 /// What this build carries, and the audit an operator's act on a
@@ -30,6 +39,8 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
         engine: engine(),
         administration: administration(),
         key_stores: key_stores(),
+        #[cfg(feature = "identify")]
+        transport_identifiers: transport_identifiers(),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
@@ -92,6 +103,29 @@ pub fn key_stores() -> Vec<LinkedKeyStore> {
     stores
 }
 
+/// The first gate's technologies this build carries, in the order the gate
+/// asks them: the first claim an arrival carries is the one authenticated
+/// (`xmip_runtime::arrival`), so a credential the sender presented comes
+/// before the peer it connected from.
+#[allow(
+    unused_mut,
+    clippy::vec_init_then_push,
+    reason = "each push is a feature this build may leave out"
+)]
+#[cfg(feature = "identify")]
+pub fn transport_identifiers() -> Vec<Box<dyn TransportIdentifier>> {
+    let mut identifiers: Vec<Box<dyn TransportIdentifier>> = Vec::new();
+    #[cfg(feature = "identify-jwt")]
+    identifiers.push(Box::new(xmip_identify_jwt::Jwt::bearer()));
+    #[cfg(feature = "identify-api-key")]
+    identifiers.push(Box::new(xmip_identify_api_key::ApiKey::default()));
+    #[cfg(feature = "identify-username")]
+    identifiers.push(Box::new(xmip_identify_username::Username::default()));
+    #[cfg(feature = "identify-ip")]
+    identifiers.push(Box::new(xmip_identify_ip::IpIdentifier::new()));
+    identifiers
+}
+
 /// The transports this build carries, each by its own declaration.
 #[allow(
     unused_mut,
@@ -129,6 +163,17 @@ mod tests {
                 .iter()
                 .all(|name| name.starts_with("xmip-core-transport-"))
         );
+    }
+
+    #[cfg(feature = "identify-ip")]
+    #[test]
+    fn the_first_gate_reads_the_peer_after_every_credential() {
+        let mechanisms: Vec<String> = transport_identifiers()
+            .iter()
+            .map(|identifier| identifier.mechanism().name().to_string())
+            .collect();
+
+        assert_eq!(mechanisms.last().map(String::as_str), Some("ip"));
     }
 
     #[cfg(feature = "persist-rocksdb")]

@@ -69,7 +69,10 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   a bus. A Stream belongs to the sender until Xmip accepts it. Receiving
   one through a node's gates is
   [built, not in the assembled service](doc/architecture/estate-map.md#arrival): `xmip-service`
-  links no authenticator yet, so it refuses every Stream at authentication.
+  identifies each Stream by what its transport carries — its peer, a bearer
+  token, an API key, a Basic user — and links no authenticator yet, so it
+  refuses every Stream at authentication and audits the attempt with its
+  claim.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
   out. Every step below carries a note of what it audits. Entry, refusal,
@@ -607,6 +610,16 @@ PowerShell module and the monitors run on all three.
 The desired-state files write the node configuration `xmip-core-configure`
 reads; `cargo test --test deploy` renders both and reads them as
 `xmip-service` does. Each names the site its node is built from.
+
+The [Hyper-V lab](deploy/dsc/hyperv-lab/README.md) sets up ten virtual
+machines on one Hyper-V host with Microsoft DSC v3: a domain controller, a
+file server and three Xmip nodes declaring `processing` on Windows Server
+2025, a Windows 11 developer machine, and on AlmaLinux 10 a PostgreSQL
+primary, its streaming standby, and one node each declaring `receiving` and
+`sending`. The Windows machines start from prepared VHDX images and are
+configured through PowerShell Direct; the AlmaLinux machines start from the
+GenericCloud image with a cloud-init seed and are configured by DSC v3 on
+the guest, over SSH.
 
 A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,

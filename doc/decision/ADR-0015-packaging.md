@@ -315,3 +315,28 @@ none is. A Storage node names its server in its configuration as
 `<server>://<login>@<host>[:<port>]/<database>`, and the name of the secret
 the password is kept under, never the password — which is the assistant's
 drafting of the owner's *a connection string*, and his to strike.
+
+## Amendment, 2026-10-08: a device node runs the whole message path
+
+The owner, 2026-10-08: *An MCU node does Receive (validate), Prepare,
+Transform, Process & Send (validate) like any other node type. It does not
+have Operation.*
+
+- **A device is a node, not an endpoint client.** A `device` site's node
+  receives and validates against the Contract, prepares, transforms,
+  processes and sends, validating what it sends, as a node of any other
+  target does. The message path's semantics are the same on every target
+  (`deployment-model.md` section 1).
+- **No Operation on a device.** The device target refuses the operational
+  role (amendment 2026-10-01, *the target vetoes*); a device is observed and
+  configured through another node.
+- **What follows, not yet decided or built:** the message path, Contract
+  validation, Transform and the Work Process are to build `no_std`, beside
+  `xmip-core`; until they do, `Build-XmipService` keeps refusing a device
+  site as above. Where a device keeps its Ledger and what a device transport
+  is stay open.
+
+Provenance: the stages and *no Operation* are the owner's, 2026-10-08,
+quoted above; reading *Operation* as the operational role, and the refusal
+staying until the path builds `no_std`, are the assistant's drafting, his to
+strike.

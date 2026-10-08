@@ -12,9 +12,12 @@
 //!   node takes orders shows paused in the next one; and the stop leaves it
 //!   saying so.
 //!
-//! Every Message is received and settled. The build links no authenticator
-//! and the configuration can name none yet, so the Receive Location accepts
-//! nothing and every Message is refused at its gate, by name, and counted.
+//! Every Message is received and settled. Each reaches the first gate with
+//! what its transport observed, and the build's `ip` identifier claims its
+//! peer on the transport layer, passed. The build links no authenticator
+//! and the configuration can set none up yet, so the Receive Location
+//! accepts nothing: every Message is refused at authentication, by name,
+//! counted, and audited with the claim it carried.
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};

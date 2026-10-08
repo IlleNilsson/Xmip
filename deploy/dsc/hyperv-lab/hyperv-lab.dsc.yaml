@@ -14,3 +14,11 @@ resources:
       - "[resourceId('Xmip.Lab/HyperVHost', 'HyperVHost')]"
     properties:
       ConfigPath: "[parameters('labConfig')]"
+  # The Linux guests resolve through the domain controller's DNS, which holds
+  # their records, so they follow the Windows guests.
+  - name: LinuxGuests
+    type: Xmip.Lab/LinuxGuests
+    dependsOn:
+      - "[resourceId('Xmip.Lab/WindowsGuests', 'WindowsGuests')]"
+    properties:
+      ConfigPath: "[parameters('labConfig')]"
