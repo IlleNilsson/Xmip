@@ -186,8 +186,8 @@ function Get-LabFleetFinding {
 function New-LabMachine {
     <#
     .SYNOPSIS
-    Creates or starts one lab VM over its Os's base image: a prepared Windows
-    VHDX as it is, AlmaLinux's GenericCloud image converted once.
+    Creates or starts one lab VM over its Os's base image, a VHDX as it is:
+    a prepared Windows image, or AlmaLinux's own Hyper-V image.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -200,10 +200,6 @@ function New-LabMachine {
     )
 
     [string] $image = $Lab.Images[$Machine.Os].Path
-    if ($Machine.Family -eq 'Linux') {
-        [hashtable] $base = @{ Lab = $Lab; Os = $Machine.Os; Create = $true; Confirm = $false }
-        $image = Get-LabLinuxBaseImage @base
-    }
     Set-LabVirtualMachine -Lab $Lab -Machine $Machine -BaseImage $image -Confirm:$false
 }
 

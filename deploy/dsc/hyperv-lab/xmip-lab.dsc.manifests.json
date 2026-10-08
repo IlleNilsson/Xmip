@@ -80,7 +80,7 @@
       "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
       "type": "Xmip.Lab/LinuxGuests",
       "version": "0.1.0",
-      "description": "The Xmip Hyper-V lab's AlmaLinux guests: GenericCloud image to VHDX, cloud-init seed, VM, then DSC v3 on the guest over SSH.",
+      "description": "The Xmip Hyper-V lab's AlmaLinux guests: AlmaLinux's Hyper-V image, cloud-init seed, VM, then DSC v3 on the guest over SSH.",
       "tags": ["Linux", "HyperV", "Xmip"],
       "get": {
         "executable": "pwsh",

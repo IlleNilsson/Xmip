@@ -31,12 +31,15 @@ differencing disk over its image, and are configured through PowerShell
 Direct: name, static address, the domain (the Windows Server 2025 machines
 and XMIP-DEV01 are domain members), then their role.
 
-**The AlmaLinux machines** start from AlmaLinux's GenericCloud image, which
-the lab converts to a VHDX once with `qemu-img`. Each gets a cloud-init
-NoCloud seed disk, a small FAT32 VHDX labelled `CIDATA`, holding its host
-name, its static address matched to the static MAC the lab gives its adapter,
-the domain controller as its DNS server, and the lab's SSH key for the
-account `xmiplab`, which has no password. From then on the host reaches it
+**The AlmaLinux machines** start from AlmaLinux's own Hyper-V image, the
+VHDX inside its Vagrant box for Hyper-V, a differencing disk each, as the
+Windows machines do. Each gets a cloud-init NoCloud seed disk, a small FAT32
+VHDX labelled `CIDATA`, holding its host name, the lab's SSH key for the
+account `xmiplab`, which has no password, and its static address with the
+domain controller as its DNS server: a NetworkManager profile matched to the
+static MAC the lab gives its adapter, since the image turns cloud-init's own
+network step off. The image's `vagrant` account, whose key is public, is
+removed at first boot. From then on the host reaches it
 over SSH only: it copies the guest's payload to `/opt/xmip-lab`, installs
 PowerShell and DSC v3 there from the RPMs you supply, and runs the guest's
 own DSC document, `linux/linux.dsc.yaml`, whose resource
@@ -76,7 +79,6 @@ In an elevated Xmip PowerShell Console on the host, once, then reboot:
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
 winget install --id Microsoft.DSC --exact
-winget install --id SoftwareFreedomConservancy.QEMU --exact
 ```
 
 **Media.** The prepared Windows VHDX images (the enabled built-in
@@ -84,19 +86,23 @@ Administrator in both; App Installer registered on Windows 11), the
 PowerShell MSI for XMIP-DEV01, and for the AlmaLinux machines:
 
 ```powershell
-[string] $alma = 'https://repo.almalinux.org/almalinux/10/cloud/x86_64/images'
-[string] $image = 'AlmaLinux-10-GenericCloud-latest.x86_64.qcow2'
-Invoke-WebRequest -Uri "$alma/$image" -OutFile "D:\Images\$image"
-Invoke-WebRequest -Uri "$alma/CHECKSUM" -OutFile 'D:\Images\AlmaLinux-10-CHECKSUM'
+[string] $images = 'D:\Downloads\OS\Images\AlmaLinux'
+[string] $version = (Invoke-RestMethod -Uri 'https://vagrantcloud.com/api/v2/box/almalinux/10').current_version.version
+[string] $box = "$images\AlmaLinux-$version-hyperv.box"
+New-Item -ItemType Directory -Force -Path $images
+Invoke-WebRequest -Uri "https://vagrantcloud.com/almalinux/boxes/10/versions/$version/providers/hyperv/amd64/vagrant.box" -OutFile $box
+tar -xf $box -C $images 'Virtual Hard Disks/almalinux.vhdx'
+Move-Item -LiteralPath "$images\Virtual Hard Disks\almalinux.vhdx" -Destination "$images\AlmaLinux-$version-hyperv.vhdx"
 [string] $github = 'https://github.com/PowerShell'
 Invoke-WebRequest -Uri "$github/PowerShell/releases/download/v7.6.5/powershell-7.6.5-1.rh.x86_64.rpm" -OutFile 'D:\Installers\powershell-7.6.5-1.rh.x86_64.rpm'
 Invoke-WebRequest -Uri "$github/DSC/releases/download/v3.2.3/dsc-3.2.3-1.x86_64.rpm" -OutFile 'D:\Installers\dsc-3.2.3-1.x86_64.rpm'
-Get-FileHash -Algorithm SHA256 -Path "D:\Images\$image", 'D:\Installers\*.rpm', 'D:\Installers\*.msi'
+Get-FileHash -Algorithm SHA256 -Path $box, "$images\*.vhdx", 'D:\Installers\*.rpm', 'D:\Installers\*.msi'
 ```
 
-Compare each hash with its publisher's — the image with
-`AlmaLinux-10-CHECKSUM`, the RPMs with their GitHub release pages — and copy
-the example to where the lab reads it, writing the verified hashes in:
+Compare each hash with its publisher's — the box with the `checksum` the
+same `vagrantcloud.com` API gives its `hyperv` provider, the RPMs with their
+GitHub release pages — and copy the example to where the lab reads it,
+writing in the verified hashes, the VHDX's as the image's:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path 'D:\Repos\Xmip\.local-work\hyperv-lab'

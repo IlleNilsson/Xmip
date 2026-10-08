@@ -199,7 +199,7 @@ Describe 'The cluster file the lab slices' {
     }
 }
 
-Describe 'A Linux guest from the GenericCloud image' {
+Describe 'A Linux guest from AlmaLinux''s Hyper-V image' {
     BeforeAll {
         [hashtable] $script:Lab = Read-LabConfiguration -Path $script:Example
         [hashtable] $script:Standby = $script:Lab.Machines | Where-Object Name -eq 'XMIP-DB02'
@@ -219,15 +219,16 @@ Describe 'A Linux guest from the GenericCloud image' {
         }
         [System.Collections.Specialized.OrderedDictionary] $seed = Get-LabCloudInitData @asked
 
-        @($seed.Keys) | Should -Be @('meta-data', 'user-data', 'network-config')
+        @($seed.Keys) | Should -Be @('meta-data', 'user-data')
         $seed['meta-data'] | Should -Match '(?m)^local-hostname: xmip-db02$'
         $seed['user-data'] | Should -Match '(?m)^#cloud-config$'
         $seed['user-data'] | Should -Match ([regex]::Escape("- '$script:Key'"))
         $seed['user-data'] | Should -Match '(?m)^ssh_pwauth: false$'
-        $seed['network-config'] | Should -Match ([regex]::Escape("macaddress: '00:15:5d:4d:00:2a'"))
-        $seed['network-config'] | Should -Match ([regex]::Escape("addresses: ['10.77.0.42/24']"))
-        $seed['network-config'] | Should -Match '(?m)^\s+via: 10\.77\.0\.1$'
-        $seed['network-config'] | Should -Match ([regex]::Escape('addresses: [10.77.0.10]'))
+        $seed['user-data'] | Should -Match '(?m)^\s+mac-address=00:15:5D:4D:00:2A$'
+        $seed['user-data'] | Should -Match '(?m)^\s+address1=10\.77\.0\.42/24,10\.77\.0\.1$'
+        $seed['user-data'] | Should -Match '(?m)^\s+dns=10\.77\.0\.10;$'
+        $seed['user-data'] | Should -Match ([regex]::Escape('[nmcli, connection, up, lab]'))
+        $seed['user-data'] | Should -Match ([regex]::Escape('[userdel, --remove, vagrant]'))
         $seed.Values | ForEach-Object { $_ | Should -Not -Match "`r" }
     }
 
