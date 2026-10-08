@@ -460,3 +460,74 @@ not read yet, so every Receive Location keeps the defaults `none` and
 `accept`. `xmip-core-receive`'s `ReceiveLocation`, a second model of a
 Location that nothing configured, is deleted; the Location is the
 configuration's.
+
+## Amendment, 2026-10-06: every Stream brings its identity to the gate
+
+The owner, 2026-10-06: *The first stream will come from somewhere, it will
+carry its identity via transport or on its message* — clause 5 — and, of
+every receiving technology, *that goes for all streams*.
+
+- **Nothing a transport hands over is dropped.** A technology writes what
+  it observed of the sender on its arrival (`transport::Arrived`), each
+  under the name `context::property` declares (amendment 2026-09-24): the
+  socket peer as `peer.address`, an HTTP request's method, target and query
+  as `http.method`, `http.uri` and `http.query.<name>`, its headers as
+  HTTP's. It says whether the arrival was pushed, detected or scheduled
+  (clause 8): a dropped file is detected. The runtime hands all of it to the
+  first gate, and the headers to the Message Context (ADR-0046, amendment
+  2026-09-25, later).
+- **Each technology says what its arrival carries.** `Loopback` asks every
+  receiving technology for its `ArrivalIdentity` — the names it writes, or
+  why it has nothing beyond its origin — and every loopback round fails
+  where the arrival dropped one.
+- **Every receiving technology was audited for it, the same day.** A
+  socket server writes its peer — a datagram's included, and Thread's IPv6
+  source — and a link-layer one the hardware address (`peer.mac`); a
+  technology riding on HTTP carries the request's headers, peer and request
+  line (`http::server::Sender`), and a broker what its protocol says of
+  the publisher: its headers (`stomp`, `amqp`, `kafka`, `nats` HMSG), a
+  Pub/Sub message's attributes, a Service Bus answer's properties, AMQP's
+  `user-id`, IBM MQ's `UserIdentifier`, SQS's `SenderId`. Where a protocol's
+  own word for its sender had no name, `context::property` gained one per
+  field, named after the field in its standard: SMTP's `MAIL FROM`, DICOM's
+  Calling-AE-title, the CAN identifier (and ISO-TP, UDS and OBD-II over
+  it), the J1939 source address, the CANopen Node-ID, the EtherCAT station
+  address, the IO-Link port, the HART address and WirelessHART nickname,
+  the M-Bus primary address and identification number, a Unix socket
+  peer's `SO_PEERCRED` user, group and process, a named pipe client's
+  process id, and a file's owner, group and mode (a local folder on Unix,
+  an NFS export's attributes). Bluetooth and Zigbee addresses are
+  link-layer addresses and travel as `peer.mac` where the transport sees
+  one. What no receiving transport terminates, TLS, and what a technology
+  still cannot say, each says as why.
+- **Detected and scheduled, read so for the owner to confirm.** What a
+  broker, a queue, a table, an object store, a share or a mailbox delivers
+  is *detected*: Xmip found it waiting, and the connection's peer is the
+  broker's. A value Xmip reads from a device or a server — IEC 61850, OPC
+  UA, S7, EtherNet/IP, EtherCAT, IO-Link, CANopen, OBD-II, M-Bus — is
+  *scheduled*: Xmip went and fetched it. A file dropped in a watched folder
+  is detected. Everything else is pushed.
+- **The assembled service identifies.** `xmip-service` links the identify
+  technologies that read what its transports write and need no
+  configuration: `ip`, `jwt`, `api-key`, `username`. The first claim an
+  arrival carries is the one authenticated, so a credential the sender
+  presented is asked before the peer it connected from.
+- **A refused attempt is audited with its claim.** ADR-0013 clause 1 audits
+  the attempt as a transport event; the record names the Location, the
+  reason and the claim — its mechanism, value, layer and provenance, under
+  the names the Message Context promotes an identity by
+  (`xmip.transport.*`, `xmip.message.*`) — and never its proof
+  (`Presented::without_proof`).
+
+Authentication is unchanged: no authenticator is set up by configuration
+yet, so the service refuses every Stream there. Parties, clause 1's `party`
+list, the `location` policy and credential stores wait (open problem 33).
+
+Provenance: the rulings quoted are the owner's, 2026-10-06. The names a
+transport writes are the amendment of 2026-09-24's; `ArrivalIdentity`, the
+order the service's identifiers are asked in, `http.query.<name>` written
+for every query parameter, which arrivals are detected and which scheduled
+(clause 8's example calls an SFTP pickup scheduled; no schedule is
+configured yet, so a share polled is read as detected), and the audit
+record's content are the
+assistant's drafting, for the owner to confirm or strike.

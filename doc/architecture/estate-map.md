@@ -1,6 +1,6 @@
 # The Xmip estate
 
-333 repositories are declared and 263 of them are
+335 repositories are declared and 263 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -35,13 +35,13 @@ the estate tree, and are counted nowhere below.
 | Capability | 19 | 19 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 291 | 223 | 68 |
-| **Total** | 333 | 263 | 70 |
+| Technology | 293 | 223 | 70 |
+| **Total** | 335 | 263 | 72 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | reserved | 70 | 0 | 70 |
-| scaffolded | 263 | 263 | 0 |
+| scaffolded | 265 | 263 | 2 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -124,10 +124,16 @@ routing yet (`arrival`). Records: ADR-0013, ADR-0066.
 **Receiving a Stream through a node's gates and publishing its Message.** The
 runtime receives through a linked transport, identifies, authenticates and
 authorizes, writes the Stream to the Ledger in chunks and publishes a Message
-with what it learned in its context. `xmip-service` links no authenticator and
-no authorization policy, and a Receive Location authenticates and permits
-nothing without them, so the assembled service refuses every Stream at its
-gates; the Playground and the runtime's tests hand both in. Records: ADR-0019,
+with what it learned in its context. Nothing a transport hands over is
+dropped: what it observed of the sender (the socket peer, the request line)
+and its headers reach the first gate, and the headers the Message Context.
+`xmip-service` links the identify technologies that need no configuration
+(`ip`, `jwt`, `api-key`, `username`), so a Stream's transport claim reaches
+the gate and is recorded with its layer and how it was established; it links
+no authenticator and no authorization policy, and a Receive Location
+authenticates and permits nothing without them, so the assembled service
+refuses every Stream at authentication and audits the refused attempt with its
+claim; the Playground and the runtime's tests hand both in. Records: ADR-0019,
 runtime-model.md section 5.
 
 #### `certificate-usage`
@@ -284,7 +290,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 228508 lines of production
+Where each repository mounts and what it holds: 230279 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -301,7 +307,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 70 of them and they
+nowhere — work not begun, not work unmounted. There are 72 of them and they
 hold no source to count.
 
 ```text
@@ -309,93 +315,93 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       4237
-│   │   │   │   ├── amqp                        2556
-│   │   │   │   ├── opc-ua                      2410
-│   │   │   │   ├── nfs                         1983
-│   │   │   │   ├── smb                         1941
-│   │   │   │   ├── mssql                       1866
-│   │   │   │   ├── mysql                       1765
-│   │   │   │   ├── ibm-mq                      1742
-│   │   │   │   ├── kafka                       1711
-│   │   │   │   ├── http                        1630
-│   │   │   │   ├── sftp                        1452
-│   │   │   │   ├── snmp                        1421
-│   │   │   │   ├── oracle                      1394
-│   │   │   │   ├── postgresql                  1335
-│   │   │   │   ├── nats-jetstream              1333
-│   │   │   │   ├── as4                         1310
-│   │   │   │   ├── canopen                     1135
-│   │   │   │   ├── s7comm                      1128
-│   │   │   │   ├── dns                         1112
-│   │   │   │   ├── mqtt                        1068
-│   │   │   │   ├── webdav                      1056
-│   │   │   │   ├── iec-61850                   1031
-│   │   │   │   ├── secs-gem                    1025
-│   │   │   │   ├── ftp                          987
-│   │   │   │   ├── imap                         981
-│   │   │   │   ├── ethercat                     964
-│   │   │   │   ├── dicom                        948
-│   │   │   │   ├── as2                          940
-│   │   │   │   ├── m-bus                        919
-│   │   │   │   ├── aws-sns                      905
-│   │   │   │   ├── hart                         901
-│   │   │   │   ├── nats                         898
-│   │   │   │   ├── uds                          892
-│   │   │   │   ├── j1939                        885
-│   │   │   │   ├── bluetooth                    878
-│   │   │   │   ├── lorawan                      873
-│   │   │   │   ├── activemq                     865
-│   │   │   │   ├── aws-kinesis                  860
-│   │   │   │   ├── ethernet-ip                  855
-│   │   │   │   ├── pop3                         850
-│   │   │   │   ├── azure-service-bus            840
-│   │   │   │   ├── azure-event-grid             831
-│   │   │   │   ├── profinet                     824
-│   │   │   │   ├── redis-streams                820
-│   │   │   │   ├── google-pub-sub               818
-│   │   │   │   ├── wireless-hart                814
-│   │   │   │   ├── dhcp                         806
-│   │   │   │   ├── zigbee                       783
-│   │   │   │   ├── thread                       780
-│   │   │   │   ├── aws-sqs                      767
-│   │   │   │   ├── peppol                       749
-│   │   │   │   ├── knx                          732
-│   │   │   │   ├── file                         721
-│   │   │   │   ├── iso-tp                       695
-│   │   │   │   ├── s3                           695
-│   │   │   │   ├── azure-blob                   681
-│   │   │   │   ├── mdns                         679
-│   │   │   │   ├── cotp                         669
-│   │   │   │   ├── io-link                      669
-│   │   │   │   ├── google-cloud-storage         663
-│   │   │   │   ├── dds                          655
-│   │   │   │   ├── iec-60870-5-104              651
-│   │   │   │   ├── smtp                         638
-│   │   │   │   ├── msmq                         635
-│   │   │   │   ├── syslog                       623
-│   │   │   │   ├── obd-ii                       608
-│   │   │   │   ├── dnp3                         602
-│   │   │   │   ├── ssdp                         601
-│   │   │   │   ├── coap                         564
-│   │   │   │   ├── modbus                       528
-│   │   │   │   ├── redpanda                     517
-│   │   │   │   ├── wireless-m-bus               517
-│   │   │   │   ├── azure-event-hubs             515
+│   │   │   ├── transport                       4612
+│   │   │   │   ├── amqp                        2590
+│   │   │   │   ├── opc-ua                      2415
+│   │   │   │   ├── nfs                         2028
+│   │   │   │   ├── smb                         1948
+│   │   │   │   ├── mssql                       1873
+│   │   │   │   ├── mysql                       1772
+│   │   │   │   ├── ibm-mq                      1765
+│   │   │   │   ├── kafka                       1722
+│   │   │   │   ├── http                        1721
+│   │   │   │   ├── sftp                        1461
+│   │   │   │   ├── snmp                        1427
+│   │   │   │   ├── oracle                      1401
+│   │   │   │   ├── postgresql                  1342
+│   │   │   │   ├── nats-jetstream              1340
+│   │   │   │   ├── as4                         1321
+│   │   │   │   ├── canopen                     1145
+│   │   │   │   ├── s7comm                      1138
+│   │   │   │   ├── dns                         1117
+│   │   │   │   ├── mqtt                        1075
+│   │   │   │   ├── webdav                      1063
+│   │   │   │   ├── iec-61850                   1050
+│   │   │   │   ├── secs-gem                    1035
+│   │   │   │   ├── ftp                          994
+│   │   │   │   ├── nats                         989
+│   │   │   │   ├── imap                         988
+│   │   │   │   ├── ethercat                     974
+│   │   │   │   ├── dicom                        957
+│   │   │   │   ├── as2                          954
+│   │   │   │   ├── m-bus                        926
+│   │   │   │   ├── aws-sns                      916
+│   │   │   │   ├── hart                         913
+│   │   │   │   ├── uds                          896
+│   │   │   │   ├── j1939                        891
+│   │   │   │   ├── bluetooth                    885
+│   │   │   │   ├── lorawan                      880
+│   │   │   │   ├── activemq                     870
+│   │   │   │   ├── aws-kinesis                  867
+│   │   │   │   ├── ethernet-ip                  865
+│   │   │   │   ├── pop3                         857
+│   │   │   │   ├── azure-service-bus            853
+│   │   │   │   ├── azure-event-grid             847
+│   │   │   │   ├── google-pub-sub               839
+│   │   │   │   ├── profinet                     832
+│   │   │   │   ├── redis-streams                827
+│   │   │   │   ├── wireless-hart                824
+│   │   │   │   ├── dhcp                         815
+│   │   │   │   ├── aws-sqs                      810
+│   │   │   │   ├── zigbee                       791
+│   │   │   │   ├── thread                       790
+│   │   │   │   ├── file                         773
+│   │   │   │   ├── peppol                       754
+│   │   │   │   ├── knx                          738
+│   │   │   │   ├── iso-tp                       715
+│   │   │   │   ├── s3                           702
+│   │   │   │   ├── smtp                         689
+│   │   │   │   ├── azure-blob                   688
+│   │   │   │   ├── mdns                         687
+│   │   │   │   ├── dds                          682
+│   │   │   │   ├── cotp                         678
+│   │   │   │   ├── io-link                      671
+│   │   │   │   ├── google-cloud-storage         670
+│   │   │   │   ├── iec-60870-5-104              660
+│   │   │   │   ├── msmq                         644
+│   │   │   │   ├── syslog                       629
+│   │   │   │   ├── obd-ii                       616
+│   │   │   │   ├── ssdp                         609
+│   │   │   │   ├── dnp3                         606
+│   │   │   │   ├── coap                         573
+│   │   │   │   ├── modbus                       541
+│   │   │   │   ├── redpanda                     528
+│   │   │   │   ├── wireless-m-bus               523
+│   │   │   │   ├── azure-event-hubs             522
 │   │   │   │   ├── aws                          513
-│   │   │   │   ├── serial                       497
-│   │   │   │   ├── ethernet                     482
-│   │   │   │   ├── named-pipe                   476
-│   │   │   │   ├── can-bus                      459
-│   │   │   │   ├── sqlite                       456
+│   │   │   │   ├── serial                       502
+│   │   │   │   ├── named-pipe                   495
+│   │   │   │   ├── ethernet                     487
+│   │   │   │   ├── can-bus                      466
+│   │   │   │   ├── sqlite                       463
+│   │   │   │   ├── websocket                    451
 │   │   │   │   ├── azure                        449
-│   │   │   │   ├── websocket                    442
-│   │   │   │   ├── bacnet                       441
-│   │   │   │   ├── rabbitmq                     353
-│   │   │   │   ├── unix-socket                  308
-│   │   │   │   ├── mllp                         287
-│   │   │   │   ├── udp                          201
-│   │   │   │   └── tcp                          178
+│   │   │   │   ├── bacnet                       447
+│   │   │   │   ├── rabbitmq                     368
+│   │   │   │   ├── unix-socket                  354
+│   │   │   │   ├── mllp                         288
+│   │   │   │   ├── udp                          207
+│   │   │   │   └── tcp                          184
 │   │   │   ├── authenticate                    2657
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
@@ -423,7 +429,7 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
-│   │   │   ├── identify                        1437
+│   │   │   ├── identify                        1448
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
 │   │   │   │   ├── dns                          195
@@ -495,6 +501,7 @@ hold no source to count.
 │   │   │   │   ├── acl                          147
 │   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
+│   │   │   ├── receive                          174
 │   │   │   ├── logic                            156
 │   │   │   │   ├── matter                      1129
 │   │   │   │   ├── soap                         274
@@ -507,7 +514,6 @@ hold no source to count.
 │   │   │   │   ├── retry                         82
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
-│   │   │   ├── receive                          124
 │   │   │   ├── demote                           108
 │   │   │   ├── send                              88
 │   │   │   ├── process                           42
@@ -584,16 +590,18 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── node                                 831
-│   │   ├── context                              750
+│   │   ├── context                              820
 │   │   ├── journey                              569
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            17902
+│       ├── runtime                            18033
 │       ├── persist                             5040
 │       │   ├── sqlite                           140
-│       │   └── rocksdb                          136
+│       │   ├── rocksdb                          136
+│       │       declared, not built 1
+│       │       postgresql
 │       └── configure                           3365
 └── test/
     └── core/
@@ -642,14 +650,14 @@ What capabilities are built out of.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-library` | reserved | not mounted | 6 |
+| `xmip-core-library` | reserved | not mounted | 7 |
 
-### `xmip-core-library`, 6 technologies
+### `xmip-core-library`, 7 technologies
 
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 6 — asn1, codec, net, ntlm, ssh, tls
+- **scaffolded**, 7 — asn1, codec, net, ntlm, postgresql*, ssh, tls
 
 ---
 
@@ -859,13 +867,14 @@ Platform-wide runtime services.
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
 | `xmip-core-configure` | scaffolded | `module/platform/configure` | — |
-| `xmip-core-persist` | scaffolded | `module/platform/persist` | 2 |
+| `xmip-core-persist` | scaffolded | `module/platform/persist` | 3 |
 | `xmip-core-runtime` | scaffolded | `module/platform/runtime` | — |
 
-### `xmip-core-persist`, 2 technologies
+### `xmip-core-persist`, 3 technologies
 
-All 2 composed in `module/platform/persist`.
+2 of 3 composed in `module/platform/persist`; a name marked `*` is one the
+parent does not compose.
 
-- **scaffolded**, 2 — rocksdb, sqlite
+- **scaffolded**, 3 — postgresql*, rocksdb, sqlite
 
 ---

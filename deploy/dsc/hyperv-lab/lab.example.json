@@ -1,9 +1,8 @@
 {
   "LabId": "Xmip-HyperV-Lab",
   "Root": "D:\\HyperV\\Xmip",
-  "ServerImage": "D:\\Images\\WindowsServer2025.vhdx",
-  "DeveloperImage": "D:\\Images\\Windows11-26H2.vhdx",
   "CredentialPath": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\credential.xml",
+  "SshKeyPath": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\ssh\\xmip-lab",
   "DomainName": "xmip.test",
   "NetbiosName": "XMIP",
   "Network": {
@@ -14,34 +13,63 @@
     "EnableNat": true,
     "DnsForwarders": ["1.1.1.1", "9.9.9.9"]
   },
+  "Images": {
+    "WindowsServer2025": {"Path": "D:\\Images\\WindowsServer2025.vhdx"},
+    "Windows11": {"Path": "D:\\Images\\Windows11-26H2.vhdx"},
+    "AlmaLinux10": {
+      "Path": "D:\\Images\\AlmaLinux-10-GenericCloud-latest.x86_64.qcow2",
+      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256",
+      "QemuImg": "C:\\Program Files\\qemu\\qemu-img.exe"
+    }
+  },
+  "Linux": {
+    "PowerShell": {
+      "Path": "D:\\Installers\\powershell-7.6.5-1.rh.x86_64.rpm",
+      "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256"
+    },
+    "Dsc": {
+      "Path": "D:\\Installers\\dsc-3.2.3-1.x86_64.rpm",
+      "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256"
+    }
+  },
   "PostgreSql": {
-    "Installer": "D:\\Installers\\postgresql-windows-x64.exe",
-    "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256",
     "MajorVersion": 18,
     "Port": 5432,
-    "Database": "xmip"
+    "Tls": {
+      "Authority": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\tls\\authority.pem",
+      "Directory": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\tls"
+    }
   },
   "Development": {
     "PowerShellMsi": "D:\\Installers\\PowerShell-win-x64.msi",
     "Sha256": "REPLACE_WITH_VERIFIED_INSTALLER_SHA256",
     "RepositoryRoot": "D:\\Repos\\Xmip"
   },
+  "Xmip": {
+    "Cluster": "D:\\Repos\\Xmip\\deploy\\dsc\\hyperv-lab\\xmip.toml",
+    "WindowsService": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\windows\\xmip-service.exe",
+    "LinuxService": "D:\\Repos\\Xmip\\.local-work\\hyperv-lab\\linux\\xmip-service"
+  },
   "Machines": [
-    {"Name": "XMIP-DC01", "Role": "DomainController", "Address": "10.77.0.10",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-FS01", "Role": "FileServer", "Address": "10.77.0.20",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-DEV01", "Role": "Developer", "Address": "10.77.0.30",
-      "MemoryGB": 12, "Cpu": 4},
-    {"Name": "XMIP-DB01", "Role": "PostgreSql", "Address": "10.77.0.41",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-DB02", "Role": "PostgreSql", "Address": "10.77.0.42",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-APP01", "Role": "Xmip", "Address": "10.77.0.51",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-APP02", "Role": "Xmip", "Address": "10.77.0.52",
-      "MemoryGB": 4, "Cpu": 2},
-    {"Name": "XMIP-APP03", "Role": "Xmip", "Address": "10.77.0.53",
-      "MemoryGB": 4, "Cpu": 2}
+    {"Name": "XMIP-DC01", "Os": "WindowsServer2025", "Role": "DomainController",
+      "Address": "10.77.0.10", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-FS01", "Os": "WindowsServer2025", "Role": "FileServer",
+      "Address": "10.77.0.20", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-DEV01", "Os": "Windows11", "Role": "Developer",
+      "Address": "10.77.0.30", "MemoryGB": 12, "Cpu": 4},
+    {"Name": "XMIP-DB01", "Os": "AlmaLinux10", "Role": "PostgreSql",
+      "Address": "10.77.0.41", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-DB02", "Os": "AlmaLinux10", "Role": "PostgreSql", "StandbyOf": "XMIP-DB01",
+      "Address": "10.77.0.42", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP01", "Os": "WindowsServer2025", "Role": "Xmip",
+      "Address": "10.77.0.51", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP02", "Os": "WindowsServer2025", "Role": "Xmip",
+      "Address": "10.77.0.52", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-APP03", "Os": "WindowsServer2025", "Role": "Xmip",
+      "Address": "10.77.0.53", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-IN01", "Os": "AlmaLinux10", "Role": "Xmip",
+      "Address": "10.77.0.61", "MemoryGB": 4, "Cpu": 2},
+    {"Name": "XMIP-OUT01", "Os": "AlmaLinux10", "Role": "Xmip",
+      "Address": "10.77.0.71", "MemoryGB": 4, "Cpu": 2}
   ]
 }

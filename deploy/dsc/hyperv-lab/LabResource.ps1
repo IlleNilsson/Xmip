@@ -2,10 +2,11 @@
 #requires -Version 7.6.5
 <#
 .SYNOPSIS
-Command-resource boundary for the lab's host and Windows guest fleet.
+Command-resource boundary for the lab's host, Windows guests and Linux guests.
 .DESCRIPTION
-DSC invokes Get, Test or Set with JSON on stdin. Only Set mutates. Returns real
-findings, including pending first boot and reboots, rather than success markers.
+DSC invokes Get, Test or Set with JSON on stdin; xmip-lab.dsc.manifests.json
+names the three resources. Only Set mutates. Returns real findings, including
+pending first boot and reboots, rather than success markers.
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 [OutputType([string])]
@@ -15,13 +16,16 @@ param(
     [string] $Operation,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Host', 'Guests')]
+    [ValidateSet('Host', 'WindowsGuests', 'LinuxGuests')]
     [string] $Scope
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path -Path $PSScriptRoot -ChildPath 'LabHost.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath 'LabLinux.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath 'LabMedia.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath 'LabLinuxFleet.ps1')
 
 function Open-LabGuestSession {
     [CmdletBinding()]
@@ -46,6 +50,30 @@ function Open-LabGuestSession {
     return $null
 }
 
+function Copy-LabGuestFile {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LiteralPath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Destination
+    )
+
+    [hashtable] $copy = @{
+        LiteralPath = $LiteralPath
+        ToSession = $Session
+        Destination = $Destination
+        Force = $true
+        Recurse = (Test-Path -LiteralPath $LiteralPath -PathType Container)
+    }
+    Copy-Item @copy
+}
+
 function Copy-LabGuestPayload {
     [CmdletBinding()]
     [OutputType([void])]
@@ -63,7 +91,10 @@ function Copy-LabGuestPayload {
     Invoke-Command -Session $Session -ScriptBlock {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
-        New-Item -Path C:\ProgramData\XmipLab -ItemType Directory -Force | Out-Null
+        foreach ($directory in @('C:\ProgramData\XmipLab', 'C:\ProgramData\XmipLab\Xmip',
+            'C:\ProgramData\XmipLab\Estate')) {
+            New-Item -Path $directory -ItemType Directory -Force | Out-Null
+        }
         [string[]] $acl = @('C:\ProgramData\XmipLab', '/inheritance:r', '/grant:r',
             '*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F')
         & icacls.exe @acl | Out-Null
@@ -71,43 +102,25 @@ function Copy-LabGuestPayload {
             throw 'Cannot restrict the guest payload directory.'
         }
     } | Out-Null
-    if ($Machine.Role -eq 'PostgreSql') {
-        [hashtable] $copy = @{
-            LiteralPath = $Lab.PostgreSql.Installer
-            ToSession = $Session
-            Destination = 'C:\ProgramData\XmipLab\postgresql.exe'
-            Force = $true
-        }
-        Copy-Item @copy
-        [string] $scriptPath = Join-Path -Path $PSScriptRoot -ChildPath 'LabPostgreSql.ps1'
-        $copy.LiteralPath = $scriptPath
-        $copy.Destination = 'C:\ProgramData\XmipLab\LabPostgreSql.ps1'
-        Copy-Item @copy
+    [hashtable] $files = @{}
+    if ($Machine.Role -eq 'Xmip') {
+        $files['C:\ProgramData\XmipLab\LabXmipNode.ps1'] =
+            Join-Path -Path $PSScriptRoot -ChildPath 'LabXmipNode.ps1'
+        $files['C:\ProgramData\XmipLab\Xmip\xmip.toml'] = $Lab.Xmip.Cluster
+        $files['C:\ProgramData\XmipLab\Xmip\xmip-service.exe'] = $Lab.Xmip.WindowsService
     }
     if ($Machine.Role -eq 'Developer') {
-        [hashtable] $copy = @{
-            LiteralPath = $Lab.Development.PowerShellMsi
-            ToSession = $Session
-            Destination = 'C:\ProgramData\XmipLab\powershell.msi'
-            Force = $true
-        }
-        Copy-Item @copy
-        [string] $scriptPath = Join-Path -Path $PSScriptRoot -ChildPath 'LabDevelopment.ps1'
-        $copy.LiteralPath = $scriptPath
-        $copy.Destination = 'C:\ProgramData\XmipLab\LabDevelopment.ps1'
-        Copy-Item @copy
-        Invoke-Command -Session $Session -ScriptBlock {
-            New-Item -Path C:\ProgramData\XmipLab\Estate -ItemType Directory -Force | Out-Null
-        } | Out-Null
-        [string] $tooling = Join-Path -Path $Lab.Development.RepositoryRoot -ChildPath 'Xmip'
-        $copy.LiteralPath = $tooling
-        $copy.Destination = 'C:\ProgramData\XmipLab\Estate'
-        Copy-Item @copy -Recurse
-        [string] $manifest = Join-Path -Path $Lab.Development.RepositoryRoot -ChildPath
-            'prerequisite.toml'
-        $copy.LiteralPath = $manifest
-        $copy.Destination = 'C:\ProgramData\XmipLab\Estate\prerequisite.toml'
-        Copy-Item @copy
+        [string] $root = $Lab.Development.RepositoryRoot
+        $files['C:\ProgramData\XmipLab\powershell.msi'] = $Lab.Development.PowerShellMsi
+        $files['C:\ProgramData\XmipLab\LabDevelopment.ps1'] =
+            Join-Path -Path $PSScriptRoot -ChildPath 'LabDevelopment.ps1'
+        $files['C:\ProgramData\XmipLab\Estate'] = Join-Path -Path $root -ChildPath 'Xmip'
+        $files['C:\ProgramData\XmipLab\Estate\prerequisite.toml'] =
+            Join-Path -Path $root -ChildPath 'prerequisite.toml'
+    }
+    foreach ($destination in $files.Keys) {
+        [string] $source = $files[$destination]
+        Copy-LabGuestFile -Session $Session -LiteralPath $source -Destination $destination
     }
 }
 
@@ -126,7 +139,7 @@ function Get-LabFleetFinding {
 
     [string] $guestPath = Join-Path -Path $PSScriptRoot -ChildPath 'LabGuest.ps1'
     [scriptblock] $guest = [scriptblock]::Create((Get-Content -LiteralPath $guestPath -Raw))
-    [object[]] $ordered = @($Lab.Machines | Sort-Object {
+    [object[]] $ordered = @($Lab.Machines | Where-Object Family -eq 'Windows' | Sort-Object {
         if ($_.Role -eq 'DomainController') { 0 } else { 1 }
     })
     [bool] $dcReady = $false
@@ -141,7 +154,8 @@ function Get-LabFleetFinding {
         }
         [object] $session = Open-LabGuestSession -Name $machine.Name -Credential $Credential
         if ($null -eq $session) {
-            Write-Output -InputObject "$($machine.Name): PowerShell Direct unavailable or login failed."
+            [string] $unreachable = 'PowerShell Direct unavailable or login failed.'
+            Write-Output -InputObject "$($machine.Name): $unreachable"
             continue
         }
         try {
@@ -169,34 +183,105 @@ function Get-LabFleetFinding {
     }
 }
 
+function New-LabMachine {
+    <#
+    .SYNOPSIS
+    Creates or starts one lab VM over its Os's base image: a prepared Windows
+    VHDX as it is, AlmaLinux's GenericCloud image converted once.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Machine
+    )
+
+    [string] $image = $Lab.Images[$Machine.Os].Path
+    if ($Machine.Family -eq 'Linux') {
+        [hashtable] $base = @{ Lab = $Lab; Os = $Machine.Os; Create = $true; Confirm = $false }
+        $image = Get-LabLinuxBaseImage @base
+    }
+    Set-LabVirtualMachine -Lab $Lab -Machine $Machine -BaseImage $image -Confirm:$false
+}
+
+function Read-LabCredential {
+    <#
+    .SYNOPSIS
+    The DPAPI bundle Initialize-LabCredential.ps1 wrote, readable only by the
+    host user who wrote it, with the shapes each fleet takes.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab
+    )
+
+    [hashtable] $bundle = Import-Clixml -LiteralPath $Lab.CredentialPath
+    # Wrap secure strings as PSCredentials for remoting serialization.
+    [hashtable] $windows = @{
+        LocalAdministrator = $bundle.LocalAdministrator
+        DomainAdministrator = [pscredential]::new("$($Lab.NetbiosName)\Administrator",
+            $bundle.LocalAdministrator.Password)
+        DsrmPassword = [pscredential]::new('dsrm', $bundle.DsrmPassword)
+    }
+    # The Linux guests take theirs in clear over SSH, for one DSC run.
+    [hashtable] $linux = @{
+        StoragePassword = [pscredential]::new('xmip_storage',
+            $bundle.StoragePassword).GetNetworkCredential().Password
+        ReplicationPassword = [pscredential]::new('xmip_replication',
+            $bundle.ReplicationPassword).GetNetworkCredential().Password
+    }
+    return @{ Windows = $windows; Linux = $linux }
+}
+
 try {
     [hashtable] $inputState = [Console]::In.ReadToEnd() | ConvertFrom-Json -AsHashtable
     [hashtable] $lab = Read-LabConfiguration -Path $inputState.ConfigPath
     if (-not $IsWindows) {
         throw 'Hyper-V provisioning requires a Windows host; configuration validation is portable.'
     }
-    if ($Scope -eq 'Host') {
-        if ($Operation -eq 'Set' -and $PSCmdlet.ShouldProcess($lab.LabId, 'Provision Hyper-V lab')) {
-            Assert-LabMedia -Lab $lab
-            Set-LabNetwork -Lab $lab -Confirm:$false
-            foreach ($machine in $lab.Machines) {
-                Set-LabVirtualMachine -Lab $lab -Machine $machine -Confirm:$false
-            }
-        }
-        [string[]] $findings = @(Get-LabHostFinding -Lab $lab)
+    [bool] $mutate = $Operation -eq 'Set' -and
+        $PSCmdlet.ShouldProcess($lab.LabId, "Configure the lab's $Scope")
+    [string] $scopeName = $Scope
+    if ($null -eq (Get-Command -Name Get-VM -ErrorAction SilentlyContinue)) {
+        $scopeName = 'NoHyperV'
     }
-    else {
-        [hashtable] $credential = Import-Clixml -LiteralPath $lab.CredentialPath
-        # Wrap secure strings as PSCredentials for remoting serialization.
-        $credential.DsrmPassword = [pscredential]::new('dsrm', $credential.DsrmPassword)
-        $credential.PostgreSqlPassword = [pscredential]::new('postgres',
-            $credential.PostgreSqlPassword)
-        $credential.DomainAdministrator = [pscredential]::new(
-            "$($lab.NetbiosName)\Administrator", $credential.LocalAdministrator.Password)
-        [bool] $configure = $Operation -eq 'Set' -and
-            $PSCmdlet.ShouldProcess($lab.LabId, 'Configure Windows guest fleet')
-        [hashtable] $fleet = @{ Lab = $lab; Credential = $credential; Configure = $configure }
-        [string[]] $findings = @(Get-LabFleetFinding @fleet)
+    [string[]] $findings = switch ($scopeName) {
+        'NoHyperV' {
+            @('Hyper-V is not enabled; enable the host feature and reboot first.')
+        }
+        'Host' {
+            if ($mutate) {
+                Assert-LabMedia -Lab $lab
+                Set-LabNetwork -Lab $lab -Confirm:$false
+                foreach ($machine in @($lab.Machines | Where-Object Family -eq 'Windows')) {
+                    New-LabMachine -Lab $lab -Machine $machine
+                }
+            }
+            @(Get-LabHostFinding -Lab $lab)
+        }
+        'WindowsGuests' {
+            [hashtable] $credential = (Read-LabCredential -Lab $lab).Windows
+            @(Get-LabFleetFinding -Lab $lab -Credential $credential -Configure:$mutate)
+        }
+        'LinuxGuests' {
+            [hashtable] $secret = @{}
+            if ($mutate) {
+                Assert-LabLinuxMedia -Lab $lab
+                $secret = (Read-LabCredential -Lab $lab).Linux
+            }
+            foreach ($machine in @($lab.Machines | Where-Object Family -eq 'Linux')) {
+                if ($mutate) {
+                    New-LabMachine -Lab $lab -Machine $machine
+                }
+                Get-LabVirtualMachineFinding -Lab $lab -Machine $machine
+            }
+            @(Get-LabLinuxFleetFinding -Lab $lab -Secret $secret -Configure:$mutate)
+        }
     }
     [hashtable] $state = @{
         ConfigPath = $inputState.ConfigPath

@@ -5,6 +5,23 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# The operating systems a machine may run, each with its family and the roles
+# it may carry. A machine's family comes from its Os, never from its name.
+$script:LabOs = @{
+    WindowsServer2025 = @{
+        Family = 'Windows'
+        Roles = @('DomainController', 'FileServer', 'Xmip')
+    }
+    Windows11 = @{
+        Family = 'Windows'
+        Roles = @('Developer')
+    }
+    AlmaLinux10 = @{
+        Family = 'Linux'
+        Roles = @('PostgreSql', 'Xmip')
+    }
+}
+
 function Read-LabConfiguration {
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -23,43 +40,155 @@ function Read-LabConfiguration {
     if ($lab.NetbiosName -notmatch '^[A-Za-z][A-Za-z0-9-]{0,14}$') {
         throw 'NetbiosName must be a valid domain NetBIOS name.'
     }
-    [string[]] $names = @($lab.Machines.Name)
-    [string[]] $addresses = @($lab.Machines.Address) + $lab.Network.Gateway
+    # Enumerated, not member-accessed: an array's own Address method would win.
+    [string[]] $names = @($lab.Machines | ForEach-Object { $_.Name })
+    [string[]] $addresses = @($lab.Machines | ForEach-Object { $_.Address }) +
+        $lab.Network.Gateway
     if (@($names | Select-Object -Unique).Count -ne $names.Count -or
         @($addresses | Select-Object -Unique).Count -ne $addresses.Count) {
         throw 'Machine names and addresses must be unique.'
     }
-    if (@($lab.Machines | Where-Object Role -eq 'DomainController').Count -ne 1) {
-        throw 'Exactly one domain controller is required.'
-    }
     foreach ($machine in $lab.Machines) {
-        if ($machine.Name -notmatch '^[A-Za-z][A-Za-z0-9-]{0,14}$' -or
-            $machine.MemoryGB -lt 2 -or $machine.Cpu -lt 1 -or
-            $machine.Role -notin @('DomainController', 'FileServer', 'Developer',
-                'PostgreSql', 'Xmip')) {
-            throw 'Invalid machine name, size or role.'
-        }
+        Assert-LabMachine -Lab $lab -Machine $machine
+        $machine.Family = $script:LabOs[$machine.Os].Family
     }
-    # Restrict the first version to /24; all IPs must belong to that subnet.
-    if ($lab.Network.Prefix -notmatch '^(\d+\.\d+\.\d+)\.0/24$' -or
-        $lab.Network.PrefixLength -ne 24) {
-        throw 'This lab supports an IPv4 /24 subnet only.'
+    [object[]] $controllers = @($lab.Machines | Where-Object Role -eq 'DomainController')
+    if ($controllers.Count -ne 1 -or $controllers[0].Family -ne 'Windows') {
+        throw 'Exactly one Windows domain controller is required.'
     }
-    [string] $networkBase = $Matches[1]
-    foreach ($address in $addresses) {
-        [ipaddress] $parsed = [ipaddress]::Parse($address)
-        if ($parsed.AddressFamily -ne 'InterNetwork' -or
-            $address -notlike "$networkBase.*" -or
-            $parsed.GetAddressBytes()[3] -in @(0, 255)) {
-            throw "Address outside the lab subnet: $address"
-        }
-    }
-    foreach ($pathKey in @('Root', 'ServerImage', 'DeveloperImage', 'CredentialPath')) {
-        if (-not [IO.Path]::IsPathFullyQualified($lab[$pathKey])) {
-            throw "$pathKey must be an absolute path."
+    Assert-LabAddress -Lab $lab -Address $addresses
+    [string[]] $paths = @($lab.Root, $lab.CredentialPath, $lab.SshKeyPath) +
+        @($lab.Images.Values | ForEach-Object { $_.Path })
+    foreach ($path in $paths) {
+        if (-not [IO.Path]::IsPathFullyQualified($path)) {
+            throw "Lab paths must be absolute: $path"
         }
     }
     return $lab
+}
+
+function Assert-LabMachine {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Machine
+    )
+
+    if ($Machine.Name -notmatch '^[A-Za-z][A-Za-z0-9-]{0,14}$' -or
+        $Machine.MemoryGB -lt 2 -or $Machine.Cpu -lt 1) {
+        throw "Invalid machine name or size: $($Machine.Name)"
+    }
+    if (-not $script:LabOs.ContainsKey([string] $Machine.Os) -or
+        -not $Lab.Images.ContainsKey([string] $Machine.Os)) {
+        throw "$($Machine.Name): Os must be one of the lab's images."
+    }
+    [hashtable] $os = $script:LabOs[$Machine.Os]
+    if ($Machine.Role -notin $os.Roles) {
+        throw "$($Machine.Name): $($Machine.Os) carries only $($os.Roles -join ', ')."
+    }
+    if ($Machine.ContainsKey('StandbyOf')) {
+        [object[]] $primary = @($Lab.Machines | Where-Object {
+            $_.Name -eq $Machine.StandbyOf -and $_.Role -eq 'PostgreSql' -and
+            -not $_.ContainsKey('StandbyOf')
+        })
+        if ($Machine.Role -ne 'PostgreSql' -or $primary.Count -ne 1) {
+            throw "$($Machine.Name): StandbyOf names no PostgreSQL primary."
+        }
+    }
+}
+
+function Assert-LabAddress {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $Address
+    )
+
+    # Restrict the first version to /24; all IPs must belong to that subnet.
+    if ($Lab.Network.Prefix -notmatch '^(\d+\.\d+\.\d+)\.0/24$' -or
+        $Lab.Network.PrefixLength -ne 24) {
+        throw 'This lab supports an IPv4 /24 subnet only.'
+    }
+    [string] $networkBase = $Matches[1]
+    foreach ($candidate in $Address) {
+        [ipaddress] $parsed = [ipaddress]::Parse($candidate)
+        if ($parsed.AddressFamily -ne 'InterNetwork' -or
+            $candidate -notlike "$networkBase.*" -or
+            $parsed.GetAddressBytes()[3] -in @(0, 255)) {
+            throw "Address outside the lab subnet: $candidate"
+        }
+    }
+}
+
+function Get-LabMacAddress {
+    <#
+    .SYNOPSIS
+    The static MAC a lab guest is given: Hyper-V's prefix 00-15-5D and the last
+    three octets of its address, so cloud-init can match its adapter by MAC.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Address
+    )
+
+    [byte[]] $bytes = ([ipaddress]::Parse($Address)).GetAddressBytes()
+    return '00155D{0:X2}{1:X2}{2:X2}' -f $bytes[1], $bytes[2], $bytes[3]
+}
+
+function Get-LabVirtualMachineFinding {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Machine
+    )
+
+    [object] $vm = Get-VM -Name $Machine.Name -ErrorAction SilentlyContinue
+    if ($null -eq $vm) {
+        return "$($Machine.Name): VM is missing."
+    }
+    [object[]] $nics = @(Get-VMNetworkAdapter -VMName $Machine.Name)
+    [object] $memory = Get-VMMemory -VMName $Machine.Name
+    [string[]] $disks = @(Get-VMHardDiskDrive -VMName $Machine.Name | ForEach-Object { $_.Path })
+    [string] $directory = Join-Path -Path $Lab.Root -ChildPath $Machine.Name
+    [string[]] $expected = @(Join-Path -Path $directory -ChildPath 'os.vhdx')
+    if ($Machine.Family -eq 'Linux') {
+        $expected += Join-Path -Path $directory -ChildPath 'seed.vhdx'
+    }
+    if ($vm.Notes -ne $Lab.LabId -or $vm.Generation -ne 2 -or
+        $vm.ProcessorCount -ne $Machine.Cpu -or
+        $memory.Startup -ne ($Machine.MemoryGB * 1GB) -or
+        $memory.DynamicMemoryEnabled -or $vm.State -ne 'Running' -or
+        $nics.Count -ne 1 -or $nics[0].SwitchName -ne $Lab.Network.SwitchName -or
+        ($disks -join '|') -ne ($expected -join '|')) {
+        Write-Output -InputObject "$($Machine.Name): VM settings differ."
+    }
+    [object] $firmware = Get-VMFirmware -VMName $Machine.Name
+    if ($firmware.SecureBoot -ne 'On') {
+        Write-Output -InputObject "$($Machine.Name): Secure Boot is disabled."
+    }
+    if ($Machine.Family -eq 'Linux' -and
+        ($firmware.SecureBootTemplate -ne 'MicrosoftUEFICertificateAuthority' -or
+        $nics[0].MacAddress -ne (Get-LabMacAddress -Address $Machine.Address))) {
+        Write-Output -InputObject "$($Machine.Name): Linux boot template or static MAC differs."
+    }
+    if ($Machine.Os -eq 'Windows11' -and
+        -not (Get-VMSecurity -VMName $Machine.Name).TpmEnabled) {
+        Write-Output -InputObject "$($Machine.Name): virtual TPM is disabled."
+    }
 }
 
 function Get-LabHostFinding {
@@ -98,31 +227,8 @@ function Get-LabHostFinding {
     if (-not $Lab.Network.EnableNat -and $null -ne $nat) {
         Write-Output -InputObject 'NAT exists although the lab requests isolation.'
     }
-    foreach ($machine in $Lab.Machines) {
-        [object] $vm = Get-VM -Name $machine.Name -ErrorAction SilentlyContinue
-        if ($null -eq $vm) {
-            Write-Output -InputObject "$($machine.Name): VM is missing."
-            continue
-        }
-        [object[]] $nics = @(Get-VMNetworkAdapter -VMName $machine.Name)
-        [object] $memory = Get-VMMemory -VMName $machine.Name
-        [object[]] $disks = @(Get-VMHardDiskDrive -VMName $machine.Name)
-        [string] $disk = Join-Path -Path $Lab.Root -ChildPath "$($machine.Name)/os.vhdx"
-        if ($vm.Notes -ne $Lab.LabId -or $vm.Generation -ne 2 -or
-            $vm.ProcessorCount -ne $machine.Cpu -or
-            $memory.Startup -ne ($machine.MemoryGB * 1GB) -or
-            $memory.DynamicMemoryEnabled -or $vm.State -ne 'Running' -or
-            $nics.Count -ne 1 -or $nics[0].SwitchName -ne $Lab.Network.SwitchName -or
-            $disks.Count -ne 1 -or $disks[0].Path -ne $disk) {
-            Write-Output -InputObject "$($machine.Name): VM settings differ."
-        }
-        if ((Get-VMFirmware -VMName $machine.Name).SecureBoot -ne 'On') {
-            Write-Output -InputObject "$($machine.Name): Secure Boot is disabled."
-        }
-        if ($machine.Role -eq 'Developer' -and
-            -not (Get-VMSecurity -VMName $machine.Name).TpmEnabled) {
-            Write-Output -InputObject "$($machine.Name): virtual TPM is disabled."
-        }
+    foreach ($machine in @($Lab.Machines | Where-Object Family -eq 'Windows')) {
+        Get-LabVirtualMachineFinding -Lab $Lab -Machine $machine
     }
 }
 
@@ -179,6 +285,14 @@ function Set-LabNetwork {
 }
 
 function Set-LabVirtualMachine {
+    <#
+    .SYNOPSIS
+    Creates a lab VM on a differencing disk over its base image, or starts it.
+    .DESCRIPTION
+    A Linux machine also gets its cloud-init seed disk, a static MAC and the
+    UEFI certificate authority's Secure Boot template; a Windows 11 machine a
+    virtual TPM. An existing VM's hardware drift is reported, never repaired.
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
     param(
@@ -186,7 +300,10 @@ function Set-LabVirtualMachine {
         [hashtable] $Lab,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $Machine
+        [hashtable] $Machine,
+
+        [Parameter(Mandatory = $true)]
+        [string] $BaseImage
     )
 
     [object] $vm = Get-VM -Name $Machine.Name -ErrorAction SilentlyContinue
@@ -197,19 +314,13 @@ function Set-LabVirtualMachine {
         return
     }
     if ($null -eq $vm) {
-        [string] $image = if ($Machine.Role -eq 'Developer') {
-            $Lab.DeveloperImage
-        }
-        else {
-            $Lab.ServerImage
-        }
         [string] $directory = Join-Path -Path $Lab.Root -ChildPath $Machine.Name
         [string] $disk = Join-Path -Path $directory -ChildPath 'os.vhdx'
         if (Test-Path -LiteralPath $directory) {
             throw "REFUSED: unregistered VM directory already exists: $directory"
         }
         New-Item -Path $directory -ItemType Directory | Out-Null
-        New-VHD -Path $disk -ParentPath $image -Differencing | Out-Null
+        New-VHD -Path $disk -ParentPath $BaseImage -Differencing | Out-Null
         [hashtable] $create = @{
             Name = $Machine.Name
             Generation = 2
@@ -222,48 +333,18 @@ function Set-LabVirtualMachine {
         Set-VM -Name $Machine.Name -Notes $Lab.LabId -AutomaticCheckpointsEnabled $false
         Set-VMProcessor -VMName $Machine.Name -Count $Machine.Cpu
         Set-VMMemory -VMName $Machine.Name -DynamicMemoryEnabled $false
-        Set-VMFirmware -VMName $Machine.Name -EnableSecureBoot On
-        if ($Machine.Role -eq 'Developer') {
+        if ($Machine.Family -eq 'Linux') {
+            Set-LabLinuxHardware -Lab $Lab -Machine $Machine -Directory $directory
+        }
+        else {
+            Set-VMFirmware -VMName $Machine.Name -EnableSecureBoot On
+        }
+        if ($Machine.Os -eq 'Windows11') {
             Set-VMKeyProtector -VMName $Machine.Name -NewLocalKeyProtector
             Enable-VMTPM -VMName $Machine.Name
         }
     }
-    # Existing VM hardware drift is reported, never repaired by stopping a VM.
     if ((Get-VM -Name $Machine.Name).State -eq 'Off') {
         Start-VM -Name $Machine.Name | Out-Null
-    }
-}
-
-function Assert-LabMedia {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Lab
-    )
-
-    foreach ($image in @($Lab.ServerImage, $Lab.DeveloperImage)) {
-        if (-not (Test-Path -LiteralPath $image -PathType Leaf)) {
-            throw "Prepared Windows VHDX image is missing: $image"
-        }
-        [object] $vhd = Get-VHD -Path $image
-        if ($vhd.Attached -or $vhd.VhdType -eq 'Differencing' -or $vhd.VhdFormat -ne 'VHDX') {
-            throw 'Base images must be detached, standalone VHDX files.'
-        }
-    }
-    foreach ($media in @($Lab.PostgreSql, $Lab.Development)) {
-        [string] $installer = if ($media.ContainsKey('Installer')) {
-            $media.Installer
-        }
-        else {
-            $media.PowerShellMsi
-        }
-        if (-not (Test-Path -LiteralPath $installer -PathType Leaf) -or
-            $media.Sha256 -notmatch '^[a-fA-F0-9]{64}$') {
-            throw 'Provide local installers and their verified SHA256 values in lab.json.'
-        }
-        if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash -ne $media.Sha256) {
-            throw "Installer checksum differs: $installer"
-        }
     }
 }

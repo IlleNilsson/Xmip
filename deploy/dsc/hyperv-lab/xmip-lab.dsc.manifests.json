@@ -1,0 +1,118 @@
+{
+  "resources": [
+    {
+      "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+      "type": "Xmip.Lab/HyperVHost",
+      "version": "0.1.0",
+      "description": "The Xmip Hyper-V lab's host: its internal switch, gateway and NAT, and its Windows VMs.",
+      "tags": ["Windows", "HyperV", "Xmip"],
+      "get": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Get", "-Scope", "Host"],
+        "input": "stdin"
+      },
+      "test": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Test", "-Scope", "Host"],
+        "input": "stdin",
+        "return": "state"
+      },
+      "set": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Set", "-Scope", "Host"],
+        "input": "stdin",
+        "implementsPretest": false,
+        "return": "state"
+      },
+      "schema": {
+        "embedded": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "required": ["ConfigPath"],
+          "additionalProperties": false,
+          "properties": {
+            "ConfigPath": { "type": "string", "description": "The lab's lab.json, outside the repository." },
+            "Findings": { "type": "array", "items": { "type": "string" }, "readOnly": true },
+            "_inDesiredState": { "type": ["boolean", "null"], "readOnly": true }
+          }
+        }
+      }
+    },
+    {
+      "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+      "type": "Xmip.Lab/WindowsGuests",
+      "version": "0.1.0",
+      "description": "The Xmip Hyper-V lab's Windows guests through PowerShell Direct: domain, file share, developer machine and Xmip nodes.",
+      "tags": ["Windows", "HyperV", "Xmip"],
+      "get": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Get", "-Scope", "WindowsGuests"],
+        "input": "stdin"
+      },
+      "test": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Test", "-Scope", "WindowsGuests"],
+        "input": "stdin",
+        "return": "state"
+      },
+      "set": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Set", "-Scope", "WindowsGuests"],
+        "input": "stdin",
+        "implementsPretest": false,
+        "return": "state"
+      },
+      "schema": {
+        "embedded": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "required": ["ConfigPath"],
+          "additionalProperties": false,
+          "properties": {
+            "ConfigPath": { "type": "string", "description": "The lab's lab.json, outside the repository." },
+            "Findings": { "type": "array", "items": { "type": "string" }, "readOnly": true },
+            "_inDesiredState": { "type": ["boolean", "null"], "readOnly": true }
+          }
+        }
+      }
+    },
+    {
+      "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+      "type": "Xmip.Lab/LinuxGuests",
+      "version": "0.1.0",
+      "description": "The Xmip Hyper-V lab's AlmaLinux guests: GenericCloud image to VHDX, cloud-init seed, VM, then DSC v3 on the guest over SSH.",
+      "tags": ["Linux", "HyperV", "Xmip"],
+      "get": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Get", "-Scope", "LinuxGuests"],
+        "input": "stdin"
+      },
+      "test": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Test", "-Scope", "LinuxGuests"],
+        "input": "stdin",
+        "return": "state"
+      },
+      "set": {
+        "executable": "pwsh",
+        "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabResource.ps1", "-Operation", "Set", "-Scope", "LinuxGuests"],
+        "input": "stdin",
+        "implementsPretest": false,
+        "return": "state"
+      },
+      "schema": {
+        "embedded": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "required": ["ConfigPath"],
+          "additionalProperties": false,
+          "properties": {
+            "ConfigPath": { "type": "string", "description": "The lab's lab.json, outside the repository." },
+            "Findings": { "type": "array", "items": { "type": "string" }, "readOnly": true },
+            "_inDesiredState": { "type": ["boolean", "null"], "readOnly": true }
+          }
+        }
+      }
+    }
+  ]
+}

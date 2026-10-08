@@ -1,0 +1,48 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Lab/LinuxGuest",
+  "version": "0.1.0",
+  "description": "One AlmaLinux guest of the Xmip Hyper-V lab: its network as cloud-init left it, and PostgreSQL or an Xmip node.",
+  "tags": ["Linux", "Xmip"],
+  "get": {
+    "executable": "pwsh",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabLinuxGuest.ps1", "-Operation", "Get"],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabLinuxGuest.ps1", "-Operation", "Test"],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", "./LabLinuxGuest.ps1", "-Operation", "Set"],
+    "input": "stdin",
+    "implementsPretest": false,
+    "return": "state"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": ["Machine"],
+      "additionalProperties": false,
+      "properties": {
+        "Machine": {
+          "type": "object",
+          "description": "The guest as the host composed it: name, address, role and the role's settings; never a secret."
+        },
+        "Findings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": ["boolean", "null"],
+          "readOnly": true
+        }
+      }
+    }
+  }
+}
