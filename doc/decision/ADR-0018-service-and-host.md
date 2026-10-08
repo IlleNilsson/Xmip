@@ -669,3 +669,25 @@ where the far end deduplicates, at least once elsewhere, never at most once.
 `runtime-model.md` section 9 and section 10, *Corrected 2026-10-06*, say
 how each runs; `xmip-core-persist` (`storage::publication`) and
 `xmip-core-runtime` (`send_step::renewal`) hold them.
+
+## Amendment, 2026-10-08: a renewal speaks for its own claim, and never shortens one
+
+A second outside review, its repairs asked for by the owner on 2026-10-08,
+found clause 5's renewal still racing what follows it.
+
+**A renewal's answer is obeyed only for the claim it asked about.** Every
+answer, lost and unanswered as well as renewed, is applied only while the
+node holds the Journey under the token the renewal asked with; an answer
+for a claim since ended and taken again under another token says nothing
+of the new one.
+
+**A renewal never shortens a claim.** Xmip Storage renews a claim to the
+later of a lease from now and the deadline it holds, so a claim kept to a
+retry's due time keeps it and no node takes the Journey up before its
+backoff ends.
+
+**A node's renewals are one request.** `XmipStorage::renew` takes every
+claim in flight and answers those still held, so one slow answer costs one
+wait, never one per claim, and a round ends inside the lease.
+
+`runtime-model.md` section 10, *Corrected 2026-10-08*, says how each runs.

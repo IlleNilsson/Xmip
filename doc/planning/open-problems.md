@@ -847,6 +847,45 @@ gate only after transport authentication passes and a contract or the
 `message` identifier is configured, so the service cannot show one yet; the
 runtime's tests do (`arrival.rs`).
 
+## 34. The failure backlog lives in the node's memory
+
+Found by the outside review of 2026-10-08. The send step keeps every
+Journey that failed waiting in a queue it sends, with its reason
+(`send_step::figures`), so a Port's failed count and its oldest hundred
+can be published; admission bounds what is in flight, not this. Repaired the
+same day: a Journey read Failed again is found by its Journey at once, not
+by looking through all of them, and a whole read of a queue forgets every
+place passed over that has left it. What remains: memory still grows with
+the number of failed Journeys waiting. Needed: the count, and an index of
+the failed Journeys of each queue, kept by Xmip Storage in the Ledger and
+read from it, with the node keeping a bounded window of the oldest.
+
+## 35. Loopback proves where a caller is, not who
+
+Raised by the outside review of 2026-10-08 as a decision to reconsider, not
+a defect: ADR-0009's exception (the owner's *Go with A* of 2026-10-03)
+makes every certificate-free caller over this machine's loopback the
+operating system user the host runs as (`GatedOperator.Proven`). With a
+role stated for the run, or a Playground host's tester directory, another
+local user acts as that account, and a reverse proxy forwarding to
+loopback extends the same trust to remote callers; the audit names the
+host's account. The review asks for either a narrower deployment boundary
+for the exception or authenticated local callers. The owner's to decide;
+nothing is changed until then.
+
+## 36. A green root CI run is not evidence for the composed estate
+
+Raised by the outside review of 2026-10-08. The root workflow
+(`.github/workflows/rust.yml`) resolves the dependencies from the branches
+ADR-0005 tracks, not the module revisions the root pins, and the .NET
+operator surfaces' workflows (`module/foundation/abi/.github/workflows/verify.yml`)
+run only by hand. A green root run therefore does not show that Desktop,
+Web, CLI and PowerShell work together at the estate's recorded revisions;
+`xgit` verifies that locally before it pushes, and leaves no record of it.
+The review asks that each landing publish an identifiable verification
+result beside root CI: the revisions it resolved and the surface checks it
+ran.
+
 ---
 
 # Suggested order

@@ -1156,6 +1156,43 @@ waits for its due time.
   renewal's answer was dropped, and a node that had lost its claim went on
   trying Locations.
 
+**Corrected 2026-10-08**, after a second review of the same:
+
+- **A renewal's answer speaks only for the claim it asked about.** Every
+  answer — renewed, lost or unanswered — is applied only while the node
+  still holds the Journey under the token the renewal asked with. Until
+  now only a renewed answer was checked: a late lost or unanswered answer
+  for a claim whose send had ended marked the claim an operator's Retry had
+  taken since lost or unconfirmed, stopping a valid retry and misreporting
+  its Port.
+- **A renewal never shortens a deadline.** A claim kept to a retry's due
+  time and a lease past it keeps that deadline: Xmip Storage renews a
+  claim to the later of now and a lease, or the deadline it holds, and the
+  node's own reckoning does the same. Until now a renewal asked before a
+  retry's hand-on and answered after it cut the claim back to a lease, so
+  another node could take the Journey up and retry it before its backoff
+  ended.
+- **A round of renewals is one request.** The node renews every claim in
+  flight in one request to Xmip Storage, a third of a lease after the last
+  round began, so a slow answer costs the round one wait, never one per
+  claim, and a round ends well inside a lease however many claims it holds.
+  Until now each claim was its own request, one after another, so
+  unanswered requests added up across claims and could use up the lease
+  of healthy work.
+- **A queue that cannot be read is said.** A scan whose read of a Send
+  Port's queue Xmip Storage does not answer marks the Port Done, its
+  evidence saying since when and Xmip Storage's answer, audited once, and
+  Fine again at the first read answered. Until now the failed read ended
+  the scan silently, and a Port with no claims and no failures known was
+  published Fine while what waited in its queue could not be found.
+- **The failure backlog is indexed.** A Journey read Failed again is found
+  by its Journey at once, and a whole read of a queue forgets every place
+  passed over that has left it; until now each read looked through every
+  Failed Journey of the Port, and what a scan passed over was never
+  forgotten. The node still keeps each Failed Journey of the queues it
+  sends in memory; keeping the count in Xmip Storage is open
+  (`open-problems.md` problem 34).
+
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
 runtime's settings are configured*, says.
