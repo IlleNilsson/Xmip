@@ -617,8 +617,8 @@ file server and three Xmip nodes declaring `processing` on Windows Server
 2025, a Windows 11 developer machine, and on AlmaLinux 10 a PostgreSQL
 primary, its streaming standby, and one node each declaring `receiving` and
 `sending`. The Windows machines start from prepared VHDX images and are
-configured through PowerShell Direct; the AlmaLinux machines start from the
-GenericCloud image with a cloud-init seed and are configured by DSC v3 on
+configured through PowerShell Direct; the AlmaLinux machines start from AlmaLinux's
+Hyper-V image with a cloud-init seed and are configured by DSC v3 on
 the guest, over SSH.
 
 A site, `deploy/site/<name>.toml`, says what one deployment's program is

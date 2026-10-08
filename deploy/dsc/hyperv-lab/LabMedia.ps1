@@ -1,7 +1,7 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 # The media the lab is built from, checked before Set changes anything: the
-# prepared Windows images, the AlmaLinux GenericCloud image and the installers with
+# prepared Windows images, AlmaLinux's Hyper-V image and the installers with
 # their verified SHA256 values, the lab's SSH key, and the files each guest is
 # given. Nothing here is fetched; every file is the operator's, on the host.
 Set-StrictMode -Version Latest
@@ -72,9 +72,6 @@ function Assert-LabLinuxMedia {
     foreach ($os in @($Lab.Machines | Where-Object Family -eq 'Linux' |
         ForEach-Object { $_.Os } | Select-Object -Unique)) {
         Assert-LabFile -Path $Lab.Images[$os].Path -Sha256 $Lab.Images[$os].Sha256
-        if (-not (Test-Path -LiteralPath $Lab.Images[$os].QemuImg -PathType Leaf)) {
-            throw "qemu-img is missing: $($Lab.Images[$os].QemuImg)"
-        }
     }
     Assert-LabFile -Path $Lab.Linux.PowerShell.Path -Sha256 $Lab.Linux.PowerShell.Sha256
     Assert-LabFile -Path $Lab.Linux.Dsc.Path -Sha256 $Lab.Linux.Dsc.Sha256

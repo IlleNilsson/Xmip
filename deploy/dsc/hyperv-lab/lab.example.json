@@ -14,12 +14,11 @@
     "DnsForwarders": ["1.1.1.1", "9.9.9.9"]
   },
   "Images": {
-    "WindowsServer2025": {"Path": "D:\\Images\\WindowsServer2025.vhdx"},
-    "Windows11": {"Path": "D:\\Images\\Windows11-26H2.vhdx"},
+    "WindowsServer2025": {"Path": "D:\\Downloads\\OS\\Images\\Microsoft\\WindowsServer2025.vhdx"},
+    "Windows11": {"Path": "D:\\Downloads\\OS\\Images\\Microsoft\\Windows11-26H2.vhdx"},
     "AlmaLinux10": {
-      "Path": "D:\\Images\\AlmaLinux-10-GenericCloud-latest.x86_64.qcow2",
-      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256",
-      "QemuImg": "C:\\Program Files\\qemu\\qemu-img.exe"
+      "Path": "D:\\Downloads\\OS\\Images\\AlmaLinux\\AlmaLinux-10.2.20260914-hyperv.vhdx",
+      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256"
     }
   },
   "Linux": {

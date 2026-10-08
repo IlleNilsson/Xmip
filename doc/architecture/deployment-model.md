@@ -574,7 +574,7 @@ a file server, a developer machine, a PostgreSQL primary and its streaming
 standby, and five Xmip nodes, three on Windows Server 2025 declaring
 processing and two on AlmaLinux 10 declaring receiving and sending. The
 Windows machines are configured through PowerShell Direct; the AlmaLinux
-machines start from AlmaLinux's GenericCloud image with a cloud-init seed and
+machines start from AlmaLinux's own Hyper-V image with a cloud-init seed and
 are configured by DSC v3 on the guest, over SSH. Each Xmip node is placed and
 sliced as above, from the lab cluster's `xmip.toml`, which alone says its
 roles; each PostgreSQL machine is set up as `deploy/database/postgresql`

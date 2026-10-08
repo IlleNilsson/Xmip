@@ -1,7 +1,7 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
-# The lab's AlmaLinux guests on the host: the GenericCloud image converted to a
-# base VHDX once, a cloud-init NoCloud seed disk per guest (hostname, static
+# The lab's AlmaLinux guests on the host: AlmaLinux's own Hyper-V image as the
+# base VHDX, a cloud-init NoCloud seed disk per guest (hostname, static
 # address, the lab's SSH key), the VM hardware cloud-init needs, and the
 # parameters the guest's own DSC document is given. Hyper-V calls are guarded
 # at the resource boundary, as in LabHost.ps1.
@@ -50,10 +50,14 @@ function Get-LabPublicKey {
 function Get-LabCloudInitData {
     <#
     .SYNOPSIS
-    The three NoCloud files for one guest: meta-data, user-data, network-config.
+    The two NoCloud files for one guest: meta-data and user-data.
     .DESCRIPTION
-    Returns an ordered dictionary of file name to text, LF line endings. The
-    adapter is matched by the static MAC Set-LabLinuxHardware gives it.
+    Returns an ordered dictionary of file name to text, LF line endings.
+    AlmaLinux's Hyper-V image turns cloud-init's network step off
+    (`network: {config: disabled}`), so the static address is a
+    NetworkManager profile the user-data writes and brings up, matched to the
+    adapter by the static MAC Set-LabLinuxHardware gives it. The image's
+    `vagrant` account, whose key is public, is removed.
     #>
     [CmdletBinding()]
     [OutputType([System.Collections.Specialized.OrderedDictionary])]
@@ -69,8 +73,7 @@ function Get-LabCloudInitData {
     )
 
     [string] $hostName = Get-LabLinuxHostName -Machine $Machine
-    [string] $mac = (Get-LabMacAddress -Address $Machine.Address).ToLowerInvariant() -replace
-        '(..)(?!$)', '$1:'
+    [string] $mac = (Get-LabMacAddress -Address $Machine.Address) -replace '(..)(?!$)', '$1:'
     [string] $dns = ($Lab.Machines | Where-Object Role -eq 'DomainController').Address
     [string[]] $metaData = @(
         "instance-id: $($Lab.LabId)-$($Machine.Name)"
@@ -89,26 +92,31 @@ function Get-LabCloudInitData {
         "      - '$PublicKey'"
         'disable_root: true'
         'ssh_pwauth: false'
-    )
-    [string[]] $network = @(
-        'version: 2'
-        'ethernets:'
-        '  lab:'
-        '    match:'
-        "      macaddress: '$mac'"
-        '    set-name: eth0'
-        "    addresses: ['$($Machine.Address)/$($Lab.Network.PrefixLength)']"
-        '    routes:'
-        '      - to: default'
-        "        via: $($Lab.Network.Gateway)"
-        '    nameservers:'
-        "      search: [$($Lab.DomainName)]"
-        "      addresses: [$dns]"
+        'write_files:'
+        '  - path: /etc/NetworkManager/system-connections/lab.nmconnection'
+        "    permissions: '0600'"
+        '    content: |'
+        '      [connection]'
+        '      id=lab'
+        '      type=ethernet'
+        '      autoconnect-priority=100'
+        '      [ethernet]'
+        "      mac-address=$mac"
+        '      [ipv4]'
+        '      method=manual'
+        "      address1=$($Machine.Address)/$($Lab.Network.PrefixLength),$($Lab.Network.Gateway)"
+        "      dns=$dns;"
+        "      dns-search=$($Lab.DomainName);"
+        '      [ipv6]'
+        '      method=disabled'
+        'runcmd:'
+        '  - [nmcli, connection, reload]'
+        '  - [nmcli, connection, up, lab]'
+        '  - [userdel, --remove, vagrant]'
     )
     return [ordered] @{
         'meta-data' = ($metaData -join "`n") + "`n"
         'user-data' = ($userData -join "`n") + "`n"
-        'network-config' = ($network -join "`n") + "`n"
     }
 }
 
@@ -201,47 +209,6 @@ function Set-LabLinuxHardware {
     [string] $seed = Join-Path -Path $Directory -ChildPath 'seed.vhdx'
     New-LabCloudInitSeed -Lab $Lab -Machine $Machine -Path $seed -Confirm:$false
     Add-VMHardDiskDrive -VMName $Machine.Name -Path $seed
-}
-
-function Get-LabLinuxBaseImage {
-    <#
-    .SYNOPSIS
-    The base VHDX a Linux Os's guests differ from, converted from its GenericCloud
-    image once with qemu-img. Returns the path; converts only with -Create.
-    #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Lab,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Os,
-
-        [switch] $Create
-    )
-
-    [string] $directory = Join-Path -Path $Lab.Root -ChildPath 'base'
-    [string] $base = Join-Path -Path $directory -ChildPath "$Os.vhdx"
-    if (-not $Create -or (Test-Path -LiteralPath $base -PathType Leaf) -or
-        -not $PSCmdlet.ShouldProcess($base, 'Convert the GenericCloud image to VHDX')) {
-        return $base
-    }
-    [hashtable] $image = $Lab.Images[$Os]
-    New-Item -Path $directory -ItemType Directory -Force | Out-Null
-    [string] $partial = "$base.partial"
-    [string[]] $convert = @('convert', '-f', 'qcow2', '-O', 'vhdx', '-o', 'subformat=dynamic',
-        $image.Path, $partial)
-    & $image.QemuImg @convert
-    if ($LASTEXITCODE -ne 0) {
-        throw "qemu-img could not convert $($image.Path)."
-    }
-    # Hyper-V refuses a sparse virtual disk file.
-    if ((Get-Item -LiteralPath $partial).Attributes.HasFlag([IO.FileAttributes]::SparseFile)) {
-        & fsutil.exe sparse setflag $partial 0 | Out-Null
-    }
-    Move-Item -LiteralPath $partial -Destination $base
-    return $base
 }
 
 function Get-LabReplicationSlot {
