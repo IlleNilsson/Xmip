@@ -23,6 +23,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path -Path $PSScriptRoot -ChildPath 'LabHost.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath 'LabMachine.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath 'LabAnswer.ps1')
 . (Join-Path -Path $PSScriptRoot -ChildPath 'LabLinux.ps1')
 . (Join-Path -Path $PSScriptRoot -ChildPath 'LabMedia.ps1')
 . (Join-Path -Path $PSScriptRoot -ChildPath 'LabLinuxFleet.ps1')
@@ -159,6 +161,9 @@ function Get-LabFleetFinding {
             continue
         }
         try {
+            if ($Configure) {
+                Complete-LabInstallation -Lab $Lab -Machine $machine -Confirm:$false
+            }
             [hashtable] $invoke = @{
                 Session = $session
                 ScriptBlock = $guest
@@ -186,8 +191,8 @@ function Get-LabFleetFinding {
 function New-LabMachine {
     <#
     .SYNOPSIS
-    Creates or starts one lab VM over its Os's base image, a VHDX as it is:
-    a prepared Windows image, or AlmaLinux's own Hyper-V image.
+    Creates or starts one lab VM, installing from its Os's ISO with the
+    answer medium generated for it.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -196,11 +201,19 @@ function New-LabMachine {
         [hashtable] $Lab,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $Machine
+        [hashtable] $Machine,
+
+        [AllowNull()]
+        [securestring] $AdministratorPassword
     )
 
-    [string] $image = $Lab.Images[$Machine.Os].Path
-    Set-LabVirtualMachine -Lab $Lab -Machine $Machine -BaseImage $image -Confirm:$false
+    [hashtable] $answer = @{
+        Lab = $Lab
+        Machine = $Machine
+        AdministratorPassword = $AdministratorPassword
+    }
+    [hashtable] $medium = Get-LabAnswerMedium @answer
+    Set-LabVirtualMachine -Lab $Lab -Machine $Machine -Medium $medium -Confirm:$false
 }
 
 function Read-LabCredential {
@@ -253,9 +266,16 @@ try {
         'Host' {
             if ($mutate) {
                 Assert-LabMedia -Lab $lab
+                [hashtable] $windows = (Read-LabCredential -Lab $lab).Windows
+                [pscredential] $administrator = $windows.LocalAdministrator
                 Set-LabNetwork -Lab $lab -Confirm:$false
                 foreach ($machine in @($lab.Machines | Where-Object Family -eq 'Windows')) {
-                    New-LabMachine -Lab $lab -Machine $machine
+                    [hashtable] $create = @{
+                        Lab = $lab
+                        Machine = $machine
+                        AdministratorPassword = $administrator.Password
+                    }
+                    New-LabMachine @create
                 }
             }
             @(Get-LabHostFinding -Lab $lab)

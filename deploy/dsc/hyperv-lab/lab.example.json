@@ -14,11 +14,19 @@
     "DnsForwarders": ["1.1.1.1", "9.9.9.9"]
   },
   "Images": {
-    "WindowsServer2025": {"Path": "D:\\Downloads\\OS\\Images\\Microsoft\\WindowsServer2025.vhdx"},
-    "Windows11": {"Path": "D:\\Downloads\\OS\\Images\\Microsoft\\Windows11-26H2.vhdx"},
+    "WindowsServer2025": {
+      "Path": "D:\\Downloads\\OS\\Images\\Microsoft\\WindowsServer2025-Eval-26100.1742-en-us.iso",
+      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256",
+      "Edition": "Windows Server 2025 SERVERDATACENTER"
+    },
+    "Windows11": {
+      "Path": "D:\\Downloads\\OS\\Images\\Microsoft\\Windows11-Enterprise-Eval-26H2-26300.9457-en-us.iso",
+      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256",
+      "Edition": "Windows 11 Enterprise Evaluation"
+    },
     "AlmaLinux10": {
-      "Path": "D:\\Downloads\\OS\\Images\\AlmaLinux\\AlmaLinux-10.2.20260914-hyperv.vhdx",
-      "Sha256": "REPLACE_WITH_VERIFIED_IMAGE_SHA256"
+      "Path": "D:\\Downloads\\OS\\Images\\AlmaLinux\\AlmaLinux-10.2-x86_64-dvd.iso",
+      "Sha256": "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
     }
   },
   "Linux": {
@@ -51,24 +59,24 @@
   },
   "Machines": [
     {"Name": "XMIP-DC01", "Os": "WindowsServer2025", "Role": "DomainController",
-      "Address": "10.77.0.10", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.10", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-FS01", "Os": "WindowsServer2025", "Role": "FileServer",
-      "Address": "10.77.0.20", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.20", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-DEV01", "Os": "Windows11", "Role": "Developer",
-      "Address": "10.77.0.30", "MemoryGB": 12, "Cpu": 4},
+      "Address": "10.77.0.30", "MemoryGB": 12, "Cpu": 4, "DiskGB": 128},
     {"Name": "XMIP-DB01", "Os": "AlmaLinux10", "Role": "PostgreSql",
-      "Address": "10.77.0.41", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.41", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-DB02", "Os": "AlmaLinux10", "Role": "PostgreSql", "StandbyOf": "XMIP-DB01",
-      "Address": "10.77.0.42", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.42", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-APP01", "Os": "WindowsServer2025", "Role": "Xmip",
-      "Address": "10.77.0.51", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.51", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-APP02", "Os": "WindowsServer2025", "Role": "Xmip",
-      "Address": "10.77.0.52", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.52", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-APP03", "Os": "WindowsServer2025", "Role": "Xmip",
-      "Address": "10.77.0.53", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.53", "MemoryGB": 4, "Cpu": 2, "DiskGB": 64},
     {"Name": "XMIP-IN01", "Os": "AlmaLinux10", "Role": "Xmip",
-      "Address": "10.77.0.61", "MemoryGB": 4, "Cpu": 2},
+      "Address": "10.77.0.61", "MemoryGB": 4, "Cpu": 2, "DiskGB": 32},
     {"Name": "XMIP-OUT01", "Os": "AlmaLinux10", "Role": "Xmip",
-      "Address": "10.77.0.71", "MemoryGB": 4, "Cpu": 2}
+      "Address": "10.77.0.71", "MemoryGB": 4, "Cpu": 2, "DiskGB": 32}
   ]
 }

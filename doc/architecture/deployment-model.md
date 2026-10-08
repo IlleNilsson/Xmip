@@ -572,10 +572,13 @@ as `xmip-service` does.
 `deploy/dsc/hyperv-lab` sets up ten Hyper-V machines with DSC v3 — a domain,
 a file server, a developer machine, a PostgreSQL primary and its streaming
 standby, and five Xmip nodes, three on Windows Server 2025 declaring
-processing and two on AlmaLinux 10 declaring receiving and sending. The
-Windows machines are configured through PowerShell Direct; the AlmaLinux
-machines start from AlmaLinux's own Hyper-V image with a cloud-init seed and
-are configured by DSC v3 on the guest, over SSH. Each Xmip node is placed and
+processing and two on AlmaLinux 10 declaring receiving and sending. Every
+machine is installed unattended from its operating system's ISO, with a
+generated `autounattend.xml` or kickstart, each written by one function so
+that the lab's Ansible version, which the owner asked for beside DSC v3 on
+2026-10-08 and which is not built, can take the same answers. The Windows
+machines are then configured through PowerShell Direct, the AlmaLinux
+machines by DSC v3 on the guest, over SSH. Each Xmip node is placed and
 sliced as above, from the lab cluster's `xmip.toml`, which alone says its
 roles; each PostgreSQL machine is set up as `deploy/database/postgresql`
 tells IT to, the lab playing IT's part for replication (section 9). Its

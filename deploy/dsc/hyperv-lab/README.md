@@ -26,24 +26,53 @@ example's, `lab.example.json`.
 
 ## What each machine is given
 
-**The Windows machines** start from prepared Windows VHDX images, each a
-differencing disk over its image, and are configured through PowerShell
-Direct: name, static address, the domain (the Windows Server 2025 machines
-and XMIP-DEV01 are domain members), then their role.
+**Every machine is installed from its operating system's ISO**, unattended,
+onto a new disk of its own, `DiskGB` in `lab.json`. Its VM has the disk and
+two DVD drives: the ISO, and a small answer medium the lab generates for the
+machine, an ISO image written with the image mastering API every Windows host
+has, so no tool is installed for it. The disk comes first in the boot order.
+While it is empty the firmware moves on to the ISO, which installs Windows or
+AlmaLinux onto it; every later boot starts from the disk, so nothing installs
+twice. Every machine has a static MAC made from its address and Secure Boot
+on, with its operating system's template: `MicrosoftWindows` for Windows,
+`MicrosoftUEFICertificateAuthority` for AlmaLinux; Windows 11 also gets a
+virtual TPM. Once a machine's guest answers, PowerShell Direct for Windows
+and SSH for AlmaLinux, the lab ejects both media and deletes the answer
+medium; until then `test` reports the machine as installing from its ISO.
 
-**The AlmaLinux machines** start from AlmaLinux's own Hyper-V image, the
-VHDX inside its Vagrant box for Hyper-V, a differencing disk each, as the
-Windows machines do. Each gets a cloud-init NoCloud seed disk, a small FAT32
-VHDX labelled `CIDATA`, holding its host name, the lab's SSH key for the
-account `xmiplab`, which has no password, and its static address with the
-domain controller as its DNS server: a NetworkManager profile matched to the
-static MAC the lab gives its adapter, since the image turns cloud-init's own
-network step off. The image's `vagrant` account, whose key is public, is
-removed at first boot. From then on the host reaches it
-over SSH only: it copies the guest's payload to `/opt/xmip-lab`, installs
+**The Windows machines'** answer medium holds `autounattend.xml`, which
+Windows Setup reads from the root of a removable medium. It partitions the
+disk for UEFI, installs the image `lab.json` names as the Os's `Edition`, sets
+the computer name, enables the built-in Administrator with the lab's password,
+and skips the out-of-box experience. Windows keeps a password in an answer
+file in an encoding, Base64, not in plain text; that keeps it from a glance,
+not from a reader, which is why the medium is deleted once the guest answers.
+A Windows ISO boots only after *Press any key to boot from CD or DVD*, and on
+Hyper-V nobody is there to press one, so for the first twenty seconds after
+the lab starts a machine still installing it presses Space through Hyper-V's
+virtual keyboard (`Msvm_Keyboard`), as Packer does. That leaves the ISO as
+Microsoft published it, which its hash says; rebuilding it with the
+no-prompt boot file instead would take a tool the host does not have and a
+copy of every ISO. From then on the machines are configured through
+PowerShell Direct: static address, the domain (the Windows Server 2025
+machines and XMIP-DEV01 are domain members), then their role.
+
+**The AlmaLinux machines'** answer medium is labelled `OEMDRV` and holds
+`ks.cfg`, a kickstart, which AlmaLinux's installer reads from a volume of that
+label without being told to. The DVD's boot menu starts its default entry,
+which checks the DVD first, after its sixty seconds; the kickstart installs
+from the DVD's own repositories, with no network: the host name, the static
+address on the adapter with the static MAC, the domain controller as its DNS
+server, the account `xmiplab` with the lab's SSH key, no password and sudo
+without one, root locked, sshd and firewalld on. From then on the host reaches
+it over SSH only: it copies the guest's payload to `/opt/xmip-lab`, installs
 PowerShell and DSC v3 there from the RPMs you supply, and runs the guest's
 own DSC document, `linux/linux.dsc.yaml`, whose resource
 `Xmip.Lab/LinuxGuest` is `linux/LabLinuxGuest.ps1`.
+
+The answers are each written by one function, `Get-LabWindowsAnswer` and
+`Get-LabKickstart` in `LabAnswer.ps1`, and are text and nothing else, so
+another desired-state technology installing the same machines can take them.
 
 The AlmaLinux machines are not domain members; the domain controller holds a
 DNS record for each, so every machine reaches them by name.
@@ -81,33 +110,42 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
 winget install --id Microsoft.DSC --exact
 ```
 
-**Media.** The prepared Windows VHDX images (the enabled built-in
-Administrator in both; App Installer registered on Windows 11), the
-PowerShell MSI for XMIP-DEV01, and for the AlmaLinux machines:
+**Media.** The three ISOs, each in `D:\Downloads\OS\Images\<publisher>`, the
+PowerShell MSI for XMIP-DEV01, and the PowerShell and DSC RPMs for the
+AlmaLinux machines:
 
 ```powershell
-[string] $images = 'D:\Downloads\OS\Images\AlmaLinux'
-[string] $version = (Invoke-RestMethod -Uri 'https://vagrantcloud.com/api/v2/box/almalinux/10').current_version.version
-[string] $box = "$images\AlmaLinux-$version-hyperv.box"
-New-Item -ItemType Directory -Force -Path $images
-Invoke-WebRequest -Uri "https://vagrantcloud.com/almalinux/boxes/10/versions/$version/providers/hyperv/amd64/vagrant.box" -OutFile $box
-tar -xf $box -C $images 'Virtual Hard Disks/almalinux.vhdx'
-Move-Item -LiteralPath "$images\Virtual Hard Disks\almalinux.vhdx" -Destination "$images\AlmaLinux-$version-hyperv.vhdx"
+[string] $images = 'D:\Downloads\OS\Images'
+New-Item -ItemType Directory -Force -Path "$images\Microsoft", "$images\AlmaLinux", 'D:\Installers'
+Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2293312&clcid=0x409&culture=en-us&country=us' -OutFile "$images\Microsoft\WindowsServer2025-Eval-26100.1742-en-us.iso"
+Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?LinkId=2382600&clcid=0x409&culture=en-us&country=us' -OutFile "$images\Microsoft\Windows11-Enterprise-Eval-26H2-26300.9457-en-us.iso"
+[string] $alma = 'https://repo.almalinux.org/almalinux/10/isos/x86_64'
+Invoke-WebRequest -Uri "$alma/AlmaLinux-10.2-x86_64-dvd.iso" -OutFile "$images\AlmaLinux\AlmaLinux-10.2-x86_64-dvd.iso"
+Invoke-WebRequest -Uri "$alma/CHECKSUM" -OutFile "$images\AlmaLinux\CHECKSUM"
 [string] $github = 'https://github.com/PowerShell'
 Invoke-WebRequest -Uri "$github/PowerShell/releases/download/v7.6.5/powershell-7.6.5-1.rh.x86_64.rpm" -OutFile 'D:\Installers\powershell-7.6.5-1.rh.x86_64.rpm'
 Invoke-WebRequest -Uri "$github/DSC/releases/download/v3.2.3/dsc-3.2.3-1.x86_64.rpm" -OutFile 'D:\Installers\dsc-3.2.3-1.x86_64.rpm'
-Get-FileHash -Algorithm SHA256 -Path $box, "$images\*.vhdx", 'D:\Installers\*.rpm', 'D:\Installers\*.msi'
+Get-FileHash -Algorithm SHA256 -Path "$images\Microsoft\*.iso", "$images\AlmaLinux\*.iso", 'D:\Installers\*.rpm', 'D:\Installers\*.msi'
 ```
 
-Compare each hash with its publisher's — the box with the `checksum` the
-same `vagrantcloud.com` API gives its `hyperv` provider, the RPMs with their
-GitHub release pages — and copy the example to where the lab reads it,
-writing in the verified hashes, the VHDX's as the image's:
+Microsoft's links name no build; name each Windows ISO for the build it
+holds if it is another. Compare each hash with its publisher's — the
+AlmaLinux ISO with its line in `CHECKSUM`, the Windows ISOs with the SHA256
+Microsoft's Evaluation Center lists beside each download where it lists one,
+the RPMs with their GitHub release pages — and copy the example to where the
+lab reads it, writing in the verified hashes:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path 'D:\Repos\Xmip\.local-work\hyperv-lab'
 Copy-Item -LiteralPath 'D:\Repos\Xmip\deploy\dsc\hyperv-lab\lab.example.json' -Destination 'D:\Repos\Xmip\.local-work\hyperv-lab\lab.json'
 ```
+
+Each Windows image's `Edition` is the `NAME` of the image in its ISO's
+`sources\install.wim`, which Setup matches, not the longer display name. On
+the Windows Server 2025 evaluation ISO they are `Windows Server 2025
+SERVERDATACENTER` (Datacenter with the Desktop Experience, the example's),
+`SERVERDATACENTERCORE`, `SERVERSTANDARD` and `SERVERSTANDARDCORE`; the Windows
+11 evaluation ISO holds one, `Windows 11 Enterprise Evaluation`.
 
 **The program.** Any server site whose roles cover receiving, processing and
 sending builds it; `hospital-interface` declares `executing`, their sum.
@@ -156,14 +194,17 @@ dsc config test --file 'D:\Repos\Xmip\deploy\dsc\hyperv-lab\hyperv-lab.dsc.yaml'
 dsc config set --file 'D:\Repos\Xmip\deploy\dsc\hyperv-lab\hyperv-lab.dsc.yaml'
 ```
 
-Each resource answers with its `Findings`. `set` stops a machine at a reboot
-it starts — a rename, a domain join, the domain controller's promotion — and
-the machines after it wait for it, so run `set` again until `test` reports no
-finding. The three resources run in order: `Xmip.Lab/HyperVHost` (the switch,
-NAT and the Windows VMs), `Xmip.Lab/WindowsGuests`, then
-`Xmip.Lab/LinuxGuests` (the base image, the seed, the VMs, then DSC on each
-guest), since the AlmaLinux machines resolve names through the domain
-controller.
+Each resource answers with its `Findings`. `set` stops a machine where it
+must wait — its installation from the ISO, which runs on its own once the VM
+starts, or a reboot it starts, a domain join or the domain controller's
+promotion — and the machines after it wait for it, so run `set` again until
+`test` reports no finding. The three resources run in order:
+`Xmip.Lab/HyperVHost` (the switch, NAT and the Windows VMs, each created and
+started installing), `Xmip.Lab/WindowsGuests` (each guest's media ejected
+once it answers, then its configuration), then `Xmip.Lab/LinuxGuests` (the
+AlmaLinux VMs, created and started installing, then, once each answers over
+SSH, its media ejected and DSC on the guest), since the AlmaLinux machines
+resolve names through the domain controller.
 
 A guest's own state, from the host:
 
@@ -178,11 +219,13 @@ ssh -i 'D:\Repos\Xmip\.local-work\hyperv-lab\ssh\xmip-lab' xmiplab@10.77.0.42 's
 | `hyperv-lab.dsc.yaml` | the lab's DSC document: the three resources |
 | `xmip-lab.dsc.manifests.json` | the three resources' manifests |
 | `LabResource.ps1` | what DSC runs for each: Get, Test or Set, for a scope |
-| `LabHost.ps1` | `lab.json` read and checked; the switch, NAT and VMs |
+| `LabHost.ps1` | `lab.json` read and checked; the switch and NAT |
+| `LabMachine.ps1` | a VM: created, installed from its ISO, its findings, its media ejected |
+| `LabAnswer.ps1` | the install answers: `autounattend.xml` and the kickstart |
 | `LabMedia.ps1` | the media checked before Set changes anything |
 | `LabGuest.ps1` | a Windows guest, inside it, through PowerShell Direct |
 | `LabDevelopment.ps1` | XMIP-DEV01's prerequisites, from `prerequisite.toml` |
-| `LabLinux.ps1` | an AlmaLinux guest on the host: base image, seed, VM, its parameters |
+| `LabLinux.ps1` | an AlmaLinux guest on the host: its account, key and parameters |
 | `LabLinuxFleet.ps1` | the AlmaLinux guests over SSH: payload, DSC on the guest |
 | `LabXmipNode.ps1` | an Xmip node inside its guest, Windows or Linux |
 | `linux/` | the AlmaLinux guest's DSC document, resource and PostgreSQL setup |
@@ -193,5 +236,6 @@ ssh -i 'D:\Repos\Xmip\.local-work\hyperv-lab\ssh\xmip-lab' xmiplab@10.77.0.42 's
 
 `test/HyperVLab.Test.ps1` holds what can be held without Hyper-V: the
 configuration and its refusals, the cluster file against the machines, the
-seed, the guests' parameters and payloads, VM creation with every Hyper-V
-command a stub, the certificates, and the manifests against the scripts.
+install answers and the answer medium, the guests' parameters and payloads,
+VM creation, findings and ejection with every Hyper-V command a stub, the
+certificates, and the manifests against the scripts.

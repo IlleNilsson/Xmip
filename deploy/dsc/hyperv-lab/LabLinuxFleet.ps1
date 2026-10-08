@@ -270,12 +270,13 @@ function Get-LabLinuxFleetFinding {
             continue
         }
         if ((Invoke-LabSsh -Lab $Lab -Machine $machine -Command 'true').ExitCode -ne 0) {
-            [string] $unreachable = 'SSH unavailable; cloud-init may still be running.'
+            [string] $unreachable = 'SSH unavailable; it may still be installing from its ISO.'
             Write-Output -InputObject "$($machine.Name): $unreachable"
             continue
         }
         [hashtable] $guest = @{ Lab = $Lab; Machine = $machine; Operation = 'Test' }
         if ($Configure) {
+            Complete-LabInstallation -Lab $Lab -Machine $machine -Confirm:$false
             # The payload carries the guest's parameters; a changed lab.json
             # reaches the guest only by copying it again, so Set always does.
             Copy-LabLinuxPayload -Lab $Lab -Machine $machine

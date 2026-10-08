@@ -2,7 +2,7 @@
   "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
   "type": "Xmip.Lab/LinuxGuest",
   "version": "0.1.0",
-  "description": "One AlmaLinux guest of the Xmip Hyper-V lab: its network as cloud-init left it, and PostgreSQL or an Xmip node.",
+  "description": "One AlmaLinux guest of the Xmip Hyper-V lab: its network as its kickstart left it, and PostgreSQL or an Xmip node.",
   "tags": ["Linux", "Xmip"],
   "get": {
     "executable": "pwsh",
