@@ -1,9 +1,9 @@
 #requires -PSEdition Core
 #requires -Version 7.6.5
 # The media the lab is built from, checked before Set changes anything: the
-# prepared Windows images, AlmaLinux's Hyper-V image and the installers with
-# their verified SHA256 values, the lab's SSH key, and the files each guest is
-# given. Nothing here is fetched; every file is the operator's, on the host.
+# operating systems' ISOs and the installers with their verified SHA256
+# values, the lab's SSH key, and the files each guest is given. Nothing here
+# is fetched; every file is the operator's, on the host.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -28,6 +28,30 @@ function Assert-LabFile {
     }
 }
 
+function Assert-LabImage {
+    <#
+    .SYNOPSIS
+    The ISO of every Os one family's machines run, present and as verified.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Lab,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Windows', 'Linux')]
+        [string] $Family
+    )
+
+    foreach ($os in @($Lab.Machines | Where-Object Family -eq $Family |
+        ForEach-Object { $_.Os } | Select-Object -Unique)) {
+        [hashtable] $image = $Lab.Images[$os]
+        [string] $sha256 = if ($image.ContainsKey('Sha256')) { $image.Sha256 } else { '' }
+        Assert-LabFile -Path $image.Path -Sha256 $sha256
+    }
+}
+
 function Assert-LabMedia {
     [CmdletBinding()]
     [OutputType([void])]
@@ -36,18 +60,7 @@ function Assert-LabMedia {
         [hashtable] $Lab
     )
 
-    [string[]] $windows = @($Lab.Machines | Where-Object Family -eq 'Windows' |
-        ForEach-Object { $_.Os } | Select-Object -Unique)
-    foreach ($os in $windows) {
-        [string] $image = $Lab.Images[$os].Path
-        if (-not (Test-Path -LiteralPath $image -PathType Leaf)) {
-            throw "Prepared Windows VHDX image is missing: $image"
-        }
-        [object] $vhd = Get-VHD -Path $image
-        if ($vhd.Attached -or $vhd.VhdType -eq 'Differencing' -or $vhd.VhdFormat -ne 'VHDX') {
-            throw 'Base images must be detached, standalone VHDX files.'
-        }
-    }
+    Assert-LabImage -Lab $Lab -Family Windows
     Assert-LabFile -Path $Lab.Development.PowerShellMsi -Sha256 $Lab.Development.Sha256
     if (-not (Test-Path -LiteralPath $Lab.Xmip.Cluster -PathType Leaf)) {
         throw "The lab cluster's xmip.toml is missing: $($Lab.Xmip.Cluster)"
@@ -69,10 +82,7 @@ function Assert-LabLinuxMedia {
         [hashtable] $Lab
     )
 
-    foreach ($os in @($Lab.Machines | Where-Object Family -eq 'Linux' |
-        ForEach-Object { $_.Os } | Select-Object -Unique)) {
-        Assert-LabFile -Path $Lab.Images[$os].Path -Sha256 $Lab.Images[$os].Sha256
-    }
+    Assert-LabImage -Lab $Lab -Family Linux
     Assert-LabFile -Path $Lab.Linux.PowerShell.Path -Sha256 $Lab.Linux.PowerShell.Sha256
     Assert-LabFile -Path $Lab.Linux.Dsc.Path -Sha256 $Lab.Linux.Dsc.Sha256
     Get-LabPublicKey -Lab $Lab | Out-Null

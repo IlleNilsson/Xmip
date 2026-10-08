@@ -6,7 +6,7 @@ DSC v3 command resource for one AlmaLinux guest of the Xmip Hyper-V lab.
 .DESCRIPTION
 DSC hands the desired state on standard input, {"Machine": {...}}, as the host
 composed it (Get-LabLinuxGuestParameter). Get and Test report real findings;
-Set changes the guest and reports what is left. The network is cloud-init's
+Set changes the guest and reports what is left. The network is the kickstart's
 and is only checked here. A secret is read from /run/xmip-lab/secret.json,
 which the host writes for one Set run and removes after it.
 #>
@@ -67,7 +67,7 @@ function Get-LabGuestFinding {
         Write-Output -InputObject 'AlmaLinux 10 is required.'
     }
     if ((& hostname -s) -ne $Machine.HostName) {
-        Write-Output -InputObject 'Host name differs from the seed.'
+        Write-Output -InputObject 'Host name differs from the kickstart.'
     }
     [string] $addresses = (& ip -4 -o address show) -join "`n"
     if ($addresses -notmatch [regex]::Escape(" $($Machine.Address)/$($Machine.PrefixLength) ")) {

@@ -5,7 +5,7 @@
 Uses the estate's prerequisite manifest for the lab development machine.
 .DESCRIPTION
 The host stages the current Xmip tooling and prerequisite manifest here. Set
-requires internet access and a working winget installation in the base image.
+requires internet access and winget, which LabGuest.ps1 registers for Administrator.
 Get reports the real prerequisite state; no completion marker substitutes for it.
 #>
 [CmdletBinding()]
@@ -28,7 +28,7 @@ Import-Module -Name (Join-Path -Path $root -ChildPath 'Xmip/Xmip.psd1') -Force
 }
 if ($Operation -eq 'Set') {
     if ($null -eq (Get-Command -Name winget -ErrorAction SilentlyContinue)) {
-        throw 'Install and register App Installer/winget for Administrator in the base image.'
+        throw 'winget is not registered for Administrator; LabGuest.ps1 registers it on Set.'
     }
     Install-XmipPrerequisite @prerequisite -Install | Out-Null
 }

@@ -193,7 +193,7 @@ function Set-LabGuestNetwork {
 
     [object[]] $nics = @(Get-NetAdapter | Where-Object Status -eq 'Up')
     if ($nics.Count -ne 1) {
-        throw 'Prepared guests must have exactly one active network adapter.'
+        throw 'A lab guest must have exactly one active network adapter.'
     }
     [int] $index = $nics[0].ifIndex
     Set-NetIPInterface -InterfaceIndex $index -AddressFamily IPv4 -Dhcp Disabled
@@ -326,6 +326,12 @@ function Set-LabGuestRole {
                 if ($process.ExitCode -notin @(0, 3010)) {
                     throw "PowerShell MSI failed: $($process.ExitCode)"
                 }
+            }
+            # Installed from the ISO, Windows provisions App Installer, which
+            # brings winget, but registers it only for a user who has logged on.
+            if ($null -eq (Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+                [string] $appInstaller = 'Microsoft.DesktopAppInstaller_8wekyb3d8bbwe'
+                Add-AppxPackage -RegisterByFamilyName -MainPackage $appInstaller
             }
             [string[]] $installTools = @('-NoProfile', '-File',
                 'C:\ProgramData\XmipLab\LabDevelopment.ps1', '-Operation', 'Set')

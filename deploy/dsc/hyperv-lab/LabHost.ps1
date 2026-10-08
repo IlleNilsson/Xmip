@@ -5,20 +5,34 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# The operating systems a machine may run, each with its family and the roles
-# it may carry. A machine's family comes from its Os, never from its name.
+# The operating systems a machine may run: each one's family, the roles it may
+# carry, the least memory and disk its installer accepts, its Secure Boot
+# template, and whether it needs a virtual TPM. A machine's family comes from
+# its Os, never from its name.
 $script:LabOs = @{
     WindowsServer2025 = @{
         Family = 'Windows'
         Roles = @('DomainController', 'FileServer', 'Xmip')
+        MinimumMemoryGB = 2
+        MinimumDiskGB = 32
+        SecureBootTemplate = 'MicrosoftWindows'
+        Tpm = $false
     }
     Windows11 = @{
         Family = 'Windows'
         Roles = @('Developer')
+        MinimumMemoryGB = 4
+        MinimumDiskGB = 64
+        SecureBootTemplate = 'MicrosoftWindows'
+        Tpm = $true
     }
     AlmaLinux10 = @{
         Family = 'Linux'
         Roles = @('PostgreSql', 'Xmip')
+        MinimumMemoryGB = 2
+        MinimumDiskGB = 20
+        SecureBootTemplate = 'MicrosoftUEFICertificateAuthority'
+        Tpm = $false
     }
 }
 
@@ -57,6 +71,15 @@ function Read-LabConfiguration {
         throw 'Exactly one Windows domain controller is required.'
     }
     Assert-LabAddress -Lab $lab -Address $addresses
+    foreach ($os in @($lab.Images.Keys)) {
+        if (-not $script:LabOs.ContainsKey($os) -or $script:LabOs[$os].Family -ne 'Windows') {
+            continue
+        }
+        if (-not $lab.Images[$os].ContainsKey('Edition') -or
+            [string]::IsNullOrWhiteSpace($lab.Images[$os].Edition)) {
+            throw "$os needs its Edition: the name of the image on its ISO to install."
+        }
+    }
     [string[]] $paths = @($lab.Root, $lab.CredentialPath, $lab.SshKeyPath) +
         @($lab.Images.Values | ForEach-Object { $_.Path })
     foreach ($path in $paths) {
@@ -78,8 +101,7 @@ function Assert-LabMachine {
         [hashtable] $Machine
     )
 
-    if ($Machine.Name -notmatch '^[A-Za-z][A-Za-z0-9-]{0,14}$' -or
-        $Machine.MemoryGB -lt 2 -or $Machine.Cpu -lt 1) {
+    if ($Machine.Name -notmatch '^[A-Za-z][A-Za-z0-9-]{0,14}$' -or $Machine.Cpu -lt 1) {
         throw "Invalid machine name or size: $($Machine.Name)"
     }
     if (-not $script:LabOs.ContainsKey([string] $Machine.Os) -or
@@ -87,6 +109,11 @@ function Assert-LabMachine {
         throw "$($Machine.Name): Os must be one of the lab's images."
     }
     [hashtable] $os = $script:LabOs[$Machine.Os]
+    if ($Machine.MemoryGB -lt $os.MinimumMemoryGB -or -not $Machine.ContainsKey('DiskGB') -or
+        $Machine.DiskGB -lt $os.MinimumDiskGB) {
+        [string] $least = "$($os.MinimumMemoryGB) GB of memory and $($os.MinimumDiskGB) GB of disk"
+        throw "$($Machine.Name): $($Machine.Os) installs with $least at least."
+    }
     if ($Machine.Role -notin $os.Roles) {
         throw "$($Machine.Name): $($Machine.Os) carries only $($os.Roles -join ', ')."
     }
@@ -132,7 +159,7 @@ function Get-LabMacAddress {
     <#
     .SYNOPSIS
     The static MAC a lab guest is given: Hyper-V's prefix 00-15-5D and the last
-    three octets of its address, so cloud-init can match its adapter by MAC.
+    three octets of its address, so a kickstart can match its adapter by MAC.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -143,52 +170,6 @@ function Get-LabMacAddress {
 
     [byte[]] $bytes = ([ipaddress]::Parse($Address)).GetAddressBytes()
     return '00155D{0:X2}{1:X2}{2:X2}' -f $bytes[1], $bytes[2], $bytes[3]
-}
-
-function Get-LabVirtualMachineFinding {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Lab,
-
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Machine
-    )
-
-    [object] $vm = Get-VM -Name $Machine.Name -ErrorAction SilentlyContinue
-    if ($null -eq $vm) {
-        return "$($Machine.Name): VM is missing."
-    }
-    [object[]] $nics = @(Get-VMNetworkAdapter -VMName $Machine.Name)
-    [object] $memory = Get-VMMemory -VMName $Machine.Name
-    [string[]] $disks = @(Get-VMHardDiskDrive -VMName $Machine.Name | ForEach-Object { $_.Path })
-    [string] $directory = Join-Path -Path $Lab.Root -ChildPath $Machine.Name
-    [string[]] $expected = @(Join-Path -Path $directory -ChildPath 'os.vhdx')
-    if ($Machine.Family -eq 'Linux') {
-        $expected += Join-Path -Path $directory -ChildPath 'seed.vhdx'
-    }
-    if ($vm.Notes -ne $Lab.LabId -or $vm.Generation -ne 2 -or
-        $vm.ProcessorCount -ne $Machine.Cpu -or
-        $memory.Startup -ne ($Machine.MemoryGB * 1GB) -or
-        $memory.DynamicMemoryEnabled -or $vm.State -ne 'Running' -or
-        $nics.Count -ne 1 -or $nics[0].SwitchName -ne $Lab.Network.SwitchName -or
-        ($disks -join '|') -ne ($expected -join '|')) {
-        Write-Output -InputObject "$($Machine.Name): VM settings differ."
-    }
-    [object] $firmware = Get-VMFirmware -VMName $Machine.Name
-    if ($firmware.SecureBoot -ne 'On') {
-        Write-Output -InputObject "$($Machine.Name): Secure Boot is disabled."
-    }
-    if ($Machine.Family -eq 'Linux' -and
-        ($firmware.SecureBootTemplate -ne 'MicrosoftUEFICertificateAuthority' -or
-        $nics[0].MacAddress -ne (Get-LabMacAddress -Address $Machine.Address))) {
-        Write-Output -InputObject "$($Machine.Name): Linux boot template or static MAC differs."
-    }
-    if ($Machine.Os -eq 'Windows11' -and
-        -not (Get-VMSecurity -VMName $Machine.Name).TpmEnabled) {
-        Write-Output -InputObject "$($Machine.Name): virtual TPM is disabled."
-    }
 }
 
 function Get-LabHostFinding {
@@ -281,70 +262,5 @@ function Set-LabNetwork {
         }
         New-NetNat -Name $Lab.LabId -InternalIPInterfaceAddressPrefix $Lab.Network.Prefix |
             Out-Null
-    }
-}
-
-function Set-LabVirtualMachine {
-    <#
-    .SYNOPSIS
-    Creates a lab VM on a differencing disk over its base image, or starts it.
-    .DESCRIPTION
-    A Linux machine also gets its cloud-init seed disk, a static MAC and the
-    UEFI certificate authority's Secure Boot template; a Windows 11 machine a
-    virtual TPM. An existing VM's hardware drift is reported, never repaired.
-    #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Lab,
-
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Machine,
-
-        [Parameter(Mandatory = $true)]
-        [string] $BaseImage
-    )
-
-    [object] $vm = Get-VM -Name $Machine.Name -ErrorAction SilentlyContinue
-    if ($null -ne $vm -and $vm.Notes -ne $Lab.LabId) {
-        throw "REFUSED: $($Machine.Name) is not owned by this lab."
-    }
-    if (-not $PSCmdlet.ShouldProcess($Machine.Name, 'Create or start lab VM')) {
-        return
-    }
-    if ($null -eq $vm) {
-        [string] $directory = Join-Path -Path $Lab.Root -ChildPath $Machine.Name
-        [string] $disk = Join-Path -Path $directory -ChildPath 'os.vhdx'
-        if (Test-Path -LiteralPath $directory) {
-            throw "REFUSED: unregistered VM directory already exists: $directory"
-        }
-        New-Item -Path $directory -ItemType Directory | Out-Null
-        New-VHD -Path $disk -ParentPath $BaseImage -Differencing | Out-Null
-        [hashtable] $create = @{
-            Name = $Machine.Name
-            Generation = 2
-            VHDPath = $disk
-            Path = $directory
-            MemoryStartupBytes = $Machine.MemoryGB * 1GB
-            SwitchName = $Lab.Network.SwitchName
-        }
-        New-VM @create | Out-Null
-        Set-VM -Name $Machine.Name -Notes $Lab.LabId -AutomaticCheckpointsEnabled $false
-        Set-VMProcessor -VMName $Machine.Name -Count $Machine.Cpu
-        Set-VMMemory -VMName $Machine.Name -DynamicMemoryEnabled $false
-        if ($Machine.Family -eq 'Linux') {
-            Set-LabLinuxHardware -Lab $Lab -Machine $Machine -Directory $directory
-        }
-        else {
-            Set-VMFirmware -VMName $Machine.Name -EnableSecureBoot On
-        }
-        if ($Machine.Os -eq 'Windows11') {
-            Set-VMKeyProtector -VMName $Machine.Name -NewLocalKeyProtector
-            Enable-VMTPM -VMName $Machine.Name
-        }
-    }
-    if ((Get-VM -Name $Machine.Name).State -eq 'Off') {
-        Start-VM -Name $Machine.Name | Out-Null
     }
 }

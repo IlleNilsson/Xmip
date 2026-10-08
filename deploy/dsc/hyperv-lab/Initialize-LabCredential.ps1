@@ -5,14 +5,15 @@
 Creates a host-user-bound DPAPI credential bundle and the SSH key for this
 disposable lab.
 .DESCRIPTION
-The local account must exist in both prepared Windows images. Its password
-becomes the new domain's Administrator password. Supply a distinct DSRM
+The account is the built-in Administrator, which every Windows machine's
+generated answer file enables with this password; it becomes the new
+domain's Administrator password. Supply a distinct DSRM
 password, the password of xmip_storage, the login Xmip Storage connects to
 PostgreSQL as, and of xmip_replication, the login the standby streams with;
 each database password has 14 or more characters. Run DSC as the same Windows
 user on the same host. No password enters DSC JSON.
 
-The SSH key, ed25519, is what cloud-init places on every Linux guest and the
+The SSH key, ed25519, is what the kickstart places on every Linux guest and the
 only way into them; it is made once, beside the bundle, and kept.
 .PARAMETER Path
 The credential bundle, lab.json's CredentialPath.
@@ -57,7 +58,7 @@ if (-not $IsWindows) {
     throw 'DPAPI lab credentials require a Windows Hyper-V host.'
 }
 if ($LocalAdministrator.UserName -ne 'Administrator') {
-    throw 'Use the enabled built-in Administrator account in both base images.'
+    throw 'Use the built-in Administrator account; the answer files enable it.'
 }
 foreach ($password in @($StoragePassword, $ReplicationPassword)) {
     if ($password.Length -lt 14) {
