@@ -4,7 +4,7 @@
 - Accepted: 2026-10-09, the owner, in the words quoted below
 - Date: 2026-10-09
 - Related: ADR-0062 (every Xmip tool audits), ADR-0063 (data at rest),
-  `runtime-model.md` sections 3 and 14 (Audit and Retention)
+  `runtime-model.md` section 16 (Audit, retention and archiving)
 
 ## In brief
 
