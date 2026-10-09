@@ -1,0 +1,150 @@
+# The machines of one environment on one Hyper-V host: the network once, and
+# machine.dsc.yaml once for each machine with its own values. One instance
+# per machine, written out, is how DSC v3 wants a document: copy loops are
+# deprecated (https://github.com/PowerShell/DSC/issues/1429). The values
+# every machine shares are environment.example.parameters.yaml's. The role
+# above each machine is the environment templates' business, not this one's.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+metadata:
+  Microsoft.DSC:
+    securityContext: elevated
+parameters:
+  common:
+    type: object
+    description: >-
+      What every machine shares: template, environment, root, credentialPath,
+      sshPublicKeyPath, linuxAccount and domainName (machine.dsc.yaml).
+  network:
+    type: object
+    description: The network, as network.dsc.yaml takes it.
+  images:
+    type: object
+    description: The ISOs, each as machine.dsc.yaml's image parameter takes it.
+resources:
+  - name: Network
+    type: Microsoft.DSC/Include
+    properties:
+      configurationFile: "[path(parameters('common').template, 'network.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', createObject('environment',
+        parameters('common').environment, 'network', parameters('network'))))]
+  # DomainController
+  - name: XMIP DC01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').WindowsServer2025, 'name', 'XMIP-DC01', 'address', '10.77.0.10',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # FileServer
+  - name: XMIP FS01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').WindowsServer2025, 'name', 'XMIP-FS01', 'address', '10.77.0.20',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # Developer
+  - name: XMIP DEV01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').Windows11, 'name', 'XMIP-DEV01', 'address', '10.77.0.30',
+        'memoryGB', 12, 'cpu', 4, 'diskGB', 128))))]
+  # PostgreSql
+  - name: XMIP DB01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').AlmaLinux10, 'name', 'XMIP-DB01', 'address', '10.77.0.41',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # PostgreSql, standby of XMIP-DB01
+  - name: XMIP DB02
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').AlmaLinux10, 'name', 'XMIP-DB02', 'address', '10.77.0.42',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # Xmip
+  - name: XMIP APP01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').WindowsServer2025, 'name', 'XMIP-APP01', 'address', '10.77.0.51',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # Xmip
+  - name: XMIP APP02
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').WindowsServer2025, 'name', 'XMIP-APP02', 'address', '10.77.0.52',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # Xmip
+  - name: XMIP APP03
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').WindowsServer2025, 'name', 'XMIP-APP03', 'address', '10.77.0.53',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 64))))]
+  # Xmip
+  - name: XMIP IN01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').AlmaLinux10, 'name', 'XMIP-IN01', 'address', '10.77.0.61',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 32))))]
+  # Xmip
+  - name: XMIP OUT01
+    type: Microsoft.DSC/Include
+    dependsOn:
+      - "[resourceId('Microsoft.DSC/Include', 'Network')]"
+    properties:
+      configurationFile: "[path(parameters('common').template, 'machine.dsc.yaml')]"
+      parametersContent: >-
+        [string(createObject('parameters', union(parameters('common'),
+        createObject('network', parameters('network'), 'image',
+        parameters('images').AlmaLinux10, 'name', 'XMIP-OUT01', 'address', '10.77.0.71',
+        'memoryGB', 4, 'cpu', 2, 'diskGB', 32))))]

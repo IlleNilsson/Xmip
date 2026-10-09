@@ -1,0 +1,66 @@
+# The network an environment's machines share on one Hyper-V host: an
+# internal virtual switch, the host's address on it, which is the machines'
+# gateway, and outbound NAT for that prefix. README.md says how to run it.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+metadata:
+  Microsoft.DSC:
+    securityContext: elevated
+parameters:
+  environment:
+    type: string
+    description: The environment's name; the NAT is named for it.
+  network:
+    type: object
+    description: >-
+      switchName, prefix (the network in CIDR notation), gateway (the host's
+      address on the switch), prefixLength, dnsServer and enableNat.
+resources:
+  - name: Switch
+    type: HyperVDsc/VMSwitch
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    properties:
+      Name: "[parameters('network').switchName]"
+      Type: Internal
+      Ensure: Present
+  - name: Gateway
+    type: NetworkingDsc/IPAddress
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    dependsOn:
+      - "[resourceId('HyperVDsc/VMSwitch', 'Switch')]"
+    properties:
+      InterfaceAlias: "[concat('vEthernet (', parameters('network').switchName, ')')]"
+      AddressFamily: IPv4
+      IPAddress:
+        - >-
+          [concat(parameters('network').gateway, '/',
+          string(parameters('network').prefixLength))]
+  # No DSC resource manages a NetNat, so a script does: present with the
+  # network's prefix when enableNat is true, absent when it is false.
+  - name: Nat
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    dependsOn:
+      - "[resourceId('NetworkingDsc/IPAddress', 'Gateway')]"
+    properties:
+      input:
+        name: "[parameters('environment')]"
+        prefix: "[parameters('network').prefix]"
+        enabled: "[parameters('network').enableNat]"
+      getScript: |
+        param($Nat)
+        Get-NetNat -Name $Nat.name -ErrorAction SilentlyContinue |
+            Select-Object -Property Name, InternalIPInterfaceAddressPrefix
+      testScript: |
+        param($Nat)
+        $nat = Get-NetNat -Name $Nat.name -ErrorAction SilentlyContinue
+        if (-not $Nat.enabled) {
+            return $null -eq $nat
+        }
+        return $null -ne $nat -and $nat.InternalIPInterfaceAddressPrefix -eq $Nat.prefix
+      setScript: |
+        param($Nat)
+        Remove-NetNat -Name $Nat.name -Confirm:$false -ErrorAction SilentlyContinue
+        if ($Nat.enabled) {
+            New-NetNat -Name $Nat.name -InternalIPInterfaceAddressPrefix $Nat.prefix | Out-Null
+        }
