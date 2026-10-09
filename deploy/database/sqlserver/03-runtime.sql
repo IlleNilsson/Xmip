@@ -24,18 +24,21 @@ CREATE TABLE xmip.stream_chunk (
 );
 GO
 
--- every Message, as a step wrote it, and what it is searched by.
+-- every Message, as a step wrote it, every single value of it in a column of its own.
 CREATE TABLE xmip.message (
     message binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
     created_at datetime2(7) NOT NULL,
+    previous_message binary(16) NULL,
     generation int NOT NULL,
     created_by smallint NOT NULL,
+    priority smallint NOT NULL,
+    execution_profile smallint NOT NULL,
+    durability smallint NOT NULL,
     size_bytes bigint NOT NULL,
-    previous_message_ref binary(16) NULL,
-    party_ref binary(16) NULL,
-    contract_ref binary(16) NULL,
-    stream_ref binary(16) NULL,
+    party nvarchar(400) NULL,
+    contract nvarchar(400) NULL,
+    stream binary(16) NULL,
     CONSTRAINT message_key PRIMARY KEY (message)
 );
 GO
@@ -43,28 +46,31 @@ GO
 CREATE INDEX message_created ON xmip.message (created_at);
 GO
 
-CREATE INDEX message_party ON xmip.message (party_ref, created_at);
+CREATE INDEX message_party ON xmip.message (party, created_at);
 GO
 
-CREATE INDEX message_contract ON xmip.message (contract_ref, created_at);
+CREATE INDEX message_contract ON xmip.message (contract, created_at);
 GO
 
-CREATE INDEX message_previous ON xmip.message (previous_message_ref);
+CREATE INDEX message_previous ON xmip.message (previous_message);
 GO
 
--- every Journey, as a step wrote it, and what it is searched by.
+-- every Journey, as a step wrote it, every single value of it in a column of its own.
 CREATE TABLE xmip.journey (
     journey binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
     created_at datetime2(7) NOT NULL,
     updated_at datetime2(7) NOT NULL,
     state smallint NOT NULL,
-    attempts int NOT NULL,
+    previous_journey binary(16) NULL,
+    subscription nvarchar(400) NULL,
+    cause_work_process nvarchar(400) NULL,
     depth int NOT NULL,
-    send_port_ref binary(16) NULL,
-    work_process_ref binary(16) NULL,
-    previous_journey_ref binary(16) NULL,
-    message_ref binary(16) NULL,
+    work_process nvarchar(400) NULL,
+    send_port nvarchar(400) NULL,
+    send_location int NOT NULL,
+    attempts int NOT NULL,
+    message binary(16) NULL,
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
 GO
@@ -72,13 +78,13 @@ GO
 CREATE INDEX journey_state ON xmip.journey (state, updated_at);
 GO
 
-CREATE INDEX journey_send_port ON xmip.journey (send_port_ref, state);
+CREATE INDEX journey_send_port ON xmip.journey (send_port, state);
 GO
 
-CREATE INDEX journey_previous ON xmip.journey (previous_journey_ref);
+CREATE INDEX journey_previous ON xmip.journey (previous_journey);
 GO
 
-CREATE INDEX journey_message ON xmip.journey (message_ref);
+CREATE INDEX journey_message ON xmip.journey (message);
 GO
 
 -- the Journeys a paused Subscription holds, at their place in its queue, each once.
@@ -112,9 +118,10 @@ CREATE TABLE xmip.dead_message (
     sequence bigint NOT NULL,
     message binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    stream binary(16) NOT NULL,
+    node nvarchar(400) NOT NULL,
+    receive_location nvarchar(400) NOT NULL,
     queued_at datetime2(7) NOT NULL,
-    node_ref binary(16) NOT NULL,
-    receive_location_ref binary(16) NOT NULL,
     CONSTRAINT dead_message_key PRIMARY KEY (queue, sequence),
     CONSTRAINT dead_message_unique UNIQUE (queue, message)
 );

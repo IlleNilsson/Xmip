@@ -174,17 +174,13 @@ operator state, deployment state, cluster membership — and the
 Subscriptions each Host Service writes from its TOML as it starts
 ([decided, not built](estate-map.md#shared-subscriptions)).
 
-**Proposed 2026-10-09, not decided: what the Ledger is searched by.** A
-record's body is sealed and found by a keyed hash, which leaves an operator
-nothing to search by. The proposal keeps each record's searchable facts in
-dedicated columns of its own table beside the sealed body — a Journey's
-state, Send Port, Work Process, the Journey it came from and the Message it
-holds, with when it was written; a Message's Party, contract, Stream, the
-Message it came from, generation and length; when a Journey was held and a
-Dead Message queued; an audit record's time, action, phase, severity,
-program, node, artifact, Journey, Message and execution — times, states and
-counts in the clear, every identifier and name as a keyed hash under its
-column's own key, found by equality. They are written in the record's own
+**Proposed 2026-10-09: what the Ledger is searched by.** A record's body
+is sealed and found by a keyed hash, which leaves an operator nothing to
+search by. The proposal lays out every single value of each Journey,
+Message, held Journey, Dead Message Queue entry, kept audit record and
+administration record in a column of its own table, in the clear (the
+owner, 2026-10-09: *Store it in the clear*; *All columns shall be laid
+out*); a list stays in the body. They are written in the record's own
 write, so the index never disagrees with the data, and asked through
 `XmipStorage::query`, one typed question per table (`deployment-model.md`
 section 7).
