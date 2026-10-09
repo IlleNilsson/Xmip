@@ -558,14 +558,17 @@ configuration source. A configured node has Xmip installed, both store paths
 present, config and module folders present, node TOML present, and the service
 registered and running where services are supported.
 
-Both place the cluster's `xmip.toml` on the node — the site's own, or a
-starter written from a few variables — and write the node's configuration
+Each technology has its folder under `deploy/dsc`: `ansible` and `msdsc`.
+The Ansible role `xmip_node` is written; Microsoft DSC v3's is not (its first
+document was deleted on the owner's word, 2026-10-09). Desired state places
+the cluster's `xmip.toml` on the node — the site's own, or a starter written
+from a few variables — and writes the node's configuration
 as `xmip-service --configuration <xmip.toml> --node <name> --slice` prints
 it: `xmip-core-configure`'s one slicing
 (`module/platform/configure/doc/cluster-configuration.md`), never one in
 YAML or a template. The node reads the document `xmip-core-configure` reads
 (`module/platform/configure/doc/node-configuration.md`). The estate root's
-`cargo test --test deploy` renders both, slices them and reads the slices
+`cargo test --test deploy` renders the role, slices it and reads the slice
 as `xmip-service` does.
 
 ## 9. Recovery

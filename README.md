@@ -604,12 +604,12 @@ PowerShell module and the monitors run on all three.
 | --- | --- | --- | --- |
 | PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`) or Ansible (`deploy/dsc/ansible/roles`) | the same | the same |
+| Desired state | Ansible (`deploy/dsc/ansible/roles`); Microsoft DSC v3 (`deploy/dsc/msdsc`) decided, not written | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
-The desired-state files write the node configuration `xmip-core-configure`
-reads; `cargo test --test deploy` renders both and reads them as
-`xmip-service` does. Each names the site its node is built from.
+The Ansible role writes the node configuration `xmip-core-configure` reads;
+`cargo test --test deploy` renders it and reads it as `xmip-service` does. It
+names the site its node is built from.
 
 A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
@@ -921,7 +921,8 @@ module/               the modules: foundation/ and platform/ start a node, the r
                       at module/<provider>/<domain>/<leaf>
 test/                 the estate's Pester suite; test/core/playground is the Playground
 deploy/               the sites and profiles a build is made from (site/, profile/),
-                      Ansible roles and a DSC configuration for a node
+                      and desired state per technology under dsc/: ansible/,
+                      msdsc/ (Microsoft DSC v3, not written)
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```

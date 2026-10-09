@@ -814,8 +814,6 @@ path = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml"
 path = "deploy/dsc/ansible/roles/xmip_node/tasks/main.yml"
 [[keep]]
 path = "deploy/dsc/ansible/roles/xmip_node/templates/xmip.toml.j2"
-[[keep]]
-path = "deploy/dsc/msdsc/xmip-node.dsc.yaml"
 reason = "Manifest, estate tooling, packaging and deployment. The root composes; this is what composing needs."
 
 [[remove]]

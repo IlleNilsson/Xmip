@@ -1,8 +1,8 @@
 //! Every node configuration `deploy/` writes, rendered with representative
-//! values: the cluster's `xmip.toml` the Ansible role's template and the DSC
-//! document's script write (ADR-0031, amendment 2026-10-03), sliced to the
-//! node by `xmip_configure::slice` — what both run through
-//! `xmip-service --slice`, never a slicing of their own — and read the way
+//! values: the cluster's `xmip.toml` the Ansible role's template writes
+//! (ADR-0031, amendment 2026-10-03), sliced to the node by
+//! `xmip_configure::slice` — what the role runs through
+//! `xmip-service --slice`, never a slicing of its own — and read the way
 //! `xmip-service` reads its own:
 //! `xmip_runtime::start::read`, then the execution tree against the
 //! technologies the runtime carries. The reader keeps no key it does not
@@ -26,7 +26,6 @@ use xmip_runtime::execution_tree::build_execution_tree;
 const TEMPLATE: &str = "deploy/dsc/ansible/roles/xmip_node/templates/xmip.toml.j2";
 const TASKS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/main.yml";
 const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
-const DSC: &str = "deploy/dsc/msdsc/xmip-node.dsc.yaml";
 
 type Variables = BTreeMap<String, String>;
 
@@ -81,28 +80,6 @@ fn render(template: &str, variables: &Variables) -> String {
     }
     rendered.push_str(rest);
     rendered
-}
-
-/// The text between the DSC script's `@'` and `'@`, as PowerShell writes it:
-/// without the indentation the YAML block gives it.
-fn dsc_configuration() -> String {
-    let text = source(DSC);
-    let mut lines = text.lines();
-    let open = lines
-        .by_ref()
-        .find(|line| line.trim() == "@'")
-        .expect("the DSC script writes its configuration from a here-string");
-    let indent = &open[..open.len() - open.trim_start().len()];
-    let mut configuration = String::new();
-    for line in lines.take_while(|line| !line.trim_start().starts_with("'@")) {
-        let line = line
-            .strip_prefix(indent)
-            .or_else(|| line.trim().is_empty().then_some(""))
-            .unwrap_or_else(|| panic!("{DSC}: '{line}' is outside the here-string's indent"));
-        configuration.push_str(line);
-        configuration.push('\n');
-    }
-    configuration
 }
 
 /// Every key path in `table`, tables descended into.
@@ -181,12 +158,11 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
     let template = source(TEMPLATE);
 
-    for (file, text) in [(TASKS, source(TASKS)), (DSC, source(DSC))] {
-        assert!(
-            text.contains("xmip-service") && text.contains("--slice"),
-            "{file} writes the node's configuration through xmip-service --slice"
-        );
-    }
+    let tasks = source(TASKS);
+    assert!(
+        tasks.contains("xmip-service") && tasks.contains("--slice"),
+        "{TASKS} writes the node's configuration through xmip-service --slice"
+    );
 
     let variables = defaults();
     let installed = sliced(
@@ -231,14 +207,6 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         ),
         "each variable lands on the key it names"
     );
-
-    let cluster = dsc_configuration();
-    let slices = xmip_configure::slices(&cluster).expect("the DSC starter slices");
-    assert!(!slices.is_empty(), "the DSC starter declares its node");
-    for (node, _) in slices {
-        let sample = sliced(&directory, "dsc", &cluster, &node);
-        assert!(!sample.service.online, "ADR-0045: offline unless said");
-    }
 
     std::fs::remove_dir_all(&directory).expect("removes what it wrote");
 }

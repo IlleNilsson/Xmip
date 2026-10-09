@@ -340,3 +340,14 @@ Provenance: the stages and *no Operation* are the owner's, 2026-10-08,
 quoted above; reading *Operation* as the operational role, and the refusal
 staying until the path builds `no_std`, are the assistant's drafting, his to
 strike.
+
+## Amendment, 2026-10-09: desired state, one folder per technology
+
+The owner, 2026-10-09: *deploy/dsc should contain ansible and msdsc*, and of
+the DSC v3 document, `xmip-node.dsc.yaml`: *you can delete it*. Desired state
+lives under `deploy/dsc`, one folder per technology: `deploy/dsc/ansible`
+holds the role `xmip_node`, and `deploy/dsc/msdsc` is Microsoft DSC v3's,
+with nothing written in it yet. A deployment uses one of them, never a mix
+(the owner, 2026-10-08: *it is either DSC V3 or Ansible, not a mix*).
+Microsoft DSC v3 stays one of the two technologies (`deployment-model.md`
+section 8).
