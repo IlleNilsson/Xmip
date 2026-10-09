@@ -180,6 +180,17 @@ operator state, deployment state, cluster membership — and the
 Subscriptions each Host Service writes from its TOML as it starts
 ([decided, not built](estate-map.md#shared-subscriptions)).
 
+**Proposed 2026-10-09: what the Ledger is searched by.** A record's body
+is sealed and found by a keyed hash, which leaves an operator nothing to
+search by. The proposal lays out every single value of each Journey,
+Message, held Journey, Dead Message Queue entry, kept audit record and
+administration record in a column of its own table, in the clear (the
+owner, 2026-10-09: *Store it in the clear*; *All columns shall be laid
+out*); a list stays in the body. They are written in the record's own
+write, so the index never disagrees with the data, and asked through
+`XmipStorage::query`, one typed question per table (`deployment-model.md`
+section 7).
+
 **Configuration is TOML, read as a Host Service starts; the Subscriptions
 are shared through Xmip Storage** (the owner, 2026-10-02: *Routes are
 defined in TOML, read into Storage at Xmip Host Service startup, read from
@@ -405,7 +416,17 @@ it per transport*; *Do it fixed*): 44 segments of 1460 bytes — Ethernet's
 classic 64 KiB window, so a Stream in flight holds about 128 KiB, the chunk
 it writes and the one it reads ahead (`xmip-core-runtime`'s `ledger::CHUNK`,
 over `xmip-core-transport`'s `TCP_SEGMENT`). A transport may declare a unit
-of its own where that is useful; none does yet.
+of its own where that is useful; none does yet. **A Stream ends where it has
+no further chunk.** **A Stream is a record of its own** (the owner,
+2026-10-09: *a Message refers to a stream, a stream is stored in chunks*;
+*A new message might refer to the same stream*): written once, with its
+last chunk, and never changed, it is the one home of its length and its
+chunks, and every Message that refers to it — the one received, one assigned
+from it — refers to it by its identifier; a Message given a new Stream,
+assigned or transformed, refers to that one. A reader holds what it read to
+the length the Stream's record keeps, so a chunk lost after Publication,
+damaged or deleted, is refused in words, never read as a shorter Stream. An
+empty Stream is one empty chunk.
 
 **Built for receive, 2026-10-02.** Each Receive Location carries what
 arrives on a pool of its own (`xmip-core-runtime`'s `pool`): one thread
