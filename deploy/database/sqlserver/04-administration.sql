@@ -57,6 +57,21 @@ GO
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed = 1;
 GO
 
+-- each Stream a kept audit record carries, once: its length, its chunks, the SHA-256 digest of its bytes and when the Ledger wrote it, written with the record by the audit keeper.
+CREATE TABLE xmip.audit_stream (
+    audit binary(16) NOT NULL,
+    stream binary(16) NOT NULL,
+    length bigint NOT NULL,
+    chunks int NOT NULL,
+    digest varbinary(max) NOT NULL,
+    written_at datetime2(7) NOT NULL,
+    CONSTRAINT audit_stream_key PRIMARY KEY (audit, stream)
+);
+GO
+
+CREATE INDEX audit_stream_stream ON xmip.audit_stream (stream);
+GO
+
 -- the bytes of each Stream a kept audit record carries, in chunks by the record's identifier, the Stream's and their number, kept with it by the audit keeper; a Stream two Sections share once.
 CREATE TABLE xmip.audit_stream_chunk (
     audit binary(16) NOT NULL,

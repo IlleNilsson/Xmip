@@ -184,7 +184,6 @@ fn an_audited_stream_is_kept_beside_its_record_over_the_real_engines() {
         audited: Some(Audited {
             message: b"the Message".to_vec(),
             streams: vec![stream],
-            kept: Vec::new(),
         }),
         facts: xmip_persist::storage::AuditFacts::default(),
     };
@@ -193,11 +192,13 @@ fn an_audited_stream_is_kept_beside_its_record_over_the_real_engines() {
     let kept = node.read_kept_audit(id).expect("read").expect("kept");
     let carried = kept.audited.as_ref().expect("carried");
     assert_eq!(carried.message, b"the Message");
-    let record = carried.kept(stream).expect("kept beside it");
-    assert_eq!(record.digest, digest.finish());
+    let row = node.read_kept_audit_stream(id, stream).expect("read");
+    assert_eq!(row.expect("its audit_stream row").digest, digest.finish());
     let mut read = Vec::new();
     std::io::Read::read_to_end(
-        &mut ChunkReader::audited(&node, &kept, stream).expect("it carries one"),
+        &mut ChunkReader::audited(&node, id, stream)
+            .expect("read")
+            .expect("it carries one"),
         &mut read,
     )
     .expect("verified");

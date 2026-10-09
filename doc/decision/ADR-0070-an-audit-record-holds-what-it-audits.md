@@ -70,9 +70,9 @@ that for now.*
   Stream's own record (`ledger::write_stream`); the audit keeper copies the
   chunks of every Stream the Message's Sections are over beside the kept
   record, one at a time and a shared Stream once, into the
-  `audit_stream_chunk` table, and keeps each Stream's digest and length in
-  the record's body, since a Message has a Stream per Section and a column
-  holds one value; a read is held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
+  `audit_stream_chunk` table, and writes each Stream's row of the
+  `audit_stream` table — its length, chunks, digest and when it was written,
+  in clear columns — in the record's own write; a read is held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
   keeper outside tests and no surface reads a kept record
   (`estate-map.md`, `audit-through-storage`). Clause 5 is not built.
 
@@ -89,3 +89,14 @@ so the copy can be verified. Clause 3 falls away: the audit no longer needs
 retention to hold a Stream. Where audit is kept may be a storage of its own
 if that helps; today it is the administration database
 (`runtime-model.md` section 16), and nothing here moves it.
+
+## Amendment, 2026-10-09: the whole of it goes to audit
+
+The owner, asked whether each audited Stream's digest and length should be
+visible rather than sealed in the record: *Yes, when the Xmip Core or its
+Providers uses the Audit functionality the whole shebang goes to audit. How
+else could a serious government, bank or insurance company work?* An audit
+written by Xmip's core or by any provider's module carries everything it
+audits, laid out where a column can hold it: each audited Stream is a row of
+its own beside its bytes, with its identifier, length, digest and chunk
+count.
