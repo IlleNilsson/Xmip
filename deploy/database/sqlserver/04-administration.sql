@@ -33,12 +33,11 @@ CREATE TABLE xmip.audit (
     execution binary(16) NULL,
     journey binary(16) NULL,
     message binary(16) NULL,
-    artifact binary(16) NULL,
     artifact_kind nvarchar(32) NULL,
     artifact_name nvarchar(400) NULL,
     artifact_version nvarchar(400) NULL,
-    node binary(16) NULL,
-    cluster binary(16) NULL,
+    node nvarchar(400) NULL,
+    cluster nvarchar(400) NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 GO
