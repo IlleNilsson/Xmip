@@ -14,21 +14,54 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
--- audit records kept over time, each once.
+-- audit records kept over time, each once, and what each is searched by.
 CREATE TABLE xmip.audit (
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    occurred_at datetime2(7) NOT NULL,
+    kept_at datetime2(7) NOT NULL,
+    action nvarchar(400) NOT NULL,
+    phase nvarchar(400) NOT NULL,
+    severity nvarchar(400) NOT NULL,
+    failed bit NOT NULL,
+    program nvarchar(400) NOT NULL,
+    artifact_kind nvarchar(400) NULL,
+    cluster_ref binary(16) NULL,
+    node_ref binary(16) NULL,
+    artifact_ref binary(16) NULL,
+    journey_ref binary(16) NULL,
+    message_ref binary(16) NULL,
+    execution_ref binary(16) NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 GO
 
--- registration, membership, Modules, Handlers, deployment and operator state.
+CREATE INDEX audit_occurred ON xmip.audit (occurred_at);
+GO
+
+CREATE INDEX audit_journey ON xmip.audit (journey_ref);
+GO
+
+CREATE INDEX audit_message ON xmip.audit (message_ref);
+GO
+
+CREATE INDEX audit_artifact ON xmip.audit (artifact_ref, occurred_at);
+GO
+
+CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed = 1;
+GO
+
+-- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind nvarchar(400) NOT NULL,
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    updated_at datetime2(7) NOT NULL,
     CONSTRAINT administration_key PRIMARY KEY (kind, id)
 );
+GO
+
+CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 GO
 
 CREATE USER xmip_storage FOR LOGIN xmip_storage;

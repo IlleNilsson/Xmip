@@ -24,20 +24,61 @@ CREATE TABLE xmip.stream_chunk (
 );
 GO
 
--- every Message, as a step wrote it.
+-- every Message, as a step wrote it, and what it is searched by.
 CREATE TABLE xmip.message (
     message binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    created_at datetime2(7) NOT NULL,
+    generation int NOT NULL,
+    created_by smallint NOT NULL,
+    size_bytes bigint NOT NULL,
+    previous_message_ref binary(16) NULL,
+    party_ref binary(16) NULL,
+    contract_ref binary(16) NULL,
+    stream_ref binary(16) NULL,
     CONSTRAINT message_key PRIMARY KEY (message)
 );
 GO
 
--- every Journey, as a step wrote it.
+CREATE INDEX message_created ON xmip.message (created_at);
+GO
+
+CREATE INDEX message_party ON xmip.message (party_ref, created_at);
+GO
+
+CREATE INDEX message_contract ON xmip.message (contract_ref, created_at);
+GO
+
+CREATE INDEX message_previous ON xmip.message (previous_message_ref);
+GO
+
+-- every Journey, as a step wrote it, and what it is searched by.
 CREATE TABLE xmip.journey (
     journey binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    created_at datetime2(7) NOT NULL,
+    updated_at datetime2(7) NOT NULL,
+    state smallint NOT NULL,
+    attempts int NOT NULL,
+    depth int NOT NULL,
+    send_port_ref binary(16) NULL,
+    work_process_ref binary(16) NULL,
+    previous_journey_ref binary(16) NULL,
+    message_ref binary(16) NULL,
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
+GO
+
+CREATE INDEX journey_state ON xmip.journey (state, updated_at);
+GO
+
+CREATE INDEX journey_send_port ON xmip.journey (send_port_ref, state);
+GO
+
+CREATE INDEX journey_previous ON xmip.journey (previous_journey_ref);
+GO
+
+CREATE INDEX journey_message ON xmip.journey (message_ref);
 GO
 
 -- the Journeys a paused Subscription holds, at their place in its queue, each once.
@@ -46,9 +87,13 @@ CREATE TABLE xmip.held (
     sequence bigint NOT NULL,
     journey binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    held_at datetime2(7) NOT NULL,
     CONSTRAINT held_key PRIMARY KEY (queue, sequence),
     CONSTRAINT held_unique UNIQUE (queue, journey)
 );
+GO
+
+CREATE INDEX held_time ON xmip.held (queue, held_at);
 GO
 
 -- each queue's first place, its next and how many it holds.
@@ -67,9 +112,15 @@ CREATE TABLE xmip.dead_message (
     sequence bigint NOT NULL,
     message binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    queued_at datetime2(7) NOT NULL,
+    node_ref binary(16) NOT NULL,
+    receive_location_ref binary(16) NOT NULL,
     CONSTRAINT dead_message_key PRIMARY KEY (queue, sequence),
     CONSTRAINT dead_message_unique UNIQUE (queue, message)
 );
+GO
+
+CREATE INDEX dead_message_time ON xmip.dead_message (queue, queued_at);
 GO
 
 -- each Dead Message Queue's first place, its next and how many it holds.
