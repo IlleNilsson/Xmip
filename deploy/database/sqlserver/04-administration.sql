@@ -14,7 +14,7 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
--- audit records kept over time, each once, and what each is searched by.
+-- audit records kept over time, each once, every single value of each in a column of its own.
 CREATE TABLE xmip.audit (
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
@@ -24,14 +24,21 @@ CREATE TABLE xmip.audit (
     phase nvarchar(400) NOT NULL,
     severity nvarchar(400) NOT NULL,
     failed bit NOT NULL,
+    message_text nvarchar(max) NULL,
     program nvarchar(400) NOT NULL,
+    host nvarchar(400) NOT NULL,
+    process int NOT NULL,
+    location nvarchar(400) NULL,
+    hidden bit NOT NULL,
+    execution binary(16) NULL,
+    journey binary(16) NULL,
+    message binary(16) NULL,
+    artifact binary(16) NULL,
     artifact_kind nvarchar(400) NULL,
-    cluster_ref binary(16) NULL,
-    node_ref binary(16) NULL,
-    artifact_ref binary(16) NULL,
-    journey_ref binary(16) NULL,
-    message_ref binary(16) NULL,
-    execution_ref binary(16) NULL,
+    artifact_name nvarchar(400) NULL,
+    artifact_version nvarchar(400) NULL,
+    node binary(16) NULL,
+    cluster binary(16) NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 GO
@@ -39,13 +46,13 @@ GO
 CREATE INDEX audit_occurred ON xmip.audit (occurred_at);
 GO
 
-CREATE INDEX audit_journey ON xmip.audit (journey_ref);
+CREATE INDEX audit_journey ON xmip.audit (journey);
 GO
 
-CREATE INDEX audit_message ON xmip.audit (message_ref);
+CREATE INDEX audit_message ON xmip.audit (message);
 GO
 
-CREATE INDEX audit_artifact ON xmip.audit (artifact_ref, occurred_at);
+CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
 GO
 
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed = 1;

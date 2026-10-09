@@ -10,7 +10,7 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
--- audit records kept over time, each once, and what each is searched by.
+-- audit records kept over time, each once, every single value of each in a column of its own.
 CREATE TABLE xmip.audit (
     id uuid NOT NULL,
     body bytea NOT NULL,
@@ -20,24 +20,31 @@ CREATE TABLE xmip.audit (
     phase text NOT NULL,
     severity text NOT NULL,
     failed boolean NOT NULL,
+    message_text text NULL,
     program text NOT NULL,
+    host text NOT NULL,
+    process integer NOT NULL,
+    location text NULL,
+    hidden boolean NOT NULL,
+    execution uuid NULL,
+    journey uuid NULL,
+    message uuid NULL,
+    artifact uuid NULL,
     artifact_kind text NULL,
-    cluster_ref bytea NULL,
-    node_ref bytea NULL,
-    artifact_ref bytea NULL,
-    journey_ref bytea NULL,
-    message_ref bytea NULL,
-    execution_ref bytea NULL,
+    artifact_name text NULL,
+    artifact_version text NULL,
+    node uuid NULL,
+    cluster uuid NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 
 CREATE INDEX audit_occurred ON xmip.audit (occurred_at);
 
-CREATE INDEX audit_journey ON xmip.audit (journey_ref);
+CREATE INDEX audit_journey ON xmip.audit (journey);
 
-CREATE INDEX audit_message ON xmip.audit (message_ref);
+CREATE INDEX audit_message ON xmip.audit (message);
 
-CREATE INDEX audit_artifact ON xmip.audit (artifact_ref, occurred_at);
+CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
 
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed;
 

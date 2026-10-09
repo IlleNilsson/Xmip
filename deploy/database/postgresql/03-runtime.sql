@@ -19,52 +19,58 @@ CREATE TABLE xmip.stream_chunk (
     CONSTRAINT stream_chunk_key PRIMARY KEY (stream, chunk)
 );
 
--- every Message, as a step wrote it, and what it is searched by.
+-- every Message, as a step wrote it, every single value of it in a column of its own.
 CREATE TABLE xmip.message (
     message uuid NOT NULL,
     body bytea NOT NULL,
     created_at timestamptz NOT NULL,
+    previous_message uuid NULL,
     generation integer NOT NULL,
     created_by smallint NOT NULL,
+    priority smallint NOT NULL,
+    execution_profile smallint NOT NULL,
+    durability smallint NOT NULL,
     size_bytes bigint NOT NULL,
-    previous_message_ref bytea NULL,
-    party_ref bytea NULL,
-    contract_ref bytea NULL,
-    stream_ref bytea NULL,
+    party text NULL,
+    contract text NULL,
+    stream uuid NULL,
     CONSTRAINT message_key PRIMARY KEY (message)
 );
 
 CREATE INDEX message_created ON xmip.message (created_at);
 
-CREATE INDEX message_party ON xmip.message (party_ref, created_at);
+CREATE INDEX message_party ON xmip.message (party, created_at);
 
-CREATE INDEX message_contract ON xmip.message (contract_ref, created_at);
+CREATE INDEX message_contract ON xmip.message (contract, created_at);
 
-CREATE INDEX message_previous ON xmip.message (previous_message_ref);
+CREATE INDEX message_previous ON xmip.message (previous_message);
 
--- every Journey, as a step wrote it, and what it is searched by.
+-- every Journey, as a step wrote it, every single value of it in a column of its own.
 CREATE TABLE xmip.journey (
     journey uuid NOT NULL,
     body bytea NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
     state smallint NOT NULL,
-    attempts integer NOT NULL,
+    previous_journey uuid NULL,
+    subscription text NULL,
+    cause_work_process text NULL,
     depth integer NOT NULL,
-    send_port_ref bytea NULL,
-    work_process_ref bytea NULL,
-    previous_journey_ref bytea NULL,
-    message_ref bytea NULL,
+    work_process text NULL,
+    send_port text NULL,
+    send_location integer NOT NULL,
+    attempts integer NOT NULL,
+    message uuid NULL,
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
 
 CREATE INDEX journey_state ON xmip.journey (state, updated_at);
 
-CREATE INDEX journey_send_port ON xmip.journey (send_port_ref, state);
+CREATE INDEX journey_send_port ON xmip.journey (send_port, state);
 
-CREATE INDEX journey_previous ON xmip.journey (previous_journey_ref);
+CREATE INDEX journey_previous ON xmip.journey (previous_journey);
 
-CREATE INDEX journey_message ON xmip.journey (message_ref);
+CREATE INDEX journey_message ON xmip.journey (message);
 
 -- the Journeys a paused Subscription holds, at their place in its queue, each once.
 CREATE TABLE xmip.held (
@@ -94,9 +100,10 @@ CREATE TABLE xmip.dead_message (
     sequence bigint NOT NULL,
     message uuid NOT NULL,
     body bytea NOT NULL,
+    stream uuid NOT NULL,
+    node text NOT NULL,
+    receive_location text NOT NULL,
     queued_at timestamptz NOT NULL,
-    node_ref bytea NOT NULL,
-    receive_location_ref bytea NOT NULL,
     CONSTRAINT dead_message_key PRIMARY KEY (queue, sequence),
     CONSTRAINT dead_message_unique UNIQUE (queue, message)
 );
