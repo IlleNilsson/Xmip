@@ -92,8 +92,10 @@ there.
 
 **Least privilege.** `xmip_storage` may connect to the two databases and
 select, insert, update and delete rows in the `xmip` schema's tables, and
-nothing else: it cannot create, alter or drop anything. A schema change is
-made by an operator granted `xmip_owner` (`GRANT xmip_owner TO <operator>;`).
+nothing else: it cannot create, alter or drop anything. You may not change
+the schema in any way ([`../README.md`](../README.md)); a new release's
+scripts are run by an operator granted `xmip_owner`
+(`GRANT xmip_owner TO <operator>;`).
 
 Then set the login's password, interactively, so it is in no file and no
 shell history:
