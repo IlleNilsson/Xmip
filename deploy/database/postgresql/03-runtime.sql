@@ -14,7 +14,6 @@ CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 CREATE TABLE xmip.stream_chunk (
     stream uuid NOT NULL,
     chunk integer NOT NULL,
-    last boolean NOT NULL,
     bytes bytea NOT NULL,
     CONSTRAINT stream_chunk_key PRIMARY KEY (stream, chunk)
 );

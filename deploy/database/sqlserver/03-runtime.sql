@@ -18,7 +18,6 @@ GO
 CREATE TABLE xmip.stream_chunk (
     stream binary(16) NOT NULL,
     chunk int NOT NULL,
-    last bit NOT NULL,
     bytes varbinary(max) NOT NULL,
     CONSTRAINT stream_chunk_key PRIMARY KEY (stream, chunk)
 );
