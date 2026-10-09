@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty-nine decisions, read as one document.
+Seventy decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -943,6 +943,16 @@ and only the drawing is in the extension.**
 
 → [Developers design in VS Code, in full](ADR-0064-developers-design-in-vs-code.md)
 
+### What an audit record shows of the Message and Stream it audits
+
+**An audit record spells out the Message it audits, in full, as it was at
+the audited event, and seals its Stream by digest: the Stream is kept, once,
+for as long as an audit record names it, and is verified against the digest
+when it is read. Each audit record carries the digest of the one before it,
+so a deleted, changed or reordered record is found.**
+
+→ [An audit record holds what it audits, in full](ADR-0070-an-audit-record-holds-what-it-audits.md)
+
 ---
 
 ## 6. How the work is done
@@ -1009,7 +1019,7 @@ You have a word. This gives you the decision that governs it.
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
 | attempt | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
-| audit | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
+| Audit | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md), [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | audit sink | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -1139,6 +1149,7 @@ You have a word. This gives you the decision that governs it.
 | Replay | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | resilience technology | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Retention | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
+| retention hold | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
 | Retry | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
@@ -1155,6 +1166,7 @@ You have a word. This gives you the decision that governs it.
 | simulator | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | Source | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
+| Stream digest | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | Stream-first | [Runtime flow](ADR-0003-runtime-flow.md) |
 | Stream, Message, Journey | [Recent activity](ADR-0032-recent-activity.md) |
 | Submodules | [Submodule composition](ADR-0016-submodule-composition.md) |
@@ -1163,6 +1175,7 @@ You have a word. This gives you the decision that governs it.
 | suite declaration | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | sync | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
+| tamper evidence | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | target, domain, site | [Packaging and distribution](ADR-0015-packaging.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
@@ -1289,3 +1302,4 @@ is nowhere else.
 | [0067](ADR-0067-a-node-has-one-address.md) | A node has one address | |
 | [0068](ADR-0068-every-dependency-is-a-trait-handed-in.md) | Every dependency is a trait, handed in | |
 | [0069](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) | A Journey whose circumstances changed is a Dead Message | |
+| [0070](ADR-0070-an-audit-record-holds-what-it-audits.md) | An audit record holds what it audits | |
