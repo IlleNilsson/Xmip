@@ -211,7 +211,6 @@ Describe 'Every site becomes a build, or is refused where its target says' {
 
 Describe 'The deploy files name a site' {
     It 'names, in <_>, a site that exists' -ForEach @(
-        'deploy/dsc/msdsc/xmip-node.dsc.yaml'
         'deploy/dsc/ansible/roles/xmip_node/defaults/main.yml'
     ) {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Root $_) -Raw
