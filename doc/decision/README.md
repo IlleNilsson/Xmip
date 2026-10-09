@@ -946,10 +946,10 @@ and only the drawing is in the extension.**
 ### What an audit record shows of the Message and Stream it audits
 
 **An audit record spells out the Message it audits, in full, as it was at
-the audited event, and seals its Stream by digest: the Stream is kept, once,
-for as long as an audit record names it, and is verified against the digest
-when it is read. Each audit record carries the digest of the one before it,
-so a deleted, changed or reordered record is found.**
+the audited event, and its Stream's bytes with their digest, so the copy is
+verified when it is read (amendment 2026-10-09). Each audit record carries
+the digest of the one before it, so a deleted, changed or reordered record
+is found.**
 
 → [An audit record holds what it audits, in full](ADR-0070-an-audit-record-holds-what-it-audits.md)
 

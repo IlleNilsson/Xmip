@@ -1443,9 +1443,8 @@ systems, object stores and custom providers. Both are
 Playground drives them, a node does not.
 
 Audit comes first conceptually. An audit record spells out the Message it
-audits, as it was, and seals its Stream by digest; retention holds every
-Stream an audit record names for as long as that record is kept, and a
-Stream read for an audit is verified against its digest. Each audit record
+audits, as it was, and its Stream's bytes with their digest, so the copy is
+verified when read and the audit needs nothing else kept. Each audit record
 carries the digest of the one before it (ADR-0070; not built). Retention also
 supports Replay.
 
