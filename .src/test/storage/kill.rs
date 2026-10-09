@@ -26,6 +26,7 @@ pub fn write_until_killed(node: &dyn XmipStorage) {
         let record = JourneyRecord {
             journey: journey(number),
             body: format!("written {number}").into_bytes(),
+            facts: xmip_persist::storage::JourneyFacts::default(),
         };
         node.write_journey(&record).expect("written");
         say(&format!("written {number}"));

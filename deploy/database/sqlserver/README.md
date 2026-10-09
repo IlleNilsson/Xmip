@@ -87,7 +87,7 @@ Server login of the `sysadmin` role instead where you have none.
 | --- | --- |
 | `01-roles.sql` | the login `xmip_storage`, which the Storage nodes connect as, with the password policy checked |
 | `02-databases.sql` | `xmip_runtime` and `xmip_administration`, each with delayed durability disabled |
-| `03-runtime.sql` | in `xmip_runtime`: the role `xmip_owner`, which owns the schema `xmip`; the schema's tables; the user `xmip_storage` and its right to read and write them |
+| `03-runtime.sql` | in `xmip_runtime`: the role `xmip_owner`, which owns the schema `xmip`; the schema's tables and the indexes a search reads; the user `xmip_storage` and its right to read and write them |
 | `04-administration.sql` | the same in `xmip_administration` |
 
 Placing the administration database on another instance: run

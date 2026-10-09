@@ -10,20 +10,47 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
--- audit records kept over time, each once.
+-- audit records kept over time, each once, and what each is searched by.
 CREATE TABLE xmip.audit (
     id uuid NOT NULL,
     body bytea NOT NULL,
+    occurred_at timestamptz NOT NULL,
+    kept_at timestamptz NOT NULL,
+    action text NOT NULL,
+    phase text NOT NULL,
+    severity text NOT NULL,
+    failed boolean NOT NULL,
+    program text NOT NULL,
+    artifact_kind text NULL,
+    cluster_ref bytea NULL,
+    node_ref bytea NULL,
+    artifact_ref bytea NULL,
+    journey_ref bytea NULL,
+    message_ref bytea NULL,
+    execution_ref bytea NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 
--- registration, membership, Modules, Handlers, deployment and operator state.
+CREATE INDEX audit_occurred ON xmip.audit (occurred_at);
+
+CREATE INDEX audit_journey ON xmip.audit (journey_ref);
+
+CREATE INDEX audit_message ON xmip.audit (message_ref);
+
+CREATE INDEX audit_artifact ON xmip.audit (artifact_ref, occurred_at);
+
+CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed;
+
+-- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind text NOT NULL,
     id uuid NOT NULL,
     body bytea NOT NULL,
+    updated_at timestamptz NOT NULL,
     CONSTRAINT administration_key PRIMARY KEY (kind, id)
 );
+
+CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 
 GRANT USAGE ON SCHEMA xmip TO xmip_storage;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA xmip TO xmip_storage;

@@ -518,6 +518,19 @@ store is a table of sealed records, so "queried arbitrarily" is answered by
 reading records through persist, not by SQL over the file, and a query the
 administration views need is an index persist keeps for it.
 
+**Proposed 2026-10-09, not decided: searchable columns.** Each table a
+search reads — Journey, Message, held, Dead Message Queue, audit and
+administration — keeps its record's facts in columns of its own beside the
+sealed body: times, states, counts and flags in the clear, every identifier
+and name as sixteen bytes of HMAC-SHA-256 under that column's own key, so a
+search is equality on a name and a range on a time, never a pattern, and
+the body stays sealed. On a database server they are columns with indexes
+(`storage::schema`, `deploy/database/<server>/`); on an embedded Storage
+node, whose engines have no columns, each index is kept as entries of its
+own, written in the record's own batch. `XmipStorage::query` asks one typed
+question of one index (`module/platform/persist/README.md`, *Searchable
+columns*; the amendment drafted for ADR-0063 waits on the owner).
+
 ### Record identifiers are UUIDv7
 
 **Every record in either database is keyed by a UUIDv7**, per RFC 9562: the
