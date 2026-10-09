@@ -1,0 +1,176 @@
+# One machine on a Hyper-V host, installed unattended from its operating
+# system's ISO: its directory and new disk, a generation 2 VM on the
+# environment's switch with two DVD drives, the hardware HyperVDsc does not
+# set, and the installation itself. An environment document includes it once
+# per machine; README.md says how.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+metadata:
+  Microsoft.DSC:
+    securityContext: elevated
+parameters:
+  template:
+    type: string
+    description: This folder, where the scripts the two script resources run are.
+  environment:
+    type: string
+    description: The environment's name, written in each VM's notes.
+  root:
+    type: string
+    description: The folder that holds a folder per machine on the host.
+  credentialPath:
+    type: string
+    description: The Administrator credential of the Windows machines, Export-Clixml.
+  sshPublicKeyPath:
+    type: string
+    description: The ed25519 public key the AlmaLinux machines' account is given.
+  linuxAccount:
+    type: string
+    description: The account the kickstart creates on the AlmaLinux machines.
+  domainName:
+    type: string
+    description: The DNS domain; an AlmaLinux machine's host name is in it.
+  network:
+    type: object
+    description: The network's values, as network.dsc.yaml takes them.
+  image:
+    type: object
+    description: >-
+      The ISO the machine installs from: path, sha256, family (Windows or
+      Linux), edition (Windows: the image NAME in install.wim),
+      secureBootTemplate and tpm.
+  name:
+    type: string
+    description: The machine's name, its VM's and its computer's.
+  address:
+    type: string
+    description: The machine's IPv4 address on the network.
+  memoryGB:
+    type: int
+    description: The VM's memory, static, in GiB.
+  cpu:
+    type: int
+    description: The VM's virtual processors.
+  diskGB:
+    type: int
+    description: The size of the VM's new dynamic disk, in GiB.
+resources:
+  - name: Directory
+    type: PSDesiredStateConfiguration/File
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    properties:
+      DestinationPath: "[path(parameters('root'), parameters('name'))]"
+      Type: Directory
+      Ensure: Present
+  - name: Disk
+    type: HyperVDsc/Vhd
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    dependsOn:
+      - "[resourceId('PSDesiredStateConfiguration/File', 'Directory')]"
+    properties:
+      Name: os
+      Path: "[path(parameters('root'), parameters('name'))]"
+      Generation: Vhdx
+      Type: Dynamic
+      MaximumSizeBytes: "[mul(parameters('diskGB'), 1073741824)]"
+      Ensure: Present
+  # No State: the Installation resource starts the VM, so the ISO's boot
+  # prompt can be answered as it starts.
+  - name: Virtual machine
+    type: HyperVDsc/VMHyperV
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    dependsOn:
+      - "[resourceId('HyperVDsc/Vhd', 'Disk')]"
+    properties:
+      Name: "[parameters('name')]"
+      VhdPath: "[path(parameters('root'), parameters('name'), 'os.vhdx')]"
+      Path: "[path(parameters('root'), parameters('name'))]"
+      Generation: 2
+      StartupMemory: "[mul(parameters('memoryGB'), 1073741824)]"
+      ProcessorCount: "[parameters('cpu')]"
+      SwitchName:
+        - "[parameters('network').switchName]"
+      SecureBoot: true
+      AutomaticCheckpointsEnabled: false
+      Notes: "[parameters('environment')]"
+      Ensure: Present
+  # The two DVD drives stay; what they hold is the Installation resource's.
+  - name: Installation drive
+    type: HyperVDsc/VMDvdDrive
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    dependsOn:
+      - "[resourceId('HyperVDsc/VMHyperV', 'Virtual machine')]"
+    properties:
+      VMName: "[parameters('name')]"
+      ControllerNumber: 0
+      ControllerLocation: 1
+      Ensure: Present
+  - name: Answer drive
+    type: HyperVDsc/VMDvdDrive
+    directives:
+      requireAdapter: Microsoft.Adapter/WindowsPowerShell
+    dependsOn:
+      - "[resourceId('HyperVDsc/VMDvdDrive', 'Installation drive')]"
+    properties:
+      VMName: "[parameters('name')]"
+      ControllerNumber: 0
+      ControllerLocation: 2
+      Ensure: Present
+  # HyperVDsc sets no static MAC computed from an address, no Secure Boot
+  # template, no virtual TPM and no boot order: HyperVMachine.ps1 does.
+  - name: Hardware
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    dependsOn:
+      - "[resourceId('HyperVDsc/VMDvdDrive', 'Answer drive')]"
+    properties:
+      input:
+        template: "[parameters('template')]"
+        name: "[parameters('name')]"
+        address: "[parameters('address')]"
+        image: "[parameters('image')]"
+      getScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        Get-MachineHardwareFinding -Machine $Machine
+      testScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        return @(Get-MachineHardwareFinding -Machine $Machine).Count -eq 0
+      setScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        Set-MachineHardware -Machine $Machine -Confirm:$false
+  # No resource writes an answer medium or knows when a guest is installed:
+  # HyperVMachine.ps1 writes it, loads the ISO and it, starts the VM, and
+  # once the guest answers removes both and deletes the medium.
+  - name: Installation
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    dependsOn:
+      - "[resourceId('Microsoft.DSC.Transitional/PowerShellScript', 'Hardware')]"
+    properties:
+      input:
+        template: "[parameters('template')]"
+        directory: "[path(parameters('root'), parameters('name'))]"
+        credentialPath: "[parameters('credentialPath')]"
+        sshPublicKeyPath: "[parameters('sshPublicKeyPath')]"
+        linuxAccount: "[parameters('linuxAccount')]"
+        domainName: "[parameters('domainName')]"
+        network: "[parameters('network')]"
+        image: "[parameters('image')]"
+        name: "[parameters('name')]"
+        address: "[parameters('address')]"
+      getScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        Get-MachineInstallationState -Machine $Machine
+      testScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        return Test-MachineInstallation -Machine $Machine
+      setScript: |
+        param($Machine)
+        . (Join-Path -Path $Machine.template -ChildPath 'HyperVMachine.ps1')
+        Set-MachineInstallation -Machine $Machine -Confirm:$false

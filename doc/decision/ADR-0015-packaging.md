@@ -346,8 +346,10 @@ strike.
 The owner, 2026-10-09: *deploy/dsc should contain ansible and msdsc*, and of
 the DSC v3 document, `xmip-node.dsc.yaml`: *you can delete it*. Desired state
 lives under `deploy/dsc`, one folder per technology: `deploy/dsc/ansible`
-holds the role `xmip_node`, and `deploy/dsc/msdsc` is Microsoft DSC v3's,
-with nothing written in it yet. A deployment uses one of them, never a mix
+holds the role `xmip_node`, and `deploy/dsc/msdsc` is Microsoft DSC v3's: a
+template per virtualization technology for an environment's machines,
+`hyperv` the first (the owner, 2026-10-09: *template for virtual nodes via
+selected tech*), and no node document yet. A deployment uses one of them, never a mix
 (the owner, 2026-10-08: *it is either DSC V3 or Ansible, not a mix*).
 Microsoft DSC v3 stays one of the two technologies (`deployment-model.md`
 section 8).

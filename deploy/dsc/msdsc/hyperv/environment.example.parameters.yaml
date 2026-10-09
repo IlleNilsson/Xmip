@@ -1,0 +1,39 @@
+# The values environment.example.dsc.yaml's machines share. Copy it to
+# .local-work/hyperv/environment.parameters.yaml and write in linuxAccount,
+# which is not decided; the documents refuse to run without it.
+parameters:
+  common:
+    template: D:\Repos\Xmip\deploy\dsc\msdsc\hyperv
+    environment: Xmip-HyperV
+    root: D:\HyperV\Xmip
+    credentialPath: D:\Repos\Xmip\.local-work\hyperv\credential.xml
+    sshPublicKeyPath: D:\Repos\Xmip\.local-work\hyperv\ssh\xmip.pub
+    domainName: xmip.test
+  network:
+    switchName: Xmip
+    prefix: 10.77.0.0/24
+    gateway: 10.77.0.1
+    prefixLength: 24
+    dnsServer: 10.77.0.10
+    enableNat: true
+  images:
+    WindowsServer2025:
+      path: D:\Downloads\OS\Images\Microsoft\WindowsServer2025-Eval-26100.1742-en-us.iso
+      sha256: d0ef4502e350e3c6c53c15b1b3020d38a5ded011bf04998e950720ac8579b23d
+      family: Windows
+      edition: Windows Server 2025 SERVERDATACENTER
+      secureBootTemplate: MicrosoftWindows
+      tpm: false
+    Windows11:
+      path: D:\Downloads\OS\Images\Microsoft\Windows11-Enterprise-Eval-26H2-26300.9457-en-us.iso
+      sha256: bc3f24086ebadc94489066b5ad78089e2cf5c3491e90e790bb81a2b199c10e38
+      family: Windows
+      edition: Windows 11 Enterprise Evaluation
+      secureBootTemplate: MicrosoftWindows
+      tpm: true
+    AlmaLinux10:
+      path: D:\Downloads\OS\Images\AlmaLinux\AlmaLinux-10.2-x86_64-dvd.iso
+      sha256: 90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287
+      family: Linux
+      secureBootTemplate: MicrosoftUEFICertificateAuthority
+      tpm: false

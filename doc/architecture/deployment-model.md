@@ -575,8 +575,8 @@ present, config and module folders present, node TOML present, and the service
 registered and running where services are supported.
 
 Each technology has its folder under `deploy/dsc`: `ansible` and `msdsc`.
-The Ansible role `xmip_node` is written; Microsoft DSC v3's is not (its first
-document was deleted on the owner's word, 2026-10-09). Desired state places
+The Ansible role `xmip_node` is written; Microsoft DSC v3's node is not (its
+first document was deleted on the owner's word, 2026-10-09). Desired state places
 the cluster's `xmip.toml` on the node — the site's own, or a starter written
 from a few variables — and writes the node's configuration
 as `xmip-service --configuration <xmip.toml> --node <name> --slice` prints
@@ -586,6 +586,18 @@ YAML or a template. The node reads the document `xmip-core-configure` reads
 (`module/platform/configure/doc/node-configuration.md`). The estate root's
 `cargo test --test deploy` renders the role, slices it and reads the slice
 as `xmip-service` does.
+
+**The machines an environment runs on are templates too, one per
+virtualization technology** (the owner, 2026-10-09: *template for virtual
+nodes via selected tech, mine happens to be Hyper-V on Windows*; *DSC is not
+a lab, it is templates on how to create Xmip environments*). Microsoft DSC
+v3's first is `deploy/dsc/msdsc/hyperv`: an internal switch with NAT, and for
+each machine a generation 2 VM that installs its operating system unattended
+from the publisher's ISO (*the lab shall install from the ISO's*), with a
+generated `autounattend.xml` for Windows or kickstart for AlmaLinux, built
+from HyperVDsc's resources and three scripts where no resource exists. What
+runs inside a machine once installed belongs to the environment templates,
+not yet written.
 
 ## 9. Recovery
 

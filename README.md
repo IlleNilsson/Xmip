@@ -604,7 +604,7 @@ PowerShell module and the monitors run on all three.
 | --- | --- | --- | --- |
 | PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Ansible (`deploy/dsc/ansible/roles`); Microsoft DSC v3 (`deploy/dsc/msdsc`) decided, not written | the same | the same |
+| Desired state | Ansible (`deploy/dsc/ansible/roles`); Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`deploy/dsc/msdsc/hyperv`), a node not written | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The Ansible role writes the node configuration `xmip-core-configure` reads;
@@ -922,7 +922,7 @@ module/               the modules: foundation/ and platform/ start a node, the r
 test/                 the estate's Pester suite; test/core/playground is the Playground
 deploy/               the sites and profiles a build is made from (site/, profile/),
                       and desired state per technology under dsc/: ansible/,
-                      msdsc/ (Microsoft DSC v3, not written)
+                      msdsc/ (Microsoft DSC v3: hyperv/, the machines on Hyper-V)
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```
