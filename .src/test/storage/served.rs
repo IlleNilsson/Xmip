@@ -88,6 +88,7 @@ fn a_node_reaches_storage_over_tls_and_carries_on_past_a_killed_storage_node() {
             .write_journey(&xmip_persist::storage::JourneyRecord {
                 journey: journey(number),
                 body: b"before".to_vec(),
+                facts: xmip_persist::storage::JourneyFacts::default(),
             })
             .expect("written");
     }
@@ -98,6 +99,7 @@ fn a_node_reaches_storage_over_tls_and_carries_on_past_a_killed_storage_node() {
             .write_journey(&xmip_persist::storage::JourneyRecord {
                 journey: journey(number),
                 body: b"after".to_vec(),
+                facts: xmip_persist::storage::JourneyFacts::default(),
             })
             .expect("carried on through the other Storage node");
         let read = client.read_journey(journey(number)).expect("read");
@@ -119,6 +121,7 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
         .map(|id| AuditEntry {
             id: AuditId::new(0x0199_0000_0000_7000_a000_0000_0000_0000 | id),
             body: format!("audited {id}").into_bytes(),
+            facts: xmip_persist::storage::AuditFacts::default(),
         })
         .collect();
     for entry in &entries {
@@ -130,8 +133,10 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
     assert_eq!(node.keep_audit(60).expect("kept"), 0);
     for entry in &entries {
         assert_eq!(
-            node.read_kept_audit(entry.id).expect("read"),
-            Some(entry.clone())
+            node.read_kept_audit(entry.id)
+                .expect("read")
+                .map(|kept| (kept.id, kept.body)),
+            Some((entry.id, entry.body.clone()))
         );
     }
     drop(node);
@@ -161,6 +166,7 @@ fn the_latency_of_a_write_is_measured_and_reported() {
                     let record = xmip_persist::storage::JourneyRecord {
                         journey: journey(100_000 + thread * 1000 + number),
                         body: body.clone(),
+                        facts: xmip_persist::storage::JourneyFacts::default(),
                     };
                     node.write_journey(&record).expect("written");
                 }

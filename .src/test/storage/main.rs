@@ -84,16 +84,19 @@ fn hand_on(number: u64, claim: xmip_persist::storage::Claim) -> HandOn {
         result: JourneyRecord {
             journey: journey(number),
             body: format!("routed {number}").into_bytes(),
+            facts: xmip_persist::storage::JourneyFacts::default(),
         },
         messages: (0..3)
             .map(|part| MessageRecord {
                 message: message(number, part),
                 body: vec![b'm'; 512],
+                facts: xmip_persist::storage::MessageFacts::default(),
             })
             .collect(),
         next: vec![JourneyRecord {
             journey: journey(number + 1_000_000),
             body: format!("to send {number}").into_bytes(),
+            facts: xmip_persist::storage::JourneyFacts::default(),
         }],
         leaves: Vec::new(),
         queued: Vec::new(),
@@ -187,6 +190,7 @@ fn timed(node: &dyn XmipStorage, writes: u64, body: &[u8]) -> Vec<Duration> {
             let record = JourneyRecord {
                 journey: journey(number),
                 body: body.to_vec(),
+                facts: xmip_persist::storage::JourneyFacts::default(),
             };
             let started = std::time::Instant::now();
             node.write_journey(&record).expect("written");

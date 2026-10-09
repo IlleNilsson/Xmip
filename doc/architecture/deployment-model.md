@@ -518,6 +518,22 @@ store is a table of sealed records, so "queried arbitrarily" is answered by
 reading records through persist, not by SQL over the file, and a query the
 administration views need is an index persist keeps for it.
 
+**Proposed 2026-10-09: laid-out columns, in the clear** (the owner, the same
+day: *Store it in the clear*; *All columns shall be laid out*). Each table a
+search reads — Journey, Message, held, Dead Message Queue, audit and
+administration — keeps every single value of its record in a column of its
+own, in the clear, beside the body: identifiers as the keys are kept, names
+and words as text, times, states, counts and flags as they are. A list — a
+Journey's entries, a Message's Sections and context, an audit record's
+properties, a Dead Message's declines — is never a table of its own; it
+stays in the body. On a database server they are columns with indexes
+(`storage::schema`, `deploy/database/<server>/`); on an embedded Storage
+node, whose engines have no columns, each index is kept as entries of its
+own, their values in the clear as the server's, written in the record's
+own batch, the records themselves still sealed. `XmipStorage::query` asks
+one typed question of one index (`module/platform/persist/README.md`,
+*Laid-out columns*; the amendment drafted for ADR-0063 waits on the owner).
+
 ### Record identifiers are UUIDv7
 
 **Every record in either database is keyed by a UUIDv7**, per RFC 9562: the

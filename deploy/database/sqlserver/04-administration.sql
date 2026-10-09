@@ -14,21 +14,61 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
--- audit records kept over time, each once.
+-- audit records kept over time, each once, every single value of each in a column of its own.
 CREATE TABLE xmip.audit (
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    occurred_at datetime2(7) NOT NULL,
+    kept_at datetime2(7) NOT NULL,
+    action nvarchar(400) NOT NULL,
+    phase nvarchar(32) NOT NULL,
+    severity nvarchar(32) NOT NULL,
+    failed bit NOT NULL,
+    message_text nvarchar(max) NULL,
+    program nvarchar(400) NOT NULL,
+    host nvarchar(400) NOT NULL,
+    process int NOT NULL,
+    location nvarchar(400) NULL,
+    hidden bit NOT NULL,
+    execution binary(16) NULL,
+    journey binary(16) NULL,
+    message binary(16) NULL,
+    artifact binary(16) NULL,
+    artifact_kind nvarchar(32) NULL,
+    artifact_name nvarchar(400) NULL,
+    artifact_version nvarchar(400) NULL,
+    node binary(16) NULL,
+    cluster binary(16) NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 GO
 
--- registration, membership, Modules, Handlers, deployment and operator state.
+CREATE INDEX audit_occurred ON xmip.audit (occurred_at);
+GO
+
+CREATE INDEX audit_journey ON xmip.audit (journey);
+GO
+
+CREATE INDEX audit_message ON xmip.audit (message);
+GO
+
+CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
+GO
+
+CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed = 1;
+GO
+
+-- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
-    kind nvarchar(400) NOT NULL,
+    kind nvarchar(32) NOT NULL,
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
+    updated_at datetime2(7) NOT NULL,
     CONSTRAINT administration_key PRIMARY KEY (kind, id)
 );
+GO
+
+CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 GO
 
 CREATE USER xmip_storage FOR LOGIN xmip_storage;

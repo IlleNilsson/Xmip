@@ -83,7 +83,7 @@ psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_administr
 | --- | --- |
 | `01-roles.sql` | `xmip_owner`, which owns the schema and which no one logs in as, and `xmip_storage`, the login the Storage nodes connect as |
 | `02-databases.sql` | `xmip_runtime` and `xmip_administration`, owned by `xmip_owner`, connectable by `xmip_storage` and nobody else |
-| `03-runtime.sql` | the schema `xmip` and its tables in `xmip_runtime`, and the right to read and write them for `xmip_storage` |
+| `03-runtime.sql` | the schema `xmip` and its tables in `xmip_runtime`, with the indexes a search reads, and the right to read and write them for `xmip_storage` |
 | `04-administration.sql` | the same in `xmip_administration` |
 
 Placing the administration database on another server: run `01-roles.sql`
