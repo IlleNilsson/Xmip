@@ -68,10 +68,11 @@ that for now.*
   Message — a Publication, a Replay — carries the Message in its one binary
   form (`persist::storage::Audited`); the writer keeps the digest in the
   Stream's own record (`ledger::write_stream`); the audit keeper copies the
-  Stream's chunks beside the kept record, one at a time, into the
-  `audit_stream_chunk` table, and lays the digest and length out in the
-  `stream_digest` and `stream_length` columns, bytes and a number; a read is
-  held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
+  chunks of every Stream the Message's Sections are over beside the kept
+  record, one at a time and a shared Stream once, into the
+  `audit_stream_chunk` table, and keeps each Stream's digest and length in
+  the record's body, since a Message has a Stream per Section and a column
+  holds one value; a read is held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
   keeper outside tests and no surface reads a kept record
   (`estate-map.md`, `audit-through-storage`). Clause 5 is not built.
 

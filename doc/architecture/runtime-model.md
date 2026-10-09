@@ -1444,16 +1444,17 @@ systems, object stores and custom providers. Both are
 Playground drives them, a node does not.
 
 Audit comes first conceptually. An audit record spells out the Message it
-audits, as it was, and its Stream's bytes with their digest, so the copy is
+audits, as it was, and its Streams' bytes with their digests, so the copy is
 verified when read and the audit needs nothing else kept (ADR-0070). The
 Message travels in the record in its one binary form (`Message::record`). The
 digest is SHA-256, taken by the writer from the bytes as they pass once
 (`ledger::write_stream`) and kept in the Stream's own record, its one home;
 the audit keeper, moving a record to the administration database, copies the
-Stream's chunks beside it one at a time — the `audit_stream_chunk` table, by
-the record's identifier and their number — and lays the digest and the
-length out in the kept record's `stream_digest` and `stream_length` columns.
-A read of the copy is held to both, and one that does not match is refused in
+chunks of every Stream the Message's Sections are over beside it, one at a
+time and a shared Stream once — the `audit_stream_chunk` table, by the
+record's identifier, the Stream's and their number — and keeps each Stream's
+own record, its digest and length, in the kept record: a Message has a Stream
+per Section and a column holds one value. A read of a copy is held to both, and one that does not match is refused in
 words (`persist::storage::ChunkReader::audited`). It is part of the audit
 through Xmip Storage above,
 [decided, not built](estate-map.md#audit-through-storage): nothing runs the
