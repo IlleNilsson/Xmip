@@ -23,10 +23,10 @@ use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::catalogue;
 use xmip_runtime::execution_tree::build_execution_tree;
 
-const TEMPLATE: &str = "deploy/ansible/roles/xmip_node/templates/xmip.toml.j2";
-const TASKS: &str = "deploy/ansible/roles/xmip_node/tasks/main.yml";
-const DEFAULTS: &str = "deploy/ansible/roles/xmip_node/defaults/main.yml";
-const DSC: &str = "deploy/dsc/xmip-node.dsc.yaml";
+const TEMPLATE: &str = "deploy/dsc/ansible/roles/xmip_node/templates/xmip.toml.j2";
+const TASKS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/main.yml";
+const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
+const DSC: &str = "deploy/dsc/msdsc/xmip-node.dsc.yaml";
 
 type Variables = BTreeMap<String, String>;
 
