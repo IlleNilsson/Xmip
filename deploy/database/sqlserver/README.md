@@ -96,8 +96,10 @@ there.
 
 **Least privilege.** `xmip_storage` may select, insert, update and delete
 rows in the `xmip` schema, and nothing else: it cannot create, alter or drop
-anything, and holds no server role. A schema change is made by an operator
-added to `xmip_owner` (`ALTER ROLE xmip_owner ADD MEMBER <operator>;`).
+anything, and holds no server role. You may not change the
+schema in any way ([`../README.md`](../README.md)); a new release's scripts
+are run by an operator added to `xmip_owner`
+(`ALTER ROLE xmip_owner ADD MEMBER <operator>;`).
 
 An identifier is a UUIDv7, kept as `binary(16)`, not `uniqueidentifier`:
 SQL Server sorts `uniqueidentifier` by its last bytes first, which would
