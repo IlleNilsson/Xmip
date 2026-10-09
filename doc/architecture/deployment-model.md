@@ -568,22 +568,6 @@ YAML or a template. The node reads the document `xmip-core-configure` reads
 `cargo test --test deploy` renders both, slices them and reads the slices
 as `xmip-service` does.
 
-**The estate's own lab is desired state too** (the owner, 2026-10-06):
-`deploy/dsc/hyperv-lab` sets up ten Hyper-V machines with DSC v3 — a domain,
-a file server, a developer machine, a PostgreSQL primary and its streaming
-standby, and five Xmip nodes, three on Windows Server 2025 declaring
-processing and two on AlmaLinux 10 declaring receiving and sending. Every
-machine is installed unattended from its operating system's ISO, with a
-generated `autounattend.xml` or kickstart, each written by one function so
-that the lab's Ansible version, which the owner asked for beside DSC v3 on
-2026-10-08 and which is not built, can take the same answers. The Windows
-machines are then configured through PowerShell Direct, the AlmaLinux
-machines by DSC v3 on the guest, over SSH. Each Xmip node is placed and
-sliced as above, from the lab cluster's `xmip.toml`, which alone says its
-roles; each PostgreSQL machine is set up as `deploy/database/postgresql`
-tells IT to, the lab playing IT's part for replication (section 9). Its
-README says how to run it.
-
 ## 9. Recovery
 
 Xmip runs on computers, and computers fail. A Work Process may be short-lived
