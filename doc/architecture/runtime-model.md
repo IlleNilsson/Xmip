@@ -1452,9 +1452,9 @@ digest is SHA-256, taken by the writer from the bytes as they pass once
 the audit keeper, moving a record to the administration database, copies the
 chunks of every Stream the Message's Sections are over beside it, one at a
 time and a shared Stream once — the `audit_stream_chunk` table, by the
-record's identifier, the Stream's and their number — and keeps each Stream's
-own record, its digest and length, in the kept record: a Message has a Stream
-per Section and a column holds one value. A read of a copy is held to both, and one that does not match is refused in
+record's identifier, the Stream's and their number — and writes, with the
+record, each Stream's row of the `audit_stream` table: its length, its chunks,
+its digest and when it was written, in the clear, found by the Stream. A read of a copy is held to both, and one that does not match is refused in
 words (`persist::storage::ChunkReader::audited`). It is part of the audit
 through Xmip Storage above,
 [decided, not built](estate-map.md#audit-through-storage): nothing runs the
