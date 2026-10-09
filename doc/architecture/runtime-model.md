@@ -56,6 +56,12 @@ A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
 Message.**
 
+**Prepare keeps its Message** (the owner, 2026-10-09: *I think the message
+should be the same before and after Prepare, the stream changes, and it will
+be in the message history*). On the Receive and the Send side, Prepare
+changes the Message's Stream and not the Message: the Message is the same
+before and after, and the Stream it had stays in its history. Not built.
+
 ## 3. Immutability
 
 **The Stream is immutable. The Message and the Journey are not.**
