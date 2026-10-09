@@ -14,11 +14,12 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
--- every Stream, once, as written and never changed: its length and its chunks; a chunk and every Message referring to it refer to it by its identifier.
+-- every Stream, once, as written and never changed: its length, its chunks and the SHA-256 digest of its bytes; a chunk and every Message referring to it refer to it by its identifier.
 CREATE TABLE xmip.stream (
     stream binary(16) NOT NULL,
     length bigint NOT NULL,
     chunks int NOT NULL,
+    digest varbinary(max) NOT NULL,
     written_at datetime2(7) NOT NULL,
     CONSTRAINT stream_key PRIMARY KEY (stream)
 );

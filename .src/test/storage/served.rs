@@ -17,7 +17,10 @@ use std::time::Duration;
 
 use xmip_core::AuditId;
 use xmip_persist::storage::client::PASS_OVER;
-use xmip_persist::storage::{AuditEntry, StorageClient, StorageServer, XmipStorage};
+use xmip_persist::storage::{
+    AuditEntry, Audited, ChunkReader, StorageClient, StorageServer, StreamChunk, StreamDigest,
+    StreamRecord, XmipStorage,
+};
 
 use super::{TestNode, directory, heard, journey, percentiles, spawn, test_node, timed};
 
@@ -121,6 +124,7 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
         .map(|id| AuditEntry {
             id: AuditId::new(0x0199_0000_0000_7000_a000_0000_0000_0000 | id),
             body: format!("audited {id}").into_bytes(),
+            audited: None,
             facts: xmip_persist::storage::AuditFacts::default(),
         })
         .collect();
@@ -139,6 +143,62 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
             Some((entry.id, entry.body.clone()))
         );
     }
+    drop(node);
+    let _ = std::fs::remove_dir_all(&place);
+}
+
+/// A Stream of three chunks an audit record carries, kept beside the record
+/// by the keeper over the real engines and read back verified (ADR-0070).
+#[test]
+fn an_audited_stream_is_kept_beside_its_record_over_the_real_engines() {
+    let place = directory("audited");
+    let node = test_node(&place);
+    let stream = xmip_core::StreamId::new(0x0199_0000_0000_7000_b000_0000_0000_0001);
+    let content: Vec<u8> = (0..10_000u32).flat_map(u32::to_be_bytes).collect();
+    let mut digest = StreamDigest::default();
+    let pieces: Vec<&[u8]> = content.chunks(16_384).collect();
+    for (index, bytes) in (0..).zip(&pieces) {
+        digest.update(bytes);
+        let chunk = StreamChunk {
+            stream,
+            index,
+            bytes: bytes.to_vec(),
+        };
+        if index + 1 < 3 {
+            node.write_chunk(&chunk).expect("written");
+        } else {
+            let record = StreamRecord {
+                stream,
+                length: content.len() as u64,
+                chunks: 3,
+                digest: digest.clone().finish(),
+                written_unix_nanos: 0,
+            };
+            node.write_stream(&chunk, &record).expect("written");
+        }
+    }
+    let id = AuditId::new(0x0199_0000_0000_7000_b000_0000_0000_0002);
+    let entry = AuditEntry {
+        id,
+        body: b"audited".to_vec(),
+        audited: Some(Audited {
+            message: b"the Message".to_vec(),
+            stream,
+        }),
+        facts: xmip_persist::storage::AuditFacts::default(),
+    };
+    node.write_audit(&entry).expect("written");
+    assert_eq!(node.keep_audit(10).expect("kept"), 1);
+    let kept = node.read_kept_audit(id).expect("read").expect("kept");
+    assert_eq!(kept.audited, entry.audited);
+    assert_eq!(kept.facts.stream_digest, Some(digest.finish()));
+    let mut read = Vec::new();
+    std::io::Read::read_to_end(
+        &mut ChunkReader::audited(&node, &kept).expect("it carries one"),
+        &mut read,
+    )
+    .expect("verified");
+    assert!(read == content, "the bytes as written");
     drop(node);
     let _ = std::fs::remove_dir_all(&place);
 }

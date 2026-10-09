@@ -64,7 +64,16 @@ that for now.*
   previous record's digest; the Message travels in the audit record.
 - The writer computes the digest as it writes the Stream, from the bytes
   that pass through it once.
-- Nothing is built.
+- Built, 2026-10-09: clauses 1, 2 as amended and 4. A record of an act on a
+  Message — a Publication, a Replay — carries the Message in its one binary
+  form (`persist::storage::Audited`); the writer keeps the digest in the
+  Stream's own record (`ledger::write_stream`); the audit keeper copies the
+  Stream's chunks beside the kept record, one at a time, into the
+  `audit_stream_chunk` table, and lays the digest and length out in the
+  `stream_digest` and `stream_length` columns, bytes and a number; a read is
+  held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
+  keeper outside tests and no surface reads a kept record
+  (`estate-map.md`, `audit-through-storage`). Clause 5 is not built.
 
 ## Provenance
 

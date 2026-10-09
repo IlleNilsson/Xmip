@@ -207,8 +207,11 @@ tests. Records: ADR-0031 (amendment 2026-10-05), runtime-model.md section 20.
 
 **Audit written through Xmip Storage and kept by the audit keeper.** Xmip
 Storage's `keep_audit` exists and is tested, and nothing calls it outside
-tests; only publication and replay records reach the Ledger. The file sink is
-what every program writes. Records: ADR-0062, deployment-model.md section 7.
+tests; only publication and replay records reach the Ledger, each carrying its
+Message in full, and the keeper keeps the Stream's bytes beside the record
+with their SHA-256 digest and length, verified when read (ADR-0070 clauses 1,
+2 and 4); no surface reads a kept record. The file sink is what every program
+writes. Records: ADR-0062, ADR-0070, deployment-model.md section 7.
 
 #### `bounded-audit-channel`
 
@@ -290,7 +293,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 232720 lines of production
+Where each repository mounts and what it holds: 233307 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -596,8 +599,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            18406
-│       ├── persist                             6943
+│       ├── runtime                            18548
+│       ├── persist                             7388
 │       │   ├── sqlite                           168
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1

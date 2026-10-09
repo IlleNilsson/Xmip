@@ -1430,9 +1430,10 @@ operating system's log stays the fallback when it cannot be written
 records to its `audit.toml` today
 ([built, in the assembled service](estate-map.md#program-audit)).
 
-**Retention** (`xmip-core-retain`) holds what Audit needs to show: Messages,
-Streams or durable Stream references, lineage, Journey execution positions,
-artifact and Handler outcomes. Policy may apply by Receive Location, Receive
+**Retention** (`xmip-core-retain`) holds Messages, Streams or durable Stream
+references, lineage, Journey execution positions, artifact and Handler
+outcomes; Audit no longer needs it to show what it audited (ADR-0070,
+amendment 2026-10-09). Policy may apply by Receive Location, Receive
 Port, Publication, Journey, Message, Stream, Event, Audit category or retention
 category, using time, size, count, state or hold rules.
 
@@ -1444,9 +1445,21 @@ Playground drives them, a node does not.
 
 Audit comes first conceptually. An audit record spells out the Message it
 audits, as it was, and its Stream's bytes with their digest, so the copy is
-verified when read and the audit needs nothing else kept. Each audit record
-carries the digest of the one before it (ADR-0070; not built). Retention also
-supports Replay.
+verified when read and the audit needs nothing else kept (ADR-0070). The
+Message travels in the record in its one binary form (`Message::record`). The
+digest is SHA-256, taken by the writer from the bytes as they pass once
+(`ledger::write_stream`) and kept in the Stream's own record, its one home;
+the audit keeper, moving a record to the administration database, copies the
+Stream's chunks beside it one at a time — the `audit_stream_chunk` table, by
+the record's identifier and their number — and lays the digest and the
+length out in the kept record's `stream_digest` and `stream_length` columns.
+A read of the copy is held to both, and one that does not match is refused in
+words (`persist::storage::ChunkReader::audited`). It is part of the audit
+through Xmip Storage above,
+[decided, not built](estate-map.md#audit-through-storage): nothing runs the
+keeper outside tests, and no surface reads a kept record.
+Each audit record carrying the digest of the one before it is decided and not
+built (ADR-0070 clause 5). Retention also supports Replay.
 
 ## 17. Eventing
 
