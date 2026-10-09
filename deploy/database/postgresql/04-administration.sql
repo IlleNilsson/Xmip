@@ -29,12 +29,11 @@ CREATE TABLE xmip.audit (
     execution uuid NULL,
     journey uuid NULL,
     message uuid NULL,
-    artifact uuid NULL,
     artifact_kind text NULL,
     artifact_name text NULL,
     artifact_version text NULL,
-    node uuid NULL,
-    cluster uuid NULL,
+    node text NULL,
+    cluster text NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 
