@@ -21,8 +21,8 @@ CREATE TABLE xmip.audit (
     occurred_at datetime2(7) NOT NULL,
     kept_at datetime2(7) NOT NULL,
     action nvarchar(400) NOT NULL,
-    phase nvarchar(400) NOT NULL,
-    severity nvarchar(400) NOT NULL,
+    phase nvarchar(32) NOT NULL,
+    severity nvarchar(32) NOT NULL,
     failed bit NOT NULL,
     message_text nvarchar(max) NULL,
     program nvarchar(400) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE xmip.audit (
     journey binary(16) NULL,
     message binary(16) NULL,
     artifact binary(16) NULL,
-    artifact_kind nvarchar(400) NULL,
+    artifact_kind nvarchar(32) NULL,
     artifact_name nvarchar(400) NULL,
     artifact_version nvarchar(400) NULL,
     node binary(16) NULL,
@@ -60,7 +60,7 @@ GO
 
 -- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
-    kind nvarchar(400) NOT NULL,
+    kind nvarchar(32) NOT NULL,
     id binary(16) NOT NULL,
     body varbinary(max) NOT NULL,
     updated_at datetime2(7) NOT NULL,

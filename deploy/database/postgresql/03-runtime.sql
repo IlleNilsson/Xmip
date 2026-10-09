@@ -10,7 +10,16 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
--- every Stream, in chunks.
+-- every Stream, once, as written and never changed: its length and its chunks; a chunk and every Message referring to it refer to it by its identifier.
+CREATE TABLE xmip.stream (
+    stream uuid NOT NULL,
+    length bigint NOT NULL,
+    chunks integer NOT NULL,
+    written_at timestamptz NOT NULL,
+    CONSTRAINT stream_key PRIMARY KEY (stream)
+);
+
+-- every Stream's chunks, by its identifier and their number; a Stream ends where it has no further chunk.
 CREATE TABLE xmip.stream_chunk (
     stream uuid NOT NULL,
     chunk integer NOT NULL,
@@ -25,10 +34,10 @@ CREATE TABLE xmip.message (
     created_at timestamptz NOT NULL,
     previous_message uuid NULL,
     generation integer NOT NULL,
-    created_by smallint NOT NULL,
-    priority smallint NOT NULL,
-    execution_profile smallint NOT NULL,
-    durability smallint NOT NULL,
+    created_by text NOT NULL,
+    priority text NOT NULL,
+    execution_profile text NOT NULL,
+    durability text NOT NULL,
     size_bytes bigint NOT NULL,
     party text NULL,
     contract text NULL,
@@ -44,13 +53,15 @@ CREATE INDEX message_contract ON xmip.message (contract, created_at);
 
 CREATE INDEX message_previous ON xmip.message (previous_message);
 
+CREATE INDEX message_stream ON xmip.message (stream);
+
 -- every Journey, as a step wrote it, every single value of it in a column of its own.
 CREATE TABLE xmip.journey (
     journey uuid NOT NULL,
     body bytea NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
-    state smallint NOT NULL,
+    state text NOT NULL,
     previous_journey uuid NULL,
     subscription text NULL,
     cause_work_process text NULL,
