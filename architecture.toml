@@ -185,8 +185,8 @@ record = ["ADR-0062"]
 [implementation.audit-through-storage]
 name = "Audit written through Xmip Storage and kept by the audit keeper"
 state = "decided"
-note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger. The file sink is what every program writes."
-record = ["ADR-0062", "deployment-model.md section 7"]
+note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger, each carrying its Message in full, and the keeper keeps the Stream's bytes beside the record with their SHA-256 digest and length, verified when read (ADR-0070 clauses 1, 2 and 4); no surface reads a kept record. The file sink is what every program writes."
+record = ["ADR-0062", "ADR-0070", "deployment-model.md section 7"]
 
 [implementation.bounded-audit-channel]
 name = "A bounded asynchronous audit channel with a capacity policy"

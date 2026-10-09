@@ -6,19 +6,22 @@ now.
 This replaces `Xmip-Audit-Architecture.md`, `audit-and-correlation.md`,
 `audit-directive.md` and `Xmip-Observer-Architecture.md`.
 
-## 1. Five things, and only one of them holds payloads
+## 1. Five things, and two of them hold payloads
 
 | | Answers | Holds payloads | Module |
 | --- | --- | --- | --- |
-| **Audit** | what happened, where, by whom, why, when, with what outcome | no | `xmip-core-audit` |
+| **Audit** | what happened, where, by whom, why, when, with what outcome | **yes**, the Message and Stream of an act on a Message | `xmip-core-audit` |
 | **Logs** | what Xmip itself did — startup, configuration, hosts, threads, internal decisions | **no** | `xmip-core-observe` |
 | **Traces** | where a Message went, with timing, boundaries and correlation | **no** | `xmip-core-observe` |
 | **Retention** | the actual Message, its context and history | **yes** | `xmip-core-retain` |
 | **Observation** | what is happening right now, and what is unhealthy | no | `xmip-core-observe` |
 
-**Only retention stores message content**, and it is therefore controlled
-separately from the other four, because it is the one that can hold personal
-data, credentials in transit, medical records and commercial terms.
+**Retention and Audit store message content**: retention the actual Message
+for inspection and replay, and Audit the Message an act was on and its
+Stream's bytes, spelled out as they were, with the Stream's digest so the copy
+is verified when read (ADR-0070, amendment 2026-10-09). They are the two that
+can hold personal data, credentials in transit, medical records and commercial
+terms; retention is controlled separately from the other four.
 
 A correction to earlier vocabulary: `terminology.md` retired "Tracking" in
 favor of Audit, which flattened a distinction worth keeping. Tracking's *job* —

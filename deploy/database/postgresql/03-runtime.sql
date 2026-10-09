@@ -10,11 +10,12 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
--- every Stream, once, as written and never changed: its length and its chunks; a chunk and every Message referring to it refer to it by its identifier.
+-- every Stream, once, as written and never changed: its length, its chunks and the SHA-256 digest of its bytes; a chunk and every Message referring to it refer to it by its identifier.
 CREATE TABLE xmip.stream (
     stream uuid NOT NULL,
     length bigint NOT NULL,
     chunks integer NOT NULL,
+    digest bytea NOT NULL,
     written_at timestamptz NOT NULL,
     CONSTRAINT stream_key PRIMARY KEY (stream)
 );
