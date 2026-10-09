@@ -34,8 +34,6 @@ CREATE TABLE xmip.audit (
     artifact_version text NULL,
     node text NULL,
     cluster text NULL,
-    stream_digest bytea NULL,
-    stream_length bigint NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 
@@ -49,12 +47,13 @@ CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
 
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed;
 
--- the bytes of the Stream a kept audit record carries, in chunks by the record's identifier and their number, kept with it by the audit keeper.
+-- the bytes of each Stream a kept audit record carries, in chunks by the record's identifier, the Stream's and their number, kept with it by the audit keeper; a Stream two Sections share once.
 CREATE TABLE xmip.audit_stream_chunk (
     audit uuid NOT NULL,
+    stream uuid NOT NULL,
     chunk integer NOT NULL,
     bytes bytea NOT NULL,
-    CONSTRAINT audit_stream_chunk_key PRIMARY KEY (audit, chunk)
+    CONSTRAINT audit_stream_chunk_key PRIMARY KEY (audit, stream, chunk)
 );
 
 -- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
