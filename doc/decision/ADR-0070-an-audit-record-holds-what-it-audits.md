@@ -15,10 +15,10 @@
 - Concepts: Audit; tamper evidence; Stream digest; retention hold
 
 **An audit record spells out the Message it audits, in full, as it was at
-the audited event, and seals its Stream by digest: the Stream is kept, once,
-for as long as an audit record names it, and is verified against the digest
-when it is read. Each audit record carries the digest of the one before it,
-so a deleted, changed or reordered record is found.**
+the audited event, and its Stream's bytes with their digest, so the copy is
+verified when it is read (amendment 2026-10-09). Each audit record carries
+the digest of the one before it, so a deleted, changed or reordered record
+is found.**
 
 ## Context
 
@@ -69,3 +69,13 @@ that for now.*
 ## Provenance
 
 The owner's words of 2026-10-09, quoted in Context, recorded the same day.
+
+## Amendment, 2026-10-09: the Stream is spelled out too
+
+The owner, the same day: *Go ahead Audit has to be spelled out, could be in
+another storage solution if that helps.* Clause 2 is replaced: an audit
+record carries its Stream's bytes, not a digest of them; the digest stays,
+so the copy can be verified. Clause 3 falls away: the audit no longer needs
+retention to hold a Stream. Where audit is kept may be a storage of its own
+if that helps; today it is the administration database
+(`runtime-model.md` section 16), and nothing here moves it.
