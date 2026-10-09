@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Sixty-eight decisions, read as one document.
+Sixty-nine decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -244,6 +244,16 @@ address: the cluster is reached through a name that lists its nodes, and any
 node answers.**
 
 → [A node has one address, in full](ADR-0067-a-node-has-one-address.md)
+
+### What a Replay or a Retry does when what the Journey ran under has
+
+changed
+
+**Xmip does not replay or retry a Journey whose circumstances have changed.
+Where a Work Process, or the Pub/Sub configuration, changed between when the
+Journey stopped and its Replay or Retry, its Message is a Dead Message.**
+
+→ [A Journey whose circumstances changed is a Dead Message, in full](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md)
 
 ---
 
@@ -1014,10 +1024,12 @@ You have a word. This gives you the decision that governs it.
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | configuration | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
+| configuration change | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
+| Dead Message | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | Dead Message Queue | [The Journey model](ADR-0013-journey-model.md) |
 | decision | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | declared maturity | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
@@ -1124,9 +1136,11 @@ You have a word. This gives you the decision that governs it.
 | refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Replay | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | resilience technology | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Retention | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Retention window | [Observation has history](ADR-0029-observation-has-history.md) |
+| Retry | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
@@ -1274,3 +1288,4 @@ is nowhere else.
 | [0066](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) | Routes are configured; transforms and processes are compiled | |
 | [0067](ADR-0067-a-node-has-one-address.md) | A node has one address | |
 | [0068](ADR-0068-every-dependency-is-a-trait-handed-in.md) | Every dependency is a trait, handed in | |
+| [0069](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) | A Journey whose circumstances changed is a Dead Message | |
