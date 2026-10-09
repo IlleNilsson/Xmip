@@ -331,8 +331,8 @@ what is already there*, which is what the map's seventy-seven read like.
 - `architecture.toml` — `maturity` removed from `[default]`; 155 declarations
   gain an explicit one; six `planned` become `scaffolded`.
 - `test/Sync-XmipEstate.Test.ps1` — one test, in the `The manifest` block.
-- `deploy/dsc/xmip-node.dsc.yaml` and
-  `deploy/ansible/roles/xmip_node/defaults/main.yml` — 51 technologies each.
+- `deploy/dsc/msdsc/xmip-node.dsc.yaml` and
+  `deploy/dsc/ansible/roles/xmip_node/defaults/main.yml` — 51 technologies each.
   The owner's rule (2026-09-08) is that every technology at `scaffolded` or
   beyond appears in both lists, and `test/Deploy.Test.ps1` holds it; promoting
   the identify, authenticate and authorize technologies and two transports
@@ -425,7 +425,7 @@ taken out of the manifest, and nothing records where it was; git does.
 
 ## Amendment, 2026-09-27: the deploy lists are generated too
 
-`deploy/dsc/xmip-node.dsc.yaml` and `deploy/ansible/roles/xmip_node/defaults/main.yml`
+`deploy/dsc/msdsc/xmip-node.dsc.yaml` and `deploy/dsc/ansible/roles/xmip_node/defaults/main.yml`
 named every technology a node carries and which start, by hand, and
 `test/Deploy.Test.ps1` held them equal to the manifest: a second copy held by a
 test, which CONTRIBUTING forbids. The manifest now says both. Every technology

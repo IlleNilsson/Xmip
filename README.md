@@ -604,7 +604,7 @@ PowerShell module and the monitors run on all three.
 | --- | --- | --- | --- |
 | PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Microsoft DSC v3 (`deploy/dsc`) or Ansible (`deploy/ansible/roles`) | the same | the same |
+| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`) or Ansible (`deploy/dsc/ansible/roles`) | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The desired-state files write the node configuration `xmip-core-configure`
