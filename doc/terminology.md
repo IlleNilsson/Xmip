@@ -334,7 +334,9 @@ own files itself (ADR-0063, amendment 2026-10-01).
 ## Dead Message Queue
 
 **Dead Message Queue.** Where an accepted Message goes when **no Subscription
-matched it**. It is state in the Ledger, not a store of its own: the
+matched it**, and where a Journey's Message goes when its Replay or Retry
+finds the Work Process or the Pub/Sub configuration changed since it stopped
+(ADR-0069; not built). It is state in the Ledger, not a store of its own: the
 Publication that matched nothing, kept with each Subscription's reason for
 declining (`architecture/runtime-model.md` section 9). An Operator lists it per
 cluster and node, opens one entry and replays it once a Subscription is added
