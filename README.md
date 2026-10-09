@@ -611,16 +611,6 @@ The desired-state files write the node configuration `xmip-core-configure`
 reads; `cargo test --test deploy` renders both and reads them as
 `xmip-service` does. Each names the site its node is built from.
 
-The [Hyper-V lab](deploy/dsc/hyperv-lab/README.md) sets up ten virtual
-machines on one Hyper-V host with Microsoft DSC v3: a domain controller, a
-file server and three Xmip nodes declaring `processing` on Windows Server
-2025, a Windows 11 developer machine, and on AlmaLinux 10 a PostgreSQL
-primary, its streaming standby, and one node each declaring `receiving` and
-`sending`. Every machine is installed unattended from its operating system's
-ISO, with an answer file the lab generates: `autounattend.xml` for Windows, a
-kickstart for AlmaLinux. The Windows machines are then configured through
-PowerShell Direct, the AlmaLinux machines by DSC v3 on the guest, over SSH.
-
 A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
 `server` or `hosted`), the node **roles** it serves (`receiving`,
