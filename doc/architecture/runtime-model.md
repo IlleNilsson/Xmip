@@ -411,10 +411,16 @@ classic 64 KiB window, so a Stream in flight holds about 128 KiB, the chunk
 it writes and the one it reads ahead (`xmip-core-runtime`'s `ledger::CHUNK`,
 over `xmip-core-transport`'s `TCP_SEGMENT`). A transport may declare a unit
 of its own where that is useful; none does yet. **A Stream ends where it has
-no further chunk**, and its Message keeps its length in bytes; a reader holds
-what it read to that length, so a chunk lost after Publication, damaged or
-deleted, is refused in words, never read as a shorter Stream (the owner,
-2026-10-09). An empty Stream is one empty chunk.
+no further chunk.** **A Stream is a record of its own** (the owner,
+2026-10-09: *a Message refers to a stream, a stream is stored in chunks*;
+*A new message might refer to the same stream*): written once, with its
+last chunk, and never changed, it is the one home of its length and its
+chunks, and every Message that refers to it — the one received, one assigned
+from it — refers to it by its identifier; a Message given a new Stream,
+assigned or transformed, refers to that one. A reader holds what it read to
+the length the Stream's record keeps, so a chunk lost after Publication,
+damaged or deleted, is refused in words, never read as a shorter Stream. An
+empty Stream is one empty chunk.
 
 **Built for receive, 2026-10-02.** Each Receive Location carries what
 arrives on a pool of its own (`xmip-core-runtime`'s `pool`): one thread
