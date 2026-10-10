@@ -53,8 +53,9 @@ that for now.*
 
 ## Not decided
 
-- what "the record before it" is when several programs and nodes audit at
-  once — one chain per program, per node or per cluster;
+- which scope each kind of audited act chains in, and whether one record
+  may sit in more than one chain (amendment 2026-10-10 decides that the
+  scope follows the act);
 - the verification's surface (command, cmdlet, view);
 - what an auditor is given to read a held Stream, and under which role.
 
@@ -100,3 +101,13 @@ written by Xmip's core or by any provider's module carries everything it
 audits, laid out where a column can hold it: each audited Stream is a row of
 its own beside its bytes, with its identifier, length, digest and chunk
 count.
+
+## Amendment, 2026-10-10: the chain follows what is audited
+
+The owner, asked whether clause 5's chain runs per program, node or
+cluster: *I guess it has to be per journey, thread, program, node & cluster
+depending on what is being audited.* There is no single chain: an audit
+record chains to the record before it within the scope of what it audits —
+a Journey, a thread, a program, a node or the cluster. Which act belongs to
+which scope, and whether a record sits in more than one chain, is not yet
+decided.
