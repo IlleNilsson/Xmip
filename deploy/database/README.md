@@ -2,7 +2,7 @@
 
 For the people who run a site's database servers. How to set up Xmip
 Storage is in [`postgresql/README.md`](postgresql/README.md) and
-[`sqlserver/README.md`](sqlserver/README.md); this page holds the rules both
+[`mssql/README.md`](mssql/README.md); this page holds the rules both
 follow.
 
 ## Do not change the schemas

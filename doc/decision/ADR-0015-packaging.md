@@ -309,7 +309,7 @@ generated from the one schema definition the backend reads and writes by
 at the estate root fails when they differ, so the two cannot drift.
 PostgreSQL's and SQL Server's are both written now, ahead of SQL Server's
 backend; the same test runs Xmip Storage against a real server named by
-`XMIP_TEST_POSTGRESQL` or `XMIP_TEST_SQLSERVER`, and says it skipped where
+`XMIP_TEST_POSTGRESQL` or `XMIP_TEST_MSSQL`, and says it skipped where
 none is. A Storage node names its server in its configuration as
 `[storage.database]` — two connections,
 `<server>://<login>@<host>[:<port>]/<database>`, and the name of the secret

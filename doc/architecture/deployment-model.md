@@ -459,7 +459,7 @@ the node tries them round robin.
 owner, 2026-10-10: *i would do it like runtime, storage, connection string.
 Same for audit and administration*, and *Yes, better*; ADR-0070, amendment
 2026-10-10): `[runtime]`, `[administration]` and `[audit]`, each with
-`storage` — `rocksdb`, `sqlite`, `postgresql` or `sqlserver` — and
+`storage` — `rocksdb`, `sqlite`, `postgresql` or `mssql` — and
 `connection`, the store's path on an embedded engine or the server's own
 connection string, for example
 `[runtime] storage = "postgresql"`,

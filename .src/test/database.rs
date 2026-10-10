@@ -10,7 +10,7 @@
 //! is then read and landed with the change.
 //!
 //! And Xmip Storage against a real server, where a test is given one: the
-//! server named by `XMIP_TEST_POSTGRESQL` or `XMIP_TEST_SQLSERVER`, each as
+//! server named by `XMIP_TEST_POSTGRESQL` or `XMIP_TEST_MSSQL`, each as
 //! its operators' guide says. Where neither is set the test says it was
 //! skipped, and why, and passes on nothing.
 
@@ -97,5 +97,5 @@ fn xmip_storage_keeps_its_records_on_a_postgresql_server_where_one_is_given() {
 
 #[test]
 fn xmip_storage_keeps_its_records_on_a_sql_server_where_one_is_given() {
-    against(Server::SqlServer, "XMIP_TEST_SQLSERVER");
+    against(Server::SqlServer, "XMIP_TEST_MSSQL");
 }

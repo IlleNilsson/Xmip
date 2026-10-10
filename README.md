@@ -667,7 +667,7 @@ them until its configuration can name the identity it presents
 ([built, not in the assembled service](doc/architecture/estate-map.md#storage-nodes)). The
 database servers it is to be put in front of are set up by IT from
 [`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
-[`deploy/database/sqlserver`](deploy/database/sqlserver/README.md); a
+[`deploy/database/mssql`](deploy/database/mssql/README.md); a
 Storage node reads `[storage.database]` and connects to neither yet
 ([decided, not built](doc/architecture/estate-map.md#database-server)). A
 pause or resume of a Subscription reaches it as an

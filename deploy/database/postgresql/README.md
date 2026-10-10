@@ -218,4 +218,4 @@ cargo test --test database --features persist -- --nocapture
 ## SQL Server
 
 SQL Server's guide and scripts are beside this folder, in
-`deploy/database/sqlserver/`, written from the same schema definition.
+`deploy/database/mssql/`, written from the same schema definition.
