@@ -53,8 +53,13 @@ that for now.*
 
 ## Not decided
 
-- the verification's surface (command, cmdlet, view);
-- what an auditor is given to read a held Stream, and under which role.
+- what an auditor is given to read a held Stream, and under which role;
+- whether a node's records in its program's `audit.toml` and those Xmip
+  Storage keeps for it are one chain: they are two, one in each log, today;
+- that a record deleted from the end of a chain is found: nothing outside
+  the chain holds where it ends;
+- a surface for the chains Xmip Storage keeps: no surface reads a kept
+  record yet.
 
 ## Consequences
 
@@ -72,7 +77,33 @@ that for now.*
   `audit_stream` table — its length, chunks, digest and when it was written,
   in clear columns — in the record's own write; a read is held to both (`persist::storage::ChunkReader::audited`). Nothing runs the
   keeper outside tests and no surface reads a kept record
-  (`estate-map.md`, `audit-through-storage`). Clause 5 is not built.
+  (`estate-map.md`, `audit-through-storage`).
+- Built, 2026-10-10: clause 5 as amended, one chain per writer, and the body
+  in chunks (amendment below). The writer is `Origin::writer` in
+  `xmip-core-audit`: the location a process declared where it is a node's,
+  else the program's name. A record carries its number in its writer's
+  chain, the SHA-256 digest of the record before it there (none, zeros, for
+  the first) and its own, taken over its canonical form, which holds the
+  number and the digest before it. In a program's `audit.toml` the file sink
+  forms the chain as it appends, holding `audit.lock` beside the file, and
+  reads where the writer's chain stands from the file's end — so a restarted
+  program goes on from its last record; the canonical form is the record's
+  TOML table without the line of its own digest. In Xmip Storage the audit
+  keeper forms it as it keeps each record, once by its identifier and in
+  the order written, the head of each writer's chain kept in the
+  `audit_chain_head` table in the record's own write; the canonical form is the kept row — every column but its own
+  digest and the keeper's time — and the record of every Stream it carries,
+  the body inside it through its digest (`persist::storage::chain_digest`).
+  The `audit` table lays out `writer`, `position`, `previous_digest` and
+  `digest`, indexed on the writer and the number. One walk,
+  `xmip-core-audit`'s `audit_chain::walk`, says the first place a chain
+  breaks — a record deleted, changed or out of order — or that it is whole,
+  in words; `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit
+  view's *verify chains* walk the chains in the file, through
+  `xmip_audit_read_v1`'s `verify`, and the runtime's
+  `ledger::verify_audit_chain` walks one Xmip Storage keeps. Verifying reads
+  no payload, so an Observer may: it is a reading, and ADR-0009's amendment
+  of 2026-09-06 lets an Observer read every monitoring surface.
 
 ## Provenance
 
@@ -120,3 +151,21 @@ transaction. So every audit record sits in exactly one chain, its writer's —
 the node's, or the program's where no node writes it — and a Journey's, a
 thread's or the cluster's trail is found by its identifier across those
 chains, each proven intact. This replaces the amendment above it.
+
+## Amendment, 2026-10-10: the body is kept in chunks
+
+The owner: *The audit body has to be like the stream, in chunks.* A kept
+audit record's body — its record and the Message it carries in full — is
+kept as a Stream is: beside the record's row in a chunk table of its own,
+`audit_body_chunk`, by the record's identifier and the chunk's number, in
+chunks of the size the runtime writes a Stream in (`ledger::CHUNK`), written
+in the keeper's write, its length, chunks and SHA-256 — taken as the chunks
+pass — laid out in the row, and read back a chunk at a time, held to its
+length and digest, never whole (`persist::storage::ChunkReader::audit_body`).
+The record's digest in its writer's chain covers the body through that
+digest.
+
+The owner, the same day: *every type of data goes into dedicated tables,
+dedicated columns.* The body's chunks are a table of their own, never
+shared with `audit_stream_chunk` or the Ledger's `stream_chunk`; what is
+shared is the code that reads chunks (`ChunkReader`), not a table.

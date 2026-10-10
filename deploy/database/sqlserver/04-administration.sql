@@ -14,10 +14,9 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
--- audit records kept over time, each once, every single value of each in a column of its own.
+-- audit records kept over time, each once, every single value of each in a column of its own, each in its writer's audit chain: its number there, the SHA-256 digest of the record before it and its own.
 CREATE TABLE xmip.audit (
     id binary(16) NOT NULL,
-    body varbinary(max) NOT NULL,
     occurred_at datetime2(7) NOT NULL,
     kept_at datetime2(7) NOT NULL,
     action nvarchar(400) NOT NULL,
@@ -38,6 +37,13 @@ CREATE TABLE xmip.audit (
     artifact_version nvarchar(400) NULL,
     node nvarchar(400) NULL,
     cluster nvarchar(400) NULL,
+    writer nvarchar(400) NOT NULL,
+    position bigint NOT NULL,
+    previous_digest varbinary(max) NOT NULL,
+    digest varbinary(max) NOT NULL,
+    body_length bigint NOT NULL,
+    body_chunks int NOT NULL,
+    body_digest varbinary(max) NOT NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 GO
@@ -55,6 +61,27 @@ CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
 GO
 
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed = 1;
+GO
+
+CREATE INDEX audit_chain ON xmip.audit (writer, position);
+GO
+
+-- where each writer's audit chain stands: the number of its last kept record and that record's SHA-256 digest, written with it by the audit keeper.
+CREATE TABLE xmip.audit_chain_head (
+    writer nvarchar(400) NOT NULL,
+    position bigint NOT NULL,
+    digest varbinary(max) NOT NULL,
+    CONSTRAINT audit_chain_head_key PRIMARY KEY (writer)
+);
+GO
+
+-- the body of each kept audit record, its record and the Message it carries, in chunks by the record's identifier and their number, as a Stream is kept, written with it by the audit keeper.
+CREATE TABLE xmip.audit_body_chunk (
+    audit binary(16) NOT NULL,
+    chunk int NOT NULL,
+    bytes varbinary(max) NOT NULL,
+    CONSTRAINT audit_body_chunk_key PRIMARY KEY (audit, chunk)
+);
 GO
 
 -- each Stream a kept audit record carries, once: its length, its chunks, the SHA-256 digest of its bytes and when the Ledger wrote it, written with the record by the audit keeper.

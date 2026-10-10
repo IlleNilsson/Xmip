@@ -179,13 +179,13 @@ record = ["ADR-0034", "ADR-0033"]
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip-cli`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, the operating system's log the fallback."
+note = "`xmip-service`, `xmip-cli`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains."
 record = ["ADR-0062"]
 
 [implementation.audit-through-storage]
 name = "Audit written through Xmip Storage and kept by the audit keeper"
 state = "decided"
-note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger, each carrying its Message in full, and the keeper keeps every Stream's bytes beside the record with each one's SHA-256 digest and length, verified when read (ADR-0070 clauses 1, 2 and 4); no surface reads a kept record. The file sink is what every program writes."
+note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger, each carrying its Message in full, and the keeper keeps the record's body in chunks of the runtime's Stream chunk and every Stream's bytes beside the record, each with its SHA-256 digest and length, verified when read, and chains each record in its writer's audit chain as it keeps it (ADR-0070 clauses 1, 2, 4 and 5, amendments 2026-10-10); the runtime's `ledger::verify_audit_chain` walks a writer's chain, and no surface reads a kept record or calls it. The file sink is what every program writes."
 record = ["ADR-0062", "ADR-0070", "deployment-model.md section 7"]
 
 [implementation.bounded-audit-channel]

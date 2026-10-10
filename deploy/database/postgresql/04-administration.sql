@@ -10,10 +10,9 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
--- audit records kept over time, each once, every single value of each in a column of its own.
+-- audit records kept over time, each once, every single value of each in a column of its own, each in its writer's audit chain: its number there, the SHA-256 digest of the record before it and its own.
 CREATE TABLE xmip.audit (
     id uuid NOT NULL,
-    body bytea NOT NULL,
     occurred_at timestamptz NOT NULL,
     kept_at timestamptz NOT NULL,
     action text NOT NULL,
@@ -34,6 +33,13 @@ CREATE TABLE xmip.audit (
     artifact_version text NULL,
     node text NULL,
     cluster text NULL,
+    writer text NOT NULL,
+    position bigint NOT NULL,
+    previous_digest bytea NOT NULL,
+    digest bytea NOT NULL,
+    body_length bigint NOT NULL,
+    body_chunks integer NOT NULL,
+    body_digest bytea NOT NULL,
     CONSTRAINT audit_key PRIMARY KEY (id)
 );
 
@@ -46,6 +52,24 @@ CREATE INDEX audit_message ON xmip.audit (message);
 CREATE INDEX audit_artifact ON xmip.audit (artifact_name, occurred_at);
 
 CREATE INDEX audit_failed ON xmip.audit (failed, occurred_at) WHERE failed;
+
+CREATE INDEX audit_chain ON xmip.audit (writer, position);
+
+-- where each writer's audit chain stands: the number of its last kept record and that record's SHA-256 digest, written with it by the audit keeper.
+CREATE TABLE xmip.audit_chain_head (
+    writer text NOT NULL,
+    position bigint NOT NULL,
+    digest bytea NOT NULL,
+    CONSTRAINT audit_chain_head_key PRIMARY KEY (writer)
+);
+
+-- the body of each kept audit record, its record and the Message it carries, in chunks by the record's identifier and their number, as a Stream is kept, written with it by the audit keeper.
+CREATE TABLE xmip.audit_body_chunk (
+    audit uuid NOT NULL,
+    chunk integer NOT NULL,
+    bytes bytea NOT NULL,
+    CONSTRAINT audit_body_chunk_key PRIMARY KEY (audit, chunk)
+);
 
 -- each Stream a kept audit record carries, once: its length, its chunks, the SHA-256 digest of its bytes and when the Ledger wrote it, written with the record by the audit keeper.
 CREATE TABLE xmip.audit_stream (
