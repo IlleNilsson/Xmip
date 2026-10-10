@@ -11,13 +11,15 @@ failed over — is yours to decide, and the last section points at it.
 Every Xmip node reads and writes its records through **Xmip Storage**: the
 nodes of the cluster that declare the Storage role. Those nodes, and only
 those, connect to your database server (`doc/architecture/deployment-model.md`
-section 7, option A). Xmip Storage keeps **two databases**, always separate,
-which you may place on different servers or instances:
+section 7, option A). Xmip Storage keeps **three databases**, one to each
+data domain, always separate, and each may be on a server or instance of
+its own:
 
 | Database | Holds | Written |
 | --- | --- | --- |
 | `xmip_runtime` | the Ledger: every Stream in chunks, every Message and Journey, the claims on Journeys, audit records as first written | constantly; read by key |
-| `xmip_administration` | node registration, cluster membership, installed Modules, deployment and operator state, and audit records kept over time | rarely; read over time |
+| `xmip_administration` | node registration, cluster membership, installed Modules, deployment and operator state | rarely; read over time |
+| `xmip_audit` | audit records kept over time, each with its body and the bytes of every Stream it carries, moved there from `xmip_runtime` by the audit keeper | as the keeper moves them; read over time |
 
 Neither holds configuration: each Xmip node reads its own configuration file
 as it starts.
@@ -58,16 +60,18 @@ wherever you run them from.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Delayed durability, per database | `DISABLED` | Xmip counts a write only once the database has it durably (`runtime-model.md` section 3). `FORCED` returns a commit before its log is on disk, and a crash loses writes Xmip was told were kept. `02-databases.sql` sets it; leave it so. |
+| Delayed durability, per database | `DISABLED` | Xmip counts a write only once the database has it durably (`runtime-model.md` section 3). `FORCED` returns a commit before its log is on disk, and a crash loses writes Xmip was told were kept. Each `02-<domain>-database.sql` sets it; leave it so. |
 | Isolation | `READ COMMITTED`, the default; `READ_COMMITTED_SNAPSHOT` on or off | A claim is one conditional `UPDATE` — set the holder where there is none or the last claim has lapsed — which takes the row's lock, and a hand-on is one transaction; neither needs more. |
 | Encryption of connections | Force Strict Encryption | Xmip connects over TLS only (section 4). |
 | User connections | at least 16 for each Storage node, plus your own | A Storage node keeps a connection for each request it has in flight. |
 
 ## 3. Run the scripts, in order
 
-Each script says at its top what it is and as whom it runs. Run them as a
+The scripts are per data domain: the number is the step, the word the
+domain. Each says at its top what it is and as whom it runs. Run them as a
 member of `sysadmin`, from the folder they are in, with `-b` so a failure
-stops the script. The login's password is a scripting variable,
+stops the script. One instance holding all three databases runs them all,
+in the order they sort by step. The login's password is a scripting variable,
 `StoragePassword`: give it in the environment for the one command, so it is
 in no file and no shell history.
 
@@ -75,24 +79,32 @@ in no file and no shell history.
 $env:StoragePassword = Read-Host -Prompt 'xmip_storage password' -MaskInput
 sqlcmd -S tcp:sql-1.example,1433 -E -b -i 01-roles.sql
 Remove-Item -Path Env:StoragePassword
-sqlcmd -S tcp:sql-1.example,1433 -E -b -i 02-databases.sql
-sqlcmd -S tcp:sql-1.example,1433 -E -b -i 03-runtime.sql
-sqlcmd -S tcp:sql-1.example,1433 -E -b -i 04-administration.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 02-runtime-database.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 02-administration-database.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 02-audit-database.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 03-runtime-schema.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 03-administration-schema.sql
+sqlcmd -S tcp:sql-1.example,1433 -E -b -i 03-audit-schema.sql
 ```
 
 `-E` connects with your Windows account; use `-U <login>` with a SQL
 Server login of the `sysadmin` role instead where you have none.
 
-| Script | Makes |
-| --- | --- |
-| `01-roles.sql` | the login `xmip_storage`, which the Storage nodes connect as, with the password policy checked |
-| `02-databases.sql` | `xmip_runtime` and `xmip_administration`, each with delayed durability disabled |
-| `03-runtime.sql` | in `xmip_runtime`: the role `xmip_owner`, which owns the schema `xmip`; the schema's tables and the indexes a search reads; the user `xmip_storage` and its right to read and write them |
-| `04-administration.sql` | the same in `xmip_administration` |
+| Script | Run on | Makes |
+| --- | --- | --- |
+| `01-roles.sql` | every instance holding an Xmip database | the login `xmip_storage`, which the Storage nodes connect as, with the password policy checked |
+| `02-runtime-database.sql` | the instance holding the runtime database | `xmip_runtime`, with delayed durability disabled |
+| `02-administration-database.sql` | the instance holding the administration database | `xmip_administration`, likewise |
+| `02-audit-database.sql` | the instance holding the audit database | `xmip_audit`, likewise |
+| `03-runtime-schema.sql` | the instance holding the runtime database | in `xmip_runtime`: the role `xmip_owner`, which owns the schema `xmip`; the schema's tables and the indexes a search reads; the user `xmip_storage` and its right to read and write them |
+| `03-administration-schema.sql` | the instance holding the administration database | the same in `xmip_administration` |
+| `03-audit-schema.sql` | the instance holding the audit database | the same in `xmip_audit` |
 
-Placing the administration database on another instance: run
-`01-roles.sql` on both, and on each the rest for the database that belongs
-there.
+**Each database may be on an instance of its own** — the audit database on
+other servers and storage than the other two, for example. An instance
+holding one domain runs `01-roles.sql`, then that domain's
+`02-<domain>-database.sql` and `03-<domain>-schema.sql`, and nothing of the
+others; the domains need nothing of one another.
 
 **Least privilege.** `xmip_storage` may select, insert, update and delete
 rows in the `xmip` schema, and nothing else: it cannot create, alter or drop
@@ -127,13 +139,14 @@ under `[storage.database]` (`module/platform/configure/doc/node-configuration.md
 [storage.database]
 runtime        = "sqlserver://xmip_storage@sql-1.example:1433/xmip_runtime"
 administration = "sqlserver://xmip_storage@sql-1.example:1433/xmip_administration"
+audit          = "sqlserver://xmip_storage@sql-2.example:1433/xmip_audit"
 password       = "xmip-storage-database"
 trust_anchor   = "database-authority.pem"
 ```
 
-- **`runtime`**, **`administration`**: one connection each,
-  `sqlserver://<login>@<host>[:<port>]/<database>`; the port is 1433 where
-  it is left out. A named instance is reached by its port: give it a fixed
+- **`runtime`**, **`administration`**, **`audit`**: one connection each,
+  `sqlserver://<login>@<host>[:<port>]/<database>`, each to the instance
+  that holds it; the port is 1433 where it is left out. A named instance is reached by its port: give it a fixed
   one. Nothing else is written in a connection: no password, no option.
 - **`password`**: the **name** of the secret the password is kept under on
   the Storage node, resolved through Xmip's key home (ADR-0063 clause 4).

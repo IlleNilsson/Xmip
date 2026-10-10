@@ -168,17 +168,24 @@ servers is their concern*). Two forms are decided:
   returns. A sensor gateway is its own Storage node, so it has a Ledger, no
   broker, and the same execution model as a forty-node estate.
 
-**Either way Xmip Storage keeps two databases** (the owner: *We still need
-the distinction between runtime and administration databases, regardless of
+**Either way Xmip Storage keeps three databases**, one to each data domain.
+The ruling of 2026-10-01 kept two (the owner: *We still need the
+distinction between runtime and administration databases, regardless of
 backend database technology*): the **runtime database**, which is the
-Ledger, and the **administration database** — RocksDB and SQLite on an
-embedded Storage node, two separate databases on IT's servers behind option
-A (`deployment-model.md` section 7). Runtime matter is central there, so
-another node with matching node roles can pick up; the administration
-database keeps what must be shared and kept over time — audit history,
-operator state, deployment state, cluster membership — and the
-Subscriptions each Host Service writes from its TOML as it starts
-([decided, not built](estate-map.md#shared-subscriptions)).
+Ledger, and the **administration database**. It is extended, not
+contradicted, by a third, the **audit database** (the owner, 2026-10-10:
+*The audit part might be better of in its own database so it can be hosted
+on a different set of nodes, different storage*; ADR-0070, amendment
+2026-10-10). On an embedded Storage node they are RocksDB and two SQLite
+stores, the audit database's at a file of its own; on IT's servers behind
+option A, three separate databases, each of which may be on a server of
+its own (`deployment-model.md` section 7). Runtime matter is central there,
+so another node with matching node roles can pick up; the administration
+database keeps what must be shared and kept over time — operator state,
+deployment state, cluster membership — and the Subscriptions each Host
+Service writes from its TOML as it starts
+([decided, not built](estate-map.md#shared-subscriptions)); the audit
+database keeps the audit history.
 
 **Proposed 2026-10-09: what the Ledger is searched by.** A record's body
 is sealed and found by a keyed hash, which leaves an operator nothing to
@@ -467,7 +474,7 @@ least Windows & Linux. I do not have an OS X machine*).
 ### What proves it
 
 The tests the design is held to, decided with it on 2026-10-01. A test's
-Storage node keeps its administration database in SQLite in
+Storage node keeps its administration and audit databases in SQLite in
 memory and its runtime database in RocksDB, on disk in the test's directory,
 so the kill test still proves the runtime database durable (the owner: *for
 testing purposes the Xmip Nodes of Storage type can use SQLite in memory for
@@ -1449,7 +1456,7 @@ verified when read and the audit needs nothing else kept (ADR-0070). The
 Message travels in the record in its one binary form (`Message::record`). The
 digest is SHA-256, taken by the writer from the bytes as they pass once
 (`ledger::write_stream`) and kept in the Stream's own record, its one home;
-the audit keeper, moving a record to the administration database, copies the
+the audit keeper, moving a record to the audit database, copies the
 chunks of every Stream the Message's Sections are over beside it, one at a
 time and a shared Stream once — the `audit_stream_chunk` table, by the
 record's identifier, the Stream's and their number — and writes, with the

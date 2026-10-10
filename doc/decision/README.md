@@ -1020,6 +1020,7 @@ You have a word. This gives you the decision that governs it.
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
 | attempt | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Audit | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md), [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
+| audit database | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | audit sink | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | Audit, the durable record | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Authentication, authorization, and their order | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |

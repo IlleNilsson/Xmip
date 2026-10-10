@@ -185,7 +185,7 @@ record = ["ADR-0062"]
 [implementation.audit-through-storage]
 name = "Audit written through Xmip Storage and kept by the audit keeper"
 state = "decided"
-note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger, each carrying its Message in full, and the keeper keeps the record's body in chunks of the runtime's Stream chunk and every Stream's bytes beside the record, each with its SHA-256 digest and length, verified when read, and chains each record in its writer's audit chain as it keeps it (ADR-0070 clauses 1, 2, 4 and 5, amendments 2026-10-10); the runtime's `ledger::verify_audit_chain` walks a writer's chain, and no surface reads a kept record or calls it. The file sink is what every program writes."
+note = "Xmip Storage's `keep_audit` exists and is tested, and nothing calls it outside tests; only publication and replay records reach the Ledger, each carrying its Message in full, and the keeper keeps them in the audit database, a data domain of its own (amendment 2026-10-10), the record's body in chunks of the runtime's Stream chunk and every Stream's bytes beside the record, each with its SHA-256 digest and length, verified when read, and chains each record in its writer's audit chain as it keeps it (ADR-0070 clauses 1, 2, 4 and 5, amendments 2026-10-10); the runtime's `ledger::verify_audit_chain` walks a writer's chain, and no surface reads a kept record or calls it. The file sink is what every program writes."
 record = ["ADR-0062", "ADR-0070", "deployment-model.md section 7"]
 
 [implementation.bounded-audit-channel]
@@ -263,8 +263,8 @@ record = ["ADR-0040"]
 [implementation.embedded-storage]
 name = "A node as its own embedded Storage node"
 state = "assembled"
-note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, sealed under the key store `[store]` names."
-record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0063"]
+note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, and SQLite for the audit database, a store of its own at the file `[store] audit` names or beside the other two, all sealed under the key store `[store]` names."
+record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0063", "ADR-0070 (amendment 2026-10-10)"]
 
 [implementation.storage-nodes]
 name = "Storage nodes reached over mutual TLS"
@@ -275,8 +275,8 @@ record = ["ADR-0056 (amendment 2026-10-01)"]
 [implementation.database-server]
 name = "Xmip Storage in front of PostgreSQL or SQL Server"
 state = "decided"
-note = "`[storage.database]` is read and checked, and IT's scripts are in `deploy/database`; no Storage node connects to either server yet."
-record = ["ADR-0015 (amendment 2026-10-01)", "deployment-model.md section 7"]
+note = "`[storage.database]` is read and checked, its three connections — runtime, administration, audit — each of which may name a server of its own, and IT's scripts are in `deploy/database`, per data domain; no Storage node connects to either kind of server yet."
+record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0070 (amendment 2026-10-10)", "deployment-model.md section 7"]
 
 [implementation.artifact-steps]
 name = "Prepare, Contract, Promote, Transform, Demote and Assignment on Ports, Locations and Work Processes"

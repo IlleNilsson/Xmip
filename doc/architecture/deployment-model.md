@@ -361,7 +361,7 @@ a database server keeps none either, the server's files being IT's. A
 one-node deployment is its own embedded Storage node, so its layout is the
 one above.
 
-## 7. Two databases, and why — behind Xmip Storage
+## 7. Three databases, and why — behind Xmip Storage
 
 Decided by the owner, 2026-10-01, validated part by part with the assistant,
 and re-decided later the same day.
@@ -378,16 +378,21 @@ cluster services running on one or more nodes*; *All DB records have to be
 central and clusterable, if one node fails another one should be able to
 pick up*).
 
-**Xmip Storage always keeps two databases, whatever the backend** (the owner:
-*We still need the distinction between runtime and administration databases,
-regardless of backend database technology*):
+**Xmip Storage always keeps three databases, one to each data domain,
+whatever the backend.** The ruling of 2026-10-01 kept two (the owner: *We
+still need the distinction between runtime and administration databases,
+regardless of backend database technology*). It is extended, not
+contradicted: audit leaves the administration database for a third, the
+audit database (the owner, 2026-10-10: *The audit part might be better of
+in its own database so it can be hosted on a different set of nodes,
+different storage*; ADR-0070, amendment 2026-10-10):
 
-| | The runtime database | The administration database |
-| --- | --- | --- |
-| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; audit kept over time; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) |
-| Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time |
-| On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` |
-| Behind a database server | a database of its own on IT's server | a separate database on IT's server, which IT may place on another server |
+| | The runtime database | The administration database | The audit database |
+| --- | --- | --- | --- |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) | audit kept over time: each record, its body and the bytes of every Stream it carries, in its writer's chain |
+| Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time | what is kept and queried over time |
+| On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` | SQLite, a store of its own, at the file `[store] audit` names, beside the other two where it names none |
+| Behind a database server | a database of its own on IT's server | a separate database, which IT may place on another server | a separate database, which IT may place on another server and storage |
 
 **Runtime matter is central** in the runtime database — the Ledger, its
 claims and its state — so another node with matching node roles can pick up.
@@ -403,10 +408,12 @@ time:**
   [decided, not built](estate-map.md#shared-subscriptions));
 - operator state: what is paused, by whom and when — every node honors a
   pause;
-- audit, moved there from the runtime database by the audit keeper — on
-  every backend (the owner: *RocksDB is the first storage for audit records,
-  then transferred to SQLite, RocksDB for speed, SQLite for persistence over
-  time*). The `audit.toml` file sink is to be replaced by this, for the
+- no audit: since 2026-10-10 the audit keeper moves audit from the runtime
+  database to the audit database, on every backend (the owner, of
+  2026-10-01: *RocksDB is the first storage for audit records, then
+  transferred to SQLite, RocksDB for speed, SQLite for persistence over
+  time* — so the audit database is SQLite on an embedded Storage node). The
+  `audit.toml` file sink is to be replaced by this, for the
   tools outside a node as well — the cmdlets, the operation web and
   `xmip-cli` writing to the cluster's Storage nodes (ADR-0062, amendment
   2026-10-01; [decided, not built](estate-map.md#audit-through-storage)); until then
@@ -415,10 +422,11 @@ time:**
   system's log stays the fallback (ADR-0062 clause 3).
 
 **They are separate databases and stay separate, whatever engine holds
-them.** Their access patterns are opposites — one is written constantly and
+them.** What follows was said of the first two, and holds for the audit
+database as for the administration database. Their access patterns are opposites — one is written constantly and
 read by key, the other is written rarely and queried arbitrarily — and one
 database serving both serves neither. That holds for RocksDB and SQLite on an
-embedded Storage node and for two databases on a server alike.
+embedded Storage node and for the databases on a server alike.
 
 **What is behind Xmip Storage is IT's to design** (the owner: *The storage
 node may or may not carry the SQL storage, it is an IT-infrastructure
@@ -453,8 +461,8 @@ included.
 
 **A Storage node under test** (the owner, 2026-10-01: *for testing purposes
 the Xmip Nodes of Storage type can use SQLite in memory for administration
-and RocksDB for runtime*) keeps its administration database in SQLite in
-memory and its runtime database in RocksDB, on disk in the test's directory,
+and RocksDB for runtime*) keeps its administration and audit databases in
+SQLite in memory and its runtime database in RocksDB, on disk in the test's directory,
 so a kill test still proves the runtime database durable.
 
 **The engine is no longer a node's choice.** The `[store] engine` choice is
@@ -536,7 +544,7 @@ one typed question of one index (`module/platform/persist/README.md`,
 
 ### Record identifiers are UUIDv7
 
-**Every record in either database is keyed by a UUIDv7**, per RFC 9562: the
+**Every record in each database is keyed by a UUIDv7**, per RFC 9562: the
 timestamp leads, so records written in sequence land in sequence and a range
 over identifiers is a range over time. The reasoning, the two boundaries an
 integrator meets (.NET's `Guid` byte order, SQL Server's sort order) and the

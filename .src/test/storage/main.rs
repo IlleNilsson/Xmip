@@ -1,6 +1,6 @@
 //! Xmip Storage as a node meets it: the test Storage node — its runtime
 //! database in `RocksDB` on disk in the test's directory, its administration
-//! database in SQLite in memory (the owner, 2026-10-01: *for testing
+//! and audit databases in SQLite in memory (the owner, 2026-10-01: *for testing
 //! purposes the Xmip Nodes of Storage type can use SQLite in memory for
 //! administration and `RocksDB` for runtime*) — in processes of its own,
 //! killed hard, and reached over Xmip's TLS. What every test here opens and
@@ -61,14 +61,22 @@ fn keys(keys: &Path) -> Box<dyn KeyStore> {
     Box::new(store)
 }
 
-/// The test Storage node in `place`.
+/// The test Storage node in `place`, its administration and audit
+/// databases in memory.
 fn test_node(place: &Path) -> TestNode {
+    let administration = Sqlite::in_memory().expect("the administration database");
+    let audit = Sqlite::in_memory().expect("the audit database");
+    test_node_over(place, administration, audit)
+}
+
+/// The test Storage node in `place` over `administration` and `audit`.
+fn test_node_over(place: &Path, administration: Sqlite, audit: Sqlite) -> TestNode {
     std::fs::create_dir_all(place.join("key")).expect("its directory");
     let runtime = RocksDb::open(&place.join("runtime")).expect("the runtime database");
-    let administration = Sqlite::in_memory().expect("the administration database");
     let kek = KekName::new("storage").expect("a name");
     let keys = keys(&place.join("key"));
-    Embedded::open(runtime, administration, keys.as_ref(), &kek).expect("the test Storage node")
+    Embedded::open(runtime, administration, audit, keys.as_ref(), &kek)
+        .expect("the test Storage node")
 }
 
 /// The Journey numbered `number` in a test.
