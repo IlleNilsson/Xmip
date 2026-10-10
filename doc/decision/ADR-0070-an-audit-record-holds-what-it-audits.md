@@ -53,9 +53,6 @@ that for now.*
 
 ## Not decided
 
-- which scope each kind of audited act chains in, and whether one record
-  may sit in more than one chain (amendment 2026-10-10 decides that the
-  scope follows the act);
 - the verification's surface (command, cmdlet, view);
 - what an auditor is given to read a held Stream, and under which role.
 
@@ -111,3 +108,15 @@ record chains to the record before it within the scope of what it audits —
 a Journey, a thread, a program, a node or the cluster. Which act belongs to
 which scope, and whether a record sits in more than one chain, is not yet
 decided.
+
+## Amendment, 2026-10-10: one chain per writer
+
+Asked what the majority of auditing rules say, the owner chose to follow
+them: *Go with that.* PCI DSS requirement 10, ISO/IEC 27001 control 8.15,
+NIST SP 800-92 and SP 800-53 (AU-9, AU-10) and SEC 17a-4 prove a log's
+integrity and completeness per log source, and AWS CloudTrail, Certificate
+Transparency and RFC 5848 chain or sign per writer; none keeps a chain per
+transaction. So every audit record sits in exactly one chain, its writer's —
+the node's, or the program's where no node writes it — and a Journey's, a
+thread's or the cluster's trail is found by its identifier across those
+chains, each proven intact. This replaces the amendment above it.
