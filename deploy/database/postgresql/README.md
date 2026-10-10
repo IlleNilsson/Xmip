@@ -140,21 +140,34 @@ node checks the server against its operating system's trust store.
 ## 5. What a Storage node is given
 
 A Storage node in front of your server names it in its configuration file,
-under `[storage.database]` (`module/platform/configure/doc/node-configuration.md`):
+a table for each data domain your server holds, and the secret and the
+authority in `[storage.database]`
+(`module/platform/configure/doc/node-configuration.md`):
 
 ```toml
+[runtime]
+storage    = "postgresql"
+connection = "host=db-1.example port=5432 dbname=xmip_runtime user=xmip_storage"
+
+[administration]
+storage    = "postgresql"
+connection = "host=db-1.example port=5432 dbname=xmip_administration user=xmip_storage"
+
+[audit]
+storage    = "postgresql"
+connection = "host=db-2.example port=5432 dbname=xmip_audit user=xmip_storage"
+
 [storage.database]
-runtime        = "postgresql://xmip_storage@db-1.example:5432/xmip_runtime"
-administration = "postgresql://xmip_storage@db-1.example:5432/xmip_administration"
-audit          = "postgresql://xmip_storage@db-2.example:5432/xmip_audit"
-password       = "xmip-storage-database"
-trust_anchor   = "database-authority.pem"
+password     = "xmip-storage-database"
+trust_anchor = "database-authority.pem"
 ```
 
-- **`runtime`**, **`administration`**, **`audit`**: one connection each,
-  `postgresql://<login>@<host>[:<port>]/<database>`, each to the server
-  that holds it; the port is 5432 where it is left out. Nothing else is written in a connection: no password, no
-  option.
+- **`[runtime]`**, **`[administration]`**, **`[audit]`**: each its
+  `storage`, `postgresql`, and its `connection`, PostgreSQL's own
+  keyword and value form, `host=<host> [port=<port>] dbname=<database>
+  [user=<login>]`, to the server that holds it; the port is 5432 where it
+  is left out. Nothing else is written in a connection: no password, no
+  option. Each domain may be on another server, or another technology.
 - **`password`**: the **name** of the secret the password is kept under on
   the Storage node, resolved through Xmip's key home (ADR-0063 clause 4).
   The password itself is never written in the configuration file. How the
@@ -192,7 +205,7 @@ given one (`.src/test/database.rs`). Set, where the test runs:
 
 | Variable | Holds |
 | --- | --- |
-| `XMIP_TEST_POSTGRESQL` | the server, as a connection without its database: `postgresql://xmip_storage@<host>:<port>` |
+| `XMIP_TEST_POSTGRESQL` | the server, as a connection string without its database: `host=<host> port=<port> user=xmip_storage` |
 | `XMIP_TEST_POSTGRESQL_PASSWORD` | the login's password |
 
 The server is set up as above. Without `XMIP_TEST_POSTGRESQL` the test says

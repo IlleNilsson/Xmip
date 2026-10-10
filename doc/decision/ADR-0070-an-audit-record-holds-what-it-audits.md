@@ -184,16 +184,12 @@ administration database holds none of them. The audit keeper moves each
 record from the runtime database, where it is first written, into the audit
 database (`persist::storage::schema`, `Database::Audit`).
 
-- **Behind a database server**, a Storage node names the audit database's
-  connection of its own in `[storage.database] audit`, beside `runtime`
-  and `administration`, so it may be on another server; the three are on
-  one kind of server and no two name the same database.
 - **On an embedded Storage node** the audit database is a store of its own
   on the administration database's engine, SQLite (ADR-0015, amendment
   2026-10-01; `deployment-model.md` section 7: *RocksDB is the first
-  storage for audit records, then transferred to SQLite*), at the file
-  `[store] audit` names, and beside the other two,
-  `<data>/storage/audit.sqlite`, where it names none.
+  storage for audit records, then transferred to SQLite*), beside the
+  other two, `<data>/storage/audit.sqlite`, unless its configuration says
+  otherwise (the next amendment).
 - **IT's scripts are per data domain** (`deploy/database/<server>/`):
   `01-roles.sql` on every server, then `02-<domain>-database.sql` and
   `03-<domain>-schema.sql` for each domain a server holds;
@@ -204,3 +200,36 @@ contradicted: the runtime and the administration databases stay separate,
 and audit leaves the second for a database of its own. Not decided: whether
 the audit database is served by a separate set of Storage nodes, which a
 node would reach by a list of its own.
+
+## Amendment, 2026-10-10: each data domain is a table of its own
+
+Asked how the three data domains are configured in the Cluster TOML, the
+owner: *i would do it like runtime, storage, connection string. Same for
+audit and administration*; shown the form, *Yes, better.* Each domain is a
+table of its own, `[runtime]`, `[administration]` and `[audit]`, each with
+`storage`, the technology its database is kept on — `rocksdb`, `sqlite`,
+`postgresql` or `sqlserver`, the ones Xmip Storage has today
+(`persist::storage::database::Technology`) — and `connection`: on an
+embedded engine the store's path, relative to the configuration file; on a
+database server the server's own connection string, PostgreSQL's
+`host=… port=… dbname=… user=…` and SQL Server's
+`Server=…,<port>;Database=…;User Id=…`.
+
+- **Each domain may be on another technology and another server.** The
+  rule that the databases are on one kind of server is deleted; two
+  domains naming one database on one server are still refused.
+- **A table left out keeps the default it had**: the embedded Storage
+  node's own, `rocksdb` at `<data>/storage/runtime`, `sqlite` at
+  `<data>/storage/administration.sqlite` and at
+  `<data>/storage/audit.sqlite`.
+- **The connections leave `[storage.database]`**, which keeps the secret
+  the password is kept under and the trust anchor; `[store]` keeps the key
+  store.
+- **Embedded, the engines stay as ADR-0015 rules**: `rocksdb` for the
+  runtime database, `sqlite` for the other two; another is refused in
+  words.
+- **A database server's backend is not built yet**, so a node naming one
+  for a domain is refused as it starts, in words.
+
+Not decided: whether one `[storage.database]` secret serves domains on
+different servers, or each domain names its own.
