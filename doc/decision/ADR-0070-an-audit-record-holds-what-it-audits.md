@@ -208,7 +208,7 @@ owner: *i would do it like runtime, storage, connection string. Same for
 audit and administration*; shown the form, *Yes, better.* Each domain is a
 table of its own, `[runtime]`, `[administration]` and `[audit]`, each with
 `storage`, the technology its database is kept on — `rocksdb`, `sqlite`,
-`postgresql` or `sqlserver`, the ones Xmip Storage has today
+`postgresql` or `mssql`, the ones Xmip Storage has today
 (`persist::storage::database::Technology`) — and `connection`: on an
 embedded engine the store's path, relative to the configuration file; on a
 database server the server's own connection string, PostgreSQL's

@@ -139,15 +139,15 @@ authority in `[storage.database]`
 
 ```toml
 [runtime]
-storage    = "sqlserver"
+storage    = "mssql"
 connection = "Server=tcp:sql-1.example,1433;Database=xmip_runtime;User Id=xmip_storage"
 
 [administration]
-storage    = "sqlserver"
+storage    = "mssql"
 connection = "Server=tcp:sql-1.example,1433;Database=xmip_administration;User Id=xmip_storage"
 
 [audit]
-storage    = "sqlserver"
+storage    = "mssql"
 connection = "Server=tcp:sql-2.example,1433;Database=xmip_audit;User Id=xmip_storage"
 
 [storage.database]
@@ -156,7 +156,7 @@ trust_anchor = "database-authority.pem"
 ```
 
 - **`[runtime]`**, **`[administration]`**, **`[audit]`**: each its
-  `storage`, `sqlserver`, and its `connection`, SQL Server's own form,
+  `storage`, `mssql`, and its `connection`, SQL Server's own form,
   `Server=[tcp:]<host>[,<port>];Database=<database>[;User Id=<login>]`, to
   the instance that holds it; the port is 1433 where it is left out. A
   named instance is reached by its port: give it a fixed one. Nothing else
@@ -198,11 +198,11 @@ given one (`.src/test/database.rs`). Set, where the test runs:
 
 | Variable | Holds |
 | --- | --- |
-| `XMIP_TEST_SQLSERVER` | the server, as a connection string without its database: `Server=tcp:<host>,<port>;User Id=xmip_storage` |
-| `XMIP_TEST_SQLSERVER_PASSWORD` | the login's password |
+| `XMIP_TEST_MSSQL` | the server, as a connection string without its database: `Server=tcp:<host>,<port>;User Id=xmip_storage` |
+| `XMIP_TEST_MSSQL_PASSWORD` | the login's password |
 
-The server is set up as above. Without `XMIP_TEST_SQLSERVER` the test says
-`skipped: no sqlserver server configured` and runs nothing:
+The server is set up as above. Without `XMIP_TEST_MSSQL` the test says
+`skipped: no mssql server configured` and runs nothing:
 
 ```shell
 cargo test --test database --features persist -- --nocapture

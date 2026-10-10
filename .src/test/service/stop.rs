@@ -170,7 +170,7 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     for said in [
         "subscription.pause",
         "subscription.resume",
-        "its own Storage node at",
+        "its own Storage node, runtime at",
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }
