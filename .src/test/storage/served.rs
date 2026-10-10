@@ -21,9 +21,12 @@ use xmip_persist::storage::{
     AuditBody, AuditEntry, Audited, ChunkReader, Form, StorageClient, StorageServer, StreamChunk,
     StreamDigest, StreamRecord, XmipStorage,
 };
+use xmip_persist_sqlite::Sqlite;
 use xmip_runtime::ledger::CHUNK;
 
-use super::{TestNode, directory, heard, journey, percentiles, spawn, test_node, timed};
+use super::{
+    TestNode, directory, heard, journey, percentiles, spawn, test_node, test_node_over, timed,
+};
 
 /// Each connect and each read a node makes of a Storage node.
 const TIMEOUT: Duration = Duration::from_secs(10);
@@ -120,7 +123,15 @@ fn a_node_reaches_storage_over_tls_and_carries_on_past_a_killed_storage_node() {
 #[test]
 fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
     let place = directory("keeper");
-    let node = test_node(&place);
+    // The audit database elsewhere: a file of its own, apart from the
+    // administration database's (ADR-0070, amendment 2026-10-10).
+    std::fs::create_dir_all(place.join("elsewhere")).expect("its directory");
+    let (administration, audit) = (
+        place.join("administration.sqlite"),
+        place.join("elsewhere").join("audit.sqlite"),
+    );
+    let opened = |file: &Path| Sqlite::open(file).expect("a database");
+    let node = test_node_over(&place, opened(&administration), opened(&audit));
     let entries: Vec<AuditEntry> = (1..=100u128)
         .map(|id| AuditEntry {
             id: AuditId::new(0x0199_0000_0000_7000_a000_0000_0000_0000 | id),
@@ -140,6 +151,21 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
         assert_eq!(body(&node, entry.id).body, entry.body);
     }
     drop(node);
+    // Kept in the audit database's file, and nothing of it in the
+    // administration database's: read as an audit database, it holds none.
+    let memory = || Sqlite::in_memory().expect("a database");
+    let reopened = test_node_over(&place, memory(), opened(&audit));
+    for entry in &entries {
+        let kept = reopened.read_kept_audit(entry.id).expect("read");
+        assert!(kept.is_some(), "kept in the audit database");
+    }
+    drop(reopened);
+    let administration = test_node_over(&place, memory(), opened(&administration));
+    for entry in &entries {
+        let there = administration.read_kept_audit(entry.id).expect("read");
+        assert_eq!(there, None, "nothing audit in the administration database");
+    }
+    drop(administration);
     let _ = std::fs::remove_dir_all(&place);
 }
 

@@ -11,13 +11,14 @@ failed over — is yours to decide, and the last section points at it.
 Every Xmip node reads and writes its records through **Xmip Storage**: the
 nodes of the cluster that declare the Storage role. Those nodes, and only
 those, connect to your database server (`doc/architecture/deployment-model.md`
-section 7, option A). Xmip Storage keeps **two databases**, always separate,
-which you may place on different servers:
+section 7, option A). Xmip Storage keeps **three databases**, one to each
+data domain, always separate, and each may be on a server of its own:
 
 | Database | Holds | Written |
 | --- | --- | --- |
 | `xmip_runtime` | the Ledger: every Stream in chunks, every Message and Journey, the claims on Journeys, audit records as first written | constantly; read by key |
-| `xmip_administration` | node registration, cluster membership, installed Modules, deployment and operator state, and audit records kept over time | rarely; read over time |
+| `xmip_administration` | node registration, cluster membership, installed Modules, deployment and operator state | rarely; read over time |
+| `xmip_audit` | audit records kept over time, each with its body and the bytes of every Stream it carries, moved there from `xmip_runtime` by the audit keeper | as the keeper moves them; read over time |
 
 Neither holds configuration: each Xmip node reads its own configuration file
 as it starts.
@@ -68,29 +69,39 @@ transaction; neither needs more.
 
 ## 3. Run the scripts, in order
 
-Each script says at its top what it is, where to run it and as whom. Run
+The scripts are per data domain: the number is the step, the word the
+domain. Each says at its top what it is, where to run it and as whom. Run
 them as a superuser (`postgres`), from the folder they are in, with
-`ON_ERROR_STOP` so a failure stops the script:
+`ON_ERROR_STOP` so a failure stops the script. One server holding all
+three databases runs them all, in the order they sort by step:
 
 ```shell
 psql --host=db-1.example --port=5432 --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=01-roles.sql
-psql --host=db-1.example --port=5432 --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=02-databases.sql
-psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_runtime --set=ON_ERROR_STOP=1 --file=03-runtime.sql
-psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_administration --set=ON_ERROR_STOP=1 --file=04-administration.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=02-runtime-database.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=02-administration-database.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=02-audit-database.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_runtime --set=ON_ERROR_STOP=1 --file=03-runtime-schema.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_administration --set=ON_ERROR_STOP=1 --file=03-administration-schema.sql
+psql --host=db-1.example --port=5432 --username=postgres --dbname=xmip_audit --set=ON_ERROR_STOP=1 --file=03-audit-schema.sql
 ```
 
-| Script | Makes |
-| --- | --- |
-| `01-roles.sql` | `xmip_owner`, which owns the schema and which no one logs in as, and `xmip_storage`, the login the Storage nodes connect as |
-| `02-databases.sql` | `xmip_runtime` and `xmip_administration`, owned by `xmip_owner`, connectable by `xmip_storage` and nobody else |
-| `03-runtime.sql` | the schema `xmip` and its tables in `xmip_runtime`, with the indexes a search reads, and the right to read and write them for `xmip_storage` |
-| `04-administration.sql` | the same in `xmip_administration` |
+| Script | Run on | Makes |
+| --- | --- | --- |
+| `01-roles.sql` | every server holding an Xmip database | `xmip_owner`, which owns the schema and which no one logs in as, and `xmip_storage`, the login the Storage nodes connect as |
+| `02-runtime-database.sql` | the server holding the runtime database | `xmip_runtime`, owned by `xmip_owner`, connectable by `xmip_storage` and nobody else |
+| `02-administration-database.sql` | the server holding the administration database | `xmip_administration`, likewise |
+| `02-audit-database.sql` | the server holding the audit database | `xmip_audit`, likewise |
+| `03-runtime-schema.sql` | that server, connected to `xmip_runtime` | the schema `xmip` and its tables in `xmip_runtime`, with the indexes a search reads, and the right to read and write them for `xmip_storage` |
+| `03-administration-schema.sql` | that server, connected to `xmip_administration` | the same in `xmip_administration` |
+| `03-audit-schema.sql` | that server, connected to `xmip_audit` | the same in `xmip_audit` |
 
-Placing the administration database on another server: run `01-roles.sql`
-on both servers, and `02-databases.sql` with the database that belongs
-there.
+**Each database may be on a server of its own** — the audit database on
+other servers and storage than the other two, for example. A server
+holding one domain runs `01-roles.sql`, then that domain's
+`02-<domain>-database.sql` and `03-<domain>-schema.sql`, and nothing of the
+others; the domains need nothing of one another.
 
-**Least privilege.** `xmip_storage` may connect to the two databases and
+**Least privilege.** `xmip_storage` may connect to the three databases and
 select, insert, update and delete rows in the `xmip` schema's tables, and
 nothing else: it cannot create, alter or drop anything. You may not change
 the schema in any way ([`../README.md`](../README.md)); a new release's
@@ -113,11 +124,12 @@ Give the server a certificate and its key, and require TLS from
   `ssl_key_file = 'server.key'`, and `ssl_min_protocol_version = 'TLSv1.3'`;
   Xmip's TLS speaks TLS 1.3 first (ADR-0033).
 - `pg_hba.conf`: let `xmip_storage` in over TLS only, from the Storage
-  nodes' addresses, and refuse it otherwise:
+  nodes' addresses, and refuse it otherwise, naming the databases that
+  server holds:
 
   ```text
-  hostssl   xmip_runtime,xmip_administration  xmip_storage  10.0.20.0/24  scram-sha-256
-  hostnossl all                               xmip_storage  0.0.0.0/0     reject
+  hostssl   xmip_runtime,xmip_administration,xmip_audit  xmip_storage  10.0.20.0/24  scram-sha-256
+  hostnossl all                                          xmip_storage  0.0.0.0/0     reject
   ```
 
 The certificate's name is the host name the Storage nodes connect to. Give
@@ -134,13 +146,14 @@ under `[storage.database]` (`module/platform/configure/doc/node-configuration.md
 [storage.database]
 runtime        = "postgresql://xmip_storage@db-1.example:5432/xmip_runtime"
 administration = "postgresql://xmip_storage@db-1.example:5432/xmip_administration"
+audit          = "postgresql://xmip_storage@db-2.example:5432/xmip_audit"
 password       = "xmip-storage-database"
 trust_anchor   = "database-authority.pem"
 ```
 
-- **`runtime`**, **`administration`**: one connection each,
-  `postgresql://<login>@<host>[:<port>]/<database>`; the port is 5432 where
-  it is left out. Nothing else is written in a connection: no password, no
+- **`runtime`**, **`administration`**, **`audit`**: one connection each,
+  `postgresql://<login>@<host>[:<port>]/<database>`, each to the server
+  that holds it; the port is 5432 where it is left out. Nothing else is written in a connection: no password, no
   option.
 - **`password`**: the **name** of the secret the password is kept under on
   the Storage node, resolved through Xmip's key home (ADR-0063 clause 4).

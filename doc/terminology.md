@@ -313,17 +313,20 @@ The doorway to all storage: the nodes declaring the **Storage** role, whose
 operations — write a Stream chunk, write a Message, claim a Journey, hand it
 on, write an audit record — every other node calls,
 never a database directly, round robin over the Storage nodes. More than one
-Storage node is the safety. It always keeps two databases, whatever the
-backend: the **runtime database**, which is the Ledger, and the
-**administration database** — administration, deployment state, cluster
-membership, operator state, and audit kept over time, moved there by the
-audit keeper ([decided, not built](architecture/estate-map.md#audit-through-storage)); and the
-Subscriptions each Host Service writes from its TOML as it starts, shared
-across the cluster ([decided, not built](architecture/estate-map.md#shared-subscriptions)). The rest of a node's configuration
+Storage node is the safety. It always keeps three databases, one to each
+data domain, whatever the backend: the **runtime database**, which is the
+Ledger; the **administration database** — administration, deployment state,
+cluster membership, operator state, and the Subscriptions each Host Service
+writes from its TOML as it starts, shared across the cluster
+([decided, not built](architecture/estate-map.md#shared-subscriptions)); and
+the **audit database** — audit kept over time, moved there by the audit
+keeper ([decided, not built](architecture/estate-map.md#audit-through-storage)),
+a database of its own so it may be on other storage (ADR-0070, amendment
+2026-10-10). The rest of a node's configuration
 it reads from its TOML as it starts and holds as its execution tree in
 memory (ADR-0031, amendments 2026-10-01 and 2026-10-02). Behind it is a database server IT
 runs (option A, PostgreSQL first; [decided, not built](architecture/estate-map.md#database-server)),
-the two databases separate on IT's servers, or, for a single machine or an
+the three databases separate on IT's servers, or, for a single machine or an
 edge site, an **embedded Storage node** keeping RocksDB and SQLite itself,
 with no failover (the owner, 2026-10-01;
 [built, in the assembled service](architecture/estate-map.md#embedded-storage)). Xmip encrypts up

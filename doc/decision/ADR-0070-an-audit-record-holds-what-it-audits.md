@@ -12,7 +12,7 @@
 - Subject: What an audit record shows of the Message and Stream it audits
 - Name: An audit record holds what it audits
 - Order: 21
-- Concepts: Audit; tamper evidence; Stream digest; retention hold
+- Concepts: Audit; tamper evidence; Stream digest; retention hold; audit database
 
 **An audit record spells out the Message it audits, in full, as it was at
 the audited event, and its Stream's bytes with their digest, so the copy is
@@ -169,3 +169,38 @@ The owner, the same day: *every type of data goes into dedicated tables,
 dedicated columns.* The body's chunks are a table of their own, never
 shared with `audit_stream_chunk` or the Ledger's `stream_chunk`; what is
 shared is the code that reads chunks (`ChunkReader`), not a table.
+
+## Amendment, 2026-10-10: audit is a database of its own
+
+The owner: *The audit part might be better of in its own database so it can
+be hosted on a different set of nodes, different storage*, and *So the
+02-databases.sql script has to be re-engineered into statements per data
+domain.* The first amendment of 2026-10-09 allowed audit *a storage of its
+own if that helps*; this takes it up. Audit is a third data domain beside
+the runtime and the administration databases: the **audit database**,
+`xmip_audit`, holds every kept audit table — `audit`, `audit_chain_head`,
+`audit_body_chunk`, `audit_stream` and `audit_stream_chunk` — and the
+administration database holds none of them. The audit keeper moves each
+record from the runtime database, where it is first written, into the audit
+database (`persist::storage::schema`, `Database::Audit`).
+
+- **Behind a database server**, a Storage node names the audit database's
+  connection of its own in `[storage.database] audit`, beside `runtime`
+  and `administration`, so it may be on another server; the three are on
+  one kind of server and no two name the same database.
+- **On an embedded Storage node** the audit database is a store of its own
+  on the administration database's engine, SQLite (ADR-0015, amendment
+  2026-10-01; `deployment-model.md` section 7: *RocksDB is the first
+  storage for audit records, then transferred to SQLite*), at the file
+  `[store] audit` names, and beside the other two,
+  `<data>/storage/audit.sqlite`, where it names none.
+- **IT's scripts are per data domain** (`deploy/database/<server>/`):
+  `01-roles.sql` on every server, then `02-<domain>-database.sql` and
+  `03-<domain>-schema.sql` for each domain a server holds;
+  `02-databases.sql` is deleted.
+
+`deployment-model.md` section 7's "two databases" is extended to three, not
+contradicted: the runtime and the administration databases stay separate,
+and audit leaves the second for a database of its own. Not decided: whether
+the audit database is served by a separate set of Storage nodes, which a
+node would reach by a list of its own.
