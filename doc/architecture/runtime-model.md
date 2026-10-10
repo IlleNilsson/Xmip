@@ -176,10 +176,14 @@ Ledger, and the **administration database**. It is extended, not
 contradicted, by a third, the **audit database** (the owner, 2026-10-10:
 *The audit part might be better of in its own database so it can be hosted
 on a different set of nodes, different storage*; ADR-0070, amendment
-2026-10-10). On an embedded Storage node they are RocksDB and two SQLite
-stores, the audit database's at a file of its own; on IT's servers behind
-option A, three separate databases, each of which may be on a server of
-its own (`deployment-model.md` section 7). Runtime matter is central there,
+2026-10-10). Each is a table of its own in the configuration,
+`[runtime]`, `[administration]` and `[audit]`, its `storage` and its
+`connection` (the owner, 2026-10-10: *i would do it like runtime, storage,
+connection string. Same for audit and administration*), so each may be on
+another technology and another server: on an embedded Storage node RocksDB
+and two SQLite stores, under the data directory where a table is left out;
+on IT's servers behind option A, three separate databases
+(`deployment-model.md` section 7). Runtime matter is central there,
 so another node with matching node roles can pick up; the administration
 database keeps what must be shared and kept over time — operator state,
 deployment state, cluster membership — and the Subscriptions each Host

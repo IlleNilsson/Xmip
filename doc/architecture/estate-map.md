@@ -78,10 +78,11 @@ starts again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
 
 **A node as its own embedded Storage node.** RocksDB for the runtime database
 and SQLite for the administration database under the node's data directory,
-and SQLite for the audit database, a store of its own at the file `[store]
-audit` names or beside the other two, all sealed under the key store `[store]`
-names. Records: ADR-0015 (amendment 2026-10-01), ADR-0063, ADR-0070 (amendment
-2026-10-10).
+and SQLite for the audit database, each where its table — `[runtime]`,
+`[administration]`, `[audit]`, its `storage` and `connection` — says and under
+the data directory where it is left out, all sealed under the key store
+`[store]` names. Records: ADR-0015 (amendment 2026-10-01), ADR-0063, ADR-0070
+(amendment 2026-10-10).
 
 #### `process-declaration`
 
@@ -248,12 +249,14 @@ or Host Services that changed. Open problem 31. Records: ADR-0031 (amendments
 
 #### `database-server`
 
-**Xmip Storage in front of PostgreSQL or SQL Server.** `[storage.database]` is
-read and checked, its three connections — runtime, administration, audit —
-each of which may name a server of its own, and IT's scripts are in
-`deploy/database`, per data domain; no Storage node connects to either kind of
-server yet. Records: ADR-0015 (amendment 2026-10-01), ADR-0070 (amendment
-2026-10-10), deployment-model.md section 7.
+**Xmip Storage in front of PostgreSQL or SQL Server.** Each data domain's
+table — `[runtime]`, `[administration]`, `[audit]` — is read and checked, its
+`storage` and its connection in the server's own form, each of which may name
+a server or technology of its own, and `[storage.database]` the secret; IT's
+scripts are in `deploy/database`, per data domain; a node naming a server is
+refused as it starts, since no Storage node connects to either kind yet.
+Records: ADR-0015 (amendment 2026-10-01), ADR-0070 (amendment 2026-10-10),
+deployment-model.md section 7.
 
 #### `host-subprocess`
 
@@ -304,7 +307,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 235072 lines of production
+Where each repository mounts and what it holds: 235251 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -610,16 +613,16 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            18738
-│       ├── persist                             8179
+│       ├── runtime                            18771
+│       ├── persist                             8294
 │       │   ├── sqlite                           168
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           3387
+│       └── configure                           3417
 └── test/
     └── core/
-        └── playground                         10003
+        └── playground                         10004
 ```
 
 ---

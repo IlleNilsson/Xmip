@@ -391,7 +391,7 @@ different storage*; ADR-0070, amendment 2026-10-10):
 | --- | --- | --- | --- |
 | Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) | audit kept over time: each record, its body and the bytes of every Stream it carries, in its writer's chain |
 | Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time | what is kept and queried over time |
-| On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` | SQLite, a store of its own, at the file `[store] audit` names, beside the other two where it names none |
+| On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` | SQLite, a store of its own |
 | Behind a database server | a database of its own on IT's server | a separate database, which IT may place on another server | a separate database, which IT may place on another server and storage |
 
 **Runtime matter is central** in the runtime database — the Ledger, its
@@ -454,6 +454,19 @@ TOML, tried round robin: *Yes*): the node's configuration lists their
 addresses, for example
 `[storage] nodes = ["storage-1.example:7443", "storage-2.example:7443"]`, and
 the node tries them round robin.
+
+**Each data domain names where it is kept, in a table of its own** (the
+owner, 2026-10-10: *i would do it like runtime, storage, connection string.
+Same for audit and administration*, and *Yes, better*; ADR-0070, amendment
+2026-10-10): `[runtime]`, `[administration]` and `[audit]`, each with
+`storage` — `rocksdb`, `sqlite`, `postgresql` or `sqlserver` — and
+`connection`, the store's path on an embedded engine or the server's own
+connection string, for example
+`[runtime] storage = "postgresql"`,
+`connection = "host=db-1.example port=5432 dbname=xmip_runtime"`. Each
+domain may be on another technology and another server; a table left out
+is the embedded Storage node's own, under `<data>/storage`;
+`[storage.database]` names the secret a server's password is kept under.
 
 Option A is chosen (the owner: *Go ahead*). **Every write counts only once the
 database has it durably** (the owner: *Safe way*), the hand-ons between steps

@@ -263,7 +263,7 @@ record = ["ADR-0040"]
 [implementation.embedded-storage]
 name = "A node as its own embedded Storage node"
 state = "assembled"
-note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, and SQLite for the audit database, a store of its own at the file `[store] audit` names or beside the other two, all sealed under the key store `[store]` names."
+note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, and SQLite for the audit database, each where its table — `[runtime]`, `[administration]`, `[audit]`, its `storage` and `connection` — says and under the data directory where it is left out, all sealed under the key store `[store]` names."
 record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0063", "ADR-0070 (amendment 2026-10-10)"]
 
 [implementation.storage-nodes]
@@ -275,7 +275,7 @@ record = ["ADR-0056 (amendment 2026-10-01)"]
 [implementation.database-server]
 name = "Xmip Storage in front of PostgreSQL or SQL Server"
 state = "decided"
-note = "`[storage.database]` is read and checked, its three connections — runtime, administration, audit — each of which may name a server of its own, and IT's scripts are in `deploy/database`, per data domain; no Storage node connects to either kind of server yet."
+note = "Each data domain's table — `[runtime]`, `[administration]`, `[audit]` — is read and checked, its `storage` and its connection in the server's own form, each of which may name a server or technology of its own, and `[storage.database]` the secret; IT's scripts are in `deploy/database`, per data domain; a node naming a server is refused as it starts, since no Storage node connects to either kind yet."
 record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0070 (amendment 2026-10-10)", "deployment-model.md section 7"]
 
 [implementation.artifact-steps]

@@ -133,21 +133,35 @@ Storage node checks the server against its operating system's trust store.
 ## 5. What a Storage node is given
 
 A Storage node in front of your server names it in its configuration file,
-under `[storage.database]` (`module/platform/configure/doc/node-configuration.md`):
+a table for each data domain your instance holds, and the secret and the
+authority in `[storage.database]`
+(`module/platform/configure/doc/node-configuration.md`):
 
 ```toml
+[runtime]
+storage    = "sqlserver"
+connection = "Server=tcp:sql-1.example,1433;Database=xmip_runtime;User Id=xmip_storage"
+
+[administration]
+storage    = "sqlserver"
+connection = "Server=tcp:sql-1.example,1433;Database=xmip_administration;User Id=xmip_storage"
+
+[audit]
+storage    = "sqlserver"
+connection = "Server=tcp:sql-2.example,1433;Database=xmip_audit;User Id=xmip_storage"
+
 [storage.database]
-runtime        = "sqlserver://xmip_storage@sql-1.example:1433/xmip_runtime"
-administration = "sqlserver://xmip_storage@sql-1.example:1433/xmip_administration"
-audit          = "sqlserver://xmip_storage@sql-2.example:1433/xmip_audit"
-password       = "xmip-storage-database"
-trust_anchor   = "database-authority.pem"
+password     = "xmip-storage-database"
+trust_anchor = "database-authority.pem"
 ```
 
-- **`runtime`**, **`administration`**, **`audit`**: one connection each,
-  `sqlserver://<login>@<host>[:<port>]/<database>`, each to the instance
-  that holds it; the port is 1433 where it is left out. A named instance is reached by its port: give it a fixed
-  one. Nothing else is written in a connection: no password, no option.
+- **`[runtime]`**, **`[administration]`**, **`[audit]`**: each its
+  `storage`, `sqlserver`, and its `connection`, SQL Server's own form,
+  `Server=[tcp:]<host>[,<port>];Database=<database>[;User Id=<login>]`, to
+  the instance that holds it; the port is 1433 where it is left out. A
+  named instance is reached by its port: give it a fixed one. Nothing else
+  is written in a connection: no password, no option. Each domain may be
+  on another instance, or another technology.
 - **`password`**: the **name** of the secret the password is kept under on
   the Storage node, resolved through Xmip's key home (ADR-0063 clause 4).
   The password itself is never written in the configuration file. How the
@@ -184,7 +198,7 @@ given one (`.src/test/database.rs`). Set, where the test runs:
 
 | Variable | Holds |
 | --- | --- |
-| `XMIP_TEST_SQLSERVER` | the server, as a connection without its database: `sqlserver://xmip_storage@<host>:<port>` |
+| `XMIP_TEST_SQLSERVER` | the server, as a connection string without its database: `Server=tcp:<host>,<port>;User Id=xmip_storage` |
 | `XMIP_TEST_SQLSERVER_PASSWORD` | the login's password |
 
 The server is set up as above. Without `XMIP_TEST_SQLSERVER` the test says

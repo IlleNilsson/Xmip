@@ -5,8 +5,9 @@
 # of the cluster's own. The node's configuration is sliced from it by
 # `xmip-service --slice`, never written by hand. What the reader has a
 # default for is left to it: the data directory is the `data` beside this
-# file's `config`, sealed by the platform's key store, and every [tuning]
-# value is the built-in one.
+# file's `config`, the three data domains' databases under its `storage`
+# ([runtime], [administration], [audit] left out), sealed by the
+# platform's key store, and every [tuning] value is the built-in one.
 [service]
 name = "{{ xmip_service_name }}"
 cluster_name = "{{ xmip_cluster_name }}"

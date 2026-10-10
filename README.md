@@ -653,8 +653,9 @@ node's service: the systemd unit, the launchd property list, or the
 domains serve, by feature; a Location naming another transport is refused
 when the node starts. The node is its own embedded Storage node, under its
 data directory — `data/storage`, RocksDB for the runtime database and
-SQLite for the administration database and for the audit database, a store
-of its own that `[store] audit` may place on other storage, sealed under the key store
+SQLite for the administration and the audit databases, each where its table
+`[runtime]`, `[administration]` or `[audit]` says — its `storage` and its
+`connection` — and under `data/storage` where it is left out, sealed under the key store
 `[store]` names, the platform's by default
 ([built, in the assembled service](doc/architecture/estate-map.md#embedded-storage)) — and a
 store naming a key store the build left out, or one that does not open, is
