@@ -18,9 +18,10 @@ use std::time::Duration;
 use xmip_core::AuditId;
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::{
-    AuditEntry, Audited, ChunkReader, StorageClient, StorageServer, StreamChunk, StreamDigest,
-    StreamRecord, XmipStorage,
+    AuditBody, AuditEntry, Audited, ChunkReader, Form, StorageClient, StorageServer, StreamChunk,
+    StreamDigest, StreamRecord, XmipStorage,
 };
+use xmip_runtime::ledger::CHUNK;
 
 use super::{TestNode, directory, heard, journey, percentiles, spawn, test_node, timed};
 
@@ -132,19 +133,28 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
         node.write_audit(entry).expect("written");
     }
     node.write_audit(&entries[7]).expect("written twice");
-    assert_eq!(node.keep_audit(60).expect("kept"), 60);
-    assert_eq!(node.keep_audit(60).expect("kept"), 41);
-    assert_eq!(node.keep_audit(60).expect("kept"), 0);
+    assert_eq!(node.keep_audit(60, CHUNK).expect("kept"), 60);
+    assert_eq!(node.keep_audit(60, CHUNK).expect("kept"), 41);
+    assert_eq!(node.keep_audit(60, CHUNK).expect("kept"), 0);
     for entry in &entries {
-        assert_eq!(
-            node.read_kept_audit(entry.id)
-                .expect("read")
-                .map(|kept| (kept.id, kept.body)),
-            Some((entry.id, entry.body.clone()))
-        );
+        assert_eq!(body(&node, entry.id).body, entry.body);
     }
     drop(node);
     let _ = std::fs::remove_dir_all(&place);
+}
+
+/// The body of the kept audit record `id`, read back from its chunks and
+/// held to its length and digest (ADR-0070, amendment 2026-10-10).
+fn body(node: &TestNode, id: AuditId) -> AuditBody {
+    let mut read = Vec::new();
+    std::io::Read::read_to_end(
+        &mut ChunkReader::audit_body(node, id)
+            .expect("read")
+            .expect("kept"),
+        &mut read,
+    )
+    .expect("its body as kept");
+    AuditBody::from_bytes(&read).expect("a body")
 }
 
 /// A Stream of three chunks an audit record carries, kept beside the record
@@ -188,8 +198,8 @@ fn an_audited_stream_is_kept_beside_its_record_over_the_real_engines() {
         facts: xmip_persist::storage::AuditFacts::default(),
     };
     node.write_audit(&entry).expect("written");
-    assert_eq!(node.keep_audit(10).expect("kept"), 1);
-    let kept = node.read_kept_audit(id).expect("read").expect("kept");
+    assert_eq!(node.keep_audit(10, CHUNK).expect("kept"), 1);
+    let kept = body(&node, id);
     let carried = kept.audited.as_ref().expect("carried");
     assert_eq!(carried.message, b"the Message");
     let row = node.read_kept_audit_stream(id, stream).expect("read");

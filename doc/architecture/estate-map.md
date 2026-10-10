@@ -93,8 +93,10 @@ started. Records: ADR-0018, ADR-0064.
 **Every Xmip program audits to its audit file.** `xmip-service`, `xmip-cli`,
 both PowerShell modules, the web host, the language server and the Playground
 record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
-synchronously: a record is appended before `record` returns, the operating
-system's log the fallback. Records: ADR-0062.
+synchronously: a record is appended before `record` returns, chained in its
+writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
+system's log the fallback; `xmip-cli audit --verify`, `Get-XmipAudit -Verify`
+and the Audit view's verify walk the chains. Records: ADR-0062.
 
 #### `send-port-retry`
 
@@ -208,11 +210,14 @@ tests. Records: ADR-0031 (amendment 2026-10-05), runtime-model.md section 20.
 **Audit written through Xmip Storage and kept by the audit keeper.** Xmip
 Storage's `keep_audit` exists and is tested, and nothing calls it outside
 tests; only publication and replay records reach the Ledger, each carrying its
-Message in full, and the keeper keeps every Stream's bytes beside the record
-with each one's SHA-256 digest and length, verified when read (ADR-0070
-clauses 1, 2 and 4); no surface reads a kept record. The file sink is what
-every program writes. Records: ADR-0062, ADR-0070, deployment-model.md section
-7.
+Message in full, and the keeper keeps the record's body in chunks of the
+runtime's Stream chunk and every Stream's bytes beside the record, each with
+its SHA-256 digest and length, verified when read, and chains each record in
+its writer's audit chain as it keeps it (ADR-0070 clauses 1, 2, 4 and 5,
+amendments 2026-10-10); the runtime's `ledger::verify_audit_chain` walks a
+writer's chain, and no surface reads a kept record or calls it. The file sink
+is what every program writes. Records: ADR-0062, ADR-0070, deployment-model.md
+section 7.
 
 #### `bounded-audit-channel`
 
@@ -294,7 +299,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 233531 lines of production
+Where each repository mounts and what it holds: 234879 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -546,14 +551,14 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             6114
-│   │       ├── gui                             5401
+│   │       ├── cli                             6188
+│   │       ├── gui                             5421
 │   │       │   └── vscode                      1417
 │   │       ├── observe                         3683
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2594  C# 2594 · PowerShell 0
-│   │       ├── audit                           1783
+│   │       ├── powershell                      2618  C# 2618 · PowerShell 0
+│   │       ├── audit                           2362
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
@@ -572,7 +577,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                24567  C# 22526 · Rust 1816 · PowerShell 225
+│   │   ├── abi                                24611  C# 22570 · Rust 1816 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -600,8 +605,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            18588
-│       ├── persist                             7572
+│       ├── runtime                            18683
+│       ├── persist                             8084
 │       │   ├── sqlite                           168
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1

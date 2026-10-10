@@ -1458,9 +1458,24 @@ its digest and when it was written, in the clear, found by the Stream. A read of
 words (`persist::storage::ChunkReader::audited`). It is part of the audit
 through Xmip Storage above,
 [decided, not built](estate-map.md#audit-through-storage): nothing runs the
-keeper outside tests, and no surface reads a kept record.
-Each audit record carrying the digest of the one before it is decided and not
-built (ADR-0070 clause 5). Retention also supports Replay.
+keeper outside tests, and no surface reads a kept record. The record's body —
+its record and the Message in full — is kept as a Stream is, in chunks of
+the runtime's chunk in the `audit_body_chunk` table beside its row, its
+length, chunks and digest in the row, read back a chunk at a time and held to
+them (ADR-0070, amendment 2026-10-10: *The audit body has to be like the
+stream, in chunks*).
+
+**The audit log is a chain, one per writer** (ADR-0070 clause 5, amended
+2026-10-10): every record carries its number in its writer's chain — the
+node's, or the program's where no node writes it — and the SHA-256 digest of
+the record before it there, and its own over its canonical form. The file
+sink forms a program's chain as it appends to `audit.toml`; the audit keeper
+forms a node's as it keeps each record, the `audit` table laying out the
+writer, the number and both digests. One walk says the first place a chain
+breaks — a record deleted, changed or out of order — or that it is whole:
+`xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
+file, `ledger::verify_audit_chain` for Xmip Storage. Retention also supports
+Replay.
 
 ## 17. Eventing
 
