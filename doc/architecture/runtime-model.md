@@ -1494,7 +1494,8 @@ file, `ledger::verify_audit_chain` for Xmip Storage. A record whose write to
 with a comment line and a blank line before its own record, so it is in no
 chain and the next record continues from the last complete one, and a
 verification reports it per file apart from the chain verdict — FAILED once
-sealed, UNFINISHED while it is the file's end (built 2026-10-12). Retention
+sealed, UNFINISHED while it is the file's end (built 2026-10-12, decided
+by the owner the same day, ADR-0070). Retention
 also supports Replay.
 
 ## 17. Eventing

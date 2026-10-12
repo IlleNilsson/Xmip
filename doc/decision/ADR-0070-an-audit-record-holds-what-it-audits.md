@@ -116,7 +116,13 @@ that for now.*
   sentence: FAILED for a sealed one, UNFINISHED for the file's end no
   append has sealed yet (`xmip_audit_read_v1`'s `fragments`, .NET's
   `AuditFragment`); `xmip-cli audit --verify` exits 1 on a sealed fragment
-  as on a broken chain, and not on an unfinished end.
+  as on a broken chain, and not on an unfinished end. Decided by the
+  owner, 2026-10-12: *Let's keep it as built*. The record appended after a
+  seal takes the number the interrupted one would have had, since that one
+  was never written whole and never confirmed to its caller. Hand-sealing a
+  cut last record is not caught beyond its FAILED fragment: that is the
+  end-of-chain gap this record leaves undecided, and the seal does not
+  widen it.
 
 ## Provenance
 
