@@ -98,8 +98,10 @@ both PowerShell modules, the web host, the language server and the Playground
 record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
 synchronously: a record is appended before `record` returns, chained in its
 writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
-system's log the fallback; `xmip-cli audit --verify`, `Get-XmipAudit -Verify`
-and the Audit view's verify walk the chains. Records: ADR-0062.
+system's log the fallback; the next append seals a record whose write was
+interrupted, kept as written and in no chain; `xmip-cli audit --verify`,
+`Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say
+each such fragment apart from them. Records: ADR-0062, ADR-0070.
 
 #### `send-port-retry`
 
@@ -307,7 +309,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 235251 lines of production
+Where each repository mounts and what it holds: 235978 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -367,6 +369,7 @@ hold no source to count.
 │   │   │   │   ├── uds                          896
 │   │   │   │   ├── j1939                        891
 │   │   │   │   ├── bluetooth                    885
+│   │   │   │   ├── file                         883
 │   │   │   │   ├── lorawan                      880
 │   │   │   │   ├── activemq                     870
 │   │   │   │   ├── aws-kinesis                  867
@@ -382,7 +385,6 @@ hold no source to count.
 │   │   │   │   ├── aws-sqs                      810
 │   │   │   │   ├── zigbee                       791
 │   │   │   │   ├── thread                       790
-│   │   │   │   ├── file                         773
 │   │   │   │   ├── peppol                       754
 │   │   │   │   ├── knx                          738
 │   │   │   │   ├── iso-tp                       715
@@ -559,14 +561,14 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             6188
-│   │       ├── gui                             5421
+│   │       ├── cli                             6240
+│   │       ├── gui                             5632
 │   │       │   └── vscode                      1417
 │   │       ├── observe                         3683
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2618  C# 2618 · PowerShell 0
-│   │       ├── audit                           2362
+│   │       ├── powershell                      2627  C# 2627 · PowerShell 0
+│   │       ├── audit                           2541
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
@@ -585,7 +587,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                24611  C# 22570 · Rust 1816 · PowerShell 225
+│   │   ├── abi                                24662  C# 22621 · Rust 1816 · PowerShell 225
 │   │   ├── event                               5670
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -613,8 +615,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            18771
-│       ├── persist                             8294
+│       ├── runtime                            18859
+│       ├── persist                             8321
 │       │   ├── sqlite                           168
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1

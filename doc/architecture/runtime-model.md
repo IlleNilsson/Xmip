@@ -1187,7 +1187,11 @@ waits for its due time.
   from its own later now — so the node tries Locations only until then, on
   its own clock, never comparing two clocks, and past it presumes the claim
   lost, audits it once, and tries nothing more until a renewal is answered;
-  whatever it writes after is decided by the claim in Xmip Storage. A send
+  whatever it writes after is decided by the claim in Xmip Storage. The
+  claim is asked before a Location is tried and again once its Message is
+  authorized and read, the last thing before the transport's I/O, so a
+  claim lost while a large payload was read starts no send (2026-10-12,
+  after a review). A send
   already under way is not called back: it carries the Journey's
   identifier, the key the far end deduplicates by, so another holder's send
   of the same Journey is the same delivery (section 15). Until now every
@@ -1485,8 +1489,13 @@ forms a node's as it keeps each record, the `audit` table laying out the
 writer, the number and both digests. One walk says the first place a chain
 breaks — a record deleted, changed or out of order — or that it is whole:
 `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
-file, `ledger::verify_audit_chain` for Xmip Storage. Retention also supports
-Replay.
+file, `ledger::verify_audit_chain` for Xmip Storage. A record whose write to
+`audit.toml` was interrupted is kept as written: the next append seals it
+with a comment line and a blank line before its own record, so it is in no
+chain and the next record continues from the last complete one, and a
+verification reports it per file apart from the chain verdict — FAILED once
+sealed, UNFINISHED while it is the file's end (built 2026-10-12). Retention
+also supports Replay.
 
 ## 17. Eventing
 

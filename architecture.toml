@@ -179,8 +179,8 @@ record = ["ADR-0034", "ADR-0033"]
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip-cli`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains."
-record = ["ADR-0062"]
+note = "`xmip-service`, `xmip-cli`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
+record = ["ADR-0062", "ADR-0070"]
 
 [implementation.audit-through-storage]
 name = "Audit written through Xmip Storage and kept by the audit keeper"
