@@ -28,7 +28,7 @@
     - a parameter or flag that names a cluster or nodes: -Cluster, -Nodes,
       -OnlineNodes, -Node, -Name, --cluster, --name, --nodes, --node,
       --online;
-    - one of the names the owner types (Cn, Rn, Pn, Sn, CT), the Nn a test
+    - one of the names the owner types (Cn, Rn, Pn, Sn, Ln, On, Dn, CT), the Nn a test
       once numbered its nodes with, or the struck ones (alpha … zeta),
       quoted or backticked on its own, or standing before a / as a scope's
       part.
@@ -61,7 +61,7 @@ BeforeAll {
     [string] $quote = '[''"`]'
     # The names the owner types and the ones invented and struck: anywhere
     # quoted they are a name.
-    [string] $known = '(?:[CRPSN][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)'
+    [string] $known = '(?:[CRPSNLOD][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)'
     # Any name, where only a name can stand.
     [string] $literal = '[A-Za-z][A-Za-z0-9_-]*'
     # The role words a node declares and the stage words it declared before
@@ -136,7 +136,7 @@ BeforeAll {
         '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.toml', '.md', '.json'
     )
     $script:Candidate = [regex]::new(
-        '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSN][0-9]+|CT)\b|' +
+        '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSNLOD][0-9]+|CT)\b|' +
         "=(?:$role)\b|cluster_name|node_name|\[nodes\.", 'Compiled')
     $script:Skip = @(
         'target', 'bin', 'obj', 'node_modules', '.ai-interaction', '.ai-work',
@@ -151,7 +151,10 @@ BeforeAll {
     #>
     function Get-NodeNameFile([string] $At) {
         foreach ($file in [IO.Directory]::EnumerateFiles($At)) {
-            if ([IO.Path]::GetExtension($file) -in $script:Extension) {
+            # A package manager's lock file is written by the tool, and its
+            # hashes spell anything.
+            if ([IO.Path]::GetExtension($file) -in $script:Extension -and
+                (Split-Path -Leaf $file) -ne 'packages.lock.json') {
                 $file
             }
         }

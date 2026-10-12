@@ -490,3 +490,27 @@ cluster's as it is. The node count is deleted — `-Nodes <count>`,
 `XMIP_PLAYGROUND_NODES`, `XMIP_PLAYGROUND_NODE_NAMES`,
 `XMIP_PLAYGROUND_NODE_ROLES`, `roll --roster <level>`,
 `Get-XmipNodeComplement`, `complement.rs` and `Stress::nodes`.
+
+## Amendment, 2026-10-12: a node's letter, and the test clusters' nodes
+
+The owner, 2026-10-12: *Rn, Pn, Sn are as the prefix says, Receiving,
+Procesing & Sending. We are missing Ln nodes, Low latency nodes. We are also
+missing Operation nodes*; and for Storage nodes, S being Sending's: *Dn for
+Data will be the name for Storage Nodes*.
+
+- **The letter is the owner's convention for reading a name, never what a
+  node does.** Rn receiving, Pn processing, Sn sending, Ln low latency (the
+  `executing` role, ADR-0018's amendment of 2026-10-01), On operation (the
+  `operational` and `monitoring` roles together, the owner the same day:
+  *Yes*, to one node rather than a node per role), Dn
+  Storage (the `storage` role, which holds the data domains' databases); Cn
+  stays a cluster. A node still does what its `roles` declare, and nothing
+  reads its letter (clause 1; the 2026-09-20 amendment).
+- **No node for Observer or Event.** Observer is a person's role
+  (ADR-0009). Every node is the cluster's door for Events (ADR-0065,
+  amendment 2026-10-02: *they should be able to hook up to any node and
+  expect events from the complete cluster*), so a node only for them would
+  contradict it.
+- **The test clusters carry one of each kind.** C1 (`test/xmip.toml`): R1,
+  P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/xmip.toml`): R1, S1 and L1.
+  `test/NodeName.Test.ps1` knows the Ln, On and Dn shapes.
