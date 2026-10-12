@@ -13,3 +13,6 @@ roles = "receiving"
 
 [nodes.S1]
 roles = "sending"
+
+[nodes.L1]
+roles = "executing"

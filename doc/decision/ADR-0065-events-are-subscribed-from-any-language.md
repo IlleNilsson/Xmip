@@ -160,6 +160,13 @@ business. A direct `ProgramAudit::record` settles first instead, so a
 program's records are kept in the order it made them and the record of its
 stop after everything it handed over before.
 
+Corrected 2026-10-12: that is Rust's drop. Across the C boundary
+`xmip_event_unsubscribe_v1` returns once the subscription's audit records
+are kept, as `xmip_operate.h` has said since 2026-09-26, and settles the
+keeper itself after the drop; from this amendment until the correction it
+did not, and a caller reading the audit file at once could find it still
+being written.
+
 ## Amendment, 2026-09-29: an operator sees every subscription, and pauses, resumes and removes one
 
 The owner: *Now we need operation to have a view of event subscriptions.
@@ -365,3 +372,25 @@ potential perfect Rust code.*
   gone.
 
 Provenance: the owner's ruling, quoted; the wording is the assistant's.
+
+## Amendment, 2026-10-12: near the publication is a choice, not a rule
+
+The owner, 2026-10-12: *I guess a smart thing would be to attach your event
+subscription to a nodeset where the publication occurs, but not a must,
+right?* — and, told yes: *It should be documented.*
+
+- **Any node stays the door** (the amendment of 2026-10-02): a subscriber
+  hears the whole cluster wherever it connects, and its filter never names
+  a node.
+- **Connecting where the Events are raised saves the one hop.** An Event
+  raised on another node crosses one link to reach the subscriber — about
+  0.36 ms on loopback, as measured 2026-10-02 — and one on the subscriber's
+  own node crosses none. A subscriber whose Events come mostly from a few
+  nodes, such as the Receiving nodes for arrivals or the Sending nodes for
+  departures, does well to connect to one of those nodes.
+- **It is never required.** Xmip neither steers nor refuses a subscriber by
+  the node it reaches; where that node goes down, the subscriber connects to
+  any other and hears the whole cluster from there.
+
+Provenance: the owner's question and ruling, quoted; the wording is the
+assistant's.

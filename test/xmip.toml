@@ -24,3 +24,15 @@ roles = "sending"
 
 [nodes.S2]
 roles = "sending"
+
+[nodes.L1]
+roles = "executing"
+
+[nodes.O1]
+roles = "operational, monitoring"
+
+[nodes.D1]
+roles = "storage"
+
+[nodes.D2]
+roles = "storage"
