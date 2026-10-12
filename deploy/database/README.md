@@ -1,9 +1,10 @@
 # Xmip Storage's database schemas
 
 For the people who run a site's database servers. How to set up Xmip
-Storage is in [`postgresql/README.md`](postgresql/README.md) and
-[`mssql/README.md`](mssql/README.md); this page holds the rules both
-follow.
+Storage is in [`postgresql/README.md`](postgresql/README.md),
+[`mssql/README.md`](mssql/README.md) and
+[`mariadb/README.md`](mariadb/README.md); this page holds the rules all
+three follow.
 
 ## Do not change the schemas
 

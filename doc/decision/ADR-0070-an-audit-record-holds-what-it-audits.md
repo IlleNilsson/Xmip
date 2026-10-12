@@ -12,7 +12,7 @@
 - Subject: What an audit record shows of the Message and Stream it audits
 - Name: An audit record holds what it audits
 - Order: 21
-- Concepts: Audit; tamper evidence; Stream digest; retention hold; audit database
+- Concepts: Audit; tamper evidence; Stream digest; retention hold; audit database; MariaDB
 
 **An audit record spells out the Message it audits, in full, as it was at
 the audited event, and its Stream's bytes with their digest, so the copy is
@@ -252,3 +252,25 @@ database server the server's own connection string, PostgreSQL's
 
 Not decided: whether one `[storage.database]` secret serves domains on
 different servers, or each domain names its own.
+
+## Amendment, 2026-10-12: MariaDB beside PostgreSQL and SQL Server
+
+The owner: *Can MariaDB be a contender to PostgreSQL and MSSQL so make it a
+provider for Storage nodes and create scripts for it.* A data domain's
+`storage` may now also name `mariadb`, so the words are `rocksdb`, `sqlite`,
+`postgresql`, `mssql` and `mariadb` (`persist::storage::database::Server`).
+
+- **Its connection is MariaDB's own form**, the keywords of its
+  Connector/ODBC: `Server=<host>[;Port=<port>];Database=<database>
+  [;User=<login>]`, the port 3306 where it is left out; nothing else is
+  read, no password and no option.
+- **Its scripts are generated from the one schema definition** as the
+  other two servers' are (`persist::storage::schema`, `schema/dialect.rs`;
+  `deploy/database/mariadb/`): the same tables, columns, keys and indexes
+  and the same two roles, in MariaDB's dialect — InnoDB, `utf8mb4`
+  compared byte for byte, a database being its own schema, every
+  identifier in backticks. MariaDB keeps no partial index, so the index
+  filtered by a flag on the other servers holds every row there. The login
+  is made `REQUIRE SSL` and locked until the operator sets its password.
+- **Its backend is decided, not built**, as SQL Server's is: a node naming
+  `mariadb` for a domain is refused as it starts, in words.

@@ -524,11 +524,16 @@ services and locations without asking the message path to count itself.
 Four surfaces read one operator boundary
 ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
 [ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)) through one
-shared library, so they cannot disagree.
+shared library, so they cannot disagree. An MCP client comes in the fifth
+way, through the command line's own: `xmip-cli mcp`, a Model Context
+Protocol server whose tools are the read commands and whose resources are
+the scopes, each an Xmip URI
+([ADR-0071](doc/decision/ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md)).
 
 | Surface | Best use |
 | --- | --- |
 | `xmip-cli` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
+| `xmip-cli mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, Linux and macOS. |

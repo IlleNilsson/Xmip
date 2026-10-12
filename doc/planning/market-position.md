@@ -208,7 +208,7 @@ claimed.
 home; a catalogue of SaaS connectors (generic HTTP and OpenAPI, and the ABI
 for third parties, instead); an API-management product; a language model in
 the message path — an MCP server over the read-only operator boundary is the
-credible step; being a certified Peppol access point, which is an
+credible step, built 2026-10-12 as `xmip-cli mcp` (ADR-0071); being a certified Peppol access point, which is an
 organization's certification, not software.
 
 Sources for this section are listed under **Sources, 2026-09-23** at the end.

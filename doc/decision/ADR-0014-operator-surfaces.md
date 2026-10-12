@@ -592,3 +592,42 @@ The GitHub repository this record deprecated on 2026-08-26 is deleted, on the
 owner's word: *xmip-core-webapi can be deleted.* Nothing is released, and
 `xmip-core-logic-http-api` over `xmip-core-transport-http` is the web API. The
 reason it went is kept here.
+
+## Amendment, 2026-10-12: MCP comes in through the command line
+
+The Model Context Protocol server is a mode of the command line,
+`xmip-cli mcp`, not a fifth surface of its own: the fifth way into the
+operator boundary, through `Xmip.Surface` as the four are, read only, its
+tools the command line's read commands and its resources the scopes, and
+remote over SSH as clause 6 says (ADR-0071).
+
+## Amendment, 2026-10-12: the command line is Rust, over the ABI
+
+**Supersedes the amendment of 2026-08-26 where it makes the executable
+.NET.** The owner, 2026-10-12: *I'm questioning my desicions, regarding the
+CLI, the CLI has to be usable without .NET. If you are on an MCU or any kind
+of edge device, .NET might not be the way to go. So ABI is fine, CLI should
+be Rust relying on ABI, Powershell should also rely on ABI* — and, asked
+whether the GUI stays .NET over the ABI: *Go ahead*.
+
+```text
+xmip-core-abi          Rust         the interface into Xmip, the core
+xmip-core-cli          Rust         xmip-cli, calling the C ABI
+xmip-core-powershell   PowerShell   on .NET, calling the C ABI through Xmip.Abi
+xmip-core-gui          .NET 11      desktop and web, calling the C ABI through Xmip.Abi
+```
+
+- **Every surface still calls the C ABI and none goes through another.**
+  The command line loads the runtime's native library and calls
+  `xmip_operate.h` as the .NET surfaces do; it links no runtime crate
+  around the boundary.
+- **What the surfaces share moves below the boundary.** A rule the command
+  line and the .NET surfaces both apply — which surface an invocation
+  reads, what a scope argument selects, the words for a mood, a figure, a
+  refusal — is implemented once in Rust and exported through the ABI, as
+  ADR-0052's amendment of 2026-09-24 began (*the surfaces call the
+  runtime's exports*); `Xmip.Surface` keeps only what is .NET's own.
+- **`xmip-cli mcp` moves with it** (ADR-0071): MCP is a mode of the Rust
+  command line.
+- **Built as it lands**: until the Rust executable replaces it, the .NET
+  one is what ships; the replacement deletes it with every use.

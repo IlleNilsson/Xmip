@@ -1800,3 +1800,38 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     the Event subscription's record -> .src/event_subscription.rs; its state
 #     -> .src/pause_state.rs, shared with the Subscription, whose record is
 #     .src/subscription.rs now
+
+# Code moved on 2026-10-12, SQL placed once in xmip-core-library-sql at
+# module/core/library/sql (ADR-0044, amendment 2026-10-12):
+#   module/core/library/codec/src/sql.rs
+#     Delimiter, the doubling rule -> module/core/library/sql/src/delimiter.rs;
+#     codec keeps no copy
+#   module/core/capability/transport/.src/sql.rs
+#     the transport's Dialect, the INSERT written and taken apart, Literal and
+#     the verb -> the library's Dialect (src/dialect.rs), Literal
+#     (src/literal.rs) and Verb (src/verb.rs); the file keeps the send
+#     target, the payload column and the fixed table
+#   module/core/capability/transport/.src/sql/accept.rs
+#     the parameter bound in by text -> src/parameter.rs; the file keeps the
+#     acknowledgement and the rows read
+#   module/core/capability/transport/mssql/src/insert.rs, binary.rs and
+#   client.rs's quote_literal
+#     T-SQL's identifiers, literals and binary form -> src/tsql.rs
+#   module/core/capability/transport/mariadb/src/insert.rs, hex.rs and
+#   client.rs's quote_literal
+#     MariaDB's identifiers, escapes and hex forms -> src/mariadb.rs
+#   module/core/capability/transport/postgresql/src/bytea.rs, session.rs's
+#   dialect and client.rs's quote_literal
+#     PostgreSQL's identifiers, literals and the bytea hex form ->
+#     src/postgresql.rs
+#   module/core/operation/archive/.src/sql.rs
+#     archive::sql::Dialect's quoting, bytes literal, bytes expression and id
+#     clauses -> the library's Dialect and Returning; the trait that stays is
+#     archive::sql::Database, the dialect, the scheme, the moment and the
+#     connection
+#   module/core/operation/archive/sqlite/src/lib.rs
+#     SQLite's quoting and hex forms -> src/sqlite.rs
+#   module/core/operation/archive/sql/src/statement.rs
+#     ISO SQL's string and hex literals -> src/standard.rs
+#   module/core/capability/contract/sql/src/statement.rs
+#     Kind, the statement's verb -> src/verb.rs; the contract keeps Class

@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Seventy decisions, read as one document.
+Seventy-one decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -880,6 +880,16 @@ its configuration, never guessed from a file in a temp directory.**
 
 → [The operator surfaces share one model, in full](ADR-0052-the-operator-surfaces-share-one-model.md)
 
+### How an MCP client reaches a running Xmip
+
+**`xmip-cli mcp` is a Model Context Protocol server: a mode of the command
+line, not a new program, and the fifth way into the operator boundary. Its
+tools are the command line's read commands and nothing else; its resources
+are the scopes, each an Xmip URI, read as an operator drills. It reads only,
+and every answer is audited as the command it is.**
+
+→ [Xmip is reached over MCP through the command line, in full](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md)
+
 ### What Xmip may assume about the internet, and how a test says it
 
 **Installation, operation and the runtime work with no internet at all.
@@ -1004,6 +1014,7 @@ You have a word. This gives you the decision that governs it.
 | Concept | Decided by |
 | --- | --- |
 | `.src` | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
+| `xmip-cli mcp` | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a contract version | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a definition has no verb | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
@@ -1095,6 +1106,8 @@ You have a word. This gives you the decision that governs it.
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Loopback | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | managed Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| MariaDB | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
+| MCP, the Model Context Protocol | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
@@ -1142,6 +1155,7 @@ You have a word. This gives you the decision that governs it.
 | purpose, test, runtime | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | qualified suite name | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
+| read only, the Observer's reach | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
@@ -1208,6 +1222,7 @@ You have a word. This gives you the decision that governs it.
 | Well-formedness | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | Xmip Application | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Xmip tool | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
+| Xmip URI as a resource | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
@@ -1304,3 +1319,4 @@ is nowhere else.
 | [0068](ADR-0068-every-dependency-is-a-trait-handed-in.md) | Every dependency is a trait, handed in | |
 | [0069](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) | A Journey whose circumstances changed is a Dead Message | |
 | [0070](ADR-0070-an-audit-record-holds-what-it-audits.md) | An audit record holds what it audits | |
+| [0071](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) | Xmip is reached over MCP through the command line | |

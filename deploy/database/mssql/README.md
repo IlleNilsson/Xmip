@@ -208,7 +208,8 @@ The server is set up as above. Without `XMIP_TEST_MSSQL` the test says
 cargo test --test database --features persist -- --nocapture
 ```
 
-## PostgreSQL
+## PostgreSQL and MariaDB
 
-PostgreSQL's guide and scripts are beside this folder, in
-`deploy/database/postgresql/`, written from the same schema definition.
+Their guides and scripts are beside this folder, in
+`deploy/database/postgresql/` and `deploy/database/mariadb/`, written from
+the same schema definition.

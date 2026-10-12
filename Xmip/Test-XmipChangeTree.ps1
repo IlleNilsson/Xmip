@@ -61,6 +61,7 @@ function Test-XmipChangeTree {
     }
     [string] $previousTarget = $env:CARGO_TARGET_DIR
     [string] $previousModule = $env:XMIP_MODULE_LIBRARY
+    [string] $previousConfig = $env:XMIP_CARGO_CONFIG
     $env:CARGO_TARGET_DIR = $sharedTarget
 
     try {
@@ -72,6 +73,10 @@ function Test-XmipChangeTree {
 
         if (-not $NoVerify) {
             $patch = New-XmipLocalPatch -RepositoryRoot $RepositoryRoot
+            # A test that runs cargo itself, as the Playground's build of its
+            # binaries does, resolves through the same working trees: cargo
+            # passes no --config down to a cargo a test starts.
+            $env:XMIP_CARGO_CONFIG = $patch
             $unhashed = @(
                 Get-XmipEstateCrate -RepositoryRoot $RepositoryRoot |
                     Where-Object -Property Unhashed |
@@ -229,6 +234,7 @@ function Test-XmipChangeTree {
     finally {
         $env:CARGO_TARGET_DIR = $previousTarget
         $env:XMIP_MODULE_LIBRARY = $previousModule
+        $env:XMIP_CARGO_CONFIG = $previousConfig
     }
 
     [pscustomobject]@{ Verified = $verified.ToArray(); Skipped = $skipped.ToArray(); Failed = '' }

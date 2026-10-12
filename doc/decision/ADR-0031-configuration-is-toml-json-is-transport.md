@@ -260,7 +260,10 @@ When deployed the sections regarding a node will be sliced to that node.*
   thread and its idle time, the Send pool's likewise and a send's claim
   lease and scan (`send_threads_per_hardware_thread`, `send_idle`,
   `send_lease`, `send_scan`, built 2026-10-03 with the send step,
-  `runtime-model.md` section 10), the Storage client's timeouts and
+  `runtime-model.md` section 10), a polled Receive Location's rest after a
+  receive that found nothing and after a failure that may mend
+  (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
+  section 5), the Storage client's timeouts and
   pass-over — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in
   values are the defaults where neither says; a new assumption of this kind

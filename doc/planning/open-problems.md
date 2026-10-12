@@ -592,7 +592,7 @@ models; two host-type rules and two module registries in the runtime; three
 transport traits for one concept, two of them with no implementation outside
 a test.
 
-**Done 2026-09-24, phase B's first wave.** `xmip-core-library-codec` holds the one hex, base64 and base64url, SHA-1, parameterised CRC, byte cursor and writer, varint with zig-zag, civil calendar, character reader, TOML string and SQL delimiter, and every copy is gone (transport's cursor, hex and CRC among them). `xmip-core-transport-aws` and `xmip-core-transport-azure` exist and hold SigV4, the Query API, JSON 1.1, SAS and Shared Key; http holds HTTP (ADR-0044, amendment 2026-09-24). `rabbitmq` rides the one AMQP 0-9-1 in `amqp`; the three SQL row archives are one `archive::sql::SqlArchive<D>`. Identity reads Kerberos, NTLM type 3, JOSE keys, the clock and window, and the names crossing the gates each in one place, and the 2026-09-22 `ber`/`der` shims are gone (ADR-0050, amendment 2026-09-24). Found by it and fixed: hex took a sign, AS2's base64 a `=` anywhere, SAML and asn1 30 February, the MySQL and PostgreSQL far ends a doubled delimiter as an end, and jwt, oidc and oauth2 a token at its `exp`.
+**Done 2026-09-24, phase B's first wave.** `xmip-core-library-codec` holds the one hex, base64 and base64url, SHA-1, parameterised CRC, byte cursor and writer, varint with zig-zag, civil calendar, character reader, TOML string and SQL delimiter, and every copy is gone (transport's cursor, hex and CRC among them). `xmip-core-transport-aws` and `xmip-core-transport-azure` exist and hold SigV4, the Query API, JSON 1.1, SAS and Shared Key; http holds HTTP (ADR-0044, amendment 2026-09-24). `rabbitmq` rides the one AMQP 0-9-1 in `amqp`; the three SQL row archives are one `archive::sql::SqlArchive<D>`. Identity reads Kerberos, NTLM type 3, JOSE keys, the clock and window, and the names crossing the gates each in one place, and the 2026-09-22 `ber`/`der` shims are gone (ADR-0050, amendment 2026-09-24). Found by it and fixed: hex took a sign, AS2's base64 a `=` anywhere, SAML and asn1 30 February, the MariaDB and PostgreSQL far ends a doubled delimiter as an end, and jwt, oidc and oauth2 a token at its `exp`.
 
 **Done 2026-09-24, phase B's second wave.** The transport capability holds the one far-end rig (`Listening`, `Bound`, `Held`, `Standing`, `both_ends`, `poke`, `ceiling::within`), and 84 technologies keep only what their far end does (ADR-0051, amendment). `xmip-core-library-ntlm` is the NTLM layout for identify, both gates and SMB; `context::property` holds every name one layer writes and another reads; `authenticate::secret` is the one secret store (ADR-0050, ADR-0019, amendments). `xmip-core-library-net` holds the authority, the minimal HTTP/1.1 client, MAC notation, percent-encoding and a path as a URI; codec gained MIME and UTF-16. dns owns the DNS codec, canopen the SDO, http the message webdav writes; `archive/sqlite` is `SqlArchive<Sqlite>`. The rollup, counted words, stage facts, capability evidence, topology, run header and the publication, history and activity formats are each written once in `observe` or `node`, and the surfaces read them through `xmip_operate.h` sections 7 and 8 (ADR-0052, ADR-0027). Found and fixed: percent-decoders took a sign, the snapshot reader counted an unknown kind as streams, msmq split MIME mid-line, EtherCAT cut an SDO to four bytes, the topology drew parents in a leaf's mood.
 
@@ -915,6 +915,18 @@ taking the Message a chunk at a time as `runtime-model.md` section 10
 already allows; a byte budget beside the pool's count; audit queries read
 a page at a time from Storage.
 
+Widened by the performance review of 2026-10-12. A fan-out's departures
+each read the same Stream whole. Receive takes every arrival a transport's
+`receive` returns before it waits for room (`receiving.rs`), and the file
+transport claims a whole directory listing at once, so what waits in memory
+grows with the batch; excess should stay at its durable source. Each
+Receive Location has a pool of its own, at most twice the hardware threads
+by default, so a node of many Locations has no ceiling of its own: needed
+is a node-wide execution and memory budget beside each Location's
+isolation. The audit file reader filters, groups and sorts the whole
+history it keeps for every query, whatever page it returns, and the
+keeper's inbox is unbounded.
+
 ## 39. A send the process did not finish leaves its file behind
 
 Found 2026-10-12, making the file transport's send atomic: a send writes
@@ -924,6 +936,39 @@ A process that dies between the two leaves that file in the directory for
 good. Receive never takes it, and nothing removes it. Removing them at a
 node's start, as it recovers its claims, needs a decision on whose they
 are: the name carries the process, not the node.
+
+## 40. A queue's gap between two held entries is read place by place
+
+Found by the performance review of 2026-10-12, and repaired in part the
+same day: a queue whose oldest entry is all it holds pages in two reads,
+and taking its last entry out reads none of the gap. What remains: a gap
+with held entries on both sides is still read one place at a time, by a
+page and by the move of the queue's first place inside the one commit
+writer, because an entry's key in the encrypted store is a keyed hash and
+so has no order to scan. Proposed, the owner's to agree: an index on
+(queue, sequence) in the held and dead-message tables, written with the
+record like every other index; a page one ordered index scan from its
+place; the first place found when a read asks for it, so no gap is walked
+in the commit writer. An embedded store made before it lacks the index,
+and before the first release nothing migrates it.
+
+## 41. A released database schema has no way to change
+
+The owner, 2026-10-12: *The database creation scripts are very static,
+that might be good since we have not published. But when we have they have
+to alter databases and schema objects.* Until the first release nothing is
+migrated (CONTRIBUTING: deleted, never deprecated), and
+`deploy/database/<server>/` creates each data domain's database whole from
+the one schema definition (`persist::storage::schema`). Once a release is
+installed, the next one has to alter what it made. Proposed, the owner's to
+decide before the first release: each database records the schema version
+it was made or last altered to, and a Storage node refuses one whose
+version it does not know, naming both; the upgrade scripts are generated
+from the one schema definition as the difference between two releases,
+`04-<domain>-upgrade-<from>-<to>.sql` for each server, run in order; an
+upgrade only adds — a table, a column, an index — and whatever would drop
+or rewrite data is a step of its own, reviewed as one. The embedded
+engines need the same version and step, run by the Storage node itself.
 
 ---
 

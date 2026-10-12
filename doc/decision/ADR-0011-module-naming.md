@@ -120,9 +120,9 @@ The right column also sorts by module, so every `xmip-core-path-*` groups togeth
 - where a vendor defines the dialect, the vendor token carries it
 
 ```text
-xmip-core-contract-mssql     T-SQL
-xmip-core-contract-oracle    PL/SQL
-xmip-core-contract-sql       ANSI SQL — the one with no vendor
+xmip-core-contract-mssql           T-SQL
+xmip-<provider>-contract-oracle    PL/SQL — a third party's, never Xmip's
+xmip-core-contract-sql             ANSI SQL — the one with no vendor
 ```
 
 Bare `edi` and `hl7` are therefore not contract standards. `edi-x12`, `edi-edifact` and `hl7-v2` are, because someone defines those.
@@ -150,7 +150,7 @@ supports the module, so a name there is a claim about authorship.
 
 The standard slot is **descriptive**. It names someone else's specification, and naming the
 standard you interoperate with is simply accurate. The manifest already does this two dozen
-times — `aws-sqs`, `azure-service-bus`, `ibm-mq`, `google-pub-sub`, `oracle`, `mssql`,
+times — `aws-sqs`, `azure-service-bus`, `ibm-mq`, `google-pub-sub`, `mssql`,
 `opc-ua`. None of those need anyone's permission, and neither would
 `volkswagen-multimedia`.
 
@@ -245,3 +245,20 @@ use 3'rd party instead."*
 
 `saxon` stays. It is a real XSLT vendor, named here deliberately as a real
 example of the provider slot in use, and it was never a placeholder.
+
+## Amendment, 2026-10-12: Xmip ships nothing for Oracle
+
+Xmip ships nothing for Oracle — no transport, no PL/SQL contract. A provider
+may: the token-discipline example shows PL/SQL under `xmip-<provider>-contract-oracle`
+for that reason, and `xmip-core-transport-oracle` is gone from the estate. The
+owner: *"PL-SQL from Oracle we will keep our hands off. If an 3'rd party or
+provider want's to inlude it, it is on them"*, and *"As I said, we do not bother
+with Oracle or PL-SQL, someone else can do that if they want to."*
+
+MySQL's name leaves the estate with it, because Oracle owns it, and MariaDB
+replaces it: `xmip-core-transport-mysql` and `xmip-core-archive-mysql` are
+`xmip-core-transport-mariadb` and `xmip-core-archive-mariadb`, their types
+`MariaDb`, their scheme `mariadb://` with no alias kept. MariaDB speaks the
+same wire protocol, so the transport still reaches MySQL servers. The owner:
+*"I'm not a fan of Oracle"*, and, asked which to name instead, *"do a good
+pick"* — MariaDB.

@@ -436,7 +436,7 @@ concern*). Two forms are decided:
 | | A shared database server (option A) | One embedded Storage node |
 | --- | --- | --- |
 | For | a cluster | a single machine, an edge site |
-| What | database servers IT runs on the internal network — PostgreSQL first, through `xmip-core-persist-postgresql`; SQL Server later | RocksDB and SQLite through `xmip-core-persist`, in the node's `data/` |
+| What | database servers IT runs on the internal network — PostgreSQL first, through `xmip-core-persist-postgresql`; SQL Server and MariaDB later | RocksDB and SQLite through `xmip-core-persist`, in the node's `data/` |
 | Clustering, failover, backup | IT's | **none**: no failover, stated plainly |
 | A claim | a conditional update: set the owner where the owner is empty or lapsed | the same condition, in RocksDB on the one node |
 | A write counts | once the runtime database has committed it | once it is synced to disk; group commit shares one sync among concurrent writes |
@@ -445,7 +445,10 @@ concern*). Two forms are decided:
 owner, 2026-10-01: *Don't leave out the elephant, Postgres*), as a persist
 technology, `xmip-core-persist-postgresql`, reusing the PostgreSQL wire
 protocol the estate already speaks in its PostgreSQL transport — one
-implementation, no async runtime. SQL Server follows later. Both are
+implementation, no async runtime. SQL Server follows later, and MariaDB
+beside them (the owner, 2026-10-12: *Can MariaDB be a contender to
+PostgreSQL and MSSQL so make it a provider for Storage nodes and create
+scripts for it*; ADR-0070, amendment 2026-10-12). All three are
 [decided, not built](estate-map.md#database-server).
 
 **A node finds its Storage nodes from its TOML** (the owner, 2026-10-01,
@@ -459,7 +462,7 @@ the node tries them round robin.
 owner, 2026-10-10: *i would do it like runtime, storage, connection string.
 Same for audit and administration*, and *Yes, better*; ADR-0070, amendment
 2026-10-10): `[runtime]`, `[administration]` and `[audit]`, each with
-`storage` — `rocksdb`, `sqlite`, `postgresql` or `mssql` — and
+`storage` — `rocksdb`, `sqlite`, `postgresql`, `mssql` or `mariadb` — and
 `connection`, the store's path on an embedded engine or the server's own
 connection string, for example
 `[runtime] storage = "postgresql"`,
