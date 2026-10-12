@@ -886,6 +886,45 @@ The review asks that each landing publish an identifiable verification
 result beside root CI: the revisions it resolved and the surface checks it
 ran.
 
+## 37. A configuration has no revision a node accepts or runs
+
+Raised by the outside review of 2026-10-12. Repaired the same day: a
+save's write and its slices' delivery are one step under the cluster
+file's lock, a delivery whose cluster text a newer save replaced delivers
+nothing, and every slice is written through a file of its own and renamed
+into place. What remains is a design question, the owner's: no
+configuration carries a revision, so no surface can say which revision is
+saved, which each node accepted, and which is running, and saved,
+delivered and applied are told apart only in each screen's own words
+(*takes effect when the node starts again*). The review asks for an
+immutable revision carried from save through validation, slicing,
+delivery and the node's acceptance (problem 31's push), a node refusing
+one older than it holds, and the four surfaces answering the same four
+questions: saved, accepted, running, and what resolves the failure.
+
+## 38. Admission bounds Journeys, not bytes
+
+Raised by the outside review of 2026-10-12. The send pool admits a bounded
+number of Journeys, and each reads its Message whole before its transport
+sends it, since `Transport::send` takes a byte slice
+(`transport/.src/protocol.rs`), so resident memory grows with the sizes
+of what is in flight. The audit file reader (`xaudit::audit_store::read`)
+keeps every record it has read, and problem 34's backlog grows with the
+failures. Needed: a send that streams through the transport capability,
+taking the Message a chunk at a time as `runtime-model.md` section 10
+already allows; a byte budget beside the pool's count; audit queries read
+a page at a time from Storage.
+
+## 39. A send the process did not finish leaves its file behind
+
+Found 2026-10-12, making the file transport's send atomic: a send writes
+`<target>.xmip-sending.<pid>.<count>.<nanos>` beside its target and
+renames it into place, so a reader sees the old file or the whole new one.
+A process that dies between the two leaves that file in the directory for
+good. Receive never takes it, and nothing removes it. Removing them at a
+node's start, as it recovers its claims, needs a decision on whose they
+are: the name carries the process, not the node.
+
 ---
 
 # Suggested order

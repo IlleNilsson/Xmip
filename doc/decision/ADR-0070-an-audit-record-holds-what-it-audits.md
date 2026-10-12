@@ -104,6 +104,19 @@ that for now.*
   `ledger::verify_audit_chain` walks one Xmip Storage keeps. Verifying reads
   no payload, so an Observer may: it is a reading, and ADR-0009's amendment
   of 2026-09-06 lets an Observer read every monitoring surface.
+- Built, 2026-10-12: the seal of an interrupted write. Every table the
+  file sink appends ends with a blank line, so a file that ends otherwise
+  ends in a record whose write was interrupted, or is still going on. The
+  next append, holding `audit.lock`, does not write onto it: it keeps those
+  bytes as written and ends them with a comment line and a blank line
+  (`audit_fragment::SEAL`), so they stand as a fragment of their own, in no
+  chain, and the record it appends continues its writer's chain from the
+  last complete record. Nothing is truncated or deleted. A verification
+  reports each fragment per file, apart from the chain verdict, in one
+  sentence: FAILED for a sealed one, UNFINISHED for the file's end no
+  append has sealed yet (`xmip_audit_read_v1`'s `fragments`, .NET's
+  `AuditFragment`); `xmip-cli audit --verify` exits 1 on a sealed fragment
+  as on a broken chain, and not on an unfinished end.
 
 ## Provenance
 
