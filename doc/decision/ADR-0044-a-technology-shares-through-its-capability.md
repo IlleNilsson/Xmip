@@ -84,7 +84,7 @@ over the playground as well.
 
 Open problem 7 leaned to *keep five modules, share a store trait* so the
 `postgres` adapter is not written five times. The archive technologies do it
-one step further: archive-postgresql, -mssql, -mysql, -s3, -azure-blob and
+one step further: archive-postgresql, -mssql, -mariadb, -s3, -azure-blob and
 -gcs each ride on the transport technology of the same name for their wire
 client, and hold only the archive's own shape. When audit, report and observe
 grow technologies, they ride on the same transports.
@@ -166,7 +166,7 @@ speak HTTP/1.1 unchanged (ADR-0043, amendment 2026-09-25).
 Clause 2 left each SQL technology "its own quoting". Five crates read that as
 writing the rule itself: a literal between quotes with the quote doubled, an
 identifier between delimiters with the closing one doubled. That rule is the
-same everywhere; only which delimiter is the dialect's. The `MySQL` and
+same everywhere; only which delimiter is the dialect's. The `MariaDB` and
 `PostgreSQL` far ends had it wrong, reading `` `in``box` `` and `"in""box"` as
 ending at the first doubled delimiter.
 
@@ -174,14 +174,14 @@ ending at the first doubled delimiter.
   the lowest crate the SQL transports, the SQL script archive and the SQL
   contract all reach): `quote`, and `read` over the character reader. A
   dialect names the delimiter — `'`, `"`, `[`…`]`, a backtick — and keeps
-  what is truly its own: T-SQL's `N` prefix, `MySQL`'s backslash escapes.
+  what is truly its own: T-SQL's `N` prefix, `MariaDB`'s backslash escapes.
 - **An archive in a SQL server's table is one type**, `archive::sql::SqlArchive<D>`
   in the archive capability, with the row, its INSERT and SELECT and the
   receipt. What clause 2 leaves the technology is the `archive::sql::Dialect`
   it implements — quoting, the bytes literal and how they come back, how a
   new row's id is asked for, the moment's form — and the connection through
-  its transport technology. `SqlServer`, `MySql` and `PostgreSql` are all
-  that archive-mssql, -mysql and -postgresql hold.
+  its transport technology. `SqlServer`, `MariaDb` and `PostgreSql` are all
+  that archive-mssql, -mariadb and -postgresql hold.
 - **One protocol is one technology.** `rabbitmq` rode AMQP 0-9-1 with a
   second copy of `amqp`'s frame, methods, content, client and session. It
   now depends on `amqp`, a declared sibling carrier in clause 1's sense, and
@@ -230,3 +230,45 @@ knob no one needs is one someone gets wrong.
 
 Provenance: the owner, 2026-09-28, asked the pros and cons and left the
 choice to the assistant (*I let you decide*); the assistant chose this.
+
+## Amendment, 2026-10-12: SQL is a library of its own
+
+The 2026-09-24 amendment put SQL's doubling rule in `xmip-core-library-codec`
+and left two dialects standing: the transport capability's, which every SQL
+transport filled for its INSERT, its far end and its `accept` statement, and
+the archive capability's `archive::sql::Dialect`, which the same servers'
+archive technologies filled again for their row. The transport and the SQL
+contract each read a statement's verb their own way. That is SQL written
+three times across three domains, and none of them owns it. The owner,
+2026-10-12: *Well I guess that SQL should live under a more common
+repo/module if it is shared between domains?* — and, approving
+`xmip-core-library-sql` at `module/core/library/sql`, *Go ahead, it does not
+fit under archive.*
+
+- **SQL is `xmip-core-library-sql`'s**, beside codec, net and the other
+  libraries: `Delimiter`, the doubling rule, moved out of codec, which keeps
+  no copy; `Verb`, the keyword a statement opens with, which the SQL
+  contract's allowed set names and a SQL far end answers by; `Literal`; and
+  one `Dialect`, the union of the two: the identifier delimiter, what a bare
+  identifier takes, the first parameter marker, the string and binary
+  literals, how a binary column comes back, and how an INSERT answers its new
+  row's id. Through it the one INSERT is written and taken apart and a
+  parameter is bound in. The dialects are the ones Xmip already spoke:
+  ISO SQL (the SQL script archive), T-SQL, `PostgreSQL`, `MariaDB` and
+  `SQLite`.
+- **The wire stays with the technology.** A transport keeps its protocol, its
+  login and the URI schemes its Locations open with; the transport capability
+  keeps where a send target puts its row, the payload column setting and the
+  `accept` acknowledgement, each taking the dialect a technology names.
+- **The archive keeps what is the archive's.** `SqlArchive<D>` stays in the
+  archive capability, with its row, its receipt and `archive::sql::Database`:
+  the dialect a server speaks, the receipt's scheme, the moment's form and
+  the connection. Clause 2's rule holds: what moved is the same in every
+  domain, not what is similar.
+- **`MariaDB`.** The dialect, the transport and the archive are named for
+  `MariaDB` (the owner, 2026-10-12), whose protocol also reaches MySQL
+  servers (ADR-0011, amendment 2026-10-12).
+
+Provenance: the owner's two sentences above and his approval of the
+repository the same day; the shape of the one dialect is the assistant's
+drafting of clause 1.

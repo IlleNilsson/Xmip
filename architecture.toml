@@ -273,10 +273,10 @@ note = "`xmip-core-persist`'s Storage client and server are built and tested; `x
 record = ["ADR-0056 (amendment 2026-10-01)"]
 
 [implementation.database-server]
-name = "Xmip Storage in front of PostgreSQL or SQL Server"
+name = "Xmip Storage in front of PostgreSQL, SQL Server or MariaDB"
 state = "decided"
-note = "Each data domain's table — `[runtime]`, `[administration]`, `[audit]` — is read and checked, its `storage` and its connection in the server's own form, each of which may name a server or technology of its own, and `[storage.database]` the secret; IT's scripts are in `deploy/database`, per data domain; a node naming a server is refused as it starts, since no Storage node connects to either kind yet."
-record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0070 (amendment 2026-10-10)", "deployment-model.md section 7"]
+note = "Each data domain's table — `[runtime]`, `[administration]`, `[audit]` — is read and checked, its `storage` and its connection in the server's own form, each of which may name a server or technology of its own, and `[storage.database]` the secret; IT's scripts are in `deploy/database`, per data domain; a node naming a server is refused as it starts, since no Storage node connects to any kind yet."
+record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0070 (amendments 2026-10-10 and 2026-10-12)", "deployment-model.md section 7"]
 
 [implementation.artifact-steps]
 name = "Prepare, Contract, Promote, Transform, Demote and Assignment on Ports, Locations and Work Processes"
@@ -422,7 +422,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-context", "xmip-core"]
+  dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-sql", "xmip-core-context", "xmip-core"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core-context", "xmip-core"]
@@ -709,6 +709,10 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
     specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events"
+    [xmip.core.transport.mariadb]
+    maturity = "scaffolded"
+    specification = "MariaDB client/server protocol, the protocol-41 handshake: native password, COM_QUERY text protocol"
+    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.modbus]
       dependency = ["xmip-core"]
     maturity = "scaffolded"
@@ -720,11 +724,7 @@ dependency = []
     [xmip.core.transport.mssql]
     maturity = "scaffolded"
     specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
-    [xmip.core.transport.mysql]
-    maturity = "scaffolded"
-    specification = "MySQL client/server protocol 4.1: handshake, native password, COM_QUERY text protocol"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.named-pipe]
       dependency = ["xmip-core-library-net", "xmip-core-context", "xmip-core"]
     maturity = "scaffolded"
@@ -745,14 +745,10 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "OPC UA transport: one node's value is one Stream — the binary encoding over TCP, a secure channel with security policy None, an anonymous session, a Read and a Write of a ByteString, against a server or the in-process one this crate carries. A xmip-core-transport technology."
-    [xmip.core.transport.oracle]
-    maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core", "xmip-core-library-net"]
-    description = "Oracle transport: one row of a query is one Stream, a send is one INSERT; TNS and TTC against a listener, as mssql and mysql are built. A xmip-core-transport technology."
     [xmip.core.transport.postgresql]
     maturity = "scaffolded"
     specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.rabbitmq]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1, the RabbitMQ native protocol"
@@ -861,7 +857,7 @@ dependency = []
     primaryLanguage = "rust"
     [xmip.core.contract.sql]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
     specification = "ISO/IEC 9075 statement syntax, vendor-neutral; statement kinds bind as the conformance claim"
     [xmip.core.contract.wsdl]
     maturity = "scaffolded"
@@ -897,7 +893,7 @@ dependency = []
     [xmip.core.logic.grpc]
     maturity = "scaffolded"
     description = "gRPC logic technology: a /package.Service/Method path and a length-prefixed message become a named operation with protobuf arguments, and a result or status becomes a frame and grpc-status trailers again, on a stream of an HTTP/2 connection. A xmip-core-logic technology."
-    dependency = ["xmip-core-contract", "xmip-core-stream"]
+    dependency = ["xmip-core-contract", "xmip-core-library-net", "xmip-core-stream"]
     [xmip.core.logic.http-api]
     maturity = "scaffolded"
     dependency = ["xmip-core-contract", "xmip-core-contract-openapi", "xmip-core-stream"]
@@ -1433,7 +1429,7 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-sql"]
     [xmip.core.archive.azure-blob]
     description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1448,23 +1444,23 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-google-cloud-storage"]
     specification = "Google Cloud Storage JSON API, bearer token, through the google-cloud-storage transport client"
+    [xmip.core.archive.mariadb]
+    description = "MariaDB archive target: one item is one row of an archive table. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-mariadb", "xmip-core-transport", "xmip-core-library-sql"]
+    specification = "SQL over the MariaDB client/server protocol, through the mariadb transport client"
     [xmip.core.archive.mssql]
     description = "SQL Server archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-mssql", "xmip-core-transport"]
+    dependency = ["xmip-core-transport-mssql", "xmip-core-transport", "xmip-core-library-sql"]
     specification = "T-SQL over TDS 7.4, through the mssql transport client"
-    [xmip.core.archive.mysql]
-    description = "MySQL and MariaDB archive target: one item is one row of an archive table. A xmip-core-archive technology."
-    maturity = "scaffolded"
-    dependency = ["xmip-core-transport-mysql", "xmip-core-transport"]
-    specification = "SQL over the MySQL client/server protocol, through the mysql transport client"
     [xmip.core.archive.parquet]
     description = "Parquet archive target: retained items written as Apache Parquet files. The default archive technology (owner, 2026-09-07). A xmip-core-archive technology."
     maturity = "scaffolded"
     [xmip.core.archive.postgresql]
     description = "PostgreSQL archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-postgresql"]
+    dependency = ["xmip-core-transport-postgresql", "xmip-core-library-sql"]
     specification = "SQL over the PostgreSQL frontend/backend protocol 3.0, through the postgresql transport client"
     [xmip.core.archive.s3]
     description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
@@ -1474,12 +1470,12 @@ dependency = []
     [xmip.core.archive.sql]
     description = "SQL script archive target: one item is one INSERT in a vendor-neutral script any database loads. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core-library-net", "xmip-core-library-sql"]
     specification = "ISO/IEC 9075 INSERT statements, one script per data type"
     [xmip.core.archive.sqlite]
     description = "SQLite archive target: one file, no server, the archive a single node keeps beside itself — the SQLite dialect of the capability's SqlArchive. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core-library-net", "xmip-core-library-sql"]
     specification = "SQLite 3 database file, one archive table"
 
   [xmip.core.resilience]
@@ -1588,6 +1584,7 @@ dependency = []
       "xmip-core",
       "xmip-core-library-codec",
       "xmip-core-library-net",
+      "xmip-core-library-sql",
       "xmip-core-library-tls",
       "xmip-core-secret",
   ]
@@ -1674,7 +1671,7 @@ dependency = []
 
 
   [xmip.core.library.codec]
-  description = "Encoding primitives every layer shares, one copy of each: XML, TOML and SQL quoting, MIME media types and multipart, the character reader, byte cursor and writer, varint, hex, base64, UTF-16LE, the parameterised CRC, SHA-1 and the civil calendar. What a format means stays with the format."
+  description = "Encoding primitives every layer shares, one copy of each: XML and TOML quoting, MIME media types and multipart, the character reader, byte cursor and writer, varint, hex, base64, UTF-16LE, the parameterised CRC, SHA-1 and the civil calendar. What a format means stays with the format."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1707,6 +1704,15 @@ dependency = []
   maturity = "scaffolded"
   dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-tls"]
   mount = "module/core/library/postgresql"
+
+
+  [xmip.core.library.sql]
+  description = "SQL, one copy for every domain: delimited text with the closing delimiter doubled, a statement's verb, a literal and a binary value written and read, one INSERT written and taken apart, a parameter bound in, and the dialects Xmip speaks: ISO SQL, T-SQL, PostgreSQL, MariaDB and SQLite. A server's wire stays with its technology."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = ["xmip-core-library-codec"]
+  mount = "module/core/library/sql"
 
 
   [xmip.core.library.ssh]
@@ -1756,8 +1762,8 @@ dependency = []
       "xmip-core-archive-azure-blob",
       "xmip-core-archive-file",
       "xmip-core-archive-gcs",
+      "xmip-core-archive-mariadb",
       "xmip-core-archive-mssql",
-      "xmip-core-archive-mysql",
       "xmip-core-archive-parquet",
       "xmip-core-archive-postgresql",
       "xmip-core-archive-s3",
@@ -1792,6 +1798,7 @@ dependency = []
       "xmip-core-journey",
       "xmip-core-library-codec",
       "xmip-core-library-net",
+      "xmip-core-library-sql",
       "xmip-core-message",
       "xmip-core-node",
       "xmip-core-observe",
@@ -1849,20 +1856,19 @@ dependency = []
       "xmip-core-transport-knx",
       "xmip-core-transport-lorawan",
       "xmip-core-transport-m-bus",
+      "xmip-core-transport-mariadb",
       "xmip-core-transport-mdns",
       "xmip-core-transport-mllp",
       "xmip-core-transport-modbus",
       "xmip-core-transport-mqtt",
       "xmip-core-transport-msmq",
       "xmip-core-transport-mssql",
-      "xmip-core-transport-mysql",
       "xmip-core-transport-named-pipe",
       "xmip-core-transport-nats",
       "xmip-core-transport-nats-jetstream",
       "xmip-core-transport-nfs",
       "xmip-core-transport-obd-ii",
       "xmip-core-transport-opc-ua",
-      "xmip-core-transport-oracle",
       "xmip-core-transport-peppol",
       "xmip-core-transport-pop3",
       "xmip-core-transport-postgresql",

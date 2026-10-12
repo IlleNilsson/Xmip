@@ -5,4 +5,4 @@
 
 description = "Relational databases and the files analytics reads."
 
-standards = ["sql", "mssql", "mysql", "postgresql", "oracle", "sqlite", "parquet"]
+standards = ["sql", "mariadb", "mssql", "postgresql", "sqlite", "parquet"]

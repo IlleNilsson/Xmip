@@ -64,7 +64,7 @@ would be a second way, for one engine.
 
 ### 3. Someone else's database is theirs
 
-The sqlite, mssql, mysql, postgresql and oracle transports write where a
+The sqlite, mssql, mariadb and postgresql transports write where a
 customer points them. Whether that database is encrypted is that customer's
 choice, stated in configuration; Xmip passes the key it is given and holds
 no opinion.

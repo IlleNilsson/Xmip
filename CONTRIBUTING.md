@@ -92,9 +92,11 @@ and it cost real work.
   time; payloads are excused depending on size and complexity.* What Xmip
   does around a payload is measured in milliseconds; only the work on the
   payload itself may take longer, in proportion to what it is. The
-  operator tools are built another way for another reason: *CLI, PowerShell
-  and Web operation tools are built on .NET for the tooling and ease of
-  development* (the same day).
+  PowerShell module and the GUIs are built another way for another reason:
+  on .NET, *for the tooling and ease of development* (the same day). The
+  command line is not: the owner, 2026-10-12, *the CLI has to be usable
+  without .NET. If you are on an MCU or any kind of edge device, .NET might
+  not be the way to go* — it is Rust, over the C ABI (ADR-0014).
 - **Xmip uses its own toolchain — dogfooding as much as possible.** Where
   Xmip has an implementation of something, Xmip's own programs and tools use
   it rather than the platform's or a third party's: TLS through

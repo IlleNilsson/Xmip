@@ -3,16 +3,18 @@
 //! backend reads and writes by (`xmip-core-persist`, `storage::schema`): a
 //! script that differs from what the definition writes fails here, so the
 //! two cannot drift (the owner, 2026-10-01: *We have to give PostgreSQL and
-//! MSSQL IT-operators help in regards to settings and database schemas*).
+//! MSSQL IT-operators help in regards to settings and database schemas*;
+//! and, 2026-10-12, of MariaDB: *make it a provider for Storage nodes and
+//! create scripts for it*).
 //!
 //! After a change to the definition, `XMIP_DATABASE_SCRIPTS=write cargo test
 //! --test database --features persist` writes the scripts again; the diff
 //! is then read and landed with the change.
 //!
 //! And Xmip Storage against a real server, where a test is given one: the
-//! server named by `XMIP_TEST_POSTGRESQL` or `XMIP_TEST_MSSQL`, each as
-//! its operators' guide says. Where neither is set the test says it was
-//! skipped, and why, and passes on nothing.
+//! server named by `XMIP_TEST_POSTGRESQL`, `XMIP_TEST_MSSQL` or
+//! `XMIP_TEST_MARIADB`, each as its operators' guide says. Where none is
+//! set the test says it was skipped, and why, and passes on nothing.
 
 use std::path::{Path, PathBuf};
 
@@ -98,4 +100,9 @@ fn xmip_storage_keeps_its_records_on_a_postgresql_server_where_one_is_given() {
 #[test]
 fn xmip_storage_keeps_its_records_on_a_sql_server_where_one_is_given() {
     against(Server::SqlServer, "XMIP_TEST_MSSQL");
+}
+
+#[test]
+fn xmip_storage_keeps_its_records_on_a_mariadb_server_where_one_is_given() {
+    against(Server::MariaDb, "XMIP_TEST_MARIADB");
 }

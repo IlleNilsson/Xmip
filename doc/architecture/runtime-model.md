@@ -160,8 +160,8 @@ IT-infrastructure question… How IT-infrastructure designs their Database
 servers is their concern*). Two forms are decided:
 
 - **A shared database server** that IT runs on the internal network —
-  PostgreSQL first, SQL Server later — chosen as option A (the owner: *Go
-  ahead*). Its clustering, failover and backup are IT's.
+  PostgreSQL first, SQL Server and MariaDB later — chosen as option A (the
+  owner: *Go ahead*). Its clustering, failover and backup are IT's.
 - **One embedded Storage node**, RocksDB and SQLite through
   `xmip-core-persist`, for a single machine and an edge site. **It has no
   failover**: when that node is gone, so is the site's storage until it
@@ -453,7 +453,10 @@ machine** as the node starts (the owner, 2026-10-03: *make a calculation
 according to CPU cores/threads*): at most twice the hardware threads the
 platform allots the process (`pool::Limits::receive`), since a receive
 thread waits on the Ledger's sync as well as working. A thread idle for a
-minute ends — the assistant's drafting, for the owner to overrule. No
+minute ends — the assistant's drafting, for the owner to overrule. A
+polled Location rests between receives that found nothing (section 5,
+*How a receive runs*): a second, and five seconds after a failure that may
+mend — the assistant's drafting, 2026-10-12, for the owner to overrule. No
 configuration caps a pool yet.
 
 **Built for send, 2026-10-03.** The node's Send pool is calculated the
@@ -699,6 +702,27 @@ cycle is complete, Promote, Validate and what not then the sender is
 acknowledged*). Data Transfer and Batch Load are acknowledged once the Message
 is accepted and validated; a Composite interaction holds the call until the
 response a Work Process produced (section 11).
+
+**A polled Location rests; a waiting one is asked again at once**
+(built 2026-10-12). Every transport declares whether its receive waits for
+what arrives — a listener's accept, a socket's read, a broker drained
+until quiet, a long poll — or looks and returns at once — a directory, an
+object store or a maildrop listed, a query run, a register read
+(`xmip-core-transport`'s `Waiting`, no default, its reason in words). A
+waiting one is asked again the moment its receive returns, so an arrival
+is taken as it lands; its own wait running out is told as a failure asking
+again may mend, and is asked again at once too. A polled one that found
+nothing rests `[tuning] receive_poll` (a second by default) before it is
+asked again, and one that failed in a way asking again may mend rests
+`[tuning] receive_backoff` (five seconds), each measured from when that
+receive began, set per cluster and per node as every `[tuning]` value is
+(ADR-0031, amendment 2026-10-03). A rest is waited on the node's stop,
+which ends it at once. Until 2026-10-12 every Location was asked again at
+once, and an idle
+polled one listed its directory or ran its query without pause. Where a
+far end can tell of a change — a file system's change notification, a
+database's `LISTEN` — the technology still polls; waiting on such a notice
+is not built.
 
 Refusals before Publication are audited receive failures. From Message
 creation on the Stream is kept; a Message failing Validation is kept and
@@ -1466,7 +1490,9 @@ digest is SHA-256, taken by the writer from the bytes as they pass once
 (`ledger::write_stream`) and kept in the Stream's own record, its one home;
 the audit keeper, moving a record to the audit database, copies the
 chunks of every Stream the Message's Sections are over beside it, one at a
-time and a shared Stream once — the `audit_stream_chunk` table, by the
+time, each unsynced and made durable by the record's own synced write as a
+receive cycle's chunks are by its Publication (section 3), and a shared
+Stream once — the `audit_stream_chunk` table, by the
 record's identifier, the Stream's and their number — and writes, with the
 record, each Stream's row of the `audit_stream` table: its length, its chunks,
 its digest and when it was written, in the clear, found by the Stream. A read of a copy is held to both, and one that does not match is refused in

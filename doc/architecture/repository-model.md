@@ -423,7 +423,7 @@ Xmip/
 │   │   └── runtime   configure   persist
 │   └── core/                 the provider core: everything else it ships
 │       ├── library/
-│       │   └── asn1   codec   net   tls
+│       │   └── asn1   codec   net   ntlm   sql   ssh   tls
 │       ├── capability/
 │       │   ├── receive   send   transport   logic   prepare   identify
 │       │   ├── authenticate   authorize   contract   path   assign   promote
