@@ -221,3 +221,59 @@ Describe 'The deploy files name a site' {
         Join-Path $script:Root "deploy/site/$($Matches['site']).toml" | Should -Exist
     }
 }
+
+# The packages (ADR-0015, amendment 2026-10-13). Each installs by running
+# xmip-service's own install switch and removes by its uninstall switch, so
+# no package holds a copy of the layout, the starter or the registration;
+# and a package this estate has not built says so where it is described.
+Describe 'The packages under deploy/package' {
+    BeforeAll {
+        $script:Package = Join-Path $script:Root 'deploy/package'
+    }
+
+    It 'reads <_> as XML' -ForEach @(
+        'windows/Package.wxs'
+        'windows/Xmip.wixproj'
+        'macos/distribution.xml'
+    ) {
+        { [xml] (Get-Content -LiteralPath (Join-Path $script:Package $_) -Raw) } |
+            Should -Not -Throw
+    }
+
+    It 'installs and removes, in <Path>, through xmip-service' -ForEach @(
+        @{ Path = 'windows/Package.wxs'; Switch = '--install', '--uninstall' }
+        @{ Path = 'linux/postinstall.sh'; Switch = @('--install') }
+        @{ Path = 'linux/preremove.sh'; Switch = @('--uninstall') }
+        @{ Path = 'macos/scripts/postinstall'; Switch = @('--install') }
+    ) {
+        [string] $text = Get-Content -LiteralPath (Join-Path $script:Package $Path) -Raw
+
+        $text | Should -Match 'xmip-service'
+        foreach ($named in $Switch) {
+            $text | Should -Match ([regex]::Escape($named))
+        }
+    }
+
+    It 'says, in <_>, that it is written and not built' -ForEach @(
+        'linux/nfpm.yaml'
+        'linux/postinstall.sh'
+        'linux/preremove.sh'
+        'macos/distribution.xml'
+        'macos/scripts/postinstall'
+    ) {
+        Get-Content -LiteralPath (Join-Path $script:Package $_) -Raw |
+            Should -Match 'WRITTEN, NOT (BUILT|RUN)'
+    }
+
+    It 'names, in nfpm.yaml, scripts that exist' {
+        [string] $linux = Join-Path $script:Package 'linux'
+        [string] $text = Get-Content -LiteralPath (Join-Path $linux 'nfpm.yaml') -Raw
+
+        $named = [regex]::Matches($text, '(?m)^\s+\w+: \./(?<file>\S+)\s*$')
+
+        $named.Count | Should -Be 2 -Because 'nfpm.yaml names postinstall.sh and preremove.sh'
+        foreach ($entry in $named) {
+            Join-Path $linux $entry.Groups['file'].Value | Should -Exist
+        }
+    }
+}

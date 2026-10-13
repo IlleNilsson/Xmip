@@ -401,6 +401,10 @@ C is the tempting one and should be resisted for the reason the deployment
 model already gives: **the runtime semantics are identical on all of them.**
 A device that has no Service has different semantics, not fewer modules.
 
+Since 2026-10-13 the packages register through `xmip-service --install`
+(ADR-0015, amendment 2026-10-13), which refuses where `ServiceManager::None`
+holds; it answers nothing here.
+
 ---
 
 ## 23. Recovery is decided but undemonstrated, and unbuilt below the contracts
@@ -970,6 +974,27 @@ from the one schema definition as the difference between two releases,
 upgrade only adds — a table, a column, an index — and whatever would drop
 or rewrite data is a step of its own, reviewed as one. The embedded
 engines need the same version and step, run by the Storage node itself.
+
+## 42. The setup packages are written and not yet built
+
+The owner, 2026-10-13: *Leave it as a quest for later, but it has to be
+done.* `xmip-service --install` and the portable archive are built and run on
+Windows (ADR-0015, amendment 2026-10-13). What remains, each needed before a
+release:
+
+- **The Windows MSI and its winget manifest.** WiX 7 builds nothing until its
+  Open Source Maintenance Fee terms are accepted — the owner's decision.
+- **The Linux `.deb` and `.rpm`, and the macOS `.pkg`**: written under
+  `deploy/package/`, never built; they need Linux and macOS builds, which the
+  owner has switched off for now. Their systemd and launchd branches of
+  `install.rs` have not been compiled.
+- **Signing**: Authenticode, Apple Developer ID with notarization, Linux
+  package signing.
+- **A site whose node starts on its own**: a one-machine package built from
+  `personal-computer` is refused at start until it also carries the
+  `storage` role.
+- **The service account** (open problem 28) and whether the starter grants
+  local tools more than Observer (ADR-0014, amendment 2026-10-13).
 
 ---
 

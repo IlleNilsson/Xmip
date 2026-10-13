@@ -45,7 +45,10 @@ BeforeAll {
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
             'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
-            'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1'
+            'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
+            'Test-XmipPlatform.ps1', 'Test-XmipRuntimeLibraryReader.ps1',
+            'Get-XmipRemainingTime.ps1', 'Get-XmipVerifyTime.ps1',
+            'Update-XmipGeneratedDocument.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -837,5 +840,131 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
         $rootOnly | Should -BeGreaterThan $branch
         $rootOnly | Should -BeLessThan $pin
         $script:Source | Should -Match '\$platformBroken = -not \$NoVerify -and \$Platform -and'
+    }
+}
+
+Describe 'A landing says how long it has left' {
+    # The owner, 2026-10-13, during a landing that took over an hour: *A
+    # timer, letting one know how long it is going to take.*
+
+    It 'estimates from the average of the modules measured so far' {
+        InModuleScope Xmip {
+            [timespan[]] $measured = @([timespan]::FromSeconds(10), [timespan]::FromSeconds(20))
+            [hashtable] $at = @{
+                Index    = 3
+                Total    = 102
+                Measured = $measured
+                Recorded = @([timespan]::FromHours(1))
+                Final    = [timespan]::FromMinutes(5)
+            }
+
+            # 100 modules left at 15 seconds is 25 minutes, and 5 for the root.
+            Get-XmipRemainingTime @at | Should -Be 'module 3 of 102 (1 %), about 30 minutes left'
+        }
+    }
+
+    It 'uses the last landing''s times before a module of this one is measured' {
+        InModuleScope Xmip {
+            [hashtable] $at = @{
+                Index    = 1
+                Total    = 4
+                Recorded = @([timespan]::FromMinutes(30), [timespan]::FromMinutes(40))
+                Final    = [timespan]::FromMinutes(20)
+            }
+
+            Get-XmipRemainingTime @at |
+                Should -Be 'module 1 of 4 (0 %), about 2 hours and 40 minutes left'
+        }
+    }
+
+    It 'says what it does not know' {
+        InModuleScope Xmip {
+            Get-XmipRemainingTime -Index 1 -Total 205 |
+                Should -Be 'module 1 of 205 (0 %), time left unknown until a module has been timed'
+
+            [timespan[]] $one = @([timespan]::FromMinutes(1))
+            Get-XmipRemainingTime -Index 2 -Total 3 -Measured $one |
+                Should -Be ('module 2 of 3 (33 %), about 2 minutes left, ' +
+                    'and the root crate and test/ not yet timed')
+        }
+    }
+
+    It 'names the root crate and test/ once the modules are done' {
+        InModuleScope Xmip {
+            [hashtable] $done = @{
+                Index    = 3
+                Total    = 2
+                Measured = @([timespan]::FromMinutes(1))
+                Final    = [timespan]::FromSeconds(20)
+            }
+            Get-XmipRemainingTime @done |
+                Should -Be 'all 2 modules done; the root crate and test/ next, under a minute left'
+
+            Get-XmipRemainingTime -Index 1 -Total 0 |
+                Should -Be 'the root crate and test/ next, time left unknown: not yet timed'
+        }
+    }
+
+    It 'records each duration and reads it back for the next landing' {
+        InModuleScope Xmip -Parameters @{ Root = $TestDrive } {
+            param($Root)
+
+            (Get-XmipVerifyTime -RepositoryRoot $Root).Count | Should -Be 0
+            Set-XmipVerifyTime -RepositoryRoot $Root -Name 'module/a' -Duration '00:01:30'
+            Set-XmipVerifyTime -RepositoryRoot $Root -Name '.' -Duration '00:04:00'
+
+            [hashtable] $read = Get-XmipVerifyTime -RepositoryRoot $Root
+            $read['module/a'] | Should -Be ([timespan]::FromSeconds(90))
+            $read['.'] | Should -Be ([timespan]::FromMinutes(4))
+        }
+    }
+
+    It 'prints the line before each module and the root steps it verifies' {
+        [string] $tree = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipChangeTree.ps1')
+
+        [int] $line = $tree.IndexOf('Get-XmipRemainingTime -Index $position')
+        [int] $verify = $tree.IndexOf('Test-XmipModule @verify')
+        [int] $root = $tree.IndexOf('Get-XmipRemainingTime -Index ($Ordered.Count + 1)')
+        [int] $service = $tree.IndexOf('Test-XmipModule @service')
+
+        $line | Should -BeGreaterThan 0
+        $line | Should -BeLessThan $verify
+        $root | Should -BeGreaterThan $verify
+        $root | Should -BeLessThan $service
+    }
+}
+
+Describe 'A landing regenerates the generated documents before it verifies' {
+    BeforeAll {
+        [string] $script:Change = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Publish-XmipChange.ps1')
+    }
+
+    It 'saves the estate map and the decision index' {
+        [string] $update = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Update-XmipGeneratedDocument.ps1')
+
+        $update | Should -Match 'New-XmipEstateMap -Root \$RepositoryRoot -Save'
+        $update | Should -Match 'New-XmipDecisionIndex -DecisionRoot \$decision -Save'
+    }
+
+    It 'does it before the estate is read and before any verification' {
+        # EstateMap.Test.ps1 stopped four landings on 2026-10-13: the map was
+        # saved at the pin, after test/ had compared it with the tree.
+        [int] $update = $script:Change.IndexOf('Update-XmipGeneratedDocument -RepositoryRoot')
+        [int] $read = $script:Change.IndexOf('Get-XmipStatus -RepositoryRoot')
+
+        $update | Should -BeGreaterThan 0
+        $update | Should -BeLessThan $read
+        $update | Should -BeLessThan $script:Change.IndexOf('Test-XmipChangeTree @')
+    }
+
+    It 'does it in one place, not at the pin as well' {
+        [string] $source = Get-XmipLandingSource
+
+        ([regex]::Matches($source, 'New-XmipEstateMap -Root')).Count | Should -Be 1
+        ([regex]::Matches($source, 'Update-XmipGeneratedDocument -RepositoryRoot')).Count |
+            Should -Be 1
     }
 }

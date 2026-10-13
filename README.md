@@ -171,6 +171,39 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
 
 The full vocabulary is in [`doc/terminology.md`](doc/terminology.md).
 
+### Install
+
+Xmip installs as one node on one machine, started by the operating system
+with the machine and operated from it at once
+([ADR-0015, amendment 2026-10-13](doc/decision/ADR-0015-packaging.md);
+[`deploy/package`](deploy/package/README.md)). Nothing is published yet:
+build the package from the estate (*First run* below, then
+`Build-XmipService -Site personal-computer -CargoArgument '--release' -Package msi, archive`).
+
+| | Windows | Linux | macOS |
+| --- | --- | --- | --- |
+| Installer | MSI, x64 and arm64, and a winget manifest | `.deb` and `.rpm` (written, not built yet) | `.pkg` (written, not built yet) |
+| Install | `msiexec /i xmip-<version>-<site>-x64.msi`, elevated | `apt install ./xmip_<version>_amd64.deb` or `dnf install ./xmip-<version>.x86_64.rpm` | open the `.pkg` |
+| Programs | `Program Files\Xmip\bin` | `/opt/xmip/bin` | `/opt/xmip/bin` |
+| Configuration, data, audit, logs | `ProgramData\Xmip` | `/opt/xmip` | `/opt/xmip` |
+| The service | Windows service `xmip-<node>` | systemd unit `xmip-<node>` | launchd daemon `xmip-<node>` |
+
+The installer writes a starter configuration, `config/xmip.toml` — one node
+named after the machine, offline, operated on this machine through its
+local endpoint `xmip-<node>` — unless one is there already, and starts the
+service. Give the MSI `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>` to name them
+yourself. Removing Xmip stops and removes the service and keeps your
+configuration, data, audit and logs. The portable archive is for no
+installer at all: its [README](deploy/package/archive/README.md) says how to
+register the service yourself, or run the node in a terminal.
+
+Builds are Windows-only for now: the zip is built and run; the MSI is
+written and not yet built, because WiX Toolset 7, which builds it, needs
+its Open Source Maintenance Fee EULA accepted on the building machine first,
+and that decision is the owner's; the Linux and macOS packages are written
+and have not been built. A one-machine node needs the `storage` role in its
+site to start on its own, which no example site has yet.
+
 ### First run
 
 1. Install PowerShell 7.6.5 or later. Windows PowerShell 5.1 is a different
@@ -673,7 +706,11 @@ Ctrl+C. A node it cannot start is refused in words with exit code 2, and no
 service manager restarts that. `xmip-service --configuration <path>
 --definition` prints what this platform's service manager is told about the
 node's service: the systemd unit, the launchd property list, or the
-`sc.exe create` arguments. The build links the transports its site's
+`sc.exe create` arguments. `xmip-service --configuration <cluster xmip.toml>
+--node <node> --cluster <cluster> --install` registers that service and
+starts it, after laying the node out from a starter configuration where
+there is none, and `--uninstall` removes it; every package runs them
+([Install](#install)). The build links the transports its site's
 domains serve, by feature; a Location naming another transport is refused
 when the node starts. The node is its own embedded Storage node, under its
 data directory — `data/storage`, RocksDB for the runtime database and
@@ -901,6 +938,15 @@ stopping the run with nothing pushed:
   lands, and its `test/` suite runs when the root itself changed. A change
   to the root alone runs `test/` and not the root crate's cargo steps.
 
+Before any of it, `Publish-XmipChange` regenerates the estate map and the
+decision index from the working tree (`New-XmipEstateMap -Save`,
+`New-XmipDecisionIndex -Save`), so `test/` holds them against the tree being
+landed and the pin commits them with it. As it verifies, it prints a line
+before each module, such as `module 76 of 205 (37 %), about 45 minutes left`,
+estimated from the average of the modules measured so far, or before the first
+from what the same modules took last time; the root crate and `test/` come
+from their last run. The durations are kept in `.local-work/verify-time.json`.
+
 Run `Start-XmipTest -Suite Core.Estate` and a Playground roll yourself before
 landing anything non-trivial; `-NoVerify` skips every step above. Until the
 first Linear release, work commits directly to `main`
@@ -1010,7 +1056,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command. |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now). |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |

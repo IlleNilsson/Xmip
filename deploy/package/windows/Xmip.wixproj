@@ -1,0 +1,28 @@
+<!--
+  The Xmip MSI (ADR-0015 clause 2, amendment 2026-10-13): WiX Toolset 7,
+  SDK-style, built by `dotnet build` from NuGet's WixToolset.Sdk. One MSI per
+  architecture, chosen by -p:Platform=x64 or -p:Platform=arm64.
+
+  Build-XmipService -Package msi builds it; nothing here is built by hand.
+  It passes the properties below, and the output and intermediate folders,
+  which are under .local-work/package and never in the repository:
+
+    XmipBinaryDirectory  where xmip-service.exe and xmip_core_runtime.dll are
+    XmipVersion          the root crate's version, three numbers
+    XmipSite             the site the binaries were built from (deploy/site)
+
+  WiX 7 is under the Open Source Maintenance Fee and builds only once its
+  EULA is accepted, once per user and machine. Accepting it is the owner's
+  decision (ADR-0015, amendment 2026-10-13), so nothing here accepts it, and
+  Build-XmipService refuses in words, naming the command, until it is.
+-->
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputName>xmip-$(XmipVersion)-$(XmipSite)-$(Platform)</OutputName>
+    <DefineConstants>BinaryDirectory=$(XmipBinaryDirectory)</DefineConstants>
+    <DefineConstants>$(DefineConstants);Version=$(XmipVersion);Site=$(XmipSite)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+  </ItemGroup>
+</Project>

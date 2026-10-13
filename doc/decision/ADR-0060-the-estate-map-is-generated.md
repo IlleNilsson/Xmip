@@ -456,3 +456,15 @@ target, node roles and domains decide what its `xmip-service` is built with
 (ADR-0015, amendment 2026-10-01). `test/Deploy.Test.ps1` now holds the
 profiles to the manifest: every technology it declares built is in a domain
 or claimed by a target.
+
+## Amendment, 2026-10-13: the landing writes the map before it verifies
+
+The amendment of 2026-09-21 had the pin regenerate the map. The pin comes
+after verification, so `test/EstateMap.Test.ps1` compared the committed map
+with a tree whose line counts had moved, and failed the landing; four
+landings stopped that way on 2026-10-13. `Publish-XmipChange` now
+regenerates the map, and the decision index with it, before it reads the
+estate or verifies anything (`Update-XmipGeneratedDocument`), and the pin no
+longer does: one place. The pin commits what was regenerated, true of the
+tree that was tested. A map that will not generate still warns rather than
+stopping the landing, and `test/` then says what is wrong with it.

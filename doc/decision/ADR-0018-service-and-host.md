@@ -691,3 +691,18 @@ claim in flight and answers those still held, so one slow answer costs one
 wait, never one per claim, and a round ends inside the lease.
 
 `runtime-model.md` section 10, *Corrected 2026-10-08*, says how each runs.
+
+## Amendment, 2026-10-13: an installer registers through `xmip-service --install`
+
+ADR-0015's amendment of this date gives every package one command to run,
+`xmip-service --install`, and its removal `--uninstall`. Registering stays
+the installer's job, as the amendment of 2026-09-28 said: the package's
+installer runs the command in its elevated step, and `xmip-service` applies
+the definition `registration.rs` writes — `sc.exe create` with its
+description and environment, a systemd unit enabled and restarted, a
+launchd daemon bootstrapped — and the definition `--definition` prints is
+the same one. `ServiceDefinition` gains the service's environment, which
+carries `XMIP_AUDIT_DIRECTORY` (ADR-0062). The Open question above, whether
+the master runs elevated, is not answered by it: the installer is elevated,
+the running service is whatever account it is registered under, and which
+account that should be is open (ADR-0015, amendment 2026-10-13).

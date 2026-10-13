@@ -1,0 +1,56 @@
+# The Xmip .deb and .rpm (ADR-0015 clause 3, amendment 2026-10-13), one
+# definition for both, built by nfpm 2.48 (https://nfpm.goreleaser.com):
+#
+#   nfpm package --config deploy/package/linux/nfpm.yaml --packager deb
+#   nfpm package --config deploy/package/linux/nfpm.yaml --packager rpm
+#
+# WRITTEN, NOT BUILT. Builds are Windows-only by the owner's choice of the
+# moment, so no package has been made from this file and none has been
+# installed; Build-XmipService -Package deb and -Package rpm refuse on this
+# machine, saying what a Linux build needs. Nothing here is claimed to work.
+#
+# nfpm, not cargo-deb or cargo-generate-rpm: those build from the crate's
+# own manifest and features, and a package is built from what
+# Build-XmipService -Site built (ADR-0015, amendment 2026-10-01), so this
+# takes the binaries as they are. The environment names them:
+#
+#   XMIP_BINARY_DIRECTORY  where xmip-service and libxmip_core_runtime.so are
+#   XMIP_VERSION           the root crate's version
+#   XMIP_ARCH              amd64 or arm64, nfpm's words for x86-64 and arm64
+#
+# The package owns the two files under /opt/xmip/bin and nothing else.
+# postinstall.sh runs xmip-service --install, which lays out /opt/xmip
+# (clause 10) and registers the systemd unit registration.rs writes;
+# preremove.sh runs --uninstall on removal only. Nothing removes
+# configuration, data, audit or logs (ADR-0040).
+name: xmip
+arch: ${XMIP_ARCH}
+platform: linux
+version: ${XMIP_VERSION}
+section: net
+priority: optional
+maintainer: Xmip
+description: |
+  Xmip, the cross-platform Messaging & Integration Platform: one node,
+  started by systemd from /opt/xmip/config.
+homepage: https://github.com/IlleNilsson/Xmip
+license: AGPL-3.0-or-later
+
+depends:
+  - systemd
+
+contents:
+  - src: ${XMIP_BINARY_DIRECTORY}/xmip-service
+    dst: /opt/xmip/bin/xmip-service
+    expand: true
+    file_info:
+      mode: 0755
+  - src: ${XMIP_BINARY_DIRECTORY}/libxmip_core_runtime.so
+    dst: /opt/xmip/bin/libxmip_core_runtime.so
+    expand: true
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: ./postinstall.sh
+  preremove: ./preremove.sh

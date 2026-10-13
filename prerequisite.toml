@@ -329,6 +329,21 @@ dnf = "gcc-c++"
 zypper = "gcc-c++"
 pacman = "base-devel"
 
+[prerequisite.nfpm]
+role = "build"
+probe = "nfpm --version"
+note = """
+Linux only: builds the .deb and the .rpm from deploy/package/linux/nfpm.yaml
+(ADR-0015, amendment 2026-10-13), 2.48 the current release on 2026-10-13.
+Not used yet: builds are Windows-only for now, so no Linux package has been
+built. The Windows MSI needs nothing here beyond the .NET SDK above: dotnet
+build fetches WiX Toolset 7 from NuGet, and WiX 7 builds only once its Open
+Source Maintenance Fee EULA is accepted on the machine, the owner's decision.
+"""
+
+[prerequisite.nfpm.linux]
+fallback = "https://nfpm.goreleaser.com/docs/install/"
+
 # ---------------------------------------------------------------------------
 
 # Not a package: the event source the operating system's log is written under

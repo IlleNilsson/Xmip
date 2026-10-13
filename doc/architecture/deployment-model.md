@@ -395,7 +395,7 @@ bundled databases:
 xmip/
     bin/
     config/
-    module/
+    modules/
     data/
         persistence-rocksdb/
         management.sqlite
@@ -404,6 +404,20 @@ xmip/
 
 It creates the layout, initializes both databases, installs default
 configuration, and registers the Xmip Service where services exist.
+
+**Every package does that by running one command**, `xmip-service --install`
+(ADR-0015, amendment 2026-10-13; `deploy/package`): it lays the node out,
+writes a starter cluster `xmip.toml` where there is none — one node,
+offline, its operate listener's local endpoint `xmip-<node>` — slices the
+node's `xmip-node.toml` from it, makes `data/audit`, and registers and
+starts the Xmip Service as `registration.rs` defines it, to start with the
+machine: a Windows service, a systemd unit, a launchd daemon.
+`--uninstall` stops and removes the service and deletes nothing else
+(ADR-0040). The packages are an MSI per architecture with its winget
+manifest, a `.deb` and an `.rpm`, a macOS `.pkg`, and the portable archive;
+builds are Windows-only for now, so the MSI and the zip are built and the
+Linux and macOS packages are written and not built. On a platform with no
+service manager `--install` is refused in words (open problem 22).
 
 **Only an embedded Storage node keeps the stores in its `data/`** (section
 7). A node without the Storage role keeps neither and reaches Xmip Storage
@@ -647,7 +661,9 @@ there, per cluster and per node, under `[tuning]`.
 installation and places the configuration; the TOML remains the node and runtime
 configuration source. A configured node has Xmip installed, both store paths
 present, config and module folders present, node TOML present, and the service
-registered and running where services are supported.
+registered and running where services are supported. A package gets a node
+there with `xmip-service --install` (section 6), and desired state that
+installs a package inherits it.
 
 Each technology has its folder under `deploy/dsc`: `ansible` and `msdsc`.
 The Ansible role `xmip_node` is written; Microsoft DSC v3's node is not (its

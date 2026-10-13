@@ -28,14 +28,31 @@ function Build-XmipService {
             The build sets what is possible; the node's TOML picks from it at
             run time. Cargo runs at the estate root, in CARGO_TARGET_DIR when
             that is set. Returns the plan: Site, Target, Roles, Domains,
-            Features, Unlinked and Command.
+            Features, Unlinked and Command, and Package with what -Package
+            made.
+
+            -Package puts the build in the packages that carry it to a
+            machine (ADR-0015, amendment 2026-10-13): it builds the runtime
+            library beside xmip-service with the same cargo arguments, and
+            makes each package under .local-work/package/<version>. On
+            Windows, msi builds deploy/package/windows/Xmip.wixproj with
+            dotnet and WiX 7, and the winget manifest beside it; archive
+            zips the portable layout. deb, rpm and pkg are written under
+            deploy/package and REFUSED here, in words naming what their
+            build needs: builds are Windows-only for now. Each package runs
+            xmip-service --install, so the layout, the starter configuration
+            and the service's registration are written once, there.
 
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.
 
         .PARAMETER CargoArgument
             Further arguments for cargo after the subcommand: --release,
-            --target <triple>, --locked, --config <file>.
+            --target <triple>, --locked, --config <file>. A package is for
+            the --target triple's architecture, else this machine's.
+
+        .PARAMETER Package
+            The packages to make of the build: msi, deb, rpm, pkg, archive.
 
         .EXAMPLE
             Build-XmipService -Site hospital-interface -WhatIf
@@ -54,6 +71,13 @@ function Build-XmipService {
 
             Builds a site kept outside the estate for a 64-bit ARM Linux
             machine: the edge target's first triple.
+
+        .EXAMPLE
+            $release = '--release'
+            Build-XmipService -Site personal-computer -CargoArgument $release -Package msi, archive
+
+            Builds a person's computer's xmip-service, optimized, and makes
+            its x64 MSI, winget manifest and zip under .local-work/package.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([pscustomobject])]
@@ -64,7 +88,11 @@ function Build-XmipService {
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyCollection()]
-        [string[]] $CargoArgument = @()
+        [string[]] $CargoArgument = @(),
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('msi', 'deb', 'rpm', 'pkg', 'archive')]
+        [string[]] $Package = @()
     )
 
     Set-StrictMode -Version Latest
@@ -85,6 +113,11 @@ function Build-XmipService {
     }
     $plan = Resolve-XmipSite @asked
 
+    if ($Package.Count -gt 0) {
+        Assert-XmipPackageBuildable -Package $Package
+    }
+    $plan | Add-Member -NotePropertyName Package -NotePropertyValue @()
+
     if ($plan.Unlinked.Count -gt 0) {
         Write-Verbose "Not linked by xmip-service yet: $($plan.Unlinked -join ', ')"
     }
@@ -96,7 +129,20 @@ function Build-XmipService {
         }
         Invoke-XmipServiceBuild -Root $root -Argument $plan.Argument
         Write-XmipStep -Message "OK: built xmip-service for site $($plan.Site)"
-        Write-XmipAudit -Action 'Build-XmipService' -Phase Finished -Property @{ Site = $plan.Site }
+
+        if ($Package.Count -gt 0) {
+            [hashtable] $packaged = @{
+                Root          = $root
+                Site          = $plan.Site
+                Package       = $Package
+                CargoArgument = $CargoArgument
+            }
+            $plan.Package = @(New-XmipPackage @packaged)
+        }
+        Write-XmipAudit -Action 'Build-XmipService' -Phase Finished -Property @{
+            Site    = $plan.Site
+            Package = (@($plan.Package | ForEach-Object -MemberName Path) -join ', ')
+        }
     }
 
     return $plan
