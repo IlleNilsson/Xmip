@@ -114,10 +114,13 @@ holds open includes a producer still writing it, and no amount of Xmip-internal
 bookkeeping sees that.
 
 A Receive Location claims the individual artifact, never the location it polls.
-Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
-the type, and what those need is a stability check rather than a rename at
-claim time. Two nodes on a lockless protocol is then a placement question,
-answered by running one of them.
+Every Receive Location, whatever its protocol, has exactly one winner per
+artifact: a listener because a sender reaches one node, a broker by its own
+one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
+the file's turn and renaming it, object stores and databases by their own
+exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
+as a Journey is claimed. Several nodes may poll one directory; the stability
+check stays.
 
 → [A claim at the endpoint, in full](ADR-0024-resource-claim-replaces-exclusiveness.md)
 

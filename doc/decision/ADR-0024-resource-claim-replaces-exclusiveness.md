@@ -2,6 +2,10 @@
 
 - Status: Accepted
 - Date: 2026-08-27
+- Amended: 2026-09-26 — a file is claimed by an atomic rename
+- Amended: 2026-10-01 — a Journey is claimed through Xmip Storage
+- Amended: 2026-10-13 — one winner for every Receive Location; the file
+  family's claim extends to FTP, FTPS and SFTP
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -25,10 +29,13 @@ holds open includes a producer still writing it, and no amount of Xmip-internal
 bookkeeping sees that.
 
 A Receive Location claims the individual artifact, never the location it polls.
-Where a protocol has no locking — FTP, SFTP, IMAP — `NoNativeClaim` says so in
-the type, and what those need is a stability check rather than a rename at
-claim time. Two nodes on a lockless protocol is then a placement question,
-answered by running one of them.
+Every Receive Location, whatever its protocol, has exactly one winner per
+artifact: a listener because a sender reaches one node, a broker by its own
+one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
+the file's turn and renaming it, object stores and databases by their own
+exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
+as a Journey is claimed. Several nodes may poll one directory; the stability
+check stays.
 
 ## Context
 
@@ -119,6 +126,9 @@ What they need is a **stability check**: an artifact whose size and timestamp
 are unchanged across two consecutive listings, or a producer that writes to a
 temporary name and renames on completion.
 
+*Superseded for FTP, FTPS and SFTP by the amendment of 2026-10-13, which
+claims them by the turn and the rename; the stability check stays.*
+
 ### 6. Two nodes on a lockless protocol is a placement question
 
 With no lease and no native claim, nothing stops two nodes polling the same
@@ -131,6 +141,9 @@ not need a distributed lock to express "this Receive Location runs here".
 
 The shape of that placement is not decided by this record. What is decided is
 that it is a placement question and not a locking one.
+
+*Superseded for FTP, FTPS and SFTP by the amendment of 2026-10-13: several
+receiving nodes may share one remote directory.*
 
 ### 7. The sequence, simplified
 
@@ -281,3 +294,109 @@ an artifact at an endpoint this record stands unchanged.
 The database server's failover is IT's (`deployment-model.md` section 9). Epoch
 fencing belongs to option C, recorded for later in `deployment-model.md`
 section 7, and is not part of this decision.
+
+## Amendment, 2026-10-13: one winner for every Receive Location
+
+**Provenance.** The owner, 2026-10-13, of the Playground's drop box:
+*induce multiple files for FILE and (S)FTP(S) so I can see that it holds
+up*, and *only one Rn should win*. Then *(S)FTP(S) has a near problem to
+FILE, it has been discussed*, and *We have a thing for it, I called it
+Exclusiveness for a while*. Told exclusiveness was replaced by
+`ResourceClaim`, and asked whether to give FTP, FTPS and SFTP a real
+`ResourceClaim` the same way as FILE: *Yes*. Then *And FILE I hope* — the
+file transport moves onto the same claim, not beside it — and *And for any
+Receive Location, regardless of protocol.*
+
+**The principle.** Every Receive Location guarantees exactly one winner per
+artifact, whatever its protocol, each kind by the exclusive step it has:
+
+| kind | the one winner |
+| --- | --- |
+| listening — a socket, a server Xmip runs | a sender reaches one node; nothing is shared |
+| a broker | the broker's own one-consumer delivery is the claim |
+| the file family — file, FTP, FTPS, SFTP; SMB, NFS and WebDAV where the same applies | the turn, then the rename (below) |
+| object stores and databases | their own exclusive step: a conditional write, `SELECT … FOR UPDATE SKIP LOCKED`, a conditional update |
+| a protocol with no exclusive step at all — IMAP, POP3 | the claim through Xmip Storage, as a Journey is claimed (amendment 2026-10-01) |
+
+The exclusive step each technology of the last two rows has today, checked
+for this amendment:
+
+- **S3**: `PutObject` with `If-None-Match: *` writes only where no object of
+  the key exists, `412 Precondition Failed` otherwise (Amazon S3 User Guide,
+  *conditional writes*, generally available since 2024-08-20; RFC 9110
+  section 13.1.2).
+- **Azure Blob**: `Put Blob` with `If-None-Match: *` (the Blob service's
+  conditional headers), or `Lease Blob` with `acquire` — clause 2's
+  renewable lease.
+- **Google Cloud Storage**: an upload with `ifGenerationMatch=0` succeeds
+  only where the object does not exist (Cloud Storage, *request
+  preconditions*).
+- **PostgreSQL**: `SELECT … FOR UPDATE SKIP LOCKED`, since 9.5.
+- **MariaDB**: `SELECT … FOR UPDATE SKIP LOCKED`, since 10.6.
+- **SQL Server**: no `SKIP LOCKED`; the same is the `UPDLOCK`, `READPAST`
+  and `ROWLOCK` table hints together, or a conditional `UPDATE … OUTPUT`.
+- **SQLite**: no row locks; a conditional `UPDATE … WHERE` under the
+  database's one write lock, which `xmip-core-transport-sqlite` already
+  claims a row with.
+- **SMB**: `CREATE` with `FILE_CREATE` fails where the name exists
+  (MS-SMB2 2.2.13), and `FileRenameInformation` with `ReplaceIfExists = 0`
+  never replaces (MS-FSCC 2.4.37): the turn and the rename.
+- **NFS**: `CREATE` in `GUARDED` or `EXCLUSIVE` mode (RFC 1813 section 3.3.8;
+  `OPEN` with `EXCLUSIVE4`, RFC 7530) and `RENAME`: the turn and the rename.
+- **WebDAV**: `MKCOL` fails where the name exists (RFC 4918 section 9.3.1)
+  and `MOVE` with `Overwrite: F` never replaces (section 10.6); today the
+  transport claims with an exclusive write `LOCK` (section 9.10).
+
+**Built now: the file family.** Amendment 2026-09-26's claim — the turn,
+then the rename to `<dropped name>.xmip-claim.<node location,
+percent-encoded>.<nanoseconds>`, `Accepted` deleting, `Refused` and
+`Failed` returning the file under its dropped name never over a newer one,
+a starting node returning its own claims — extends to FTP, FTPS and SFTP.
+Clauses 5 and 6 are superseded for them: several receiving nodes may share
+one remote directory, and whichever rename succeeds has the file. The
+stability check stays: a file is taken by the listing after the one that
+found its size and modification time unchanged. The exclusive turn, per
+protocol:
+
+- **file**: a file `<name>.xmip-claim`, created only where none exists,
+  holding its claimant's name; the claim is a rename; a return is a hard
+  link where the dropped name is free.
+- **FTP and FTPS**: `MKD <name>.xmip-claim`, which a server refuses where
+  anything of the name exists, and inside it a directory named for its
+  holder, so a starting node finds its own; the claim is `RNFR` and `RNTO`.
+  A return asks `SIZE` of the dropped name and renames back only where
+  nothing lies there; a server whose `RNTO` replaces an existing file could
+  still lose one a producer drops between the two, which no FTP command
+  prevents. FTPS is FTP over the estate's TLS (RFC 4217, `AUTH TLS`,
+  `PROT P`; ADR-0033).
+- **SFTP**: `OPEN` of `<name>.xmip-claim` with `CREAT` and `EXCL`, holding
+  its claimant's name; the claim is `RENAME`, and so is the return, which
+  version 3 refuses onto an existing name (draft-ietf-secsh-filexfer-02,
+  section 6.5).
+
+The sequence, the names, the stability check, the return and the recovery
+are written once, in `xmip-core-transport` (`claim/`), over the few
+operations each technology implements — `ClaimSite`: list, take a turn,
+rename, restore, delete — and the endpoint's `ResourceClaim` for one
+artifact is written once over them too (`Sited`). File, FTP and SFTP each
+implement only those operations; `claims()` answers the real claim. A
+remote node returns its own claims at its first receive that reaches the
+server, so a server out of reach never stops a node starting.
+`NoNativeClaim` remains for IMAP and for the technologies whose own step is
+not taken yet.
+
+**Recorded as the next step**, not built: the brokers' one-consumer
+delivery declared per technology; the object stores' and databases'
+exclusive steps above; SMB, NFS and WebDAV onto the file family's claim;
+and the claim through Xmip Storage for IMAP, POP3 and the polled reads that
+consume nothing at the far end.
+
+Proved by `xmip-core-transport`'s `claim` tests (two claimants racing over
+one location: exactly one wins; recovery; a return held from a newer
+file), the file, FTP (with and without `tls`) and SFTP transports' tests of
+two receiving nodes over one directory or server, and the Playground's drop
+box (ADR-0028, amendment 2026-10-13).
+
+Provenance: the owner's words above. The FTP turn's holder directory, the
+remote recovery at the first receive, and the table of each technology's
+exclusive step are the assistant's drafting, for the owner to overrule.

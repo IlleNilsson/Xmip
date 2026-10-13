@@ -554,30 +554,36 @@ The amendment of 2026-10-06 is built:
 
 - **The drop box: many files, one winner each** (`src/drop_box.rs`). The
   owner, the same day: *induce multiple files for FILE and (S)FTP(S) so I
-  can see that it holds up*, and *only one Rn should win.* Every round the
-  roll drops a burst of eight files for each Party into the Party's own
-  file Receive Location under the cluster's shared directory, through the
-  file transport's send; every node that declared receive reads every
-  Party's Location through the file transport's receive, whose claim is
-  the rename (ADR-0024, amendment 2026-09-26), so whichever node's rename
-  succeeds has the file. The winner accepts and signs it; each node counts
-  what it took at `<node>/drop-box/<party>`, so the board shows the split
+  can see that it holds up*, and *only one Rn should win.* Each Party has
+  one directory per protocol, shared by every receiving node: its own file
+  Receive Location under the cluster's shared directory, and an FTP, an
+  FTPS and an SFTP server of its own that the roll stands up for the whole
+  roll (`src/drop_box/far_ends.rs`) — Xmip's own server sides, each serving
+  every receiving node at once (`transport::concurrent`), FTPS over Xmip's
+  TLS with a certificate from the estate's own self-signed source — and
+  whose addresses it writes beside the drop box. The roll drops a burst of
+  eight files for each Party over each protocol through that transport's
+  send: every round over file, every fifth over the servers, whose every
+  FTP transfer and listing is a data connection and a local port of its
+  own. Every node that declared receive reads every Party's directories
+  through the same transports' receive — FTP and FTPS every second round —
+  whose claim is the file family's turn and rename (ADR-0024, amendments
+  2026-09-26 and 2026-10-13), so whichever node's rename succeeds has the
+  file. The winner accepts and signs it; each node counts what it took at
+  `<node>/drop-box/<protocol>/<party>`, so the board shows the split
   between the receiving nodes Location by Location; and the roll judges
-  every file ten seconds after it was dropped, saying at `<root>/drop-box`
-  and in its `stop` record either *every file taken by exactly one
-  receiving node*, with the split, or each file taken twice and by whom and
-  each never taken. FTP, SFTP and FTPS are not in it yet: their Receive
-  Locations have no claim of their own (`NoNativeClaim`, ADR-0024 clause
-  5), the Playground has no FTP or SFTP server both receiving nodes can
-  reach — each loopback serves one client for one round — and FTPS waits
-  for the estate's TLS on that socket.
+  every file ten seconds after it was dropped, saying per protocol at
+  `<root>/drop-box/<protocol>` and in its `stop` record either *every file
+  taken by exactly one receiving node*, with the split, or each file taken
+  twice and by whom and each never taken.
 
 This supersedes ADR-0052's amendment of 2026-09-29 where it says a
 Playground cluster has one Party, `party-x`.
 
 Proved by `configure`'s `party.rs`, `section.rs` and `views.rs`, `observe`'s
 `topology/party.rs`, and the Playground's `parties.rs`, `rotation.rs`,
-`identity.rs`, `subscribing.rs`, `topology.rs`, `run.rs` and `drop_box.rs`.
+`identity.rs`, `subscribing.rs`, `topology.rs`, `run.rs`, `drop_box.rs` and
+`drop_box/judged.rs`.
 
 Not built: the Receive Location's `accept.party`, so a Location named for a
 Party is not yet held to it, and the `[run]` table carries no Parties.
