@@ -1077,10 +1077,11 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
   project — where the rule's last resort finds it. A deployment puts its own
   there.
 - **The script module uses the operator module.** `Xmip/` builds
-  `Xmip.PowerShell` into a directory of the session's own on the first command
-  that needs it and imports its binary module — never from the project's
-  `bin/`, which it would lock, and without the prompt integration
-  (`Import-XmipOperatorModule`). `ConvertTo-XmipNodeCapability` calls
+  `Xmip.PowerShell` once per change into `.local-work/operator/<key>`, the key
+  naming what it is built from, and the first command that needs it imports
+  its binary module from there — never from the project's `bin/`, which it
+  would lock, and without the prompt integration (`Import-XmipOperatorModule`;
+  note of 2026-10-13). `ConvertTo-XmipNodeCapability` calls
   `NodeCapability.Ordered`; `Get-XmipTestResult` reads a snapshot through
   `SnapshotOperator`, which now says the scope it publishes at (`Root()`),
   lists it worst first and names the worst by `ScopeTree.Worst`. Its word
@@ -1916,3 +1917,27 @@ problem 33).*
   so an act still reaches one node, over its operate listener or as an
   order file
   ([`operator-acts-through-storage`](../architecture/estate-map.md#operator-acts-through-storage)).
+
+## Note, 2026-10-13: the operator module is built once per change
+
+`Start-XmipTest` took 9.3 seconds to return, 8.5 of them in its first
+`Write-XmipAudit`: `Import-XmipOperatorModule` built `Xmip.PowerShell` into a
+new temporary directory in every session, whether or not anything had
+changed. Anything over a millisecond beyond its load is a defect to find,
+not a wait (CONTRIBUTING).
+
+- **The build is kept under a key.** `.local-work/operator/<key>`, the key
+  the path, length and last write of every source of `Xmip.PowerShell`,
+  `Xmip.Surface` and `Xmip.Abi` (their `bin/` and `obj/` aside) and of every
+  runtime library `Xmip.Abi.csproj` may copy beside them
+  (`Get-XmipOperatorModuleKey`). A session that finds the directory imports
+  from it; a change makes a new key and one build.
+- **No build writes where a session has loaded** — the reason, of
+  2026-09-03, for never loading from `bin/`. A build is made beside its key
+  and moved into it whole; an earlier key's build is removed only when no
+  process holds its binary module open.
+- **Measured**: the first load in a new session with nothing changed went
+  from 3.7 seconds (an incremental build) to between 90 and 230
+  milliseconds, of which about 60 is the key and the rest PowerShell's first
+  run of the module's own code; a change still rebuilds, in about 2 seconds.
+  `test/OperatorModule.Test.ps1` holds the key and the reuse decision.
