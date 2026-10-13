@@ -21,13 +21,13 @@ context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
 - Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip-cli`, Rust; Observation, and why it is lossy; Remote operation, WinRM, SSH
 
 Rust is the language of the runtime; everything in the message path is Rust.
-The C ABI is the core every operator surface stands on. The command line,
-`xmip-cli`, is Rust over it, so it runs where .NET does not (amendment
-2026-10-12); the PowerShell module and the GUIs, a MAUI desktop and a Blazor
-web, are .NET 11 over it through `Xmip.Abi`.
+Across a language boundary everything goes through the C ABI; Rust to Rust,
+through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
+on the runtime's traits, so it runs where .NET does not; the PowerShell module
+and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
+(`Xmip.Abi`).
 
-**Every surface calls the same C ABI, and none of them goes through another
-surface to get there.** `xmip-core-abi` is the interface *into* Xmip —
+**No surface goes through another surface to reach Xmip.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
 boundary loadable Modules plug into. The amendment of 2026-08-26 put it there,
 superseding the original clauses that made every surface a client of the `xmip`
@@ -605,32 +605,39 @@ operator boundary, through `Xmip.Surface` as the four are, read only, its
 tools the command line's read commands and its resources the scopes, and
 remote over SSH as clause 6 says (ADR-0071).
 
-## Amendment, 2026-10-12: the command line is Rust, over the ABI
+## Amendment, 2026-10-12: the command line is Rust; across languages the ABI, Rust to Rust the traits
 
 **Supersedes the amendment of 2026-08-26 where it makes the executable
 .NET.** The owner, 2026-10-12: *I'm questioning my desicions, regarding the
 CLI, the CLI has to be usable without .NET. If you are on an MCU or any kind
 of edge device, .NET might not be the way to go. So ABI is fine, CLI should
-be Rust relying on ABI, Powershell should also rely on ABI* — and, asked
-whether the GUI stays .NET over the ABI: *Go ahead*.
+be Rust relying on ABI, Powershell should also rely on ABI* — asked whether
+the GUI stays .NET over the ABI: *Go ahead* — and, the same day, the rule
+behind it: *I like .NET, but on MCU, Edge devices it is to heavy. A clean C
+by Rust CLI is the way. So the CLI goes, Rust, ABI. Where PowerShell is it
+will go through the ABI. Everything will go through the ABI unless it is
+Rust2Rust, then it is Traits.*
 
 ```text
-xmip-core-abi          Rust         the interface into Xmip, the core
-xmip-core-cli          Rust         xmip-cli, calling the C ABI
-xmip-core-powershell   PowerShell   on .NET, calling the C ABI through Xmip.Abi
-xmip-core-gui          .NET 11      desktop and web, calling the C ABI through Xmip.Abi
+xmip-core-abi          Rust         the C ABI: the door for every other language
+xmip-core-cli          Rust         xmip-cli, on the runtime's traits
+xmip-core-powershell   PowerShell   on .NET, through the C ABI (Xmip.Abi)
+xmip-core-gui          .NET 11      desktop and web, through the C ABI (Xmip.Abi)
 ```
 
-- **Every surface still calls the C ABI and none goes through another.**
-  The command line loads the runtime's native library and calls
-  `xmip_operate.h` as the .NET surfaces do; it links no runtime crate
-  around the boundary.
-- **What the surfaces share moves below the boundary.** A rule the command
-  line and the .NET surfaces both apply — which surface an invocation
-  reads, what a scope argument selects, the words for a mood, a figure, a
-  refusal — is implemented once in Rust and exported through the ABI, as
-  ADR-0052's amendment of 2026-09-24 began (*the surfaces call the
-  runtime's exports*); `Xmip.Surface` keeps only what is .NET's own.
+- **Across a language boundary, the C ABI; Rust to Rust, traits** (ADR-0068,
+  every dependency is a trait handed in). The command line is Rust calling
+  Rust, so it uses the runtime's traits and loads no native library; that is
+  also what lets it build small and statically for an edge device. The .NET
+  surfaces, and any other language, call the same code through
+  `xmip_operate.h`. None goes through another surface.
+- **What the surfaces share is implemented once, in Rust.** A rule the
+  command line and the .NET surfaces both apply — which surface an
+  invocation reads, what a scope argument selects, the words for a mood, a
+  figure, a refusal — lives in the crate that owns it; the command line
+  calls it as a trait, the .NET surfaces through its export, as ADR-0052's
+  amendment of 2026-09-24 began (*the surfaces call the runtime's exports*).
+  `Xmip.Surface` keeps only what is .NET's own.
 - **`xmip-cli mcp` moves with it** (ADR-0071): MCP is a mode of the Rust
   command line.
 - **Built as it lands**: until the Rust executable replaces it, the .NET

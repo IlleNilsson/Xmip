@@ -824,11 +824,18 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
         $script:Source | Should -Match 'if \(-not \$runtimeBuilt\) \{\s+\$failed = @\(\$module\)'
     }
 
-    It 'verifies the platform repository before it pins' {
-        [int] $platform = $script:Source.IndexOf('Test-XmipPlatform -RepositoryRoot')
-        [int] $pin = $script:Source.LastIndexOf('Publish-XmipPin -RepositoryRoot')
+    It 'verifies the platform repository before it pins, a root-only change too' {
+        # A root-only change goes through the same verification as any
+        # landing, so its test/ runs against the runtime built from the
+        # working tree: until 2026-10-13 it called Test-XmipPlatform alone and
+        # tested against whatever library a module's target still held.
+        [int] $branch = $script:Source.IndexOf('Only the platform repository has changes.')
+        [int] $rootOnly = $script:Source.IndexOf('Test-XmipChangeTree @rootOnly', $branch)
+        [int] $pin = $script:Source.IndexOf('Publish-XmipPin -RepositoryRoot', $branch)
 
-        $platform | Should -BeGreaterThan 0
-        $platform | Should -BeLessThan $pin
+        $branch | Should -BeGreaterThan 0
+        $rootOnly | Should -BeGreaterThan $branch
+        $rootOnly | Should -BeLessThan $pin
+        $script:Source | Should -Match '\$platformBroken = -not \$NoVerify -and \$Platform -and'
     }
 }

@@ -843,8 +843,8 @@ pin still shows. `Get-XmipStatus` looks inside every module.
 
 The runtime and modules are Rust on the stable channel. The PowerShell module
 and the GUIs are .NET 11 — the PowerShell module targets `net10.0` because
-`pwsh` hosts it — and so is `xmip-cli` until its Rust replacement over the C
-ABI lands (ADR-0014, amendment 2026-10-12).
+`pwsh` hosts it — and so is `xmip-cli` until its Rust replacement, on the
+runtime's traits, lands (ADR-0014, amendment 2026-10-12).
 
 ```powershell
 Publish-XmipChange -Message 'short precise message'   # alias xgit: each module's own tests, then land

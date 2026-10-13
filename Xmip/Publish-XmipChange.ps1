@@ -209,10 +209,21 @@ function Publish-XmipChange {
     if ($status.Count -eq 0) {
         Write-Host 'Only the platform repository has changes.' -ForegroundColor Cyan
 
-        if (-not $NoVerify -and -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot)) {
-            [string] $unverified = 'The platform repository did not verify; nothing landed.'
-            Write-Error $unverified -ErrorAction Continue
+        # The same verification as any landing, with no module in it: the root
+        # crate built and tested, and test/ against the runtime built from the
+        # working tree, never a stale one. Test-XmipChangeTree says why it
+        # stopped.
+        [hashtable] $rootOnly = @{
+            RepositoryRoot = $RepositoryRoot
+            Ordered        = @()
+            Consumer       = @()
+            Platform       = $true
+            All            = $All
+            NoVerify       = $NoVerify
+            Message        = $Message
+        }
 
+        if ((Test-XmipChangeTree @rootOnly).Failed) {
             return
         }
 
