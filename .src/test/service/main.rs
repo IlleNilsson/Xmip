@@ -7,6 +7,9 @@
 //!   bound, having declared and audited itself; a node it cannot start, or
 //!   a Storage node it cannot open, is refused with exit 2; a Subscription paused
 //!   through an order is paused still after a restart.
+//! - `operate.rs`: a node configured with `[operate]` is reached on its
+//!   operate listener as a surface on another machine reaches it, its
+//!   publication read and an act taken as the certificate's subject.
 //! - `publication.rs`: the node publishes its snapshot where it declares,
 //!   read by observe's one reader; a pause left where the snapshot says the
 //!   node takes orders shows paused in the next one; and the stop leaves it
@@ -276,5 +279,6 @@ fn order(directory: &Path, act: Act) {
     .expect("the order is left");
 }
 
+mod operate;
 mod publication;
 mod stop;

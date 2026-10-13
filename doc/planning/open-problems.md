@@ -789,8 +789,9 @@ own node, `xmip.gui.toml`'s `Node`, counts as shipped, and every other node
 shows *sliced, not shipped*. Desired state slices on the node itself
 (`xmip-service --slice`). Missing: an operate-plane act that places a
 node's configuration through the node's listener over Xmip's TLS,
-authorized by role and audited (ADR-0067's operate listener, not built;
-problem 17's node-to-node protocol), and each node's address known to the
+authorized by role and audited — the operate listener it would ride is
+built (ADR-0067, built 2026-10-12: reads, a follow and the operator's acts;
+no act places a configuration yet) — and each node's address known to the
 desktop.
 
 **Decided 2026-10-05** (ADR-0031, amendment): the Xmip Service on the
@@ -1117,11 +1118,11 @@ retires entries from stops being an order.
                                        the three views over a published
                                        fixture); the role is what is left. A surface
                                        is told, never asks: the change feed
-                                       is signalled, and rides SignalR when
-                                       it crosses a network — built, the
-                                       remote surface and the web host's
-                                       hub (ADR-0052, amendment
-                                       2026-09-15). The names
+                                       is signalled, and crosses a network
+                                       over gRPC to a node's operate
+                                       listener — built, the runtime's
+                                       remote surface (ADR-0014, amendment
+                                       2026-10-12). The names
                                        need item 1's
                                        configured node; the directory needs
                                        the role gate ADR-0027 blocks on

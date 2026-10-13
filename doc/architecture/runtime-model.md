@@ -1348,7 +1348,12 @@ Since 2026-10-05 each is decided on the Journey as read under its claim —
 refused in words where another writer moved it after it was first read —
 and every Journey that failed at a Send Port is listed at the Port's scope,
 a page at a time from Xmip Storage, with the two acts on each (section 10).
-Start, Pause, Continue and Stop on one Journey are not built.
+Since 2026-10-12 an operator on another machine takes them over the node's
+operate listener (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC inside
+Xmip's mutual TLS, the act the certificate's subject's, admitted by the role
+the node's `[operate]` grants and applied by the same one apply as an order
+(`applied::apply`). Start, Pause, Continue and Stop on one Journey are not
+built.
 
 ## 14. Replay
 

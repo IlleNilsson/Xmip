@@ -309,7 +309,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 236944 lines of production
+Where each repository mounts and what it holds: 239408 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -553,7 +553,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5054
+│   │   │   ├── net                             5140
 │   │   │   ├── codec                           2648
 │   │   │   ├── ssh                             1559
 │   │   │   ├── ntlm                             804
@@ -561,8 +561,8 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             7368
-│   │       ├── gui                             5632
+│   │       ├── cli                             7347
+│   │       ├── gui                             5614
 │   │       │   └── vscode                      1417
 │   │       ├── observe                         3683
 │   │       │   ├── otlp                         578
@@ -587,8 +587,8 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                24687  C# 22646 · Rust 1816 · PowerShell 225
-│   │   ├── event                               5671
+│   │   ├── abi                                24878  C# 22685 · Rust 1968 · PowerShell 225
+│   │   ├── event                               5633
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                2013
@@ -615,13 +615,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            19264
+│       ├── runtime                            21469
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           3417
+│       └── configure                           3476
 └── test/
     └── core/
         └── playground                         10005

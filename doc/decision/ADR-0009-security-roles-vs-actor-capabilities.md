@@ -278,3 +278,14 @@ Provenance: the outside review of 2026-10-06 and the owner's approval of its
 repair; the per-caller assignment, the fake directory's configuration key
 and the deletion of the screens' own checks are the assistant's drafting,
 for the owner to overrule.
+
+## Note, 2026-10-12: the gate is the runtime's
+
+The one check of the amendments above — who acts is what the connection
+proved, and only a role that may operate acts — is written once in Rust
+(`plane::role`, `xmip_operate.h` section 18) and asked by `GatedOperator`
+and by a node's operate listener alike (ADR-0014, amendment 2026-10-12), so
+a screen and a node refuse in the same words. On the operate listener every
+caller is proven by its client certificate, and its role is the one the
+node's `[operate] role` states, Observer where it states none; no directory
+is asked there yet.

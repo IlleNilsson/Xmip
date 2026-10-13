@@ -18,13 +18,15 @@ context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
 - Subject: The operator surfaces and their language
 - Name: The operator surfaces
 - Order: 1
-- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, the `xmip` executable; Observation, and why it is lossy; Remote operation, WinRM, SSH
+- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip-cli`, Rust; Observation, and why it is lossy; Remote operation, WinRM, SSH
 
-Rust is the language of the runtime; everything in the message path is Rust. The
-operator surfaces are .NET 11 — the `xmip` executable, the PowerShell module, a
-MAUI desktop GUI and a Blazor web GUI.
+Rust is the language of the runtime; everything in the message path is Rust.
+The C ABI is the core every operator surface stands on. The command line,
+`xmip-cli`, is Rust over it, so it runs where .NET does not (amendment
+2026-10-12); the PowerShell module and the GUIs, a MAUI desktop and a Blazor
+web, are .NET 11 over it through `Xmip.Abi`.
 
-**All four P/Invoke the same C ABI, and none of them goes through another
+**Every surface calls the same C ABI, and none of them goes through another
 surface to get there.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
 boundary loadable Modules plug into. The amendment of 2026-08-26 put it there,
@@ -39,9 +41,11 @@ PowerShell provider did — now held by a normative versioned contract with a
 written specification rather than by a Rust library inside one executable.
 
 Observation never sits in the message path and is lossy by design; `report` and
-`audit` are the durable records. Remote operation rides existing shell remoting
-— PowerShell Remoting over WinRM or SSH, and the CLI over SSH. Xmip defines no
-bespoke remote control protocol.
+`audit` are the durable records. A command is run on another machine through
+existing shell remoting — PowerShell Remoting over WinRM or SSH, and the CLI
+over SSH; a surface that reads or follows another node does so over gRPC on
+TCP (ADR-0052, amendment 2026-10-05), and SignalR is only between the web host
+and a GUI client.
 
 ## Context
 
@@ -631,3 +635,51 @@ xmip-core-gui          .NET 11      desktop and web, calling the C ABI through X
   command line.
 - **Built as it lands**: until the Rust executable replaces it, the .NET
   one is what ships; the replacement deletes it with every use.
+
+## Amendment, 2026-10-12: a surface reaches another node over gRPC, SignalR only to a GUI
+
+**Amends clause 6.** The owner, 2026-10-12, finding the remote surfaces
+still on SignalR: *I thaugt we droped SignalR for evertyhing but GUI/Web* —
+and, told they were not yet: *Go do it then, I'm not a fan of waiting.* He
+had ruled it on 2026-10-05 (ADR-0052, amendment of that date): *Events is
+the way to go, even between processes using gRPC over net pipe, even
+between machines using gRPC over TCP*, and *SignalR is between a server and
+a client using a GUI.* That later ruling is the one built here.
+
+- **Running a command on another machine stays shell remoting**: `ssh
+  <host> xmip-cli …` and PowerShell Remoting over WinRM or SSH, as clause 6
+  says. Xmip adds no remote command protocol.
+- **A surface that reads or follows another node does so over gRPC on TCP
+  to the node's operate listener** (ADR-0067), inside Xmip's mutual TLS
+  (ADR-0063): the node's publication read, a follower told when it advances,
+  and the acts the surfaces have, each admitted by the role the node grants
+  the identity its client certificate proves and audited, taken or refused
+  (ADR-0009). Both ends are the runtime's, once (`xmip-core-runtime`'s
+  `plane`); the surface's end is exported through `xmip_operate.h` section
+  17, so the command line, the PowerShell module and the GUIs follow a node
+  the same way (ADR-0027). The recovery loop of ADR-0052's note of 2026-10-05
+  moved down with it.
+- **gRPC on Xmip's own stack**: the estate's HTTP/2 (`net::http2`), its TLS
+  (`xmip-core-library-tls`) and its gRPC framing (`net::grpc`, which the gRPC
+  logic technology now frames with too); no gRPC crate and no async runtime.
+  The messages are JSON (`application/grpc+json`), the wire's form in the
+  estate; the publication they carry is the TOML its file holds, read by
+  the one reader (section 8).
+- **SignalR only between the web host and a GUI client**: the browser's own
+  circuit of server-side Blazor. The surface hub the web host served remote
+  surfaces (`SurfaceHub`, `SurfaceRelay`) and the SignalR client in
+  `Xmip.Surface` are deleted with every use.
+- **`--remote` and `-Remote` keep their names** and take the node's operate
+  address, `host:port`; a host's document names it as `Address` with
+  `Surface = "remote"`. A node serves its operate listener from its
+  configuration's `[operate]` (`listen`, `certificate`, `key`, `anchors`,
+  `role`).
+- **Measured** on the owner's Windows machine, debug builds, loopback: from
+  a node posting its next publication to a follower told, a median of about
+  0.3 to 0.6 ms in the runtime (`tests/plane`), and about 1.7 ms to a .NET
+  watch, which reads and parses the publication before it tells.
+
+Provenance: the owner's rulings, quoted; the plane's shape — gRPC on the
+estate's own HTTP/2, JSON messages, the follow as a held wait, the gate
+moved into Rust, `[operate]` and its keys — is the assistant's, for the
+owner to overrule.

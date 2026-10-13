@@ -570,11 +570,13 @@ opens the specific point's configuration from its scope
 ([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
 The role is the caller's: each browser, the desktop's user and each remote
 surface is the caller its connection proved — the subject of a client
-certificate the host checked, else, over loopback, the operating system user
-running the host — and one nothing proved watches and acts on nothing. Both
-GUIs and the surface hub grant a caller a role by one rule: a role the run
-states (`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's;
-else the directory the host is told (`Directory`) answers; else Observer. The
+certificate the host or the node checked, else, over loopback, the operating
+system user running the host — and one nothing proved watches and acts on
+nothing. Both GUIs grant a caller a role by one rule: a role the run states
+(`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's; else
+the directory the host is told (`Directory`) answers; else Observer. A node's
+operate listener grants every certificate it took the role its
+`[operate] role` states (ADR-0014, amendment 2026-10-12). The
 Playground's directory is a fake one that allows the tester, and
 `Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
 gate as its caller, never under a name the caller gives, refused in words
@@ -839,8 +841,10 @@ pin still shows. `Get-XmipStatus` looks inside every module.
 
 ### Build, test, land
 
-The runtime and modules are Rust on the stable channel. The operator surfaces
-are .NET 11; the PowerShell module targets `net10.0` because `pwsh` hosts it.
+The runtime and modules are Rust on the stable channel. The PowerShell module
+and the GUIs are .NET 11 — the PowerShell module targets `net10.0` because
+`pwsh` hosts it — and so is `xmip-cli` until its Rust replacement over the C
+ABI lands (ADR-0014, amendment 2026-10-12).
 
 ```powershell
 Publish-XmipChange -Message 'short precise message'   # alias xgit: each module's own tests, then land
@@ -1024,8 +1028,10 @@ everything it starts records there too. `Start-XmipOperationWeb` keeps the
 host's console in `.local-work/web`, as a roll's is kept beside the roll.
 It binds plain http on loopback only, and says so in the host's log and
 audit; any other address is `https://` with `-Certificate` and `-PrivateKey`,
-and a remote surface following it presents a certificate `-TrustAnchor`
-reaches (ADR-0063 clause 1).
+and a browser presenting a certificate is checked against `-TrustAnchor`
+(ADR-0063 clause 1). A remote surface follows a node, not a web host: over
+gRPC to the node's operate listener (`[operate]`; ADR-0014, amendment
+2026-10-12).
 
 ### Contributing
 

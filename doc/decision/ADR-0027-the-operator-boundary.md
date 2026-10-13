@@ -592,3 +592,29 @@ xmip:///<cluster>[/node/<node>]/SendPort/<name>/SendLocation/<name>
 The stage segments written today, `…/receive/<Location>`,
 `…/send/<Location>` and `…/process/<name>`, are replaced, not kept beside
 ([decided, not built](../architecture/estate-map.md#artifact-scope)).
+
+## Amendment, 2026-10-12: sections 17 and 18, a node reached at its operate address
+
+ADR-0014's amendment of this date moved the remote surfaces off SignalR onto
+gRPC to a node's operate listener (ADR-0067); the surface's end is the
+runtime's, so every language follows a node the same way.
+
+- **Section 17, a node reached at its operate address.**
+  `xmip_remote_open_v1` over `host:port`, presenting a PEM certificate with
+  its key and trusting PEM anchors; `xmip_remote_publication_v1` reads the
+  node's publication as its file holds it, for section 8's reader;
+  `xmip_remote_wait_v1` waits on the follow, which holds the node's wait on
+  a connection of its own and recovers on its own loop (ADR-0052, note of
+  2026-10-05); `xmip_remote_act_v1` asks an act on section 14's nouns as the
+  identity the certificate proves; `xmip_remote_end_v1` and
+  `xmip_remote_free_v1` end it. A program hosting a node through the
+  boundary serves it on `xmip_operate_serve_v1`, posts what it publishes
+  with `xmip_operate_post_v1` and stops with `xmip_operate_serve_stop_v1`.
+- **Section 18, a person's security role and the one gate.**
+  `xmip_security_role_named_v1`, `xmip_security_role_words_v1` and
+  `xmip_act_admitted_v1`: the rule `GatedOperator` wrote in .NET moved below
+  the boundary, so a node's operate listener and every screen refuse an act
+  in the same words (ADR-0009). Named for the security role, apart from
+  section 7's node roles (`xmip_role_words_v1`).
+
+Optional symbols, as section 7's; `XMIP_OPERATE_VERSION` is unchanged.

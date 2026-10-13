@@ -15,7 +15,10 @@
 //! once more after the drain, saying the node stopped
 //! (`running::publication::stopped`). It is written on the service's own
 //! thread between its looks for a stop: no Receive Location, routing or
-//! departure waits for it.
+//! departure waits for it. Each is posted, as written, to the board the
+//! node's operate listener answers from (`[operate]`; ADR-0014, amendment
+//! 2026-10-12), so a surface following the node from another machine is
+//! told at once.
 //!
 //! A write refused for the instant a reader holds the file — Windows
 //! refuses a rename over a file open without delete sharing — is asked
@@ -24,10 +27,12 @@
 //! once it publishes again.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_observe::Publication;
+use xmip_runtime::plane::Board;
 use xmip_runtime::running::Running;
 use xmip_runtime::running::publication::stopped;
 
@@ -53,6 +58,7 @@ pub struct Publisher<'a> {
     written: Option<Instant>,
     last: Option<Publication>,
     failing: Option<Failing>,
+    board: Arc<Board>,
 }
 
 impl<'a> Publisher<'a> {
@@ -75,7 +81,14 @@ impl<'a> Publisher<'a> {
             written: None,
             last: None,
             failing: None,
+            board: Arc::default(),
         }
+    }
+
+    /// The board every publication is posted to, which the node's operate
+    /// listener answers from.
+    pub fn board(&self) -> Arc<Board> {
+        Arc::clone(&self.board)
     }
 
     /// Whether [`EVERY`] has passed since the last publication.
@@ -113,7 +126,10 @@ impl<'a> Publisher<'a> {
     /// that is still refused a round later is a failure: audited once,
     /// asked again every round, and said when it publishes again.
     fn write(&mut self, publication: &Publication) -> bool {
-        match publication.write(&self.path) {
+        let text = publication.to_toml();
+        let written = xmip_observe::publication::write_atomic(&self.path, &text);
+        self.board.post(text);
+        match written {
             Ok(()) => {
                 self.written = Some(Instant::now());
                 if self.failing.take().is_some_and(|failing| failing.audited) {

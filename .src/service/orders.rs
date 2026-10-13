@@ -10,15 +10,18 @@
 //! They are left in `<data>/orders`, the node's data directory's
 //! (`[service] data`), as `observe::Order` writes them; the service declares
 //! the place (ADR-0053), so whoever finds the process finds where it takes
-//! orders. This node keeps no Event subscription hub, so an order for an
-//! Event subscription is refused in words, as is any order the runtime
-//! refuses; each refusal is audited as the failure to `order`.
+//! orders. Each is applied by the runtime's one apply (`applied::apply`),
+//! which an act reaching the node's operate listener goes through too: this
+//! node keeps no Event subscription hub, so an order for an Event
+//! subscription is refused in words, as is any order the runtime refuses;
+//! each refusal is audited as the failure to `order`.
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use xmip_audit::program_audit::ProgramAudit;
-use xmip_observe::{Noun, Order};
+use xmip_observe::Order;
+use xmip_runtime::applied::apply;
 use xmip_runtime::running::Running;
 
 use crate::run;
@@ -35,27 +38,12 @@ pub fn place(running: &Running) -> PathBuf {
 
 /// Take every order left for the node at `node` in `orders`, oldest first,
 /// and apply each; how many were applied.
-pub fn take(
-    program: &str,
-    audit: &ProgramAudit,
-    running: &Running,
-    orders: &Path,
-    node: &str,
-) -> usize {
+pub fn take(program: &str, audit: &ProgramAudit, orders: &Path, node: &str) -> usize {
     let mut applied_count = 0;
     for taken in Order::take(orders, node) {
         let applied = taken
             .map_err(|problem| format!("an order no node can take: {problem}"))
-            .and_then(|order| match order.noun {
-                Noun::Subscription => running.pickup().act(&order.target, order.act, &order.who),
-                Noun::DeadMessage => running.pickup().replay(&order.target, &order.who),
-                Noun::Journey => running.send().act(&order.target, order.act, &order.who),
-                Noun::EventSubscription => Err(format!(
-                    "REFUSED: {node} keeps no Event subscription hub; the Event \
-                     subscription '{}' is another process's",
-                    order.target
-                )),
-            });
+            .and_then(|order| apply(&order).into_result());
         match applied {
             Ok(said) => {
                 applied_count += 1;

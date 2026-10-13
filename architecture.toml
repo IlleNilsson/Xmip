@@ -1562,6 +1562,10 @@ dependency = []
       "xmip-core-identify",
       "xmip-core-journey",
       "xmip-core-library-codec",
+      # The operate plane (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC on
+      # the estate's own HTTP/2 inside Xmip's own mutual TLS.
+      "xmip-core-library-net",
+      "xmip-core-library-tls",
       "xmip-core-message",
       "xmip-core-node",
       "xmip-core-observe",
