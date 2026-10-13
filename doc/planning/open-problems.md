@@ -805,10 +805,10 @@ one composition root (the root crate's features and `.src/service/built.rs`):
 
 | wave | what | size |
 |---|---|---|
-| A | traits that lack a method a consumer needs: `Transport` cannot say what it holds; `IOperatorSurface` has no Validate/Plan nor liveness, forcing `as NativeOperator` and `is SnapshotOperator`; observe has no exporter trait; `ProgramAudit` cannot be handed an `AuditSink`; CAN `Bus` and Ethernet `Link` live in technology crates | 6 |
+| A | traits that lack a method a consumer needs: `Transport` cannot say what it holds; `IOperatorSurface` has no liveness, forcing `is ListenerOperator` and `is SnapshotOperator`; observe has no exporter trait; `ProgramAudit` cannot be handed an `AuditSink`; CAN `Bus` and Ethernet `Link` live in technology crates | 6 |
 | B | Rust singletons and names in place of injection: `ProgramAudit`'s fixed file sink and `XMIP_AUDIT_DIRECTORY`; `Hub::process()`; `catalogue::CARRIED`; `send_step`/`pickup` registries, `operator::PUBLISHED`; technology names in `configure::store` and `runtime::storage`; persist's closed `Server` enum where a dialect trait belongs; bus and link factories inside technologies; a mechanism matched by name in authorize-transport | ~25 sites |
 | C | technology-to-technology Cargo edges: observe, archive backends and every HTTP-shaped, cloud and field-bus technology on a sibling technology, and across capabilities (mllp on hl7-v2, http-api on openapi, route-regex on path-regex, toon on json-schema, ubl on message-xml); shared parts belong in a library or the capability, behaviour handed in as a trait | 62 edges |
-| D | .NET: one interface in the estate; `RuntimeLibrary.Rules` static (61 sites), `new NativeOperator` in four hosts, `SurfaceChoice`'s closed switch, concrete `RoleContext`, `ProgramAudit`, `RuntimeCommands` registered and injected; PowerShell and CLI statics | ~30 classes |
+| D | .NET: one interface in the estate; `RuntimeLibrary.Rules` static (61 sites), `new ConfigurationRuntime` in three hosts, `SurfaceChoice`'s closed switch, concrete `RoleContext`, `ProgramAudit`, `RuntimeCommands` registered and injected; PowerShell and CLI statics | ~30 classes |
 | E | tests reaching implementations by path, name or environment variable: runtime dev-dependencies on concrete technologies, the contract library by sibling path, fixtures by relative path, assertions keyed on technology names | ~30 |
 
 Kept as they are: the composition root, `Linked`, the core traits

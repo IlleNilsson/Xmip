@@ -94,3 +94,8 @@ audited. `xmip-service` starts it from `[operate]` (`listen`,
 `certificate`, `key`, `anchors`, `role`) and refuses to start where it
 cannot listen; a node without `[operate]` serves none. The address and port
 are the configuration's; no port is assumed.
+
+Built 2026-10-13 (ADR-0014, amendment of that date): the operate plane also
+listens on the node's own machine, at a local endpoint `[operate] local`
+names — a named pipe on Windows, a Unix domain socket elsewhere — which is
+no address on the network and needs none of clause 1's.

@@ -5,6 +5,7 @@
 
 use std::collections::BTreeMap;
 use std::process::ExitCode;
+use std::sync::Arc;
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Instant;
 
@@ -12,7 +13,7 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::{ExecutionPhase, Severity};
 use xmip_node::Declaration;
 use xmip_runtime::outcome::Outcomes;
-use xmip_runtime::plane::Listener;
+use xmip_runtime::plane::{Listener, Published};
 use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
@@ -86,6 +87,10 @@ pub fn serve(
         .with("configuration", configuration)
         .and_then(|declaration| declaration.with("orders", place.as_str()))
         .and_then(|declaration| declaration.with("snapshot", snapshot.as_str()))
+        .and_then(|declaration| match listening.as_deref() {
+            Some(operate) => declaration.with("operate", operate),
+            None => Ok(declaration),
+        })
         .and_then(|declaration| declaration.declare().map_err(|error| error.to_string()));
     if let Err(problem) = &declared {
         fail(
@@ -175,9 +180,10 @@ fn drained_record(
     said
 }
 
-/// The node's operate listener over what `publisher` posts (ADR-0067), and
-/// where it listens, where its configuration has an `[operate]`; `None`
-/// after saying why where it cannot listen, which refuses the node before
+/// The node's operate listeners over what `publisher` posts (ADR-0067) —
+/// its local endpoint and its network address, each where its
+/// configuration's `[operate]` names it — and where they listen; `None`
+/// after saying why where one cannot listen, which refuses the node before
 /// it accepts work, as every refusal at start does.
 fn operated(
     program: &str,
@@ -185,12 +191,17 @@ fn operated(
     configuration: &str,
     running: &Running,
     publisher: &Publisher,
-) -> Option<(Option<Listener>, Option<String>)> {
-    match running.operate(publisher.board(), audit) {
+) -> Option<(Vec<Listener>, Option<String>)> {
+    let board: Arc<dyn Published> = publisher.board();
+    match running.operate(&board, audit) {
         Ok(operate) => {
-            let listening = operate
-                .as_ref()
-                .map(|listener| listener.address().to_string());
+            let listening = (!operate.is_empty()).then(|| {
+                operate
+                    .iter()
+                    .map(Listener::address)
+                    .collect::<Vec<_>>()
+                    .join(" and ")
+            });
             Some((operate, listening))
         }
         Err(refusal) => {

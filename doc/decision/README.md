@@ -721,7 +721,9 @@ Across a language boundary everything goes through the C ABI; Rust to Rust,
 through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
 on the runtime's traits, so it runs where .NET does not; the PowerShell module
 and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
-(`Xmip.Abi`).
+(`Xmip.Abi`). The four stay, each for its purpose; the desktop runs on Windows
+and macOS, and on Linux only through Microsoft's experimental GTK4 backend
+(amendment 2026-10-13).
 
 **No surface goes through another surface to reach Xmip.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
@@ -739,9 +741,12 @@ written specification rather than by a Rust library inside one executable.
 Observation never sits in the message path and is lossy by design; `report` and
 `audit` are the durable records. A command is run on another machine through
 existing shell remoting — PowerShell Remoting over WinRM or SSH, and the CLI
-over SSH; a surface that reads or follows another node does so over gRPC on
-TCP (ADR-0052, amendment 2026-10-05), and SignalR is only between the web host
-and a GUI client.
+over SSH; a surface operates a node over gRPC to its operate listener — on
+TCP inside mutual TLS from another machine, at its local endpoint, a named
+pipe or a Unix domain socket, from its own — and calls the C ABI directly
+only for what has no node behind it (ADR-0052, amendment 2026-10-05;
+amendment 2026-10-13), and SignalR is only between the web host and a GUI
+client.
 
 → [The operator surfaces, in full](ADR-0014-operator-surfaces.md)
 

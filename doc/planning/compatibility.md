@@ -28,11 +28,20 @@ Operation (ADR-0015, amendment 2026-10-08, quotes him).
 | Identity and TLS (X.509 and hybrid) | library; not linked in the service | written, not run | written, not run | needs a `no_std` TLS |
 | Audit | built | written, not run | written, not run | forwarded to a node |
 | Operation surfaces (CLI, PowerShell, GUI) | built | written, not run | written, not run | none: no Operation on a device |
+| Desktop GUI (.NET MAUI) | built | experimental only: Microsoft's GTK4 backend, not supported | as Linux | none: no Operation on a device |
 | GPU for routing, transformation and processing | open | open | open | does not apply |
 | Service registration | Windows service | systemd | systemd | does not apply |
 
 *Does not apply* is where Xmip stands today, not a limit: a cell loses it once
 that piece is designed, coded, built and tested for the target.
+
+The desktop GUI is .NET MAUI, which Microsoft supports on Windows and macOS
+and not on Linux; there it runs only on Microsoft's experimental GTK4
+backend, maui-labs
+(<https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4>).
+The owner, 2026-10-13: *We are keeping CLI, PowerShell, Desktop via MAUI,
+Web via Blazor. All (G)UI Tools has there purpose* (ADR-0014, amendment
+2026-10-13).
 
 *Written, not run*: the code is written for the target, and nothing runs
 there until the owner lifts Windows only.

@@ -1872,3 +1872,19 @@ for a connection lost and a first one that failed alike, and a read while
 it recovers says unreachable at once. The amendment of 2026-09-15's
 `SurfaceHub`, `SurfaceRelay` and SignalR client are deleted; the change feed
 across a network is the node's own wait on its next revision.
+
+## Note, 2026-10-13: between processes on one machine over gRPC on the node's local endpoint
+
+The amendment of 2026-10-05 said a change is told *between two Xmip
+processes on one machine over gRPC on a named pipe*; until this date an
+operator surface on a node's own machine loaded the runtime into its own
+process instead (`NativeOperator`), which answered only for the nodes that
+process ran. Built as ADR-0014's amendment of this date: every .NET surface
+operates a node on its own machine over gRPC to the node's operate
+listener at its local endpoint — a named pipe on Windows, a Unix domain
+socket elsewhere — and on another at its operate address. `LocalOperator`
+and `RemoteOperator` are two faces of one `ListenerOperator`, which tells
+every watch first and reads the publication by the next question, so a
+change reaches a .NET watch in about 0.3 ms on the local endpoint. The
+surface a host chooses (clause 3) is `"local"`, `"snapshot"` or `"remote"`;
+`"native"` is deleted, and a choice that names no node says so.

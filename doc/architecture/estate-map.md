@@ -309,7 +309,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 239408 lines of production
+Where each repository mounts and what it holds: 244141 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -408,8 +408,8 @@ hold no source to count.
 │   │   │   │   ├── azure-event-hubs             526
 │   │   │   │   ├── aws                          513
 │   │   │   │   ├── serial                       506
-│   │   │   │   ├── named-pipe                   499
 │   │   │   │   ├── ethernet                     491
+│   │   │   │   ├── named-pipe                   486
 │   │   │   │   ├── can-bus                      470
 │   │   │   │   ├── sqlite                       467
 │   │   │   │   ├── websocket                    455
@@ -553,7 +553,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5140
+│   │   │   ├── net                             5168
 │   │   │   ├── codec                           2648
 │   │   │   ├── ssh                             1559
 │   │   │   ├── ntlm                             804
@@ -561,13 +561,13 @@ hold no source to count.
 │   │   │   ├── tls                              657
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             7347
-│   │       ├── gui                             5614
-│   │       │   └── vscode                      1417
+│   │       ├── cli                             7415
+│   │       ├── gui                             4363
+│   │       │   └── vscode                      3236
 │   │       ├── observe                         3683
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2627  C# 2627 · PowerShell 0
+│   │       ├── powershell                      2644  C# 2644 · PowerShell 0
 │   │       ├── audit                           2542
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -587,7 +587,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                24878  C# 22685 · Rust 1968 · PowerShell 225
+│   │   ├── abi                                26284  C# 24065 · Rust 1994 · PowerShell 225
 │   │   ├── event                               5633
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -615,13 +615,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            21469
+│       ├── runtime                            22638
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           3476
+│       └── configure                           4966
 └── test/
     └── core/
         └── playground                         10005

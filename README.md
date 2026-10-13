@@ -536,7 +536,20 @@ the scopes, each an Xmip URI
 | `xmip-cli mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
-| Desktop | The same on one machine. Windows, Linux and macOS. |
+| Desktop | The same on one machine. Windows and macOS; Linux only through Microsoft's experimental GTK4 backend for .NET MAUI ([maui-labs](https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4)), which Microsoft does not support. |
+
+Every one of them operates a node — its health, figures and scopes, its
+Journeys, Dead Messages and Subscriptions, the acts on them and the follow —
+over gRPC to the node's operate listener, on this machine and another alike
+([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), amendment
+2026-10-13): on its own machine at the node's local endpoint (`--local`,
+`-Local`, `Surface = "local"`), a named pipe on Windows and a Unix domain
+socket elsewhere, the caller the user the operating system proves; from
+another at its operate address (`--remote`, `-Remote`, `Surface = "remote"`)
+inside Xmip's mutual TLS, the caller its certificate's subject. What has no
+node behind it — validating, editing and slicing configuration, the
+language server's design exports, module probing, the audit file and
+Modules — is called across the C ABI directly.
 
 Both GUIs show six views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
@@ -575,8 +588,9 @@ system user running the host — and one nothing proved watches and acts on
 nothing. Both GUIs grant a caller a role by one rule: a role the run states
 (`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's; else
 the directory the host is told (`Directory`) answers; else Observer. A node's
-operate listener grants every certificate it took the role its
-`[operate] role` states (ADR-0014, amendment 2026-10-12). The
+operate listener grants every caller it proved — by certificate, or on its
+local endpoint by the operating system — the role its `[operate] role`
+states (ADR-0014, amendments 2026-10-12 and 2026-10-13). The
 Playground's directory is a fake one that allows the tester, and
 `Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
 gate as its caller, never under a name the caller gives, refused in words
@@ -605,7 +619,10 @@ journal or syslog on Linux (`journalctl -t xmip`), the unified log on macOS.
 Xmip supports current platforms only
 ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux,
 Windows and macOS are equal: the runtime, the `xmip-cli` command line, the
-PowerShell module and the monitors run on all three.
+PowerShell module and the web GUI run on all three. The desktop GUI is .NET
+MAUI: Windows and macOS, and Linux only through Microsoft's experimental,
+unsupported GTK4 backend ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
+amendment 2026-10-13).
 
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
@@ -1029,9 +1046,10 @@ host's console in `.local-work/web`, as a roll's is kept beside the roll.
 It binds plain http on loopback only, and says so in the host's log and
 audit; any other address is `https://` with `-Certificate` and `-PrivateKey`,
 and a browser presenting a certificate is checked against `-TrustAnchor`
-(ADR-0063 clause 1). A remote surface follows a node, not a web host: over
-gRPC to the node's operate listener (`[operate]`; ADR-0014, amendment
-2026-10-12).
+(ADR-0063 clause 1). A surface follows a node, not a web host: over gRPC to
+the node's operate listener (`[operate]`; ADR-0014, amendments 2026-10-12
+and 2026-10-13), at its local endpoint on the same machine and its operate
+address from another.
 
 ### Contributing
 
