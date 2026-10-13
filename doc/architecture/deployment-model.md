@@ -269,6 +269,31 @@ The rules:
 7. Edge deployments use the smallest practical permission and isolation
    footprint.
 
+### The operate listener
+
+A node is operated from another machine in two ways, and only two
+(ADR-0014, amendment 2026-10-12). **A command runs there over shell
+remoting** — `ssh <host> xmip-cli …`, PowerShell Remoting over WinRM or
+SSH — and brings that remoting's own authentication. **A surface reads,
+follows and acts on the node over its operate listener** (ADR-0067): gRPC on
+TCP at the node's one address, on the operate plane's own port, inside
+Xmip's mutual TLS (ADR-0063). The node's configuration names it:
+
+```toml
+[operate]
+listen = "0.0.0.0:7401"             # the node's address, the plane's port
+certificate = "tls/node.pem"
+key = "tls/node.key"
+anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
+role = "operator"                   # every proven caller's; Observer if left out
+```
+
+Every caller presents a certificate reaching `anchors`, and its subject is
+who acts — never a name the caller gives; `role` is what every such caller
+may do, and an act a role may not take is refused in words and audited
+(ADR-0009). A node with no `[operate]` serves none and is operated on its own
+machine only. SignalR is only between a web host and the browser it serves.
+
 ### Security profiles
 
 The seven rules above describe mechanisms. A **security profile** says how

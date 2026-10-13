@@ -1860,3 +1860,15 @@ time span to investigate the historical errors.*
   surface takes the span: the CLI and the PowerShell module as a parameter.
   Not built. The Playground's fault every 50 seconds is ADR-0028's amendment
   of the same date.
+
+## Note, 2026-10-12: the remote surface is the runtime's, over gRPC
+
+Built as ADR-0014's amendment of this date: the CLI, the PowerShell module
+and the GUIs follow a node over gRPC to its operate listener, not a web
+host over SignalR. `RemoteOperator` in `Xmip.Surface` is a face over
+`xmip_operate.h` section 17; the recovery loop of the note above (0, 2, 10
+and 30 seconds, the last repeated) is the runtime's (`plane::remote::RETRY`),
+for a connection lost and a first one that failed alike, and a read while
+it recovers says unreachable at once. The amendment of 2026-09-15's
+`SurfaceHub`, `SurfaceRelay` and SignalR client are deleted; the change feed
+across a network is the node's own wait on its next revision.

@@ -49,8 +49,8 @@ function Start-XmipOperationWeb {
             loopback only, the one exception, and the host says so in its log and
             its audit where it binds it. Any other address is https:// and needs
             -Certificate and -PrivateKey: the host presents that certificate, asks
-            a caller for one and checks it against -TrustAnchor, and its surface
-            hub takes no remote surface without one. The host refuses plain http
+            a browser for one and checks one presented against -TrustAnchor. The
+            host refuses plain http
             beyond loopback, and https with no certificate, before it listens; the
             refusal is in its audit and in the .err file beside its log.
 

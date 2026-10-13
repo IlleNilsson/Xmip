@@ -11,6 +11,8 @@ use std::time::Instant;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::{ExecutionPhase, Severity};
 use xmip_node::Declaration;
+use xmip_runtime::outcome::Outcomes;
+use xmip_runtime::plane::Listener;
 use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
@@ -69,6 +71,11 @@ pub fn serve(
     let publication_path = publication::place(&running);
     let snapshot = publication_path.display().to_string();
     let mut publisher = Publisher::new(program, audit, &running, publication_path, &orders);
+    let Some((_operate, listening)) = operated(program, audit, configuration, &running, &publisher)
+    else {
+        let _ = running.stop();
+        return Ended::Refused;
+    };
     // Every record from here carries the location it declares, so a reader
     // knows whose it is (ADR-0062, amendment 2026-09-29).
     audit.locate(&location);
@@ -98,6 +105,7 @@ pub fn serve(
             ("storage", running.storage().said()),
             ("orders", place.as_str()),
             ("snapshot", snapshot.as_str()),
+            ("operate", listening.as_deref().unwrap_or("")),
         ],
     );
     say_where(
@@ -105,13 +113,14 @@ pub fn serve(
         &running,
         &place,
         &snapshot,
+        listening.as_deref(),
     );
     publisher.publish(&running);
     println!("{program}: {location} accepts work");
     ready();
 
     let by = loop {
-        let applied = orders::take(program, audit, &running, &orders, &location);
+        let applied = orders::take(program, audit, &orders, &location);
         if applied > 0 || publisher.due() {
             publisher.publish(&running);
         }
@@ -126,6 +135,22 @@ pub fn serve(
     let outcomes = running.stop();
     let drained = draining.elapsed().as_millis().to_string();
 
+    let said = drained_record(audit, &location, by, outcomes, &drained);
+    publisher.stopped(&said);
+    println!("{program}: {location} {said}");
+    drop(declared);
+    Ended::Stopped
+}
+
+/// Record the stop of the node at `location` by `by`, drained in `drained`
+/// milliseconds with `outcomes`, and say it in one sentence.
+fn drained_record(
+    audit: &ProgramAudit,
+    location: &str,
+    by: StoppedBy,
+    outcomes: Outcomes,
+    drained: &str,
+) -> String {
     let counts = [
         ("received", outcomes.received),
         ("routed", outcomes.routed),
@@ -136,11 +161,7 @@ pub fn serve(
         ("not_sent", outcomes.not_sent),
     ]
     .map(|(name, count)| (name, count.to_string()));
-    let mut properties = vec![
-        ("node", location.as_str()),
-        ("by", by),
-        ("drained_ms", drained.as_str()),
-    ];
+    let mut properties = vec![("node", location), ("by", by), ("drained_ms", drained)];
     properties.extend(counts.iter().map(|(name, count)| (*name, count.as_str())));
     record(audit, "stop", ExecutionPhase::Finished, &properties);
     let said = format!(
@@ -151,20 +172,49 @@ pub fn serve(
             .collect::<Vec<_>>()
             .join(", ")
     );
-    publisher.stopped(&said);
-    println!("{program}: {location} {said}");
-    drop(declared);
-    Ended::Stopped
+    said
+}
+
+/// The node's operate listener over what `publisher` posts (ADR-0067), and
+/// where it listens, where its configuration has an `[operate]`; `None`
+/// after saying why where it cannot listen, which refuses the node before
+/// it accepts work, as every refusal at start does.
+fn operated(
+    program: &str,
+    audit: &ProgramAudit,
+    configuration: &str,
+    running: &Running,
+    publisher: &Publisher,
+) -> Option<(Option<Listener>, Option<String>)> {
+    match running.operate(publisher.board(), audit) {
+        Ok(operate) => {
+            let listening = operate
+                .as_ref()
+                .map(|listener| listener.address().to_string());
+            Some((operate, listening))
+        }
+        Err(refusal) => {
+            fail(
+                audit,
+                "operate",
+                &format!("{program}: {configuration} {refusal}"),
+            );
+            None
+        }
+    }
 }
 
 /// Say on the console where the node `who` names keeps what it keeps.
-fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str) {
+fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str, operate: Option<&str>) {
     println!(
         "{who} reaches Xmip Storage through {}",
         running.storage().said()
     );
     println!("{who} takes orders at {orders}");
     println!("{who} publishes its snapshot at {snapshot}");
+    if let Some(operate) = operate {
+        println!("{who} is operated at {operate}");
+    }
 }
 
 /// Say `problem` on stderr and record it as the failure of `action`: a

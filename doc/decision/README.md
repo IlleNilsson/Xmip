@@ -716,11 +716,13 @@ own.**
 
 ### The operator surfaces and their language
 
-Rust is the language of the runtime; everything in the message path is Rust. The
-operator surfaces are .NET 11 — the `xmip` executable, the PowerShell module, a
-MAUI desktop GUI and a Blazor web GUI.
+Rust is the language of the runtime; everything in the message path is Rust.
+The C ABI is the core every operator surface stands on. The command line,
+`xmip-cli`, is Rust over it, so it runs where .NET does not (amendment
+2026-10-12); the PowerShell module and the GUIs, a MAUI desktop and a Blazor
+web, are .NET 11 over it through `Xmip.Abi`.
 
-**All four P/Invoke the same C ABI, and none of them goes through another
+**Every surface calls the same C ABI, and none of them goes through another
 surface to get there.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
 boundary loadable Modules plug into. The amendment of 2026-08-26 put it there,
@@ -735,9 +737,11 @@ PowerShell provider did — now held by a normative versioned contract with a
 written specification rather than by a Rust library inside one executable.
 
 Observation never sits in the message path and is lossy by design; `report` and
-`audit` are the durable records. Remote operation rides existing shell remoting
-— PowerShell Remoting over WinRM or SSH, and the CLI over SSH. Xmip defines no
-bespoke remote control protocol.
+`audit` are the durable records. A command is run on another machine through
+existing shell remoting — PowerShell Remoting over WinRM or SSH, and the CLI
+over SSH; a surface that reads or follows another node does so over gRPC on
+TCP (ADR-0052, amendment 2026-10-05), and SignalR is only between the web host
+and a GUI client.
 
 → [The operator surfaces, in full](ADR-0014-operator-surfaces.md)
 
@@ -1041,7 +1045,7 @@ You have a word. This gives you the decision that governs it.
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Claim, claimable artifact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
-| CLI, the `xmip` executable | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| CLI, `xmip-cli`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |

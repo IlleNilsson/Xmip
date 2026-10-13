@@ -82,3 +82,15 @@ optional.
 **The assistant's**: the argument in Context, the three planes' names, the
 second heartbeat link and the cluster reached by a name that lists its nodes
 — each the owner's to strike.
+
+## Built, 2026-10-12: the operate listener
+
+The operate plane is built (ADR-0014, amendment 2026-10-12):
+`xmip-core-runtime`'s `plane::Listener`, gRPC on the estate's own HTTP/2
+inside Xmip's mutual TLS, answering the node's publication, a wait on its
+next revision and an operator's acts, each admitted by the role the node's
+`[operate] role` grants the subject of the caller's certificate, and
+audited. `xmip-service` starts it from `[operate]` (`listen`,
+`certificate`, `key`, `anchors`, `role`) and refuses to start where it
+cannot listen; a node without `[operate]` serves none. The address and port
+are the configuration's; no port is assumed.
