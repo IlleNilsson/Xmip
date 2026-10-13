@@ -791,15 +791,79 @@ dissagree more often, just tell me first.*
   1.7 ms the amendment of 2026-10-12 recorded.
 
 What stays the owner's: the local endpoint admits the node's account and
-the machine's administrators and no one else; whether an operators group
-should be admitted beside them — a group Xmip would name or a deployment
-would — is not decided, nor whether every node should serve a local
-endpoint by default, and by what name. The snapshot surface still leaves an
-act for a running node as an order file it takes at its next look
-(`xmip_order_v1`), a second local way to act on a node this amendment does
-not remove.
+the machine's administrators and no one else, and the owner kept it so
+(amendment *the owner's answers* below). Whether every node serves a local
+endpoint, and by what name, and what becomes of the order file the
+snapshot surface leaves for a running node (`xmip_order_v1`) are decided
+there.
 
 Provenance: the owner's agreement, quoted; the endpoint's shape — a named
 pipe with its security descriptor, a `0600` socket, the caller the operating
 system proves, `[operate] local`, `Surface = "local"` — is the assistant's,
 for the owner to overrule.
+
+## Amendment, 2026-10-13: the owner's answers — the local endpoint always, a bounded call, acts through Xmip Storage
+
+**Amends the amendment of the same date, *every .NET surface operates a
+node over gRPC*, where it left the owner's questions open.** Decided by the
+owner, 2026-10-13, question by question.
+
+- **The local endpoint always starts.** *The local endpoint always starts,
+  named `xmip-<node>` unless the configuration names it.* A node serves it
+  whether or not its configuration has an `[operate]`, named as its Xmip
+  Service is (ADR-0053), and `[operate] local` names another. `[operate]`
+  keeps its keys: *`[operate]` keys kept (`listen`, `certificate`, `key`,
+  `anchors`, `role`, `local`)*. Built: `Running::operate`,
+  `Running::local_endpoint`; the starter configuration `xmip-service
+  --install` writes names no endpoint.
+- **Where it is.** *Socket place: Linux `/run/xmip/xmip-<node>.sock`, macOS
+  `/var/run/xmip/xmip-<node>.sock`, created by systemd / launchd for the
+  node's account; a name may change, the folder may not.* On Windows the
+  folder is the pipe namespace, `\.\pipe\`. Built: `plane::local::place`
+  is the one rule the node binds by and every surface connects by, and it
+  refuses a name that would leave the folder; the systemd unit's
+  `RuntimeDirectory=xmip` makes `/run/xmip` for the node's account and keeps
+  it when a unit stops; on macOS, which empties `/var/run` as it starts, a
+  launchd daemon of its own, `xmip-<node>.run`, makes `/var/run/xmip` at
+  every boot (`registration::launchd_run_directory`). The Linux and macOS
+  parts are written and not built: builds are Windows only, the owner's
+  choice of the moment.
+- **Who may open it.** *The local pipe stays the service account's and
+  Administrators'.* No operators group is admitted.
+- **A local call waits at most a set time.** *A local call waits at most a
+  set time — `[tuning]`, default 2 s — then says the node did not answer and
+  shows it so; the tool recovers on its own.* Built: `[tuning]
+  local_timeout`, two seconds where it says nothing
+  (`plane::remote::LOCAL_TIMEOUT`); the node declares it beside its
+  endpoint in its process declaration (ADR-0053, `local_timeout_ms`), and a
+  surface opened with no wait of its own takes it from there —
+  `Remote::local`, `xmip_remote_open_local_v1`'s `within_ms`,
+  `LocalOperator`'s `within`. A socket keeps the time itself; a named pipe
+  has none, so a thread per surface cancels the call's read when its time
+  passes (`plane::deadline`). The surface says *the node did not answer
+  within 2 s*, shows the node unreachable, and the follow's recovery loop
+  (ADR-0052, note of 2026-10-05) hears it again. That the node declares its
+  wait, and the surface reads it there, is the assistant's, for the owner
+  to overrule.
+- **Receive Locations, Send Ports and Send Locations start only when the
+  configuration says `true`.** *Nothing or `false` means not started, shown
+  on every surface as "not started: the configuration does not say true";
+  the designer writes `true` when it creates one.* The key is each one's
+  `start`, which was required until this date.
+- **Acts go to Xmip Storage.** *Nodes are consumable: pause, resume, retry,
+  dismiss and replay are written to Storage with who and when, and every
+  node honors them; reading live state from a node over gRPC stays. Order
+  files are deleted with every use; snapshot files are for tests only.
+  Built once Storage is assembled in the service (open problem 33).* The
+  failed Journeys and a scope's pause go the same way, and the per-node act
+  exports go with the order files (the owner's questions 5 and 6, folded
+  into this one). Until open problem 33 is closed an act still reaches one
+  node — over its operate listener, or as an order file it takes at its
+  next look — and the snapshot surface leaves one
+  ([`operator-acts-through-storage`](../architecture/estate-map.md#operator-acts-through-storage),
+  decided, not built). ADR-0052's note of this date says it for the
+  surfaces' shared model.
+
+Provenance: the owner's decisions, quoted from his answers of 2026-10-13;
+the key names `local_timeout` and `start`, the declared wait and the
+deadline thread are the assistant's, for the owner to overrule.

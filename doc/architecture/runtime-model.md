@@ -1627,9 +1627,9 @@ authentication, authorization, Party and Endpoint configuration.
 > Environment profiles change policy, never the security architecture.
 
 Secrets and certificates are referenced through providers and never embedded in
-configuration, logs, retention or audit. Xmip is to support ACME-compatible
+configuration, logs, retention or audit. Xmip supports ACME-compatible
 certificate provisioning and renewal
-([decided, not built](estate-map.md#certificate-provisioning)). **All access results are audited without
+([built, not in the assembled service](estate-map.md#certificate-provisioning)). **All access results are audited without
 recording secret values.**
 
 ## 20. Artifacts, Content, Contract and Configuration

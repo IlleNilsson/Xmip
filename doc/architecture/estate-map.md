@@ -1,6 +1,6 @@
 # The Xmip estate
 
-335 repositories are declared and 263 of them are
+340 repositories are declared and 267 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -32,16 +32,16 @@ the estate tree, and are counted nowhere below.
 | --- | ---: | ---: | ---: |
 | Foundation | 11 | 11 | 0 |
 | Library | 1 | 0 | 1 |
-| Capability | 19 | 19 | 0 |
+| Capability | 20 | 20 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 293 | 223 | 70 |
-| **Total** | 335 | 263 | 72 |
+| Technology | 297 | 226 | 71 |
+| **Total** | 340 | 267 | 73 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
-| reserved | 70 | 0 | 70 |
-| scaffolded | 265 | 263 | 2 |
+| reserved | 71 | 0 | 71 |
+| scaffolded | 269 | 267 | 2 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -143,6 +143,16 @@ refuses every Stream at authentication and audits the refused attempt with its
 claim; the Playground and the runtime's tests hand both in. Records: ADR-0019,
 runtime-model.md section 5.
 
+#### `certificate-provisioning`
+
+**Obtaining and renewing certificates (ACME, an internal authority).**
+`xmip-core-provision` and its technologies obtain and renew a certificate:
+`acme` against any ACME directory, Let's Encrypt one option; `internal-ca`,
+the cluster's authority, served over ACME; `self-signed` for a lone offline
+node; and an operator's files. Proved in their tests, offline. `xmip-service`
+reads no `[provision]` table yet. Open problem 27. Records: ADR-0034, ADR-0033
+(amendment 2026-10-13).
+
 #### `certificate-usage`
 
 **Presenting and verifying certificates an operator supplies.**
@@ -233,13 +243,6 @@ delivery records alone, and a program's own record waits for it to drain; no
 capacity, discard, sampling or back-pressure policy exists. Records:
 audit-record.md, Performance.
 
-#### `certificate-provisioning`
-
-**Obtaining and renewing certificates (ACME, an internal authority).** Nothing
-obtains or renews a certificate: there is no ACME client and no
-`xmip-core-provision`, and the SDK has no ACME server. Certificates are files
-an operator supplies. Open problem 27. Records: ADR-0034, ADR-0033.
-
 #### `configuration-delivery`
 
 **Delivering a slice to its node, its acceptance, and restarting only what
@@ -267,6 +270,28 @@ Subprocess: a node runs its one in-process Host Service and refuses a Module
 that needs another (`xmip-core-runtime`'s `startup.rs`), so no process is
 named for its parent plus a dash and a short readable word. Records: ADR-0018
 (amendment 2026-10-06), ADR-0053 (amendment 2026-10-06).
+
+#### `node-listeners`
+
+**A node's sync, alive and Storage listeners, each configured as operate is.**
+Only the operate plane listens: its local endpoint always, named `xmip-<node>`
+unless `[operate] local` names it, and its network listener where `[operate]
+listen` names one. No `[sync]`, `[alive]` or `[storage]` section is read, and
+no node-to-node, heartbeat or Storage listener exists in the service. Records:
+ADR-0067 (amendment 2026-10-13).
+
+#### `operator-acts-through-storage`
+
+**An operator's act written to Xmip Storage, honored by every node.** A pause,
+resume, retry, dismiss or replay still reaches one node: over its operate
+listener, or as an order file it takes at its next look (`xmip_order_v1`,
+`.src/service/orders.rs`), the snapshot file beside it; no act is written to
+Xmip Storage with who and when, and no node reads one there. Built once
+Storage is assembled in the service, open problem 33; the order files and the
+per-node act exports are deleted with every use then, and snapshot files kept
+for tests only. Records: ADR-0014 (amendment 2026-10-13, acts through Xmip
+Storage), ADR-0052 (note of 2026-10-13, acts through Xmip Storage),
+deployment-model.md section 7.
 
 #### `other-runtime-module`
 
@@ -309,7 +334,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 244230 lines of production
+Where each repository mounts and what it holds: 248820 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -326,7 +351,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 72 of them and they
+nowhere — work not begun, not work unmounted. There are 73 of them and they
 hold no source to count.
 
 ```text
@@ -467,6 +492,12 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
+│   │   │   ├── provision                       1349
+│   │   │   │   ├── internal-ca                 1438
+│   │   │   │   ├── acme                        1160
+│   │   │   │   ├── self-signed                   80
+│   │   │   │       declared, not built 1
+│   │   │   │       platform
 │   │   │   ├── contract                         906
 │   │   │   │   ├── graphql-schema               846
 │   │   │   │   ├── xml-schema                   759
@@ -558,7 +589,7 @@ hold no source to count.
 │   │   │   ├── ssh                             1559
 │   │   │   ├── ntlm                             804
 │   │   │   ├── sql                              801
-│   │   │   ├── tls                              657
+│   │   │   ├── tls                              677
 │   │   │   └── asn1                             526
 │   │   └── operation/
 │   │       ├── cli                             7415
@@ -587,7 +618,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                26284  C# 24065 · Rust 1994 · PowerShell 225
+│   │   ├── abi                                26342  C# 24121 · Rust 1996 · PowerShell 225
 │   │   ├── event                               5633
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -615,13 +646,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            22727
+│       ├── runtime                            23176
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           4966
+│       └── configure                           5002
 └── test/
     └── core/
         └── playground                         10005
@@ -697,6 +728,7 @@ Things Xmip does.
 | `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 20 |
 | `xmip-core-process` | scaffolded | `module/core/capability/process` | 7 |
 | `xmip-core-promote` | scaffolded | `module/core/capability/promote` | — |
+| `xmip-core-provision` | scaffolded | `module/core/capability/provision` | 4 |
 | `xmip-core-receive` | scaffolded | `module/core/capability/receive` | — |
 | `xmip-core-resilience` | scaffolded | `module/core/capability/resilience` | 6 |
 | `xmip-core-retain` | scaffolded | `module/core/capability/retain` | 5 |
@@ -765,6 +797,14 @@ Declared, and none composed: `module/core/capability/process` has no
 `.gitmodules`.
 
 - **reserved**, 7 — bash, command, dotnet, grpc, http, rust, wasm
+
+### `xmip-core-provision`, 4 technologies
+
+3 of 4 composed in `module/core/capability/provision`; a name marked `*` is
+one the parent does not compose.
+
+- **reserved**, 1 — platform*
+- **scaffolded**, 3 — acme, internal-ca, self-signed
 
 ### `xmip-core-resilience`, 6 technologies
 

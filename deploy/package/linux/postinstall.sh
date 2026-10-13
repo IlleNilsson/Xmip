@@ -2,7 +2,8 @@
 # After the .deb or .rpm is unpacked (nfpm.yaml): xmip-service lays the node
 # out and registers it — the starter /opt/xmip/config/xmip.toml where there
 # is none, the node's slice, the folders, the systemd unit registration.rs
-# writes, started. An upgrade finds its configuration and keeps it, and the
+# writes, started; its RuntimeDirectory makes /run/xmip for the node's
+# account, where its local endpoint is. An upgrade finds its configuration and keeps it, and the
 # unit is restarted on the new program.
 #
 # XMIP_NODE and XMIP_CLUSTER name the node and the cluster for a machine

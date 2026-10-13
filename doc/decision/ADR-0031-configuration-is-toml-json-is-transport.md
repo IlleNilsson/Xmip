@@ -90,9 +90,13 @@ nothing about them, and the desktop editor does not have to write three empty
 lists for an Xmip Process it adds.
 
 What the runtime cannot start without still has no default: the `start` of
-an Xmip Process or a Location, and a Location's `transport`. A document
-without them is refused, never completed — by `xmip-core-configure`, which
-reads the one document, and so by `xmip_validate_v1` for every surface
+an Xmip Process, and a Location's `transport`. A document without them is
+refused, never completed. A Location's `start` has a meaning when absent
+since 2026-10-13 (ADR-0014, amendment of that date): only `true` starts a
+Receive Location, Send Port or Send Location, and nothing or `false` leaves
+it known and not started (`configure::NOT_STARTED`). Both are read by
+`xmip-core-configure`, which reads the one document, and so by
+`xmip_validate_v1` for every surface
 (ADR-0027, amendment 2026-09-05).
 
 The format itself is still open problem 14; this settles what one key means in

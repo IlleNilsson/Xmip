@@ -1888,3 +1888,31 @@ every watch first and reads the publication by the next question, so a
 change reaches a .NET watch in about 0.3 ms on the local endpoint. The
 surface a host chooses (clause 3) is `"local"`, `"snapshot"` or `"remote"`;
 `"native"` is deleted, and a choice that names no node says so.
+
+## Note, 2026-10-13: an act is written to Xmip Storage, and every node honors it
+
+Decided by the owner, 2026-10-13: *Acts go to Xmip Storage. Nodes are
+consumable: pause, resume, retry, dismiss and replay are written to Storage
+with who and when, and every node honors them; reading live state from a
+node over gRPC stays. Order files are deleted with every use; snapshot files
+are for tests only. Built once Storage is assembled in the service (open
+problem 33).*
+
+- **The model's acts change where they land, not what they are.** Every
+  surface keeps the acts it has — on a Subscription, a Journey, a Dead
+  Message, an Event Subscription, a scope's pause — and the one gate that
+  admits them (ADR-0009); what an admitted act writes is a record in Xmip
+  Storage's administration data, who and when beside it, and every node the
+  act concerns honors it from there, so a node that is replaced or restarts
+  finds what was decided. `deployment-model.md` section 7 already has it:
+  *operator state: what is paused, by whom and when — every node honors a
+  pause*.
+- **Reading stays live**: a surface reads and follows a node over gRPC
+  (note of 2026-10-12; ADR-0014, amendment 2026-10-13).
+- **The order file goes** — `xmip_order_v1`, `.src/service/orders.rs` and
+  the per-node act exports — with every use, once the act through Storage is
+  built; the snapshot file stays only for tests.
+- **Not built**: Storage is not assembled in the service (open problem 33),
+  so an act still reaches one node, over its operate listener or as an
+  order file
+  ([`operator-acts-through-storage`](../architecture/estate-map.md#operator-acts-through-storage)).

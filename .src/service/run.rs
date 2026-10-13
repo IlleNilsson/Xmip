@@ -13,7 +13,7 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::{ExecutionPhase, Severity};
 use xmip_node::Declaration;
 use xmip_runtime::outcome::Outcomes;
-use xmip_runtime::plane::{Listener, Published};
+use xmip_runtime::plane::{Listener, Published, deadline};
 use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
@@ -90,6 +90,10 @@ pub fn serve(
         .and_then(|declaration| match listening.as_deref() {
             Some(operate) => declaration.with("operate", operate),
             None => Ok(declaration),
+        })
+        .and_then(|declaration| {
+            let within = running.local_timeout().as_millis().to_string();
+            declaration.with(deadline::DECLARED, within)
         })
         .and_then(|declaration| declaration.declare().map_err(|error| error.to_string()));
     if let Err(problem) = &declared {

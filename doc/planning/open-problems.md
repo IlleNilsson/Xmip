@@ -693,7 +693,7 @@ The `trait_minor` disagreement is settled (the owner, 2026-09-26): a node
 refuses a module newer in `trait_minor` than itself, as ADR-0012 and now
 `specification.md` say (ADR-0057, amendment of 2026-09-19).
 
-## 27. Xmip cannot obtain a certificate, and identity is tested once
+## 27. A running node obtains no certificate yet, and identity is tested once
 
 The owner, 2026-09-24: *The identity test has to be split into two. One local,
 on-prem version and one using ACME when a node is online* — and then *ACME has
@@ -704,23 +704,36 @@ capability, `xmip-core-provision`, ACME one of its technologies for both
 reaches, and two tests, `identity-local` and `identity-online`.
 
 What exists: certificate **usage** — mutual TLS on Receive and Send, a stand-in
-certificate authority, the certificate authenticators. What does not: anything
-that **obtains** a certificate. ACME appears in the estate only as a simulated
-fault string, and identity is a stage inside `round-trip`.
+certificate authority, the certificate authenticators — and, since 2026-10-13,
+the sources that **obtain** one, proved in their own tests. What does not: a
+running node using them, and the Playground's two identity tests; identity is
+still a stage inside `round-trip`.
 
-| step | what |
-|---|---|
-| 1 | `xmip-core-provision` declared and created, its trait in the capability (a provider may ship a certificate source) |
-| 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names |
-| 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME |
-| 4 | the SDK runs step-ca as the local ACME server — declared in `prerequisite.toml` for a test machine only — and `identity-local` provisions from it by ACME and presents the result on mutual TLS |
-| 5 | `identity-online` on nodes that declare online, against Let's Encrypt |
+| step | what | state |
+|---|---|---|
+| 1 | `xmip-core-provision` declared and created, its trait in the capability (a provider may ship a certificate source) | done 2026-10-13 |
+| 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names | done 2026-10-13: http-01 on any port, dns-01 through a provider's `DnsWriter`; tls-alpn-01 not built |
+| 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME | done 2026-10-13; `internal-ca` also serves ACME to the cluster |
+| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Playground test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
+| 5 | `identity-online` on nodes that declare online, against Let's Encrypt | configuration only; open below |
+
+The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
+*as an option* — never required, never a default — and the validation *on any
+port*. Let's Encrypt has issued no client authentication since 2026-07-08, so
+between nodes the cluster's authority issues (ADR-0033, amendment
+2026-10-13). Not built yet: `xmip-service` reads no `[provision]` table and
+starts no provisioner or authority; a provisioned key is a PEM file, not
+sealed under the key home; no DNS writer or lookup ships.
 
 **Open for the owner before step 5:** Let's Encrypt validates that the node
-controls a name — `http-01` needs a public address on port 80, `dns-01` needs
-write access to the name's DNS. A laptop has neither. `identity-online` needs
-one of them named: a domain and the way its DNS is written, or a public host the
-Playground may run on.
+controls a name — `http-01` needs the name's public port 80 reaching the
+node's answer, which may listen on any port behind forwarding; `dns-01` needs
+write access to the name's DNS, through a DNS provider's `DnsWriter`, and no
+port. A laptop has neither. `identity-online` needs one of them named: a
+domain and the way its DNS is written, or a public host and its port 80 the
+Playground may use. Its configuration is `[provision.receive]` with `source =
+"xmip-core-provision-acme"`, `directory` Let's Encrypt's, `names` that domain,
+`agree_terms = true` and the challenge chosen (`node-configuration.md`).
 
 ## 28. A node cannot run under a group Managed Service Account
 
