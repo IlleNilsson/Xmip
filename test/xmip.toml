@@ -16,6 +16,9 @@ cluster_name = "C1"
 [nodes.R1]
 roles = "receiving"
 
+[nodes.R2]
+roles = "receiving"
+
 [nodes.P1]
 roles = "processing"
 
