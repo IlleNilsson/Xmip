@@ -248,11 +248,26 @@ impl Drop for Ending {
     }
 }
 
+/// The node's configuration in `directory`, its local operate endpoint —
+/// which always starts — named for the directory, so tests running at once
+/// never meet on `xmip-<node>`. `[operate]` is its last table: a test adds
+/// a key to it by adding a line.
 fn written(directory: &Path, receive: &str) -> PathBuf {
     std::fs::create_dir_all(directory).expect("a directory");
     let path = directory.join(format!("{}.toml", node_name()));
-    std::fs::write(&path, node(receive, &free_address())).expect("writes");
+    let text = format!(
+        "{}\n[operate]\nlocal = \"{}\"\n",
+        node(receive, &free_address()),
+        endpoint(directory)
+    );
+    std::fs::write(&path, text).expect("writes");
     path
+}
+
+/// The local endpoint the node configured in `directory` is called.
+fn endpoint(directory: &Path) -> String {
+    let name = directory.file_name().and_then(|name| name.to_str());
+    name.expect("a directory of its own").to_string()
 }
 
 fn declarations(directory: &Path) -> Vec<String> {

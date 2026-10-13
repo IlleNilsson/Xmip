@@ -55,10 +55,12 @@ cluster_name = "<cluster>"
 
 [nodes.<node>.service]
 online = false
-
-[nodes.<node>.operate]
-local = "xmip-<node>"
 ```
+
+The node's local operate endpoint always starts, named `xmip-<node>`: a
+named pipe on Windows, `/run/xmip/xmip-<node>.sock` on Linux and
+`/var/run/xmip/xmip-<node>.sock` on macOS. In a terminal on Linux or macOS
+that folder must exist and be yours; the service's unit or daemon makes it.
 
 ```powershell
 bin/xmip-service --configuration config/xmip.toml --node <node> --slice > config/xmip-node.toml
@@ -71,5 +73,5 @@ bin/xmip-service --configuration config/xmip-node.toml --console
   `module/platform/configure/doc/node-configuration.md` in the Xmip
   repository, <https://github.com/IlleNilsson/Xmip>.
 - The operator tools — the command line, the PowerShell module, the desktop
-  and the web — reach the node on its local endpoint, `xmip-<node>`
-  (ADR-0014, amendment 2026-10-13).
+  and the web — reach the node on its local endpoint, `xmip-<node>`, which
+  always starts (ADR-0014, amendments 2026-10-13).

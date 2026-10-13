@@ -189,3 +189,6 @@
 [submodule "module/core/library/sql"]
 	path = module/core/library/sql
 	url = https://github.com/IlleNilsson/xmip-core-library-sql.git
+[submodule "module/core/capability/provision"]
+	path = module/core/capability/provision
+	url = https://github.com/IlleNilsson/xmip-core-provision.git

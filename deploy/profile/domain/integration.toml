@@ -32,6 +32,11 @@ standards = [
   "ssh-key",
   "username",
   "windows",
+  # Where a node's certificates come from: provision (ADR-0034, amendment
+  # 2026-10-13).
+  "acme",
+  "internal-ca",
+  "self-signed",
   # What they may do: authorize.
   "abac",
   "acl",

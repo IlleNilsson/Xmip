@@ -172,9 +172,9 @@ record = ["ADR-0033", "ADR-0063"]
 
 [implementation.certificate-provisioning]
 name = "Obtaining and renewing certificates (ACME, an internal authority)"
-state = "decided"
-note = "Nothing obtains or renews a certificate: there is no ACME client and no `xmip-core-provision`, and the SDK has no ACME server. Certificates are files an operator supplies. Open problem 27."
-record = ["ADR-0034", "ADR-0033"]
+state = "built"
+note = "`xmip-core-provision` and its technologies obtain and renew a certificate: `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`, the cluster's authority, served over ACME; `self-signed` for a lone offline node; and an operator's files. Proved in their tests, offline. `xmip-service` reads no `[provision]` table yet. Open problem 27."
+record = ["ADR-0034", "ADR-0033 (amendment 2026-10-13)"]
 
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
@@ -307,6 +307,18 @@ name = "An Xmip Host Subprocess, named for its parent"
 state = "decided"
 note = "Nothing spawns an Xmip Host Subprocess: a node runs its one in-process Host Service and refuses a Module that needs another (`xmip-core-runtime`'s `startup.rs`), so no process is named for its parent plus a dash and a short readable word."
 record = ["ADR-0018 (amendment 2026-10-06)", "ADR-0053 (amendment 2026-10-06)"]
+
+[implementation.operator-acts-through-storage]
+name = "An operator's act written to Xmip Storage, honored by every node"
+state = "decided"
+note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes at its next look (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Built once Storage is assembled in the service, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
+record = ["ADR-0014 (amendment 2026-10-13, acts through Xmip Storage)", "ADR-0052 (note of 2026-10-13, acts through Xmip Storage)", "deployment-model.md section 7"]
+
+[implementation.node-listeners]
+name = "A node's sync, alive and Storage listeners, each configured as operate is"
+state = "decided"
+note = "Only the operate plane listens: its local endpoint always, named `xmip-<node>` unless `[operate] local` names it, and its network listener where `[operate] listen` names one. No `[sync]`, `[alive]` or `[storage]` section is read, and no node-to-node, heartbeat or Storage listener exists in the service."
+record = ["ADR-0067 (amendment 2026-10-13)"]
 
 # The estate. Depth is the classification: xmip.<provider> is the provider
 # root repository, xmip.<provider>.<module> a module, and one level deeper an
@@ -1534,6 +1546,31 @@ dependency = []
     [xmip.core.secret.azure-key-vault]
     maturity = "reserved"
     [xmip.core.secret.aws-kms]
+    maturity = "reserved"
+
+  [xmip.core.provision]
+  description = "Certificate provisioning (ADR-0034): a source obtains and renews a node's certificate for a purpose, what Parties reach or node to node, renewed at two thirds of its life. The P-256 key, the CSR and the certificate written once, and a purpose's configuration read. A source is a technology."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec"]
+    [xmip.core.provision.acme]
+    description = "ACME client (RFC 8555): account, order, http-01 on any port or dns-01 through a provider's DNS writer, CSR finalized, chain fetched, against any directory a node names, over Xmip's HTTP and TLS. A xmip-core-provision technology."
+    maturity = "scaffolded"
+    specification = "RFC 8555 Automatic Certificate Management Environment, JWS ES256 (RFC 7515, RFC 7518), JWK thumbprint (RFC 7638)"
+    dependency = ["xmip-core-provision", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
+    # internal-ca rides on acme as its carrier (ADR-0044 clause 1): the
+    # authority serves the same RFC 8555 objects and JWS the client speaks.
+    [xmip.core.provision.internal-ca]
+    description = "The cluster's own certificate authority: issues node certificates for server and client authentication, served over ACME so every node uses one protocol. A xmip-core-provision technology."
+    maturity = "scaffolded"
+    specification = "RFC 8555 server side, http-01 and dns-01 validation; RFC 5280 certificates"
+    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
+    [xmip.core.provision.self-signed]
+    description = "A self-signed certificate for a lone offline node, its own anchor. A xmip-core-provision technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-provision", "xmip-core"]
+    [xmip.core.provision.platform]
     maturity = "reserved"
 
 # Platform services. These existed as crates with no module, so nothing would

@@ -179,6 +179,17 @@ Authentication always precedes authorization. **Anonymous is an authenticated
 outcome, not a skipped gate** — the claim is "nobody", it is verified as such,
 and authorization then decides whether nobody may post here.
 
+A certificate is **used** the same way everywhere and **provisioned** from a
+source a node's configuration names (ADR-0034; ADR-0033, amendment
+2026-10-13):
+
+| Term | Meaning |
+| --- | --- |
+| **Purpose** | What a node's certificate is for: `receive`, what a Party reaches, server authentication alone; `node`, between nodes, server and client authentication. |
+| **Source** | Where a purpose's certificate comes from: an ACME directory, the cluster's authority, the node itself (self-signed), or an operator's files. A technology of `xmip-core-provision`; none is a default. |
+| **Provisioner** | One purpose's certificate kept in its place and obtained again at two thirds of the life it was issued with. |
+| **Cluster authority** | The cluster's own certificate authority (`internal-ca`), whose certificate every node holds as its anchor; it issues node certificates and answers ACME. |
+
 ## Arrival and Departure
 
 **Arrivals are handled by Receive Locations. Departures are handled by Send

@@ -5,6 +5,8 @@
 - Amended: 2026-09-24 — provisioning is a capability, `xmip-core-provision`;
   ACME is used on-premises against a local ACME server and over the internet;
   the Playground tests both, `identity-local` and `identity-online`
+- Amended: 2026-10-13 — Let's Encrypt is an option a node chooses, never a
+  default; the capability and three of its sources are built
 - Related: ADR-0033 (certificates on Receive and Send), ADR-0019 (the identity
   pipeline), ADR-0021 (current platforms), ADR-0028 (the offline Playground),
   deployment-model.md
@@ -131,3 +133,21 @@ that service: *step-ca is only for test. The end user will choose their CA.*
    Encrypt where a node is online.
 
 Open problem 27 holds the work.
+
+## Amendment, 2026-10-13: Let's Encrypt is an option, never the default
+
+Clause 2 of the amendment above let a node's online switch choose Let's
+Encrypt by default. The owner, 2026-10-13, told that Let's Encrypt has issued
+no client authentication since 2026-07-08 and so cannot prove a node between
+nodes: *As an option.* So no source is a default: a node's configuration
+names its source and, for ACME, its directory, and `online = true` still
+only permits (ADR-0045 clause 3). Let's Encrypt serves what Parties reach;
+between nodes the cluster's own authority (`internal-ca`) issues, over ACME.
+
+Built the same day: `xmip-core-provision` with `acme`, `internal-ca` and
+`self-signed`; `platform` stays reserved. What `identity-local` proves — a
+node not online obtains its certificate by ACME and presents it on mutual
+TLS — is proved in `internal-ca`'s own tests against the authority's ACME
+server, offline, with nothing installed; the Playground's `identity-local`
+test, and whether it still runs step-ca, are not built and remain the
+owner's to say. ADR-0033's amendment of 2026-10-13 holds the detail.

@@ -92,10 +92,60 @@ next revision and an operator's acts, each admitted by the role the node's
 `[operate] role` grants the subject of the caller's certificate, and
 audited. `xmip-service` starts it from `[operate]` (`listen`,
 `certificate`, `key`, `anchors`, `role`) and refuses to start where it
-cannot listen; a node without `[operate]` serves none. The address and port
-are the configuration's; no port is assumed.
+cannot listen; a node whose `[operate]` names no `listen` serves no
+network listener. The address and port are the configuration's; no port is
+assumed.
 
-Built 2026-10-13 (ADR-0014, amendment of that date): the operate plane also
-listens on the node's own machine, at a local endpoint `[operate] local`
-names — a named pipe on Windows, a Unix domain socket elsewhere — which is
-no address on the network and needs none of clause 1's.
+Built 2026-10-13 (ADR-0014, amendments of that date): the operate plane also
+listens on the node's own machine, always, at a local endpoint named
+`xmip-<node>` unless `[operate] local` names it — a named pipe on Windows, a
+Unix domain socket in `/run/xmip` on Linux and `/var/run/xmip` on macOS —
+which is no address on the network and needs none of clause 1's.
+
+## Amendment, 2026-10-13: a listener per purpose, always; an address per purpose where the network has one
+
+**Amends clauses 2 and 3.** Decided by the owner, 2026-10-13: *Each node
+has separate listeners per purpose — IT operators (the operating system's:
+SSH, PowerShell Remoting, Remote Desktop), Xmip operators (operate), the
+heartbeat (alive), Xmip Storage, node to node (sync) — and the Receive and
+Send Locations for communication. Separate addresses where the network
+allows; separate listeners always (ADR-0067). The local pipe stays the
+service account's and Administrators'.* And of a beginner's machine, the
+same day: *For a beginner setup we can't demand mulitple IP adresses, port
+segmentation have to due.*
+
+- **A listener per purpose, always.** IT operators reach the machine on
+  the operating system's own listeners — SSH, PowerShell Remoting, Remote
+  Desktop — which Xmip neither serves nor replaces. Xmip operators reach
+  the node on operate, the heartbeat is alive, Xmip Storage is its own
+  listener, node to node is sync, and the Receive and Send Locations keep
+  the endpoints their technologies configure. No two of them share a
+  listener.
+- **The default is one address and a port per purpose**: Xmip operators,
+  the heartbeat, Storage, node to node and the ACME challenge each on its
+  own port of the node's one address, which a beginner's machine with a
+  single address always satisfies. Clause 1 stands as that default.
+- **Separate addresses are an option, never required**: where the network
+  has them, an operator puts any purpose on an address — or a network — of
+  its own. Nothing in Xmip demands one.
+- **The local endpoint stays the service account's and Administrators'**
+  (ADR-0014, amendment 2026-10-13): the operate plane's local endpoint, a
+  named pipe or a Unix domain socket, admits the node's account, the
+  system and the machine's administrators, and is no address on the
+  network.
+- **The sections are shaped alike** — decided by the owner, the same day:
+  *`[operate]` keys kept (`listen`, `certificate`, `key`, `anchors`,
+  `role`, `local`); `[sync]`, `[alive]` and `[storage]` sections shaped
+  the same.* Each purpose's section names where it listens and what it
+  presents and trusts, as `[operate]` does.
+
+**Built**: the operate plane, its local endpoint always (ADR-0014,
+amendment 2026-10-13, *the local endpoint always starts*) and its network
+listener where `[operate] listen` names one. **Decided, not built**: the
+sync, alive and Storage listeners and their sections
+([`node-listeners`](../architecture/estate-map.md#node-listeners)).
+
+Provenance: the owner's decisions, quoted, and the default of one address
+with a port per purpose — the ACME challenge among them — as his beginner
+ruling was recorded the same day; the wording of the bullets is the
+assistant's, for the owner to overrule.

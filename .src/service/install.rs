@@ -8,9 +8,9 @@
 //! `--install`, with the cluster's `xmip.toml` at `--configuration`:
 //!
 //! 1. writes a starter `xmip.toml` there, where there is none: the cluster
-//!    `--cluster` names, the node `--node` names, offline (ADR-0045), its
-//!    operate listener's local endpoint named as its service is (ADR-0014,
-//!    amendment 2026-10-13);
+//!    `--cluster` names, the node `--node` names, offline (ADR-0045); its
+//!    local operate endpoint needs no line, for it always starts, named
+//!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13);
 //! 2. slices the node's configuration, `xmip-node.toml` beside it, where
 //!    there is none — `xmip-core-configure`'s one slicing;
 //! 3. makes the layout's `modules` and `logs` beside `config`, the node's
@@ -134,8 +134,9 @@ fn starter(cluster: &str, node: &str) -> String {
     let service = node_service_name(node);
     format!(
         "# The cluster's configuration, xmip.toml, as an Xmip package starts it:\n\
-         # one node, offline, operated from this machine on its local endpoint\n\
-         # (ADR-0015, amendment 2026-10-13). The node's configuration,\n\
+         # one node, offline, operated from this machine on its local endpoint,\n\
+         # {service}, which always starts (ADR-0015, amendment 2026-10-13;\n\
+         # ADR-0014, amendments 2026-10-13). The node's configuration,\n\
          # {NODE_FILE}, is sliced from this file; change this one, slice again\n\
          # (xmip-service --slice) and restart the service.\n\
          [service]\n\
@@ -143,10 +144,7 @@ fn starter(cluster: &str, node: &str) -> String {
          cluster_name = {cluster}\n\
          \n\
          [nodes.{node_key}.service]\n\
-         online = false\n\
-         \n\
-         [nodes.{node_key}.operate]\n\
-         local = {service}\n",
+         online = false\n",
         service = quoted(&service),
         cluster = quoted(cluster),
         node_key = quoted(node),
@@ -219,6 +217,25 @@ fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
 
 #[cfg(target_os = "macos")]
 fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
+    // The local endpoints' folder first, made now and at every boot.
+    let run = format!("/Library/LaunchDaemons/{}.run.plist", service.name);
+    write(
+        Path::new(&run),
+        &xmip_runtime::registration::launchd_run_directory(service),
+    )?;
+    let _ = command(
+        "launchctl",
+        &[
+            String::from("bootout"),
+            format!("system/{}.run", service.name),
+        ],
+        &[],
+    );
+    command(
+        "launchctl",
+        &[String::from("bootstrap"), String::from("system"), run],
+        &[],
+    )?;
     let plist = format!("/Library/LaunchDaemons/{}.plist", service.name);
     write(
         Path::new(&plist),
@@ -327,6 +344,14 @@ fn deregister(name: &str, _: &str) -> Result<String, String> {
         &[],
     )?;
     std::fs::remove_file(&plist).map_err(|error| said(Path::new(&plist), &error))?;
+    // The folder's daemon goes with it; the folder stays for other nodes.
+    let run = format!("/Library/LaunchDaemons/{name}.run.plist");
+    let _ = command(
+        "launchctl",
+        &[String::from("bootout"), format!("system/{name}.run")],
+        &[],
+    );
+    let _ = std::fs::remove_file(&run);
     Ok(format!(
         "{name} stopped and removed; its configuration and data are kept"
     ))
@@ -342,7 +367,7 @@ mod tests {
     use super::*;
 
     /// The starter slices for its node and reads as `xmip-service` reads a
-    /// node's configuration, its local endpoint named as its service is.
+    /// node's configuration, naming no operate listener.
     #[test]
     fn the_starter_slices_and_reads_as_the_service_reads_it() {
         let cluster = xmip_configure::fixture::test_cluster();
@@ -361,9 +386,10 @@ mod tests {
         assert_eq!(document.service.node_name, node);
         assert_eq!(document.service.cluster_name, cluster.name);
         assert!(!document.service.online);
-        let operate = document.operate.expect("an operate listener");
-        assert_eq!(operate.local, Some(node_service_name(&node)));
-        assert_eq!(operate.network(), Ok(None));
+        // No [operate]: the local endpoint starts all the same, named as
+        // the service is, and nothing else listens.
+        assert!(document.operate.is_none());
+        assert!(source.contains(&quoted(&node_service_name(&node))));
     }
 
     #[test]

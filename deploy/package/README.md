@@ -13,7 +13,8 @@ xmip-service --configuration <layout>/config/xmip.toml \
 That command — written once, in `xmip-service` (`.src/service/install.rs`)
 — lays the node out (`bin`, `config`, `modules`, `data`, `logs`; clause 10),
 writes a starter cluster `xmip.toml` where there is none (one node,
-offline, its operate listener's local endpoint `xmip-<node>`), slices the
+offline; its local operate endpoint, `xmip-<node>`, always starts and needs
+no line), slices the
 node's `xmip-node.toml` from it, makes `data/audit`, and registers the Xmip
 Service `xmip-<node>` the way `registration.rs` defines it, to start with
 the machine, and starts it. Removal runs
@@ -72,7 +73,9 @@ XMIP_BINARY_DIRECTORY=<built> XMIP_VERSION=<version> XMIP_ARCH=amd64 \
 ```
 
 and `--packager rpm` for the `.rpm`; `XMIP_ARCH=arm64` for arm64. The layout
-is `/opt/xmip`; the unit is `/etc/systemd/system/xmip-<node>.service`.
+is `/opt/xmip`; the unit is `/etc/systemd/system/xmip-<node>.service`, and
+its `RuntimeDirectory=xmip` makes `/run/xmip` for the node's account, where
+the node's local endpoint is, `/run/xmip/xmip-<node>.sock`.
 `postinstall.sh` runs `--install`, `preremove.sh` runs `--uninstall` on
 removal only, never on an upgrade.
 
@@ -89,7 +92,10 @@ productbuild --distribution deploy/package/macos/distribution.xml \
 ```
 
 The layout is `/opt/xmip`; the daemon is
-`/Library/LaunchDaemons/xmip-<node>.plist`. macOS has no removal for a
+`/Library/LaunchDaemons/xmip-<node>.plist`, and beside it
+`xmip-<node>.run.plist` makes `/var/run/xmip` for the node's account at
+every boot, since macOS empties `/var/run` as it starts; the node's local
+endpoint is `/var/run/xmip/xmip-<node>.sock`. macOS has no removal for a
 package: `sudo /opt/xmip/bin/xmip-service --configuration
 /opt/xmip/config/xmip-node.toml --uninstall` removes the daemon and keeps
 everything else. A `.pkg` people can open is signed with a Developer ID

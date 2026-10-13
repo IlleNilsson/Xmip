@@ -307,10 +307,11 @@ site to start on its own, which no example site has yet.
    `-OnlineNodes R1` records that `R1` may assume a route to the
    internet and the others may not (ADR-0045). `R1` is the node this
    command declared `receive` for, so it is the receiving edge — the node that
-   would obtain its server certificate from Let's Encrypt over ACME, which is
-   the one online act Xmip has (ADR-0033, ADR-0034;
-   [decided, not built](doc/architecture/estate-map.md#certificate-provisioning)). The switch
-   permits; nothing in the Playground reaches out.
+   may obtain its server certificate over ACME from a public authority, Let's
+   Encrypt one option its configuration names, which is the one online act
+   Xmip has (ADR-0033, ADR-0034;
+   [built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning)).
+   The switch permits; nothing in the Playground reaches out.
 
    The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
    board that follows receive, process and send as the cluster moves. Beside
@@ -500,8 +501,10 @@ client on send. Certificates are the first mechanism built: Xmip's own TLS
 presents and verifies the certificate files an operator gives it, and the
 web host serves with them; a node presents none yet
 ([built, not in the assembled service](doc/architecture/estate-map.md#certificate-usage)). Provisioning
-them — by Let's Encrypt at a public edge and by your own authority
-elsewhere — is [decided, not built](doc/architecture/estate-map.md#certificate-provisioning). Xmip is developed in Sweden and is source-available, which is
+them — over ACME from any authority a node names, Let's Encrypt one option
+for what Parties reach, the cluster's own authority between nodes, or
+self-signed on a lone offline node — is
+[built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning). Xmip is developed in Sweden and is source-available, which is
 relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
@@ -576,8 +579,11 @@ Journeys, Dead Messages and Subscriptions, the acts on them and the follow —
 over gRPC to the node's operate listener, on this machine and another alike
 ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), amendment
 2026-10-13): on its own machine at the node's local endpoint (`--local`,
-`-Local`, `Surface = "local"`), a named pipe on Windows and a Unix domain
-socket elsewhere, the caller the user the operating system proves; from
+`-Local`, `Surface = "local"`), which every node serves, `xmip-<node>`
+unless its `[operate] local` names another — a named pipe on Windows,
+`/run/xmip/<name>.sock` on Linux, `/var/run/xmip/<name>.sock` on macOS —
+the caller the user the operating system proves, a call waiting at most
+`[tuning] local_timeout`, two seconds by default; from
 another at its operate address (`--remote`, `-Remote`, `Surface = "remote"`)
 inside Xmip's mutual TLS, the caller its certificate's subject. What has no
 node behind it — validating, editing and slicing configuration, the
@@ -758,7 +764,7 @@ A node is offline unless its configuration says `online = true`
 ([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
 may reach the internet for duties that require it, such as certificate
 provisioning at a public edge
-([decided, not built](doc/architecture/estate-map.md#certificate-provisioning)). Online access is a declared choice, never a
+([built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning)). Online access is a declared choice, never a
 side effect of deployment.
 
 The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,

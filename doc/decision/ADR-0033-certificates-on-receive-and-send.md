@@ -116,6 +116,9 @@ Each is security-critical and lands on its own, tested, rather than as one drop.
   real mechanism rather than only simulated.
 - `open-problems.md` gains this as a prioritized item.
 
+*Step 5 is built, and Let's Encrypt is an option rather than the
+priority: see the amendment of 2026-10-13.*
+
 ## Amendment, 2026-09-18: the two authenticators are built, and where X.509 lives
 
 Step 4 of the build order, on the owner's *go ahead, and be sure to split
@@ -249,3 +252,85 @@ The requirement and the priority are the owner's, 2026-09-05: certificates on
 Receive and Send, Let's Encrypt prioritized among the identity protocols.
 Clauses 1 to 4 are the assistant's drafting of it, on the instruction to
 proceed and to write the decision down.
+
+## Amendment, 2026-10-13: Let's Encrypt is an option, and step 5 is built
+
+The owner, 2026-10-13: *When we have internet, Let's use Let's Encryp, ACME
+for Receive Locations and between nodes.*
+
+**What Let's Encrypt no longer issues.** Its certificates have carried no
+TLS Client Authentication since 2026-07-08: the default profile dropped the
+extended key usage on 2026-02-11, and from 2026-07-08 *no further
+certificates with the Client Authentication EKU will be issued* — *only TLS
+Server Authentication will be available from Let's Encrypt*
+(<https://letsencrypt.org/2025/05/14/ending-tls-client-authentication>).
+Between nodes each end presents a certificate (ADR-0063 clause 1), so a Let's
+Encrypt certificate can prove what a Party reaches and never the calling
+node. Told this, and offered Let's Encrypt for Receive Locations and the
+cluster's own authority over ACME between nodes, the owner answered *As an
+option*: Let's Encrypt is one option a node's configuration chooses, never
+required and never a default; and the domain validation is an option too.
+
+**Where the authority asks.** The owner, the same day: *On any port.*
+Let's Encrypt validates http-01 on port 80 alone — *The HTTP-01 challenge can
+only be done on port 80*, and it follows redirects only to ports 80 or 443 —
+and tls-alpn-01 *via TLS on port 443*; dns-01 is a TXT record at
+`_acme-challenge.<domain>` and needs no port
+(<https://letsencrypt.org/docs/challenge-types/>; RFC 8555 section 8.3,
+RFC 8737). So a node's http-01 answer listens on any port its configuration
+names, `0.0.0.0:80` unless it says otherwise, and is reached from public
+port 80 through forwarding where it listens elsewhere; dns-01 suits a node
+behind a firewall, and is the only way to a wildcard name.
+
+1. **Provisioning is `xmip-core-provision`**, created 2026-10-13 at
+   `module/core/capability/provision` as ADR-0034's amendment of 2026-09-24
+   placed it: a `Source` obtains a certificate for an `Order` — a purpose and
+   its DNS names — and a `Provisioner` keeps it in the purpose's place and
+   obtains again at two thirds of the life it was issued with, read from the
+   certificate, since public lifetimes are shortening (CA/Browser Forum
+   ballot SC-081) and no lifetime is assumed. Two purposes: `receive`, what
+   a Party reaches, server authentication alone; `node`, between nodes,
+   server and client authentication. The P-256 key, the CSR and the
+   certificate are written once there over `xmip-core-library-asn1` and
+   signed with aws-lc-rs, the crypto `xmip-core-library-tls` already builds;
+   an operator's own files are the source of a purpose that names none.
+2. **Three technologies, each its own repository** under the capability, as
+   the 2026-09-24 amendment of ADR-0034 named them and ADR-0044 and ADR-0049
+   shape a capability's technologies, rather than one crate with features:
+   each is a source a package carries or not, a provider's source sits beside
+   them by the same trait, and what two of them share — the key, the CSR, the
+   certificate — went up into the capability (ADR-0044 clause 1).
+   - **`acme`** — RFC 8555 over Xmip's own HTTP and TLS: the directory, the
+     nonce, an account by a P-256 key signing JWS with ES256 and kept across
+     renewals, the order, http-01 or dns-01, the CSR finalized, the chain
+     fetched. Any directory a node names; Let's Encrypt's is one value. dns-01
+     writes through a `DnsWriter` a DNS provider's module implements, and
+     Xmip ships none for a vendor. A certificate that does not serve the
+     purpose asked — a Let's Encrypt one asked for `node` — is refused in
+     words. tls-alpn-01 is not built.
+   - **`internal-ca`** — the cluster's own authority: a root kept in the
+     purpose's place, issuing node certificates for server and client
+     authentication, and served over ACME so every node uses the one
+     protocol; it rides on `acme` as its carrier, from the same JWS and
+     objects. It validates http-01 on the port it is configured with, and
+     dns-01 through a `DnsLookup` it is given; Xmip ships none yet.
+   - **`self-signed`** — a lone offline node's certificate, its own anchor.
+3. **A node's configuration**: `[provision.receive]` and `[provision.node]`,
+   `source` the technology's module name and the rest its settings, refused
+   in words when incomplete (`node-configuration.md`, *Where a node's
+   certificates come from*).
+4. **Proved offline**, in `internal-ca`'s tests: a node obtains its
+   certificate by ACME from the authority in process, by http-01 and by
+   dns-01, and presents it on mutual TLS to the authority's own node; a
+   certificate is renewed at two thirds of its life and not before; a
+   challenge nobody answers is refused with the authority's reason. This is
+   open problem 27's `identity-local`, without step-ca.
+
+**Not yet.** `xmip-service` reads no `[provision]` table and starts no
+provisioner or authority; `identity-online` against Let's Encrypt waits on
+what the owner gives it (open problem 27); a provisioned key is a PEM file in
+the node's data directory, not sealed under the key home (ADR-0063 clause 4).
+
+Provenance: the owner's three sentences above. The two purposes, the
+settings, the renewal fraction and the split into three repositories are
+the assistant's drafting, each the owner's to strike.

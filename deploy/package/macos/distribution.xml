@@ -14,7 +14,8 @@
   and both need an Apple Developer Program membership: the owner's.
 
   postinstall runs xmip-service with its install switch, which lays out /opt/xmip and
-  registers the launchd daemon registration.rs writes. macOS has no removal
+  registers the launchd daemon registration.rs writes, with the daemon that
+  makes /var/run/xmip, the local endpoints' folder, at every boot. macOS has no removal
   for a package; README.md in deploy/package says the one command that
   removes the daemon and keeps configuration and data (ADR-0040).
 -->

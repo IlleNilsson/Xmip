@@ -290,9 +290,18 @@ machine; on Unix the socket file is `0600`, the node's account and the
 superuser. Who acts is the user the operating system says the connecting
 process runs as — `DOMAIN\user` on Windows, the user name elsewhere — never
 a name the caller gives, and its role is the one `[operate] role` states.
-A bare name is `\\.\pipe\<name>` on Windows and a file in the temporary
-directory on Unix; on a machine other users log on to, give a path in a
-directory only the node's account and its operators reach.
+**The local endpoint always starts** — decided by the owner, 2026-10-13:
+*the local endpoint always starts, named `xmip-<node>` unless the
+configuration names it* — at `\\.\pipe\xmip-<node>` on Windows,
+`/run/xmip/xmip-<node>.sock` on Linux and `/var/run/xmip/xmip-<node>.sock`
+on macOS: *created by systemd / launchd for the node's account; a name may
+change, the folder may not.* A name that would leave the folder is refused
+as the node starts. **A local call waits at most `[tuning] local_timeout`**,
+two seconds by default, then the surface says the node did not answer
+within it and shows it unreachable until the follow hears it again; the
+node declares that wait beside its endpoint (ADR-0053), where a surface on
+the machine reads it (ADR-0014, amendment 2026-10-13, *the owner's
+answers*).
 
 **From another machine** a node is operated in two ways, and only two
 (ADR-0014, amendment 2026-10-12). **A command runs there over shell
@@ -304,7 +313,7 @@ Xmip's mutual TLS (ADR-0063). The node's configuration names both:
 
 ```toml
 [operate]
-local = "xmip-node1"                # the local endpoint's name or path
+local = "xmip-node1"                # the local endpoint's name; xmip-<node> if left out
 listen = "0.0.0.0:7401"             # the node's address, the plane's port
 certificate = "tls/node.pem"
 key = "tls/node.key"
@@ -312,13 +321,33 @@ anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
 role = "operator"                   # every proven caller's; Observer if left out
 ```
 
-`listen` takes `certificate`, `key` and `anchors`; either endpoint may
-stand alone. Every caller on the network presents a certificate reaching
+`listen` takes `certificate`, `key` and `anchors`, and adds the network
+listener to the local endpoint. Every caller on the network presents a certificate reaching
 `anchors`, and its subject is who acts — never a name the caller gives;
 `role` is what every proven caller may do, on either endpoint, and an act a
 role may not take is refused in words and audited (ADR-0009). A node with
-no `[operate]` serves neither, and no surface operates it. SignalR is only
-between a web host and the browser it serves.
+no `[operate]` serves its local endpoint, `xmip-<node>`, every caller there
+an Observer, and no network listener. SignalR is only between a web host
+and the browser it serves.
+
+**Every purpose has a listener of its own** — decided by the owner,
+2026-10-13 (ADR-0067, amendment of that date): IT operators on the
+operating system's own (SSH, PowerShell Remoting, Remote Desktop), Xmip
+operators on operate, the heartbeat on alive, Xmip Storage, node to node on
+sync, and the Receive and Send Locations; *separate addresses where the
+network allows; separate listeners always*. By default they share the
+node's one address on a port each — *for a beginner setup we can't demand
+mulitple IP adresses, port segmentation have to due* — and `[sync]`,
+`[alive]` and `[storage]` are shaped as `[operate]` is
+([decided, not built](estate-map.md#node-listeners)).
+
+**An act is written to Xmip Storage** — decided by the owner, 2026-10-13:
+*pause, resume, retry, dismiss and replay are written to Storage with who
+and when, and every node honors them; reading live state from a node over
+gRPC stays. Order files are deleted with every use.* Until Storage is
+assembled in the service (open problem 33) an act reaches one node, over
+its operate listener or as an order file
+([decided, not built](estate-map.md#operator-acts-through-storage)).
 
 ### Security profiles
 
@@ -408,10 +437,12 @@ configuration, and registers the Xmip Service where services exist.
 **Every package does that by running one command**, `xmip-service --install`
 (ADR-0015, amendment 2026-10-13; `deploy/package`): it lays the node out,
 writes a starter cluster `xmip.toml` where there is none — one node,
-offline, its operate listener's local endpoint `xmip-<node>` — slices the
-node's `xmip-node.toml` from it, makes `data/audit`, and registers and
-starts the Xmip Service as `registration.rs` defines it, to start with the
-machine: a Windows service, a systemd unit, a launchd daemon.
+offline, operated at its local endpoint `xmip-<node>`, which always starts
+— slices the node's `xmip-node.toml` from it, makes `data/audit`, and
+registers and starts the Xmip Service as `registration.rs` defines it, to
+start with the machine: a Windows service, a systemd unit that makes
+`/run/xmip` for the node's account, a launchd daemon beside one that makes
+`/var/run/xmip` at every boot.
 `--uninstall` stops and removes the service and deletes nothing else
 (ADR-0040). The packages are an MSI per architecture with its winget
 manifest, a `.deb` and an `.rpm`, a macOS `.pkg`, and the portable archive;
@@ -472,7 +503,9 @@ time:**
   never edited there (ADR-0031, amendment 2026-10-02;
   [decided, not built](estate-map.md#shared-subscriptions));
 - operator state: what is paused, by whom and when — every node honors a
-  pause;
+  pause; every act an operator takes — pause, resume, retry, dismiss,
+  replay — with who and when (the owner, 2026-10-13;
+  [decided, not built](estate-map.md#operator-acts-through-storage));
 - no audit: since 2026-10-10 the audit keeper moves audit from the runtime
   database to the audit database, on every backend (the owner, of
   2026-10-01: *RocksDB is the first storage for audit records, then
