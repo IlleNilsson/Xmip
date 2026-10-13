@@ -717,13 +717,13 @@ own.**
 ### The operator surfaces and their language
 
 Rust is the language of the runtime; everything in the message path is Rust.
-The C ABI is the core every operator surface stands on. The command line,
-`xmip-cli`, is Rust over it, so it runs where .NET does not (amendment
-2026-10-12); the PowerShell module and the GUIs, a MAUI desktop and a Blazor
-web, are .NET 11 over it through `Xmip.Abi`.
+Across a language boundary everything goes through the C ABI; Rust to Rust,
+through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
+on the runtime's traits, so it runs where .NET does not; the PowerShell module
+and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
+(`Xmip.Abi`).
 
-**Every surface calls the same C ABI, and none of them goes through another
-surface to get there.** `xmip-core-abi` is the interface *into* Xmip —
+**No surface goes through another surface to reach Xmip.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
 boundary loadable Modules plug into. The amendment of 2026-08-26 put it there,
 superseding the original clauses that made every surface a client of the `xmip`

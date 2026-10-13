@@ -96,7 +96,9 @@ and it cost real work.
   on .NET, *for the tooling and ease of development* (the same day). The
   command line is not: the owner, 2026-10-12, *the CLI has to be usable
   without .NET. If you are on an MCU or any kind of edge device, .NET might
-  not be the way to go* — it is Rust, over the C ABI (ADR-0014).
+  not be the way to go* — it is Rust, on the runtime's traits: across a
+  language boundary everything goes through the C ABI, and Rust to Rust
+  through traits (ADR-0014).
 - **Xmip uses its own toolchain — dogfooding as much as possible.** Where
   Xmip has an implementation of something, Xmip's own programs and tools use
   it rather than the platform's or a third party's: TLS through

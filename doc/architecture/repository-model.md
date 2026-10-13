@@ -394,8 +394,8 @@ first-party naming exception.
 Repositories whose declared `primaryLanguage` is not Rust do not invent a
 Cargo package. ADR-0014 clause 14 governs those surfaces:
 `xmip-core-gui` is .NET 11, `xmip-core-powershell` is PowerShell, and
-`xmip-core-cli` is .NET 11 until its Rust replacement over the C ABI lands
-(ADR-0014, amendment 2026-10-12).
+`xmip-core-cli` is .NET 11 until its Rust replacement, on the runtime's
+traits, lands (ADR-0014, amendment 2026-10-12).
 
 Platform foundation stays together while the architecture is settling.
 Loadable modules can separate later precisely because they depend on published

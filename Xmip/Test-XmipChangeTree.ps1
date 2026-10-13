@@ -84,6 +84,29 @@ function Test-XmipChangeTree {
             )
         }
 
+        # The runtime's library, built once from the working tree into the
+        # shared directory and named by XMIP_RUNTIME_LIBRARY to whatever loads
+        # it next: a module's tests, and the root's own test/, whose cmdlets
+        # load it through Xmip.Surface. Dot-sourced, so $runtimeBuilt holds.
+        [scriptblock] $useRuntime = {
+            if ($runtimeBuilt) {
+                return
+            }
+
+            [hashtable] $runtimeLibrary = @{
+                RepositoryRoot = $RepositoryRoot
+                Module         = 'module/platform/runtime'
+                Patch          = $patch
+                Library        = $unhashed
+            }
+            $runtimeBuilt = Build-XmipTestLibrary @runtimeLibrary
+
+            [string] $file = if ($IsWindows) { 'xmip_core_runtime.dll' }
+            else { 'libxmip_core_runtime.so' }
+            $env:XMIP_RUNTIME_LIBRARY =
+                Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
+        }
+
         foreach ($module in $Ordered) {
             if ($NoVerify) {
                 $verified.Add($module)
@@ -120,23 +143,12 @@ function Test-XmipChangeTree {
 
             # A failed runtime build fails the module that needed it: a
             # stale library must never be tested in its place.
-            if ($loadsRuntime -and -not $runtimeBuilt) {
-                [hashtable] $runtimeLibrary = @{
-                    RepositoryRoot = $RepositoryRoot
-                    Module         = 'module/platform/runtime'
-                    Patch          = $patch
-                    Library        = $unhashed
-                }
-                $runtimeBuilt = Build-XmipTestLibrary @runtimeLibrary
+            if ($loadsRuntime) {
+                . $useRuntime
 
                 if (-not $runtimeBuilt) {
                     $failed = @($module)
                 }
-
-                [string] $file = if ($IsWindows) { 'xmip_core_runtime.dll' }
-                else { 'libxmip_core_runtime.so' }
-                $env:XMIP_RUNTIME_LIBRARY =
-                    Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
             }
 
             # The runtime's tests open the Rust contract module's library:
@@ -221,8 +233,16 @@ function Test-XmipChangeTree {
         Clear-XmipUnhashedLibrary -TargetDirectory $sharedTarget -Library $unhashed
         [bool] $serviceBroken = -not $NoVerify -and @(Test-XmipModule @service).Count -gt 0
 
-        if ($serviceBroken -or (-not $NoVerify -and $Platform -and
-                -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot))) {
+        # The root's test/ loads the runtime too: never the stale one a
+        # module's own target directory may still hold.
+        if (-not $NoVerify -and $Platform) {
+            . $useRuntime
+        }
+
+        [bool] $platformBroken = -not $NoVerify -and $Platform -and
+            (-not $runtimeBuilt -or -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot))
+
+        if ($serviceBroken -or $platformBroken) {
             [string] $unverified = 'The platform repository did not verify; nothing landed.'
             Write-Error $unverified -ErrorAction Continue
 
