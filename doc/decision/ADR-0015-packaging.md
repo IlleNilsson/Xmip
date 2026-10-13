@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI; target, domain, site
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, domain, site
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -18,7 +18,10 @@ release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01).
+`Build-XmipService` (amendment 2026-10-01). macOS gets a `.pkg` with a
+launchd daemon, and every package installs by running
+`xmip-service --install`; only the Windows packages are built for now
+(amendment 2026-10-13).
 
 ## Context
 
@@ -353,3 +356,123 @@ selected tech*), and no node document yet. A deployment uses one of them, never 
 (the owner, 2026-10-08: *it is either DSC V3 or Ansible, not a mix*).
 Microsoft DSC v3 stays one of the two technologies (`deployment-model.md`
 section 8).
+
+## Amendment, 2026-10-13: packages an end user installs, macOS among them
+
+**Provenance.** The owner, 2026-10-13: *In the deploy folder we need some
+kind of setup binarie(es) to get things started for End Users* — and:
+*Well do the Windows, Linux and hopefully the OS X setup.* Builds are
+Windows-only by his choice of the moment, so the Windows packages are built
+and tested, and the Linux and macOS ones are written complete and not built.
+
+**`deploy/package`, one folder per form:**
+
+- `windows/` — clause 2's MSI, one per architecture (x64, arm64), from
+  `Xmip.wixproj`, an SDK-style project on WiX Toolset 7 (NuGet
+  `WixToolset.Sdk` 7.0.0, released 2026-04-06, current on 2026-10-13), built
+  by `dotnet build`; and its winget manifest, three files on manifest schema
+  1.28.0 (the newest in `microsoft/winget-cli` on 2026-10-13), generated from
+  the MSI — its SHA-256 and ProductCode — and never kept by hand. Binaries go
+  to `Program Files\Xmip\bin`, the rest of clause 10's layout to
+  `ProgramData\Xmip`: a service's programs in a folder only administrators
+  write, which refines clause 10's `ProgramData\Xmip` and is the drafting's,
+  the owner's to strike.
+- `linux/` — clause 3's `.deb` and `.rpm` from one nfpm 2.48 definition, a
+  systemd unit, `/opt/xmip`. nfpm, not `cargo-deb` or
+  `cargo-generate-rpm`: those build from the crate's own manifest and
+  features, and a package carries what `Build-XmipService -Site` built.
+  **Written, not built.**
+- `macos/` — **clause 7 is amended**: macOS is no longer archive only. A
+  `.pkg`, pkgbuild's component in productbuild's distribution, registers a
+  launchd daemon, as ADR-0018's amendment of 2026-09-28 already runs
+  `xmip-service` under launchd; `/opt/xmip`. **Written, not built.** A
+  `.pkg` Gatekeeper opens is signed with a Developer ID Installer
+  certificate and notarized, and both need an Apple Developer Program
+  membership: the owner's.
+- `archive/` — clause 5's portable archive, a zip on Windows, with a README
+  for the person who wants no installer.
+
+There is no container file in the estate, so clause 4's OCI image is not
+among them yet.
+
+**One command installs, in every package.** A package carries two files,
+`xmip-service` and the runtime library, and runs
+`xmip-service --configuration <layout>/config/xmip.toml --node <node>
+--cluster <cluster> --install` (`.src/service/install.rs`): it writes a
+starter cluster `xmip.toml` where there is none — one node, offline
+(ADR-0045), its operate listener's local endpoint named `xmip-<node>` like
+its service (ADR-0014, amendment 2026-10-13) — slices `xmip-node.toml` from
+it, makes `modules`, `logs`, the data directory and `data/audit`, and
+registers and starts the Xmip Service that `registration.rs` defines, to
+start with the machine. `--configuration <layout>/config/xmip-node.toml
+--uninstall` stops the service, waits for the drain and removes it, and
+deletes nothing else (ADR-0040): no configuration, data, audit or log. A
+configuration already there is never written over. So an installer
+*registers what the runtime writes rather than a copy of it* (ADR-0018,
+amendment 2026-09-28), and the layout and the starter are written once.
+The service's environment carries `XMIP_AUDIT_DIRECTORY`, the node's
+`data/audit` (ADR-0062), from the definition `--definition` prints. The
+node and cluster default to the machine's name — the MSI's `XMIP_NODE` and
+`XMIP_CLUSTER`, the Linux and macOS scripts' environment of the same names
+— which is the drafting's.
+
+**One entry point builds them: `Build-XmipService -Package`** — `msi`,
+`deb`, `rpm`, `pkg`, `archive` — a parameter on the known noun, no new
+command. On Windows it builds the runtime library beside `xmip-service`
+with the same cargo arguments, then the MSI with `dotnet build` and the
+winget manifest, and the zip, under `.local-work/package/<version>`; the
+architecture is the `--target` triple's, else the machine's. `deb`, `rpm`
+and `pkg` are REFUSED in words naming what their build needs.
+
+**Open for the owner:**
+
+- **WiX's fee.** WiX Toolset 6 and later carry the Open Source Maintenance
+  Fee for commercial users; WiX 7's EULA (OSMF EULA 1.1) asks an
+  organization with more than US$10,000 a year in revenue to sponsor the
+  `wixtoolset` GitHub organization, and WiX 7 builds nothing until the EULA
+  is accepted, once per user and machine
+  (<https://docs.firegiant.com/wix/osmf/>). Whether Xmip accepts it is his
+  decision, not taken here: nothing in the estate accepts it, and
+  `-Package msi` is REFUSED, naming the command that would, until he has.
+- **The service account.** No record names the account a node's service
+  runs as: `deployment-model.md` section 5 lists the kinds per platform,
+  `registration.rs` says the platform default — LocalSystem on Windows,
+  root under systemd and launchd — is not what a production node wants, and
+  open problem 28 has the group Managed Service Account. The packages
+  register the platform default until he names one.
+- **The names a package publishes under**: winget's `Xmip.Xmip`, the
+  download address of a GitHub release, the macOS identifier
+  `io.github.illenilsson.xmip`, and the publisher `Xmip`. Nothing is
+  published yet.
+- **What the local endpoint grants.** The starter leaves `[operate] role`
+  out, so a local operator tool reads the node and acts on nothing
+  (Observer); whether a package's starter should grant more, and whether
+  every node serves a local endpoint by default, stay his (ADR-0014,
+  amendment 2026-10-13).
+- **Signing.** Nothing is signed: no Authenticode on the MSI or the
+  programs, no Developer ID on macOS, no package signature on Linux.
+- **Two starters.** The Ansible role writes its own starter from a template
+  (`deploy/dsc/ansible`); it could run `--install` instead.
+- **The event source.** The MSI does not register the Windows event source
+  `Xmip` (ADR-0062 clause 3); `Install-XmipPrerequisite` still does.
+- **A site whose node starts on its own.** A one-machine node is its own
+  embedded Storage node and needs SQLite for its administration and audit
+  databases, which only the `storage` role brings; no example site has it,
+  so a package built from `personal-computer` installs a node that is
+  refused as it starts (*was not built with xmip-core-persist-sqlite*).
+  `personal-computer` with `storage` among its roles resolves and starts;
+  which site an end user's package is built from is his.
+
+**Verified, 2026-10-13, on Windows x64.** `xmip-service`'s and
+`registration.rs`'s unit tests, clippy and rustfmt pass. The zip was built by
+`Build-XmipService -Package archive`, unpacked, and `--install` run from it
+without elevation: it wrote the starter, the slice and the folders, and the
+Service Control Manager refused the registration with access denied, which
+`--install` reported in its words with exit 2; `--definition` printed the
+same registration, `--uninstall` said nothing was registered, and the node,
+built with SQLite as above, started in a console and served its local
+endpoint 275 ms after start. **The MSI is written and not built:** WiX 7
+refused the build with WIX7015 until its EULA is accepted, so neither the
+MSI nor its winget manifest has been made, validated or installed, and
+nothing was installed elevated (no UAC prompt is ever launched). `-Package
+deb`, `rpm` and `pkg` are refused in words.

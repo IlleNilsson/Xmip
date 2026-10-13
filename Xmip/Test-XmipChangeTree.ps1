@@ -107,11 +107,40 @@ function Test-XmipChangeTree {
                 Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
         }
 
+        # A line before each module saying where the landing is and about how
+        # long is left (the owner, 2026-10-13: *A timer, letting one know how
+        # long it is going to take*): from this run's modules once one is
+        # measured, before that from the last landing's, which is recorded.
+        [hashtable] $lastTime = if ($NoVerify) { @{} }
+        else { Get-XmipVerifyTime -RepositoryRoot $RepositoryRoot }
+        [string[]] $finalStep = if ($Platform) { @('.', 'test/') } else { @('.') }
+        [bool] $finalKnown =
+            @($finalStep | Where-Object { -not $lastTime.ContainsKey($_) }).Count -eq 0
+        [hashtable] $progress = @{
+            Total     = $Ordered.Count
+            Recorded  = @($Ordered | Where-Object { $lastTime.ContainsKey($_) } |
+                    ForEach-Object { $lastTime[$_] })
+            Final     = if ($finalKnown) {
+                [timespan]::FromTicks(($finalStep | ForEach-Object { $lastTime[$_].Ticks } |
+                            Measure-Object -Sum).Sum)
+            }
+            FinalName = if ($Platform) { 'the root crate and test/' } else { 'the root crate' }
+        }
+        [List[timespan]] $measured = [List[timespan]]::new()
+        [int] $position = 0
+        [System.Diagnostics.Stopwatch] $clock = [System.Diagnostics.Stopwatch]::new()
+
         foreach ($module in $Ordered) {
             if ($NoVerify) {
                 $verified.Add($module)
                 continue
             }
+
+            $position++
+            [string] $remaining =
+                Get-XmipRemainingTime -Index $position -Measured $measured.ToArray() @progress
+            Write-Host $remaining -ForegroundColor Cyan
+            $clock.Restart()
 
             # A module is verifiable if it has a Cargo.toml or a project file.
             [string] $modulePath = Join-Path -Path $RepositoryRoot -ChildPath $module
@@ -218,6 +247,9 @@ function Test-XmipChangeTree {
             }
 
             $verified.Add($module)
+            [timespan] $took = $clock.Elapsed
+            $measured.Add($took)
+            Set-XmipVerifyTime -RepositoryRoot $RepositoryRoot -Name $module -Duration $took
         }
 
         # The service itself — the root crate, which links every technology
@@ -230,17 +262,36 @@ function Test-XmipChangeTree {
             Module         = @('.')
             Patch          = $patch
         }
+
+        if (-not $NoVerify) {
+            [string] $remaining = Get-XmipRemainingTime -Index ($Ordered.Count + 1) -Measured (
+                $measured.ToArray()) @progress
+            Write-Host $remaining -ForegroundColor Cyan
+        }
+
+        $clock.Restart()
         Clear-XmipUnhashedLibrary -TargetDirectory $sharedTarget -Library $unhashed
         [bool] $serviceBroken = -not $NoVerify -and @(Test-XmipModule @service).Count -gt 0
 
+        if (-not $NoVerify -and -not $serviceBroken) {
+            Set-XmipVerifyTime -RepositoryRoot $RepositoryRoot -Name '.' -Duration $clock.Elapsed
+        }
+
         # The root's test/ loads the runtime too: never the stale one a
         # module's own target directory may still hold.
+        $clock.Restart()
+
         if (-not $NoVerify -and $Platform) {
             . $useRuntime
         }
 
         [bool] $platformBroken = -not $NoVerify -and $Platform -and
             (-not $runtimeBuilt -or -not (Test-XmipPlatform -RepositoryRoot $RepositoryRoot))
+
+        if (-not $NoVerify -and $Platform -and -not $platformBroken) {
+            [timespan] $took = $clock.Elapsed
+            Set-XmipVerifyTime -RepositoryRoot $RepositoryRoot -Name 'test/' -Duration $took
+        }
 
         if ($serviceBroken -or $platformBroken) {
             [string] $unverified = 'The platform repository did not verify; nothing landed.'
@@ -258,85 +309,6 @@ function Test-XmipChangeTree {
     }
 
     [pscustomobject]@{ Verified = $verified.ToArray(); Skipped = $skipped.ToArray(); Failed = '' }
-}
-
-function Test-XmipPlatform {
-    <#
-        .SYNOPSIS
-            Runs the platform repository's own tests, every file of test/, in a
-            fresh pwsh, and says whether they passed.
-
-        .DESCRIPTION
-            A change to the root — the landing scripts and their tests among it —
-            went straight to the pin step unverified (an external review,
-            2026-10-05).
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $RepositoryRoot
-    )
-
-    Write-Host '== the platform repository (test/)' -ForegroundColor Cyan
-
-    [string] $tests = Join-Path -Path $RepositoryRoot -ChildPath 'test'
-    [string] $manifest = Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1'
-
-    # The estate suite's own Pester configuration — its *.Test.ps1 names
-    # among it — never a second one written here.
-    [scriptblock] $run = {
-        param([string] $Manifest, [string] $Path)
-
-        Import-Module -Name $Manifest
-        [PesterConfiguration] $configuration = & (Get-Module -Name Xmip) {
-            param([string] $Path) Get-XmipPesterConfiguration -Path $Path
-        } $Path
-        $configuration.Run.Exit = $true
-        $configuration.Output.Verbosity = 'Normal'
-        Invoke-Pester -Configuration $configuration
-    }
-
-    & pwsh -NoProfile -Command $run -args $manifest, $tests 2>&1 |
-        ForEach-Object { Write-Host $_ }
-
-    $LASTEXITCODE -eq 0
-}
-
-function Test-XmipRuntimeLibraryReader {
-    <#
-        .SYNOPSIS
-            Whether a Rust module's sources read XMIP_RUNTIME_LIBRARY, the
-            variable naming the runtime library its tests load.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    [System.IO.FileInfo[]] $sources = @(
-        foreach ($folder in @('.src', 'src')) {
-            [string] $at = Join-Path -Path $Path -ChildPath $folder
-            if (Test-Path -LiteralPath $at) {
-                Get-ChildItem -LiteralPath $at -Recurse -Filter '*.rs' -File
-            }
-        }
-    )
-
-    if ($sources.Count -eq 0) {
-        return $false
-    }
-
-    [hashtable] $search = @{
-        LiteralPath = $sources.FullName
-        Pattern     = 'XMIP_RUNTIME_LIBRARY'
-        SimpleMatch = $true
-        Quiet       = $true
-    }
-
-    [bool] (Select-String @search)
 }
 
 function Build-XmipTestLibrary {

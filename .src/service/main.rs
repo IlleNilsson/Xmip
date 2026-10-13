@@ -5,6 +5,8 @@
 //! xmip-service --configuration <path> [--console] [--purpose test|runtime]
 //! xmip-service --configuration <path> --definition
 //! xmip-service --configuration <cluster xmip.toml> --node <name> --slice
+//! xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name> --install
+//! xmip-service --configuration <path> --uninstall
 //! ```
 //!
 //! It starts the node configured at `<path>` with the technologies this build
@@ -35,6 +37,14 @@
 //! one slicing (`slice.rs`; ADR-0031, amendment 2026-10-03): desired state
 //! writes each node what it prints.
 //!
+//! `--install` lays a node out from its cluster's `xmip.toml` — a starter
+//! where there is none, the node's slice beside it, its data and audit
+//! directories — and registers and starts the service `--definition`
+//! prints; `--uninstall` stops and removes the service of the node
+//! configured at `<path>` and deletes nothing
+//! (`install.rs`). Every package runs these two (ADR-0015, amendment
+//! 2026-10-13).
+//!
 //! The node keeps its runtime store where its configuration's `[store]`
 //! says, over `RocksDB`, the one engine, sealed under the platform's key
 //! store (ADR-0018, amendments 2026-09-30 and 2026-10-01); a build without
@@ -56,6 +66,7 @@ mod console;
 #[cfg(windows)]
 mod control_manager;
 mod definition;
+mod install;
 mod orders;
 mod publication;
 mod readiness;
@@ -95,6 +106,8 @@ fn main() -> ExitCode {
     match arguments.mode {
         Mode::Definition => definition::print(&audit, &arguments),
         Mode::Slice => slice::print(&audit, &arguments),
+        Mode::Install => install::install(&audit, &arguments),
+        Mode::Uninstall => install::uninstall(&audit, &arguments),
         Mode::Console => console::run(&program, &audit, &arguments),
         #[cfg(windows)]
         Mode::Service => control_manager::run(program, audit, arguments),

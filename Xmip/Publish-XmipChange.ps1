@@ -64,6 +64,18 @@ function Publish-XmipChange {
             hand-run loop pushed 105 files of `target/` to xmip-core: it checked
             whether a module was dirty and never what was dirty.
 
+            **Generated documents first.** The estate map and the decision
+            index are regenerated from the working tree before anything is
+            read or verified, so test/ holds them against the tree being
+            landed and the pin commits them with it.
+
+            **Progress as it goes.** Before each module it prints a line such
+            as `module 76 of 205 (37 %), about 45 minutes left`: the average
+            of the modules measured so far, or, before the first, what the
+            same modules took when last verified, plus the root crate and
+            test/ from their last run. The durations are kept on this machine
+            in .local-work/verify-time.json.
+
             Redirect to capture, per the style document:
 
                 Publish-XmipChange -m 'what changed' *>&1 |
@@ -145,6 +157,13 @@ function Publish-XmipChange {
         Write-XmipAudit -Action 'Publish-XmipChange' -ErrorRecord $_
         break
     }
+
+    # The estate map and the decision index first, before the estate is read
+    # and before anything is verified, so test/ compares them with the tree
+    # being landed and the pin commits them with it. A source change used to
+    # fail EstateMap.Test.ps1 on every landing until someone saved the map;
+    # four landings did on 2026-10-13.
+    Update-XmipGeneratedDocument -RepositoryRoot $RepositoryRoot
 
     # Not $all. PowerShell variable names are case-insensitive, so that name
     # overwrites the -All switch parameter and the next call hands an array to

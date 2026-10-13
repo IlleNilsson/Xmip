@@ -235,7 +235,12 @@ pub fn fail(audit: &ProgramAudit, action: &str, problem: &str) {
     kept(audit.failed(action, problem));
 }
 
-fn record(audit: &ProgramAudit, action: &str, phase: ExecutionPhase, properties: &[(&str, &str)]) {
+pub fn record(
+    audit: &ProgramAudit,
+    action: &str,
+    phase: ExecutionPhase,
+    properties: &[(&str, &str)],
+) {
     let properties: BTreeMap<String, String> = properties
         .iter()
         .map(|(key, value)| ((*key).to_string(), (*value).to_string()))

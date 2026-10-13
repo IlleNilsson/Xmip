@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Xmip .pkg for macOS (ADR-0015, amendment 2026-10-13): productbuild's
+  distribution file around one component package, which pkgbuild makes from
+  the two binaries under opt/xmip/bin and scripts/postinstall. The two
+  commands, in order, are in deploy/package/README.md (an XML comment cannot
+  hold their double-hyphen options).
+
+  WRITTEN, NOT BUILT. Builds are Windows-only by the owner's choice of the
+  moment: nothing has been packaged, signed or installed from this file, and
+  Build-XmipService -Package pkg refuses on this machine, saying what a macOS
+  build needs. A package a person can open without Gatekeeper refusing it is
+  signed with a Developer ID Installer certificate and notarized by Apple,
+  and both need an Apple Developer Program membership: the owner's.
+
+  postinstall runs xmip-service with its install switch, which lays out /opt/xmip and
+  registers the launchd daemon registration.rs writes. macOS has no removal
+  for a package; README.md in deploy/package says the one command that
+  removes the daemon and keeps configuration and data (ADR-0040).
+-->
+<installer-gui-script minSpecVersion="2">
+  <title>Xmip</title>
+  <options customize="never" require-scripts="true" hostArchitectures="arm64,x86_64" />
+  <domains enable_localSystem="true" enable_anywhere="false"
+           enable_currentUserHome="false" />
+  <choices-outline>
+    <line choice="node" />
+  </choices-outline>
+  <choice id="node" title="Xmip node">
+    <pkg-ref id="io.github.illenilsson.xmip" />
+  </choice>
+  <pkg-ref id="io.github.illenilsson.xmip">xmip-node.pkg</pkg-ref>
+</installer-gui-script>

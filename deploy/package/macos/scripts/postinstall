@@ -1,0 +1,21 @@
+#!/bin/sh
+# After the .pkg is unpacked (distribution.xml): xmip-service lays the node
+# out under /opt/xmip and registers it — the starter config/xmip.toml where
+# there is none, the node's slice, the folders, and the launchd daemon
+# registration.rs writes, loaded. An upgrade keeps the configuration and
+# loads the daemon again on the new program.
+#
+# XMIP_NODE and XMIP_CLUSTER name the node and the cluster for a machine
+# with no xmip.toml yet; each is the machine's local host name unless set.
+#
+# WRITTEN, NOT RUN: builds are Windows-only for now (distribution.xml).
+set -e
+
+node="${XMIP_NODE:-$(scutil --get LocalHostName)}"
+cluster="${XMIP_CLUSTER:-$node}"
+
+/opt/xmip/bin/xmip-service \
+    --configuration /opt/xmip/config/xmip.toml \
+    --node "$node" \
+    --cluster "$cluster" \
+    --install

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Xmip MSI (ADR-0015 clause 2, amendment 2026-10-13). It installs
+  xmip-service and the runtime library under Program Files\Xmip\bin, and then
+  runs xmip-service itself with ProgramData\Xmip as the layout (clause 10).
+  Its install switch writes the starter xmip.toml where there is none,
+  slices the node's xmip-node.toml, makes the modules, logs, data and audit
+  folders, and registers and starts the Xmip Service — automatic start, as
+  `registration.rs` defines it. Removing the MSI runs its uninstall switch,
+  which stops and removes the service; configuration, data, audit and logs
+  stay
+  (ADR-0040: Xmip does not delete). The layout, the starter and the
+  registration are xmip-service's, written once; nothing here copies them.
+
+  Two public properties, each the machine's name unless given, used only
+  where the machine has no xmip.toml yet:
+
+    XMIP_NODE     the node this machine is
+    XMIP_CLUSTER  the cluster the starter xmip.toml names
+
+  msiexec /i xmip-<version>-<site>-x64.msi XMIP_NODE=<node> XMIP_CLUSTER=<cluster>
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Xmip"
+           Manufacturer="Xmip"
+           Version="$(var.Version)"
+           UpgradeCode="158C1E62-DDD5-409A-AFB0-394AB4E96963"
+           Scope="perMachine"
+           Compressed="yes">
+    <SummaryInformation Description="Xmip, built from site $(var.Site)" />
+    <MajorUpgrade DowngradeErrorMessage="A newer Xmip is installed on this machine." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/IlleNilsson/Xmip" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="XMIP_NODE" Secure="yes" />
+    <Property Id="XMIP_CLUSTER" Secure="yes" />
+    <SetProperty Id="XMIP_NODE" Value="[ComputerName]" After="AppSearch" Sequence="both"
+                 Condition="NOT XMIP_NODE" />
+    <SetProperty Id="XMIP_CLUSTER" Value="[ComputerName]" After="AppSearch" Sequence="both"
+                 Condition="NOT XMIP_CLUSTER" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Xmip">
+        <Directory Id="BINFOLDER" Name="bin" />
+      </Directory>
+    </StandardDirectory>
+    <!-- Named for its path only: xmip-service makes it and what is in it. -->
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="LAYOUTFOLDER" Name="Xmip">
+        <Directory Id="CONFIGFOLDER" Name="config" />
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="Node" Title="Xmip node" Level="1">
+      <Component Id="XmipService" Directory="BINFOLDER">
+        <File Id="XmipServiceExe" Source="$(var.BinaryDirectory)\xmip-service.exe" />
+      </Component>
+      <Component Id="RuntimeLibrary" Directory="BINFOLDER">
+        <File Id="RuntimeLibraryDll" Source="$(var.BinaryDirectory)\xmip_core_runtime.dll" />
+      </Component>
+    </Feature>
+
+    <!--
+      xmip-service does the work, deferred and as the installer's own
+      account, its words in the MSI log (WiX's quiet execution). A refusal
+      fails the install, and the rollback removes the service again.
+    -->
+    <CustomAction Id="XmipInstall" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+                  DllEntry="WixQuietExec" Execute="deferred" Impersonate="no"
+                  Return="check" />
+    <CustomAction Id="XmipInstallRollback" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+                  DllEntry="WixQuietExec" Execute="rollback" Impersonate="no"
+                  Return="ignore" />
+    <CustomAction Id="XmipUninstall" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+                  DllEntry="WixQuietExec" Execute="deferred" Impersonate="no"
+                  Return="check" />
+    <!-- A line break inside a value is read as a space, which a command line
+         takes as the space between two arguments. -->
+    <SetProperty Id="XmipInstall" Before="XmipInstall" Sequence="execute"
+                 Value="&quot;[#XmipServiceExe]&quot;
+                        --configuration &quot;[CONFIGFOLDER]xmip.toml&quot;
+                        --node &quot;[XMIP_NODE]&quot;
+                        --cluster &quot;[XMIP_CLUSTER]&quot; --install" />
+    <SetProperty Id="XmipInstallRollback" Before="XmipInstallRollback" Sequence="execute"
+                 Value="&quot;[#XmipServiceExe]&quot;
+                        --configuration &quot;[CONFIGFOLDER]xmip-node.toml&quot; --uninstall" />
+    <SetProperty Id="XmipUninstall" Before="XmipUninstall" Sequence="execute"
+                 Value="&quot;[#XmipServiceExe]&quot;
+                        --configuration &quot;[CONFIGFOLDER]xmip-node.toml&quot; --uninstall" />
+
+    <InstallExecuteSequence>
+      <Custom Action="XmipInstallRollback" Before="XmipInstall"
+              Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="XmipInstall" Before="InstallFinalize"
+              Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="XmipUninstall" Before="RemoveFiles"
+              Condition="REMOVE~=&quot;ALL&quot;" />
+    </InstallExecuteSequence>
+  </Package>
+</Wix>

@@ -758,7 +758,10 @@ release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01).
+`Build-XmipService` (amendment 2026-10-01). macOS gets a `.pkg` with a
+launchd daemon, and every package installs by running
+`xmip-service --install`; only the Windows packages are built for now
+(amendment 2026-10-13).
 
 → [Packaging and distribution, in full](ADR-0015-packaging.md)
 
@@ -1121,7 +1124,7 @@ You have a word. This gives you the decision that governs it.
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | mounted repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
-| MSI, winget, deb, rpm, OCI | [Packaging and distribution](ADR-0015-packaging.md) |
+| MSI, winget, deb, rpm, OCI, pkg, launchd | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
