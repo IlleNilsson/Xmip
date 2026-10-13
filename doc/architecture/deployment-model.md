@@ -271,16 +271,40 @@ The rules:
 
 ### The operate listener
 
-A node is operated from another machine in two ways, and only two
+**Every surface operates a node over its operate listener** (ADR-0067;
+ADR-0014, amendment 2026-10-13): its health, figures and scopes, its
+Journeys, Dead Messages and Subscriptions, the acts on them and the follow
+go over gRPC, from the node's own machine and another alike. The C ABI is
+called directly only for what has no node behind it — validating, editing
+and slicing configuration, the language server's design exports, module
+probing, the audit file and Modules.
+
+**On the node's own machine** a surface reaches its local endpoint: a named
+pipe on Windows, a Unix domain socket elsewhere (ADR-0052, amendment
+2026-10-05: *gRPC over net pipe*), without TLS — the one exception inside
+one machine ADR-0063 clause 1 allows, recorded in the node's audit where it
+is made (`operate.local`). The operating system is the gate: on Windows the
+pipe's security descriptor admits the account that made it — the node's —
+`SYSTEM` and the machine's administrators, and no caller from another
+machine; on Unix the socket file is `0600`, the node's account and the
+superuser. Who acts is the user the operating system says the connecting
+process runs as — `DOMAIN\user` on Windows, the user name elsewhere — never
+a name the caller gives, and its role is the one `[operate] role` states.
+A bare name is `\\.\pipe\<name>` on Windows and a file in the temporary
+directory on Unix; on a machine other users log on to, give a path in a
+directory only the node's account and its operators reach.
+
+**From another machine** a node is operated in two ways, and only two
 (ADR-0014, amendment 2026-10-12). **A command runs there over shell
 remoting** — `ssh <host> xmip-cli …`, PowerShell Remoting over WinRM or
 SSH — and brings that remoting's own authentication. **A surface reads,
-follows and acts on the node over its operate listener** (ADR-0067): gRPC on
+follows and acts on the node over its operate listener**: gRPC on
 TCP at the node's one address, on the operate plane's own port, inside
-Xmip's mutual TLS (ADR-0063). The node's configuration names it:
+Xmip's mutual TLS (ADR-0063). The node's configuration names both:
 
 ```toml
 [operate]
+local = "xmip-node1"                # the local endpoint's name or path
 listen = "0.0.0.0:7401"             # the node's address, the plane's port
 certificate = "tls/node.pem"
 key = "tls/node.key"
@@ -288,11 +312,13 @@ anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
 role = "operator"                   # every proven caller's; Observer if left out
 ```
 
-Every caller presents a certificate reaching `anchors`, and its subject is
-who acts — never a name the caller gives; `role` is what every such caller
-may do, and an act a role may not take is refused in words and audited
-(ADR-0009). A node with no `[operate]` serves none and is operated on its own
-machine only. SignalR is only between a web host and the browser it serves.
+`listen` takes `certificate`, `key` and `anchors`; either endpoint may
+stand alone. Every caller on the network presents a certificate reaching
+`anchors`, and its subject is who acts — never a name the caller gives;
+`role` is what every proven caller may do, on either endpoint, and an act a
+role may not take is refused in words and audited (ADR-0009). A node with
+no `[operate]` serves neither, and no surface operates it. SignalR is only
+between a web host and the browser it serves.
 
 ### Security profiles
 
@@ -744,3 +770,17 @@ mitigates avoidable loss:
 - checkpoint before externally visible side effects where possible;
 - deduplicate where receive or failover can replay work;
 - audit the Journey.
+
+## A device that cannot host a node's listeners
+
+Checked 2026-10-13 against what exists, not assumed: a microcontroller that
+can run Xmip's own HTTP/2 and TLS hosts a node's operate listener like any
+node — HTTP/2 over TLS 1.3 is served from an ESP32 in Rust today
+(<https://c410-f3r.github.io/thoughts/esp32-server-distributing-http2-streams-over-tls/>),
+though no example yet shows the client certificate Xmip's mutual TLS asks
+for. A smaller one, without a network stack or an operating system to carry
+HTTP/2 and TLS (ST's own answer for gRPC on STM32:
+<https://community.st.com/t5/stm32-mcus-embedded-software/grpc-on-stm32/td-p/780672>),
+is an endpoint: a Party's device a gateway node reaches through a transport
+it speaks — MQTT, CoAP, a serial line — and the gateway is what the operator
+surfaces operate. Which chips are which is `doc/planning/compatibility.md`'s.

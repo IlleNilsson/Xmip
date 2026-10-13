@@ -249,3 +249,34 @@ a surface; `xmip_cluster_views_v1` answers whether the text is a cluster's
 or a node's (`document`). The Operation Web has no editor (the owner: *I do
 not see that need for Operation Web version*). ADR-0031, amendment
 2026-10-05.
+
+## Amendment, 2026-10-13: create, edit, delete; suggestions, lookups, validations
+
+The owner, 2026-10-13, trying the extension: *Nice attempt, but not really
+usefull VS Code extension*; what it must do: *Create, Edit, Delete.
+Suggestions, Lookups, Validations*; and *Refine it and I'll try again.*
+The text editor over the cluster's `xmip.toml` is where a developer works,
+so it gains all six, each by clause 5: the rules in Rust, reached through
+the runtime's library, and the extension only wiring.
+
+Built 2026-10-13. `xmip-core-configure` says what an editor needs, in the
+answer of `xmip_cluster_views_v1`: `written`, where each table, key and
+value is (`written.rs`); `references`, each name standing for an entry
+declared elsewhere — a Receive Location's `receive_port`, a Send Port
+Group's `send_ports`, a Subscription's `destination`, a binding's `name`,
+each bound Location's `name` and `node`, a node's own `node_name` — with
+what it names and every name it may take (`references.rs`); and `keys`,
+every key each table may hold, its kind, words and requirement, read from
+configure's own types by listening to their `Deserialize`, so no key is
+listed twice (`keys.rs`, `shape.rs`, `probe.rs`). The runtime adds its
+`[tuning]` declaration beside them. `xmip_cluster_edit_v1` gains `rename`
+(an entry or a node, and every name standing for it), `refer` and
+`rename-key`, and `remove-entry` is refused while anything names the entry,
+saying which reference holds it, unless `references`, which removes those
+too (`reference_edit.rs`). `xmip-lsp` answers completion, hover,
+definition, references, the outline, prepare-rename and rename, code
+actions — add, rename, delete, delete with its references, and a quick fix
+for each problem the runtime reports where the fix is determinable — and
+three commands that make the edits; the extension registers **Xmip: Add**,
+**Rename** and **Delete**, which ask only what the server sends them to ask.
+Parties are not in the configuration yet, so none is suggested.

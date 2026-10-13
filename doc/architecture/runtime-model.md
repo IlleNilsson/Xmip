@@ -1352,7 +1352,11 @@ Since 2026-10-12 an operator on another machine takes them over the node's
 operate listener (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC inside
 Xmip's mutual TLS, the act the certificate's subject's, admitted by the role
 the node's `[operate]` grants and applied by the same one apply as an order
-(`applied::apply`). Start, Pause, Continue and Stop on one Journey are not
+(`applied::apply`). Since 2026-10-13 an operator on the node's own machine
+takes them over the same listener's local endpoint — a named pipe on
+Windows, a Unix domain socket elsewhere — the act the user's the operating
+system proves (ADR-0014, amendment 2026-10-13): every .NET surface operates
+a node over gRPC, here and elsewhere alike. Start, Pause, Continue and Stop on one Journey are not
 built.
 
 ## 14. Replay

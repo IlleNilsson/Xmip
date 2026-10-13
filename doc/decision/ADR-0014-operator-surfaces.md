@@ -25,7 +25,9 @@ Across a language boundary everything goes through the C ABI; Rust to Rust,
 through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
 on the runtime's traits, so it runs where .NET does not; the PowerShell module
 and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
-(`Xmip.Abi`).
+(`Xmip.Abi`). The four stay, each for its purpose; the desktop runs on Windows
+and macOS, and on Linux only through Microsoft's experimental GTK4 backend
+(amendment 2026-10-13).
 
 **No surface goes through another surface to reach Xmip.** `xmip-core-abi` is the interface *into* Xmip —
 configuration, runtime, observing, eventing, auditing — and not only the
@@ -43,9 +45,12 @@ written specification rather than by a Rust library inside one executable.
 Observation never sits in the message path and is lossy by design; `report` and
 `audit` are the durable records. A command is run on another machine through
 existing shell remoting — PowerShell Remoting over WinRM or SSH, and the CLI
-over SSH; a surface that reads or follows another node does so over gRPC on
-TCP (ADR-0052, amendment 2026-10-05), and SignalR is only between the web host
-and a GUI client.
+over SSH; a surface operates a node over gRPC to its operate listener — on
+TCP inside mutual TLS from another machine, at its local endpoint, a named
+pipe or a Unix domain socket, from its own — and calls the C ABI directly
+only for what has no node behind it (ADR-0052, amendment 2026-10-05;
+amendment 2026-10-13), and SignalR is only between the web host and a GUI
+client.
 
 ## Context
 
@@ -690,3 +695,111 @@ Provenance: the owner's rulings, quoted; the plane's shape — gRPC on the
 estate's own HTTP/2, JSON messages, the follow as a held wait, the gate
 moved into Rust, `[operate]` and its keys — is the assistant's, for the
 owner to overrule.
+
+## Amendment, 2026-10-13: the four surfaces stay, each for its purpose
+
+**Corrects clause 12 where it says MAUI runs on Linux.** .NET MAUI supports
+Windows and macOS; on Linux it runs only through Microsoft's experimental
+GTK4 backend, maui-labs
+(<https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4>),
+which Microsoft does not support. Clause 12 chose MAUI so that *every
+operator surface runs on Windows, macOS and Linux*; for the desktop that
+holds on Windows and macOS, and on Linux only experimentally. Told so, and
+asked whether the desktop should go and the web GUI be the one GUI, the
+owner, 2026-10-13: *We are keeping CLI, PowerShell, Desktop via MAUI, Web
+via Blazor. All (G)UI Tools has there purpose.*
+
+- **The four surfaces stay**: `xmip-cli`, the PowerShell module, the MAUI
+  desktop and the Blazor web, each for its purpose. An operator on Linux
+  has the command line, the PowerShell module and the web GUI, which run
+  there as on the other two; the desktop is Windows and macOS, and Linux as
+  far as the experimental backend carries it.
+- **The desktop's configuration logic is placed beneath it.** The cluster's
+  file opened, compared, locked and written whole, its slices delivered to
+  each node, and Validate, Save and Plan with their audit
+  (`ClusterConfiguration`, `SliceDelivery`, `NodeDelivery`, `ClusterSave`,
+  `RuntimeCommands`) moved from `Xmip.Operations` to `Xmip.Surface`, and
+  their tests to `Xmip.Surface.Test`, so they are proved without MAUI; the
+  desktop keeps its pages. The web GUI does not gain the editor.
+- `README.md`, the gui README and `doc/planning/compatibility.md` say where
+  the desktop runs.
+- **A target gets its tools by what its OS offers, not by who makes it.**
+  The owner, the same day: *runtime is goining to all specified targets,
+  Operations is going to various targtes depending if their OS has only UI
+  or GUI, regardless of OS maker.* The runtime is designed for every target
+  `doc/planning/compatibility.md` names. An operating system with a text
+  interface only gets the command line; one with a graphical interface gets
+  the command line and the GUIs too. Xmip is the cross-platform — the X —
+  Messaging & Integration Platform; no surface is chosen by a vendor's name.
+  Which targets are built at a given time is a choice of the moment, not
+  this record's.
+
+## Amendment, 2026-10-13: every .NET surface operates a node over gRPC, here and elsewhere
+
+**Amends the amendment of 2026-10-12 (*across languages the ABI*) where a
+.NET surface operated a node through the C ABI, and its amendment *a surface
+reaches another node over gRPC*, which said it for another machine only.**
+The lead proposed that a .NET surface operate a node on its own machine the
+way it operates one on another; the owner, 2026-10-13, agreeing: *Fix it and
+dissagree more often, just tell me first.*
+
+- **Operating a node goes over gRPC for every .NET surface, local and remote
+  alike**: its health, figures and scopes, its Journeys, Dead Messages and
+  Subscriptions, the acts on them and the follow. On the node's own machine
+  the surface reaches the node's operate listener at its **local endpoint** —
+  a named pipe on Windows, a Unix domain socket elsewhere, as ADR-0052's
+  amendment of 2026-10-05 put it, *gRPC over net pipe* — and from another
+  machine at its operate address, inside Xmip's mutual TLS, as before.
+  `LocalOperator` and `RemoteOperator` in `Xmip.Surface` are the two faces
+  of one `ListenerOperator` over the runtime's client (`xmip_operate.h`
+  section 17: `xmip_remote_open_local_v1`, `xmip_operate_serve_local_v1`);
+  `NativeOperator`, which loaded the runtime into the surface's own process
+  and so operated only the nodes that process ran, is deleted with every
+  use, and `Surface = "native"` with it: a host's document says
+  `Surface = "local"` and `Local = <endpoint>`, a line `--local` or `-Local`.
+  `--runtime` and `-Library` name the library a surface calls the runtime
+  through and choose no surface; a line and a document naming no node say
+  so (`LocalOperator.Unnamed`).
+- **The C ABI stays only for what has no node behind it**: validating,
+  editing and slicing configuration, the language server's design exports,
+  module probing, the audit file read, and Modules (`xmip_module.h`).
+  `ConfigurationRuntime` holds Validate and Plan, which `RuntimeCommands`
+  asks. The command line in Rust is not touched by this amendment; it moves
+  to the runtime's traits on its own (amendment 2026-10-12).
+- **The node's side**: `[operate] local` names the endpoint; `listen`,
+  `certificate`, `key` and `anchors` the network listener, which now may be
+  left out, and either may stand alone (`plane::Listener::local`,
+  `plane::local`). Plain HTTP/2 inside the machine is the one exception
+  ADR-0063 clause 1 allows, said where it is made: an `operate.local` record
+  in the node's audit. The operating system is the gate: on Windows the
+  pipe's security descriptor admits its owner — the node's account —
+  `SYSTEM` and the machine's administrators, and no caller from another
+  machine; on Unix the socket file is `0600`. Who acts is the user the
+  operating system says the connecting process runs as — `DOMAIN\user` on
+  Windows, the user name elsewhere — never a name the caller gives, and its
+  role is the one `[operate] role` states for every proven caller (ADR-0009,
+  note of 2026-10-12). `xmip-service` declares where it is operated
+  (ADR-0053).
+- **Told first, read after.** A `ListenerOperator` tells every watch when the
+  node's publication advances and reads it by the next question; until this
+  date it read and parsed the whole publication before it told.
+- **Measured** on the owner's Windows machine, debug builds: from a node
+  posting its next publication to a follower told on the local endpoint, a
+  median of about 0.22 ms in the runtime (`tests/plane/local.rs`) and about
+  0.3 ms into a .NET watch (`LocalOperatorTest`, held under a millisecond);
+  over loopback TCP with mutual TLS into .NET about 0.55 to 0.6 ms, from the
+  1.7 ms the amendment of 2026-10-12 recorded.
+
+What stays the owner's: the local endpoint admits the node's account and
+the machine's administrators and no one else; whether an operators group
+should be admitted beside them — a group Xmip would name or a deployment
+would — is not decided, nor whether every node should serve a local
+endpoint by default, and by what name. The snapshot surface still leaves an
+act for a running node as an order file it takes at its next look
+(`xmip_order_v1`), a second local way to act on a node this amendment does
+not remove.
+
+Provenance: the owner's agreement, quoted; the endpoint's shape — a named
+pipe with its security descriptor, a `0600` socket, the caller the operating
+system proves, `[operate] local`, `Surface = "local"` — is the assistant's,
+for the owner to overrule.

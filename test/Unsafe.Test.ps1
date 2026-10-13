@@ -18,8 +18,10 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     # The runtime keeps its whole C boundary in one folder (ADR-0050, refined
-    # 2026-09-25): the operator's table and exports (ADR-0027) and the loader
-    # (ADR-0057). Only the runtime has a folder.
+    # 2026-09-25): the operator's table and exports (ADR-0027), the loader
+    # (ADR-0057) and the two Windows calls the local operate endpoint makes
+    # (ffi/system.rs; ADR-0014, amendment 2026-10-13). Only the runtime has a
+    # folder.
     $script:Folder = 'module/platform/runtime/src/ffi/'
 
     # Every other crate: exactly one file, and why it crosses a C interface.
