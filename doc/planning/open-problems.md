@@ -1323,9 +1323,14 @@ Xmip's.
 All four options recorded here shared one assumption — that Xmip had to keep
 the fact. It did not; the fact already had an owner.
 
-Two nodes on a lockless protocol (FTP, SFTP, IMAP) is what remains, and
-ADR-0024 clause 6 makes it a placement question: run one of them. The shape of
-that placement is undecided and belongs with Host Services.
+What remained was two nodes on a protocol with no claim of its own. ADR-0024's
+amendment of 2026-10-13 answers it by the owner's principle — every Receive
+Location has one winner per artifact, regardless of protocol — and builds the
+file family's: FTP, FTPS and SFTP claim by the turn and the rename, as the
+file transport does. The rest is recorded there as the next step: the
+brokers' one-consumer delivery declared, the object stores' and databases'
+own exclusive steps, SMB, NFS and WebDAV onto the file family's claim, and the
+claim through Xmip Storage for IMAP, POP3 and the polled reads.
 The four options as they were recorded:
 
 | option | effect |

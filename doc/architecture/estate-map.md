@@ -334,7 +334,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 249987 lines of production
+Where each repository mounts and what it holds: 252221 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -359,17 +359,18 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       4515
+│   │   │   ├── transport                       5338
 │   │   │   │   ├── amqp                        2594
 │   │   │   │   ├── opc-ua                      2419
+│   │   │   │   ├── ftp                         2060
 │   │   │   │   ├── nfs                         2038
 │   │   │   │   ├── smb                         1952
+│   │   │   │   ├── sftp                        1819
 │   │   │   │   ├── mssql                       1795
 │   │   │   │   ├── ibm-mq                      1769
 │   │   │   │   ├── kafka                       1726
 │   │   │   │   ├── http                        1725
 │   │   │   │   ├── mariadb                     1651
-│   │   │   │   ├── sftp                        1465
 │   │   │   │   ├── snmp                        1431
 │   │   │   │   ├── nats-jetstream              1344
 │   │   │   │   ├── as4                         1325
@@ -381,7 +382,6 @@ hold no source to count.
 │   │   │   │   ├── webdav                      1067
 │   │   │   │   ├── iec-61850                   1054
 │   │   │   │   ├── secs-gem                    1039
-│   │   │   │   ├── ftp                          998
 │   │   │   │   ├── nats                         993
 │   │   │   │   ├── imap                         992
 │   │   │   │   ├── ethercat                     978
@@ -393,7 +393,6 @@ hold no source to count.
 │   │   │   │   ├── uds                          900
 │   │   │   │   ├── j1939                        895
 │   │   │   │   ├── bluetooth                    889
-│   │   │   │   ├── file                         887
 │   │   │   │   ├── lorawan                      884
 │   │   │   │   ├── aws-kinesis                  871
 │   │   │   │   ├── activemq                     870
@@ -426,6 +425,7 @@ hold no source to count.
 │   │   │   │   ├── obd-ii                       620
 │   │   │   │   ├── ssdp                         613
 │   │   │   │   ├── dnp3                         610
+│   │   │   │   ├── file                         578
 │   │   │   │   ├── coap                         577
 │   │   │   │   ├── modbus                       545
 │   │   │   │   ├── redpanda                     532
@@ -655,7 +655,7 @@ hold no source to count.
 │       └── configure                           5116
 └── test/
     └── core/
-        └── playground                         10975
+        └── playground                         11279
 ```
 
 ---
