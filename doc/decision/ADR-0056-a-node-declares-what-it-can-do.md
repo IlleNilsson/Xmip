@@ -512,5 +512,8 @@ Data will be the name for Storage Nodes*.
   expect events from the complete cluster*), so a node only for them would
   contradict it.
 - **The test clusters carry one of each kind.** C1 (`test/xmip.toml`): R1,
-  P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/xmip.toml`): R1, S1 and L1.
-  `test/NodeName.Test.ps1` knows the Ln, On and Dn shapes.
+  R2, P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/xmip.toml`): R1, S1 and
+  L1. `test/NodeName.Test.ps1` knows the Ln, On and Dn shapes. R2 joined C1
+  the same day, the owner: *We need an R2, to stress the obvious, concurrecny
+  of reasources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
+  receiving nodes on one shared drop, each file taken by exactly one.

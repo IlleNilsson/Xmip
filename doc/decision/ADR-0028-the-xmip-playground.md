@@ -7,6 +7,7 @@
 - Amended: 2026-09-09, decisions 2 and 3a — difficulty: a stress level every
   scenario runs at, an eighth scenario, storm, and nodes that are processes
 - Amended: 2026-09-30 — a test run can be hidden, by what it declares
+- Amended: 2026-10-13 — the Parties built, and flows named as an ERP's
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -490,3 +491,99 @@ historical errors.*
   determinism stand; the cadence and the spread are new.
 - What an operator does with it is ADR-0052's amendment of the same date:
   a one-minute span, paused and widened to investigate. Not built.
+
+## Amendment, 2026-10-13: the Parties built, and flows named as an ERP's
+
+The owner, 2026-10-13, watching his Playground run: *You have not
+Implementet more Parties than Party-X. It is better, but not good enough.*
+Of its Locations and Ports, one Application named after the test: *just do
+not make sense*, and, asked whether to name them as an ERP's documents:
+*Yes, use ERP names.* And of a name that carried its protocol: *The
+protocol shall not be in the Send or Receive Port, Location. That is
+infered information, which one should se in the operation tools.*
+
+The amendment of 2026-10-06 is built:
+
+- **The Parties are configuration.** The Playground's `configuration/xmip.toml`
+  declares them as `[[parties]]`, each with `name` and `identities`, in the
+  shape `runtime-model.md` gives (ADR-0031, amendment 2026-10-01) —
+  `Party-A` to `Party-E` as shipped, renamed there. The parse is placed once,
+  in `xmip-core-configure` (`configure::party`; the node document's
+  `parties`), which open problem 33 named as missing: a Party without a
+  name or an identity, a name twice, or an identity two Parties hold is a
+  problem every node's binding reports. The cluster designer has a Party
+  view (`configure::views`). Nothing in the Playground's code or tests names
+  a Party; a test reads them from the file.
+- **Several Parties, each on several transports and streams, both
+  directions** (`src/parties.rs`): the Party at a transport's place in the
+  list sends into its Receive Locations and the next Party is delivered to
+  over its Send Locations, so every Party sends and receives, over
+  different transports, and every stream of a transport is its Party's.
+  The identity pipeline runs per Party: the arrival claims the Party's
+  certificate subject, the Receive Location accepts that Party alone and
+  resolves the claim through every Party's identities, and a Send Location
+  presents the same; another Party's subject is refused at authentication.
+- **The fault every 50 seconds** (`src/rotation.rs`): each turn of fifty
+  wall-clock seconds strikes one target for its first ten — one Party's
+  transport on one turn, one stream of the next Party's on the next — round
+  the Parties in order, alternating the side they send into with the side
+  delivered to, with clause 4a's transport, addressing and contract faults.
+  The turn is the clock's, so every node of a run agrees on it, and its
+  target the turn's alone. At `realistic` nothing else is injected, so
+  between faults the board is green; `harsh` and `brutal` add the realistic
+  table scaled as before; `calm` injects nothing. `file` carries no fault
+  at any level, as before.
+- **Drawn and named per Party.** `observe::topology::party::draw` takes the
+  Parties and, for each, the transports it is reached over on each side; a
+  link counts what its stage counted over the Party's transports and its
+  mood is the worst of the Party's endpoints. The Playground's ledger counts
+  per stage and transport, `<node>/<stage>/<transport>`, which a stage's
+  figure sums. A running node still draws `any-party` over every endpoint:
+  no Location says which Party it serves until `accept.party` is read. The
+  roll's first lines and its `start` record name the Parties.
+- **Flows named as an ERP's.** Two Xmip Applications, *Order to cash* and
+  *Procure to pay*: sales orders, purchase order responses, goods receipts,
+  inventory reports and remittance advices received from Parties; order
+  responses, despatch advices, invoices — a second Send Location for
+  failover — purchase orders, item master and payments sent to them. Their
+  Subscriptions together pick up every content contract once. A name says
+  the document and the Party, never the transport: that is each Location's
+  configuration, and the operation tools show it — the Topology draws an
+  endpoint per transport beneath each stage. The bindings are written from
+  the sections, so no Location, Port or Subscription is named in code.
+
+- **The drop box: many files, one winner each** (`src/drop_box.rs`). The
+  owner, the same day: *induce multiple files for FILE and (S)FTP(S) so I
+  can see that it holds up*, and *only one Rn should win.* Every round the
+  roll drops a burst of eight files for each Party into the Party's own
+  file Receive Location under the cluster's shared directory, through the
+  file transport's send; every node that declared receive reads every
+  Party's Location through the file transport's receive, whose claim is
+  the rename (ADR-0024, amendment 2026-09-26), so whichever node's rename
+  succeeds has the file. The winner accepts and signs it; each node counts
+  what it took at `<node>/drop-box/<party>`, so the board shows the split
+  between the receiving nodes Location by Location; and the roll judges
+  every file ten seconds after it was dropped, saying at `<root>/drop-box`
+  and in its `stop` record either *every file taken by exactly one
+  receiving node*, with the split, or each file taken twice and by whom and
+  each never taken. FTP, SFTP and FTPS are not in it yet: their Receive
+  Locations have no claim of their own (`NoNativeClaim`, ADR-0024 clause
+  5), the Playground has no FTP or SFTP server both receiving nodes can
+  reach — each loopback serves one client for one round — and FTPS waits
+  for the estate's TLS on that socket.
+
+This supersedes ADR-0052's amendment of 2026-09-29 where it says a
+Playground cluster has one Party, `party-x`.
+
+Proved by `configure`'s `party.rs`, `section.rs` and `views.rs`, `observe`'s
+`topology/party.rs`, and the Playground's `parties.rs`, `rotation.rs`,
+`identity.rs`, `subscribing.rs`, `topology.rs`, `run.rs` and `drop_box.rs`.
+
+Not built: the Receive Location's `accept.party`, so a Location named for a
+Party is not yet held to it, and the `[run]` table carries no Parties.
+
+Provenance: the owner's words above. The spread by place, the turn of ten
+seconds in fifty, the alternation of sides and kinds, the ERP flows'
+document names and which contract family each Subscription takes, and the
+problems the Parties' parse reports are the assistant's drafting, for the
+owner to overrule.

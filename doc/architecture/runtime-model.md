@@ -1732,7 +1732,9 @@ default = "..."                   # overridable per Port and per Location
 ```
 
 - **Parties** are named with their identities (ADR-0019), so a Receive
-  Location's accepted Parties read as names.
+  Location's accepted Parties read as names. `[[parties]]` is read since
+  2026-10-13 (`configure::party`; ADR-0028, amendment 2026-10-13); a
+  Location's `accept.party` is not yet, and is refused.
 - **Retention** has a node default, overridable per Port (section 16).
 - **Audit policy follows retention**: a node default, overridable per
   Receive or Send Port and per Location (section 16). The policy's words are

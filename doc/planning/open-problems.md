@@ -857,7 +857,8 @@ service links the identify technologies that need no configuration — `ip`,
 `jwt`, `api-key`, `username` — so a Stream's transport claim reaches the
 gate, and a refused attempt is audited with the claim, its layer and how it
 was established (ADR-0013 clause 1). What remains of the first part:
-Parties in the configuration and `accept.party`, the `location` policy, an
+`accept.party` — the Parties themselves are configuration since 2026-10-13,
+`[[parties]]` (ADR-0028, amendment 2026-10-13) — the `location` policy, an
 authenticator the configuration sets up with its credential store, and a
 receiving transport that terminates TLS so `mutual-tls` has a peer
 certificate to verify. A message identity — an X12 `ISA06` — reaches the
