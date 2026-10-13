@@ -109,14 +109,26 @@ function Invoke-XmipPlaygroundBuild {
             $bins += @('--bin', 'xmip-playground-roll')
         }
 
-        & cargo build @bins 2>&1 | ForEach-Object { Write-Verbose "$_" }
+        # Cargo's first error is kept, so a failed build says why in its own
+        # words and not only its exit code (Get-XmipTestStatus shows it).
+        [string] $first = ''
+        & cargo build @bins 2>&1 | ForEach-Object {
+            [string] $line = "$_"
+
+            if ($first -eq '' -and $line -match '^error') {
+                $first = $line
+            }
+
+            Write-Verbose $line
+        }
     }
     finally {
         Pop-Location
     }
 
     if ($LASTEXITCODE -ne 0) {
-        throw "cargo build --bin $Binary exited $LASTEXITCODE in $($layout.Playground)."
+        [string] $why = if ($first -ne '') { ": $first" } else { '.' }
+        throw "cargo build --bin $Binary exited $LASTEXITCODE in $($layout.Playground)$why"
     }
 
     return $path

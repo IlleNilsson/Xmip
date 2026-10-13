@@ -587,3 +587,42 @@ seconds in fifty, the alternation of sides and kinds, the ERP flows'
 document names and which contract family each Subscription takes, and the
 problems the Parties' parse reports are the assistant's drafting, for the
 owner to overrule.
+
+## Amendment, 2026-10-13: the build runs detached
+
+The owner, 2026-10-13, of `Start-XmipTest` holding his console during the
+first build of a roll: the build runs detached too. `Start-XmipTest` built
+the roll, cluster and node binaries in the console before it spawned
+anything, and a first build took minutes; the roll itself has run detached
+from the start, and the estate's Pester suite since 2026-09-25.
+
+- **`Start-XmipTest` returns at once.** It still refuses in the console,
+  before anything starts — a choice it cannot run, and a cluster already
+  rolling or still building — and writes the run's cluster file there. The
+  build and the roll's spawn then run in a pwsh of their own
+  (`Start-XmipPlaygroundBuild`), which spawns the roll once cargo has
+  finished (`Start-XmipPlaygroundRollProcess`) and writes its run record as
+  before.
+- **Building is the run's state.** The build writes a record,
+  `build-<start time>.toml`, beside the rolls' records, and its output to
+  `build-<start time>.log`. `Get-XmipTestStatus` lists it as kind `build`,
+  state `building`, with how many crates cargo has compiled and the last of
+  them — cargo prints no total when its output is not a terminal, so the
+  progress is counted, not estimated — until the roll is spawned and listed
+  in its place.
+- **A failed build says why.** It is listed `FAILED`, the reason cargo's
+  first error, or that its pwsh was stopped or died, until that cluster is
+  started again.
+- **`Stop-XmipTest` stops a build** as it stops an estate run: the pwsh and
+  everything beneath it, cargo and the compilers, then the record.
+
+`Start-XmipTestNode` still builds the node in the console: the owner's words
+were about `Start-XmipTest`. A first `Write-XmipAudit` in a session still
+holds the console for the operator module's `dotnet build`, seconds rather
+than minutes; that is not this amendment's.
+
+Proved by `test/PlaygroundBuild.Test.ps1`.
+
+Provenance: the owner's words above. The record's shape, the counted
+progress and the refusal of a second start while building are the
+assistant's drafting, for the owner to overrule.

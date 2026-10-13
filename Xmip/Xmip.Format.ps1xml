@@ -28,7 +28,7 @@
           <TableColumnHeader><Label>Cluster</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
-          <TableColumnHeader><Label>State</Label><Width>7</Width></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>8</Width></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Tests</Label><Width>12</Width></TableColumnHeader>
@@ -49,7 +49,7 @@
               <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Nodes) { '' } elseif ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.OnlineNodes) { '' } elseif ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'build') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

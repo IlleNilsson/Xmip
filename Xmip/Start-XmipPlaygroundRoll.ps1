@@ -111,15 +111,22 @@ function Remove-XmipPlaygroundStaleRecord {
 function Start-XmipPlaygroundRoll {
     <#
         .SYNOPSIS
-            Builds, spawns and records one Playground roll, for Start-XmipTest.
+            Starts one Playground roll for Start-XmipTest, detached: the build
+            and the roll run in a pwsh of their own, and this returns at once.
 
         .DESCRIPTION
             The Playground's own work, once Start-XmipTest has chosen the
-            suite and refused what it cannot run: lay the run out, build the
-            binaries, spawn the roll with its environment, and write the run
-            record Get-XmipTestStatus reads. Part of Start-XmipTest's body
+            suite and refused what it cannot run: lay the run out, refuse a
+            cluster already rolling or building, write the run's cluster file,
+            and hand the rest — the build, the roll's spawn and its run record
+            — to Start-XmipPlaygroundBuild. Part of Start-XmipTest's body
             until 2026-09-22, when that one function was 610 lines against
             the 400 the estate allows a file.
+
+            The build held the console until 2026-10-13, minutes on a first
+            build. The owner, that day, of Start-XmipTest holding his console
+            during the first build: the build runs detached too, and
+            Get-XmipTestStatus says the run is building until its nodes start.
 
             It asks the caller, not itself, whether to go ahead: -Caller is
             Start-XmipTest's own $PSCmdlet, so -WhatIf and -Confirm given to
@@ -242,19 +249,24 @@ function Start-XmipPlaygroundRoll {
         return
     }
 
-    [string] $roll = Invoke-XmipPlaygroundBuild -Binary roll
-    $publication = Get-XmipPlaygroundPublication -Roll $roll -Cluster $Cluster -Path $Path
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Remove-XmipPlaygroundStaleRecord -Path $Path
+    Remove-XmipPlaygroundBuildEnded -Path $Path -Cluster $Cluster
 
     # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
     # ruling 1 of 2026-09-14). Two under one name publish to one file and each
     # overwrites the other: on 2026-09-18 three rolled as CC1, the surfaces
-    # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank.
-    [int[]] $rolling = @(Get-XmipPlaygroundRolling -Path $Path -Cluster $Cluster)
+    # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank. A
+    # cluster still building is about to roll, and is refused the same way.
+    [int[]] $rolling = @(
+        Get-XmipPlaygroundRolling -Path $Path -Cluster $Cluster
+        Get-XmipPlaygroundBuild -Path $Path |
+            Where-Object { $_.State -eq 'building' -and $_.Cluster -eq $Cluster } |
+            ForEach-Object { $_.Id }
+    )
 
     if ($rolling.Count -gt 0) {
-        Write-Error ("REFUSED: cluster $Cluster is already rolling as pid " +
+        Write-Error ("REFUSED: cluster $Cluster is already rolling or building as pid " +
             "$($rolling -join ', '). Stop it with Stop-XmipTest -Id " +
             "$($rolling -join ', '), or name another cluster.")
         return
@@ -296,73 +308,51 @@ function Start-XmipPlaygroundRoll {
         }
     }
 
-    # A process name is its image file's name, so the roll, its cluster and
-    # every node run images linked for this cluster: the operating system then
-    # says xmip-playground-<cluster>-node-<node>, both names the operator's,
-    # rather than one more xmip-playground-node
-    # (the owner, 2026-09-20; ADR-0053, amendment). The roll finds its cluster
-    # binary beside its own image and the cluster finds the node binary the
-    # same way, which is why all three are linked here.
-    $choice.Image = Get-XmipPlaygroundImageArea -Cluster $Cluster
-    [string] $image = New-XmipPlaygroundImage -Cluster $Cluster
-
-    [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
-
-    $launch = @{
-        FilePath         = $image
-        WorkingDirectory = $layout.Playground
-        Environment      = $environment
-        WindowStyle      = 'Hidden'
-        PassThru         = $true
-    }
-
-    if ($Rounds -gt 0) {
-        $launch.ArgumentList = @("$Rounds")
-    }
-
-    # The log is named for the start time, since Start-Process wants the file
-    # named before the pid exists; the run record says which log is whose.
-    [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $launch.RedirectStandardOutput = Join-Path -Path $Path -ChildPath "roll-$stamp.log"
-    $launch.RedirectStandardError = Join-Path -Path $Path -ChildPath "roll-$stamp.err"
-
-    # What it starts audits where the tooling does (ADR-0062).
-    Initialize-XmipAudit
-    $process = Start-Process @launch
-
     [bool] $hidden = $Bound.ContainsKey('Hidden') -and [bool] $Bound['Hidden']
     [bool] $boundDuration = $Bound.ContainsKey('Duration')
     [bool] $boundFactor = $Bound.ContainsKey('TimeFactor')
+    $choice.Hidden = $hidden
 
-    # The nodes are the cluster file's either way: an operator who named none
-    # can read what they got, node_names says which of the two it was, and
-    # cluster_file where they came from.
-    $record = [ordered]@{
-        suite        = $Suite
-        cluster      = $Cluster
-        pid          = $process.Id
-        started      = $process.StartTime.ToString('o')
-        stress       = $Stress.ToLowerInvariant()
-        tests        = @($Test)
-        rounds       = $Rounds
-        nodes        = @($Nodes)
-        node_names   = if ($boundNodes) { 'named' } else { 'configured' }
-        cluster_file = $clusterFile
-        online       = @($OnlineNodes)
-        duration_s   = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
-        time_factor  = if ($boundFactor) { $TimeFactor } else { 1.0 }
-        snapshot     = $publication.Snapshot
-        history      = $publication.History
-        activity     = $publication.Activity
-        log          = $launch.RedirectStandardOutput
-        hidden       = $hidden
+    # Everything the roll is spawned and recorded with, handed to the
+    # detached build as one value (Start-XmipPlaygroundRollProcess).
+    [hashtable] $start = @{
+        Suite       = $Suite
+        Cluster     = $Cluster
+        Stress      = $Stress
+        Test        = @($Test)
+        Rounds      = $Rounds
+        Nodes       = @($Nodes)
+        NodeRole    = $NodeRole
+        OnlineNodes = @($OnlineNodes)
+        Path        = $Path
+        ClusterFile = $clusterFile
+        Named       = $boundNodes
+        Seconds     = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
+        TimeFactor  = if ($boundFactor) { $TimeFactor } else { 1.0 }
+        Hidden      = $hidden
+        Choice      = $choice
+        What        = $what
     }
 
-    [string] $recordPath = Get-XmipRollRecordPath -Path $Path -Id $process.Id
-    Write-XmipToml -Path $recordPath -Value $record
-    [string] $declared = Get-XmipNodeRoleText -Nodes $Nodes -NodeRole $NodeRole
-    [string] $roster = if ($declared -ne '') { "; roster $declared" } else { '' }
-    Write-Verbose "started $what$roster as pid $($process.Id); record at $recordPath"
+    # Where the roll will publish, asked of the roll binary already built, if
+    # there is one, before the build can replace it; a first build has none
+    # to ask, and an older one that cannot answer is not a reason to refuse:
+    # the prompt is then not told until the next start.
+    [string] $snapshot = ''
+
+    if (Test-Path -LiteralPath $layout.Roll) {
+        [hashtable] $where = @{ Roll = $layout.Roll; Cluster = $Cluster; Path = $Path }
+
+        try {
+            $snapshot = (Get-XmipPlaygroundPublication @where).Snapshot
+        }
+        catch {
+            Write-Verbose "the roll built before could not say where it publishes: $_"
+        }
+    }
+
+    $start.Snapshot = $snapshot
+    [int] $id = Start-XmipPlaygroundBuild -Start $start
 
     # The prompt, where this session shows one, follows the roll just started:
     # the shipped document names one cluster, and on 2026-09-18 a roll of a
@@ -379,16 +369,19 @@ function Start-XmipPlaygroundRoll {
 
     # A hidden run is not followed: the prompt is the owner's (ADR-0028,
     # amendment 2026-09-30).
-    if ($null -ne $prompt -and -not $hidden) {
+    if ($null -ne $prompt -and -not $hidden -and $snapshot -ne '') {
         [string[]] $beside = @(
             Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot |
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
         )
-        $prompt::Follow($publication.Snapshot, $beside)
+        $prompt::Follow($snapshot, $beside)
     }
 
+    Write-Host ("Started cluster $Cluster as pid $id, detached: it builds, then rolls. " +
+        "Get-XmipTestStatus says building until its nodes start, and the reason if " +
+        "the build FAILED; Stop-XmipTest -Id $id stops it.")
+
     if ($PassThru) {
-        return Get-XmipTestStatus -Path $Path -IncludeHidden |
-            Where-Object { $_.Id -eq $process.Id }
+        return Get-XmipTestStatus -Path $Path -IncludeHidden | Where-Object { $_.Id -eq $id }
     }
 }

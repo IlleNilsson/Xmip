@@ -57,7 +57,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
         (Get-Command -Name Start-XmipTest).Parameters['Hidden'].ParameterType |
             Should -Be ([switch])
         [string] $roll = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'Xmip/Start-XmipPlaygroundRoll.ps1')
+            Join-Path $script:Root 'Xmip/Start-XmipPlaygroundRollProcess.ps1')
         $roll | Should -Match 'hidden\s+= \$hidden'
     }
 

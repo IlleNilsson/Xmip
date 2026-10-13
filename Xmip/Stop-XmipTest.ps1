@@ -34,6 +34,10 @@ function Stop-XmipTest {
             takes its record; its log is kept. One that has already ended is
             listed by Get-XmipTestStatus with its verdict and is never picked
             by a filter; named by -Id it is REFUSED, since nothing of it runs.
+            A roll still building is stopped the same way — its pwsh, cargo
+            and the compilers beneath it — and picked by its cluster, suite
+            and tests as the roll it would have become; one whose build
+            FAILED has ended, and is REFUSED by -Id as an ended estate run is.
 
             A run is one process, so a test is stopped by stopping the run
             that drives it. A run that also drives a test not named is
@@ -194,7 +198,7 @@ function Stop-XmipTest {
         # among the shown runs unless -IncludeHidden (ADR-0028, amendment
         # 2026-09-30), by the one rule over what each run declared.
         [object[]] $listed = @(Get-XmipTestStatus -IncludeHidden)
-        [object[]] $running = @($listed | Where-Object { $_.State -eq 'running' })
+        [object[]] $running = @($listed | Where-Object { $_.State -in 'running', 'building' })
 
         if ($PSCmdlet.ParameterSetName -eq 'Filter') {
             [bool] $including = $IncludeHidden
@@ -222,17 +226,20 @@ function Stop-XmipTest {
                 continue
             }
 
-            # The estate's Pester run is one pwsh and what it started; it has
-            # no nodes and no cluster (Stop-XmipEstateRun).
-            if ($roll.Kind -eq 'pester' -and $roll.State -ne 'running') {
+            # The estate's Pester run is one pwsh and what it started, and so
+            # is a roll still building — cargo beneath it; neither has nodes
+            # or a cluster process yet (Stop-XmipDetachedRun).
+            [bool] $detached = $roll.Kind -in 'pester', 'build'
+
+            if ($detached -and $roll.State -notin 'running', 'building') {
                 Write-Error ("REFUSED: the $($roll.Suite) run $number has ended " +
                     "($($roll.State)); there is nothing to stop.")
                 continue
             }
 
-            if ($roll.Kind -eq 'pester') {
+            if ($detached) {
                 if ($PSCmdlet.ShouldProcess("the $($roll.Suite) run $number", 'Stop')) {
-                    Stop-XmipEstateRun -Run $roll
+                    Stop-XmipDetachedRun -Run $roll
                     Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
                         Id    = $number
                         Suite = $roll.Suite
@@ -322,20 +329,22 @@ function Update-XmipPromptFollowing {
     }
 }
 
-function Stop-XmipEstateRun {
+function Stop-XmipDetachedRun {
     <#
         .SYNOPSIS
-            Ends a running estate run: its pwsh and everything that pwsh
-            started, then its record.
+            Ends a run that is one detached pwsh — an estate run, or a roll
+            still building: that pwsh and everything it started, then its
+            record.
 
         .DESCRIPTION
             A test may start a process of its own — cargo, a node, a host —
-            and ending only the run's pwsh would orphan it, so the whole
-            tree is ended, as Stop-XmipTest ends a roll's tree. The log is
-            kept, for what the run said before it was stopped.
+            and a build is cargo and its compilers, so ending only the pwsh
+            would orphan them: the whole tree is ended, as Stop-XmipTest ends
+            a roll's tree. The log is kept, for what the run said before it
+            was stopped.
 
         .PARAMETER Run
-            The run, from Get-XmipEstateRun.
+            The run, from Get-XmipEstateRun or Get-XmipPlaygroundBuild.
     #>
     [CmdletBinding()]
     [OutputType([void])]
