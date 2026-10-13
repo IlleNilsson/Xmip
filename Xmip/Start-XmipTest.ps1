@@ -37,9 +37,11 @@ function Start-XmipTest {
 
             The roll, cluster and node binaries are built first, a no-op when
             they are current, so a roll never runs yesterday's scenarios. The
-            roll's own output goes to `roll-<start time>.log` and `.err` under
-            -Path, one line per round; the run record `roll-<pid>.toml` beside
-            them says which log is whose.
+            build is detached and this returns at once (the owner, 2026-10-13):
+            Get-XmipTestStatus says building, with the crates compiled, until
+            the nodes start, or FAILED with cargo's first error; Stop-XmipTest
+            stops it. Under -Path: `build-<start time>.log`, the roll's
+            `roll-<start time>.log` and `.err`, and `roll-<pid>.toml`.
 
         .PARAMETER Suite
             Which test suite to run: Core.Playground (the default) or
@@ -192,7 +194,7 @@ function Start-XmipTest {
             directory of Pester tests; defaults to test/ under the repository.
 
         .PARAMETER PassThru
-            Return the Xmip.TestStatus object for the roll started.
+            Return the Xmip.TestStatus object for the run started, building.
 
         .PARAMETER Hidden
             Declares the run hidden, as an assistant's test run is (ADR-0028,

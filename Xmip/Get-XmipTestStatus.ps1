@@ -15,6 +15,14 @@ function Get-XmipTestStatus {
             listed from its record under .local-work/estate while it runs and
             after it ends: State says running, OK or FAILED in words, and
             Tally the counts. A new estate run clears the ended ones.
+
+            A roll builds before it rolls, detached, and is listed while it
+            does as kind build, State building, Tally saying how many crates
+            cargo has compiled and the last of them; once its nodes start the
+            roll is listed instead. A build that FAILED stays listed as
+            FAILED, the reason in Fault and Tally — cargo's first error, or
+            that its pwsh was stopped or died — until that cluster is started
+            again.
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Playground's own
             roll binary — never a process that merely shares the name. A roll
@@ -83,6 +91,20 @@ function Get-XmipTestStatus {
     [System.Diagnostics.Process[]] $rolls = @(
         Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Roll -Kind Roll
     )
+    [object[]] $builds = @(
+        Get-XmipPlaygroundBuild -Path $Path | Where-Object { "$($_.Cluster)" -like $Cluster }
+    )
+
+    if ($rolls.Count -eq 0 -and $builds.Count -eq 0) {
+        return
+    }
+
+    Import-XmipOperatorModule
+    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
+
+    # A roll still building, or whose build FAILED, until its nodes start:
+    # shown and hidden by the one rule, as a roll is.
+    $builds | Where-Object { $rules.Shown([bool] $_.Hidden, [bool] $IncludeHidden) }
 
     if ($rolls.Count -eq 0) {
         return
@@ -90,8 +112,6 @@ function Get-XmipTestStatus {
 
     [object[]] $nodes = @(Get-XmipTestNode)
     [object[]] $suites = @(Get-XmipTestSuite)
-    Import-XmipOperatorModule
-    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
 
     foreach ($roll in $rolls) {
         $recorded = Get-XmipRollRecord -Path $Path -Id $roll.Id

@@ -24,10 +24,11 @@ function New-XmipTestStatus {
             The suite the run was started with.
 
         .PARAMETER Kind
-            roll or pester.
+            roll, pester, or build: a roll still building, before it rolls
+            (Get-XmipPlaygroundBuild).
 
         .PARAMETER State
-            running, OK or FAILED, in words.
+            running, building, OK or FAILED, in words.
 
         .PARAMETER Id
             The run's process id.
@@ -45,7 +46,7 @@ function New-XmipTestStatus {
         [string] $Suite,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet('roll', 'pester')]
+        [ValidateSet('roll', 'pester', 'build')]
         [string] $Kind,
 
         [Parameter(Mandatory = $true)]

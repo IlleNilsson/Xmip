@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
     owner's console for ten minutes before that, and the rule is his: nothing
     starts itself; Start starts, Status observes, Stop stops (the owner,
     2026-09-12). Start-XmipEstateSuite starts it, Complete-XmipEstateRun is
-    what the run writes when it ends, Stop-XmipEstateRun (in Stop-XmipTest.ps1)
+    what the run writes when it ends, Stop-XmipDetachedRun (in Stop-XmipTest.ps1)
     ends it early; what reads a run is here.
 
     A run is one TOML record under .local-work/estate (Get-XmipPlaygroundLayout's
@@ -100,7 +100,7 @@ function ConvertTo-XmipEstateRun {
     [string] $state = [string](Get-TomlValue -Node $Record -Name 'state' -Default '')
     [string] $fault = [string](Get-TomlValue -Node $Record -Name 'fault' -Default '')
 
-    if ($state -eq '' -and (Test-XmipEstateAlive -Id $id -Started $started)) {
+    if ($state -eq '' -and (Test-XmipDetachedAlive -Id $id -Started $started)) {
         $state = 'running'
     }
     elseif ($state -eq '') {
@@ -143,11 +143,12 @@ function ConvertTo-XmipEstateRun {
 }
 
 
-function Test-XmipEstateAlive {
+function Test-XmipDetachedAlive {
     <#
         .SYNOPSIS
             Whether the process a record names is still that run's pwsh, and
-            not another process that was later given the same id.
+            not another process that was later given the same id: an estate
+            run's, or a roll's detached build's (Get-XmipPlaygroundBuild).
 
         .PARAMETER Id
             The process id the record names.

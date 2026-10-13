@@ -831,6 +831,11 @@ Get-XmipTestResult -Test HeavyLoad -Worst
 Stop-XmipTest -Cluster C1 -Test HeavyLoad, LowLatency
 ```
 
+`Start-XmipTest` returns at once: the build runs detached before the roll,
+and `Get-XmipTestStatus` says `building`, with the crates compiled, until the
+nodes start — or `FAILED` with cargo's first error. `Stop-XmipTest` stops a
+build as it stops a roll.
+
 `Stop-XmipTest` takes the run the way `Start-XmipTest` was told it, by
 `-Cluster` and `-Test` together, or every run with neither. A run is one
 process, so a test is stopped by stopping the run that drives it; a run that
@@ -910,7 +915,7 @@ runtime's traits, lands (ADR-0014, amendment 2026-10-12).
 Publish-XmipChange -Message 'short precise message'   # alias xgit: each module's own tests, then land
 Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, detached
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
-Get-XmipTestStatus                                    # running, OK or FAILED, with counts
+Get-XmipTestStatus                                    # building, running, OK or FAILED
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
 Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
 Start-XmipTest -Suite * -Cluster C1                   # every suite this estate knows

@@ -34,6 +34,7 @@ BeforeAll {
         [string[]] $family = @(
             'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1', 'Start-XmipEstateSuite.ps1'
             'Resolve-XmipPlaygroundChoice.ps1', 'Start-XmipPlaygroundRoll.ps1'
+            'Start-XmipPlaygroundBuild.ps1', 'Start-XmipPlaygroundRollProcess.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -1817,7 +1818,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
             $run = Get-XmipEstateRun -Path $Area
             $run.State | Should -Be 'running'
 
-            Stop-XmipEstateRun -Run $run
+            Stop-XmipDetachedRun -Run $run
             $process.HasExited | Should -BeTrue
             Test-Path -LiteralPath $start.Record | Should -BeFalse
 
