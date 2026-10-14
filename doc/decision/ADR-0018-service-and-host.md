@@ -706,3 +706,32 @@ carries `XMIP_AUDIT_DIRECTORY` (ADR-0062). The Open question above, whether
 the master runs elevated, is not answered by it: the installer is elevated,
 the running service is whatever account it is registered under, and which
 account that should be is open (ADR-0015, amendment 2026-10-13).
+
+## Amendment, 2026-10-15: a stop drains what the far end already let go of
+
+Clause 12's drain stops accepting new work, and its finish completes what is
+in flight. A Stream whose sender was told it went through is in flight,
+whether or not the node has accepted its connection yet. Raw TCP's sender is
+done once its kernel took the bytes (`xmip-core-transport-tcp`'s
+`AT_MOST_ONCE`), so a connection the operating system completed and queued
+in a Receive Location's backlog before the stop is such a Stream. The
+amendment of 2026-09-28 had `Running::stop` take nothing more once each
+Location's current receive returned, and the listener was closed with its
+backlog in it: the root crate's stop test lost 7 of 50 Streams on the CI's
+Linux runner and 32 on its macOS one, and none on Windows, which drained
+faster than the test sent.
+
+A Location whose receive waits for what arrives (`transport::Waiting::Waits`)
+and whose far end let go of what it handed over
+(`transport::Acknowledgement::at_most_once`) now goes on receiving after
+the stop until a receive finds nothing, which its own wait bounds, and never
+past `[tuning] receive_drain` from the stop (a second by default, the
+assistant's drafting for the owner to overrule), so senders that never
+pause cannot hold the stop. A polled Location, and one whose far end is
+told, stops as before: its far end keeps what it holds and sends it again.
+The rule is the runtime's, once (`xmip-core-runtime`'s `receiving::drain`),
+so every technology of that kind drains alike: the TCP family, datagrams,
+pipes and Unix domain sockets. `runtime-model.md` section 5, *A stop drains
+what the far end already let go of*, says how it runs; the runtime's
+`tests/ledger/drained.rs` fills a backlog before the stop on every machine,
+rather than leaving it to how fast one runs.

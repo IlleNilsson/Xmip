@@ -724,6 +724,24 @@ far end can tell of a change — a file system's change notification, a
 database's `LISTEN` — the technology still polls; waiting on such a notice
 is not built.
 
+**A stop drains what the far end already let go of** (built 2026-10-15,
+ADR-0018, amendment 2026-10-15). A far end that keeps what it hands over
+until it is told — a file in its directory, a leased message, a caller
+waiting for its answer — loses nothing when its Location stops taking: it
+sends it again. One whose protocol cannot defer
+(`transport::Acknowledgement::at_most_once`) has let go already: raw TCP's
+sender is done once its kernel took the bytes, so a connection the
+operating system completed and queued in the listener's backlog before the
+stop is a Stream its sender was told went through, and so is a datagram in
+a socket's buffer. A Location whose receive waits and whose far end let go
+of what it handed over therefore goes on receiving after the stop until a
+receive finds nothing — which its own wait bounds, as it bounds every
+receive — and never past `[tuning] receive_drain` (a second by default)
+from the stop, so senders that never pause cannot hold it. A polled
+Location, and one whose far end is told, stops once its current receive
+returns. Until 2026-10-15 every Location did, and the listener was closed
+with its backlog in it.
+
 Refusals before Publication are audited receive failures. From Message
 creation on the Stream is kept; a Message failing Validation is kept and
 answered where the protocol can; no Journey exists (ADR-0013 clauses 1 to 3).
