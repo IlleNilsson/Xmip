@@ -46,6 +46,19 @@ function Build-XmipService {
             xmip-service --install, so the layout, the starter configuration
             and the service's registration are written once, there.
 
+            -Remote builds no site: it builds the runtime's remote build,
+            --no-default-features --features remote, the library an
+            operator surface follows nodes with from outside (ADR-0014,
+            amendment 2026-10-14). Desktop is this machine's, debug, into
+            .ai-interaction/target-remote, the one Xmip.Abi's tests load.
+            Android is the phone host's, release, for aarch64-linux-android
+            and x86_64-linux-android at API level 26 into
+            .ai-interaction/target-android, linked by the Android NDK found
+            under ANDROID_NDK_HOME, ANDROID_HOME or the per-user Android SDK;
+            Xmip.Operations packages both. Cargo runs with -j 2, one build
+            at a time. Returns Platform, Triple, Path and Length per library.
+            A landing builds each itself before the module that needs it.
+
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.
 
@@ -56,6 +69,10 @@ function Build-XmipService {
 
         .PARAMETER Package
             The packages to make of the build: msi, deb, rpm, pkg, archive.
+
+        .PARAMETER Remote
+            The runtime's remote builds to make instead of a site's:
+            Desktop, Android.
 
         .EXAMPLE
             Build-XmipService -Site hospital-interface -WhatIf
@@ -81,21 +98,31 @@ function Build-XmipService {
 
             Builds a person's computer's xmip-service, optimized, and makes
             its x64 MSI, winget manifest and zip under .local-work/package.
+
+        .EXAMPLE
+            Build-XmipService -Remote Android
+
+            Builds the runtime's remote build for a phone and its emulator,
+            the two libraries Xmip.Operations packages for Android.
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Site')]
     [OutputType([pscustomobject])]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Site')]
         [ValidateNotNullOrEmpty()]
         [string] $Site,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Site')]
         [AllowEmptyCollection()]
         [string[]] $CargoArgument = @(),
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Site')]
         [ValidateSet('msi', 'deb', 'rpm', 'pkg', 'archive')]
-        [string[]] $Package = @()
+        [string[]] $Package = @(),
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Remote')]
+        [ValidateSet('Desktop', 'Android')]
+        [string[]] $Remote
     )
 
     Set-StrictMode -Version Latest
@@ -107,6 +134,11 @@ function Build-XmipService {
     }
 
     [string] $root = Get-XmipRepositoryRoot
+
+    if ($PSCmdlet.ParameterSetName -eq 'Remote') {
+        return @(Build-XmipServiceRemote -Root $root -Remote $Remote)
+    }
+
     $manifest = Get-XmipManifest -Path (Join-Path $root 'architecture.toml')
     [hashtable] $asked = @{
         Root          = $root
@@ -149,6 +181,43 @@ function Build-XmipService {
     }
 
     return $plan
+}
+
+
+function Build-XmipServiceRemote {
+    <#
+        .SYNOPSIS
+            Build-XmipService -Remote: each platform's remote build of the
+            runtime, audited, one after another; -WhatIf says the commands.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $Remote
+    )
+
+    foreach ($platform in $Remote) {
+        [string] $ndk = if ($platform -eq 'Android') { Find-XmipAndroidNdk } else { '' }
+        [string[]] $command = @(
+            Get-XmipRemoteRuntimeBuild -Root $Root -Platform $platform -Ndk $ndk |
+                ForEach-Object { "cargo build --lib $($_.CargoArgument -join ' ')" }
+        )
+        [string] $what = "the runtime's remote build, $platform"
+
+        if (-not $PSCmdlet.ShouldProcess($what, ($command -join '; '))) {
+            continue
+        }
+
+        Write-XmipAudit -Action 'Build-XmipService' -Phase Begin -Property @{
+            Remote = $platform
+        }
+        Build-XmipRemoteRuntime -Root $Root -Platform $platform
+        Write-XmipStep -Message "OK: built $what"
+    }
 }
 
 

@@ -1597,6 +1597,14 @@ dependency = []
 # ADR-0018.
   [xmip.core.runtime]
   description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; and the native library the operator surfaces load."
+  # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
+  # phone follows nodes remotely and runs none).
+  features = [
+      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16 and section 17's serve exports; includes remote",
+      "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18 and section 17's client exports",
+      "dynamic-loading: the module loader (xmip_module.h); includes node",
+      "test-support: the test fixtures; enabled only by the crate's own dev-dependency",
+  ]
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"

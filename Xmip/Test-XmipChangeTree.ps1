@@ -53,6 +53,14 @@ function Test-XmipChangeTree {
     [List[string]] $verified = [List[string]]::new()
     [bool] $runtimeBuilt = $false
 
+    # The runtime's remote build, from the working tree, before the module
+    # that needs it: the Desktop one Xmip.Abi's tests load, the Android ones
+    # the phone host packages (Build-XmipRemoteRuntime.ps1).
+    [hashtable] $remoteFor = @{
+        'module/foundation/abi'     = 'Desktop'
+        'module/core/operation/gui' = 'Android'
+    }
+
     [string] $sharedTarget = if ($env:CARGO_TARGET_DIR) {
         $env:CARGO_TARGET_DIR
     }
@@ -149,9 +157,18 @@ function Test-XmipChangeTree {
             [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
                 @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
 
-            if (-not $All -and -not $verifiable) {
-                [string] $why = "SKIPPED. $module has no Cargo.toml and no project to verify."
-                Write-Host $why -ForegroundColor DarkGray
+            # A phone build needs the Android NDK, an optional prerequisite.
+            [string] $why = ''
+
+            if (-not $verifiable) {
+                $why = "$module has no Cargo.toml and no project to verify."
+            }
+            elseif ($remoteFor[$module] -eq 'Android' -and -not (Find-XmipAndroidNdk)) {
+                $why = "$module builds for Android, and the Android NDK is absent here."
+            }
+
+            if (-not $All -and $why) {
+                Write-Host "SKIPPED. $why" -ForegroundColor DarkGray
                 $skipped.Add($module)
 
                 continue
@@ -176,6 +193,22 @@ function Test-XmipChangeTree {
                 . $useRuntime
 
                 if (-not $runtimeBuilt) {
+                    $failed = @($module)
+                }
+            }
+
+            if ($remoteFor.ContainsKey($module) -and $failed.Count -eq 0) {
+                [hashtable] $remote = @{
+                    Root     = $RepositoryRoot
+                    Platform = $remoteFor[$module]
+                    Patch    = $patch
+                }
+
+                try {
+                    $null = Build-XmipRemoteRuntime @remote
+                }
+                catch {
+                    Write-Host $_.Exception.Message -ForegroundColor Red
                     $failed = @($module)
                 }
             }

@@ -26,23 +26,36 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
 
         <#
             .SYNOPSIS
-            The target framework in force for a project file.
+            The target frameworks in force for a project file.
 
             .DESCRIPTION
             A project may set it or inherit it from a Directory.Build.props
             beside or above it — the template does the second, deliberately,
             because two manifests that must agree eventually stop agreeing.
-            Returns '' when neither states one.
+            A project built for several platforms names each in
+            TargetFrameworks, under whatever condition, and every one is
+            returned: the MAUI host names Windows, Android and iOS (ADR-0014,
+            amendment 2026-10-14). Returns '' when none is stated.
         #>
         function Get-TargetFramework {
             [CmdletBinding()]
-            [OutputType([string])]
+            [OutputType([string[]])]
             param(
                 [Parameter(Mandatory = $true)]
                 [System.IO.FileInfo] $File
             )
 
             [string] $text = Get-Content -LiteralPath $File.FullName -Raw
+
+            [string[]] $several = @(
+                [regex]::Matches($text, '<TargetFrameworks[^>]*>([^<]+)</TargetFrameworks>') |
+                    ForEach-Object { $_.Groups[1].Value -split ';' } |
+                    Where-Object { $_ -ne '' -and $_ -ne '$(TargetFrameworks)' }
+            )
+
+            if ($several.Count -gt 0) {
+                return $several
+            }
 
             if ($text -match '<TargetFramework>([^<]+)</TargetFramework>') {
                 return $Matches[1]
@@ -93,20 +106,21 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
                 $script:Policy.targetFramework
             }
 
-            [string] $actual = Get-TargetFramework -File $file
-
             # A platform suffix is the version, not a different version. A MAUI
             # Windows app must target net11.0-windows10.0.19041.0 — the suffix
             # is required by the framework, not drift from it — so the declared
             # target is a prefix the actual one must start with. net11.0 still
             # refuses net10.0. Added when the desktop host landed, 2026-09-05.
             [string] $suffix = "$expected-"
-            [bool] $ok =
-                $actual -eq $expected -or
-                $actual.StartsWith($suffix, [System.StringComparison]::Ordinal)
 
-            if (-not $ok) {
-                $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
+            foreach ($actual in @(Get-TargetFramework -File $file)) {
+                [bool] $ok =
+                    $actual -eq $expected -or
+                    $actual.StartsWith($suffix, [System.StringComparison]::Ordinal)
+
+                if (-not $ok) {
+                    $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
+                }
             }
         }
 

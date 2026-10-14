@@ -177,6 +177,37 @@ brew = "dotnet-sdk"
 [prerequisite.dotnet.linux]
 fallback = "https://dot.net/v1/dotnet-install.sh"
 
+[prerequisite.maui]
+role = "developer"
+optional = true
+note = "The MAUI workloads for the desktop and phone GUI (ADR-0014, amendment 2026-10-14). Xmip.Operations builds for Android on every machine and for Windows on Windows, so a landing of xmip-core-gui needs both. A new .NET SDK band removes every workload: install them again after each SDK upgrade. iOS (maui-ios) builds only on macOS."
+
+[prerequisite.maui.windows]
+present_path = ['%ProgramFiles%\dotnet\packs\Microsoft.Android.Sdk.Windows\*', '%ProgramFiles%\dotnet\packs\Microsoft.Maui.Sdk*\*']
+command = "dotnet workload install maui maui-android"
+elevation = true
+
+[prerequisite.maui.macos]
+command = "dotnet workload install maui maui-android maui-ios"
+
+[prerequisite.android-sdk]
+role = "developer"
+optional = true
+note = "The Android SDK the phone build packages with, per user, no elevation. Its installer target expects a cmdline-tools directory and fails without one, so the command creates it first."
+
+[prerequisite.android-sdk.windows]
+present_path = ['%LOCALAPPDATA%\Android\Sdk\platforms\android-*']
+command = "New-Item -ItemType Directory -Force -Path $env:LOCALAPPDATA\\Android\\Sdk\\cmdline-tools; dotnet build -t:InstallAndroidDependencies -f net11.0-android -p:AndroidSdkDirectory=$env:LOCALAPPDATA\\Android\\Sdk -p:AcceptAndroidSDKLicenses=True module/core/operation/gui/src/Xmip.Operations"
+
+[prerequisite.android-ndk]
+role = "developer"
+optional = true
+note = "The Android NDK, whose clang links the Rust runtime library for Android (aarch64-linux-android, x86_64-linux-android; rustup target add both). Unpacked under the SDK's ndk directory, named by its version; latest LTS from Google, checked against the SHA-1 Google publishes."
+
+[prerequisite.android-ndk.windows]
+present_path = ['%LOCALAPPDATA%\Android\Sdk\ndk\*\toolchains\llvm\prebuilt\windows-x86_64']
+fallback = "https://developer.android.com/ndk/downloads"
+
 [prerequisite.node]
 role = "developer"
 optional = true

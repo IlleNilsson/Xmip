@@ -572,7 +572,7 @@ the scopes, each an Xmip URI
 | `xmip-cli mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
-| Desktop | The same on one machine. Windows and macOS; Linux only through Microsoft's experimental GTK4 backend for .NET MAUI ([maui-labs](https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4)), which Microsoft does not support. |
+| Desktop | The same on one machine. Windows and macOS; Linux only through Microsoft's experimental GTK4 backend for .NET MAUI ([maui-labs](https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4)), which Microsoft does not support. The same host on Android and iOS is the phone app: an Observer of nodes followed remotely, cluster health first (ADR-0014, amendment 2026-10-14). |
 
 Every one of them operates a node — its health, figures and scopes, its
 Journeys, Dead Messages and Subscriptions, the acts on them and the follow —
@@ -943,7 +943,13 @@ stopping the run with nothing pushed:
   feature its `Cargo.toml` declares. Clippy is not run with those features.
 - **Each changed .NET module:** `dotnet build` of every project, `dotnet
   test` of every `*.Test.csproj` and the module's Pester tests, the runtime
-  library built first.
+  library built first. The runtime's remote build is built before the module
+  that needs it, changed or consuming: this machine's before
+  `module/foundation/abi`, whose tests load it, and Android's, for a device
+  and the emulator, before `module/core/operation/gui`, which packages them
+  (`Build-XmipService -Remote Desktop, Android` builds the same by hand).
+  Without the Android NDK the gui module is reported SKIPPED, unverifiable
+  here, and does not land.
 - **Each unchanged module that consumes a changed one:** `cargo clippy
   --all-targets --features <every declared feature> -- -D warnings`, which
   compiles it and its tests against the change; its tests do not run.
@@ -1069,7 +1075,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now). |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote` and the phone's, ARM64 and x86_64, into `.ai-interaction/target-android`. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
