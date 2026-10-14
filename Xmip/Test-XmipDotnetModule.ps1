@@ -128,17 +128,24 @@ function Test-XmipDotnetModule {
     [string] $stamp = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
     [string] $output = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-verify-$stamp"
 
-    foreach ($csproj in $project) {
-        Write-Host "   building $($csproj.Name)..." -ForegroundColor DarkGray
+    # Removed whatever the build said: one left per landing filled the
+    # owner's C: with 142 of them, 5 GB, by 2026-10-14.
+    try {
+        foreach ($csproj in $project) {
+            Write-Host "   building $($csproj.Name)..." -ForegroundColor DarkGray
 
-        [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
+            [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
 
-        & dotnet build $csproj.FullName --output $into --verbosity quiet --nologo 2>&1 |
-            ForEach-Object { Write-Host $_ }
+            & dotnet build $csproj.FullName --output $into --verbosity quiet --nologo 2>&1 |
+                ForEach-Object { Write-Host $_ }
 
-        if ($LASTEXITCODE -ne 0) {
-            return $false
+            if ($LASTEXITCODE -ne 0) {
+                return $false
+            }
         }
+    }
+    finally {
+        Remove-Item -LiteralPath $output -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     # `.Test.csproj`, singular, like every test file in the estate.
