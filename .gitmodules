@@ -192,3 +192,6 @@
 [submodule "module/core/capability/provision"]
 	path = module/core/capability/provision
 	url = https://github.com/IlleNilsson/xmip-core-provision.git
+[submodule "module/core/library/mariadb"]
+	path = module/core/library/mariadb
+	url = https://github.com/IlleNilsson/xmip-core-library-mariadb.git

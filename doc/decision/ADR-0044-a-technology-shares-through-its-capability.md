@@ -266,8 +266,9 @@ fit under archive.*
   the connection. Clause 2's rule holds: what moved is the same in every
   domain, not what is similar.
 - **`MariaDB`.** The dialect, the transport and the archive are named for
-  `MariaDB` (the owner, 2026-10-12), whose protocol also reaches MySQL
-  servers (ADR-0011, amendment 2026-10-12).
+  `MariaDB` (the owner, 2026-10-12). MySQL is a transport of its own on the
+  same wire, `xmip-core-library-mariadb`, with what MySQL does differently
+  kept in it alone (ADR-0011, amendment 2026-10-14).
 
 Provenance: the owner's two sentences above and his approval of the
 repository the same day; the shape of the one dialect is the assistant's

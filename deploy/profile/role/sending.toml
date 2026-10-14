@@ -18,3 +18,19 @@ features = [
   "prepare",
   "resilience",
 ]
+
+# The archive targets a node in this role is built with, by repository
+# name: an archiving role names them and no domain selects one (ADR-0015,
+# amendment 2026-10-14). Parquet is the default (owner, 2026-09-07).
+archives = [
+  "xmip-core-archive-azure-blob",
+  "xmip-core-archive-file",
+  "xmip-core-archive-gcs",
+  "xmip-core-archive-mariadb",
+  "xmip-core-archive-mssql",
+  "xmip-core-archive-parquet",
+  "xmip-core-archive-postgresql",
+  "xmip-core-archive-s3",
+  "xmip-core-archive-sql",
+  "xmip-core-archive-sqlite",
+]

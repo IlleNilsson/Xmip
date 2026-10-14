@@ -1,6 +1,6 @@
 # The Xmip estate
 
-340 repositories are declared and 267 of them are
+344 repositories are declared and 271 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -35,13 +35,13 @@ the estate tree, and are counted nowhere below.
 | Capability | 20 | 20 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 297 | 226 | 71 |
-| **Total** | 340 | 267 | 73 |
+| Technology | 301 | 230 | 71 |
+| **Total** | 344 | 271 | 73 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | reserved | 71 | 0 | 71 |
-| scaffolded | 269 | 267 | 2 |
+| scaffolded | 273 | 271 | 2 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -334,7 +334,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 252221 lines of production
+Where each repository mounts and what it holds: 257843 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -360,6 +360,7 @@ hold no source to count.
 │   ├── core/
 │   │   ├── capability/
 │   │   │   ├── transport                       5338
+│   │   │   │   ├── db2                         2648
 │   │   │   │   ├── amqp                        2594
 │   │   │   │   ├── opc-ua                      2419
 │   │   │   │   ├── ftp                         2060
@@ -370,14 +371,14 @@ hold no source to count.
 │   │   │   │   ├── ibm-mq                      1769
 │   │   │   │   ├── kafka                       1726
 │   │   │   │   ├── http                        1725
-│   │   │   │   ├── mariadb                     1651
+│   │   │   │   ├── oracle                      1473
 │   │   │   │   ├── snmp                        1431
 │   │   │   │   ├── nats-jetstream              1344
 │   │   │   │   ├── as4                         1325
 │   │   │   │   ├── postgresql                  1292
 │   │   │   │   ├── canopen                     1149
 │   │   │   │   ├── s7comm                      1142
-│   │   │   │   ├── dns                         1121
+│   │   │   │   ├── dns                         1130
 │   │   │   │   ├── mqtt                        1079
 │   │   │   │   ├── webdav                      1067
 │   │   │   │   ├── iec-61850                   1054
@@ -412,6 +413,7 @@ hold no source to count.
 │   │   │   │   ├── knx                          742
 │   │   │   │   ├── iso-tp                       719
 │   │   │   │   ├── s3                           706
+│   │   │   │   ├── mysql                        694
 │   │   │   │   ├── smtp                         693
 │   │   │   │   ├── azure-blob                   692
 │   │   │   │   ├── mdns                         691
@@ -437,6 +439,7 @@ hold no source to count.
 │   │   │   │   ├── named-pipe                   486
 │   │   │   │   ├── can-bus                      470
 │   │   │   │   ├── sqlite                       467
+│   │   │   │   ├── mariadb                      464
 │   │   │   │   ├── websocket                    455
 │   │   │   │   ├── bacnet                       451
 │   │   │   │   ├── azure                        449
@@ -586,9 +589,10 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             5168
 │   │   │   ├── codec                           2648
+│   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
+│   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
-│   │   │   ├── sql                              801
 │   │   │   ├── tls                              677
 │   │   │   └── asn1                             526
 │   │   └── operation/
@@ -611,7 +615,7 @@ hold no source to count.
 │   │       │   ├── parquet                      147
 │   │       │   ├── gcs                          135
 │   │       │   ├── sqlite                       125
-│   │       │   ├── mariadb                       77
+│   │       │   ├── mariadb                       82
 │   │       │   ├── postgresql                    62
 │   │       │   └── mssql                         59
 │   │       └── report                            18
@@ -655,7 +659,7 @@ hold no source to count.
 │       └── configure                           5116
 └── test/
     └── core/
-        └── playground                         11279
+        └── playground                         11283
 ```
 
 ---
@@ -700,14 +704,15 @@ What capabilities are built out of.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-library` | reserved | not mounted | 8 |
+| `xmip-core-library` | reserved | not mounted | 9 |
 
-### `xmip-core-library`, 8 technologies
+### `xmip-core-library`, 9 technologies
 
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 8 — asn1, codec, net, ntlm, postgresql*, sql, ssh, tls
+- **scaffolded**, 9 — asn1, codec, mariadb, net, ntlm, postgresql*, sql, ssh,
+  tls
 
 ---
 
@@ -736,7 +741,7 @@ Things Xmip does.
 | `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
 | `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 12 |
-| `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 85 |
+| `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 88 |
 
 ### `xmip-core-authenticate`, 18 technologies
 
@@ -843,21 +848,21 @@ Declared, and none composed: `module/core/capability/transform` has no
 - **reserved**, 12 — dotnet, handlebars, jolt, jq, jsonata, liquid, mustache,
   rust, tera, wasm, xquery, xslt
 
-### `xmip-core-transport`, 85 technologies
+### `xmip-core-transport`, 88 technologies
 
-All 85 composed in `module/core/capability/transport`.
+All 88 composed in `module/core/capability/transport`.
 
-- **scaffolded**, 85 — activemq, amqp, as2, as4, aws, aws-kinesis, aws-sns,
+- **scaffolded**, 88 — activemq, amqp, as2, as4, aws, aws-kinesis, aws-sns,
   aws-sqs, azure, azure-blob, azure-event-grid, azure-event-hubs,
-  azure-service-bus, bacnet, bluetooth, can-bus, canopen, coap, cotp, dds,
-  dhcp, dicom, dnp3, dns, ethercat, ethernet, ethernet-ip, file, ftp,
+  azure-service-bus, bacnet, bluetooth, can-bus, canopen, coap, cotp, db2,
+  dds, dhcp, dicom, dnp3, dns, ethercat, ethernet, ethernet-ip, file, ftp,
   google-cloud-storage, google-pub-sub, hart, http, ibm-mq, iec-60870-5-104,
   iec-61850, imap, io-link, iso-tp, j1939, kafka, knx, lorawan, m-bus,
-  mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, named-pipe, nats,
-  nats-jetstream, nfs, obd-ii, opc-ua, peppol, pop3, postgresql, profinet,
-  rabbitmq, redis-streams, redpanda, s3, s7comm, secs-gem, serial, sftp, smb,
-  smtp, snmp, sqlite, ssdp, syslog, tcp, thread, udp, uds, unix-socket,
-  webdav, websocket, wireless-hart, wireless-m-bus, zigbee
+  mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe, nats,
+  nats-jetstream, nfs, obd-ii, opc-ua, oracle, peppol, pop3, postgresql,
+  profinet, rabbitmq, redis-streams, redpanda, s3, s7comm, secs-gem, serial,
+  sftp, smb, smtp, snmp, sqlite, ssdp, syslog, tcp, thread, udp, uds,
+  unix-socket, webdav, websocket, wireless-hart, wireless-m-bus, zigbee
 
 ---
 

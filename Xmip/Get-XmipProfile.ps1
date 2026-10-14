@@ -10,7 +10,9 @@
     A target is what a build runs on, a role what its node is for, a domain
     what it integrates (ADR-0015, amendment 2026-10-01). Each is a TOML file
     named by its word; a site under deploy/site picks one target, its roles
-    and its domains, and Resolve-XmipSite turns that into features.
+    and its domains, and Resolve-XmipSite turns that into features. The
+    archive targets are a role's, never a domain's: an archiving role names
+    the ones it carries (ADR-0015, amendment 2026-10-14).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -74,12 +76,11 @@ function Get-XmipProfile {
 }
 
 
-function Get-XmipRoleFeature {
+function Get-XmipRoleComposition {
     <#
         .SYNOPSIS
-            The root crate features one role is built with, its composed
-            roles expanded (executing is receiving, processing and sending),
-            each with the role that brought it.
+            One role and every role it is composed of, each read once
+            (executing is receiving, processing and sending): Role and Read.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -93,12 +94,62 @@ function Get-XmipRoleFeature {
 
     $read = Get-XmipProfile -Root $Root -Kind 'role' -Name $Role
 
-    foreach ($feature in @(Get-TomlValue -Node $read -Name 'features' -Default @())) {
-        [pscustomobject] @{ Feature = [string] $feature; From = "role $Role" }
-    }
+    [pscustomobject] @{ Role = $Role; Read = $read }
 
     foreach ($composed in @(Get-TomlValue -Node $read -Name 'roles' -Default @())) {
-        Get-XmipRoleFeature -Root $Root -Role ([string] $composed)
+        Get-XmipRoleComposition -Root $Root -Role ([string] $composed)
+    }
+}
+
+
+function Get-XmipRoleFeature {
+    <#
+        .SYNOPSIS
+            The root crate features one role is built with, its composed
+            roles expanded, each with the role that brought it.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Role
+    )
+
+    foreach ($each in @(Get-XmipRoleComposition -Root $Root -Role $Role)) {
+        foreach ($feature in @(Get-TomlValue -Node $each.Read -Name 'features' -Default @())) {
+            [pscustomobject] @{ Feature = [string] $feature; From = "role $($each.Role)" }
+        }
+    }
+}
+
+
+function Get-XmipRoleArchive {
+    <#
+        .SYNOPSIS
+            The archive targets one role carries, its composed roles
+            expanded, each with the role that named it: Technology and From.
+
+        .DESCRIPTION
+            An archiving role names them in `archives`, by repository name;
+            no domain selects one (ADR-0015, amendment 2026-10-14).
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Role
+    )
+
+    foreach ($each in @(Get-XmipRoleComposition -Root $Root -Role $Role)) {
+        foreach ($archive in @(Get-TomlValue -Node $each.Read -Name 'archives' -Default @())) {
+            [pscustomobject] @{ Technology = [string] $archive; From = "role $($each.Role)" }
+        }
     }
 }
 
@@ -127,12 +178,38 @@ function Get-XmipTargetClaim {
 }
 
 
+function Get-XmipArchiveTarget {
+    <#
+        .SYNOPSIS
+            Every archive target a role names: the technologies an archiving
+            role carries, which are a role's business and no domain's.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root
+    )
+
+    [string[]] $named = @(
+        foreach ($role in @(Get-XmipProfileName -Root $Root -Kind 'role')) {
+            foreach ($archive in @(Get-XmipRoleArchive -Root $Root -Role $role)) {
+                $archive.Technology
+            }
+        }
+    )
+
+    return @($named | Sort-Object -Unique)
+}
+
+
 function Get-XmipDomainTechnology {
     <#
         .SYNOPSIS
             A domain's members: every built technology whose leaf the domain
             names among its standards, across capabilities, less what a
-            target claims.
+            target claims and less every archive target, which a role names
+            and no domain selects (ADR-0015, amendment 2026-10-14).
 
         .PARAMETER Technology
             Get-XmipBuiltTechnology's answer, read once by the caller.
@@ -152,7 +229,9 @@ function Get-XmipDomainTechnology {
 
     $read = Get-XmipProfile -Root $Root -Kind 'domain' -Name $Domain
     [string[]] $standard = @(Get-TomlValue -Node $read -Name 'standards' -Default @())
-    [string[]] $claimed = @(Get-XmipTargetClaim -Root $Root)
+    [string[]] $claimed = @(
+        @(Get-XmipTargetClaim -Root $Root) + @(Get-XmipArchiveTarget -Root $Root)
+    )
 
     [object[]] $member = @(
         $Technology | Where-Object { $_.Leaf -cin $standard -and $_.Name -notin $claimed }

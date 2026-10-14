@@ -13,11 +13,14 @@ function Build-XmipService {
             domains it integrates; the profiles under deploy/profile say what
             each brings (ADR-0015, amendment 2026-10-01). The build carries
             the target's features, every role's (executing is receiving,
-            processing and sending), each domain technology the root crate
-            links through a feature, and xmip-service's own required
-            features, which its [[bin]] entry in Cargo.toml declares. A
-            domain technology xmip-service has no feature for yet is said
-            under Unlinked, not refused.
+            processing and sending), each domain technology and each archive
+            target the root crate links through a feature, and xmip-service's
+            own required features, which its [[bin]] entry in Cargo.toml
+            declares. The archive targets are the roles' that archive,
+            sending and operational, each naming them in its archives; no
+            domain selects one (ADR-0015, amendment 2026-10-14). A
+            technology xmip-service has no feature for yet is said under
+            Unlinked, not refused.
 
             The target vetoes. A role or a domain needing a feature the
             target refuses is REFUSED, naming the role or domain, the feature
@@ -28,8 +31,8 @@ function Build-XmipService {
             The build sets what is possible; the node's TOML picks from it at
             run time. Cargo runs at the estate root, in CARGO_TARGET_DIR when
             that is set. Returns the plan: Site, Target, Roles, Domains,
-            Features, Unlinked and Command, and Package with what -Package
-            made.
+            Archives, Features, Unlinked and Command, and Package with what
+            -Package made.
 
             -Package puts the build in the packages that carry it to a
             machine (ADR-0015, amendment 2026-10-13): it builds the runtime

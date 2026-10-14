@@ -3,22 +3,17 @@
 # The deploy profiles and sites (ADR-0015, amendment 2026-10-01). A site under
 # deploy/site picks a target, its node roles and its domains from the
 # profiles under deploy/profile, and Build-XmipService turns it into a build.
-# This holds the profiles to the estate they describe: every built technology
-# serves a domain or is a target's, every standard a domain names is one a
-# technology has, the role files are the node's own role words, every feature
-# named is the root crate's, and every site resolves, or is refused exactly
-# where its target says. The deploy files name a site that exists.
+# This holds the profiles to the estate they describe: every standard a
+# domain names is one a technology has, a target claims only built
+# technologies, no domain selects an archive target and every role carrying
+# archive names the archive targets (amendments 2026-10-14), the role files
+# are the node's own role words, every feature named is the root crate's, and
+# every site resolves, or is refused exactly where its target says. The
+# deploy files name a site that exists.
 
 BeforeDiscovery {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
-    $script:Built = @(
-        InModuleScope Xmip -Parameters @{ Manifest = $manifest } {
-            param($Manifest)
-            @(Get-XmipBuiltTechnology -Manifest $Manifest).Name
-        }
-    )
     $script:SiteName = @(
         Get-ChildItem -LiteralPath (Join-Path $script:Root 'deploy/site') -Filter '*.toml' |
             ForEach-Object { @{ Name = $_.BaseName } }
@@ -42,6 +37,7 @@ BeforeAll {
         [hashtable] $read = @{
             Technology = $technology
             Claimed    = @(Get-XmipTargetClaim -Root $Root)
+            Archived   = @(Get-XmipArchiveTarget -Root $Root)
             Cargo      = Get-XmipRootCargo -Root $Root
             Profile    = @{}
             SiteTarget = @{}
@@ -59,17 +55,18 @@ BeforeAll {
                     Refuses   = @(Get-TomlKey -Node $refuses)
                     Roles     = @(Get-TomlValue -Node $file -Name 'roles' -Default @())
                     Standards = @(Get-TomlValue -Node $file -Name 'standards' -Default @())
+                    Archives  = @(Get-TomlValue -Node $file -Name 'archives' -Default @())
                     Instead   = $null -ne (Get-TomlValue -Node $file -Name 'instead')
                 }
             }
         }
 
-        $read.Member = @(
-            foreach ($domain in $read.Profile['domain'].Keys) {
-                [hashtable] $asked = @{ Root = $Root; Technology = $technology; Domain = $domain }
-                Get-XmipDomainTechnology @asked
-            }
-        )
+        $read.Domain = [ordered] @{}
+
+        foreach ($domain in $read.Profile['domain'].Keys) {
+            [hashtable] $asked = @{ Root = $Root; Technology = $technology; Domain = $domain }
+            $read.Domain[$domain] = @(Get-XmipDomainTechnology @asked)
+        }
 
         [string] $sites = Join-Path $Root 'deploy/site'
 
@@ -95,21 +92,59 @@ BeforeAll {
     }
 }
 
-Describe 'Every built technology is in a domain or a target''s' {
-    It 'finds something built to place' {
-        $script:Read.Technology.Count | Should -BeGreaterThan 50
+Describe 'Targets claim, and archiving roles name, what is built' {
+    BeforeAll {
+        # The archive targets: the built technologies of the archive
+        # capability, whose name is the capability's and the leaf.
+        $script:Archive = @(
+            $script:Read.Technology |
+                Where-Object { $_.Name -ceq "xmip-core-archive-$($_.Leaf)" } |
+                ForEach-Object -MemberName Name
+        )
     }
 
-    It 'places <_>' -ForEach $script:Built {
-        $placed = $_ -in $script:Read.Member -or $_ -in $script:Read.Claimed
-
-        $placed | Should -BeTrue -Because (
-            "$_ serves no domain under deploy/profile/domain and no target claims it")
+    It 'finds something built' {
+        $script:Read.Technology.Count | Should -BeGreaterThan 50
+        $script:Archive.Count | Should -BeGreaterThan 0
     }
 
     It 'claims only built technologies' {
         $script:Read.Claimed | Where-Object { $_ -notin $script:Read.Technology.Name } |
             Should -BeNullOrEmpty
+    }
+
+    It 'selects no archive target in any domain' {
+        [string[]] $selected = @(
+            foreach ($domain in $script:Read.Domain.GetEnumerator()) {
+                $domain.Value | Where-Object { $_ -cin $script:Archive } |
+                    ForEach-Object { "$($domain.Key): $_" }
+            }
+        )
+
+        $selected | Should -BeNullOrEmpty -Because (
+            'an archive target is an archiving role''s, never a domain''s (ADR-0015, ' +
+            'amendment 2026-10-14)')
+    }
+
+    It 'names archive targets in every role carrying archive, and only there' {
+        [string[]] $wrong = @(
+            foreach ($role in $script:Read.Profile['role'].GetEnumerator()) {
+                [bool] $archives = 'archive' -cin $role.Value.Features
+
+                if ($archives -and $role.Value.Archives.Count -eq 0) {
+                    "role $($role.Key) carries archive and names no archive target"
+                }
+
+                if (-not $archives -and $role.Value.Archives.Count -gt 0) {
+                    "role $($role.Key) names archive targets and does not carry archive"
+                }
+
+                $role.Value.Archives | Where-Object { $_ -cnotin $script:Archive } |
+                    ForEach-Object { "role $($role.Key): $_ is no built archive target" }
+            }
+        )
+
+        $wrong | Should -BeNullOrEmpty
     }
 }
 
@@ -181,6 +216,29 @@ Describe 'Every site becomes a build, or is refused where its target says' {
         foreach ($required in $script:Read.Cargo.Required) {
             $plan.Features | Should -Contain $required
         }
+    }
+
+    It 'builds the archive targets of its archiving roles' {
+        $plan = Resolve-XmipTestSite -Site 'hospital-interface'
+
+        $plan.Archives | Should -Contain 'xmip-core-archive-parquet'
+        @($plan.Archives | Where-Object { $_ -cnotin $script:Read.Archived }) |
+            Should -BeNullOrEmpty
+    }
+
+    It 'builds no archive target from a domain' {
+        [string] $path = Join-Path $TestDrive 'ledger.toml'
+        Set-Content -LiteralPath $path -Value @(
+            'target = "server"'
+            'roles = ["receiving"]'
+            'domains = ["file-exchange", "managed-service"]'
+        )
+
+        $plan = Resolve-XmipTestSite -Site $path
+
+        $plan.Archives | Should -BeNullOrEmpty
+        @($plan.Unlinked | Where-Object { $_ -clike 'xmip-core-archive-*' }) |
+            Should -BeNullOrEmpty
     }
 
     It 'refuses a role the target refuses a feature of, in words' {

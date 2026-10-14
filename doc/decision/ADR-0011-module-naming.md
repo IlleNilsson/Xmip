@@ -246,19 +246,29 @@ use 3'rd party instead."*
 `saxon` stays. It is a real XSLT vendor, named here deliberately as a real
 example of the provider slot in use, and it was never a placeholder.
 
-## Amendment, 2026-10-12: Xmip ships nothing for Oracle
+## Amendment, 2026-10-14: no Oracle in the foundation; Oracle, MySQL and DB2 as transports
 
-Xmip ships nothing for Oracle — no transport, no PL/SQL contract. A provider
-may: the token-discipline example shows PL/SQL under `xmip-<provider>-contract-oracle`
-for that reason, and `xmip-core-transport-oracle` is gone from the estate. The
-owner: *"PL-SQL from Oracle we will keep our hands off. If an 3'rd party or
-provider want's to inlude it, it is on them"*, and *"As I said, we do not bother
-with Oracle or PL-SQL, someone else can do that if they want to."*
+Nothing of Oracle's is in Xmip's foundation: what starts a node and Xmip
+Storage name and depend on no Oracle product. The databases Xmip Storage can
+stand in front of are SQL Server, PostgreSQL and MariaDB; Oracle Database and
+MySQL are never among them. The owner: *"mssql, postgresl and mariadb can bee
+chosen for the core, Oracle is not supported for the core, only for transport
+(OracleDB and MySQL)."* As transports, Xmip ships
+`xmip-core-transport-oracle` (Oracle Database), `xmip-core-transport-mysql`
+and `xmip-core-transport-db2` (IBM DB2), beside `xmip-core-transport-mariadb`.
+The owner: *"What I meant was that we do not want Oracle in the core,
+foundation of Xmip. I got carried away. As a transport we shall have MySQL and
+OracleDB and IBM DB2"*, and, asked whether MariaDB stays a transport of its
+own, *"Yes"*.
 
-MySQL's name leaves the estate with it, because Oracle owns it, and MariaDB
-replaces it: `xmip-core-transport-mysql` and `xmip-core-archive-mysql` are
-`xmip-core-transport-mariadb` and `xmip-core-archive-mariadb`, their types
-`MariaDb`, their scheme `mariadb://` with no alias kept. MariaDB speaks the
-same wire protocol, so the transport still reaches MySQL servers. The owner:
-*"I'm not a fan of Oracle"*, and, asked which to name instead, *"do a good
-pick"* — MariaDB.
+MariaDB and MySQL share one wire, placed once in `xmip-core-library-mariadb`:
+MariaDB is a Xmip Storage server, so the library the foundation reaches is
+named for MariaDB. What MySQL does differently — its logins first — lives in
+`xmip-core-transport-mysql` alone, so a change Oracle makes to MySQL reaches
+neither MariaDB nor Storage. The owner: *"One never knows what Oracle does or
+do not."*
+
+PL/SQL stays a provider's: the token-discipline example shows it under
+`xmip-<provider>-contract-oracle`. The owner: *"PL-SQL from Oracle we will keep
+our hands off. If an 3'rd party or provider want's to inlude it, it is on
+them."*

@@ -9,8 +9,10 @@
 .DESCRIPTION
     A site (deploy/site/<name>.toml) picks a target, its roles and its
     domains. The build carries the target's features, every role's, and each
-    domain technology the root crate links through a feature; xmip-service's
-    own required features are always on. The target vetoes: a role or a
+    domain technology and each archive target of an archiving role that the
+    root crate links through a feature; xmip-service's own required features
+    are always on. A role, never a domain, brings an archive target (ADR-0015,
+    amendment 2026-10-14). The target vetoes: a role or a
     domain needing a feature the target refuses is REFUSED, in words naming
     the role or domain, the feature and the target's reason (ADR-0055). The
     build sets what is possible; the node's TOML picks from it at run time
@@ -23,8 +25,8 @@
 function Resolve-XmipSite {
     <#
         .SYNOPSIS
-            A site's build plan: Site, Target, Roles, Domains, Features,
-            Unlinked and Command. Throws REFUSED in words when the site
+            A site's build plan: Site, Target, Roles, Domains, Archives,
+            Features, Unlinked and Command. Throws REFUSED in words when the site
             cannot be built.
 
         .PARAMETER Root
@@ -76,22 +78,43 @@ function Resolve-XmipSite {
             Get-XmipRoleFeature -Root $Root -Role $role
         }
     )
+    # Each technology the build carries, with what brought it: a domain's
+    # members, and the archive targets an archiving role names.
+    [object[]] $archived = @(
+        foreach ($role in $roles) {
+            Get-XmipRoleArchive -Root $Root -Role $role
+        }
+    )
+    [object[]] $brought = @(
+        foreach ($domain in $domains) {
+            [hashtable] $asked = @{ Root = $Root; Technology = $technology; Domain = $domain }
+
+            foreach ($name in @(Get-XmipDomainTechnology @asked)) {
+                [pscustomobject] @{ Technology = $name; From = "domain $domain" }
+            }
+        }
+    ) + $archived
     [string[]] $member = @()
 
-    foreach ($domain in $domains) {
-        [hashtable] $asked = @{ Root = $Root; Technology = $technology; Domain = $domain }
+    foreach ($each in $brought) {
+        $member += $each.Technology
 
-        foreach ($name in @(Get-XmipDomainTechnology @asked)) {
-            $member += $name
-
-            if ($cargo.Linked.ContainsKey($name)) {
-                [string] $from = "domain $domain (through $name)"
-                $needed += [pscustomobject] @{ Feature = $cargo.Linked[$name]; From = $from }
+        if ($cargo.Linked.ContainsKey($each.Technology)) {
+            [string] $from = "$($each.From) (through $($each.Technology))"
+            $needed += [pscustomobject] @{
+                Feature = $cargo.Linked[$each.Technology]
+                From    = $from
             }
         }
     }
 
     $member = @($member | Sort-Object -Unique)
+    # A loop, not ForEach-Object -MemberName, which -WhatIf would ask about.
+    [string[]] $archives = @(
+        foreach ($each in $archived) {
+            $each.Technology
+        }
+    ) | Sort-Object -Unique
 
     Assert-XmipTargetVeto -Site $siteName -Target $target -Read $targetRead -Needed $needed
 
@@ -107,6 +130,7 @@ function Resolve-XmipSite {
         Target     = $target
         Roles      = $roles
         Domains    = $domains
+        Archives   = $archives
         Features   = $features
         Unlinked   = @($member | Where-Object { -not $cargo.Linked.ContainsKey($_) })
         Command    = 'cargo ' + ($argument -join ' ')
@@ -114,7 +138,9 @@ function Resolve-XmipSite {
     }
 
     # Argument is what Build-XmipService hands cargo; Command says it.
-    [string[]] $shown = @('Site', 'Target', 'Roles', 'Domains', 'Features', 'Unlinked', 'Command')
+    [string[]] $shown = @(
+        'Site', 'Target', 'Roles', 'Domains', 'Archives', 'Features', 'Unlinked', 'Command'
+    )
     [System.Management.Automation.PSMemberInfo[]] $standard = @(
         [System.Management.Automation.PSPropertySet]::new('DefaultDisplayPropertySet', $shown)
     )
@@ -203,7 +229,8 @@ function Assert-XmipTargetVeto {
         .SYNOPSIS
             REFUSED when a role or a domain needs a feature the target
             refuses, naming each: the role or domain, the feature and the
-            target's reason.
+            target's reason. A role needs a feature by naming it or by
+            naming an archive target the feature links.
     #>
     [CmdletBinding()]
     [OutputType([void])]
