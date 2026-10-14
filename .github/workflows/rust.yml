@@ -13,6 +13,12 @@ on:
 permissions:
   contents: read
 
+# .cargo/config.toml links the RocksDB kept under .local-work, which a runner
+# does not have: here it is compiled from source in every job that links it,
+# and the cache keeps it until the RocksDB version changes.
+env:
+  ROCKSDB_COMPILE: "1"
+
 jobs:
   # Every operating system Xmip targets, each reported on its own: one that
   # fails does not cancel the others (the owner, 2026-10-06: *lets turn on
@@ -98,3 +104,67 @@ jobs:
         run: |
           git submodule update --init module/foundation/core
           cargo build --manifest-path module/foundation/core/Cargo.toml --no-default-features --features serde --target thumbv7em-none-eabihf
+
+  # The phone host for the iPhone, built where Apple's tools run: the owner
+  # has no Mac (ADR-0014, amendment 2026-10-14). For the simulator, so
+  # nothing is signed; built, never run.
+  phone-ios:
+    name: Phone host, iOS simulator
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The runtime the remote build is made from, and what Xmip.Operations
+      # references: its own gui module and xmip-core-abi's Xmip.Surface. The
+      # runtime's estate dependencies are git dependencies on the branches
+      # ADR-0005 tracks, so nothing is patched to a working tree here; a
+      # landing does that (New-XmipLocalPatch), before anything is pushed.
+      - name: Submodules
+        run: git submodule update --init module/platform/runtime module/foundation/abi module/core/operation/gui
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: module/platform/runtime -> ../../../.ai-interaction/target-ios
+
+      # The newest stable Xcode on the image; the image's default can be
+      # older than the one .NET for iOS asks for.
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # global.json pins an 11 preview and rolls forward to the latest
+      # feature, prerelease allowed: the newest 11.0 preview or release
+      # candidate is one it accepts, and the one a developer has.
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - name: Install the MAUI iOS workload
+        working-directory: module/core/operation/gui
+        run: dotnet workload install maui-ios
+
+      # The one place the remote build is made (Build-XmipRemoteRuntime):
+      # a static library for a device and the simulator, joined into the
+      # xcframework Xmip.Abi.Native.props links.
+      - name: Remote runtime, iOS
+        shell: pwsh
+        run: |
+          Import-Module ./Xmip/Xmip.psd1
+          Build-XmipService -Remote iOS
+
+      # From the gui module, so its global.json chooses the SDK. Xcode's
+      # version is not held to the one .NET for iOS names: this checks that
+      # the host builds, and a newer Xcode builds it.
+      - name: Xmip.Operations, iOS simulator
+        working-directory: module/core/operation/gui
+        run: dotnet build src/Xmip.Operations/Xmip.Operations.csproj -f net11.0-ios -c Debug -p:RuntimeIdentifier=iossimulator-arm64 -p:ValidateXcodeVersion=false

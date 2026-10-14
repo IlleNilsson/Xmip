@@ -334,7 +334,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 258994 lines of production
+Where each repository mounts and what it holds: 259042 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -359,7 +359,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       5338
+│   │   │   ├── transport                       5364
 │   │   │   │   ├── db2                         2648
 │   │   │   │   ├── amqp                        2594
 │   │   │   │   ├── opc-ua                      2419
@@ -385,8 +385,8 @@ hold no source to count.
 │   │   │   │   ├── secs-gem                    1039
 │   │   │   │   ├── nats                         993
 │   │   │   │   ├── imap                         992
+│   │   │   │   ├── dicom                        984
 │   │   │   │   ├── ethercat                     978
-│   │   │   │   ├── dicom                        961
 │   │   │   │   ├── as2                          958
 │   │   │   │   ├── m-bus                        930
 │   │   │   │   ├── aws-sns                      920
@@ -623,7 +623,7 @@ hold no source to count.
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
 │   │   ├── abi                                26702  C# 24481 · Rust 1996 · PowerShell 225
-│   │   ├── event                               5633
+│   │   ├── event                               5631
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                2013
@@ -650,7 +650,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            23796
+│       ├── runtime                            23797
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163

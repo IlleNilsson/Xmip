@@ -103,7 +103,7 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     assert_eq!(output.status.code(), Some(2));
     let said = String::from_utf8_lossy(&output.stderr);
     assert!(said.contains("xmip-core-transport-sftp"), "{said}");
-    assert!(declarations(&directory).is_empty());
+    assert_eq!(declarations(&directory), Vec::<String>::new());
     let _ = std::fs::remove_dir_all(&directory);
 }
 
@@ -248,7 +248,7 @@ place = \"taken\"
     std::fs::write(directory.join("data").join("storage"), "not a Storage node").expect("writes");
     let said = refused(&configuration, &directory);
     assert!(said.contains("did not open"), "{said}");
-    assert!(declarations(&directory).is_empty());
+    assert_eq!(declarations(&directory), Vec::<String>::new());
     let audit =
         std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
     assert!(audit.contains("xmip-core-secret-vault"), "{audit}");
