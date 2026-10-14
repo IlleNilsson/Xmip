@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, domain, site
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, domain, site; archive target
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -18,7 +18,8 @@ release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01). macOS gets a `.pkg` with a
+`Build-XmipService` (amendment 2026-10-01); the archive targets are the
+archiving roles', never a domain's (amendment 2026-10-14). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).
@@ -154,14 +155,15 @@ drafting's, and the owner's to strike.
   description and the standards the domain serves. A standard is the leaf
   of a technology's position in `architecture.toml` (`hl7-v2`, `mllp`,
   `aws-sqs`), so a domain's members are every built technology whose leaf
-  it lists, across capabilities, less what a target claims. Thirteen:
-  healthcare, industrial, building-automation, vehicle, b2b,
+  it lists, across capabilities, less what a target claims and every
+  archive target, which is an archiving role's (amendment 2026-10-14).
+  Twelve: healthcare, industrial, building-automation, vehicle, b2b,
   managed-service (the managed services a hosting provider sells),
-  enterprise-messaging, database, file-exchange, mail, web-service,
-  network, and integration, the mechanisms every integration uses
-  (authenticate, authorize, identify, resilience, route, the common shapes,
-  paths and observation). Every built technology is in a domain or claimed
-  by a target, and `test/Deploy.Test.ps1` fails when one is not.
+  enterprise-messaging, file-exchange, mail, web-service, network, and
+  integration, the mechanisms every integration uses (authenticate,
+  authorize, identify, resilience, route, the common shapes, paths and
+  observation). A `database` domain was deleted and no profile has to
+  place every built technology (second amendment of 2026-10-14).
 
 **One place turns a site into a build: `Build-XmipService -Site`.** The
 features are the target's, every role's (executing expanded), each domain
@@ -476,3 +478,67 @@ refused the build with WIX7015 until its EULA is accepted, so neither the
 MSI nor its winget manifest has been made, validated or installed, and
 nothing was installed elevated (no UAC prompt is ever launched). `-Package
 deb`, `rpm` and `pkg` are refused in words.
+
+## Amendment, 2026-10-14: the archiving roles carry the archive targets
+
+**Provenance.** The owner, 2026-10-14: *Parquet is for archiving as other
+storage technologies.* Asked whether the archive targets should move from
+the domains to the roles that archive, he answered *Yes*.
+
+**What was wrong.** A domain's members were every built technology whose
+leaf it lists, across capabilities (amendment 2026-10-01), so a standard
+that named a storage technology pulled in its archive target with its
+transport: `database` listed `parquet` only for `xmip-core-archive-parquet`,
+the default archive target (owner, 2026-09-07), and its `mariadb`, `mssql`,
+`postgresql`, `sqlite` and `sql`, `file-exchange`'s `file` and
+`managed-service`'s `s3`, `azure-blob` and `gcs` brought the archive target
+of the same name. What a node archives to followed from what it integrates.
+
+**Archive targets are chosen by the roles that archive.** The roles that
+carry the `archive` feature, `deploy/profile/role/sending.toml` and
+`operational.toml`, name the archive targets they carry in `archives`, by
+repository name, as a target names its technologies in `claims`: the ten
+the domains pulled in until now — `azure-blob`, `file`, `gcs`, `mariadb`,
+`mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite` under
+`xmip-core-archive`. A composed role carries its parts' (executing is
+receiving, processing and sending, so it carries sending's).
+
+**No domain selects an archive target.** A domain's members are every
+built technology whose leaf it lists, across capabilities, less what a
+target claims and every archive target a role names. `parquet` went from
+`database`, and `gcs` from `managed-service`: each was there only for its
+archive target. The other standards stayed for the transports, contracts
+and stores they name; `database` itself was deleted the same day (next
+amendment).
+
+**One reader.** `Get-XmipRoleArchive` reads a role's `archives`, its
+composed roles expanded through `Get-XmipRoleComposition`, which
+`Get-XmipRoleFeature` uses as well; `Get-XmipArchiveTarget` is every role's,
+which `Get-XmipDomainTechnology` leaves out. `Build-XmipService` carries a
+site's roles' archive targets beside its domains' technologies, links each
+the root crate has a feature for, says the rest under `Unlinked`, and shows
+them in the plan as `Archives`. `test/Deploy.Test.ps1` fails when a domain
+selects an archive target, when a role carrying `archive` names none or a
+role not carrying it names one, or when a role names something that is not
+a built archive target.
+
+## Amendment, 2026-10-14: databases are technologies, not a domain
+
+**Provenance.** The owner, 2026-10-14: *I guess the profile domain is
+abit wonky. Database.toml. Databases are technologies, not a domain. When
+building & testing transports, there is where the build & tests shall
+occur.* He answered *Go ahead* to deleting the `database` domain and the
+requirement that a profile places every built technology.
+
+**The `database` domain is deleted**, `deploy/profile/domain/database.toml`
+with it; no site named it. Twelve domains remain, and the owner has not
+ruled on them.
+
+**No profile has to place every built technology.** The amendment of
+2026-10-01 held every built technology to a domain or a target's claim, and
+the one before this held it to an archiving role as well;
+`test/Deploy.Test.ps1` failed for each one placed nowhere. That rule is
+deleted. A transport, like every technology, is built and tested in its own
+module when it lands (`Publish-XmipChange`), and a site's build carries
+what its profiles select. The tests that a domain selects no archive target
+and that each archiving role names built archive targets stay.

@@ -122,8 +122,10 @@ processing and sending in one process) and the domains it integrates
 (`deploy/profile/domain`: healthcare, industrial, b2b, managed-service and
 the rest, each naming the standards it serves). `Build-XmipService -Site`
 turns it into one `cargo build` of `xmip-service`: the target's features,
-every role's, each domain technology the build can link, and the
-program's own. The target vetoes: a role or a domain needing a feature the
+every role's, each domain technology and each archive target the build can
+link, and the program's own. The archive targets are the archiving roles',
+sending's and operational's, each naming them; no domain selects one
+(ADR-0015, amendment 2026-10-14). The target vetoes: a role or a domain needing a feature the
 target refuses is refused in words, with the target's reason, and a device
 site is refused because `xmip-service` needs the standard library — what
 builds for a device is `xmip-core` alone.
@@ -234,9 +236,10 @@ capabilities or operational responsibilities, implemented by Artifact
 Instances, Modules or profiles, and they do not extend the role model.
 
 **A role also picks what is built.** `deploy/profile/role/<role>.toml`, one
-per role, says which capabilities a deployment's program carries for it, and
-a site names its roles beside its target and its domains (ADR-0015,
-amendment 2026-10-01).
+per role, says which capabilities a deployment's program carries for it,
+and a role that archives also which archive targets, and a site names its
+roles beside its target and its domains (ADR-0015, amendments 2026-10-01
+and 2026-10-14).
 
 Runtime roles are also **not human roles**. Observer, Operator, Developer,
 Administrator and Architect are people. A scoped human role such as Edge

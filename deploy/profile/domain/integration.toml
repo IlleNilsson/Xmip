@@ -1,7 +1,8 @@
 # The integration domain: the mechanisms every integration uses, whatever it
 # serves (ADR-0015, amendment 2026-10-01). Its members are every built
 # technology whose leaf in architecture.toml is a standard below, across
-# capabilities, less what a target claims.
+# capabilities, less what a target claims and every archive target, which
+# is an archiving role's (amendment 2026-10-14).
 
 description = """\
   The mechanisms every integration uses: who is calling, what they may do, \

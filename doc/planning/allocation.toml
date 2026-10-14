@@ -1835,3 +1835,21 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     ISO SQL's string and hex literals -> src/standard.rs
 #   module/core/capability/contract/sql/src/statement.rs
 #     Kind, the statement's verb -> src/verb.rs; the contract keeps Class
+
+# Code moved on 2026-10-14, the MariaDB client/server protocol placed once in
+# xmip-core-library-mariadb at module/core/library/mariadb, for the MariaDB
+# and MySQL transports and the MariaDB archive target:
+#   module/core/capability/transport/mariadb/src/wire.rs
+#     -> module/core/library/mariadb/src/wire.rs
+#   module/core/capability/transport/mariadb/src/result.rs
+#     -> module/core/library/mariadb/src/result.rs
+#   module/core/capability/transport/mariadb/src/handshake.rs
+#     the greeting, the response and the switch -> src/handshake.rs; the
+#     native password's scramble -> src/native_password.rs
+#   module/core/capability/transport/mariadb/src/client.rs
+#     the login, query, execute and close -> src/client.rs, the login now a
+#     plugin's (src/authentication.rs); the pool's liveness check stays in
+#     the transport, on the library's Client
+#   module/core/capability/transport/mariadb/src/session.rs
+#     the far end -> src/session.rs; the Stream an insert is, as the
+#     Location's column holds it, stays in the transport (taken)

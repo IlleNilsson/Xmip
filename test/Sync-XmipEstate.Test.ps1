@@ -392,6 +392,22 @@ Describe 'What the manifest tells GitHub' {
     }
 }
 
+Describe 'Whether GitHub has a repository' {
+    # A renamed repository keeps its old name as a redirect, and the request
+    # follows it: xmip-core-transport-mysql answered as xmip-core-transport-mariadb
+    # after the rename of 2026-10-12, and -Create would have skipped a name that
+    # was free (found 2026-10-14).
+    It 'reads a name that only redirects to another repository as free' {
+        InModuleScope Xmip {
+            Mock Invoke-XmipGitHubApi { [pscustomobject]@{ name = 'xmip-renamed' } }
+            [hashtable] $asked = @{ Owner = 'example'; GitHub = @{ Token = 'token' } }
+
+            (Test-XmipGitHubRepository @asked -Name 'xmip-old').Exists | Should -BeFalse
+            (Test-XmipGitHubRepository @asked -Name 'xmip-renamed').Exists | Should -BeTrue
+        }
+    }
+}
+
 Describe 'Configuring repositories' {
     # -Only was ignored here, so creating two repositories reconfigured all of
     # them, and GitHub's 350-character limit refused a description after the

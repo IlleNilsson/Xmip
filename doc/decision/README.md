@@ -761,7 +761,8 @@ release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01). macOS gets a `.pkg` with a
+`Build-XmipService` (amendment 2026-10-01); the archive targets are the
+archiving roles', never a domain's (amendment 2026-10-14). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).
@@ -1042,6 +1043,7 @@ You have a word. This gives you the decision that governs it.
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | alive | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| archive target | [Packaging and distribution](ADR-0015-packaging.md) |
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
 | attempt | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |

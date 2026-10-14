@@ -683,6 +683,8 @@ built with: one **target** it runs on (`device`, `edge`, `computer`,
 `deploy/profile` say what each brings, and `Build-XmipService -Site <name>`
 builds `xmip-service` with exactly that
 ([ADR-0015, amendment 2026-10-01](doc/decision/ADR-0015-packaging.md)). The
+archive targets come with the roles that archive, sending and operational,
+and never with a domain (amendment 2026-10-14). The
 target vetoes: a role or a domain needing what the target cannot have is
 refused in words, and a device, which cannot run `xmip-service`, is told
 that what builds for it is `xmip-core` alone. The build sets what is
@@ -1067,7 +1069,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now). |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now). |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |

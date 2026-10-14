@@ -154,6 +154,16 @@ function Test-XmipGitHubRepository {
         throw "GitHub returned $status for /repos/$Owner/$Name$detail"
     }
 
+    # A renamed repository keeps its old name as a redirect, and the request
+    # follows it to the new one: xmip-core-transport-mysql answered as
+    # xmip-core-transport-mariadb after the rename of 2026-10-12. A name that
+    # only redirects is free, not taken.
+    [hashtable] $named = @{ Object = $repository; Name = 'name'; Default = '' }
+    [string] $answered = [string](Get-XmipPropertyValue @named)
+    if ($answered -ine $Name) {
+        return [pscustomobject]@{ Exists = $false; Repository = $null }
+    }
+
     return [pscustomobject]@{ Exists = $true; Repository = $repository }
 }
 

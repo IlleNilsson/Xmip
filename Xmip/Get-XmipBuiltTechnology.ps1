@@ -8,9 +8,9 @@
 
 .DESCRIPTION
     One rule, read by the domain profiles under deploy/profile/domain
-    (Get-XmipDomainTechnology) and by test/Deploy.Test.ps1, which holds
-    every one of them to a domain or a target (ADR-0015, amendment
-    2026-10-01).
+    (Get-XmipDomainTechnology) and by test/Deploy.Test.ps1, which holds a
+    target's claims and an archiving role's archive targets to it (ADR-0015,
+    amendments 2026-10-01 and 2026-10-14).
 
     Style: doc/governance/powershell-style.md
 #>

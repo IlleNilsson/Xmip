@@ -867,3 +867,58 @@ owner, 2026-10-13, question by question.
 Provenance: the owner's decisions, quoted from his answers of 2026-10-13;
 the key names `local_timeout` and `start`, the declared wait and the
 deadline thread are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-10-14: the desktop host on the phone, and an MCP server to talk to Xmip
+
+**Provenance.** The owner, 2026-10-14: *we ne a phone app. The operator
+wants to know whar is going on. Extend it on .NET Blazor.* Offered three
+forms — the MAUI host on phone targets, the web GUI made phone-shaped, a
+separate phone host — he chose the MAUI host on phone targets, and, for
+what the operator sees first, cluster health. Of MCP: *I know, that requires
+internet, so it is not the first choice, but it has to be an apportunity as
+MCP*; *MCP does not relate to apps on a phone*; *As a developer or operator
+I can ask the MCP server, What do you got*; *What the MCP server responds is
+my way to talk to Xmip*; corrected, *No, it gives me answers on how to talk
+to Xmip*; and, told what the Model Context Protocol offers — prompts,
+resources, tools, and `server/discover` with the three lists for *What do
+you got* — *Great, so that is what the Xmip MCP Server has to do, the
+implementation is one of, generall, the questions, request beeing asked is
+per installation.* Of how a phone reaches the nodes away from the site:
+*VPN, would be nice, not only for the phone apps*; asked whether Xmip
+provides it or relies on one out of the box, *Depends if it is hard or shall
+we use out of the box*; told that the hard part is each OS's virtual network
+interface and that WireGuard ships for every target, *So lets get it out of
+the box. Now we have Phone apps and VS Code extensions and VPN, we depend on
+external parties. Let's keep that to a minimum.*
+
+- **The phone is the MAUI desktop surface on more targets**, not a fifth
+  surface: `Xmip.Operations` gains Android and iOS beside Windows, the
+  components stay `Xmip.Gui`'s, and on a phone it follows nodes remotely
+  over their operate listener (amendment 2026-10-12), inside Xmip's mutual
+  TLS. Its first view is cluster health: every node and every Receive
+  Location, Xmip Process and Send Location by its health, with the reason,
+  a tap drilling down. Offered the web GUI over the VPN instead, to depend
+  on fewer parties, the owner kept it: *Native GUI for the phones, fueled by
+  blazor if possible.* *And an iPhone target, not only Android.* With no
+  Mac, the iOS target is written but neither built nor tested until one is
+  at hand: *I do not have a Mac so that has to be pseudo, virtual ... Test
+  will be done later.* Decided, not built.
+- **An MCP server gives answers on how to talk to Xmip.** A developer or
+  operator asks it what it has — *What do you got* — and it answers how to
+  talk to Xmip, through what the protocol offers: prompts, resources and
+  tools, discovered and listed. The implementation is one, general; the
+  questions and requests it is asked are per installation. It is not about
+  the phone, and it is not the first choice, because it needs the
+  internet; it has to be there as an opportunity. Decided, not built; its
+  form is to be designed.
+- **A VPN out of the box, not only for the phone apps.** Xmip builds no VPN
+  of its own. It names no supplier: the owner, *I'm not sure about
+  pinpointing a supplier like WireGuard, it should be by protocol or
+  multiple suppliers of VPN.* Which protocols are to be decided.
+- **Dependence on external parties is kept to a minimum.** The phone apps
+  (Android, Apple), the VS Code extension and the VPN each depend on
+  another party; the owner named them and asked that such dependence stay
+  as small as it can.
+
+Provenance: the owner's decisions, quoted; the wording of the forms he
+chose between is the assistant's.

@@ -521,6 +521,11 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "IETF RFC 1006, ISO transport over TCP, TPKT and COTP"
+    [xmip.core.transport.db2]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core"]
+    description = "IBM DB2 transport: one row of a query is one Stream, a send is one INSERT; DRDA over TCP with the user ID and password security mechanism, TLS through the estate's own behind the tls feature, in the DB2 dialect of xmip-core-library-sql. A transport only: DB2 is never a Storage server. A xmip-core-transport technology."
+    specification = "The Open Group DRDA, Version 5 (DDM and FD:OCA): SQLAM level 11, security mechanism USRIDPWD (3), EXCSQLIMM and PRPSQLSTT, OPNQRY and CNTQRY under limited block protocol, RDBCMM"
     [xmip.core.transport.dds]
     maturity = "scaffolded"
     description = "DDS transport: RTPS over UDP — DATA submessages carry a sample whole and DATA_FRAG submessages carry it in fragments reassembled by sequence number; a Location is a participant's unicast locator; an in-process reader stands in for the domain. A xmip-core-transport technology."
@@ -721,8 +726,9 @@ dependency = []
     specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events"
     [xmip.core.transport.mariadb]
     maturity = "scaffolded"
+    description = "MariaDB transport: one row of a query is one Stream, a send is one INSERT; the client/server protocol of xmip-core-library-mariadb with MariaDB's native password, TLS through the estate's own behind the tls feature. A xmip-core-transport technology."
     specification = "MariaDB client/server protocol, the protocol-41 handshake: native password, COM_QUERY text protocol"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-library-mariadb", "xmip-core-library-sql", "xmip-core"]
     [xmip.core.transport.modbus]
       dependency = ["xmip-core"]
     maturity = "scaffolded"
@@ -735,6 +741,11 @@ dependency = []
     maturity = "scaffolded"
     specification = "Tabular Data Stream 7.4: pre-login, SQL Server authentication, SQL batch, token stream"
     dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
+    [xmip.core.transport.mysql]
+    maturity = "scaffolded"
+    description = "MySQL transport: one row of a query is one Stream, a send is one INSERT; xmip-core-library-mariadb's protocol with MySQL's caching_sha2_password, full authentication over the estate's TLS or the server's RSA key. What Oracle changes in MySQL lands here only. Never a Storage server. A xmip-core-transport technology."
+    specification = "MySQL client/server protocol, the protocol-41 handshake: caching_sha2_password (fast and full authentication, RSA-OAEP or TLS), mysql_native_password where a server still switches to it, COM_QUERY text protocol"
+    dependency = ["xmip-core-library-mariadb", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
     [xmip.core.transport.named-pipe]
       dependency = ["xmip-core-library-net", "xmip-core-context", "xmip-core"]
     maturity = "scaffolded"
@@ -755,6 +766,10 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     description = "OPC UA transport: one node's value is one Stream — the binary encoding over TCP, a secure channel with security policy None, an anonymous session, a Read and a Write of a ByteString, against a server or the in-process one this crate carries. A xmip-core-transport technology."
+    [xmip.core.transport.oracle]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
+    description = "Oracle Database transport: one row of a query is one Stream, a send is one INSERT; TNS and the two-task layer's order against a listener — the bodies and O5LOGON not yet Oracle's, so only its own far end answers — in the Oracle dialect of xmip-core-library-sql. A transport only: Oracle is never a Storage server. A xmip-core-transport technology."
     [xmip.core.transport.postgresql]
     maturity = "scaffolded"
     specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow"
@@ -1457,8 +1472,8 @@ dependency = []
     [xmip.core.archive.mariadb]
     description = "MariaDB archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-mariadb", "xmip-core-transport", "xmip-core-library-sql"]
-    specification = "SQL over the MariaDB client/server protocol, through the mariadb transport client"
+    dependency = ["xmip-core-library-mariadb", "xmip-core-library-sql"]
+    specification = "SQL over the MariaDB client/server protocol, through the xmip-core-library-mariadb client"
     [xmip.core.archive.mssql]
     description = "SQL Server archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1718,6 +1733,15 @@ dependency = []
   mount = "module/core/library/codec"
 
 
+  [xmip.core.library.mariadb]
+  description = "The MariaDB client/server protocol, both halves: framing, the protocol-41 login and authentication switch, OK, ERR, EOF and text result sets, the native password, a client over TLS where asked, and the far end a test serves. One protocol for the MariaDB and MySQL transports, the archive target and Xmip Storage."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-sql", "xmip-core-library-tls"]
+  mount = "module/core/library/mariadb"
+
+
   [xmip.core.library.net]
   description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, and HTTP itself, both halves: HTTP/1.1, and HTTP/2 with HPACK, which the http transport and every capability asking a service speak."
   architecturalDomain = "Library"
@@ -1746,7 +1770,7 @@ dependency = []
 
 
   [xmip.core.library.sql]
-  description = "SQL, one copy for every domain: delimited text with the closing delimiter doubled, a statement's verb, a literal and a binary value written and read, one INSERT written and taken apart, a parameter bound in, and the dialects Xmip speaks: ISO SQL, T-SQL, PostgreSQL, MariaDB and SQLite. A server's wire stays with its technology."
+  description = "SQL, one copy for every domain: delimited text with the closing delimiter doubled, a statement's verb, a literal and a binary value written and read, one INSERT written and taken apart, a bound parameter, and the dialects ISO SQL, T-SQL, PostgreSQL, MariaDB, Oracle Database, IBM DB2 and SQLite. A server's wire stays with its technology."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1836,6 +1860,7 @@ dependency = []
       "xmip-core-identify",
       "xmip-core-journey",
       "xmip-core-library-codec",
+      "xmip-core-library-mariadb",
       "xmip-core-library-net",
       "xmip-core-library-sql",
       "xmip-core-library-tls",
@@ -1873,6 +1898,7 @@ dependency = []
       "xmip-core-transport-canopen",
       "xmip-core-transport-coap",
       "xmip-core-transport-cotp",
+      "xmip-core-transport-db2",
       "xmip-core-transport-dds",
       "xmip-core-transport-dhcp",
       "xmip-core-transport-dicom",
@@ -1905,12 +1931,14 @@ dependency = []
       "xmip-core-transport-mqtt",
       "xmip-core-transport-msmq",
       "xmip-core-transport-mssql",
+      "xmip-core-transport-mysql",
       "xmip-core-transport-named-pipe",
       "xmip-core-transport-nats",
       "xmip-core-transport-nats-jetstream",
       "xmip-core-transport-nfs",
       "xmip-core-transport-obd-ii",
       "xmip-core-transport-opc-ua",
+      "xmip-core-transport-oracle",
       "xmip-core-transport-peppol",
       "xmip-core-transport-pop3",
       "xmip-core-transport-postgresql",
