@@ -3,8 +3,9 @@
 
 <#
     The runtime's remote build (ADR-0014, amendment 2026-10-14), built once in
-    Build-XmipRemoteRuntime.ps1: the Desktop one Xmip.Abi's tests load and the
-    Android ones Xmip.Operations packages through Xmip.Abi.Native.props.
+    Build-XmipRemoteRuntime.ps1: the Desktop one Xmip.Abi's tests load, the
+    Android ones Xmip.Operations packages through Xmip.Abi.Native.props, and
+    the iOS xcframework it links, made only on macOS (the CI's phone-ios job).
     Before 2026-10-14 a hand-run script built the ARM64 one and nothing built
     the x86_64 one, so the phone build failed on a missing file with a raw zip
     exception. What can be checked without building is checked here: where
@@ -145,6 +146,82 @@ Describe 'Each remote build is one cargo command' {
     }
 }
 
+Describe 'iOS is built on macOS, and refused in words elsewhere' {
+    It 'refuses the iOS build, its plan and -WhatIf off macOS' -Skip:$IsMacOS {
+        [string] $refused = 'REFUSED: the runtime builds for iOS only on macOS*'
+
+        { Get-XmipTestBuild -Platform iOS } | Should -Throw -ExpectedMessage $refused
+        {
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                Build-XmipRemoteRuntime -Root $Root -Platform iOS
+            }
+        } | Should -Throw -ExpectedMessage $refused
+        { Build-XmipService -Remote iOS -WhatIf } | Should -Throw -ExpectedMessage $refused
+    }
+
+    Context 'where the platform check passes' {
+        BeforeEach {
+            Mock -ModuleName Xmip Assert-XmipMacOS { }
+        }
+
+        It 'builds a static library for a device and the simulator, release, iOS 15, -j 2' {
+            [object[]] $build = Get-XmipTestBuild -Platform iOS
+            [string] $ios = Join-Path $script:Root '.ai-interaction/target-ios'
+
+            $build.Triple | Should -Be @('aarch64-apple-ios', 'aarch64-apple-ios-sim')
+
+            foreach ($one in $build) {
+                [string] $triple = $one.Triple
+
+                ($one.Subcommand -join ' ') | Should -Be 'rustc --lib --crate-type staticlib'
+                ($one.CargoArgument -join ' ') | Should -Be (
+                    "--release --target $triple -j 2 --no-default-features --features remote")
+                $one.TargetDirectory | Should -Be $ios
+                $one.Environment['IPHONEOS_DEPLOYMENT_TARGET'] | Should -Be '15.0'
+                $one.Library | Should -Be (Join-Path $ios (
+                        "$triple/release/libxmip_core_runtime.a"))
+            }
+        }
+
+        It 'says the cargo commands, then the xcframework of the two' {
+            [string[]] $command = InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                @(Get-XmipRemoteRuntimeCommand -Root $Root -Platform iOS)
+            }
+            [string] $ios = Join-Path $script:Root '.ai-interaction/target-ios'
+            [string] $device = Join-Path $ios 'aarch64-apple-ios/release/libxmip_core_runtime.a'
+            [string] $sim = Join-Path $ios 'aarch64-apple-ios-sim/release/libxmip_core_runtime.a'
+            [string] $output = Join-Path $ios 'xmip_core_runtime.xcframework'
+
+            $command.Count | Should -Be 3
+            $command[0] | Should -Be ('cargo rustc --lib --crate-type staticlib --release ' +
+                '--target aarch64-apple-ios -j 2 --no-default-features --features remote')
+            $command[1] | Should -BeLike '* --target aarch64-apple-ios-sim *'
+            $command[2] | Should -Be (
+                "xcodebuild -create-xcframework -library $device -library $sim -output $output")
+        }
+
+        It 'builds nothing under -WhatIf' {
+            Mock -ModuleName Xmip Build-XmipRemoteRuntime { }
+
+            Build-XmipService -Remote iOS -WhatIf
+
+            Should -Invoke -ModuleName Xmip Build-XmipRemoteRuntime -Times 0
+        }
+
+        It 'keeps the other platforms on cargo build --lib, with nothing to join' {
+            [object[]] $build = Get-XmipTestBuild -Platform Desktop
+
+            ($build[0].Subcommand -join ' ') | Should -Be 'build --lib'
+            InModuleScope Xmip -Parameters @{ Build = $build; Root = $script:Root } {
+                param($Build, $Root)
+                Get-XmipRemoteRuntimeBundle -Root $Root -Build $Build
+            } | Should -BeNullOrEmpty
+        }
+    }
+}
+
 Describe 'The phone host reads what the build writes' {
     BeforeAll {
         [string] $props = Join-Path $script:Root (
@@ -166,6 +243,16 @@ Describe 'The phone host reads what the build writes' {
 
         $remote = (Get-Command -Name Build-XmipService).Parameters['Remote']
         $remote.Attributes.ValidValues | Should -Contain 'Android'
+    }
+
+    It 'links the iOS xcframework where the build writes it, and names its command' {
+        [string] $xcframework = '.ai-interaction/target-ios/xmip_core_runtime.xcframework'
+
+        $script:Props | Should -BeLike "*$xcframework</XmipRuntimeXcframework>*"
+        $script:Props | Should -BeLike '*<Error *Build-XmipService -Remote iOS*'
+
+        $remote = (Get-Command -Name Build-XmipService).Parameters['Remote']
+        $remote.Attributes.ValidValues | Should -Contain 'iOS'
     }
 }
 

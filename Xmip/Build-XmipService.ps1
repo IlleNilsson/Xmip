@@ -55,9 +55,16 @@ function Build-XmipService {
             and x86_64-linux-android at API level 26 into
             .ai-interaction/target-android, linked by the Android NDK found
             under ANDROID_NDK_HOME, ANDROID_HOME or the per-user Android SDK;
-            Xmip.Operations packages both. Cargo runs with -j 2, one build
-            at a time. Returns Platform, Triple, Path and Length per library.
-            A landing builds each itself before the module that needs it.
+            Xmip.Operations packages both. iOS is the iPhone's, release,
+            only on macOS and REFUSED elsewhere: a static library for
+            aarch64-apple-ios and aarch64-apple-ios-sim into
+            .ai-interaction/target-ios, joined by xcodebuild into the
+            xmip_core_runtime.xcframework Xmip.Operations links; the
+            estate's CI builds it on macOS (.github/workflows/rust.yml, job
+            phone-ios). Cargo runs with -j 2, one build at a time. -WhatIf
+            says the commands. Returns Platform, Triple, Path and Length per
+            library and per xcframework. A landing builds Desktop and
+            Android itself before the module that needs it.
 
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.
@@ -72,7 +79,7 @@ function Build-XmipService {
 
         .PARAMETER Remote
             The runtime's remote builds to make instead of a site's:
-            Desktop, Android.
+            Desktop, Android, iOS.
 
         .EXAMPLE
             Build-XmipService -Site hospital-interface -WhatIf
@@ -104,6 +111,13 @@ function Build-XmipService {
 
             Builds the runtime's remote build for a phone and its emulator,
             the two libraries Xmip.Operations packages for Android.
+
+        .EXAMPLE
+            Build-XmipService -Remote iOS -WhatIf
+
+            On macOS, says the two cargo commands and the xcodebuild command
+            that make the xcframework Xmip.Operations links for an iPhone
+            and its simulator, building nothing.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Site')]
     [OutputType([pscustomobject])]
@@ -121,7 +135,7 @@ function Build-XmipService {
         [string[]] $Package = @(),
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Remote')]
-        [ValidateSet('Desktop', 'Android')]
+        [ValidateSet('Desktop', 'Android', 'iOS')]
         [string[]] $Remote
     )
 
@@ -203,9 +217,7 @@ function Build-XmipServiceRemote {
     foreach ($platform in $Remote) {
         [string] $ndk = if ($platform -eq 'Android') { Find-XmipAndroidNdk } else { '' }
         [string[]] $command = @(
-            Get-XmipRemoteRuntimeBuild -Root $Root -Platform $platform -Ndk $ndk |
-                ForEach-Object { "cargo build --lib $($_.CargoArgument -join ' ')" }
-        )
+            Get-XmipRemoteRuntimeCommand -Root $Root -Platform $platform -Ndk $ndk)
         [string] $what = "the runtime's remote build, $platform"
 
         if (-not $PSCmdlet.ShouldProcess($what, ($command -join '; '))) {

@@ -905,7 +905,10 @@ external parties. Let's keep that to a minimum.*
   will be done later.* Built for Android the same day, not yet run on a
   phone: `Xmip.Operations` targets `net11.0-android` everywhere,
   `net11.0-windows10.0.19041.0` on Windows and `net11.0-ios` only on
-  macOS, so the iOS target is written and never attempted here. What
+  macOS, so the iOS target is built on the CI's macOS machine
+  (`.github/workflows/rust.yml`, job `phone-ios`) for the simulator: the
+  runtime's remote build by `Build-XmipService -Remote iOS`, then the host;
+  not signed, not run. What
   configures a cluster — the Configure page, its editing components and
   the desktop's start (`MauiProgram.Desktop.cs`) — is compiled for Windows
   alone; the phone's start (`MauiProgram.Phone.cs`) takes `Surface =

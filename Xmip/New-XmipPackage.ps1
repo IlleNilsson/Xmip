@@ -183,6 +183,12 @@ function Build-XmipRuntimeLibrary {
             Builds the runtime's library, the one the operator surfaces load,
             from module/platform/runtime into TargetDirectory, with the cargo
             arguments xmip-service was built with.
+
+        .PARAMETER Subcommand
+            The cargo subcommand and what it builds, `build --lib` unless
+            said: iOS's remote build makes a static library with `rustc
+            --lib --crate-type staticlib`, leaving the crate's own crate
+            types in Cargo.toml as they are.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -195,7 +201,11 @@ function Build-XmipRuntimeLibrary {
 
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
-        [string[]] $CargoArgument
+        [string[]] $CargoArgument,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string[]] $Subcommand = @('build', '--lib')
     )
 
     [string] $was = $env:CARGO_TARGET_DIR
@@ -203,7 +213,7 @@ function Build-XmipRuntimeLibrary {
     Push-Location -LiteralPath (Join-Path $Root 'module/platform/runtime')
 
     try {
-        & cargo build --lib @CargoArgument 2>&1 | ForEach-Object { Write-Host "     cargo| $_" }
+        & cargo @Subcommand @CargoArgument 2>&1 | ForEach-Object { Write-Host "     cargo| $_" }
 
         if ($LASTEXITCODE -ne 0) {
             throw "FAILED: the runtime library's cargo build exited $LASTEXITCODE."
