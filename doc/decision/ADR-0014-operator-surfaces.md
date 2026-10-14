@@ -902,7 +902,17 @@ external parties. Let's keep that to a minimum.*
   blazor if possible.* *And an iPhone target, not only Android.* With no
   Mac, the iOS target is written but neither built nor tested until one is
   at hand: *I do not have a Mac so that has to be pseudo, virtual ... Test
-  will be done later.* Decided, not built.
+  will be done later.* Built for Android the same day, not yet run on a
+  phone: `Xmip.Operations` targets `net11.0-android` everywhere,
+  `net11.0-windows10.0.19041.0` on Windows and `net11.0-ios` only on
+  macOS, so the iOS target is written and never attempted here. What
+  configures a cluster — the Configure page, its editing components and
+  the desktop's start (`MauiProgram.Desktop.cs`) — is compiled for Windows
+  alone; the phone's start (`MauiProgram.Phone.cs`) takes `Surface =
+  "remote"` and nothing else, reads the document shipped inside the app,
+  resolves its certificate files and audit directory under the app's data,
+  and holds the Observer role, which is not configurable there. The
+  stylesheet's narrow-screen block lays the same pages out in one column.
 - **An MCP server gives answers on how to talk to Xmip.** A developer or
   operator asks it what it has — *What do you got* — and it answers how to
   talk to Xmip, through what the protocol offers: prompts, resources and
