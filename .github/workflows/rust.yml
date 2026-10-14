@@ -60,6 +60,16 @@ jobs:
       - name: Check
         run: cargo check --workspace --all-targets --all-features --locked
 
+      # A node's local endpoint is in the folder systemd (Linux) or launchd
+      # (macOS) makes for the node's account at install; the folder never
+      # moves (ADR-0014, amendment 2026-10-13), so the runner makes it as an
+      # install would, for the account the tests run as.
+      - name: Local endpoint folder
+        if: runner.os != 'Windows'
+        run: |
+          folder=$([ "$RUNNER_OS" = "Linux" ] && echo /run/xmip || echo /var/run/xmip)
+          sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" "$folder"
+
       - name: Test
         run: cargo test --workspace --all-features --locked
 
@@ -149,9 +159,11 @@ jobs:
           dotnet-version: 11.0.x
           dotnet-quality: preview
 
-      - name: Install the MAUI iOS workload
+      # Android too: Xmip.Operations targets Android on every machine, and
+      # restore reads every target framework before the iOS one is built.
+      - name: Install the MAUI iOS and Android workloads
         working-directory: module/core/operation/gui
-        run: dotnet workload install maui-ios
+        run: dotnet workload install maui-ios maui-android
 
       # The one place the remote build is made (Build-XmipRemoteRuntime):
       # a static library for a device and the simulator, joined into the
