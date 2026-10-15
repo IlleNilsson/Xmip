@@ -176,7 +176,10 @@ jobs:
 
       # From the gui module, so its global.json chooses the SDK. Xcode's
       # version is not held to the one .NET for iOS names: this checks that
-      # the host builds, and a newer Xcode builds it.
+      # the host builds. .NET 11 rc.2 for iOS wants the iOS 27 SDK, and the
+      # runner's newest stable Xcode is 26.6 (2026-10-15), so the managed
+      # linker links the framework SDKs only, as its own error advises; set
+      # back to the default once the runner carries Xcode 27.
       - name: Xmip.Operations, iOS simulator
         working-directory: module/core/operation/gui
-        run: dotnet build src/Xmip.Operations/Xmip.Operations.csproj -f net11.0-ios -c Debug -p:RuntimeIdentifier=iossimulator-arm64 -p:ValidateXcodeVersion=false
+        run: dotnet build src/Xmip.Operations/Xmip.Operations.csproj -f net11.0-ios -c Debug -p:RuntimeIdentifier=iossimulator-arm64 -p:ValidateXcodeVersion=false -p:MtouchLink=SdkOnly
