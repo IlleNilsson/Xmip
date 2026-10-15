@@ -723,7 +723,10 @@ port*. Let's Encrypt has issued no client authentication since 2026-07-08, so
 between nodes the cluster's authority issues (ADR-0033, amendment
 2026-10-13). Not built yet: `xmip-service` reads no `[provision]` table and
 starts no provisioner or authority; a provisioned key is a PEM file, not
-sealed under the key home; no DNS writer or lookup ships.
+sealed under the key home; no DNS writer or lookup ships. A person's
+certificate, purpose `operator`, is requested and signed since 2026-10-15
+(ADR-0034, amendment 2026-10-15) over the folder `internal-ca` keeps its
+authority in; the phone's key in its platform's keystore is the next step.
 
 **Open for the owner before step 5:** Let's Encrypt validates that the node
 controls a name — `http-01` needs the name's public port 80 reaching the

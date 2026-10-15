@@ -187,10 +187,11 @@ source a node's configuration names (ADR-0034; ADR-0033, amendment
 
 | Term | Meaning |
 | --- | --- |
-| **Purpose** | What a node's certificate is for: `receive`, what a Party reaches, server authentication alone; `node`, between nodes, server and client authentication. |
+| **Purpose** | What a certificate is for: `receive`, what a Party reaches, server authentication alone; `node`, between nodes, server and client authentication; `operator`, a person's surface reaching a node's operate listener, client authentication alone, its subject the person (ADR-0034, amendment 2026-10-15). |
+| **Operator certificate** | A person's certificate, purpose `operator`: the surface makes its own key and a request naming the person, and the cluster authority signs it after an approval out of band. The caller it proves is `CN=<person>`. Never obtained by a node. |
 | **Source** | Where a purpose's certificate comes from: an ACME directory, the cluster's authority, the node itself (self-signed), or an operator's files. A technology of `xmip-core-provision`; none is a default. |
 | **Provisioner** | One purpose's certificate kept in its place and obtained again at two thirds of the life it was issued with. |
-| **Cluster authority** | The cluster's own certificate authority (`internal-ca`), whose certificate every node holds as its anchor; it issues node certificates and answers ACME. |
+| **Cluster authority** | The cluster's own certificate authority (`internal-ca`), whose certificate every node holds as its anchor; it issues node certificates, answers ACME and signs an operator certificate's request. |
 
 ## Arrival and Departure
 
