@@ -121,6 +121,10 @@ jobs:
   phone-ios:
     name: Phone host, iOS simulator
     runs-on: macos-latest
+    # Allowed to fail until the runner's Xcode 27 is stable: .NET 11 rc.2 for
+    # iOS needs the iOS 27 SDK, and on 2026-10-15 macos-latest carries 26.6
+    # (the owner, 2026-10-15: *Option 2*). Remove this line then.
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
