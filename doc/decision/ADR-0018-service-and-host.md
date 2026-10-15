@@ -725,8 +725,8 @@ A Location whose receive waits for what arrives (`transport::Waiting::Waits`)
 and whose far end let go of what it handed over
 (`transport::Acknowledgement::at_most_once`) now goes on receiving after
 the stop until a receive finds nothing, which its own wait bounds, and never
-past `[tuning] receive_drain` from the stop (a second by default, the
-assistant's drafting for the owner to overrule), so senders that never
+past `[tuning] receive_drain` from the stop (a second by default; asked,
+the owner chose it, 2026-10-15: *1 second*), so senders that never
 pause cannot hold the stop. A polled Location, and one whose far end is
 told, stops as before: its far end keeps what it holds and sends it again.
 The rule is the runtime's, once (`xmip-core-runtime`'s `receiving::drain`),
