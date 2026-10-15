@@ -781,7 +781,16 @@ the Journeys that failed at each Send Port, a page at a time, with
 `--retry` or `--dismiss` on one; the PowerShell module answers the same as
 objects, the audit, the Subscriptions, the Event subscriptions, the Dead
 Message Queues and the failed Journeys included, and takes listing, Retry
-and Dismiss of failed Journeys as parameters of its scope cmdlet. Pause and resume are the two acts the
+and Dismiss of failed Journeys as parameters of its scope cmdlet. A person's
+certificate for reaching a node's operate listener, the phone first —
+client authentication alone, its subject the person — is made and signed by
+`xmip-cli certificate --operator <person>` and `xmip-cli certificate
+<request> --sign <file>`, and by the PowerShell module's certificate cmdlet
+with the same two parameter sets: the surface makes its own key
+and request, and the cluster's authority, named by the node configuration's
+`[provision.operator]`, signs it after an approval out of band
+([ADR-0034](doc/decision/ADR-0034-certificate-provisioning-versus-usage.md),
+amendment 2026-10-15). Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built

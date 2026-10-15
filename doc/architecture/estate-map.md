@@ -149,9 +149,13 @@ runtime-model.md section 5.
 `xmip-core-provision` and its technologies obtain and renew a certificate:
 `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`,
 the cluster's authority, served over ACME; `self-signed` for a lone offline
-node; and an operator's files. Proved in their tests, offline. `xmip-service`
-reads no `[provision]` table yet. Open problem 27. Records: ADR-0034, ADR-0033
-(amendment 2026-10-13).
+node; and an operator's files. A person's certificate, purpose `operator`, is
+requested by the surface with its own key and signed by the authority
+`[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`,
+`xmip_operate.h` section 19; the phone's key is not yet in its platform's
+keystore. Proved in their tests, offline. `xmip-service` reads no
+`[provision]` table yet. Open problem 27. Records: ADR-0034 (amendment
+2026-10-15), ADR-0033 (amendment 2026-10-13).
 
 #### `certificate-usage`
 
@@ -334,7 +338,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 259384 lines of production
+Where each repository mounts and what it holds: 261285 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -359,9 +363,9 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       5364
+│   │   │   ├── transport                       5424
 │   │   │   │   ├── db2                         2648
-│   │   │   │   ├── amqp                        2594
+│   │   │   │   ├── amqp                        2623
 │   │   │   │   ├── opc-ua                      2419
 │   │   │   │   ├── ftp                         2060
 │   │   │   │   ├── nfs                         2038
@@ -373,17 +377,17 @@ hold no source to count.
 │   │   │   │   ├── http                        1725
 │   │   │   │   ├── oracle                      1473
 │   │   │   │   ├── snmp                        1431
-│   │   │   │   ├── nats-jetstream              1344
+│   │   │   │   ├── nats-jetstream              1345
 │   │   │   │   ├── as4                         1325
 │   │   │   │   ├── postgresql                  1292
 │   │   │   │   ├── canopen                     1149
 │   │   │   │   ├── s7comm                      1142
-│   │   │   │   ├── dns                         1130
+│   │   │   │   ├── dns                         1134
 │   │   │   │   ├── mqtt                        1079
 │   │   │   │   ├── webdav                      1067
 │   │   │   │   ├── iec-61850                   1054
 │   │   │   │   ├── secs-gem                    1039
-│   │   │   │   ├── nats                         993
+│   │   │   │   ├── nats                         996
 │   │   │   │   ├── imap                         992
 │   │   │   │   ├── dicom                        984
 │   │   │   │   ├── ethercat                     978
@@ -395,8 +399,8 @@ hold no source to count.
 │   │   │   │   ├── j1939                        895
 │   │   │   │   ├── bluetooth                    889
 │   │   │   │   ├── lorawan                      884
+│   │   │   │   ├── activemq                     879
 │   │   │   │   ├── aws-kinesis                  871
-│   │   │   │   ├── activemq                     870
 │   │   │   │   ├── ethernet-ip                  869
 │   │   │   │   ├── azure-service-bus            861
 │   │   │   │   ├── pop3                         861
@@ -418,7 +422,7 @@ hold no source to count.
 │   │   │   │   ├── azure-blob                   692
 │   │   │   │   ├── mdns                         691
 │   │   │   │   ├── dds                          686
-│   │   │   │   ├── cotp                         682
+│   │   │   │   ├── cotp                         685
 │   │   │   │   ├── google-cloud-storage         674
 │   │   │   │   ├── io-link                      671
 │   │   │   │   ├── iec-60870-5-104              664
@@ -475,6 +479,12 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
+│   │   │   ├── provision                       1931
+│   │   │   │   ├── internal-ca                 1489
+│   │   │   │   ├── acme                        1160
+│   │   │   │   ├── self-signed                   80
+│   │   │   │       declared, not built 1
+│   │   │   │       platform
 │   │   │   ├── identify                        1448
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
@@ -495,12 +505,6 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── provision                       1349
-│   │   │   │   ├── internal-ca                 1438
-│   │   │   │   ├── acme                        1160
-│   │   │   │   ├── self-signed                   80
-│   │   │   │       declared, not built 1
-│   │   │   │       platform
 │   │   │   ├── contract                         906
 │   │   │   │   ├── graphql-schema               846
 │   │   │   │   ├── xml-schema                   759
@@ -596,13 +600,13 @@ hold no source to count.
 │   │   │   ├── tls                              677
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             7415
+│   │       ├── cli                             7803
 │   │       ├── gui                             4538
 │   │       │   └── vscode                      3236
 │   │       ├── observe                         3764
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2644  C# 2644 · PowerShell 0
+│   │       ├── powershell                      2799  C# 2799 · PowerShell 0
 │   │       ├── audit                           2542
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -622,7 +626,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                26737  C# 24516 · Rust 1996 · PowerShell 225
+│   │   ├── abi                                27226  C# 25005 · Rust 1996 · PowerShell 225
 │   │   ├── event                               5631
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -650,13 +654,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            24102
+│       ├── runtime                            24221
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5116
+│       └── configure                           5124
 └── test/
     └── core/
         └── playground                         11283

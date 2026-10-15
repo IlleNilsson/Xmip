@@ -173,8 +173,8 @@ record = ["ADR-0033", "ADR-0063"]
 [implementation.certificate-provisioning]
 name = "Obtaining and renewing certificates (ACME, an internal authority)"
 state = "built"
-note = "`xmip-core-provision` and its technologies obtain and renew a certificate: `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`, the cluster's authority, served over ACME; `self-signed` for a lone offline node; and an operator's files. Proved in their tests, offline. `xmip-service` reads no `[provision]` table yet. Open problem 27."
-record = ["ADR-0034", "ADR-0033 (amendment 2026-10-13)"]
+note = "`xmip-core-provision` and its technologies obtain and renew a certificate: `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`, the cluster's authority, served over ACME; `self-signed` for a lone offline node; and an operator's files. A person's certificate, purpose `operator`, is requested by the surface with its own key and signed by the authority `[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`, `xmip_operate.h` section 19; the phone's key is not yet in its platform's keystore. Proved in their tests, offline. `xmip-service` reads no `[provision]` table yet. Open problem 27."
+record = ["ADR-0034 (amendment 2026-10-15)", "ADR-0033 (amendment 2026-10-13)"]
 
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
@@ -1562,7 +1562,7 @@ dependency = []
     maturity = "reserved"
 
   [xmip.core.provision]
-  description = "Certificate provisioning (ADR-0034): a source obtains and renews a node's certificate for a purpose, what Parties reach or node to node, renewed at two thirds of its life. The P-256 key, the CSR and the certificate written once, and a purpose's configuration read. A source is a technology."
+  description = "Certificate provisioning (ADR-0034): a source obtains and renews a node's certificate for a purpose, renewed at two thirds of its life; a person's, purpose operator, is requested with the surface's own key and signed by the cluster's authority. Key, CSR, certificate and signing written once. A source is a technology."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
@@ -1575,7 +1575,7 @@ dependency = []
     # internal-ca rides on acme as its carrier (ADR-0044 clause 1): the
     # authority serves the same RFC 8555 objects and JWS the client speaks.
     [xmip.core.provision.internal-ca]
-    description = "The cluster's own certificate authority: issues node certificates for server and client authentication, served over ACME so every node uses one protocol. A xmip-core-provision technology."
+    description = "The cluster's own certificate authority: issues node certificates for server and client authentication, served over ACME so every node uses one protocol, and signs a person's operator request. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 server side, http-01 and dns-01 validation; RFC 5280 certificates"
     dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
@@ -1600,8 +1600,8 @@ dependency = []
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
-      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16 and section 17's serve exports; includes remote",
-      "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18 and section 17's client exports",
+      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16, section 17's serve exports and section 19's signing of a person's request; includes remote",
+      "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request, a person's key and request made",
       "dynamic-loading: the module loader (xmip_module.h); includes node",
       "test-support: the test fixtures; enabled only by the crate's own dev-dependency",
   ]
@@ -1629,6 +1629,9 @@ dependency = []
       "xmip-core-observe",
       "xmip-core-party",
       "xmip-core-persist",
+      # An operator's request made and signed for the surfaces (ADR-0034,
+      # amendment 2026-10-15): the capability, never a technology of it.
+      "xmip-core-provision",
       "xmip-core-receive",
       "xmip-core-route",
       "xmip-core-secret",
