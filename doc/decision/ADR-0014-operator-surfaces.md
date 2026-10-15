@@ -916,6 +916,9 @@ external parties. Let's keep that to a minimum.*
   resolves its certificate files and audit directory under the app's data,
   and holds the Observer role, which is not configurable there. The
   stylesheet's narrow-screen block lays the same pages out in one column.
+  Its first page is the web's: asked whether it should list every Location
+  instead, the owner, 2026-10-15: *Same as the web version.* One page,
+  `Xmip.Gui`'s `Cluster.razor`, for both.
 - **An MCP server gives answers on how to talk to Xmip.** A developer or
   operator asks it what it has — *What do you got* — and it answers how to
   talk to Xmip, through what the protocol offers: prompts, resources and
