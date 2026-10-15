@@ -233,12 +233,77 @@ refusing to sign); in `Xmip.Surface.Test` (a signed request is the caller a
 real operate listener proves, `CN=alice@example.org`, refused an act as
 Observer); in `Xmip.Cli.Test` and the PowerShell module's Pester suite.
 
-**Not yet.** The phone keeps its key as a PEM file: phase 2 makes the key in
-the platform's keeper — the Android Keystore, the iOS keychain or Secure
-Enclave — where it never leaves, which needs a request signed by that keeper
-(`csr::information` and `csr::assemble` are the two halves, written for it)
-and, through the ABI, an export of those halves; and the phone's TLS
-presenting a key it cannot read. `xmip-service` reads no `[provision]` table
-yet (open problem 27), so no node holds an authority on its own; the folder
+**Built the same day, phase 2: the key in the platform's keeper.** The
+phone's key is made in its platform's keeper and never leaves it; the
+request and every handshake are signed there.
+
+- **The two halves, placed once.** `xmip-core-provision`'s
+  `operator::information(person, public_key)` writes what a request signs
+  over the keeper's public key, read in either form a platform hands it —
+  `SubjectPublicKeyInfo` DER (the Android Keystore, Windows CNG) or the bare
+  uncompressed point (the iOS keychain) — and `operator::assemble` makes the
+  request of it and the keeper's signature, verifying that signature under
+  the key first, so a keeper that signed in another form is told so before
+  the authority is asked. `operator::request` is the two around a key in
+  memory. Exported in `xmip_operate.h` section 19 as
+  `xmip_operator_information_v1` and `xmip_operator_assemble_v1`, carried by
+  every build, the phone's remote build too, and bound in `Xmip.Abi`'s
+  `RuntimeCertificates` (`Information`, `Assemble`); the surface never
+  writes DER.
+- **TLS presenting a key it cannot read.** `xmip-core-library-tls` takes a
+  signer in place of a PEM key, `Identity::from_signer` with a `Sign`: a
+  rustls signing key for ECDSA on P-256 with SHA-256 whose every signature
+  is asked of the keeper. Section 17's remote open gains
+  `xmip_remote_open_kept_v1`, taking the chain and a signing callback with
+  its context instead of the key's PEM, forwarded by the runtime
+  (`ffi::keeper`) and bound as `RuntimeRemotes.OpenKept`, the callback held
+  until the handle is freed.
+- **The keepers.** One interface, `Xmip.Surface`'s `IOperatorKeeper`, and
+  one keeper per platform in `Xmip.Operations`: the Android Keystore
+  (`AndroidKeeper`; EC on secp256r1 in `AndroidKeyStore`, SHA-256, StrongBox
+  where the phone declares it, the trusted environment where StrongBox
+  cannot make the key), the iOS keychain in the Secure Enclave
+  (`EnclaveKeeper`; `kSecAttrTokenIDSecureEnclave`, permanent and tagged,
+  usable only on that phone while it is unlocked), and Windows CNG on the
+  desktop (`CngKeeper`; the Microsoft Platform Crypto Provider — the TPM —
+  first, the software provider where the TPM makes no P-256 key, never
+  exportable). `OperatorCertificate.RequestKept` makes the request over the
+  kept key — made first where none is kept, else the kept one asked again, so
+  a renewal keeps its key — and `Keep` keeps the chain the authority signed
+  once the keeper signs a probe its leaf verifies; `KeepAnchors` keeps the
+  cluster's authority. `SurfaceTls` names a keeper's key where a host's
+  document names a `Certificate` and no `PrivateKey`, and `RemoteOperator`
+  then opens kept. The host's Certificate page — on the phone and the
+  desktop alike — makes the request, shares it, and keeps the chain and the
+  authority, each act audited; what it keeps is presented from the next
+  start. The phone's shipped document names `Certificate = "operator.pem"`
+  and `TrustAnchor = "anchor.pem"` and no key.
+
+Proved: in `xmip-core-provision` (both forms of a public key make a request
+that reads; a fixed-width signature and another key's are refused in words);
+in `xmip-core-library-tls` (a client whose keeper signs is admitted by a
+mutual-TLS server, one whose keeper refuses is not, a server whose kept key
+is not its certificate's is refused, one whose is answers); in the runtime
+(both new section 19 exports across the boundary, and a kept open that is
+the caller `CN=phone` a served operate listener proves, while a keeper that
+refuses leaves the node unreachable); in `Xmip.Abi.Test` (the two halves
+from either form of a .NET key, a request .NET reads back naming the
+person); in `Xmip.Surface.Test` (a keeper's request signed by the authority,
+the chain kept and refused for another key, and the kept key presented to a
+real operate listener as `CN=alice@example.org`, refused an act as
+Observer); in `Xmip.Operations.Test` (Windows CNG, the software provider, on
+this machine: a key not exportable that makes a request). The Android
+keeper is built and not yet run on a phone; the iOS keeper is written and
+neither built nor run — iOS builds only on macOS. The TPM is not asked by
+any test: a key it made would outlive a failed run in the machine's chip.
+
+**Not yet.** `xmip-service` reads no `[provision]` table yet (open problem
+27), so no node holds an authority on its own; the folder
 `[provision.operator] authority` names is the one `internal-ca` keeps.
-Revocation of an operator's certificate is not decided.
+Revocation of an operator's certificate is not decided. The command line
+and the PowerShell module still make the key as a PEM file
+(`--operator`, `-Operator`) and take no keeper: the keepers live in the
+MAUI host, and whether those two surfaces gain one — Windows CNG first — is
+the owner's to say (ADR-0014, amendment 2026-09-19). The Certificate
+page's form, and whether the phone may take the cluster's authority from
+the chain it is sent rather than separately, are the owner's to say.

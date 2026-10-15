@@ -152,10 +152,13 @@ the cluster's authority, served over ACME; `self-signed` for a lone offline
 node; and an operator's files. A person's certificate, purpose `operator`, is
 requested by the surface with its own key and signed by the authority
 `[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`,
-`xmip_operate.h` section 19; the phone's key is not yet in its platform's
-keystore. Proved in their tests, offline. `xmip-service` reads no
-`[provision]` table yet. Open problem 27. Records: ADR-0034 (amendment
-2026-10-15), ADR-0033 (amendment 2026-10-13).
+`xmip_operate.h` section 19; on the phone and the desktop the key is made in
+the platform's keeper and never leaves it (the Android Keystore, the Secure
+Enclave, Windows CNG and the TPM), the request signed there in the two halves
+section 19 exports and every handshake signed there through
+`xmip-core-library-tls`'s `Sign`. Proved in their tests, offline.
+`xmip-service` reads no `[provision]` table yet. Open problem 27. Records:
+ADR-0034 (amendment 2026-10-15), ADR-0033 (amendment 2026-10-13).
 
 #### `certificate-usage`
 
@@ -338,7 +341,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 261285 lines of production
+Where each repository mounts and what it holds: 262977 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -479,7 +482,7 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
-│   │   │   ├── provision                       1931
+│   │   │   ├── provision                       1962
 │   │   │   │   ├── internal-ca                 1489
 │   │   │   │   ├── acme                        1160
 │   │   │   │   ├── self-signed                   80
@@ -597,11 +600,11 @@ hold no source to count.
 │   │   │   ├── ssh                             1559
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
-│   │   │   ├── tls                              677
+│   │   │   ├── tls                              770
 │   │   │   └── asn1                             526
 │   │   └── operation/
 │   │       ├── cli                             7803
-│   │       ├── gui                             4538
+│   │       ├── gui                             5050
 │   │       │   └── vscode                      3236
 │   │       ├── observe                         3764
 │   │       │   ├── otlp                         578
@@ -626,7 +629,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                27226  C# 25005 · Rust 1996 · PowerShell 225
+│   │   ├── abi                                27976  C# 25727 · Rust 2024 · PowerShell 225
 │   │   ├── event                               5631
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -654,7 +657,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            24221
+│       ├── runtime                            24527
 │       ├── persist                             8478
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163

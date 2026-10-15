@@ -790,7 +790,11 @@ with the same two parameter sets: the surface makes its own key
 and request, and the cluster's authority, named by the node configuration's
 `[provision.operator]`, signs it after an approval out of band
 ([ADR-0034](doc/decision/ADR-0034-certificate-provisioning-versus-usage.md),
-amendment 2026-10-15). Pause and resume are the two acts the
+amendment 2026-10-15). On the phone and the desktop the key is made in the
+platform's keeper and never leaves it — the Android Keystore, the iOS
+keychain's Secure Enclave, Windows CNG and the TPM — and the host's
+Certificate page makes the request over it, shares it, and keeps the chain
+the authority signs; every handshake is signed by the keeper. Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built
