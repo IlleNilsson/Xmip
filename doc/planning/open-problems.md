@@ -726,7 +726,13 @@ starts no provisioner or authority; a provisioned key is a PEM file, not
 sealed under the key home; no DNS writer or lookup ships. A person's
 certificate, purpose `operator`, is requested and signed since 2026-10-15
 (ADR-0034, amendment 2026-10-15) over the folder `internal-ca` keeps its
-authority in; the phone's key in its platform's keystore is the next step.
+authority in; since the same day the phone's and the desktop's key is made
+in the platform's keeper and never leaves it — the Android Keystore, the iOS
+keychain's Secure Enclave, Windows CNG and the TPM — the request signed
+there in two halves the runtime writes, and every handshake signed there
+(`Identity::from_signer`, `xmip_remote_open_kept_v1`). The Android keeper is
+built and not run on a phone; the iOS keeper is written and not built.
+Revocation of an operator's certificate is not decided.
 
 **Open for the owner before step 5:** Let's Encrypt validates that the node
 controls a name — `http-01` needs the name's public port 80 reaching the
