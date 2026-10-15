@@ -116,9 +116,25 @@ address = "{far}"
     )
 }
 
+/// A loopback address no one holds, for a service started later to bind.
+///
+/// Below every operating system's ephemeral range (Linux from 32768,
+/// Windows and macOS from 49152): a port the kernel chose for `:0` and this
+/// test released was taken by another test's connection before the service
+/// bound it, on the CI's macOS machine (2026-10-15). The kernel never hands
+/// these out by itself, each test process has a block of its own, and each
+/// call takes the next that binds.
 fn free_address() -> String {
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a free port");
-    listener.local_addr().expect("its address").to_string()
+    use std::sync::atomic::{AtomicU16, Ordering};
+    static NEXT: AtomicU16 = AtomicU16::new(0);
+    let block = 20_000 + u16::try_from(std::process::id() % 120).expect("small") * 100;
+    (0..100)
+        .map(|_| block + NEXT.fetch_add(1, Ordering::Relaxed) % 100)
+        .find_map(|port| std::net::TcpListener::bind(("127.0.0.1", port)).ok())
+        .expect("a free port in this process's block")
+        .local_addr()
+        .expect("its address")
+        .to_string()
 }
 
 /// The service's stdout, line by line, on a channel.
