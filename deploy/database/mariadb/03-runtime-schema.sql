@@ -89,6 +89,8 @@ CREATE TABLE `held` (
     `journey` binary(16) NOT NULL,
     `body` longblob NOT NULL,
     `held_at` datetime(6) NOT NULL,
+    `failed` boolean NOT NULL,
+    `due_at` datetime(6) NULL,
     CONSTRAINT held_key PRIMARY KEY (`queue`, `sequence`),
     CONSTRAINT held_unique UNIQUE (`queue`, `journey`)
 ) ENGINE=InnoDB;
@@ -102,6 +104,27 @@ CREATE TABLE `held_places` (
     `next_place` bigint NOT NULL,
     `held` bigint NOT NULL,
     CONSTRAINT held_places_key PRIMARY KEY (`queue`)
+) ENGINE=InnoDB;
+
+-- the Journeys that failed waiting in each Send Port's queue for an operator, in the order they failed, each once, with its place in the queue and why, written with the failure and taken out with the operator's act.
+CREATE TABLE `failed_journey` (
+    `queue` binary(16) NOT NULL,
+    `sequence` bigint NOT NULL,
+    `journey` binary(16) NOT NULL,
+    `place` bigint NOT NULL,
+    `reason` longtext NOT NULL,
+    `failed_at` datetime(6) NOT NULL,
+    CONSTRAINT failed_journey_key PRIMARY KEY (`queue`, `sequence`),
+    CONSTRAINT failed_journey_unique UNIQUE (`queue`, `journey`)
+) ENGINE=InnoDB;
+
+-- each queue's index of failed Journeys: its first place, its next and how many failed Journeys wait in the queue.
+CREATE TABLE `failed_journey_places` (
+    `queue` binary(16) NOT NULL,
+    `first_place` bigint NOT NULL,
+    `next_place` bigint NOT NULL,
+    `failed` bigint NOT NULL,
+    CONSTRAINT failed_journey_places_key PRIMARY KEY (`queue`)
 ) ENGINE=InnoDB;
 
 -- each node's Dead Message Queue: every Message nothing matched, at its place, with its receive context, what its gates concluded, its promoted properties and each Subscription's reason for declining, each once.

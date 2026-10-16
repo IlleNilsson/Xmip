@@ -175,10 +175,11 @@ none and stand under their host too; nothing is inferred from their names.
 
 ### 6. The audit is read in one place
 
-The reader is the capability's, beside the writer: `audit_store::read`
-reads `audit.toml` into records and keeps them, reading only what was
-appended since — the file only grows, so a view that reads again on every
-change of a cluster reads a few hundred bytes. `audit_query::AuditQuery` is
+The reader is the capability's, beside the writer: `audit_store` reads
+`audit.toml`, and reads again only what was appended since — the file only
+grows, so a view that reads again on every change of a cluster reads a few
+hundred bytes. It keeps an index of the file, never its records, and reads
+a page at a time (amendment 2026-10-16). `audit_query::AuditQuery` is
 what every surface asks, in one set of words: who (`location`, at and
 beneath a scope; `host`; `program`; one `record`), the scope `pattern` by the
 estate's one wildcard over each location, `severity`, `action`, `from` and
@@ -280,3 +281,36 @@ writes to them round robin. With no cluster reachable, the operating
 system's log takes the record (clause 3). How a tool finds the Storage
 nodes — asking the node it works against for its list, then round robin —
 is the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-10-16: the reader is bounded in bytes, and a full keeper makes the writer wait
+
+Open problem 38 (the outside review and the performance review of
+2026-10-12): clause 6's reader kept every record of each file it had read,
+filtered, grouped and sorted all of them for every query whatever page it
+returned, and the keeper's inbox had no bound.
+
+- **The reader keeps no record** (clause 6 amended). `audit_store::ask`
+  answers an `AuditQuery` a page at a time from `audit.toml`, through an
+  index of the file it extends with what was appended since: blocks of
+  records by their bytes, each with its earliest and latest time and how
+  many records of each kind it holds. The words, the groups, the counts and
+  the page are clause 6's, unchanged: every surface gets the answer a whole
+  read would give.
+- **What it keeps is bounded in bytes**: `audit_store::BUDGET`, 16 MiB for
+  a process, half its indexes, half the blocks it read lately. An index
+  over its half merges its older blocks, so the newest, where a reader
+  begins, stay short. The reader runs in a surface, which reads no node's
+  configuration, so the budget is the code's constant and not `[tuning]`.
+- **A full keeper makes the writer wait.** The keeper's inbox holds at most
+  4,096 hand-overs; one handed over while it is full waits for room, and
+  none is dropped or refused. A record is evidence: *nothing an Xmip program
+  does fails silently* (the decision), and a writer's chain proves its log
+  complete (ADR-0070 clause 5), which a record left out would break without
+  a word. Failing the caller instead would leave it a record with nowhere to
+  go but the operating system's log, which clause 3 keeps for when audit
+  cannot persist, not for when it is behind. A writer waiting on a disk
+  that is behind is load, not Xmip's overhead.
+
+**Provenance.** The assistant's, repairing open problem 38: the index and
+its blocks, the budget and its value, for the owner to view and overrule.
+Waiting over failing when the keeper is full is the owner's, 2026-10-16.

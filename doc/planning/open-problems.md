@@ -883,10 +883,35 @@ Journey that failed waiting in a queue it sends, with its reason
 can be published; admission bounds what is in flight, not this. Repaired the
 same day: a Journey read Failed again is found by its Journey at once, not
 by looking through all of them, and a whole read of a queue forgets every
-place passed over that has left it. What remains: memory still grows with
+place passed over that has left it. What remained: memory still grew with
 the number of failed Journeys waiting. Needed: the count, and an index of
 the failed Journeys of each queue, kept by Xmip Storage in the Ledger and
 read from it, with the node keeping a bounded window of the oldest.
+
+Repaired 2026-10-16. The hand-on that writes a Journey Failed names its
+queue and why (`HandOn::failed`), and Xmip Storage enters it at the end of
+that queue's index of failed Journeys — the `failed_journey` and
+`failed_journey_places` tables, numbered as every queue is — and marks its
+place in the queue failed (`held.failed`), in that one write; an operator's
+Retry or Dismiss takes it out in its own (`HandOn::cleared`). How many wait
+is one read of the index's places (`XmipStorage::read_failed`). The node
+keeps per Send Port that count and the oldest `[tuning] failed_window` (a
+hundred by default), read again only where the index's places moved, and
+publishes them; `xmip_failed_journeys_v1` pages the rest from the index,
+each page one read, its `next` a place in the index. A scan passes over a
+place marked failed without reading its Journey, except where it blocks a
+Sequential Port's sequence (`runtime-model.md` section 10, corrected
+2026-10-16; `tests/ledger/send_bounded.rs`). What remains: a Journey
+written Failed before this change, or by a writer that does not name its
+queue, is in no index — before the first release nothing migrates it; a
+gap the index's first place must cross is read place by place, as in every
+queue (problem 40); and a publication's list (`SnapshotOperator`,
+`PublicationReading.FailedJourneysWithin`) still pages by the place in the
+Send Port's queue while a node's own list pages by the place in the index:
+a publication carries no index places. Said so precisely, the same day, in
+`IOperatorSurface.FailedJourneys`, `xmip-cli journey --offset` and
+`Get-XmipScope -Offset`; making the two one would mean publishing each
+Journey's place in the index.
 
 ## 35. Loopback proves where a caller is, not who
 
@@ -936,9 +961,10 @@ Raised by the outside review of 2026-10-12. The send pool admits a bounded
 number of Journeys, and each reads its Message whole before its transport
 sends it, since `Transport::send` takes a byte slice
 (`transport/.src/protocol.rs`), so resident memory grows with the sizes
-of what is in flight. The audit file reader (`xaudit::audit_store::read`)
-keeps every record it has read, and problem 34's backlog grows with the
-failures. Needed: a send that streams through the transport capability,
+of what is in flight. The audit file reader kept every record it had read
+(repaired for audit 2026-10-16, below); problem 34's backlog, which grew with the
+failures, is kept by Xmip Storage since 2026-10-16, the node holding a
+bounded window of it. Needed: a send that streams through the transport capability,
 taking the Message a chunk at a time as `runtime-model.md` section 10
 already allows; a byte budget beside the pool's count; audit queries read
 a page at a time from Storage.
@@ -951,9 +977,36 @@ grows with the batch; excess should stay at its durable source. Each
 Receive Location has a pool of its own, at most twice the hardware threads
 by default, so a node of many Locations has no ceiling of its own: needed
 is a node-wide execution and memory budget beside each Location's
-isolation. The audit file reader filters, groups and sorts the whole
-history it keeps for every query, whatever page it returns, and the
-keeper's inbox is unbounded.
+isolation. The audit file reader filtered, grouped and sorted the whole
+history it kept for every query, whatever page it returned, and the
+keeper's inbox was unbounded.
+
+Repaired for audit 2026-10-16. The reader keeps no record: `audit_store::ask`
+keeps an index of each audit file (`audit_index`) — blocks of 64 records by
+their bytes, each with its earliest and latest time and its count of each
+kind, a kind being what a query asks by but time and identifier — extended
+by what was appended since. The counts, groups and actions come from it;
+the page from the few blocks it can be in, walked from the page's own end
+and stopped where the page is found, read from the file and kept parsed
+while they fit (`audit_cache`). What a process keeps of its audit is
+bounded in bytes by `audit_store::BUDGET`, 16 MiB, half the indexes, half
+the blocks read lately: an index over its half merges its older blocks, so
+the newest stay short. A surface reads no node's configuration, so the
+budget is a constant, not `[tuning]`. A verification and a page sorted by
+the summary read the file through a piece at a time, holding the page
+(`audit_scan`). The keeper's inbox holds at most 4,096 hand-overs and, full,
+makes the writer wait: an audit record is evidence and is never dropped or
+sent to the operating system's log for being late (ADR-0062 clause 3,
+ADR-0070 clause 5; ADR-0062, amendment 2026-10-16). The pages are those a
+whole read gives, held equal over every column, order, filter and time
+window, and a page took 3.1 ms over 2,048 records and 3.5 ms over 204,800
+on a machine at 96% load (`audit_store`'s tests). What remains: a deep
+page into an old history reads a merged block, longer the longer the
+history; a page sorted by the summary and a verification read the whole
+file; a query naming a time counts the blocks within it; looking up a
+record that is not there reads every block; and audit is read from the
+program's file, not yet from Xmip Storage, where ADR-0062's amendment of
+2026-10-01 puts it.
 
 ## 39. A send the process did not finish leaves its file behind
 
@@ -1018,6 +1071,47 @@ release:
   `storage` role.
 - **The service account** (open problem 28) and whether the starter grants
   local tools more than Observer (ADR-0014, amendment 2026-10-13).
+
+## 43. A Journey waiting for a retry holds a place every Port shares
+
+Raised by the outside review of 2026-10-16. Admission counts every Journey
+the node owns against one node-wide number of places
+(`runtime/src/send_step/admission.rs`), a Journey waiting for its retry's
+due time included: `dispatch.rs` keeps it owned until its next pass ends.
+That holds memory to the pool, as intended, and it lets one failing Send
+Port fill every place with Journeys that only wait, so a scan finds no room
+and the healthy Ports send nothing until the failing one's retries end.
+Decided by the owner, 2026-10-16: a waiting Journey holds no place. Its
+claim and place are released, Xmip Storage keeps its due time in its queue,
+and a scan takes it again once it is due, so what waits stays in the Ledger
+and a far end that fails cannot stop the others.
+
+Built 2026-10-16. The hand-on that writes a Journey Recovering names its
+queue and its backoff (`HandOn::waits`), and Xmip Storage keeps its due
+time at its place in that queue — the `held` table's `due_at`, on Xmip
+Storage's clock — and releases the claim, in that one write; nothing stays
+owned, so its place in the Send pool frees with it. A read of a queue
+answers with Xmip Storage's clock beside its entries
+(`HeldQueue::read_unix_nanos`, `HeldQueue::due_in`), so a node tells how long
+one still waits as a duration and never compares two clocks. A scan passes
+over an entry not yet due without claiming it — on a Sequential Port
+reading it, so its sequence waits behind it — and claims it once due, on
+any node, its tries counted on from its `attempts`. The node keeps per
+queue only the earliest due time and how many wait (`send_step::due`), as
+the queue's last read showed, and wakes for that time; the list of every
+waiting Journey in memory is gone, and with it the resume path and its
+renewal. A pass whose claim was not surely the node's when it began now
+tries nothing and writes nothing (`Ended::Untried`): it had been written
+Recovering, a send entry and a backoff for a try never made, which a node
+under load showed as one entry too many in
+`send::a_retry_due_is_tried_again_on_the_active_location_and_sent`.
+`tests/ledger/send_waiting.rs` proves a healthy Port sending all its
+Journeys while three times as many as the pool has places wait on a far end
+that always fails, no claim held by a waiting Journey, every due time kept
+across a restart, and a pass that tried nothing leaving no entry. What
+remains: an embedded store made before it reads no held entry, and before
+the first release nothing migrates it; a scan still reads every waiting
+entry of a queue at each `send_scan`, as it reads every entry (problem 40).
 
 ---
 

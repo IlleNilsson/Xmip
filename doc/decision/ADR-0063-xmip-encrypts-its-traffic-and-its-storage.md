@@ -195,3 +195,17 @@ support encryption of that*.
    itself**: every record is sealed by persist's `EncryptedStore` before
    RocksDB or SQLite sees it, as clause 2 says and as built today, and a
    Storage node under test is no exception.
+
+## Amendment, 2026-10-16: a key on disk is a private file, written here once
+
+Clause 4's key home also owns how a key is kept as a file. `xmip-core-secret`'s
+`private_file` writes every key and identity the estate keeps on disk — the
+key-encryption keys of `file` and `dpapi`, a node's certificate and key, the
+cluster's authority, an ACME account key and a person's operator key:
+owner-only before the first byte (mode `0600`, a created directory `0700`;
+on Windows an access list of the user the process runs as and `SYSTEM`,
+protected from inheritance), synced, then moved into place whole, the
+directory synced after on Unix. A node's identity switches as one through a
+generation folder named by one file (ADR-0034, amendment 2026-10-16). The
+access list is set in `.src/private_file/dacl.rs`, the one file of the crate
+that allows unsafe code (ADR-0050, amendment 2026-09-25).

@@ -464,8 +464,9 @@ same way (`[tuning] send_threads_per_hardware_thread`, two by default, and
 `send_idle`), and the send step dispatches on it (section 10, *How a send
 runs*): a Journey's hand-on — Completed, Failed with why, or Recovering
 with its due time — is one atomic write through Xmip Storage, and a retry
-waiting for its backoff holds no thread, its claim kept in the Ledger to
-its due time.
+waiting for its backoff holds no thread, no claim and no place in the pool,
+its due time kept at its place in its queue (section 10, corrected
+2026-10-16).
 
 **Executing keeps the hops in one process.** A node declaring the executing
 role runs receiving, processing and sending in one Host Service for low
@@ -1088,9 +1089,10 @@ order (`send_locations`, or the Location bound under the Port's name),
 in one write: **Completed** and out of its queue; **Failed** with why in
 words, its Message with it, kept in its queue for an operator — where a
 Sequential Port's `on_failure = "block"` stops its sequence behind it, and
-otherwise passed over; or **Recovering**, its claim kept to its due time,
-which is the due time in the Ledger, the node keeping when it is due only
-to start it again.
+otherwise passed over; or **Recovering**, its due time kept at its place in
+its queue and its claim released, a scan passing over it until it is due
+(corrected 2026-10-16, below; until then its claim was kept to its due
+time and the node kept the Journey in memory to start it again).
 **Recovery** is a scan: as a node starts and every `[tuning] send_scan`
 after, each queue it sends is read oldest first and every Journey no live
 claim holds is claimed (`[tuning] send_lease`) and sent — one a dead node
@@ -1166,7 +1168,8 @@ waits for its due time.
   from its Send Locations — until now the figures were looked up by each
   Send Location's name, so a Port of several Locations had none — with how
   many failed wait in its queue; and, beside its records, how many and the
-  oldest hundred of them with why. Every one is read from Xmip Storage a
+  oldest hundred of them with why (`[tuning] failed_window`, corrected
+  2026-10-16, below). Every one is read from Xmip Storage a
   page at a time (`xmip_operate.h` section 16), and every surface lists them
   at the Port's scope with Retry and Dismiss on each.
 
@@ -1276,6 +1279,46 @@ waits for its due time.
   forgotten. The node still keeps each Failed Journey of the queues it
   sends in memory; keeping the count in Xmip Storage is open
   (`open-problems.md` problem 34).
+
+**Corrected 2026-10-16** (`open-problems.md` problem 34):
+
+- **Xmip Storage keeps the failure backlog, the node a window of it.** The
+  hand-on that writes a Journey Failed names its queue and why, and Xmip
+  Storage enters it at the end of that queue's index of failed Journeys
+  and marks its place in the queue failed, in that one write; an
+  operator's Retry or Dismiss takes it out in its own. The index is
+  numbered as it is written, as every queue is, so how many wait is one
+  read of its places and the oldest are its first entries. The node keeps,
+  per Send Port, that count and the oldest `[tuning] failed_window` (a
+  hundred by default), read again only where the index's places moved;
+  the snapshot publishes that window, and a surface pages the rest from the
+  index, each page one read. A scan passes over a place marked failed
+  without reading its Journey, except where it blocks a Sequential Port's
+  sequence. Until now the node kept every Journey a scan had read Failed,
+  with why, and every place passed over, so its memory grew with the
+  failures, and every node read each failed Journey once after a restart
+  to find it again.
+- **A Journey waiting for a retry holds no place** (the owner, 2026-10-16;
+  `open-problems.md` problem 43). The hand-on that writes it Recovering
+  keeps its due time at its place in its queue — Xmip Storage's now and the
+  backoff, on Xmip Storage's clock — and releases its claim, so it holds no
+  claim, no place in the Send pool and no memory. A read of a queue answers
+  with Xmip Storage's clock beside the entries, so a node tells how long an
+  entry still waits as a duration and never compares two clocks; a scan
+  passes over an entry not yet due without claiming it — on a Sequential
+  Port reading it, so its sequence waits behind it — and claims it, on any
+  node, once it is due, its tries counted on from its `attempts`. The node
+  keeps per queue only the earliest due time and how many wait, as the
+  queue's last read showed, and wakes for that time. Until now a waiting
+  Journey stayed owned, its claim kept to its due time, and counted against
+  the places every Port shares, so one far end that failed every send
+  filled them and the healthy Ports sent nothing until its retries ended.
+- **A pass that tried nothing writes nothing.** A pass whose claim is not
+  surely this node's when it begins — its last confirmation older than a
+  lease, though no renewal found it another's — gives the claim back and
+  asks for its queue to be read, where a scan claims it afresh. Until now
+  it was written Recovering: an entry and a backoff for a try never made,
+  which a node under load showed as a send entry too many.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
@@ -1452,8 +1495,9 @@ A Journey is marked delivered only after the far end confirms. Where the far
 end can deduplicate, the key Xmip hands it is the **Journey id**, not the
 Message id (the owner, 2026-10-01): a Message matched by two Subscriptions to
 one endpoint is two deliveries, and a retry of one Journey is the same
-delivery. A retry waiting for its backoff holds no thread; its due time is in
-the Ledger (section 3).
+delivery. A retry waiting for its backoff holds no thread, no claim and no
+place; its due time is in the Ledger, at its place in its queue (section
+10).
 
 At-most-once — losing a Message to avoid duplicating it — is never a default. An
 integration platform that quietly drops work is worse than one that occasionally

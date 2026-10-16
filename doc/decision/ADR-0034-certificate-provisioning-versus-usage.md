@@ -210,11 +210,14 @@ assistant's draft, each point marked, for the owner to strike.
    by other means that the request is the person's. Every surface audits the
    act (ADR-0062).
 7. **The surfaces.** `xmip_operate.h` section 19: `xmip_operator_request_v1`
-   (a fresh P-256 key and the request, JSON of two PEM texts), carried by
+   (a fresh P-256 key and the request, written into a folder as
+   `operator.key` and `operator.csr`, private files, and answered as JSON of
+   the two paths: the key never crosses the boundary — amended 2026-10-16,
+   below), carried by
    every build, the phone's remote build too; `xmip_operator_sign_v1` (a
    request signed by the authority a node configuration names), a node's
    build only. `Xmip.Abi`'s `RuntimeCertificates` binds both;
-   `Xmip.Surface`'s `OperatorCertificate` writes the files once, for
+   `Xmip.Surface`'s `OperatorCertificate` calls them once, for
    `xmip-cli certificate --operator <person>` and `xmip-cli certificate
    <request> --sign <configuration>`, and for `New-XmipCertificate
    -Operator` and `New-XmipCertificate -Request -Configuration` — one new
@@ -307,3 +310,62 @@ MAUI host, and whether those two surfaces gain one — Windows CNG first — is
 the owner's to say (ADR-0014, amendment 2026-09-19). The Certificate
 page's form, and whether the phone may take the cluster's authority from
 the chain it is sent rather than separately, are the owner's to say.
+
+## Amendment, 2026-10-16: every key and identity on disk is a private file
+
+An outside review asked that identities be secured and persisted
+atomically. Before this, a node's `Provisioned` was three files each renamed
+into place, so a crash between two renames could leave a new chain beside
+the old key; the cluster's authority and an ACME account key were written by
+a plain write; and a person's operator key was written by the .NET surface,
+owner-only on Unix and not on Windows, never synced. None set an access list
+on Windows.
+
+1. **One writer, in the key home.** `xmip-core-secret`'s `private_file`
+   writes every key and identity the estate keeps on disk — the
+   key-encryption keys of `file` and `dpapi` too: the bytes go to a file
+   created beside the one they become, owner-only before its first byte
+   (mode `0600`, a created directory `0700`; on Windows an access list
+   granting the user the process runs as and `SYSTEM` full control and no
+   one else, protected from inheritance), synced, then moved into place —
+   `replace` by a rename, `create` by a link that refuses a file already
+   there — and on Unix the directory synced after. It is in the key home
+   because the key home is the capability that keeps keys (ADR-0063 clause
+   4), and it is the lowest layer both it and `xmip-core-provision` reach:
+   provisioning now depends on it, as do `acme` and `internal-ca`.
+2. **A node's identity switches whole.** `Provisioned::write` writes
+   `chain.pem`, `key.pem` and `anchors.pem` into a new folder
+   `generation-<random>` of the purpose's place and only then replaces the
+   file `current`, which names it; `Provisioned::read` follows `current`.
+   A crash at any step leaves the identity kept before; the folder a crash
+   left is removed at the next write, and the generation replaced at once.
+   Nothing else reads the place's identity files.
+3. **The authority's pair** is written certificate first and key last,
+   never over a key: the key is what says an authority is kept, so a crash
+   between leaves none kept and the next start makes a matching pair.
+4. **The operator key never enters .NET.** `xmip_operator_request_v1` takes
+   the folder and writes both files through `provision::operator::
+   request_into`; its answer is the two paths, and a file already there is
+   refused with nothing written. `OperatorCertificate` no longer names the
+   files or writes the key.
+5. **The chain and the anchors a surface keeps** are not secret, and are
+   kept the same way: `OperatorCertificate.Keep` and `KeepAnchors` check
+   what they keep and call `xmip_operator_keep_v1`, which writes the text
+   beside its file, syncs it and renames it over what was there
+   (`provision::operator::keep`, over `private_file::replace_readable`,
+   readable as its folder lets). .NET writes neither file itself.
+6. **A crash's leftover is swept.** A file written and never switched is
+   named `.<name>.<16 hex>.new`, and nothing else is; whoever opens a folder
+   of private files — `KeyDirectory`, the authority's folder, the purpose's
+   place before an account key or a generation is written — removes exactly
+   those first (`private_file::sweep`).
+
+Proved in `xmip-core-secret` (mode and access list asserted; a crash after
+the bytes are written leaves the file as it was, and the sweep removes that
+leftover and no look-alike), `xmip-core-provision` (an identity read back
+whole and owner-only; a crash before the switch, or halfway through a
+generation, leaves the old chain with the old key), `internal-ca` (a crash
+between certificate and key leaves a matching pair next time), `acme` (the
+account key made once, owner-only), the runtime's exports, `Xmip.Abi.Test`
+and `Xmip.Surface.Test` (the key file owner-only on Windows and Unix; a
+chain and anchors kept through the runtime).
