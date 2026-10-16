@@ -269,6 +269,8 @@ When deployed the sections regarding a node will be sliced to that node.*
   (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
   section 5), how long a stopping Receive Location drains what its far end
   already let go of (`receive_drain`, built 2026-10-15, the same section),
+  how many of the oldest failed Journeys of each Send Port a node keeps
+  (`failed_window`, built 2026-10-16, `runtime-model.md` section 10),
   the Storage client's timeouts and
   pass-over — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in

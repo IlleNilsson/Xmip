@@ -1566,19 +1566,19 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec"]
+  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-secret"]
     [xmip.core.provision.acme]
     description = "ACME client (RFC 8555): account, order, http-01 on any port or dns-01 through a provider's DNS writer, CSR finalized, chain fetched, against any directory a node names, over Xmip's HTTP and TLS. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 Automatic Certificate Management Environment, JWS ES256 (RFC 7515, RFC 7518), JWK thumbprint (RFC 7638)"
-    dependency = ["xmip-core-provision", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-provision", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core", "xmip-core-secret"]
     # internal-ca rides on acme as its carrier (ADR-0044 clause 1): the
     # authority serves the same RFC 8555 objects and JWS the client speaks.
     [xmip.core.provision.internal-ca]
     description = "The cluster's own certificate authority: issues node certificates for server and client authentication, served over ACME so every node uses one protocol, and signs a person's operator request. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 server side, http-01 and dns-01 validation; RFC 5280 certificates"
-    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
+    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core", "xmip-core-secret"]
     [xmip.core.provision.self-signed]
     description = "A self-signed certificate for a lone offline node, its own anchor. A xmip-core-provision technology."
     maturity = "scaffolded"

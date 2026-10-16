@@ -36,6 +36,9 @@ BeforeAll {
         'module/core/operation/audit/src/windows_event_log.rs' = 'ADR-0050, amendment 2026-09-25'
         # CryptProtectData and CryptUnprotectData: the key home on Windows.
         'module/core/capability/secret/dpapi/src/crypt_protect.rs' = 'ADR-0063 clause 4'
+        # The owner-only access list of a private file on Windows: every key
+        # and identity the estate keeps on disk (secret::private_file).
+        'module/core/capability/secret/.src/private_file/dacl.rs' = 'ADR-0063 clause 4'
         # A test's counting allocator, beside the runtime's folder: what proves
         # a Stream far larger than a chunk passes in bounded memory
         # (runtime-model.md section 3, What proves it). Test code only.

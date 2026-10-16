@@ -341,7 +341,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 262977 lines of production
+Where each repository mounts and what it holds: 265990 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -482,9 +482,9 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
-│   │   │   ├── provision                       1962
-│   │   │   │   ├── internal-ca                 1489
-│   │   │   │   ├── acme                        1160
+│   │   │   ├── provision                       2112
+│   │   │   │   ├── internal-ca                 1502
+│   │   │   │   ├── acme                        1164
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
@@ -508,6 +508,12 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
+│   │   │   ├── secret                          1102
+│   │   │   │   ├── dpapi                        319
+│   │   │   │   ├── file                         202
+│   │   │   │   ├── keychain                     106
+│   │   │   │       declared, not built 5
+│   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── contract                         906
 │   │   │   │   ├── graphql-schema               846
 │   │   │   │   ├── xml-schema                   759
@@ -539,12 +545,6 @@ hold no source to count.
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
-│   │   │   ├── secret                           572
-│   │   │   │   ├── dpapi                        315
-│   │   │   │   ├── file                         207
-│   │   │   │   ├── keychain                     106
-│   │   │   │       declared, not built 5
-│   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── authorize                        409
 │   │   │   │   ├── location                     397
 │   │   │   │   ├── abac                         359
@@ -603,17 +603,17 @@ hold no source to count.
 │   │   │   ├── tls                              770
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             7803
+│   │       ├── cli                             7810
 │   │       ├── gui                             5050
 │   │       │   └── vscode                      3236
-│   │       ├── observe                         3764
-│   │       │   ├── otlp                         578
-│   │       │   └── prometheus                   328
-│   │       ├── powershell                      2799  C# 2799 · PowerShell 0
-│   │       ├── audit                           2542
+│   │       ├── audit                           3962
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
+│   │       ├── observe                         3764
+│   │       │   ├── otlp                         578
+│   │       │   └── prometheus                   328
+│   │       ├── powershell                      2804  C# 2804 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -629,7 +629,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                27976  C# 25727 · Rust 2024 · PowerShell 225
+│   │   ├── abi                                28062  C# 25813 · Rust 2024 · PowerShell 225
 │   │   ├── event                               5631
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -657,8 +657,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            24527
-│       ├── persist                             8478
+│       ├── runtime                            24886
+│       ├── persist                             8918
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
