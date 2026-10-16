@@ -353,7 +353,13 @@ on Windows.
    what they keep and call `xmip_operator_keep_v1`, which writes the text
    beside its file, syncs it and renames it over what was there
    (`provision::operator::keep`, over `private_file::replace_readable`,
-   readable as its folder lets). .NET writes neither file itself.
+   readable as its folder lets). The chain `OperatorCertificate.Sign`
+   writes where `xmip-cli certificate --sign --out` or `New-XmipCertificate
+   -Path` names a file goes through the same export with `replace` zero:
+   written beside it, synced and linked where nothing is, never over a file
+   already there (`private_file::create_readable`). A file there before the
+   signing is refused before anything is signed. .NET writes none of these
+   files itself.
 6. **A crash's leftover is swept.** A file written and never switched is
    named `.<name>.<16 hex>.new`, and nothing else is; whoever opens a folder
    of private files — `KeyDirectory`, the authority's folder, the purpose's
@@ -368,4 +374,5 @@ generation, leaves the old chain with the old key), `internal-ca` (a crash
 between certificate and key leaves a matching pair next time), `acme` (the
 account key made once, owner-only), the runtime's exports, `Xmip.Abi.Test`
 and `Xmip.Surface.Test` (the key file owner-only on Windows and Unix; a
-chain and anchors kept through the runtime).
+chain and anchors kept through the runtime, a chain created never over a
+file and replaced only where asked).

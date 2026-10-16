@@ -7,7 +7,7 @@ use super::*;
 fn a_stop_drains_the_node_and_the_service_exits_zero() {
     let directory = std::env::temp_dir().join(format!("xmip-service-stop-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let receive = free_address();
+    let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
 
     let mut child = spawned(&configuration, &directory);
@@ -81,7 +81,7 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-refused-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let configuration = written(&directory, &free_address());
+    let configuration = written(&directory, &unheld().to_string());
     let text = std::fs::read_to_string(&configuration).expect("reads");
     std::fs::write(
         &configuration,
@@ -138,7 +138,7 @@ fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
 fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     let directory = std::env::temp_dir().join(format!("xmip-service-store-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let configuration = written(&directory, &free_address());
+    let configuration = written(&directory, &unheld().to_string());
     let operator = operator();
 
     served(
@@ -199,7 +199,7 @@ fn a_storage_node_the_build_did_not_link_or_that_does_not_open_is_refused() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-unstored-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let configuration = written(&directory, &free_address());
+    let configuration = written(&directory, &unheld().to_string());
     let text = std::fs::read_to_string(&configuration).expect("reads");
 
     // The engine is no node's choice (ADR-0015, amendment 2026-10-01).

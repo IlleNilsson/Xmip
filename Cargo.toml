@@ -210,6 +210,9 @@ rcgen = "0.13"
 # runtime's remote surface, and its test authority (`fixture::Authority`),
 # which only the test-support feature turns on.
 xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main", features = ["test-support"] }
+# A loopback address no one holds, for the service a test starts to bind
+# (`fixture::unheld`).
+xmip-net = { package = "xmip-core-library-net", git = "https://github.com/IlleNilsson/xmip-core-library-net", branch = "main", features = ["test-support"] }
 
 [target.'cfg(windows)'.dependencies]
 # xmip-service under the Windows Service Control Manager: the dispatcher, the
