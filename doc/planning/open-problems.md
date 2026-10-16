@@ -1072,47 +1072,6 @@ release:
 - **The service account** (open problem 28) and whether the starter grants
   local tools more than Observer (ADR-0014, amendment 2026-10-13).
 
-## 43. A Journey waiting for a retry holds a place every Port shares
-
-Raised by the outside review of 2026-10-16. Admission counts every Journey
-the node owns against one node-wide number of places
-(`runtime/src/send_step/admission.rs`), a Journey waiting for its retry's
-due time included: `dispatch.rs` keeps it owned until its next pass ends.
-That holds memory to the pool, as intended, and it lets one failing Send
-Port fill every place with Journeys that only wait, so a scan finds no room
-and the healthy Ports send nothing until the failing one's retries end.
-Decided by the owner, 2026-10-16: a waiting Journey holds no place. Its
-claim and place are released, Xmip Storage keeps its due time in its queue,
-and a scan takes it again once it is due, so what waits stays in the Ledger
-and a far end that fails cannot stop the others.
-
-Built 2026-10-16. The hand-on that writes a Journey Recovering names its
-queue and its backoff (`HandOn::waits`), and Xmip Storage keeps its due
-time at its place in that queue — the `held` table's `due_at`, on Xmip
-Storage's clock — and releases the claim, in that one write; nothing stays
-owned, so its place in the Send pool frees with it. A read of a queue
-answers with Xmip Storage's clock beside its entries
-(`HeldQueue::read_unix_nanos`, `HeldQueue::due_in`), so a node tells how long
-one still waits as a duration and never compares two clocks. A scan passes
-over an entry not yet due without claiming it — on a Sequential Port
-reading it, so its sequence waits behind it — and claims it once due, on
-any node, its tries counted on from its `attempts`. The node keeps per
-queue only the earliest due time and how many wait (`send_step::due`), as
-the queue's last read showed, and wakes for that time; the list of every
-waiting Journey in memory is gone, and with it the resume path and its
-renewal. A pass whose claim was not surely the node's when it began now
-tries nothing and writes nothing (`Ended::Untried`): it had been written
-Recovering, a send entry and a backoff for a try never made, which a node
-under load showed as one entry too many in
-`send::a_retry_due_is_tried_again_on_the_active_location_and_sent`.
-`tests/ledger/send_waiting.rs` proves a healthy Port sending all its
-Journeys while three times as many as the pool has places wait on a far end
-that always fails, no claim held by a waiting Journey, every due time kept
-across a restart, and a pass that tried nothing leaving no entry. What
-remains: an embedded store made before it reads no held entry, and before
-the first release nothing migrates it; a scan still reads every waiting
-entry of a queue at each `send_scan`, as it reads every entry (problem 40).
-
 ---
 
 # Suggested order
@@ -1448,3 +1407,55 @@ transport addressing a discrete claimable artifact claims the artifact, and that
 claim is cluster-wide without any lease at all. The remaining need for true
 Cluster scope may be small enough to make B's cost absurd. Worth counting the
 real cases before building anything.
+
+## 43. A Journey waiting for a retry holds a place every Port shares — **Resolved**
+
+*Resolved 2026-10-16 by the owner's decision of that day, built the same
+day; recorded here 2026-10-16. What it left is problem 40 and the store
+encoding below, which no release carries yet.*
+
+
+Raised by the outside review of 2026-10-16. Admission counts every Journey
+the node owns against one node-wide number of places
+(`runtime/src/send_step/admission.rs`), a Journey waiting for its retry's
+due time included: `dispatch.rs` keeps it owned until its next pass ends.
+That holds memory to the pool, as intended, and it lets one failing Send
+Port fill every place with Journeys that only wait, so a scan finds no room
+and the healthy Ports send nothing until the failing one's retries end.
+Decided by the owner, 2026-10-16: a waiting Journey holds no place. Its
+claim and place are released, Xmip Storage keeps its due time in its queue,
+and a scan takes it again once it is due, so what waits stays in the Ledger
+and a far end that fails cannot stop the others.
+
+Built 2026-10-16. The hand-on that writes a Journey Recovering names its
+queue and its backoff (`HandOn::waits`), and Xmip Storage keeps its due
+time at its place in that queue — the `held` table's `due_at`, on Xmip
+Storage's clock — and releases the claim, in that one write; nothing stays
+owned, so its place in the Send pool frees with it. A read of a queue
+answers with Xmip Storage's clock beside its entries
+(`HeldQueue::read_unix_nanos`, `HeldQueue::due_in`), so a node tells how long
+one still waits as a duration and never compares two clocks. A scan passes
+over an entry not yet due without claiming it — on a Sequential Port
+reading it, so its sequence waits behind it — and claims it once due, on
+any node, its tries counted on from its `attempts`. The node keeps per
+queue only the earliest due time and how many wait (`send_step::due`), as
+the queue's last read showed and as each hand-on Xmip Storage took since
+that read began noted, and wakes for that time; until that evening a read
+of the whole queue that passed a Journey's place before its hand-on landed
+dropped the due time the hand-on had noted, and a short backoff waited up
+to a `send_scan`, a second by default, past its due time
+(`send_step::due`'s tests hold the race); the list of every
+waiting Journey in memory is gone, and with it the resume path and its
+renewal. A pass whose claim was not surely the node's when it began now
+tries nothing and writes nothing (`Ended::Untried`): it had been written
+Recovering, a send entry and a backoff for a try never made, which a node
+under load showed as one entry too many in
+`send::a_retry_due_is_tried_again_on_the_active_location_and_sent`.
+`tests/ledger/send_waiting.rs` proves a healthy Port sending all its
+Journeys while three times as many as the pool has places wait on a far end
+that always fails, no claim held by a waiting Journey, every due time kept
+across a restart, and a pass that tried nothing leaving no entry. What it
+left: an embedded store made before it reads no held entry, and before the
+first release nothing migrates it; a scan still reads every waiting entry
+of a queue at each `send_scan`, as it reads every entry, which is problem
+40's.

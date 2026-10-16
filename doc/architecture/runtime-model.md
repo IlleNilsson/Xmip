@@ -1309,7 +1309,11 @@ waits for its due time.
   Port reading it, so its sequence waits behind it — and claims it, on any
   node, once it is due, its tries counted on from its `attempts`. The node
   keeps per queue only the earliest due time and how many wait, as the
-  queue's last read showed, and wakes for that time. Until now a waiting
+  queue's last read showed and as each hand-on Xmip Storage took since
+  that read began noted, and wakes for that time: a read that passed a
+  Journey's place before its hand-on landed keeps its due time, where at
+  first it dropped it and the retry waited for the next `send_scan`, a
+  second by default, after it was due. Until now a waiting
   Journey stayed owned, its claim kept to its due time, and counted against
   the places every Port shares, so one far end that failed every send
   filled them and the healthy Ports sent nothing until its retries ended.

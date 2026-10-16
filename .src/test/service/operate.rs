@@ -16,7 +16,7 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-operate-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let receive = free_address();
+    let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
     let authority = Authority::new();
     let (certificate, key, anchors) = authority.pem("node");
@@ -27,7 +27,7 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     ] {
         std::fs::write(directory.join(name), text).expect("writes");
     }
-    let listen = free_address();
+    let listen = unheld().to_string();
     let text = format!(
         "{}listen = \"{listen}\"\ncertificate = \"node.pem\"\nkey = \"node.key\"\n\
          anchors = \"anchor.pem\"\nrole = \"operator\"\n",
@@ -82,7 +82,7 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
 fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
     let directory = std::env::temp_dir().join(format!("xmip-service-local-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let configuration = written(&directory, &free_address());
+    let configuration = written(&directory, &unheld().to_string());
     let text = format!(
         "{}role = \"operator\"\n",
         std::fs::read_to_string(&configuration).expect("reads")
@@ -105,7 +105,7 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
     let configuration = directory.join(format!("{}.toml", node_name()));
     let text = format!(
         "{}\n[operate]\nrole = \"operator\"\n",
-        node(&free_address(), &free_address())
+        node(&unheld().to_string(), &unheld().to_string())
     );
     std::fs::write(&configuration, text).expect("writes");
     operated_locally(&directory, &configuration, &format!("xmip-{}", node_name()));
