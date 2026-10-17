@@ -19,9 +19,10 @@ BeforeAll {
 
     # The runtime keeps its whole C boundary in one folder (ADR-0050, refined
     # 2026-09-25): the operator's table and exports (ADR-0027), the loader
-    # (ADR-0057) and the two Windows calls the local operate endpoint makes
-    # (ffi/system.rs; ADR-0014, amendment 2026-10-13). Only the runtime has a
-    # folder.
+    # (ADR-0057), the two Windows calls the local operate endpoint makes
+    # (ffi/system.rs; ADR-0014, amendment 2026-10-13) and those a directory
+    # watch makes (ffi/directory_watch.rs; ADR-0018, amendment 2026-10-17).
+    # Only the runtime has a folder.
     $script:Folder = 'module/platform/runtime/src/ffi/'
 
     # Every other crate: exactly one file, and why it crosses a C interface.
@@ -39,6 +40,10 @@ BeforeAll {
         # The owner-only access list of a private file on Windows: every key
         # and identity the estate keeps on disk (secret::private_file).
         'module/core/capability/secret/.src/private_file/dacl.rs' = 'ADR-0063 clause 4'
+        # xmip-core's calls to the operating system: the timed wait's kernel
+        # event and high-resolution timer on Windows, and the processor time
+        # tests measure with.
+        'module/foundation/core/src/system.rs'                 = 'ADR-0050, amendment 2026-10-17'
         # A test's counting allocator, beside the runtime's folder: what proves
         # a Stream far larger than a chunk passes in bounded memory
         # (runtime-model.md section 3, What proves it). Test code only.

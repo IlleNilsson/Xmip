@@ -311,7 +311,7 @@ record = ["ADR-0018 (amendment 2026-10-06)", "ADR-0053 (amendment 2026-10-06)"]
 [implementation.operator-acts-through-storage]
 name = "An operator's act written to Xmip Storage, honored by every node"
 state = "decided"
-note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes at its next look (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Built once Storage is assembled in the service, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
+note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes the moment its operating system says it was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Built once Storage is assembled in the service, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
 record = ["ADR-0014 (amendment 2026-10-13, acts through Xmip Storage)", "ADR-0052 (note of 2026-10-13, acts through Xmip Storage)", "deployment-model.md section 7"]
 
 [implementation.node-listeners]
@@ -326,7 +326,7 @@ record = ["ADR-0067 (amendment 2026-10-13)"]
 # children.
 
 [xmip.core]
-description = "Core Xmip identifiers, shared types and stable public contracts."
+description = "Core Xmip identifiers, shared types and stable public contracts; the clock and the message path's one timed wait (wake), kept to the microsecond — on Windows a kernel event and a high-resolution waitable timer, the operating system's calls in one file, system.rs (ADR-0050, amendment 2026-10-17)."
 architecturalDomain = "Foundation"
 repositoryRole = "common-architecture"
 maturity = "scaffolded"

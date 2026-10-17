@@ -165,8 +165,8 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let (paused, took) = published_until(&snapshot, Duration::from_secs(2), |publication| {
         onward(publication) == Some(PauseState::Paused)
     });
-    // Taken at the next look, ten milliseconds, and published at once: not
-    // a round of a quarter of a second later.
+    // Taken the moment the operating system says it was left, and
+    // published at once: not a round of a quarter of a second later.
     assert!(
         took < Duration::from_millis(250),
         "published paused in {took:?}"

@@ -2,12 +2,20 @@
 //! start it, declare and audit it, publish it, say it is ready, take its
 //! orders and publish it again while it waits for the stop, drain it, audit
 //! the drain and publish that it stopped.
+//!
+//! While it serves, the service waits to be told ([`Told`]), using no
+//! processor: by a stop — the Service Control Manager's, a signal from
+//! systemd or launchd, the console's Ctrl+C — by the operating system that
+//! an order was left where it takes them, and by its operate listener that
+//! an act was taken there. Each wakes it the moment it arrives; only the
+//! publication's round, [`publication::EVERY`], wakes it otherwise.
 
 use std::collections::BTreeMap;
+use std::path::Path;
 use std::process::ExitCode;
 use std::sync::Arc;
-use std::sync::mpsc::{Receiver, RecvTimeoutError};
-use std::time::Instant;
+use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
+use std::time::{Duration, Instant};
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::{ExecutionPhase, Severity};
@@ -23,6 +31,17 @@ use crate::{built, orders};
 
 /// Who stopped the node, as the stop record says it.
 pub type StoppedBy = &'static str;
+
+/// What the service is told while it serves.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Told {
+    /// Stop, by whom.
+    Stop(StoppedBy),
+    /// The place it takes orders changed: one may have been left.
+    Orders,
+    /// An act was taken over its operate listener.
+    Acted,
+}
 
 /// How a run ended.
 #[derive(Debug)]
@@ -43,14 +62,15 @@ impl Ended {
     }
 }
 
-/// Start the node, serve until `stops` names who stopped it, drain it.
-/// `ready` is told once the node accepts work, `stopping` once a stop has
-/// arrived and before the drain.
+/// Start the node, serve until `told` says who stopped it, drain it. What
+/// tells the service while it serves is given `tell`, the sender of
+/// `told`. `ready` is told once the node accepts work, `stopping` once a
+/// stop has arrived and before the drain.
 pub fn serve(
     program: &str,
     audit: &ProgramAudit,
     arguments: &Arguments,
-    stops: &Receiver<StoppedBy>,
+    (tell, told): (&Sender<Told>, &Receiver<Told>),
     ready: impl FnOnce(),
     stopping: impl FnOnce(),
 ) -> Ended {
@@ -72,10 +92,19 @@ pub fn serve(
     let publication_path = publication::place(&running);
     let snapshot = publication_path.display().to_string();
     let mut publisher = Publisher::new(program, audit, &running, publication_path, &orders);
-    let Some((_operate, listening)) = operated(program, audit, configuration, &running, &publisher)
+    let board = publisher.board(tell);
+    let Some((_operate, listening)) = operated(program, audit, configuration, &running, &board)
     else {
         let _ = running.stop();
         return Ended::Refused;
+    };
+    let watch = match orders::watch(&orders, &location, tell) {
+        Ok(watch) => watch,
+        Err(problem) => {
+            fail(audit, "orders", &format!("{program}: {problem}"));
+            let _ = running.stop();
+            return Ended::Refused;
+        }
     };
     // Every record from here carries the location it declares, so a reader
     // knows whose it is (ADR-0062, amendment 2026-09-29).
@@ -128,17 +157,8 @@ pub fn serve(
     println!("{program}: {location} accepts work");
     ready();
 
-    let by = loop {
-        let applied = orders::take(program, audit, &orders, &location);
-        if applied > 0 || publisher.due() {
-            publisher.publish(&running);
-        }
-        match stops.recv_timeout(orders::LOOK) {
-            Ok(by) => break by,
-            Err(RecvTimeoutError::Timeout) => {}
-            Err(RecvTimeoutError::Disconnected) => break "its stop closing",
-        }
-    };
+    let by = served(program, audit, &running, &orders, &mut publisher, told);
+    drop(watch);
     stopping();
     let draining = Instant::now();
     let outcomes = running.stop();
@@ -149,6 +169,56 @@ pub fn serve(
     println!("{program}: {location} {said}");
     drop(declared);
     Ended::Stopped
+}
+
+/// Serve `running` until `told` says who stopped it: take the orders left
+/// in `orders` when told one may have been, and publish at once after an
+/// order or an act, and otherwise when the round is due.
+fn served(
+    program: &str,
+    audit: &ProgramAudit,
+    running: &Running,
+    orders: &Path,
+    publisher: &mut Publisher,
+    told: &Receiver<Told>,
+) -> StoppedBy {
+    let location = running.location();
+    // Orders left before the watch began are taken at once.
+    let (mut taking, mut acted) = (true, false);
+    loop {
+        let applied = if taking {
+            orders::take(program, audit, orders, &location)
+        } else {
+            0
+        };
+        if applied > 0 || acted || publisher.due() {
+            publisher.publish(running);
+        }
+        match hear(told, publisher.next()) {
+            Ok(now) => (taking, acted) = now,
+            Err(by) => return by,
+        }
+    }
+}
+
+/// What `told` says within `within`, every message waiting heard at once,
+/// so a burst of changes is one look: whether orders may have been left
+/// and whether an act was taken — or who stopped the node.
+fn hear(told: &Receiver<Told>, within: Duration) -> Result<(bool, bool), StoppedBy> {
+    let first = match told.recv_timeout(within) {
+        Ok(first) => first,
+        Err(RecvTimeoutError::Timeout) => return Ok((false, false)),
+        Err(RecvTimeoutError::Disconnected) => return Err("its stop closing"),
+    };
+    let (mut orders, mut acted) = (false, false);
+    for heard in std::iter::once(first).chain(told.try_iter()) {
+        match heard {
+            Told::Stop(by) => return Err(by),
+            Told::Orders => orders = true,
+            Told::Acted => acted = true,
+        }
+    }
+    Ok((orders, acted))
 }
 
 /// Record the stop of the node at `location` by `by`, drained in `drained`
@@ -184,7 +254,7 @@ fn drained_record(
     said
 }
 
-/// The node's operate listeners over what `publisher` posts (ADR-0067) —
+/// The node's operate listeners over what `board` holds (ADR-0067) —
 /// its local endpoint and its network address, each where its
 /// configuration's `[operate]` names it — and where they listen; `None`
 /// after saying why where one cannot listen, which refuses the node before
@@ -194,10 +264,9 @@ fn operated(
     audit: &ProgramAudit,
     configuration: &str,
     running: &Running,
-    publisher: &Publisher,
+    board: &Arc<dyn Published>,
 ) -> Option<(Vec<Listener>, Option<String>)> {
-    let board: Arc<dyn Published> = publisher.board();
-    match running.operate(&board, audit) {
+    match running.operate(board, audit) {
         Ok(operate) => {
             let listening = (!operate.is_empty()).then(|| {
                 operate

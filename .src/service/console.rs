@@ -9,7 +9,7 @@ use xmip_audit::program_audit::ProgramAudit;
 
 use crate::arguments::{Arguments, Mode};
 use crate::readiness;
-use crate::run::{self, StoppedBy};
+use crate::run::{self, StoppedBy, Told};
 
 /// Run the node until a signal stops it.
 pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
@@ -18,11 +18,12 @@ pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCo
     } else {
         "the service manager"
     };
-    let (stop, stops) = mpsc::channel();
+    let (tell, told) = mpsc::channel();
     // Taken before the node starts, so a stop during the start is not lost:
     // it waits in the channel and the node drains as soon as it serves.
+    let stop = tell.clone();
     if let Err(error) = ctrlc::set_handler(move || {
-        let _ = stop.send(by);
+        let _ = stop.send(Told::Stop(by));
     }) {
         run::fail(
             audit,
@@ -39,7 +40,7 @@ pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCo
         program,
         audit,
         arguments,
-        &stops,
+        (&tell, &told),
         readiness::ready,
         readiness::stopping,
     )

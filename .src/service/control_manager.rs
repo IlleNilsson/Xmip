@@ -77,7 +77,8 @@ extern "system" fn service_main(_count: u32, _arguments: *mut *mut u16) {
 }
 
 fn serve(told: &Told) {
-    let (stop, stops) = mpsc::channel();
+    let (tell, stops) = mpsc::channel();
+    let stop = tell.clone();
     let registered =
         service_control_handler::register(PROGRAM, move |control| answer(control, &stop));
     let status = match registered {
@@ -117,7 +118,7 @@ fn serve(told: &Told) {
         &told.program,
         &told.audit,
         &told.arguments,
-        &stops,
+        (&tell, &stops),
         || report(ServiceState::Running, taken, 0),
         || report(ServiceState::StopPending, ServiceControlAccept::empty(), 0),
     );
@@ -132,7 +133,7 @@ fn serve(told: &Told) {
 /// The manager's control, answered: a Stop or a Shutdown is the drain,
 /// asked; an Interrogate is answered by the last status; nothing else is
 /// taken.
-fn answer(control: ServiceControl, stop: &Sender<StoppedBy>) -> ServiceControlHandlerResult {
+fn answer(control: ServiceControl, stop: &Sender<run::Told>) -> ServiceControlHandlerResult {
     let by: StoppedBy = match control {
         ServiceControl::Stop => "the Service Control Manager",
         ServiceControl::Shutdown => "the system shutting down",
@@ -141,7 +142,7 @@ fn answer(control: ServiceControl, stop: &Sender<StoppedBy>) -> ServiceControlHa
     };
     // The receiver is gone only once the node has drained; a stop then asks
     // for nothing.
-    let _ = stop.send(by);
+    let _ = stop.send(run::Told::Stop(by));
     ServiceControlHandlerResult::NoError
 }
 
@@ -161,7 +162,7 @@ mod tests {
                 answer(control, &stop),
                 ServiceControlHandlerResult::NoError
             ));
-            assert_eq!(stops.try_recv(), Ok(by));
+            assert_eq!(stops.try_recv(), Ok(run::Told::Stop(by)));
         }
         assert!(stops.try_recv().is_err(), "one stop per control");
     }

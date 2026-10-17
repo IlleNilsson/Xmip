@@ -291,14 +291,14 @@ ADR-0067 (amendment 2026-10-13).
 
 **An operator's act written to Xmip Storage, honored by every node.** A pause,
 resume, retry, dismiss or replay still reaches one node: over its operate
-listener, or as an order file it takes at its next look (`xmip_order_v1`,
-`.src/service/orders.rs`), the snapshot file beside it; no act is written to
-Xmip Storage with who and when, and no node reads one there. Built once
-Storage is assembled in the service, open problem 33; the order files and the
-per-node act exports are deleted with every use then, and snapshot files kept
-for tests only. Records: ADR-0014 (amendment 2026-10-13, acts through Xmip
-Storage), ADR-0052 (note of 2026-10-13, acts through Xmip Storage),
-deployment-model.md section 7.
+listener, or as an order file it takes the moment its operating system says it
+was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside
+it; no act is written to Xmip Storage with who and when, and no node reads one
+there. Built once Storage is assembled in the service, open problem 33; the
+order files and the per-node act exports are deleted with every use then, and
+snapshot files kept for tests only. Records: ADR-0014 (amendment 2026-10-13,
+acts through Xmip Storage), ADR-0052 (note of 2026-10-13, acts through Xmip
+Storage), deployment-model.md section 7.
 
 #### `other-runtime-module`
 
@@ -341,7 +341,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 266010 lines of production
+Where each repository mounts and what it holds: 267521 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -366,9 +366,9 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       5424
+│   │   │   ├── transport                       5384
 │   │   │   │   ├── db2                         2648
-│   │   │   │   ├── amqp                        2623
+│   │   │   │   ├── amqp                        2628
 │   │   │   │   ├── opc-ua                      2419
 │   │   │   │   ├── ftp                         2060
 │   │   │   │   ├── nfs                         2038
@@ -376,8 +376,8 @@ hold no source to count.
 │   │   │   │   ├── sftp                        1819
 │   │   │   │   ├── mssql                       1795
 │   │   │   │   ├── ibm-mq                      1769
-│   │   │   │   ├── kafka                       1726
-│   │   │   │   ├── http                        1725
+│   │   │   │   ├── kafka                       1731
+│   │   │   │   ├── http                        1730
 │   │   │   │   ├── oracle                      1473
 │   │   │   │   ├── snmp                        1431
 │   │   │   │   ├── nats-jetstream              1345
@@ -606,11 +606,11 @@ hold no source to count.
 │   │       ├── cli                             7810
 │   │       ├── gui                             5050
 │   │       │   └── vscode                      3236
-│   │       ├── audit                           3962
+│   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3764
+│   │       ├── observe                         3769
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      2804  C# 2804 · PowerShell 0
@@ -629,11 +629,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                28215  C# 25966 · Rust 2024 · PowerShell 225
-│   │   ├── event                               5631
+│   │   ├── abi                                28379  C# 26130 · Rust 2024 · PowerShell 225
+│   │   ├── event                               5616
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                2013
+│   │   ├── core                                2845
 │   │   ├── message                             1587
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -657,7 +657,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            24659
+│       ├── runtime                            25213
 │       ├── persist                             8918
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163

@@ -1310,7 +1310,10 @@ waits for its due time.
   node, once it is due, its tries counted on from its `attempts`. The node
   keeps per queue only the earliest due time and how many wait, as the
   queue's last read showed and as each hand-on Xmip Storage took since
-  that read began noted, and wakes for that time: a read that passed a
+  that read began noted, and wakes for that time — within a millisecond
+  apart from load, through `xcore::wake`, on Windows a high-resolution waitable timer where
+  a `Condvar` ended on the system tick up to 14 ms late (the owner,
+  2026-10-16; ADR-0050, amendment 2026-10-17): a read that passed a
   Journey's place before its hand-on landed keeps its due time, where at
   first it dropped it and the retry waited for the next `send_scan`, a
   second by default, after it was due. Until now a waiting
@@ -1323,6 +1326,25 @@ waits for its due time.
   asks for its queue to be read, where a scan claims it afresh. Until now
   it was written Recovering: an entry and a backoff for a try never made,
   which a node under load showed as a send entry too many.
+
+**Corrected 2026-10-17**, a race the change above brought in:
+
+- **A scan's claim reads the place again, its due time with it.** Every
+  claim a scan takes, on any Send Port, reads the Journey's place in its
+  queue again under the claim: it is sent only where the place is still
+  there, still this Journey's and due, and its Journey still to be sent;
+  a place whose retry is not yet due gives the claim back and is woken for
+  at its due time. Releasing a waiting Journey's claim (problem 43, above)
+  let a scan that had read the queue before that Journey's hand-on landed —
+  no due time at its place then, and the Journey no longer owned when the
+  scan looked — take a claim nobody held and send the Journey again at
+  once: a far end received it twice from one node. Until now only a
+  Sequential Send Port's scan read the place again, and it did not look at
+  the due time. Xmip Storage's claim stays as section 3 has it — *set the
+  owner where the owner is empty or lapsed* — and already refuses any claim
+  held under another token, whoever holds it: in the race no claim was
+  held, so only the read under the claim can tell, and the same holds for a
+  scan of another node.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

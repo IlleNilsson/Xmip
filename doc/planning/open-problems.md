@@ -1454,8 +1454,15 @@ under load showed as one entry too many in
 `tests/ledger/send_waiting.rs` proves a healthy Port sending all its
 Journeys while three times as many as the pool has places wait on a far end
 that always fails, no claim held by a waiting Journey, every due time kept
-across a restart, and a pass that tried nothing leaving no entry. What it
-left: an embedded store made before it reads no held entry, and before the
+across a restart, and a pass that tried nothing leaving no entry. Releasing
+the waiting claim brought in a race, found 2026-10-17 as that test failing
+about one run in twelve: a scan that had read the queue before a Journey's
+Recovering hand-on landed took the claim nobody held any more and sent it
+again at once. Every claim a scan takes now reads the place again under it,
+its due time with it (`send_step::scan`, `runtime-model.md` section 10,
+corrected 2026-10-17), and
+`send_waiting::a_scan_that_read_its_queue_before_a_retry_was_handed_on_never_sends_it_again`
+holds the race open with `fixture::Failing::after`. What it left: an embedded store made before it reads no held entry, and before the
 first release nothing migrates it; a scan still reads every waiting entry
 of a queue at each `send_scan`, as it reads every entry, which is problem
 40's.

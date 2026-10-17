@@ -740,13 +740,15 @@ database servers it is to be put in front of are set up by IT from
 Storage node reads `[storage.database]` and connects to neither yet
 ([decided, not built](doc/architecture/estate-map.md#database-server)). A
 pause or resume of a Subscription reaches it as an
-order left in `data/orders`, and survives its restart
+order left in `data/orders`, taken the moment the operating system tells it
+one was left — it never looks, and idle it waits using no processor between
+its publications — and survives its restart
 ([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md);
 [built, in the assembled service](doc/architecture/estate-map.md#subscription-pause)).
 It publishes what the node says of itself — its health and figures, its
 topology with the Parties on each side, its Subscriptions and where it takes
 orders — to `data/snapshot.toml`, every quarter of a second and at once after
-an order, and declares the file, so the operation surfaces open over it:
+an order or an act over its operate listener, and declares the file, so the operation surfaces open over it:
 
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb

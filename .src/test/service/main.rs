@@ -14,6 +14,9 @@
 //!   read by observe's one reader; a pause left where the snapshot says the
 //!   node takes orders shows paused in the next one; and the stop leaves it
 //!   saying so.
+//! - `told.rs`: an order is acted on the moment it is left, within about a
+//!   millisecond beyond what it carries, and a service nothing tells uses
+//!   next to no processor.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
@@ -293,3 +296,4 @@ fn order(directory: &Path, act: Act) {
 mod operate;
 mod publication;
 mod stop;
+mod told;

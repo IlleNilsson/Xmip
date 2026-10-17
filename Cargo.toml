@@ -213,6 +213,9 @@ xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNi
 # A loopback address no one holds, for the service a test starts to bind
 # (`fixture::unheld`).
 xmip-net = { package = "xmip-core-library-net", git = "https://github.com/IlleNilsson/xmip-core-library-net", branch = "main", features = ["test-support"] }
+# The service test's figure for an order and the plain wake it is held
+# beside (`latency`).
+xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main", features = ["test-support"] }
 
 [target.'cfg(windows)'.dependencies]
 # xmip-service under the Windows Service Control Manager: the dispatcher, the
