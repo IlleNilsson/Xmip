@@ -458,3 +458,29 @@ now holds SSH, not only its wire types:
 A refusal is `net::NetError`, so the transport capability takes it with the
 `From` it already has and judges a connection's failure retryable by its
 kind.
+
+## Amendment, 2026-10-17: xmip-core calls the operating system in one file
+
+The owner, 2026-10-16: on Windows a timed wait uses a high-resolution
+waitable timer (`CreateWaitableTimerExW` with
+`CREATE_WAITABLE_TIMER_HIGH_RESOLUTION`), not `timeBeginPeriod`. A
+`std::sync::Condvar` waits on an address with a timeout counted in
+milliseconds and ends on the system tick, so the send step woke for a retry
+due in 2 ms up to 9-14 ms late. And 2026-10-17: the wait lives in
+`xmip-core`, behind `std`, and the crate lowers its lint to `deny` with
+exactly one file allowed.
+
+That file is `module/foundation/core/src/system.rs`, xmip-core's calls to the
+operating system behind safe functions: the kernel event and the
+high-resolution timer `wake::Wake` waits on, one of each per waiting thread,
+and, behind `test-support`, the processor time a thread and the process have
+used (`QueryThreadCycleTime` and `QueryProcessCycleTime` on Windows,
+`clock_gettime` on Unix) that `processor_time` reads. `wake` itself is safe
+code; every other target waits on `std::sync::Condvar` as before.
+`test/Unsafe.Test.ps1` lists the file.
+
+Measured on 2026-10-16 under full load: a thread woken by a notify keeps
+Windows' priority boost whether it waited on an address or on a kernel
+event (0.08 ms at p99; 28-60 ms with the boost turned off), and no wait
+ended by its due time is boosted, the high-resolution timer's included. Load
+is load (the owner, 2026-10-17): no thread's priority is raised.

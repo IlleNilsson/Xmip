@@ -735,3 +735,60 @@ pipes and Unix domain sockets. `runtime-model.md` section 5, *A stop drains
 what the far end already let go of*, says how it runs; the runtime's
 `tests/ledger/drained.rs` fills a backlog before the stop on every machine,
 rather than leaving it to how fast one runs.
+
+## Amendment, 2026-10-17: the service is told, it never looks
+
+The amendment of 2026-09-30 had `xmip-service` look in `<data>/orders`
+between its waits for a stop, every ten milliseconds: a hundred wakes a
+second on a node nothing asked anything of, and an order acted on up to ten
+milliseconds after it was left. Two rules already said otherwise. ADR-0052,
+amendment 2026-09-15: *Polling is not preferred unless really needed* —
+recorded there as *Told, not asked*, with a published snapshot file *watched
+by the file system*. And CONTRIBUTING.md, the owner 2026-09-26: *if
+something takes more than a millisecond, apart from load, something is
+wrong.* A node is told as a surface is.
+
+- **One wait for everything that tells it.** While it serves, the service
+  waits on one channel (`run::Told`) and is woken the moment each arrives:
+  a stop — the Service Control Manager's Stop or Shutdown, SIGTERM from
+  systemd or launchd, the console's Ctrl+C — an order left where it takes
+  them, and an act taken over its operate listener. Only the publication's
+  round of a quarter of a second wakes it otherwise; between them it uses
+  no processor. A burst of changes is heard as one.
+- **An order is told by the operating system.** The node's own directory
+  beneath `<data>/orders` (`observe::Order::place`, the one place it is
+  written) is watched by the runtime's `directory_watch`: a change
+  notification on Windows (`ffi/directory_watch.rs`, among the runtime's
+  unsafe calls), inotify on Linux and Android, kqueue on macOS and the BSDs.
+  The watch's thread waits in the kernel and tells the service of each
+  change; orders left before the watch began are taken as it serves. A
+  place that cannot be watched refuses the node before it accepts work,
+  exit 2, as every refusal at start does.
+- **An act over the plane is told too.** The listener tells what it answers
+  from that an act was taken (`Published::acted`), and the service publishes
+  at once, so a surface following the node sees its pause in the next
+  revision rather than a round later.
+- **A refused write is asked again a millisecond later** (`publication::AGAIN`),
+  not at a look that no longer exists.
+
+The root crate's `.src/test/service/told.rs` holds both halves. An order is
+measured from left to its answer heard, the fastest of five beside a plain
+wake (`xcore::latency`), and held under a millisecond plus four plain wakes
+plus what reading and removing its file takes, measured beside it by
+`observe::Order::take`: measured on Windows the same day at 0.8 ms, the file
+alone 0.9 ms. An idle service's processor time over a second, read by the
+operating system, is held under a tenth of a second: what is left is the
+publication's round, building and writing the snapshot four times a second,
+measured at 0 to 80 ms in the 15.6 ms steps Windows counts it in, and none
+without the round.
+
+What it does not do: the round stays, as the amendment of 2026-09-30 set it,
+so an idle node still writes its snapshot four times a second; a
+publication told by what changed in the node, and none when nothing did,
+waits on the runtime telling of its figures. Taking a pause that changes
+the Subscription's standing writes Xmip Storage first, measured at ten
+milliseconds, which is the runtime's to answer.
+
+Provenance: the coordinator's brief of 2026-10-17, under the rules quoted.
+The channel, the watch, `acted` and the bounds are the assistant's, for the
+owner to overrule.
