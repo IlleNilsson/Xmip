@@ -622,3 +622,50 @@ clause 3 keep for it is unchanged, and the audit names the level that
 refused. Validation is the artifact's choice, on by default where a
 receive artifact names a Contract. ADR-0031, amendment 2026-10-05, the
 owner's ruling; `runtime-model.md` sections 5 and 20.
+
+## Amendment, 2026-10-19: a queue is read in its order by an index
+
+Every queue this record keeps in the Ledger — a paused Subscription's, a
+Send Port's, a node's Dead Message Queue, and a Send Port queue's index of
+failed Journeys — is numbered as it is written and taken out in any order,
+so a queue has gaps. On an embedded Storage node an entry is found by a
+keyed hash (ADR-0063 clause 2), which sorts nowhere, and a gap with an
+entry held on each side of it was read one place at a time, by a page and
+by the one writer moving the queue's first place past it
+(`open-problems.md` problem 40).
+
+The owner agreed on 2026-10-19 the proposal as problem 40 wrote it: an
+index on (queue, sequence) in the held and dead-message tables, written
+with the record like every other index; a page one ordered index scan from
+its place; the first place found when a read asks for it, so no gap is
+walked in the commit writer. An embedded store made before it lacks the
+index, and before the first release nothing migrates it.
+
+- **One index per kind of queue**, in the one schema definition
+  (`persist::storage::schema`): `held_place`, `dead_message_place` and
+  `failed_journey_place`, each on `(queue, sequence)`. The index of failed
+  Journeys is numbered as every queue is and read by the same mechanics,
+  so it is indexed the same way (problem 34: *a gap the index's first
+  place must cross is read place by place, as in every queue*).
+- **On a database server that index is the table's primary key**, which
+  every server keeps ordered; the scripts make no second index, which
+  would be written with every row and read by nothing.
+- **On the embedded engines it is entries of its own**, written in the
+  entry's own write and taken out with it, their key in the clear as every
+  index entry's is (proposed 2026-10-09: *Store it in the clear*): the
+  index's number, the queue, the place and the entry's Journey or Message.
+  What it shows beyond the indexes kept before is each entry's place: the
+  order of a queue and the size of its gaps. A held Journey's queue and
+  Journey, and a Dead Message's queue and Message, were in the clear
+  already (`held_time`, `dead_message_time`), and that a Journey is
+  Failed in its state (`journey_state`); the place is all that is new.
+- **A page is one ordered range of the index from its place**, and a read
+  of each entry it finds; a gap is never read.
+- **The first place is found by the read that asks for it.** The writer
+  keeps as the first a place no entry is held before, moved to the next
+  only when the queue is emptied; a read starting there takes the first
+  its range finds, and one starting past it reads a range of one from
+  there.
+
+Built 2026-10-19 (`xmip-core-persist`, `storage/queue.rs`); `runtime-model.md`
+section 10, corrected 2026-10-19.

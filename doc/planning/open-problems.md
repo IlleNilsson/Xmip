@@ -965,9 +965,8 @@ place marked failed without reading its Journey, except where it blocks a
 Sequential Port's sequence (`runtime-model.md` section 10, corrected
 2026-10-16; `tests/ledger/send_bounded.rs`). What remains: a Journey
 written Failed before this change, or by a writer that does not name its
-queue, is in no index — before the first release nothing migrates it; a
-gap the index's first place must cross is read place by place, as in every
-queue (problem 40); and a publication's list (`SnapshotOperator`,
+queue, is in no index — before the first release nothing migrates it; and
+a publication's list (`SnapshotOperator`,
 `PublicationReading.FailedJourneysWithin`) still pages by the place in the
 Send Port's queue while a node's own list pages by the place in the index:
 a publication carries no index places. Said so precisely, the same day, in
@@ -1152,21 +1151,6 @@ What remains:
   over TCP — is taken whole.
 - **The C ABI's transport table** has no place for `sending` or for a
   receive's bound (ADR-0057, amendment 2026-10-19).
-
-## 40. A queue's gap between two held entries is read place by place
-
-Found by the performance review of 2026-10-12, and repaired in part the
-same day: a queue whose oldest entry is all it holds pages in two reads,
-and taking its last entry out reads none of the gap. What remains: a gap
-with held entries on both sides is still read one place at a time, by a
-page and by the move of the queue's first place inside the one commit
-writer, because an entry's key in the encrypted store is a keyed hash and
-so has no order to scan. Proposed, the owner's to agree: an index on
-(queue, sequence) in the held and dead-message tables, written with the
-record like every other index; a page one ordered index scan from its
-place; the first place found when a read asks for it, so no gap is walked
-in the commit writer. An embedded store made before it lacks the index,
-and before the first release nothing migrates it.
 
 ## 41. A released database schema has no way to change
 
@@ -1635,3 +1619,49 @@ learns its side as it is built (`transport::Configured::sided`). Building it
 found that a file Send Location's start had read its address as a drop
 directory, so a node whose file Send Location had sent once could not start
 again; it no longer does.
+
+## 40. A queue's gap between two held entries is read place by place — **Resolved**
+
+*Resolved 2026-10-19 by the owner's agreement that day to the proposal
+below, built the same day (ADR-0013, amendment 2026-10-19).*
+
+Found by the performance review of 2026-10-12, and repaired in part the
+same day: a queue whose oldest entry is all it holds paged in two reads,
+and taking its last entry out read none of the gap. What remained: a gap
+with held entries on both sides was read one place at a time, by a page
+and by the move of the queue's first place inside the one commit writer,
+because an entry's key in the encrypted store is a keyed hash and so has no
+order to scan. Proposed, and agreed by the owner on 2026-10-19 as written:
+an index on (queue, sequence) in the held and dead-message tables, written
+with the record like every other index; a page one ordered index scan from
+its place; the first place found when a read asks for it, so no gap is
+walked in the commit writer. An embedded store made before it lacks the
+index, and before the first release nothing migrates it.
+
+Built 2026-10-19. The schema definition (`persist::storage::schema`)
+indexes each kind of queue on `(queue, sequence)`: `held_place`,
+`dead_message_place`, and `failed_journey_place` — the index of failed
+Journeys is numbered and read by the same mechanics, so its gap was the
+same (problem 34), and its record now carries its queue. On a database
+server each is the table's primary key, so the scripts under
+`deploy/database/<server>/` make no second index and are unchanged. The
+embedded engines keep it as entries of their own, written and taken out
+with each entry by the one writer (`storage/columns.rs`). A page is one
+ordered range of the index from its place and a read of each entry found
+(`queue::page`, `Columns::find_from`, `EncryptedStore::scan_index_keyed`);
+the writer keeps as the first a place no entry is held before, moved only
+when the queue empties, and the read finds the first. Over a gap of a
+million places (`storage/queue.rs`'s tests, counted and timed in memory, a
+debug build, the fastest of five rounds): a page of the two entries either
+side of it is three key reads and one range, 16 µs; the writer's part of
+taking out the first, three key reads and no range, 20 µs. An index entry's
+key is in the clear as every index entry's is: it shows each entry's place,
+the order of a queue and the size of its gaps, beyond what `held_time`,
+`dead_message_time` and `journey_state` showed already.
+
+What it left: on RocksDB a removed index entry is a tombstone until
+compaction, so a range across a gap just emptied steps over its tombstones
+inside the engine — no record read, none decrypted — and that was not
+measured on RocksDB here; and a scan still reads every entry its queue
+holds at each `send_scan`, waiting or not (problem 43's remainder), which
+an index does not change.
