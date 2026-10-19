@@ -1451,6 +1451,26 @@ directory, a Send Location beside its target — and removes no other node's,
 nor one a send of the same process is still writing. Until 2026-10-19 the
 name carried the process, and such a file stayed for good.
 
+**Corrected 2026-10-19** (the owner agreed the proposal; `open-problems.md`
+problem 40, ADR-0013, amendment 2026-10-19): **a queue is read in its order
+by an index.** Every queue in the Ledger — a Send Port's, a paused
+Subscription's, a node's Dead Message Queue, and a Send Port queue's index
+of failed Journeys — is indexed on its queue and place, written with each
+entry and taken out with it; on a database server that index is the table's
+primary key. A page of a queue is one ordered range of the index from its
+place and a read of each entry it finds, and the queue's first place is
+found by the read that asks for it, so the one writer never walks a gap
+when an entry is taken out. Until now an entry, kept under a keyed hash, was
+found by asking each place in turn: a gap with an entry held on each side of
+it was read place by place, by a page and by the writer moving the first
+past it. Measured over a gap of a million places, in memory, a debug
+build, the fastest of five rounds: a page of the two entries either side
+of it 16 µs in three key reads and one range, and the writer's part of
+taking out the first 20 µs in three key reads and no range, where each
+read the million places.
+An embedded store made before the index lacks it, and before the first
+release nothing migrates it.
+
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
 runtime's settings are configured*, says.
