@@ -1,4 +1,4 @@
-#Requires -Version 7.6.5
+#Requires -Version 7.6.7
 
 # ConvertFrom-Toml has returned a dictionary in one version of PSToml and an
 # object in the next. The module reads a TOML file in one place, Read-XmipToml

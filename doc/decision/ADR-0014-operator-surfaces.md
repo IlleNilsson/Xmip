@@ -343,7 +343,7 @@ The 2026-08-26 amendment said ".NET 11" and meant one thing; it is two. The
 `global.json`. The *target framework* is owned by whoever loads the assembly:
 an executable owns its runtime and targets net11.0 — the cli — while a binary
 PowerShell module loads into pwsh and targets what the platform pwsh
-(ADR-0021, 7.6.5) hosts, which is net10.0 today and follows pwsh upward.
+(ADR-0021's floor) hosts, which is net10.0 today and follows pwsh upward.
 
 Found the honest way: the module was built net11.0 to the letter of the earlier
 amendment, and `Import-Module` refused it. A rule that produces an assembly its
@@ -956,3 +956,22 @@ WebAssembly on .NET 11, the estate's .NET (Preview 1, 2026-03-16,
 - `README.md`, the gui README and `doc/planning/compatibility.md` say so.
 
 Provenance: the owner's decision, quoted; the wording is the assistant's.
+
+## Amendment, 2026-10-19: the toolchain moves to the latest
+
+The owner, 2026-10-19: *Lets be real, we are designing for the future,
+update all references.* ADR-0021's rule, applied to this record's toolchain
+sentences (the 2026-08-26 and 2026-08-30 amendments):
+
+- **The SDK is .NET 11 release candidate 2**, 11.0.100-rc.2.26504.105 of
+  2026-10-13, with a go-live license; every `global.json` names it, and the
+  MAUI workloads are 11.0.0-rc.2.26505.5. Still the preview channel until
+  GA on 10 November 2026.
+- **PowerShell 7.6.7 still hosts .NET 10** (10.0.13), so the PowerShell
+  module and the ABI's binding stay net10.0; every other project is
+  net11.0, as before.
+- The packages tied to the SDK follow it: the ASP.NET Core and logging
+  packages float on 11.0.0-rc.2, and the lock files are restored again.
+
+Provenance: the owner's instruction, quoted; the versions were read from
+Microsoft's download page and NuGet on 2026-10-19.

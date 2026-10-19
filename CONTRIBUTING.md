@@ -173,10 +173,13 @@ and is the estate's memory of every past defect. It runs detached, so the
 prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
 failed.
 
-**The toolchain.** PowerShell Core 7.6.5 or newer, with PSToml and posh-git.
-Rust builds with stable cargo; C# builds with the .NET 11 preview SDK, but
-the PowerShell binary module targets net10.0 because pwsh hosts it (ADR-0014,
-amendment 2026-08-30).
+**The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
+PowerShell Core 7.6.7 or newer, with PSToml and posh-git, and Pester 6.
+Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
+.NET 11 SDK, release candidate 2 until GA on 2026-11-10, but the PowerShell
+binary module targets net10.0 because pwsh hosts it (ADR-0014, amendments
+2026-08-30 and 2026-10-19). The event bindings build with Java 27 and Python
+3.15, the VS Code extension with Node 26. `prerequisite.toml` has each.
 
 **Writing PowerShell.** Every script must remain cross-platform. Use advanced
 functions and native PowerShell parameter sets, and support `ShouldProcess`

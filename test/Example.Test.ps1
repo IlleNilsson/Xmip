@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     A test instead of a promise: what a document shows a reader to copy is

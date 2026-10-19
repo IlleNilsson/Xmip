@@ -208,7 +208,7 @@ site to start on its own, which no example site has yet.
 
 ### First run
 
-1. Install PowerShell 7.6.5 or later. Windows PowerShell 5.1 is a different
+1. Install PowerShell 7.6.7 or later. Windows PowerShell 5.1 is a different
    product and is not supported.
 
    ```sh
@@ -669,7 +669,7 @@ amendment 2026-10-19).
 
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
-| PowerShell 7.6.5 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
+| PowerShell 7.6.7 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
 | Desired state | Ansible (`deploy/dsc/ansible/roles`); Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`deploy/dsc/msdsc/hyperv`), a node not written | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |

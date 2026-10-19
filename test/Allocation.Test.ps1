@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     doc/planning/allocation.toml is the plan for moving every document and

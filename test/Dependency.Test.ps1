@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     The manifest says what each repository depends on, and until 2026-09-22 it

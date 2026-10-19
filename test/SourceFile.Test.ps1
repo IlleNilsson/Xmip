@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     `Get-XmipSourceFile` is what the estate map weighs its tree with and what

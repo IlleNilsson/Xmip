@@ -139,11 +139,11 @@ Describe 'The module is the entry point' {
         }
     }
 
-    It 'declares Core and 7.6.5 on every entry point' {
+    It 'declares Core and 7.6.7 on every entry point' {
         foreach ($file in $script:EntryPoints) {
             $head = (Get-Content (Join-Path $script:ModuleRoot $file) -TotalCount 3) -join "`n"
             $head | Should -Match '#requires -PSEdition Core'
-            $head | Should -Match '#requires -Version 7\.6\.5'
+            $head | Should -Match '#requires -Version 7\.6\.7'
         }
     }
 }
@@ -163,7 +163,7 @@ Describe 'ADR-0021: current platforms only, enforced' {
     }
 
     It 'keeps the manifest floor and the #requires floor in step' {
-        # The one that drifts silently: prerequisite.toml says 7.6.5 while an
+        # The one that drifts silently: prerequisite.toml says 7.6.7 while an
         # entry point still says 7.6, and nothing notices. On 2026-08-27 three
         # documents said 7.6, one said 7.6.3, and an example printed 7.6.5.
         $declared = [string]$script:Prereq.prerequisite.powershell.minimum

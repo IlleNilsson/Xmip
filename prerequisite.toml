@@ -36,12 +36,12 @@ include = ["developer"]
 [prerequisite.powershell]
 role = "operator"
 probe = "pwsh --version"
-minimum = "7.6.5"
+minimum = "7.6.7"
 channel = "stable"
 note = """
 The one prerequisite Xmip cannot install for you, because the tooling is
 written in it. Every entry point declares #requires -PSEdition Core and
--Version 7.6.5, so a machine below the floor is refused by PowerShell itself,
+-Version 7.6.7, so a machine below the floor is refused by PowerShell itself,
 by name and version. If Install-XmipPrerequisite is running at all, this is already
 satisfied, so it is reported rather than installed.
 
@@ -79,7 +79,7 @@ channel = "stable"
 minimum = "6.0"
 note = """
 Latest stable, no pinned version — the same rule as Rust. Pester 6 requires
-PowerShell 7.4 or later, which the 7.6.5 floor above already guarantees.
+PowerShell 7.4 or later, which the 7.6.7 floor above already guarantees.
 
 The minimum is 6.0 rather than a specific build because Pester 6 changed how
 discovery works: it now discovers and runs per file, where 5 discovered every
@@ -166,7 +166,7 @@ optional = true
 probe = "dotnet --version"
 minimum = "11.0"
 channel = "preview"
-note = "For the Blazor surfaces in ADR-0014. Latest preview until .NET 11 reaches stable on 10 November 2026, latest stable from then on: set channel to stable and change the winget identifier to Microsoft.DotNet.SDK.11 on that date. The winget identifier for preview SDKs is not verified here; released ones are versioned, such as Microsoft.DotNet.SDK.9."
+note = "For the Blazor surfaces in ADR-0014. Latest preview until .NET 11 reaches stable on 10 November 2026, latest stable from then on: set channel to stable and change the winget identifier to Microsoft.DotNet.SDK.11 on that date. On 2026-10-19 the preview channel is release candidate 2, SDK 11.0.100-rc.2.26504.105 of 2026-10-13, which every global.json names; winget's Microsoft.DotNet.SDK.Preview carries it."
 
 [prerequisite.dotnet.windows]
 winget = "Microsoft.DotNet.SDK.Preview"
@@ -212,7 +212,7 @@ fallback = "https://developer.android.com/ndk/downloads"
 role = "developer"
 optional = true
 probe = "node --version"
-minimum = "24.0"
+minimum = "26.0"
 channel = "stable"
 note = "For the VS Code extension's TypeScript shell (ADR-0014, amendment 2026-09-10): npm compiles, lints and tests it under module/core/operation/gui/vscode/extension. The landing gate runs those steps where node is present and says so where it is not (ADR-0052)."
 
@@ -255,34 +255,37 @@ fallback = "https://ziglang.org/download/"
 role = "developer"
 optional = true
 probe = "javac -version"
-minimum = "21"
-note = "For the Java event binding in xmip-core-abi: the foreign function and memory API, a preview in 21, compiled with javac --release 21 --enable-preview. A perimeter program in its own process (ADR-0065)."
+minimum = "27"
+channel = "stable"
+note = "For the Java event binding in xmip-core-abi: the foreign function and memory API, final since Java 22, compiled with javac --release 27. A perimeter program in its own process (ADR-0065). JDK 27 is the current release (2026-09-15); JDK 25 is the current long-term support release."
 
 [prerequisite.java.windows]
-winget = "Microsoft.OpenJDK.21"
+winget = "Amazon.Corretto.27.JDK"
 elevation = true
-note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation."
+note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation. Microsoft builds OpenJDK only for long-term support releases (Microsoft.OpenJDK.25), so JDK 27 comes from Amazon Corretto."
 
 [prerequisite.java.macos]
-brew = "openjdk@21"
+brew = "openjdk"
 
 [prerequisite.java.linux]
-apt = "openjdk-21-jdk"
-dnf = "java-21-openjdk-devel"
-pacman = "jdk21-openjdk"
+apt = "openjdk-27-jdk"
+dnf = "java-latest-openjdk-devel"
+pacman = "jdk-openjdk"
 
 [prerequisite.python]
 role = "developer"
 optional = true
 probe = "python --version"
-minimum = "3.12"
-note = "For the Python event binding in xmip-core-abi: ctypes over the runtime library, tested with python -m unittest. A perimeter program in its own process (ADR-0065)."
+minimum = "3.15"
+channel = "stable"
+note = "For the Python event binding in xmip-core-abi: ctypes over the runtime library, tested with python -m unittest. A perimeter program in its own process (ADR-0065). Python 3.15.0 is the current release (2026-10-09)."
 
 [prerequisite.python.windows]
-winget = "Python.Python.3.13"
+command = "winget install --id Python.PythonInstallManager --exact; py install 3.15"
+note = "Python 3.15 is installed on Windows through the Python install manager, per user; winget carries no Python.Python.3.15."
 
 [prerequisite.python.macos]
-brew = "python@3.13"
+brew = "python@3.15"
 
 [prerequisite.python.linux]
 apt = "python3"
