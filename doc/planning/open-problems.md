@@ -1153,16 +1153,6 @@ What remains:
 - **The C ABI's transport table** has no place for `sending` or for a
   receive's bound (ADR-0057, amendment 2026-10-19).
 
-## 39. A send the process did not finish leaves its file behind
-
-Found 2026-10-12, making the file transport's send atomic: a send writes
-`<target>.xmip-sending.<pid>.<count>.<nanos>` beside its target and
-renames it into place, so a reader sees the old file or the whole new one.
-A process that dies between the two leaves that file in the directory for
-good. Receive never takes it, and nothing removes it. Removing them at a
-node's start, as it recovers its claims, needs a decision on whose they
-are: the name carries the process, not the node.
-
 ## 40. A queue's gap between two held entries is read place by place
 
 Found by the performance review of 2026-10-12, and repaired in part the
@@ -1611,3 +1601,37 @@ holds the race open with `fixture::Failing::after`. What it left: an embedded st
 first release nothing migrates it; a scan still reads every waiting entry
 of a queue at each `send_scan`, as it reads every entry, which is problem
 40's.
+
+## 39. A send the process did not finish leaves its file behind — **Resolved**
+
+*Resolved 2026-10-19 by the owner's decision of that day, built the same
+day (ADR-0024, amendment 2026-10-19).*
+
+Found 2026-10-12, making the file transport's send atomic: a send wrote
+`<target>.xmip-sending.<pid>.<count>.<nanos>` beside its target and
+renamed it into place, so a reader sees the old file or the whole new one.
+A process that died between the two left that file in the directory for
+good. Receive never took it, and nothing removed it. Removing them at a
+node's start, as it recovers its claims, needed a decision on whose they
+are: the name carried the process, not the node.
+
+Decided by the owner, 2026-10-19: the temporary file's name carries the
+node's identity, not the process's, and at its start the node removes its
+own leftovers while it recovers its claims. It removes no other node's
+file.
+
+Built 2026-10-19. The name is
+`<target>.xmip-sending.<the node's location, percent-encoded>.<count>.<nanos>`,
+the node's identity as a claimed name carries it, written once in
+`xmip-core-transport`'s `claim/unfinished.rs` (`Claimant::sending`) and never
+an arrival (`claim::may_arrive`). A starting node's recovery removes the
+ones its own name records (`Claimant::remove_unfinished`, from
+`Claimant::recover`), never one a send of the same process is still writing
+(`claim::Unfinished` holds it in the process's set of sends in flight). The
+file transport is the family's one technology that writes beside its
+target; a Receive Location removes its node's in its drop directory, a Send
+Location, whose address names the file it writes, beside that file — it
+learns its side as it is built (`transport::Configured::sided`). Building it
+found that a file Send Location's start had read its address as a drop
+directory, so a node whose file Send Location had sent once could not start
+again; it no longer does.

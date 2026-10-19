@@ -938,3 +938,21 @@ external parties. Let's keep that to a minimum.*
 
 Provenance: the owner's decisions, quoted; the wording of the forms he
 chose between is the assistant's.
+
+## Amendment, 2026-10-19: .NET MAUI is cross-platform
+
+**Withdraws the 2026-10-13 correction of clause 12; clause 12 stands.** The
+owner, 2026-10-19: *.NET MAUI is cross platform, so correct the decisions.*
+That correction named only Microsoft's unsupported GTK4 backend, maui-labs,
+for Linux, and missed Avalonia's backend for .NET MAUI, which adds Linux and
+WebAssembly on .NET 11, the estate's .NET (Preview 1, 2026-03-16,
+<https://avaloniaui.net/blog/maui-avalonia-preview-1>).
+
+- **The desktop runs on Windows, macOS and Linux**, as clause 12 says:
+  Microsoft's targets are Windows, macOS, Android and iOS, and Linux comes
+  through Avalonia's backend, a preview today.
+- Which targets are built at a given time remains a choice of the moment
+  (the 2026-10-13 amendment's last point).
+- `README.md`, the gui README and `doc/planning/compatibility.md` say so.
+
+Provenance: the owner's decision, quoted; the wording is the assistant's.
