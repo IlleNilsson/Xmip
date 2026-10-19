@@ -18,7 +18,7 @@
 - Subject: One Service per node, and it stays out of the message path
 - Name: The Service and the Host Services
 - Order: 5
-- Concepts: Host Service; Service, the Xmip Service
+- Concepts: Budget, what a node holds beside its pools; Host Service; Service, the Xmip Service
 
 The Xmip Service is the master and the only thing the operating system starts.
 It reads the node configuration, builds and validates the execution tree, then
@@ -792,3 +792,64 @@ milliseconds, which is the runtime's to answer.
 Provenance: the coordinator's brief of 2026-10-17, under the rules quoted.
 The channel, the watch, `acted` and the bounds are the assistant's, for the
 owner to overrule.
+
+## Amendment, 2026-10-19: a node's budget beside each pool
+
+**Provenance.** `open-problems.md` problem 38, raised by the outside review
+and the performance review of 2026-10-12: *the send pool admits a bounded
+number of Journeys, and each reads its Message whole*; *each Receive
+Location has a pool of its own, so a node of many Locations has no ceiling
+of its own: needed is a node-wide execution and memory budget beside each
+Location's isolation*. The coordinator's brief of 2026-10-19 asked for it
+built, every hardware assumption a default only in `[tuning]` (ADR-0031,
+amendment 2026-10-03).
+
+The amendment of 2026-10-01 bounds each step's pool by threads — the
+bulkhead of clause 11 — and leaves what those threads hold unbounded. Beside
+every pool a node now keeps budgets (`xmip-core-runtime`'s `budget`), each
+a quantity held at once:
+
+- **The arrivals it carries**, across all its Receive Locations
+  (`[tuning] node_receive_threads_per_hardware_thread`, four per hardware
+  thread by default). A receive asks its transport for no more arrivals
+  than its Location's pool has threads free and the node has places, and
+  waits for a place where the node has none; what it does not take stays at
+  its far end (`Transport::receive_up_to`; ADR-0024, amendment 2026-10-19).
+  Each Location keeps its own pool, its isolation; the node's places are
+  shared, first come.
+- **The bytes those carries hold** (`receive_chunks_per_thread`, chunks per
+  arrival carried at once): a carry holds its charge while it carries and
+  lets it go before its turn to tell its far end, so an arrival waiting to
+  tell never holds back one carrying.
+- **The bytes the sends hold**, beside the Send pool's count of Journeys
+  (`send_chunks_per_thread`, chunks per thread of the pool): a send holds
+  what its transport holds of the Message — the whole of it where the
+  transport gathers it (`transport::Sending`), what reading it holds where
+  the transport streams — and waits for room before the transport's I/O,
+  its claim renewed and asked again after the wait.
+
+A holder with no room waits for a holder to let go: nothing is dropped,
+refused or taken from a far end without room, and a charge above a whole
+budget waits until it is alone and holds all of it, so nothing is too large
+to go. What a carry and a streamed send hold is counted as measured: a carry
+of a 64 MiB Stream held seven chunks at most, counted as eight
+(`budget::CARRY_CHUNKS`); a send that streams a 64 MiB Message a little
+over five, counted as six (`budget::STREAM_CHUNKS`).
+
+Proved by `xmip-core-runtime`'s `budget` tests and `tests/ledger/roomed.rs`
+and `send_streamed.rs`, what this process allocated counted by the test
+program's allocator: two Locations of 32 threads each on a node of 16
+places never had more than 16 arrivals taken and untold at once; 32
+Streams of 4 MiB on two Locations, 128 MiB whole, held 2.3 MB at most under
+a byte budget of 4.1 MB; four sends of one 64 MiB Message held 1.1 MB at
+most; and two sends whose transport gathers a Message as large as the whole
+budget went one after the other.
+
+What it does not do: the C ABI's transport table has no place for a
+technology's `sending` or a receive's bound (ADR-0057, amendment
+2026-10-19); a transport that hands over a whole message holds it before
+its carry begins, bounded by the room it was asked for, not by bytes.
+
+The defaults — four places per hardware thread, eight chunks a carry,
+sixteen chunks a send thread — are the assistant's drafting, for the owner
+to overrule.

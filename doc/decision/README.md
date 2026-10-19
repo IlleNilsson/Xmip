@@ -1056,6 +1056,7 @@ You have a word. This gives you the decision that governs it.
 | authorizer | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | binding | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Budget, what a node holds beside its pools | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Claim, claimable artifact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, `xmip-cli`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |

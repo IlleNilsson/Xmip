@@ -548,3 +548,19 @@ runtime and no unchecked native code is hosted in an Xmip process unless
 configuration invites it (ADR-0018 and ADR-0042, amendments 2026-10-05).
 The loader is proven against `xmip-core-contract-rust` by the runtime's
 `ffi::loaded_contract` tests.
+
+## Amendment, 2026-10-19: the trait sends a stream, as the table does
+
+The consequence above named the trait behind `XmipTransportVtable` as
+materialized where the table streams. On the send side it no longer is:
+`xmip-core-transport`'s `Transport::send_from` takes an `Outgoing`, the
+Message read a chunk at a time from the Ledger, its length known first —
+what the table's `send` takes as an `XmipReader` (open problem 38;
+`runtime-model.md` section 10, corrected 2026-10-19). Two things the trait
+now says have no field in the table, and wrapping one in the other is not
+mechanical until they do: `Transport::sending`, whether a technology
+streams a body or gathers it whole, which the runtime's byte budget for
+sends counts by; and the bound `Transport::receive_up_to` takes, the room
+the runtime has, where the table's receive pushes into a sink without one.
+Whether the table gains them is open with the loader for transports, which
+is not built; nothing here changes the header.

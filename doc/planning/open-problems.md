@@ -1008,6 +1008,89 @@ record that is not there reads every block; and audit is read from the
 program's file, not yet from Xmip Storage, where ADR-0062's amendment of
 2026-10-01 puts it.
 
+Repaired for sending and receiving 2026-10-19 (`runtime-model.md` sections
+3, 5 and 10, corrected 2026-10-19; ADR-0018, ADR-0024 and ADR-0057,
+amendments 2026-10-19; ADR-0031's `[tuning]` list).
+
+- **A send streams through the transport capability.** `Transport::send`
+  and `send_keyed` took a byte slice and are gone from what a technology
+  implements: it implements `send_from`, handed an `Outgoing`
+  (`transport/.src/outgoing.rs`) — the Message read from the Ledger a chunk
+  at a time, its length known before its first byte, opened from its start
+  by every read so a kept session's resend reads it again, held to its
+  length, and its key — written once in the capability with what every
+  technology needs of it: `write_to`, `pieces` in requests of a protocol's
+  own size, `gather`, and `checked`, which keeps a send whose claim was lost
+  while a large Message was read from starting. `send(target, bytes)` is
+  `send_from` over bytes in memory, for a test or a tool. Every technology
+  says whether it streams or gathers, and why (`Transport::sending`, no
+  default). Ten stream: file, TCP, a Unix domain socket, a named pipe, MLLP,
+  WebSocket, FTP, SFTP, SMB and NFS. The rest gather, most because their
+  protocol needs the whole body first — a datagram, a frame, a record with
+  its CRC, a signed or encrypted message, an INSERT's literal.
+- **A byte budget beside the Send pool's count.** A send holds what its
+  transport holds of the Message from the node's byte budget for sends
+  (`runtime`'s `budget`, `[tuning] send_chunks_per_thread`), waiting for
+  room before the transport's I/O: the whole Message where its transport
+  gathers, six chunks of reading where it streams, as measured.
+- **A fan-out's departures share their reads.** The departures of one
+  Stream in flight on a node take each chunk from one read of it, lent,
+  while they keep up (`runtime`'s `stream_share`, over
+  `persist::storage::ChunkReader::shared` and `next_chunk`); one further
+  behind reads on from Xmip Storage itself, so no Send Port waits on
+  another.
+- **Receive takes no more than it has room for.** A receive asks its
+  transport for at most as many arrivals as its Location's pool has threads
+  free and the node has places (`Transport::receive_up_to`); the rest stay
+  at the far end. The file family claims no more of a listing than that,
+  the rest left as dropped for the next listing (`claim::Claiming::take`);
+  an object store's listing, a SQL query's rows, a kept subscription, SMB,
+  NFS, WebDAV, IMAP and POP3 listings, Kinesis, SQS, Pub/Sub, Service Bus,
+  Kafka, Redpanda, Redis Streams and JetStream hand over no more.
+- **A node-wide execution and memory budget.** Beside each Receive
+  Location's own pool the node bounds the arrivals it carries at once
+  across all its Locations (`node_receive_threads_per_hardware_thread`)
+  and the bytes those carries hold (`receive_chunks_per_thread`), every one
+  a default only in `[tuning]`, the defaults the assistant's drafting.
+
+Measured (`runtime`'s `tests/ledger/send_streamed.rs` and `roomed.rs`, what
+the test program allocated counted): a 64 MiB Message carried in and sent
+to four Send Ports held 1.1 MB at most; four departures at a far end's pace
+read an 8 MiB Stream's 132 chunks 132 times; sends that gather a Message as
+large as the byte budget went one after the other; two Locations of 32
+threads on a node of 16 places never had more than 16 arrivals taken and
+untold at once; 32 Streams of 4 MiB, 128 MiB whole, held 2.3 MB at most
+under a receive byte budget of 4.1 MB.
+
+What remains:
+
+- **Technologies that could stream gather.** The HTTP ones — http, WebDAV,
+  Azure Blob, Google Cloud Storage — because the HTTP client
+  (`net::http`) writes a request whole, its length counted from it; SMTP,
+  to dot-stuff its `DATA` whole; Bluetooth, whose in-process link takes one
+  write whole. Each says so in its `sending`, and its byte budget counts
+  the whole Message.
+- **Departures started apart read apart.** Four departures of a 64 MiB
+  Message to far ends faster than Xmip Storage's read took 4,184 chunk
+  reads for 1,045 chunks: a departure more than two chunks behind reads on
+  by itself. Holding a fan-out's departures together would make one read
+  of each chunk certain and would couple their far ends' pace, which the
+  bulkhead forbids today; that is the owner's to decide.
+- **A carry holds seven chunks, not two.** A carry of a 64 MiB Stream held
+  seven chunks at most where section 3 designs for two, the chunk written
+  and the one read ahead: Xmip Storage encodes and seals each chunk written
+  in copies of its own. The budget counts what was measured, eight; the
+  copies are not removed.
+- **Some receives still take what they are handed.** A query's rows are
+  all read before the bound is applied (the query itself is not bounded);
+  a Kafka or Redpanda fetch brings more records than are taken, read again
+  later; a technology that hands over a whole message holds it before its
+  carry, bounded by the room it was asked for, not by bytes; and a
+  connection whose far end let go of what it sent — COTP, SECS/GEM, syslog
+  over TCP — is taken whole.
+- **The C ABI's transport table** has no place for `sending` or for a
+  receive's bound (ADR-0057, amendment 2026-10-19).
+
 ## 39. A send the process did not finish leaves its file behind
 
 Found 2026-10-12, making the file transport's send atomic: a send writes
