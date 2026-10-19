@@ -17,13 +17,17 @@
 //! - `told.rs`: an order is acted on the moment it is left, within about a
 //!   millisecond beyond what it carries, and a service nothing tells uses
 //!   next to no processor.
+//! - `accepted.rs`: a Receive Location terminating TLS with the node's
+//!   `[provision.receive]` certificate accepts a Stream from the Party its
+//!   `accept.party` names, through the build's own identity technologies,
+//!   and refuses and audits one whose certificate names another.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
-//! peer on the transport layer, passed. The build links no authenticator
-//! and the configuration can set none up yet, so the Receive Location
-//! accepts nothing: every Message is refused at authentication, by name,
-//! counted, and audited with the claim it carried.
+//! peer on the transport layer, passed. Where the Receive Location's
+//! configuration declares no `accept`, it accepts nothing: every Message is
+//! refused at authentication, by name, counted, and audited with the claim
+//! it carried.
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -293,6 +297,7 @@ fn order(directory: &Path, act: Act) {
     .expect("the order is left");
 }
 
+mod accepted;
 mod operate;
 mod publication;
 mod stop;

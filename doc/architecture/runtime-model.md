@@ -1785,6 +1785,19 @@ different questions, and a gate able to see the answer to the second would
 eventually decide something with it. ADR-0019 clause 4 says the same in
 prose: **a Party is a shortcut to an Identity, not a permission.**
 
+**What the assembled service sets up from configuration** (2026-10-19;
+ADR-0019 and ADR-0033, amendments 2026-10-19). A tcp Receive Location
+saying `tls = true` terminates TLS with the node's `[provision.receive]`
+certificate and verifies a client's against the anchors given there, before
+a byte of content is read; the transport writes what the handshake proved;
+the first gate presents the certificate's subject as `mutual-tls`, and
+`mutual-tls` records the transport's proof; the Parties of `[[parties]]`
+resolve the verified value; the Location's `accept` closes the set —
+mechanisms and Parties — at authentication; and the `location` policy
+admits, at each Receive Location the node starts, what its `accept` takes.
+An authenticator that needs a credential store, and a policy that speaks
+for a Send Location, are not set up by configuration yet (open problem 33).
+
 All access through Xmip follows this path. **Development uses permissive
 configuration; it does not bypass security.** A developer installation
 bootstraps four identities:
@@ -1913,8 +1926,12 @@ default = "..."                   # overridable per Port and per Location
 
 - **Parties** are named with their identities (ADR-0019), so a Receive
   Location's accepted Parties read as names. `[[parties]]` is read since
-  2026-10-13 (`configure::party`; ADR-0028, amendment 2026-10-13); a
-  Location's `accept.party` is not yet, and is refused.
+  2026-10-13 (`configure::party`; ADR-0028, amendment 2026-10-13), and a
+  Location's `accept.party` since 2026-10-19: a verified identity resolves
+  to the Party holding it, and a Location naming Parties refuses at
+  authentication one that resolves to another or to none (ADR-0019,
+  amendment 2026-10-19). A name no `[[parties]]` declares is a problem the
+  node's binding reports.
 - **Retention** has a node default, overridable per Port (section 16).
 - **Audit policy follows retention**: a node default, overridable per
   Receive or Send Port and per Location (section 16). The policy's words are

@@ -256,7 +256,7 @@ added to what Xmip knows about it (`xmip-core-message`: *The Stream is
 immutable. The Message is not.*). Every generation is kept. **Routing alone
 does not create a new Message**, and promotion for routing is held beside
 the Message rather than in it. Enrichment at arrival is
-[built, not in the assembled service](architecture/estate-map.md#arrival); Assignment
+[built, in the assembled service](architecture/estate-map.md#arrival); Assignment
 belongs to an Xmip Work Process and Transformation to the steps of a Port or
 Location, both [decided, not built](architecture/estate-map.md#artifact-steps).
 

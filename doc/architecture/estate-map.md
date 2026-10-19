@@ -66,6 +66,39 @@ true now, and changes in the same change as the code that changes it.
 
 ### Built, in the assembled service
 
+#### `arrival`
+
+**Receiving a Stream through a node's gates and publishing its Message.** The
+runtime receives through a linked transport, identifies, authenticates and
+authorizes, writes the Stream to the Ledger in chunks and publishes a Message
+with what it learned in its context. Nothing a transport hands over is
+dropped: what it observed of the sender (the socket peer, the request line,
+the certificate a TLS handshake verified) and its headers reach the first
+gate, and the headers the Message Context. `xmip-service` links the identify
+technologies that need no configuration (`certificate`, `ip`, `jwt`,
+`api-key`, `username`), the `mutual-tls` authenticator and the `location`
+policy, and its tcp terminates TLS where a Receive Location says `tls = true`,
+presenting the node's `[provision.receive]` certificate and verifying a
+client's against its anchors: a Receive Location accepting `mutual-tls`,
+narrowed by `accept.party` to Parties `[[parties]]` declares, receives a
+Stream from such a Party and refuses any other at authentication, auditing the
+refused attempt with its claim. No authenticator a credential store sets up is
+linked, so a Location accepting another mechanism is refused as the node
+starts; and no policy speaks for a Send Location, so a Message routed onward
+is refused at send authorization (open problem 33). Records: ADR-0019
+(amendment 2026-10-19), ADR-0033 (amendment 2026-10-19), runtime-model.md
+section 5.
+
+#### `certificate-usage`
+
+**Presenting and verifying certificates an operator supplies.**
+`xmip-core-library-tls` presents and verifies PEM certificates; the web host
+serves https with them, and Xmip Storage's client and server speak mutual TLS
+with them. `xmip-service` presents the node's `[provision.receive]`
+certificate on a tcp Receive Location that terminates TLS and verifies a
+Party's against the anchors given there; a Send Location presents none yet.
+Records: ADR-0033 (amendment 2026-10-19), ADR-0063.
+
 #### `configuration-saving`
 
 **Saving and slicing the cluster's configuration.** The Operation Desktop
@@ -121,27 +154,11 @@ act. Records: ADR-0013 (amendments 2026-09-30, 2026-10-01).
 
 **Routing by the Subscriptions a node binds.** A node routes every Message it
 publishes against the Subscriptions of the Xmip Applications it binds, their
-filters compiled as it starts; in the assembled service no Stream reaches
-routing yet (`arrival`). Records: ADR-0013, ADR-0066.
+filters compiled as it starts; in the assembled service a Stream a Receive
+Location accepts reaches routing, and a Message routed onward is refused at
+send authorization (`arrival`). Records: ADR-0013, ADR-0066.
 
 ### Built, not in the assembled service
-
-#### `arrival`
-
-**Receiving a Stream through a node's gates and publishing its Message.** The
-runtime receives through a linked transport, identifies, authenticates and
-authorizes, writes the Stream to the Ledger in chunks and publishes a Message
-with what it learned in its context. Nothing a transport hands over is
-dropped: what it observed of the sender (the socket peer, the request line)
-and its headers reach the first gate, and the headers the Message Context.
-`xmip-service` links the identify technologies that need no configuration
-(`ip`, `jwt`, `api-key`, `username`), so a Stream's transport claim reaches
-the gate and is recorded with its layer and how it was established; it links
-no authenticator and no authorization policy, and a Receive Location
-authenticates and permits nothing without them, so the assembled service
-refuses every Stream at authentication and audits the refused attempt with its
-claim; the Playground and the runtime's tests hand both in. Records: ADR-0019,
-runtime-model.md section 5.
 
 #### `certificate-provisioning`
 
@@ -157,16 +174,10 @@ the platform's keeper and never leaves it (the Android Keystore, the Secure
 Enclave, Windows CNG and the TPM), the request signed there in the two halves
 section 19 exports and every handshake signed there through
 `xmip-core-library-tls`'s `Sign`. Proved in their tests, offline.
-`xmip-service` reads no `[provision]` table yet. Open problem 27. Records:
-ADR-0034 (amendment 2026-10-15), ADR-0033 (amendment 2026-10-13).
-
-#### `certificate-usage`
-
-**Presenting and verifying certificates an operator supplies.**
-`xmip-core-library-tls` presents and verifies PEM certificates; the web host
-serves https with them, and Xmip Storage's client and server speak mutual TLS
-with them. `xmip-service` presents none yet: it reaches only its own embedded
-Storage node. Records: ADR-0033, ADR-0063.
+`xmip-service` reads `[provision.receive]` from an operator's files alone, as
+it starts, and starts no provisioner: a table naming a `source` is refused,
+and no other purpose's table is read. Open problem 27. Records: ADR-0034
+(amendment 2026-10-15), ADR-0033 (amendment 2026-10-13).
 
 #### `module-loading`
 
@@ -341,7 +352,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 269758 lines of production
+Where each repository mounts and what it holds: 270236 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -366,7 +377,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       5790
+│   │   │   ├── transport                       5884
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -453,9 +464,9 @@ hold no source to count.
 │   │   │   │   ├── rabbitmq                     373
 │   │   │   │   ├── unix-socket                  361
 │   │   │   │   ├── mllp                         309
-│   │   │   │   ├── udp                          216
-│   │   │   │   └── tcp                          191
-│   │   │   ├── authenticate                    2657
+│   │   │   │   ├── tcp                          277
+│   │   │   │   └── udp                          216
+│   │   │   ├── authenticate                    2569
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -471,7 +482,7 @@ hold no source to count.
 │   │   │   │   ├── certificate                  139
 │   │   │   │   ├── api-key                       99
 │   │   │   │   ├── bearer                        94
-│   │   │   │   ├── mutual-tls                    89
+│   │   │   │   ├── mutual-tls                    86
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── password                      68
 │   │   │   ├── path                            2431
@@ -598,9 +609,9 @@ hold no source to count.
 │   │   │   ├── codec                           2648
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
+│   │   │   ├── tls                             1020
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
-│   │   │   ├── tls                              770
 │   │   │   └── asn1                             526
 │   │   └── operation/
 │   │       ├── cli                             7810
@@ -610,7 +621,7 @@ hold no source to count.
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3769
+│   │       ├── observe                         3770
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      2804  C# 2804 · PowerShell 0
@@ -651,22 +662,22 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── node                                 831
-│   │   ├── context                              820
+│   │   ├── context                              827
 │   │   ├── journey                              592
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            26472
+│       ├── runtime                            26524
 │       ├── persist                             8972
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5124
+│       └── configure                           5204
 └── test/
     └── core/
-        └── playground                         11283
+        └── playground                         11282
 ```
 
 ---

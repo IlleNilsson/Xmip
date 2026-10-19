@@ -148,9 +148,9 @@ appliesTo = ["soap", "http-api", "grpc"]
 
 [implementation.arrival]
 name = "Receiving a Stream through a node's gates and publishing its Message"
-state = "built"
-note = "The runtime receives through a linked transport, identifies, authenticates and authorizes, writes the Stream to the Ledger in chunks and publishes a Message with what it learned in its context. Nothing a transport hands over is dropped: what it observed of the sender (the socket peer, the request line) and its headers reach the first gate, and the headers the Message Context. `xmip-service` links the identify technologies that need no configuration (`ip`, `jwt`, `api-key`, `username`), so a Stream's transport claim reaches the gate and is recorded with its layer and how it was established; it links no authenticator and no authorization policy, and a Receive Location authenticates and permits nothing without them, so the assembled service refuses every Stream at authentication and audits the refused attempt with its claim; the Playground and the runtime's tests hand both in."
-record = ["ADR-0019", "runtime-model.md section 5"]
+state = "assembled"
+note = "The runtime receives through a linked transport, identifies, authenticates and authorizes, writes the Stream to the Ledger in chunks and publishes a Message with what it learned in its context. Nothing a transport hands over is dropped: what it observed of the sender (the socket peer, the request line, the certificate a TLS handshake verified) and its headers reach the first gate, and the headers the Message Context. `xmip-service` links the identify technologies that need no configuration (`certificate`, `ip`, `jwt`, `api-key`, `username`), the `mutual-tls` authenticator and the `location` policy, and its tcp terminates TLS where a Receive Location says `tls = true`, presenting the node's `[provision.receive]` certificate and verifying a client's against its anchors: a Receive Location accepting `mutual-tls`, narrowed by `accept.party` to Parties `[[parties]]` declares, receives a Stream from such a Party and refuses any other at authentication, auditing the refused attempt with its claim. No authenticator a credential store sets up is linked, so a Location accepting another mechanism is refused as the node starts; and no policy speaks for a Send Location, so a Message routed onward is refused at send authorization (open problem 33)."
+record = ["ADR-0019 (amendment 2026-10-19)", "ADR-0033 (amendment 2026-10-19)", "runtime-model.md section 5"]
 
 [implementation.arrival-validation]
 name = "Holding a Stream to a named Contract"
@@ -166,14 +166,14 @@ record = ["ADR-0022", "deployment-model.md section 4"]
 
 [implementation.certificate-usage]
 name = "Presenting and verifying certificates an operator supplies"
-state = "built"
-note = "`xmip-core-library-tls` presents and verifies PEM certificates; the web host serves https with them, and Xmip Storage's client and server speak mutual TLS with them. `xmip-service` presents none yet: it reaches only its own embedded Storage node."
-record = ["ADR-0033", "ADR-0063"]
+state = "assembled"
+note = "`xmip-core-library-tls` presents and verifies PEM certificates; the web host serves https with them, and Xmip Storage's client and server speak mutual TLS with them. `xmip-service` presents the node's `[provision.receive]` certificate on a tcp Receive Location that terminates TLS and verifies a Party's against the anchors given there; a Send Location presents none yet."
+record = ["ADR-0033 (amendment 2026-10-19)", "ADR-0063"]
 
 [implementation.certificate-provisioning]
 name = "Obtaining and renewing certificates (ACME, an internal authority)"
 state = "built"
-note = "`xmip-core-provision` and its technologies obtain and renew a certificate: `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`, the cluster's authority, served over ACME; `self-signed` for a lone offline node; and an operator's files. A person's certificate, purpose `operator`, is requested by the surface with its own key and signed by the authority `[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`, `xmip_operate.h` section 19; on the phone and the desktop the key is made in the platform's keeper and never leaves it (the Android Keystore, the Secure Enclave, Windows CNG and the TPM), the request signed there in the two halves section 19 exports and every handshake signed there through `xmip-core-library-tls`'s `Sign`. Proved in their tests, offline. `xmip-service` reads no `[provision]` table yet. Open problem 27."
+note = "`xmip-core-provision` and its technologies obtain and renew a certificate: `acme` against any ACME directory, Let's Encrypt one option; `internal-ca`, the cluster's authority, served over ACME; `self-signed` for a lone offline node; and an operator's files. A person's certificate, purpose `operator`, is requested by the surface with its own key and signed by the authority `[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`, `xmip_operate.h` section 19; on the phone and the desktop the key is made in the platform's keeper and never leaves it (the Android Keystore, the Secure Enclave, Windows CNG and the TPM), the request signed there in the two halves section 19 exports and every handshake signed there through `xmip-core-library-tls`'s `Sign`. Proved in their tests, offline. `xmip-service` reads `[provision.receive]` from an operator's files alone, as it starts, and starts no provisioner: a table naming a `source` is refused, and no other purpose's table is read. Open problem 27."
 record = ["ADR-0034 (amendment 2026-10-15)", "ADR-0033 (amendment 2026-10-13)"]
 
 [implementation.program-audit]
@@ -197,7 +197,7 @@ record = ["audit-record.md, Performance"]
 [implementation.subscription-routing]
 name = "Routing by the Subscriptions a node binds"
 state = "assembled"
-note = "A node routes every Message it publishes against the Subscriptions of the Xmip Applications it binds, their filters compiled as it starts; in the assembled service no Stream reaches routing yet (`arrival`)."
+note = "A node routes every Message it publishes against the Subscriptions of the Xmip Applications it binds, their filters compiled as it starts; in the assembled service a Stream a Receive Location accepts reaches routing, and a Message routed onward is refused at send authorization (`arrival`)."
 record = ["ADR-0013", "ADR-0066"]
 
 [implementation.shared-subscriptions]
@@ -798,7 +798,7 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.tcp]
-      dependency = ["xmip-core"]
+      dependency = ["xmip-core", "xmip-core-library-tls"]
     maturity = "scaffolded"
     specification = "IETF RFC 9293"
     [xmip.core.transport.udp]
@@ -1131,7 +1131,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-ntlm"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-ntlm", "xmip-core-library-tls"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
@@ -1803,7 +1803,7 @@ dependency = []
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = []
+  dependency = ["xmip-core-library-codec"]
   mount = "module/core/library/tls"
 
 # What exercises Xmip, under the provider whose work it exercises. `test` is

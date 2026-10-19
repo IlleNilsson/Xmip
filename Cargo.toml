@@ -39,7 +39,7 @@ required-features = ["node", "audit", "observe"]
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
-required-features = ["node", "audit", "observe", "transport-tcp", "identify-ip", "persist-rocksdb", "persist-sqlite"]
+required-features = ["node", "audit", "observe", "transport-tcp", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite"]
 
 # Renders every node configuration deploy/ writes and reads it the way
 # xmip-service reads its own, so a template out of step with the reader fails.
@@ -107,22 +107,34 @@ transform = ["dep:xmip-transform"]
 # section 3). Each reads what a linked transport writes on its arrival and
 # needs no configuration: the socket peer (`ip`), a bearer token's subject
 # (`jwt`), an `X-API-Key` (`api-key`), a Basic credential's user
-# (`username`). A Stream is still refused at authentication until an
-# authenticator is set up. A site links those its domains name
-# (deploy/profile/domain): integration names api-key, jwt and username,
-# network names ip.
+# (`username`), a TLS peer certificate (`certificate`). A site links those
+# its domains name (deploy/profile/domain): integration names api-key,
+# certificate, jwt and username, network names ip.
 identify-api-key = ["identify", "dep:xmip-identify-api-key"]
 identify-ip = ["identify", "dep:xmip-identify-ip"]
 identify-jwt = ["identify", "dep:xmip-identify-jwt"]
 identify-username = ["identify", "dep:xmip-identify-username"]
+# The peer certificate a transport that terminates TLS reports (`tls.peer.*`),
+# claimed as `mutual-tls` where its handshake verified it.
+identify-certificate = ["identify", "dep:xmip-identify-certificate"]
+
+# The authenticate and authorize technologies xmip-service links, each set
+# up by what the node's configuration says and nothing else (ADR-0068):
+# `mutual-tls` records what the handshake proved, for a Receive Location
+# whose `accept.mechanism` names it; `location` admits at each Receive
+# Location the node starts what its `accept` declares it takes. A site links
+# those its domains name (integration names both).
+authenticate-mutual-tls = ["authenticate", "dep:xmip-authenticate-mutual-tls"]
+authorize-location = ["authorize", "dep:xmip-authorize-location"]
 
 # The transports xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
 # is refused as the node starts. A site links the ones its domains serve
-# (deploy/profile/domain).
+# (deploy/profile/domain). tcp terminates TLS where its Location says
+# `tls = true`, with the node's `[provision.receive]` certificate.
 transport-file = ["dep:xmip-transport-file"]
 transport-http = ["dep:xmip-transport-http"]
-transport-tcp = ["dep:xmip-transport-tcp"]
+transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
 
 # The embedded engines (ADR-0015, amendments 2026-09-25 and 2026-10-01):
@@ -146,7 +158,9 @@ xmip-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNi
 xmip-assign = { package = "xmip-core-assign", git = "https://github.com/IlleNilsson/xmip-core-assign", branch = "main", optional = true }
 xmip-audit = { package = "xmip-core-audit", git = "https://github.com/IlleNilsson/xmip-core-audit", branch = "main", optional = true }
 xmip-authenticate = { package = "xmip-core-authenticate", git = "https://github.com/IlleNilsson/xmip-core-authenticate", branch = "main", optional = true }
+xmip-authenticate-mutual-tls = { package = "xmip-core-authenticate-mutual-tls", git = "https://github.com/IlleNilsson/xmip-core-authenticate-mutual-tls", branch = "main", optional = true }
 xmip-authorize = { package = "xmip-core-authorize", git = "https://github.com/IlleNilsson/xmip-core-authorize", branch = "main", optional = true }
+xmip-authorize-location = { package = "xmip-core-authorize-location", git = "https://github.com/IlleNilsson/xmip-core-authorize-location", branch = "main", optional = true }
 xmip-cluster = { package = "xmip-core-cluster", git = "https://github.com/IlleNilsson/xmip-core-cluster", branch = "main", optional = true }
 xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main" }
 xmip-context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
@@ -156,6 +170,7 @@ xmip-demote = { package = "xmip-core-demote", git = "https://github.com/IlleNils
 xmip-event = { package = "xmip-core-event", git = "https://github.com/IlleNilsson/xmip-core-event", branch = "main", optional = true }
 xmip-identify = { package = "xmip-core-identify", git = "https://github.com/IlleNilsson/xmip-core-identify", branch = "main", optional = true }
 xmip-identify-api-key = { package = "xmip-core-identify-api-key", git = "https://github.com/IlleNilsson/xmip-core-identify-api-key", branch = "main", optional = true }
+xmip-identify-certificate = { package = "xmip-core-identify-certificate", git = "https://github.com/IlleNilsson/xmip-core-identify-certificate", branch = "main", optional = true }
 xmip-identify-ip = { package = "xmip-core-identify-ip", git = "https://github.com/IlleNilsson/xmip-core-identify-ip", branch = "main", optional = true }
 xmip-identify-jwt = { package = "xmip-core-identify-jwt", git = "https://github.com/IlleNilsson/xmip-core-identify-jwt", branch = "main", optional = true }
 xmip-identify-username = { package = "xmip-core-identify-username", git = "https://github.com/IlleNilsson/xmip-core-identify-username", branch = "main", optional = true }

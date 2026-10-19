@@ -376,3 +376,18 @@ account key made once, owner-only), the runtime's exports, `Xmip.Abi.Test`
 and `Xmip.Surface.Test` (the key file owner-only on Windows and Unix; a
 chain and anchors kept through the runtime, a chain created never over a
 file and replaced only where asked).
+
+## Amendment, 2026-10-19: a node uses its `receive` certificate
+
+The first use of a provisioned purpose in the assembled service:
+`xmip-service` reads `[provision.receive]` as it starts and terminates the
+TLS of every tcp Receive Location saying `tls = true` with it, the client's
+certificate verified against the table's `anchors` (ADR-0033, amendment
+2026-10-19; the runtime's `receive_certificate`). Usage is the TLS
+library's, as this record has it; provisioning is still the operator's own
+files alone: a table naming a `source` is refused, no provisioner runs in a
+node and nothing renews while it runs (open problem 27). Reading the
+anchors a Party's certificate must reach from the same table is the
+assistant's drafting of 2026-10-19, for the owner to overrule: the
+operator's-files source already declared `anchors` as *the PEM anchors a
+peer's certificate must reach*.

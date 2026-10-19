@@ -8,6 +8,7 @@
   scenario runs at, an eighth scenario, storm, and nodes that are processes
 - Amended: 2026-09-30 — a test run can be hidden, by what it declares
 - Amended: 2026-10-13 — the Parties built, and flows named as an ERP's
+- Amended: 2026-10-19 — `accept.party` built in the node
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -632,3 +633,12 @@ Proved by `test/PlaygroundBuild.Test.ps1`.
 Provenance: the owner's words above. The record's shape, the counted
 progress and the refusal of a second start while building are the
 assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-10-19: `accept.party` is built
+
+What the amendment of 2026-10-13 left unbuilt, a Receive Location held to
+the Parties it names, is built in the node (ADR-0019, amendment
+2026-10-19). The Playground's gates count a Party's identifier and resolve
+a claim as a node does, through `configure::party::id` and
+`configure::party::place_holding`, rather than each its own copy. The
+`[run]` table carries no Parties still.

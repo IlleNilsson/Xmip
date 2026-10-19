@@ -16,20 +16,29 @@
 //! (`xmip_runtime::storage`).
 //!
 //! The identify technologies whose claim a linked transport carries, with
-//! no configuration (ADR-0019 clause 5, ADR-0050 section 3): the socket
-//! peer, a bearer token's subject, an API key, a Basic credential's user.
-//! Every Stream reaches the first gate with what its transport observed and
-//! its headers, and its claim is recorded with its layer and how it was
-//! established. No authenticator, policy or route technology is linked,
-//! because the node configuration cannot yet say how one is set up: a
-//! Receive Location accepts nothing, so every Stream is refused at
-//! authentication, and the refused attempt is audited with the claim it
-//! carried (ADR-0013 clause 1).
+//! no configuration (ADR-0019 clause 5, ADR-0050 section 3): a TLS peer
+//! certificate, a bearer token's subject, an API key, a Basic credential's
+//! user, the socket peer. Every Stream reaches the first gate with what its
+//! transport observed and its headers, and its claim is recorded with its
+//! layer and how it was established.
+//!
+//! The authenticate and authorize technologies, each set up by what the
+//! node's configuration says (ADR-0068): `mutual-tls`, which records what a
+//! transport's handshake proved, for a Receive Location whose
+//! `accept.mechanism` names it — the handshake terminated by tcp with the
+//! node's `[provision.receive]` certificate; and `location`, which admits
+//! at each Receive Location the node starts what that Location's `accept`
+//! declares it takes, its Parties narrowed at authentication (ADR-0019
+//! clause 1). A Stream any gate refuses is refused, and the attempt refused
+//! at authentication is audited with the claim it carried (ADR-0013 clause
+//! 1). No route technology is linked yet.
 
 use xmip_audit::program_audit::ProgramAudit;
+#[cfg(feature = "authenticate")]
+use xmip_authenticate::Authenticator;
 #[cfg(feature = "identify")]
 use xmip_identify::TransportIdentifier;
-use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport};
+use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport, ReceivePolicy};
 
 /// What this build carries, and the audit an operator's act on a
 /// Subscription is recorded in.
@@ -41,9 +50,55 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
         key_stores: key_stores(),
         #[cfg(feature = "identify")]
         transport_identifiers: transport_identifiers(),
+        #[cfg(feature = "authenticate")]
+        authenticators: authenticators(),
+        receive_policies: receive_policies(),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
+}
+
+/// The authenticators this build carries, each taken where a Receive
+/// Location the node starts accepts its mechanism.
+#[allow(
+    unused_mut,
+    clippy::vec_init_then_push,
+    reason = "each push is a feature this build may leave out"
+)]
+#[cfg(feature = "authenticate")]
+pub fn authenticators() -> Vec<Box<dyn Authenticator>> {
+    let mut authenticators: Vec<Box<dyn Authenticator>> = Vec::new();
+    #[cfg(feature = "authenticate-mutual-tls")]
+    authenticators.push(Box::new(xmip_authenticate_mutual_tls::Verifier::new()));
+    authenticators
+}
+
+/// The policies this build sets up from the Receive Locations a node
+/// starts.
+#[allow(
+    unused_mut,
+    clippy::vec_init_then_push,
+    reason = "each push is a feature this build may leave out"
+)]
+pub fn receive_policies() -> Vec<ReceivePolicy> {
+    let mut policies: Vec<ReceivePolicy> = Vec::new();
+    #[cfg(feature = "authorize-location")]
+    policies.push(location);
+    policies
+}
+
+/// The `location` policy (ADR-0050 section 5): each Receive Location the
+/// node starts admits what its `accept` declares it takes — the mechanisms
+/// it authenticates, narrowed to the Parties it names — and anyone those
+/// authenticate. A Location's hours and the identities it admits by value
+/// have no key in a node's configuration yet. The assistant's reading of
+/// 2026-10-19, for the owner to overrule.
+#[cfg(feature = "authorize-location")]
+fn location(gates: &[xmip_runtime::receiving::ReceiveGate]) -> Box<dyn xmip_authorize::Authorizer> {
+    use xmip_authorize_location::{Admission, LocationPolicy};
+    Box::new(gates.iter().fold(LocationPolicy::new(), |policy, gate| {
+        policy.admit(Admission::receive(&gate.location).anyone())
+    }))
 }
 
 /// The runtime database's engine, where this build carries it.
@@ -106,7 +161,8 @@ pub fn key_stores() -> Vec<LinkedKeyStore> {
 /// The first gate's technologies this build carries, in the order the gate
 /// asks them: the first claim an arrival carries is the one authenticated
 /// (`xmip_runtime::arrival`), so a credential the sender presented comes
-/// before the peer it connected from.
+/// before the peer it connected from, and the certificate a TLS handshake
+/// verified before a credential sent inside the connection.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -115,6 +171,8 @@ pub fn key_stores() -> Vec<LinkedKeyStore> {
 #[cfg(feature = "identify")]
 pub fn transport_identifiers() -> Vec<Box<dyn TransportIdentifier>> {
     let mut identifiers: Vec<Box<dyn TransportIdentifier>> = Vec::new();
+    #[cfg(feature = "identify-certificate")]
+    identifiers.push(Box::new(xmip_identify_certificate::Certificate));
     #[cfg(feature = "identify-jwt")]
     identifiers.push(Box::new(xmip_identify_jwt::Jwt::bearer()));
     #[cfg(feature = "identify-api-key")]
@@ -174,6 +232,58 @@ mod tests {
             .collect();
 
         assert_eq!(mechanisms.last().map(String::as_str), Some("ip"));
+    }
+
+    #[cfg(feature = "authenticate-mutual-tls")]
+    #[test]
+    fn a_handshake_the_transport_verified_is_authenticated_by_mutual_tls() {
+        let mechanisms: Vec<String> = authenticators()
+            .iter()
+            .map(|authenticator| authenticator.mechanism().name().to_string())
+            .collect();
+
+        assert!(
+            mechanisms.contains(&"mutual-tls".to_string()),
+            "{mechanisms:?}"
+        );
+    }
+
+    #[cfg(all(feature = "authorize-location", feature = "authenticate"))]
+    #[test]
+    fn each_receive_location_the_node_starts_admits_what_its_gates_authenticated() {
+        use xmip_authorize::{Action, Attempt};
+        use xmip_context::{Alignment, AuthenticatedIdentity, IdentityFacts, Verified};
+        use xmip_runtime::receiving::ReceiveGate;
+
+        let gates = [ReceiveGate::new(
+            "In",
+            xmip_authenticate::Acceptance::closed(),
+        )];
+        let policy = receive_policies()
+            .into_iter()
+            .map(|build| build(&gates))
+            .find(|policy| policy.name() == "location")
+            .expect("the location policy");
+        let facts = IdentityFacts::evaluate(
+            Alignment::None,
+            AuthenticatedIdentity::new(
+                xmip_core::mechanism::mutual_tls(),
+                "CN=anyone.example",
+                xmip_core::Established::Passed,
+                Verified::Proven,
+            ),
+            None,
+        );
+
+        assert!(
+            policy
+                .decide(&facts, &Attempt::new(Action::Receive, "In"))
+                .is_some_and(|decision| decision.allowed())
+        );
+        assert_eq!(
+            policy.decide(&facts, &Attempt::new(Action::Receive, "Elsewhere")),
+            None
+        );
     }
 
     #[cfg(feature = "persist-rocksdb")]

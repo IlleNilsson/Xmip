@@ -531,3 +531,49 @@ for every query parameter, which arrivals are detected and which scheduled
 configured yet, so a share polled is read as detected), and the audit
 record's content are the
 assistant's drafting, for the owner to confirm or strike.
+
+## Amendment, 2026-10-19: clause 1's Parties are read, and the service accepts a Party
+
+Clause 1's closed set is of *identities and mechanisms* both, and *anything
+else is refused at authentication* (`terminology.md`: *A Receive Location
+declares a closed set of mechanisms and Parties it accepts*). Since the
+Parties became configuration (`[[parties]]`, ADR-0028, amendment
+2026-10-13), the `party` list is read rather than refused (open problem
+33):
+
+- **`accept.party` names Parties by their `[[parties]]` name**
+  (`configure::Accept`). A name no Party holds is a problem every node's
+  binding reports, and a node refuses to start on it.
+- **A verified identity resolves to the Party holding it** (clause 4), after
+  it was verified and never before: the Party whose `identities` hold the
+  value as its mechanism wrote it (`configure::party::holding`, the
+  runtime's `Recognized`).
+- **A Location naming Parties refuses, at authentication, an identity that
+  resolves to another Party or to none** (`Refusal::PartyNotPermitted`,
+  `Refusal::NoParty`). Until this change an identity resolving to no Party
+  passed a Location that named its Parties; the gate now holds clause 1 as
+  written. A Location naming none takes any identity its mechanisms verify,
+  resolved or not, as before.
+- **The refused attempt is audited with its claim**, as the amendment of
+  2026-10-06 says, and a Party's Stream is received: proved end to end in
+  the assembled service (`.src/test/service/accepted.rs`) over a tcp
+  Receive Location terminating TLS (ADR-0033, amendment 2026-10-19).
+
+The `location` policy (ADR-0050 section 5) is set up from the Receive
+Locations a node starts: each admits what its `accept` declares it takes,
+its Parties narrowed at authentication and not a second time.
+
+**Drafted, for the owner to overrule.** A configured Party's identifier is
+its place among `[[parties]]`, counted from one, as the Playground already
+counted (`configure::party::id`); every node of a cluster holds the same
+list, so each gives a Party the same identifier, and a Party written in
+another place has another. A configured identity names neither its
+mechanism nor its direction, against clause 4's *per direction and per
+mechanism*, so a value resolves to the Party holding it whatever mechanism
+verified it, and the send side's directory still holds no configured Party.
+The `location` policy admits anyone a Location's closed set authenticated:
+a Location's hours and the identities it admits by value have no key yet.
+
+Provenance: clause 1 and the terminology are the records'; reading the
+`party` list and refusing an unresolved identity are clause 1 applied; the
+drafted points above are the assistant's, 2026-10-19.
