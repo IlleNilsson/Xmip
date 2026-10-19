@@ -6,6 +6,9 @@
 - Amended: 2026-10-01 — a Journey is claimed through Xmip Storage
 - Amended: 2026-10-13 — one winner for every Receive Location; the file
   family's claim extends to FTP, FTPS and SFTP
+- Amended: 2026-10-19 — a listing claims no more than there is room for; a
+  sent file not yet in place is its node's, and its node removes it as it
+  starts
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -427,3 +430,65 @@ they lie.
 Proved by `xmip-core-transport`'s `claim` test of a listing claiming no
 more than asked, and the file transport's test of a receive that claims no
 more than its room and leaves the rest as dropped.
+
+## Amendment, 2026-10-19: a sent file not yet in place is its node's
+
+**Provenance.** `open-problems.md` problem 39, found 2026-10-12 making the
+file transport's send atomic: a send writes its file beside its target and
+renames it into place, so a reader sees the old file or the whole new one,
+and a process that dies between the two leaves that file in the directory
+for good — receive never takes it, nothing removed it, and its name carried
+the process, so no node could say it was its own. The owner decided it on
+2026-10-19: **the temporary file's name carries the node's identity, not the
+process's, and at its start the node removes its own leftovers while it
+recovers its claims. It removes no other node's file.**
+
+**The name.** The node's identity is the one a claimed name carries
+(amendment 2026-09-26, *Option A*): the node's location the runtime gives a
+transport as it builds it (`transport::Configured::on_node`), percent-encoded
+(`claim::Claimant::of`), compared whole and never read for meaning. A send
+writes under
+
+```text
+<target>.xmip-sending.<the node's location, percent-encoded>.<count>.<nanoseconds>
+```
+
+the count being the process's sends so far, so two sends at once never
+share a name. Such a name is never an arrival. The name and its removal are
+written once, in `xmip-core-transport`'s `claim/unfinished.rs`
+(`Claimant::sending`, `Claimant::remove_unfinished`), and a technology that
+writes beside its target calls them.
+
+**The removal.** A starting node's recovery of its claims removes, of what
+the listing it already makes finds, the sent files its own name records
+(`Claimant::recover`). A send in flight is never removed: a node builds a
+Location's transport while its other Locations may be sending into the same
+directory, so every name stays in the process's set of sends in flight from
+before its file is created until it is renamed or removed
+(`claim::Unfinished`), and the removal passes over every name the set holds.
+
+**Where.** The file transport is the family's one technology that writes
+beside its target: FTP stores with `STOR`, SFTP opens with `TRUNC`, SMB
+creates and NFS creates and writes, each in place, and WebDAV, S3, Azure
+Blob and Google Cloud Storage put an object whole. The runtime sends a
+Send Location's Messages to its address (`xmip-core-runtime`'s
+`departure`), so a file Send Location's address names the file it writes,
+while a Receive Location's names its drop directory. The transport learns
+which as it is built (`Configured::sided`, called once by
+`Configured::open`, keeping nothing by default): a Receive Location recovers
+its claims and removes its node's sent files in its drop directory; a Send
+Location claims nothing and removes them beside its target. Until now a Send
+Location's start read its address as a drop directory, so a node whose file
+Send Location had sent once could not start again.
+
+Proved by `xmip-core-transport`'s `claim::unfinished` tests (a node's own
+left file removed and another node's kept; one in flight kept until its send
+lets it go; never an arrival; the removal no more than a millisecond beyond
+the far end's own listing and removals over a hundred names) and the file
+transport's (a starting Receive Location and a starting Send Location each
+remove their node's and no other's; a node starting while a send writes
+leaves it whole).
+
+Provenance: the owner's words above. `Configured::sided`, the set of sends
+in flight and the place each side removes in are the assistant's drafting,
+for the owner to overrule.

@@ -1438,6 +1438,19 @@ waits for its due time.
   So sends that gather large Messages go one after another rather than
   growing the node.
 
+**Decided 2026-10-19** (the owner; `open-problems.md` problem 39, ADR-0024,
+amendment 2026-10-19): **a sent file not yet in place is its node's.** A
+send that writes its file beside the target and renames it into place — the
+file transport's, so a reader finds the old file or the whole new one —
+names it for the node writing it, `<target>.xmip-sending.<the node's
+location, percent-encoded>.<count>.<nanoseconds>`, as a claimed name carries
+the node (`xmip-core-transport`'s `claim::Claimant::sending`). A process that
+dies between the write and the rename leaves it; its node removes it as it
+starts, while it recovers its claims — a Receive Location in its drop
+directory, a Send Location beside its target — and removes no other node's,
+nor one a send of the same process is still writing. Until 2026-10-19 the
+name carried the process, and such a file stayed for good.
+
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
 runtime's settings are configured*, says.

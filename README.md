@@ -576,7 +576,7 @@ the scopes, each an Xmip URI
 | `xmip-cli mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
-| Desktop | The same on one machine. Windows and macOS; Linux only through Microsoft's experimental GTK4 backend for .NET MAUI ([maui-labs](https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4)), which Microsoft does not support. The same host on Android and iOS is the phone app: an Observer of nodes followed remotely, cluster health first (ADR-0014, amendment 2026-10-14). |
+| Desktop | The same on one machine. Windows, macOS and Linux: .NET MAUI is cross-platform, Linux through Avalonia's backend for it ([preview](https://avaloniaui.net/blog/maui-avalonia-preview-1)). The same host on Android and iOS is the phone app: an Observer of nodes followed remotely, cluster health first (ADR-0014, amendment 2026-10-14). |
 
 Every one of them operates a node — its health, figures and scopes, its
 Journeys, Dead Messages and Subscriptions, the acts on them and the follow —
@@ -663,9 +663,9 @@ Xmip supports current platforms only
 ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux,
 Windows and macOS are equal: the runtime, the `xmip-cli` command line, the
 PowerShell module and the web GUI run on all three. The desktop GUI is .NET
-MAUI: Windows and macOS, and Linux only through Microsoft's experimental,
-unsupported GTK4 backend ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
-amendment 2026-10-13).
+MAUI, cross-platform: Windows and macOS, and Linux through Avalonia's backend
+for .NET MAUI, a preview ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
+amendment 2026-10-19).
 
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
