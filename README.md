@@ -68,11 +68,13 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   socket, a queue, a mailbox, the rows a SQL statement returns, a device on
   a bus. A Stream belongs to the sender until Xmip accepts it. Receiving
   one through a node's gates is
-  [built, not in the assembled service](doc/architecture/estate-map.md#arrival): `xmip-service`
-  identifies each Stream by what its transport carries — its peer, a bearer
-  token, an API key, a Basic user — and links no authenticator yet, so it
-  refuses every Stream at authentication and audits the attempt with its
-  claim.
+  [built, in the assembled service](doc/architecture/estate-map.md#arrival): `xmip-service`
+  identifies each Stream by what its transport carries — the certificate a
+  TLS handshake verified, its peer, a bearer token, an API key, a Basic
+  user — receives one over a tcp Receive Location that terminates TLS from a
+  Party its `accept` names, and refuses any other at authentication,
+  auditing the attempt with its claim. A Message it routes onward is refused
+  at send authorization: no policy speaks for a Send Location yet.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
   out. Every step below carries a note of what it audits. Entry, refusal,
@@ -499,8 +501,10 @@ standards; authorization follows it; Receive and Send identities are
 configured independently, because Xmip is the server on receive and the
 client on send. Certificates are the first mechanism built: Xmip's own TLS
 presents and verifies the certificate files an operator gives it, and the
-web host serves with them; a node presents none yet
-([built, not in the assembled service](doc/architecture/estate-map.md#certificate-usage)). Provisioning
+web host serves with them; a node presents its `[provision.receive]`
+certificate where a tcp Receive Location terminates TLS and verifies a
+Party's against the anchors given there, and a Send Location presents none
+yet ([built, in the assembled service](doc/architecture/estate-map.md#certificate-usage)). Provisioning
 them — over ACME from any authority a node names, Let's Encrypt one option
 for what Parties reach, the cluster's own authority between nodes, or
 self-signed on a lone offline node — is

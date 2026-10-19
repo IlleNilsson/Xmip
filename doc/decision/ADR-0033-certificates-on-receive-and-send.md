@@ -334,3 +334,49 @@ the node's data directory, not sealed under the key home (ADR-0063 clause 4).
 Provenance: the owner's three sentences above. The two purposes, the
 settings, the renewal fraction and the split into three repositories are
 the assistant's drafting, each the owner's to strike.
+
+## Amendment, 2026-10-19: steps 1 and 2 of the build order, in the assembled service
+
+Clause 1's receive half is built and assembled (open problem 33): a
+receiving transport terminates TLS, requests the client's certificate,
+verifies its chain in the handshake and hands the proven subject to the
+gates.
+
+- **What the handshake proved is read once, in `xmip-core-library-tls`.**
+  `tls::peer::answered` finishes a server's handshake before a byte of
+  content is read and reports the client's certificate (`tls::Peer`): its
+  subject and issuer as `tls::Name` writes them, and its SHA-256
+  fingerprint. `Name` — a distinguished name as its attributes, written in
+  one order — and the fingerprint moved down from `xmip-core-authenticate`,
+  so the name a transport writes and the name the gates compare are one
+  implementation; `authenticate::x509` re-exports `Name` for the gates and
+  keeps the alternative names and the user principal name, which are
+  theirs. The word a transport writes for a verified handshake,
+  `verified`, is `context::property::TLS_HANDSHAKE_VERIFIED`, which
+  `mutual-tls` reads; `context` had said `true`.
+- **The transport capability guards a receive** (`transport::Guard`,
+  behind its `tls` feature): handed to every transport once, as the node
+  builds it (`Configured::guarded_by`, after `on_node`), it answers a
+  connection in TLS and writes `tls.peer.subject`, `.issuer`,
+  `.fingerprint` and `.verified` on the arrival. A failed handshake is the
+  client's alone, retryable, and the Location takes the next.
+- **tcp terminates TLS where its Location says `tls = true`**, a receive
+  setting, off unless said, and refuses to be built so on a node with no
+  `receive` certificate. Other technologies keep their own TLS as before.
+- **The certificate is `[provision.receive]`'s** (ADR-0034): the node reads
+  the operator's own files as it starts — `certificate`, `key` and, for
+  `mutual-tls`, `anchors`, which a client's chain must reach; without
+  `anchors` the node presents its certificate and requests none. A table
+  naming a `source` is refused: no node runs a provisioner yet (open
+  problem 27). Renewal while running is not built.
+- **The chain is not reported.** The handshake verified it, and
+  `mutual-tls` records that rather than walking it again, so `tls.peer.chain`
+  is written by no transport yet; `certificate` over a terminated handshake
+  waits for it.
+
+Step 3, a Send Location presenting a client certificate, is not built.
+
+Provenance: clause 1 and the build order are the record's; the guard's
+shape, the `tls` setting, reading the anchors from `[provision.receive]`
+and leaving the chain unreported are the assistant's drafting, 2026-10-19,
+for the owner to overrule.

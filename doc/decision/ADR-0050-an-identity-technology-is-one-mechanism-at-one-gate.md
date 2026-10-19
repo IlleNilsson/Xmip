@@ -484,3 +484,28 @@ Windows' priority boost whether it waited on an address or on a kernel
 event (0.08 ms at p99; 28-60 ms with the boost turned off), and no wait
 ended by its due time is boosted, the high-resolution timer's included. Load
 is load (the owner, 2026-10-17): no thread's priority is raised.
+
+## Amendment, 2026-10-19: three of them in the assembled service, set up by configuration
+
+`xmip-service` links `identify/certificate`, `authenticate/mutual-tls` and
+`authorize/location`, each a root feature a site's domain names
+(integration), and each taken only as the node's configuration says
+(ADR-0068): `certificate` claims what a terminating transport wrote of a
+verified handshake as `mutual-tls`; `mutual-tls` is taken where a Receive
+Location's `accept.mechanism` names it; and `location` is set up from the
+Receive Locations the node starts — the runtime hands each policy a
+program links that way the Locations' gates as it starts
+(`Linked::receive_policies`) — admitting at each what its `accept` takes.
+It speaks for no Send Location, so a send is refused there, as by any gate
+no policy permits (section 5, amendment 2026-09-19).
+
+Section 6's X.509 moved in part: a distinguished name and a leaf's
+fingerprint are `xmip-core-library-tls`'s (`tls::Name`,
+`tls::peer::fingerprint`), read once for the transport that writes them and
+the gates that compare them; `authenticate::x509` re-exports `Name` and
+keeps the chain walk, the alternative names and the user principal name
+(ADR-0033, amendment 2026-10-19).
+
+Provenance: the assistant's, 2026-10-19, under open problem 33; the
+location policy's reading — anyone a Location's closed set authenticated —
+is the owner's to overrule (ADR-0019, amendment 2026-10-19).

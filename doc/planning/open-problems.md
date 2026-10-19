@@ -721,8 +721,11 @@ The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
 *as an option* — never required, never a default — and the validation *on any
 port*. Let's Encrypt has issued no client authentication since 2026-07-08, so
 between nodes the cluster's authority issues (ADR-0033, amendment
-2026-10-13). Not built yet: `xmip-service` reads no `[provision]` table and
-starts no provisioner or authority; a provisioned key is a PEM file, not
+2026-10-13). Not built yet: `xmip-service` starts no provisioner or
+authority — since 2026-10-19 it reads `[provision.receive]` from an
+operator's own files as it starts, for the TLS a tcp Receive Location
+terminates (problem 33), refuses that table naming a `source`, renews
+nothing while running and reads no other purpose's table; a provisioned key is a PEM file, not
 sealed under the key home; no DNS writer or lookup ships. A person's
 certificate, purpose `operator`, is requested and signed since 2026-10-15
 (ADR-0034, amendment 2026-10-15) over the folder `internal-ca` keeps its
@@ -842,7 +845,7 @@ Kept as they are: the composition root, `Linked`, the core traits
 handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, event's
 `Membership` and `Wire`, `IOperatorSurface` and the hosts' DI containers.
 
-## 33. The assembled service receives nothing
+## 33. The assembled service receives from one mechanism alone, and sends nothing
 
 Found 2026-10-06 while documenting what is built: `xmip-service`
 (`.src/service/built.rs`) links no authenticator and no authorization policy,
@@ -874,6 +877,65 @@ certificate to verify. A message identity — an X12 `ISA06` — reaches the
 gate only after transport authentication passes and a contract or the
 `message` identifier is configured, so the service cannot show one yet; the
 runtime's tests do (`arrival.rs`).
+
+*Repaired 2026-10-19: the service receives from a configured Party.*
+`accept.party` is read (`configure::Accept`), each name a `[[parties]]`
+Party, and a name none declares is a problem the binding reports; a
+verified identity resolves to the Party holding it (the runtime's
+`Recognized`, `configure::party::holding`), and a Location naming Parties
+refuses at authentication one resolving to another or to none
+(`Refusal::NoParty`, new; clause 1 of ADR-0019, amendment 2026-10-19). The
+`location` policy is set up from the Receive Locations a node starts
+(`Linked::receive_policies`) and admits at each what its `accept` takes.
+`xmip-service` links `identify/certificate`, `authenticate/mutual-tls` and
+`authorize/location`, and its tcp terminates TLS where a Receive Location
+says `tls = true`: the node's `[provision.receive]` certificate, read from
+the operator's files as it starts, presented, and a client's verified
+against the anchors given there before a byte of content is read
+(`transport::Guard`, `tls::peer`; ADR-0033, amendment 2026-10-19). Proved in
+the assembled service by `.src/test/service/accepted.rs`: a configured
+Party's Stream received over TLS with `mutual-tls`, another Party's refused
+at authentication and audited with its claim, a stranger's certificate
+refused in the handshake; and in each module changed.
+
+What remains of the first part:
+
+- **An authenticator a credential store sets up** (`password`, `basic`,
+  `digest`, `scram`, against `authenticate::store`; `api-key` and `bearer`
+  against `authenticate::secret`): no record says where a node's credential
+  store lives or how configuration names it, so none is linked and a
+  Location accepting one is refused as the node starts. The owner's to
+  decide.
+- **A send is refused at authorization.** The `location` policy speaks for
+  the Receive Locations a node starts and for no Send Location, and nothing
+  else permits a send, so a Message the service routes onward is refused
+  there. Which policy admits a send, and from what configuration, is the
+  owner's.
+- **Drafted, for the owner to confirm or strike** (ADR-0019, amendment
+  2026-10-19): a configured Party's identifier is its place among
+  `[[parties]]`, counted from one; a configured identity names neither its
+  mechanism nor its direction, so a value resolves whatever mechanism
+  verified it, and the send side's directory holds no configured Party;
+  the `location` policy admits anyone a Location's closed set
+  authenticated, with no key for hours or identities by value; the
+  certificate a TLS handshake verified is the first claim the first gate
+  takes.
+- **Not reported or not published:** the peer's chain (`tls.peer.chain`),
+  so `certificate` over a terminated handshake has nothing to walk; a
+  failed handshake, which no audit records; which Parties a Location takes,
+  which the node's publication and the Topology do not show (one Party per
+  side, `any-party`); renewal of the `receive` certificate while a node
+  runs (problem 27).
+
+The second part, a Storage node in the service: a node is its own embedded
+Storage node in the assembled service — RocksDB and SQLite under its data
+directory, sealed under the key store `[store]` names (`embedded-storage`,
+assembled) — and it serves no other node: a node whose `[storage] nodes`
+lists any is refused until its configuration can name the identity it
+presents (`storage-nodes`, built, not assembled). The third part, the first
+database server client, is not built: each data domain's table is read and
+checked, and a node naming a server is refused as it starts
+(`database-server`, decided).
 
 ## 34. The failure backlog lives in the node's memory
 

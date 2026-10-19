@@ -81,3 +81,17 @@ everywhere else.
 
 The owner's words, quoted above; the clauses and their wording are the
 assistant's, from the owner's rule. Not yet applied everywhere.
+
+## Amendment, 2026-10-19: a policy set up from configuration, and TLS handed to a transport
+
+Two seams added for open problem 33, each clause 2 as written. **A policy
+the composer links is set up from what the node starts**: the program
+hands the runtime a constructor (`Linked::receive_policies`, a
+`fn(&[ReceiveGate]) -> Box<dyn Authorizer>`), and the runtime, composing,
+calls it with the gates of the Receive Locations its configuration starts;
+the runtime names no policy technology. **The TLS a node terminates its
+receives with is handed to every transport once, as it is built**
+(`transport::Configured::guarded_by`, after `on_node`): the composer reads
+it from `[provision.receive]`, the transport keeps it where its Location's
+settings ask for TLS, and no technology reads a certificate of its own.
+The assistant's, 2026-10-19.

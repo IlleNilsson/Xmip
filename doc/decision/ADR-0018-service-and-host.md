@@ -853,3 +853,18 @@ its carry begins, bounded by the room it was asked for, not by bytes.
 The defaults — four places per hardware thread, eight chunks a carry,
 sixteen chunks a send thread — are the assistant's drafting, for the owner
 to overrule.
+
+## Amendment, 2026-10-19: `xmip-service` links its gates and receives from a Party
+
+What the amendment of 2026-09-28 said it could not do yet, it now does for
+one mechanism (open problem 33): the build links `identify/certificate`,
+`authenticate/mutual-tls` and `authorize/location` by feature, its tcp
+terminates TLS where a Receive Location says `tls = true` with the node's
+`[provision.receive]` certificate, and a Receive Location accepting
+`mutual-tls` from a Party `[[parties]]` declares receives that Party's
+Stream and refuses any other at authentication, audited (ADR-0019 and
+ADR-0033, amendments 2026-10-19). `.src/test/service/accepted.rs` starts the
+service and proves both. A Location accepting a mechanism that needs a
+credential store is still refused as the node starts, and a Message routed
+onward is refused at send authorization: no policy speaks for a Send
+Location yet.
