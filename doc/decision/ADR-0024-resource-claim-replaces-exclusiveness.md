@@ -400,3 +400,30 @@ box (ADR-0028, amendment 2026-10-13).
 Provenance: the owner's words above. The FTP turn's holder directory, the
 remote recovery at the first receive, and the table of each technology's
 exclusive step are the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-10-19: a listing claims no more than there is room for
+
+**Provenance.** `open-problems.md` problem 38, raised by the performance
+review of 2026-10-12: *the file transport claims a whole directory listing
+at once, so what waits in memory grows with the batch; excess should stay
+at its durable source.* The coordinator's brief of 2026-10-19 asked for it
+built.
+
+The claim above is unchanged; how much of a listing one receive takes is
+bounded. The runtime asks a transport for at most as many arrivals as the
+Receive Location's pool and the node have room for
+(`Transport::receive_up_to`; ADR-0018, amendment 2026-10-19), and the file
+family's claim, written once (`claim::Claiming::take`), claims no more of
+a listing than that: the rest stay unclaimed under their dropped names,
+remembered as found, and the next listing takes them as it takes any
+finished artifact — the stability check is kept, not restarted. So several
+nodes share a large directory a room's worth at a time, and a node that
+stops leaves unclaimed what it never had room for. File, FTP, FTPS and SFTP
+take it through the claim; an object store's listing (`listed::listed`), a
+SQL query's rows (`sql::accept::arrivals`), SMB's and NFS's listings, a
+WebDAV collection and a POP3 maildrop hand over no more, the rest left where
+they lie.
+
+Proved by `xmip-core-transport`'s `claim` test of a listing claiming no
+more than asked, and the file transport's test of a receive that claims no
+more than its room and leaves the rest as dropped.

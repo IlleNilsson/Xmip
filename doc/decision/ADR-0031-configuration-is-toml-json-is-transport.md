@@ -271,6 +271,11 @@ When deployed the sections regarding a node will be sliced to that node.*
   already let go of (`receive_drain`, built 2026-10-15, the same section),
   how many of the oldest failed Journeys of each Send Port a node keeps
   (`failed_window`, built 2026-10-16, `runtime-model.md` section 10),
+  the node's budget beside its pools — the arrivals it carries at once
+  across all its Receive Locations, the chunks those carries hold, and the
+  chunks its sends hold (`node_receive_threads_per_hardware_thread`,
+  `receive_chunks_per_thread`, `send_chunks_per_thread`, built 2026-10-19,
+  `runtime-model.md` section 3; ADR-0018, amendment 2026-10-19),
   the Storage client's timeouts and
   pass-over — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in

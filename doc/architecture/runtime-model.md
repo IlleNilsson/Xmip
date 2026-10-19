@@ -468,6 +468,35 @@ waiting for its backoff holds no thread, no claim and no place in the pool,
 its due time kept at its place in its queue (section 10, corrected
 2026-10-16).
 
+**A node's budget beside its pools, built 2026-10-19** (`open-problems.md`
+problem 38). A pool bounds threads, not what they hold, and each Receive
+Location's pool is its own — its isolation — so a node of many Locations
+had no ceiling of its own, and the Send pool admitted a count of Journeys
+whatever their size. Beside every pool the node keeps budgets
+(`xmip-core-runtime`'s `budget`): the arrivals it carries at once across
+all its Receive Locations (`[tuning]
+node_receive_threads_per_hardware_thread`, four per hardware thread by
+default, twice one Location's pool — the assistant's drafting, for the
+owner to overrule); the bytes of Streams those carries hold
+(`receive_chunks_per_thread`, eight chunks for each arrival carried at once,
+what one carry is counted as holding — the chunk it writes, the one it reads
+ahead and what Xmip Storage encodes and seals of it, measured at seven
+chunks at most for a 64 MiB Stream, more than the two this section's
+chunks paragraph designs for — so by default the carries bound the bytes,
+and a node set lower holds fewer);
+and the bytes of Messages its sends hold (`send_chunks_per_thread`, sixteen
+chunks for each thread of the Send pool — the assistant's drafting, for the
+owner to overrule; section 10, corrected 2026-10-19). A receive asks its
+transport for no more arrivals than its Location's pool has threads free
+and the node has places, waiting for a place where the node has none, and
+what it does not take stays at its far end (section 5). A carry holds its
+place until it is told, and its bytes while it carries, let go of before
+its turn to tell, so an arrival waiting to tell never holds back one
+carrying. A holder with no room waits for one: nothing is dropped, refused
+or taken from a far end, and a charge above a whole budget waits until it
+is alone and holds all of it, so nothing is too large to go. Every budget
+is a default only, set per cluster and node as every `[tuning]` value is.
+
 **Executing keeps the hops in one process.** A node declaring the executing
 role runs receiving, processing and sending in one Host Service for low
 latency (ADR-0056 and ADR-0018 clause 10a, amendments 2026-10-01); the steps
@@ -531,7 +560,15 @@ the same on every try; a retry's count is kept in the Ledger and survives a
 restart; an Operator's Retry sends a failed Journey again — in its order
 where a Sequential Port blocks behind it — and Dismiss ends it Dismissed and
 lets its sequence go, each audited. The Work Process step waits for a
-runtime that runs Processes.
+runtime that runs Processes. And, built 2026-10-19 (`tests/ledger/
+send_streamed.rs` and `roomed.rs`, what the process allocated counted): a
+64 MiB Message sent to four Send Ports held 1.1 MB at most, read a chunk
+at a time and never whole; four departures at a far end's pace read an
+8 MiB Stream's 132 chunks 132 times, each chunk once; sends that gather a
+Message as large as the byte budget went one after another; two Receive
+Locations of 32 threads on a node of 16 places never had more than 16
+arrivals taken and untold; and 32 Streams of 4 MiB, 128 MiB whole, held
+2.3 MB at most under a receive byte budget of 4.1 MB.
 
 ## 4. Actors and Communication Domains
 
@@ -724,6 +761,19 @@ polled one listed its directory or ran its query without pause. Where a
 far end can tell of a change — a file system's change notification, a
 database's `LISTEN` — the technology still polls; waiting on such a notice
 is not built.
+
+**A receive takes no more than there is room for** (built 2026-10-19,
+`open-problems.md` problem 38). A Location asks its transport for at most
+as many arrivals as its pool has threads free and the node's carry budget
+has places (section 3, *A node's budget beside its pools*;
+`Transport::receive_up_to`), and what the transport does not take stays at
+its far end for a later receive: the file family claims no more of a
+directory listing than that, the rest left as dropped and taken by the
+next listing; an object store's listing, a SQL query's rows and a kept
+subscription drained hand over no more. Until 2026-10-19 a receive took
+every arrival its transport handed over — the file transport claimed a
+whole listing at once — and queued what the pool had no thread for, so
+what waited in memory grew with the batch.
 
 **A stop drains what the far end already let go of** (built 2026-10-15,
 ADR-0018, amendment 2026-10-15). A far end that keeps what it hands over
@@ -1121,8 +1171,9 @@ waits for its due time.
   hand-on of a send, so a node restarted, or another taking the Journey up,
   counts on from them rather than from zero.
 - **The deduplication key reaches the endpoint.** Every send carries the
-  Journey's identifier through the transport contract's `send_keyed`
-  (`xmip-core-transport`); a technology whose protocol has an identifier its
+  Journey's identifier as the key of what the transport contract's
+  `send_from` is handed (`Outgoing::key`, `xmip-core-transport`; until
+  2026-10-19 `send_keyed`); a technology whose protocol has an identifier its
   far end deduplicates by puts it there, its README says where, and every
   other sends as before, at least once (section 15). Thirteen carry it:
   HTTP (`Idempotency-Key`), AMQP and RabbitMQ (`message-id`), ActiveMQ
@@ -1234,9 +1285,11 @@ waits for its due time.
   lost, audits it once, and tries nothing more until a renewal is answered;
   whatever it writes after is decided by the claim in Xmip Storage. The
   claim is asked before a Location is tried and again once its Message is
-  authorized and read, the last thing before the transport's I/O, so a
-  claim lost while a large payload was read starts no send (2026-10-12,
-  after a review). A send
+  authorized and the bytes its send holds have room (corrected 2026-10-19,
+  below), and once more as its first byte would go, after a transport that
+  gathers has read it whole (`transport::Outgoing::checked`), so a claim
+  lost while a send waited or a large payload was read starts no send
+  (2026-10-12, after a review). A send
   already under way is not called back: it carries the Journey's
   identifier, the key the far end deduplicates by, so another holder's send
   of the same Journey is the same delivery (section 15). Until now every
@@ -1345,6 +1398,45 @@ waits for its due time.
   held under another token, whoever holds it: in the race no claim was
   held, so only the read under the claim can tell, and the same holds for a
   scan of another node.
+
+**Corrected 2026-10-19** (`open-problems.md` problem 38):
+
+- **A send takes its Message a chunk at a time.** Departure hands the
+  transport the Message as the Ledger keeps it (`xmip-core-transport`'s
+  `Outgoing`, through `Transport::send_from`): its length known before its
+  first byte, read a chunk at a time, opened from its start by every read —
+  so a kept session that fails on reuse and carries the exchange again
+  reads it again — and held to its length, a body ending short or running
+  on refused in words. A technology that sends as it reads writes it on
+  (`Outgoing::write_to`, or `Outgoing::pieces` in requests of its
+  protocol's own size): file, TCP, a Unix domain socket, a named pipe,
+  MLLP, WebSocket, FTP, SFTP, SMB and NFS. One whose protocol needs the
+  whole body first — a datagram, a frame, a record with its digest, a
+  signature over all of it — gathers it (`Outgoing::gather`). Every
+  technology declares which, with why (`transport::Sending`, no default).
+  Until now departure read each Message whole before its transport sent
+  it, since `Transport::send` took a byte slice.
+- **A fan-out's departures read each chunk once.** The departures of one
+  Stream in flight on a node — one Journey for each Send Port a Message
+  reaches, sent side by side — share one read of it: the first opens it
+  from Xmip Storage, and every other takes each chunk from that read, lent,
+  never copied, while it keeps up (`xmip-core-runtime`'s `stream_share`).
+  The read keeps the last two chunks it took; a departure further behind —
+  a slower far end, a send begun later — reads on from Xmip Storage itself
+  from where it stands, so no Send Port waits on another (ADR-0018 clause
+  11, the bulkhead). Until now each departure read the Stream whole.
+- **A send holds its bytes within the node's budget.** Beside the Send
+  pool's count of Journeys (*Corrected 2026-10-06*, above), what a send
+  holds is held from the node's byte budget for sends (section 3, *A node's
+  budget beside its pools*; `[tuning] send_chunks_per_thread`): the whole
+  Message besides where its transport gathers it, and where it streams what
+  reading it holds — what Xmip Storage reads, opens and decodes of a chunk,
+  the chunk lent and the piece written on, measured at a little over five
+  chunks for a 64 MiB Message and counted as six (`budget::STREAM_CHUNKS`). A send with no room waits for one before the
+  transport's I/O, its claim renewed, and its claim is asked again after
+  the wait; a Message larger than the whole budget waits until it is alone.
+  So sends that gather large Messages go one after another rather than
+  growing the node.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
