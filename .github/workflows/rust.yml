@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -127,7 +127,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # The runtime the remote build is made from, and what Xmip.Operations
       # references: its own gui module and xmip-core-abi's Xmip.Surface. The
@@ -147,8 +147,6 @@ jobs:
         with:
           workspaces: module/platform/runtime -> ../../../.ai-interaction/target-ios
 
-      # The newest stable Xcode on the image; the image's default can be
-      # older than the one .NET for iOS asks for.
       # The newest Xcode on the runner, a beta included: .NET 11 rc.2 for iOS
       # is built against the iOS 27 SDK, and on 2026-10-15 the runner's
       # Xcode 27 is a public preview beside 26.6, the default.
@@ -157,11 +155,11 @@ jobs:
         with:
           xcode-version: latest
 
-      # global.json pins an 11 preview and rolls forward to the latest
-      # feature, prerelease allowed: the newest 11.0 preview or release
-      # candidate is one it accepts, and the one a developer has.
+      # global.json pins 11.0 release candidate 2 and rolls forward to the
+      # latest feature, prerelease allowed: the newest 11.0 release candidate
+      # or release is one it accepts, and the one a developer has.
       - name: Install .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 11.0.x
           dotnet-quality: preview

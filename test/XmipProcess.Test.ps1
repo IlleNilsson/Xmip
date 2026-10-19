@@ -1,4 +1,4 @@
-#Requires -Version 7.6.5
+#Requires -Version 7.6.7
 
 # Every System Process Xmip owns is named xmip-<what> and declares its name,
 # its location and its purpose (ADR-0053). Get-XmipProcess lists them with what

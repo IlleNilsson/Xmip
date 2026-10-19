@@ -13,8 +13,8 @@
 - Concepts: Pester, PowerShell, .NET, Rust versions; Version floors, channels
 
 Xmip tracks the current stable release of every platform it depends on and
-carries no compatibility with superseded ones. PowerShell 7.6.5 Core, .NET 11,
-latest stable Rust, Pester 6.
+carries no compatibility with superseded ones. PowerShell 7.6.7 Core, .NET 11,
+latest stable Rust, Pester 6 (the amendment of 2026-10-19 has every version).
 
 **The version numbers are not the decision** — they will be history soon enough.
 The decision is the rule that produced them, which is why `prerequisite.toml`
@@ -75,7 +75,7 @@ Concretely, at the time of writing:
 
 | | Xmip requires | Explicitly not supported |
 | --- | --- | --- |
-| PowerShell | 7.6.5 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
+| PowerShell | 7.6.7 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
 | .NET | 11 | 8, 9, 10 |
 | Rust | latest stable, via `rust-toolchain.toml` | any pinned older toolchain |
 | Pester | 6 or later | 3, 5 |
@@ -97,7 +97,7 @@ does not freeze anything.
 ### Corollaries
 
 **A version floor is a real refusal.** `#requires -PSEdition Core` and
-`#requires -Version 7.6.5` are not advisory. A machine below the floor is told so
+`#requires -Version 7.6.7` are not advisory. A machine below the floor is told so
 by PowerShell, by name and version, and nothing runs. That error message *is*
 the compatibility documentation.
 
@@ -186,6 +186,36 @@ default**, and names the moment.
 *Raised by the owner, 2026-09-03: latest anywhere and everywhere is intended
 because we are in a design phase, and will be obsolete if Xmip reaches a
 public.*
+
+## Amendment, 2026-10-19: every reference moves to the latest
+
+The owner, 2026-10-19: *Lets be real, we are designing for the future,
+update all references. PowerShell has gone to 7.6.7, .NET has skipped
+forward. Maybe Rust has* — and *latest of .NET, Python and Java as well.*
+The rule above, applied on that date; each version read from its publisher:
+
+| | Xmip requires | Source |
+| --- | --- | --- |
+| PowerShell | 7.6.7 or later, Core edition: every `#requires` and manifest | released 2026-10-13 |
+| .NET SDK | 11.0.100-rc.2.26504.105, preview channel, in every `global.json` | dotnet.microsoft.com, 2026-10-13 |
+| Target framework | net11.0; net10.0 where pwsh 7.6.7 hosts (ADR-0014) | |
+| Rust | latest stable, 1.99.1; edition 2024, still the latest | blog.rust-lang.org, 2026-10-15 |
+| Pester | 6 or later; 6.2.0 current | PowerShell Gallery, 2026-09-09 |
+| Java | 27, the current JDK; 25 is the current long-term support release | GA 2026-09-15 |
+| Python | 3.15 | python.org, 2026-10-09 |
+| Node | 26 for the VS Code extension; long-term support from 2026-10-28 | nodejs.org |
+
+**Java follows the current release, not the long-term one.** The foreign
+function and memory API the Java binding uses is final since 22, so the
+binding compiles with `--release 27` and no preview flag. Microsoft builds
+OpenJDK only for long-term support releases, so the Windows package is
+Amazon Corretto 27.
+
+**Python 3.15 is installed on Windows through the Python install manager**
+(`py install 3.15`); winget carries no package for 3.15 itself.
+
+The GitHub Actions the workflows use move to their current majors:
+`actions/checkout@v7`, `actions/setup-dotnet@v6`, `actions/setup-node@v7`.
 
 ## Alternatives considered
 

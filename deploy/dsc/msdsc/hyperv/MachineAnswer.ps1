@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 # What an unattended installation reads, written for one machine: Windows
 # Setup's autounattend.xml and Anaconda's kickstart, and the small ISO image
 # that carries them. Each answer is text and nothing else. $Machine is the

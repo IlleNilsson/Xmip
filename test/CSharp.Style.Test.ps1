@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     The estate's two length rules, held for C# as Rust.Style.Test.ps1 holds

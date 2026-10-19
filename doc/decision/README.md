@@ -773,8 +773,8 @@ launchd daemon, and every package installs by running
 ### Current platforms only
 
 Xmip tracks the current stable release of every platform it depends on and
-carries no compatibility with superseded ones. PowerShell 7.6.5 Core, .NET 11,
-latest stable Rust, Pester 6.
+carries no compatibility with superseded ones. PowerShell 7.6.7 Core, .NET 11,
+latest stable Rust, Pester 6 (the amendment of 2026-10-19 has every version).
 
 **The version numbers are not the decision** — they will be history soon enough.
 The decision is the rule that produced them, which is why `prerequisite.toml`

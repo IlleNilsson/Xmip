@@ -105,8 +105,9 @@ which Event types, scopes and metadata it may receive (runtime-model section
   amendment 2026-09-26) forwards to `Hub::process` from the runtime's
   `src/ffi/event.rs`; bound once in `Xmip.Abi` (`RuntimeEvents`, and
   `Xmip.Surface`'s `EventFeed`), and beside it in `xmip-core-abi`: C (`c/`),
-  C++ (`include/xmip_event.hpp`), Java 21 over the foreign function API with
-  `--enable-preview` (`java/`), Python over ctypes (`python/`).
+  C++ (`include/xmip_event.hpp`), Java over the foreign function API, final
+  in Java 27 (`java/`), Python 3.15 over ctypes (`python/`); the versions
+  moved on 2026-10-19 (ADR-0021, amendment 2026-10-19).
 - **Over the wire (clause 3).** `wire::WireEvent` (the JSON format)
   and `binding::Binding` (HTTP, Kafka and AMQP, structured and binary) in
   the event crate; `forward::Forwarder`, at least once, in order, under the

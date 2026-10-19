@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 
 <#
     The Microsoft DSC v3 template for Hyper-V (deploy/dsc/msdsc/hyperv)

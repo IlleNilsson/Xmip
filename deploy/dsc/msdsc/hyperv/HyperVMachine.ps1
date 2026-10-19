@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.6.7
 # What machine.dsc.yaml's two script resources run, for what HyperVDsc has no
 # resource for: the hardware a VM needs before its first start (static MAC,
 # Secure Boot template, virtual TPM, boot order), and its installation from
