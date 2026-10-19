@@ -1660,7 +1660,7 @@ dependency = []
     # amendment 2026-10-01).
     [xmip.core.persist.postgresql]
     description = "Xmip Storage in front of PostgreSQL: the runtime and administration databases on a server IT runs, reached over TLS; each operation one transaction whose rows are locked as read and decided by persist's one rule. A xmip-core-persist technology."
-    maturity = "scaffolded"
+    maturity = "planned"
     specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow, SCRAM-SHA-256 over TLS"
     dependency = ["xmip-core", "xmip-core-library-postgresql", "xmip-core-library-tls"]
     [xmip.core.persist.rocksdb]

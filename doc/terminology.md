@@ -57,17 +57,17 @@ which say the stages of the message path it serves, and whether it is online
 (receive, process, send) is where a Message is on its path and a segment of a
 scope; a node does not declare a stage, its roles serve them.
 
-## Target, Domain and Site
+## Target and Site
 
-Three words for what a deployment's program is built with, each a TOML file
+Two words for what a deployment's program is built with, each a TOML file
 under `deploy/` (ADR-0015, amendment 2026-10-01). A node's roles are the
-third axis, and are the Role row above.
+Role row above, and its technologies are its user's choice (amendment
+2026-10-19).
 
 | Term | Meaning |
 | --- | --- |
-| **Target** | What a node's program runs on: `device` (a microcontroller, no_std), `edge` (a Raspberry Pi, industrial PC or gateway), `computer` (a person's own machine), `server` (an on-premises service) or `hosted` (a virtual machine or container at a hosting provider). A target says whether a build can be an embedded Storage node — RocksDB and SQLite, never one for the other (ADR-0015, amendment 2026-10-01) — which key store it carries, and what it refuses, each with its reason; a role or domain needing what it refuses is refused. A cluster and a hybrid are arrangements of nodes on targets, not targets. `deploy/profile/target`. |
-| **Domain** | What a node integrates, named by what its technologies serve: `healthcare`, `industrial`, `b2b`, `managed-service` (what a hosting provider sells), `integration` (the mechanisms every integration uses) and the rest. A domain lists standards, the leaves of technologies' positions in `architecture.toml`, and its members are every built technology with one of those leaves, across capabilities, except an archive target: that is an archiving role's, never a domain's (ADR-0015, amendment 2026-10-14). Not a repository's architectural domain, such as Foundation or Platform (ADR-0058). `deploy/profile/domain`. |
-| **Site** | One deployment's choice of a target, its node roles and its domains, `deploy/site/<name>.toml`, and so what its `xmip-service` is built with: `Build-XmipService -Site <name>`. The build sets what is possible; the node's TOML picks from it at run time. |
+| **Target** | What a node's program runs on: `device` (a microcontroller, no_std), `edge` (a Raspberry Pi, industrial PC or gateway), `computer` (a person's own machine), `server` (an on-premises service) or `hosted` (a virtual machine or container at a hosting provider). A target says whether a build can be an embedded Storage node — RocksDB and SQLite, never one for the other (ADR-0015, amendment 2026-10-01) — which key store it carries, and what it refuses, each with its reason; a role or technology needing what it refuses is refused. A cluster and a hybrid are arrangements of nodes on targets, not targets. `deploy/profile/target`. |
+| **Site** | One deployment's choice of a target, its node roles and its technologies, by repository name, `deploy/site/<name>.toml`, and so what its `xmip-service` is built with: `Build-XmipService -Site <name>`. The build sets what is possible; the node's TOML picks from it at run time. |
 
 ## PowerShell
 

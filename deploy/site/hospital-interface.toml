@@ -10,4 +10,13 @@ target = "server"
 
 roles = ["executing", "operational", "monitoring"]
 
-domains = ["healthcare", "web-service", "network", "integration"]
+# The technologies this deployment chose, by repository name (ADR-0015,
+# amendment 2026-10-19).
+technologies = [
+  "xmip-core-transport-mllp",
+  "xmip-core-transport-tcp",
+  "xmip-core-message-hl7-er7",
+  "xmip-core-contract-hl7-v2",
+  "xmip-core-transport-http",
+  "xmip-core-contract-fhir",
+]

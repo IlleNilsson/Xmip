@@ -682,15 +682,15 @@ A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
 `server` or `hosted`), the node **roles** it serves (`receiving`,
 `processing`, `sending`, `executing`, `operational`, `monitoring`,
-`development`, `storage`) and the **domains** it integrates (`healthcare`,
-`industrial`, `b2b`, `managed-service` and the rest). The profiles under
-`deploy/profile` say what each brings, and `Build-XmipService -Site <name>`
-builds `xmip-service` with exactly that
-([ADR-0015, amendment 2026-10-01](doc/decision/ADR-0015-packaging.md)). The
-archive targets come with the roles that archive, sending and operational,
-and never with a domain (amendment 2026-10-14). The
-target vetoes: a role or a domain needing what the target cannot have is
-refused in words, and a device, which cannot run `xmip-service`, is told
+`development`, `storage`) and the **technologies** its user chose, by
+repository name: which ones is every end user's own choice, and every built
+technology is built and tested. The profiles under `deploy/profile` say
+what a target and a role bring, and `Build-XmipService -Site <name>` builds
+`xmip-service` with exactly that
+([ADR-0015, amendments 2026-10-01 and 2026-10-19](doc/decision/ADR-0015-packaging.md)).
+The archive targets come with the roles that archive, sending and
+operational (amendment 2026-10-14). The target vetoes: a role or a
+technology needing what the target cannot have is refused in words, and a device, which cannot run `xmip-service`, is told
 that what builds for it is `xmip-core` alone. The build sets what is
 possible; the node's TOML picks from it when the node starts.
 
@@ -722,8 +722,8 @@ node's service: the systemd unit, the launchd property list, or the
 --node <node> --cluster <cluster> --install` registers that service and
 starts it, after laying the node out from a starter configuration where
 there is none, and `--uninstall` removes it; every package runs them
-([Install](#install)). The build links the transports its site's
-domains serve, by feature; a Location naming another transport is refused
+([Install](#install)). The build links the transports its site
+names, by feature; a Location naming another transport is refused
 when the node starts. The node is its own embedded Storage node, under its
 data directory — `data/storage`, RocksDB for the runtime database and
 SQLite for the administration and the audit databases, each where its table
@@ -1094,7 +1094,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and domains' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run). |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run). |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |

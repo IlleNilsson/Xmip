@@ -760,9 +760,10 @@ through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
 release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
-site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01); the archive targets are the
-archiving roles', never a domain's (amendment 2026-10-14). macOS gets a `.pkg` with a
+site's: a target, node roles and the technologies its end user chose,
+turned into a build by `Build-XmipService` (amendments 2026-10-01 and
+2026-10-19), every built technology built and tested; the archive targets
+are the archiving roles' (amendment 2026-10-14). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).
@@ -1209,7 +1210,7 @@ You have a word. This gives you the decision that governs it.
 | sync | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | tamper evidence | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
-| target, domain, site | [Packaging and distribution](ADR-0015-packaging.md) |
+| target, site | [Packaging and distribution](ADR-0015-packaging.md) |
 | test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |

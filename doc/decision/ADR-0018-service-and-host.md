@@ -284,8 +284,9 @@ xmip-service --configuration <path> --definition
 ```
 
 It calls `Running::start` with the technologies its build linked: the
-transports its site's domains serve, of `file`, `http`, `tcp` and `udp`,
-each a feature of the root crate (ADR-0015, amendment 2026-10-01). It serves
+transports its site names, of `file`, `http`, `tcp` and `udp`, each a
+feature of the root crate (ADR-0015, amendments 2026-10-01 and
+2026-10-19). It serves
 until a stop arrives and then calls `Running::stop`, which is clause 12's
 drain for one process, and exits 0. Every stop arrives on one channel and is
 the same drain:

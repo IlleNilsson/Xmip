@@ -11,9 +11,9 @@
 //! (ADR-0018, amendment 2026-09-26).
 //!
 //! The re-exports below the fold are behind features, and a site selects a
-//! set of them: `Build-XmipService` turns the target, roles and domains a
-//! site under `deploy/site` picks into features (ADR-0015, amendment
-//! 2026-10-01). The ones above are always present: without them there is
+//! set of them: `Build-XmipService` turns the target, roles and technologies
+//! a site under `deploy/site` picks into features (ADR-0015, amendments
+//! 2026-10-01 and 2026-10-19). The ones above are always present: without them there is
 //! nothing to configure.
 
 pub use xmip_abi;

@@ -20,8 +20,7 @@ features = [
 ]
 
 # The archive targets a node in this role is built with, by repository
-# name: an archiving role names them and no domain selects one (ADR-0015,
-# amendment 2026-10-14). Parquet is the default (owner, 2026-09-07).
+# name: an archiving role names them (ADR-0015, amendment 2026-10-14). Parquet is the default (owner, 2026-09-07).
 archives = [
   "xmip-core-archive-azure-blob",
   "xmip-core-archive-file",

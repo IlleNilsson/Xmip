@@ -3,16 +3,16 @@
 
 <#
 .SYNOPSIS
-    The deploy profiles: targets, roles and domains under deploy/profile, and
-    what the root crate's Cargo.toml says a build can link.
+    The deploy profiles: targets and roles under deploy/profile, and what the
+    root crate's Cargo.toml says a build can link.
 
 .DESCRIPTION
-    A target is what a build runs on, a role what its node is for, a domain
-    what it integrates (ADR-0015, amendment 2026-10-01). Each is a TOML file
-    named by its word; a site under deploy/site picks one target, its roles
-    and its domains, and Resolve-XmipSite turns that into features. The
-    archive targets are a role's, never a domain's: an archiving role names
-    the ones it carries (ADR-0015, amendment 2026-10-14).
+    A target is what a build runs on, a role what its node is for (ADR-0015,
+    amendment 2026-10-01). Each is a TOML file named by its word; a site
+    under deploy/site picks one target, its roles and the technologies its
+    user chose (amendment 2026-10-19), and Resolve-XmipSite turns that into
+    features. An archiving role names the archive targets it carries
+    (amendment 2026-10-14).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -35,7 +35,7 @@ function Get-XmipProfileName {
         [string] $Root,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet('target', 'role', 'domain')]
+        [ValidateSet('target', 'role')]
         [string] $Kind
     )
 
@@ -59,7 +59,7 @@ function Get-XmipProfile {
         [string] $Root,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet('target', 'role', 'domain')]
+        [ValidateSet('target', 'role')]
         [string] $Kind,
 
         [Parameter(Mandatory = $true)]
@@ -133,8 +133,8 @@ function Get-XmipRoleArchive {
             expanded, each with the role that named it: Technology and From.
 
         .DESCRIPTION
-            An archiving role names them in `archives`, by repository name;
-            no domain selects one (ADR-0015, amendment 2026-10-14).
+            An archiving role names them in `archives`, by repository name
+            (ADR-0015, amendment 2026-10-14).
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -158,7 +158,7 @@ function Get-XmipTargetClaim {
     <#
         .SYNOPSIS
             Every technology a target claims: the runtime store's engines and
-            the key stores, which are a target's business and no domain's.
+            the key stores.
     #>
     [CmdletBinding()]
     [OutputType([string[]])]
@@ -182,7 +182,7 @@ function Get-XmipArchiveTarget {
     <#
         .SYNOPSIS
             Every archive target a role names: the technologies an archiving
-            role carries, which are a role's business and no domain's.
+            role carries.
     #>
     [CmdletBinding()]
     [OutputType([string[]])]
@@ -200,44 +200,6 @@ function Get-XmipArchiveTarget {
     )
 
     return @($named | Sort-Object -Unique)
-}
-
-
-function Get-XmipDomainTechnology {
-    <#
-        .SYNOPSIS
-            A domain's members: every built technology whose leaf the domain
-            names among its standards, across capabilities, less what a
-            target claims and less every archive target, which a role names
-            and no domain selects (ADR-0015, amendment 2026-10-14).
-
-        .PARAMETER Technology
-            Get-XmipBuiltTechnology's answer, read once by the caller.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [object[]] $Technology,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Domain
-    )
-
-    $read = Get-XmipProfile -Root $Root -Kind 'domain' -Name $Domain
-    [string[]] $standard = @(Get-TomlValue -Node $read -Name 'standards' -Default @())
-    [string[]] $claimed = @(
-        @(Get-XmipTargetClaim -Root $Root) + @(Get-XmipArchiveTarget -Root $Root)
-    )
-
-    [object[]] $member = @(
-        $Technology | Where-Object { $_.Leaf -cin $standard -and $_.Name -notin $claimed }
-    )
-
-    return @($member.Name)
 }
 
 

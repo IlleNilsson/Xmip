@@ -10,4 +10,15 @@ target = "hosted"
 
 roles = ["receiving", "sending", "operational"]
 
-domains = ["b2b", "managed-service", "file-exchange", "web-service", "network", "integration"]
+# The technologies this deployment chose, by repository name (ADR-0015,
+# amendment 2026-10-19).
+technologies = [
+  "xmip-core-transport-as2",
+  "xmip-core-transport-sftp",
+  "xmip-core-message-edi-x12",
+  "xmip-core-contract-edi-x12",
+  "xmip-core-message-edi-edifact",
+  "xmip-core-contract-edi-edifact",
+  "xmip-core-transport-aws-sqs",
+  "xmip-core-transport-s3",
+]

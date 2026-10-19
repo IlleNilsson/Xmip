@@ -4,19 +4,20 @@
 <#
 .SYNOPSIS
     The one place a site becomes a build: the features its target, roles and
-    domains need, refused where the target cannot have one.
+    technologies need, refused where the target cannot have one.
 
 .DESCRIPTION
-    A site (deploy/site/<name>.toml) picks a target, its roles and its
-    domains. The build carries the target's features, every role's, and each
-    domain technology and each archive target of an archiving role that the
-    root crate links through a feature; xmip-service's own required features
-    are always on. A role, never a domain, brings an archive target (ADR-0015,
-    amendment 2026-10-14). The target vetoes: a role or a
-    domain needing a feature the target refuses is REFUSED, in words naming
-    the role or domain, the feature and the target's reason (ADR-0055). The
-    build sets what is possible; the node's TOML picks from it at run time
-    (ADR-0015, amendment 2026-10-01).
+    A site (deploy/site/<name>.toml) picks a target, its roles and the
+    technologies its user chose, by repository name (ADR-0015, amendment
+    2026-10-19). The build carries the target's features, every role's, and
+    each chosen technology and each archive target of an archiving role that
+    the root crate links through a feature; xmip-service's own required
+    features are always on (amendment 2026-10-14). A name that is no built
+    technology is REFUSED. The target vetoes: a role or a technology needing
+    a feature the target refuses is REFUSED, in words naming what needs it,
+    the feature and the target's reason (ADR-0055). The build sets what is
+    possible; the node's TOML picks from it at run time (ADR-0015, amendment
+    2026-10-01).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -25,7 +26,7 @@
 function Resolve-XmipSite {
     <#
         .SYNOPSIS
-            A site's build plan: Site, Target, Roles, Domains, Archives,
+            A site's build plan: Site, Target, Roles, Technologies, Archives,
             Features, Unlinked and Command. Throws REFUSED in words when the site
             cannot be built.
 
@@ -63,13 +64,20 @@ function Resolve-XmipSite {
     $read = Read-XmipToml -Path $path
     [string] $target = Get-TomlValue -Node $read -Name 'target' -Default ''
     [string[]] $roles = @(Get-TomlValue -Node $read -Name 'roles' -Default @())
-    [string[]] $domains = @(Get-TomlValue -Node $read -Name 'domains' -Default @())
+    [string[]] $chosen = @(Get-TomlValue -Node $read -Name 'technologies' -Default @())
     $targetRead = Get-XmipProfile -Root $Root -Kind 'target' -Name $target
 
     Assert-XmipTargetBuildsService -Root $Root -Site $siteName -Target $target -Read $targetRead
 
     $cargo = Get-XmipRootCargo -Root $Root
-    [object[]] $technology = @(Get-XmipBuiltTechnology -Manifest $Manifest)
+    [string[]] $built = @((Get-XmipBuiltTechnology -Manifest $Manifest).Name)
+    [string[]] $unknown = @($chosen | Where-Object { $_ -cnotin $built })
+
+    if ($unknown.Count -gt 0) {
+        throw ("REFUSED: site $siteName names $($unknown -join ', '), " +
+            'which is no built technology (architecture.toml).')
+    }
+
     [object[]] $needed = @(
         foreach ($feature in @(Get-TomlValue -Node $targetRead -Name 'features' -Default @())) {
             [pscustomobject] @{ Feature = [string] $feature; From = "target $target" }
@@ -78,20 +86,16 @@ function Resolve-XmipSite {
             Get-XmipRoleFeature -Root $Root -Role $role
         }
     )
-    # Each technology the build carries, with what brought it: a domain's
-    # members, and the archive targets an archiving role names.
+    # Each technology the build carries, with what brought it: the site's
+    # choice, and the archive targets an archiving role names.
     [object[]] $archived = @(
         foreach ($role in $roles) {
             Get-XmipRoleArchive -Root $Root -Role $role
         }
     )
     [object[]] $brought = @(
-        foreach ($domain in $domains) {
-            [hashtable] $asked = @{ Root = $Root; Technology = $technology; Domain = $domain }
-
-            foreach ($name in @(Get-XmipDomainTechnology @asked)) {
-                [pscustomobject] @{ Technology = $name; From = "domain $domain" }
-            }
+        foreach ($name in $chosen) {
+            [pscustomobject] @{ Technology = $name; From = "site $siteName" }
         }
     ) + $archived
     [string[]] $member = @()
@@ -125,21 +129,21 @@ function Resolve-XmipSite {
     ) + $CargoArgument
 
     $plan = [pscustomobject] @{
-        PSTypeName = 'Xmip.SiteBuild'
-        Site       = $siteName
-        Target     = $target
-        Roles      = $roles
-        Domains    = $domains
-        Archives   = $archives
-        Features   = $features
-        Unlinked   = @($member | Where-Object { -not $cargo.Linked.ContainsKey($_) })
-        Command    = 'cargo ' + ($argument -join ' ')
-        Argument   = $argument
+        PSTypeName   = 'Xmip.SiteBuild'
+        Site         = $siteName
+        Target       = $target
+        Roles        = $roles
+        Technologies = $chosen
+        Archives     = $archives
+        Features     = $features
+        Unlinked     = @($member | Where-Object { -not $cargo.Linked.ContainsKey($_) })
+        Command      = 'cargo ' + ($argument -join ' ')
+        Argument     = $argument
     }
 
     # Argument is what Build-XmipService hands cargo; Command says it.
     [string[]] $shown = @(
-        'Site', 'Target', 'Roles', 'Domains', 'Archives', 'Features', 'Unlinked', 'Command'
+        'Site', 'Target', 'Roles', 'Technologies', 'Archives', 'Features', 'Unlinked', 'Command'
     )
     [System.Management.Automation.PSMemberInfo[]] $standard = @(
         [System.Management.Automation.PSPropertySet]::new('DefaultDisplayPropertySet', $shown)
@@ -227,8 +231,8 @@ function Assert-XmipTargetBuildsService {
 function Assert-XmipTargetVeto {
     <#
         .SYNOPSIS
-            REFUSED when a role or a domain needs a feature the target
-            refuses, naming each: the role or domain, the feature and the
+            REFUSED when a role or a chosen technology needs a feature the
+            target refuses, naming each: what needs it, the feature and the
             target's reason. A role needs a feature by naming it or by
             naming an archive target the feature links.
     #>
