@@ -488,8 +488,8 @@ is load (the owner, 2026-10-17): no thread's priority is raised.
 ## Amendment, 2026-10-19: three of them in the assembled service, set up by configuration
 
 `xmip-service` links `identify/certificate`, `authenticate/mutual-tls` and
-`authorize/location`, each a root feature a site's domain names
-(integration), and each taken only as the node's configuration says
+`authorize/location`, each a root feature a site links where it names the
+technology, and each taken only as the node's configuration says
 (ADR-0068): `certificate` claims what a terminating transport wrote of a
 verified handshake as `mutual-tls`; `mutual-tls` is taken where a Receive
 Location's `accept.mechanism` names it; and `location` is set up from the

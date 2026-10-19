@@ -452,10 +452,10 @@ answered: nothing. The `present` and `started` lists in the DSC document's
 `metadata`, `xmip_modules` in the Ansible defaults, the manifest's `[deploy]`
 table, `Sync-XmipEstate -Deploy` and `Update-XmipDeployList.ps1` are deleted.
 Each deploy file names the site its node is built from instead, and a site's
-target, node roles and domains decide what its `xmip-service` is built with
-(ADR-0015, amendment 2026-10-01). `test/Deploy.Test.ps1` now holds the
-profiles to the manifest: every technology it declares built is in a domain
-or claimed by a target.
+target, node roles and technologies decide what its `xmip-service` is built
+with (ADR-0015, amendments 2026-10-01 and 2026-10-19). `test/Deploy.Test.ps1`
+holds the manifest to the estate: every technology it declares built is
+mounted where the landing builds and tests it, and has tests of its own.
 
 ## Amendment, 2026-10-13: the landing writes the map before it verifies
 

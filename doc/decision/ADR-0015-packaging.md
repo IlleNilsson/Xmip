@@ -10,16 +10,17 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, domain, site; archive target
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
 release. A portable archive for people who want no installer at all. x86-64 and
 arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
-site's: a target, node roles and domains, turned into a build by
-`Build-XmipService` (amendment 2026-10-01); the archive targets are the
-archiving roles', never a domain's (amendment 2026-10-14). macOS gets a `.pkg` with a
+site's: a target, node roles and the technologies its end user chose,
+turned into a build by `Build-XmipService` (amendments 2026-10-01 and
+2026-10-19), every built technology built and tested; the archive targets
+are the archiving roles' (amendment 2026-10-14). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).
@@ -119,14 +120,13 @@ ciphertext.
 deploy files' two flat module lists with grouped profiles that decide what a
 deployment's program is built with: *We can try that and add runtime role
 perspective and target node type.* The five targets were proposed and not
-objected to; the domains were accepted as the axis to try. The names
-`hosted` and `managed-service`, the domains beyond healthcare, industrial,
-b2b and managed-service, the role compositions and the vetoes are the
-drafting's, and the owner's to strike.
+objected to. The name `hosted`, the role compositions and the vetoes are
+the drafting's, and the owner's to strike.
 
 **What a package is built with is a site's.** A site,
-`deploy/site/<name>.toml`, picks three things, each a profile under
-`deploy/profile`, each a TOML file named by its word (ADR-0031):
+`deploy/site/<name>.toml`, picks a target and node roles, each a profile
+under `deploy/profile`, a TOML file named by its word (ADR-0031), and its
+technologies:
 
 - **One target**, what the program runs on (`deploy/profile/target`):
   `device`, a Meadow-class microcontroller, no_std, no store, no TLS
@@ -139,7 +139,7 @@ drafting's, and the owner's to strike.
   it always brings (its store's engine, which brings the key store), the
   features it refuses, each with a reason sentence, the Rust triples it is
   built for, and the technologies it claims: the store engines and key
-  stores are a target's business and no domain's. A cluster and a hybrid
+  stores. A cluster and a hybrid
   are arrangements of nodes, each on a target, and not targets
   (deployment-model.md section 1).
 - **Node roles**, what the node is for (`deploy/profile/role`), one file
@@ -151,34 +151,23 @@ drafting's, and the owner's to strike.
   Playground's, composes executing, operational and monitoring.
   `xmip-service`'s own features — node, audit, observe — are always on, and
   say so in one place: its `[[bin]] required-features` in `Cargo.toml`.
-- **Domains**, what it integrates (`deploy/profile/domain`): a
-  description and the standards the domain serves. A standard is the leaf
-  of a technology's position in `architecture.toml` (`hl7-v2`, `mllp`,
-  `aws-sqs`), so a domain's members are every built technology whose leaf
-  it lists, across capabilities, less what a target claims and every
-  archive target, which is an archiving role's (amendment 2026-10-14).
-  Twelve: healthcare, industrial, building-automation, vehicle, b2b,
-  managed-service (the managed services a hosting provider sells),
-  enterprise-messaging, file-exchange, mail, web-service, network, and
-  integration, the mechanisms every integration uses (authenticate,
-  authorize, identify, resilience, route, the common shapes, paths and
-  observation). A `database` domain was deleted and no profile has to
-  place every built technology (second amendment of 2026-10-14).
+- **Technologies**, what it integrates with (`technologies`): the
+  repository names of the built technologies its end user chose, across
+  capabilities (amendment 2026-10-19).
 
 **One place turns a site into a build: `Build-XmipService -Site`.** The
-features are the target's, every role's (executing expanded), each domain
+features are the target's, every role's (executing expanded), each chosen
 technology the root crate links through a feature (a feature listing
-`dep:<alias>` whose dependency's `package` is the technology: today the
-four transports and the two store engines), and xmip-service's required
-ones; the command is `cargo build --bin xmip-service --no-default-features
---features <them>`, run at the estate root. A domain technology
-xmip-service has no feature for yet is said under `Unlinked`, in words, and
-not refused: the build links what exists. `-WhatIf` returns the plan and the
+`dep:<alias>` whose dependency's `package` is the technology), and
+xmip-service's required ones; the command is `cargo build --bin
+xmip-service --no-default-features --features <them>`, run at the estate
+root. A chosen technology xmip-service has no feature for yet is said under
+`Unlinked`, in words, and not refused: the build links what exists. `-WhatIf` returns the plan and the
 command and builds nothing. The rule that says which technologies are built
 moved from `Update-XmipDeployList.ps1` to `Get-XmipBuiltTechnology`, once.
 
-**The target vetoes.** A role or a domain needing a feature the target
-refuses is REFUSED in words naming the role or domain, the feature and the
+**The target vetoes.** A role or a technology needing a feature the target
+refuses is REFUSED in words naming what needs it, the feature and the
 target's reason (ADR-0055): an operational node on a person's computer
 needs `cluster`, which the computer target refuses because a computer
 sleeps, roams and is shut down by its user. **A device site is refused, not
@@ -482,43 +471,25 @@ deb`, `rpm` and `pkg` are refused in words.
 ## Amendment, 2026-10-14: the archiving roles carry the archive targets
 
 **Provenance.** The owner, 2026-10-14: *Parquet is for archiving as other
-storage technologies.* Asked whether the archive targets should move from
-the domains to the roles that archive, he answered *Yes*.
-
-**What was wrong.** A domain's members were every built technology whose
-leaf it lists, across capabilities (amendment 2026-10-01), so a standard
-that named a storage technology pulled in its archive target with its
-transport: `database` listed `parquet` only for `xmip-core-archive-parquet`,
-the default archive target (owner, 2026-09-07), and its `mariadb`, `mssql`,
-`postgresql`, `sqlite` and `sql`, `file-exchange`'s `file` and
-`managed-service`'s `s3`, `azure-blob` and `gcs` brought the archive target
-of the same name. What a node archives to followed from what it integrates.
+storage technologies.* Asked whether the roles that archive should carry
+the archive targets, he answered *Yes*.
 
 **Archive targets are chosen by the roles that archive.** The roles that
 carry the `archive` feature, `deploy/profile/role/sending.toml` and
 `operational.toml`, name the archive targets they carry in `archives`, by
 repository name, as a target names its technologies in `claims`: the ten
-the domains pulled in until now — `azure-blob`, `file`, `gcs`, `mariadb`,
-`mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite` under
-`xmip-core-archive`. A composed role carries its parts' (executing is
-receiving, processing and sending, so it carries sending's).
-
-**No domain selects an archive target.** A domain's members are every
-built technology whose leaf it lists, across capabilities, less what a
-target claims and every archive target a role names. `parquet` went from
-`database`, and `gcs` from `managed-service`: each was there only for its
-archive target. The other standards stayed for the transports, contracts
-and stores they name; `database` itself was deleted the same day (next
-amendment).
+under `xmip-core-archive` — `azure-blob`, `file`, `gcs`, `mariadb`,
+`mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite`. A composed role
+carries its parts' (executing is receiving, processing and sending, so it
+carries sending's).
 
 **One reader.** `Get-XmipRoleArchive` reads a role's `archives`, its
 composed roles expanded through `Get-XmipRoleComposition`, which
-`Get-XmipRoleFeature` uses as well; `Get-XmipArchiveTarget` is every role's,
-which `Get-XmipDomainTechnology` leaves out. `Build-XmipService` carries a
-site's roles' archive targets beside its domains' technologies, links each
-the root crate has a feature for, says the rest under `Unlinked`, and shows
-them in the plan as `Archives`. `test/Deploy.Test.ps1` fails when a domain
-selects an archive target, when a role carrying `archive` names none or a
+`Get-XmipRoleFeature` uses as well; `Get-XmipArchiveTarget` is every role's.
+`Build-XmipService` carries a site's roles' archive targets beside its
+chosen technologies, links each the root crate has a feature for, says the
+rest under `Unlinked`, and shows them in the plan as `Archives`.
+`test/Deploy.Test.ps1` fails when a role carrying `archive` names none or a
 role not carrying it names one, or when a role names something that is not
 a built archive target.
 
@@ -530,15 +501,45 @@ building & testing transports, there is where the build & tests shall
 occur.* He answered *Go ahead* to deleting the `database` domain and the
 requirement that a profile places every built technology.
 
-**The `database` domain is deleted**, `deploy/profile/domain/database.toml`
-with it; no site named it. Twelve domains remain, and the owner has not
-ruled on them.
+**A technology is built and tested where it lands.** A transport, like
+every technology, is built and tested in its own module when it lands
+(`Publish-XmipChange`); no profile has to place it.
 
-**No profile has to place every built technology.** The amendment of
-2026-10-01 held every built technology to a domain or a target's claim, and
-the one before this held it to an archiving role as well;
-`test/Deploy.Test.ps1` failed for each one placed nowhere. That rule is
-deleted. A transport, like every technology, is built and tested in its own
-module when it lands (`Publish-XmipChange`), and a site's build carries
-what its profiles select. The tests that a domain selects no archive target
-and that each archiving role names built archive targets stay.
+## Amendment, 2026-10-19: no domains; a site names its technologies
+
+**Provenance.** The owner, 2026-10-19, on `deploy/profile/domain`: mail,
+network and web-service are not domains, and neither is integration. Then:
+*I guess the main reason was for your node configuration and slicing. You
+have to let that go. Every end user will choose. We just have to show the
+possibilities and test all.*
+
+**The domain axis is deleted**, with every use: `deploy/profile/domain`
+and its twelve profiles, a site's `domains`, `Get-XmipDomainTechnology` and
+the plan's `Domains`. Nothing in the estate groups technologies for a
+deployment.
+
+**A site names its technologies.** `technologies` in
+`deploy/site/<name>.toml` lists, by repository name as a role names its
+archive targets, the built technologies its end user chose, across
+capabilities. `Resolve-XmipSite` REFUSES, in words, a name that is no
+built technology (`Get-XmipBuiltTechnology`), links each the root crate has
+a feature for, says the rest under `Unlinked`, and shows them in the plan
+as `Technologies`; the target vetoes a technology's feature as it vetoes a
+role's. The five example sites name what their descriptions say.
+
+**Every built technology is built and tested.** `test/Deploy.Test.ps1`
+holds each technology `architecture.toml` declares built to being mounted
+as a declared module, which the landing builds with every feature it
+declares and tests (`Publish-XmipChange`, `Test-XmipModule`), and to having
+tests of its own. It found `xmip-core-persist-postgresql` declared
+`scaffolded` with no repository; it is `planned`, nothing exists (ADR-0060),
+as `deploy/database/postgresql/README.md` already said.
+
+**Open for the owner:**
+
+- Naming a technology by its repository name is the drafting's, his to
+  strike.
+- **How the possibilities are shown.** Nothing is built for it here.
+- **A target's `claims`.** It kept the store engines and key stores out of
+  the domains; now only the test that a target claims built technologies
+  reads it. Whether it stays is his.

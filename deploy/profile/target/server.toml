@@ -16,7 +16,7 @@ triples = [
 # runtime store's engine, which brings the platform's key store with it.
 features = ["persist-rocksdb"]
 
-# The technologies this target decides, not a domain: the embedded engines,
+# The technologies this target decides: the embedded engines,
 # RocksDB for the runtime database and SQLite for the administration
 # database, and the key stores that seal them (DPAPI on Windows, a private
 # file on Linux).
@@ -28,5 +28,5 @@ claims = [
 ]
 
 # What this target cannot have, each feature with the reason; a role or a
-# domain needing one is refused. A server refuses nothing.
+# technology needing one is refused. A server refuses nothing.
 [refuses]

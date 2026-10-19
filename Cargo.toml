@@ -67,8 +67,8 @@ required-features = ["persist"]
 # Nothing by default. A plain `cargo build` is the assembly library with the
 # modules every node has; xmip-service is built from a site (deploy/site) by
 # Build-XmipService, which sets exactly the features below that the site's
-# target, roles and domains need (ADR-0015, amendment 2026-10-01). The
-# root's own tests take `--all-features`.
+# target, roles and chosen technologies need (ADR-0015, amendments
+# 2026-10-01 and 2026-10-19). The root's own tests take `--all-features`.
 #
 # The two fit as two steps. The build sets what is possible: the profiles
 # under deploy/profile decide which of these features a site's program
@@ -108,8 +108,7 @@ transform = ["dep:xmip-transform"]
 # needs no configuration: the socket peer (`ip`), a bearer token's subject
 # (`jwt`), an `X-API-Key` (`api-key`), a Basic credential's user
 # (`username`), a TLS peer certificate (`certificate`). A site links those
-# its domains name (deploy/profile/domain): integration names api-key,
-# certificate, jwt and username, network names ip.
+# it names (deploy/site).
 identify-api-key = ["identify", "dep:xmip-identify-api-key"]
 identify-ip = ["identify", "dep:xmip-identify-ip"]
 identify-jwt = ["identify", "dep:xmip-identify-jwt"]
@@ -123,14 +122,14 @@ identify-certificate = ["identify", "dep:xmip-identify-certificate"]
 # `mutual-tls` records what the handshake proved, for a Receive Location
 # whose `accept.mechanism` names it; `location` admits at each Receive
 # Location the node starts what its `accept` declares it takes. A site links
-# those its domains name (integration names both).
+# those it names.
 authenticate-mutual-tls = ["authenticate", "dep:xmip-authenticate-mutual-tls"]
 authorize-location = ["authorize", "dep:xmip-authorize-location"]
 
 # The transports xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
-# is refused as the node starts. A site links the ones its domains serve
-# (deploy/profile/domain). tcp terminates TLS where its Location says
+# is refused as the node starts. A site links the ones it names
+# (deploy/site). tcp terminates TLS where its Location says
 # `tls = true`, with the node's `[provision.receive]` certificate.
 transport-file = ["dep:xmip-transport-file"]
 transport-http = ["dep:xmip-transport-http"]

@@ -5,32 +5,33 @@ function Build-XmipService {
     <#
         .SYNOPSIS
             Builds xmip-service for a site: the features its target, roles
-            and domains need, and nothing else.
+            and technologies need, and nothing else.
 
         .DESCRIPTION
             A site, deploy/site/<name>.toml, picks one target (device, edge,
             computer, server or hosted), the node roles it serves and the
-            domains it integrates; the profiles under deploy/profile say what
-            each brings (ADR-0015, amendment 2026-10-01). The build carries
-            the target's features, every role's (executing is receiving,
-            processing and sending), each domain technology and each archive
-            target the root crate links through a feature, and xmip-service's
-            own required features, which its [[bin]] entry in Cargo.toml
-            declares. The archive targets are the roles' that archive,
-            sending and operational, each naming them in its archives; no
-            domain selects one (ADR-0015, amendment 2026-10-14). A
-            technology xmip-service has no feature for yet is said under
-            Unlinked, not refused.
+            technologies its user chose, by repository name; the profiles
+            under deploy/profile say what a target and a role bring
+            (ADR-0015, amendments 2026-10-01 and 2026-10-19). The build
+            carries the target's features, every role's (executing is
+            receiving, processing and sending), each chosen technology and
+            each archive target the root crate links through a feature, and
+            xmip-service's own required features, which its [[bin]] entry in
+            Cargo.toml declares. The archive targets are the roles' that
+            archive, sending and operational, each naming them in its
+            archives (amendment 2026-10-14). A name that is no built
+            technology is REFUSED; a technology xmip-service has no feature
+            for yet is said under Unlinked, not refused.
 
-            The target vetoes. A role or a domain needing a feature the
-            target refuses is REFUSED, naming the role or domain, the feature
-            and the target's reason; a target that cannot run xmip-service
-            at all, the device, is REFUSED with what builds for it instead:
+            The target vetoes. A role or a technology needing a feature the
+            target refuses is REFUSED, naming what needs it, the feature and
+            the target's reason; a target that cannot run xmip-service at
+            all, the device, is REFUSED with what builds for it instead:
             xmip-core alone, no_std.
 
             The build sets what is possible; the node's TOML picks from it at
             run time. Cargo runs at the estate root, in CARGO_TARGET_DIR when
-            that is set. Returns the plan: Site, Target, Roles, Domains,
+            that is set. Returns the plan: Site, Target, Roles, Technologies,
             Archives, Features, Unlinked and Command, and Package with what
             -Package made.
 

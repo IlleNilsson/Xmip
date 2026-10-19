@@ -4,13 +4,13 @@
 <#
 .SYNOPSIS
     The technologies the estate has built, each with the leaf of its tree
-    position: what a domain profile names and a site builds from.
+    position: what a site chooses from.
 
 .DESCRIPTION
-    One rule, read by the domain profiles under deploy/profile/domain
-    (Get-XmipDomainTechnology) and by test/Deploy.Test.ps1, which holds a
-    target's claims and an archiving role's archive targets to it (ADR-0015,
-    amendments 2026-10-01 and 2026-10-14).
+    One rule, read by Resolve-XmipSite, which refuses a site naming anything
+    else, and by test/Deploy.Test.ps1, which holds every one to being
+    mounted and tested, and a target's claims and an archiving role's
+    archive targets to it (ADR-0015, amendments 2026-10-14 and 2026-10-19).
 
     Style: doc/governance/powershell-style.md
 #>

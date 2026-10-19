@@ -10,4 +10,10 @@ target = "computer"
 
 roles = ["executing", "monitoring"]
 
-domains = ["file-exchange", "mail", "network", "integration"]
+# The technologies this deployment chose, by repository name (ADR-0015,
+# amendment 2026-10-19).
+technologies = [
+  "xmip-core-transport-file",
+  "xmip-core-transport-smtp",
+  "xmip-core-transport-imap",
+]

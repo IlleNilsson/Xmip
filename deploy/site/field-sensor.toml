@@ -9,4 +9,6 @@ target = "device"
 
 roles = ["sending"]
 
-domains = ["industrial"]
+# The technologies this deployment chose, by repository name (ADR-0015,
+# amendment 2026-10-19).
+technologies = ["xmip-core-transport-modbus"]

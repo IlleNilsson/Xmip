@@ -40,8 +40,9 @@ the estate tree, and are counted nowhere below.
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
+| planned | 1 | 0 | 1 |
 | reserved | 71 | 0 | 71 |
-| scaffolded | 273 | 271 | 2 |
+| scaffolded | 272 | 271 | 1 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -957,6 +958,7 @@ Platform-wide runtime services.
 2 of 3 composed in `module/platform/persist`; a name marked `*` is one the
 parent does not compose.
 
-- **scaffolded**, 3 — postgresql*, rocksdb, sqlite
+- **planned**, 1 — postgresql*
+- **scaffolded**, 2 — rocksdb, sqlite
 
 ---

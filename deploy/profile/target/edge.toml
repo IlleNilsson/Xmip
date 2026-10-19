@@ -20,11 +20,11 @@ triples = [
 # always the embedded runtime engine).
 features = ["persist-rocksdb"]
 
-# The technologies this target decides, not a domain: the embedded engines,
+# The technologies this target decides: the embedded engines,
 # RocksDB for the runtime database and SQLite for the administration
 # database, and the key store that seals them, a private file.
 claims = ["xmip-core-persist-rocksdb", "xmip-core-persist-sqlite", "xmip-core-secret-file"]
 
 # What this target cannot have, each feature with the reason; a role or a
-# domain needing one is refused. An edge machine refuses nothing.
+# technology needing one is refused. An edge machine refuses nothing.
 [refuses]

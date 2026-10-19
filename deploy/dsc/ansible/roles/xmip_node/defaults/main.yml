@@ -19,7 +19,7 @@ xmip_online: false
 #
 # The site this node is built from (ADR-0015, amendment 2026-10-01):
 # Build-XmipService -Site builds its xmip-service with what the site's
-# target, roles and domains need. The node configuration the template
+# target, roles and chosen technologies need. The node configuration the template
 # writes names no technology: the node loads what its configuration names,
 # from what that build linked (ADR-0025, amendment 2026-09-28).
 xmip_site: deploy/site/b2b-exchange.toml

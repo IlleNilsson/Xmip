@@ -18,7 +18,7 @@ triples = [
 # platform's key store with it.
 features = ["persist-rocksdb"]
 
-# The technologies this target decides, not a domain: the embedded engines,
+# The technologies this target decides: the embedded engines,
 # RocksDB for the runtime database and SQLite for the administration
 # database, and the key stores that seal them (DPAPI on Windows, the
 # keychain on a Mac).
@@ -30,7 +30,7 @@ claims = [
 ]
 
 # What this target cannot have, each feature with the reason; a role or a
-# domain needing one is refused.
+# technology needing one is refused.
 [refuses]
 cluster = """\
   A person's computer sleeps, roams and is shut down by its user, so it runs \
