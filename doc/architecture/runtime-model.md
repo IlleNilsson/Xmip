@@ -273,7 +273,13 @@ once it is written and decided, and syncs it right after: the answer carries
 when it is durable (`persist::storage::Durable`), what the receive cycle and
 every send of its Journeys wait on before anything is acknowledged or seen
 by a far end (section 10; ADR-0018, amendment 2026-10-20). Every other write
-is answered once durable.
+is answered once durable. The write-ahead log is written to its file by the
+sync alone (`RocksDB`'s `manual_wal_flush`): a write before it is kept in
+`RocksDB`'s own buffer of the log, so a Stream's chunks never wait while
+another thread syncs the log — on Windows a write to a file waits while the
+file is flushed, and each Message's chunks waited out the previous
+Message's sync — and a write not yet synced goes with its process, as
+nothing anyone was told of does (ADR-0018, amendment 2026-10-20).
 
 **Work moves by claim.** A node takes a Journey by
 a claim through Xmip Storage: a conditional update in the database — set the
@@ -1465,14 +1471,21 @@ waits for its due time.
   never copied, while it keeps up (`xmip-core-runtime`'s `stream_share`).
   The read keeps the last chunk it took for a departure reading alone and
   five more for each other departure reading it — the room each one's own
-  read of Xmip Storage would have held (`stream_share::KEPT_PER_READER`) —
-  and no Send Port waits on another (ADR-0018 clause 11, the bulkhead). A
-  departure further behind — a slower far end, a send begun later, a
-  thread kept from its processor on a loaded machine — asks Xmip Storage
-  for the chunks it missed, from the chunk it reached
-  (`persist::storage::ChunkReader::shared_from`), and takes from the one
-  read again once its place is among the kept chunks (ADR-0018, amendment
-  2026-10-20). Until now each departure read the Stream whole.
+  read of Xmip Storage would have held (`stream_share::KEPT_PER_READER`).
+  A departure about to let go of the chunk another of its read takes next
+  waits for that one to take it — a thread kept from its processor on a
+  loaded machine — for at most what the kept chunks take the read to pass
+  at its pace, over the whole Stream for each departure waited for, so a
+  slower Send Port holds the others back no longer than that, once
+  (ADR-0018 clause 11, the bulkhead). A departure further behind — a
+  slower far end, a send begun later — asks Xmip Storage for the chunks it
+  missed, from the chunk it reached
+  (`persist::storage::ChunkReader::shared_from`), from a read of its
+  Stream that reaches its place where there is one and from one of its
+  own, which the next behind shares, where there is none; before each
+  chunk it moves to a read that reaches it and that more departures read,
+  so the reads of a Stream come together as their places meet (ADR-0018,
+  amendments 2026-10-20). Until now each departure read the Stream whole.
 - **A send holds its bytes within the node's budget.** Beside the Send
   pool's count of Journeys (*Corrected 2026-10-06*, above), what a send
   holds is held from the node's byte budget for sends (section 3, *A node's

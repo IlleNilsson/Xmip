@@ -361,7 +361,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 271875 lines of production
+Where each repository mounts and what it holds: 272113 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -504,7 +504,7 @@ hold no source to count.
 │   │   │   │   └── xpath                         49
 │   │   │   ├── provision                       2126
 │   │   │   │   ├── internal-ca                 1502
-│   │   │   │   ├── acme                        1164
+│   │   │   │   ├── acme                        1158
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
@@ -614,7 +614,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5228
+│   │   │   ├── net                             5288
 │   │   │   ├── codec                           2648
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
@@ -650,7 +650,7 @@ hold no source to count.
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
 │   │   ├── abi                                28450  C# 26130 · Rust 2024 · PowerShell 296
-│   │   ├── event                               5616
+│   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                2852
@@ -677,10 +677,10 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            26881
-│       ├── persist                             9361
+│       ├── runtime                            27072
+│       ├── persist                             9354
 │       │   ├── sqlite                           240
-│       │   ├── rocksdb                          169
+│       │   ├── rocksdb                          178
 │       │       declared, not built 1
 │       │       postgresql
 │       └── configure                           5425
