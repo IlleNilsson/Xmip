@@ -218,6 +218,8 @@ note = "For the VS Code extension's TypeScript shell (ADR-0014, amendment 2026-0
 
 [prerequisite.node.windows]
 winget = "OpenJS.NodeJS"
+elevation = true
+note = "A machine-scope MSI (WiX); winget offers no per-user installer, so the install prompts for elevation."
 
 [prerequisite.node.macos]
 brew = "node"

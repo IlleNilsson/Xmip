@@ -201,6 +201,47 @@ function Import-XmipOperatorModule {
     $script:XmipOperatorModule = Import-Module -Name $binary -PassThru -ErrorAction Stop
 }
 
+function Set-XmipOperatorModuleRoot {
+    <#
+        .SYNOPSIS
+            Points the built module's document at the estate root from where
+            the build lies.
+
+        .DESCRIPTION
+            xmip.powershell.toml as shipped reaches the estate root from the
+            project's bin/Debug/net10.0, nine levels up, and its Snapshot is
+            relative to the module's directory. A build under
+            .local-work/operator/<key> lies three levels down, so the shipped
+            path climbed past the root: Get-XmipHealth read
+            D:\.local-work\playground (2026-10-20). The climb is written again
+            for where this build lies; the rest of the path is the
+            document's own.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Directory,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Root
+    )
+
+    [string] $document = Join-Path -Path $Directory -ChildPath 'xmip.powershell.toml'
+
+    if (-not (Test-Path -LiteralPath $document -PathType Leaf)) {
+        return
+    }
+
+    [string] $relative = [System.IO.Path]::GetRelativePath($Directory, $Root)
+    [int] $depth = @($relative -split '[\\/]' | Where-Object { $_ -eq '..' }).Count
+    [string] $climb = '../' * $depth
+    [string] $text = [System.IO.File]::ReadAllText($document)
+    [string] $pointed = [regex]::Replace(
+        $text, '(?m)^(Snapshot\s*=\s*")(\.\./)+', "`${1}$climb")
+    [System.IO.File]::WriteAllText($document, $pointed)
+}
+
 function Build-XmipOperatorModule {
     <#
         .SYNOPSIS
@@ -243,6 +284,8 @@ function Build-XmipOperatorModule {
         throw ("The operator module did not build, and Xmip reads capabilities and " +
             "snapshots through it. Run: dotnet build $project`n$($said -join "`n")")
     }
+
+    Set-XmipOperatorModuleRoot -Directory $staging -Root $Root
 
     try {
         [System.IO.Directory]::Move($staging, $Output)

@@ -41,7 +41,8 @@
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
     - an xmip.toml, a cluster's configuration;
-    - a README.md;
+    - a README.md, and doc/getting-started.md, the first run the README links
+      first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
       .ps1 or .psm1 that is not a test;
     - a binary's usage text: a Rust `const USAGE`, and the `Text` of a C#
@@ -182,7 +183,8 @@ BeforeAll {
         [string] $extension = [IO.Path]::GetExtension($leaf)
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
-        if ($leaf -eq 'README.md' -or $leaf -like '*xmip.toml') {
+        if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
+            $leaf -like '*xmip.toml') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -388,8 +390,10 @@ Describe 'No cluster or node is named in code or tests' {
             Should -BeNullOrEmpty -Because 'a README shows the owner''s names'
         @(Find-NodeName -Path 'test/xmip.toml' -Line "[nodes.$($cluster.Nodes[0])]") |
             Should -BeNullOrEmpty -Because 'an xmip.toml is where a name is configured'
+        @(Find-NodeName -Path 'doc/getting-started.md' -Line $example) |
+            Should -BeNullOrEmpty -Because 'the getting-started guide is the first run'
         @(Find-NodeName -Path 'doc/guide.md' -Line $example) |
-            Should -Not -BeNullOrEmpty -Because 'only a README.md is help'
+            Should -Not -BeNullOrEmpty -Because 'only a README.md and that guide are help'
 
         [string] $node = $cluster.Nodes[0]
         [string[]] $rust = @(

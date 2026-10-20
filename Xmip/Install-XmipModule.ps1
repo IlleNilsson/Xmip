@@ -54,7 +54,7 @@ function Install-XmipModule {
         Run once, by path. Everything after that is Import-Module Xmip.
 
     .EXAMPLE
-        Import-Module ./module/Xmip
+        Import-Module -Name ./Xmip/Xmip.psd1
         Install-XmipModule
 
     .EXAMPLE

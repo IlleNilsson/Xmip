@@ -567,3 +567,14 @@ role.* Every example site of one machine declares `storage`:
 Ansible role builds by default — beside `personal-computer`. `field-sensor`
 does not: its target, a device, refuses `persist` and builds no
 `xmip-service` (ADR-0015).
+
+## Amendment, 2026-10-20: the getting-started guide is help
+
+`doc/getting-started.md`, the first run the root `README.md` links first,
+takes a new user from a fresh clone to a node of their own and the
+Playground, so it names a cluster and its nodes as a README does: `learning`
+and `first` for the node it configures, C1, R1, P1 and S1 for the roll.
+`test/NodeName.Test.ps1` allows it beside a README.md and refuses every
+other document still. That the guide counts as help is the assistant's
+drafting, the owner's to confirm or strike; struck, the guide moves to a
+README of its own.

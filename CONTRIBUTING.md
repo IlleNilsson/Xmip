@@ -209,6 +209,7 @@ facts explain every surprise:
 **Getting a working estate**
 
 ```powershell
+git config --global core.longpaths true  # Windows, once: module paths nest deep
 git clone --recursive https://github.com/IlleNilsson/Xmip.git
 git submodule update --init --recursive   # after any pull
 git config push.recurseSubmodules check   # once, per clone

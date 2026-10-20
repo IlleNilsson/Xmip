@@ -156,3 +156,27 @@ Describe 'Reusing a build of the operator module' {
         }
     }
 }
+
+Describe 'The built operator module reads the snapshot under the estate root' {
+    It 'climbs from where the build lies, not from the project bin' {
+        [hashtable] $given = @{ Area = [string] $TestDrive; Estate = $script:Root }
+
+        InModuleScope Xmip -Parameters $given {
+            param([string] $Area, [string] $Estate)
+
+            [string] $tree = Join-Path -Path $Area -ChildPath 'estate'
+            [string] $build = Join-Path -Path $tree -ChildPath '.local-work/operator/KEY.build-1'
+            New-Item -ItemType Directory -Path $build -Force | Out-Null
+            [string] $document = Join-Path -Path $build -ChildPath 'xmip.powershell.toml'
+            [string] $shipped = Join-Path -Path $Estate -ChildPath (
+                'module/core/operation/powershell/src/Xmip.PowerShell/xmip.powershell.toml')
+            Copy-Item -LiteralPath $shipped -Destination $document
+
+            Set-XmipOperatorModuleRoot -Directory $build -Root $tree
+
+            [string] $line = @(Get-Content -LiteralPath $document |
+                    Where-Object { $_ -match '^Snapshot\s*=' })[0]
+            $line | Should -Be 'Snapshot = "../../../.local-work/playground/C1-snapshot.toml"'
+        }
+    }
+}
