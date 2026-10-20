@@ -9,6 +9,13 @@
 
 USE `xmip_audit`;
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE `schema_version` (
+    `version` int NOT NULL,
+    `recorded_at` datetime(6) NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (`version`)
+) ENGINE=InnoDB;
+
 -- audit records kept over time, each once, every single value of each in a column of its own, each in its writer's audit chain: its number there, the SHA-256 digest of the record before it and its own.
 CREATE TABLE `audit` (
     `id` binary(16) NOT NULL,
@@ -91,5 +98,8 @@ CREATE TABLE `audit_stream_chunk` (
     `bytes` longblob NOT NULL,
     CONSTRAINT audit_stream_chunk_key PRIMARY KEY (`audit`, `stream`, `chunk`)
 ) ENGINE=InnoDB;
+
+-- The schema version it holds now.
+INSERT INTO `schema_version` (`version`, `recorded_at`) VALUES (1, UTC_TIMESTAMP(6));
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON `xmip_audit`.* TO 'xmip_storage'@'%';

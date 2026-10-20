@@ -9,6 +9,13 @@
 
 USE `xmip_runtime`;
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE `schema_version` (
+    `version` int NOT NULL,
+    `recorded_at` datetime(6) NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (`version`)
+) ENGINE=InnoDB;
+
 -- every Stream, once, as written and never changed: its length, its chunks and the SHA-256 digest of its bytes; a chunk and every Message referring to it refer to it by its identifier.
 CREATE TABLE `stream` (
     `stream` binary(16) NOT NULL,
@@ -184,5 +191,8 @@ CREATE TABLE `audit` (
     `body` longblob NOT NULL,
     CONSTRAINT audit_key PRIMARY KEY (`sequence`)
 ) ENGINE=InnoDB;
+
+-- The schema version it holds now.
+INSERT INTO `schema_version` (`version`, `recorded_at`) VALUES (1, UTC_TIMESTAMP(6));
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON `xmip_runtime`.* TO 'xmip_storage'@'%';

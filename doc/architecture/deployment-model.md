@@ -667,6 +667,16 @@ own batch, the records themselves still sealed. `XmipStorage::query` asks
 one typed question of one index (`module/platform/persist/README.md`,
 *Laid-out columns*; the amendment drafted for ADR-0063 waits on the owner).
 
+**Every database records its schema version** (open problem 41; ADR-0015,
+amendment 2026-10-20) in a table of its own, `schema_version`, a row for
+each version it has held. A release's schema only adds to the one before —
+a table, a column, an index — and its upgrade is generated as the
+difference, `04-<domain>-upgrade-<from>-<to>.sql` beside each server's
+scripts, which IT runs; an embedded Storage node steps its own databases as
+it opens. A database newer than the build is refused in words, and each
+node publishes the version each of its databases holds at
+`<node>/storage/<domain>`.
+
 ### Record identifiers are UUIDv7
 
 **Every record in each database is keyed by a UUIDv7**, per RFC 9562: the

@@ -10,6 +10,13 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE xmip.schema_version (
+    version integer NOT NULL,
+    recorded_at timestamptz NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (version)
+);
+
 -- audit records kept over time, each once, every single value of each in a column of its own, each in its writer's audit chain: its number there, the SHA-256 digest of the record before it and its own.
 CREATE TABLE xmip.audit (
     id uuid NOT NULL,
@@ -92,6 +99,9 @@ CREATE TABLE xmip.audit_stream_chunk (
     bytes bytea NOT NULL,
     CONSTRAINT audit_stream_chunk_key PRIMARY KEY (audit, stream, chunk)
 );
+
+-- The schema version it holds now.
+INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, now());
 
 GRANT USAGE ON SCHEMA xmip TO xmip_storage;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA xmip TO xmip_storage;

@@ -120,10 +120,12 @@ keeps RocksDB for the runtime database and SQLite for the administration
 database under its data directory, and SQLite for the audit database, each
 where its table — `[runtime]`, `[administration]`, `[audit]`, its `storage`
 and `connection` — says and under the data directory where it is left out, all
-sealed under the key store `[store]` names; a node declaring neither the role
-nor `[storage] nodes` is refused as it starts. Records: ADR-0015 (amendment
-2026-10-01), ADR-0056 (amendment 2026-10-20), ADR-0063, ADR-0070 (amendment
-2026-10-10).
+sealed under the key store `[store]` names; each database is brought to the
+build's schema version as it opens, one newer refused in words, and the
+version each holds is published at `<node>/storage/<domain>`; a node declaring
+neither the role nor `[storage] nodes` is refused as it starts. Records:
+ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
+2026-10-20), ADR-0063, ADR-0070 (amendment 2026-10-10).
 
 #### `process-declaration`
 
@@ -285,10 +287,13 @@ or Host Services that changed. Open problem 31. Records: ADR-0031 (amendments
 domain's table — `[runtime]`, `[administration]`, `[audit]` — is read and
 checked, its `storage` and its connection in the server's own form, each of
 which may name a server or technology of its own, and `[storage.database]` the
-secret; IT's scripts are in `deploy/database`, per data domain; a node naming
-a server is refused as it starts, since no Storage node connects to any kind
-yet. Records: ADR-0015 (amendment 2026-10-01), ADR-0070 (amendments 2026-10-10
-and 2026-10-12), deployment-model.md section 7.
+secret; IT's scripts are in `deploy/database`, per data domain, each database
+recording its schema version, and a release's upgrade is written as the
+difference from an earlier one by `xmip-cli database` and
+`Get-XmipDatabaseScript`; a node naming a server is refused as it starts,
+since no Storage node connects to any kind yet. Records: ADR-0015 (amendments
+2026-10-01 and 2026-10-20), ADR-0070 (amendments 2026-10-10 and 2026-10-12),
+deployment-model.md section 7.
 
 #### `host-subprocess`
 
@@ -361,7 +366,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 272113 lines of production
+Where each repository mounts and what it holds: 273430 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -623,7 +628,7 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             7810
+│   │       ├── cli                             8126
 │   │       ├── gui                             5050
 │   │       │   └── vscode                      3236
 │   │       ├── audit                           3958
@@ -633,7 +638,7 @@ hold no source to count.
 │   │       ├── observe                         3770
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2804  C# 2804 · PowerShell 0
+│   │       ├── powershell                      2930  C# 2930 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -649,7 +654,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                28450  C# 26130 · Rust 2024 · PowerShell 296
+│   │   ├── abi                                28665  C# 26345 · Rust 2024 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -677,8 +682,8 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            27072
-│       ├── persist                             9354
+│       ├── runtime                            27184
+│       ├── persist                             9902
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          178
 │       │       declared, not built 1

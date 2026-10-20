@@ -1260,24 +1260,6 @@ What remains:
 - **The C ABI's transport table** has no place for `sending` or for a
   receive's bound (ADR-0057, amendment 2026-10-19).
 
-## 41. A released database schema has no way to change
-
-The owner, 2026-10-12: *The database creation scripts are very static,
-that might be good since we have not published. But when we have they have
-to alter databases and schema objects.* Until the first release nothing is
-migrated (CONTRIBUTING: deleted, never deprecated), and
-`deploy/database/<server>/` creates each data domain's database whole from
-the one schema definition (`persist::storage::schema`). Once a release is
-installed, the next one has to alter what it made. Proposed, the owner's to
-decide before the first release: each database records the schema version
-it was made or last altered to, and a Storage node refuses one whose
-version it does not know, naming both; the upgrade scripts are generated
-from the one schema definition as the difference between two releases,
-`04-<domain>-upgrade-<from>-<to>.sql` for each server, run in order; an
-upgrade only adds — a table, a column, an index — and whatever would drop
-or rewrite data is a step of its own, reviewed as one. The embedded
-engines need the same version and step, run by the Storage node itself.
-
 ## 42. The setup packages are written and not yet built
 
 The owner, 2026-10-13: *Leave it as a quest for later, but it has to be
@@ -1770,3 +1752,67 @@ inside the engine — no record read, none decrypted — and that was not
 measured on RocksDB here; and a scan still reads every entry its queue
 holds at each `send_scan`, waiting or not (problem 43's remainder), which
 an index does not change.
+
+## 41. A released database schema has no way to change — **Resolved**
+
+*Resolved 2026-10-19 by the owner's agreement that day to the proposal
+below, built 2026-10-20 (ADR-0015, amendment 2026-10-20).*
+
+The owner, 2026-10-12: *The database creation scripts are very static,
+that might be good since we have not published. But when we have they have
+to alter databases and schema objects.* Until the first release nothing is
+migrated (CONTRIBUTING: deleted, never deprecated), and
+`deploy/database/<server>/` created each data domain's database whole from
+the one schema definition (`persist::storage::schema`). Once a release is
+installed, the next one has to alter what it made. Proposed: each database
+records the schema version it was made or last altered to, and a Storage
+node refuses one whose version it does not know, naming both; the upgrade
+scripts are generated from the one schema definition as the difference
+between two releases, `04-<domain>-upgrade-<from>-<to>.sql` for each
+server, run in order; an upgrade only adds — a table, a column, an index.
+The embedded engines need the same version and step, run by the Storage
+node itself. Agreed by the owner on 2026-10-19 as written: *each database
+records its schema version, and the upgrade scripts are generated as the
+difference between releases, adding only*.
+
+Built 2026-10-20. **Every database records its version** in a table of its
+own, `schema_version` — `version` and `recorded_at`, a row for each version
+it has held — in the runtime, the administration and the audit databases
+alike; it holds the highest. `schema::VERSION` is the build's, 1 until the
+first release. **The difference is what was added**: every table, column and
+index of the definition says the version that added it (`since`), so the
+schema at a version is what was added at or before it, and an upgrade from
+one release to a later one makes the tables, adds the columns and makes the
+indexes added between them, then records each version reached
+(`schema::upgrade`, `schema/upgrade.rs`). The definition has no way to say
+a drop or a rename, and what it may say is held by a test: a version from 1
+to the build's, nothing older than its table, a column added to a table
+already made one that may hold nothing, a key the table's from the first,
+and each released schema's fingerprint unchanged (`RELEASED`, empty until
+the first release). `03-<domain>-schema.sql` makes `schema_version` and
+records the version it made; `scripts` writes one
+`04-<domain>-upgrade-<from>-<to>.sql` for each release after the first, and
+`cargo test --test database` holds `deploy/database/<server>/` to them.
+**The embedded Storage node** reads each database's version as it opens,
+records each version after it, and refuses a database newer than its build
+in words naming both (`Embedded::over`, `embedded/versioned.rs`,
+`PersistError::Schema`); a step needs nothing else there, since a table is a
+kind of record and a column a value of the sealed body. **A node publishes**
+each database it keeps at `<node>/storage/<domain>`, its evidence `schema
+version <n> on <engine>`, so `xmip-cli health`, `Get-XmipHealth`, the GUI's
+tree and the publication itself show it, and the service says it as it
+starts. **The tool act** is `xmip-cli database <server> --from <version>
+[--to <version>] [--out <folder>]` and `Get-XmipDatabaseScript -Server
+-From [-To] [-Path]`, over `xmip_database_upgrade_v1` (`xmip_operate.h`
+section 20); before the first release every upgrade is none and is refused
+in those words.
+
+Drafted for the owner, 2026-10-20, each marked so in ADR-0015's amendment:
+an index added to a table already made is refused by the definition's test
+until the embedded engines can write its entries for the records they keep;
+a database that recorded no version is recorded at the build's, since
+before this every store was made at version 1 and none is released; on a
+database server, whose login may not alter the schema, a Storage node will
+refuse a database older than its build too, naming the scripts to run, once
+that backend is built; and version 1's fingerprint is recorded at the first
+release.

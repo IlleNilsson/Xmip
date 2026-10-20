@@ -10,6 +10,13 @@
 SET ROLE xmip_owner;
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE xmip.schema_version (
+    version integer NOT NULL,
+    recorded_at timestamptz NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (version)
+);
+
 -- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind text NOT NULL,
@@ -20,6 +27,9 @@ CREATE TABLE xmip.administration (
 );
 
 CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
+
+-- The schema version it holds now.
+INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, now());
 
 GRANT USAGE ON SCHEMA xmip TO xmip_storage;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA xmip TO xmip_storage;

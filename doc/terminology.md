@@ -359,6 +359,17 @@ to the Storage node, over its own TLS; behind a database server, encryption
 at rest is IT's; an embedded Storage node, test nodes included, encrypts its
 own files itself (ADR-0063, amendment 2026-10-01).
 
+Every database records its **schema version** — the release of the schema it
+holds — in a table of its own, `schema_version`, one row for each version it
+has held; it holds the highest. A release's schema only adds to the one
+before, and its **upgrade** is the difference between the two, one script to
+each database, `04-<domain>-upgrade-<from>-<to>.sql`; nothing is dropped or
+renamed. An embedded Storage node brings its databases to its build's version
+as it starts; a database server's are brought there by IT, who runs the
+scripts. A Storage node refuses a database newer than its build, and
+publishes the version each holds at `<node>/storage/<domain>` (open problem
+41; ADR-0015, amendment 2026-10-20).
+
 ## Dead Message Queue
 
 **Dead Message Queue.** Where an accepted Message goes when **no Subscription

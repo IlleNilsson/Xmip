@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -23,7 +23,8 @@ turned into a build by `Build-XmipService` (amendments 2026-10-01 and
 among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
-(amendment 2026-10-13).
+(amendment 2026-10-13). Every database records its schema version, and a
+release's upgrade scripts only add (amendment 2026-10-20).
 
 ## Context
 
@@ -594,3 +595,66 @@ node built without a policy permits nothing, and with it a file dropped
 in is received and sent on (ADR-0050, amendment 2026-10-20). Every build
 of `xmip-service` carries the authenticate capability, its `circumstance`
 verifier among it (ADR-0019, amendment 2026-10-20).
+
+## Amendment, 2026-10-20: every database records its schema version, and an upgrade only adds
+
+**Provenance.** Open problem 41. The owner, 2026-10-12: *The database
+creation scripts are very static, that might be good since we have not
+published. But when we have they have to alter databases and schema
+objects.* And on 2026-10-19, agreeing to the problem's proposal as written:
+*each database records its schema version, and the upgrade scripts are
+generated as the difference between releases, adding only*.
+
+**Every Xmip database records the schema version it holds**, the runtime,
+the administration and the audit database alike, on every engine and
+server: a table of its own, `schema_version`, its columns `version` and
+`recorded_at`, a row for each version the database has held — the one it
+was made at and each an upgrade reached. The version it holds is the
+highest. This build's is `persist::storage::schema::VERSION`; until the
+first release the schema is version 1 and changes in place, as nothing is
+released, and nothing of a schema before this is kept or migrated
+(CONTRIBUTING: until the first release, nothing is deprecated).
+
+**A release's schema only adds to the one before.** Every table, column and
+index of the one schema definition says the version that added it
+(`since`). The schema at a version is everything added at it or before; the
+difference between two releases is everything added after the first, up to
+the second: a table made, a column added to a table already there, an index
+made. Nothing is dropped or renamed — the definition has no way to say it —
+and its test holds what it may say: a column added to a table already made
+may hold nothing, a key is the table's from the first, and a released
+schema's fingerprint (`RELEASED`) never changes.
+
+**The upgrade scripts are generated from it**, one to each database,
+`04-<domain>-upgrade-<from>-<to>.sql`, beside the scripts that make a
+database (`deploy/database/<server>/`, held by `cargo test --test
+database`): one for each release after the first, run in order of their
+versions, each recording the version it reached. `03-<domain>-schema.sql`
+makes `schema_version` and records the version it made. Generating them is
+a tool act, `xmip-cli database <server> --from <version> [--to <version>]
+[--out <folder>]` and `Get-XmipDatabaseScript -Server -From [-To] [-Path]`,
+over one export, `xmip_database_upgrade_v1` (`xmip_operate.h` section 20):
+from any release to the build's.
+
+**At its start a Storage node reads each database's version.** The
+embedded Storage node records each version after the one a database holds
+— a step adds nothing else there: a table is a kind of record, a column a
+value of the sealed body — and refuses a database newer than its build, in
+words naming both versions; a database is never stepped down. Every node
+that keeps databases publishes each at `<node>/storage/<domain>`, its
+evidence `schema version <n> on <engine>`, so every surface shows the
+version each holds.
+
+**Drafted for the owner** (not yet his):
+
+- An index added to a table already made is refused by the definition's
+  test until the embedded engines can write its entries for the records
+  they keep; the server's script would make it, but an embedded Storage
+  node's index would hold only what is written after.
+- A database that recorded no version is recorded at the build's version
+  as it opens: every store before this change was made at version 1, and
+  none is released.
+- On a database server, whose login may not alter the schema, a Storage
+  node refuses a database older than its build too, naming the upgrade
+  scripts IT runs — once that backend is built.
+- Version 1's fingerprint is recorded in `RELEASED` at the first release.
