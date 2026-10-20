@@ -73,6 +73,7 @@ fn ended(directory: &Path, child: Child, mut ending: Ending, said: &Receiver<Str
 
 #[test]
 fn an_order_is_acted_on_the_moment_it_is_left() {
+    let _machine = alone();
     let (directory, child, ending, said) = started("told", true);
     let operator = operator();
     let plain = PlainWake::start();
@@ -125,6 +126,7 @@ fn file_taken(beside: &Path) -> Duration {
 
 #[test]
 fn a_service_nothing_tells_uses_next_to_no_processor() {
+    let _machine = alone();
     // Nothing started, so what is measured is the service's own: a
     // Receive Location's transport waits on its own terms.
     let (directory, child, ending, said) = started("idle", false);
@@ -137,9 +139,12 @@ fn a_service_nothing_tells_uses_next_to_no_processor() {
     let used = processor_time(&child).saturating_sub(from);
     let over = began.elapsed();
     println!("an idle service used {used:?} of processor time in {over:?}");
+    // Held per second of the window read: the second reading is taken as
+    // PowerShell starts, which on a busy machine is seconds past the sleep.
+    let bound = IDLE.mul_f64(over.as_secs_f64().max(1.0));
     assert!(
-        used < IDLE,
-        "an idle service used {used:?} of processor time in {over:?}"
+        used < bound,
+        "an idle service used {used:?} of processor time in {over:?}, over {bound:?}"
     );
     ended(&directory, child, ending, &said);
 }

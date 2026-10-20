@@ -267,7 +267,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   `runtime-model.md` section 10), a polled Receive Location's rest after a
   receive that found nothing and after a failure that may mend
   (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
-  section 5), how long a stopping Receive Location drains what its far end
+  section 5), the recovery sweep of a Location whose far end tells it of a
+  change (`receive_sweep`, built 2026-10-20; ADR-0024, amendment
+  2026-10-20), how long a stopping Receive Location drains what its far end
   already let go of (`receive_drain`, built 2026-10-15, the same section),
   how long each read of a TLS handshake a Receive Location terminates waits,
   apart from the Location's own wait (`receive_handshake`, built

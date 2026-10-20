@@ -74,8 +74,13 @@ PowerShell 7 first, in whichever way your system offers:
 ```sh
 winget install Microsoft.PowerShell          # Windows
 sudo snap install powershell --classic       # Linux, any distribution with snap
+sudo apt-get install -y powershell           # Debian, Ubuntu; Microsoft package repository required
+sudo dnf install -y powershell               # Fedora, RHEL; Microsoft package repository required
 brew install powershell                      # macOS
 ```
+
+Every command on this page runs inside `pwsh` and is the same on all three
+platforms.
 
 `rust-toolchain.toml` at the root picks the Rust compiler for you, so there is
 no version to choose. RocksDB, the runtime store, is C++: every build links
@@ -145,6 +150,21 @@ PowerShell Console; where a package manager cannot install one, it says
 `MANUAL` and prints what to run instead.
 
 In any later session, `Import-Module -Name Xmip` is enough.
+
+A console of its own, in Windows Terminal: add a profile whose starting
+directory is the clone and whose command line is
+
+```text
+pwsh -NoExit -Command "Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1"
+```
+
+Do not add `-NoProfile`. posh-git is imported by a PowerShell profile file,
+`-NoProfile` skips every one of them, and the prompt then shows
+`PS D:\Repos\Xmip>` with no repository state (the owner's console,
+2026-09-18). Leave the Xmip status segment out of the command line and import
+it in the session that wants it: a console holding that module holds its
+assemblies, and a build into them fails until it is closed. That console is
+`pwsh`, which `Get-Process -Name xmip-*` does not find.
 
 ## 4. Compile
 
@@ -412,10 +432,14 @@ Move-Item -Path .local-work/node/order.edi -Destination .local-work/node/in/
 ```
 
 A file is written beside the folder and moved in, as a producer that means a
-file to be whole drops it. The node lists its drop folder at an interval,
-`[tuning] receive_poll`, and takes a file once two listings agree it is
-whole, so within a second or two it is gone from `in` and is in `out` under
-the same name, whole:
+file to be whole drops it. The file system tells the node the moment a file
+lands in its drop folder; it lists the folder then and takes the file once no
+writer holds it open, so within a few milliseconds it is gone from `in` and
+is in `out` under the same name, whole. A file still being written is left
+until its writer closes it. On Linux and macOS, where the system does not say
+whether a writer holds a file, the node takes it once two listings agree it
+is unchanged, the second at the next change or at its recovery sweep,
+`[tuning] receive_sweep`, a second by default:
 
 ```powershell
 Get-ChildItem -Path .local-work/node/out
@@ -492,8 +516,21 @@ send.
 
 ```powershell
 Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
+    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -OnlineNodes R1
 ```
+
+`-NodeRole` states each node's roles — receiving, processing and sending one
+stage each, or `executing` for all three in one process, the low-latency
+choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
+Omit `-Nodes` and the run takes the test cluster's `test/xmip.toml` as it is,
+whose `[nodes.R1] roles = "receiving"` and so on cover the whole path. A node
+given no role declares none and runs the shared-directory tests whole, which
+`Start-XmipTest` says in words before it starts anything. `-OnlineNodes R1`
+records that `R1` may assume a route to the internet and the others may not
+(ADR-0045): it is the receiving edge, the node that may obtain its server
+certificate over ACME from a public authority (ADR-0033, ADR-0034;
+[built, not in the assembled service](architecture/estate-map.md#certificate-provisioning)).
+The switch permits; nothing in the Playground reaches out.
 
 It returns at once and builds in the background. Ask how it is going:
 
@@ -519,6 +556,49 @@ Get-XmipScope -Scope xmip:///C1/*
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- show xmip:///C1
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- measure xmip:///C1
 Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
+```
+
+The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the board
+that follows receive, process and send as the cluster moves. Beside it are
+Configuration, the classic tree of the whole cluster, and Topology, the
+cluster's own communication.
+
+A roll is one cluster's test, and the cluster is a process the roll spawns
+(ADR-0052, amendment 2026-09-19); two rolls are two clusters side by side.
+Start a second before stopping the first, and one web host serves them both;
+the views say which cluster they are on and move between them (ADR-0052,
+amendment 2026-09-20):
+
+```powershell
+Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
+    -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' } -OnlineNodes R1
+Get-XmipTestStatus | Start-XmipOperationWeb
+```
+
+`P1` carries two roles because `-NodeRole` says so, not because of its name,
+and `C2`'s `R1` is not `C1`'s: each cluster names its own nodes, and Xmip
+reads none of those names (the owner, 2026-09-20: *Rn, Pn and Sn are
+arbitrary node names*, and the same of clusters).
+
+The prompt follows one cluster and says how many it is not showing —
+`[C2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters are the three stages of the
+message path, the one place in Xmip where a letter means anything, and each
+is what that stage moves per second, not a total since the roll began:
+`R:0/s` says stalled, which a rising total never can, and a dash says there
+has been only one publication so far. T and F are counts, on the line only
+when above zero. `xmip-cli --snapshot <path>` names which cluster the
+executable reads; it answers one cluster per invocation and shows totals,
+because a single reading has no interval to take a rate over.
+
+Every System Process Xmip owns is named `xmip-<what>` and declares its name,
+its location and its purpose, test or runtime (ADR-0053). A Playground
+process says which cluster and which node it is — `xmip-playground-C1-roll`,
+`xmip-playground-C1-cluster`, `xmip-playground-C1-node-R1` (amendment
+2026-09-20). `Get-XmipProcess` lists them with what they said, and one line
+stops every one of them, whatever started it:
+
+```powershell
+Get-Process -Name xmip-* | Stop-Process -Force
 ```
 
 Stop when you are done:

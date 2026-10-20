@@ -15,14 +15,26 @@
 //! its dropped name goes from the drop directory — to the moment the file
 //! is whole in the send directory: read, the three gates, the Ledger
 //! write, the route, the Journey, the send step and the sent file's write,
-//! sync and rename. How long a file waits in the drop directory before it
-//! is claimed is the operator's polling cadence and the stability check
-//! (`[tuning] receive_poll`), not work, and is printed apart. The rounds
-//! are printed as `xcore::latency` spreads them.
+//! sync and rename. The payload's own work is measured beside it: the
+//! dropped file opened and read, the sent file written, synced and renamed
+//! as a send writes it, and the Ledger's durable copy of it — the payload
+//! appended to a file kept open and synced, as the write-ahead log keeps
+//! it; **what is left is Xmip's
+//! own share, and it is held under a millisecond**, the fastest of five,
+//! beside the machine's own wake for each hand-off between threads the
+//! path makes (`xcore::latency::PlainWake`, measured round by round under
+//! the same load; `CONTRIBUTING.md`, *Rust is here for one reason*), run
+//! alone among the tests here. How long a file
+//! waits in the drop directory before it is claimed is printed apart: the
+//! file system's change notification wakes the Location, which lists the
+//! directory and claims the file by its turn and rename (ADR-0024,
+//! amendment 2026-10-20), so it is held under ten milliseconds — never the
+//! recovery sweep's second (`[tuning] receive_sweep`). The rounds are
+//! printed as `xcore::latency` spreads them.
 
 use std::path::Path;
 
-use xmip_core::latency::{FIVE, spread};
+use xmip_core::latency::{FIVE, PlainWake, spread};
 use xmip_runtime::directory_watch::DirectoryWatch;
 
 use super::*;
@@ -30,9 +42,19 @@ use super::*;
 /// How many files are carried, one after another.
 const ROUNDS: usize = 2 * FIVE;
 
-/// The poll a drop directory is listed at here: the operator's cadence,
-/// which a file waits at least once before its stability check takes it.
-const POLL: &str = "50ms";
+/// The most Xmip's own share of a carried file may take, the fastest of
+/// five, beside the machine's own wakes: the millisecond rule.
+const OWN: Duration = Duration::from_millis(1);
+
+/// The hand-offs between threads a carried file makes: the claim to its
+/// carrying thread, to the Storage node's writer and back, to the send
+/// step and to its sending thread.
+const HAND_OFFS: u32 = 5;
+
+/// The most a dropped file may wait for its claim, the fastest of five:
+/// a word from the file system and the claim's few steps there, never a
+/// poll or the sweep.
+const CLAIM: Duration = Duration::from_millis(10);
 
 /// The longest any one file may take from its drop to its arrival: a
 /// bound on the test, never on Xmip; what Xmip does is measured apart.
@@ -60,9 +82,6 @@ name = "xmip-{node}"
 cluster_name = "{cluster}"
 node_name = "{node}"
 data = "data"
-
-[tuning]
-receive_poll = "{POLL}"
 
 [[applications]]
 name = "Loopback"
@@ -129,6 +148,7 @@ fn told(changed: &Receiver<()>, deadline: Instant, holds: impl Fn() -> bool) -> 
 
 #[test]
 fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
+    let _machine = alone();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-carried-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
@@ -151,6 +171,9 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
     let (in_changed, _in_watch) = watched(&drop);
     let (out_changed, _out_watch) = watched(&out);
     let (mut worked, mut waited, mut file) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut log, mut logged) = (kept_open(&directory.join("ledger.log")), Vec::new());
+    let mut read = Vec::new();
+    let (plain, mut woke) = (PlainWake::start(), Vec::new());
     for round in 0..ROUNDS {
         let name = format!("order-{round}.edi");
         let content = format!("ISA*00*{round}*").repeat(64 + round).into_bytes();
@@ -175,10 +198,20 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
         worked.push(arrived - claimed);
         waited.push(claimed - dropped);
         file.push(written_whole(&directory.join("beside"), &content));
+        read.push(read_whole(&directory.join("beside").join("order.edi")));
+        logged.push(appended(&mut log, &content));
+        woke.push(plain.round().0);
     }
+    std::mem::drop(log);
     let worked = spread("a claimed file to its file sent", worked);
-    let waited = spread("a dropped file to its claim, at the poll", waited);
+    let waited = spread(
+        "a dropped file to its claim, told by the file system",
+        waited,
+    );
     let file = spread("its file written, synced and renamed beside it", file);
+    let logged = spread("its Ledger copy appended and synced beside it", logged);
+    let read = spread("its dropped file opened and read beside it", read);
+    let wake = spread("a plain channel's wake beside it", woke).fastest_of_five;
 
     stop(&child);
     let stopped = heard(&said, "stopped by the console", Duration::from_secs(5));
@@ -214,12 +247,61 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
         let said = format!("\"{each}\" = \"{ROUNDS}\"");
         assert!(audit.contains(&said), "{said} in {audit}");
     }
+    let load = read.fastest_of_five + file.fastest_of_five + logged.fastest_of_five;
+    let own = worked.fastest_of_five.saturating_sub(load);
     println!(
-        "carried {ROUNDS} files: Xmip's work {:?} fastest of five, of which the sent file's own \
-         write, sync and rename {:?}; waiting at the poll {:?}",
-        worked.fastest_of_five, file.fastest_of_five, waited.fastest_of_five
+        "carried {ROUNDS} files: {:?} fastest of five, of which the dropped file's read {:?}, the \
+         sent file's own write, sync and rename {:?} and its Ledger copy {:?}: Xmip's own share \
+         {own:?} ({:?} beyond the sent file alone); waiting for the claim {:?}",
+        worked.fastest_of_five,
+        read.fastest_of_five,
+        file.fastest_of_five,
+        logged.fastest_of_five,
+        worked.fastest_of_five.saturating_sub(file.fastest_of_five),
+        waited.fastest_of_five
+    );
+    let bound = OWN + wake * HAND_OFFS;
+    assert!(
+        own < bound,
+        "Xmip's own share {own:?}, over {bound:?}: {OWN:?} and the machine's wake {wake:?} \
+         for each of {HAND_OFFS} hand-offs"
+    );
+    assert!(
+        waited.fastest_of_five < CLAIM,
+        "a dropped file waited {:?} for its claim",
+        waited.fastest_of_five
     );
     let _ = std::fs::remove_dir_all(&directory);
+}
+
+/// How long the file at `path` takes to open and read whole: the load the
+/// dropped file's own read carries, measured beside Xmip's work.
+fn read_whole(path: &Path) -> Duration {
+    let began = Instant::now();
+    let read = std::fs::read(path).expect("read");
+    let took = began.elapsed();
+    assert!(!read.is_empty(), "read whole");
+    took
+}
+
+/// A file kept open to append to, as the Ledger's write-ahead log is.
+fn kept_open(path: &Path) -> std::fs::File {
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .expect("opened")
+}
+
+/// How long `content` takes to append to `log` and sync: the Ledger's
+/// durable copy of the payload, the load its write carries, measured
+/// beside Xmip's work.
+fn appended(log: &mut std::fs::File, content: &[u8]) -> Duration {
+    use std::io::Write;
+    let began = Instant::now();
+    log.write_all(content).expect("appended");
+    log.sync_data().expect("synced");
+    began.elapsed()
 }
 
 /// How long `content` takes to write as a file send writes it — beside,

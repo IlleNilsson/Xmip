@@ -9,6 +9,8 @@
 - Amended: 2026-10-19 — a listing claims no more than there is room for; a
   sent file not yet in place is its node's, and its node removes it as it
   starts
+- Amended: 2026-10-20 — a file Send Location's address names a directory; a
+  drop directory tells, and a file is finished when no writer holds it
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -20,8 +22,8 @@
 - Subject: A claim at the endpoint, not a lease inside Xmip
 - Name: A claim at the endpoint
 - Order: 7
-- Concepts: Claim, claimable artifact; Exclusiveness, leases, renewal (retired);
-  Journey claim
+- Concepts: Change notification, a drop directory told; Claim, claimable
+  artifact; Exclusiveness, leases, renewal (retired); Journey claim
 - Note: supersedes ADR-0017
 
 `xmip-core-exclusiveness` is retired — the module, the repository, the four
@@ -38,7 +40,9 @@ one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
 the file's turn and renaming it, object stores and databases by their own
 exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
 as a Journey is claimed. Several nodes may poll one directory; the stability
-check stays.
+check stays where the system cannot say whether a writer holds a file. A
+drop directory tells the Location of a file as it lands, and its poll is a
+recovery sweep (amendment 2026-10-20).
 
 ## Context
 
@@ -533,3 +537,52 @@ Provenance: the ruling is the owner's, 2026-10-19; `file.name`, the `KEPT`
 list, handing the context with the body and the refusals' words are the
 assistant's, 2026-10-20. What a file Send Location writes for a Message that
 carries no file name is open (open problem 33).
+
+## Amendment, 2026-10-20: a drop directory tells, and a file is finished when no writer holds it
+
+A file dropped on the getting-started node waited about 1.7 seconds for its
+claim (`doc/getting-started.md`), and 64 to 77 ms at a 50 ms poll in
+`.src/test/service/carried.rs`: the Location listed its directory at its
+poll interval, and took a file only at the listing after the one that found
+it unchanged. The owner, 2026-10-20: *make the file Receive Location react to
+the file system's change notification, and keep the stability check
+correct: a file being written must never be taken half-written. Keep
+polling only as a recovery sweep. Its cadence is a default in `[tuning]`,
+set per cluster and node in the Cluster TOML.*
+
+- **The drop directory tells.** A polled technology whose far end tells of
+  a change says where (`transport::Transport::notice`, `transport::Notice`);
+  the file transport names its drop directory. The runtime watches it with
+  the operating system's change notification (`runtime::directory_watch`,
+  which tells now also of a file grown or written and closed, on Windows),
+  and a Location that found nothing rests until the word comes
+  (`stopping::Nudge`). A drop directory not there yet is polled until it is.
+- **The poll is a recovery sweep.** Where no word comes, the rest lasts
+  `[tuning] receive_sweep`, a second by default, set per cluster and per
+  node as every `[tuning]` value is (ADR-0031, amendment 2026-10-03): for
+  a file that lay there before the watch began, or a word missed.
+  `receive_poll` stays the rest of a Location nothing tells.
+- **A file is finished when no writer holds it, where the system says.**
+  The claim asks its site whether a writer still holds a file
+  (`transport::claim::ClaimSite::finished`). On Windows the file transport
+  opens the file sharing reading and deleting and not writing, which the
+  system refuses while any handle writes it: a file a producer writes in
+  place — paused or not — is never taken, and one renamed in whole or
+  closed is taken by the listing its change wakes. Where the system cannot
+  say — Linux, macOS, the file family's remote sites — clause 5's stability
+  check decides as before, its second listing at the next change or sweep.
+  Either way a file is claimed only if its stamp is still what the listing
+  found once its turn is held.
+- **A listing asks the file system nothing more per file** than the
+  directory read carries, its length and time.
+
+Measured after (2026-10-20, three runs): a file waits 1.57 to 1.79 ms, the
+fastest of five, from its drop to its claim — the word, the listing, the
+probe, the turn and the rename on the file system — and `carried.rs` holds
+it under ten milliseconds, never the sweep's second.
+
+Provenance: the ruling is the owner's, 2026-10-20; the writer's probe, the
+sweep's name and its default of a second are the assistant's, for the owner
+to confirm or strike. Taking a file at once on Linux and macOS — a close
+after writing the watch already hears, told by name — is open (open problem
+33).

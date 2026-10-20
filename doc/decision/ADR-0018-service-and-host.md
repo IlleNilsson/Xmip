@@ -18,7 +18,8 @@
 - Subject: One Service per node, and it stays out of the message path
 - Name: The Service and the Host Services
 - Order: 5
-- Concepts: Budget, what a node holds beside its pools; Host Service; Service, the Xmip Service
+- Concepts: Budget, what a node holds beside its pools; Durable, a Publication
+  answered before its sync; Host Service; Service, the Xmip Service
 
 The Xmip Service is the master and the only thing the operating system starts.
 It reads the node configuration, builds and validates the execution tree, then
@@ -934,3 +935,55 @@ held within the same memory (1.6 to 1.8 MB of four sends of 64 MiB).
 Provenance: the ruling and the test's terms are the owner's, 2026-10-20;
 the size of what is kept and how one behind comes back are the
 assistant's.
+
+## Amendment, 2026-10-20: a Publication is answered before its sync, and a far end sees it only once durable
+
+Measured against the millisecond rule on the getting-started node
+(`.src/test/service/carried.rs`), a file took 6.2 ms, the fastest of five,
+from its claim to its file whole in the send directory, of which the sent
+file's own write, sync and rename took 2.8 ms: some 3.4 ms of Xmip's own.
+Profiled step by step, the gates, the route and the hand-offs between
+threads were each tens of microseconds; the Publication's sync of the
+write-ahead log was 1.6 to 2.1 ms of it, and the send began only after it.
+
+- **The writer answers once written, and syncs after.** The embedded
+  Storage node's one writer writes a batch unsynced, answers every write in
+  it with the batch's durability (`persist::storage::Durable`), then syncs
+  the write-ahead log (`persist::Engine::sync`: `RocksDB`'s `flush_wal`, a
+  full checkpoint of `SQLite`'s log). Every write but a Publication is
+  waited on until durable, as before (`Committer::submit`); a Publication
+  is answered with its claims and its durability (`XmipStorage::publish`).
+  A Storage node reached over the network answers once durable there.
+- **The receive cycle still ends once durable.** It hands the Journeys it
+  claimed to the send step as soon as the Publication is decided, then
+  waits for its durability before the sender is acknowledged; a sync that
+  fails fails the cycle, and the sender sends again.
+- **No far end sees a Message the Ledger could lose.** A technology whose
+  send keeps what its far end sees back says so (`Transport::holds_back`)
+  and is handed the Message at once, waiting for it to be durable
+  (`Outgoing::kept`) before the step that lets the far end see it: the file
+  transport writes and syncs its file beside the target while the Ledger
+  syncs, and renames it into place last. Every other technology is handed
+  the Message once durable (`departure::depart_one`), so nothing changes
+  for it.
+- **A file send makes its directory only where it is not there**, rather
+  than asking the file system on every send.
+
+Measured after (2026-10-20, three runs): 3.68 to 3.87 ms the fastest of five,
+the sent file's own work 2.06 to 2.08 ms beside it and the Ledger's own
+durable copy — the payload appended to a file kept open and synced, as the
+write-ahead log keeps it — 0.98 to 1.06 ms: what is left, Xmip's own share,
+is 0.60 to 0.83 ms. `carried.rs` holds it under a millisecond beside the
+machine's own wake for each of the path's five hand-offs between threads
+(`xcore::latency::PlainWake`), and runs alone among the service tests, the
+others sharing the machine and it taking it whole. Beyond the
+sent file alone it is 1.6 to 1.8 ms, the Ledger's own sync among it: the two
+syncs land on one disk, which takes them one after the other, so the sent
+file's sync waits for the Ledger's. Taking the Ledger's sync off that path
+would mean letting a far end see a Message before the Ledger holds it, a
+duplicate after a crash; that is the owner's to decide (open problem 33).
+
+Provenance: the measurement and the rule are the owner's, 2026-09-26 and
+2026-10-20; answering before the sync, holding a far end back and counting
+the Ledger's durable copy as the payload's load are the assistant's,
+2026-10-20, for the owner to confirm or strike.
