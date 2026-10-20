@@ -16,7 +16,11 @@
     on each, so nothing here assumes winget. The manifest declares a package per
     operating system and per manager, and this picks the one actually present.
 
-    Reporting is the default. -Install acts, the same rule as Sync-XmipEstate.
+    Reporting is the default. -Install acts, the same rule as Sync-XmipEstate:
+    it installs what is missing and what is below its floor. An optional
+    toolchain is taken only with -IncludeOptional; without it, one absent is
+    SKIPPED OPTIONAL and one below its floor OUTDATED OPTIONAL, and neither
+    fails the run.
 
     It never elevates. Where a prerequisite needs administrative rights it says
     so and prints the command, because a setup script that silently runs
@@ -26,7 +30,7 @@
     module is written in it, and #requires above states the floor.
 
 .EXAMPLE
-    Import-Module ./Xmip.psm1
+    Import-Module -Name ./Xmip/Xmip.psd1
     Install-XmipPrerequisite -Role developer
 
 .EXAMPLE
@@ -143,18 +147,31 @@ function Install-XmipPrerequisite {
         # Probe before honoring optional. Optional means you need not have it,
         # not that any version will do — a machine with an older .NET installed
         # would otherwise build the GUI surfaces against it and never be told.
+        # One below its floor goes on to what installs a missing one, so
+        # -Install installs the current one and a report says how.
+        [bool] $outdated = $false
         if ($found) {
             if (Test-XmipFloor -Name $name -Found $found -Minimum $minimum) {
                 Write-Host "PRESENT: $name  ($found)"
                 Add-XmipPrerequisiteResult -Name $name -Status 'present' -Detail $found
+            }
+            elseif ($optional -and -not $IncludeOptional) {
+                # Told, never blocking: every language but Rust is optional
+                # (the owner, 2026-10-20), so an old Python on a machine that
+                # only wants the Rust side must not refuse it.
+                Write-Warning ("OUTDATED OPTIONAL: $name is $found; " +
+                    "Xmip requires $minimum or later where it is used. ADR-0021.")
+                [string] $below = "$found < $minimum"
+                Add-XmipPrerequisiteResult -Name $name -Status 'outdated-optional' -Detail $below
             }
             else {
                 Write-Warning ("OUTDATED: $name is $found; " +
                     "Xmip requires $minimum or later. ADR-0021.")
                 [string] $below = "$found < $minimum"
                 Add-XmipPrerequisiteResult -Name $name -Status 'outdated' -Detail $below
+                $outdated = $true
             }
-            continue
+            if (-not $outdated) { continue }
         }
 
         if ($optional -and -not $IncludeOptional) {
@@ -181,6 +198,9 @@ function Install-XmipPrerequisite {
             if ($good) {
                 Write-Host "PRESENT: $name  ($newest)"
                 Add-XmipPrerequisiteResult -Name $name -Status 'present' -Detail 'psgallery'
+            }
+            elseif ($outdated -and -not $Install) {
+                Write-Host "    Install-XmipPrerequisite -Install installs $id from the gallery"
             }
             elseif (-not $Install) {
                 [string] $why = 'MISSING: {0}' -f $name
@@ -280,9 +300,11 @@ function Install-XmipPrerequisite {
             continue
         }
         if (-not $Install) {
-            Write-Warning "MISSING: $name"
+            if (-not $outdated) {
+                Write-Warning "MISSING: $name"
+                Add-XmipPrerequisiteResult -Name $name -Status 'missing' -Detail $line
+            }
             Write-Host "    $line"
-            Add-XmipPrerequisiteResult -Name $name -Status 'missing' -Detail $line
             continue
         }
         if ($PSCmdlet.ShouldProcess($name, $line)) {
@@ -341,7 +363,8 @@ function Install-XmipPrerequisite {
         }
     }
 
-    # The event source the audit fallback writes under (ADR-0062).
+    # The event source the audit fallback writes under (ADR-0062), and the
+    # RocksDB library every build under the root links (.cargo/config.toml).
     [hashtable] $source = @{
         Manifest     = $manifest
         ManifestPath = $ManifestPath
@@ -350,7 +373,7 @@ function Install-XmipPrerequisite {
         Caller       = $PSCmdlet
     }
 
-    foreach ($said in @(Install-XmipEventSource @source)) {
+    foreach ($said in @(Install-XmipEventSource @source; Install-XmipNativeLibrary @source)) {
         $results.Add($said)
     }
 

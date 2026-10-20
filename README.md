@@ -37,6 +37,7 @@ repositories are mounted under `module/` as git submodules.
 
 | Reader | Start here |
 | --- | --- |
+| Trying Xmip on your own computer | [Getting started](doc/getting-started.md): clone, build, configure, carry a file in to a file out, watch it |
 | New to Xmip | [Beginner](#beginner) |
 | Responsible for the engineering | [Chief Engineering Officer](#chief-engineering-officer) |
 | Evaluating Xmip for an organization | [Chief Information Officer](#chief-information-officer) |
@@ -212,6 +213,9 @@ starter configuration `--install` writes declares it for its one node.
 
 ### First run
 
+[Getting started](doc/getting-started.md) is the same first run step by
+step, through a node of your own that carries a file in to a file out.
+
 1. Install PowerShell 7.6.7 or later. Windows PowerShell 5.1 is a different
    product and is not supported.
 
@@ -229,6 +233,7 @@ starter configuration `--install` writes declares it for its one node.
 2. Clone the estate and load its PowerShell module.
 
    ```powershell
+   git config --global core.longpaths true      # Windows: module paths nest deep
    git clone --recursive https://github.com/IlleNilsson/Xmip.git
    Set-Location -Path Xmip
    Import-Module -Name ./Xmip
@@ -238,6 +243,8 @@ starter configuration `--install` writes declares it for its one node.
 
    `Install-XmipModule` links the module into your user module path. In any
    later shell, `Import-Module -Name Xmip` is sufficient.
+   `Install-XmipPrerequisite -Install` also compiles, once per RocksDB
+   version, the RocksDB library every build links; nothing builds before it.
 
    A console of its own, in Windows Terminal: add a profile whose starting
    directory is the clone and whose command line is

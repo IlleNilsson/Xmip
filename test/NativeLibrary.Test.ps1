@@ -10,16 +10,16 @@
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
-    [string] $configuration = Join-Path -Path $script:Root -ChildPath '.cargo/config.toml'
-    [string] $script:Config = Get-Content -Raw -LiteralPath $configuration
 }
 
 Describe 'RocksDB is linked from the one library kept for its version' {
     It 'names the version every lock resolves, and the library is there' {
-        [string] $named = 'ROCKSDB_LIB_DIR\s*=\s*\{\s*value\s*=\s*"([^"]+)"'
-        $script:Config -match $named | Should -BeTrue
-        [string] $kept = $Matches[1]
-        [string] $version = Split-Path -Leaf $kept
+        # Read as Install-XmipPrerequisite reads it, which compiles it once.
+        $native = & (Get-Module -Name Xmip) {
+            param([string] $Root)
+            Get-XmipNativeLibrary -Root $Root
+        } $script:Root
+        [string] $version = $native.Version
 
         [hashtable] $locks = @{
             Path    = Join-Path -Path $script:Root -ChildPath 'module/platform'
@@ -38,12 +38,10 @@ Describe 'RocksDB is linked from the one library kept for its version' {
         )
 
         [string] $why = "cargo resolves RocksDB $($resolved -join ', ') and " +
-            ".cargo/config.toml links ${version}: build the new one once " +
-            '(ROCKSDB_COMPILE=1 cargo build in module/platform/persist/rocksdb), ' +
-            'copy rocksdb.lib from its build out directory to ' +
-            '.local-work/native/rocksdb/<version>, and name it there'
+            ".cargo/config.toml links ${version}: name the new version there, then " +
+            'Install-XmipPrerequisite -Install compiles it once'
 
         $resolved | Should -Be @($version) -Because $why
-        Join-Path -Path $script:Root -ChildPath "$kept/rocksdb.lib" | Should -Exist
+        $native.Library | Should -Exist
     }
 }

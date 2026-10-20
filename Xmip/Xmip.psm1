@@ -242,6 +242,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Test-XmipFloor.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipPrerequisite.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipEventSource.ps1')
+. (Join-Path $PSScriptRoot 'Install-XmipNativeLibrary.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPrerequisiteResult.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipComposePlan.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipUnexpectedName.ps1')
