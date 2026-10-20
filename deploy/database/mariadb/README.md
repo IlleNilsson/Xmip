@@ -111,7 +111,10 @@ drop anything. You may not change the schema in any way
 ([`../README.md`](../README.md)); a new release's scripts are run by an
 operator granted `xmip_owner`
 (`GRANT xmip_owner TO '<operator>'@'<host>';`, then, as that operator,
-`SET ROLE xmip_owner;`).
+`SET ROLE xmip_owner;`). A release's upgrade scripts,
+`04-<domain>-upgrade-<from>-<to>.sql`, are run the same way, each on its
+database, in order of their versions ([`../README.md`](../README.md), *A new
+release*).
 
 Then set the login's password and unlock it, so the password is in no file
 and no shell history; quote nothing in it with `'`:

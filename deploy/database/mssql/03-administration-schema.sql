@@ -14,6 +14,14 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE xmip.schema_version (
+    version int NOT NULL,
+    recorded_at datetime2(7) NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (version)
+);
+GO
+
 -- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind nvarchar(32) NOT NULL,
@@ -25,6 +33,10 @@ CREATE TABLE xmip.administration (
 GO
 
 CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
+GO
+
+-- The schema version it holds now.
+INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, SYSUTCDATETIME());
 GO
 
 CREATE USER xmip_storage FOR LOGIN xmip_storage;

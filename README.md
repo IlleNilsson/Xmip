@@ -616,7 +616,9 @@ SQLite for the administration and the audit databases, each where its table
 `[store]` names, the platform's by default
 ([built, in the assembled service](doc/architecture/estate-map.md#embedded-storage)) — and a
 store naming a key store the build left out, or one that does not open, is
-refused the same way. Xmip Storage on nodes of its own — the nodes
+refused the same way. Each database records its schema version, is brought
+to the build's as it opens and published at `<node>/storage/<domain>`, and
+one newer than the build is refused in words. Xmip Storage on nodes of its own — the nodes
 declaring the `storage` role, which every other node reaches round robin
 from its `[storage] nodes`, over Xmip's own mutual TLS — is built in
 `xmip-core-persist`'s `storage`, and `xmip-service` refuses a node listing
@@ -626,7 +628,9 @@ node declaring neither the `storage` role nor `[storage] nodes` is refused
 as it starts, in words naming both. The
 database servers it is to be put in front of are set up by IT from
 [`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
-[`deploy/database/mssql`](deploy/database/mssql/README.md); a
+[`deploy/database/mssql`](deploy/database/mssql/README.md), and a release's
+upgrade, which only adds, by `xmip-cli database <server> --from <version>`
+and the PowerShell module's database script cmdlet (ADR-0015, amendment 2026-10-20); a
 Storage node reads `[storage.database]` and connects to neither yet
 ([decided, not built](doc/architecture/estate-map.md#database-server)). A
 pause or resume of a Subscription reaches it as an

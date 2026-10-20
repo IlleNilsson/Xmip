@@ -14,6 +14,14 @@ GO
 CREATE SCHEMA xmip AUTHORIZATION xmip_owner;
 GO
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE xmip.schema_version (
+    version int NOT NULL,
+    recorded_at datetime2(7) NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (version)
+);
+GO
+
 -- audit records kept over time, each once, every single value of each in a column of its own, each in its writer's audit chain: its number there, the SHA-256 digest of the record before it and its own.
 CREATE TABLE xmip.audit (
     id binary(16) NOT NULL,
@@ -107,6 +115,10 @@ CREATE TABLE xmip.audit_stream_chunk (
     bytes varbinary(max) NOT NULL,
     CONSTRAINT audit_stream_chunk_key PRIMARY KEY (audit, stream, chunk)
 );
+GO
+
+-- The schema version it holds now.
+INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, SYSUTCDATETIME());
 GO
 
 CREATE USER xmip_storage FOR LOGIN xmip_storage;

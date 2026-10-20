@@ -770,7 +770,8 @@ turned into a build by `Build-XmipService` (amendments 2026-10-01 and
 among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
-(amendment 2026-10-13).
+(amendment 2026-10-13). Every database records its schema version, and a
+release's upgrade scripts only add (amendment 2026-10-20).
 
 → [Packaging and distribution, in full](ADR-0015-packaging.md)
 
@@ -1192,6 +1193,7 @@ You have a word. This gives you the decision that governs it.
 | Retry | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| schema version, upgrade | [Packaging and distribution](ADR-0015-packaging.md) |
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | second link | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |

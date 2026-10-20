@@ -9,6 +9,13 @@
 
 USE `xmip_administration`;
 
+-- each schema version the database has held, the one it was made at and each an upgrade reached, with when; the version it holds is the highest.
+CREATE TABLE `schema_version` (
+    `version` int NOT NULL,
+    `recorded_at` datetime(6) NOT NULL,
+    CONSTRAINT schema_version_key PRIMARY KEY (`version`)
+) ENGINE=InnoDB;
+
 -- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE `administration` (
     `kind` varchar(32) NOT NULL,
@@ -19,5 +26,8 @@ CREATE TABLE `administration` (
 ) ENGINE=InnoDB;
 
 CREATE INDEX `administration_updated` ON `administration` (`kind`, `updated_at`);
+
+-- The schema version it holds now.
+INSERT INTO `schema_version` (`version`, `recorded_at`) VALUES (1, UTC_TIMESTAMP(6));
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON `xmip_administration`.* TO 'xmip_storage'@'%';

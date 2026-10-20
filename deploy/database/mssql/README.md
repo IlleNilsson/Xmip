@@ -111,7 +111,10 @@ rows in the `xmip` schema, and nothing else: it cannot create, alter or drop
 anything, and holds no server role. You may not change the
 schema in any way ([`../README.md`](../README.md)); a new release's scripts
 are run by an operator added to `xmip_owner`
-(`ALTER ROLE xmip_owner ADD MEMBER <operator>;`).
+(`ALTER ROLE xmip_owner ADD MEMBER <operator>;`). A release's upgrade scripts,
+`04-<domain>-upgrade-<from>-<to>.sql`, are run the same way, each on its
+database, in order of their versions ([`../README.md`](../README.md), *A new
+release*).
 
 An identifier is a UUIDv7, kept as `binary(16)`, not `uniqueidentifier`:
 SQL Server sorts `uniqueidentifier` by its last bytes first, which would
