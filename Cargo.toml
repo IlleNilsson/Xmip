@@ -27,19 +27,23 @@ path = ".src/lib.rs"
 # The Xmip Service (ADR-0018, amendment 2026-09-26): the one program the
 # operating system starts, named as ADR-0053 names it. It starts a node from
 # its configuration with the technologies this build linked, and a stop from
-# the service manager or the console drains it.
+# the service manager or the console drains it. Every build carries the
+# authenticate capability, whose `circumstance` verifies a drop folder's
+# implied identity: every node infers one where nothing was presented
+# (ADR-0019 clause 7; the owner, 2026-10-19).
 [[bin]]
 name = "xmip-service"
 path = ".src/service/main.rs"
-required-features = ["node", "audit", "observe"]
+required-features = ["node", "audit", "observe", "authenticate"]
 
 # Starts xmip-service in a console over loopback, carries Messages to it,
 # reads what it publishes, acts on it as a surface does and stops it the way a
-# terminal or a service manager does.
+# terminal or a service manager does; and carries a file dropped in to a
+# file sent out.
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
-required-features = ["node", "audit", "observe", "transport-tcp", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite"]
+required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite"]
 
 # Renders every node configuration deploy/ writes and reads it the way
 # xmip-service reads its own, so a template out of step with the reader fails.

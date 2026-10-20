@@ -577,3 +577,66 @@ a Location's hours and the identities it admits by value have no key yet.
 Provenance: clause 1 and the terminology are the records'; reading the
 `party` list and refusing an unresolved identity are clause 1 applied; the
 drafted points above are the assistant's, 2026-10-19.
+
+## Amendment, 2026-10-20: a Party's id is written with it, its identities state mechanism and purpose, and a drop folder is accepted
+
+The owner ruled on 2026-10-19 on what the amendment of 2026-10-19 drafted,
+and on what a file Receive Location needs to accept on a real node:
+
+- *A Party's identifier:* **each `[[parties]]` entry gets an `id` key
+  holding a UUIDv7 written once with the Party (not its position in the
+  list). Every surface that writes a Party writes one; a configuration
+  without it is refused in words.**
+- *`[[parties]]` identities state their mechanism and purpose* (clause 4):
+  **each identity names the mechanism that verifies it and whether it is
+  for receiving or sending.**
+- *A drop folder's implied identity* (the `circumstance` mechanism, clause
+  7; `terminology.md`, *Implied identity*): **linked into the service and
+  chosen by configuration, so a file Receive Location can accept on a real
+  node.**
+
+Built the same day:
+
+- **`id`** (`configure::PartyConfiguration::id`): a UUIDv7, minted once by
+  `PartyConfiguration::new` (`configure::party::mint`), which the cluster
+  designer's `AddEntry` calls for a Party it adds unless it is given one —
+  the one way every surface writes a Party, since the GUI, the command
+  line and PowerShell each edit the cluster's file through it (ADR-0064,
+  amendment 2026-10-13). A Party with none, with one that is not a UUIDv7,
+  or with another Party's, is a problem every node's binding reports, and a
+  node refuses to start on it: *the Party 'x' has no id: a Party is written
+  with its id, a UUIDv7 minted once with it*. `configure::party::id`, the
+  place counted from one, is deleted with every use; the Playground's
+  Parties carry ids of their own (ADR-0028, amendment 2026-10-20).
+- **Identities** (`configure::PartyIdentity`): `{ mechanism, purpose, value
+  }`, the mechanism by the name it declares, the purpose `receive` or
+  `send` in `xcore::Purpose`'s words (`Purpose::word`, written there once),
+  offered by the designer as a choice of those two. A bare string is
+  refused. A verified identity resolves to the Party holding its value
+  under the mechanism that verified it, for `receive`
+  (`configure::party::holding`, the runtime's `Recognized`), and an
+  identity is held twice only where two Parties hold the same mechanism,
+  purpose and value.
+- **`circumstance`** (`xmip-core-authenticate`'s `Circumstance`): every
+  build of `xmip-service` carries it — the service's required features
+  include `authenticate` — and a Receive Location takes it only where its
+  `accept.mechanism` names it. It verifies what a circumstance is: a claim
+  the node inferred from where the Stream arrived, never one a sender
+  presented, so a passed or detected circumstance is refused, and the
+  verdict is *claimed*. Proved in the assembled service by
+  `.src/test/service/carried.rs`.
+
+The drafted points of 2026-10-19 that these answer are struck: a Party's
+identifier is no longer its place, and a value no longer resolves whatever
+mechanism verified it. What stays drafted: the `location` policy admits
+anyone a Location's closed set authenticated (ADR-0050, amendment
+2026-10-20); the send side's directory still holds no configured Party,
+since a `send` identity presents a credential and where a node's
+credentials live is a later task (open problem 33); a circumstance's value
+is the whole origin of each Stream, `file:///…/order.edi`, so no Party can
+hold it and `accept.party` cannot narrow a drop folder — whether the value
+is the folder is the owner's (open problem 33).
+
+Provenance: the three rulings are the owner's, 2026-10-19, quoted as given;
+where the authenticator lives, what it verifies, the TOML shape of an
+identity and the problems' words are the assistant's, 2026-10-20.

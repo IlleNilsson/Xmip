@@ -509,3 +509,35 @@ keeps the chain walk, the alternative names and the user principal name
 Provenance: the assistant's, 2026-10-19, under open problem 33; the
 location policy's reading — anyone a Location's closed set authenticated —
 is the owner's to overrule (ADR-0019, amendment 2026-10-19).
+
+## Amendment, 2026-10-20: `location` admits each Send Location the node starts, and every build verifies a circumstance
+
+The owner, 2026-10-19, on what permits a send: **the `location` policy also
+admits each Send Location the node starts, as it admits Receive
+Locations.** The amendment of 2026-10-19 left a send refused there.
+
+- **Set up from every Location the node starts.** The runtime hands each
+  policy a program links that way the Locations it starts as it starts —
+  its Receive Locations' gates and its Send Locations
+  (`Linked::location_policies`, `linked::Started`; ADR-0068, amendment
+  2026-10-20) — and `xmip-service`'s `location` admits at each Receive
+  Location what its `accept` takes and at each Send Location the identity
+  the Message arrived under, anyone, as it admits at a Receive Location.
+  Attempted again at every pass, against the clock (`departure.rs`).
+- **`circumstance` is verified in every build**, by
+  `xmip-core-authenticate`'s `Circumstance` (ADR-0019, amendment
+  2026-10-20). Section 4's eighteen are technologies a site links; the
+  circumstance is no technology a site chooses — every node infers it
+  where nothing was presented (ADR-0019 clause 7; the runtime's `arrival`
+  makes the claim) — so its verifier stands beside the capability's
+  trait, not in a repository of its own. Whether it should be a
+  nineteenth repository, `xmip-core-authenticate-circumstance`, is the
+  owner's (open problem 33).
+
+Proved by `.src/test/service/carried.rs`: a file dropped in, accepted by
+the circumstance, admitted by `location` at the Receive Location and at the
+Send Location, arrives in the send directory.
+
+Provenance: the ruling is the owner's, 2026-10-19; admitting anyone at a
+Send Location, as at a Receive Location, and where the circumstance's
+verifier lives are the assistant's, 2026-10-20.

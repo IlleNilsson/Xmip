@@ -30,11 +30,12 @@ fn subject(party: &str) -> String {
 /// The node's configuration in `directory`, its Receive Location `In`
 /// terminating TLS with the node's `receive` certificate, which the test
 /// authority issued and whose anchors are that authority, and taking
-/// `mutual-tls` from the first of [`parties`] alone. Its Location waits a
-/// second per read, not a tenth: the handshake is read under that wait, and
-/// with tests beside this one (`RUST_TEST_THREADS=4`) the test's own client,
-/// on a loaded machine, let a tenth lapse between its handshake messages and
-/// the first Stream was dropped before any gate (2026-10-20).
+/// `mutual-tls` from the first of [`parties`] alone. Its Location waits its
+/// tenth of a second per read of content, as every Location here does: the
+/// handshake is read under its own bound (`[tuning] receive_handshake`), so
+/// a client on a loaded machine whose handshake messages come a tenth
+/// apart is not dropped before any gate (the millisecond rule: a longer
+/// receive wait was never the fix; 2026-10-20).
 fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path::PathBuf {
     let configuration = written(directory, receive);
     let (certificate, key, anchors) = authority.pem("localhost");
@@ -50,7 +51,9 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
         .iter()
         .map(|party| {
             format!(
-                "[[parties]]\nname = \"{party}\"\nidentities = [\"CN={}\"]\n\n",
+                "[[parties]]\nid = \"{}\"\nname = \"{party}\"\nidentities = [\
+                 {{ mechanism = \"mutual-tls\", purpose = \"receive\", value = \"CN={}\" }}]\n\n",
+                xmip_configure::party::mint(),
                 subject(party)
             )
         })
@@ -66,7 +69,7 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
         .replacen(
             "timeout = \"100ms\"\n",
             &format!(
-                "timeout = \"1s\"\ntls = true\n\
+                "timeout = \"100ms\"\ntls = true\n\
                  [applications.receive_locations.accept]\n\
                  mechanism = [\"mutual-tls\"]\nparty = [\"{accepted}\"]\n"
             ),

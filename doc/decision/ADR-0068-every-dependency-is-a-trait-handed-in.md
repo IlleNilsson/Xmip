@@ -95,3 +95,16 @@ receives with is handed to every transport once, as it is built**
 it from `[provision.receive]`, the transport keeps it where its Location's
 settings ask for TLS, and no technology reads a certificate of its own.
 The assistant's, 2026-10-19.
+
+## Amendment, 2026-10-20: the policy is set up from every Location the node starts
+
+`Linked::receive_policies` is renamed `Linked::location_policies`, a
+`fn(Started<'_>) -> Box<dyn Authorizer>`: the runtime, composing, hands it
+the gates of the Receive Locations and the Send Locations its
+configuration starts (`linked::Started`), so the `location` policy admits
+at each Send Location the node starts (the owner, 2026-10-19; ADR-0050,
+amendment 2026-10-20). The old name is deleted with every use. The
+handshake of the TLS handed to a transport is read under its own bound,
+`[tuning] receive_handshake`, which the runtime gives the guard as it
+builds it (`transport::Guard::handshaking_within`; ADR-0033, amendment
+2026-10-20). The assistant's, 2026-10-20.

@@ -8,7 +8,11 @@ description = "A hosted business-to-business exchange: EDI over AS2 and SFTP."
 
 target = "hosted"
 
-roles = ["receiving", "sending", "operational"]
+# One hosted node, and the site the Ansible role builds by default
+# (deploy/dsc/ansible), so it keeps Xmip Storage itself: a one-machine node
+# carries the Storage role (the owner, 2026-10-20; ADR-0056, amendment
+# 2026-10-20).
+roles = ["receiving", "sending", "operational", "storage"]
 
 # The technologies this deployment chose, by repository name (ADR-0015,
 # amendment 2026-10-19).

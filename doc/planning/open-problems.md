@@ -845,7 +845,7 @@ Kept as they are: the composition root, `Linked`, the core traits
 handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, event's
 `Membership` and `Wire`, `IOperatorSurface` and the hosts' DI containers.
 
-## 33. The assembled service receives from one mechanism alone, and sends nothing
+## 33. The assembled service authenticates by two mechanisms alone, and keeps no credentials
 
 Found 2026-10-06 while documenting what is built: `xmip-service`
 (`.src/service/built.rs`) links no authenticator and no authorization policy,
@@ -898,28 +898,80 @@ Party's Stream received over TLS with `mutual-tls`, another Party's refused
 at authentication and audited with its claim, a stranger's certificate
 refused in the handshake; and in each module changed.
 
+*Repaired 2026-10-20: one node carries a file in to a file out.* The
+owner's rulings of 2026-10-19, each built and recorded:
+
+- *The `location` policy also admits each Send Location the node starts,
+  as it admits Receive Locations* — set up from every Location the node
+  starts (`Linked::location_policies`, `linked::Started`; ADR-0050 and
+  ADR-0068, amendments 2026-10-20), so a Message routed onward is sent.
+- *Each `[[parties]]` entry gets an `id` key holding a UUIDv7 written once
+  with the Party* — `configure::PartyConfiguration::id`, minted by
+  `PartyConfiguration::new` and by the designer's `AddEntry`; a Party
+  without one is refused in words; `configure::party::id`, the place, is
+  deleted (ADR-0019, amendment 2026-10-20).
+- *Identities state their mechanism and purpose* — `{ mechanism, purpose,
+  value }`, `purpose` `receive` or `send`; a verified identity resolves by
+  the mechanism that verified it, for `receive` (the same amendment).
+- *A file Send Location's address names a directory*, each Message written
+  under the name it was received under, `file.name` in its context
+  (`context::property::FILE_NAME`, kept by the runtime at arrival); the
+  `out/out` of a relative address is gone; the atomic write and the
+  node-named temporary file are kept (ADR-0024, amendment 2026-10-20).
+- *A drop folder's implied identity is linked into the service and chosen
+  by configuration* — `xmip-core-authenticate`'s `Circumstance`, in every
+  build (`authenticate` is a required feature of `xmip-service`), taken
+  where a Receive Location's `accept.mechanism` names `circumstance`
+  (ADR-0019, amendment 2026-10-20).
+
+Beside them: the TLS handshake a Receive Location terminates is read under
+its own bound, `[tuning] receive_handshake`, apart from the Location's
+wait, and the service test is back to the Location's tenth of a second,
+passing at `RUST_TEST_THREADS=4` across six runs (ADR-0033, amendment
+2026-10-20); and every one-machine example site declares `storage`
+(ADR-0056 and ADR-0015, the amendments of 2026-10-20). Proved in the
+assembled service by `.src/test/service/carried.rs`: one node, roles
+executing and storage, a file Receive Location accepting by circumstance,
+the Loopback Application's Subscription, a file Send Port; ten files
+dropped one after another each arrive whole in the send directory under
+their names, counted in the node's audit.
+
+**Measured against the millisecond rule, and over it.** From the node's
+claim of a dropped file to the file whole in the send directory — read,
+the three gates, the Ledger's write, the route, the Journey, the send step
+and the sent file — took 6.7 to 9.8 ms, the fastest of five, across seven
+runs on 2026-10-20, of which the sent file's own write, sync and rename,
+measured beside it, took 3.3 to 4.8 ms: Xmip's own work beyond the payload
+is some 3 to 5 ms, a defect to find. How long a file waits before it is
+claimed is the operator's poll (`receive_poll`) and the stability check's
+second listing, and is no work; a watched drop directory
+(`runtime::directory_watch`, built and not used by the file transport)
+would end that wait.
+
 What remains of the first part:
 
-- **An authenticator a credential store sets up** (`password`, `basic`,
-  `digest`, `scram`, against `authenticate::store`; `api-key` and `bearer`
-  against `authenticate::secret`): no record says where a node's credential
-  store lives or how configuration names it, so none is linked and a
-  Location accepting one is refused as the node starts. The owner's to
-  decide.
-- **A send is refused at authorization.** The `location` policy speaks for
-  the Receive Locations a node starts and for no Send Location, and nothing
-  else permits a send, so a Message the service routes onward is refused
-  there. Which policy admits a send, and from what configuration, is the
-  owner's.
-- **Drafted, for the owner to confirm or strike** (ADR-0019, amendment
-  2026-10-19): a configured Party's identifier is its place among
-  `[[parties]]`, counted from one; a configured identity names neither its
-  mechanism nor its direction, so a value resolves whatever mechanism
-  verified it, and the send side's directory holds no configured Party;
-  the `location` policy admits anyone a Location's closed set
-  authenticated, with no key for hours or identities by value; the
+- **The credential store is a later task.** An authenticator a credential
+  store sets up (`password`, `basic`, `digest`, `scram`, against
+  `authenticate::store`; `api-key` and `bearer` against
+  `authenticate::secret`) is not linked, since no record says where a
+  node's credentials live or how configuration names them, so a Location
+  accepting one is refused as the node starts; and for the same reason the
+  send side's directory holds no configured Party, so a `send` identity is
+  presented by nothing yet.
+- **Drafted, for the owner to confirm or strike:** the `location` policy
+  admits anyone a Location's closed set authenticated, at a Receive and at
+  a Send Location, with no key for hours or identities by value; the
   certificate a TLS handshake verified is the first claim the first gate
-  takes.
+  takes; the circumstance's verifier lives in the authenticate capability,
+  not a repository of its own (ADR-0050, amendment 2026-10-20); a
+  handshake read waits five seconds by default.
+- **Open, the owner's:** a circumstance's value is each Stream's whole
+  origin, `file:///…/order.edi`, so no Party can hold it and `accept.party`
+  cannot narrow a drop folder to a Party — recommended: the value is the
+  folder; what a file Send Location writes for a Message that carries no
+  `file.name` — refused in words today; recommended: a name the Send
+  Location's configuration gives, taking the Message's identifier where
+  nothing else names it.
 - **Not reported or not published:** the peer's chain (`tls.peer.chain`),
   so `certificate` over a terminated handshake has nothing to walk; a
   failed handshake, which no audit records; which Parties a Location takes,
@@ -927,8 +979,9 @@ What remains of the first part:
   side, `any-party`); renewal of the `receive` certificate while a node
   runs (problem 27).
 
-The second part, a Storage node in the service: a node is its own embedded
-Storage node in the assembled service — RocksDB and SQLite under its data
+The second part, a Storage node in the service: a node declaring the
+`storage` role is its own embedded Storage node in the assembled service
+(ADR-0056, amendment 2026-10-20) — RocksDB and SQLite under its data
 directory, sealed under the key store `[store]` names (`embedded-storage`,
 assembled) — and it serves no other node: a node whose `[storage] nodes`
 lists any is refused until its configuration can name the identity it
@@ -1099,7 +1152,19 @@ amendments 2026-10-19; ADR-0031's `[tuning]` list).
   while they keep up (`runtime`'s `stream_share`, over
   `persist::storage::ChunkReader::shared` and `next_chunk`); one further
   behind reads on from Xmip Storage itself, so no Send Port waits on
-  another.
+  another. *Repaired 2026-10-20* (the owner: *a departure that falls
+  behind starts reading at the chunk it reached, catches up from Storage
+  over only the chunks it missed, and rejoins the shared read; never from
+  chunk 0 or the whole Stream*): the read kept two chunks, less than a
+  millisecond of a far end's pace, and one behind read the Stream again
+  from its first chunk and never came back, so on a loaded machine four
+  paced departures read 264 or 528 chunks for 132. It now keeps one chunk
+  for a departure alone and five for each other
+  (`stream_share::KEPT_PER_READER`, the room each one's own read would
+  have held), one behind reads from the chunk it reached
+  (`ChunkReader::shared_from`) and rejoins once among the kept chunks;
+  under the full runtime suite in parallel the same test read 132 to 176
+  (ADR-0018, amendment 2026-10-20).
 - **Receive takes no more than it has room for.** A receive asks its
   transport for at most as many arrivals as its Location's pool has threads
   free and the node has places (`Transport::receive_up_to`); the rest stay
@@ -1185,9 +1250,6 @@ release:
   `install.rs` have not been compiled.
 - **Signing**: Authenticode, Apple Developer ID with notarization, Linux
   package signing.
-- **A site whose node starts on its own**: a one-machine package built from
-  `personal-computer` is refused at start until it also carries the
-  `storage` role.
 - **The service account** (open problem 28) and whether the starter grants
   local tools more than Observer (ADR-0014, amendment 2026-10-13).
 

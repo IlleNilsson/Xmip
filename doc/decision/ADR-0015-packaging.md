@@ -583,3 +583,14 @@ example sites declare what they did; a one-machine node built from one of
 them is refused as it starts, in words (ADR-0056, amendment 2026-10-20).
 The starter `--install` writes, and the Ansible role's, declare `storage`
 for their one node.
+
+*Later the same day, the owner: a one-machine node carries the Storage
+role.* `factory-gateway`, `hospital-interface` and `b2b-exchange`, the
+Ansible role's default site, declare `storage` beside their roles, so no
+example site of one machine is refused as it starts; `field-sensor`'s
+device target refuses `persist` and builds no `xmip-service`, so it gains
+nothing. `personal-computer` also names `xmip-core-authorize-location`: a
+node built without a policy permits nothing, and with it a file dropped
+in is received and sent on (ADR-0050, amendment 2026-10-20). Every build
+of `xmip-service` carries the authenticate capability, its `circumstance`
+verifier among it (ADR-0019, amendment 2026-10-20).
