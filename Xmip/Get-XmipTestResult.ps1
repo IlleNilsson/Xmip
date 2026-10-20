@@ -22,7 +22,7 @@ function Get-XmipTestResult {
             stage of RoundTrip under its name, as
             node/<name>/<stage>/<transport>/<contract> — R receives, P
             processes, S sends — and those are RoundTrip's. It reads a file
-            and computes nothing but the split — the judgement is the roll's
+            and computes nothing but the split — the judgment is the roll's
             (ADR-0027 clause 6).
 
             -Suite Core.Estate reads the estate's Pester suite instead: the

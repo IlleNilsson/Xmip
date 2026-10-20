@@ -191,7 +191,7 @@ Describe 'The concept index still matches the records' {
             renamed or removed while the index goes on claiming it.
 
             At least one term per row must match, because a row like
-            'Claim, claimable artefact' is one idea written several ways.
+            'Claim, claimable artifact' is one idea written several ways.
         #>
         [string[]] $stale = @()
 

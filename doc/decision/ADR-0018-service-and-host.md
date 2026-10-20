@@ -103,7 +103,7 @@ legal.**
 ```toml
 [default.host]
 serviceNamePattern   = "xmip-host-{host}"
-serviceNameSanitiser = "[^a-z0-9-]"
+serviceNameSanitizer = "[^a-z0-9-]"
 ```
 
 Variables: `{host}` `{cluster}` `{node}` `{id}` `{trust}` `{bitness}`

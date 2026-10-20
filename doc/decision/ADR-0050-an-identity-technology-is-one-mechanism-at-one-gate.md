@@ -184,7 +184,7 @@ was read before it was written.
   their own names, so an Acceptance can say which verifier a Location uses.
 - **The proof rides on `Presented::proof`, and never on the record.**
   `Presented` said the secret does not appear on it, and `Authenticator`
-  is given nothing else. Both were right and the type could not honour
+  is given nothing else. Both were right and the type could not honor
   them: a password, a Digest response, an NTLM type 3, a JWT with its
   signature, an SSH signature over the session all have to reach the
   verifier. `Presented` gains a private `proof` list beside `evidence`,
@@ -310,7 +310,7 @@ Section 6 as it stands; nothing goes sideways.
   window does. And where a token named no key, `jwt` tried the first key of
   its algorithm and `oidc` every one; every one is the rule.
 - **Already one before this, confirmed:** the `Authorization` header and the
-  Digest list (`identify::authorization`, quotes honoured as RFC 7616
+  Digest list (`identify::authorization`, quotes honored as RFC 7616
   requires), SAML's unescaping and its principal (`codec::xml`,
   `identify::saml`), the `*` pattern (`authorize::pattern`), and the peer
   address `authorize/transport` reads (`net::PEER_ADDRESS`).

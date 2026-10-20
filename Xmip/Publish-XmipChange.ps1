@@ -30,9 +30,9 @@ using namespace System.Collections.Generic
     dependency order is read out of the manifests, because it is already written
     there and making a person supply it is how the estate grows gray hairs.
 
-    Colour is decoration, never the message. Every line that reports an outcome
+    Color is decoration, never the message. Every line that reports an outcome
     says it in words first — OK, FAILED, REFUSED, NOTE — because a reader who
-    does not separate red from green is otherwise reading an unlabelled result,
+    does not separate red from green is otherwise reading an unlabeled result,
     and so is anyone piping this to a file. -ForegroundColor stays as a second
     channel for those it helps.
 

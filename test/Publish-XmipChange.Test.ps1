@@ -48,7 +48,7 @@ BeforeAll {
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
             'Test-XmipPlatform.ps1', 'Test-XmipRuntimeLibraryReader.ps1',
             'Get-XmipRemainingTime.ps1', 'Get-XmipVerifyTime.ps1',
-            'Update-XmipGeneratedDocument.ps1'
+            'Update-XmipGeneratedDocument.ps1', 'Test-XmipSpelling.ps1'
         )
 
         return (($family | ForEach-Object {

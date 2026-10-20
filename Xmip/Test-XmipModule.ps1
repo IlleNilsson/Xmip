@@ -150,6 +150,24 @@ function Test-XmipModule {
         $path = Join-Path -Path $RepositoryRoot -ChildPath $name
         $manifest = Join-Path -Path $path -ChildPath 'Cargo.toml'
 
+        # Spelling first, in every language a module holds: the root's
+        # _typos.toml, through the estate's one check (Test-XmipSpelling).
+        if (-not $CheckOnly) {
+            [string[]] $misspelled =
+                @(Test-XmipSpelling -RepositoryRoot $RepositoryRoot -Path $name)
+
+            if ($misspelled.Count -gt 0) {
+                [string] $hint = '   FAILED spelling. Fix it, or allow the word in _typos.toml.'
+
+                Write-Host "== $name" -ForegroundColor Cyan
+                $misspelled | ForEach-Object { Write-Host "   $_" }
+                Write-Host $hint -ForegroundColor Red
+                $name
+
+                continue
+            }
+        }
+
         if (-not (Test-Path -LiteralPath $manifest)) {
             # No Cargo.toml is not the end of the question any more.
             #

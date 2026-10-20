@@ -116,7 +116,7 @@ Three records point at a thing none of them defines. This one defines it.
   started with its capability, publishes it at
   `xmip:///<cluster>/node/<name>/capability`, and the topology takes a
   node's stages from that record; `[run]` says what each node was started
-  with. **Authentication and runtime capability are not modelled**: the
+  with. **Authentication and runtime capability are not modeled**: the
   Playground verifies no credential and isolates no identity context, so
   either would be a word with nothing behind it. The node's own capability
   record says so in as many words, rather than leaving a reader to guess

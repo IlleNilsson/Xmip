@@ -62,7 +62,7 @@ the disk; every later boot starts from the disk.
   Windows ISO boots only after *Press any key to boot from CD or DVD*, so for
   the first twenty seconds of that start the template presses Space through
   Hyper-V's virtual keyboard.
-- **AlmaLinux**: the answer medium is labelled `OEMDRV` and holds `ks.cfg`, a
+- **AlmaLinux**: the answer medium is labeled `OEMDRV` and holds `ks.cfg`, a
   kickstart, which the installer reads from a volume of that label without
   being told to. It installs from the DVD's own repositories: the host name
   in the domain, the static address on the adapter with the static MAC, the

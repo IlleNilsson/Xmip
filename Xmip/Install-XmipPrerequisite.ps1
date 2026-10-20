@@ -140,7 +140,7 @@ function Install-XmipPrerequisite {
             }
         }
 
-        # Probe before honouring optional. Optional means you need not have it,
+        # Probe before honoring optional. Optional means you need not have it,
         # not that any version will do — a machine with an older .NET installed
         # would otherwise build the GUI surfaces against it and never be told.
         if ($found) {

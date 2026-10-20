@@ -179,7 +179,9 @@ Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
 .NET 11 SDK, release candidate 2 until GA on 2026-11-10, but the PowerShell
 binary module targets net10.0 because pwsh hosts it (ADR-0014, amendments
 2026-08-30 and 2026-10-19). The event bindings build with Java 27 and Python
-3.15, the VS Code extension with Node 26. `prerequisite.toml` has each.
+3.15, the VS Code extension with Node 26. Spelling is checked by typos 1.51,
+in American English, with the root's `_typos.toml`. `prerequisite.toml` has
+each.
 
 **Writing PowerShell.** Every script must remain cross-platform. Use advanced
 functions and native PowerShell parameter sets, and support `ShouldProcess`

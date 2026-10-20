@@ -225,6 +225,29 @@ brew = "node"
 [prerequisite.node.linux]
 apt = "nodejs"
 
+[prerequisite.typos]
+role = "developer"
+probe = "typos --version"
+minimum = "1.51"
+channel = "stable"
+note = """
+The spelling check (crate-ci/typos, written in Rust; 1.51.1 the current
+release on 2026-10-06). test/Spelling.Test.ps1 runs it over the estate and a
+landing over each module it tests, with the root's _typos.toml; a machine
+without it fails both, by this name. Linux distributions other than Arch
+build it with cargo, which the rust entry above already brings.
+"""
+
+[prerequisite.typos.windows]
+winget = "Crate-CI.Typos"
+
+[prerequisite.typos.macos]
+brew = "typos-cli"
+
+[prerequisite.typos.linux]
+pacman = "typos"
+fallback = "cargo install typos-cli --locked"
+
 # ---------------------------------------------------------------------------
 # Event binding languages. ADR-0065: a program at the perimeter subscribes to
 # Events from C, C++, Java or Python through the bindings in xmip-core-abi; it

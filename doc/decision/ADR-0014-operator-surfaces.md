@@ -582,7 +582,7 @@ Three conventions the views follow, so that a reader meets one style:
   original views already did. A blank cell is a question; a word is an answer.
 
 Presentation only. No cmdlet's return changed: same objects, same properties,
-same pipeline behaviour, and `Format-List` still shows every property,
+same pipeline behavior, and `Format-List` still shows every property,
 including the ones a table drops. Columns a table drops are named in the view
 file, not hidden: `Leaf`, `Parent` and `Mounted` from `Xmip.EstateRepository`
 (the first two are read off `Name`, the third is `Mount` being non-empty),
