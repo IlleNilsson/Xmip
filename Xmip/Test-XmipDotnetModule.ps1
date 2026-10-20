@@ -3,7 +3,8 @@
 
 <#
 .SYNOPSIS
-    Verifying what is not a Cargo crate: .NET projects and Pester suites.
+    Verifying what is not a Cargo crate: .NET projects, Pester suites, the
+    VS Code extension's shell and the Event bindings in other languages.
 
 .DESCRIPTION
     Apart from Publish-XmipChange.ps1 since 2026-09-22, when that file had grown
@@ -75,6 +76,70 @@ function Test-XmipExtensionShell {
 }
 
 
+# The script a module verifies its Event bindings with, at its root
+# (xmip-core-abi's, ADR-0065).
+[string] $script:XmipEventBinding = 'verify-event-bindings.ps1'
+
+# The most MSBuild nodes a landing's dotnet build or test runs at once, given
+# as -m: to each.
+[int] $script:XmipDotnetNodes = 4
+
+
+function Test-XmipEventBinding {
+    <#
+        .SYNOPSIS
+            Builds and tests a module's Event bindings in the languages
+            besides Rust, through its own verify-event-bindings.ps1. True
+            when every binding that ran passed.
+
+        .DESCRIPTION
+            Every language but Rust is optional for Xmip itself (the owner,
+            2026-10-20: *every language except Rust is optional*): C and C++
+            through zig, Java and Python are optional prerequisites
+            (prerequisite.toml). A binding whose tool is absent here is
+            SKIPPED in words by the script — "SKIPPED: Java not installed;
+            the Java Event binding is not verified" — and fails nothing; one
+            whose tool is here and fails fails the module. The script loads
+            the runtime library XMIP_RUNTIME_LIBRARY names, which the landing
+            builds first (Test-XmipRuntimeLibraryReader).
+
+        .PARAMETER Path
+            The module's working tree.
+
+        .PARAMETER Name
+            The module path, for reporting.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    Write-Host '   verifying the Event bindings...' -ForegroundColor DarkGray
+
+    [string] $verify = Join-Path -Path $Path -ChildPath $script:XmipEventBinding
+    [string[]] $arguments = @('-NoProfile', '-NonInteractive', '-File', $verify)
+
+    if ($env:XMIP_RUNTIME_LIBRARY) {
+        $arguments += @('-Library', $env:XMIP_RUNTIME_LIBRARY)
+    }
+
+    & pwsh @arguments 2>&1 | ForEach-Object { Write-Host "   $_" }
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "   FAILED: an Event binding of $Name" -ForegroundColor Red
+
+        return $false
+    }
+
+    return $true
+}
+
+
 function Test-XmipDotnetModule {
     <#
         .SYNOPSIS
@@ -136,7 +201,12 @@ function Test-XmipDotnetModule {
 
             [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
 
-            & dotnet build $csproj.FullName --output $into --verbosity quiet --nologo 2>&1 |
+            [string[]] $building = @(
+                'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo',
+                "-m:$script:XmipDotnetNodes"
+            )
+
+            & dotnet @building 2>&1 |
                 ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -ne 0) {
@@ -156,7 +226,12 @@ function Test-XmipDotnetModule {
     foreach ($csproj in $suite) {
         Write-Host "   dotnet test $($csproj.Name)..." -ForegroundColor DarkGray
 
-        & dotnet test $csproj.FullName --verbosity quiet --nologo 2>&1 |
+        [string[]] $testing = @(
+            'test', $csproj.FullName, '--verbosity', 'quiet', '--nologo',
+            "-m:$script:XmipDotnetNodes"
+        )
+
+        & dotnet @testing 2>&1 |
             ForEach-Object { Write-Host $_ }
 
         if ($LASTEXITCODE -ne 0) {

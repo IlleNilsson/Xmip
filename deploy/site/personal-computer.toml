@@ -8,7 +8,9 @@ description = "A person's computer: files and mail, one node of its own."
 
 target = "computer"
 
-roles = ["executing", "monitoring"]
+# One machine, so it keeps Xmip Storage itself: only a node with the storage
+# role stores (ADR-0056, amendment 2026-10-20).
+roles = ["executing", "monitoring", "storage"]
 
 # The technologies this deployment chose, by repository name (ADR-0015,
 # amendment 2026-10-19).

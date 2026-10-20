@@ -12,9 +12,6 @@ triples = ["thumbv7em-none-eabihf"]
 # xmip-service is not built for it.
 features = []
 
-# A device keeps no runtime store and seals none, so it claims nothing.
-claims = []
-
 # What this target cannot have, each feature with the reason.
 [refuses]
 persist = "A device keeps no runtime store: what it holds is in memory until it is sent."

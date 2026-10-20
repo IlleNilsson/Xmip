@@ -232,7 +232,11 @@ function Build-XmipOperatorModule {
 
     [string] $id = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
     [string] $staging = "$Output.build-$id"
-    [string[]] $said = @(& dotnet build $project --output $staging --verbosity quiet --nologo 2>&1)
+    [string[]] $building = @(
+        'build', $project, '--output', $staging, '--verbosity', 'quiet', '--nologo',
+        "-m:$script:XmipDotnetNodes"
+    )
+    [string[]] $said = @(& dotnet @building 2>&1)
 
     if ($LASTEXITCODE -ne 0) {
         Remove-Item -LiteralPath $staging -Recurse -Force -ErrorAction SilentlyContinue

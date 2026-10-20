@@ -12,6 +12,11 @@
 name = "{{ xmip_service_name }}"
 cluster_name = "{{ xmip_cluster_name }}"
 
+[nodes.{{ xmip_node_name }}]
+# The starter is one node, so it keeps Xmip Storage itself: only a node with
+# the storage role stores (ADR-0056, amendment 2026-10-20).
+roles = "storage"
+
 [nodes.{{ xmip_node_name }}.service]
 # ADR-0045: a node may assume no route to the internet unless the operator
 # says so; nothing at runtime reaches out.

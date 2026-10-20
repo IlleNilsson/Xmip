@@ -162,6 +162,18 @@ Describe 'ADR-0021: current platforms only, enforced' {
         }
     }
 
+    It 'keeps every language toolchain but Rust''s optional' {
+        # The owner, 2026-10-20: "every language except Rust is optional" for
+        # Xmip itself; Java, Python, C and C++ (zig) build only the Event
+        # bindings, Node only the VS Code extension's shell, and each is
+        # verified where it is here and said SKIPPED where it is not.
+        foreach ($name in 'c', 'java', 'python', 'node') {
+            [string] $because = "$name builds only what uses it, never the core"
+
+            $script:Prereq.prerequisite.$name.optional | Should -BeTrue -Because $because
+        }
+    }
+
     It 'keeps the manifest floor and the #requires floor in step' {
         # The one that drifts silently: prerequisite.toml says 7.6.7 while an
         # entry point still says 7.6, and nothing notices. On 2026-08-27 three

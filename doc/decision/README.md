@@ -762,8 +762,8 @@ arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and the technologies its end user chose,
 turned into a build by `Build-XmipService` (amendments 2026-10-01 and
-2026-10-19), every built technology built and tested; the archive targets
-are the archiving roles' (amendment 2026-10-14). macOS gets a `.pkg` with a
+2026-10-19), every built technology built and tested, archive targets
+among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).

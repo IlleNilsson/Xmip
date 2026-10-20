@@ -204,7 +204,8 @@ written and not yet built, because WiX Toolset 7, which builds it, needs
 its Open Source Maintenance Fee EULA accepted on the building machine first,
 and that decision is the owner's; the Linux and macOS packages are written
 and have not been built. A one-machine node needs the `storage` role in its
-site to start on its own, which no example site has yet.
+site to start on its own, as the example site `personal-computer` has; the
+starter configuration `--install` writes declares it for its one node.
 
 ### First run
 
@@ -688,8 +689,10 @@ technology is built and tested. The profiles under `deploy/profile` say
 what a target and a role bring, and `Build-XmipService -Site <name>` builds
 `xmip-service` with exactly that
 ([ADR-0015, amendments 2026-10-01 and 2026-10-19](doc/decision/ADR-0015-packaging.md)).
-The archive targets come with the roles that archive, sending and
-operational (amendment 2026-10-14). The target vetoes: a role or a
+The site chooses its archive targets among its technologies; the roles that
+archive, sending and operational, bring only the `archive` feature
+(amendment 2026-10-20). Only a node with the `storage` role keeps Xmip
+Storage itself; a one-machine node carries it. The target vetoes: a role or a
 technology needing what the target cannot have is refused in words, and a device, which cannot run `xmip-service`, is told
 that what builds for it is `xmip-core` alone. The build sets what is
 possible; the node's TOML picks from it when the node starts.
@@ -724,7 +727,9 @@ starts it, after laying the node out from a starter configuration where
 there is none, and `--uninstall` removes it; every package runs them
 ([Install](#install)). The build links the transports its site
 names, by feature; a Location naming another transport is refused
-when the node starts. The node is its own embedded Storage node, under its
+when the node starts. A node declaring the `storage` role — its cluster's
+`[nodes.<node>] roles`, which the slice gives it — is its own embedded
+Storage node, under its
 data directory — `data/storage`, RocksDB for the runtime database and
 SQLite for the administration and the audit databases, each where its table
 `[runtime]`, `[administration]` or `[audit]` says — its `storage` and its
@@ -737,7 +742,9 @@ declaring the `storage` role, which every other node reaches round robin
 from its `[storage] nodes`, over Xmip's own mutual TLS — is built in
 `xmip-core-persist`'s `storage`, and `xmip-service` refuses a node listing
 them until its configuration can name the identity it presents
-([built, not in the assembled service](doc/architecture/estate-map.md#storage-nodes)). The
+([built, not in the assembled service](doc/architecture/estate-map.md#storage-nodes)). A
+node declaring neither the `storage` role nor `[storage] nodes` is refused
+as it starts, in words naming both. The
 database servers it is to be put in front of are set up by IT from
 [`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
 [`deploy/database/mssql`](deploy/database/mssql/README.md); a
@@ -971,7 +978,15 @@ stopping the run with nothing pushed:
   and the emulator, before `module/core/operation/gui`, which packages them
   (`Build-XmipService -Remote Desktop, Android` builds the same by hand).
   Without the Android NDK the gui module is reported SKIPPED, unverifiable
-  here, and does not land.
+  here, and does not land. Each `dotnet build` and `dotnet test` runs at most
+  four MSBuild nodes (`-m:4`).
+- **The Event bindings in other languages,** where a changed module carries
+  `verify-event-bindings.ps1` (`module/foundation/abi`): C and C++ through
+  zig, Java and Python, against the runtime library built first. Every
+  language but Rust is optional (the owner, 2026-10-20), so a binding whose
+  tool is absent, or older than its floor, is said in words — `SKIPPED: Java
+  not installed; the Java Event binding is not verified` — and fails nothing;
+  one whose tool is here and fails stops the run.
 - **Each unchanged module that consumes a changed one:** `cargo clippy
   --all-targets --features <every declared feature> -- -D warnings`, which
   compiles it and its tests against the change; its tests do not run.
@@ -1098,7 +1113,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features and its archiving roles' archive targets, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run). |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run). |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |

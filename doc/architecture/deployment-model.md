@@ -123,9 +123,9 @@ chose, by repository name: which technologies a node carries is every end
 user's choice, and every built technology is built and tested (ADR-0015,
 amendment 2026-10-19). `Build-XmipService -Site` turns it into one
 `cargo build` of `xmip-service`: the target's features, every role's, each
-chosen technology and each archive target the build can link, and the
-program's own. The archive targets are the archiving roles', sending's and
-operational's, each naming them (amendment 2026-10-14). The target vetoes:
+chosen technology the build can link, and the program's own. The archive
+targets are technologies the site chooses like every other; the roles that
+archive bring only the `archive` feature (amendment 2026-10-20). The target vetoes:
 a role or a technology needing a feature the target refuses is refused in
 words, with the target's reason, and a device
 site is refused because `xmip-service` needs the standard library — what
@@ -215,7 +215,14 @@ reaching them round robin, one Storage node for the whole of a statement —
 a receive cycle's chunks, Publication and Journeys (the owner, 2026-10-03;
 `runtime-model.md` section 3); more than one Storage node is the safety. Whether
 a Storage node also carries the database is IT's question (section 7). A
-one-node deployment is its own Storage node. `node::NodeRole::Storage` is
+one-node deployment is its own Storage node. **Only a node with the Storage
+role stores** (the owner, 2026-10-20): every other node calls a Storage node
+through `[storage] nodes`, a one-machine node and a development node carry
+the role, and a node declaring neither the role nor `[storage] nodes` is
+refused as it starts, in words naming both (ADR-0056, amendment
+2026-10-20). A node declares its roles in the cluster's `xmip.toml`,
+`[nodes.<name>] roles`, which the slice gives its own configuration.
+`node::NodeRole::Storage` is
 the role, and `xmip-core-persist`'s `storage` is Xmip Storage: its
 operations, the embedded Storage node, the wire over Xmip's TLS and the
 round robin (ADR-0056, amendment 2026-10-01, the Storage role). A node as
@@ -238,9 +245,9 @@ Instances, Modules or profiles, and they do not extend the role model.
 
 **A role also picks what is built.** `deploy/profile/role/<role>.toml`, one
 per role, says which capabilities a deployment's program carries for it,
-and a role that archives also which archive targets, and a site names its
-roles beside its target and its technologies (ADR-0015, amendments
-2026-10-01, 2026-10-14 and 2026-10-19).
+and a site names its roles beside its target and its technologies, archive
+targets among them (ADR-0015, amendments 2026-10-01, 2026-10-19 and
+2026-10-20).
 
 Runtime roles are also **not human roles**. Observer, Operator, Developer,
 Administrator and Architect are people. A scoped human role such as Edge
@@ -458,8 +465,8 @@ service manager `--install` is refused in words (open problem 22).
 7). A node without the Storage role keeps neither and reaches Xmip Storage
 over Xmip's TLS (ADR-0063, amendment 2026-10-01); a Storage node in front of
 a database server keeps none either, the server's files being IT's. A
-one-node deployment is its own embedded Storage node, so its layout is the
-one above.
+one-node deployment is its own embedded Storage node, declaring the Storage
+role, so its layout is the one above.
 
 ## 7. Three databases, and why — behind Xmip Storage
 
