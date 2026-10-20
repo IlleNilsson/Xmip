@@ -327,7 +327,9 @@ The doorway to all storage: the nodes declaring the **Storage** role, whose
 operations — write a Stream chunk, write a Message, claim a Journey, hand it
 on, write an audit record — every other node calls,
 never a database directly, round robin over the Storage nodes. More than one
-Storage node is the safety. It always keeps three databases, one to each
+Storage node is the safety. Only a node with the Storage role stores; every
+other node reaches one through `[storage] nodes`, and a one-machine node
+carries the role (ADR-0056, amendment 2026-10-20). It always keeps three databases, one to each
 data domain, whatever the backend: the **runtime database**, which is the
 Ledger; the **administration database** — administration, deployment state,
 cluster membership, operator state, and the Subscriptions each Host Service

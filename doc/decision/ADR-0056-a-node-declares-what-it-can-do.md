@@ -382,7 +382,8 @@ name, and the name is the role.
   2026-10-01).
 
 **Not decided here.** How a node's TOML configuration states its roles —
-`xmip-service` derives them from its Locations today — and whether placement
+`xmip-service` derives them from its Locations today; the storage role is
+read from its `roles` since the amendment of 2026-10-20 — and whether placement
 (ADR-0022's solver) matches work against roles or against the stages they
 serve. Named so the gaps are on the record.
 
@@ -434,7 +435,8 @@ node's program is built with. Xmip Storage itself — its operations, the
 embedded Storage node, the wire over Xmip's TLS and the round robin — is
 `xmip-core-persist`'s `storage`. How a node's configuration declares the
 Storage role, and so when `xmip-service` serves Xmip Storage, is this
-record's open question on declaring roles in the TOML, named above.
+record's open question on declaring roles in the TOML, named above;
+*answered for Storage by the amendment of 2026-10-20.*
 
 ## Amendment, 2026-10-03: one statement, one Storage node
 
@@ -517,3 +519,44 @@ Data will be the name for Storage Nodes*.
   the same day, the owner: *We need an R2, to stress the obvious, concurrecny
   of reasources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
   receiving nodes on one shared drop, each file taken by exactly one.
+
+## Amendment, 2026-10-20: only a node with the Storage role stores
+
+**Provenance.** The owner, 2026-10-20: only a node with the Storage role
+stores; every other node calls a Storage node through `[storage] nodes`; a
+one-machine node carries Storage, and so does `development`.
+
+- **Storage is declared, never assumed.** Until this day `xmip-service`
+  made every node its own embedded Storage node whatever it declared. Now a
+  node keeps Xmip Storage itself only where its roles declare `storage`; a
+  node that declares it and lists no Storage node in `[storage] nodes` is
+  its own embedded Storage node (`deployment-model.md` sections 3 and 7).
+- **Every other node reaches a Storage node through `[storage] nodes`**,
+  round robin over Xmip's TLS (the amendment of 2026-10-01). That client is
+  not in the assembled service yet, so a node listing Storage nodes is
+  still refused at start until its configuration can name the identity it
+  presents ([built, not in the assembled service](../architecture/estate-map.md#storage-nodes)).
+- **A node declaring neither is refused at start**, at phase 3, in words
+  naming both: the storage role, and `[storage] nodes`. A role word that is
+  no role is refused there too, in `NodeRole::declared`'s words.
+- **A one-machine node carries Storage**, and so does the `development`
+  role (`deploy/profile/role/development.toml`; ADR-0015, amendment
+  2026-10-20). The starter `xmip-service --install` writes and the Ansible
+  role's starter declare `storage` for their one node, and the example site
+  `personal-computer` declares it.
+
+**Where a node's configuration says its roles.** This answers the storage
+half of what this record left *not decided* on 2026-10-01 — how a node's
+TOML states its roles. The cluster's `xmip.toml` already declared them per
+node, `[nodes.<name>] roles` (the amendment of 2026-10-03); the slice gives
+them to the node's own configuration as its top-level `roles`, and
+`xmip-core-configure` now reads them there (the document's `roles`), the
+words parsed by `NodeRole::declared`. That a running node reads
+its storage role from that key is the assistant's drafting, the owner's to
+strike. The stages a running node says it serves are still derived from
+its Locations (`Capability::serving`), and placement against roles stays
+open.
+
+Built 2026-10-20: `xmip-core-runtime`'s `storage::plan` refuses a node
+without the storage role and without `[storage] nodes`; the root crate's
+service tests, its starter and its deploy test declare it.

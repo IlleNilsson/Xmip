@@ -19,8 +19,8 @@ arm64 on both — **arm64 is not optional**, because the edge target, an IoT
 gateway or a Raspberry Pi, requires it. What a package is built with is its
 site's: a target, node roles and the technologies its end user chose,
 turned into a build by `Build-XmipService` (amendments 2026-10-01 and
-2026-10-19), every built technology built and tested; the archive targets
-are the archiving roles' (amendment 2026-10-14). macOS gets a `.pkg` with a
+2026-10-19), every built technology built and tested, archive targets
+among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
 `xmip-service --install`; only the Windows packages are built for now
 (amendment 2026-10-13).
@@ -474,6 +474,9 @@ deb`, `rpm` and `pkg` are refused in words.
 storage technologies.* Asked whether the roles that archive should carry
 the archive targets, he answered *Yes*.
 
+*Amended 2026-10-20: the site chooses its archive targets; the roles keep
+only the `archive` feature.*
+
 **Archive targets are chosen by the roles that archive.** The roles that
 carry the `archive` feature, `deploy/profile/role/sending.toml` and
 `operational.toml`, name the archive targets they carry in `archives`, by
@@ -542,4 +545,41 @@ as `deploy/database/postgresql/README.md` already said.
 - **How the possibilities are shown.** Nothing is built for it here.
 - **A target's `claims`.** It kept the store engines and key stores out of
   the domains; now only the test that a target claims built technologies
-  reads it. Whether it stays is his.
+  reads it. Whether it stays is his. *Answered 2026-10-19: deleted
+  (amendment 2026-10-20).*
+
+## Amendment, 2026-10-20: the site chooses its archive targets; only Storage stores
+
+**Provenance.** The owner, 2026-10-20, on whether the archive targets stay
+with the roles that archive: *Site chooses*. And on a target's `claims`, the
+open question of the amendment of 2026-10-19, the same owner on 2026-10-19:
+delete. And that only a node with the Storage role stores (ADR-0056,
+amendment 2026-10-20).
+
+**The amendment of 2026-10-14 is amended: archive targets leave the
+roles.** A site names the archive targets its end user chose in its
+`technologies`, by repository name, as it names every other technology
+(amendment 2026-10-19). The roles that archive keep the `archive` feature —
+`sending.toml` and `operational.toml` — and name no target. Deleted, with
+every use: the roles' `archives`, `Get-XmipRoleArchive`,
+`Get-XmipArchiveTarget`, the plan's `Archives`, and the tests that held a
+role carrying `archive` to naming targets and a site's archiving roles to
+building them. `test/Deploy.Test.ps1` holds instead that a site naming an
+archive target builds it beside its role's `archive` feature.
+
+**A target's `claims` is deleted**, with its reader `Get-XmipTargetClaim`
+and the test *claims only built technologies*. A target still names the
+features it always brings and the ones it refuses; the key store a node
+seals its Storage under is its configuration's `[store]`, from what the
+build carries.
+
+**`retain` joins the sending role's features** (the owner, 2026-10-20).
+
+**Only a node with the Storage role stores.** `development.toml` composes
+`storage` beside executing, operational and monitoring, and the example
+site `personal-computer`, one machine, declares `storage`: this answers
+the 2026-10-13 open item *a site whose node starts on its own*. The other
+example sites declare what they did; a one-machine node built from one of
+them is refused as it starts, in words (ADR-0056, amendment 2026-10-20).
+The starter `--install` writes, and the Ansible role's, declare `storage`
+for their one node.

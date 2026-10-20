@@ -18,17 +18,6 @@ triples = [
 # platform's key store with it.
 features = ["persist-rocksdb"]
 
-# The technologies this target decides: the embedded engines,
-# RocksDB for the runtime database and SQLite for the administration
-# database, and the key stores that seal them (DPAPI on Windows, the
-# keychain on a Mac).
-claims = [
-  "xmip-core-persist-rocksdb",
-  "xmip-core-persist-sqlite",
-  "xmip-core-secret-dpapi",
-  "xmip-core-secret-keychain",
-]
-
 # What this target cannot have, each feature with the reason; a role or a
 # technology needing one is refused.
 [refuses]

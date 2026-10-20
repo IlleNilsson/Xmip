@@ -8,7 +8,9 @@
 //! `--install`, with the cluster's `xmip.toml` at `--configuration`:
 //!
 //! 1. writes a starter `xmip.toml` there, where there is none: the cluster
-//!    `--cluster` names, the node `--node` names, offline (ADR-0045); its
+//!    `--cluster` names, the node `--node` names, declaring the storage
+//!    role, for one node keeps Xmip Storage itself (ADR-0056, amendment
+//!    2026-10-20), offline (ADR-0045); its
 //!    local operate endpoint needs no line, for it always starts, named
 //!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13);
 //! 2. slices the node's configuration, `xmip-node.toml` beside it, where
@@ -142,6 +144,11 @@ fn starter(cluster: &str, node: &str) -> String {
          [service]\n\
          name = {service}\n\
          cluster_name = {cluster}\n\
+         \n\
+         # One node, so it keeps Xmip Storage itself: only a node with the\n\
+         # storage role stores (ADR-0056, amendment 2026-10-20).\n\
+         [nodes.{node_key}]\n\
+         roles = \"storage\"\n\
          \n\
          [nodes.{node_key}.service]\n\
          online = false\n",
@@ -386,6 +393,11 @@ mod tests {
         assert_eq!(document.service.node_name, node);
         assert_eq!(document.service.cluster_name, cluster.name);
         assert!(!document.service.online);
+        assert_eq!(
+            document.roles.as_deref(),
+            Some("storage"),
+            "one node stores"
+        );
         // No [operate]: the local endpoint starts all the same, named as
         // the service is, and nothing else listens.
         assert!(document.operate.is_none());

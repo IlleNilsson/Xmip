@@ -154,6 +154,13 @@ same statement): a receive cycle's chunks, its Publication and its Journeys
 are asked of one Storage node, and one that stops answering mid-statement
 fails the statement rather than moving it to another.
 
+**Only a node with the Storage role stores** (the owner, 2026-10-20). A node
+keeps Xmip Storage itself only where its roles declare `storage`; every
+other node calls a Storage node through `[storage] nodes`. A one-machine
+node carries the Storage role, and is its own embedded Storage node; a node
+declaring neither the role nor `[storage] nodes` is refused as it starts,
+in words naming both (ADR-0056, amendment 2026-10-20).
+
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an
 IT-infrastructure question… How IT-infrastructure designs their Database
@@ -165,7 +172,8 @@ servers is their concern*). Two forms are decided:
 - **One embedded Storage node**, RocksDB and SQLite through
   `xmip-core-persist`, for a single machine and an edge site. **It has no
   failover**: when that node is gone, so is the site's storage until it
-  returns. A sensor gateway is its own Storage node, so it has a Ledger, no
+  returns. A sensor gateway is its own Storage node, declaring the Storage
+  role, so it has a Ledger, no
   broker, and the same execution model as a forty-node estate.
 
 **Either way Xmip Storage keeps three databases**, one to each data domain.

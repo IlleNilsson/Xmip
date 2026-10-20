@@ -10,9 +10,9 @@
     A site (deploy/site/<name>.toml) picks a target, its roles and the
     technologies its user chose, by repository name (ADR-0015, amendment
     2026-10-19). The build carries the target's features, every role's, and
-    each chosen technology and each archive target of an archiving role that
-    the root crate links through a feature; xmip-service's own required
-    features are always on (amendment 2026-10-14). A name that is no built
+    each chosen technology, archive targets among them (amendment
+    2026-10-20), that the root crate links through a feature; xmip-service's
+    own required features are always on. A name that is no built
     technology is REFUSED. The target vetoes: a role or a technology needing
     a feature the target refuses is REFUSED, in words naming what needs it,
     the feature and the target's reason (ADR-0055). The build sets what is
@@ -26,9 +26,9 @@
 function Resolve-XmipSite {
     <#
         .SYNOPSIS
-            A site's build plan: Site, Target, Roles, Technologies, Archives,
-            Features, Unlinked and Command. Throws REFUSED in words when the site
-            cannot be built.
+            A site's build plan: Site, Target, Roles, Technologies, Features,
+            Unlinked and Command. Throws REFUSED in words when the site cannot
+            be built.
 
         .PARAMETER Root
             The estate root.
@@ -86,39 +86,18 @@ function Resolve-XmipSite {
             Get-XmipRoleFeature -Root $Root -Role $role
         }
     )
-    # Each technology the build carries, with what brought it: the site's
-    # choice, and the archive targets an archiving role names.
-    [object[]] $archived = @(
-        foreach ($role in $roles) {
-            Get-XmipRoleArchive -Root $Root -Role $role
-        }
-    )
-    [object[]] $brought = @(
-        foreach ($name in $chosen) {
-            [pscustomobject] @{ Technology = $name; From = "site $siteName" }
-        }
-    ) + $archived
-    [string[]] $member = @()
-
-    foreach ($each in $brought) {
-        $member += $each.Technology
-
-        if ($cargo.Linked.ContainsKey($each.Technology)) {
-            [string] $from = "$($each.From) (through $($each.Technology))"
+    # Each technology the site chose that the root crate links, with the
+    # feature that links it.
+    foreach ($name in $chosen) {
+        if ($cargo.Linked.ContainsKey($name)) {
             $needed += [pscustomobject] @{
-                Feature = $cargo.Linked[$each.Technology]
-                From    = $from
+                Feature = $cargo.Linked[$name]
+                From    = "site $siteName (through $name)"
             }
         }
     }
 
-    $member = @($member | Sort-Object -Unique)
-    # A loop, not ForEach-Object -MemberName, which -WhatIf would ask about.
-    [string[]] $archives = @(
-        foreach ($each in $archived) {
-            $each.Technology
-        }
-    ) | Sort-Object -Unique
+    [string[]] $member = @($chosen | Sort-Object -Unique)
 
     Assert-XmipTargetVeto -Site $siteName -Target $target -Read $targetRead -Needed $needed
 
@@ -134,7 +113,6 @@ function Resolve-XmipSite {
         Target       = $target
         Roles        = $roles
         Technologies = $chosen
-        Archives     = $archives
         Features     = $features
         Unlinked     = @($member | Where-Object { -not $cargo.Linked.ContainsKey($_) })
         Command      = 'cargo ' + ($argument -join ' ')
@@ -143,7 +121,7 @@ function Resolve-XmipSite {
 
     # Argument is what Build-XmipService hands cargo; Command says it.
     [string[]] $shown = @(
-        'Site', 'Target', 'Roles', 'Technologies', 'Archives', 'Features', 'Unlinked', 'Command'
+        'Site', 'Target', 'Roles', 'Technologies', 'Features', 'Unlinked', 'Command'
     )
     [System.Management.Automation.PSMemberInfo[]] $standard = @(
         [System.Management.Automation.PSPropertySet]::new('DefaultDisplayPropertySet', $shown)
@@ -233,8 +211,8 @@ function Assert-XmipTargetVeto {
         .SYNOPSIS
             REFUSED when a role or a chosen technology needs a feature the
             target refuses, naming each: what needs it, the feature and the
-            target's reason. A role needs a feature by naming it or by
-            naming an archive target the feature links.
+            target's reason. A role needs a feature by naming it, a site's
+            technology by the feature that links it.
     #>
     [CmdletBinding()]
     [OutputType([void])]

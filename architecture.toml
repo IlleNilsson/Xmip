@@ -264,8 +264,8 @@ record = ["ADR-0040"]
 [implementation.embedded-storage]
 name = "A node as its own embedded Storage node"
 state = "assembled"
-note = "RocksDB for the runtime database and SQLite for the administration database under the node's data directory, and SQLite for the audit database, each where its table — `[runtime]`, `[administration]`, `[audit]`, its `storage` and `connection` — says and under the data directory where it is left out, all sealed under the key store `[store]` names."
-record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0063", "ADR-0070 (amendment 2026-10-10)"]
+note = "A node declaring the Storage role keeps RocksDB for the runtime database and SQLite for the administration database under its data directory, and SQLite for the audit database, each where its table — `[runtime]`, `[administration]`, `[audit]`, its `storage` and `connection` — says and under the data directory where it is left out, all sealed under the key store `[store]` names; a node declaring neither the role nor `[storage] nodes` is refused as it starts."
+record = ["ADR-0015 (amendment 2026-10-01)", "ADR-0056 (amendment 2026-10-20)", "ADR-0063", "ADR-0070 (amendment 2026-10-10)"]
 
 [implementation.storage-nodes]
 name = "Storage nodes reached over mutual TLS"

@@ -178,8 +178,11 @@ PowerShell Core 7.6.7 or newer, with PSToml and posh-git, and Pester 6.
 Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
 .NET 11 SDK, release candidate 2 until GA on 2026-11-10, but the PowerShell
 binary module targets net10.0 because pwsh hosts it (ADR-0014, amendments
-2026-08-30 and 2026-10-19). The event bindings build with Java 27 and Python
-3.15, the VS Code extension with Node 26. Spelling is checked by typos 1.51,
+2026-08-30 and 2026-10-19). The event bindings build with Java 27, Python 3.15 and zig,
+the VS Code extension with Node 26, and each of those is optional: every
+language but Rust is optional for Xmip itself (the owner, 2026-10-20), a
+binding whose tool is absent is said SKIPPED and fails nothing, and .NET
+and PowerShell are the operator surfaces' and the tooling's. Spelling is checked by typos 1.51,
 in American English, with the root's `_typos.toml`. `prerequisite.toml` has
 each.
 

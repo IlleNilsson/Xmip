@@ -351,6 +351,12 @@ function Test-XmipModule {
                 # (ADR-0014, amendment 2026-09-10) is verified in both languages.
                 $passed = Test-XmipExtensionShell -Path (Join-Path $path 'extension') -Name $name
             }
+
+            if ($passed -and (Test-Path -LiteralPath (Join-Path $path $script:XmipEventBinding))) {
+                # The Event bindings in the languages besides Rust (ADR-0065),
+                # each verified where its optional tool is here.
+                $passed = Test-XmipEventBinding -Path $path -Name $name
+            }
         }
         finally {
             Pop-Location

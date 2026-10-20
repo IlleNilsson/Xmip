@@ -242,6 +242,16 @@ place = \"taken\"
     let said = refused(&configuration, &directory);
     assert!(said.contains("place"), "{said}");
 
+    // Only a node with the Storage role stores (ADR-0056, amendment
+    // 2026-10-20): without it, and with no Storage node listed, refused.
+    let roleless = text.replace("roles = \"executing, storage\"", "roles = \"executing\"");
+    std::fs::write(&configuration, &roleless).expect("writes");
+    let said = refused(&configuration, &directory);
+    assert!(
+        said.contains("storage role") && said.contains("[storage] nodes"),
+        "{said}"
+    );
+
     // A file where its Storage node wants its directory.
     std::fs::write(&configuration, &text).expect("writes");
     std::fs::create_dir_all(directory.join("data")).expect("its data");

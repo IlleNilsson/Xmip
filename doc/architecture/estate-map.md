@@ -110,13 +110,15 @@ starts again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
 
 #### `embedded-storage`
 
-**A node as its own embedded Storage node.** RocksDB for the runtime database
-and SQLite for the administration database under the node's data directory,
-and SQLite for the audit database, each where its table — `[runtime]`,
-`[administration]`, `[audit]`, its `storage` and `connection` — says and under
-the data directory where it is left out, all sealed under the key store
-`[store]` names. Records: ADR-0015 (amendment 2026-10-01), ADR-0063, ADR-0070
-(amendment 2026-10-10).
+**A node as its own embedded Storage node.** A node declaring the Storage role
+keeps RocksDB for the runtime database and SQLite for the administration
+database under its data directory, and SQLite for the audit database, each
+where its table — `[runtime]`, `[administration]`, `[audit]`, its `storage`
+and `connection` — says and under the data directory where it is left out, all
+sealed under the key store `[store]` names; a node declaring neither the role
+nor `[storage] nodes` is refused as it starts. Records: ADR-0015 (amendment
+2026-10-01), ADR-0056 (amendment 2026-10-20), ADR-0063, ADR-0070 (amendment
+2026-10-10).
 
 #### `process-declaration`
 
@@ -353,7 +355,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 270641 lines of production
+Where each repository mounts and what it holds: 270797 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -641,7 +643,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                28380  C# 26130 · Rust 2024 · PowerShell 226
+│   │   ├── abi                                28450  C# 26130 · Rust 2024 · PowerShell 296
 │   │   ├── event                               5616
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -669,13 +671,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            26524
+│       ├── runtime                            26593
 │       ├── persist                             9149
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5204
+│       └── configure                           5221
 └── test/
     └── core/
         └── playground                         11282

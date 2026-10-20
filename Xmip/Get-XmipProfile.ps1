@@ -10,9 +10,8 @@
     A target is what a build runs on, a role what its node is for (ADR-0015,
     amendment 2026-10-01). Each is a TOML file named by its word; a site
     under deploy/site picks one target, its roles and the technologies its
-    user chose (amendment 2026-10-19), and Resolve-XmipSite turns that into
-    features. An archiving role names the archive targets it carries
-    (amendment 2026-10-14).
+    user chose (amendment 2026-10-19), archive targets among them
+    (amendment 2026-10-20), and Resolve-XmipSite turns that into features.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -123,83 +122,6 @@ function Get-XmipRoleFeature {
             [pscustomobject] @{ Feature = [string] $feature; From = "role $($each.Role)" }
         }
     }
-}
-
-
-function Get-XmipRoleArchive {
-    <#
-        .SYNOPSIS
-            The archive targets one role carries, its composed roles
-            expanded, each with the role that named it: Technology and From.
-
-        .DESCRIPTION
-            An archiving role names them in `archives`, by repository name
-            (ADR-0015, amendment 2026-10-14).
-    #>
-    [CmdletBinding()]
-    [OutputType([pscustomobject])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Role
-    )
-
-    foreach ($each in @(Get-XmipRoleComposition -Root $Root -Role $Role)) {
-        foreach ($archive in @(Get-TomlValue -Node $each.Read -Name 'archives' -Default @())) {
-            [pscustomobject] @{ Technology = [string] $archive; From = "role $($each.Role)" }
-        }
-    }
-}
-
-
-function Get-XmipTargetClaim {
-    <#
-        .SYNOPSIS
-            Every technology a target claims: the runtime store's engines and
-            the key stores.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root
-    )
-
-    [string[]] $claimed = @(
-        foreach ($target in @(Get-XmipProfileName -Root $Root -Kind 'target')) {
-            $read = Get-XmipProfile -Root $Root -Kind 'target' -Name $target
-            @(Get-TomlValue -Node $read -Name 'claims' -Default @())
-        }
-    )
-
-    return @($claimed | Sort-Object -Unique)
-}
-
-
-function Get-XmipArchiveTarget {
-    <#
-        .SYNOPSIS
-            Every archive target a role names: the technologies an archiving
-            role carries.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root
-    )
-
-    [string[]] $named = @(
-        foreach ($role in @(Get-XmipProfileName -Root $Root -Kind 'role')) {
-            foreach ($archive in @(Get-XmipRoleArchive -Root $Root -Role $role)) {
-                $archive.Technology
-            }
-        }
-    )
-
-    return @($named | Sort-Object -Unique)
 }
 
 

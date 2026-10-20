@@ -30,7 +30,11 @@ fn subject(party: &str) -> String {
 /// The node's configuration in `directory`, its Receive Location `In`
 /// terminating TLS with the node's `receive` certificate, which the test
 /// authority issued and whose anchors are that authority, and taking
-/// `mutual-tls` from the first of [`parties`] alone.
+/// `mutual-tls` from the first of [`parties`] alone. Its Location waits a
+/// second per read, not a tenth: the handshake is read under that wait, and
+/// with tests beside this one (`RUST_TEST_THREADS=4`) the test's own client,
+/// on a loaded machine, let a tenth lapse between its handshake messages and
+/// the first Stream was dropped before any gate (2026-10-20).
 fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path::PathBuf {
     let configuration = written(directory, receive);
     let (certificate, key, anchors) = authority.pem("localhost");
@@ -62,7 +66,7 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
         .replacen(
             "timeout = \"100ms\"\n",
             &format!(
-                "timeout = \"100ms\"\ntls = true\n\
+                "timeout = \"1s\"\ntls = true\n\
                  [applications.receive_locations.accept]\n\
                  mechanism = [\"mutual-tls\"]\nparty = [\"{accepted}\"]\n"
             ),

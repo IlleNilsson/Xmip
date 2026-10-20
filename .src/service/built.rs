@@ -7,7 +7,8 @@
 //! as the node starts.
 //!
 //! Transports, and the engines and key stores of an embedded Storage node:
-//! a node that is its own Storage node opens Xmip Storage over `RocksDB`,
+//! a node declaring the storage role, its own Storage node, opens Xmip
+//! Storage over `RocksDB`,
 //! the runtime database's one engine (ADR-0015 and ADR-0018, amendments
 //! 2026-10-01), and `SQLite`, the administration database's, which the
 //! storage role builds (`deploy/profile/role/storage.toml`), sealed under a

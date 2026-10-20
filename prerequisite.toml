@@ -254,7 +254,15 @@ fallback = "cargo install typos-cli --locked"
 # is its own process, and no such runtime is loaded into an Xmip process
 # (ADR-0018, amendment 2026-10-05). Each language below is the toolchain
 # xmip-core-abi's verify-event-bindings.ps1 builds and tests its binding with.
-# Optional: a developer who never touches that binding need not carry it.
+#
+# Every one is optional, and stays so. The owner, 2026-10-20: "Xmip is able
+# to use Java, but it is not in the core", and "every language except Rust is
+# optional" for Xmip itself. A toolchain is needed only to build and test
+# what uses it: the landing (Test-XmipEventBinding) and the script verify a
+# binding where its tool is here at its floor, and say of one whose tool is
+# not "SKIPPED: Java not installed; the Java Event binding is not verified",
+# failing nothing in the core for it. .NET and PowerShell are another matter:
+# the operator surfaces and the estate's tooling are built on them.
 
 [prerequisite.c]
 role = "developer"

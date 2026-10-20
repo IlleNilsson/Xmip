@@ -89,14 +89,17 @@ fn operator() -> String {
 
 /// The test cluster's first node takes both ends: a tcp Receive Location
 /// on `receive` and a tcp Send Port to `far`. Its Location waits a tenth
-/// of a second per receive, which is what bounds the drain. Its data — its
-/// own Storage node, its keys, its orders — is in `data` beside the
+/// of a second per receive, which is what bounds the drain. It declares the
+/// storage role, so it keeps Xmip Storage itself; its data — its own
+/// Storage node, its keys, its orders — is in `data` beside the
 /// configuration.
 fn node(receive: &str, far: &str) -> String {
     let cluster = &test_cluster().name;
     let node = node_name();
     format!(
-        r#"[service]
+        r#"roles = "executing, storage"
+
+[service]
 name = "xmip-{node}"
 cluster_name = "{cluster}"
 node_name = "{node}"

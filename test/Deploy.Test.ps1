@@ -5,11 +5,9 @@
 # deploy/profile, and the technologies its user chose (amendment 2026-10-19),
 # and Build-XmipService turns it into a build. This holds the estate to it:
 # every built technology is mounted where the landing builds and tests it and
-# has tests of its own, a target claims only built technologies, every role
-# carrying archive names the archive targets (amendment 2026-10-14), the role
-# files are the node's own role words, every feature named is the root
-# crate's, and every site resolves, or is refused exactly where its target
-# says. The deploy files name a site that exists.
+# has tests of its own, the role files are the node's own role words, every
+# feature named is the root crate's, and every site resolves, or is refused
+# exactly where its target says. The deploy files name a site that exists.
 
 BeforeDiscovery {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
@@ -36,8 +34,6 @@ BeforeAll {
         [object[]] $technology = @(Get-XmipBuiltTechnology -Manifest $Manifest)
         [hashtable] $read = @{
             Technology = $technology
-            Claimed    = @(Get-XmipTargetClaim -Root $Root)
-            Archived   = @(Get-XmipArchiveTarget -Root $Root)
             Cargo      = Get-XmipRootCargo -Root $Root
             Profile    = @{}
             SiteTarget = @{}
@@ -54,7 +50,6 @@ BeforeAll {
                     Features = @(Get-TomlValue -Node $file -Name 'features' -Default @())
                     Refuses  = @(Get-TomlKey -Node $refuses)
                     Roles    = @(Get-TomlValue -Node $file -Name 'roles' -Default @())
-                    Archives = @(Get-TomlValue -Node $file -Name 'archives' -Default @())
                     Instead  = $null -ne (Get-TomlValue -Node $file -Name 'instead')
                 }
             }
@@ -94,49 +89,6 @@ BeforeAll {
     }
 }
 
-Describe 'Targets claim, and archiving roles name, what is built' {
-    BeforeAll {
-        # The archive targets: the built technologies of the archive
-        # capability, whose name is the capability's and the leaf.
-        $script:Archive = @(
-            $script:Read.Technology |
-                Where-Object { $_.Name -ceq "xmip-core-archive-$($_.Leaf)" } |
-                ForEach-Object -MemberName Name
-        )
-    }
-
-    It 'finds something built' {
-        $script:Read.Technology.Count | Should -BeGreaterThan 50
-        $script:Archive.Count | Should -BeGreaterThan 0
-    }
-
-    It 'claims only built technologies' {
-        $script:Read.Claimed | Where-Object { $_ -notin $script:Read.Technology.Name } |
-            Should -BeNullOrEmpty
-    }
-
-    It 'names archive targets in every role carrying archive, and only there' {
-        [string[]] $wrong = @(
-            foreach ($role in $script:Read.Profile['role'].GetEnumerator()) {
-                [bool] $archives = 'archive' -cin $role.Value.Features
-
-                if ($archives -and $role.Value.Archives.Count -eq 0) {
-                    "role $($role.Key) carries archive and names no archive target"
-                }
-
-                if (-not $archives -and $role.Value.Archives.Count -gt 0) {
-                    "role $($role.Key) names archive targets and does not carry archive"
-                }
-
-                $role.Value.Archives | Where-Object { $_ -cnotin $script:Archive } |
-                    ForEach-Object { "role $($role.Key): $_ is no built archive target" }
-            }
-        )
-
-        $wrong | Should -BeNullOrEmpty
-    }
-}
-
 # "Test all" (the owner, 2026-10-19; ADR-0015, amendment 2026-10-19): a
 # node's technologies are its user's choice, so every built technology is
 # one a user may choose, and each is built and tested. The landing builds
@@ -144,6 +96,10 @@ Describe 'Targets claim, and archiving roles name, what is built' {
 # (Publish-XmipChange, Test-XmipModule); this holds each built technology to
 # being such a module, with tests of its own.
 Describe 'Every built technology is built and tested' {
+    It 'finds something built' {
+        $script:Read.Technology.Count | Should -BeGreaterThan 50
+    }
+
     It 'mounts every built technology as a module the landing verifies' {
         [string] $prefix = ($script:Root -replace '\\', '/').TrimEnd('/') + '/'
         [string[]] $wrong = @(
@@ -250,14 +206,6 @@ Describe 'Every site becomes a build, or is refused where its target says' {
         }
     }
 
-    It 'builds the archive targets of its archiving roles' {
-        $plan = Resolve-XmipTestSite -Site 'hospital-interface'
-
-        $plan.Archives | Should -Contain 'xmip-core-archive-parquet'
-        @($plan.Archives | Where-Object { $_ -cnotin $script:Read.Archived }) |
-            Should -BeNullOrEmpty
-    }
-
     It 'builds the technologies its site names, and links those it can' {
         [string] $path = Join-Path $TestDrive 'chosen.toml'
         Set-Content -LiteralPath $path -Value @(
@@ -271,7 +219,25 @@ Describe 'Every site becomes a build, or is refused where its target says' {
         $plan.Technologies | Should -Be @('xmip-core-transport-file', 'xmip-core-transport-smtp')
         $plan.Features | Should -Contain 'transport-file'
         $plan.Unlinked | Should -Contain 'xmip-core-transport-smtp'
-        $plan.Archives | Should -BeNullOrEmpty
+    }
+
+    # Site chooses (the owner, 2026-10-20; ADR-0015, amendment 2026-10-20):
+    # an archive target is a technology like every other, and the role that
+    # archives brings the archive feature, not the targets.
+    It 'builds the archive targets its site names, beside its role''s archive feature' {
+        [string] $path = Join-Path $TestDrive 'archived.toml'
+        Set-Content -LiteralPath $path -Value @(
+            'target = "server"'
+            'roles = ["sending"]'
+            'technologies = ["xmip-core-archive-parquet"]'
+        )
+
+        $plan = Resolve-XmipTestSite -Site $path
+
+        $plan.Technologies | Should -Be @('xmip-core-archive-parquet')
+        $plan.Features | Should -Contain 'archive'
+        $plan.Features | Should -Contain 'retain'
+        @($plan.PSObject.Properties.Name) | Should -Not -Contain 'Archives'
     }
 
     It 'refuses a role the target refuses a feature of, in words' {

@@ -17,8 +17,10 @@
 function Test-XmipRuntimeLibraryReader {
     <#
         .SYNOPSIS
-            Whether a Rust module's sources read XMIP_RUNTIME_LIBRARY, the
-            variable naming the runtime library its tests load.
+            Whether a Rust module's sources, or the scripts at its root that
+            the landing runs (its Event bindings' verification), read
+            XMIP_RUNTIME_LIBRARY, the variable naming the runtime library its
+            tests load.
     #>
     [CmdletBinding()]
     [OutputType([bool])]
@@ -34,6 +36,7 @@ function Test-XmipRuntimeLibraryReader {
                 Get-ChildItem -LiteralPath $at -Recurse -Filter '*.rs' -File
             }
         }
+        Get-ChildItem -LiteralPath $Path -Filter '*.ps1' -File
     )
 
     if ($sources.Count -eq 0) {

@@ -9,8 +9,7 @@
 .DESCRIPTION
     One rule, read by Resolve-XmipSite, which refuses a site naming anything
     else, and by test/Deploy.Test.ps1, which holds every one to being
-    mounted and tested, and a target's claims and an archiving role's
-    archive targets to it (ADR-0015, amendments 2026-10-14 and 2026-10-19).
+    mounted and tested (ADR-0015, amendments 2026-10-19 and 2026-10-20).
 
     Style: doc/governance/powershell-style.md
 #>

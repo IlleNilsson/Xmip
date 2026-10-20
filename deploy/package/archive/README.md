@@ -24,7 +24,8 @@ bin/xmip-service --configuration config/xmip.toml --node <node> --cluster <clust
 ```
 
 This is what every Xmip package runs. It writes a starter cluster
-configuration, `config/xmip.toml`, if there is none — one node, offline,
+configuration, `config/xmip.toml`, if there is none — one node, declaring
+the `storage` role so it keeps its own storage, offline,
 operated from this machine on its local endpoint — slices the node's own
 configuration, `config/xmip-node.toml`, from it, makes the `modules`,
 `logs`, `data` and `data/audit` folders, and registers and starts the Xmip
@@ -53,9 +54,16 @@ run the node until Ctrl+C.
 name = "xmip-<node>"
 cluster_name = "<cluster>"
 
+[nodes.<node>]
+roles = "storage"
+
 [nodes.<node>.service]
 online = false
 ```
+
+Only a node with the `storage` role keeps its own storage; a node without
+it, and without `[storage] nodes` naming the nodes that do, is refused as
+it starts.
 
 The node's local operate endpoint always starts, named `xmip-<node>`: a
 named pipe on Windows, `/run/xmip/xmip-<node>.sock` on Linux and
