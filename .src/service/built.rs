@@ -24,22 +24,25 @@
 //! layer and how it was established.
 //!
 //! The authenticate and authorize technologies, each set up by what the
-//! node's configuration says (ADR-0068): `mutual-tls`, which records what a
-//! transport's handshake proved, for a Receive Location whose
-//! `accept.mechanism` names it — the handshake terminated by tcp with the
-//! node's `[provision.receive]` certificate; and `location`, which admits
-//! at each Receive Location the node starts what that Location's `accept`
-//! declares it takes, its Parties narrowed at authentication (ADR-0019
-//! clause 1). A Stream any gate refuses is refused, and the attempt refused
-//! at authentication is audited with the claim it carried (ADR-0013 clause
-//! 1). No route technology is linked yet.
+//! node's configuration says (ADR-0068): `circumstance`, a drop folder's
+//! implied identity, which every build carries, for a Receive Location
+//! whose `accept.mechanism` names it (the owner, 2026-10-19); `mutual-tls`,
+//! which records what a transport's handshake proved, for a Receive
+//! Location whose `accept.mechanism` names it — the handshake terminated by
+//! tcp with the node's `[provision.receive]` certificate; and `location`,
+//! which admits at each Receive Location the node starts what that
+//! Location's `accept` declares it takes, its Parties narrowed at
+//! authentication (ADR-0019 clause 1), and at each Send Location the node
+//! starts what reached it (the owner, 2026-10-19). A Stream any gate
+//! refuses is refused, and the attempt refused at authentication is
+//! audited with the claim it carried (ADR-0013 clause 1). No route
+//! technology is linked yet.
 
 use xmip_audit::program_audit::ProgramAudit;
-#[cfg(feature = "authenticate")]
 use xmip_authenticate::Authenticator;
 #[cfg(feature = "identify")]
 use xmip_identify::TransportIdentifier;
-use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport, ReceivePolicy};
+use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport, LocationPolicy};
 
 /// What this build carries, and the audit an operator's act on a
 /// Subscription is recorded in.
@@ -51,38 +54,38 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
         key_stores: key_stores(),
         #[cfg(feature = "identify")]
         transport_identifiers: transport_identifiers(),
-        #[cfg(feature = "authenticate")]
         authenticators: authenticators(),
-        receive_policies: receive_policies(),
+        location_policies: location_policies(),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
 }
 
 /// The authenticators this build carries, each taken where a Receive
-/// Location the node starts accepts its mechanism.
+/// Location the node starts accepts its mechanism: `circumstance` in every
+/// build, since every node infers a circumstance where nothing was
+/// presented (ADR-0019 clause 7), and those the site linked.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
-    reason = "each push is a feature this build may leave out"
+    reason = "each push after the first is a feature this build may leave out"
 )]
-#[cfg(feature = "authenticate")]
 pub fn authenticators() -> Vec<Box<dyn Authenticator>> {
     let mut authenticators: Vec<Box<dyn Authenticator>> = Vec::new();
+    authenticators.push(Box::new(xmip_authenticate::Circumstance));
     #[cfg(feature = "authenticate-mutual-tls")]
     authenticators.push(Box::new(xmip_authenticate_mutual_tls::Verifier::new()));
     authenticators
 }
 
-/// The policies this build sets up from the Receive Locations a node
-/// starts.
+/// The policies this build sets up from the Locations a node starts.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
     reason = "each push is a feature this build may leave out"
 )]
-pub fn receive_policies() -> Vec<ReceivePolicy> {
-    let mut policies: Vec<ReceivePolicy> = Vec::new();
+pub fn location_policies() -> Vec<LocationPolicy> {
+    let mut policies: Vec<LocationPolicy> = Vec::new();
     #[cfg(feature = "authorize-location")]
     policies.push(location);
     policies
@@ -91,15 +94,29 @@ pub fn receive_policies() -> Vec<ReceivePolicy> {
 /// The `location` policy (ADR-0050 section 5): each Receive Location the
 /// node starts admits what its `accept` declares it takes — the mechanisms
 /// it authenticates, narrowed to the Parties it names — and anyone those
-/// authenticate. A Location's hours and the identities it admits by value
-/// have no key in a node's configuration yet. The assistant's reading of
-/// 2026-10-19, for the owner to overrule.
+/// authenticate; and each Send Location the node starts admits what reached
+/// it (the owner, 2026-10-19: *the `location` policy also admits each Send
+/// Location the node starts, as it admits Receive Locations*). A Location's
+/// hours and the identities it admits by value have no key in a node's
+/// configuration yet.
 #[cfg(feature = "authorize-location")]
-fn location(gates: &[xmip_runtime::receiving::ReceiveGate]) -> Box<dyn xmip_authorize::Authorizer> {
+fn location(started: xmip_runtime::linked::Started<'_>) -> Box<dyn xmip_authorize::Authorizer> {
     use xmip_authorize_location::{Admission, LocationPolicy};
-    Box::new(gates.iter().fold(LocationPolicy::new(), |policy, gate| {
-        policy.admit(Admission::receive(&gate.location).anyone())
-    }))
+    let receive = started
+        .receive
+        .iter()
+        .map(|gate| Admission::receive(&gate.location));
+    let send = started
+        .send
+        .iter()
+        .map(|location| Admission::send(&location.name));
+    Box::new(
+        receive
+            .chain(send)
+            .fold(LocationPolicy::new(), |policy, admission| {
+                policy.admit(admission.anyone())
+            }),
+    )
 }
 
 /// The runtime database's engine, where this build carries it.
@@ -251,18 +268,28 @@ mod tests {
 
     #[cfg(all(feature = "authorize-location", feature = "authenticate"))]
     #[test]
-    fn each_receive_location_the_node_starts_admits_what_its_gates_authenticated() {
+    fn each_location_the_node_starts_admits_what_its_gates_authenticated() {
         use xmip_authorize::{Action, Attempt};
         use xmip_context::{Alignment, AuthenticatedIdentity, IdentityFacts, Verified};
+        use xmip_runtime::linked::Started;
         use xmip_runtime::receiving::ReceiveGate;
 
         let gates = [ReceiveGate::new(
             "In",
             xmip_authenticate::Acceptance::closed(),
         )];
-        let policy = receive_policies()
+        let node = xmip_configure::parse_toml(
+            "[service]\nname = \"n\"\ncluster_name = \"c\"\nnode_name = \"d\"\n\n\
+             [[send_locations]]\nname = \"Out\"\ntransport = \"t\"\naddress = \"a\"\n",
+        )
+        .expect("reads");
+        let started = Started {
+            receive: &gates,
+            send: &node.send_locations,
+        };
+        let policy = location_policies()
             .into_iter()
-            .map(|build| build(&gates))
+            .map(|build| build(started))
             .find(|policy| policy.name() == "location")
             .expect("the location policy");
         let facts = IdentityFacts::evaluate(
@@ -284,6 +311,29 @@ mod tests {
         assert_eq!(
             policy.decide(&facts, &Attempt::new(Action::Receive, "Elsewhere")),
             None
+        );
+        assert!(
+            policy
+                .decide(&facts, &Attempt::new(Action::Send, "Out"))
+                .is_some_and(|decision| decision.allowed()),
+            "the owner, 2026-10-19: a Send Location the node starts is admitted"
+        );
+        assert_eq!(
+            policy.decide(&facts, &Attempt::new(Action::Send, "Elsewhere")),
+            None
+        );
+    }
+
+    #[test]
+    fn every_build_verifies_a_drop_folders_implied_identity() {
+        let mechanisms: Vec<String> = authenticators()
+            .iter()
+            .map(|authenticator| authenticator.mechanism().name().to_string())
+            .collect();
+
+        assert!(
+            mechanisms.contains(&"circumstance".to_string()),
+            "{mechanisms:?}"
         );
     }
 

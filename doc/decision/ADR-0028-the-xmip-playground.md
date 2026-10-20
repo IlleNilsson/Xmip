@@ -642,3 +642,13 @@ the Parties it names, is built in the node (ADR-0019, amendment
 a claim as a node does, through `configure::party::id` and
 `configure::party::place_holding`, rather than each its own copy. The
 `[run]` table carries no Parties still.
+
+## Amendment, 2026-10-20: the Parties carry their ids and their identities' mechanism and purpose
+
+Each of the Playground's `[[parties]]` is written with its `id`, a UUIDv7
+minted once with it, and each identity as `{ mechanism = "mutual-tls",
+purpose = "receive", value = "CN=…" }` (the owner, 2026-10-19; ADR-0019,
+amendment 2026-10-20). The gates resolve a claim through
+`configure::party::place_holding` by mechanism and purpose and know a
+Party by the id it is written with (`Parties::id`), as a node does;
+`configure::party::id`, the place counted from one, is deleted.

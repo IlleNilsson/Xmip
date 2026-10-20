@@ -869,3 +869,68 @@ service and proves both. A Location accepting a mechanism that needs a
 credential store is still refused as the node starts, and a Message routed
 onward is refused at send authorization: no policy speaks for a Send
 Location yet.
+
+## Amendment, 2026-10-20: one node carries a file in to a file out
+
+The last sentence of the amendment above no longer holds: the `location`
+policy admits each Send Location the node starts (the owner, 2026-10-19;
+ADR-0050, amendment 2026-10-20), so a Message routed onward is sent. Every
+build of `xmip-service` carries the authenticate capability and its
+`circumstance` authenticator, so a file Receive Location accepting
+`circumstance` takes a dropped file on an installed node (ADR-0019,
+amendment 2026-10-20), and a file Send Location writes each Message in the
+directory its address names under the name it was received under
+(ADR-0024, amendment 2026-10-20). `.src/test/service/carried.rs` starts one
+node, its roles executing and storage, and proves a file dropped in arrives
+whole in the send directory under its name, counted in its audit; Xmip's
+own work around the payload measured 6.7 to 9.8 ms, the fastest of five,
+across seven runs, of which the sent file's own write, sync and rename took
+3.3 to 4.8 ms — over the millisecond, a defect to find (open problem 33). A
+Location accepting a mechanism that needs a credential store is still
+refused as the node starts.
+
+## Amendment, 2026-10-20: a departure behind the shared read reads what it missed, and comes back
+
+**Provenance.** The amendment of 2026-10-19 above had a fan-out's departures
+share one read of their Stream (`xmip-core-runtime`'s `stream_share`; open
+problem 38). On the landing of 2026-10-20 its test,
+`departures_at_their_far_ends_pace_share_one_read_of_each_chunk`, read 264
+or 528 chunks for 132 beside the runtime's other tests and 132 alone: the
+read kept two chunks, less than a millisecond of a far end's pace, so a
+departure begun a little late or kept from its processor fell behind, read
+the Stream again from its first chunk, and never came back. The owner,
+2026-10-20: *a departure that falls behind starts reading at the chunk it
+reached, catches up from Storage over only the chunks it missed, and
+rejoins the shared read. It must never re-read from chunk 0 or the whole
+Stream* — and the test is to hold under load with its bound as it was,
+neither isolated nor loosened.
+
+- **What is kept is what the departures' own reads would have held.** The
+  one read keeps the chunk it took last for a departure reading alone and
+  five more for each other departure reading it
+  (`stream_share::KEPT_PER_READER`, `budget::STREAM_CHUNKS` but for the
+  chunk lent): a departure taking lent chunks holds no read of Xmip Storage
+  of its own, and what its budget counts for one is the room the kept
+  chunks take. No departure waits for another, clause 11's bulkhead.
+- **One behind reads from where it is.** A departure whose place is not
+  among the kept chunks asks Xmip Storage for the chunk it reached and the
+  ones after it (`persist::storage::ChunkReader::shared_from`, held to the
+  Stream's length with the bytes it took before), never for a chunk it took.
+- **And comes back.** Before each chunk it reads by itself it asks whether
+  its place is among the kept chunks again, and once it is takes from the
+  one read, its own let go.
+
+Proved by `stream_share`'s tests — a departure fallen behind asks Xmip
+Storage for exactly the chunks it missed, comes back and stays — and by the
+same `send_streamed` test, unchanged: within the full runtime suite in
+parallel, on this machine with its desktop work and four processor-bound
+jobs beside it, it read 132 to 176 chunks for 132. At a machine's pace —
+a far end as fast as Xmip Storage is read,
+`a_fan_out_of_a_large_message_is_sent_in_bounded_memory` — departures begun more than the kept chunks apart read side by side and do
+not come back, since one reading by itself is no faster than the read it
+would join: 4,134 reads for 1,045 chunks, from the chunks each reached,
+held within the same memory (1.6 to 1.8 MB of four sends of 64 MiB).
+
+Provenance: the ruling and the test's terms are the owner's, 2026-10-20;
+the size of what is kept and how one behind comes back are the
+assistant's.

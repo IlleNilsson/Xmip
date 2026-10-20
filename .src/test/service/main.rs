@@ -21,6 +21,10 @@
 //!   `[provision.receive]` certificate accepts a Stream from the Party its
 //!   `accept.party` names, through the build's own identity technologies,
 //!   and refuses and audits one whose certificate names another.
+//! - `carried.rs`: the getting-started node — roles executing and storage —
+//!   carries a file dropped in its drop directory, accepted by the
+//!   circumstance, to a file of the same name in its send directory, whole,
+//!   audited, with Xmip's own work measured against the millisecond rule.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
@@ -301,6 +305,7 @@ fn order(directory: &Path, act: Act) {
 }
 
 mod accepted;
+mod carried;
 mod operate;
 mod publication;
 mod stop;

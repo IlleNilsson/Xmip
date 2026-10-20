@@ -269,6 +269,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
   section 5), how long a stopping Receive Location drains what its far end
   already let go of (`receive_drain`, built 2026-10-15, the same section),
+  how long each read of a TLS handshake a Receive Location terminates waits,
+  apart from the Location's own wait (`receive_handshake`, built
+  2026-10-20; ADR-0033, amendment 2026-10-20),
   how many of the oldest failed Journeys of each Send Port a node keeps
   (`failed_window`, built 2026-10-16, `runtime-model.md` section 10),
   the node's budget beside its pools — the arrivals it carries at once

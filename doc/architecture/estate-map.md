@@ -77,18 +77,23 @@ dropped: what it observed of the sender (the socket peer, the request line,
 the certificate a TLS handshake verified) and its headers reach the first
 gate, and the headers the Message Context. `xmip-service` links the identify
 technologies that need no configuration (`certificate`, `ip`, `jwt`,
-`api-key`, `username`), the `mutual-tls` authenticator and the `location`
-policy, and its tcp terminates TLS where a Receive Location says `tls = true`,
-presenting the node's `[provision.receive]` certificate and verifying a
-client's against its anchors: a Receive Location accepting `mutual-tls`,
-narrowed by `accept.party` to Parties `[[parties]]` declares, receives a
-Stream from such a Party and refuses any other at authentication, auditing the
-refused attempt with its claim. No authenticator a credential store sets up is
-linked, so a Location accepting another mechanism is refused as the node
-starts; and no policy speaks for a Send Location, so a Message routed onward
-is refused at send authorization (open problem 33). Records: ADR-0019
-(amendment 2026-10-19), ADR-0033 (amendment 2026-10-19), runtime-model.md
-section 5.
+`api-key`, `username`), the `circumstance` authenticator in every build, the
+`mutual-tls` authenticator and the `location` policy, and its tcp terminates
+TLS where a Receive Location says `tls = true`, presenting the node's
+`[provision.receive]` certificate and verifying a client's against its
+anchors, the handshake read under its own bound: a Receive Location accepting
+`mutual-tls`, narrowed by `accept.party` to Parties `[[parties]]` declares,
+each with its UUIDv7 id and its identities by mechanism and purpose, receives
+a Stream from such a Party and refuses any other at authentication, auditing
+the refused attempt with its claim; and a file Receive Location accepting
+`circumstance` receives a dropped file, the `location` policy admits it and
+the Send Location the node starts, and a file Send Location writes it in the
+directory its address names under the name it was dropped under. No
+authenticator a credential store sets up is linked, so a Location accepting a
+password-shaped mechanism is refused as the node starts (open problem 33).
+Records: ADR-0019 (amendments 2026-10-19 and 2026-10-20), ADR-0024 (amendment
+2026-10-20), ADR-0033 (amendments 2026-10-19 and 2026-10-20), ADR-0050
+(amendment 2026-10-20), runtime-model.md section 5.
 
 #### `certificate-usage`
 
@@ -158,8 +163,9 @@ act. Records: ADR-0013 (amendments 2026-09-30, 2026-10-01).
 **Routing by the Subscriptions a node binds.** A node routes every Message it
 publishes against the Subscriptions of the Xmip Applications it binds, their
 filters compiled as it starts; in the assembled service a Stream a Receive
-Location accepts reaches routing, and a Message routed onward is refused at
-send authorization (`arrival`). Records: ADR-0013, ADR-0066.
+Location accepts reaches routing, and a Message routed onward to a Send
+Location the node starts is admitted there by the `location` policy and sent
+(`arrival`). Records: ADR-0013, ADR-0066.
 
 ### Built, not in the assembled service
 
@@ -355,7 +361,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 270797 lines of production
+Where each repository mounts and what it holds: 271268 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -380,7 +386,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6096
+│   │   │   ├── transport                       6175
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -445,10 +451,10 @@ hold no source to count.
 │   │   │   │   ├── iec-60870-5-104              669
 │   │   │   │   ├── msmq                         651
 │   │   │   │   ├── syslog                       638
+│   │   │   │   ├── file                         633
 │   │   │   │   ├── obd-ii                       625
 │   │   │   │   ├── ssdp                         618
 │   │   │   │   ├── dnp3                         615
-│   │   │   │   ├── file                         599
 │   │   │   │   ├── coap                         582
 │   │   │   │   ├── modbus                       550
 │   │   │   │   ├── redpanda                     533
@@ -469,7 +475,7 @@ hold no source to count.
 │   │   │   │   ├── mllp                         309
 │   │   │   │   ├── tcp                          277
 │   │   │   │   └── udp                          216
-│   │   │   ├── authenticate                    2569
+│   │   │   ├── authenticate                    2626
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -647,7 +653,7 @@ hold no source to count.
 │   │   ├── event                               5616
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                2845
+│   │   ├── core                                2852
 │   │   ├── message                             1587
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -664,23 +670,23 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
+│   │   ├── context                              839
 │   │   ├── node                                 831
-│   │   ├── context                              827
 │   │   ├── journey                              592
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            26593
-│       ├── persist                             9149
+│       ├── runtime                            26664
+│       ├── persist                             9168
 │       │   ├── sqlite                           231
 │       │   ├── rocksdb                          163
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5221
+│       └── configure                           5404
 └── test/
     └── core/
-        └── playground                         11282
+        └── playground                         11291
 ```
 
 ---

@@ -492,3 +492,44 @@ leaves it whole).
 Provenance: the owner's words above. `Configured::sided`, the set of sends
 in flight and the place each side removes in are the assistant's drafting,
 for the owner to overrule.
+
+## Amendment, 2026-10-20: a file Send Location's address names a directory
+
+The owner, 2026-10-19: **a file Send Location's address names a directory,
+with each Message's file name taken from the Message's context (its
+received file name). Fix the relative-path bug (`addr/addr`) on the way.
+Keep the atomic write and the node-named temporary file** (the amendment of
+2026-10-19).
+
+- **The name the file was dropped under travels with the Message.** A file
+  Receive Location writes it on the arrival as `file.name`
+  (`context::property::FILE_NAME`), and the runtime writes it into the
+  Message Context beside the headers, once, at arrival
+  (`context::property::KEPT`, the one list of what a transport says that
+  the Message keeps). Departure hands the transport the Message's context
+  with its body (`transport::Outgoing::carrying`), and the file transport
+  writes the file under that name in the directory the address names.
+- **Refused in words, never guessed.** A Message carrying no `file.name` —
+  one received over another transport — or one naming a path rather than a
+  file of the directory (`..`, `sub/order.edi`, empty) is refused at the
+  send, permanently, and nothing is written. A test or a tool that sends
+  bytes it holds, with no Message behind them, names the file itself.
+- **The relative-path bug is gone with the reading that made it.** The
+  address had been read as the file, and the directory a send wrote beside
+  it was found by joining the address to itself, so a relative address
+  `out` wrote under `out/out`. The directory is now the address, as it is
+  for a Receive Location, and a starting Send Location removes its node's
+  unfinished sends there.
+- **Kept:** the write beside the target, its sync and its rename into place,
+  and the temporary file named for its node.
+
+Proved by the file transport's tests (a Message written under its received
+name in the directory a relative or absolute address names; a Message with
+no name, or a path for one, refused and nothing written; a dropped file
+saying its name) and by `.src/test/service/carried.rs` in the assembled
+service.
+
+Provenance: the ruling is the owner's, 2026-10-19; `file.name`, the `KEPT`
+list, handing the context with the body and the refusals' words are the
+assistant's, 2026-10-20. What a file Send Location writes for a Message that
+carries no file name is open (open problem 33).

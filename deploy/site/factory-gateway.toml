@@ -8,7 +8,9 @@ description = "A factory floor gateway: Modbus and OPC UA in, MQTT out."
 
 target = "edge"
 
-roles = ["executing"]
+# One machine, so it keeps Xmip Storage itself: a one-machine node carries
+# the Storage role (the owner, 2026-10-20; ADR-0056, amendment 2026-10-20).
+roles = ["executing", "storage"]
 
 # The technologies this deployment chose, by repository name (ADR-0015,
 # amendment 2026-10-19).

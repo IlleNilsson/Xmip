@@ -73,8 +73,11 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   TLS handshake verified, its peer, a bearer token, an API key, a Basic
   user — receives one over a tcp Receive Location that terminates TLS from a
   Party its `accept` names, and refuses any other at authentication,
-  auditing the attempt with its claim. A Message it routes onward is refused
-  at send authorization: no policy speaks for a Send Location yet.
+  auditing the attempt with its claim. A file dropped in a file Receive
+  Location that accepts `circumstance` — the drop folder's implied identity
+  — is received, routed by a Subscription and written in the directory a
+  file Send Location's address names, under the name it was dropped under:
+  one node on one computer, file in and file out.
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
   out. Every step below carries a note of what it audits. Entry, refusal,

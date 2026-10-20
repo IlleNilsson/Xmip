@@ -380,3 +380,27 @@ Provenance: clause 1 and the build order are the record's; the guard's
 shape, the `tls` setting, reading the anchors from `[provision.receive]`
 and leaving the chain unreported are the assistant's drafting, 2026-10-19,
 for the owner to overrule.
+
+## Amendment, 2026-10-20: the handshake is read under its own bound
+
+The service test of 2026-10-19 gave its Receive Location a one-second wait
+per read, because the handshake was read under the Location's own wait —
+a tenth of a second — and a client on a loaded machine let a tenth lapse
+between its handshake messages. A longer wait is a defect, never a fix
+(CONTRIBUTING.md, the millisecond rule).
+
+**The guard reads the handshake under a bound of its own**
+(`transport::Guard::answer`): each read of the handshake waits at most
+`[tuning] receive_handshake`, five seconds by default
+(`transport::guard::HANDSHAKE`, as long as a node's Event link waits on its
+peer's handshake), and the waits the connection came with — the Location's
+`timeout`, which bounds its content — are put back before a byte of
+content is read. The runtime gives the guard the node's bound as it builds
+it (`Guard::handshaking_within`). The service test is back to the
+Location's tenth, and passed at `RUST_TEST_THREADS=4` across six runs of
+the whole service suite; tcp's own test holds a client slower than the
+Location's wait before its handshake answered, and its stalled content let
+go after the Location's wait, not the guard's.
+
+Provenance: the bound's place, its key and its default of five seconds are
+the assistant's, 2026-10-20, for the owner to overrule.

@@ -36,9 +36,11 @@ built or installed; nothing here claims they work.
 
 **Build from a site whose node starts on its own.** A one-machine node is
 its own embedded Storage node and needs SQLite, which only the `storage`
-role brings. No example site has it yet, so a node built from
-`personal-computer` is refused as it starts; the owner decides which site
-an end user's package is built from (ADR-0015, amendment 2026-10-13).
+role brings; every one-machine example site carries it (the owner,
+2026-10-20: a one-machine node carries the Storage role), and
+`personal-computer` also links the `location` policy, so a file dropped in
+is received and sent on. The owner decides which site an end user's
+package is built from (ADR-0015, amendment 2026-10-13).
 
 ## Windows
 

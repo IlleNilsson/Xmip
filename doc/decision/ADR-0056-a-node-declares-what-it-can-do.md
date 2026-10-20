@@ -560,3 +560,10 @@ open.
 Built 2026-10-20: `xmip-core-runtime`'s `storage::plan` refuses a node
 without the storage role and without `[storage] nodes`; the root crate's
 service tests, its starter and its deploy test declare it.
+
+*Later the same day, the owner: a one-machine node carries the Storage
+role.* Every example site of one machine declares `storage`:
+`factory-gateway`, `hospital-interface` and `b2b-exchange` — the site the
+Ansible role builds by default — beside `personal-computer`. `field-sensor`
+does not: its target, a device, refuses `persist` and builds no
+`xmip-service` (ADR-0015).

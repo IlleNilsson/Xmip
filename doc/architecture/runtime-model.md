@@ -1429,10 +1429,16 @@ waits for its due time.
   reaches, sent side by side — share one read of it: the first opens it
   from Xmip Storage, and every other takes each chunk from that read, lent,
   never copied, while it keeps up (`xmip-core-runtime`'s `stream_share`).
-  The read keeps the last two chunks it took; a departure further behind —
-  a slower far end, a send begun later — reads on from Xmip Storage itself
-  from where it stands, so no Send Port waits on another (ADR-0018 clause
-  11, the bulkhead). Until now each departure read the Stream whole.
+  The read keeps the last chunk it took for a departure reading alone and
+  five more for each other departure reading it — the room each one's own
+  read of Xmip Storage would have held (`stream_share::KEPT_PER_READER`) —
+  and no Send Port waits on another (ADR-0018 clause 11, the bulkhead). A
+  departure further behind — a slower far end, a send begun later, a
+  thread kept from its processor on a loaded machine — asks Xmip Storage
+  for the chunks it missed, from the chunk it reached
+  (`persist::storage::ChunkReader::shared_from`), and takes from the one
+  read again once its place is among the kept chunks (ADR-0018, amendment
+  2026-10-20). Until now each departure read the Stream whole.
 - **A send holds its bytes within the node's budget.** Beside the Send
   pool's count of Journeys (*Corrected 2026-10-06*, above), what a send
   holds is held from the node's byte budget for sends (section 3, *A node's
@@ -1952,8 +1958,11 @@ In a node's configuration:
 
 ```toml
 [[parties]]
+id         = "..."                # a UUIDv7, written once with the Party
 name       = "Supplier"
-identities = ["..."]              # ADR-0019
+identities = [                    # ADR-0019, amendment 2026-10-20
+  { mechanism = "mutual-tls", purpose = "receive", value = "..." },
+]
 
 [receive_locations.accept]
 party = ["Supplier"]
