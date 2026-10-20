@@ -229,7 +229,14 @@ Between the two sits the **Ledger**, which holds every Stream, Message and
 Journey until *every* departure is settled. A Journey with two destinations
 reached and one awaiting collection is unfinished, and the Ledger is the only
 place that state can live without lying about it in one direction or the
-other.
+other. What the Ledger holds is **durable** once it is on disk: a sender is
+acknowledged, and a far end sees a Message, only then (ADR-0018, amendment
+2026-10-20).
+
+A Receive Location whose far end tells it of a change — a drop directory the
+operating system watches — rests until told, and its **recovery sweep**
+(`[tuning] receive_sweep`) lists what no word announced; one nothing tells
+**polls** at its poll interval (ADR-0024, amendment 2026-10-20).
 
 How a Stream arrived is separate from how its identity was established — see
 *Identity, Party and direction* above, and ADR-0019 clause 8.

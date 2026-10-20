@@ -80,6 +80,8 @@ and reports to its parent Receive Port.
 
 ### One Service per node, and it stays out of the message path
 
+answered before its sync; Host Service; Service, the Xmip Service
+
 The Xmip Service is the master and the only thing the operating system starts.
 It reads the node configuration, builds and validates the execution tree, then
 supervises the Xmip Host Services. **No Stream, Message or Journey passes
@@ -104,7 +106,7 @@ Consul, etcd, Redis or ZooKeeper.
 
 ### A claim at the endpoint, not a lease inside Xmip
 
-Journey claim
+artifact; Exclusiveness, leases, renewal (retired); Journey claim
 
 `xmip-core-exclusiveness` is retired — the module, the repository, the four
 scopes, the lease and its renewal. `ResourceClaim` in `xmip-core-transport`
@@ -120,7 +122,9 @@ one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
 the file's turn and renaming it, object stores and databases by their own
 exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
 as a Journey is claimed. Several nodes may poll one directory; the stability
-check stays.
+check stays where the system cannot say whether a writer holds a file. A
+drop directory tells the Location of a file as it lands, and its poll is a
+recovery sweep (amendment 2026-10-20).
 
 → [A claim at the endpoint, in full](ADR-0024-resource-claim-replaces-exclusiveness.md)
 
@@ -1059,7 +1063,8 @@ You have a word. This gives you the decision that governs it.
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Budget, what a node holds beside its pools | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
-| Claim, claimable artifact | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| Change notification, a drop directory told | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
+| Claim, claimable | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, `xmip-cli`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
@@ -1085,13 +1090,13 @@ You have a word. This gives you the decision that governs it.
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
+| Durable, a Publication | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
-| Exclusiveness, leases, renewal | retired — [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | expression | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
@@ -1105,7 +1110,6 @@ You have a word. This gives you the decision that governs it.
 | History, an observation series | [Observation has history](ADR-0029-observation-has-history.md) |
 | Holding says why | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | Host crate | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
-| Host Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | identifier | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Identity technology | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
@@ -1193,7 +1197,6 @@ You have a word. This gives you the decision that governs it.
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | service principal name, SPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
-| Service, the Xmip Service | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | Shape | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Shared code | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | shared declaration | [One error declaration](ADR-0037-one-error-declaration.md) |

@@ -112,6 +112,7 @@ fn count(publication: &Publication, scope: &str, counted: Counted) -> u64 {
 
 #[test]
 fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_next() {
+    let _machine = sharing();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-publication-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);

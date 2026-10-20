@@ -936,17 +936,36 @@ the Loopback Application's Subscription, a file Send Port; ten files
 dropped one after another each arrive whole in the send directory under
 their names, counted in the node's audit.
 
-**Measured against the millisecond rule, and over it.** From the node's
-claim of a dropped file to the file whole in the send directory — read,
-the three gates, the Ledger's write, the route, the Journey, the send step
-and the sent file — took 6.7 to 9.8 ms, the fastest of five, across seven
-runs on 2026-10-20, of which the sent file's own write, sync and rename,
-measured beside it, took 3.3 to 4.8 ms: Xmip's own work beyond the payload
-is some 3 to 5 ms, a defect to find. How long a file waits before it is
-claimed is the operator's poll (`receive_poll`) and the stability check's
-second listing, and is no work; a watched drop directory
-(`runtime::directory_watch`, built and not used by the file transport)
-would end that wait.
+**Measured against the millisecond rule.** From the node's claim of a
+dropped file to the file whole in the send directory — read, the three
+gates, the Ledger's write, the route, the Journey, the send step and the
+sent file — took 6.2 ms, the fastest of five, on 2026-10-20, of which the
+sent file's own write, sync and rename took 2.8 ms; and a file waited 64 to
+77 ms for its claim at a 50 ms poll, about 1.7 s at the default. Repaired
+the same day: the drop directory tells the Location of a file the moment it
+lands, a file is finished once no writer holds it, and the poll is a
+recovery sweep (`[tuning] receive_sweep`; ADR-0024, amendment 2026-10-20);
+a Publication is answered before its sync, its sends prepared meanwhile and
+let out only once it is durable (ADR-0018, amendment 2026-10-20). After:
+the claim waits 1.57 to 1.79 ms; the carry takes 3.68 to 3.87 ms, the sent
+file's own work 2.06 to 2.08 ms and the Ledger's durable copy of the payload
+0.98 to 1.06 ms beside it, so Xmip's own share is 0.60 to 0.83 ms, held
+under a millisecond beside the machine's own wake for each of its five
+hand-offs between threads by `.src/test/service/carried.rs`, run alone.
+
+What remains of it, the owner's to decide:
+
+- **The Ledger's sync is counted as the payload's load.** Beyond the sent
+  file alone Xmip takes 1.6 to 1.8 ms: the Ledger's sync and the sent
+  file's land on one disk, which takes them one after the other. Only
+  letting a far end see a Message before the Ledger holds it durably would
+  take that sync off the path — a duplicate after a crash, under a new
+  Journey and so a new deduplication key. Recommended: keep it, and count
+  the Ledger's copy as load, as `carried.rs` does.
+- **Linux and macOS take a file at the second listing**, at the next change
+  or the sweep, since the system does not say whether a writer holds it;
+  the watch hears a close after writing there, and telling it by name
+  would let the claim take that file at once.
 
 What remains of the first part:
 

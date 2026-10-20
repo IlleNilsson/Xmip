@@ -268,7 +268,12 @@ sender, never acknowledged, sends again; an acknowledged Message has its
 Stream, its Message record and its Journeys in the Ledger. The chunks and the
 Publication are one statement, asked of one Storage node (*Xmip Storage is
 the doorway to it*, above), so the sync that covers them is that node's (the
-owner, 2026-10-03).
+owner, 2026-10-03). The embedded Storage node's writer answers a Publication
+once it is written and decided, and syncs it right after: the answer carries
+when it is durable (`persist::storage::Durable`), what the receive cycle and
+every send of its Journeys wait on before anything is acknowledged or seen
+by a far end (section 10; ADR-0018, amendment 2026-10-20). Every other write
+is answered once durable.
 
 **Work moves by claim.** A node takes a Journey by
 a claim through Xmip Storage: a conditional update in the database — set the
@@ -765,10 +770,34 @@ receive began, set per cluster and per node as every `[tuning]` value is
 (ADR-0031, amendment 2026-10-03). A rest is waited on the node's stop,
 which ends it at once. Until 2026-10-12 every Location was asked again at
 once, and an idle
-polled one listed its directory or ran its query without pause. Where a
-far end can tell of a change — a file system's change notification, a
-database's `LISTEN` — the technology still polls; waiting on such a notice
-is not built.
+polled one listed its directory or ran its query without pause.
+
+**A polled Location whose far end tells of a change waits for that word**
+(built 2026-10-20, ADR-0024, amendment 2026-10-20). A technology says where
+its far end tells (`Transport::notice`): the file transport, its drop
+directory. The runtime watches it with the operating system's change
+notification (`runtime::directory_watch`), and a Location that found
+nothing rests until the word comes or its recovery sweep is over,
+`[tuning] receive_sweep` (a second by default), for what lay there before
+the watch began or a word missed. A drop directory not there yet is polled
+until it is, then watched. So a file is listed the moment it lands: a
+file dropped waited about 1.7 seconds for its claim on the getting-started
+node until then, and waits under two milliseconds now, the listing and the
+claim's turn and rename on the file system. A database's `LISTEN` is not
+built.
+
+**The far end sees a send only once its Message is durable, and the send
+is prepared meanwhile** (built 2026-10-20, ADR-0018, amendment 2026-10-20).
+The embedded Storage node's writer answers a Publication once it is decided
+and written, before its sync, and syncs it then (`persist::storage::Durable`);
+the receive cycle hands the Journeys it claimed to the send step at once and
+ends — the sender acknowledged — only once the Publication is durable. A
+technology whose send keeps what its far end sees back (`Transport::holds_back`)
+is handed the Message at once: the file transport writes and syncs its file
+beside the target while the Ledger syncs, and renames it into place only once
+`Outgoing::kept` says the Message is durable. Every other technology is handed
+it once durable, as before. Nothing reaches a far end that the Ledger could
+lose.
 
 **A receive takes no more than there is room for** (built 2026-10-19,
 `open-problems.md` problem 38). A Location asks its transport for at most
@@ -1134,7 +1163,12 @@ The owner accepted four additions:
 **Built 2026-10-03** (`xmip-core-runtime`'s `send_step`), closing the
 review finding that inline sends recorded no outcome and nothing took up
 an unfinished Journey. **The receive cycle sends nothing**: it ends at the
-Publication's durable write and the acknowledgement (section 5). The
+Publication's durable write and the acknowledgement (section 5). Its claimed
+Journeys are handed to the Send pool as soon as the Publication is decided,
+before its sync, and a far end sees one only once the Publication is
+durable: a technology that holds its delivery back (the file transport,
+which renames its file into place last) prepares the send meanwhile, and
+every other is handed it once durable (ADR-0018, amendment 2026-10-20). The
 Publication keeps every Journey that is not held in the queue of where it
 leads — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node

@@ -183,7 +183,7 @@ Xmip installs as one node on one machine, started by the operating system
 with the machine and operated from it at once
 ([ADR-0015, amendment 2026-10-13](doc/decision/ADR-0015-packaging.md);
 [`deploy/package`](deploy/package/README.md)). Nothing is published yet:
-build the package from the estate (*First run* below, then
+build the package from the estate ([Getting started](doc/getting-started.md), then
 `Build-XmipService -Site personal-computer -CargoArgument '--release' -Package msi, archive`).
 
 | | Windows | Linux | macOS |
@@ -213,147 +213,16 @@ starter configuration `--install` writes declares it for its one node.
 
 ### First run
 
-[Getting started](doc/getting-started.md) is the same first run step by
-step, through a node of your own that carries a file in to a file out.
-
-1. Install PowerShell 7.6.7 or later. Windows PowerShell 5.1 is a different
-   product and is not supported.
-
-   ```sh
-   winget install Microsoft.PowerShell          # Windows
-   sudo snap install powershell --classic       # Linux, any distribution with snap
-   sudo apt-get install -y powershell           # Debian, Ubuntu; Microsoft package repository required
-   sudo dnf install -y powershell               # Fedora, RHEL; Microsoft package repository required
-   brew install powershell                      # macOS
-   ```
-
-   Every command below runs inside `pwsh` and is identical on all three
-   platforms.
-
-2. Clone the estate and load its PowerShell module.
-
-   ```powershell
-   git config --global core.longpaths true      # Windows: module paths nest deep
-   git clone --recursive https://github.com/IlleNilsson/Xmip.git
-   Set-Location -Path Xmip
-   Import-Module -Name ./Xmip
-   Install-XmipModule
-   Install-XmipPrerequisite -Role developer -Install
-   ```
-
-   `Install-XmipModule` links the module into your user module path. In any
-   later shell, `Import-Module -Name Xmip` is sufficient.
-   `Install-XmipPrerequisite -Install` also compiles, once per RocksDB
-   version, the RocksDB library every build links; nothing builds before it.
-
-   A console of its own, in Windows Terminal: add a profile whose starting
-   directory is the clone and whose command line is
-
-   ```text
-   pwsh -NoExit -Command "Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1"
-   ```
-
-   Do not add `-NoProfile`. posh-git is imported by a PowerShell profile
-   file, `-NoProfile` skips every one of them, and the prompt then shows
-   `PS D:\Repos\Xmip>` with no repository state (the owner's console,
-   2026-09-18). Leave the Xmip status segment out of the command line and
-   import it in the session that wants it: a console holding that module
-   holds its assemblies, and a build into them fails until it is closed.
-   That console is `pwsh`, which `Get-Process -Name xmip-*` does not find.
-
-3. Start the Playground and its monitor. The Playground is Xmip's own
-   integration rehearsal; it needs no network and no other software.
-
-   ```powershell
-   Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -OnlineNodes R1
-   Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
-   Get-XmipTestStatus
-   Get-XmipTestResult | Where-Object -Property State -NE -Value fine
-   Stop-XmipTest
-   Stop-XmipOperationWeb
-   ```
-
-   A roll is one cluster's test, and the cluster is a process the roll spawns
-   (ADR-0052, amendment 2026-09-19); two rolls are two clusters side by side.
-   Leave the two `Stop-` lines above until later and a second roll stands
-   beside the first. One web host serves them both, and the views say
-   which cluster they are on and move between them (ADR-0052, amendment
-   2026-09-20):
-
-   ```powershell
-   Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' } -OnlineNodes R1
-   Get-XmipTestStatus | Start-XmipOperationWeb
-   ```
-
-   The second roll is a cluster called `C2` with two nodes, and `P1` carries
-   two roles because `-NodeRole` says so, not because of its name
-   ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)). Its
-   `R1` is not the first roll's `R1`: each cluster names its own nodes, and
-   Xmip reads none of those names.
-
-   The prompt follows one cluster and says how many it is not showing —
-   `[C2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters there are the three
-   stages of the message path, which is the one place in Xmip where a letter
-   means anything — the R of a node called `R1` means nothing — and each
-   is what that stage is moving per second, not a total since the roll began: `R:0/s` says stalled, which a rising total
-   never can, and a dash says there has been only one publication so far. T
-   and F are counts, on the line only when above zero.
-   `xmip-cli --snapshot <path>` names which cluster the executable reads; it
-   answers one cluster per invocation and shows totals, because a single
-   reading has no interval to take a rate over.
-
-   Every System Process Xmip owns is named `xmip-<what>` and declares its
-   name, its location and its purpose, test or runtime (ADR-0053). A
-   Playground process says which cluster and which node it is —
-   `xmip-playground-C1-roll`, `xmip-playground-C1-cluster`,
-   `xmip-playground-C1-node-R1` — so twenty rows of `Get-Process` read as a
-   tree rather than as one name repeated (amendment 2026-09-20).
-   `Get-XmipProcess` lists them with what they said, and one line stops
-   every one of them, whatever started it:
-
-   ```powershell
-   Get-Process -Name xmip-* | Stop-Process -Force
-   ```
-
-   `-OnlineNodes R1` records that `R1` may assume a route to the
-   internet and the others may not (ADR-0045). `R1` is the node this
-   command declared `receive` for, so it is the receiving edge — the node that
-   may obtain its server certificate over ACME from a public authority, Let's
-   Encrypt one option its configuration names, which is the one online act
-   Xmip has (ADR-0033, ADR-0034;
-   [built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning)).
-   The switch permits; nothing in the Playground reaches out.
-
-   The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the
-   board that follows receive, process and send as the cluster moves. Beside
-   it are Configuration, the classic tree of the whole cluster, and Topology,
-   the cluster's own communication. `C1` is the cluster and `R1`, `P1`
-   and `S1` its three simulated node processes. Those names are yours and
-   mean nothing — the owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node
-   names*, and the same of clusters. The examples name clusters `C1`, `C2` and
-   nodes `R1`, `P1`, `S1` because that is how the owner names them when he
-   tests (2026-09-25): the letter reminds you, and Xmip never reads it. This
-   walkthrough says `C1` also because
-   the `xmip-cli` and PowerShell documents that ship in a developer's clone
-   follow `C1-snapshot.toml`; roll under any other name and point them at that
-   file, or let `Start-XmipTest` tell the session. Nothing in Xmip reads a
-   cluster's name or a node's: what a node does is the roles it was started
-   with ([ADR-0056](doc/decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-   `-NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }`
-   states them — receiving, processing and sending one stage each, or
-   `executing` for all three in one process, the low-latency choice — or omit
-   `-Nodes` and the run takes the test cluster's `test/xmip.toml` as it is,
-   whose `[nodes.R1] roles = "receiving"` and so on cover the whole path.
-   A node given no role declares none and runs the
-   shared-directory tests whole, which `Start-XmipTest` says in words before
-   it starts anything. `R1` may use the internet because you said so; the
-   others may not.
+[Getting started](doc/getting-started.md) is the first run, step by step,
+and its one home: what a machine needs, the clone and the estate's
+PowerShell module, compiling the Xmip Service, a node of your own that
+carries a file in to a file out, and the Playground, Xmip's own integration
+rehearsal, with its monitor.
 
 Nothing in Xmip starts on its own. You name a cluster and its nodes, you
-start them when you want to, and you stop them. Every command that changes state accepts `-WhatIf`.
-`Get-Help Start-XmipTest -Full` documents every parameter.
+start them when you want to, and you stop them. Every command that changes
+state accepts `-WhatIf`. `Get-Help Start-XmipTest -Full` documents every
+parameter.
 
 ---
 
@@ -928,14 +797,8 @@ repository.
 
 ### Setup
 
-Complete the [first run](#first-run), then:
-
-```powershell
-git submodule update --init --recursive
-git config push.recurseSubmodules check
-```
-
-A submodule is a commit, not a branch. [CONTRIBUTING.md](CONTRIBUTING.md)
+Complete the [first run](doc/getting-started.md), the clone's submodule
+settings among it (section 3). A submodule is a commit, not a branch. [CONTRIBUTING.md](CONTRIBUTING.md)
 explains how a Module change lands before the superproject updates its pin.
 `git status` at the root ignores dirt inside the submodules
 (`ignore = dirty` in `.gitmodules`): walking them took thirty seconds, and a

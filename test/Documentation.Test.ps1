@@ -14,6 +14,8 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     $script:ModuleRoot = Join-Path $script:Root 'Xmip'
     $script:Readme = Get-Content (Join-Path $script:Root 'README.md') -Raw
+    # The first run's one home: README.md links it (2026-10-20).
+    $script:Guide = Get-Content (Join-Path $script:Root 'doc/getting-started.md') -Raw
 
 }
 
@@ -254,9 +256,10 @@ Describe 'The setup procedure is present' {
     It 'shows how to load the module and put it on PSModulePath' {
         # A forward slash: the line is typed on Linux and macOS as often as on
         # Windows, and PowerShell reads it on all three (the owner, 2026-09-12).
-        $script:Readme | Should -Match 'Import-Module -Name \./Xmip'
-        $script:Readme | Should -Match 'Install-XmipModule'
-        $script:Readme | Should -Match 'Import-Module -Name Xmip'
+        $script:Guide | Should -Match 'Import-Module -Name \./Xmip'
+        $script:Guide | Should -Match 'Install-XmipModule'
+        $script:Guide | Should -Match 'Import-Module -Name Xmip'
+        $script:Readme | Should -Match '\(doc/getting-started\.md\)'
     }
 
     It 'states the PowerShell floor that prerequisite.toml declares' {
@@ -268,11 +271,12 @@ Describe 'The setup procedure is present' {
         [string] $because = 'a reader must be told the same floor the tooling enforces'
 
         $script:Readme | Should -Match ([regex]::Escape($floor)) -Because $because
+        $script:Guide | Should -Match ([regex]::Escape($floor)) -Because $because
     }
 
     It 'covers both roles a person can set up' {
         $script:Readme | Should -Match '-Role operator'
-        $script:Readme | Should -Match '-Role developer'
+        $script:Guide | Should -Match '-Role developer'
     }
 }
 

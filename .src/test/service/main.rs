@@ -24,7 +24,12 @@
 //! - `carried.rs`: the getting-started node — roles executing and storage —
 //!   carries a file dropped in its drop directory, accepted by the
 //!   circumstance, to a file of the same name in its send directory, whole,
-//!   audited, with Xmip's own work measured against the millisecond rule.
+//!   audited, with Xmip's own work measured against the millisecond rule —
+//!   alone.
+//!
+//! A test that measures how long Xmip takes — `carried.rs`, `told.rs` —
+//! takes the machine whole ([`alone`]); every other shares it ([`sharing`]),
+//! so what is measured is Xmip's work and not its neighbors'.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
@@ -37,6 +42,7 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::mpsc::{self, Receiver};
+use std::sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
 use xmip_net::fixture::unheld;
@@ -45,6 +51,22 @@ use xmip_transport::Transport;
 use xmip_transport_tcp::TcpTransport;
 
 const MESSAGES: u64 = 50;
+
+/// The machine the tests here run on: shared by those that only prove what
+/// a node does, taken whole by one that measures how long it takes.
+static MACHINE: RwLock<()> = RwLock::new(());
+
+/// The machine, shared with every other test that shares it, for as long
+/// as the guard is held.
+fn sharing() -> RwLockReadGuard<'static, ()> {
+    MACHINE.read().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// The machine, no other test of this program running beside it, for as
+/// long as the guard is held.
+fn alone() -> RwLockWriteGuard<'static, ()> {
+    MACHINE.write().unwrap_or_else(PoisonError::into_inner)
+}
 
 /// The Loopback Application, as its section of the node's configuration.
 const APPLICATION: &str = r#"
