@@ -78,7 +78,7 @@ function New-XmipGitHubRepository {
         Write-Warning $warning
     }
 
-    # A repository generated from the template starts with the licence, the
+    # A repository generated from the template starts with the license, the
     # workflow and the layout every Xmip repository is supposed to have. A
     # blank one starts with nothing and someone has to remember to add them.
     if ($chosen) {
@@ -283,7 +283,7 @@ function New-XmipRepository {
 
     if ($template.Count -eq 0) {
         [string] $warning = 'No crate.template in the manifest. Repositories will be created ' +
-            'blank, with no licence, workflow or layout.'
+            'blank, with no license, workflow or layout.'
 
         Write-Warning $warning
     }

@@ -687,7 +687,7 @@ dependency = []
     specification = "Azure Shared Access Signature and Shared Key authorization"
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
-    specification = "Azure Blob Storage REST API, Shared Key authorisation"
+    specification = "Azure Blob Storage REST API, Shared Key authorization"
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-transport-azure", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.azure-event-grid]
     maturity = "scaffolded"
@@ -708,7 +708,7 @@ dependency = []
     [xmip.core.transport.file]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-net", "xmip-core-context", "xmip-core"]
-    specification = "Platform file-system behaviour and the Rust standard library file APIs"
+    specification = "Platform file-system behavior and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
     maturity = "scaffolded"
     specification = "Google Cloud Storage JSON API, bearer token"
@@ -1315,7 +1315,7 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-node"]
 
   [xmip.core.party]
-  description = "Xmip Party model, associations, and the identities a Party is recognised by on receive and presents on send. ADR-0019."
+  description = "Xmip Party model, associations, and the identities a Party is recognized by on receive and presents on send. ADR-0019."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1460,7 +1460,7 @@ dependency = []
     description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-azure-blob"]
-    specification = "Azure Blob Storage REST API, Shared Key authorisation, through the azure-blob transport client"
+    specification = "Azure Blob Storage REST API, Shared Key authorization, through the azure-blob transport client"
     [xmip.core.archive.file]
     description = "File archive target: one item is one file under a directory, its metadata beside it. A xmip-core-archive technology."
     maturity = "scaffolded"

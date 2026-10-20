@@ -15,7 +15,7 @@
 schemaVersion = "1.0.0"
 source = "IlleNilsson/Xmip"
 sourceCommit = "a3b001e871"
-revised = "2026-08-25, after api became webapi and xmip-tracking was recognised as audit"
+revised = "2026-08-25, after api became webapi and xmip-tracking was recognized as audit"
 generated = "2026-08-25"
 
 # ===========================================================================
@@ -88,7 +88,7 @@ fromSurface = [
 # the previous-journey link, which the root has never had.
 #
 # So a [[move]] is only correct where the destination is empty. Everything else
-# is a [[merge]], which is a judgement per file and inert to Invoke-XmipDistribution
+# is a [[merge]], which is a judgment per file and inert to Invoke-XmipDistribution
 # by design — a merge must not be performed by a tool that can only overwrite.
 #
 # No Cargo.toml moves survive. Every module already has one, current, with
@@ -117,7 +117,7 @@ into = "xmip-core-route"
 on = "2026-08-27"
 outcome = "Done. The root implementation survived; the module's was replaced."
 reason = """
-Both sides are real. src/route.rs is the largest single piece of behaviour in
+Both sides are real. src/route.rs is the largest single piece of behavior in
 the tree — publication, subscription matching as a pure function, declines that
 explain themselves, and the four stated differences from BizTalk's MessageBox.
 xmip-core-route has its own implementation.
@@ -190,7 +190,7 @@ returning a boxed ExclusiveLease with renew and release.
 with ResourceClaim in xmip-core-transport — the endpoint's own atomic claim,
 which is cluster-wide because the endpoint is one thing however many nodes are
 asking. The queue, the fairness and the acquisition timeout recorded below went
-with it. Nothing needs queueing for an artefact: a node that finds one claimed
+with it. Nothing needs queuing for an artifact: a node that finds one claimed
 takes the next one.
 
 **What goes with it, recorded because git holds it and nobody will look.** This
@@ -620,7 +620,7 @@ Repository families are sections 2 and 5. Its two remaining pieces were placed
 
 The note that FTP covers FTP and FTPS modes while SFTP stays a separate
 SSH-based transport is runtime-model.md section 23 conflict 10, which was
-already resolved in this document's favour — SFTP shares a purpose with FTP and
+already resolved in this document's favor — SFTP shares a purpose with FTP and
 nothing else, not the wire protocol, port, security model or command set.
 
 The rule that a repository may be added, removed or renamed only through a
@@ -640,7 +640,7 @@ third, Process or Send Port fourth — which is runtime-model.md sections 5 to
 
 Verified before deletion: the one clause worth losing sleep over, that a Send
 Port completes when one of its Send Locations succeeds, is stated in section
-10 along with the retry and failover behaviour around it.
+10 along with the retry and failover behavior around it.
 """
 
 [[superseded]]
@@ -652,10 +652,10 @@ superseded when it was classified — it became superseded on 2026-08-26, when
 the content was moved rather than deleted.
 
 The specifications are now a `specification` field on the repository itself,
-beside `dependency`, which answers the neighbouring question: dependency says
+beside `dependency`, which answers the neighboring question: dependency says
 HTTP is built on TCP, specification says which HTTP. RFC 9293 for TCP, RFC 9110
 for HTTP, RFC 6455 for WebSocket, RFC 768 for UDP, MLLP framing for MLLP, and
-platform file-system behaviour for file.
+platform file-system behavior for file.
 
 repository-model.md section 5b documents the field and carries the rule this
 document closed with: compliance is claimed only after conformance evidence
@@ -829,7 +829,7 @@ git holds the originals. Delete the directory.
 
 The lesson is worth keeping even though the folder is not: the previous entry
 read 'Historical, and the one place a docx belongs', and that word — historical
-— is why nothing in here was read during the consolidation. A folder labelled
+— is why nothing in here was read during the consolidation. A folder labeled
 as provenance is a folder nobody greps.
 """
 
@@ -878,7 +878,7 @@ as provenance is a folder nobody greps.
 #   'Core semantics may not be forked or reimplemented'
 #       Cannot be adopted. Xmip is AGPL-3.0-or-later, which grants exactly the
 #       right to modify and redistribute that this sentence withholds. A
-#       licence and a wish, and the licence is the one that binds. Flagged
+#       license and a wish, and the license is the one that binds. Flagged
 #       rather than silently dropped, because it was written on purpose.
 #   template.xmip.toml, cluster.xmip.toml, node xmip.toml
 #       Not rejected on merit — it is direct input to the open node
@@ -927,7 +927,7 @@ source = "_origins/Xmip_Current_State_Specification.md section 9"
 detail = """
 standard, enterprise, regulated. Regulated means strict isolation, fail-closed,
 and mandatory compliance reporting. deployment-model.md has node profiles and
-roles; it has no security profile, and fail-closed is a runtime behaviour that
+roles; it has no security profile, and fail-closed is a runtime behavior that
 has to be designed rather than declared.
 """
 candidate = "doc/architecture/deployment-model.md"
@@ -997,9 +997,9 @@ core semantics may not be forked or reimplemented.
 
 The last clause is a licensing position and Xmip is AGPL-3.0-or-later. Whether
 'may not be reimplemented' is enforceable, aspirational, or in tension with the
-licence is a question for a human, not for this file.
+license is a question for a human, not for this file.
 """
-candidate = "doc/governance/release-model.md, and CONTRIBUTING.md. The licence clause needs a decision."
+candidate = "doc/governance/release-model.md, and CONTRIBUTING.md. The license clause needs a decision."
 
 [[unmined]]
 subject = "Build targets"
@@ -1675,7 +1675,7 @@ path = "doc/governance/repository-creation-blueprint.md"
 replacedBy = "doc/architecture/repository-model.md"
 why = """
 Written before ADR-0011, ADR-0012, ADR-0016 and ADR-0018: nine domains where
-the model has five, per-module ABIs where ADR-0012 has one, an MIT licence
+the model has five, per-module ABIs where ADR-0012 has one, an MIT license
 where ADR-0023 has AGPL, and twenty repositories under names that no longer
 exist. Its layout is repository-model.md section 7; its creation gate is
 section 10, in current terms; its owner-information and tooling notes were
@@ -1690,7 +1690,7 @@ A 'frozen architectural baseline' for publish, subscribe, evaluate and dispatch
 that runtime-model.md sections 9 and 11 already state in current words; its
 module structure named four submodules that never existed, and its DMN clause
 was decided against by ADR-0043 (logic is the method). Moved into the route
-repository on 2026-08-26 as a judgement call; retired on 2026-09-12."""
+repository on 2026-08-26 as a judgment call; retired on 2026-09-12."""
 
 # Content moved on 2026-09-12, each file kept, each part now beside its subject
 # (ADR-0020 clause 3). Recorded here so the ledger says where a paragraph went:

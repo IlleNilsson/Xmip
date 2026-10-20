@@ -124,7 +124,7 @@ hold HTTP. Two technologies were approved that day to hold them,
   it is the shared dialect of a family, which is why it sits under the
   capability beside the technologies it serves.
 - **http keeps HTTP**: the request and its answer, the endpoint,
-  percent-encoding, RFC 1123's date and the judgement of a status.
+  percent-encoding, RFC 1123's date and the judgment of a status.
   `x-amz-date` went to the AWS signer that reads it, once the civil
   calendar both dates are written off had moved to `xmip-core-library-codec`
   the same day. *(Later the same day: percent-encoding and a URL's
@@ -145,7 +145,7 @@ halves, are `net::http`, and the URL a Location names `net::Endpoint`; http's
 own codec (`message`), its Stream writer (`client`) and its URL reader
 (`HttpTarget`) are gone, and every technology riding on HTTP calls net for
 the message and http for what is the transport's — the connection and its
-TLS (`http::endpoint`), a request served (`http::server`), the judgement of
+TLS (`http::endpoint`), a request served (`http::server`), the judgment of
 a status (`http::status`) and RFC 1123's date. The head reader the
 transport capability held for HTTP and SMTP went with it, to `net::head`,
 and a network failure reaches a transport's `?` through

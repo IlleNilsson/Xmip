@@ -384,7 +384,7 @@ about what a surface reads: the snapshot stays the truth (ADR-0027), the
 change feed says only that a new one exists.
 
 - **Told, not asked.** `WatchAsync` is the one change feed every surface
-  follows, and it is signalled: the native boundary blocks in
+  follows, and it is signaled: the native boundary blocks in
   `xmip_wait_change_v1` on a revision, and a published snapshot file is
   watched by the file system. The two-second loop in `NativeOperator` is
   the fallback for a runtime that cannot signal, kept for a rolling upgrade
@@ -917,7 +917,7 @@ rising total can never say. That is the whole of the change.
   interval between two publications. A trickle is written `0.3/s` and never
   rounded to `0/s`, on the same *one decimal below ten of a unit* the K, M and G
   ladder already uses.
-- **The trend colour still earns its place, and the judgement is stated rather
+- **The trend color still earns its place, and the judgment is stated rather
   than assumed.** Over a total it answered *is anything moving*, which the rate
   now answers outright; over a rate it answers a different question — *is the
   rate climbing or falling*, whether a cluster is speeding up or winding down —
@@ -1630,7 +1630,7 @@ its name.
   holds nothing and says why in its source line.
 - **On, it is there and says test.** Its pill, its audit group and each of
   its audit records say `· test` after their name, in words
-  (`English.Test`) and outlined dashed — never a mood's colour or the
+  (`English.Test`) and outlined dashed — never a mood's color or the
   brand's — and its run line ends *hidden test run*.
 - **The other surfaces.** `xmip-cli audit --include-hidden`,
   `Get-XmipAudit -IncludeHidden` and `Get-XmipTestStatus -IncludeHidden`,

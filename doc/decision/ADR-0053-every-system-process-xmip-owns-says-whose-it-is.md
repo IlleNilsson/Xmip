@@ -249,7 +249,7 @@ when the roll ends: the roll takes what it can on its way out, `Stop-XmipTest`
 takes the rest, and the next roll on the same cluster clears the directory
 before it starts.
 
-A link is not a micro-optimisation here. The node binary is twenty-one
+A link is not a micro-optimization here. The node binary is twenty-one
 megabytes and the brutal level brings forty nodes; copying would write eight
 hundred megabytes for every roll, on every start.
 

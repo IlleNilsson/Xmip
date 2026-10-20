@@ -193,7 +193,7 @@ function Get-MachineAnswerMedium {
     What one machine's answer medium holds: its volume label and its files.
     .DESCRIPTION
     Windows Setup reads autounattend.xml from the root of any removable
-    medium; Anaconda reads ks.cfg from a volume labelled OEMDRV without being
+    medium; Anaconda reads ks.cfg from a volume labeled OEMDRV without being
     told to. The Windows answer takes the Administrator password from the
     machine's credential file, the Linux answer its SSH public key.
     #>

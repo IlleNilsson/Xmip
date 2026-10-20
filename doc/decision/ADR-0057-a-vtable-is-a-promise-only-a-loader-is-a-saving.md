@@ -293,7 +293,7 @@ happens.
   materialized, while `XmipTransportVtable` streams through `XmipReader`.
   Neither contradicts a decision; both mean a vtable is not a mechanical
   wrap of the trait beside it, for the one capability where both exist.
-- **ADR-0025's delay-load becomes real or stays theatre.** Clause 3 says a
+- **ADR-0025's delay-load becomes real or stays theater.** Clause 3 says a
   delayed Module is loaded on the first call that needs it. Until step 2
   there is nothing to delay.
 - **A node still cannot use a technology.** The runtime links none and
@@ -327,7 +327,7 @@ name, and nothing since has weakened its reasoning.
 platform's stated position: `artifact-model.md` lists Rust, C, C++, COM,
 .NET, Java, PowerShell and native binaries as module technologies, and seven
 contract technologies in six non-Rust languages already exist. It also gives
-up *their licence, their support* (ADR-0012 clause 9), which is a commercial
+up *their license, their support* (ADR-0012 clause 9), which is a commercial
 position and not an engineering one.
 
 **Replace `branch = "main"` with version pins to cut the rebuild.** It

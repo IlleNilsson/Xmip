@@ -72,12 +72,12 @@ Whether a failure is worth retrying was still modeled five times: `send`'s
 
 - **`xmip-core` holds the one retryable failure, `Failure`**
   (`src/error.rs`): `message`, `retryable`, `retryable` / `permanent`
-  constructors, `at` to say where it was met without losing the judgement,
-  and a `Display` that writes the judgement after the message —
+  constructors, `at` to say where it was met without losing the judgment,
+  and a `Display` that writes the judgment after the message —
   `the peer hung up (retryable)` — as transport's did. A send answers with
   it, and the resilience guards judge an attempt by it.
 - **`declare_retryable_error!(Name)` declares a crate's own name for that
-  shape** and a conversion into `Failure` that keeps the judgement. It is for
+  shape** and a conversion into `Failure` that keeps the judgment. It is for
   a crate that must convert its dependencies' errors into its own with `?`,
   which only a type it owns can do: `transport` declares `TransportError`
   with it and keeps `classify` and its `From` conversions beside it. Clause
@@ -97,5 +97,5 @@ leave transport's richer error alone are the assistant's drafting of it.
 that no technology implemented; a Send Location sends through
 `xmip-core-transport`'s `Transport::send`, which answers with
 `TransportError`, declared by `declare_retryable_error!` and converting into
-`Failure` with its judgement kept. Departure records that judgement on each
+`Failure` with its judgment kept. Departure records that judgment on each
 failed departure (`Departed::Failed`).

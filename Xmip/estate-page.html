@@ -149,7 +149,7 @@ td.list .x{color:var(--staged)}
   ];
   $('facts').innerHTML = facts.map(([b, s]) => '<div><b>' + b + '</b><span>' + s + '</span></div>').join('');
 
-  // The tree, exactly as estate-map.md draws it, coloured by the domain it is in.
+  // The tree, exactly as estate-map.md draws it, colored by the domain it is in.
   const domains = ['foundation', 'capability', 'operation', 'platform'];
   let domain = 'other', absent = false;
   $('tree').innerHTML = E.tree.map((line) => {

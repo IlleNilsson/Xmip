@@ -363,7 +363,7 @@ capability, which observes the path and does not carry it — and no
 repository holds any. Searched on 2026-09-22, the nearest thing is
 `ModuleProbe` in `xmip-core-abi`, behind `xmip probe` and the PowerShell
 probe, and it is not diagnosis: its own summary calls it the first rule of
-ADR-0012's section 11 conformance suite, which checks that a module honours
+ADR-0012's section 11 conformance suite, which checks that a module honors
 the boundary, and its home is the conformance repository the specification
 names. A contract's `diagnostics` in the ABI are its findings about content,
 which is validation. Nothing moves; the first diagnosis Xmip writes goes to

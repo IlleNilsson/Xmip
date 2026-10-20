@@ -627,7 +627,7 @@ One component at a time, and the order is not arbitrary:
 5. Mount it in `Xmip` as a submodule.
 
 `xmip-core` goes first, because every other repository depends on its shared
-domain contracts, and a contract that changes after its dependants exist is
+domain contracts, and a contract that changes after its dependents exist is
 paid for by all of them.
 
 Step 2 is the owner's act. A repository is created on origin under his

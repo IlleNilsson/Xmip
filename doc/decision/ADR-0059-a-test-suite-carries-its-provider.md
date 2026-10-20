@@ -503,7 +503,7 @@ to say so.**
   machine it does not control the contents of. So a declaration that does
   not hold is **warned about by name and is absent** — asking for it refuses
   with the same words as a suite nobody declared, and the other suites are
-  untouched. ADR-0055 clause 5 forbids silence, not judgement; a warning
+  untouched. ADR-0055 clause 5 forbids silence, not judgment; a warning
   naming the file and the fault is not silence. Corrected the same day it
   was written, before landing.
 - ADR-0055's consequence note that ``-Suite`` is a set is superseded by

@@ -18,7 +18,7 @@ function Get-XmipOperatingSystem {
     if ($IsWindows) { return 'windows' }
     if ($IsMacOS) { return 'macos' }
     if ($IsLinux) { return 'linux' }
-    throw 'Unrecognised operating system. Xmip tooling supports Windows, Linux and macOS.'
+    throw 'Unrecognized operating system. Xmip tooling supports Windows, Linux and macOS.'
 }
 
 function Get-XmipPackageManager([string] $OperatingSystem) {

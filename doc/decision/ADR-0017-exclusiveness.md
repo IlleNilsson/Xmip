@@ -130,8 +130,8 @@ what FTP is:
 
 ```rust
 pub trait ResourceClaim {
-    fn is_available(&self, artifact: &ArtefactId) -> Result<bool, ClaimError>;
-    fn claim(&self, artifact: &ArtefactId) -> Result<Claimed, ClaimError>;
+    fn is_available(&self, artifact: &ArtifactId) -> Result<bool, ClaimError>;
+    fn claim(&self, artifact: &ArtifactId) -> Result<Claimed, ClaimError>;
     fn release(&self, claimed: Claimed) -> Result<(), ClaimError>;
 }
 ```
@@ -322,7 +322,7 @@ cannot coordinate itself without external help is a platform with two single
 points of failure instead of one.
 
 **Opt-in exclusivity everywhere.** Simpler to implement and surprises nobody
-at configuration time. Rejected for artefact-addressing transports: it is
+at configuration time. Rejected for artifact-addressing transports: it is
 BizTalk's shape of mistake, where the safe behavior was available and had to
 be remembered. The cost of a forgotten opt-in on a file location is
 duplicate processing, which is the expensive kind of wrong; the cost of a

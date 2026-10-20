@@ -254,7 +254,7 @@ repository; the gate above is what makes it unreachable.
 **Evidence, applied to every entry and to nothing else:** the repository is
 composed in this working tree (a directory reached through the `.gitmodules`
 chain), and that directory holds a build manifest, a README, and at least one
-source file with a body. No judgement of quality, completeness or intent.
+source file with a body. No judgment of quality, completeness or intent.
 
 - **79 were `reserved` by default and are now `scaffolded`.** Every one met
   the test. Every one has a `Cargo.toml` or a `.csproj`, a README, and source.

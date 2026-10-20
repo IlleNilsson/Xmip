@@ -930,7 +930,8 @@ pin still shows. `Get-XmipStatus` looks inside every module.
 The runtime and modules are Rust on the stable channel. The PowerShell module
 and the GUIs are .NET 11 — the PowerShell module targets `net10.0` because
 `pwsh` hosts it — and so is `xmip-cli` until its Rust replacement, on the
-runtime's traits, lands (ADR-0014, amendment 2026-10-12).
+runtime's traits, lands (ADR-0014, amendment 2026-10-12). Spelling is
+checked by typos, in American English, against the root's `_typos.toml`.
 
 ```powershell
 Publish-XmipChange -Message 'short precise message'   # alias xgit: each module's own tests, then land
@@ -956,6 +957,8 @@ What it runs before anything is pushed, every estate crate patched to its
 working tree and built in the one shared directory, the first failure
 stopping the run with nothing pushed:
 
+- **Each changed module, first:** its spelling, `typos` with the root's
+  `_typos.toml`, which `test/Spelling.Test.ps1` holds the whole estate to.
 - **Each changed Rust module, leaves first:** `cargo test` with its default
   features, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`
   with its default features, then `cargo test --features` naming every
@@ -1027,6 +1030,7 @@ on `Start-XmipTest` — is exact.
 architecture.toml     the estate: every repository, named by its position in the tree
 prerequisite.toml     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
+_typos.toml           the spelling check: American English, the words a standard allows
 Xmip/                 the estate's PowerShell module
 .src/                 the assembly crate xmip, and xmip-service, the Xmip Service
 module/               the modules: foundation/ and platform/ start a node, the rest

@@ -1,0 +1,89 @@
+# The estate's spelling check: typos (crate-ci/typos), prerequisite.toml's
+# typos entry. test/Spelling.Test.ps1 runs it over the whole estate and a
+# module's landing over that module (Test-XmipSpelling), both with this one
+# file: a module clone alone carries no configuration of its own.
+#
+# A word is allowed here narrowly, by word, each with its reason. A file is
+# excluded whole only when it is build output, a lock file, generated, or
+# a working area.
+
+[files]
+# The estate keeps source in .src/ and workflows in .github/: hidden is read.
+ignore-hidden = false
+extend-exclude = [
+    # Git's own store; a submodule's .git is a file naming it.
+    ".git/",
+    ".git",
+    # Build output.
+    "target/",
+    "bin/Debug/",
+    "bin/Release/",
+    "obj/",
+    "out/",
+    "node_modules/",
+    # The working areas (CONTRIBUTING, The working area).
+    ".ai-interaction/",
+    ".ai-work/",
+    ".local-work/",
+    # Lock files.
+    "Cargo.lock",
+    "package-lock.json",
+    "packages.lock.json",
+    # Generated: Update-XmipGeneratedDocument writes both from the tree.
+    "doc/architecture/estate-map.md",
+    "doc/decision/README.md",
+]
+
+[default]
+# User-facing prose is American English.
+locale = "en-us"
+extend-ignore-re = [
+    # The owner's words stay exactly as he wrote them: the italic quotes that
+    # follow "the owner" in one paragraph (CONTRIBUTING, Hard-learned rules).
+    '\b[Tt]he owner\b(?:[^*\n]|\n[^\r\n*]){0,600}?\n?\*[^*\s][^*]*\*(?:(?:[^*\n]|\n[^\r\n*]){0,400}?\n?\*[^*\s][^*]*\*)*',
+    # A line that misspells on purpose, such as a test of a misspelled key.
+    '(?Rm)^.*(?:#|//)\s*spellchecker:disable-line$',
+    # Hexadecimal: digests and test vectors (FIPS 180-2, RFC 7541, RFC 3961).
+    '\b(?:[0-9]+[A-Fa-f]|[A-Fa-f]+[0-9])[0-9A-Fa-f]*\b',
+]
+
+[default.extend-identifiers]
+# BACnet, ASHRAE 135: building automation's protocol.
+BACnet = "BACnet"
+# Secur32, the Windows library behind the Security Support Provider Interface.
+Secur32 = "Secur32"
+# NFS3ERR_ACCES and its constant, RFC 1813: NFS version 3's access error.
+NFS3ERR_ACCES = "NFS3ERR_ACCES"
+ACCES = "ACCES"
+
+[default.extend-words]
+# The test-run parameter names: clusters Cn, nodes Rn, Pn, Sn, Ln, On, Dn.
+cn = "cn"
+rn = "rn"
+pn = "pn"
+sn = "sn"
+ln = "ln"
+on = "on"
+dn = "dn"
+# PowerShell's case-insensitive not-equal operator, -ine.
+ine = "ine"
+# SMTP's HELO, RFC 5321; also the verb a NATS test refuses.
+helo = "helo"
+# OPC UA's Hello message, HEL (OPC 10000-6); a test splits "hello" there too.
+hel = "hel"
+# HL7 version 2: the EVN segment and the ORU message type.
+evn = "evn"
+oru = "oru"
+# X12 and EDIFACT: CONTRL, the syntax and service report message.
+contrl = "contrl"
+# EDIFACT trade documents: remittance advices, despatch advices (REMADV, DESADV).
+advices = "advices"
+# KNXnet/IP Tunnelling, the KNX standard's own spelling of its service.
+tunnelling = "tunnelling"
+# COBOL copybooks, .cpy, beside a mainframe's fixed-width data.
+cpy = "cpy"
+# Truncated literals the scanners and codecs are tested with.
+tru = "tru"
+fo = "fo"
+abd = "abd"
+caf = "caf"
