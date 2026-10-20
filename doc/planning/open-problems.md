@@ -953,6 +953,20 @@ file's own work 2.06 to 2.08 ms and the Ledger's durable copy of the payload
 under a millisecond beside the machine's own wake for each of its five
 hand-offs between threads by `.src/test/service/carried.rs`, run alone.
 
+*Repaired again 2026-10-20, under load.* The runtime's loopback node test
+(`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
+its load alone and up to 2.8 ms beside the rest of the suite: each
+Message's Stream chunk, written unsynced, waited out the previous
+Message's Journey hand-on sync, since on Windows a write to the
+write-ahead log's file waits while another thread flushes it. `RocksDB`
+now writes its log at a sync alone (`manual_wal_flush`), a write not yet
+synced going with its process; beside four processor-bound jobs the
+Message took 0.23 ms less to 0.02 ms more than its load in six runs. The
+same day a stop's one wake connection, lost with the machine's ports in
+use, held the library tests 41 minutes; every listener's stop now knocks
+until its accept has heard (`net::accepting`; ADR-0018, amendment
+2026-10-20, *one kept from its processor*).
+
 What remains of it, the owner's to decide:
 
 - **The Ledger's sync is counted as the payload's load.** Beyond the sent
@@ -1169,9 +1183,8 @@ amendments 2026-10-19; ADR-0031's `[tuning]` list).
 - **A fan-out's departures share their reads.** The departures of one
   Stream in flight on a node take each chunk from one read of it, lent,
   while they keep up (`runtime`'s `stream_share`, over
-  `persist::storage::ChunkReader::shared` and `next_chunk`); one further
-  behind reads on from Xmip Storage itself, so no Send Port waits on
-  another. *Repaired 2026-10-20* (the owner: *a departure that falls
+  `persist::storage::ChunkReader::shared_from` and `next_chunk`); one
+  further behind reads on from Xmip Storage itself. *Repaired 2026-10-20* (the owner: *a departure that falls
   behind starts reading at the chunk it reached, catches up from Storage
   over only the chunks it missed, and rejoins the shared read; never from
   chunk 0 or the whole Stream*): the read kept two chunks, less than a
@@ -1183,7 +1196,18 @@ amendments 2026-10-19; ADR-0031's `[tuning]` list).
   have held), one behind reads from the chunk it reached
   (`ChunkReader::shared_from`) and rejoins once among the kept chunks;
   under the full runtime suite in parallel the same test read 132 to 176
-  (ADR-0018, amendment 2026-10-20).
+  (ADR-0018, amendment 2026-10-20). *Repaired again 2026-10-20*: on the
+  landing it read 425, since departures paced alike never close a gap a
+  stall opened, and one behind came back only where the kept chunks came
+  back to it. Now one about to be left behind holds the one ahead back, for
+  at most what the kept chunks take the read to pass over the whole Stream,
+  so a slow Send Port holds the others back no longer than that, once; and
+  one behind reads from a read of its Stream that reaches its place, or one
+  of its own the next behind shares, the reads coming together as their
+  places meet. Under the full suite in parallel beside four
+  processor-bound jobs, six runs, it read 132 to 196 (ADR-0018, amendment
+  2026-10-20, *one kept from its processor*). Left, the owner's: whether a
+  bounded hold-back is the bulkhead he wants.
 - **Receive takes no more than it has room for.** A receive asks its
   transport for at most as many arrivals as its Location's pool has threads
   free and the node has places (`Transport::receive_up_to`); the rest stay

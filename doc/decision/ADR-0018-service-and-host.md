@@ -987,3 +987,78 @@ Provenance: the measurement and the rule are the owner's, 2026-09-26 and
 2026-10-20; answering before the sync, holding a far end back and counting
 the Ledger's durable copy as the payload's load are the assistant's,
 2026-10-20, for the owner to confirm or strike.
+
+## Amendment, 2026-10-20: one kept from its processor holds the one ahead back a while, and no write waits on another's sync
+
+**Provenance.** Three defects of the runtime suite under load, each found
+on the landings of 2026-10-20 and passing alone: the paced fan-out read 425
+chunks for 132 where under 264 is allowed; the loopback node's Message took
+about 1.2 ms over its load and its millisecond; and the suite's library
+tests once hung for 41 minutes beside eight processor-bound jobs. The
+owner's terms: fix the underlying problem, never isolate or loosen a test,
+and over a millisecond beyond load is a defect.
+
+- **Departures paced alike never close a gap a stall opened.** Profiled,
+  the departures of one fan-out fell behind at chunks 17, 24 and 31 within
+  ten milliseconds of each other, each kept from its processor longer than
+  the kept chunks take to pass, and each read the rest of the Stream by
+  itself: one behind came back only where the one read's kept chunks came
+  back to it, which at one pace they never did. What is kept cannot grow to
+  cover a stall: it is what the departures' own reads would have held,
+  which `a_fan_out_of_a_large_message_is_sent_in_bounded_memory` holds.
+- **So one about to be left behind holds the one ahead back a while.** A
+  departure about to let go of the chunk another of its read takes next
+  waits for that one to take it (`stream_share::one_read`, on
+  `xcore::wake::Wake`), for at most what the kept chunks take the read to
+  pass at its own pace, summed over the whole Stream for each departure
+  waited for. A slow or stuck Send Port holds the others back no longer
+  than that, once, and is then left behind to read by itself: clause 11's
+  bulkhead, bounded, where the amendment above had no departure wait.
+- **And the reads of a Stream come together.** One behind every read reads
+  on from its place, from a read of its Stream that reaches it — a chunk it
+  keeps, its next, or one ahead it reads on to within what it may keep —
+  and from one of its own only where none does, which the next behind
+  shares; before each chunk a departure moves to a read that reaches it and
+  that more departures read, or as many and opened before, and a read none
+  takes from is let go.
+- **A write never waits on another thread's sync.** Profiled step by step,
+  each Message's Stream chunk, written unsynced, waited about a millisecond
+  for the previous Message's Journey hand-on to finish its sync: on Windows
+  a write to the write-ahead log's file waits while another thread flushes
+  that file. Answering before the sync did not cause it; a synced hand-on
+  held the next write back the same way before. The embedded Storage
+  node's `RocksDB` now writes its log to the file at a sync alone
+  (`manual_wal_flush`): a write before it waits in `RocksDB`'s own buffer.
+  What is lost is what was never durable: a write not yet synced goes with
+  its process, as the chunks of a receive killed before its Publication now
+  do (`tests/ledger/killed.rs`), and nothing anyone was told of. The
+  node test's measurement stands: its load, a durable write and two
+  loopback connections made as a Message arrives, waits out that same
+  hand-on's sync, and the median is held as before.
+- **A stop wakes an accept until it has heard.** The hung tests waited in
+  the stop of an operate listener whose one wake connection was given up
+  before it was accepted, the machine's ports in use: the accept waited for
+  good, and one connection made to it by hand ended the hang. Every
+  listener's stop now knocks until its accept has ended
+  (`net::accepting::woken`, one copy, with the loopback address a wake
+  reaches, `net::accepting::wakeable`, which three listeners wrote apart):
+  the runtime's operate listener, the Storage node's server, the cluster's
+  Event listener and the ACME challenge listener.
+- **A dropped watch is measured once it watches.** Under the same load the
+  directory watch's drop measured the start of its thread, not its two
+  wakes: each round now drops a watch whose thread was told of a change.
+
+Measured after (2026-10-20), the full runtime suite in parallel, its three
+test programs at once, beside four processor-bound jobs, six runs: the
+paced fan-out read 132 to 196 chunks for 132 (before, 207 to 433); the
+loopback node's Message took 0.23 ms less to 0.02 ms more than its load
+(before, 0.8 to 2.8 ms more), within its millisecond in every run; the
+fan-out of 64 MiB held 1.26 to 1.33 MB at most; nothing hung. Beside eight
+processor-bound jobs the library tests ran fifteen times without a hang,
+the last of them with the machine's ports in use, as when the hang came;
+what failed there failed to connect at all.
+
+Provenance: the defects and the terms are the owner's; holding one ahead
+back, its bound, the reads coming together, the log written at a sync and
+the stop's knock are the assistant's, 2026-10-20, for the owner to confirm
+or strike.
