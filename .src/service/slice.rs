@@ -3,7 +3,10 @@
 //! 2026-10-03: *When deployed the sections regarding a node will be sliced
 //! to that node*). Desired state runs it on each node it deploys and writes
 //! what it prints where the node reads its configuration
-//! (`deployment-model.md` section 8); nothing here writes a file.
+//! (`deployment-model.md` section 8); nothing here writes a file. With
+//! `--cluster`, a cluster's file that names no cluster is sliced as that
+//! one, and one naming another is refused (`slice_named`; ADR-0028,
+//! amendment 2026-10-21).
 
 use std::process::ExitCode;
 
@@ -34,5 +37,8 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
         .ok_or("--slice needs --node, the node it slices for")?;
     let cluster = std::fs::read_to_string(&arguments.configuration)
         .map_err(|error| format!("cannot read {}: {error}", arguments.configuration))?;
-    xmip_configure::slice(&cluster, node)
+    match arguments.cluster.as_deref() {
+        Some(name) => xmip_configure::slice_named(&cluster, node, name),
+        None => xmip_configure::slice(&cluster, node),
+    }
 }

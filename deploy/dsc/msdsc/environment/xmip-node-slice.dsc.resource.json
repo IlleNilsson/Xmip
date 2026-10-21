@@ -1,0 +1,99 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Node/Slice",
+  "version": "0.1.0",
+  "description": "The node's configuration as xmip-service --slice prints it from the cluster's xmip.toml; the service restarted when it changed.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Slice",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Slice",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Slice",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "program",
+        "configuration",
+        "node",
+        "cluster"
+      ],
+      "properties": {
+        "program": {
+          "description": "xmip-service, as the package installed it.",
+          "type": "string"
+        },
+        "configuration": {
+          "description": "The cluster's xmip.toml on this machine.",
+          "type": "string"
+        },
+        "node": {
+          "description": "The node this machine is.",
+          "type": "string"
+        },
+        "cluster": {
+          "description": "The cluster's name.",
+          "type": "string"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

@@ -83,7 +83,8 @@ function Get-XmipNodeRole {
             tests whole, which is a real answer and not an error;
             Start-XmipTest says so in words where RoundTrip was asked for. The
             other way to have the message path covered is to omit -Nodes, and
-            take the test cluster's nodes with the roles its xmip.toml declares.
+            take the Playground's own cluster file's nodes with the roles it
+            declares.
 
         .PARAMETER Name
             The node's name.
@@ -274,7 +275,7 @@ function Get-XmipNodeRoleRefusal {
         "roles declared, or executing; no node declares $($missing -join ' or '). " +
         'State them with -NodeRole, one entry per node — ' +
         "-NodeRole @{ $($Nodes[0]) = 'receiving' } — or omit -Nodes and take " +
-        "the test cluster's nodes, whose xmip.toml declares their roles.")
+        "the Playground's own cluster file's nodes, which declares their roles.")
 }
 
 function Get-XmipNodeRoleWarning {
@@ -338,5 +339,5 @@ function Get-XmipNodeRoleWarning {
         'across the nodes. A node name says nothing about what it does (ADR-0056). ' +
         "Split the message path with -NodeRole @{ $($named[0]) = 'receiving' } " +
         "and so on, or give one node 'executing', or omit -Nodes to take the " +
-        "test cluster's nodes as its xmip.toml declares them.")
+        "Playground's own cluster file's nodes as it declares them.")
 }

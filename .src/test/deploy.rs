@@ -1,87 +1,35 @@
-//! Every node configuration `deploy/` writes, rendered with representative
-//! values: the cluster's `xmip.toml` the Ansible role's template writes
-//! (ADR-0031, amendment 2026-10-03), sliced to the node by
-//! `xmip_configure::slice` — what the role runs through
-//! `xmip-service --slice`, never a slicing of its own — and read the way
-//! `xmip-service` reads its own:
-//! `xmip_runtime::start::read`, then the execution tree against the
-//! technologies the runtime carries. The reader keeps no key it does not
-//! know, so each rendered key must also come back when the document the
-//! reader made of it is written out: a template in an older shape (`[node]`,
-//! `[storage]`) or naming a key the reader drops fails here, not on an
-//! installed node.
+//! Every node configuration `deploy/` writes, read the way `xmip-service`
+//! reads its own: the Playground's cluster `xmip.toml` — the one file a
+//! test runs whether its nodes are simulated or on machines of their own
+//! (ADR-0028, amendment 2026-10-21), which the environment templates under
+//! `deploy/dsc` put on each node machine — sliced to every node it declares
+//! by `xmip_configure::slice_named`, as `xmip-service --slice --cluster`
+//! prints it, then `xmip_runtime::start::read` and the execution tree
+//! against the technologies the runtime carries. The reader keeps no key it
+//! does not know, so each key the slice writes must also come back when the
+//! document the reader made of it is written out: a file naming a key the
+//! reader drops fails here, not on an installed node.
 //!
-//! No Jinja2 runs in the estate's tests, so the template is rendered by
-//! [`render`], which takes exactly what the template uses and refuses the
-//! rest by name: a template that outgrows it fails rather than rendering
-//! wrong.
+//! The Ansible role asks `xmip-service` for the slice, its cluster and the
+//! ports the firewall opens, and keeps no starter of its own; the example
+//! inventory maps only nodes the file declares. The Microsoft DSC v3
+//! documents are held by `test/MsdscEnvironment.Test.ps1`.
 
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::catalogue;
 use xmip_runtime::execution_tree::build_execution_tree;
 
-const TEMPLATE: &str = "deploy/dsc/ansible/roles/xmip_node/templates/xmip.toml.j2";
-const TASKS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/main.yml";
-const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
-
-type Variables = BTreeMap<String, String>;
+const PLAYGROUND: &str = "test/core/playground/configuration/xmip.toml";
+const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
+const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
+const INVENTORY: &str = "deploy/dsc/ansible/inventory.example.yml";
 
 fn source(relative: &str) -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
     std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{relative}: {error}"))
 }
-
-/// The role's defaults: every top-level `name: value` with a scalar value.
-fn defaults() -> Variables {
-    source(DEFAULTS)
-        .lines()
-        .filter(|line| !line.starts_with([' ', '#', '-']))
-        .filter_map(|line| line.split_once(':'))
-        .map(|(name, value)| (name.trim(), value.trim().trim_matches(['"', '\''])))
-        .filter(|(_, value)| !value.is_empty())
-        .map(|(name, value)| (name.to_string(), value.to_string()))
-        .collect()
-}
-
-/// Jinja2 as far as the template uses it: `{{ name }}` and a `lower` filter.
-/// A statement, a comment, another filter or a name no variable holds panics,
-/// naming it.
-fn render(template: &str, variables: &Variables) -> String {
-    for construct in ["{%", "{#"] {
-        assert!(
-            !template.contains(construct),
-            "{TEMPLATE} uses {construct}, which this test does not render; extend render"
-        );
-    }
-    let mut rendered = String::new();
-    let mut rest = template;
-    while let Some(open) = rest.find("{{") {
-        rendered.push_str(&rest[..open]);
-        let after = &rest[open + 2..];
-        let close = after.find("}}").expect("every {{ closes");
-        let mut parts = after[..close].split('|').map(str::trim);
-        let name = parts.next().unwrap_or_default();
-        let mut value = variables
-            .get(name)
-            .unwrap_or_else(|| panic!("{TEMPLATE} names {name}, which no variable holds"))
-            .clone();
-        for filter in parts {
-            assert_eq!(
-                filter, "lower",
-                "{TEMPLATE} filters by {filter}; extend render"
-            );
-            value = value.to_lowercase();
-        }
-        rendered.push_str(&value);
-        rest = &after[close + 2..];
-    }
-    rendered.push_str(rest);
-    rendered
-}
-
 /// Every key path in `table`, tables descended into.
 fn keys(table: &toml::Table, prefix: &str) -> Vec<String> {
     let mut paths = Vec::new();
@@ -110,14 +58,6 @@ fn holds(table: &toml::Table, path: &str) -> bool {
         }
     }
     false
-}
-
-/// The node `node`'s configuration sliced from the cluster's `cluster`, as
-/// `xmip-service --slice` prints it, read as below.
-fn sliced(directory: &Path, name: &str, cluster: &str, node: &str) -> XmipConfigurationDocument {
-    let text = xmip_configure::slice(cluster, node)
-        .unwrap_or_else(|problem| panic!("{name} does not slice for {node}: {problem}\n{cluster}"));
-    read(directory, name, &text)
 }
 
 /// Write `text` where an installed node keeps it, read it as `xmip-service`
@@ -156,57 +96,65 @@ fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
 #[test]
 fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
-    let template = source(TEMPLATE);
 
-    let tasks = source(TASKS);
-    assert!(
-        tasks.contains("xmip-service") && tasks.contains("--slice"),
-        "{TASKS} writes the node's configuration through xmip-service --slice"
-    );
-
-    let variables = defaults();
-    let installed = sliced(
-        &directory,
-        "ansible",
-        &render(&template, &variables),
-        &variables["xmip_node_name"],
-    );
-    assert_eq!(installed.service.node_name, variables["xmip_node_name"]);
-    assert!(!installed.service.online, "ADR-0045: offline unless said");
-
-    let test_cluster = xmip_configure::fixture::test_cluster();
-    let (cluster_name, node_name) = (&test_cluster.name, &test_cluster.node(0).name);
-    let service_name = format!("xmip-{node_name}");
-    let mut given = variables.clone();
-    for (name, value) in [
-        ("xmip_service_name", service_name.as_str()),
-        ("xmip_cluster_name", cluster_name.as_str()),
-        ("xmip_node_name", node_name.as_str()),
-        ("xmip_online", "True"),
-    ] {
-        given.insert(name.to_string(), value.to_string());
+    for tasks in [TASKS_WINDOWS, TASKS_LINUX] {
+        let text = source(tasks);
+        for asked in ["xmip-service", "--slice", "--cluster", "--listening"] {
+            assert!(
+                text.contains(asked),
+                "{tasks} asks xmip-service for the slice, its cluster and its ports: {asked}"
+            );
+        }
     }
-    let node = sliced(
-        &directory,
-        &format!("ansible-{node_name}"),
-        &render(&template, &given),
-        &given["xmip_node_name"],
+    assert!(
+        !Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("deploy/dsc/ansible/roles/xmip_node/templates")
+            .exists(),
+        "the role writes no starter of its own: the package's xmip-service --install does"
     );
+
+    // The Playground's file is the one a test runs whether its nodes are
+    // simulated or on machines of their own (ADR-0028, amendment
+    // 2026-10-21): every node it declares slices as the environment names
+    // the cluster and reads as xmip-service reads it.
+    let cluster = source(PLAYGROUND);
     assert_eq!(
-        (
-            node.service.name.as_str(),
-            node.service.cluster_name.as_str(),
-            node.service.node_name.as_str(),
-            node.service.online,
-        ),
-        (
-            service_name.as_str(),
-            cluster_name.as_str(),
-            node_name.as_str(),
-            true
-        ),
-        "each variable lands on the key it names"
+        xmip_configure::cluster::cluster_name(&cluster).expect("reads"),
+        None,
+        "{PLAYGROUND} names no cluster: where it runs is the environment's"
     );
+    let environment = xmip_configure::fixture::test_cluster().name;
+    let nodes = xmip_configure::cluster::nodes(&cluster).expect("declares its nodes");
+    assert!(!nodes.is_empty(), "{PLAYGROUND} declares its nodes");
+    for node in &nodes {
+        let text = xmip_configure::slice_named(&cluster, node, &environment)
+            .unwrap_or_else(|problem| panic!("{node} does not slice: {problem}"));
+        let document = read(&directory, &format!("playground-{node}"), &text);
+        assert_eq!(document.service.cluster_name, environment);
+        assert_eq!(document.service.node_name, *node);
+        let operate = document
+            .operate
+            .expect("each node is operated from another machine");
+        assert!(
+            operate
+                .listen
+                .is_some_and(|listen| listen.starts_with("0.0.0.0:")),
+            "{node} listens at whatever address its machine has"
+        );
+    }
+
+    // The example environment puts only nodes the file declares on machines.
+    let inventory = source(INVENTORY);
+    for line in inventory
+        .lines()
+        .filter(|line| line.contains("xmip_node_name:"))
+    {
+        let named = line.split(':').nth(1).unwrap_or_default().trim();
+        assert!(
+            nodes.iter().any(|node| node == named),
+            "{INVENTORY} maps {named}, which {PLAYGROUND} does not declare"
+        );
+    }
 
     std::fs::remove_dir_all(&directory).expect("removes what it wrote");
 }

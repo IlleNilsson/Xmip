@@ -812,8 +812,6 @@ itself stays normative in ADR-0015 clause 10.
 path = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml"
 [[keep]]
 path = "deploy/dsc/ansible/roles/xmip_node/tasks/main.yml"
-[[keep]]
-path = "deploy/dsc/ansible/roles/xmip_node/templates/xmip.toml.j2"
 reason = "Manifest, estate tooling, packaging and deployment. The root composes; this is what composing needs."
 
 [[remove]]

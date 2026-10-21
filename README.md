@@ -555,12 +555,22 @@ amendment 2026-10-19).
 | --- | --- | --- | --- |
 | PowerShell 7.6.7 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Ansible (`deploy/dsc/ansible/roles`); Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`deploy/dsc/msdsc/hyperv`), a node not written | the same | the same |
+| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`) and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
-The Ansible role writes the node configuration `xmip-core-configure` reads;
-`cargo test --test deploy` renders it and reads it as `xmip-service` does. It
-names the site its node is built from.
+The environment templates put a cluster's nodes on machines of their own,
+Windows and AlmaLinux alike, in either technology — both cover both
+systems, and Ansible is kept for familiarity and the project's support (the
+owner, 2026-10-21): the names of the cluster and its nodes, and on each node
+machine its account, the cluster's `xmip.toml`, its certificate from the
+cluster's own authority (`xmip-cli certificate --node`), the package, its
+slice, the firewall openings its configuration listens on, and its service
+(ADR-0015, amendment 2026-10-21). Every rule about the node is
+`xmip-service`'s — `--slice --cluster`, `--listening`, `--install
+--account` — and `cargo test --test deploy` reads the Playground's cluster
+file, which the example environment runs, as `xmip-service` reads it for
+every node it declares. That file is the same on one computer and on the
+machines (ADR-0028, amendment 2026-10-21).
 
 A site, `deploy/site/<name>.toml`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
@@ -783,12 +793,22 @@ Stop-XmipTest -Cluster C2 -IncludeHidden
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
-give, and the nodes are the test cluster's `xmip.toml` — the file
-`XMIP_TEST_CLUSTER` names, else `test/xmip.toml` — each declaring the roles
+give, and the nodes are the Playground's own cluster file's,
+`test/core/playground/configuration/xmip.toml`, each declaring the roles
 that file gives it, so the message path runs between the node processes.
-Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file.
-A node is configuration and there is no count (ADR-0056, amendment
+Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file,
+a node `-NodeRole` says nothing of taking the roles the Playground's file
+declares. A node is configuration and there is no count (ADR-0056, amendment
 2026-10-03); in a real environment an orchestrator spawns nodes, never Xmip.
+
+The same file runs on machines of their own (ADR-0028, amendment
+2026-10-21): a `-Cluster` or `-Nodes` name that resolves is a real node,
+asked over its operate listener with the operator certificate `-Certificate`
+names — real where it answers as that node, REFUSED by name where it does
+not — and never spawned; a name that does not resolve is spawned as before.
+The run says which are real, and `Get-XmipTestStatus` shows them as `Real`.
+The environment templates put the file's nodes on machines
+(`deploy/dsc/msdsc/environment/README.md`).
 
 Use the Playground to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries
@@ -933,8 +953,9 @@ module/               the modules: foundation/ and platform/ start a node, the r
                       at module/<provider>/<domain>/<leaf>
 test/                 the estate's Pester suite; test/core/playground is the Playground
 deploy/               the sites and profiles a build is made from (site/, profile/),
-                      and desired state per technology under dsc/: ansible/,
-                      msdsc/ (Microsoft DSC v3: hyperv/, the machines on Hyper-V)
+                      and desired state per technology under dsc/: msdsc/
+                      (Microsoft DSC v3: hyperv/, the machines on Hyper-V, and
+                      environment/, what runs inside them) and ansible/
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```

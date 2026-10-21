@@ -76,7 +76,18 @@ function Resolve-XmipPlaygroundChoice {
         return $null
     }
 
-    # The nodes named; the test cluster's are asked where they are read
+    # A node named with no role states the roles the Playground's own file
+    # declares for it (ADR-0028, amendment 2026-10-21).
+    if ($Choice.Bound.ContainsKey('Nodes')) {
+        [hashtable] $joined = @{
+            Nodes    = $Choice.Nodes
+            NodeRole = $Choice.NodeRole
+            Declared = (Read-XmipPlaygroundCluster).Role
+        }
+        $Choice.NodeRole = Join-XmipNodeRole @joined
+    }
+
+    # The nodes named; the Playground file's are asked where they are read
     # (Start-XmipPlaygroundRoll).
     [hashtable] $asked = @{
         Nodes    = $Choice.Nodes

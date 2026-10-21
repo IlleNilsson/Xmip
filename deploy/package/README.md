@@ -61,10 +61,14 @@ in `-CargoArgument` makes the arm64 MSI.
   REFUSED, naming the command that accepts it.
 - **Install**: `msiexec /i <msi>` from an elevated prompt, optionally with
   `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>`; each is the computer's name
-  otherwise. Binaries go to `Program Files\Xmip\bin`, the rest of the layout
-  to `ProgramData\Xmip`. The service runs as LocalSystem, the platform
-  default: which account it should run as is open (ADR-0015, amendment
-  2026-10-13).
+  otherwise, and the cluster is used where the machine's `xmip.toml` names
+  none. Binaries go to `Program Files\Xmip\bin`, the rest of the layout to
+  `ProgramData\Xmip`. The service runs as LocalSystem, the platform default,
+  unless `XMIP_ACCOUNT="NT SERVICE\xmip-<node>"` names its own virtual
+  account, which is given what the node reads and writes (`xmip-service
+  --install --account`); which account a node should run as is the
+  environment templates' draft of 2026-10-21, for the owner to decide
+  (ADR-0015, amendments 2026-10-13 and 2026-10-21).
 - **Remove**: Apps in Settings, or `msiexec /x <msi>`.
 
 ## Linux (written, not built)
@@ -79,7 +83,10 @@ is `/opt/xmip`; the unit is `/etc/systemd/system/xmip-<node>.service`, and
 its `RuntimeDirectory=xmip` makes `/run/xmip` for the node's account, where
 the node's local endpoint is, `/run/xmip/xmip-<node>.sock`.
 `postinstall.sh` runs `--install`, `preremove.sh` runs `--uninstall` on
-removal only, never on an upgrade.
+removal only, never on an upgrade. `XMIP_NODE`, `XMIP_CLUSTER` and
+`XMIP_ACCOUNT` in the installer's environment say the node, the cluster and
+the account its unit runs as, `User=` (root unless said), as the MSI's
+properties do; the macOS `postinstall` takes the same three.
 
 ## macOS (written, not built)
 

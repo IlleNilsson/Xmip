@@ -735,7 +735,13 @@ keychain's Secure Enclave, Windows CNG and the TPM — the request signed
 there in two halves the runtime writes, and every handshake signed there
 (`Identity::from_signer`, `xmip_remote_open_kept_v1`). The Android keeper is
 built and not run on a phone; the iOS keeper is written and not built.
-Revocation of an operator's certificate is not decided.
+Revocation of an operator's certificate is not decided. Until a node
+provisions its own, a node an environment template puts on a machine of its
+own is issued its key and certificate on the operator's machine, from the
+cluster's authority kept in a folder (`provision::node::issue_into`,
+`xmip_operate.h` section 22, `New-XmipCertificate -Node`; ADR-0015,
+amendment 2026-10-21), and given them by the template: a key made away from
+the node it is for, which a node's own provisioner ends.
 
 **Open for the owner before step 5:** Let's Encrypt validates that the node
 controls a name — `http-01` needs the name's public port 80 reaching the
@@ -816,7 +822,8 @@ save.* The Operation Desktop slices on save through `xmip_cluster_slices_v1`
 and writes each slice to `<SliceDirectory>/<node>/xmip-node.toml`; only its
 own node, `xmip.gui.toml`'s `Node`, counts as shipped, and every other node
 shows *sliced, not shipped*. Desired state slices on the node itself
-(`xmip-service --slice`). Missing: an operate-plane act that places a
+(`xmip-service --slice --cluster`; the environment templates of ADR-0015,
+amendment 2026-10-21). Missing: an operate-plane act that places a
 node's configuration through the node's listener over Xmip's TLS,
 authorized by role and audited — the operate listener it would ride is
 built (ADR-0067, built 2026-10-12: reads, a follow and the operator's acts;

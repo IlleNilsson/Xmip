@@ -12,13 +12,19 @@
   (ADR-0040: Xmip does not delete). The layout, the starter and the
   registration are xmip-service's, written once; nothing here copies them.
 
-  Two public properties, each the machine's name unless given, used only
-  where the machine has no xmip.toml yet:
+  Three public properties. The first two are the machine's name unless
+  given; the cluster is used where the machine's xmip.toml names none, the
+  starter's or one an environment template put there (ADR-0028, amendment
+  2026-10-21). The account is the platform's default, LocalSystem, unless
+  given, and is given what the node reads and writes (ADR-0015, amendment
+  2026-10-21):
 
     XMIP_NODE     the node this machine is
-    XMIP_CLUSTER  the cluster the starter xmip.toml names
+    XMIP_CLUSTER  the cluster, where the machine's xmip.toml names none
+    XMIP_ACCOUNT  the account the node's service runs as
 
   msiexec /i xmip-<version>-<site>-x64.msi XMIP_NODE=<node> XMIP_CLUSTER=<cluster>
+    XMIP_ACCOUNT="NT SERVICE\xmip-<node>"
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="Xmip"
@@ -35,6 +41,7 @@
     <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="XMIP_NODE" Secure="yes" />
     <Property Id="XMIP_CLUSTER" Secure="yes" />
+    <Property Id="XMIP_ACCOUNT" Secure="yes" />
     <SetProperty Id="XMIP_NODE" Value="[ComputerName]" After="AppSearch" Sequence="both"
                  Condition="NOT XMIP_NODE" />
     <SetProperty Id="XMIP_CLUSTER" Value="[ComputerName]" After="AppSearch" Sequence="both"
@@ -78,10 +85,18 @@
     <!-- A line break inside a value is read as a space, which a command line
          takes as the space between two arguments. -->
     <SetProperty Id="XmipInstall" Before="XmipInstall" Sequence="execute"
+                 Condition="NOT XMIP_ACCOUNT"
                  Value="&quot;[#XmipServiceExe]&quot;
                         --configuration &quot;[CONFIGFOLDER]xmip.toml&quot;
                         --node &quot;[XMIP_NODE]&quot;
                         --cluster &quot;[XMIP_CLUSTER]&quot; --install" />
+    <SetProperty Id="XmipInstall" Action="SetXmipInstallAsAccount" Before="XmipInstall"
+                 Sequence="execute" Condition="XMIP_ACCOUNT"
+                 Value="&quot;[#XmipServiceExe]&quot;
+                        --configuration &quot;[CONFIGFOLDER]xmip.toml&quot;
+                        --node &quot;[XMIP_NODE]&quot;
+                        --cluster &quot;[XMIP_CLUSTER]&quot;
+                        --account &quot;[XMIP_ACCOUNT]&quot; --install" />
     <SetProperty Id="XmipInstallRollback" Before="XmipInstallRollback" Sequence="execute"
                  Value="&quot;[#XmipServiceExe]&quot;
                         --configuration &quot;[CONFIGFOLDER]xmip-node.toml&quot; --uninstall" />

@@ -5,19 +5,27 @@ use xmip_node::Purpose;
 pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] \
      [--purpose test|runtime]\n       \
      xmip-service --configuration <path> --definition\n       \
-     xmip-service --configuration <cluster xmip.toml> --node <name> --slice\n       \
+     xmip-service --configuration <cluster xmip.toml> --node <name> [--cluster <name>] \
+     --slice\n       \
      xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name> \
-     --install\n       \
+     [--account <account>] --install\n       \
+     xmip-service --configuration <path> --listening\n       \
      xmip-service --configuration <path> --uninstall\n\
      example: xmip-service --configuration /opt/xmip/config/xmip-node.toml --console\n\
-     example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 --slice\n\
      example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 \
-     --cluster C1 --install\n\
-     --slice prints the node's configuration, sliced from its cluster's xmip.toml.\n\
+     --cluster C1 --slice\n\
+     example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 \
+     --cluster C1 --account xmip --install\n\
+     example: xmip-service --configuration /opt/xmip/config/xmip-node.toml --listening\n\
+     --slice prints the node's configuration, sliced from its cluster's xmip.toml; \
+     --cluster names the cluster where the file names none.\n\
      --install writes a starter xmip.toml where there is none, slices the node's \
      configuration beside it where there is none, makes the node's folders, and \
-     registers and starts its service; --uninstall stops and removes the service \
-     of the node configured at <path> and deletes nothing. Both need elevation.\n\
+     registers and starts its service, as --account where it is given; --uninstall \
+     stops and removes the service of the node configured at <path> and deletes \
+     nothing. Both need elevation.\n\
+     --listening prints each port the node's configuration listens on, \
+     <port>/<protocol> and what listens.\n\
      --console runs in a terminal and stops on Ctrl+C; without it the operating \
      system's service manager runs it and stops it.";
 
@@ -36,6 +44,9 @@ pub enum Mode {
     /// Lay the node out from its cluster's `xmip.toml` and register its
     /// service, as a package installs it (ADR-0015, amendment 2026-10-13).
     Install,
+    /// Print the ports the node's configuration listens on, which an
+    /// environment opens its firewall for (ADR-0015, amendment 2026-10-21).
+    Listening,
     /// Stop and remove the node's service; nothing else.
     Uninstall,
 }
@@ -52,8 +63,13 @@ pub struct Arguments {
     pub purpose: Purpose,
     /// The node `--slice` and `--install` act for.
     pub node: Option<String>,
-    /// The cluster a starter `xmip.toml` names, with `--install`.
+    /// The cluster, with `--install` and `--slice`: the one a starter
+    /// `xmip.toml` names, and the one a cluster's file that names none
+    /// runs as (ADR-0028, amendment 2026-10-21).
     pub cluster: Option<String>,
+    /// The account the node's service runs as, with `--install`; the
+    /// platform's default where it is not given.
+    pub account: Option<String>,
 }
 
 impl Arguments {
@@ -67,8 +83,7 @@ impl Arguments {
     pub fn parse(mut args: impl Iterator<Item = String>) -> Result<Self, String> {
         let mut configuration = None;
         let mut switches = Vec::new();
-        let mut node = None;
-        let mut cluster = None;
+        let (mut node, mut cluster, mut account) = (None, None, None);
         let mut purpose = Purpose::Runtime;
 
         while let Some(flag) = args.next() {
@@ -82,10 +97,12 @@ impl Arguments {
                 "--purpose" => purpose = Purpose::declared(&value()?)?,
                 "--node" => node = Some(value()?),
                 "--cluster" => cluster = Some(value()?),
+                "--account" => account = Some(value()?),
                 "--console" => switches.push(Mode::Console),
                 "--definition" => switches.push(Mode::Definition),
                 "--slice" => switches.push(Mode::Slice),
                 "--install" => switches.push(Mode::Install),
+                "--listening" => switches.push(Mode::Listening),
                 "--uninstall" => switches.push(Mode::Uninstall),
                 _ => return Err(format!("{flag} is not a parameter of xmip-service")),
             }
@@ -96,19 +113,23 @@ impl Arguments {
             [mode] => *mode,
             _ => {
                 return Err(
-                    "--console, --definition, --slice, --install and --uninstall \
+                    "--console, --definition, --slice, --install, --listening and --uninstall \
                             exclude each other"
                         .into(),
                 );
             }
         };
         names(mode, node.as_ref(), cluster.as_ref())?;
+        if account.is_some() && mode != Mode::Install {
+            return Err("--account is the account --install registers the service as".into());
+        }
         Ok(Self {
             configuration: configuration.ok_or("--configuration names no node configuration")?,
             mode,
             purpose,
             node,
             cluster,
+            account,
         })
     }
 }
@@ -125,8 +146,8 @@ fn names(mode: Mode, node: Option<&String>, cluster: Option<&String>) -> Result<
         (_, Some(_), _) if !takes_node => {
             Err("--node is the node --slice or --install acts for".into())
         }
-        (mode, _, Some(_)) if mode != Mode::Install => {
-            Err("--cluster is the cluster --install names".into())
+        (_, _, Some(_)) if !takes_node => {
+            Err("--cluster is the cluster --slice or --install names".into())
         }
         _ => Ok(()),
     }
@@ -168,6 +189,23 @@ mod tests {
             (install.mode, install.cluster.as_deref()),
             (Mode::Install, Some("c"))
         );
+        let named =
+            parsed("--slice --node n --cluster c --configuration xmip.toml").expect("reads");
+        assert_eq!(
+            named.cluster.as_deref(),
+            Some("c"),
+            "--slice names the cluster"
+        );
+
+        let account = "--install --node n --cluster c --account xmip --configuration xmip.toml";
+        assert_eq!(
+            parsed(account).expect("reads").account.as_deref(),
+            Some("xmip")
+        );
+
+        let listening = parsed("--listening --configuration xmip-node.toml").expect("reads");
+        assert_eq!(listening.mode, Mode::Listening);
+
         let uninstall = parsed("--uninstall --configuration xmip-node.toml").expect("reads");
         assert_eq!(uninstall.mode, Mode::Uninstall);
     }
@@ -198,9 +236,14 @@ mod tests {
                 "--node is the node",
             ),
             ("--configuration a --node n", "--node is the node"),
+            ("--configuration a --definition --cluster c", "--cluster is"),
             (
-                "--configuration a --slice --node n --cluster c",
-                "--cluster is",
+                "--configuration a --slice --node n --account xmip",
+                "--account is",
+            ),
+            (
+                "--configuration a --listening --slice",
+                "exclude each other",
             ),
             ("--configuration a --node", "--node needs a value"),
             ("--configuration a --purpose Test", "test"),

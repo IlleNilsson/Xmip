@@ -169,6 +169,7 @@ function Get-XmipTestStatus {
                 Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
                 Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
                 OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
+                RealNodes   = @(Get-XmipTestRealNode -Snapshot $snapshot)
                 Worst       = if ($null -ne $worst) { $worst.State } else { $null }
                 Tally       = 'running'
                 Snapshot    = $snapshot
@@ -181,4 +182,32 @@ function Get-XmipTestStatus {
 
         New-XmipTestStatus @row
     }
+}
+
+function Get-XmipTestRealNode {
+    <#
+        .SYNOPSIS
+            The nodes a roll found real — each on a machine of its own, whose
+            typed name resolved and which answered as that node, never
+            spawned — as its snapshot's [run] says them, through the
+            surfaces' one reading of a publication (ADR-0028, amendment
+            2026-10-21). None where the snapshot is not there yet or every
+            node is simulated.
+
+        .PARAMETER Snapshot
+            The roll's snapshot.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Snapshot
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Snapshot) -or -not (Test-Path -LiteralPath $Snapshot)) {
+        return @()
+    }
+
+    return @([Xmip.Surface.SnapshotOperator]::new($Snapshot).Run().RealNodes)
 }

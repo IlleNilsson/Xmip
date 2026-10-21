@@ -9,6 +9,8 @@
 - Amended: 2026-09-30 — a test run can be hidden, by what it declares
 - Amended: 2026-10-13 — the Parties built, and flows named as an ERP's
 - Amended: 2026-10-19 — `accept.party` built in the node
+- Amended: 2026-10-21 — one file for one computer and for machines of their
+  own; a real node is used where its name resolves, built
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -21,7 +23,7 @@
 - Subject: The Playground exercises everything, all the time
 - Name: The Xmip Playground
 - Order: 5
-- Concepts: Playground, exercise, verdict; Development node
+- Concepts: Playground, exercise, verdict; Development node; simulated node, real node, test level
 
 **`xmip-test-playground` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
@@ -320,9 +322,11 @@ exists the rig has no business inventing a second.
   Xmip (ruling 8 of ADR-0052). The rig sends it work and reads what it
   publishes.
 
-Agreed 2026-09-19, not yet built. Nothing resolved on the owner's machine the
-day it was agreed — `C1`, `R1` and their kin were checked and there is no
-search suffix — so the rig's behavior is unchanged until an estate has names.
+Agreed 2026-09-19 and built 2026-10-21 (the amendment of that date). Nothing
+resolved on the owner's machine the day it was agreed — `C1`, `R1` and their
+kin were checked and there is no search suffix — so the rig's behavior is
+unchanged until an estate has names; the environment templates give them
+(ADR-0015, amendment 2026-10-21).
 
 ## Amendment, 2026-09-19: a run is found by what it declared, not by the file
 
@@ -652,3 +656,108 @@ amendment 2026-10-20). The gates resolve a claim through
 `configure::party::place_holding` by mechanism and purpose and know a
 Party by the id it is written with (`Parties::id`), as a node does;
 `configure::party::id`, the place counted from one, is deleted.
+
+## Amendment, 2026-10-21: one file for one computer and for machines of their own
+
+The owner, 2026-10-21: *one TOML file that can be run for tests regardless
+of node faking or actual nodes.* The Playground's own cluster file,
+`configuration/xmip.toml`, is that file. At test level 1, one computer, its
+nodes are processes the Playground spawns; at test level 2 the same file's
+nodes run as `xmip-service` on machines of their own — the Hyper-V
+example's XMIP-APP01 to XMIP-APP03 (Windows Server 2025), XMIP-IN01 and
+XMIP-OUT01 (AlmaLinux 10) — and the same scenarios run at both levels. A
+test level says where the nodes run; it is never the identity mechanism
+`circumstance` (ADR-0050), which says how a file's arrival is identified.
+
+**What the file says, and what it leaves to the environment.** It says
+what the cluster is: its nodes and their roles — the test cluster's nine,
+R1, R2, P1, S1, S2, L1, O1, D1 and D2, the owner's names — where each that
+declares no Storage role reaches Xmip Storage, by name
+(`[nodes.<name>.storage] nodes = ["D1:7443", "D2:7443"]`), where every node
+is operated from (`[operate]`: the wildcard address on the operate plane's
+port, its certificate, key and anchors by paths relative to the node's
+configuration), its Parties and its Xmip Applications. It says nothing of
+where it runs. What assumed one computer was moved out of it, or never
+written into it:
+
+- **The cluster's name.** The run names it, `-Cluster`; on machines the
+  environment does, `xmip-service --install --cluster` and `--slice
+  --cluster`. The file names none, and the one slicing gives the
+  environment's name where the file says none and refuses a file naming
+  another (`configure::slice_named`, `configure::cluster::cluster_name`).
+- **The bindings and their addresses.** The run's own directories at level
+  1, written by the node that declared process as it starts
+  (`src/subscribing/configured.rs`, which slices through `slice_named`
+  too), never the file's.
+- **Paths.** Relative to the node's configuration file, so `tls/node.pem`
+  is wherever the environment put that node's certificate.
+- **How a node finds another.** By its name and the cluster's own
+  declarations — `D1:7443` is the node D1, resolved as every name is —
+  never by "it is on this machine".
+
+What still assumes one computer is the simulation's own, and a real node is
+never asked to share it: the shared directory its simulated nodes hand
+pairs on through, their beats, their orders and each one's embedded store
+beneath it.
+
+**The run's nodes are the file's.** `Start-XmipTest` without `-Nodes`
+spawns every node the Playground's file declares, with the roles it
+declares, where the test cluster's `test/xmip.toml` was taken before; with
+`-Nodes`, a node `-NodeRole` says nothing of takes the roles the file
+declares for it. The run's cluster file is still written from what was
+typed (`Write-XmipTestCluster`, `Read-XmipPlaygroundCluster`,
+`Join-XmipNodeRole`). `test/xmip.toml` stays the estate's tests' cluster.
+
+**A real node is used when its name resolves** — the amendment of
+2026-09-19, built (`src/real.rs`).
+
+- **Only the names typed.** `-Cluster`, and the nodes `-Nodes` named, which
+  `Start-XmipTest` hands the roll as `XMIP_PLAYGROUND_NAMED`; an omitted
+  `-Nodes` takes the file's nodes, names nobody typed, and resolves none.
+  Each is resolved by this machine's resolver at the port the file says
+  that node is operated on.
+- **One that does not resolve is spawned**, exactly as before.
+- **One that resolves must answer and declare itself**: over its operate
+  listener, inside Xmip's mutual TLS, asked with the tester's operator
+  certificate — `Start-XmipTest -Certificate <folder>`,
+  `XMIP_PLAYGROUND_CERTIFICATE`, holding `operator.pem`, `operator.key` and
+  `anchors.pem` from the cluster's own authority — its publication's scope
+  must be `xmip:///<cluster>/node/<name>` and it must say what it can do,
+  its `<node>/capability` record, whose roles it then runs by in the run.
+  Anything else — no certificate to ask with, no answer, another node,
+  nothing said of what it can do — is REFUSED, naming the name, the address
+  and what was wrong, and nothing is spawned. A resolving cluster name must
+  answer as a node of that cluster.
+- **The run says which is which.** `[run]` names the real nodes in `real`
+  (`observe::Run::real`, a fifth list crossing section 8's head as
+  `XMIP_RUN_REAL`, read by `RunHeader.RealNodes`, whose line adds *real
+  R1, the rest simulated* where R1 is real); every other node of `nodes` is
+  simulated.
+  The roll's first lines and its live board name each real node and where it
+  answered, its `start` record says them, `Get-XmipTestStatus` carries
+  them as `RealNodes` and shows them as `Real`.
+- **What the rig does with a real node.** It reads what the node publishes,
+  every round, over the operate listener, into the run's snapshot, and
+  records at `<node>/reached` that it answered, or that it did not and why.
+  It never spawns, configures or stops one (ADR-0052, ruling 8): the
+  cluster process is given only the simulated nodes, and `Stop-XmipTest`
+  reaches nothing on another machine.
+
+**Not built: sending a real node work.** The simulated nodes hand a pair on
+through their shared directory, which a real node does not share, so the
+scenarios' work is spread over the simulated nodes alone and a real node is
+observed, not driven. A real node carries a Message from another when Xmip
+Storage is reached over the wire in the assembled service
+([built, not in the assembled service](../architecture/estate-map.md#storage-nodes)):
+until then a node of the file that declares no Storage role is refused as it
+starts on a machine of its own, in words naming `[storage] nodes`, and D1 is
+the one of the example's five that runs.
+
+The environment templates that put the file's nodes on machines are
+ADR-0015's amendment of the same date.
+
+Provenance: the owner's words above. Declaring the nine nodes in the file,
+the five the example puts on machines, `-Certificate` and its files,
+`XMIP_PLAYGROUND_NAMED`, `<node>/reached`, and observing rather than driving
+a real node until Storage is assembled are the assistant's drafting, for the
+owner to overrule.

@@ -1,0 +1,130 @@
+# One Xmip node on its own machine, Windows or AlmaLinux alike: its account,
+# the cluster's xmip.toml, its certificate from the cluster's own authority,
+# the estate's package, which installs and starts its service, its slice,
+# the firewall openings its configuration listens on, and its service
+# running. Applied on the node machine itself by Xmip.Environment/Machine
+# (environment.example.dsc.yaml), which copies this folder and the files
+# below to the machine's staging folder first; README.md says how.
+#
+# Where a built-in resource of DSC fits, it is used: Microsoft.Windows/Service
+# for the Windows service. Everything else is an Xmip resource of this
+# folder (node.resource.ps1), because the rules it applies — the slice, the
+# ports, the layout — are xmip-service's, which it asks.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.2
+  securityContext: elevated
+parameters:
+  staging:
+    type: string
+    description: >-
+      Where Xmip.Environment/Machine copied this folder and the files:
+      xmip.toml, node.pem, node.key, anchors.pem and the package.
+  family:
+    type: string
+    allowedValues: [Windows, Linux]
+    description: The machine's operating system.
+  node:
+    type: string
+    description: The node this machine is, as the cluster's xmip.toml declares it.
+  cluster:
+    type: string
+    description: The cluster's name; the cluster's xmip.toml names none.
+  account:
+    type: string
+    description: >-
+      The account the node's service runs as: NT SERVICE\xmip-<node> on
+      Windows, a system account on Linux.
+  package:
+    type: string
+    description: The package's file name among the files, the MSI or the .rpm.
+  layout:
+    type: object
+    description: >-
+      Where the package puts the node on this family: program, the
+      xmip-service it installs, and configuration, its config folder.
+resources:
+  - name: Account
+    type: Xmip.Node/Account
+    requireVersion: ^0.1
+    condition: "[equals(parameters('family'), 'Linux')]"
+    properties:
+      name: "[parameters('account')]"
+  - name: Cluster configuration
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    properties:
+      path: "[path(parameters('layout').configuration, 'xmip.toml')]"
+      source: "[path(parameters('staging'), 'files', 'xmip.toml')]"
+  - name: Certificate
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    properties:
+      path: "[path(parameters('layout').configuration, 'tls', 'node.pem')]"
+      source: "[path(parameters('staging'), 'files', 'node.pem')]"
+  - name: Key
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/File', 'Certificate')]"
+    properties:
+      path: "[path(parameters('layout').configuration, 'tls', 'node.key')]"
+      source: "[path(parameters('staging'), 'files', 'node.key')]"
+      private: true
+      owner: "[if(equals(parameters('family'), 'Linux'), parameters('account'), '')]"
+  - name: Anchors
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    properties:
+      path: "[path(parameters('layout').configuration, 'tls', 'anchors.pem')]"
+      source: "[path(parameters('staging'), 'files', 'anchors.pem')]"
+  - name: Package
+    type: Xmip.Node/Package
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/File', 'Cluster configuration')]"
+      - "[resourceId('Xmip.Node/File', 'Key')]"
+      - "[resourceId('Xmip.Node/File', 'Anchors')]"
+    properties:
+      path: "[path(parameters('staging'), 'files', parameters('package'))]"
+      node: "[parameters('node')]"
+      cluster: "[parameters('cluster')]"
+      account: "[parameters('account')]"
+  - name: Slice
+    type: Xmip.Node/Slice
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/Package', 'Package')]"
+    properties:
+      program: "[parameters('layout').program]"
+      configuration: "[path(parameters('layout').configuration, 'xmip.toml')]"
+      node: "[parameters('node')]"
+      cluster: "[parameters('cluster')]"
+  - name: Opening
+    type: Xmip.Node/Opening
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+    properties:
+      program: "[parameters('layout').program]"
+      configuration: "[path(parameters('layout').configuration, 'xmip-node.toml')]"
+      node: "[parameters('node')]"
+  - name: Windows service
+    type: Microsoft.Windows/Service
+    requireVersion: ^0.1
+    condition: "[equals(parameters('family'), 'Windows')]"
+    dependsOn:
+      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+    properties:
+      name: "[concat('xmip-', parameters('node'))]"
+      status: Running
+      startType: Automatic
+      logonAccount: "[parameters('account')]"
+  - name: Linux service
+    type: Xmip.Node/Service
+    requireVersion: ^0.1
+    condition: "[equals(parameters('family'), 'Linux')]"
+    dependsOn:
+      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+    properties:
+      name: "[concat('xmip-', parameters('node'))]"

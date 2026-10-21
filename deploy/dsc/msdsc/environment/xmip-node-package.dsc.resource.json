@@ -1,0 +1,99 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Node/Package",
+  "version": "0.1.0",
+  "description": "The estate's package installed, which runs xmip-service --install for the node, its cluster and its account.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Package",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Package",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Package",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "path",
+        "node",
+        "cluster",
+        "account"
+      ],
+      "properties": {
+        "path": {
+          "description": "The package: the MSI on Windows, the .rpm on Linux.",
+          "type": "string"
+        },
+        "node": {
+          "description": "The node this machine is, as the cluster's xmip.toml declares it.",
+          "type": "string"
+        },
+        "cluster": {
+          "description": "The cluster's name.",
+          "type": "string"
+        },
+        "account": {
+          "description": "The account the node's service runs as.",
+          "type": "string"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

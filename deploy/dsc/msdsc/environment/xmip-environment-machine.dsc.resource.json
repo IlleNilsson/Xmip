@@ -1,0 +1,131 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Environment/Machine",
+  "version": "0.1.0",
+  "description": "A document of this folder applied on another machine over PowerShell Remoting: WinRM to Windows as its Administrator, SSH to AlmaLinux with its key.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Machine",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Machine",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Machine",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "name",
+        "address",
+        "family",
+        "document",
+        "parameters"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The machine."
+        },
+        "address": {
+          "type": "string",
+          "description": "Where it is reached."
+        },
+        "family": {
+          "description": "Its operating system: WinRM to Windows, SSH to Linux.",
+          "type": "string",
+          "enum": [
+            "Windows",
+            "Linux"
+          ]
+        },
+        "login": {
+          "type": "string",
+          "description": "Linux: the account SSH logs in as."
+        },
+        "credentialPath": {
+          "type": "string",
+          "description": "Windows: the Administrator credential, Export-Clixml."
+        },
+        "keyPath": {
+          "type": "string",
+          "description": "Linux: the private SSH key."
+        },
+        "document": {
+          "type": "string",
+          "description": "The document of this folder applied there."
+        },
+        "files": {
+          "type": "object",
+          "description": "What the document is given: a name under the staging folder's files, and the path here it is copied from."
+        },
+        "parameters": {
+          "type": "object",
+          "description": "The document's parameters; staging is added, where its files are."
+        },
+        "differing": {
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true,
+          "type": "array"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

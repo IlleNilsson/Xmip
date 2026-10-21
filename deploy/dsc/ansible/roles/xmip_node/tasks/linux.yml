@@ -1,0 +1,153 @@
+---
+# The node on an AlmaLinux machine. Its account is a system account, made
+# here, which `xmip-service --install --account` gives what it reads and
+# names in the systemd unit as User=.
+
+- name: The node's account
+  ansible.builtin.user:
+    name: "{{ xmip_account }}"
+    system: true
+    create_home: false
+    home: /opt/xmip
+    shell: /sbin/nologin
+  become: true
+
+- name: The config and staging folders
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ xmip_configuration }}"
+    - "{{ xmip_staging }}"
+  become: true
+
+- name: The cluster's xmip.toml
+  ansible.builtin.copy:
+    src: "{{ xmip_cluster_configuration }}"
+    dest: "{{ xmip_configuration }}/xmip.toml"
+    mode: '0644'
+  when: xmip_cluster_configuration | length > 0
+  become: true
+
+- name: The certificate's folder, the node's account's
+  ansible.builtin.file:
+    path: "{{ xmip_configuration }}/tls"
+    state: directory
+    owner: "{{ xmip_account }}"
+    mode: '0700'
+  when: xmip_identity | length > 0
+  become: true
+
+- name: The node's certificate, key and anchors from the cluster's authority
+  ansible.builtin.copy:
+    src: "{{ xmip_identity }}/{{ item.file }}"
+    dest: "{{ xmip_configuration }}/tls/{{ item.file }}"
+    owner: "{{ xmip_account }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { file: node.pem, mode: '0644' }
+    - { file: node.key, mode: '0600' }
+    - { file: anchors.pem, mode: '0644' }
+  when: xmip_identity | length > 0
+  notify: Restart the Xmip node
+  become: true
+
+- name: The package, copied to the machine
+  ansible.builtin.copy:
+    src: "{{ xmip_package }}"
+    dest: "{{ xmip_staging }}/xmip.rpm"
+    mode: '0644'
+  become: true
+
+- name: The package installed, which runs xmip-service --install
+  ansible.builtin.dnf:
+    name: "{{ xmip_staging }}/xmip.rpm"
+    disable_gpg_check: true
+    state: present
+  environment:
+    XMIP_NODE: "{{ xmip_node_name }}"
+    XMIP_CLUSTER: "{{ xmip_cluster_name }}"
+    XMIP_ACCOUNT: "{{ xmip_account }}"
+  become: true
+
+- name: The node's configuration as xmip-service slices it
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}/xmip.toml"
+      - --node
+      - "{{ xmip_node_name }}"
+      - --cluster
+      - "{{ xmip_cluster_name }}"
+      - --slice
+  register: xmip_slice
+  changed_when: false
+  become: true
+
+- name: The node's configuration where it reads it
+  ansible.builtin.copy:
+    content: "{{ xmip_slice.stdout }}\n"
+    dest: "{{ xmip_configuration }}/xmip-node.toml"
+    mode: '0644'
+  notify: Restart the Xmip node
+  become: true
+
+- name: The ports the node's configuration listens on
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}/xmip-node.toml"
+      - --listening
+  register: xmip_listening
+  changed_when: false
+  become: true
+
+# A firewalld service of the node's own holds exactly those ports, so an
+# opening the configuration no longer listens on is closed with it.
+- name: The node's firewalld service
+  ansible.builtin.command:
+    argv: [firewall-cmd, --permanent, "--new-service=xmip-{{ xmip_node_name }}"]
+  register: xmip_firewall_service
+  changed_when: xmip_firewall_service.rc == 0
+  failed_when: xmip_firewall_service.rc != 0 and 'ALREADY_ENABLED' not in xmip_firewall_service.stderr
+    and 'NAME_CONFLICT' not in xmip_firewall_service.stderr
+  become: true
+
+- name: The ports the node's firewalld service holds
+  ansible.builtin.command:
+    argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", --get-ports]
+  register: xmip_opened
+  changed_when: false
+  become: true
+
+- name: Close what the configuration no longer listens on
+  ansible.builtin.command:
+    argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", "--remove-port={{ item }}"]
+  loop: "{{ xmip_opened.stdout.split() | difference(xmip_listening.stdout_lines | map('split') | map('first') | list) }}"
+  notify: Reload the firewall
+  become: true
+
+- name: Open what it listens on
+  ansible.builtin.command:
+    argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", "--add-port={{ item }}"]
+  loop: "{{ xmip_listening.stdout_lines | map('split') | map('first') | list | difference(xmip_opened.stdout.split()) }}"
+  notify: Reload the firewall
+  become: true
+
+- name: The node's firewalld service in the zone
+  ansible.posix.firewalld:
+    service: "xmip-{{ xmip_node_name }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  become: true
+
+- name: The node's service running, started with the machine
+  ansible.builtin.systemd_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: started
+    enabled: true
+  become: true

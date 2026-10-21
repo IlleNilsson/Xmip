@@ -1,0 +1,64 @@
+---
+# The Playground's cluster on the Hyper-V example's machines
+# (deploy/dsc/msdsc/hyperv). Copy it to
+# .local-work/environment/inventory.yml and write in linux_account, the
+# account the AlmaLinux machines were installed with; the paths are the
+# controller's, here the WSL guest's view of this clone.
+#
+# The cluster's xmip.toml is the Playground's own, the one file a test runs
+# whether its nodes are simulated or on machines of their own (the owner,
+# 2026-10-21). Which node runs on which machine is here, never in that file:
+# the mapping is the environment's. The nodes the file declares and no
+# machine here carries — R2, S2, O1 and D2 — the Playground simulates.
+all:
+  vars:
+    xmip_cluster_name: C1
+    xmip_domain: xmip.test
+    xmip_cluster_configuration: /mnt/d/Repos/Xmip/test/core/playground/configuration/xmip.toml
+    xmip_identity: "/mnt/d/Repos/Xmip/.local-work/environment/identity/{{ xmip_node_name }}"
+  children:
+    windows:
+      vars:
+        ansible_connection: winrm
+        ansible_port: 5985
+        ansible_winrm_transport: ntlm
+        ansible_user: Administrator
+        ansible_pwsh_interpreter: pwsh
+        # Build-XmipService -Site personal-computer -Package msi
+        # (deploy/package/README.md); write the version in.
+        xmip_package: /mnt/d/Repos/Xmip/.local-work/package/<version>/xmip-<version>-personal-computer-x64.msi
+      hosts:
+        XMIP-DC01:
+        XMIP-APP01:
+        XMIP-APP02:
+        XMIP-APP03:
+    linux:
+      vars:
+        ansible_connection: ssh
+        ansible_user: "{{ linux_account }}"
+        ansible_ssh_private_key_file: /mnt/d/Repos/Xmip/.local-work/hyperv/ssh/xmip
+        xmip_package: /mnt/d/Repos/Xmip/.local-work/package/<version>/xmip-<version>-personal-computer-x86_64.rpm
+      hosts:
+        XMIP-IN01:
+        XMIP-OUT01:
+    xmip_name_server:
+      hosts:
+        XMIP-DC01:
+          ansible_host: 10.77.0.10
+    xmip_nodes:
+      hosts:
+        XMIP-IN01:
+          ansible_host: 10.77.0.61
+          xmip_node_name: R1
+        XMIP-OUT01:
+          ansible_host: 10.77.0.71
+          xmip_node_name: S1
+        XMIP-APP01:
+          ansible_host: 10.77.0.51
+          xmip_node_name: P1
+        XMIP-APP02:
+          ansible_host: 10.77.0.52
+          xmip_node_name: L1
+        XMIP-APP03:
+          ansible_host: 10.77.0.53
+          xmip_node_name: D1
