@@ -20,12 +20,13 @@ function Start-XmipOperationWeb {
             Without -Snapshot the host reads what its own xmip.gui.toml says.
 
             Each browser acts as the caller its connection proved — a client
-            certificate, else this machine's loopback, the user the host runs
-            as — with the role the host grants that caller (ADR-0009, amended
-            2026-10-06): the role xmip.gui.toml or XMIP_ROLE states, else the
-            directory it names, else Observer. Over a Playground roll the host
-            is told the Playground's fake directory, which allows you, the
-            tester, every role and no one else. A browser nothing proved
+            certificate, over this machine's loopback as from anywhere — with
+            the role the host grants that caller (ADR-0009, amended 2026-10-06
+            and 2026-10-21): the role xmip.gui.toml or XMIP_ROLE states, else
+            the directory it names, else Observer. Over a Playground roll the
+            host is told the Playground's fake directory, which allows the
+            user the host runs as every role and no one else; a browser is
+            never that user for reaching loopback. A browser nothing proved
             watches and acts on nothing.
 
             Several snapshots are one host over several clusters (ADR-0052,
@@ -217,9 +218,10 @@ function Start-XmipOperationWeb {
             ).Count -gt 0
 
             # And its roles come from the Playground's fake directory, which
-            # allows the tester — you, the user the host runs as — and no one
-            # else (ADR-0009, amendments 2026-09-14 and 2026-10-06). Anywhere
-            # else an unstated role grants nothing.
+            # allows the user the host runs as and no one else (ADR-0009,
+            # amendments 2026-09-14 and 2026-10-06); a browser proves it only
+            # by a certificate, never by reaching loopback (amendment
+            # 2026-10-21). Anywhere else an unstated role grants nothing.
             if ($rolls) {
                 $arguments += '--Xmip:Purpose=test'
                 $arguments += '--Xmip:Directory=tester'

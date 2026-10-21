@@ -506,14 +506,18 @@ opens the specific point's configuration from its scope
 ([ADR-0009](doc/decision/ADR-0009-security-roles-vs-actor-capabilities.md)).
 The role is the caller's: each browser, the desktop's user and each remote
 surface is the caller its connection proved — the subject of a client
-certificate the host or the node checked, else, over loopback, the operating
-system user running the host — and one nothing proved watches and acts on
-nothing. Both GUIs grant a caller a role by one rule: a role the run states
+certificate the host or the node checked, or on a node's local endpoint the
+account the operating system names; the desktop's, the user running it — and
+one nothing proved watches and acts on nothing. Loopback proves where a
+caller is, not who: a tcp connection over it presents a certificate like any
+other (open problem 35). Both GUIs grant a caller a role by one rule: a role the run states
 (`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's; else
 the directory the host is told (`Directory`) answers; else Observer. A node's
 operate listener grants every caller it proved — by certificate, or on its
-local endpoint by the operating system — the role its `[operate] role`
-states (ADR-0014, amendments 2026-10-12 and 2026-10-13). The
+local endpoint by the operating system, which lets open it only the node's
+account, the machine's administrators and whom `[operate] admit` names —
+the role its `[operate] role` states (ADR-0014, amendments 2026-10-12,
+2026-10-13 and 2026-10-21). The
 Playground's directory is a fake one that allows the tester, and
 `Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
 gate as its caller, never under a name the caller gives, refused in words

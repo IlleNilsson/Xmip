@@ -975,3 +975,87 @@ sentences (the 2026-08-26 and 2026-08-30 amendments):
 
 Provenance: the owner's instruction, quoted; the versions were read from
 Microsoft's download page and NuGet on 2026-10-19.
+
+## Amendment, 2026-10-21: local callers are proven by the operating system
+
+**Amends the amendment of 2026-10-13, *every .NET surface operates a node
+over gRPC*, where the local endpoint's gate was fixed, and its answers of
+the same date.** Decided by the owner, 2026-10-19 (open problem 35): *local
+callers are proven by the operating system*, through a named pipe on
+Windows or a Unix socket's peer account elsewhere, and *tcp loopback is no
+longer trusted by itself* (ADR-0009, amendment 2026-10-21).
+
+- **Every local surface reaches a node at its local endpoint**: xmip-cli
+  (`--local`), the PowerShell module (`-Local`) and both GUIs (`Surface =
+  "local"`), each through the runtime's one connecting end
+  (`plane::local::connect`, `xmip_remote_open_local_v1`). The VS Code
+  extension's language server reaches no node: it validates and designs
+  through the ABI alone. The operate listener's network address asks every
+  caller for its certificate, from loopback as from anywhere.
+- **Windows.** Every surface opens the pipe lent for identification alone
+  (`SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION`,
+  `ffi::system::open_identifying`), asking to read and write its data and
+  nothing more, so a node — or whatever made a pipe of that name first —
+  reads who the caller is and can never act as it. The node reads the
+  account from the client's token (`ImpersonateNamedPipeClient`, the
+  token's user, `LookupAccountSidW`), held by a test to the
+  identification level. The security descriptor admits the node's account,
+  `SYSTEM` and the machine's administrators fully, and each account or
+  group `[operate] admit` names to read and write the pipe and never make an
+  instance of it (`FILE_GENERIC_READ | FILE_WRITE_DATA`), so no admitted
+  caller can stand in for the node; a name Windows does not know is refused
+  as the node starts. Remote callers are rejected, as before.
+- **Unix.** The kernel names the peer (`SO_PEERCRED` on Linux,
+  `getpeereid` elsewhere) and the node admits its own account, the
+  superuser and each user or group `admit` names, a member of a named group
+  by the system's group list, and refuses anyone else in words. The socket
+  is `0600` where `admit` names nobody, so the file system refuses everyone
+  else first, and `0666` where it names some, the kernel's word the gate.
+  The folder — `/run/xmip`, `/var/run/xmip` — must be the node's account's
+  or the superuser's and writable by nobody else, or a stranger could put a
+  socket where a surface looks; a node refuses to make its endpoint in any
+  other (`plane::local::unix::guarded`).
+- **What authorization judges** is that account: who acts, audited, and
+  admitted by the role `[operate] role` states (ADR-0009, note of
+  2026-10-12).
+- **Measured** on the owner's Windows machine, debug build: a surface's
+  connection from nothing to its first answer — the pipe opened, the
+  account read, HTTP/2 agreed and one call answered — about 0.28 to
+  0.45 ms the fastest of five and 0.30 to 0.49 ms the median over four
+  runs, the process's processor time 0.48 to 0.74 ms (`tests/plane/local.rs`,
+  held under the millisecond, wall and processor alike); on Linux, the
+  AlmaLinux 10 guest under WSL, 0.70 to 0.82 ms the fastest of five and
+  0.78 to 0.97 ms the median over three runs.
+  Four costs were found and taken out on the way, each measured:
+  - Windows took about 0.35 ms to name an account's identifier, so a name
+    is kept by the identifier the token proved for the process's life; an
+    account renamed meanwhile keeps its old name until the node restarts.
+  - Every surface on a pipe started a thread of its own to keep its calls'
+    deadline (amendment *the owner's answers*, above); one thread now keeps
+    every surface's in the process, woken only where a call's deadline
+    falls before its next look (`plane::deadline`).
+  - A connection's thread is kept for the next connection, at most eight
+    waiting (`plane::workers`): starting and ending one cost about a fifth
+    of a millisecond.
+  - HTTP/2 is generic over its connection, so the runtime's own tests
+    compiled it unoptimized: a call took about 0.4 ms of the caller's
+    processor time there and 0.13 ms as it ships. Both ends of the plane
+    ride a boxed connection and ask the code `net` compiled
+    (`net::http2::BoxedClient`, `BoxedServer`), and a call takes about
+    0.2 ms.
+  A surface that states no wait of its own first lists the node
+  declarations to learn the node's (`deadline::declared`), which took 0.4
+  to 0.6 ms of processor time on this machine's temporary folder alone;
+  that is not taken out, and is the owner's to weigh.
+
+**Drafted, for the owner:** the key's name and reach, `[operate] admit`, a
+list of accounts and groups beside the node's account and the machine's
+administrators, empty where it is left out — so the owner's *the local
+pipe stays the service account's and Administrators'* holds until a site
+names someone; on Unix a socket of `0666` where `admit` names anyone, the
+node's check on the kernel's word the gate; and a name kept for the
+process's life.
+
+Provenance: the owner's decision of 2026-10-19, quoted; the key, the access
+an admitted caller gets, the folder rule and the kept names are the
+assistant's, for the owner to overrule.

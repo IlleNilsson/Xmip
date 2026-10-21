@@ -366,7 +366,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 274362 lines of production
+Where each repository mounts and what it holds: 275323 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -619,7 +619,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5320
+│   │   │   ├── net                             5410
 │   │   │   ├── codec                           2648
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
@@ -654,7 +654,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                28665  C# 26345 · Rust 2024 · PowerShell 296
+│   │   ├── abi                                28670  C# 26350 · Rust 2024 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -682,13 +682,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            27383
+│       ├── runtime                            28234
 │       ├── persist                            10537
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5425
+│       └── configure                           5440
 └── test/
     └── core/
         └── playground                         11291

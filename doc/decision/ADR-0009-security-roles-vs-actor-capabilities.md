@@ -289,3 +289,56 @@ a screen and a node refuse in the same words. On the operate listener every
 caller is proven by its client certificate, and its role is the one the
 node's `[operate] role` states, Observer where it states none; no directory
 is asked there yet.
+
+## Amendment, 2026-10-21: loopback proves where a caller is, not who
+
+**Amends the amendment of 2026-10-03, where an act over this machine's
+loopback without a certificate was the host's own user (the owner's *Go
+with A*), and the amendment of 2026-10-06, which carried that to every
+browser.** Raised by the outside review of 2026-10-08 (open problem 35):
+with a role stated for the run, or a Playground host's tester directory,
+another user on the machine acted as the host's account, and a reverse
+proxy forwarding to loopback gave remote callers the same trust. Decided
+by the owner, 2026-10-19: *local callers are proven by the operating
+system*, through a named pipe or a Unix socket's peer account, and *tcp
+loopback is no longer trusted by itself*.
+
+- **A connection is proven by what it presents, never by where it comes
+  from.** `GatedOperator.Proven` takes the client certificate's subject and
+  nothing else; its loopback branch is deleted with every use
+  (`ProvenCaller.Of`, the web host's middleware, the surface hub). A
+  browser on this machine's loopback presents a certificate as a browser
+  anywhere does; one that presents none watches and acts on nothing, the
+  tester directory notwithstanding. Plain HTTP on loopback stays ADR-0063
+  clause 1's one exception for what the wire carries, and grants nothing.
+- **A surface on the node's machine is proven by the operating system**,
+  on the node's local endpoint: the account its process runs as, read from
+  the connection (ADR-0014, amendment 2026-10-21). That is the one way
+  xmip-cli, the PowerShell module and both GUIs reach a node on their own
+  machine, all through `xmip_remote_open_local_v1`. The desktop host's own
+  caller stays the user running it: a process is its operating system
+  user, which the node then proves again for every act it takes.
+- **The runtime's refusal says it.** `plane::role::admitted` refuses a
+  caller nothing proved as *the identity the connection proved — a client
+  certificate, or on the node's local endpoint the account the operating
+  system names — never from what the caller says, nor from where it
+  connects*.
+
+Proved in `Xmip.Surface.Test` (`BrowserCallerTest`): a browser on loopback
+without a certificate is no one, an Observer, and its act is not taken
+even where the tester directory is configured; every request's user over
+the wire is what a certificate proved, and *nobody* over plain loopback.
+
+**Drafted, for the owner: how the Playground's tester acts in the web
+GUI.** The tester directory allows the user a host runs as, whom a browser
+no longer is. Recommended: `Start-XmipOperationWeb` serves a roll's host on
+`https://127.0.0.1` under the roll's cluster authority, the tester presents
+an operator certificate (`New-XmipCertificate -Operator`, ADR-0034,
+amendment 2026-10-15), and the tester directory knows the tester by that
+certificate's subject. Until then the Playground's web GUI watches, and the
+tester acts through the desktop GUI, xmip-cli or PowerShell on the node's
+local endpoint.
+
+Provenance: the owner's decision of 2026-10-19, quoted; the deletion's
+reach and the tester's draft are the assistant's, for the owner to
+overrule.

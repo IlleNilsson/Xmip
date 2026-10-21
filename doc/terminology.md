@@ -194,6 +194,7 @@ source a node's configuration names (ADR-0034; ADR-0033, amendment
 | **Source** | Where a purpose's certificate comes from: an ACME directory, the cluster's authority, the node itself (self-signed), or an operator's files. A technology of `xmip-core-provision`; none is a default. |
 | **Provisioner** | One purpose's certificate kept in its place and obtained again at two thirds of the life it was issued with. |
 | **Cluster authority** | The cluster's own certificate authority (`internal-ca`), whose certificate every node holds as its anchor; it issues node certificates, answers ACME and signs an operator certificate's request. |
+| **Local endpoint** | A node's operate listener on its own machine — a named pipe on Windows, a Unix domain socket elsewhere — and the one way a surface on that machine reaches the node. Its caller is **proven by the operating system**: the account the connecting process runs as, lent for identification alone on Windows, the kernel's word on the peer on Unix; only the node's account, the machine's administrators and whom `[operate] admit` names may open it (ADR-0014, amendment 2026-10-21). Not **loopback**: a tcp connection over loopback proves where a caller is, not who, and presents a certificate like any other (ADR-0009, amendment 2026-10-21). |
 
 ## Arrival and Departure
 

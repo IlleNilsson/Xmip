@@ -1085,19 +1085,6 @@ a publication carries no index places. Said so precisely, the same day, in
 `Get-XmipScope -Offset`; making the two one would mean publishing each
 Journey's place in the index.
 
-## 35. Loopback proves where a caller is, not who
-
-Raised by the outside review of 2026-10-08 as a decision to reconsider, not
-a defect: ADR-0009's exception (the owner's *Go with A* of 2026-10-03)
-makes every certificate-free caller over this machine's loopback the
-operating system user the host runs as (`GatedOperator.Proven`). With a
-role stated for the run, or a Playground host's tester directory, another
-local user acts as that account, and a reverse proxy forwarding to
-loopback extends the same trust to remote callers; the audit names the
-host's account. The review asks for either a narrower deployment boundary
-for the exception or authenticated local callers. The owner's to decide;
-nothing is changed until then.
-
 ## 36. A green root CI run is not evidence for the composed estate
 
 Raised by the outside review of 2026-10-08. The root workflow
@@ -1902,3 +1889,57 @@ Marks between two entries still held — a Journey slow to send while those
 after it are sent — are stepped over until `RocksDB` compacts them. And
 the index's keys show, in the clear, whether an entry failed and when its
 retry is due, beyond what `held_place` showed.
+
+## 35. Loopback proves where a caller is, not who — **Resolved**
+
+*Resolved 2026-10-21 by the owner's decision of 2026-10-19, built the
+same day (ADR-0009 and ADR-0014, amendments 2026-10-21).*
+
+Raised by the outside review of 2026-10-08 as a decision to reconsider:
+ADR-0009's exception (the owner's *Go with A* of 2026-10-03) made every
+certificate-free caller over this machine's loopback the operating system
+user the host runs as (`GatedOperator.Proven`). With a role stated for the
+run, or a Playground host's tester directory, another local user acted as
+that account, and a reverse proxy forwarding to loopback extended the same
+trust to remote callers; the audit named the host's account. Decided by
+the owner, 2026-10-19: *local callers are proven by the operating system*,
+through a named pipe or a Unix socket's peer account, and *tcp loopback is
+no longer trusted by itself*.
+
+Built 2026-10-21. **The loopback trust is deleted**: `GatedOperator.Proven`
+takes a client certificate's subject alone, and a browser or a remote
+surface over loopback presents one like any other caller, or is no one.
+**Every local surface reaches a node at its local endpoint** — xmip-cli, the
+PowerShell module and both GUIs, through the runtime's one connecting end;
+the VS Code extension's language server reaches no node. **On Windows**
+every surface opens the node's pipe lent for identification alone
+(`ffi::system::open_identifying`), and the node reads the caller's account
+from its token; the pipe's security descriptor admits the node's account,
+`SYSTEM`, the machine's administrators and whom `[operate] admit` names,
+the admitted only to read and write it (`plane::local::windows::openers`).
+**On Unix** the kernel names the peer (`SO_PEERCRED`, `getpeereid`) and the
+node admits its own account, the superuser and whom `admit` names
+(`plane::local::unix::Admitted`), in a folder only the node's account or
+the superuser may write (`unix::guarded`). The account is what
+authorization judges, by `[operate] role`.
+
+Measured, Windows, a debug build: a surface's connection from nothing to
+its first answer, the caller proven, about 0.28 to 0.45 ms the fastest of
+five and 0.30 to 0.49 ms the median (`tests/plane/local.rs`), after four
+costs were taken out on the way: a name Windows took 0.35 ms to give,
+now kept by the identifier the token proved; a deadline thread per
+surface, now one for the process (`plane::deadline`); a thread started
+and ended per connection, now kept for the next (`plane::workers`); and
+HTTP/2 compiled unoptimized in the runtime's tests, now asked where `net`
+compiled it (`net::http2::BoxedClient`, `BoxedServer`; ADR-0014,
+amendment 2026-10-21). On Linux, the AlmaLinux 10 guest under WSL, 0.70
+to 0.82 ms the fastest of five and 0.78 to 0.97 ms the median.
+
+What it leaves for the owner, drafted: the key `[operate] admit` and its
+reach; a Unix socket of `0666` where `admit` names anyone; a name kept for
+the process's life; a surface stating no wait of its own, which lists the
+node declarations to learn the node's (`deadline::declared`, 0.4 to 0.6 ms
+of processor time on this machine's temporary folder); and how the Playground's tester acts in the web GUI,
+now that a browser is never the host's user for reaching loopback
+(ADR-0009, amendment 2026-10-21: an operator certificate the tester
+directory knows, recommended).
