@@ -669,3 +669,67 @@ index, and before the first release nothing migrates it.
 
 Built 2026-10-19 (`xmip-core-persist`, `storage/queue.rs`); `runtime-model.md`
 section 10, corrected 2026-10-19.
+
+## Amendment, 2026-10-21: a send scan reads only what is due
+
+A Send Port's queue holds what is due, what waits for a retry and what
+failed and waits for an operator. A scan read all of it at every `[tuning]
+send_scan` to find what was due, so its cost followed what the queue held:
+a far end that failed for an hour made every scan read every Journey
+waiting on it (`open-problems.md` problem 43's remainder, problem 40's
+last item). The owner decided on 2026-10-19: *a send scan reads only what
+is due*, through an ordered index on when each entry is due, written and
+removed with the entry, as problem 40's index on queue and place is.
+
+- **One index, in the one schema definition**: `held_due` on `(queue,
+  failed, due_at, sequence)`, schema version 1, as everything is until the
+  first release (problem 41). `held.due_at` holds a value in every row:
+  a retry's due time, or the epoch, before every time, for a Journey due
+  since it was held. So the index keeps a queue's entries in three parts —
+  what failed apart from the rest; those due since they were held, at the
+  epoch, in their order; then each retry by its due time — and what is due
+  now is one range of it up to Xmip Storage's now.
+- **On a database server it is an index of its own**, made by the
+  scripts beside the table's key; unlike `held_place`, its columns are not
+  the key.
+- **A failed Journey waits for no retry**: the hand-on that fails it
+  takes its due time out with the mark, so it is in the failed part alone.
+- **Xmip Storage reads a part** (`XmipStorage::read_due`, wire operation
+  28): what is due, what waits for a retry, or what failed, a page from a
+  due time and place, with how many of the queue keep a retry's due time
+  and when the earliest not yet due is. The count is kept, not read: each
+  queue's places in its due order are a table of their own,
+  `held_due_places` — where its first Journey due since it was held is,
+  where its first retry is, and how many keep a retry's due time — written
+  by the one writer in the write that changes them.
+- **A scan reads what is due**: a Send Port that is not Sequential reads
+  that part a page at a time, in the order it fell due, and stops where the
+  Send pool is full. A Sequential Send Port's scan also reads what holds a
+  sequence behind it — what waits for a retry, and where `on_failure =
+  "block"`, what failed — and goes through it all in the queue's order, so
+  its order is kept as before. The node wakes for the earliest retry as
+  Xmip Storage tells it, and counts what waits as Xmip Storage counts it.
+- **A read starts where the first is.** On `RocksDB` an entry taken out of
+  an index stays a mark the engine steps over until it compacts it away,
+  about 85 ns each (measured 2026-10-21: 100,000 marks before three entries
+  cost 8.5 ms a read, in the memory table and once flushed), and a queue
+  being sent takes out each entry it sends, ahead of what it still holds.
+  So a read of what is due starts at `held_due_places`' first of each
+  part, and the one writer keeps both where the first is: once a batch is
+  decided, each queue it wrote a held Journey of finds its first again by
+  one range of the index from where it was, stepping over each mark once,
+  never one place at a time. `RocksDB`'s ranges are now bounded at both
+  ends, so none steps past its end over what was taken out beyond it.
+  This moves a first in the writer, which the amendment of 2026-10-19 did
+  not do for the place index; that one is unchanged.
+- **In the clear**, as every index entry is: beyond what `held_place`
+  showed, whether an entry failed and when its retry is due.
+
+Built 2026-10-21 (`xmip-core-persist`, `storage/due.rs`;
+`xmip-core-runtime`, `send_step/reading.rs`); `runtime-model.md` section
+10, corrected 2026-10-21. Proved by `storage::due`'s tests: of 11,003 held
+— 10,000 waiting an hour, 1,000 failed, three due — a read of what is due
+reads four keys and two ranges, where a read of the whole queue read
+11,176 keys, in 91 µs, a debug build; and by
+`xmip-core-persist-rocksdb`'s test of a range past 199,997 marks: 15-20 ms
+through them, under 10 µs from the first kept.

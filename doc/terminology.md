@@ -326,6 +326,13 @@ It is not a broker, and Xmip requires none. `xmip-core-transport-rabbitmq`,
 `-msmq`, `-kafka` and `-ibm-mq` are integration targets — things Xmip talks to
 on somebody's behalf — not infrastructure it runs on.
 
+**What is due** in a Send Port's queue is what a send scan reads, and
+nothing else: each Journey due since it was held, and each retry whose due
+time has come. What **waits** for a retry and what **failed** and waits for
+an operator are held too, in parts of the queue a scan of a Port that is
+not Sequential never reads, so its cost follows what is due, not what is
+held (the owner, 2026-10-19; ADR-0013, amendment 2026-10-21).
+
 The databases, the roles and the split with IT's infrastructure are in
 `architecture/deployment-model.md` sections 3, 7 and 9; the execution model it
 implements is `architecture/runtime-model.md` section 3.
