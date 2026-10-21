@@ -366,7 +366,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 275323 lines of production
+Where each repository mounts and what it holds: 275554 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -391,7 +391,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6317
+│   │   │   ├── transport                       6324
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -439,13 +439,13 @@ hold no source to count.
 │   │   │   │   ├── wireless-hart                833
 │   │   │   │   ├── aws-sqs                      827
 │   │   │   │   ├── dhcp                         824
+│   │   │   │   ├── file                         808
 │   │   │   │   ├── zigbee                       800
 │   │   │   │   ├── thread                       799
 │   │   │   │   ├── peppol                       756
 │   │   │   │   ├── knx                          747
 │   │   │   │   ├── iso-tp                       724
 │   │   │   │   ├── s3                           714
-│   │   │   │   ├── file                         702
 │   │   │   │   ├── azure-blob                   700
 │   │   │   │   ├── mysql                        700
 │   │   │   │   ├── mdns                         698
@@ -533,7 +533,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1122
+│   │   │   ├── secret                          1149
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -683,7 +683,7 @@ hold no source to count.
 │   │   └── cluster                               21
 │   └── platform/
 │       ├── runtime                            28234
-│       ├── persist                            10537
+│       ├── persist                            10628
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1

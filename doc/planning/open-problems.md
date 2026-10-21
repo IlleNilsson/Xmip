@@ -984,15 +984,48 @@ than its load in the test build. Beside four jobs it passed five runs in
 five, 0.16 to 0.92 ms over its load; beside eight, six in ten (ADR-0018,
 amendment 2026-10-21).
 
+*Repaired again 2026-10-21, where the processor time went.* Sampled thread
+by thread, the Storage node's writer took about 40 percent of the node
+test's processor time: two batches a Message, its Publication and its
+Journey's hand-on, each deciding (the due places half of it), sealing and
+writing, and syncing. The test build was not the cause — built whole at
+`opt-level = 3` a Message took 2.96 ms of processor time against 3.1 to 3.5
+— so no profile changed. The defect was a wait: the writer synced each
+batch before taking the next, so a Message's Publication waited out the
+previous Message's hand-on sync, answered in 1.2 ms back to back against
+0.53 ms apart. The sync is a thread of its own now, one sync for every
+batch written meanwhile (`persist::storage::commit::Syncer`), and a data
+key sets its cipher and keyed hash up once (`secret::DataKey`), where it
+did so some sixty times a Message (ADR-0018, amendment 2026-10-21). The
+node test beside four jobs and the suite, five runs: 0.47 ms less to 0.32
+ms more than its load; beside eight, five runs in five, 0.52 ms less to
+0.23 ms more. And the file-drop test's claim, 14 ms once beside a build:
+on Windows a dropped file's turn is now the file held open, one open where
+a turn file took four changes to the directory and an open more (ADR-0024,
+amendment 2026-10-21); the claim takes 1.60 to 1.99 ms beside four jobs,
+1.90 to 2.72 ms beside eight, from about 3 ms idle and 5 ms beside jobs and
+a busy disk before.
+
 What remains of it, the owner's to decide:
 
-- **The path's processor time.** The loopback node's Message passes six
-  runs in ten beside eight processor-bound jobs and the suite, where its
-  own processor time waits its turn; fewer hand-offs would not mend it,
-  less work on the path would — the Publication's building, about 0.1 ms
-  in the test build, first. On Linux, in the AlmaLinux guest, the same
-  test and its eight senders fail by about 3 ms whether a connection ends
-  in a reset or a close, and the deadline test needs `/run/xmip`.
+- **The path's processor time.** The writer's own work stands: about
+  0.25 ms deciding and 0.24 ms sealing and writing per batch, two batches a
+  Message, a fifth of it the heap; the due places found again
+  (`due::settle`) are the largest single part. The test process still
+  spends 2.8 to 2.9 times its load's processor time on a Message. On
+  Linux, in the AlmaLinux guest, the node test and its eight senders fail
+  by about 3 ms whether a connection ends in a reset or a close, and the
+  deadline test needs `/run/xmip`.
+- **Seen under load the same day, not this problem's.** Beside four or
+  eight jobs, `plane`'s
+  `a_connection_on_this_machine_is_proven_and_answered_within_the_millisecond`
+  took 1.24 to 1.60 ms of processor time and failed one or two runs in five
+  beside four, four in five beside eight (problem 35's); the library's
+  `a_caller_lends_its_account_for_identification_alone` read nothing from
+  its client three times in some twenty runs beside four; and the paced
+  fan-out read 277 and
+  304 chunks for 132 twice in 23 runs of the Ledger tests beside four
+  (none in eight runs before the sync's thread, at most 221).
 
 - **The Ledger's sync is counted as the payload's load.** Beyond the sent
   file alone Xmip takes 1.6 to 1.8 ms: the Ledger's sync and the sent

@@ -788,8 +788,10 @@ nothing rests until the word comes or its recovery sweep is over,
 the watch began or a word missed. A drop directory not there yet is polled
 until it is, then watched. So a file is listed the moment it lands: a
 file dropped waited about 1.7 seconds for its claim on the getting-started
-node until then, and waits under two milliseconds now, the listing and the
-claim's turn and rename on the file system. A database's `LISTEN` is not
+node until then, and waits about two milliseconds now, the listing and the
+claim's turn and rename on the file system — on Windows the turn is the
+dropped file held open, one open where a turn file took four changes to the
+directory (ADR-0024, amendment 2026-10-21). A database's `LISTEN` is not
 built.
 
 **The far end sees a send only once its Message is durable, and the send

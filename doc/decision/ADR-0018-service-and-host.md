@@ -1140,3 +1140,60 @@ Provenance: the defects and the terms are the owner's; the reset after the
 sender's close, the held block, the repeated cancel and the reading of the
 node test's numbers are the assistant's, 2026-10-21, for the owner to
 confirm or strike.
+
+## Amendment, 2026-10-21: the Storage node syncs on a thread of its own, and a key is set up once
+
+**Provenance.** The loopback node's Message still went one to two
+milliseconds over its load beside other jobs, and the amendment above left
+most of its processor time unexplained. The owner's terms, as before: fix
+the underlying problem, never isolate or loosen a test, and over a
+millisecond beyond load is a defect.
+
+- **Where the processor time went.** Sampled thread by thread (each
+  thread's cycles, and its stack suspended and walked where they grew), the
+  embedded Storage node's writer took about 40 percent of the test
+  process's processor time, the test's own sends and accepts — its load —
+  about 25, the carrying and sending threads the rest. A Message is two of
+  the writer's batches, its Publication and its Journey's hand-on, each
+  some 0.25 ms deciding (the due places found again, `due::settle`, half of
+  it), some 0.24 ms sealing and writing, and some 0.32 ms in the sync's own
+  call into the kernel; about a fifth of the writer's time was the heap.
+- **The test build is not what made it slow.** Built whole at
+  `opt-level = 3`, the runtime included, a Message took 2.96 ms of the
+  process's processor time where the test build took 3.1 to 3.5 ms: the
+  path's work is in its dependencies, `xmip-core-persist` and RocksDB,
+  which the test profile builds optimized already
+  (`[profile.dev.package."*"]`). No profile changes.
+- **A Publication no longer waits out the previous Message's sync.** The
+  writer synced each batch itself before it took the next, so the next
+  Message's Publication, arriving while the previous Message's hand-on
+  synced, was decided only after that sync: answered in 0.53 ms at the
+  median with a pause between Messages, and 1.2 ms back to back. The sync
+  is now a thread of its own (`xmip-storage-sync`,
+  `persist::storage::commit::Syncer`): the writer hands it each batch's
+  `Durable` once the batch is written and takes the next, and one sync
+  makes every batch handed over meanwhile durable together — group commit
+  of the syncs, as a batch is group commit of the writes. A sync makes
+  durable everything written before it began, and a batch reaches the
+  thread only once it is written, so the sync that tells it holds it; the
+  thread syncs whatever it was handed before the writer's thread ends.
+- **A key's cipher and keyed hash are set up once.** `secret::DataKey`
+  set up AES-256-GCM and HMAC-SHA-256 from its bytes for every seal, open
+  and keyed hash, some sixty a Message; it keeps them now, set up at their
+  first use, and seals and opens in place, one allocation each.
+
+Measured after (2026-10-21): the test process's processor time per Message
+went from 3.0 to 3.1 times its load's to 2.8 to 2.9 times. The full runtime
+suite, five runs back to back beside four processor-bound jobs: the
+Message took 0.47 ms less to 0.32 ms more than its load (before, 0.31 to
+0.91 ms more alone, and up to 2 ms more beside jobs), and every test
+passed but, once each, the paced fan-out (304 chunk reads for 132) and
+the plane's local connection (1.28 ms of processor time). Beside eight
+jobs, five runs: the Message 0.52 ms less to 0.23 ms more than its load,
+five runs in five where it passed six in ten before; the plane's local
+connection failed four runs in five (1.24 to 1.44 ms), open problem 35's
+to answer.
+
+Provenance: the defect and the terms are the owner's; the sync's thread
+and the key set up once are the assistant's, 2026-10-21, for the owner to
+confirm or strike.

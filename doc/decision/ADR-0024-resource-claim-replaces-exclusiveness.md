@@ -586,3 +586,46 @@ sweep's name and its default of a second are the assistant's, for the owner
 to confirm or strike. Taking a file at once on Linux and macOS — a close
 after writing the watch already hears, told by name — is open (open problem
 33).
+
+## Amendment, 2026-10-21: on Windows a dropped file's turn is the file held open
+
+**Provenance.** The assembled service's file-drop test once waited 14 ms
+for a dropped file's claim against its ten while another build ran on the
+machine (open problem 33). The owner's terms: fix what a busy machine or
+disk slows, never loosen the test.
+
+- **What was slow.** Timed step by step inside the node, a claim on an
+  idle machine took about 3.0 ms, the fastest of five: the word and the
+  wake, the listing (0.35 ms), the open asking whether a writer still held
+  the file (0.35 ms), the turn file created, written and closed (0.85 ms),
+  the stamp read again by its path (0.2 ms), the rename (0.7 ms) and the
+  turn removed (0.5 ms). Each is a change to the directory or an open the
+  file system and its virus guard work through, and each grows with a busy
+  disk: beside four processor-bound jobs and two jobs writing and removing
+  files, 4.6 to 5.3 ms.
+- **On Windows the turn is the dropped file held open**
+  (`xmip-core-transport-file`, `holding.rs`): opened to write and sharing
+  reading and deleting, never writing. No other claimant opens it so while
+  one holds it, and no producer still writing it lets it be opened at all,
+  so the same open says the file is finished (the amendment of 2026-10-20);
+  the stamp is read through the handle; the rename, which opens the file to
+  delete it, goes through; nothing is written through it, and the turn ends
+  with the handle, so a node that dies leaves none behind. Exclusive as the
+  turn file was: whichever claimant holds the handle renames the file, and
+  one that finds it held leaves it to its next listing. Where the open is
+  refused for anything but another's handle — a file the node's account may
+  not write — and on every other system, the turn is a file as before.
+- **What stays.** The claimed name, the rename, the return and a starting
+  node's recovery are unchanged; `ClaimSite` is unchanged, the file system
+  taking its turn in its own words as FTP takes it by `MKD`.
+
+Measured after (2026-10-21): the claim took 2.0 to 2.2 ms on an idle
+machine and beside the same jobs and disk; the assembled service's suite,
+five runs back to back beside four processor-bound jobs, passed every test
+with the claim at 1.60 to 1.99 ms, the fastest of five, and three runs
+beside eight at 1.90 to 2.72 ms.
+
+Provenance: the defect and the terms are the owner's; the turn held open
+is the assistant's, 2026-10-21, for the owner to confirm or strike. Linux
+and macOS keep the turn file, and take a file at the second listing (the
+amendment of 2026-10-20).
