@@ -98,12 +98,14 @@ CREATE TABLE xmip.held (
     body bytea NOT NULL,
     held_at timestamptz NOT NULL,
     failed boolean NOT NULL,
-    due_at timestamptz NULL,
+    due_at timestamptz NOT NULL,
     CONSTRAINT held_key PRIMARY KEY (queue, sequence),
     CONSTRAINT held_unique UNIQUE (queue, journey)
 );
 
 CREATE INDEX held_time ON xmip.held (queue, held_at);
+
+CREATE INDEX held_due ON xmip.held (queue, failed, due_at, sequence);
 
 -- each queue's first place, its next and how many it holds.
 CREATE TABLE xmip.held_places (
@@ -112,6 +114,16 @@ CREATE TABLE xmip.held_places (
     next_place bigint NOT NULL,
     held bigint NOT NULL,
     CONSTRAINT held_places_key PRIMARY KEY (queue)
+);
+
+-- each queue's places in the order its Journeys are due: the place no Journey due since it was held is before, the due time and place no retry is before, and how many keep a retry's due time.
+CREATE TABLE xmip.held_due_places (
+    queue uuid NOT NULL,
+    first_due_place bigint NOT NULL,
+    first_retry_at timestamptz NOT NULL,
+    first_retry_place bigint NOT NULL,
+    retrying bigint NOT NULL,
+    CONSTRAINT held_due_places_key PRIMARY KEY (queue)
 );
 
 -- the Journeys that failed waiting in each Send Port's queue for an operator, in the order they failed, each once, with its place in the queue and why, written with the failure and taken out with the operator's act.

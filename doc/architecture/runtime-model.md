@@ -1192,8 +1192,10 @@ its queue and its claim released, a scan passing over it until it is due
 (corrected 2026-10-16, below; until then its claim was kept to its due
 time and the node kept the Journey in memory to start it again).
 **Recovery** is a scan: as a node starts and every `[tuning] send_scan`
-after, each queue it sends is read oldest first and every Journey no live
-claim holds is claimed (`[tuning] send_lease`) and sent — one a dead node
+after, what is due in each queue it sends is read, in the order it fell
+due (corrected 2026-10-21, below; until then the whole queue, oldest
+first), and every Journey no live claim holds is claimed (`[tuning]
+send_lease`) and sent — one a dead node
 left, one whose send was cut short, one no node sending its Port held;
 claims of work in flight are renewed, and a stop gives back the claims of
 what waits. A Sequential Send Port has one Journey of each sequence — the
@@ -1531,6 +1533,25 @@ taking out the first 20 µs in three key reads and no range, where each
 read the million places.
 An embedded store made before the index lacks it, and before the first
 release nothing migrates it.
+
+**Corrected 2026-10-21** (the owner, 2026-10-19; `open-problems.md`
+problems 40 and 43, ADR-0013, amendment 2026-10-21): **a send scan reads
+only what is due.** A Send Port's queue is indexed, too, on whether each
+entry failed, when it is due — a retry's due time, or the epoch for one due
+since it was held — and its place (`held_due`); what is due now is one
+range of it. A scan of a Port that is not Sequential reads only that, a
+page at a time, in the order it fell due, and stops where the Send pool is
+full; a Sequential Port's reads beside it what holds a sequence behind it —
+what waits for a retry, and where a failure blocks, what failed — and goes
+through all of it in the queue's order. How many wait for a retry, and when
+the earliest is due, Xmip Storage keeps and tells (`held_due_places`); a
+scan no longer reads what waits to learn it. A Journey that failed waits
+for no retry: its due time goes with the mark. Each queue's first entry of
+each part is kept by the one writer, so a read never steps over what was
+taken out before it, which `RocksDB` keeps as marks until it compacts
+them. Until now every scan read every entry its queue held, waiting or
+not. Of 11,003 held, three due, a read of what is due reads four keys and
+two ranges where the whole queue read 11,176 keys.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

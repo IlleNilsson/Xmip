@@ -1696,7 +1696,7 @@ corrected 2026-10-17), and
 holds the race open with `fixture::Failing::after`. What it left: an embedded store made before it reads no held entry, and before the
 first release nothing migrates it; a scan still reads every waiting entry
 of a queue at each `send_scan`, as it reads every entry, which is problem
-40's.
+40's, and problem 44's, resolved 2026-10-21.
 
 ## 39. A send the process did not finish leaves its file behind — **Resolved**
 
@@ -1776,7 +1776,7 @@ compaction, so a range across a gap just emptied steps over its tombstones
 inside the engine — no record read, none decrypted — and that was not
 measured on RocksDB here; and a scan still reads every entry its queue
 holds at each `send_scan`, waiting or not (problem 43's remainder), which
-an index does not change.
+an index does not change. Both are problem 44's, resolved 2026-10-21.
 
 ## 41. A released database schema has no way to change — **Resolved**
 
@@ -1841,3 +1841,64 @@ database server, whose login may not alter the schema, a Storage node will
 refuse a database older than its build too, naming the scripts to run, once
 that backend is built; and version 1's fingerprint is recorded at the first
 release.
+
+## 44. A send scan reads every entry its queue holds — **Resolved**
+
+*Resolved 2026-10-21 by the owner's decision of 2026-10-19, built the
+same day (ADR-0013, amendment 2026-10-21).*
+
+What problems 40 and 43 left: at every `[tuning] send_scan` a scan read
+every entry its Send Port's queue held to find what was due, so a far end
+that failed for an hour made every scan read every Journey waiting on it,
+and a Journey that failed was read at every scan to be passed over.
+Decided by the owner, 2026-10-19: *a send scan reads only what is due*,
+through an ordered index on when each entry is due, written and removed
+with the entry, as problem 40's index on queue and place is.
+
+Built 2026-10-21. The schema definition (`persist::storage::schema`)
+indexes `held` on `(queue, failed, due_at, sequence)`, `held_due`, at
+version 1, and `held.due_at` holds a value in every row: a retry's due
+time, or the epoch for a Journey due since it was held. What is due now is
+one range of it; what waits for a retry and what failed are parts of their
+own. Xmip Storage reads a part (`XmipStorage::read_due`, `DuePart`,
+`DueQueue`, wire operation 28) and says beside it how many keep a retry's
+due time and when the earliest not yet due is, which a table of its own
+keeps with where each part's first is (`held_due_places`), so nothing
+waiting is read to count it. A Journey marked failed waits for no retry:
+its due time goes with the mark. The send step reads only what is due on a
+Port that is not Sequential, a page at a time, in the order it fell due
+(`send_step/reading.rs`); a Sequential Port's scan reads beside it what
+waits for a retry and, where a failure blocks, what failed, since each
+holds a sequence behind it, and keeps the queue's order. On a database
+server `held_due` is an index of its own, in the scripts under
+`deploy/database/<server>/`.
+
+Measured, in memory, a debug build, the fastest of five rounds
+(`storage::due`'s tests): of 11,003 held — 10,000 waiting an hour, 1,000
+failed, three due — a read of what is due reads four keys and two ranges,
+finding four index entries, in 91 µs; a read of the whole queue, as a scan
+read it, 11,176 keys.
+
+**`RocksDB`'s marks, measured.** Problem 40 left them unmeasured: on
+`RocksDB` an entry taken out of an index is a mark the engine steps over
+until a compaction drops it, and a queue being sent takes out each entry it
+sends, ahead of what it still holds. Measured 2026-10-21 (a release build:
+100,000 marks before three entries, 8.5 ms a read in the memory table and
+8.3 ms once flushed; `xmip-core-persist-rocksdb`'s test, a debug build:
+199,997 marks, 15-20 ms through them, 5-8 µs from the first kept), about
+85 ns a mark, which costs. Fixed two ways: a read of what is due starts
+where each part's first is, which the one writer keeps — once a batch is
+decided, each queue it wrote a held Journey of finds its first again by
+one range of the index from where it was, stepping over each mark once
+(`storage::due::settle`) — and `RocksDB`'s ranges are bounded at both
+ends, so none steps past its end over what was taken out beyond it.
+
+What it leaves: the place index (`held_place`, `dead_message_place`,
+`failed_journey_place`) still keeps its first only as a place no entry is
+held before, moved when the queue empties, as problem 40 decided, so a page
+of it from the first steps over the marks of what was taken out ahead of
+the oldest entry; the pickup and the window on failed Journeys read it so.
+Marks between two entries still held — a Journey slow to send while those
+after it are sent — are stepped over until `RocksDB` compacts them. And
+the index's keys show, in the clear, whether an entry failed and when its
+retry is due, beyond what `held_place` showed.

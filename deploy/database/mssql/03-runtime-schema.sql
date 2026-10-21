@@ -116,13 +116,16 @@ CREATE TABLE xmip.held (
     body varbinary(max) NOT NULL,
     held_at datetime2(7) NOT NULL,
     failed bit NOT NULL,
-    due_at datetime2(7) NULL,
+    due_at datetime2(7) NOT NULL,
     CONSTRAINT held_key PRIMARY KEY (queue, sequence),
     CONSTRAINT held_unique UNIQUE (queue, journey)
 );
 GO
 
 CREATE INDEX held_time ON xmip.held (queue, held_at);
+GO
+
+CREATE INDEX held_due ON xmip.held (queue, failed, due_at, sequence);
 GO
 
 -- each queue's first place, its next and how many it holds.
@@ -132,6 +135,17 @@ CREATE TABLE xmip.held_places (
     next_place bigint NOT NULL,
     held bigint NOT NULL,
     CONSTRAINT held_places_key PRIMARY KEY (queue)
+);
+GO
+
+-- each queue's places in the order its Journeys are due: the place no Journey due since it was held is before, the due time and place no retry is before, and how many keep a retry's due time.
+CREATE TABLE xmip.held_due_places (
+    queue binary(16) NOT NULL,
+    first_due_place bigint NOT NULL,
+    first_retry_at datetime2(7) NOT NULL,
+    first_retry_place bigint NOT NULL,
+    retrying bigint NOT NULL,
+    CONSTRAINT held_due_places_key PRIMARY KEY (queue)
 );
 GO
 
