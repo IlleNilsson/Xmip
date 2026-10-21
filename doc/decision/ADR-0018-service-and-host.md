@@ -1062,3 +1062,81 @@ Provenance: the defects and the terms are the owner's; holding one ahead
 back, its bound, the reads coming together, the log written at a sync and
 the stop's knock are the assistant's, 2026-10-20, for the owner to confirm
 or strike.
+
+## Amendment, 2026-10-21: a connection read to its end waits for nobody, a test's port block is held, and a passed deadline cancels until heard
+
+**Provenance.** Four defects of the runtime suite run back to back, beside
+processor-bound jobs, on the landings of 2026-10-20. The owner's terms, as
+the day before: fix the underlying problem, never isolate or loosen a test,
+and over a millisecond beyond load is a defect.
+
+- **A connection read to its end is let go at once.** After many runs the
+  machine held some 13,000 connections waiting to close and the runtime's
+  connects failed. Counted per test program, one run of the library tests
+  left 1,259 waiting on the side that closed first, every one a raw TCP
+  Stream's sender — the tests' own sends to a node, and the node's to its
+  far end: a connection frames the Stream, so its sender closes first and
+  holds its port two minutes on Windows. The Ledger tests left 33, the
+  plane's 12. Now the receiver, once it has read the sender's close, lets
+  the connection go with a reset (`transport::ended::Ended`, `SO_LINGER`
+  of zero, through `rustix`), which the tcp technology's every arrival
+  reads through: everything sent was received, and neither end waits. A
+  connection not read to its end is closed as before, and a sender that
+  waits for the receiver's close is told of a reset. Where Xmip sends raw
+  TCP to a far end not Xmip, Xmip closes first and its side still waits;
+  only a protocol with a reply, or connections kept, can spare that.
+- **A test process holds its block of ports.** `net::fixture::unheld`
+  gave each test process the block its process id named and counted from
+  its first port, so two test programs run at once shared a block whenever
+  their ids met in it, and each found free the port the other was about to
+  bind (`plane`'s read after the node was not there, 2026-10-20). The
+  block's first port is now listened on while the process runs, a process
+  whose block another holds takes the next free one, and the ports handed
+  out are the rest of it.
+- **A passed deadline cancels until its call has ended.** A local call on
+  a named pipe is ended by cancelling its read from the deadline's thread,
+  and a cancel reaches only a read in flight: one made while the call was
+  still connecting, or before its thread began the read, was lost and the
+  read waited for good. The deadline now cancels again each millisecond
+  until the call disarms it (`plane::deadline`), held by
+  `a_read_begun_after_its_deadline_passed_is_cancelled_still`. Beside
+  eight jobs the deadline test also hung where its stand-in node's accept
+  was joined bare: a pipe client gone before the accept began is passed
+  over by it, which then waits for the next. The tests join it through
+  `net::accepting::woken`, knocking until it has taken one.
+- **The loopback node's Message is Xmip's own processor time, not its
+  wakes.** Measured beside the node test round by round: a plain wake took
+  17 to 19 µs at the median beside eight jobs and the whole suite, so the
+  path's hand-offs between threads — the accept to a receive thread, to
+  the Storage node's writer and back, to the send step's dispatching and
+  its send thread, and the durable sync's wake — cost about a tenth of a
+  millisecond together. The path's own processor time is what the load
+  does not count: in the test build, with the runtime itself unoptimized,
+  a Message took 2.4 to 2.6 ms of the process's processor time where its
+  load took 0.8 to 0.9 ms, of which the carrying thread took about 0.3 ms
+  (the gates 8 µs, the Stream into the Ledger 60 µs, the Publication
+  built about 0.1 ms) and the send thread, beside its connect and write,
+  about 0.1 ms. On an idle machine the Message took 0.45 to 0.55 ms more
+  than its load, the fastest of five, and 0.8 ms at the median; beside
+  four jobs and the suite, 0.16 to 0.92 ms at the median, within its
+  millisecond in five runs of five; beside eight jobs and the suite, where
+  that processor time waits its turn on a machine of sixteen hardware
+  threads, it passed six runs in ten. Fewer hand-offs would not mend it;
+  less processor time on the path would. The test's margin stands.
+- **Linux, the same day.** The cfg(unix) code built and linted clean in the
+  AlmaLinux 10 guest, and net, the transport capability and tcp passed
+  there. The runtime's node test and its eight senders failed there by
+  about 3 ms, a reset or a close alike, so not this amendment's doing; and
+  the deadline test needs `/run/xmip`, which the guest does not have.
+
+Measured after (2026-10-21), the full runtime suite in parallel, its three
+test programs at once, beside four processor-bound jobs, five runs back to
+back: every test passed, and the connections waiting to close went from 6
+to 91, about 17 a run where one run left some 1,300 before. Beside eight
+jobs, ten runs: 186 after, the node test passing six runs in ten, and
+`a_dropped_watch_ends_its_thread_at_once` failing two runs in ten.
+
+Provenance: the defects and the terms are the owner's; the reset after the
+sender's close, the held block, the repeated cancel and the reading of the
+node test's numbers are the assistant's, 2026-10-21, for the owner to
+confirm or strike.
