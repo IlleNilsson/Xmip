@@ -1579,7 +1579,7 @@ dependency = []
     description = "The cluster's own certificate authority: issues node certificates for server and client authentication, served over ACME so every node uses one protocol, and signs a person's operator request. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 server side, http-01 and dns-01 validation; RFC 5280 certificates"
-    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core", "xmip-core-secret"]
+    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.provision.self-signed]
     description = "A self-signed certificate for a lone offline node, its own anchor. A xmip-core-provision technology."
     maturity = "scaffolded"

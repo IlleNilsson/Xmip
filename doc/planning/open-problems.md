@@ -776,7 +776,7 @@ and no engine.
 | 2 | `persist` gains its encryption layer: AES-256-GCM per record, lookup keys by keyed hash, a record that fails its tag audited as a failure. **Built 2026-09-25:** `EncryptedStore` over the `Engine` trait, and a `RuntimeStore`; a failed tag is `PersistError::Refused` with scope and reason, audited by the caller — wiring that caller to `xmip-core-audit` is open |
 | 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
 | 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
-| 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SurfaceTls` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
+| 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SecureSurface` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
 | 6 | the .NET programs' TLS through `xmip-core-library-tls`, not the platform's (the owner, 2026-09-26; ADR-0063, amendment): the web host's and the remote surface's connections terminate in the Rust library — through the runtime's library as a stream the .NET side reads and writes, or a Rust front in the web host's process — so the hybrid exchange holds on every Xmip connection |
 
 ## 30. HTTP/3 is declared and not built
@@ -970,10 +970,16 @@ until its accept has heard (`net::accepting`; ADR-0018, amendment
 *Repaired 2026-10-21, run after run.* The machine ran out of ports after
 many runs: one run of the runtime's library tests left 1,259 connections
 waiting to close, every one a raw TCP Stream's sender, which closes first
-since the connection frames the Stream. A connection read to its sender's
-close is now let go with a reset (`transport::ended`), so neither end
-waits; five runs of the whole suite beside four jobs left 85 more, not some
-6,500. A test process now holds its block of ports (`net::fixture`), so
+since the connection frames the Stream. *Repaired again the same day, as
+the owner ruled:* a tcp arrival closes normally again, the reset drafted
+for it deleted; the runtime's eight senders carry their Messages over HTTP
+on kept connections, the Xmip technologies whose protocol carries many
+Messages on one connection keep theirs at both ends, and a connection
+freed while a receive waits is waited on at once (`serving::Freed`). A run
+of the runtime suite leaves 522 to 526 waiting to close where it left
+1,306 (ADR-0018, amendment 2026-10-21); the loopback node test, still on
+raw TCP, leaves 480 of them. A test process now holds its block of ports
+(`net::fixture`), so
 two test programs never share one, the plane test's race; a passed local
 deadline cancels until its call has ended (`plane::deadline`), and the
 local-endpoint tests join their stand-in's accept by knocking, two hangs
@@ -1012,11 +1018,22 @@ What remains of it, the owner's to decide:
   0.25 ms deciding and 0.24 ms sealing and writing per batch, two batches a
   Message, a fifth of it the heap; the due places found again
   (`due::settle`) are the largest single part. The test process still
-  spends 2.8 to 2.9 times its load's processor time on a Message. On
-  Linux, in the AlmaLinux guest, the node test and its eight senders fail
-  by about 3 ms whether a connection ends in a reset or a close, and the
-  deadline test needs `/run/xmip`.
-- **Seen under load the same day, not this problem's.** Beside four or
+  spends 2.8 to 2.9 times its load's processor time on a Message. Over
+  kept HTTP connections, its load down to what the path's two requests
+  cost, the loopback node's receive cycle took 1.0 to 1.3 ms over its load
+  in three runs in four, the Publication's write through the writer 0.65 to
+  1.1 ms of it (2026-10-21), so that test stays on raw TCP and its 480
+  connections a run (ADR-0018, amendment 2026-10-21). On Linux, in the
+  AlmaLinux guest, the node test fails by about 4 ms; the eight senders,
+  over HTTP now, and the deadline test, with `/run/xmip` made, pass.
+- **Seen under load the same day, not this problem's** — and repaired on
+  2026-10-21, both of the plane's: a surface connected to the local
+  endpoint twice through the pipe library, which the runtime no longer
+  uses (ADR-0014, amendment 2026-10-21). The named pipe transport
+  (`xmip-core-transport-named-pipe`) still accepts and reads through that
+  library, so it may hold a connection its sender let go the same way;
+  its repair needs the runtime's calls (`ffi::pipe`, `ffi::pipe_io`) placed
+  where a transport reaches them, open. Beside four or
   eight jobs, `plane`'s
   `a_connection_on_this_machine_is_proven_and_answered_within_the_millisecond`
   took 1.24 to 1.60 ms of processor time and failed one or two runs in five
@@ -1027,13 +1044,14 @@ What remains of it, the owner's to decide:
   304 chunks for 132 twice in 23 runs of the Ledger tests beside four
   (none in eight runs before the sync's thread, at most 221).
 
-- **The Ledger's sync is counted as the payload's load.** Beyond the sent
-  file alone Xmip takes 1.6 to 1.8 ms: the Ledger's sync and the sent
-  file's land on one disk, which takes them one after the other. Only
-  letting a far end see a Message before the Ledger holds it durably would
-  take that sync off the path — a duplicate after a crash, under a new
-  Journey and so a new deduplication key. Recommended: keep it, and count
-  the Ledger's copy as load, as `carried.rs` does.
+- **Decided by the owner, 2026-10-21:** the Ledger's disk sync counts as
+  load for the millisecond rule, as `carried.rs` counts it; the bounded
+  fan-out wait (ADR-0018, amendment 2026-10-20, *one kept from its
+  processor*); unsynced writes are lost with the process; the defaults —
+  `[tuning] receive_sweep` 1 s, five kept chunks per other departure. Not
+  decided, still drafted: the Storage node's sync on a thread of its own,
+  and on Windows a dropped file's claim held open (ADR-0018 and ADR-0024,
+  amendments 2026-10-21).
 - **Linux and macOS take a file at the second listing**, at the next change
   or the sweep, since the system does not say whether a writer holds it;
   the watch hears a close after writing there, and telling it by name
@@ -1049,20 +1067,18 @@ What remains of the first part:
   accepting one is refused as the node starts; and for the same reason the
   send side's directory holds no configured Party, so a `send` identity is
   presented by nothing yet.
-- **Drafted, for the owner to confirm or strike:** the `location` policy
-  admits anyone a Location's closed set authenticated, at a Receive and at
-  a Send Location, with no key for hours or identities by value; the
-  certificate a TLS handshake verified is the first claim the first gate
-  takes; the circumstance's verifier lives in the authenticate capability,
-  not a repository of its own (ADR-0050, amendment 2026-10-20); a
-  handshake read waits five seconds by default.
-- **Open, the owner's:** a circumstance's value is each Stream's whole
-  origin, `file:///…/order.edi`, so no Party can hold it and `accept.party`
-  cannot narrow a drop folder to a Party — recommended: the value is the
-  folder; what a file Send Location writes for a Message that carries no
-  `file.name` — refused in words today; recommended: a name the Send
-  Location's configuration gives, taking the Message's identifier where
-  nothing else names it.
+- **Decided by the owner, 2026-10-21:** the `location` policy admits
+  whoever the Location's mechanisms authenticated, at a Receive and at a
+  Send Location; a TLS handshake read waits five seconds by default; a
+  drop folder's circumstance value stays the whole file path — the folder
+  was considered and declined (ADR-0019, amendment 2026-10-21); a Message
+  without `file.name` is named from a pattern configured on the file Send
+  Location, falling back to the Message's identifier — built the same day,
+  the Location's `name` setting, `{message}` in it the identifier (ADR-0024,
+  amendment 2026-10-21). Still drafted: the certificate a TLS handshake
+  verified is the first claim the first gate takes, and the circumstance's
+  verifier lives in the authenticate capability, not a repository of its
+  own (ADR-0050, amendment 2026-10-20).
 - **Not reported or not published:** the peer's chain (`tls.peer.chain`),
   so `certificate` over a terminated handshake has nothing to walk; a
   failed handshake, which no audit records; which Parties a Location takes,
@@ -1852,7 +1868,8 @@ starts. **The tool act** is `xmip-cli database <server> --from <version>
 section 20); before the first release every upgrade is none and is refused
 in those words.
 
-Drafted for the owner, 2026-10-20, each marked so in ADR-0015's amendment:
+Drafted 2026-10-20, each marked so in ADR-0015's amendment, and **decided
+by the owner, 2026-10-21**, as drafted:
 an index added to a table already made is refused by the definition's test
 until the embedded engines can write its entries for the records they keep;
 a database that recorded no version is recorded at the build's, since
@@ -1889,7 +1906,11 @@ its due time goes with the mark. The send step reads only what is due on a
 Port that is not Sequential, a page at a time, in the order it fell due
 (`send_step/reading.rs`); a Sequential Port's scan reads beside it what
 waits for a retry and, where a failure blocks, what failed, since each
-holds a sequence behind it, and keeps the queue's order. On a database
+holds a sequence behind it, and keeps the queue's order; it reads what is
+due first and again last, so a Journey that moves between the parts while
+they are read — a send's verdict, an operator's Retry, the clock — is read
+in one of them and its sequence never goes on without it (corrected
+2026-10-21, `tests/ledger/journey_act.rs`). On a database
 server `held_due` is an index of its own, in the scripts under
 `deploy/database/<server>/`.
 
@@ -1968,11 +1989,17 @@ compiled it (`net::http2::BoxedClient`, `BoxedServer`; ADR-0014,
 amendment 2026-10-21). On Linux, the AlmaLinux 10 guest under WSL, 0.70
 to 0.82 ms the fastest of five and 0.78 to 0.97 ms the median.
 
-What it leaves for the owner, drafted: the key `[operate] admit` and its
-reach; a Unix socket of `0666` where `admit` names anyone; a name kept for
-the process's life; a surface stating no wait of its own, which lists the
-node declarations to learn the node's (`deadline::declared`, 0.4 to 0.6 ms
-of processor time on this machine's temporary folder); and how the Playground's tester acts in the web GUI,
-now that a browser is never the host's user for reaching loopback
-(ADR-0009, amendment 2026-10-21: an operator certificate the tester
-directory knows, recommended).
+Decided by the owner, 2026-10-21, and built the same day: *a Unix socket
+0660 with a group, not 0666* — where `admit` names anyone the socket
+belongs to `[operate] group`, the node's own group where it is left out,
+and is `0660`, the node's peer check staying the second gate
+(`plane::local::unix`; proved in the AlmaLinux 10 guest); an account's name
+is kept until the node restarts; and *the Playground tester in the web GUI
+acts with an operator certificate* — the roll's host serves https on
+127.0.0.1 under the roll's authority, in Xmip's own TLS, the tester
+presents a certificate from `New-XmipCertificate -Operator`, and the tester
+directory knows that certificate's subject (ADR-0009 and ADR-0014,
+amendments 2026-10-21). Still drafted: the key `[operate] admit` and its
+reach; a surface stating no wait of its own, which lists the node
+declarations to learn the node's (`deadline::declared`, 0.4 to 0.6 ms of
+processor time on this machine's temporary folder).

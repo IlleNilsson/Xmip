@@ -402,5 +402,6 @@ the whole service suite; tcp's own test holds a client slower than the
 Location's wait before its handshake answered, and its stalled content let
 go after the Location's wait, not the guard's.
 
-Provenance: the bound's place, its key and its default of five seconds are
-the assistant's, 2026-10-20, for the owner to overrule.
+Provenance: the bound's place and its key are the assistant's, 2026-10-20,
+for the owner to overrule. **Decided by the owner, 2026-10-21:** the TLS
+handshake's default of five seconds.

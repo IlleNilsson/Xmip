@@ -335,10 +335,83 @@ no longer is. Recommended: `Start-XmipOperationWeb` serves a roll's host on
 `https://127.0.0.1` under the roll's cluster authority, the tester presents
 an operator certificate (`New-XmipCertificate -Operator`, ADR-0034,
 amendment 2026-10-15), and the tester directory knows the tester by that
-certificate's subject. Until then the Playground's web GUI watches, and the
-tester acts through the desktop GUI, xmip-cli or PowerShell on the node's
-local endpoint.
+certificate's subject. Decided and built 2026-10-21 (the amendment below).
 
 Provenance: the owner's decision of 2026-10-19, quoted; the deletion's
 reach and the tester's draft are the assistant's, for the owner to
 overrule.
+
+## Amendment, 2026-10-21: the Playground's tester acts in the web GUI with an operator certificate, in Xmip's own TLS
+
+**Decided by the owner, 2026-10-21**, as the amendment above drafted it:
+*the Playground tester in the web GUI acts with an operator certificate: the
+roll's host serves https on 127.0.0.1 under the roll's authority, the tester
+presents a certificate from `New-XmipCertificate -Operator`, and the tester
+directory knows that certificate's subject. Use Xmip's own TLS (dogfood),
+never the platform's.* And on the names, the same day: *Why not call it
+SecureSurface, we do not know what comes after TLS* — and, widening it:
+*Over all technology and security should not be in functions, parameters is
+ok.* A type is named by the capability (`SecureSurface`, `SecureListener`,
+`SecureSession`); no function, method or export names a technology or a
+protection, which is a parameter (`Protection::Tls`, `XMIP_PROTECTION_TLS`);
+only `xmip-core-library-tls`, which is TLS, keeps the technology's name.
+
+Built the same day:
+
+- **Xmip's own TLS serves the web host's HTTPS.** Kestrel's own HTTPS — the
+  platform's TLS — is deleted with every use. The runtime listens, finishes
+  each handshake and hands the host plain sessions (`secure_listener.rs`;
+  `xmip_operate.h` section 21: `xmip_listener_open_v1` taking the
+  protection, `xmip_listener_accept_v1`, `xmip_listener_stop_v1`, and a
+  session's `xmip_session_peer_v1`, `_read_v1`, `_write_v1`, `_close_v1`),
+  asking a client for a certificate and verifying one presented against the
+  anchors, a client presenting none let through to watch
+  (`tls::Identity::server_asking`); a certificate refused ends the handshake
+  and is told to the host's audit. `Xmip.Surface.Relay`'s `SecureTransport`
+  is the host's listener for every https address
+  (`SurfaceBinding.UseSurface`), each session carrying the client's
+  certificate where Kestrel reads it, so `ProvenCaller` is unchanged; a
+  plain loopback address keeps Kestrel's sockets. `SurfaceTls` is
+  `SecureSurface`, holding the files alone; https names its anchors, the
+  operating system's trust store never one.
+- **The roll's authority** is kept under the Playground's area
+  (`Get-XmipPlaygroundLayout`'s `Authority`,
+  `Initialize-XmipPlaygroundAuthority`), made where none is kept
+  (`provision::Issuer::kept_or_made`, which internal-ca's authority calls
+  too), and issues the host a certificate for 127.0.0.1 as an iPAddress
+  alternative name (`provision::host::issue_into`, `xmip_host_issue_v1`).
+  One authority serves every roll, since one host serves several. Beside it
+  `operator.toml` names it in `[provision.operator]`, so the tester's
+  request is signed by it.
+- **The tester directory knows the tester's subject**: `TesterDirectory`
+  allows the user the host runs as — the desktop's caller — and the subject
+  `Xmip:Tester` names, `CN=<person>`; `Start-XmipOperationWeb -Tester
+  <person>` passes it. Over a roll the host binds `https://127.0.0.1:5087`
+  under the roll's authority.
+- **The tester's way**: `New-XmipCertificate -Operator <person> -Path
+  <folder>`, the host started once so the authority exists,
+  `New-XmipCertificate -Request <folder>/operator.csr -Configuration
+  .local-work/playground/authority/operator.toml -Path
+  <folder>/operator.pem`, the certificate and key loaded into the browser and
+  `authority.pem` trusted there.
+
+Proved by `Xmip.Surface.Test` (`BrowserCallerTest`: the tester's
+certificate acts with the tester's role, another certificate or none does
+not; the scheme is https), `Xmip.Abi.Test`'s section 21 checks,
+`test/PlaygroundAuthority.Test.ps1`, and the built host over https on
+127.0.0.1: a roll-signed `CN=alice@example.org` was answered, and so was a
+request presenting nothing. Not proved: a real browser.
+
+Not built: a PKCS#12 form for a browser to import; a failed handshake other
+than a refused certificate, which is passed over unaudited; a cap on
+handshakes in flight. The authority's lifetime of 365 days and a host
+certificate's of 30 are the assistant's, for the owner to overrule.
+Functions elsewhere that name a technology or a protection — the exports
+`xmip_security_role_named_v1` and `xmip_security_role_words_v1`,
+`SecureSurface.Pem` and `KeptPem`, `transport::Configured::guarded_by`, the
+runtime's `receive_certificate` and `ffi::remote::identity` — are left for
+a sweep of their own.
+
+Provenance: the decisions and both naming rules are the owner's, quoted;
+the exports' shapes, one authority for the whole Playground and the
+lifetimes are the assistant's.

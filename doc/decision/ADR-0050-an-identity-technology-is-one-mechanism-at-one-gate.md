@@ -540,4 +540,8 @@ Send Location, arrives in the send directory.
 
 Provenance: the ruling is the owner's, 2026-10-19; admitting anyone at a
 Send Location, as at a Receive Location, and where the circumstance's
-verifier lives are the assistant's, 2026-10-20.
+verifier lives are the assistant's, 2026-10-20. **Decided by the owner,
+2026-10-21:** the `location` policy admits whoever the Location's
+mechanisms authenticated (ADR-0019, amendment 2026-10-21). Where the
+circumstance's verifier lives stays the assistant's, for the owner to
+confirm or strike.

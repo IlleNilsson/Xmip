@@ -24,6 +24,12 @@ function Get-XmipPlaygroundLayout {
             never copies of the repository, and they are device-local like
             everything else a run writes here.
 
+            Authority is the Playground's own certificate authority, one for
+            every roll in the area: the web host is served https under it and a
+            tester's operator certificate is signed by it
+            (Initialize-XmipPlaygroundAuthority; ADR-0009, amendment
+            2026-10-21).
+
             Estate is where a run of the estate's Pester suite writes its
             record and its log: .local-work/estate, beside the Playground's
             area and not inside it, since it is no roll's.
@@ -60,6 +66,7 @@ function Get-XmipPlaygroundLayout {
         Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
+        Authority  = Join-Path -Path $root -ChildPath '.local-work/playground/authority'
         Image      = Join-Path -Path $root -ChildPath '.local-work/playground/image'
         Estate     = Join-Path -Path $root -ChildPath '.local-work/estate'
         Suffix     = $suffix

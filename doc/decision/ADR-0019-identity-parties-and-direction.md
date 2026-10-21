@@ -640,3 +640,21 @@ is the folder is the owner's (open problem 33).
 Provenance: the three rulings are the owner's, 2026-10-19, quoted as given;
 where the authenticator lives, what it verifies, the TOML shape of an
 identity and the problems' words are the assistant's, 2026-10-20.
+
+## Amendment, 2026-10-21: the `location` policy and a drop folder's circumstance, decided
+
+The owner decided on 2026-10-21 what the amendment of 2026-10-20 left
+drafted or open:
+
+- **The `location` policy admits whoever the Location's mechanisms
+  authenticated**, at a Receive and at a Send Location, as built
+  (ADR-0050, amendment 2026-10-20); no longer drafted.
+- **A drop folder's circumstance value stays the whole file path**, each
+  Stream's origin, `file:///…/order.edi`. Making the value the folder was
+  considered and declined; so no Party holds a drop folder's value, and
+  `accept.party` does not narrow one.
+
+What stays as it was: the send side's directory holds no configured Party
+until the credential store is built (open problem 33).
+
+Provenance: both decisions are the owner's, 2026-10-21.

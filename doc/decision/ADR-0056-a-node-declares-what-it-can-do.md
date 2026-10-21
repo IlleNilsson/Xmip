@@ -575,6 +575,6 @@ takes a new user from a fresh clone to a node of their own and the
 Playground, so it names a cluster and its nodes as a README does: `learning`
 and `first` for the node it configures, C1, R1, P1 and S1 for the roll.
 `test/NodeName.Test.ps1` allows it beside a README.md and refuses every
-other document still. That the guide counts as help is the assistant's
-drafting, the owner's to confirm or strike; struck, the guide moves to a
-README of its own.
+other document still. That the guide counts as help was the assistant's
+drafting; **decided by the owner, 2026-10-21:** the getting-started guide
+counts as help for node names.

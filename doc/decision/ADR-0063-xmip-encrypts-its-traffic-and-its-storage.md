@@ -97,7 +97,7 @@ store its SQL; `deployment-model.md` section 7 says so. Clause 1 waits for the
 web host and the node-to-node protocol (problem 29, step 5).
 
 Built 2026-09-25, clause 1 for the web host and the remote surfaces (problem
-29, step 5). The rule is `SurfaceTls` in `Xmip.Surface`, once for both ends
+29, step 5). The rule is `SecureSurface` in `Xmip.Surface`, once for both ends
 and every .NET surface: a PEM chain and key and the anchors a peer's chain
 must reach — `Certificate`, `PrivateKey` and `TrustAnchor` in a host's
 `[Xmip]` table, else `XMIP_CERTIFICATE`, `XMIP_PRIVATE_KEY` and

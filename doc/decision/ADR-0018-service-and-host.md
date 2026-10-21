@@ -934,7 +934,8 @@ held within the same memory (1.6 to 1.8 MB of four sends of 64 MiB).
 
 Provenance: the ruling and the test's terms are the owner's, 2026-10-20;
 the size of what is kept and how one behind comes back are the
-assistant's.
+assistant's. **Decided by the owner, 2026-10-21:** the default of five kept
+chunks for each other departure.
 
 ## Amendment, 2026-10-20: a Publication is answered before its sync, and a far end sees it only once durable
 
@@ -984,9 +985,10 @@ would mean letting a far end see a Message before the Ledger holds it, a
 duplicate after a crash; that is the owner's to decide (open problem 33).
 
 Provenance: the measurement and the rule are the owner's, 2026-09-26 and
-2026-10-20; answering before the sync, holding a far end back and counting
-the Ledger's durable copy as the payload's load are the assistant's,
-2026-10-20, for the owner to confirm or strike.
+2026-10-20; answering before the sync and holding a far end back are the
+assistant's, 2026-10-20, for the owner to confirm or strike. **Decided by
+the owner, 2026-10-21:** the Ledger's disk sync counts as load for the
+millisecond rule.
 
 ## Amendment, 2026-10-20: one kept from its processor holds the one ahead back a while, and no write waits on another's sync
 
@@ -1060,31 +1062,65 @@ what failed there failed to connect at all.
 
 Provenance: the defects and the terms are the owner's; holding one ahead
 back, its bound, the reads coming together, the log written at a sync and
-the stop's knock are the assistant's, 2026-10-20, for the owner to confirm
-or strike.
+the stop's knock are the assistant's, 2026-10-20. **Decided by the owner,
+2026-10-21:** the bounded fan-out wait — one about to be left behind holds
+the one ahead back, for at most its bound — and that unsynced writes are
+lost with the process. The reads coming together and the stop's knock stay
+the assistant's, for the owner to confirm or strike.
 
-## Amendment, 2026-10-21: a connection read to its end waits for nobody, a test's port block is held, and a passed deadline cancels until heard
+## Amendment, 2026-10-21: connections are kept, a test's port block is held, and a passed deadline cancels until heard
 
 **Provenance.** Four defects of the runtime suite run back to back, beside
 processor-bound jobs, on the landings of 2026-10-20. The owner's terms, as
 the day before: fix the underlying problem, never isolate or loosen a test,
 and over a millisecond beyond load is a defect.
 
-- **A connection read to its end is let go at once.** After many runs the
+- **Connections are kept, not spent a Message each.** After many runs the
   machine held some 13,000 connections waiting to close and the runtime's
   connects failed. Counted per test program, one run of the library tests
   left 1,259 waiting on the side that closed first, every one a raw TCP
   Stream's sender — the tests' own sends to a node, and the node's to its
   far end: a connection frames the Stream, so its sender closes first and
   holds its port two minutes on Windows. The Ledger tests left 33, the
-  plane's 12. Now the receiver, once it has read the sender's close, lets
-  the connection go with a reset (`transport::ended::Ended`, `SO_LINGER`
-  of zero, through `rustix`), which the tcp technology's every arrival
-  reads through: everything sent was received, and neither end waits. A
-  connection not read to its end is closed as before, and a sender that
-  waits for the receiver's close is told of a reset. Where Xmip sends raw
-  TCP to a far end not Xmip, Xmip closes first and its side still waits;
-  only a protocol with a reply, or connections kept, can spare that.
+  plane's 12. The owner, 2026-10-21: *a tcp arrival closes normally again*
+  — the reset after the sender's close that was drafted here is deleted
+  with every use — and the pile-up is fixed where it belongs: *tests that
+  send to a node reuse a connection*, and *Xmip-to-Xmip sends reuse kept
+  connections where the protocol allows*. The runtime's test of eight
+  senders now carries its 400 Messages over HTTP, each sender keeping its
+  one connection and the node's Send Port keeping its own
+  (`running.rs`, `node_keeping_connections`); MLLP, syslog over TCP, WebSocket, SMTP,
+  Modbus, DNP3, IEC 60870-5-104 and SECS/GEM keep their connections, or
+  their sessions, at both ends — a sender's through `transport::pool`, a
+  Receive Location's through `transport::serving`, one Message a receive —
+  each proved by a hundred sends opening one connection. A kept connection
+  that breaks after a Message was written carries it again at once on a new
+  one, at least once; IEC 104, whose station closing unacknowledged is its
+  failure, fails the send retryable instead. Raw TCP frames a Stream by
+  its close and so cannot: one connection a Message stays its nature,
+  said in its README.
+- **A busy connection freed while a receive waits is waited on at once.**
+  Found carrying the eight senders over HTTP: a Receive Location's wait
+  leaves a connection out while its exchange is unanswered, and the answer,
+  written on another thread, freed it while the next receive already
+  waited on the others, so a caller's next request on it waited out the
+  Location's whole wait — a tenth of a second a Message here, and for good
+  where a Location waits as long as it takes. The answer now tells the
+  wait (`transport::serving::Freed`, a datagram to a loopback socket of the
+  wait's own, which leaves nothing waiting to close), and the wait takes
+  the connection in again, held by
+  `a_connection_freed_while_a_receive_waits_is_waited_on_at_once`.
+- **The loopback node test stays on raw TCP, and spends 480 connections a
+  run.** Moved to HTTP with kept connections, its load shrank to what the
+  path's requests cost — a request on a kept connection about 0.3 ms where
+  a connection made and closed cost about 0.4 to 0.5 — and Xmip's own work
+  on the receive cycle showed over the millisecond: in the test build the
+  arrival 0.15 to 0.3 ms, the Publication built 0.3 ms and its write
+  through the Storage node's writer, answered before its sync, 0.65 to
+  1.1 ms (deciding 0.1 to 0.25, the due places 0.1 to 0.2, sealing and
+  writing 0.2 to 0.35), the send step's hand-over 0.1 to 0.15 — 1.0 to
+  1.3 ms over its load in three runs in four. The test's measure is kept as
+  it was; the path's processor time is open problem 33's, the owner's.
 - **A test process holds its block of ports.** `net::fixture::unheld`
   gave each test process the block its process id named and counted from
   its first port, so two test programs run at once shared a block whenever
@@ -1129,16 +1165,21 @@ and over a millisecond beyond load is a defect.
   about 3 ms, a reset or a close alike, so not this amendment's doing; and
   the deadline test needs `/run/xmip`, which the guest does not have.
 
-Measured after (2026-10-21), the full runtime suite in parallel, its three
-test programs at once, beside four processor-bound jobs, five runs back to
-back: every test passed, and the connections waiting to close went from 6
-to 91, about 17 a run where one run left some 1,300 before. Beside eight
-jobs, ten runs: 186 after, the node test passing six runs in ten, and
-`a_dropped_watch_ends_its_thread_at_once` failing two runs in ten.
+Measured (2026-10-21), the full runtime suite, its three test programs at
+once, the loopback connections waiting to close
+(`Get-NetTCPConnection -State TimeWait`) a run: with the reset deleted and
+nothing else changed, 1,306; after, 522 to 526 in three runs back to back,
+climbing by that much a run and let go two minutes on, so a run every ten
+seconds holds some 6,300, against the 16,384 ports Windows hands out. On
+Linux, the AlmaLinux 10 guest, every runtime test passed but the loopback
+node test (9.7 ms a Message against 5.7 ms of load), as before this
+amendment; the eight senders, which failed there by about 3 ms over raw
+TCP, pass over HTTP.
 
-Provenance: the defects and the terms are the owner's; the reset after the
-sender's close, the held block, the repeated cancel and the reading of the
-node test's numbers are the assistant's, 2026-10-21, for the owner to
+Provenance: the defects and the terms are the owner's, and so are, on
+2026-10-21, the reset's deletion and where the pile-up is fixed; the held
+block, the repeated cancel, the freed connection's word and the reading of
+the node test's numbers are the assistant's, 2026-10-21, for the owner to
 confirm or strike.
 
 ## Amendment, 2026-10-21: the Storage node syncs on a thread of its own, and a key is set up once

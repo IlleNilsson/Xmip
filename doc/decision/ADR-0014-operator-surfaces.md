@@ -1010,7 +1010,10 @@ longer trusted by itself* (ADR-0009, amendment 2026-10-21).
   superuser and each user or group `admit` names, a member of a named group
   by the system's group list, and refuses anyone else in words. The socket
   is `0600` where `admit` names nobody, so the file system refuses everyone
-  else first, and `0666` where it names some, the kernel's word the gate.
+  else first, and `0660` where it names some, belonging to `[operate]
+  group` — the node's own group where it is left out — so the file system
+  lets only that group's members connect, and the kernel's word against the
+  admitted is the second gate (decided by the owner, 2026-10-21, below).
   The folder — `/run/xmip`, `/var/run/xmip` — must be the node's account's
   or the superuser's and writable by nobody else, or a stranger could put a
   socket where a surface looks; a node refuses to make its endpoint in any
@@ -1052,10 +1055,45 @@ longer trusted by itself* (ADR-0009, amendment 2026-10-21).
 list of accounts and groups beside the node's account and the machine's
 administrators, empty where it is left out — so the owner's *the local
 pipe stays the service account's and Administrators'* holds until a site
-names someone; on Unix a socket of `0666` where `admit` names anyone, the
-node's check on the kernel's word the gate; and a name kept for the
-process's life.
+names someone.
 
-Provenance: the owner's decision of 2026-10-19, quoted; the key, the access
-an admitted caller gets, the folder rule and the kept names are the
-assistant's, for the owner to overrule.
+**Decided by the owner, 2026-10-21:** *Unix socket 0660 with a group, not
+0666* — when `admit` names anyone, the socket belongs to a group and is
+`0660`, and the node's peer check stays as the second gate; and an
+account's name is kept until the node restarts, as drafted above. Built
+the same day: the group is `[operate] group`, the node's own group — the
+group the node's service account runs under — where it is left out; the
+socket is given it as it is made (`plane::local::unix::Acceptor::bind`), a
+group the system does not know, or one the node's account may not give
+it, refused in words as the node starts; an admitted account outside the
+group is refused by the file system. Windows admits by the pipe's security
+descriptor and reads no `group`. Proved in the AlmaLinux 10 guest
+(`a_socket_others_are_admitted_to_is_0660_of_its_group_and_0600_otherwise`),
+where every plane test passed, the deadline test with `/run/xmip` made.
+
+**Repaired the same day: a surface connected once, not twice.** Beside the
+runtime's other test programs `a_caller_lends_its_account_for_identification_alone`
+read nothing from a caller in some 35 runs of a hundred, and the local
+connection's test went over its millisecond (1.24 to 1.6 ms of processor
+time). Traced: the pipe library's stream, made from a handle, opens it
+again (`ReOpenFile`) and closes the original, which on a pipe is a second
+connection and the first one's end, so every surface connected twice and,
+on a loaded machine, the node held the connection the surface had let go
+while the surface waited on the other; and its accept waited for a client
+by `ConnectNamedPipe` with no `OVERLAPPED` on an overlapped instance, which
+Windows documents may say *connected* early. The runtime now makes each
+instance, waits for its client and reads and writes it itself
+(`ffi::pipe`, `ffi::pipe_io`), the security descriptor read once for every
+instance, and the `interprocess` dependency is deleted. And a connection a
+surface went away from is let go with nothing more said, where the node
+answered its `GOAWAY` with its own and read on until it closed, a quarter
+of a millisecond of processor time a connection (`plane::served::calls`).
+After: the lent test failed none of 150 runs beside the library tests; a
+connection from nothing to its first answer took 0.59 to 0.66 ms of the
+process's processor time the fastest of five, from 0.77 to 0.87, and the
+plane tests passed four runs in four beside the library and the Ledger
+tests.
+
+Provenance: the owner's decisions of 2026-10-19 and 2026-10-21, quoted; the
+key, the access an admitted caller gets, the folder rule, and the group's
+key and its default are the assistant's, for the owner to overrule.
