@@ -366,7 +366,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 278925 lines of production
+Where each repository mounts and what it holds: 279025 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -391,7 +391,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6416
+│   │   │   ├── transport                       6417
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -469,7 +469,6 @@ hold no source to count.
 │   │   │   │   ├── aws                          513
 │   │   │   │   ├── serial                       513
 │   │   │   │   ├── ethernet                     496
-│   │   │   │   ├── named-pipe                   494
 │   │   │   │   ├── can-bus                      475
 │   │   │   │   ├── sqlite                       472
 │   │   │   │   ├── mariadb                      470
@@ -478,6 +477,7 @@ hold no source to count.
 │   │   │   │   ├── mllp                         441
 │   │   │   │   ├── rabbitmq                     373
 │   │   │   │   ├── unix-socket                  361
+│   │   │   │   ├── named-pipe                   290
 │   │   │   │   ├── tcp                          277
 │   │   │   │   └── udp                          216
 │   │   │   ├── authenticate                    2626
@@ -619,7 +619,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5410
+│   │   │   ├── net                             6514
 │   │   │   ├── codec                           2648
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
@@ -682,7 +682,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            29289
+│       ├── runtime                            28488
 │       ├── persist                            10628
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189

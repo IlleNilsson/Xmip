@@ -994,7 +994,8 @@ longer trusted by itself* (ADR-0009, amendment 2026-10-21).
   caller for its certificate, from loopback as from anywhere.
 - **Windows.** Every surface opens the pipe lent for identification alone
   (`SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION`,
-  `ffi::system::open_identifying`), asking to read and write its data and
+  `net::pipe::connect`, amendment *the named pipe is placed once*, below),
+  asking to read and write its data and
   nothing more, so a node — or whatever made a pipe of that name first —
   reads who the caller is and can never act as it. The node reads the
   account from the client's token (`ImpersonateNamedPipeClient`, the
@@ -1097,3 +1098,52 @@ tests.
 Provenance: the owner's decisions of 2026-10-19 and 2026-10-21, quoted; the
 key, the access an admitted caller gets, the folder rule, and the group's
 key and its default are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-10-21: the named pipe is placed once
+
+**Amends the amendment above, *local callers are proven by the operating
+system*, where the runtime made its pipe itself.** Agreed by the owner,
+2026-10-21: the named pipe transport moves off the `interprocess` crate onto
+Xmip's own pipe code, placed once.
+
+- **One pipe, in `net`.** The runtime's pipe code moved down to
+  `xmip-core-library-net` (`net::pipe`), the lowest layer both the runtime
+  and the named pipe transport reach, beside `net::pipe::path_of`, which
+  already said where a pipe is: `Listener::bind`, `Listener::accept`,
+  `connect`, `Stream` and `Cancel`, the same on Windows and Unix. On
+  Windows the system's calls — the security descriptor read from SDDL once
+  for every instance, the instance made, its client waited for with an
+  `OVERLAPPED` of its own, the overlapped reads and writes, the client
+  opened lent for identification alone, the account read from its token
+  and the identifier of an account admitted — are `net`'s folder
+  `src/pipe/windows/` (ADR-0050, amendment 2026-10-21). The runtime's
+  `ffi::pipe`, `ffi::pipe_io` and `ffi::system` are deleted; its local
+  endpoint on Windows calls `net::pipe` (`plane::local::windows`), and its
+  Unix domain socket is unchanged.
+- **The transport on both systems.** On Windows the transport's pipe is
+  made with the same descriptor, admitting nobody beyond its owner, the
+  system and the administrators, and a Receive Location's wait for a
+  writer is the system's event within its timeout, where it napped a
+  quarter of a millisecond between tries. On Unix it is a FIFO, its
+  owner's alone, made by `mkfifo` through `nix`; an open within a time is
+  released at its deadline by the other end, as before. The writer's
+  process id travels as it did (`named-pipe.client-process-id`).
+- **One client is one connection, and an accept returns only with a
+  client.** An instance is never disconnected to be used again and the
+  next is made before a connected one is handed out; a timed-out wait is
+  cancelled and the instance listens on. Held by `net`'s tests
+  (`one_client_is_exactly_one_connection`,
+  `an_accept_never_returns_without_a_client`) and the transport's
+  (`one_writer_is_one_stream_and_no_second`). A writer that wrote nothing
+  and closed before its reader waited is now a Stream of nothing; a
+  Windows pipe dropped it until today, and the transport's loopback refused
+  an empty Stream there.
+- **`interprocess` is deleted** from every manifest in the estate. Its
+  defects were reported upstream (#100, #101).
+
+Proved on Windows and in the AlmaLinux 10 guest: `net`'s pipe tests, the
+transport's tests, and the runtime's plane tests.
+
+Provenance: the move is the owner's, agreed 2026-10-21; the place, `net`,
+was his preference; the API and the folder are the assistant's, for the
+owner to overrule.
