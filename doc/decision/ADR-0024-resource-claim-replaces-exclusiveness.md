@@ -513,11 +513,12 @@ Keep the atomic write and the node-named temporary file** (the amendment of
   the Message keeps). Departure hands the transport the Message's context
   with its body (`transport::Outgoing::carrying`), and the file transport
   writes the file under that name in the directory the address names.
-- **Refused in words, never guessed.** A Message carrying no `file.name` —
-  one received over another transport — or one naming a path rather than a
+- **Refused in words, never guessed.** A name naming a path rather than a
   file of the directory (`..`, `sub/order.edi`, empty) is refused at the
-  send, permanently, and nothing is written. A test or a tool that sends
-  bytes it holds, with no Message behind them, names the file itself.
+  send, permanently, and nothing is written; a Message carrying no
+  `file.name` is named as the amendment of 2026-10-21 below says. A test or
+  a tool that sends bytes it holds, with no Message behind them, names the
+  file itself.
 - **The relative-path bug is gone with the reading that made it.** The
   address had been read as the file, and the directory a send wrote beside
   it was found by joining the address to itself, so a relative address
@@ -536,7 +537,7 @@ service.
 Provenance: the ruling is the owner's, 2026-10-19; `file.name`, the `KEPT`
 list, handing the context with the body and the refusals' words are the
 assistant's, 2026-10-20. What a file Send Location writes for a Message that
-carries no file name is open (open problem 33).
+carries no file name was decided on 2026-10-21 (below).
 
 ## Amendment, 2026-10-20: a drop directory tells, and a file is finished when no writer holds it
 
@@ -581,9 +582,10 @@ fastest of five, from its drop to its claim — the word, the listing, the
 probe, the turn and the rename on the file system — and `carried.rs` holds
 it under ten milliseconds, never the sweep's second.
 
-Provenance: the ruling is the owner's, 2026-10-20; the writer's probe, the
-sweep's name and its default of a second are the assistant's, for the owner
-to confirm or strike. Taking a file at once on Linux and macOS — a close
+Provenance: the ruling is the owner's, 2026-10-20; the writer's probe and
+the sweep's name are the assistant's, for the owner to confirm or strike.
+**Decided by the owner, 2026-10-21:** `receive_sweep`'s default of a
+second. Taking a file at once on Linux and macOS — a close
 after writing the watch already hears, told by name — is open (open problem
 33).
 
@@ -629,3 +631,33 @@ Provenance: the defect and the terms are the owner's; the turn held open
 is the assistant's, 2026-10-21, for the owner to confirm or strike. Linux
 and macOS keep the turn file, and take a file at the second listing (the
 amendment of 2026-10-20).
+
+## Amendment, 2026-10-21: a Message without `file.name` is named by the Send Location's pattern
+
+The owner, 2026-10-21: **a Message without `file.name` is named from a
+pattern configured on the file Send Location, falling back to the Message's
+identifier.** Every surface that configures a Send Location gets the
+pattern.
+
+- **The pattern is the Send Location's `name` setting**, declared by the
+  file technology (`xmip-core-transport-file`'s `SETTINGS`, `Applies::Send`):
+  `{message}` in it is the Message's identifier, so
+  `name = "order-{message}.edi"` writes `order-<identifier>.edi`. A Location
+  that gives none writes the identifier alone. A name the Message carries,
+  `file.name`, goes first; a name the pattern makes is held to what every
+  name is — one file of the directory, never a path — and refused in words
+  otherwise.
+- **The runtime hands every send the Message's identifier** beside its
+  context (`transport::Outgoing::of_message`, `Outgoing::message`), as it
+  hands the Journey's as the deduplication key.
+- **Every surface has it from the declaration**, the one place it is
+  written: the API's `xmip_technology_catalogue_v1` and `xmip_validate_v1`,
+  `xmip-cli validate`, `Test-XmipNodeConfiguration`, and the VS Code
+  designer's completion, hover and Location form, all read the technology's
+  declaration through the runtime, so none holds a word of its own about it.
+
+Proved by the file transport's tests (named by the identifier, by the
+pattern, by `file.name` first; a pattern naming a path refused; `name`
+refused on a Receive Location). Provenance: the ruling is the owner's,
+2026-10-21; the setting's name and `{message}` are the assistant's, for the
+owner to overrule.

@@ -303,7 +303,10 @@ and the machine's administrators, each account or group `[operate] admit`
 names to read and write it, and no caller from another machine; on Unix the
 kernel names the peer (`SO_PEERCRED`, `getpeereid`) and the node admits its
 own account, the superuser and whom `admit` names, the socket file `0600`
-where `admit` names nobody, in a folder no one else may write. Who acts is
+where `admit` names nobody and `0660` where it names anyone, belonging to
+`[operate] group` — the node's own group where it is left out — so the file
+system lets only that group's members connect before the node judges them
+(the owner, 2026-10-21), in a folder no one else may write. Who acts is
 the account the operating system says the connecting process runs as —
 `DOMAIN\user` on Windows, lent for identification alone, the user name
 elsewhere — never a name the caller gives, and its role is the one
@@ -339,6 +342,7 @@ key = "tls/node.key"
 anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
 role = "operator"                   # every proven caller's; Observer if left out
 admit = ['CONTOSO\xmip-operators']  # who else may open the local endpoint
+group = "xmip-operators"            # on Unix, the socket's group; the node's own if left out
 ```
 
 `listen` takes `certificate`, `key` and `anchors`, and adds the network

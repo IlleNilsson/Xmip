@@ -274,7 +274,7 @@ request and every handshake are signed there.
   kept key — made first where none is kept, else the kept one asked again, so
   a renewal keeps its key — and `Keep` keeps the chain the authority signed
   once the keeper signs a probe its leaf verifies; `KeepAnchors` keeps the
-  cluster's authority. `SurfaceTls` names a keeper's key where a host's
+  cluster's authority. `SecureSurface` names a keeper's key where a host's
   document names a `Certificate` and no `PrivateKey`, and `RemoteOperator`
   then opens kept. The host's Certificate page — on the phone and the
   desktop alike — makes the request, shares it, and keeps the chain and the

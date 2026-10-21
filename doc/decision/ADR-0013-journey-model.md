@@ -733,3 +733,6 @@ reads four keys and two ranges, where a read of the whole queue read
 11,176 keys, in 91 µs, a debug build; and by
 `xmip-core-persist-rocksdb`'s test of a range past 199,997 marks: 15-20 ms
 through them, under 10 µs from the first kept.
+
+**Decided by the owner, 2026-10-21:** the writer moves a queue's first
+entry, as drafted above (`storage::due::settle`); no longer drafted.

@@ -645,7 +645,7 @@ that keeps databases publishes each at `<node>/storage/<domain>`, its
 evidence `schema version <n> on <engine>`, so every surface shows the
 version each holds.
 
-**Drafted for the owner** (not yet his):
+**Decided by the owner, 2026-10-21**, as drafted here on 2026-10-20:
 
 - An index added to a table already made is refused by the definition's
   test until the embedded engines can write its entries for the records

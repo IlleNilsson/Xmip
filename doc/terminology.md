@@ -166,7 +166,7 @@ owner, 2026-09-29: *Partner is the wrong word. It is Party, plural Parties.*
 | --- | --- |
 | **Transport identity** | Who opened the connection. Read before Message creation. Mandatory. |
 | **Message identity** | On whose behalf the content was produced. Requires the Message to exist. Optional, and absent for most representations. |
-| **Implied identity** | An identity nothing presented, evidenced by circumstance — path, permissions, source address. Still authenticated, against that evidence. |
+| **Implied identity** | An identity nothing presented, evidenced by circumstance — path, permissions, source address. Still authenticated, against that evidence. A drop folder's circumstance is the whole path of each file dropped, never the folder (the owner, 2026-10-21; ADR-0019). |
 | **Alignment** | Whether the two identities must resolve to the same Party. `none`, `relaxed` or `strict`, per Receive Location. |
 
 A **Receive Location** declares a closed set of mechanisms and Parties it
@@ -194,7 +194,7 @@ source a node's configuration names (ADR-0034; ADR-0033, amendment
 | **Source** | Where a purpose's certificate comes from: an ACME directory, the cluster's authority, the node itself (self-signed), or an operator's files. A technology of `xmip-core-provision`; none is a default. |
 | **Provisioner** | One purpose's certificate kept in its place and obtained again at two thirds of the life it was issued with. |
 | **Cluster authority** | The cluster's own certificate authority (`internal-ca`), whose certificate every node holds as its anchor; it issues node certificates, answers ACME and signs an operator certificate's request. |
-| **Local endpoint** | A node's operate listener on its own machine — a named pipe on Windows, a Unix domain socket elsewhere — and the one way a surface on that machine reaches the node. Its caller is **proven by the operating system**: the account the connecting process runs as, lent for identification alone on Windows, the kernel's word on the peer on Unix; only the node's account, the machine's administrators and whom `[operate] admit` names may open it (ADR-0014, amendment 2026-10-21). Not **loopback**: a tcp connection over loopback proves where a caller is, not who, and presents a certificate like any other (ADR-0009, amendment 2026-10-21). |
+| **Local endpoint** | A node's operate listener on its own machine — a named pipe on Windows, a Unix domain socket elsewhere — and the one way a surface on that machine reaches the node. Its caller is **proven by the operating system**: the account the connecting process runs as, lent for identification alone on Windows, the kernel's word on the peer on Unix; only the node's account, the machine's administrators and whom `[operate] admit` names may open it, on Unix a socket `0660` of `[operate] group` where `admit` names anyone (ADR-0014, amendment 2026-10-21). Not **loopback**: a tcp connection over loopback proves where a caller is, not who, and presents a certificate like any other (ADR-0009, amendment 2026-10-21). |
 
 ## Arrival and Departure
 

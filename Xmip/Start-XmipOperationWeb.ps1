@@ -25,9 +25,22 @@ function Start-XmipOperationWeb {
             and 2026-10-21): the role xmip.gui.toml or XMIP_ROLE states, else
             the directory it names, else Observer. Over a Playground roll the
             host is told the Playground's fake directory, which allows the
-            user the host runs as every role and no one else; a browser is
-            never that user for reaching loopback. A browser nothing proved
-            watches and acts on nothing.
+            tester every role and no one else: the user the host runs as, and
+            the subject of the tester's operator certificate, -Tester. A
+            browser is never that user for reaching loopback. A browser
+            nothing proved watches and acts on nothing.
+
+            Over a roll, unless -Url or -Certificate says otherwise, the host
+            is served https://127.0.0.1:5087 in Xmip's own TLS under the
+            Playground's authority, .local-work/playground/authority, made
+            there the first time (Initialize-XmipPlaygroundAuthority), and
+            verifies a browser's certificate against it. From nothing to acting
+            in the browser: New-XmipCertificate -Operator <person> -Path
+            <folder>; New-XmipCertificate -Request <folder>/operator.csr
+            -Configuration .local-work/playground/authority/operator.toml
+            -Path <folder>/operator.pem; give the browser that chain with
+            operator.key and trust authority.pem; then
+            Get-XmipTestStatus | Start-XmipOperationWeb -Tester <person>.
 
             Several snapshots are one host over several clusters (ADR-0052,
             amendment 2026-09-20): Get-XmipTestStatus piped here over two rolls
@@ -64,10 +77,12 @@ function Start-XmipOperationWeb {
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087, plain http on
-            loopback. Use https://0.0.0.0:5443 with -Certificate and -PrivateKey
-            to reach it from another device on the network (the firewall must
-            also allow the port); https://127.0.0.1:5443 serves TLS on this
-            machine alone.
+            loopback, and to https://127.0.0.1:5087 over a Playground roll. Use
+            https://0.0.0.0:5443 with -Certificate, -PrivateKey and
+            -TrustAnchor to reach it from another device on the network (the
+            firewall must also allow the port); https://127.0.0.1:5443 serves
+            TLS on this machine alone. Every https address is served in Xmip's
+            own TLS by the runtime, never the platform's.
 
         .PARAMETER Certificate
             The PEM certificate chain, leaf first, the host presents on https.
@@ -80,8 +95,13 @@ function Start-XmipOperationWeb {
 
         .PARAMETER TrustAnchor
             The PEM anchors a caller's certificate must reach. Unset, the host's
-            xmip.gui.toml or XMIP_TRUST_ANCHOR, else the operating system's trust
-            store.
+            xmip.gui.toml or XMIP_TRUST_ANCHOR; https needs one, since Xmip
+            trusts no operating system's trust store (ADR-0063).
+
+        .PARAMETER Tester
+            The person the Playground's tester is, as New-XmipCertificate
+            -Operator named them: a browser presenting that operator
+            certificate, CN=<person>, acts with every role over a roll.
 
         .PARAMETER PassThru
             Return the Xmip.Web object for the host started.
@@ -95,6 +115,9 @@ function Start-XmipOperationWeb {
 
         .EXAMPLE
             Get-XmipTestStatus | Start-XmipOperationWeb
+
+        .EXAMPLE
+            Get-XmipTestStatus | Start-XmipOperationWeb -Tester alice@example.org
 
         .EXAMPLE
             Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
@@ -139,6 +162,10 @@ function Start-XmipOperationWeb {
         [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf },
             ErrorMessage = "REFUSED. No trust anchor file at '{0}'.")]
         [string] $TrustAnchor,
+
+        [Parameter()]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $Tester,
 
         [Parameter()]
         [switch] $PassThru
@@ -205,6 +232,8 @@ function Start-XmipOperationWeb {
             }
         }
 
+        [bool] $rolls = $false
+
         if ($following.Count -gt 0) {
             $arguments += '--Xmip:Surface=snapshot'
             $arguments += Get-XmipOperationWebSnapshotArgument -Snapshot $following
@@ -213,18 +242,29 @@ function Start-XmipOperationWeb {
             # in its declaration (ADR-0053); over anything else it is runtime.
             [string] $area = [System.IO.Path]::GetFullPath($layout.Area)
             $under = [System.StringComparison]::OrdinalIgnoreCase
-            [bool] $rolls = @(
+            $rolls = @(
                 $following | Where-Object { $_.StartsWith($area, $under) }
             ).Count -gt 0
 
             # And its roles come from the Playground's fake directory, which
-            # allows the user the host runs as and no one else (ADR-0009,
-            # amendments 2026-09-14 and 2026-10-06); a browser proves it only
-            # by a certificate, never by reaching loopback (amendment
-            # 2026-10-21). Anywhere else an unstated role grants nothing.
+            # allows the tester and no one else (ADR-0009, amendments
+            # 2026-09-14, 2026-10-06 and 2026-10-21): the user the host runs
+            # as, and the subject of the tester's operator certificate, which
+            # a browser proves, never by reaching loopback. Anywhere else an
+            # unstated role grants nothing. Served https under the roll's
+            # authority unless the call says otherwise.
             if ($rolls) {
                 $arguments += '--Xmip:Purpose=test'
                 $arguments += '--Xmip:Directory=tester'
+
+                if (-not $PSBoundParameters.ContainsKey('Url')) {
+                    $Url = 'https://127.0.0.1:5087'
+                    $arguments[0] = "--Kestrel:Endpoints:Http:Url=$Url"
+                }
+
+                if ($Tester) {
+                    $arguments += "--Xmip:Tester=CN=$($Tester.Trim())"
+                }
             }
         }
 
@@ -278,6 +318,18 @@ function Start-XmipOperationWeb {
             return
         }
 
+        # Over a roll, https under the Playground's authority, the host's
+        # certificate issued anew, unless the call named its own.
+        if ($rolls -and $Url.StartsWith('https:') -and -not $Certificate) {
+            $kept = Initialize-XmipPlaygroundAuthority -Folder $layout.Authority -Confirm:$false
+            $arguments += "--Xmip:Certificate=$($kept.Certificate)"
+            $arguments += "--Xmip:PrivateKey=$($kept.PrivateKey)"
+
+            if (-not $TrustAnchor) {
+                $arguments += "--Xmip:TrustAnchor=$($kept.TrustAnchor)"
+            }
+        }
+
         # Built before every start, as Start-XmipTest builds a roll: the host
         # runs the source as it is. Until 2026-09-29 it ran whatever bin held,
         # and xgit builds elsewhere, so a fix landed the day before was not
@@ -325,68 +377,5 @@ function Start-XmipOperationWeb {
         if ($PassThru) {
             return ConvertTo-XmipOperationWeb -Process $process
         }
-    }
-}
-
-function Get-XmipOperationWebSnapshotArgument {
-    <#
-        .SYNOPSIS
-            How a web host is told which snapshots to read: one key for one,
-            an indexed key each for several. Pure.
-
-        .DESCRIPTION
-            Microsoft.Extensions.Configuration reads --Xmip:Snapshot:0 and
-            --Xmip:Snapshot:1 as the list Xmip.Surface's SurfaceChoice asks
-            for; one snapshot keeps the plain key it has always had, so every
-            reader of a host's command line still reads it (ADR-0052,
-            amendment 2026-09-20).
-
-        .PARAMETER Snapshot
-            The full paths, in the order the host should hold them.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter(Mandatory)]
-        [string[]] $Snapshot
-    )
-
-    if ($Snapshot.Count -eq 1) {
-        return @("--Xmip:Snapshot=$($Snapshot[0])")
-    }
-
-    return @(0..($Snapshot.Count - 1) | ForEach-Object { "--Xmip:Snapshot:$_=$($Snapshot[$_])" })
-}
-
-function Test-XmipOperationWebAnswering {
-    <#
-        .SYNOPSIS
-            Whether something already listens where a web host would.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Url
-    )
-
-    [uri] $address = $Url
-    [string] $reach = $address.Host
-
-    if ($reach -in '0.0.0.0', '+', '*') {
-        $reach = '127.0.0.1'
-    }
-
-    $client = [System.Net.Sockets.TcpClient]::new()
-
-    try {
-        $client.Connect($reach, $address.Port)
-        return $true
-    }
-    catch [System.Net.Sockets.SocketException] {
-        return $false
-    }
-    finally {
-        $client.Dispose()
     }
 }
