@@ -1755,7 +1755,7 @@ dependency = []
 
 
   [xmip.core.library.net]
-  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, and HTTP itself, both halves: HTTP/1.1, and HTTP/2 with HPACK, which the http transport and every capability asking a service speak."
+  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

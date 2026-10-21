@@ -545,3 +545,21 @@ verifier lives are the assistant's, 2026-10-20. **Decided by the owner,
 mechanisms authenticated (ADR-0019, amendment 2026-10-21). Where the
 circumstance's verifier lives stays the assistant's, for the owner to
 confirm or strike.
+
+## Amendment, 2026-10-21: net keeps its named pipe's C boundary in one folder
+
+The named pipe on Windows moved from the runtime's `src/ffi/` down to
+`xmip-core-library-net` (ADR-0014, amendment 2026-10-21), so the runtime's
+local endpoint and the named pipe transport make their pipes through one
+implementation. Its calls into Windows — the instance and its descriptor,
+the overlapped wait and I/O, the identifying client and the account
+lookups — are some 640 lines, over the 400-line limit for one file. As the
+runtime was on 2026-09-25, `net` keeps them in one named folder,
+`src/pipe/windows/`, each file under the limit, and allows unsafe code
+there and nowhere else; its `Cargo.toml` says `deny`, and every other file
+of the crate writes none. The rule reads: one file per crate, or one
+folder where the boundary is longer than a file. `test/Unsafe.Test.ps1`
+holds both folders.
+
+Provenance: the assistant's, following the owner's refinement of
+2026-09-25, for the owner to confirm or overrule.

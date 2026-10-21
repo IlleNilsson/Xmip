@@ -149,12 +149,14 @@ the module's name in the tab bar instead of five identical tabs.
 A crate forbids unsafe code. A crate that must call a C interface allows it
 in one named file and nowhere else, and every block in that file says where
 its pointers come from, how long they live and who frees them (ADR-0050,
-amendment 2026-09-25). The runtime is the one exception, refined the same
-day: its whole C boundary — the operator's exports and the module loader —
+amendment 2026-09-25). A boundary longer than a file is a folder, refined
+the same day for the runtime: its whole C boundary — the operator's exports and the module loader —
 is one folder, `src/ffi/`, each file under 400 lines, and what a boundary
-file does beyond reading and writing pointers stays outside it. Its `Cargo.toml` says `unsafe_code = "deny"` rather
+file does beyond reading and writing pointers stays outside it. `net` keeps
+its named pipe's calls into Windows the same way, in `src/pipe/windows/`
+(amendment 2026-10-21). Such a crate's `Cargo.toml` says `unsafe_code = "deny"` rather
 than `forbid`, because Rust lets no file lower `forbid`; the file lowers
-`deny` at its top with its reason. `test/Unsafe.Test.ps1` holds the folder and
+`deny` at its top with its reason. `test/Unsafe.Test.ps1` holds the folders and
 the list of those files, one per crate, fails on any other file that allows
 unsafe code or crate that lowers the lint without one, and fails on a block without its `SAFETY`
 comment.

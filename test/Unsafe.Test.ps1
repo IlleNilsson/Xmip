@@ -8,22 +8,27 @@
     them, and every other file forbids it.
 
     The runtime keeps its whole C boundary in one folder, src/ffi/ (ADR-0050,
-    refined 2026-09-25); every other crate gets one file. The folder and the
-    list below are the whole of the estate's unsafe. A new file on the list is
-    a change a reviewer sees here, with its reason; a file that lowers the lint
-    anywhere else fails.
+    refined 2026-09-25), and net its named pipe's on Windows in another
+    (amendment 2026-10-21); every other crate gets one file. The folders and
+    the list below are the whole of the estate's unsafe. A new file on the
+    list is a change a reviewer sees here, with its reason; a file that lowers
+    the lint anywhere else fails.
 #>
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    # The runtime keeps its whole C boundary in one folder (ADR-0050, refined
-    # 2026-09-25): the operator's table and exports (ADR-0027), the loader
-    # (ADR-0057), the two Windows calls the local operate endpoint makes
-    # (ffi/system.rs; ADR-0014, amendment 2026-10-13) and those a directory
-    # watch makes (ffi/directory_watch.rs; ADR-0018, amendment 2026-10-17).
-    # Only the runtime has a folder.
-    $script:Folder = 'module/platform/runtime/src/ffi/'
+    # A crate whose C boundary is too long for one file keeps it in one folder
+    # (ADR-0050, refined 2026-09-25 and amended 2026-10-21): the runtime's,
+    # the operator's table and exports (ADR-0027), the loader (ADR-0057) and
+    # the calls a directory watch makes (ffi/directory_watch.rs; ADR-0018,
+    # amendment 2026-10-17); and net's, the named pipe on Windows, which the
+    # runtime's local endpoint and the named pipe transport both make theirs
+    # through (ADR-0014, amendment 2026-10-21).
+    $script:Folders = @(
+        'module/platform/runtime/src/ffi/'
+        'module/core/library/net/src/pipe/windows/'
+    )
 
     # Every other crate: exactly one file, and why it crosses a C interface.
     $script:Allowed = [ordered]@{
@@ -63,7 +68,8 @@ BeforeAll {
     }
 
     function Test-UnsafePlace([string] $Path) {
-        return $Path.StartsWith($script:Folder) -or $script:Allowed.Contains($Path)
+        return @($script:Folders | Where-Object { $Path.StartsWith($_) }).Count -gt 0 -or
+            $script:Allowed.Contains($Path)
     }
 
     $script:Rust = @(Get-XmipSourceFile -Language Rust)
@@ -84,7 +90,7 @@ Describe 'Unsafe code lives only in the files the estate lists' {
         [string[]] $stranger = @($found | Where-Object { -not (Test-UnsafePlace $_) })
 
         $stranger | Should -BeNullOrEmpty -Because (
-            'unsafe lives in the runtime''s ffi folder or one named file per crate (ADR-0050)')
+            'unsafe lives in a listed folder or one named file per crate (ADR-0050)')
     }
 
     It 'lists exactly one file for each crate' {
@@ -93,7 +99,7 @@ Describe 'Unsafe code lives only in the files the estate lists' {
                 Group-Object | Where-Object Count -gt 1 | ForEach-Object Name
         )
 
-        $twice | Should -BeNullOrEmpty -Because 'one file per crate; only the runtime has a folder'
+        $twice | Should -BeNullOrEmpty -Because 'one file per crate, or one folder'
     }
 
     It 'lists no file that is gone or no longer allows it' {
@@ -108,10 +114,10 @@ Describe 'Unsafe code lives only in the files the estate lists' {
         $stale | Should -BeNullOrEmpty -Because 'the list says what is true'
     }
 
-    It 'says of every unsafe block in a listed file or the folder why it is sound' {
+    It 'says of every unsafe block in a listed file or a folder why it is sound' {
         [string[]] $held = @($script:Allowed.Keys) + @(
             $script:Rust | ForEach-Object { $_.Path -replace '\\', '/' } |
-                Where-Object { $_.StartsWith($script:Folder) }
+                Where-Object { -not $script:Allowed.Contains($_) -and (Test-UnsafePlace $_) }
         )
         [string[]] $bare = @(
             foreach ($file in $held) {
@@ -136,9 +142,9 @@ Describe 'Unsafe code lives only in the files the estate lists' {
             'every block names its pointers, their lifetime and who frees them')
     }
 
-    It 'lowers the lint only in a crate that holds a listed file or the folder' {
+    It 'lowers the lint only in a crate that holds a listed file or a folder' {
         [string[]] $crates = @(
-            @($script:Allowed.Keys) + @($script:Folder + 'operate.rs') |
+            @($script:Allowed.Keys) + @($script:Folders | ForEach-Object { $_ + 'any.rs' }) |
                 ForEach-Object { Get-UnsafeCrate $_ }
         )
         [string[]] $lowered = @(

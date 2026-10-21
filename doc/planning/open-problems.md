@@ -1030,10 +1030,13 @@ What remains of it, the owner's to decide:
   2026-10-21, both of the plane's: a surface connected to the local
   endpoint twice through the pipe library, which the runtime no longer
   uses (ADR-0014, amendment 2026-10-21). The named pipe transport
-  (`xmip-core-transport-named-pipe`) still accepts and reads through that
-  library, so it may hold a connection its sender let go the same way;
-  its repair needs the runtime's calls (`ffi::pipe`, `ffi::pipe_io`) placed
-  where a transport reaches them, open. Beside four or
+  (`xmip-core-transport-named-pipe`) accepted and read through that
+  library too; closed the same day: the runtime's calls moved down to
+  `net::pipe`, which the runtime's local endpoint and the transport both
+  make their pipes through, one client one connection and an accept
+  returning only with a client, on Windows and as a FIFO on Unix, and
+  `interprocess` is deleted from the estate (ADR-0014, amendment
+  2026-10-21, *the named pipe is placed once*). Beside four or
   eight jobs, `plane`'s
   `a_connection_on_this_machine_is_proven_and_answered_within_the_millisecond`
   took 1.24 to 1.60 ms of processor time and failed one or two runs in five
@@ -1967,7 +1970,7 @@ surface over loopback presents one like any other caller, or is no one.
 PowerShell module and both GUIs, through the runtime's one connecting end;
 the VS Code extension's language server reaches no node. **On Windows**
 every surface opens the node's pipe lent for identification alone
-(`ffi::system::open_identifying`), and the node reads the caller's account
+(`net::pipe::connect`), and the node reads the caller's account
 from its token; the pipe's security descriptor admits the node's account,
 `SYSTEM`, the machine's administrators and whom `[operate] admit` names,
 the admitted only to read and write it (`plane::local::windows::openers`).
