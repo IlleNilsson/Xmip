@@ -294,13 +294,21 @@ probing, the audit file and Modules.
 pipe on Windows, a Unix domain socket elsewhere (ADR-0052, amendment
 2026-10-05: *gRPC over net pipe*), without TLS — the one exception inside
 one machine ADR-0063 clause 1 allows, recorded in the node's audit where it
-is made (`operate.local`). The operating system is the gate: on Windows the
-pipe's security descriptor admits the account that made it — the node's —
-`SYSTEM` and the machine's administrators, and no caller from another
-machine; on Unix the socket file is `0600`, the node's account and the
-superuser. Who acts is the user the operating system says the connecting
-process runs as — `DOMAIN\user` on Windows, the user name elsewhere — never
-a name the caller gives, and its role is the one `[operate] role` states.
+is made (`operate.local`). **Local callers are proven by the operating
+system** — decided by the owner, 2026-10-19 (open problem 35) — and every
+surface on the machine reaches the node here: xmip-cli, the PowerShell module
+and both GUIs. The operating system is the gate: on Windows the pipe's
+security descriptor admits the account that made it — the node's — `SYSTEM`
+and the machine's administrators, each account or group `[operate] admit`
+names to read and write it, and no caller from another machine; on Unix the
+kernel names the peer (`SO_PEERCRED`, `getpeereid`) and the node admits its
+own account, the superuser and whom `admit` names, the socket file `0600`
+where `admit` names nobody, in a folder no one else may write. Who acts is
+the account the operating system says the connecting process runs as —
+`DOMAIN\user` on Windows, lent for identification alone, the user name
+elsewhere — never a name the caller gives, and its role is the one
+`[operate] role` states. A tcp connection over loopback is trusted for
+nothing: it presents a certificate like any caller from another machine.
 **The local endpoint always starts** — decided by the owner, 2026-10-13:
 *the local endpoint always starts, named `xmip-<node>` unless the
 configuration names it* — at `\\.\pipe\xmip-<node>` on Windows,
@@ -330,6 +338,7 @@ certificate = "tls/node.pem"
 key = "tls/node.key"
 anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
 role = "operator"                   # every proven caller's; Observer if left out
+admit = ['CONTOSO\xmip-operators']  # who else may open the local endpoint
 ```
 
 `listen` takes `certificate`, `key` and `anchors`, and adds the network
