@@ -366,7 +366,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 273430 lines of production
+Where each repository mounts and what it holds: 273535 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -391,7 +391,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6267
+│   │   │   ├── transport                       6317
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -478,7 +478,7 @@ hold no source to count.
 │   │   │   │   ├── rabbitmq                     373
 │   │   │   │   ├── unix-socket                  361
 │   │   │   │   ├── mllp                         309
-│   │   │   │   ├── tcp                          277
+│   │   │   │   ├── tcp                          282
 │   │   │   │   └── udp                          216
 │   │   │   ├── authenticate                    2626
 │   │   │   │   ├── saml                         947
@@ -619,7 +619,7 @@ hold no source to count.
 │   │   │   │       azure-blob  file  gcs  s3  sql
 │   │   │   └── promote                           10
 │   │   ├── library/
-│   │   │   ├── net                             5288
+│   │   │   ├── net                             5320
 │   │   │   ├── codec                           2648
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
@@ -682,7 +682,7 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            27184
+│       ├── runtime                            27202
 │       ├── persist                             9902
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          178

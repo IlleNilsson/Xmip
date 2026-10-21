@@ -967,7 +967,32 @@ use, held the library tests 41 minutes; every listener's stop now knocks
 until its accept has heard (`net::accepting`; ADR-0018, amendment
 2026-10-20, *one kept from its processor*).
 
+*Repaired 2026-10-21, run after run.* The machine ran out of ports after
+many runs: one run of the runtime's library tests left 1,259 connections
+waiting to close, every one a raw TCP Stream's sender, which closes first
+since the connection frames the Stream. A connection read to its sender's
+close is now let go with a reset (`transport::ended`), so neither end
+waits; five runs of the whole suite beside four jobs left 85 more, not some
+6,500. A test process now holds its block of ports (`net::fixture`), so
+two test programs never share one, the plane test's race; a passed local
+deadline cancels until its call has ended (`plane::deadline`), and the
+local-endpoint tests join their stand-in's accept by knocking, two hangs
+beside eight jobs. The loopback node's Message is held back by Xmip's own
+processor time on the path, not its hand-offs: a plain wake beside it took
+17 to 19 µs at the median, the path some 0.5 ms of processor time more
+than its load in the test build. Beside four jobs it passed five runs in
+five, 0.16 to 0.92 ms over its load; beside eight, six in ten (ADR-0018,
+amendment 2026-10-21).
+
 What remains of it, the owner's to decide:
+
+- **The path's processor time.** The loopback node's Message passes six
+  runs in ten beside eight processor-bound jobs and the suite, where its
+  own processor time waits its turn; fewer hand-offs would not mend it,
+  less work on the path would — the Publication's building, about 0.1 ms
+  in the test build, first. On Linux, in the AlmaLinux guest, the same
+  test and its eight senders fail by about 3 ms whether a connection ends
+  in a reset or a close, and the deadline test needs `/run/xmip`.
 
 - **The Ledger's sync is counted as the payload's load.** Beyond the sent
   file alone Xmip takes 1.6 to 1.8 ms: the Ledger's sync and the sent
