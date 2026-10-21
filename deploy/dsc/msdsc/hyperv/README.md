@@ -8,9 +8,11 @@ this one, `deploy/dsc/msdsc/<technology>`; Ansible's desired state is
 `deploy/dsc/ansible`, and an environment uses one of the two, never a mix
 (ADR-0015, amendment 2026-10-09).
 
-What runs inside a machine once it is installed — the domain, PostgreSQL,
-the Xmip nodes — is not this template's. The environment templates do it;
-they are not written yet.
+What runs inside a machine once it is installed is not this template's. The
+Xmip nodes and the names of the cluster and its nodes are the environment
+templates', `deploy/dsc/msdsc/environment` and, the same set in Ansible,
+`deploy/dsc/ansible`, each for Windows and AlmaLinux alike (ADR-0015,
+amendment 2026-10-21); the domain and PostgreSQL are not written yet.
 
 ## The example environment
 

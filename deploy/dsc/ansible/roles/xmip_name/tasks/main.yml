@@ -1,0 +1,36 @@
+---
+# On the environment's DNS server, a Windows DNS server: the zone where it is
+# not there, a primary zone in a file, and in it an A record for the cluster
+# holding every node machine's address and one for each node holding its
+# machine's, each holding exactly those.
+
+- name: Refuse a domain or a cluster left unnamed
+  ansible.builtin.assert:
+    that:
+      - xmip_domain | length > 0
+      - xmip_cluster_name | length > 0
+    fail_msg: "REFUSED: xmip_domain and xmip_cluster_name name the zone and the cluster."
+
+- name: The zone
+  ansible.windows.win_dns_zone:
+    name: "{{ xmip_domain }}"
+    type: primary
+    replication: none
+    state: present
+
+- name: The cluster's name, every node machine's address
+  ansible.windows.win_dns_record:
+    zone: "{{ xmip_domain }}"
+    name: "{{ xmip_cluster_name }}"
+    type: A
+    value: "{{ groups[xmip_node_group] | map('extract', hostvars, 'ansible_host') | list }}"
+    state: present
+
+- name: Each node's name, its machine's address
+  ansible.windows.win_dns_record:
+    zone: "{{ xmip_domain }}"
+    name: "{{ hostvars[item].xmip_node_name }}"
+    type: A
+    value: ["{{ hostvars[item].ansible_host }}"]
+    state: present
+  loop: "{{ groups[xmip_node_group] }}"

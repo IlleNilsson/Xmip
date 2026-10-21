@@ -251,6 +251,44 @@ pacman = "typos"
 fallback = "cargo install typos-cli --locked"
 
 # ---------------------------------------------------------------------------
+# Desired state, for test level 2 alone: the environment templates under
+# deploy/dsc put a cluster's nodes on machines of their own (ADR-0015,
+# amendment 2026-10-21). Neither is needed to build, test or land Xmip, and
+# an environment uses one of the two, never both; both cover Windows and
+# Linux alike (the owner, 2026-10-21: "dotnet is cross platform, so is
+# Blazor, MAUI and DSC. We keep Ansible and other tech for familiarity and
+# support for the project.").
+
+[prerequisite.dsc]
+role = "operator"
+optional = true
+probe = "dsc --version"
+minimum = "3.2"
+channel = "stable"
+note = "Microsoft DSC v3, the standalone dsc command (3.3.0 the current release on 2026-10-21; 3.2.0 generally available 2026-04-29). The host that runs deploy/dsc/msdsc and every machine an environment document is applied on need it, with PowerShell 7.6, which the Xmip resources run in."
+
+[prerequisite.dsc.windows]
+winget = "Microsoft.DSC"
+
+[prerequisite.dsc.linux]
+dnf = "dsc"
+note = "From Microsoft's package repository, packages.microsoft.com, where DSC 3.3 publishes its Linux packages."
+
+[prerequisite.ansible]
+role = "operator"
+optional = true
+probe = "ansible --version"
+minimum = "2.21"
+channel = "stable"
+note = "ansible-core (2.21.5 the current release on 2026-10-05), the controller of deploy/dsc/ansible; 2.21 is the first to run Windows modules in PowerShell 7. A distribution's own package may be older, so it is installed with Python's pip into a folder of its own, with pywinrm for the Windows machines; Python is Ansible's, never Xmip's."
+
+[prerequisite.ansible.linux]
+command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix"
+
+[prerequisite.ansible.macos]
+command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix"
+
+# ---------------------------------------------------------------------------
 # Event binding languages. ADR-0065: a program at the perimeter subscribes to
 # Events from C, C++, Java or Python through the bindings in xmip-core-abi; it
 # is its own process, and no such runtime is loaded into an Xmip process

@@ -1,4 +1,4 @@
-﻿#requires -PSEdition Core
+#requires -PSEdition Core
 #requires -Version 7.6.7
 
 <#
@@ -558,10 +558,16 @@ Describe 'The environment a roll is started with' {
             Get-XmipNodeRoleWarning | Should -Be ''
         }
 
-        [hashtable] $door = @{
-            Cluster = $script:Cluster.Name
-            Nodes   = @($script:Stage.receiving, $script:Stage.processing, $script:Stage.sending)
-        }
+        # A node the Playground's own cluster file declares takes the roles it
+        # declares there (ADR-0028, amendment 2026-10-21), so nothing is said;
+        # nodes it does not declare declare none, and that is said.
+        [string[]] $declared = @($script:Stage.receiving, $script:Stage.processing,
+            $script:Stage.sending)
+        [hashtable] $door = @{ Cluster = $script:Cluster.Name; Nodes = $declared }
+        Start-XmipTest @door -WhatIf -WarningVariable quiet | Out-Null
+        "$quiet" | Should -Not -BeLike '*declares a role*'
+
+        $door.Nodes = @($declared | ForEach-Object { "$_-undeclared" })
         Start-XmipTest @door -WhatIf -WarningVariable said | Out-Null
         "$said" | Should -BeLike '*declares a role*'
     }

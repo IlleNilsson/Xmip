@@ -5,10 +5,13 @@ Set-StrictMode -Version Latest
 <#
     A test run's cluster, as configuration: the xmip.toml whose [nodes] are the
     nodes a roll spawns (ADR-0056, amendment 2026-10-03: names are parameters
-    and configuration). Start-XmipTest writes the run's own file from -Cluster,
-    -Nodes and -NodeRole, or takes the test cluster's where -Nodes was not
-    given, and names it to the roll in XMIP_TEST_CLUSTER — the variable every
-    language's test fixture reads.
+    and configuration). Start-XmipTest writes the run's own file from
+    -Cluster, and the nodes -Nodes names or, where it names none, every node
+    the Playground's own cluster file declares, each with the roles -NodeRole
+    states or that file declares (ADR-0028, amendment 2026-10-21: one file
+    for one computer and for machines of their own), and names it to the
+    roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
+    reads.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -64,7 +67,35 @@ function Read-XmipTestCluster {
         throw "the cluster file $Path names no cluster_name"
     }
 
-    $declared = Get-TomlValue -Node $document -Name 'nodes'
+    $declared = Get-XmipClusterNodeRole -Document $document
+
+    return [pscustomobject]@{
+        Path  = $Path
+        Name  = $name
+        Nodes = $declared.Nodes
+        Role  = $declared.Role
+        Scope = "xmip:///$name"
+    }
+}
+
+function Get-XmipClusterNodeRole {
+    <#
+        .SYNOPSIS
+            The nodes a cluster's xmip.toml declares, in ordinal order, and
+            the roles each declares as written: the module's one reading of
+            a cluster's [nodes].
+
+        .PARAMETER Document
+            The cluster's xmip.toml, as Read-XmipToml read it.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [object] $Document
+    )
+
+    $declared = Get-TomlValue -Node $Document -Name 'nodes'
     [string[]] $names = @(Get-TomlKey -Node $declared)
     [Array]::Sort($names, [StringComparer]::Ordinal)
     $role = [ordered]@{}
@@ -74,13 +105,71 @@ function Read-XmipTestCluster {
         $role[$node] = [string] (Get-TomlValue -Node $own -Name 'roles')
     }
 
-    return [pscustomobject]@{
-        Path  = $Path
-        Name  = $name
-        Nodes = $names
-        Role  = $role
-        Scope = "xmip:///$name"
+    return [pscustomobject]@{ Nodes = $names; Role = $role }
+}
+
+function Read-XmipPlaygroundCluster {
+    <#
+        .SYNOPSIS
+            The nodes the Playground's own cluster xmip.toml declares and the
+            roles each declares. It names no cluster: where it runs is the
+            run's or the environment's (ADR-0028, amendment 2026-10-21).
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param()
+
+    [string] $path = (Get-XmipPlaygroundLayout).Configuration
+    return Get-XmipClusterNodeRole -Document (Read-XmipToml -Path $path)
+}
+
+function Join-XmipNodeRole {
+    <#
+        .SYNOPSIS
+            The roles each of -Nodes declares in a run: what -NodeRole states
+            for it, else what the Playground's file declares, else none.
+
+        .PARAMETER Nodes
+            The run's nodes.
+
+        .PARAMETER NodeRole
+            What -NodeRole stated per node, or $null.
+
+        .PARAMETER Declared
+            What the Playground's file declares per node (Read-XmipPlaygroundCluster).
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes = @(),
+
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeRole,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Declared
+    )
+
+    [hashtable] $joined = @{}
+
+    foreach ($node in @($Nodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+        [string] $stated = if ($null -ne $NodeRole -and $NodeRole.ContainsKey($node)) {
+            [string] $NodeRole[$node]
+        }
+        else {
+            [string] $Declared[$node]
+        }
+
+        if ($stated -ne '') {
+            $joined[$node] = $stated
+        }
     }
+
+    return $joined
 }
 
 function Write-XmipTestCluster {

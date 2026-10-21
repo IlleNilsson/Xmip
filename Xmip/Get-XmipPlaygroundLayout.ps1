@@ -30,6 +30,12 @@ function Get-XmipPlaygroundLayout {
             (Initialize-XmipPlaygroundAuthority; ADR-0009, amendment
             2026-10-21).
 
+            Configuration is the Playground's own cluster xmip.toml, the one
+            file a run is the same over whether its nodes are simulated or on
+            machines of their own (ADR-0028, amendment 2026-10-21): the nodes
+            a run spawns where -Nodes names none, and what the environment
+            templates under deploy/dsc put on each node machine.
+
             Estate is where a run of the estate's Pester suite writes its
             record and its log: .local-work/estate, beside the Playground's
             area and not inside it, since it is no roll's.
@@ -61,6 +67,7 @@ function Get-XmipPlaygroundLayout {
     return [PSCustomObject]@{
         Root       = $root
         Playground = $playground
+        Configuration = Join-Path -Path $playground -ChildPath 'configuration/xmip.toml'
         Roll       = Join-Path -Path $target -ChildPath "xmip-playground-roll$suffix"
         Cluster    = Join-Path -Path $target -ChildPath "xmip-playground-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"

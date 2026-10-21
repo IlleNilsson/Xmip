@@ -1,0 +1,12 @@
+---
+# The names of a cluster and its nodes on the environment's DNS server
+# (README.md). A node finds another by its name, and the Playground uses a
+# node whose name resolves (ADR-0028, amendment 2026-10-21).
+#
+# The DNS domain the names are in.
+xmip_domain: ""
+# The cluster's name: an A record holding every node machine's address.
+xmip_cluster_name: ""
+# The hosts whose xmip_node_name is named: each its own A record, its
+# ansible_host the address.
+xmip_node_group: xmip_nodes

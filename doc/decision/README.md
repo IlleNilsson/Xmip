@@ -1094,6 +1094,7 @@ You have a word. This gives you the decision that governs it.
 | Durable, a Publication | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
+| environment template | [Packaging and distribution](ADR-0015-packaging.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
@@ -1202,6 +1203,7 @@ You have a word. This gives you the decision that governs it.
 | Shape | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Shared code | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | shared declaration | [One error declaration](ADR-0037-one-error-declaration.md) |
+| simulated node, real node, test level | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | simulator | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | Source | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |

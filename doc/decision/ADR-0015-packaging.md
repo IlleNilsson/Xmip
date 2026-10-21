@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade; environment template
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -658,3 +658,116 @@ version each holds.
   node refuses a database older than its build too, naming the upgrade
   scripts IT runs — once that backend is built.
 - Version 1's fingerprint is recorded in `RELEASED` at the first release.
+
+## Amendment, 2026-10-21: the environment templates, one set per technology
+
+The owner, 2026-10-21: *one TOML file that can be run for tests regardless
+of node faking or actual nodes* (ADR-0028, amendment of the same date); and
+of the two technologies: *dotnet is cross platform, so is Blazor, MAUI and
+DSC. We keep Ansible and other tech for familiarity and support for the
+project.* Microsoft DSC v3 and Ansible each cover Windows and Linux alike;
+Ansible is kept for the people who know it and for the project's support,
+not for something DSC lacks. A deployment uses one of them, never a mix
+(the amendment of 2026-10-09).
+
+**What runs inside a machine** — the part the Hyper-V template's README
+said was not written — is written twice, the same set in each technology,
+and each does all five of the example's node machines, Windows Server 2025
+and AlmaLinux 10 alike, and the DNS server: `deploy/dsc/msdsc/environment`
+and `deploy/dsc/ansible` (the playbook `environment.yml`, the role
+`xmip_node`, extended, and the role `xmip_name`). Given a cluster's
+`xmip.toml` and the machines, each:
+
+- gives the environment's DNS server an A record for the cluster, holding
+  every node machine's address, and one for each node, holding its
+  machine's;
+- gives each node machine its node's account — a virtual account of its
+  own, `NT SERVICE\xmip-<node>`, on Windows, a system account, `xmip`, on
+  Linux — the cluster's `xmip.toml`, and its certificate, key and anchors
+  from the cluster's own authority (Xmip's internal CA, never the
+  platform's), issued beforehand by `New-XmipCertificate -Node` on the
+  operator's machine, the key private to the node;
+- installs the estate's package, telling it the node, the cluster and the
+  account (`XMIP_NODE`, `XMIP_CLUSTER`, `XMIP_ACCOUNT`), so the package's
+  `xmip-service --install` slices the file already there, gives the
+  account what it reads and writes, and registers and starts the service
+  as that account;
+- keeps the node's slice as `xmip-service --slice --cluster` prints it,
+  restarting the node when it changed;
+- opens the firewall for exactly the ports `xmip-service --listening` says
+  the node's configuration listens on, and closes what it no longer does;
+- holds the node's service running and started with the machine.
+
+Every rule about the node is `xmip-service`'s, which the templates ask; no
+template reads the TOML, slices it or knows a port. The mapping of nodes
+onto machines is each template's parameters —
+`environment.example.parameters.yaml` and `inventory.example.yml`, held
+equal by `test/MsdscEnvironment.Test.ps1` — and never the cluster's file:
+the example runs R1 on XMIP-IN01, S1 on XMIP-OUT01, P1 on XMIP-APP01, L1
+on XMIP-APP02 and D1 on XMIP-APP03, and the Playground simulates the rest.
+
+**Microsoft DSC v3 as it is** (checked 2026-10-21: 3.3.0 current, 3.2.0
+general availability 2026-04-29, 3.2.3 on the owner's machine). DSC is a
+standalone command, its resources any executable speaking JSON. The
+documents use a built-in resource wherever one fits —
+`Microsoft.Windows/Service` for the Windows service — and Xmip resources of
+their own folder, PowerShell 7 scripts behind resource manifests, for the
+rest: `Xmip.Node/Account`, `File`, `Package`, `Slice`, `Opening` and
+`Service`, `Xmip.Environment/Name` and `Xmip.Environment/Machine`. The
+firewall is Xmip's own resource rather than the built-in
+`Microsoft.Windows/FirewallRuleList`, because its ports are what the
+configuration listens on, which the built-in would take typed. DSC applies
+a document on the machine it runs on, so `Xmip.Environment/Machine` copies
+the folder and a node's files to its machine — WinRM to Windows as its
+Administrator, SSH to AlmaLinux with its key — and runs `dsc` there,
+elevated. The documents require DSC `^3.2` and each resource `^0.1`. The
+Windows PowerShell adapter is used nowhere in them. The Hyper-V template
+keeps `PSDesiredStateConfiguration/File` and the HyperVDsc and
+NetworkingDsc resources through that adapter: no built-in of 3.2 or 3.3
+replaces any of them.
+
+**Ansible as it is** (ansible-core 2.21.5, 2026-10-05): PowerShell 7 on
+the Windows machines (`ansible_pwsh_interpreter`), WinRM to them and SSH to
+AlmaLinux, `ansible.windows`, `ansible.posix` and the builtin modules. The
+role's starter template, `templates/xmip.toml.j2`, is deleted: a node with
+no cluster file of its own is given the package's starter, written once in
+`xmip-service --install`.
+
+**What xmip-service gained** (`.src/service`). `--account <account>` with
+`--install`, the packages' `XMIP_ACCOUNT` (the MSI, the `.rpm` and `.deb`,
+the macOS `.pkg`): the service runs as that account, which is given read on
+the node's configuration and its key's folder and write on its data and
+logs (`account.rs`; on Windows after the registration, when a virtual
+account exists, and before the start); without it the platform's default,
+as before. `--cluster` with `--slice`, and with `--install` where the
+machine's `xmip.toml` names no cluster: the one file names none
+(`configure::slice_named`). `--listening`: the ports a node's configuration
+listens on, one line each, `<port>/tcp <listener>` — its operate listener,
+and each started Receive Location whose address names a port
+(`listening.rs`); a transport does not yet say which protocol it listens
+on, so a UDP one is said as TCP.
+
+**A node's certificate from the cluster's own authority.** `xmip-service`
+starts no provisioner yet (open problem 27), so a node is issued its key
+and certificate on the operator's machine, before it is installed:
+`provision::node::issue_into` keeps the cluster's authority in a folder, or
+makes it there, and writes `node.pem` — server and client authentication,
+for the node's name and every name it is reached by — `node.key` and
+`anchors.pem` into the folder the templates ship, the files the cluster
+file's `[operate]` names (`xmip_operate.h` section 22,
+`xmip_node_issue_v1`; `New-XmipCertificate -Node`, `xmip-cli certificate
+--node`). Ninety days is the assistant's draft of 2026-10-21, for the owner
+to strike. The tester's operator certificate is signed by the same
+authority, as section 19 signs any. The operation GUIs issue none: a node's
+certificate is made where the authority is kept.
+
+**Validated, never applied.** The documents are read and evaluated by DSC
+with every resource replaced by an echo, and the Xmip resources' steps are
+held with the machine's commands stubbed (`test/MsdscEnvironment.Test.ps1`);
+the playbook passes `ansible-playbook --syntax-check` and `--list-tasks` in
+the WSL AlmaLinux guest. Neither has been run against a machine.
+
+Which account a node runs as was open (the amendment of 2026-10-13); the
+virtual account and `xmip` are the assistant's draft of 2026-10-21, for the
+owner to strike. DSC and Ansible are optional prerequisites, for test level
+2 alone (`prerequisite.toml`).

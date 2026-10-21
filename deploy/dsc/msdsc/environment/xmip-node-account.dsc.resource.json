@@ -1,0 +1,84 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Node/Account",
+  "version": "0.1.0",
+  "description": "The node's service account on Linux: a system account, made where it is not there.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Account",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Account",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "Account",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The account.",
+          "type": "string"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

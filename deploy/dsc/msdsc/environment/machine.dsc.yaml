@@ -1,0 +1,61 @@
+# One node machine of an environment, from the machine DSC runs on:
+# node.dsc.yaml applied there by Xmip.Environment/Machine, given the
+# cluster's xmip.toml, the node's certificate, key and anchors from the
+# cluster's own authority, and the estate's package for its family. An
+# environment document includes it once for each node; README.md says how.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.2
+parameters:
+  common:
+    type: object
+    description: >-
+      What every node shares: cluster, configuration (the cluster's
+      xmip.toml), identity (a folder per node of what New-XmipCertificate
+      -Node wrote), credentialPath, keyPath and linuxAccount.
+  packages:
+    type: object
+    description: Per family, the package's path and the file name it is given there.
+  layout:
+    type: object
+    description: Per family, where the package puts the node.
+  accounts:
+    type: object
+    description: >-
+      Per family, the account a node's service runs as: its name, and
+      ofNode where the node's name follows it.
+  node:
+    type: string
+    description: The node, as the cluster's xmip.toml declares it.
+  machine:
+    type: object
+    description: The machine the node runs on, from the mapping in the parameters.
+resources:
+  - name: Node machine
+    type: Xmip.Environment/Machine
+    requireVersion: ^0.1
+    properties:
+      name: "[parameters('machine').name]"
+      address: "[parameters('machine').address]"
+      family: "[parameters('machine').family]"
+      login: "[parameters('common').linuxAccount]"
+      credentialPath: "[parameters('common').credentialPath]"
+      keyPath: "[parameters('common').keyPath]"
+      document: node.dsc.yaml
+      files: >-
+        [createObject(
+        'xmip.toml', parameters('common').configuration,
+        'node.pem', path(parameters('common').identity, parameters('node'), 'node.pem'),
+        'node.key', path(parameters('common').identity, parameters('node'), 'node.key'),
+        'anchors.pem', path(parameters('common').identity, parameters('node'), 'anchors.pem'),
+        parameters('packages')[parameters('machine').family].file,
+        parameters('packages')[parameters('machine').family].path)]
+      parameters: >-
+        [createObject(
+        'family', parameters('machine').family,
+        'node', parameters('node'),
+        'cluster', parameters('common').cluster,
+        'account', concat(parameters('accounts')[parameters('machine').family].name,
+        if(parameters('accounts')[parameters('machine').family].ofNode, parameters('node'), '')),
+        'package', parameters('packages')[parameters('machine').family].file,
+        'layout', parameters('layout')[parameters('machine').family])]

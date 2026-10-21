@@ -1,0 +1,25 @@
+---
+# A changed slice or certificate takes effect when the node starts again,
+# never mid-flight (module/platform/configure/doc/cluster-configuration.md,
+# Activation).
+
+- name: Restart the Xmip node
+  ansible.windows.win_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: restarted
+  when: ansible_os_family == 'Windows'
+  listen: Restart the Xmip node
+
+- name: Restart the Xmip node on Linux
+  ansible.builtin.systemd_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: restarted
+  when: ansible_os_family != 'Windows'
+  become: true
+  listen: Restart the Xmip node
+
+- name: Reload the firewall
+  ansible.builtin.command:
+    argv: [firewall-cmd, --reload]
+  changed_when: true
+  become: true

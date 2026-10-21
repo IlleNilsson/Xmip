@@ -144,10 +144,10 @@ function Start-XmipTest {
             roll. Anything a file cannot be called is REFUSED before a process
             starts.
 
-            Omit it and the run takes the test cluster's xmip.toml as it is —
-            the file XMIP_TEST_CLUSTER names, else test/xmip.toml — every node
-            under its [nodes] one process, declaring the roles its roles key
-            says. A role the message path needs and no node declares is
+            Omit it and the run takes every node of the Playground's own
+            cluster file, test/core/playground/configuration/xmip.toml, one
+            process each, declaring the roles its roles key says. A role the
+            message path needs and no node declares is
             REFUSED before anything starts, as for named nodes. The run record
             and the [run] table carry the nodes and the cluster file.
 
@@ -161,9 +161,9 @@ function Start-XmipTest {
             operational, monitoring and development serve no stage. Lowercase
             exactly, by comma or plus; any other word ('Sending' and the old
             'receive' too), or a node -Nodes does not name, is REFUSED before
-            anything starts. A node the table does not name declares nothing.
-            This is the only way a named node gets a role; omit -Nodes instead
-            and the test cluster's xmip.toml declares them.
+            anything starts. A node the table does not name declares what the
+            Playground's own cluster file declares for it, and nothing where
+            that file does not declare it.
             ADR-0056 names two further kinds of capability, authentication and
             runtime, which the Playground does not model.
 
@@ -182,6 +182,11 @@ function Start-XmipTest {
             anything to Xmip. Two rolls with two names are two clusters side
             by side, each with its own web GUI:
             Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
+
+        .PARAMETER Certificate
+            operator.pem, operator.key and anchors.pem's folder: a -Cluster or
+            -Nodes name that resolves is asked with it, real if it answers as
+            that node, else REFUSED; one that does not resolve is spawned.
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
@@ -208,8 +213,8 @@ function Start-XmipTest {
             @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 
         .EXAMPLE
-            # Omitted -Nodes: the test cluster's nodes, as test/xmip.toml
-            # declares them ([nodes.R1] roles = "receiving", and so on).
+            # Omitted -Nodes: the Playground's own cluster file's nodes
+            # ([nodes.R1] roles = "receiving", and so on).
             Start-XmipTest -Suite Core.Playground -Cluster C1
 
         .EXAMPLE
@@ -323,6 +328,9 @@ function Start-XmipTest {
         [string] $Cluster,
 
         [Parameter()]
+        [string] $Certificate,
+
+        [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
         [string] $LoadBytes,
 
@@ -373,21 +381,12 @@ function Start-XmipTest {
     # The Playground's own work: checking the choice, then building, spawning
     # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
     # still decide there, and a parameter nobody gave is not handed on.
-    [hashtable] $playground = @{
-        Caller = $PSCmdlet
-        Bound  = $PSBoundParameters
-        Suite = $Suite
-        Stress = $Stress
-        Test = $Test
-        Rounds = $Rounds
-        Duration = $Duration
-        TimeFactor = $TimeFactor
-        Nodes = $Nodes
-        NodeRole = $NodeRole
-        OnlineNodes = $OnlineNodes
-        Cluster = $Cluster
-        Path = $Path
-        PassThru = $PassThru
+    [hashtable] $playground = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
+    [string[]] $handed = @('Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor',
+        'Nodes', 'NodeRole', 'OnlineNodes', 'Cluster', 'Path', 'PassThru')
+
+    foreach ($name in $handed) {
+        $playground[$name] = Get-Variable -Name $name -ValueOnly
     }
 
     $resolved = Resolve-XmipPlaygroundChoice -Choice $playground

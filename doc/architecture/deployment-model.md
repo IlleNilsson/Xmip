@@ -708,7 +708,9 @@ configuration through two technologies, **Microsoft DSC v3** and
 **Ansible**. Both are operating-system agnostic (the owner, 2026-10-02:
 *Microsoft DSC 3+ as Ansible is OS agnostic, just different technologies*):
 each deploys a node on Windows, Linux and macOS alike, and a site chooses
-the one its IT runs.
+the one its IT runs. Neither is the other's fallback (the owner,
+2026-10-21: *dotnet is cross platform, so is Blazor, MAUI and DSC. We keep
+Ansible and other tech for familiarity and support for the project.*).
 
 Desired state tooling installs the package and brings a node to its configured
 state: directory layout, persistence and management store paths, module folder,
@@ -732,18 +734,37 @@ registered and running where services are supported. A package gets a node
 there with `xmip-service --install` (section 6), and desired state that
 installs a package inherits it.
 
-Each technology has its folder under `deploy/dsc`: `ansible` and `msdsc`.
-The Ansible role `xmip_node` is written; Microsoft DSC v3's node is not (its
-first document was deleted on the owner's word, 2026-10-09). Desired state places
-the cluster's `xmip.toml` on the node — the site's own, or a starter written
-from a few variables — and writes the node's configuration
-as `xmip-service --configuration <xmip.toml> --node <name> --slice` prints
-it: `xmip-core-configure`'s one slicing
-(`module/platform/configure/doc/cluster-configuration.md`), never one in
-YAML or a template. The node reads the document `xmip-core-configure` reads
-(`module/platform/configure/doc/node-configuration.md`). The estate root's
-`cargo test --test deploy` renders the role, slices it and reads the slice
-as `xmip-service` does.
+Each technology has its folder under `deploy/dsc`: `msdsc` and `ansible`,
+and each holds the same environment templates — Microsoft DSC v3's
+`deploy/dsc/msdsc/environment`, Ansible's playbook `environment.yml` with
+the roles `xmip_name` and `xmip_node` — each for Windows and AlmaLinux alike
+(ADR-0015, amendment 2026-10-21). Given a cluster's `xmip.toml` and the
+machines, they give the DNS server the names of the cluster and its nodes,
+and each node machine its account, the cluster's `xmip.toml`, its
+certificate, key and anchors from the cluster's own authority — issued on
+the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
+section 22, since a node starts no provisioner yet — the estate's package,
+whose `xmip-service --install --account` registers and starts the service as
+the node's account, its slice as `xmip-service --slice --cluster` prints it,
+a firewall opening for exactly the ports `xmip-service --listening` says,
+and its service running. Which node runs on which machine is the templates'
+parameters, never the cluster's file. Nothing in YAML or a template reads,
+slices or writes the configuration: `xmip-core-configure`'s one slicing does
+(`module/platform/configure/doc/cluster-configuration.md`), and the node
+reads the document `xmip-core-configure` reads
+(`module/platform/configure/doc/node-configuration.md`).
+
+**A cluster's file says nothing of where it runs** (the owner, 2026-10-21:
+*one TOML file that can be run for tests regardless of node faking or
+actual nodes*; ADR-0028, amendment 2026-10-21). Its nodes, their roles, the
+Storage nodes each reaches, by name, the operate listener on the wildcard
+address, and its certificate's paths relative to the configuration — and no
+cluster name, no machine's address, no absolute path. The environment names
+the cluster: the Playground's run, or `--cluster` on a machine, which the
+slice writes where the file names none (`configure::slice_named`). The
+Playground's own file is such a file, and the example environment runs it;
+the estate root's `cargo test --test deploy` slices it for every node it
+declares and reads each slice as `xmip-service` does.
 
 **The machines an environment runs on are templates too, one per
 virtualization technology** (the owner, 2026-10-09: *template for virtual
@@ -754,8 +775,8 @@ each machine a generation 2 VM that installs its operating system unattended
 from the publisher's ISO (*the lab shall install from the ISO's*), with a
 generated `autounattend.xml` for Windows or kickstart for AlmaLinux, built
 from HyperVDsc's resources and three scripts where no resource exists. What
-runs inside a machine once installed belongs to the environment templates,
-not yet written.
+runs inside a machine once installed belongs to the environment templates
+above.
 
 ## 9. Recovery
 

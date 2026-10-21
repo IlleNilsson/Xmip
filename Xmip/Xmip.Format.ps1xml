@@ -34,6 +34,7 @@
           <TableColumnHeader><Label>Tests</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Nodes</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Online</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Real</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Worst or tally</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -49,6 +50,7 @@
               <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Nodes) { '' } elseif ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.OnlineNodes) { '' } elseif ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.RealNodes -or $_.RealNodes.Count -eq 0) { '' } else { $_.RealNodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'build') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

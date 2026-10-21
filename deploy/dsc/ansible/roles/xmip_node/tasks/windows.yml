@@ -1,0 +1,132 @@
+---
+# The node on a Windows machine, over PowerShell 7 (ansible_pwsh_interpreter).
+# Its account is a virtual account, NT SERVICE\xmip-<node>, which exists with
+# its service: nothing makes it, and `xmip-service --install --account`
+# gives it what it reads.
+
+- name: The config and staging folders
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ xmip_configuration }}"
+    - "{{ xmip_staging }}"
+
+- name: The cluster's xmip.toml
+  ansible.windows.win_copy:
+    src: "{{ xmip_cluster_configuration }}"
+    dest: "{{ xmip_configuration }}\\xmip.toml"
+  when: xmip_cluster_configuration | length > 0
+
+- name: The certificate's folder, inheriting nothing
+  ansible.windows.win_file:
+    path: "{{ xmip_configuration }}\\tls"
+    state: directory
+  when: xmip_identity | length > 0
+
+- name: The certificate's folder readable by SYSTEM and the administrators alone
+  ansible.windows.win_acl_inheritance:
+    path: "{{ xmip_configuration }}\\tls"
+    state: absent
+    reorganize: false
+  when: xmip_identity | length > 0
+
+- name: SYSTEM and the administrators hold the certificate's folder
+  ansible.windows.win_acl:
+    path: "{{ xmip_configuration }}\\tls"
+    user: "{{ item }}"
+    rights: FullControl
+    type: allow
+    inherit: ContainerInherit, ObjectInherit
+  loop:
+    - SYSTEM
+    - Administrators
+  when: xmip_identity | length > 0
+
+- name: The node's certificate, key and anchors from the cluster's authority
+  ansible.windows.win_copy:
+    src: "{{ xmip_identity }}/{{ item }}"
+    dest: "{{ xmip_configuration }}\\tls\\{{ item }}"
+  loop:
+    - node.pem
+    - node.key
+    - anchors.pem
+  when: xmip_identity | length > 0
+  notify: Restart the Xmip node
+
+- name: The package, copied to the machine
+  ansible.windows.win_copy:
+    src: "{{ xmip_package }}"
+    dest: "{{ xmip_staging }}\\xmip.msi"
+
+- name: The package installed, which runs xmip-service --install
+  ansible.windows.win_package:
+    path: "{{ xmip_staging }}\\xmip.msi"
+    arguments:
+      - XMIP_NODE={{ xmip_node_name }}
+      - XMIP_CLUSTER={{ xmip_cluster_name }}
+      - XMIP_ACCOUNT={{ xmip_account }}
+    creates_service: "xmip-{{ xmip_node_name }}"
+    state: present
+
+- name: The node's configuration as xmip-service slices it
+  ansible.windows.win_command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}\\xmip.toml"
+      - --node
+      - "{{ xmip_node_name }}"
+      - --cluster
+      - "{{ xmip_cluster_name }}"
+      - --slice
+  register: xmip_slice
+  changed_when: false
+
+- name: The node's configuration where it reads it
+  ansible.windows.win_copy:
+    content: "{{ xmip_slice.stdout }}"
+    dest: "{{ xmip_configuration }}\\xmip-node.toml"
+  notify: Restart the Xmip node
+
+- name: The ports the node's configuration listens on
+  ansible.windows.win_command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}\\xmip-node.toml"
+      - --listening
+  register: xmip_listening
+  changed_when: false
+
+- name: An opening for each, named for the node
+  ansible.windows.win_firewall_rule:
+    name: "xmip-{{ xmip_node_name }}-{{ item | replace('/', '-') }}"
+    localport: "{{ item.split('/')[0] }}"
+    protocol: "{{ item.split('/')[1] }}"
+    direction: in
+    action: allow
+    state: present
+    enabled: true
+  loop: "{{ xmip_listening.stdout_lines | map('split') | map('first') | list }}"
+
+- name: No opening the node's configuration no longer listens on
+  ansible.windows.win_powershell:
+    script: |
+      param([string] $Node, [string[]] $Wanted)
+      $Ansible.Changed = $false
+      foreach ($rule in Get-NetFirewallRule -Name "xmip-$Node-*" -ErrorAction SilentlyContinue) {
+          if ($rule.Name -notin $Wanted) {
+              Remove-NetFirewallRule -Name $rule.Name
+              $Ansible.Changed = $true
+          }
+      }
+    parameters:
+      Node: "{{ xmip_node_name }}"
+      Wanted: "{{ xmip_listening.stdout_lines | map('split') | map('first') | map('replace', '/', '-') | map('regex_replace', '^', 'xmip-' ~ xmip_node_name ~ '-') | list }}"
+
+- name: The node's service running, started with the machine
+  ansible.windows.win_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: started
+    start_mode: auto

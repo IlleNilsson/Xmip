@@ -1,0 +1,107 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Environment/Name",
+  "version": "0.1.0",
+  "description": "On the environment's DNS server, an A record for the cluster and for each node, holding exactly the addresses given.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Name",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Name",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./environment.resource.ps1",
+      "-Kind",
+      "Name",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "zone",
+        "records"
+      ],
+      "properties": {
+        "zone": {
+          "type": "string",
+          "description": "The DNS domain the names are in."
+        },
+        "records": {
+          "items": {
+            "properties": {
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object",
+            "required": [
+              "name",
+              "addresses"
+            ]
+          },
+          "description": "Each name and its addresses.",
+          "type": "array"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

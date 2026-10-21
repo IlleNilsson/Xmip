@@ -4,8 +4,10 @@
 //! ```text
 //! xmip-service --configuration <path> [--console] [--purpose test|runtime]
 //! xmip-service --configuration <path> --definition
-//! xmip-service --configuration <cluster xmip.toml> --node <name> --slice
-//! xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name> --install
+//! xmip-service --configuration <cluster xmip.toml> --node <name> [--cluster <name>] --slice
+//! xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name>
+//!     [--account <account>] --install
+//! xmip-service --configuration <path> --listening
 //! xmip-service --configuration <path> --uninstall
 //! ```
 //!
@@ -35,12 +37,18 @@
 //! `--slice` prints the node `--node` names its configuration, sliced from
 //! the cluster's `xmip.toml` at `--configuration` by `xmip-core-configure`'s
 //! one slicing (`slice.rs`; ADR-0031, amendment 2026-10-03): desired state
-//! writes each node what it prints.
+//! writes each node what it prints. `--cluster` names the cluster a file
+//! that names none runs as (ADR-0028, amendment 2026-10-21).
+//!
+//! `--listening` prints each port the node's configuration listens on, which
+//! an environment opens its firewall for (`listening.rs`; ADR-0015,
+//! amendment 2026-10-21).
 //!
 //! `--install` lays a node out from its cluster's `xmip.toml` — a starter
 //! where there is none, the node's slice beside it, its data and audit
 //! directories — and registers and starts the service `--definition`
-//! prints; `--uninstall` stops and removes the service of the node
+//! prints, as `--account` where it is given (`account.rs`); `--uninstall`
+//! stops and removes the service of the node
 //! configured at `<path>` and deletes nothing
 //! (`install.rs`). Every package runs these two (ADR-0015, amendment
 //! 2026-10-13).
@@ -63,6 +71,7 @@
 //! snapshot among what it says — and audits its start, its stop, every
 //! order and every failure (ADR-0062).
 
+mod account;
 mod arguments;
 mod built;
 mod console;
@@ -70,6 +79,7 @@ mod console;
 mod control_manager;
 mod definition;
 mod install;
+mod listening;
 mod orders;
 mod publication;
 mod readiness;
@@ -110,6 +120,7 @@ fn main() -> ExitCode {
         Mode::Definition => definition::print(&audit, &arguments),
         Mode::Slice => slice::print(&audit, &arguments),
         Mode::Install => install::install(&audit, &arguments),
+        Mode::Listening => listening::print(&audit, &arguments),
         Mode::Uninstall => install::uninstall(&audit, &arguments),
         Mode::Console => console::run(&program, &audit, &arguments),
         #[cfg(windows)]

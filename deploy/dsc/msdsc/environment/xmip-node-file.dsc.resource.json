@@ -1,0 +1,97 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "Xmip.Node/File",
+  "version": "0.1.0",
+  "description": "A file in place with its source's bytes; private where asked, readable by the node alone.",
+  "tags": [
+    "Xmip"
+  ],
+  "get": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "File",
+      "-Operation",
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "File",
+      "-Operation",
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "pwsh",
+    "args": [
+      "-NoLogo",
+      "-NonInteractive",
+      "-NoProfile",
+      "-File",
+      "./node.resource.ps1",
+      "-Kind",
+      "File",
+      "-Operation",
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "exitCodes": {
+    "0": "Success",
+    "1": "Error"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "path",
+        "source"
+      ],
+      "properties": {
+        "path": {
+          "description": "Where the file is.",
+          "type": "string"
+        },
+        "source": {
+          "description": "The file it holds the bytes of.",
+          "type": "string"
+        },
+        "private": {
+          "description": "Readable by the node alone.",
+          "type": "boolean"
+        },
+        "owner": {
+          "description": "On Linux, the account that owns a private file.",
+          "type": "string"
+        },
+        "_exist": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "_inDesiredState": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

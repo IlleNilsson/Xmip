@@ -33,7 +33,7 @@ function Get-XmipPlaygroundChoice {
     # -Nodes and -NodeRole reach the roll as the run's cluster file
     # (Write-XmipTestCluster), never as variables of their own.
     [string[]] $optional = @(
-        'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden'
+        'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden', 'Certificate'
     )
 
     foreach ($name in $optional) {
@@ -239,7 +239,7 @@ function Start-XmipPlaygroundRoll {
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
     [string] $with = if (-not $boundNodes) {
-        ", the nodes of $(Get-XmipTestClusterPath)"
+        ", the nodes of $((Get-XmipPlaygroundLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
@@ -272,15 +272,27 @@ function Start-XmipPlaygroundRoll {
         return
     }
 
-    # The nodes are the cluster's xmip.toml (ADR-0056, amendment 2026-10-03):
-    # named, the run's own file is written from -Cluster, -Nodes and -NodeRole;
-    # omitted, the test cluster's is taken as it is. XMIP_TEST_CLUSTER names it
-    # to the roll, and the run record says the nodes it declares.
-    [string] $clusterFile = if ($boundNodes) {
-        Write-XmipTestCluster -Cluster $Cluster -Nodes $Nodes -NodeRole $NodeRole -Path $Path
+    # The nodes are the cluster's xmip.toml (ADR-0056, amendment 2026-10-03),
+    # the Playground's own, one file for one computer and for machines of
+    # their own (ADR-0028, amendment 2026-10-21): the run's file is written
+    # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
+    # or, where it says none, the Playground's file declares; omitted, its
+    # every node. XMIP_TEST_CLUSTER names it to the roll, and the run record
+    # says the nodes it declares. Only typed names are resolved for a real
+    # node, so they alone are named to the roll.
+    $declared = Read-XmipPlaygroundCluster
+    [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
+    [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
+    [hashtable] $written = @{
+        Cluster  = $Cluster
+        Nodes    = $typed
+        NodeRole = Join-XmipNodeRole @joined
+        Path     = $Path
     }
-    else {
-        Get-XmipTestClusterPath
+    [string] $clusterFile = Write-XmipTestCluster @written
+
+    if ($boundNodes) {
+        $choice.Named = @($Nodes)
     }
 
     $configured = Read-XmipTestCluster -Path $clusterFile

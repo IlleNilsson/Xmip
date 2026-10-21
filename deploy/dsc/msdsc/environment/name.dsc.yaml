@@ -1,0 +1,27 @@
+# The names of a cluster and its nodes, on the environment's DNS server: an A
+# record for the cluster holding every node machine's address, and one for
+# each node holding its machine's. A node finds another by its name, and the
+# Playground uses a node whose name resolves (ADR-0028, amendment
+# 2026-10-21). Applied on the DNS server by Xmip.Environment/Machine
+# (environment.example.dsc.yaml); README.md says how.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.2
+  securityContext: elevated
+parameters:
+  staging:
+    type: string
+    description: Where Xmip.Environment/Machine copied this folder; nothing is read from it.
+  zone:
+    type: string
+    description: The DNS domain the names are in.
+  records:
+    type: array
+    description: Each name, the cluster's and each node's, with its addresses.
+resources:
+  - name: Names
+    type: Xmip.Environment/Name
+    requireVersion: ^0.1
+    properties:
+      zone: "[parameters('zone')]"
+      records: "[parameters('records')]"

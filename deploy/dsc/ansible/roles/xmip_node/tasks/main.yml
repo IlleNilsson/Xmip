@@ -1,54 +1,28 @@
 ---
-- name: Create Xmip directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-  loop:
-    - "{{ xmip_install_root }}"
-    - "{{ xmip_install_root }}/bin"
-    - "{{ xmip_install_root }}/config"
-    - "{{ xmip_install_root }}/modules"
-    - "{{ xmip_install_root }}/data"
-    - "{{ xmip_install_root }}/data/persistence-rocksdb"
-    - "{{ xmip_install_root }}/logs"
+# One Xmip node on its own machine, Windows or AlmaLinux alike, in the same
+# steps: its account, the cluster's xmip.toml, its certificate from the
+# cluster's own authority, the estate's package (whose `xmip-service
+# --install` lays the node out, slices it and registers and starts its
+# service), its slice kept as `xmip-service --slice` prints it, a firewall
+# opening for exactly the ports `xmip-service --listening` says its
+# configuration listens on, and its service running. How each step is done
+# on each system is windows.yml's and linux.yml's; every rule about the
+# node is xmip-service's, which the role asks.
 
-- name: Create Xmip management database placeholder
-  ansible.builtin.file:
-    path: "{{ xmip_install_root }}/data/management.sqlite"
-    state: touch
-    mode: '0644'
+- name: Refuse a node, a cluster or a package left unnamed
+  ansible.builtin.assert:
+    that:
+      - xmip_node_name | length > 0
+      - xmip_cluster_name | length > 0
+      - xmip_package | length > 0
+    fail_msg: >-
+      REFUSED: xmip_node_name, xmip_cluster_name and xmip_package name the
+      node this host is, its cluster and the package it is installed from.
 
-- name: Write the cluster's xmip.toml, the starter
-  ansible.builtin.template:
-    src: xmip.toml.j2
-    dest: "{{ xmip_install_root }}/config/xmip.toml"
-    mode: '0644'
-  when: xmip_cluster_configuration | length == 0
+- name: The node on a Windows machine
+  ansible.builtin.import_tasks: windows.yml
+  when: ansible_os_family == 'Windows'
 
-- name: Write the cluster's xmip.toml, the cluster's own
-  ansible.builtin.copy:
-    src: "{{ xmip_cluster_configuration }}"
-    dest: "{{ xmip_install_root }}/config/xmip.toml"
-    mode: '0644'
-  when: xmip_cluster_configuration | length > 0
-
-# The one slicing is xmip-core-configure's, reached through the program the
-# node runs; nothing here takes the cluster's file apart.
-- name: Slice the node's configuration from the cluster's xmip.toml
-  ansible.builtin.command:
-    argv:
-      - "{{ xmip_install_root }}/bin/xmip-service"
-      - --configuration
-      - "{{ xmip_install_root }}/config/xmip.toml"
-      - --node
-      - "{{ xmip_node_name }}"
-      - --slice
-  register: xmip_slice
-  changed_when: false
-
-- name: Write the node's configuration
-  ansible.builtin.copy:
-    content: "{{ xmip_slice.stdout }}\n"
-    dest: "{{ xmip_install_root }}/config/xmip-node.toml"
-    mode: '0644'
+- name: The node on an AlmaLinux machine
+  ansible.builtin.import_tasks: linux.yml
+  when: ansible_os_family != 'Windows'

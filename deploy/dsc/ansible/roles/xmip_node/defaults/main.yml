@@ -1,25 +1,38 @@
 ---
-xmip_install_root: /opt/xmip
+# One Xmip node on its own machine, Windows or AlmaLinux alike (README.md).
+#
+# The node this host is: its key under [nodes] in the cluster's xmip.toml.
+xmip_node_name: ""
+# The cluster's name. The cluster's xmip.toml names none: where it runs is
+# the environment's, so `xmip-service --install --cluster` and `--slice
+# --cluster` give it (ADR-0028, amendment 2026-10-21).
+xmip_cluster_name: ""
 # The cluster's xmip.toml on the controller (ADR-0031, amendment
 # 2026-10-03): one file for the whole cluster, each node's configuration
-# sliced from it on the node by `xmip-service --slice`. Left empty, the role
-# writes its starter, templates/xmip.toml.j2, from the three below.
+# sliced from it on the node by `xmip-service --slice`. Left empty, the
+# package's `xmip-service --install` writes its starter, one node keeping
+# Xmip Storage itself.
 xmip_cluster_configuration: ""
-# The node this host is: its key under [nodes] in the cluster's file.
-xmip_node_name: local-xmip-node
-# [service] in the starter cluster file.
-xmip_service_name: local-xmip-service
-xmip_cluster_name: local-xmip-cluster
-# ADR-0045: offline unless said. Set true per node that may reach out.
-xmip_online: false
+# A folder on the controller holding what New-XmipCertificate -Node wrote
+# for this node under the cluster's own authority: node.pem, node.key and
+# anchors.pem. Left empty, the node is given no certificate.
+xmip_identity: ""
+# The estate's package on the controller (deploy/package): the MSI for a
+# Windows machine, the .rpm for an AlmaLinux one.
+xmip_package: ""
+# The account the node's service runs as: a virtual account of its own on
+# Windows, a system account on Linux. The assistant's draft of 2026-10-21,
+# for the owner to strike (ADR-0015, amendment 2026-10-21).
+xmip_account: "{{ ('NT SERVICE\\xmip-' ~ xmip_node_name) if ansible_os_family == 'Windows' else 'xmip' }}"
+# Where the package puts the node: xmip-service, and its config folder.
+xmip_program: "{{ 'C:\\Program Files\\Xmip\\bin\\xmip-service.exe' if ansible_os_family == 'Windows' else '/opt/xmip/bin/xmip-service' }}"
+xmip_configuration: "{{ 'C:\\ProgramData\\Xmip\\config' if ansible_os_family == 'Windows' else '/opt/xmip/config' }}"
+# Where the package and the certificate are copied before they are used.
+xmip_staging: "{{ 'C:\\ProgramData\\Xmip\\environment' if ansible_os_family == 'Windows' else '/var/tmp/xmip-environment' }}"
 
-# TLS is a build feature, not an entry here: a package built without `tls`
-# refuses an https endpoint rather than sending it in the clear
-# (deployment-model.md section 2, ADR-0033).
-#
-# The site this node is built from (ADR-0015, amendment 2026-10-01):
+# The site the package is built from (ADR-0015, amendment 2026-10-01):
 # Build-XmipService -Site builds its xmip-service with what the site's
-# target, roles and chosen technologies need. The node configuration the template
-# writes names no technology: the node loads what its configuration names,
-# from what that build linked (ADR-0025, amendment 2026-09-28).
-xmip_site: deploy/site/b2b-exchange.toml
+# target, roles and chosen technologies need. The node configuration names
+# no technology: the node loads what its configuration names, from what
+# that build linked (ADR-0025, amendment 2026-09-28).
+xmip_site: deploy/site/personal-computer.toml

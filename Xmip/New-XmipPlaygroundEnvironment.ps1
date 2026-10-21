@@ -252,6 +252,14 @@ function New-XmipPlaygroundEnvironment {
         [Parameter()]
         [switch] $Hidden,
 
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Named,
+
+        [Parameter()]
+        [string] $Certificate,
+
         [Parameter(Mandatory)]
         [string] $Area
     )
@@ -279,7 +287,8 @@ function New-XmipPlaygroundEnvironment {
 
     # The nodes are the cluster's xmip.toml, each one process declaring the
     # roles its roles key says (ADR-0056, amendment 2026-10-03): the run's
-    # own, written from -Nodes and -NodeRole, or the test cluster's. The
+    # own, written from -Cluster and the nodes -Nodes or the Playground's own
+    # cluster file names (Write-XmipTestCluster). The
     # variable is the one every test fixture reads.
     # With them, which may assume the internet (ADR-0045), by name: none
     # named is none online, never every node's XMIP_ONLINE.
@@ -318,6 +327,20 @@ function New-XmipPlaygroundEnvironment {
     # amendment 2026-09-30). Unset, the run is shown, whatever it is called.
     if ($Hidden) {
         $environment.XMIP_PLAYGROUND_HIDDEN = 'true'
+    }
+
+    # The nodes the operator typed, the only node names the roll resolves to
+    # find a real node, and the operator certificate it asks one with
+    # (ADR-0028, amendment 2026-10-21). Unset, no name is resolved but the
+    # cluster's, and a resolving one is refused for want of a certificate.
+    [string[]] $typed = @($Named | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
+    if ($typed.Count -gt 0) {
+        $environment.XMIP_PLAYGROUND_NAMED = $typed -join ','
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Certificate)) {
+        $environment.XMIP_PLAYGROUND_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
     }
 
     return $environment

@@ -14,11 +14,15 @@
 //!    local operate endpoint needs no line, for it always starts, named
 //!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13);
 //! 2. slices the node's configuration, `xmip-node.toml` beside it, where
-//!    there is none — `xmip-core-configure`'s one slicing;
+//!    there is none — `xmip-core-configure`'s one slicing, as the cluster
+//!    `--cluster` names where the cluster's file names none (ADR-0028,
+//!    amendment 2026-10-21);
 //! 3. makes the layout's `modules` and `logs` beside `config`, the node's
 //!    data directory and the audit directory under it (ADR-0015 clause 10);
 //! 4. registers the node's Xmip Service — `definition.rs`'s, which
-//!    `--definition` prints — to start with the machine, and starts it.
+//!    `--definition` prints — to start with the machine, as the account
+//!    `--account` names where it is given, which is given what the node
+//!    reads and writes (`account.rs`), and starts it.
 //!
 //! A configuration already there is the operator's and is never written
 //! over. `--uninstall`, with the node's configuration at `--configuration`
@@ -37,6 +41,7 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::ExecutionPhase;
 use xmip_runtime::registration::{REFUSED, ServiceDefinition, node_service_name};
 
+use crate::account::{self, Given};
 use crate::arguments::Arguments;
 use crate::definition::{self, text};
 use crate::run;
@@ -93,7 +98,12 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
     if !node_file.exists() {
         let source =
             std::fs::read_to_string(&cluster_file).map_err(|error| said(&cluster_file, &error))?;
-        write(&node_file, &xmip_configure::slice(&source, node)?)?;
+        let sliced = if xmip_configure::cluster::cluster_name(&source)?.is_some() {
+            xmip_configure::slice(&source, node)?
+        } else {
+            xmip_configure::slice_named(&source, node, cluster)?
+        };
+        write(&node_file, &sliced)?;
     }
 
     if let Some(root) = directory.parent() {
@@ -102,13 +112,18 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
             std::fs::create_dir_all(&folder).map_err(|error| said(&folder, &error))?;
         }
     }
-    let (configured, service) = definition::node_service(&node_file)?;
+    let (configured, mut service) = definition::node_service(&node_file)?;
+    let mut given = Vec::new();
+    if let Some(account) = &arguments.account {
+        service = service.running_as(account);
+        given = account::given(&node_file)?;
+    }
     for (name, value) in &service.environment {
         if name == DIRECTORY_VARIABLE {
             std::fs::create_dir_all(value).map_err(|error| said(Path::new(value), &error))?;
         }
     }
-    register(&service, &configured)?;
+    register(&service, &configured, &given)?;
     Ok(format!(
         "{} registered and started, configured by {}",
         service.name,
@@ -173,7 +188,9 @@ fn said(path: &Path, error: &std::io::Error) -> String {
 
 /// Run `program` with `arguments`; its own words when it fails, unless its
 /// exit code is one of `fine`.
-fn command(program: &str, arguments: &[String], fine: &[i32]) -> Result<(), String> {
+/// Run `program` with `arguments`; an exit code but success and `fine` is
+/// refused with what it said.
+pub fn command(program: &str, arguments: &[String], fine: &[i32]) -> Result<(), String> {
     let output = Command::new(program)
         .args(arguments)
         .output()
@@ -190,10 +207,19 @@ fn command(program: &str, arguments: &[String], fine: &[i32]) -> Result<(), Stri
     ))
 }
 
-/// Register `service`, node `node`'s, with this platform's service manager
-/// and start it.
+/// The account `service` runs as given each of `given`; nothing where it
+/// runs as the platform's default.
+fn give(service: &ServiceDefinition, given: &[Given]) -> Result<(), String> {
+    match &service.service_identity {
+        Some(account) => account::give(account, given),
+        None => Ok(()),
+    }
+}
+
+/// Register `service`, node `node`'s, with this platform's service manager,
+/// give its account what it reads and writes, and start it.
 #[cfg(windows)]
-fn register(service: &ServiceDefinition, node: &str) -> Result<(), String> {
+fn register(service: &ServiceDefinition, node: &str, given: &[Given]) -> Result<(), String> {
     use xmip_runtime::registration::{windows_service_arguments, windows_service_settings};
     use xmip_runtime::service_control::{Act, control};
     // 1073: the service exists already, as on a repair.
@@ -201,11 +227,14 @@ fn register(service: &ServiceDefinition, node: &str) -> Result<(), String> {
     for (program, arguments) in windows_service_settings(service) {
         command(&program, &arguments, &[])?;
     }
+    // A virtual account is there once its service is.
+    give(service, given)?;
     control(Act::Start, node).map(|_| ())
 }
 
 #[cfg(target_os = "linux")]
-fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
+fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
+    give(service, given)?;
     let unit = format!("/etc/systemd/system/{}.service", service.name);
     write(
         Path::new(&unit),
@@ -223,7 +252,8 @@ fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
 }
 
 #[cfg(target_os = "macos")]
-fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
+fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
+    give(service, given)?;
     // The local endpoints' folder first, made now and at every boot.
     let run = format!("/Library/LaunchDaemons/{}.run.plist", service.name);
     write(
@@ -263,7 +293,7 @@ fn register(service: &ServiceDefinition, _: &str) -> Result<(), String> {
 }
 
 #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
-fn register(_: &ServiceDefinition, _: &str) -> Result<(), String> {
+fn register(_: &ServiceDefinition, _: &str, _: &[Given]) -> Result<(), String> {
     Err("this platform has no service manager".to_string())
 }
 

@@ -1,0 +1,68 @@
+# What environment.example.dsc.yaml's machines are given: the Playground's
+# cluster on the Hyper-V example's machines (deploy/dsc/msdsc/hyperv). Copy
+# it to .local-work/environment/environment.parameters.yaml and write in
+# linuxAccount, the account the AlmaLinux machines were installed with; the
+# documents refuse to run without it.
+#
+# The cluster's xmip.toml is the Playground's own, the one file a test runs
+# whether its nodes are simulated or on machines of their own (the owner,
+# 2026-10-21). Which node runs on which machine is here, never in that file:
+# the mapping is the environment's. The nodes the file declares and no
+# machine here carries — R2, S2, O1 and D2 — the Playground simulates.
+parameters:
+  common:
+    template: D:\Repos\Xmip\deploy\dsc\msdsc\environment
+    cluster: C1
+    domain: xmip.test
+    configuration: D:\Repos\Xmip\test\core\playground\configuration\xmip.toml
+    identity: D:\Repos\Xmip\.local-work\environment\identity
+    credentialPath: D:\Repos\Xmip\.local-work\hyperv\credential.xml
+    keyPath: D:\Repos\Xmip\.local-work\hyperv\ssh\xmip
+  # Build-XmipService -Site personal-computer -Package msi, and the .rpm
+  # from the same site (deploy/package/README.md); write the version in.
+  packages:
+    Windows:
+      path: D:\Repos\Xmip\.local-work\package\<version>\xmip-<version>-personal-computer-x64.msi
+      file: xmip.msi
+    Linux:
+      path: D:\Repos\Xmip\.local-work\package\<version>\xmip-<version>-personal-computer-x86_64.rpm
+      file: xmip.rpm
+  layout:
+    Windows:
+      program: C:\Program Files\Xmip\bin\xmip-service.exe
+      configuration: C:\ProgramData\Xmip\config
+    Linux:
+      program: /opt/xmip/bin/xmip-service
+      configuration: /opt/xmip/config
+  accounts:
+    Windows:
+      name: NT SERVICE\xmip-
+      ofNode: true
+    Linux:
+      name: xmip
+      ofNode: false
+  nameServer:
+    name: XMIP-DC01
+    address: 10.77.0.10
+    family: Windows
+  nodes:
+    R1:
+      name: XMIP-IN01
+      address: 10.77.0.61
+      family: Linux
+    S1:
+      name: XMIP-OUT01
+      address: 10.77.0.71
+      family: Linux
+    P1:
+      name: XMIP-APP01
+      address: 10.77.0.51
+      family: Windows
+    L1:
+      name: XMIP-APP02
+      address: 10.77.0.52
+      family: Windows
+    D1:
+      name: XMIP-APP03
+      address: 10.77.0.53
+      family: Windows

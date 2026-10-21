@@ -522,8 +522,10 @@ Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1,
 `-NodeRole` states each node's roles — receiving, processing and sending one
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-Omit `-Nodes` and the run takes the test cluster's `test/xmip.toml` as it is,
-whose `[nodes.R1] roles = "receiving"` and so on cover the whole path. A node
+Omit `-Nodes` and the run takes every node of the Playground's own cluster
+file, `test/core/playground/configuration/xmip.toml`, whose `[nodes.R1]
+roles = "receiving"` and so on cover the whole path; a node you name with no
+`-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
 `Start-XmipTest` says in words before it starts anything. `-OnlineNodes R1`
 records that `R1` may assume a route to the internet and the others may not
@@ -607,6 +609,29 @@ Stop when you are done:
 Stop-XmipTest
 Stop-XmipOperationWeb
 ```
+
+### The same run on machines of their own
+
+Everything above is test level 1: one computer, every node simulated, a
+process the run spawned. At test level 2 the same cluster file runs with
+real nodes — `xmip-service` on machines of their own — and the same
+scenarios (ADR-0028, amendment 2026-10-21). The templates under `deploy/dsc`
+make the machines and put the file's nodes on them, Windows and AlmaLinux
+alike: `deploy/dsc/msdsc/hyperv/README.md` for the virtual machines on
+Hyper-V, then `deploy/dsc/msdsc/environment/README.md`, or
+`deploy/dsc/ansible/README.md` for the same in Ansible, for what runs inside
+them. Then a `-Cluster` or `-Nodes` name that resolves is a real node, asked
+with the operator certificate `-Certificate` names:
+
+```powershell
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, R2, P1, S1, S2, L1, O1, D1, D2 `
+    -Certificate D:\Repos\Xmip\.local-work\environment\tester
+```
+
+A name that answers as its node is real and never spawned; one that does not
+answer is REFUSED by name; one that does not resolve is simulated as at
+level 1. The first lines of the run, its board and `Get-XmipTestStatus` say
+which nodes are real.
 
 ## 7. Where next
 
