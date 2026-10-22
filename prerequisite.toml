@@ -208,25 +208,6 @@ note = "The Android NDK, whose clang links the Rust runtime library for Android 
 present_path = ['%LOCALAPPDATA%\Android\Sdk\ndk\*\toolchains\llvm\prebuilt\windows-x86_64']
 fallback = "https://developer.android.com/ndk/downloads"
 
-[prerequisite.node]
-role = "developer"
-optional = true
-probe = "node --version"
-minimum = "26.0"
-channel = "stable"
-note = "For the VS Code extension's TypeScript shell (ADR-0014, amendment 2026-09-10): npm compiles, lints and tests it under module/core/operation/gui/vscode/extension. The landing gate runs those steps where node is present and says so where it is not (ADR-0052)."
-
-[prerequisite.node.windows]
-winget = "OpenJS.NodeJS"
-elevation = true
-note = "A machine-scope MSI (WiX); winget offers no per-user installer, so the install prompts for elevation."
-
-[prerequisite.node.macos]
-brew = "node"
-
-[prerequisite.node.linux]
-apt = "nodejs"
-
 [prerequisite.typos]
 role = "developer"
 probe = "typos --version"
@@ -467,3 +448,55 @@ writes goes under the Application log's .NET Runtime source and says so in its
 first sentence. Linux and macOS need nothing: the journal, syslog and the
 unified log take an entry from any program.
 """
+
+# ---------------------------------------------------------------------------
+
+# Not a package: a release archive, fetched, verified by its SHA-256 and
+# unpacked under .local-work/tool/<name>/<version> by Install-XmipPrerequisite
+# -Install -IncludeOptional, with no package manager and no Node.js
+# (Install-XmipArchive.ps1). One table per operating system and architecture,
+# as the release names its assets; `executable` is the program inside.
+[archive.typescript]
+role = "developer"
+optional = true
+version = "7.0.2"
+note = """
+TypeScript's native compiler, the Go port, stable since 2026-07-08: tsc, a
+single program with the standard library's declarations beside it, as
+microsoft/typescript-go releases it for each platform
+(https://github.com/microsoft/typescript-go/releases/tag/typescript/v7.0.2).
+Build-XmipService -Extension VsCode compiles the VS Code extension's shell
+with it and packages the VSIX; Node.js is never needed on a developer's
+machine (the owner, 2026-10-22; ADR-0014, amendment 2026-10-22). The shell's
+lint and tests run in its CI alone.
+"""
+
+[archive.typescript.windows-x64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-win32-x64.tgz"
+sha256 = "61fc4e141d2bc687db580e71bbfa63b9c209f0310645d82ca1b457eb3a24fd19"
+executable = "package/lib/tsc.exe"
+
+[archive.typescript.windows-arm64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-win32-arm64.tgz"
+sha256 = "0a73534e6ee50cdbb2a29ac48657ca0ad13cf0f424cf63808e4df7baeb87b8be"
+executable = "package/lib/tsc.exe"
+
+[archive.typescript.linux-x64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-linux-x64.tgz"
+sha256 = "7ecad6f67377e831856367ab062ef394f21506a611405bf8ac0ff039348637d3"
+executable = "package/lib/tsc"
+
+[archive.typescript.linux-arm64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-linux-arm64.tgz"
+sha256 = "c83d931ac9dd7549cde6e71246aa9d6a9812843023df3e277fe3b5dcf41dd0ea"
+executable = "package/lib/tsc"
+
+[archive.typescript.macos-x64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-darwin-x64.tgz"
+sha256 = "eba158cb54050f723d5ff781438f33de5640054440bb4f2bd170cfe9bc2eb551"
+executable = "package/lib/tsc"
+
+[archive.typescript.macos-arm64]
+url = "https://github.com/microsoft/typescript-go/releases/download/typescript/v7.0.2/typescript-darwin-arm64.tgz"
+sha256 = "902e2fe1cf0799198ef902c6b8c310a450fef629a6baba41d45641ef75c04ebd"
+executable = "package/lib/tsc"

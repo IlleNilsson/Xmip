@@ -400,7 +400,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 287575 lines of production
+Where each repository mounts and what it holds: 289442 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -664,7 +664,7 @@ hold no source to count.
 │   │   └── operation/
 │   │       ├── cli                             8706
 │   │       ├── gui                             5053
-│   │       │   └── vscode                      3236
+│   │       │   └── vscode                      3300
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -688,7 +688,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30652  C# 28331 · Rust 2025 · PowerShell 296
+│   │   ├── abi                                30879  C# 28405 · Rust 2178 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -716,13 +716,13 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            29398
+│       ├── runtime                            29430
 │       ├── persist                            12493
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5576
+│       └── configure                           7120
 └── test/
     └── core/
         └── playground                         12404

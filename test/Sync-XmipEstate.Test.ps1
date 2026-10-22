@@ -165,13 +165,19 @@ Describe 'ADR-0021: current platforms only, enforced' {
     It 'keeps every language toolchain but Rust''s optional' {
         # The owner, 2026-10-20: "every language except Rust is optional" for
         # Xmip itself; Java, Python, C and C++ (zig) build only the Event
-        # bindings, Node only the VS Code extension's shell, and each is
-        # verified where it is here and said SKIPPED where it is not.
-        foreach ($name in 'c', 'java', 'python', 'node') {
+        # bindings, TypeScript's native compiler only the VS Code extension's
+        # shell, and each is verified where it is here and said SKIPPED where
+        # it is not. Node.js is no prerequisite at all (2026-10-22).
+        foreach ($name in 'c', 'java', 'python') {
             [string] $because = "$name builds only what uses it, never the core"
 
             $script:Prereq.prerequisite.$name.optional | Should -BeTrue -Because $because
         }
+
+        $script:Prereq.archive.typescript.optional | Should -BeTrue -Because (
+            'TypeScript builds only the extension''s shell')
+        $script:Prereq.prerequisite.Contains('node') | Should -BeFalse -Because (
+            'Node.js is never installed on a developer''s machine; it lives in the CI')
     }
 
     It 'keeps the manifest floor and the #requires floor in step' {
