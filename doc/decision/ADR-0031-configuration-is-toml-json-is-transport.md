@@ -178,9 +178,9 @@ settings are configured*):
   states `interaction` (`composite`, `data-transfer`, `batch-load`) and
   `depth` (`transfer`, `light`, `context`). `[[send_ports]]` gains
   `send_locations` (tried in order), `retry = { attempts, backoff }` on the
-  active Location, `failover` (`next`, `none`), `execution_style`,
-  `order_key` and `on_failure` (`block`, `skip`); a Sequential Send Port
-  without `on_failure` is refused at startup.
+  active Location, `failover` (`next`, `none`), and `correlation_set`,
+  the cluster's set its Journeys pass it by one at a time per key (the
+  amendment of 2026-10-22 below).
 - **A node's configuration.** `[[parties]]` with `name` and `identities`
   (ADR-0019), so `[receive_locations.accept] party = [...]` names them;
   `[retention] default`, overridable per Port; `[audit] default`,
@@ -193,10 +193,9 @@ Built 2026-10-03, the Application's keys: an Xmip Application is a section
 of the cluster's `xmip.toml` (the amendment of 2026-10-03, ADR-0064), and
 `xmip-core-configure` reads its `[[receive_ports]]`, each Receive
 Location's `receive_port`, `interaction` and `depth`, and each Send Port's
-`send_locations`, `retry`, `failover`, `execution_style`, `order_key` and
-`on_failure` (`port.rs`). A Receive Location without its Port, naming one
-the Application does not declare, or without its interaction or depth,
-and a Sequential Send Port without `on_failure`, are problems of the
+`send_locations`, `retry`, `failover` and `correlation_set` (`port.rs`). A
+Receive Location without its Port, naming one the Application does not
+declare, or without its interaction or depth, is a problem of the
 Application, refused at startup phase 3; the execution tree holds the
 Receive Ports a node's bound Receive Locations are at and the Send Ports
 it takes, with their policy. How a Send Port's `send_locations` relate to
@@ -474,3 +473,17 @@ Service learns each node's address from cluster membership — node
 registration in the administration database (`deployment-model.md`,
 *The administration database holds*) — not from `xmip.toml`.
 
+## Amendment, 2026-10-22: correlation sets replace a Send Port's ordering keys
+
+The owner, 2026-10-22: *A default correlation set is its receive location
+name. … I can widen and strangle parallelism at any configurable point.*
+The cluster's `xmip.toml` declares `[[correlation_sets]]` — `name`, `keys`,
+`on_failure` (`block` where it says nothing, or `skip`) — once for the whole
+cluster, and a Receive Location, a Receive Port, a Work Process or a Send
+Port names one by `correlation_set` (ADR-0024 and ADR-0066, amendments of
+this date). The Send Port's `execution_style`, `order_key` and
+`on_failure` and the Work Process's `execution_style` are deleted with every
+use: a Send Port that sends one at a time names a set keyed by `send-port`.
+A set that is not declared, declared twice, with no key or with a key that
+is no key word is refused at validation and as a node starts. A Work
+Process names its compiled flow by `module` and `unit`.

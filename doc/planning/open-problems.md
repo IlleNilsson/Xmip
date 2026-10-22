@@ -1391,6 +1391,30 @@ a defect by the millisecond rule. Proposed: a wait on a queue asked of the
 Storage node, answered as a Publication or a hand-on puts a Journey in it,
 which the sending node's scan waits on instead of its interval; the
 node-to-node sync plane (ADR-0067) is the other way, and decided, not built.
+A Work Process's queue waits on the same scan (ADR-0066, amendment
+2026-10-22): a Journey published for it on another node is taken up at the
+next `WORK_SCAN`.
+
+## 47. Human tasks and waiting on people
+
+The owner, 2026-10-22, of the Work Process's BPMN 2.0 subset: *Human tasks,
+waiting for an email, text or a phone call can wait.* A BPMN `userTask` or
+`manualTask` is refused in words today (`xmip-core-process-bpmn`'s
+`refused.rs`; ADR-0066, amendment 2026-10-22): Xmip runs no human workflow,
+and a Work Process is not one unless that workflow is represented by Xmip
+configuration and runtime state (`runtime-model.md` section 22). Later: what a
+task for a person is in the Ledger, who may complete it and on which surface,
+and how a reply by email, text or phone reaches the waiting Instance — most
+likely a Receive Location whose Messages correlate to it like any other.
+
+Beside it, recorded the same day: **other design formats come later**, each a
+technology behind `process::DesignFormat`. WS-BPEL 2.0 is one. The Open
+Workflow Specification is another only where a technology for it can be built
+that explicitly works offline: its catalogs, `use` resources and endpoints may
+name remote documents, and such a technology resolves locally only and
+refuses a remote reference at design and compile time (the owner,
+2026-10-22: *We can only use standards, code and compiled units that
+explicitly work offline!*).
 
 ---
 

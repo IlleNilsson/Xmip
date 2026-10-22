@@ -592,8 +592,8 @@ again from the queue, its tries begun anew; **Dismiss** writes it
 queue. Each is one hand-on under a claim, audited with who acted, and goes
 through the node's orders as Pause and Replay do. This is not a queue of
 failed Journeys, which *There is no Dismissed queue* above rules out: it is
-the queue the Journey was always in, where a Sequential Send Port's order
-needs it, and a Dismissed Journey leaves it.
+the queue the Journey was always in, where its sequence's order needs it,
+and a Dismissed Journey leaves it.
 
 **Protocol-level deduplication is honored** (clause 4c's second
 consequence): every send hands the transport the Journey's identifier, and
@@ -704,10 +704,9 @@ removed with the entry, as problem 40's index on queue and place is.
   by the one writer in the write that changes them.
 - **A scan reads what is due**: a Send Port that is not Sequential reads
   that part a page at a time, in the order it fell due, and stops where the
-  Send pool is full. A Sequential Send Port's scan also reads what holds a
-  sequence behind it — what waits for a retry, and where `on_failure =
-  "block"`, what failed — and goes through it all in the queue's order, so
-  its order is kept as before. The node wakes for the earliest retry as
+  Send pool is full. Order is not the scan's: a Journey that does not head
+  its sequence is passed and taken up once it does (the amendment of
+  2026-10-22 below). The node wakes for the earliest retry as
   Xmip Storage tells it, and counts what waits as Xmip Storage counts it.
 - **A read starts where the first is.** On `RocksDB` an entry taken out of
   an index stays a mark the engine steps over until it compacts it away,
@@ -736,3 +735,17 @@ through them, under 10 µs from the first kept.
 
 **Decided by the owner, 2026-10-21:** the writer moves a queue's first
 entry, as drafted above (`storage::due::settle`); no longer drafted.
+
+## Amendment, 2026-10-22: a Journey heads its sequences before it moves
+
+A Journey carries where its Stream came in — its Receive Location, its
+Receive Port, the Message it was received as and the sequences the Stream
+holds a place in end to end — and every Journey born from it carries the
+same (`journey::Received`). Its record says whether it still keeps that place,
+`open`, and Xmip Storage counts the open ones in the writes that open and end
+them, so the Stream lets its places go with its last Journey (ADR-0024 and
+ADR-0066, amendments of this date). A Sequential Send Port is no more: the
+Send Port's `execution_style`, `order_key` and `on_failure` are deleted, and a
+Send Port that sends one at a time names a correlation set; a Journey that
+failed keeps its place, and its sequence waits behind it, where the set's
+`on_failure` is `block`, the default.

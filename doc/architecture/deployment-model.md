@@ -102,9 +102,10 @@ What `xmip-service` is today is a purpose-compiled runtime in this sense:
 every technology it runs is linked by feature, so adding one — a transport,
 a contract, a key store — is a rebuild with `Build-XmipService`, and the
 node's TOML then names it. Its Module loader is built and drives the
-contract table alone, and the service is built without it
+contract and work process tables, and the service is built without it
 ([built, not in the assembled service](estate-map.md#module-loading)); Work Process
-execution is [decided, not built](estate-map.md#process-execution).
+execution is [built, not in the assembled service](estate-map.md#process-execution): a Work
+Process unit ships apart from Xmip, a library a node with the loader opens.
 
 **Purpose-compiled runtime** — a smaller build for one target: an endpoint
 collector, an industrial gateway, a CAN bus bridge, a telemetry forwarder, a

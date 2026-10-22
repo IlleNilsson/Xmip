@@ -221,14 +221,14 @@ record = ["ADR-0018", "ADR-0064"]
 
 [implementation.process-execution]
 name = "Compiling a Work Process at design time, and running it"
-state = "decided"
-note = "Nothing compiles a design and no engine runs one: a Journey to a Work Process ends saying no runtime runs it yet (`xmip-core-runtime`'s `departure.rs`)."
-record = ["ADR-0066", "runtime-model.md section 22"]
+state = "built"
+note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; a unit's settings and calls through the standard units are decided, not built."
+record = ["ADR-0066 (amendment 2026-10-22)", "runtime-model.md section 22"]
 
 [implementation.module-loading]
 name = "Opening a Module at run time"
 state = "built"
-note = "The loader opens a shared library, resolves `xmip_create_module_v1`, checks its trait version and configures, starts and stops its contract table, the only table with a host side; nothing on the message path calls it. It is behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; every other technology is linked by feature, so adding one means running `Build-XmipService` again."
+note = "The loader opens a shared library, resolves `xmip_create_module_v1`, checks its trait version and configures, starts and stops its contract table, and opens a work process table as the flow of the Work Processes naming its units (section 13); the work process table is the one the message path calls. It is behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; every other technology is linked by feature, so adding one means running `Build-XmipService` again."
 record = ["ADR-0025", "ADR-0057"]
 
 [implementation.other-runtime-module]
@@ -1279,25 +1279,14 @@ dependency = []
     dependency = ["xmip-core-message", "xmip-core-path", "xmip-core-path-regex"]
 
   [xmip.core.process]
-  description = "Common Process execution functionality."
+  description = "Xmip Work Processes: the design format trait, the compiled program, the unit and the engine."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-message"]
-    [xmip.core.process.bash]
-    maturity = "reserved"
-    [xmip.core.process.command]
-    maturity = "reserved"
-    [xmip.core.process.dotnet]
-    maturity = "reserved"
-    [xmip.core.process.grpc]
-    maturity = "reserved"
-    [xmip.core.process.http]
-    maturity = "reserved"
-    [xmip.core.process.rust]
-    maturity = "reserved"
-    [xmip.core.process.wasm]
-    maturity = "reserved"
+  dependency = ["xmip-core", "xmip-core-path", "xmip-core-assign", "xmip-core-library-codec", "xmip-core-abi"]
+    [xmip.core.process.bpmn]
+    maturity = "scaffolded"
+    dependency = ["xmip-core-process", "xmip-core", "xmip-core-assign", "xmip-core-path", "xmip-core-library-codec"]
 
   [xmip.core.send]
   description = "Common Send Port, Send Group and Send Location functionality."
@@ -1609,7 +1598,7 @@ dependency = []
   features = [
       "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16, section 17's serve exports and section 19's signing of a person's request; includes remote",
       "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request, a person's key and request made",
-      "dynamic-loading: the module loader (xmip_module.h); includes node",
+      "dynamic-loading: the module loader (xmip_module.h), a contract module and a Work Process unit (section 13); includes node",
       "test-support: the test fixtures; enabled only by the crate's own dev-dependency",
   ]
   architecturalDomain = "Platform"
@@ -1618,6 +1607,8 @@ dependency = []
   dependency = [
       "xmip-core",
       "xmip-core-abi",
+      # A Work Process task's Assignments (ADR-0066, amendment 2026-10-22).
+      "xmip-core-assign",
       "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authorize",
@@ -1636,6 +1627,9 @@ dependency = []
       "xmip-core-observe",
       "xmip-core-party",
       "xmip-core-persist",
+      # The Work Process step runs a unit's flow (ADR-0066, amendment
+      # 2026-10-22): the capability, never a design format of it.
+      "xmip-core-process",
       # An operator's request made and signed for the surfaces (ADR-0034,
       # amendment 2026-10-15): the capability, never a technology of it.
       "xmip-core-provision",
@@ -1716,10 +1710,10 @@ dependency = []
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
     [xmip.core.gui.vscode]
-    description = "The VS Code extension, the developer's face of the configuration tool: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI (ADR-0014, amendment 2026-09-10) and draws an Application's routes in a designer (ADR-0064). A xmip-core-gui technology."
+    description = "The VS Code extension, the developer's face of the configuration tool: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI (ADR-0014, amendment 2026-09-10) and draws an Application's routes in a designer (ADR-0064), and the Work Process designer, which reads, edits and compiles a design through the design formats it carries (ADR-0066, amendment 2026-10-22). A xmip-core-gui technology."
     maturity = "scaffolded"
     primaryLanguage = "rust"
-    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit"]
+    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-process", "xmip-core-process-bpmn"]
 
 
 # What capabilities are built out of, and what a third party may replace like

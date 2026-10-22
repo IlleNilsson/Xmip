@@ -7,7 +7,10 @@ and designed in VS Code, and what is designed is compiled at design time
 into a native Module the node loads (ADR-0066); no repository is created
 for it. Declaring one is
 [built, in the assembled service](../architecture/estate-map.md#process-declaration); compiling and
-running one are [decided, not built](../architecture/estate-map.md#process-execution).
+running one are [built, not in the assembled service](../architecture/estate-map.md#process-execution):
+a BPMN 2.0 design, drawn in the VS Code designer, compiles to a Work Process
+unit crate, and module/core/capability/process/doc/getting-started.md takes
+one from the drawing to a node.
 
 None of them reaches a node by being installed beside it: `xmip-service`
 links every technology it runs, and adding one means building it again with

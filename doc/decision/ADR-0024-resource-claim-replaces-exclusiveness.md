@@ -661,3 +661,61 @@ pattern, by `file.name` first; a pattern naming a path refused; `name`
 refused on a Receive Location). Provenance: the ruling is the owner's,
 2026-10-21; the setting's name and `{message}` are the assistant's, for the
 owner to overrule.
+
+## Amendment, 2026-10-22: correlation sets are cluster-wide, and one Sequence orders over the claims
+
+The owner, 2026-10-22, having read this record again: *As long as the
+correlation sets are cluster wide*, and *when a stream arrives, it might
+need exclusiveness from the point it is read to when it leaves Xmip via
+Send, or it does not, it just might need some parameter to work in
+parallel.* Then, simplifying the drafts he was shown: *I think you are
+overcomplicating things. On receive, the default is one journey per stream
+at a time. If I decide to open up for multiple streams (messages) I will
+tell Xmip by defining values that work can be spread over, like Message
+Contexts values, Promoted values. Like for instance, Xmip receives an order.
+That can be processed per client requesting an order. Xmip gets an update
+of all the merchandise, that Xmip should process one at a time because the
+person updated all the merchandise is hacking away not knowing of the
+consequences*; corrected to *every receive location should by default be end
+to end treated. Not the receive port, unless opened up by correlation sets
+to support multiple processing through Xmip*; and settled as *A default
+correlation set is its receive location name. There might be more streams,
+files, pushing at that receive location. Default one stream, message,
+journey at a time. Put it in the ledger if it is not processed now. If I
+want to open up for parallelism I can use context values like Receive Port,
+Work Process, Send Port, Message and Journey context values. I can widen
+and strangle parallelism at any configurable point*, and *Equal values in a
+correlation set (aka hashtable) go in the same queue, different values go
+parallel depending on the value in the correlation set.*
+
+- **A claim is still a claim.** This record's rule stands: a claim says one
+  holder at a time, at the endpoint where one exists and through Xmip
+  Storage where none does, and says nothing about order.
+- **A Sequence orders over the claims** (`xmip-core-runtime`'s `sequence`;
+  ADR-0066, amendment of this date, clause 5). A correlation set is declared
+  once for the cluster, `[[correlation_sets]]`, and named at a point — a
+  Receive Location, a Receive Port, a Work Process, a Send Port — by
+  `correlation_set`. Each key, the full tuple of the set's values, is one
+  queue in the Ledger, its places in the order they were written; work at
+  the point goes on only while it holds the first place. A Journey is still
+  claimed before it is worked on; a claimed Journey that does not head its
+  sequence gives its claim back and waits in the Ledger, holding no thread.
+- **The default is the Receive Location's own sequence**: one Stream at a
+  time, end to end — from its Publication until the last Journey born from
+  it, its sends among them, has ended. The merchandise update needs nothing
+  configured; orders per client name a set keyed by the client,
+  `keys = ["context:Client"]`, and run side by side, each client's in order.
+- **What a failure does is the set's**: `on_failure`, `block` by default — a
+  failed Journey waiting for an operator keeps its Stream at the head until
+  Retry or Dismiss — and `skip` as the option that lets the rest pass (the
+  owner, 2026-10-22). The Send Port's own `execution_style`, `order_key` and
+  `on_failure` are deleted with every use.
+- **Cluster-wide by construction.** A sequence is a Ledger queue, named by
+  the point and the key's values, read and written through Xmip Storage by
+  whichever node takes the work, the same primary every node writes to — no
+  lease, no consensus, no store of its own. A node that dies leaves its
+  claims to lapse and its places in the Ledger; another node takes up the
+  Journey, and the order is the Ledger's.
+
+Provenance: the rulings quoted are the owner's, 2026-10-22; the queue's
+naming and the origin counting are the assistant's, the owner's to strike.
