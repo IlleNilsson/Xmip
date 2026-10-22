@@ -26,8 +26,9 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      nothing. Both need elevation.\n\
      --listening prints each port the node's configuration listens on, \
      <port>/<protocol> and what listens.\n\
-     --console runs in a terminal and stops on Ctrl+C; without it the operating \
-     system's service manager runs it and stops it.";
+     --console runs in a terminal and stops on Ctrl+C, and with --purpose test also at \
+     the end of its input, as the test that started it ends it; without it the \
+     operating system's service manager runs it and stops it.";
 
 /// How this process runs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -123,10 +123,15 @@ function Invoke-XmipPlaygroundBuild {
             $bins += @('--bin', 'xmip-playground-roll')
         }
 
+        # The estate as it is on disk, every estate crate patched to its
+        # working tree as a landing verifies (New-XmipLocalPatch), so a run
+        # tests what is here and never only what was pushed.
+        [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
+
         # Cargo's first error is kept, so a failed build says why in its own
         # words and not only its exit code (Get-XmipTestStatus shows it).
         [string] $first = ''
-        & cargo build @bins 2>&1 | ForEach-Object {
+        & cargo build --config $patch @bins 2>&1 | ForEach-Object {
             [string] $line = "$_"
 
             if ($first -eq '' -and $line -match '^error') {
@@ -146,6 +151,58 @@ function Invoke-XmipPlaygroundBuild {
     }
 
     return $path
+}
+
+function Invoke-XmipPlaygroundService {
+    <#
+        .SYNOPSIS
+            Builds the xmip-service a run of `Cluster` starts its nodes as, and
+            says where it is.
+
+        .DESCRIPTION
+            Built as the personal-computer site builds it (Build-XmipService):
+            every stage, Xmip Storage and the file transport, against the
+            estate as it is on disk (New-XmipLocalPatch), in a build
+            directory of its own, .local-work/playground/service/target. The
+            binary is copied
+            to .local-work/playground/service/<cluster>, so a later build never
+            changes what a running roll's nodes run (ADR-0028, amendment
+            2026-10-22).
+
+        .PARAMETER Cluster
+            The run's cluster.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    $layout = Get-XmipPlaygroundLayout
+    [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
+
+    # A build directory of its own: one shared with the Playground's own
+    # build, a workspace whose lock pins other revisions, left rustc finding
+    # two builds of one estate crate and refusing the service (2026-10-22).
+    [string] $target = Join-Path -Path $layout.Area -ChildPath 'service/target'
+    [string] $previous = $env:CARGO_TARGET_DIR
+    $env:CARGO_TARGET_DIR = $target
+
+    try {
+        $null = Build-XmipService -Site personal-computer -CargoArgument @('--config', $patch)
+    }
+    finally {
+        $env:CARGO_TARGET_DIR = $previous
+    }
+
+    [string] $built = Join-Path -Path $target -ChildPath "debug/xmip-service$($layout.Suffix)"
+    [string] $folder = Join-Path -Path $layout.Area -ChildPath "service/$Cluster"
+    $null = New-Item -ItemType Directory -Path $folder -Force
+    [string] $kept = Join-Path -Path $folder -ChildPath "xmip-service$($layout.Suffix)"
+    Copy-Item -LiteralPath $built -Destination $kept -Force
+
+    return $kept
 }
 
 

@@ -149,3 +149,21 @@ Provenance: the owner's decisions, quoted, and the default of one address
 with a port per purpose — the ACME challenge among them — as his beginner
 ruling was recorded the same day; the wording of the bullets is the
 assistant's, for the owner to overrule.
+
+## Amendment, 2026-10-22: the Storage listener is built
+
+The Storage listener of the amendment of 2026-10-13 is built, its section
+shaped as `[operate]` is: `[storage] listen`, the node's address and the
+Storage plane's port, where a node declaring the Storage role serves Xmip
+Storage to the nodes reaching it; `certificate`, `key` and `anchors`, all
+three or none, what the node presents and trusts over Xmip's mutual TLS —
+serving, and reaching the Storage nodes `[storage] nodes` lists. A node
+without the Storage role reads no `listen`, so one cluster-wide `[storage]`
+table serves every node of a cluster's file. `xmip-service --listening`
+says `<port>/tcp storage` for a node with the role, so an environment opens
+its firewall for it (ADR-0015, amendment 2026-10-21). The one reading of a
+plane's certificate, key and anchors is the runtime's `presented::identity`,
+which `[operate]` and `[storage]` both read through; `[sync]` and `[alive]`
+stay decided, not built
+([`node-listeners`](../architecture/estate-map.md#node-listeners)). The
+assistant's, 2026-10-22 (ADR-0056, amendment of this date).

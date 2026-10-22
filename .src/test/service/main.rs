@@ -26,6 +26,10 @@
 //!   circumstance, to a file of the same name in its send directory, whole,
 //!   audited, with Xmip's own work measured against the millisecond rule —
 //!   alone.
+//! - `failover.rs`: a receiving and a sending node reach the test cluster's
+//!   two Storage nodes over Xmip's mutual TLS, keeping none themselves;
+//!   the primary Storage node is stopped while files are dropped, its
+//!   standby is promoted, and every file dropped arrives once, whole.
 //!
 //! A test that measures how long Xmip takes — `carried.rs`, `told.rs` —
 //! takes the machine whole ([`alone`]); every other shares it ([`sharing`]),
@@ -47,6 +51,7 @@ use std::time::{Duration, Instant};
 
 use xmip_net::fixture::unheld;
 use xmip_observe::{Act, Noun, Order};
+use xmip_runtime::directory_watch::DirectoryWatch;
 use xmip_transport::Transport;
 use xmip_transport_tcp::TcpTransport;
 
@@ -252,6 +257,9 @@ fn spawned(configuration: &Path, directory: &Path) -> Child {
         .args(["--console", "--purpose", "test"])
         .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
         .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
+        // Its input held open for as long as the child is, which a test
+        // ends to stop it (`console.rs`); Ctrl+Break is what these press.
+        .stdin(Stdio::piped())
         .stdout(Stdio::piped());
     #[cfg(windows)]
     {
@@ -326,8 +334,35 @@ fn order(directory: &Path, act: Act) {
     .expect("the order is left");
 }
 
+/// `directory` watched: a word on the channel each time it changes, until
+/// the watch is dropped.
+fn watched(directory: &Path) -> (Receiver<()>, DirectoryWatch) {
+    let (tell, told) = mpsc::channel();
+    let watch = DirectoryWatch::spawn(directory, move || {
+        let _ = tell.send(());
+    })
+    .expect("watched");
+    (told, watch)
+}
+
+/// When `holds` first held, asked at once and again each time the
+/// directory behind `changed` changes; `None` where it did not by
+/// `deadline`.
+fn told(changed: &Receiver<()>, deadline: Instant, holds: impl Fn() -> bool) -> Option<Instant> {
+    loop {
+        if holds() {
+            return Some(Instant::now());
+        }
+        let left = deadline.checked_duration_since(Instant::now())?;
+        if changed.recv_timeout(left).is_err() {
+            return holds().then(Instant::now);
+        }
+    }
+}
+
 mod accepted;
 mod carried;
+mod failover;
 mod operate;
 mod publication;
 mod stop;

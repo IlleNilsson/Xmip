@@ -241,8 +241,11 @@ time-limited claim in that database (`runtime-model.md` section 3,
 `deployment-model.md` sections 7 and 9). Of the options below it is nearest
 B — a shared write path — with the difference that no node writes the
 database directly, only Xmip Storage's operations do. The database server's
-failover and the balancing of incoming traffic are IT's. Built: none of it
-yet. The question as it
+failover and the balancing of incoming traffic are IT's. Built since: a
+node's work reaching another node through Xmip Storage over the wire in the
+assembled service, a receiving node's Journey sent by a sending node, and
+embedded Storage nodes as a primary and its standbys (2026-10-22; problems
+45 and 46); the database server is not. The question as it
 stood before the ruling:
 
 The work store was per node and written only by its owner, which was meant to
@@ -1100,9 +1103,10 @@ The second part, a Storage node in the service: a node declaring the
 `storage` role is its own embedded Storage node in the assembled service
 (ADR-0056, amendment 2026-10-20) — RocksDB and SQLite under its data
 directory, sealed under the key store `[store]` names (`embedded-storage`,
-assembled) — and it serves no other node: a node whose `[storage] nodes`
-lists any is refused until its configuration can name the identity it
-presents (`storage-nodes`, built, not assembled). The third part, the first
+assembled) — and since 2026-10-22 it serves the others at `[storage]
+listen`, and a node whose `[storage] nodes` lists Storage nodes reaches them
+with the identity `[storage]` names (`storage-nodes` and `storage-standby`,
+assembled; ADR-0056, amendment 2026-10-22). The third part, the first
 database server client, is not built: each data domain's table is read and
 checked, and a node naming a server is refused as it starts
 (`database-server`, decided).
@@ -1348,6 +1352,45 @@ release:
   package signing.
 - **The service account** (open problem 28) and whether the starter grants
   local tools more than Observer (ADR-0014, amendment 2026-10-13).
+
+## 45. Embedded Storage nodes have no witness, and a standby behind is copied whole
+
+Built 2026-10-22, drafted (ADR-0056, amendment 2026-10-22): embedded
+Storage nodes are a primary and its standbys, settled among themselves, a
+standby promoted once its primary is gone. Three things are left:
+
+- **No witness.** The owner's design of 2026-10-01 had *a witness holding
+  the claim on which node is primary*, and IT's infrastructure calling a
+  promote. Without one, two sides of a network partition can each promote a
+  primary; a node that met the later epoch never asks the earlier, and a
+  primary that meets a later epoch steps down, but writes taken by the
+  earlier one meanwhile are lost when it follows the later. Proposed: a
+  witness of the cluster's own — any node, asked like a Storage node —
+  whose word a standby needs before it is promoted; or the promote kept a
+  command, with an Operator's act on every surface.
+- **A standby behind is copied whole.** A standby that restarts after its
+  primary did, or falls further behind than `[tuning] storage_kept`, is
+  wiped and copied whole, every record read once over the wire; a primary
+  restarting starts a history of its own, so every standby is copied whole
+  then too. Proposed: the primary's numbering kept in each database, so a
+  restarted primary goes on and a standby takes on from where it is.
+- **The loss window of a kill.** The owner accepted it on 2026-10-01; it is
+  unmeasured. Proposed: a kill test that says how many writes a killed
+  primary had not handed on, under load.
+
+## 46. A Journey published on one node waits for another's send scan
+
+Measured 2026-10-22 in the Playground at level 1, every node a process
+(ADR-0028, amendment 2026-10-22): a file received on one node and sent by
+another took about 630 ms from its drop to its arrival, the median, where
+one received and sent by the same node took about 7 ms. The sending node
+learns of a Journey another node published only by reading its Send Port's
+queue every `[tuning] send_scan`, one second, since Xmip Storage tells no
+node of a write another made — beyond a millisecond and apart from load, so
+a defect by the millisecond rule. Proposed: a wait on a queue asked of the
+Storage node, answered as a Publication or a hand-on puts a Journey in it,
+which the sending node's scan waits on instead of its interval; the
+node-to-node sync plane (ADR-0067) is the other way, and decided, not built.
 
 ---
 

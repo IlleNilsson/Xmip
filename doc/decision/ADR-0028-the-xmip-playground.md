@@ -743,15 +743,10 @@ typed (`Write-XmipTestCluster`, `Read-XmipPlaygroundCluster`,
   cluster process is given only the simulated nodes, and `Stop-XmipTest`
   reaches nothing on another machine.
 
-**Not built: sending a real node work.** The simulated nodes hand a pair on
-through their shared directory, which a real node does not share, so the
-scenarios' work is spread over the simulated nodes alone and a real node is
-observed, not driven. A real node carries a Message from another when Xmip
-Storage is reached over the wire in the assembled service
-([built, not in the assembled service](../architecture/estate-map.md#storage-nodes)):
-until then a node of the file that declares no Storage role is refused as it
-starts on a machine of its own, in words naming `[storage] nodes`, and D1 is
-the one of the example's five that runs.
+**Sending a real node work** is the amendment of 2026-10-22: Xmip Storage is
+reached over the wire in the assembled service, every node of the file
+starts on a machine of its own, and the rig drives the nodes through their
+Receive Locations.
 
 The environment templates that put the file's nodes on machines are
 ADR-0015's amendment of the same date.
@@ -761,3 +756,82 @@ the five the example puts on machines, `-Certificate` and its files,
 `XMIP_PLAYGROUND_NAMED`, `<node>/reached`, and observing rather than driving
 a real node until Storage is assembled are the assistant's drafting, for the
 owner to overrule.
+
+## Amendment, 2026-10-22: at level 1 every node is a process of the assembled service, and the rig drives them
+
+The task given 2026-10-22: the full Playground run with every node a
+process, R, S, P and L reaching D1 and D2 over the wire, over a real
+loopback connection, through the same code as on a machine; and the
+Playground driving real nodes, the rig sending them work through their
+Receive Locations, where it observed them.
+
+**Every node of the run that is not real is started as `xmip-service`**
+where the run is given one (`XMIP_PLAYGROUND_SERVICE`) and one of those
+nodes declares the Storage role, which the rest reach — every node of the
+file, where `-Nodes` is left out — and simulated where not
+(`src/served.rs`). `Start-XmipTest` builds it as the
+`personal-computer` site builds it — every stage, Xmip Storage and the file
+transport — in a build directory of its own,
+`.local-work/playground/service/target`, since one shared with the
+Playground's build left rustc finding two builds of one estate crate, and
+keeps it at `.local-work/playground/service/<cluster>`, so a later build
+never changes what a running roll's nodes run; the Playground
+itself and the service are built against the estate as it is on disk, every
+estate crate patched to its working tree as a landing verifies
+(`New-XmipLocalPatch`). The run is the nodes' environment and gives each
+what an environment gives a machine's node, the file unchanged:
+
+- its slice of the Playground's cluster file under the run's cluster name,
+  in a folder of its own beneath the run's directory, its data beside it;
+- its certificate, key and anchors from an authority of the run's own
+  (`provision::node`, for its name, `127.0.0.1` and `localhost`), which it
+  presents on its operate listener and to the Storage nodes;
+- each plane an address on loopback where a machine's node has the
+  machine's: its operate listener on a port of its own, its local endpoint
+  `xmip-<cluster>-<node>`, and a Storage node's Storage listener on a port
+  of its own — the name of each Storage node in `[storage] nodes` resolved
+  to the address it serves at, as a machine's resolver resolves `D1`;
+- the bindings that place the file's Applications on the run's nodes:
+  each Receive Location a file Location over a drop folder of the run's,
+  accepting the folder's circumstance, on the next receiving or executing
+  node; each Send Port a file Send Location over a folder of the run's, on
+  the next sending or executing node (`src/bindings.rs`, which the
+  simulated nodes' process stage writes its bindings through too).
+
+The Storage nodes start first, the rest once those accept work; every node
+that keeps no Storage reaches them over Xmip's mutual TLS, the primary
+asked and its standby passed over. The rig reads each one's publication at
+its local endpoint, which the operating system proves the rig to, as a real
+node's (`<node>/reached`, `[run] real`), and stops them by ending their
+input — the stop a node a test started takes (ADR-0018, amendment of this
+date) — those keeping no Storage first, each waited for to drain, one that
+does not killed. A roll killed ends their input with it.
+
+**The rig drives them: Carried** (`src/carried.rs`). Each round it drops a
+file into each bound drop folder, written beside it and renamed in, the
+next of the Playground's twenty content contracts each time, named
+`<contract>-<number>` (`Contract::file_name`). The cluster file's
+Subscriptions route by that name — `file.name like '<contract>-%'`, what a
+file Receive Location gives every Message it takes — where they read
+`MessageType`, which nothing in the assembled service promotes; the
+simulated process stage promotes `file.name` the same way. The file arrives
+in its Send Port's folder under its name, from a sending node that took its
+Journey from Xmip Storage. `<cluster>/carried` is Fine while every file
+dropped arrived or is younger than five seconds, Stressed while one is
+overdue, Done once one is lost — a minute — or could not be dropped, and
+says how long a file took from its drop to its arrival, the fastest and the
+median; the Send Ports' folders are watched, never looked in on a timer. As
+the run ends it waits, for at most that minute, for every file dropped to
+arrive, and its stop record says how many were carried.
+
+**What a run of real nodes leaves out**: the scenarios a simulated node
+carries — the relayed round trip, the drop box, the exclusive claim, the
+daily backlog — have no node to run on, and the roll runs the round trip in
+its own process, as when no node serves a stage. A node on a machine of its
+own is driven only through the Receive Locations its environment binds,
+which the environment templates do not bind yet.
+
+Provenance: the task's words above. Starting every node as the service by
+default, the `personal-computer` build, routing by the file's name, ending
+the input to stop a node, the folders, the bounds and `<cluster>/carried`
+are the assistant's drafting, for the owner to overrule.

@@ -269,9 +269,15 @@ record = ["ADR-0015 (amendments 2026-10-01 and 2026-10-20)", "ADR-0056 (amendmen
 
 [implementation.storage-nodes]
 name = "Storage nodes reached over mutual TLS"
-state = "built"
-note = "`xmip-core-persist`'s Storage client and server are built and tested; `xmip-service` serves no other node, and refuses a node whose `[storage] nodes` lists any until its configuration can name the identity it presents."
-record = ["ADR-0056 (amendment 2026-10-01)"]
+state = "assembled"
+note = "A node without the Storage role reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS, presenting the certificate, key and anchors `[storage]` names — the node's own, from the cluster's authority — a standby passed over, a primary of an earlier epoch not asked, and refused at start in words where it names nothing to present; a node with the Storage role serves Xmip Storage at `[storage] listen`, and `xmip-service --listening` says its port; every node publishes at `<node>/storage` which Storage it uses and whether it answered, Done where none did. Held by the root's `failover` and `wire` tests and the Playground's level 1, every node a process."
+record = ["ADR-0056 (amendments 2026-10-01 and 2026-10-22)", "ADR-0067 (amendment 2026-10-22)"]
+
+[implementation.storage-standby]
+name = "Embedded Storage nodes as a primary and its standbys"
+state = "assembled"
+note = "Storage nodes that list every Storage node of the cluster settle which is the primary by asking each what it is: the first listed of equals is promoted, at once where every one before it answered, else after `[tuning] storage_silence`; each standby copies the primary's engine writes in order, asynchronously, copied whole first where it cannot take them on (its data keys handed inside the mutual TLS, wrapped under its own key-encryption key); each promotion raises the epoch, a primary that meets a later one steps down, and a primary stopped in order hands on everything it wrote. No witness: a partition can promote a second primary, which the nodes that met the later epoch do not ask. Drafted, for the owner (ADR-0056, amendment 2026-10-22)."
+record = ["ADR-0056 (amendment 2026-10-22)", "ADR-0063 (amendment 2026-10-22)", "deployment-model.md sections 7 and 9"]
 
 [implementation.database-server]
 name = "Xmip Storage in front of PostgreSQL, SQL Server or MariaDB"
@@ -312,14 +318,14 @@ record = ["ADR-0018 (amendment 2026-10-06)", "ADR-0053 (amendment 2026-10-06)"]
 [implementation.operator-acts-through-storage]
 name = "An operator's act written to Xmip Storage, honored by every node"
 state = "decided"
-note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes the moment its operating system says it was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Built once Storage is assembled in the service, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
+note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes the moment its operating system says it was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Xmip Storage is assembled in the service since 2026-10-22 and no act is written to it yet, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
 record = ["ADR-0014 (amendment 2026-10-13, acts through Xmip Storage)", "ADR-0052 (note of 2026-10-13, acts through Xmip Storage)", "deployment-model.md section 7"]
 
 [implementation.node-listeners]
-name = "A node's sync, alive and Storage listeners, each configured as operate is"
+name = "A node's sync and alive listeners, each configured as operate is"
 state = "decided"
-note = "Only the operate plane listens: its local endpoint always, named `xmip-<node>` unless `[operate] local` names it, and its network listener where `[operate] listen` names one. No `[sync]`, `[alive]` or `[storage]` section is read, and no node-to-node, heartbeat or Storage listener exists in the service."
-record = ["ADR-0067 (amendment 2026-10-13)"]
+note = "The operate plane listens — its local endpoint always, named `xmip-<node>` unless `[operate] local` names it, and its network listener where `[operate] listen` names one — and, on a node declaring the Storage role, the Storage listener where `[storage] listen` names one (amendment 2026-10-22). No `[sync]` or `[alive]` section is read, and no node-to-node or heartbeat listener exists in the service."
+record = ["ADR-0067 (amendments 2026-10-13 and 2026-10-22)"]
 
 # The estate. Depth is the classification: xmip.<provider> is the provider
 # root repository, xmip.<provider>.<module> a module, and one level deeper an

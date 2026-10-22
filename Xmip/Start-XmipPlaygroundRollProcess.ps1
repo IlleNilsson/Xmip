@@ -128,6 +128,10 @@ function New-XmipPlaygroundRollLaunch {
     $choice.Image = Get-XmipPlaygroundImageArea -Cluster $Start.Cluster
     [string] $image = New-XmipPlaygroundImage -Cluster $Start.Cluster
 
+    if (-not [string]::IsNullOrWhiteSpace([string] $Start['Service'])) {
+        $choice.Service = [string] $Start['Service']
+    }
+
     [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 

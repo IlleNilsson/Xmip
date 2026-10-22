@@ -5,7 +5,8 @@
 //! themselves.
 //!
 //! What listens is what the configuration says: the operate listener at
-//! `[operate] listen`, and each started Receive Location, its own and its
+//! `[operate] listen`, the Storage listener at `[storage] listen` where the
+//! node declares the Storage role, and each started Receive Location, its own and its
 //! bindings', whose address names a port, over TCP. A Receive Location whose
 //! transport listens on UDP is said over TCP too until a transport declares
 //! the protocol it listens on, which none does yet.
@@ -50,6 +51,13 @@ fn listening(document: &XmipConfigurationDocument) -> Vec<String> {
         .and_then(|operate| operate.listen.as_deref());
     if let Some(port) = operate.and_then(port_of) {
         said.push((port, "operate".to_string()));
+    }
+    // Only a node declaring the Storage role serves Xmip Storage.
+    let roles = xmip_node::NodeRole::declared(document.roles.as_deref().unwrap_or(""));
+    let stores = roles.is_ok_and(|roles| roles.contains(&xmip_node::NodeRole::Storage));
+    let storage = document.storage.listen.as_deref().filter(|_| stores);
+    if let Some(port) = storage.and_then(port_of) {
+        said.push((port, "storage".to_string()));
     }
     let own = document.receive_locations.iter();
     let bound = document
@@ -102,8 +110,10 @@ mod tests {
 
     #[test]
     fn the_operate_listener_and_each_started_receive_location_with_a_port_listen() {
-        let node = xmip_configure::fixture::test_cluster().node(0).name.clone();
-        let cluster = format!(
+        let cluster = xmip_configure::fixture::test_cluster();
+        let node = cluster.node(0).name.clone();
+        let other = cluster.with_role("receiving").name.clone();
+        let file = format!(
             "[operate]\nlisten = \"0.0.0.0:7401\"\ncertificate = \"node.pem\"\n\
              key = \"node.key\"\nanchors = \"anchors.pem\"\n\
              [[receive_locations]]\nname = \"orders\"\nstart = true\n\
@@ -112,13 +122,24 @@ mod tests {
              transport = \"xmip-core-transport-tcp\"\naddress = \"0.0.0.0:9101\"\n\
              [[receive_locations]]\nname = \"drop\"\nstart = true\n\
              transport = \"xmip-core-transport-file\"\naddress = \"/var/xmip/in\"\n\
-             [nodes.{node}]\nroles = \"storage\"\n"
+             [storage]\nlisten = \"0.0.0.0:7443\"\n\
+             [nodes.{node}]\nroles = \"storage\"\n[nodes.{other}]\nroles = \"receiving\"\n"
         );
-        let text = xmip_configure::slice_named(&cluster, &node, "listening").expect("slices");
+        let text = xmip_configure::slice_named(&file, &node, "listening").expect("slices");
         let document = xmip_configure::parse_toml(&text).expect("reads");
         assert_eq!(
             listening(&document),
-            ["7401/tcp operate", "9100/tcp receive location orders"]
+            [
+                "7401/tcp operate",
+                "7443/tcp storage",
+                "9100/tcp receive location orders"
+            ]
+        );
+        let text = xmip_configure::slice_named(&file, &other, "listening").expect("slices");
+        let document = xmip_configure::parse_toml(&text).expect("reads");
+        assert!(
+            !listening(&document).contains(&"7443/tcp storage".to_string()),
+            "only a node declaring the Storage role serves it"
         );
     }
 }

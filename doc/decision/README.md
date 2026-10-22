@@ -185,7 +185,7 @@ the parent is displeased and reports `Holding` — drill in. A parent is only ev
 ### What a node says it can do, in the terms work is matched against
 
 authentication capability; runtime capability; placement criteria;
-  Storage role, Xmip Storage
+  Storage role, Xmip Storage; primary and standby Storage nodes, epoch
 
 **A node declares its capabilities, and work is placed on a node whose
 capabilities satisfy what the work requires. There are four kinds: online,

@@ -159,7 +159,26 @@ keeps Xmip Storage itself only where its roles declare `storage`; every
 other node calls a Storage node through `[storage] nodes`. A one-machine
 node carries the Storage role, and is its own embedded Storage node; a node
 declaring neither the role nor `[storage] nodes` is refused as it starts,
-in words naming both (ADR-0056, amendment 2026-10-20).
+in words naming both (ADR-0056, amendment 2026-10-20). Every other node
+reaches them over Xmip's mutual TLS with the certificate, key and anchors
+`[storage]` names, and a Storage node serves them at `[storage] listen`
+(ADR-0056 and ADR-0067, amendments 2026-10-22).
+
+**Embedded Storage nodes are a primary and its standbys** (drafted:
+ADR-0056, amendment 2026-10-22, the owner's design of 2026-10-01 brought
+forward from option C below). Round robin over Storage nodes in front of
+one database server shares one Ledger; embedded Storage nodes each keep
+their own, so a cluster's are one **primary**, serving every operation, and
+its **standbys**, each copying the primary's engine writes behind it, in
+the order written, asynchronously. A standby serves no operation and says
+so, and a node asks the next listed. The Storage nodes settle which is the
+primary themselves, the first listed the first: a standby is promoted once
+the primary is gone — at once where every one listed before it answered,
+else once it heard no primary for `[tuning] storage_silence` — and each
+promotion raises the **epoch**, a primary of an earlier one asked by no node
+that met the later. A primary stopped in order hands on everything it
+wrote; one killed loses what it had not handed on, which the owner accepted
+on 2026-10-01.
 
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an
@@ -251,7 +270,9 @@ built, clustered and tuned for them is IT's. If A's latency proves too slow,
 two forms are recorded for later, and only for then
 (`deployment-model.md` section 7): C, an embedded engine per Storage node
 with Xmip copying from a claimed primary to standbys, and D, C for the hot
-Ledger with A for history.
+Ledger with A for history. C is built for embedded Storage nodes, drafted on
+2026-10-22 while A is not built (*Embedded Storage nodes are a primary and
+its standbys*, above); its witness is not.
 
 **Every Ledger write counts only once the database has it durably** (the
 owner, 2026-10-01: *Safe way*), the hand-ons between steps included. Behind a
@@ -557,7 +578,14 @@ loses no write it acknowledged, and a hand-on killed at any moment is all
 there or not at all; two claimants, one wins, a lapsed claim is taken over
 and a release frees it; a Storage node stopped or killed, and a node carries
 on through the next; the audit keeper moves each record once; and a
-write's latency, measured idle, in process and over TLS. And for the receive
+write's latency, measured idle, in process and over TLS. And for the
+assembled service, built 2026-10-22 (the root's `failover` and `wire`
+tests): a receiving and a sending node, keeping no Storage, carry every
+file dropped once while the primary Storage node is stopped mid-run and its
+standby promoted; and a call over the wire to the primary, its standby
+copying, costs less than a millisecond beyond the same call in process — a
+read about 80 µs against 6 µs, a write and its sync about 1.2 ms against
+1.1 ms. And for the receive
 path through the Ledger (`xmip-core-runtime`'s `tests/ledger.rs`): a receive
 killed after its Stream's chunks were written and before its Publication
 leaves the chunks and no Message, and every Message whose receive cycle

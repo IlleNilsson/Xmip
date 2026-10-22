@@ -189,14 +189,17 @@ Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\an
 Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, R2, P1, S1, S2, L1, O1, D1, D2 -Certificate $tester
 ```
 
-**What runs today.** D1 starts and answers. A node that declares no Storage
-role reaches Xmip Storage over the wire, which is built and not yet in the
-assembled service, so R1, S1, P1 and L1 are refused as they start, in
-words naming `[storage] nodes`
-([estate map](../../../../doc/architecture/estate-map.md#storage-nodes)).
-The Playground observes a real node — reads its publication — and spreads
-the scenarios' work over the simulated nodes only (ADR-0028, amendment
-2026-10-21).
+**What runs today.** Every node of the five starts. A node that declares no
+Storage role reaches D1 over Xmip's mutual TLS on the Storage plane's port,
+7443, presenting its own `tls/node.pem`
+([built, in the assembled service](../../../../doc/architecture/estate-map.md#storage-nodes)); D1's
+`xmip-service --listening` says `7443/tcp storage`, so its machine's firewall
+opens it. D2 runs on no machine of the example: every node passes it over,
+and D1 is the primary on its own (ADR-0056, amendment 2026-10-22). The
+Playground reads each real node's publication; it drives the nodes it starts
+on one computer through their Receive Locations, and a node on a machine of
+its own only through the Receive Locations its environment binds, which these
+templates do not yet (ADR-0028, amendment 2026-10-22).
 
 ## How it is held
 
