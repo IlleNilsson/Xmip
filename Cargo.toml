@@ -43,7 +43,7 @@ required-features = ["node", "audit", "observe", "authenticate"]
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
-required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite"]
+required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite", "provision-internal-ca"]
 
 # Renders every node configuration deploy/ writes and reads it the way
 # xmip-service reads its own, so a template out of step with the reader fails.
@@ -140,6 +140,12 @@ transport-http = ["dep:xmip-transport-http"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
 
+# The cluster's authority, served by the node whose `[provision.node]` names
+# it with `serve`: the premises' own ACME service, with renewal information
+# and revocation, and its revocation list published over plain HTTP
+# (ADR-0034, amendment 2026-10-22). A site that keeps the authority links it.
+provision-internal-ca = ["dep:xmip-provision", "dep:xmip-provision-internal-ca"]
+
 # The embedded engines (ADR-0015, amendments 2026-09-25 and 2026-10-01):
 # RocksDB, the runtime database's one engine, which the node opens its
 # store over, and which every target that keeps a store links
@@ -187,6 +193,8 @@ xmip-persist = { package = "xmip-core-persist", git = "https://github.com/IlleNi
 xmip-persist-rocksdb = { package = "xmip-core-persist-rocksdb", git = "https://github.com/IlleNilsson/xmip-core-persist-rocksdb", branch = "main", optional = true }
 xmip-persist-sqlite = { package = "xmip-core-persist-sqlite", git = "https://github.com/IlleNilsson/xmip-core-persist-sqlite", branch = "main", optional = true }
 xmip-prepare = { package = "xmip-core-prepare", git = "https://github.com/IlleNilsson/xmip-core-prepare", branch = "main", optional = true }
+xmip-provision = { package = "xmip-core-provision", git = "https://github.com/IlleNilsson/xmip-core-provision", branch = "main", optional = true }
+xmip-provision-internal-ca = { package = "xmip-core-provision-internal-ca", git = "https://github.com/IlleNilsson/xmip-core-provision-internal-ca", branch = "main", optional = true }
 xmip-process = { package = "xmip-core-process", git = "https://github.com/IlleNilsson/xmip-core-process", branch = "main", optional = true }
 xmip-promote = { package = "xmip-core-promote", git = "https://github.com/IlleNilsson/xmip-core-promote", branch = "main", optional = true }
 xmip-receive = { package = "xmip-core-receive", git = "https://github.com/IlleNilsson/xmip-core-receive", branch = "main" }
@@ -236,6 +244,9 @@ xmip-net = { package = "xmip-core-library-net", git = "https://github.com/IlleNi
 # The service test's figure for an order and the plain wake it is held
 # beside (`latency`).
 xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main", features = ["test-support"] }
+# The service test's client of the cluster's authority the service serves:
+# Xmip's own ACME client, as a node on the premises asks it.
+xmip-provision-acme = { package = "xmip-core-provision-acme", git = "https://github.com/IlleNilsson/xmip-core-provision-acme", branch = "main" }
 
 [target.'cfg(windows)'.dependencies]
 # xmip-service under the Windows Service Control Manager: the dispatcher, the

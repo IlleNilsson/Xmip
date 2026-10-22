@@ -7,7 +7,9 @@
 //! What listens is what the configuration says: the operate listener at
 //! `[operate] listen`, the Storage listener at `[storage] listen` where the
 //! node declares the Storage role, and each started Receive Location, its own and its
-//! bindings', whose address names a port, over TCP. A Receive Location whose
+//! bindings', whose address names a port, over TCP. The cluster's authority, where
+//! `[provision.node]` serves it, listens at its `serve` and `publish`
+//! addresses (ADR-0034, amendment 2026-10-22). A Receive Location whose
 //! transport listens on UDP is said over TCP too until a transport declares
 //! the protocol it listens on, which none does yet.
 
@@ -58,6 +60,11 @@ fn listening(document: &XmipConfigurationDocument) -> Vec<String> {
     let storage = document.storage.listen.as_deref().filter(|_| stores);
     if let Some(port) = storage.and_then(port_of) {
         said.push((port, "storage".to_string()));
+    }
+    for (address, what) in crate::authority::listens(document) {
+        if let Some(port) = port_of(&address) {
+            said.push((port, what.to_string()));
+        }
     }
     let own = document.receive_locations.iter();
     let bound = document

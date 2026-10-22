@@ -18,11 +18,11 @@ context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
 - Subject: The operator surfaces and their language
 - Name: The operator surfaces
 - Order: 1
-- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip-cli`, Rust; Observation, and why it is lossy; Remote operation, WinRM, SSH
+- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip`, Rust; Observation, and why it is lossy; Remote operation, WinRM, SSH
 
 Rust is the language of the runtime; everything in the message path is Rust.
 Across a language boundary everything goes through the C ABI; Rust to Rust,
-through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
+through traits (amendment 2026-10-12). The command line, `xmip`, is Rust
 on the runtime's traits, so it runs where .NET does not; the PowerShell module
 and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
 (`Xmip.Abi`). The four stay, each for its purpose; the desktop runs on Windows
@@ -1147,3 +1147,14 @@ transport's tests, and the runtime's plane tests.
 Provenance: the move is the owner's, agreed 2026-10-21; the place, `net`,
 was his preference; the API and the folder are the assistant's, for the
 owner to overrule.
+
+## Amendment, 2026-10-22: the command is `xmip`
+
+The owner, 2026-10-22: *Xmip CLI should be named just xmip, no need for the
+'-cli' part of the name.* The amendment of 2026-09-18 named it `xmip-cli`,
+by his word that day — *xmip-cli, not xmip: every System Process Xmip owns
+matches xmip-\** — and he approved widening that rule rather than keeping
+the name: every System Process Xmip owns is `xmip` or `xmip-<what>`
+(ADR-0053, amendment 2026-10-22). An operator types `xmip health <scope>`,
+`xmip certificate …`, `xmip mcp`; the repository and crate stay
+`xmip-core-cli`. Nothing else about the command line changes.
