@@ -281,6 +281,64 @@ three commands that make the edits; the extension registers **Xmip: Add**,
 **Rename** and **Delete**, which ask only what the server sends them to ask.
 Parties are not in the configuration yet, so none is suggested.
 
+## Amendment, 2026-10-22: every kind the configuration defines has its view, and the gaps are filled
+
+The owner, 2026-10-22, about the VS Code extension: *Go ahead and fill the
+gaps.* The configuration had grown since 2026-10-13, and the editor and the
+designer had not followed everywhere. Built 2026-10-22, each by clause 5,
+in `xmip-core-configure` below both surfaces:
+
+- **Every kind is defined.** The views are Cluster, Node, Party, Module,
+  Receive Port, Receive Location, Send Port, Send Location, Send Port Group,
+  Prepare, Promote, Demote, Route, Transformation and Work Process
+  (`kinds.rs`). Prepare, Promote, Demote and Transformation list the calls to
+  compiled units the file holds, and Module its `[[modules]]` (ADR-0066,
+  amendment of this date); no kind is "not defined yet", so a view's
+  `defined` is deleted with every use. The Cluster view holds `[operate]`
+  and `[provision]` beside the other shared tables.
+- **Parties.** `accept.party` names a Party of `[[parties]]`: suggested,
+  looked up, renamed with it and guarding its deletion, as every other
+  reference (`references.rs`). A new Party's `id` is minted by configure as
+  it is added, never typed.
+- **What may be set, offered.** Each entry of the views carries `offered`:
+  every key its table may hold and does not write, its kind, whether it is
+  required, and the words or names it may take — the reference's choices, a
+  choice's words, the role words, and in `[tuning]` the runtime's
+  declaration, which the runtime hands in with the role words
+  (`offered.rs`, `Views::offering`). An array of unnamed tables, a Party's
+  `identities`, is offered as the keys of one element — `mechanism`,
+  `purpose` with its words `receive` and `send`, `value` — and added by the
+  new edit `add-element`. The VS Code designer and the Operation Desktop's
+  Configure page both draw it, as keys and values to pick, and hold no rule.
+- **The kinds read right.** A key's kind was read wrong where an outer
+  table refused its probe before reaching it — `[storage] listen`,
+  `certificate`, `key` and `anchors` were offered as `any` — and is read
+  now with every table above it given only the way down to it
+  (`shape.rs`).
+- **The calls.** A call's `module` and `unit` are references, the units
+  offered those of the list's capability; an attachment offers only the
+  calls whose unit serves the stage it is attached at; and a call's
+  `settings` table is completed and explained from its unit's declaration,
+  which the views answer as `units` beside the views.
+
+**The technologies' declarations.** Asked what the runtime library the
+surfaces load should carry, the owner, 2026-10-22: every technology's
+declaration — names, settings, kinds and words, not the technologies'
+code — so every Location's settings are suggested and checked on every
+surface, each declaration placed once in its technology; and, from two
+ways, a `declaration` feature in each technology crate, its code behind the
+default, gathered by one crate the surfaces' build links. Decided, not
+built (open problem 48): until then a surface's library carries none, and the
+file Send Location's `name` pattern, like every transport's settings, is
+checked only by a node that loads the transport.
+
+**The runtime's library stays named.** Asked whether the extension should
+find the runtime's library itself through the one rule, `RuntimeLibrary`,
+the owner kept `xmip.runtime.library` required (2026-10-22): a Rust server
+cannot call the .NET rule, and a second writing of it is the copy ADR-0052
+deleted on 2026-09-24. The setting's description and the server's sentence
+say plainly where to point it, and `doc/getting-started.md` sets it.
+
 ## Amendment, 2026-10-22: the Work Process designer
 
 Clause 1's third designer. The owner, 2026-10-22: *I would like a Work

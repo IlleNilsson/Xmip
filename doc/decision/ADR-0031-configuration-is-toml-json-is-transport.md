@@ -473,6 +473,47 @@ Service learns each node's address from cluster membership — node
 registration in the administration database (`deployment-model.md`,
 *The administration database holds*) — not from `xmip.toml`.
 
+## Amendment, 2026-10-22: no Pipeline, the attachment keys decided, and debatching on both sides
+
+**No Pipeline concept.** The amendment of 2026-10-05 already breaks
+BizTalk's Receive and Send Pipelines into steps every Port and Location may
+configure, and Xmip has no Pipeline beside them. BizTalk's stages, the
+owner's mapping of 2026-10-22:
+
+| BizTalk pipeline stage | Xmip |
+| --- | --- |
+| Decode, Encode | Prepare — a Receive or Send Preparation — and message security |
+| Disassemble, Assemble | the Contract, with its deserialization or serialization |
+| Validate | validation (`runtime-model.md` section 20, *Validation gates*) |
+| Resolve Party | ADR-0019's identity steps: identify, authenticate, authorize |
+| Pre-assemble | Transform and Demote, on send |
+
+**The keys are decided** (ADR-0066, amendment of this date): each step is a
+call to a compiled unit, an entry of `[[preparation_steps]]`,
+`[[promotions]]`, `[[demotions]]` or `[[transformations]]`, and a Port or
+Location attaches entries by name — `prepare = [...]`, `transform`,
+`promote` on receive, `demote` on send. The inline `promote` and `demote`
+tables of Content Selectors and the `[[…prepare]]` tables of a step and its
+settings drafted on 2026-10-05 are replaced by them. `contract`,
+`contract_settings` and `validate` stay as drafted; reading them is still
+decided, not built.
+
+**Debatching, on both sides.** Asked whether debatching belongs in the
+receive or in an Xmip Work Process, the owner, 2026-10-22: *I'm not shure,
+can we go with both?* So both: in the receive, streamed — each record
+published as a Message of its own as soon as it is complete, a failure
+reported for each record — and in an Xmip Work Process. One splitting
+implementation, placed once, is called from both.
+
+**Batching only in an Xmip Work Process.** The owner: *I'm not shure that I
+want Debatching and Batching without a Xmip Work Process. It is not stream
+friendly.* Batching gathers Messages over time, which a stream does not
+wait for; it is a Work Process's.
+
+Decided, not built: debatching and batching wait for the Work Process
+engine (open problem 47). Their configuration keys are not chosen: any
+written for them is a draft for the owner.
+
 ## Amendment, 2026-10-22: correlation sets replace a Send Port's ordering keys
 
 The owner, 2026-10-22: *A default correlation set is its receive location

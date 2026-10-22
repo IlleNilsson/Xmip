@@ -45,6 +45,28 @@ When a person writes or says **Process** without qualification and the meaning
 is not clear, the correct response is to ask whether they mean **System
 Process**, an **Xmip Host Service** or an **Xmip Work Process**.
 
+## Compiled units, their stages, and what Xmip does not call a Pipeline
+
+What a developer designs beyond a route is compiled, and the configuration
+refers to it (ADR-0066, amendment 2026-10-22; the owner: *They are compiled
+units. They just have to be referred to in the VS Code extension, ending up
+in the TOML configuration.*).
+
+| Term | Meaning |
+| --- | --- |
+| **Compiled unit** | A function a Module provides, declared in its manifest, `[[modules.manifest.units]]`: its name, its capability — prepare, promote, demote, transform, work-process or validate — the stages it serves, that it works offline, and the settings a call to it gives. Called, it is handed the stage it is called at. |
+| **Step entry** | A call to a compiled unit with its arguments: an entry of `[[preparation_steps]]`, `[[promotions]]`, `[[demotions]]` or `[[transformations]]`, naming its module, its unit and its settings. A Receive or Send Port or Location attaches entries by name. |
+| **Receive Preparation**, **Process Preparation**, **Send Preparation** | A prepare unit called at the receive, process or send stage. One unit may serve several, *just an enum away what it does in what situation* (the owner, 2026-10-22): decompress on receive, compress on send. Only a prepare unit is a Preparation; *A transformation is not a prepare, just so we are clear.* |
+| **Debatching** | Splitting one Message into a Message per record. In the receive, streamed: each record published as its own Message as soon as it is complete, a failure reported for each record; and in an Xmip Work Process. One splitting implementation, called from both (the owner, 2026-10-22: *can we go with both?*). Decided, not built (open problem 47). |
+| **Batching** | Gathering Messages into one, in an Xmip Work Process alone (the owner, 2026-10-22: *It is not stream friendly.*). Decided, not built (open problem 47). |
+
+**Pipeline** is BizTalk's word and not Xmip's: its stages are Xmip's steps
+on the Port and the Location (ADR-0031, amendment 2026-10-22). Decode and
+Encode are a Preparation and message security; Disassemble and Assemble the
+Contract with its deserialization or serialization; Validate is
+validation; Resolve Party is ADR-0019's identity steps; Pre-assemble is
+Transform and Demote on send.
+
 ## Roll and Role
 
 Two words, one letter apart, both chosen. The owner read one for the other on
@@ -270,8 +292,15 @@ happen to a Message, and only two of them make a new one:
 | | What changes | Message id | Generation |
 | --- | --- | --- | --- |
 | **Enrichment** | context only: the identities settled at arrival, promoted properties, validation results, execution history | the same: the Message is rebuilt under its identifiers, never edited in place | the same |
-| **Assignment** | context: values set from a literal or another value | new, naming the one before | next; the Sections are shared |
-| **Transformation** | content: a new Stream | new, naming the one before | next |
+| **Assignment** | context: values set from a literal or another value | new, from a previous or a created Message | next; the Sections are shared |
+| **Transformation** | content: a new Stream | new, from a previous or a created Message | next |
+
+The owner, 2026-10-22: *Transformation and Assignment where ever they
+occur, creates a new message from a previous or created message* — the
+source may be a Message a Work Process constructed itself. And: *Assignments
+are not configured, they are done by primarily Work Processes*: no key of
+the configuration names one; a Work Process's compiled code assigns through
+the assign capability.
 
 So "immutable" means the Streams a Message's Sections reference never change,
 and a recorded generation is never rewritten — not that nothing is ever

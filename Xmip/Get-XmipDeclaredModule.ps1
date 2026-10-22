@@ -132,7 +132,9 @@ function Read-XmipModuleManifest {
 
     # No manifest, no declared Cargo dependencies.
     if (-not (Test-Path -LiteralPath $manifest)) {
-        return [pscustomobject]@{ Package = ''; Needs = @(); References = $references }
+        return [pscustomobject]@{
+            Package = ''; Needs = @(); Builds = @(); References = $references
+        }
     }
 
     [string] $text = Get-Content -LiteralPath $manifest -Raw
@@ -142,11 +144,41 @@ function Read-XmipModuleManifest {
         $name = $Matches['name']
     }
 
+    # What its build needs, its tests' own dependencies left out: a test may
+    # use a module that builds on this one (node's tests read configure's
+    # test cluster, and configure reads node's stage words), which Cargo
+    # allows and which orders nothing (2026-10-22).
+    [string] $built = [regex]::Replace($text, '(?ms)^\[dev-dependencies\].*?(?=^\[|\z)', '')
+    [string[]] $builds = @(Get-XmipManifestPackage -Text $built)
+
+    [string[]] $needs = @(Get-XmipManifestPackage -Text $text)
+
+    [pscustomobject]@{
+        Package = $name; Needs = $needs; Builds = $builds; References = $references
+    }
+}
+
+function Get-XmipManifestPackage {
+    <#
+        .SYNOPSIS
+            The Xmip packages a Cargo.toml's text names as dependencies.
+
+        .PARAMETER Text
+            The manifest's text, or the part of it to read.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Text
+    )
+
     # Any alias: a technology names its sibling `ethernet` or `iso_tp`, not
     # `xmip-...`. Matching only aliases that start with xmip landed ethercat
     # before ethernet on 2026-09-11. What decides is the package.
-    [string[]] $needs = @(
-        [regex]::Matches($text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
+    @(
+        [regex]::Matches($Text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
             ForEach-Object {
                 [string] $body = $_.Groups['body'].Value
 
@@ -159,8 +191,6 @@ function Read-XmipModuleManifest {
             } |
             Where-Object { $_ -like 'xmip*' }
     )
-
-    [pscustomobject]@{ Package = $name; Needs = $needs; References = $references }
 }
 
 function Get-XmipModuleConsumer {
@@ -273,7 +303,8 @@ function Sort-XmipModuleDependency {
 
             A cycle is reported rather than quietly broken. Cargo would refuse
             it anyway, and an arbitrary order here would turn a manifest error
-            into a mysterious build failure.
+            into a mysterious build failure. A test's own dependency orders
+            nothing: Cargo allows a module's tests to use one that builds on it.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -297,7 +328,7 @@ function Sort-XmipModuleDependency {
             $package[$read.Package] = $name
         }
 
-        $needs[$name] = $read.Needs
+        $needs[$name] = $read.Builds
     }
 
     [List[string]] $placed = [List[string]]::new()

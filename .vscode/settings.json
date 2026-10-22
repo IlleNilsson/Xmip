@@ -15,16 +15,32 @@
     "scm.alwaysShowRepositories": true,
 
     // 43 repositories times target/ is a large number of files nobody wants
-    // watched, indexed, or offered in Quick Open.
+    // watched, indexed, or offered in Quick Open. The working areas hold the
+    // shared build directory (.ai-interaction/target-windows) and whole
+    // clones of the estate (.local-work/*-work): watched, a build sent the
+    // C/C++ extension 74,000 file events and crashed its language server
+    // (microsoft/vscode-cpptools#14841, 2026-10-22).
     "files.watcherExclude": {
         "**/target/**": true,
+        "**/target-*/**": true,
         "**/bin/**": true,
-        "**/obj/**": true
+        "**/obj/**": true,
+        "**/.ai-interaction/**": true,
+        "**/.local-work/**": true
     },
     "search.exclude": {
         "**/target": true,
+        "**/target-*": true,
         "**/bin": true,
-        "**/obj": true
+        "**/obj": true,
+        "**/.ai-interaction": true,
+        "**/.local-work": true
+    },
+    "C_Cpp.files.exclude": {
+        "**/target/**": true,
+        "**/target-*/**": true,
+        "**/.ai-interaction/**": true,
+        "**/.local-work/**": true
     },
 
     "files.trimTrailingWhitespace": true,
