@@ -280,3 +280,29 @@ for each problem the runtime reports where the fix is determinable — and
 three commands that make the edits; the extension registers **Xmip: Add**,
 **Rename** and **Delete**, which ask only what the server sends them to ask.
 Parties are not in the configuration yet, so none is suggested.
+
+## Amendment, 2026-10-22: the Work Process designer
+
+Clause 1's third designer. The owner, 2026-10-22: *I would like a Work
+Process to be designed in VS Code, but at the end of the day it is a
+compiled piece executed when called upon*; the design format, BPMN 2.0
+by default, and what it compiles to are ADR-0066's amendment of this date.
+
+Built 2026-10-22. A `.bpmn` file opens in the **Xmip Work Process
+designer**, the extension's default editor for it: Xmip's own TypeScript
+and SVG, never bpmn-js (JavaScript, and its license demands a visible
+watermark). The design is a standard BPMN 2.0 document with its BPMN DI, so
+clause 4 holds as it does for the cluster's file: the text is the design,
+the designer a view of it, and an edit is made in place in the XML, the
+rest byte for byte. Clause 5 holds with one difference: what a design means,
+how it is drawn and edited and what it compiles to are the design format's
+(`xmip-core-process-bpmn`) and `xmip-core-process`'s, answered by
+`xmip-lsp` itself (`xmip/process`, `xmip/processEdit`,
+`xmip/processCompile`), because a design format is a technology and the
+runtime's library, a platform service, names none (`architecture.toml`).
+**Compile** writes the Work Process unit's crate and its `[[modules]]`
+entry beside the design. Which design formats the runtime's library the
+.NET surfaces load carries, so that the PowerShell module and the Operation
+Desktop could compile a design too, is the owner's to decide, as which
+technologies it carries is (amendment 2026-09-28); until then a design is
+compiled in VS Code.

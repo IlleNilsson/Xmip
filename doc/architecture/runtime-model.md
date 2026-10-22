@@ -131,6 +131,16 @@ name, propose a better one*; the assistant proposed Ledger; the owner:
 and every Journey, with the state of each Work Process, retry, failure and
 replay state, and the Messages a paused Subscription holds.
 
+**A Work Process's state is two tables of its own** (built 2026-10-22,
+section 22): **Process Instance**, each Instance's state whole, by its
+identifier, with how many turns it has taken and whether it has ended; and
+**Correlation**, each correlation set's key — named from the Work Process,
+the set and the key's values in full — and the Instance it belongs to. Both
+are written in a turn's one write and nowhere else, and an Instance only over
+the turn it was read at. Beside them, each Stream that holds a place in a
+sequence end to end has its count of open Journeys, kept by the writer in the
+writes that open and end them (*Sequences*, below).
+
 **The Ledger belongs to the cluster, not to a node** (the owner, 2026-10-01:
 *There is nothing local about either RocksDB or SQLite, they are cluster
 services running on one or more nodes*; and *All DB records have to be
@@ -375,15 +385,17 @@ whatever sequence it likes is perfectly exclusive and completely unordered.
 
 Ordering needs three things a claim does not supply:
 
-**An order key.** Ordered *by what*? Global ordering across a Receive Location
-serializes everything and destroys throughput. What is almost always wanted is
-ordering **per key** — per Party, per device, per account — so that
-unrelated sequences run in parallel while each sequence stays intact. The key is
-configured; there is no useful default.
+**A key.** Ordered *by what*? A correlation set says: the values work is
+spread over, per Party, per client, per device, so that unrelated sequences run
+in parallel while each sequence stays intact (ADR-0024 and ADR-0066,
+amendments 2026-10-22). Where nothing is configured, a Receive Location orders
+its own Streams as one sequence, end to end — the owner, 2026-10-22: *A default
+correlation set is its receive location name. … Default one stream, message,
+journey at a time.*
 
 **In-sequence selection.** The holder takes the next item for that key, not the
-next available item. That is a different query against the Ledger, and it is
-why ordering is a queue property.
+next available item: each key is a queue of its own in the Ledger, and work
+goes on only while it holds the first place there (*Sequences*, below).
 
 **A failure policy, which nobody thinks about until it happens.** When an
 ordered item fails, either the sequence blocks behind it — order preserved,
@@ -391,26 +403,57 @@ head-of-line blocking, one bad Message stops a Party's traffic until an
 operator intervenes — or it is set aside and the sequence continues, which
 breaks the ordering that was the point. Both are defensible; **neither is a
 default that can be chosen silently**, because the first surprises an operator
-with a stall and the second surprises them with reordering. A Sequential
-sequence's failure policy, block or skip, must therefore be configured, never
-left to a silent default (the owner, 2026-10-01, accepting it for the send
-side, section 10). Configuration states both on the Send Port, as
-`order_key` and `on_failure`, and a Sequential one without `on_failure` is
-refused at startup (section 20, *Where the runtime's settings are
-configured*).
+with a stall and the second surprises them with reordering. The owner chose,
+2026-10-22: block by default, skip as an option — a failed Journey waiting for
+an operator keeps its Stream at the head until Retry or Dismiss, and a set's
+`on_failure = "skip"` lets the rest pass. It is a key of the set, placed once
+(section 20, *Where the runtime's settings are configured*).
 
-### Execution style
+### Sequences
 
-An artifact declares how its work runs:
+The owner, 2026-10-22: *If I want to open up for parallelism I can use context
+values like Receive Port, Work Process, Send Port, Message and Journey context
+values. I can widen and strangle parallelism at any configurable point*, and
+*Equal values in a correlation set (aka hashtable) go in the same queue,
+different values go parallel depending on the value in the correlation set.*
 
 ```text
-Sequential    one at a time, in order, per order key
-Parallel      many at once, no ordering guarantee
-Concurrent    many in flight, interleaved, no ordering guarantee
+[[correlation_sets]]                 declared once, cluster-wide
+  name, keys, on_failure            keys: receive-location, receive-port,
+                                    work-process, send-port, context:<name>
+correlation_set = "<set>"           at a Receive Location, Receive Port,
+                                    Work Process or Send Port
 ```
 
-**Sequential enforcement is state-based and durable.** The sequence position,
-by order key, lives in the Ledger, not in the memory of whatever is currently
+- **One queue per point and key.** A sequence is a queue in the Ledger named by
+  the point and the key's values in full,
+  `<cluster>/sequence/<point>/<name>/<set>/<values>`; equal tuples share it,
+  different tuples run in parallel. Its identifier is named from that text and
+  the text is kept beside every place, so a collision is told apart.
+- **A place is taken in the write that brings work to the point** — the
+  Publication, a hand-on that publishes — and work there goes on only while it
+  holds the first place. What does not waits in the Ledger, its claim given
+  back, holding no thread; a step that ends a sequenced Journey reads its
+  queues again at once.
+- **A Receive Location's and a Receive Port's sequence is end to end.** The
+  Stream's origin — the Message it was received as — holds the place until the
+  last Journey born from it ends, its sends and what a Work Process published
+  from it among them. Each Journey's record says its origin and whether it is
+  still open, and Xmip Storage counts the open ones in the writes that open
+  and end them; the last to close lets the places go in that same write.
+- **A Work Process's and a Send Port's sequence holds the Journey** while it is
+  at that point: until it is handed to its Instance, or sent.
+- **The default costs no write.** A Receive Location that names no set holds
+  its own sequence, keyed by its name, its place taken in the Publication's
+  own write. Whether a Stream heads its sequence is one Ledger read, once per
+  Stream on each node that takes a step of it: a place that heads its sequence
+  heads it until it is let go, so a node remembers what it has seen head and
+  never asks again (`sequence::heads`). No Location keeps the promise end to end
+  alone, as its Stream's send may run on another node, so none passes the
+  Ledger's sequence by.
+
+**Sequence enforcement is state-based and durable.** The sequence position,
+by key, lives in the Ledger, not in the memory of whatever is currently
 running it. A node that dies mid-sequence loses nothing: the position is
 behind Xmip Storage, its claim lapses, and another node claims it and
 continues from it. Enforcing order through in-memory
@@ -418,7 +461,8 @@ state would mean a restart either replays or skips, and neither is acceptable
 for something whose entire purpose is that the order held.
 
 Recovered 2026-08-26 from the `_origins` design export, where the execution
-styles and the durability rule were recorded and had been carried into none of
+styles — Sequential, Parallel, Concurrent, deleted 2026-10-22 for correlation
+sets — and the durability rule were recorded and had been carried into none of
 the consolidated documents.
 
 This is not new. It was recorded in the earliest architecture, carried in
@@ -598,16 +642,20 @@ killed mid-send has every Journey it acknowledged sent once it is restarted,
 the one cut short again — at least once, never lost; a send that fails is
 written Failed with why while its sender was acknowledged all the same; a
 retry's backoff holds no thread, and a stop gives its claim back; and a
-Sequential Send Port keeps its order, blocking behind a failure or setting
-it aside as `on_failure` says. And, built 2026-10-04 (`tests/ledger/
+Send Port naming a correlation set keeps its order, blocking behind a
+failure or setting it aside as the set's `on_failure` says. And, built 2026-10-04 (`tests/ledger/
 send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
 Subscription opens one Journey per Port, each in its Port's queue and sent
 or failed alone; every send carries its Journey's identifier as its key,
 the same on every try; a retry's count is kept in the Ledger and survives a
 restart; an Operator's Retry sends a failed Journey again — in its order
-where a Sequential Port blocks behind it — and Dismiss ends it Dismissed and
-lets its sequence go, each audited. The Work Process step waits for a
-runtime that runs Processes. And, built 2026-10-19 (`tests/ledger/
+where its sequence blocks behind it — and Dismiss ends it Dismissed and
+lets its sequence go, each audited. And, built 2026-10-22
+(`tests/ledger/work_process.rs`): a client's Messages make one Instance and
+its Batch holds them in the order received; two clients carried at once,
+the Work Process step dispatching meanwhile, never see one of their Messages
+overtake another; a node killed mid-process is started again and finishes
+its Instance from the Ledger. And, built 2026-10-19 (`tests/ledger/
 send_streamed.rs` and `roomed.rs`, what the process allocated counted): a
 64 MiB Message sent to four Send Ports held 1.1 MB at most, read a chunk
 at a time and never whole; four departures at a far end's pace read an
@@ -719,6 +767,30 @@ External Stream
 
 > Receive Locations receive Streams. Receive Ports create Messages. Publication
 > offers them. Routing decides where they continue. Journeys carry them.
+
+**The receive order** (the owner, 2026-10-22: *Every received stream must
+check in, from what Receive Location, Receive Port. It has to propose its
+identity, be authenticated, authorized, promoted, Correlation Set populated,
+then we can queue the message in the fashion it needs to be queued*, and
+*Identify, Authenticate and Authorize. Those are different uses*). Every
+Stream goes through eight steps, in this order:
+
+1. **Check in**: the Receive Location and Receive Port it came through,
+   recorded with it (`journey::Received`).
+2. **Identify**: the identity it proposes, read at the transport and again in
+   the Message (ADR-0019).
+3. **Authenticate**: that identity proved.
+4. **Authorize**: what it may do, decided by policy.
+5. **Prepare, Message creation, Contract and validation.**
+6. **Promotion**.
+7. **The correlation set's key populated**, from the Message's context: its
+   Receive Location's own sequence, or the set the Location and its Port name
+   (section 3, *Sequences*).
+8. **Queued** in the Ledger, as its set says: its place taken in each
+   sequence in the Publication's own write.
+
+Nothing joins a sequence before step 7: a Stream refused at any step before
+it holds no place and keeps nothing waiting behind it.
 
 **Failures before Publication are audited receive failures, not Dead Journeys.**
 There is no Journey yet to be Dead. This is the single most important boundary
@@ -1005,8 +1077,9 @@ Journey another node has moved on since is never reset (section 10,
 *Corrected 2026-10-06*). A
 paused Subscription's Journey is written and held until the Subscription is
 resumed, and the held ones are picked up oldest first. The chain is recorded
-and bounded (ADR-0026). A Sequential artifact's position, by its order key,
-is in the Ledger. Nothing is deduplicated.
+and bounded (ADR-0026). A sequence's position, by its key, is in the
+Ledger (section 3, *Sequences*), its places taken in the Publication's own
+write. Nothing is deduplicated.
 
 **The Dead Message Queue is Ledger state**, not a place beside it: a
 Publication that matched nothing is kept in the Ledger with its receive
@@ -1191,8 +1264,8 @@ The owner accepted four additions:
   written to the Ledger, and the Send pool picks it up when it is due.
 - **The deduplication key is the Journey id**, not the Message id: one
   Message may have several Journeys, each delivered once (section 15).
-- **A Sequential sequence's failure policy, block or skip, must be
-  configured** — never a silent default (section 3).
+- **A sequence's failure policy is its correlation set's**, block by
+  default, skip as the option (section 3; the owner, 2026-10-22).
 - **A large Message's outgoing Contract validates streaming**, chunk by
   chunk, or that Send Location refuses to start.
 
@@ -1208,16 +1281,16 @@ every other is handed it once durable (ADR-0018, amendment 2026-10-20). The
 Publication keeps every Journey that is not held in the queue of where it
 leads — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node
-sends that Port and it is not Sequential, claims it in the same write and
+sends that Port and it names no correlation set, claims it in the same write and
 hands it to the Send pool in memory, so the send costs no sync of its own
 before it starts — where the pool admits it (*Corrected 2026-10-06*
 below). Each pass tries the Port's Send Locations in configured
 order (`send_locations`, or the Location bound under the Port's name),
 `retry` on the active one and `failover = "next"` to the next, and hands on
 in one write: **Completed** and out of its queue; **Failed** with why in
-words, its Message with it, kept in its queue for an operator — where a
-Sequential Port's `on_failure = "block"` stops its sequence behind it, and
-otherwise passed over; or **Recovering**, its due time kept at its place in
+words, its Message with it, kept in its queue for an operator — where its
+sequence's `on_failure` is `block` it stops the sequence behind it, and
+otherwise it lets its place go; or **Recovering**, its due time kept at its place in
 its queue and its claim released, a scan passing over it until it is due
 (corrected 2026-10-16, below; until then its claim was kept to its due
 time and the node kept the Journey in memory to start it again).
@@ -1228,9 +1301,11 @@ first), and every Journey no live claim holds is claimed (`[tuning]
 send_lease`) and sent — one a dead node
 left, one whose send was cut short, one no node sending its Port held;
 claims of work in flight are renewed, and a stop gives back the claims of
-what waits. A Sequential Send Port has one Journey of each sequence — the
-value of its `order_key` in the Message's context — in flight at a time,
-the oldest first. A paused Subscription's resume moves each Journey it
+what waits. A Send Port naming a correlation set has one Journey of each
+key in flight at a time, the oldest first, and every Journey waits until its
+Stream heads the sequences it holds end to end (section 3, *Sequences*): a
+pass that finds it does not gives its claim back, tries nothing, and is taken
+up again once it does. A paused Subscription's resume moves each Journey it
 held to its Send Port's queue in one hand-on, and the send step sends it
 from there. The node's snapshot publishes, at `<node>/send/<Port>`, what
 was sent, what failed — the last Journey that did, and why — and what
@@ -1266,10 +1341,9 @@ waits for its due time.
   with who acted and gated by role on every surface (`xmip_operate.h`
   section 16). Each is one hand-on under a claim: Retry writes the Journey
   Active, its tries begun anew, and moves it to the end of its Send Port's
-  queue — keeping its place where it blocks a Sequential Port, so its
-  sequence goes on in order from it; Dismiss writes it Dismissed, its
-  history kept, and takes it out of the queue, so a Sequential Port's next
-  of its order key goes. An act is taken by a node that sends the Journey's
+  queue — keeping its place in its sequence, so the sequence goes on in
+  order from it; Dismiss writes it Dismissed, its history kept, and takes it
+  out of the queue, so the next of its key goes. An act is taken by a node that sends the Journey's
   Port, the one whose `<node>/send/<Port>` showed it failed.
 
 **Corrected 2026-10-05**, after an external review of the send step:
@@ -1278,10 +1352,9 @@ waits for its due time.
   Dismiss reads the Journey, takes its claim, and reads it again: where
   another writer moved it between the two — another operator's act, a node
   that sent it — the act is refused in words and nothing is written, so an
-  act never writes back a state the Journey has left. A scan of a
-  Sequential Send Port, which reads a Journey before it claims it to learn
-  its sequence, reads it again under the claim with its place in the queue,
-  and sends it only where it is still there and still to be sent.
+  act never writes back a state the Journey has left. A scan reads a
+  Journey again under its claim with its place in the queue, and sends it
+  only where it is still there and still to be sent.
 - **A send whose thread panics is settled.** It is written Failed with why —
   kept in its queue for an operator, as every Journey that failed is — its
   claim ended, counted and audited; it is never left owned, its claim
@@ -1320,16 +1393,15 @@ waits for its due time.
   end failing every send slows its node's admissions rather than filling
   its memory.
 - **A scan claims on the send threads.** What a scan finds unclaimed in a
-  queue that is not ordered is claimed and read on the send thread its
+  queue is claimed and read on the send thread its
   place was admitted for, so a backlog's claims share their commits; until
   now the dispatching claimed them one by one, a commit's sync each, which
-  a backlog refilled through the scan would have paid for every Journey. A
-  Sequential Send Port's scan still claims in order, one of each sequence.
+  a backlog refilled through the scan would have paid for every Journey.
 - **A Send Port with failed Journeys waiting is Done.** Its record at
   `<node>/send/<Port>` is Done — blocked or failed, the pain an operator's
   Retry or Dismiss solves (`observability-model.md` section 6) — while any
-  waits in its queue, the most severe of the Done where one blocks a
-  Sequential Port's sequence, and Fine once none does; what failed before
+  waits in its queue, the most severe of the Done where one blocks its
+  Send Port's sequence, and Fine once none does; what failed before
   and was acted on is history in its figures and leaves it Fine. Until now
   it was Fine whatever waited, and left out of what needs attention.
 - **Now and history are published apart.** Every Send Port the node sends
@@ -1426,8 +1498,8 @@ waits for its due time.
   hundred by default), read again only where the index's places moved;
   the snapshot publishes that window, and a surface pages the rest from the
   index, each page one read. A scan passes over a place marked failed
-  without reading its Journey, except where it blocks a Sequential Port's
-  sequence. Until now the node kept every Journey a scan had read Failed,
+  without reading its Journey; whether it blocks a sequence is the
+  sequence's, which keeps its place. Until now the node kept every Journey a scan had read Failed,
   with why, and every place passed over, so its memory grew with the
   failures, and every node read each failed Journey once after a restart
   to find it again.
@@ -1438,8 +1510,8 @@ waits for its due time.
   claim, no place in the Send pool and no memory. A read of a queue answers
   with Xmip Storage's clock beside the entries, so a node tells how long an
   entry still waits as a duration and never compares two clocks; a scan
-  passes over an entry not yet due without claiming it — on a Sequential
-  Port reading it, so its sequence waits behind it — and claims it, on any
+  passes over an entry not yet due without claiming it — its place in a
+  sequence kept, so the sequence waits behind it — and claims it, on any
   node, once it is due, its tries counted on from its `attempts`. The node
   keeps per queue only the earliest due time and how many wait, as the
   queue's last read showed and as each hand-on Xmip Storage took since
@@ -1471,9 +1543,8 @@ waits for its due time.
   let a scan that had read the queue before that Journey's hand-on landed —
   no due time at its place then, and the Journey no longer owned when the
   scan looked — take a claim nobody held and send the Journey again at
-  once: a far end received it twice from one node. Until now only a
-  Sequential Send Port's scan read the place again, and it did not look at
-  the due time. Xmip Storage's claim stays as section 3 has it — *set the
+  once: a far end received it twice from one node. Until then only an
+  ordered scan read the place again, and it did not look at the due time. Xmip Storage's claim stays as section 3 has it — *set the
   owner where the owner is empty or lapsed* — and already refuses any claim
   held under another token, whoever holds it: in the race no claim was
   held, so only the read under the claim can tell, and the same holds for a
@@ -1569,11 +1640,11 @@ problems 40 and 43, ADR-0013, amendment 2026-10-21): **a send scan reads
 only what is due.** A Send Port's queue is indexed, too, on whether each
 entry failed, when it is due — a retry's due time, or the epoch for one due
 since it was held — and its place (`held_due`); what is due now is one
-range of it. A scan of a Port that is not Sequential reads only that, a
-page at a time, in the order it fell due, and stops where the Send pool is
-full; a Sequential Port's reads beside it what holds a sequence behind it —
-what waits for a retry, and where a failure blocks, what failed — and goes
-through all of it in the queue's order. How many wait for a retry, and when
+range of it. A scan reads only that, a page at a time, in the order it fell
+due, and stops where the Send pool is full; what holds a sequence behind it
+is the sequence's (corrected 2026-10-22, section 3, *Sequences*: until then
+an ordered Port's scan read its whole queue in order, the one place order
+was kept, now deleted). How many wait for a retry, and when
 the earliest is due, Xmip Storage keeps and tells (`held_due_places`); a
 scan no longer reads what waits to learn it. A Journey that failed waits
 for no retry: its due time goes with the mark. Each queue's first entry of
@@ -2009,7 +2080,7 @@ interaction type, response behavior, and audit and retention policy.
 
 Six things the runtime needs had no place in configuration: Receive Ports,
 a Receive Location's interaction type and processing depth, the Send Port's
-policy, the order key and a Sequential failure policy, Parties on a node,
+policy, the order key and a failure policy, Parties on a node,
 and retention and audit policy per Port and Location. The owner,
 2026-10-01: *sort it and present a solution*. The assistant presented one;
 the owner: *If there are no questions, write it down.* Two points were then
@@ -2035,9 +2106,18 @@ name            = "ErpOut"
 send_locations  = ["ErpPrimary", "ErpBackup"]       # tried in order
 retry           = { attempts = 3, backoff = "5s" }  # on the active Location
 failover        = "next"          # next | none
-execution_style = "sequential"
-order_key       = "party"         # for example, per Party
-on_failure      = "block"         # block | skip
+correlation_set = "PerParty"      # one at a time per key, as the set says
+```
+
+In the cluster's `xmip.toml`, once for the whole cluster (ADR-0024 and
+ADR-0066, amendments 2026-10-22):
+
+```toml
+[[correlation_sets]]
+name       = "PerParty"
+keys       = ["context:Party"]   # receive-location | receive-port | work-process |
+                                 # send-port | context:<name>, in order
+on_failure = "block"            # block where it says nothing | skip
 ```
 
 - **A Receive Port** is named, and keeps Message creation and Publication
@@ -2048,9 +2128,15 @@ on_failure      = "block"         # block | skip
   the receive gates read (section 7).
 - **A Send Port** names its `send_locations`, tried in order; `retry`
   applies to the active Location; `failover` is `next` or `none`
-  (section 10). It states its `execution_style`, its `order_key` and its
-  `on_failure`; a Sequential Send Port without `on_failure` is refused at
-  startup, because section 3 allows no silent default.
+  (section 10). It may name a `correlation_set`: its Journeys pass it one
+  at a time per key (section 3, *Sequences*).
+- **A correlation set** is declared once for the cluster and named at a point
+  — a Receive Location, a Receive Port, a Work Process or a Send Port — by
+  `correlation_set`. A Receive Location that names none goes one Stream at a
+  time, keyed by its own name. A set not declared, declared twice, with no key
+  or with a key that is no key word is refused at validation and as a node
+  starts. The Send Port's `execution_style`, `order_key` and `on_failure`
+  were deleted for it on 2026-10-22.
 
 In a node's configuration:
 
@@ -2298,8 +2384,8 @@ every restart in between.
 (the owner, 2026-10-01, validated part by part with the assistant). A pool
 for the Work Process step (section 3) claims a Journey destined for one
 Work Process. Its state is in the Ledger, never in thread memory, and is
-checkpointed at every Stage. Waiting releases its thread; a Correlation Rule
-resumes it on any capable node. Assignment belongs to a Work Process alone.
+checkpointed at every turn. Waiting releases its thread; a Message of its key
+in a correlation set resumes it on any capable node. Assignment belongs to a Work Process alone.
 New content is a new Stream, written in chunks, and a new Message
 generation. Validation gates stand at its input and output (section 20).
 Publishing back goes through routing again, with the chain recorded
@@ -2307,11 +2393,62 @@ Publishing back goes through routing again, with the chain recorded
 Receive Location holding the call (section 11). The end of every execution
 scope is audited with its outcome.
 
-**Not yet built:** running Stages — the Work Process engine itself — is work
-of its own. A node declares and plans its Work Processes
-([built, in the assembled service](estate-map.md#process-declaration)); compiling one
-at design time and running it are
-[decided, not built](estate-map.md#process-execution).
+**Built 2026-10-22** (ADR-0066, amendment 2026-10-22). The owner, 2026-10-22:
+*I would like a Work Process to be designed in VS Code, but at the end of the
+day it is a compiled piece executed when called upon.*
+
+- **Designed, then compiled.** A Work Process is drawn in BPMN 2.0, the
+  default design format (`xmip-core-process-bpmn`), in Xmip's own VS Code
+  designer, and saved as standard BPMN XML with BPMN DI. It is compiled at
+  design time to the one `process::Program` — a graph of typed steps, its
+  flows resolved and its subprocesses laid flat — and generated as a Rust
+  crate exporting it, built into a library: the Work Process unit, declared
+  `capability = "work-process"`, `stages = ["process"]`, `offline = true`.
+  A `[[work_processes]]` entry names its flow by `module` and `unit`. The
+  node never reads a design.
+- **Loaded through the C ABI** (`xmip_module.h` section 13): `declared`, what
+  the unit declares — its name, the correlation sets it follows, the names
+  its decisions read — and `advance`, one turn. A unit compiled from a user's
+  design ships apart from Xmip, so a change to a process never rebuilds the
+  node.
+- **A turn** takes the Instance as the Ledger holds it and one event — a
+  Message of its key arrived, the work it asked for done or thrown, its time
+  due — and answers the acts the runtime carries out: work on a Message (a
+  unit's call, an Assignment, a split), Messages made one, a Message
+  published back through routing, how it ended (`process::flow`).
+- **The Work Process step** (`xmip-core-runtime`'s `work_step`) claims a
+  Journey from its Work Process's queue, waits while its Stream does not head
+  its sequences, finds its Instance through the Correlation table — or the
+  one it starts — advances it, carries out its acts, and hands it all on in
+  one write (`XmipStorage::turn`): the Journey, the new Messages, the
+  Journeys published with their places, the Instance, its correlation keys
+  set or let go, and, where a timer waits, the Journey kept at its place with
+  its due time. An Instance is written only over the turn it was read at, so
+  two nodes taking a turn of one Instance never both write; the later gives
+  its claim back and takes the turn again from the Instance as it now is.
+- **Nothing waits on a thread.** An Instance waiting for a Message is a
+  record in the Process Instance table and its keys in the Correlation
+  table; one waiting for a time is the due time of the Journey whose turn
+  started the timer, taken up by a scan when it is due, on any node.
+- **Correlate, Wait, Batch, Debatch.** A start or a receive step names the
+  correlation set it takes Messages by: the start initializes it, a later
+  step follows it, and the Messages of one key are handed to their Instance
+  in the order the Ledger wrote them (section 3, *Sequences*). A Batch
+  collects Messages of the key until it has its `most` or its `within` is due
+  and makes them one Message, their Sections in order; a Debatch splits the
+  current Message by a splitting unit and publishes each part.
+- **Try and catch.** An error boundary event catches an error of its code
+  thrown inside its task or subprocess — by a failed unit call, or an error
+  end event — and leads on; one no scope catches fails the Instance. A timer
+  boundary event interrupts its task or subprocess once due. Compensation is
+  not built: the owner, 2026-10-22, *Compensation can mostly be handled with
+  try/catch*.
+
+**Decided, not built:** the `settings` a Work Process gives its unit; unit
+calls through the standard units' registry (a node calls none yet, and a call
+throws `no-unit`); a Journey published on one node woken on another at once
+(open problem 46); a Send Location naming a correlation set; human tasks
+(open problem 47).
 
 ### Stages
 
@@ -2323,7 +2460,7 @@ timeouts and decisions it meets.
 ### Starting and resuming
 
 > A Subscription decides when work **starts**.
-> A Correlation Rule decides when waiting work **resumes**.
+> A correlation set decides when waiting work **resumes**.
 
 A Subscription Instance may correlate an incoming Message to a waiting Process
 Instance. Where the correlation and the wait condition both match, Xmip
@@ -2349,11 +2486,15 @@ of an execution scope is always audited.**
 Completed   CompletedWithWarnings   Failed   Canceled   TimedOut   Abandoned
 ```
 
-**How this relates to `JourneyState` is not yet decided.** A Process is one
-step inside a Journey rather than the Journey itself, so the two vocabularies
-are probably distinct with a mapping between them — but the Process model has
-only just been written down, and inventing the mapping in the same breath
-would be guessing. Recorded in section 23 with the other open questions.
+**How this relates to `JourneyState` — DRAFTED 2026-10-22, for the owner.** A
+Process is one step inside a Journey rather than the Journey itself, so the two
+vocabularies stay distinct. What is built: an Instance that ends `Completed`
+leaves the Journey of its last turn `Completed`; one that ends `Failed` — an error
+no scope caught — leaves it `Failed` with the code and why, kept in its Work
+Process's queue for an operator's Retry or Dismiss. A Journey whose turn only
+hands its Message to a waiting Instance is `Completed`; one whose turn starts a
+timer is `Waiting` until it is due. `CompletedWithWarnings`, `Canceled`,
+`TimedOut` and `Abandoned` are not produced yet.
 
 ## 23. Conflicts resolved
 

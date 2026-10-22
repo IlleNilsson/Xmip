@@ -194,7 +194,9 @@ xmip-report = { package = "xmip-core-report", git = "https://github.com/IlleNils
 xmip-resilience = { package = "xmip-core-resilience", git = "https://github.com/IlleNilsson/xmip-core-resilience", branch = "main", optional = true }
 xmip-retain = { package = "xmip-core-retain", git = "https://github.com/IlleNilsson/xmip-core-retain", branch = "main", optional = true }
 xmip-route = { package = "xmip-core-route", git = "https://github.com/IlleNilsson/xmip-core-route", branch = "main" }
-xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main" }
+# Opening Modules from their libraries, a compiled Work Process unit among
+# them (ADR-0066, amendment 2026-10-22).
+xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main", features = ["dynamic-loading"] }
 xmip-secret = { package = "xmip-core-secret", git = "https://github.com/IlleNilsson/xmip-core-secret", branch = "main", optional = true }
 xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.com/IlleNilsson/xmip-core-secret-dpapi", branch = "main", optional = true }
 xmip-secret-file = { package = "xmip-core-secret-file", git = "https://github.com/IlleNilsson/xmip-core-secret-file", branch = "main", optional = true }

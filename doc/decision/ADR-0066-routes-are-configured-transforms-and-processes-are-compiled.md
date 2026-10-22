@@ -206,3 +206,215 @@ technologies its program linked, and refuses to start while a filter names
 what none of them reads (`xmip-core-runtime`'s `startup.rs`,
 `what_the_program_was_not_built_with_refuses_the_node_at_start`), as clause
 1 decides. The route gathering is built once, with the node's `Runtime`.
+
+## Amendment, 2026-10-22: a Work Process is designed in BPMN 2.0, compiled to a unit and run from the Ledger
+
+The owner, 2026-10-22: *I would like a Work Process to be designed in VS
+Code, but at the end of the day it is a compiled piece executed when called
+upon. … there are BPEL solutions out there, no need to invent the wheel
+unless we have to*; then *go with the best functionality agreeing with Xmip
+licensing*, and *Go for it*. Of the choice made, BPMN 2.0: *It can not be
+the only choice, just the default one.* Clause 1's other half for Work
+Processes and clause 4 are built by this amendment.
+
+### 1. A design format is a technology behind one trait; BPMN 2.0 is the default
+
+- **One trait, one compiled form.** `xmip-core-process`'s `DesignFormat`
+  reads a design and compiles it to the one `Program`; a design names its
+  format, and `bpmn` is assumed where it names none (`DEFAULT_FORMAT`). The
+  engine runs a `Program` and never learns which format it came from.
+- **BPMN 2.0 is the default technology**, `xmip-core-process-bpmn`, mounted
+  beside the capability's source. OMG's specification licenses anyone to
+  build software on it, which agrees with Xmip's AGPL; its XML with BPMN DI
+  is what every BPMN tool opens, so a design drawn in Xmip's own VS Code
+  designer is a standard `.bpmn` file and one drawn elsewhere compiles here.
+  The designer is Xmip's own TypeScript and SVG; bpmn-js is not used (it is
+  JavaScript, and its license demands a visible watermark).
+- **Other formats come later as technologies of their own**, behind the
+  same trait: WS-BPEL 2.0, or the Open Workflow Specification — the latter
+  only where a technology for it can be built that explicitly works
+  offline: its catalogs, `use` resources and endpoints may name remote
+  documents, and any technology for it must resolve locally only and refuse
+  a remote reference at design and compile time. A unit written by hand is
+  already a format of its own: it implements `process::Flow`.
+
+### 2. Offline, always
+
+The owner, 2026-10-22: *We can't be dependent on resources online, check
+that out!*, and *We can only use standards, code and compiled units that
+explicitly work offline! The offline units may be updated, but on the end
+user's request, after a review.*
+
+- The BPMN 2.0, BPMN DI, DC and DI XML Schemas of OMG's BPMN 2.0.2
+  publication ship inside the technology, unmodified (`schema/`). A
+  namespace is a name and is never fetched; a `schemaLocation` for a
+  namespace Xmip ships a schema of is answered by that schema, its location
+  never read.
+- Any other location, in a `schemaLocation` or a `bpmn:import`, that names
+  a network resource is refused in words before anything is asked
+  (`process::remote`); a local one is read through `LocalResources`, files
+  beside the design. A BPMN document imported for its definitions is refused
+  in this version: one design is one document. Proved with no network
+  attempt (`a_remote_import_is_refused_in_words_and_nothing_is_asked_for_it`).
+- A document type declaration is refused, so no entity of anyone else's is
+  expanded. Neither the compiler nor the engine opens a connection.
+- A compiled unit's manifest says `offline = true`.
+- **The XML reader is quick-xml** (0.42, MIT, no default features; its one
+  dependency is memchr, MIT or Unlicense). Neither holds network code: their
+  sources were searched for `std::net`, sockets and HTTP clients on
+  2026-10-22 and hold none. Validating a design against the shipped schemas
+  waits for `xmip-core-contract-xml-schema` to read `import` and `include`,
+  which it refuses today.
+
+### 3. What BPMN 2.0 compiles to, in this version
+
+The owner, 2026-10-22: *Correlation is a big thing, process things in
+order. Compensation can mostly be handled with try/catch. Rules can be
+handled in code. Human tasks, waiting for an email, text or a phone call can
+wait.*
+
+| BPMN 2.0 | The Work Process program |
+| --- | --- |
+| process (`isExecutable`), none and message start events | the Instance's start |
+| `serviceTask` with `xmip:call module unit` | a call to a compiled unit; a rule is code |
+| `serviceTask` with `xmip:debatch` | the split, each part published back through routing |
+| `task` with `dataOutputAssociation` and `assignment` | an Assignment: a new Message generation |
+| `sendTask`, message throw and end events | the current Message published back through routing |
+| `receiveTask`, message catch events | a wait for the next Message of the Instance's key |
+| `receiveTask` with `xmip:batch most within` | a Batch: Messages of the key made one, their Sections in order |
+| timer catch events (`timeDuration`, `timeDate`) | a due time in the Ledger |
+| exclusive gateway, `conditionExpression` in `urn:xmip:expression`, default flow | a decision in Xmip's expression language |
+| parallel gateway | a fork and a join |
+| embedded `subProcess` | a scope, laid flat |
+| interrupting timer boundary event | a scope's timer |
+| interrupting error boundary event, error end event | try and catch: a scope catching a code |
+
+Refused in words, naming the element: compensation, transactions and cancel
+events (*handled with try/catch*); user and manual tasks (*can wait*, open
+problem 47); business-rule tasks (*Rules can be handled in code*); script
+tasks (a node never interprets); call activities, inclusive, complex and
+event-based gateways, signal, escalation, conditional and link events,
+event subprocesses, loops and multi-instance, ad hoc subprocesses,
+choreographies, and any element the compiler does not read. A failed unit
+call throws the code its unit answers; an exclusive gateway whose
+conditions all fail with no default throws `no-branch`; a flow that never
+waits throws `loops`.
+
+### 4. Compiled to a unit, loaded through the C ABI, run a turn at a time
+
+- **The compiled form is `process::Program`**, a graph of typed steps with
+  every flow resolved and every subprocess laid flat, kept in its binary
+  form (`process::form`). `process::generate` writes the Work Process unit
+  it is built into: a Rust crate carrying the program's bytes, exporting it
+  with `process::export_work_process!`, built as a `cdylib`, and the
+  `[[modules]]` entry declaring it (`capability = "work-process"`,
+  `[[modules.manifest.units]]` with `stages = ["process"]` and
+  `offline = true`).
+- **Loaded through the module boundary.** A Work Process compiled from a
+  user's design ships apart from Xmip, so it is a library a node loads and
+  never linked into the service, and a change to a process never rebuilds
+  the node: `xmip_module.h` section 13, the work process table —
+  `declared`, what the unit declares, and `advance`, one turn: the
+  Instance, the event and the time in, the Instance and the acts out —
+  opened by `runtime::ffi::loaded_work_process` as a `process::Flow`. A
+  `[[work_processes]]` entry names its flow by `module` and `unit`.
+- **The engine is `process::flow`**: a turn takes the Instance as the
+  Ledger holds it and one event — a Message of its key arrived, work done
+  or thrown, its time due — and answers the acts the runtime carries out:
+  work on a Message, Messages made one, a Message published, how it ended.
+- **The runtime's Work Process step** (`runtime::work_step`) claims a
+  Journey bound for a Work Process, finds its Instance through the
+  Correlation table, advances it, carries out its acts, and hands it all on
+  in one write (`XmipStorage::turn`): the Journey, the new Messages, the
+  Journeys published, the Instance, its correlation keys, and — where a
+  timer waits — the Journey kept at its place with a due time. **Nothing
+  waits on a thread**: an Instance waiting for a Message or a time is a
+  record in the Ledger. An Instance is written only over the turn it was
+  read at, so two nodes taking a turn of one Instance never both write.
+- **Two tables of their own** in the runtime database: Process Instance and
+  Correlation (`persist::storage`'s `instance`).
+
+### 5. Correlation sets, cluster-wide, and the one Sequence
+
+The owner, 2026-10-22: *Correlations should be definable, like in BizTalk.
+Default would be the receive port, if one would like to broaden it it
+should be able to use promoted values in a message or context values*;
+*As long as the correlation sets are cluster wide*; then, of the default,
+*every receive location should by default be end to end treated. Not the
+receive port, unless opened up by correlation sets to support multiple
+processing through Xmip*; and, replacing the drafts before it, *A default
+correlation set is its receive location name. There might be more streams,
+files, pushing at that receive location. Default one stream, message,
+journey at a time. Put it in the ledger if it is not processed now. If I
+want to open up for parallelism I can use context values like Receive Port,
+Work Process, Send Port, Message and Journey context values. I can widen
+and strangle parallelism at any configurable point*; *Equal values in a
+correlation set (aka hashtable) go in the same queue, different values go
+parallel depending on the value in the correlation set*; and *Of course that
+is why the stages exist, Receive Location, Receive Port. It is up to Xmip to
+work as specified. A Receive Location can work on its own when the
+Correlation Set value is only Receive Location. When there is a more
+complicated Correlation Set, Xmip is the tool.* His two examples: an order
+*can be processed per client requesting an order*; an update of all the
+merchandise *Xmip should process one at a time because the person updated
+all the merchandise is hacking away not knowing of the consequences*.
+
+- **`[[correlation_sets]]`**, declared once in the cluster's `xmip.toml`:
+  `name`; `keys` — `receive-location`, `receive-port`, `work-process`,
+  `send-port`, or a Message Context value by the name a filter reads it by,
+  promoted properties among them; and `on_failure`, `block` where it says
+  nothing, `skip` to let the rest pass (the owner, 2026-10-22: block by
+  default, skip as an option). A Journey Context value is refused until
+  something sets one. configure refuses an undeclared set, one declared
+  twice, one with no key and a key that is no key word, at validation and as
+  a node starts.
+- **A point names a set** by `correlation_set`: a Receive Location, a
+  Receive Port, a Work Process or a Send Port. A BPMN start or receive names
+  the set it takes Messages by, `<xmip:correlate set="…"/>`: the start
+  initializes it, a later step follows it, and a process may follow several.
+  A Send Location naming a set is drafted, not built.
+- **A Receive Location that names none goes one Stream at a time**, keyed by
+  its own name: the merchandise update needs nothing configured, and
+  `correlation_set = "PerClient"` keyed by `context:Client` spreads orders
+  per client.
+- **The Sequence is one mechanism** (`runtime::sequence`): a queue in the
+  Ledger per point and key, named by the point and the key's values in full
+  — `<cluster>/sequence/<point>/<name>/<set>/<values>` — its identifier
+  named from that text and the text kept beside every place, so two keys
+  share a queue only where every value is equal. A place is taken in the
+  write that brings work to the point; work there goes on only while it
+  holds the first place, and what does not waits in the Ledger, holding no
+  thread. A Receive Location's and a Receive Port's sequence holds the
+  Stream end to end: its origin holds the place until the last Journey born
+  from it ends, which Xmip Storage counts in the writes that open and end
+  them (the Journey facts `origin` and `open`). A Work Process's and a Send
+  Port's holds the Journey while it is at that point.
+- **The Send Port's `execution_style`, `order_key` and `on_failure` are
+  deleted**, and a Work Process's `execution_style` with them: a Send Port
+  that must send one at a time names a set keyed by `send-port`, and the
+  send scan's own ordering (`send_step/scan.rs`'s `in_sequence`) is deleted,
+  so ordering has one implementation.
+- **What a Location does on its own.** A Stream's place in its Receive
+  Location's sequence is taken in the Publication's own write and counted in
+  the writes that open and end its Journeys, so the default costs no write
+  of its own. Whether a Stream heads its sequence is one Ledger read, once
+  per Stream on each node that takes a step of it: a place that heads its
+  sequence heads it until it is let go, so a node remembers what it has seen
+  head and asks again of nothing (`sequence::heads`). No Location keeps the
+  promise end to end alone — its Stream's send may run on another node — so
+  none passes the Ledger's sequence by: the cluster-wide promise is never
+  traded for a read.
+- **The receive order** (the owner, 2026-10-22: *Every received stream must
+  check in, from what Receive Location, Receive Port. It has to propose its
+  identity, be authenticated, authorized, promoted, Correlation Set
+  populated, then we can queue the message in the fashion it needs to be
+  queued*, and *Identify, Authenticate and Authorize. Those are different
+  uses*): check in, Identify, Authenticate, Authorize, Prepare and Message
+  creation, Contract and validation, promotion, the correlation set's key
+  populated, queued. Nothing joins a sequence before its key is populated.
+
+Provenance: the rulings quoted are the owner's, 2026-10-22. The program's
+steps, the extension elements' names (`urn:xmip:process:1`, `xmip:call`,
+`xmip:debatch`, `xmip:batch`, `xmip:correlate`, `urn:xmip:expression`), the
+key words, the queue names, the turn's form and section 13's shape are the
+assistant's, each the owner's to strike.

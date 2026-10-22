@@ -131,8 +131,10 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   Send Port has no Processing. A node declares and plans its Work Processes
   ([built, in the assembled service](doc/architecture/estate-map.md#process-declaration)); compiling
   one at design time and running it are
-  [decided, not built](doc/architecture/estate-map.md#process-execution), and a Journey to one ends
-  saying no runtime runs it yet.
+  [built, not in the assembled service](doc/architecture/estate-map.md#process-execution): a BPMN 2.0
+  design compiles to a Work Process unit a node loads through the C ABI, and
+  the node's Work Process step takes a turn of each Instance from the Ledger,
+  holding no thread while it waits (ADR-0066, amendment 2026-10-22).
   *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to a Work Process alone and
