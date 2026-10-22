@@ -1070,6 +1070,7 @@ You have a word. This gives you the decision that governs it.
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
+| compiled unit | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | configuration | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | configuration change | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | Configuration, TOML | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |

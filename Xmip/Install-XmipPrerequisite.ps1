@@ -363,8 +363,9 @@ function Install-XmipPrerequisite {
         }
     }
 
-    # The event source the audit fallback writes under (ADR-0062), and the
-    # RocksDB library every build under the root links (.cargo/config.toml).
+    # The event source the audit fallback writes under (ADR-0062), the RocksDB
+    # library every build under the root links (.cargo/config.toml), and the
+    # archived tools (Install-XmipArchive.ps1).
     [hashtable] $source = @{
         Manifest     = $manifest
         ManifestPath = $ManifestPath
@@ -373,7 +374,8 @@ function Install-XmipPrerequisite {
         Caller       = $PSCmdlet
     }
 
-    foreach ($said in @(Install-XmipEventSource @source; Install-XmipNativeLibrary @source)) {
+    foreach ($said in @(Install-XmipEventSource @source; Install-XmipNativeLibrary @source;
+            Install-XmipArchive @source -IncludeOptional:$IncludeOptional)) {
         $results.Add($said)
     }
 

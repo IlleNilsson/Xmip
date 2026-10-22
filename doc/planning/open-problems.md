@@ -1414,6 +1414,39 @@ Storage node, answered as a Publication or a hand-on puts a Journey in it,
 which the sending node's scan waits on instead of its interval; the
 node-to-node sync plane (ADR-0067) is the other way, and decided, not built.
 
+## 47. Debatching and batching are decided, not built
+
+Decided 2026-10-22 (ADR-0031, amendment 2026-10-22): debatching runs both
+in the receive, streamed — each record published as a Message of its own as
+soon as it is complete, a failure reported for each record — and in an Xmip
+Work Process, one splitting implementation called from both; batching runs
+only in a Work Process (the owner: *It is not stream friendly.*). Neither is
+built: both wait for the Work Process engine, which runs no Work Process
+yet. No configuration key is chosen; any drafted for them is the owner's to
+decide.
+
+## 48. The surfaces' library carries no technology's declaration
+
+Decided by the owner, 2026-10-22 (ADR-0064, amendment 2026-10-22): the
+runtime library the surfaces load carries every technology's declaration —
+names, settings, kinds and words, not the technologies' code — so every
+Location's settings are suggested and checked on every surface. Not built:
+today the library carries what a node in its process loaded, which for a
+surface is nothing, so no transport, contract or setting — the file Send
+Location's `name` among them — is suggested in VS Code or on the desktop.
+Each declaration is a `const` in its technology's crate, beside the code.
+The owner chose the way the same day, from two (the other a catalogue
+generated at build time): a `declaration` feature in each technology
+crate, its code and its dependencies behind the default feature, so the
+declaration stays placed once. The plan, its own work after the current:
+
+1. A test that a technology built with its declaration alone pulls in no
+   heavy dependency.
+2. The crates in batches, each landed in its own repository.
+3. A gathering crate last, which the surfaces' runtime build links every
+   declaration through, since a platform service depends on no technology
+   (`architecture.toml`).
+
 ---
 
 # Suggested order

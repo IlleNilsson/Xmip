@@ -15,7 +15,7 @@
   expression language they share
 - Name: Routes are configured; transforms and processes are compiled
 - Order: 16
-- Concepts: expression; compiled at start; compiled at design time
+- Concepts: expression; compiled at start; compiled at design time; compiled unit
 
 **A route is configuration: its filter is text in the Xmip Application's
 TOML, compiled once when a node starts and evaluated from the compiled form.
@@ -206,3 +206,80 @@ technologies its program linked, and refuses to start while a filter names
 what none of them reads (`xmip-core-runtime`'s `startup.rs`,
 `what_the_program_was_not_built_with_refuses_the_node_at_start`), as clause
 1 decides. The route gathering is built once, with the node's `Runtime`.
+
+## Amendment, 2026-10-22: Prepare, Promote, Demote, Transformation and a Work Process's flow are calls to compiled units
+
+The owner, 2026-10-22, on Prepare, Promote, Demote, Transformation and a
+Work Process's flow: *They are tricky but not impossible. They are compiled units. They
+just have to be referred to in the VS Code extension, ending up in the TOML
+configuration.* Compiling them stays clause 4's; what the configuration
+holds is the reference. Decided by the owner the same day, in the keys
+drafted for him: a unit is a function a Module provides, and a step entry
+is a call to it with arguments.
+
+- **A Module declares its units** in its manifest, `[[modules.manifest.units]]`
+  (`abi::ModuleUnit`): `name`; `capability`, what it can be called as —
+  `prepare`, `promote`, `demote`, `transform`, `work-process` or `validate`
+  (*Validation according to format or custom contracts has to be in
+  there*), never read from its name; `stages`, the stages it serves; and
+  `settings`, what a call may give, in the shape a technology declares a
+  Location's settings in, each with its kind, default or requirement, words
+  and meaning (`abi::UnitSetting`, xmip-core's `Setting` as data).
+- **Stages.** The owner: *So there has to be a need for a separation of
+  prepeare units. Like receive, process and send*, and then: *Maybe we
+  should use the terms Receive, Process and Send Preparation more clear. The
+  code used in a prepare situation is usually similar. It is just an enum
+  away what it does in what situation.* A unit lists the stages it serves,
+  `stages = ["receive", "process", "send"]` or fewer, in the message path's
+  own stage words, read by `xmip-core-node`'s `Stage` and never listed again;
+  called, it is handed the stage it is called at, so one unit may compress
+  on send and decompress on receive. Promote serves receive alone and Demote
+  send alone, by definition; a Work Process's flow, a Debatch, may serve
+  receive as well as process. A prepare unit at each stage is a Receive
+  Preparation, a Process Preparation or a Send Preparation; *A transformation is not a prepare, just so
+  we are clear*: the other kinds have stages and are never called
+  Preparation.
+- **Offline, explicitly.** The owner: *We can only use standards, code and
+  compiled units that explicitly work offline! The offline units may be
+  updated, but on the end user's request, after a review.* A manifest says
+  `offline = true` for the module and for each unit, and configure refuses
+  one that does not, in words, at validation and as a node starts. The
+  module's version, `[modules.manifest.identity] version`, is what the
+  configuration pins; a module is never updated by itself (the update act is
+  ADR-0045's, amendment of this date).
+- **A call is an entry** of one of four lists, in a node's document — the
+  cluster's top or `[nodes.<name>]` — and in an Xmip Application's section:
+  `[[preparation_steps]]`, `[[promotions]]`, `[[demotions]]` and
+  `[[transformations]]`, each with `name`, `module` (a `[[modules]]` entry),
+  `unit` (one of that module's units, of the list's capability) and
+  `settings`, held to the unit's declaration as a Location's settings are to
+  its technology's. A Work Process names its flow by `module`, `unit` and
+  `settings` the same way, a `work-process` unit serving `process`.
+- **Attachment**, on the four artifacts, by the entry's name, as ADR-0031's
+  amendment of 2026-10-05 places them: `prepare = [...]` in order,
+  `transform`, `promote` on a Receive Port or Location alone, `demote` on a
+  Send Port or Location alone. Receive runs the Location's, then the
+  Port's; send the Port's, then the Location's. An artifact attaches entries
+  of its own document's lists: a node's Locations and bound Locations the
+  node's, an Application's Ports and Locations the Application's.
+- **Refused**, in words, by `xmip_validate_v1` for every surface and as a
+  node starts (`configure::step::problems`): a module no `[[modules]]` entry
+  declares, a unit its manifest does not declare or declares as another
+  capability, a stage word that is none, a unit listing a stage twice or
+  none, a Promote or Demote unit listing another stage, a call's settings
+  its unit's declaration refuses, an attachment naming no entry, a unit
+  attached at a stage it does not serve, and a Promotion on send or a
+  Demotion on receive.
+- **Assignment is not configured.** The owner: *Assignments are not
+  configured, they are done by primarily Work Processes.* No key names one;
+  a Work Process's compiled code assigns through the assign capability.
+  And: *Transformation and Assignment where ever they occur, creates a new
+  message from a previous or created message* (terminology).
+
+Built 2026-10-22, the reference, not the running: `abi::unit`,
+`configure::step`, `configure::modules`, the Module, Prepare, Promote,
+Demote and Transformation views of the designer and the Operation Desktop
+(ADR-0064, amendment of this date). Running a unit is decided, not built: a
+node refuses to start a Port or Location that attaches one, saying this
+runtime runs no compiled unit yet (`configure::step::unrun`, startup phase
+3). The standard units are separate work (`xmip-core-unit`).

@@ -2107,43 +2107,55 @@ the same defaults. [Decided, not built](estate-map.md#arrival-validation): a nod
 refuses a Location naming a Contract, and reads none of these keys yet.
 
 ```toml
+[[transformations]]                             # a call to a compiled unit
+name   = "EdifactOrderToOrder"
+module = "orders"                               # a [[modules]] entry
+unit   = "EdifactToOrder"                       # its manifest's unit
+
+[[preparation_steps]]
+name     = "Unzip"
+module   = "codecs"
+unit     = "Codec"                              # serves receive and send
+settings = { format = "gzip" }
+
 [[receive_ports]]
 name     = "Orders"
 contract = "xmip-core-contract-json-schema"     # the Port's one format
 contract_settings = { reference = "schemas/order.json" }
-promote  = { OrderNumber = "order.number" }     # Content Selectors
+promote  = "OrderNumbers"                       # a [[promotions]] entry
 
 [[receive_locations]]
 name         = "OrdersEdi"
 receive_port = "Orders"
 contract     = "xmip-core-contract-edifact"     # the Party's format
 validate     = false                            # receive: true unless said
-transform    = "EdifactOrderToOrder"            # compiled at design time
-
-[[receive_locations.prepare]]                   # in order
-step     = "xmip-core-prepare-decompress"
-settings = { format = "gzip" }
+prepare      = ["Unzip"]                        # in order
+transform    = "EdifactOrderToOrder"
 
 [[send_ports]]
 name      = "ErpOut"
 transform = "OrderToErpOrder"
-demote    = { OrderNumber = "order.number" }
+demote    = "OrderNumbersOut"                   # a [[demotions]] entry
 
 [[send_locations]]
 name     = "ErpPrimary"
 contract = "xmip-core-contract-xml-schema"
 validate = true                                 # send: off unless said
-demote   = { OrderNumber = "headers['X-Order']" }
 ```
 
-Startup checks the chain — what a Location hands its Port, a
-Transformation's output, what a Send Port hands its Send Location — against
-the next Contract named, and refuses a mismatch; and refuses a
-Transformation, validation or promotion that needs materialized content on
-a Receive Location at `transfer` or `light` depth. Recorded in ADR-0031,
-amendment 2026-10-05; the key names are the assistant's drafting. Not
-built.
-
+Each Prepare, Promote, Demote and Transform is a call to a compiled unit
+its Module's manifest declares, attached by the call's name (ADR-0066,
+amendment 2026-10-22: the keys decided by the owner, replacing the drafts
+of 2026-10-05); a unit lists the stages it serves, and is attached only at
+one of them. Configure validates the calls and their attachments; running a
+unit is decided, not built, and a node refuses to start a Port or Location
+that attaches one. `contract`, `contract_settings` and `validate` are still
+the assistant's drafting. Startup will check the chain — what a Location
+hands its Port, a Transformation's output, what a Send Port hands its Send
+Location — against the next Contract named, and refuse a mismatch; and
+refuse a Transformation, validation or promotion that needs materialized
+content on a Receive Location at `transfer` or `light` depth. Recorded in
+ADR-0031, amendments 2026-10-05 and 2026-10-22. Not built.
 ### Validation gates
 
 The `Validation` step in section 5 is the receive gate. It is not the only
