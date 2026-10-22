@@ -132,6 +132,7 @@ pub fn serve(
             &format!("{program}: could not declare itself: {problem}"),
         );
     }
+    let said = running.storage().said();
     record(
         audit,
         "start",
@@ -140,7 +141,7 @@ pub fn serve(
             ("node", location.as_str()),
             ("configuration", configuration),
             ("purpose", arguments.purpose.word()),
-            ("storage", running.storage().said()),
+            ("storage", said.as_str()),
             ("orders", place.as_str()),
             ("snapshot", snapshot.as_str()),
             ("operate", listening.as_deref().unwrap_or("")),

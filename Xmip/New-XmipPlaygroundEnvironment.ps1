@@ -260,6 +260,9 @@ function New-XmipPlaygroundEnvironment {
         [Parameter()]
         [string] $Certificate,
 
+        [Parameter()]
+        [string] $Service,
+
         [Parameter(Mandatory)]
         [string] $Area
     )
@@ -341,6 +344,14 @@ function New-XmipPlaygroundEnvironment {
 
     if (-not [string]::IsNullOrWhiteSpace($Certificate)) {
         $environment.XMIP_PLAYGROUND_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
+    }
+
+    # The xmip-service the run starts every node as that is neither real nor
+    # simulated, each reaching Xmip Storage over the wire and driven through
+    # its Receive Locations (ADR-0028, amendment 2026-10-22). Unset, every
+    # node not real is simulated.
+    if (-not [string]::IsNullOrWhiteSpace($Service)) {
+        $environment.XMIP_PLAYGROUND_SERVICE = [System.IO.Path]::GetFullPath($Service)
     }
 
     return $environment

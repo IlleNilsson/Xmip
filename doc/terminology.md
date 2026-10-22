@@ -51,7 +51,7 @@ type in the code and **roll** had never been written down here at all.
 | **Hidden run** | A roll that declared itself hidden when it was started, `Start-XmipTest -Hidden`: an assistant's test run beside the owner's. Every surface leaves it out — its cluster, its run and its audit records — until asked to show it: the views' *show test clusters* box, `-IncludeHidden`, `--include-hidden`. Hidden by what it declared and never by its name, so a cluster that declared nothing is shown whatever it is called (ADR-0028 and ADR-0052, amendments 2026-09-30). Shown with it, it is marked *test*. |
 | **Simulated node** | A node of a Playground run that the run spawned: a System Process on the computer the run is on, `xmip-playground-<cluster>-node-<node>`, which emulates the node over a directory the run's nodes share. Every node of a run on one computer is one. Its name is the cluster file's, the same a real node of that name has (ADR-0028, amendment 2026-10-21). |
 | **Real node** | A node of a Playground run on a machine of its own: `xmip-service` installed and started there by an environment template (`deploy/dsc`), never by the run. The run uses it where the name typed for it, `-Nodes`, resolves and it answers over its operate listener as that node; the run never spawns, configures or stops it, reads what it publishes, and says in `[run] real` which nodes are real (ADR-0028, amendments 2026-09-19 and 2026-10-21). |
-| **Test level** | Where a test's nodes run: level 1 one computer, simulated nodes, the Playground and the estate's tests; level 2 machines of their own, an environment template's, the same cluster file and the same scenarios with real nodes; level 3 an end user's own environment (the owner, 2026-10-19). A level is never a *circumstance*: that word is implied identity's (ADR-0050), what a drop folder's path says of a file. |
+| **Test level** | Where a test's nodes run: level 1 one computer, the Playground's nodes processes of `xmip-service` on loopback where the run builds it and simulated where not, and the estate's tests (ADR-0028, amendment 2026-10-22); level 2 machines of their own, an environment template's, the same cluster file and the same scenarios with real nodes; level 3 an end user's own environment (the owner, 2026-10-19). A level is never a *circumstance*: that word is implied identity's (ADR-0050), what a drop folder's path says of a file. |
 | **Environment template** | A desired-state template that creates an Xmip environment, never a lab: the machines (`deploy/dsc/msdsc/hyperv`) and what runs inside them (`deploy/dsc/msdsc/environment`, and the same set in Ansible, `deploy/dsc/ansible`), each for Windows and Linux alike (ADR-0015, amendments 2026-10-09 and 2026-10-21). Which node runs on which machine is its parameters, never the cluster's file. |
 | **Role** | What something is permitted or expected to be. A Node has `NodeRole`, eight of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the Playground's; Storage is Xmip Storage, the doorway every other node calls for all storage (ADR-0056, amendments 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
 
@@ -349,8 +349,13 @@ operations — write a Stream chunk, write a Message, claim a Journey, hand it
 on, write an audit record — every other node calls,
 never a database directly, round robin over the Storage nodes. More than one
 Storage node is the safety. Only a node with the Storage role stores; every
-other node reaches one through `[storage] nodes`, and a one-machine node
-carries the role (ADR-0056, amendment 2026-10-20). It always keeps three databases, one to each
+other node reaches one through `[storage] nodes`, over Xmip's mutual TLS with
+the certificate `[storage]` names, and a one-machine node carries the role
+(ADR-0056, amendments 2026-10-20 and 2026-10-22). Several embedded Storage
+nodes are a **primary**, serving every operation, and its **standbys**, each
+copying the primary's writes behind it and promoted once it is gone; each
+promotion raises the **epoch**, and a primary of an earlier one is not asked
+(drafted, ADR-0056, amendment 2026-10-22). It always keeps three databases, one to each
 data domain, whatever the backend: the **runtime database**, which is the
 Ledger; the **administration database** — administration, deployment state,
 cluster membership, operator state, and the Subscriptions each Host Service

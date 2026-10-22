@@ -771,3 +771,16 @@ Which account a node runs as was open (the amendment of 2026-10-13); the
 virtual account and `xmip` are the assistant's draft of 2026-10-21, for the
 owner to strike. DSC and Ansible are optional prerequisites, for test level
 2 alone (`prerequisite.toml`).
+
+## Amendment, 2026-10-22: every node of the example environment runs
+
+A node that declares no Storage role reaches Xmip Storage over the wire in
+the assembled service (ADR-0056, amendment of this date), so every node the
+templates of the amendment of 2026-10-21 put on a machine starts, where
+until today only D1 did. Nothing the templates do changed: each node's
+certificate from the cluster's authority is what it presents to the
+Storage nodes as well as on its operate listener, and the firewall opening
+follows `xmip-service --listening`, which says `7443/tcp storage` on a node
+declaring the Storage role. The Playground's cluster file says its Storage
+nodes once for every node, `[storage]`; the example's D2 is on no machine,
+and every node passes it over. The assistant's, 2026-10-22.

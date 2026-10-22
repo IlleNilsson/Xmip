@@ -208,6 +208,8 @@ function Complete-XmipPlaygroundBuild {
 
     try {
         Invoke-XmipPlaygroundBuild -Binary roll | Out-Null
+        # The xmip-service every node of the run not real is started as.
+        $start.Service = Invoke-XmipPlaygroundService -Cluster $start.Cluster
         [int] $roll = Start-XmipPlaygroundRollProcess -Start $start
         Remove-Item -LiteralPath $Record -Force -ErrorAction SilentlyContinue
         Write-Verbose "built; cluster $($start.Cluster) rolls as pid $roll"

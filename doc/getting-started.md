@@ -612,8 +612,28 @@ Stop-XmipOperationWeb
 
 ### The same run on machines of their own
 
-Everything above is test level 1: one computer, every node simulated, a
-process the run spawned. At test level 2 the same cluster file runs with
+Everything above is test level 1: one computer, every node a process the run
+spawned. Where the run's nodes include one declaring the Storage role —
+every node of the Playground's file, when `-Nodes` is left out — each is a
+process of `xmip-service`, the build `Start-XmipTest` makes beside the
+Playground: D1 and D2 keep Xmip Storage, the primary and its standby, and
+every other node reaches them over Xmip's mutual TLS on loopback, with a
+certificate the run issued it. The rig drops files into their Receive
+Locations and reads what their Send Ports write, and `xmip:///C1/carried`
+says whether every file dropped arrived (ADR-0028, amendment 2026-10-22).
+Where none declares the Storage role, as with `-Nodes R1, P1, S1` above,
+every node is simulated.
+
+```powershell
+Start-XmipTest -Suite Core.Playground -Cluster C1
+Get-XmipHealth -Scope xmip:///C1/carried
+Get-XmipHealth -Scope xmip:///C1/node/R1/storage
+```
+
+`xmip:///C1/node/R1/storage` says which Storage node R1 reaches and whether
+it answered, and D1's which it is, the primary or a standby.
+
+At test level 2 the same cluster file runs with
 real nodes — `xmip-service` on machines of their own — and the same
 scenarios (ADR-0028, amendment 2026-10-21). The templates under `deploy/dsc`
 make the machines and put the file's nodes on them, Windows and AlmaLinux
@@ -629,9 +649,15 @@ Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, R2, P1, S1, S2, L1,
 ```
 
 A name that answers as its node is real and never spawned; one that does not
-answer is REFUSED by name; one that does not resolve is simulated as at
-level 1. The first lines of the run, its board and `Get-XmipTestStatus` say
-which nodes are real.
+answer is REFUSED by name; one that does not resolve is started or simulated
+as at level 1. The first lines of the run, its board and `Get-XmipTestStatus`
+say which nodes are real. On its machine each node presents the certificate
+its environment gave it, `tls/node.pem`, on its operate listener and to the
+Storage nodes, which serve on port 7443 — the port a Storage node's
+`xmip-service --listening` says, so the environment opens it. The rig reads
+what every real node publishes; it drives a node on a machine of its own
+only through the Receive Locations its environment binds, which the
+templates do not bind yet.
 
 ## 7. Where next
 

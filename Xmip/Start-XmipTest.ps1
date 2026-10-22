@@ -33,7 +33,9 @@ function Start-XmipTest {
             process per node (the owner, 2026-09-19: even clusters have to be
             spawned as processes during tests). Get-XmipProcess shows all
             three kinds with the location and purpose each declared, and
-            Stop-XmipTest ends the tree from the leaves up.
+            Stop-XmipTest ends the tree from the leaves up. Where a node
+            declares the Storage role, each node runs as xmip-service instead,
+            driven through its Receive Locations (ADR-0028, 2026-10-22).
 
             The roll, cluster and node binaries are built first, a no-op when
             they are current, so a roll never runs yesterday's scenarios. The
@@ -117,8 +119,7 @@ function Start-XmipTest {
             simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
-            The nodes to simulate, by name — one process each, spawned by the
-            roll's cluster process: -Nodes R1, P1, S1 is three called that
+            The nodes, by name — one process each: -Nodes R1, P1, S1 is three called that
             under one cluster called -Cluster. They are written, with
             -Cluster and -NodeRole, into the run's own cluster xmip.toml,
             <Path>/<Cluster>.xmip.toml, and XMIP_TEST_CLUSTER names it to the
@@ -186,7 +187,7 @@ function Start-XmipTest {
         .PARAMETER Certificate
             operator.pem, operator.key and anchors.pem's folder: a -Cluster or
             -Nodes name that resolves is asked with it, real if it answers as
-            that node, else REFUSED; one that does not resolve is spawned.
+            that node, else REFUSED; one that does not resolve runs here.
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.

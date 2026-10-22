@@ -11,7 +11,10 @@
 //! - `served.rs`: a node reaches a Storage node process over mutual TLS,
 //!   carries on through the next when one is killed, and the audit keeper
 //!   moves each record once; and the latency of a write, measured idle,
-//!   locally and over TLS (`runtime-model.md` section 3, *What proves it*).
+//!   locally and over TLS (`runtime-model.md` section 3, *What proves it*);
+//! - `wire.rs`: a read and a write over the wire to the primary of two
+//!   Storage nodes, its standby copying every write behind it, cost less
+//!   than a millisecond beyond the same calls in process.
 //!
 //! A child is this same test program, started again with
 //! [`CHILD`] naming what it does: [`child`] is the test that does it, and
@@ -19,6 +22,7 @@
 
 mod kill;
 mod served;
+mod wire;
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};

@@ -633,11 +633,15 @@ store naming a key store the build left out, or one that does not open, is
 refused the same way. Each database records its schema version, is brought
 to the build's as it opens and published at `<node>/storage/<domain>`, and
 one newer than the build is refused in words. Xmip Storage on nodes of its own — the nodes
-declaring the `storage` role, which every other node reaches round robin
-from its `[storage] nodes`, over Xmip's own mutual TLS — is built in
-`xmip-core-persist`'s `storage`, and `xmip-service` refuses a node listing
-them until its configuration can name the identity it presents
-([built, not in the assembled service](doc/architecture/estate-map.md#storage-nodes)). A
+declaring the `storage` role, each serving it at `[storage] listen`, which
+every other node reaches from its `[storage] nodes` over Xmip's own mutual
+TLS, presenting the certificate `[storage]` names — is in `xmip-service`
+([built, in the assembled service](doc/architecture/estate-map.md#storage-nodes)),
+and several such nodes are a primary and its standbys, each standby copying
+the primary's writes and promoted once it is gone
+([built, in the assembled service](doc/architecture/estate-map.md#storage-standby);
+drafted, ADR-0056, amendment 2026-10-22); every node publishes at
+`<node>/storage` which Storage it uses and whether it answers. A
 node declaring neither the `storage` role nor `[storage] nodes` is refused
 as it starts, in words naming both. The
 database servers it is to be put in front of are set up by IT from

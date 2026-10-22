@@ -229,7 +229,9 @@ round robin (ADR-0056, amendment 2026-10-01, the Storage role). A node as
 its own embedded Storage node is
 [built, in the assembled service](estate-map.md#embedded-storage); Storage nodes
 reached over the wire are
-[built, not in the assembled service](estate-map.md#storage-nodes).
+[built, in the assembled service](estate-map.md#storage-nodes), and embedded
+Storage nodes as a primary and its standbys
+[built, in the assembled service](estate-map.md#storage-standby).
 
 **Executor, Reader and Writer are gone.** This section named three runtime
 roles until 2026-10-01 — Executor, Reader, Writer — for the subject
@@ -578,7 +580,10 @@ asked whether a node should find them from a list of their addresses in its
 TOML, tried round robin: *Yes*): the node's configuration lists their
 addresses, for example
 `[storage] nodes = ["storage-1.example:7443", "storage-2.example:7443"]`, and
-the node tries them round robin.
+the node tries them round robin. It presents its own certificate, from the
+cluster's authority, and trusts that authority — `[storage] certificate`,
+`key` and `anchors` — and a Storage node serves at `[storage] listen`, the
+table shaped as `[operate]` is (ADR-0067, amendment 2026-10-22).
 
 **Each data domain names where it is kept, in a table of its own** (the
 owner, 2026-10-10: *i would do it like runtime, storage, connection string.
@@ -636,6 +641,18 @@ started again, never mid-flight (ADR-0031, amendments 2026-10-01 and
   window — writes not yet copied when the primary dies.
 - **Option D** — C for the hot runtime database, A for the administration
   database and its history.
+
+**C is built for embedded Storage nodes, drafted on 2026-10-22** (ADR-0056,
+amendment 2026-10-22), since A is not built and embedded Storage nodes
+round robin alone each keep a Ledger of their own. The Storage nodes listed
+settle the primary among themselves; each standby copies the primary's
+engine writes in order, asynchronously, copied whole first where it cannot
+take them on, keeping the primary's data keys under its own key-encryption
+key (ADR-0063, amendment 2026-10-22); each promotion raises the epoch, and
+a primary of an earlier one is not asked. The promote is the standbys' own,
+not a command, and there is no witness: two sides of a partition can each
+promote a primary (open problem 45). A stays the choice for a database
+server.
 
 **Rejected: option B**, an embedded engine on a shared disk. RocksDB is not
 supported on network file systems.
@@ -846,8 +863,12 @@ continues the audit. **Shutdown drains** and gives its claims back
 explicitly, rather than leaving them to lapse (ADR-0018 clause 12). **The
 Xmip Service dying stops no work** (ADR-0018 clause 5). **A Storage node
 dying stops no work either** while another is left: every node reaches the
-next one round robin. **The database server's failover is IT's.** An
-embedded Storage node has none: while it is down, its site stores nothing.
+next one round robin. **The database server's failover is IT's.** One
+embedded Storage node alone has none: while it is down, its site stores
+nothing. Several are a primary and its standbys, and a standby is promoted
+once the primary is gone (section 7, *C is built for embedded Storage
+nodes*): a primary stopped in order loses nothing, one killed loses the
+writes it had not handed on.
 
 ### What Xmip does, and what the infrastructure does
 
@@ -863,8 +884,9 @@ implement.* The split agreed, as re-decided later that day:
 | one atomic write per hand-on, counted once the database has it durably | |
 
 Replication between Storage nodes, a promote command and epoch fencing are
-not Xmip's under option A; they are option C's, recorded in section 7 for
-later, only if A's latency is too slow.
+not Xmip's under option A; they are option C's, recorded in section 7, and
+built for embedded Storage nodes on 2026-10-22 — the promote the standbys'
+own, with no witness yet.
 
 Xmip cannot own every bad decision in configuration or custom code, but it
 mitigates avoidable loss:

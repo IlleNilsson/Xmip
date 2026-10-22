@@ -209,3 +209,18 @@ directory synced after on Unix. A node's identity switches as one through a
 generation folder named by one file (ADR-0034, amendment 2026-10-16). The
 access list is set in `.src/private_file/dacl.rs`, the one file of the crate
 that allows unsafe code (ADR-0050, amendment 2026-09-25).
+
+## Amendment, 2026-10-22: a standby keeps its primary's data keys, wrapped under its own
+
+A standby Storage node copies its primary's engine writes as the engine
+took them — a keyed hash and a sealed record (ADR-0056, amendment of this
+date) — so it can open them only under the primary's data keys. **A primary
+hands each database's data key to a standby inside the mutual TLS between
+them, and the standby wraps it under its own key-encryption key**, in its
+own key store, before it keeps a byte: the clause 2 layer seals and opens
+on both alike, nothing is unsealed on the way, and neither key store ever
+holds the other's key-encryption key. `xmip-core-secret`'s
+`DataKey::handed` and `DataKey::taken` are the one way a data key leaves
+its node; a key handed is overwritten when dropped. Each database's own
+engine keys — its wrapped data key, and how far a standby has copied — are
+never copied as written. The assistant's drafting, for the owner.

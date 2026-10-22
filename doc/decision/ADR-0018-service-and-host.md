@@ -1238,3 +1238,14 @@ to answer.
 Provenance: the defect and the terms are the owner's; the sync's thread
 and the key set up once are the assistant's, 2026-10-21, for the owner to
 confirm or strike.
+
+## Amendment, 2026-10-22: a node a test started stops at the end of its input
+
+`xmip-service --console --purpose test` also stops — the same drain, by
+*its input ending* — when its standard input ends: a test's rig, which has
+no console of its own to press Ctrl+Break in, starts the node with its
+input held open and ends it to stop it, and a node whose rig went stops
+with it. Without `--purpose test` a console node reads nothing of its
+input. The root's service tests hold every node's input open and still stop
+it with Ctrl+Break; the Playground ends it (ADR-0028, amendment of this
+date). The assistant's, 2026-10-22.

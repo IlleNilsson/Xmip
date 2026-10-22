@@ -35,7 +35,6 @@
 use std::path::Path;
 
 use xmip_core::latency::{FIVE, PlainWake, spread};
-use xmip_runtime::directory_watch::DirectoryWatch;
 
 use super::*;
 
@@ -118,32 +117,6 @@ local = "{local}"
 /// under.
 fn lies(directory: &Path, name: &str) -> bool {
     directory.join(name).exists()
-}
-
-/// `directory` watched: a word on the channel each time it changes, until
-/// the watch is dropped.
-fn watched(directory: &Path) -> (Receiver<()>, DirectoryWatch) {
-    let (tell, told) = mpsc::channel();
-    let watch = DirectoryWatch::spawn(directory, move || {
-        let _ = tell.send(());
-    })
-    .expect("watched");
-    (told, watch)
-}
-
-/// When `holds` first held, asked at once and again each time the
-/// directory behind `changed` changes; `None` where it did not by
-/// `deadline`.
-fn told(changed: &Receiver<()>, deadline: Instant, holds: impl Fn() -> bool) -> Option<Instant> {
-    loop {
-        if holds() {
-            return Some(Instant::now());
-        }
-        let left = deadline.checked_duration_since(Instant::now())?;
-        if changed.recv_timeout(left).is_err() {
-            return holds().then(Instant::now);
-        }
-    }
 }
 
 #[test]

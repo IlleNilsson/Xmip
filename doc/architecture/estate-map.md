@@ -153,6 +153,36 @@ each such fragment apart from them. Records: ADR-0062, ADR-0070.
 tries is written Failed and waits for Retry or Dismiss. Records: ADR-0013,
 runtime-model.md section 10.
 
+#### `storage-nodes`
+
+**Storage nodes reached over mutual TLS.** A node without the Storage role
+reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS,
+presenting the certificate, key and anchors `[storage]` names — the node's
+own, from the cluster's authority — a standby passed over, a primary of an
+earlier epoch not asked, and refused at start in words where it names nothing
+to present; a node with the Storage role serves Xmip Storage at `[storage]
+listen`, and `xmip-service --listening` says its port; every node publishes at
+`<node>/storage` which Storage it uses and whether it answered, Done where
+none did. Held by the root's `failover` and `wire` tests and the Playground's
+level 1, every node a process. Records: ADR-0056 (amendments 2026-10-01 and
+2026-10-22), ADR-0067 (amendment 2026-10-22).
+
+#### `storage-standby`
+
+**Embedded Storage nodes as a primary and its standbys.** Storage nodes that
+list every Storage node of the cluster settle which is the primary by asking
+each what it is: the first listed of equals is promoted, at once where every
+one before it answered, else after `[tuning] storage_silence`; each standby
+copies the primary's engine writes in order, asynchronously, copied whole
+first where it cannot take them on (its data keys handed inside the mutual
+TLS, wrapped under its own key-encryption key); each promotion raises the
+epoch, a primary that meets a later one steps down, and a primary stopped in
+order hands on everything it wrote. No witness: a partition can promote a
+second primary, which the nodes that met the later epoch do not ask. Drafted,
+for the owner (ADR-0056, amendment 2026-10-22). Records: ADR-0056 (amendment
+2026-10-22), ADR-0063 (amendment 2026-10-22), deployment-model.md sections 7
+and 9.
+
 #### `subscription-pause`
 
 **Pausing and resuming a Subscription.** An order the node takes: what the
@@ -213,13 +243,6 @@ interrupt one. Records: ADR-0048.
 **Archiving by retention window.** `xmip-core-retain` and `xmip-core-archive`
 are driven by the Playground on a simulated clock; a node has no retention or
 archive step and reads no `[retention]` table. Records: ADR-0040.
-
-#### `storage-nodes`
-
-**Storage nodes reached over mutual TLS.** `xmip-core-persist`'s Storage
-client and server are built and tested; `xmip-service` serves no other node,
-and refuses a node whose `[storage] nodes` lists any until its configuration
-can name the identity it presents. Records: ADR-0056 (amendment 2026-10-01).
 
 ### Decided, not built
 
@@ -305,12 +328,13 @@ named for its parent plus a dash and a short readable word. Records: ADR-0018
 
 #### `node-listeners`
 
-**A node's sync, alive and Storage listeners, each configured as operate is.**
-Only the operate plane listens: its local endpoint always, named `xmip-<node>`
-unless `[operate] local` names it, and its network listener where `[operate]
-listen` names one. No `[sync]`, `[alive]` or `[storage]` section is read, and
-no node-to-node, heartbeat or Storage listener exists in the service. Records:
-ADR-0067 (amendment 2026-10-13).
+**A node's sync and alive listeners, each configured as operate is.** The
+operate plane listens — its local endpoint always, named `xmip-<node>` unless
+`[operate] local` names it, and its network listener where `[operate] listen`
+names one — and, on a node declaring the Storage role, the Storage listener
+where `[storage] listen` names one (amendment 2026-10-22). No `[sync]` or
+`[alive]` section is read, and no node-to-node or heartbeat listener exists in
+the service. Records: ADR-0067 (amendments 2026-10-13 and 2026-10-22).
 
 #### `operator-acts-through-storage`
 
@@ -319,11 +343,12 @@ resume, retry, dismiss or replay still reaches one node: over its operate
 listener, or as an order file it takes the moment its operating system says it
 was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside
 it; no act is written to Xmip Storage with who and when, and no node reads one
-there. Built once Storage is assembled in the service, open problem 33; the
-order files and the per-node act exports are deleted with every use then, and
-snapshot files kept for tests only. Records: ADR-0014 (amendment 2026-10-13,
-acts through Xmip Storage), ADR-0052 (note of 2026-10-13, acts through Xmip
-Storage), deployment-model.md section 7.
+there. Xmip Storage is assembled in the service since 2026-10-22 and no act is
+written to it yet, open problem 33; the order files and the per-node act
+exports are deleted with every use then, and snapshot files kept for tests
+only. Records: ADR-0014 (amendment 2026-10-13, acts through Xmip Storage),
+ADR-0052 (note of 2026-10-13, acts through Xmip Storage), deployment-model.md
+section 7.
 
 #### `other-runtime-module`
 
@@ -366,7 +391,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 280014 lines of production
+Where each repository mounts and what it holds: 283123 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -533,7 +558,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1149
+│   │   │   ├── secret                          1168
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -682,16 +707,16 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            28569
-│       ├── persist                            10628
+│       ├── runtime                            28934
+│       ├── persist                            12493
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           5510
+│       └── configure                           5576
 └── test/
     └── core/
-        └── playground                         11610
+        └── playground                         12404
 ```
 
 ---

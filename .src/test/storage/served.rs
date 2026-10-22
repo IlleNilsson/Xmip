@@ -49,7 +49,7 @@ pub fn authority(place: &Path) {
 }
 
 /// An identity the authority in `place` issues to a node at 127.0.0.1.
-fn issue(place: &Path) -> xmip_tls::Identity {
+pub fn issue(place: &Path) -> xmip_tls::Identity {
     let authority_pem = std::fs::read_to_string(place.join("authority.pem")).expect("read");
     let authority_key = std::fs::read_to_string(place.join("authority-key.pem")).expect("read");
     let authority_key = rcgen::KeyPair::from_pem(&authority_key).expect("the authority's key");

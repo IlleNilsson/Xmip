@@ -23,7 +23,7 @@
 - Order: 13
 - Concepts: node capability; node role; online capability; feature capability;
   authentication capability; runtime capability; placement criteria;
-  Storage role, Xmip Storage
+  Storage role, Xmip Storage; primary and standby Storage nodes, epoch
 
 **A node declares its capabilities, and work is placed on a node whose
 capabilities satisfy what the work requires. There are four kinds: online,
@@ -532,10 +532,10 @@ one-machine node carries Storage, and so does `development`.
   node that declares it and lists no Storage node in `[storage] nodes` is
   its own embedded Storage node (`deployment-model.md` sections 3 and 7).
 - **Every other node reaches a Storage node through `[storage] nodes`**,
-  round robin over Xmip's TLS (the amendment of 2026-10-01). That client is
-  not in the assembled service yet, so a node listing Storage nodes is
-  still refused at start until its configuration can name the identity it
-  presents ([built, not in the assembled service](../architecture/estate-map.md#storage-nodes)).
+  round robin over Xmip's TLS (the amendment of 2026-10-01); *the client
+  is in the assembled service since the amendment of 2026-10-22*, with the
+  identity `[storage]` names
+  ([built, in the assembled service](../architecture/estate-map.md#storage-nodes)).
 - **A node declaring neither is refused at start**, at phase 3, in words
   naming both: the storage role, and `[storage] nodes`. A role word that is
   no role is refused there too, in `NodeRole::declared`'s words.
@@ -578,3 +578,91 @@ and `first` for the node it configures, C1, R1, P1 and S1 for the roll.
 other document still. That the guide counts as help was the assistant's
 drafting; **decided by the owner, 2026-10-21:** the getting-started guide
 counts as help for node names.
+
+## Amendment, 2026-10-22: Xmip Storage over the wire, and Storage nodes as a primary and its standbys
+
+**Provenance.** The task given 2026-10-22: a node without the Storage role
+reaches Storage over the wire in the assembled `xmip-service`, failing over
+to the next listed node *by the runtime model's rules for primary and
+standbys*, and refusing in words when none answers. The owner's design of
+2026-10-01 (*one primary Storage node takes every write; standby Storage
+nodes copy asynchronously behind*, the last writes not yet copied lost if
+the primary dies; Xmip does a promote, a health answer and epoch fencing)
+was recorded as option C, *later, only if option A's latency is too slow*
+(`deployment-model.md` section 7). **Drafted, for the owner:** option A — a
+database server behind the Storage nodes — is not built, and embedded
+Storage nodes round robin alone each keep a Ledger of their own, so the
+Playground's D1 and D2 shared nothing; option C is brought forward for
+embedded Storage nodes, as below, and A stays the choice for a database
+server.
+
+**The amendment of 2026-10-20 is answered: a node lists its Storage nodes
+and is not refused.** A node without the Storage role whose `[storage]
+nodes` lists Storage nodes reaches them over Xmip's mutual TLS with what
+`[storage]` presents — `certificate`, `key` and `anchors`, the node's own
+from the cluster's authority, shaped as `[operate]` is (ADR-0067, amendment
+of this date) — and is refused at phase 3 in words where it names nothing
+to present. A node with the Storage role serves Xmip Storage where
+`[storage] listen` names an address, and one that lists Storage nodes and
+names no `listen` is refused at phase 3, in words. `xmip-service
+--listening` says the Storage port of a node with the role.
+
+**Storage nodes of embedded databases are a primary and its standbys**
+(`xmip-core-persist`'s `storage::standby`):
+
+- **They settle it among themselves**, from the same `[storage] nodes`
+  list every node of the cluster reaches them through, the first listed
+  the first primary. Each asks every one listed what it is now (wire
+  operation 29, its standing); it finds itself among them by the process it
+  answers as, never by a name. A primary that answers is followed. Where
+  none answers, the standby holding most of the latest epoch is promoted,
+  the first listed of equals — at once where every one listed before it
+  answered, else once it heard no primary for `[tuning] storage_silence`
+  (1 s).
+- **A standby copies the primary's engine writes, in order,
+  asynchronously** (wire operation 30): each write as the primary's engine
+  took it, numbered in that order under the write's own lock, so claims are
+  decided once, by the primary, and a standby holds what its primary held.
+  One that cannot take the writes on from where it is is copied whole
+  first; it keeps its primary's data keys, handed inside the mutual TLS and
+  wrapped under its own key-encryption key (ADR-0063, amendment of this
+  date). The primary keeps `[tuning] storage_kept` bytes of each database's
+  writes (64 MiB) for a standby behind it, and beats every `[tuning]
+  storage_beat` (100 ms) while it has nothing to hand on.
+- **Each promotion raises the epoch.** A primary that meets a primary of a
+  later epoch steps down; a node keeps the latest epoch it met and does not
+  ask a primary of an earlier one. A standby serves no operation: it answers
+  that it is one, naming its primary, and a node asks the next.
+- **A primary stopped in order hands on everything it wrote** — it serves
+  no operation more, waits for each one under way, and ends each standby's
+  connection only once it has had every write. One killed loses the writes
+  it had not handed on, as the owner accepted on 2026-10-01; a former
+  primary that comes back follows the new one, copied whole, and what it
+  held alone is gone.
+- **What is not built**: a witness — two sides of a partition can each
+  promote a primary, and only the nodes that met the later epoch refuse
+  the earlier one — and copying a standby whole without reading every
+  record once (open problem 45).
+
+**Every surface shows which Storage a node uses and whether it is
+reached**: at `<node>/storage`, Fine, or Done where every Storage node
+listed failed the last request asked of it (*Storage is not here is a
+flat-out error*, the owner, 2026-10-06), its evidence each Storage node and
+what it last came to — answered, a standby, or why not; on a Storage node,
+whether it is the primary, its epoch, each standby following it and how far
+behind. Each surface shows it as it shows every record.
+
+Built 2026-10-22: `persist::storage::standby` (`StorageNode`, `Copies`,
+`Copied`, wire operations 29 and 30, answers 21 and 22),
+`StorageClient::reached` and its standby and epoch checks,
+`StorageServer::several`, `PersistError::Standby`; `configure`'s
+`[storage] listen`, `certificate`, `key` and `anchors`
+(`StorageConfiguration::presented`); the runtime's `storage::plan` and
+`Planned::open` (`Kept`, `Reaching`, `Serving`; `runtime::presented`, the
+one reading of a plane's identity, which `[operate]` reads through too);
+`[tuning] storage_beat`, `storage_silence` and `storage_kept`. Held by the
+root's `failover` test (every file dropped arrives once while the primary
+stops mid-run) and `wire` test (a call over the wire within a millisecond
+of the same in process), the runtime's and persist's tests, and the
+Playground at level 1, every node a process (ADR-0028, amendment of this
+date).
