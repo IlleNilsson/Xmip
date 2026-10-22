@@ -1683,7 +1683,7 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core"]
+  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-node"]
 
 # Surfaces, ADR-0014. abi is above. These three were named in surface and had
 # no module, so they were invisible to repository creation.

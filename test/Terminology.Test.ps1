@@ -24,11 +24,13 @@ BeforeAll {
     $qual = '(?<!(Work|Xmip|Host|System|Sending|Receiving|Business) )'
     $mtnAfter = '(?!["`*])'                                   # not a mention, after
     $axis = '(?! (Definition|Instance))'                      # the Definition/Instance axis
+    # The owner's three, 2026-10-22: Receive, Process and Send Preparation.
+    $prepared = '(?! Preparation| and Send Preparation)'
 
     $script:Watchwords = @(
         [pscustomobject]@{
             Word = 'Process'
-            Pattern = [regex]($mtn + $qual + '\bProcess\b' + $mtnAfter + $axis)
+            Pattern = [regex]($mtn + $qual + '\bProcess\b' + $mtnAfter + $axis + $prepared)
             # Frozen 2026-09-06 at the count then present across docs. It may
             # fall, never rise. Qualify a new one (Work Process / Host Subprocess /
             # System Process / Process Definition); do not raise this number.

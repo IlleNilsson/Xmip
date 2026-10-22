@@ -64,9 +64,10 @@ applies it. The versions below change often; **see
 
 The linker is Visual Studio Build Tools with the C++ workload on Windows, the
 command line tools on macOS, and `build-essential` or `gcc` on Linux.
-Every language but Rust is optional for Xmip itself: Java, Python, Node and
-zig build the event bindings and the VS Code extension, and a machine without
-them builds and runs a node all the same.
+Every language but Rust is optional for Xmip itself: Java, Python and zig
+build the event bindings, and TypeScript's native compiler the VS Code
+extension, and a machine without them builds and runs a node all the same.
+Node.js is needed nowhere on your machine.
 
 Windows PowerShell 5.1 is a different product and is not supported. Install
 PowerShell 7 first, in whichever way your system offers:
@@ -142,7 +143,8 @@ Install-XmipPrerequisite -Role developer -Install
 ```
 
 Add `-IncludeOptional` to both to take the optional toolchains too: the event
-bindings' Java, Python and zig, and Node for the VS Code extension.
+bindings' Java, Python and zig, and TypeScript's native compiler for the VS
+Code extension, fetched and checked by its digest, under .local-work/tool.
 
 It never elevates. Where a package needs administrator rights, it says
 `NEEDS ELEVATION` and prints the command for you to run from an elevated Xmip
@@ -408,6 +410,37 @@ Test-XmipNodeConfiguration -Path .local-work/node/config/xmip.toml
 
 The VS Code extension and the desktop GUI validate through the same call, as
 you type.
+
+### Editing in VS Code
+
+The VS Code extension edits the cluster's `xmip.toml` with suggestions,
+lookups, fixes and the cluster designer, every answer the runtime's. It
+needs two settings, and the runtime's library is one of them, always: the
+extension's language server looks for no runtime of its own (ADR-0064,
+amendment 2026-10-22). Build the server and the runtime, then name both in
+your VS Code settings, as full paths:
+
+```powershell
+cargo build --manifest-path module/platform/runtime/Cargo.toml
+cargo build --manifest-path module/core/operation/gui/vscode/Cargo.toml
+Build-XmipService -Extension VsCode
+code --install-extension .local-work/package/vscode/xmip-0.1.0.vsix
+```
+
+`Build-XmipService -Extension VsCode` compiles the extension's shell with
+TypeScript's native compiler and writes its VSIX, with no Node.js.
+
+```json
+{
+  "xmip.server.path": "<estate>/module/core/operation/gui/vscode/target/debug/xmip-lsp.exe",
+  "xmip.runtime.library": "<estate>/module/platform/runtime/target/debug/xmip_core_runtime.dll"
+}
+```
+
+`<estate>` is the full path of your clone. On Linux the library is
+`libxmip_core_runtime.so` and the server `xmip-lsp`, on macOS
+`libxmip_core_runtime.dylib`. Left out, every validation says where to
+point it.
 
 ## 6. In practice
 

@@ -81,6 +81,16 @@ function Build-XmipService {
             The runtime's remote builds to make instead of a site's:
             Desktop, Android, iOS.
 
+        .PARAMETER Extension
+            The editor extension to build instead of a site: VsCode, the VS
+            Code extension (ADR-0014, amendment 2026-10-22). Its packages
+            are restored from its lock, each checked against the lock's
+            integrity; its TypeScript shell is compiled by TypeScript's
+            native compiler, the [archive.typescript] of prerequisite.toml;
+            and its VSIX is zipped by PowerShell into
+            .local-work/package/vscode. No Node.js. Returns Extension and
+            Path.
+
         .EXAMPLE
             Build-XmipService -Site hospital-interface -WhatIf
 
@@ -105,6 +115,11 @@ function Build-XmipService {
 
             Builds a person's computer's xmip-service, optimized, and makes
             its x64 MSI, winget manifest and zip under .local-work/package.
+
+        .EXAMPLE
+            Build-XmipService -Extension VsCode
+
+            Compiles the VS Code extension's shell and writes its VSIX.
 
         .EXAMPLE
             Build-XmipService -Remote Android
@@ -136,7 +151,11 @@ function Build-XmipService {
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Remote')]
         [ValidateSet('Desktop', 'Android', 'iOS')]
-        [string[]] $Remote
+        [string[]] $Remote,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Extension')]
+        [ValidateSet('VsCode')]
+        [string] $Extension
     )
 
     Set-StrictMode -Version Latest
@@ -151,6 +170,27 @@ function Build-XmipService {
 
     if ($PSCmdlet.ParameterSetName -eq 'Remote') {
         return @(Build-XmipServiceRemote -Root $root -Remote $Remote)
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'Extension') {
+        [string] $module = Join-Path -Path $root -ChildPath 'module/core/operation/gui/vscode'
+        [string] $shell = Join-Path -Path $module -ChildPath 'extension'
+
+        if (-not $PSCmdlet.ShouldProcess($shell, 'restore, compile with tsc and zip a VSIX')) {
+            return
+        }
+
+        Restore-XmipExtensionPackage -Extension $shell
+        Invoke-XmipExtensionCompile -Root $root -Extension $shell
+        [hashtable] $packaging = @{
+            Extension = $shell
+            License   = Join-Path -Path $module -ChildPath 'LICENSE'
+            Into      = Join-Path -Path $root -ChildPath '.local-work/package/vscode'
+        }
+        [string] $vsix = New-XmipExtensionPackage @packaging
+        Write-XmipStep -Message "OK: built the VS Code extension, $vsix"
+
+        return [pscustomobject]@{ Extension = $Extension; Path = $vsix }
     }
 
     $manifest = Get-XmipManifest -Path (Join-Path $root 'architecture.toml')

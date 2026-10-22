@@ -19,14 +19,20 @@
 function Test-XmipExtensionShell {
     <#
         .SYNOPSIS
-            Compiles, lints and tests a VS Code extension's TypeScript shell.
-            True when everything passed, or when npm is absent and said so.
+            Compiles a VS Code extension's TypeScript shell with TypeScript's
+            native compiler. True when it compiled, or when the compiler is
+            absent and said so.
 
         .DESCRIPTION
             ADR-0052 clause 6: the shell is verified by the gate the way its
-            Rust is. Node is an optional developer prerequisite
-            (prerequisite.toml), so a machine without it lands the shell
-            unverified and is told, rather than being refused.
+            Rust is, and without Node.js (the owner, 2026-10-22; ADR-0014,
+            amendment 2026-10-22): its packages restored from its lock, each
+            checked against the lock's integrity, and its shell and webview
+            compiled by the native compiler, an optional developer
+            prerequisite (prerequisite.toml, [archive.typescript]). Every
+            rule is the Rust server's and tested in Rust; the shell's lint
+            and tests run in its CI alone, where Node lives in a throwaway
+            runner, and are said SKIPPED here.
 
         .PARAMETER Path
             The extension directory, holding package.json.
@@ -44,37 +50,37 @@ function Test-XmipExtensionShell {
         [string] $Name
     )
 
-    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
-        [string] $note = "   NOTE $Name/extension not verified: npm is absent. " +
-            'Install-XmipPrerequisite -Role developer'
+    [string] $root = Get-XmipRepositoryRoot
+    $tsc = Get-XmipArchiveTool -Root $root -Name 'typescript'
+
+    if (-not $tsc.Present) {
+        [string] $note = "   SKIPPED: $Name/extension not compiled: TypeScript's native " +
+            'compiler is absent. Install-XmipPrerequisite -Install -IncludeOptional'
 
         Write-Host $note -ForegroundColor Yellow
 
         return $true
     }
 
-    Push-Location -LiteralPath $Path
+    Write-Host "   compiling $Name/extension with tsc $($tsc.Version)..." -ForegroundColor DarkGray
 
     try {
-        foreach ($step in @('ci', 'run compile', 'run lint', 'test')) {
-            Write-Host "   npm $step..." -ForegroundColor DarkGray
-
-            & npm @($step -split ' ') 2>&1 | ForEach-Object { Write-Host $_ }
-
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "   FAILED npm $step" -ForegroundColor Red
-
-                return $false
-            }
-        }
+        Restore-XmipExtensionPackage -Extension $Path
+        Invoke-XmipExtensionCompile -Root $root -Extension $Path
     }
-    finally {
-        Pop-Location
+    catch {
+        Write-Host "   FAILED: $($_.Exception.Message)" -ForegroundColor Red
+
+        return $false
     }
+
+    [string] $skipped = "   SKIPPED: the shell's lint and tests run in its CI alone, where " +
+        'Node.js lives in a throwaway runner (ADR-0014, amendment 2026-10-22)'
+
+    Write-Host $skipped -ForegroundColor Yellow
 
     return $true
 }
-
 
 # The script a module verifies its Event bindings with, at its root
 # (xmip-core-abi's, ADR-0065).

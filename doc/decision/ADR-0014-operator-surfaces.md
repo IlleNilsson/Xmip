@@ -1158,3 +1158,72 @@ the name: every System Process Xmip owns is `xmip` or `xmip-<what>`
 (ADR-0053, amendment 2026-10-22). An operator types `xmip health <scope>`,
 `xmip certificate …`, `xmip mcp`; the repository and crate stay
 `xmip-core-cli`. Nothing else about the command line changes.
+
+## Amendment, 2026-10-22: the extension's shell is TypeScript, built without Node.js, and nothing it needs is fetched at run time
+
+**But not JavaScript.** The owner, 2026-10-22, of the amendment of
+2026-09-10's *TypeScript and JavaScript live in the extension*: *But not
+JavaScript.* The extension's shell is TypeScript, and the estate holds no
+hand-written JavaScript: the last file, the shell's `eslint.config.mjs`,
+is `eslint.config.ts`, which ESLint 10 reads through Node's own type
+stripping when its flag `unstable_native_nodejs_ts_config` is set
+(<https://eslint.org/docs/latest/use/configure/configuration-files>), so no
+third party's loader is added. What runs as JavaScript is the compiler's
+output in `out/`, never tracked. `test/JavaScript.Test.ps1` fails on any
+tracked `.js`, `.mjs` or `.cjs` file in the root or any submodule.
+
+**Offline.** The owner, 2026-10-22: *We can't be dependent on resources
+online, check that out!* Checked: the designer's webview allows nothing but
+its own resources (`default-src 'none'`, its stylesheet and nonce-bound
+modules from the extension's own folder), the extension contributes no JSON
+or TOML schema and no schema-store association, reports no telemetry and
+fetches nothing; `xmip-lsp` opens no connection, only the runtime's library
+it is named. Everything it runs is in the extension's package.
+
+**The runtime's library stays named**, `xmip.runtime.library` required
+(the owner, 2026-10-22; ADR-0064, amendment of this date).
+
+**Built without Node.js.** The owner, 2026-10-22, on the extension's build:
+*Do it*; Node.js is never installed on his machine. So:
+
+- **The compiler is TypeScript 7's native one**, the Go port, stable since
+  2026-07-08, released as a program of its own for each platform outside
+  npm (<https://github.com/microsoft/typescript-go/releases/tag/typescript/v7.0.2>,
+  checked 2026-10-22). `prerequisite.toml`'s `[archive.typescript]` names
+  each platform's asset and its SHA-256, and `Install-XmipPrerequisite
+  -Install -IncludeOptional` fetches, verifies and unpacks it under
+  `.local-work/tool` (`Install-XmipArchive.ps1`), no package manager and no
+  Node. The Node.js prerequisite is deleted.
+- **The VSIX is zipped by Xmip's own PowerShell**: `Build-XmipService
+  -Extension VsCode` restores the packages the shell compiles against and
+  runs with — the language client and its dependencies, the type
+  declarations of VS Code and Node's API — from the extension's lock, each
+  tarball refused unless it is the lock's integrity; compiles the shell and
+  its webview with the native compiler; and writes `extension.vsixmanifest`,
+  `[Content_Types].xml` and `extension/` into one zip
+  (`Build-XmipExtension.ps1`). No vsce, no npm. The language client is the
+  one JavaScript the package carries that is not the compiler's output: the
+  extension host speaks the language server protocol through it.
+- **Tests.** Every rule is the Rust server's and tested in Rust. The
+  shell's lint and its tests run in its CI alone, where Node.js lives in a
+  throwaway runner, and are reported there; the landing compiles the shell
+  with the native compiler and says the rest SKIPPED, naming why. The tests
+  are stubbed node tests, not `@vscode/test-electron`'s: moving them is the
+  owner's to ask for, since they would download VS Code itself in the CI.
+  The CI compiles with TypeScript 6, which the latest typescript-eslint
+  still needs.
+- **The shell is at its least**: it starts the server, registers what VS
+  Code asks it to — the commands, the custom editor — asks the developer
+  what the server sends it to ask, and carries the webview's messages; the
+  webview draws. No rule is left in it to move.
+- `test/JavaScript.Test.ps1` stays.
+
+**Current as of 2026-10-22.** VS Code 1.143 is the latest release
+(<https://code.visualstudio.com/updates>, updated 2026-10-19); the owner
+runs 1.141.2, and `engines` stays `^1.140.0`, the newest `@types/vscode`
+(1.140.0). `vscode-languageclient` 10.1.2 is the latest and asks VS Code
+`^1.91.0`. TypeScript 7.0.2 is released, and the shell stays on 6.0: the
+latest `typescript-eslint`, 8.72.0, accepts TypeScript below 6.1 alone
+(<https://registry.npmjs.org/typescript-eslint/latest>), so the CI's lint
+keeps TypeScript 6 and the build compiles with 7. ESLint is 10.13.0, the
+latest.
