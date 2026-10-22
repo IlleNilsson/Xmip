@@ -6,7 +6,7 @@
     held to what Xmip itself accepts.
 
     A documentation review of 2026-10-06 found a "minimal configuration" that
-    was not TOML at all and an `xmip-cli subscriptions` pause the command
+    was not TOML at all and an `xmip subscriptions` pause the command
     line refuses for want of `--location`. Both had been read as true for
     weeks, because nothing read them but people.
 
@@ -17,7 +17,7 @@
       would start it judges it, through Test-XmipNodeConfiguration and
       xmip_validate_v1 — never a reading of this test's own. A block without
       the line is a fragment and is not read.
-    - Every `xmip-cli` line a document shows names a command the command
+    - Every `xmip` line a document shows names a command the command
       line's own usage (`Usage.Text` in module/core/operation/cli) lists and
       passes only the options it lists; a line in a fenced block, which a
       reader copies whole, also gives its command the arguments it requires
@@ -151,14 +151,14 @@ Describe 'A complete configuration a document shows is one the runtime would sta
     }
 }
 
-Describe 'An xmip-cli line a document shows is one the command line takes' {
+Describe 'An xmip line a document shows is one the command line takes' {
     BeforeAll {
-        # The usage's command list: `xmip-cli <command> <required> [optional]`,
+        # The usage's command list: `xmip <command> <required> [optional]`,
         # then two spaces and what it does, or the description on the next line.
         [hashtable] $script:Required = @{}
 
         # An example line passes options or a literal and is not one of them.
-        [string] $listed = '(?m)^\s+xmip-cli ([a-z-]+)((?: [<\[][^>\]]+[>\]])*)(?:\s{2,}\S|\s*$)'
+        [string] $listed = '(?m)^\s+xmip ([a-z-]+)((?: [<\[][^>\]]+[>\]])*)(?:\s{2,}\S|\s*$)'
 
         foreach ($match in [regex]::Matches($script:Usage, $listed)) {
             [string] $command = $match.Groups[1].Value
@@ -209,12 +209,14 @@ Describe 'An xmip-cli line a document shows is one the command line takes' {
                     continue
                 }
 
+                # The command, lower case, then a command word; the Xmip Service
+                # in prose and a binding's `xmip = ...` example are not it.
                 [string[]] $said = @(
-                    if ($fenced -and $line -match '^\s*(?:\$ )?(xmip-cli\b.*)$') {
+                    if ($fenced -and $line -cmatch '^\s*(?:\$ )?(xmip [a-z][a-z-]*\b.*)$') {
                         $Matches[1]
                     }
                     elseif (-not $fenced) {
-                        [regex]::Matches($line, '`(xmip-cli\b[^`]*)`') |
+                        [regex]::Matches($line, '`(xmip [a-z][a-z-]*\b[^`]*)`') |
                             ForEach-Object { $_.Groups[1].Value }
                     }
                 )
@@ -283,7 +285,7 @@ Describe 'An xmip-cli line a document shows is one the command line takes' {
 
                 foreach ($option in $passed) {
                     if ($option -notin $script:Option) {
-                        "$($example.Where): '$option' is no option of xmip-cli"
+                        "$($example.Where): '$option' is no option of xmip"
                     }
                 }
 
@@ -292,11 +294,11 @@ Describe 'An xmip-cli line a document shows is one the command line takes' {
                 }
 
                 if (-not $script:Required.ContainsKey($command)) {
-                    "$($example.Where): '$command' is no command of xmip-cli"
+                    "$($example.Where): '$command' is no command of xmip"
                     continue
                 }
 
-                # In prose, `xmip-cli pause --who` names an option, and a
+                # In prose, `xmip pause --who` names an option, and a
                 # command named alone is a mention: only a fenced line is a
                 # whole example.
                 if (-not $example.Fenced) {

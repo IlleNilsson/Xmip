@@ -37,7 +37,7 @@ the difference between the two releases, one to each database,
 by the operator who owns the schema, after the release's own: one for each
 release in between, in order of their versions. Each records the version
 it reached. A database made by a release's `03-<domain>-schema.sql` is at
-that release already and runs none. `xmip-cli database <server> --from <version>` and
+that release already and runs none. `xmip database <server> --from <version>` and
 `Get-XmipDatabaseScript` write the scripts from any release to the one
 installed. Until the first release the schema is version 1 and there is
 no upgrade.

@@ -151,10 +151,10 @@ Three records point at a thing none of them defines. This one defines it.
     the capability as a row of its own beneath the node, named `capability`
     rather than filed under *technology*.
   - **CLI** — owed nothing for the capability itself and was shown to owe
-    nothing by running it: a capability is a scope, so `xmip-cli list
-    <node>` already listed it and `xmip-cli show <node>/capability` already
+    nothing by running it: a capability is a scope, so `xmip list
+    <node>` already listed it and `xmip show <node>/capability` already
     printed the node's own words. What it did owe was the run, which it had
-    never shown at all: `xmip-cli health` now prints the same line the GUI
+    never shown at all: `xmip health` now prints the same line the GUI
     does, and `--json` carries it as `run`.
   - **PowerShell** — `Get-XmipTestNode` carries `Capability` beside
     `Online`, read from the `--can` flag the cluster starts each node with.

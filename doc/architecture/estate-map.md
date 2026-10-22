@@ -136,13 +136,13 @@ started. Records: ADR-0018, ADR-0064.
 
 #### `program-audit`
 
-**Every Xmip program audits to its audit file.** `xmip-service`, `xmip-cli`,
-both PowerShell modules, the web host, the language server and the Playground
+**Every Xmip program audits to its audit file.** `xmip-service`, `xmip`, both
+PowerShell modules, the web host, the language server and the Playground
 record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
 synchronously: a record is appended before `record` returns, chained in its
 writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
 system's log the fallback; the next append seals a record whose write was
-interrupted, kept as written and in no chain; `xmip-cli audit --verify`,
+interrupted, kept as written and in no chain; `xmip audit --verify`,
 `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say
 each such fragment apart from them. Records: ADR-0062, ADR-0070.
 
@@ -209,16 +209,25 @@ Location the node starts is admitted there by the `location` policy and sent
 the cluster's authority, served over ACME; `self-signed` for a lone offline
 node; and an operator's files. A person's certificate, purpose `operator`, is
 requested by the surface with its own key and signed by the authority
-`[provision.operator]` names: `xmip-cli certificate`, `New-XmipCertificate`,
+`[provision.operator]` names: `xmip certificate`, `New-XmipCertificate`,
 `xmip_operate.h` section 19; on the phone and the desktop the key is made in
 the platform's keeper and never leaves it (the Android Keystore, the Secure
 Enclave, Windows CNG and the TPM), the request signed there in the two halves
 section 19 exports and every handshake signed there through
 `xmip-core-library-tls`'s `Sign`. Proved in their tests, offline.
 `xmip-service` reads `[provision.receive]` from an operator's files alone, as
-it starts, and starts no provisioner: a table naming a `source` is refused,
-and no other purpose's table is read. Open problem 27. Records: ADR-0034
-(amendment 2026-10-15), ADR-0033 (amendment 2026-10-13).
+it starts, and starts no provisioner: a table naming a `source` is refused. It
+serves the cluster's authority, the premises' own ACME service, where
+`[provision.node]` names `internal-ca` and `serve`: renewal information (RFC
+9773), revocation into the authority's register and its revocation list,
+published over plain HTTP; lego, a standard client, is proved against it.
+Every surface sets the authority up, inspects, revokes from, exports and backs
+up (`xmip certificate`, `New-` and `Get-XmipCertificate`, the desktop's
+Authority page, `xmip_operate.h` section 23), and a node's certificate is
+carried across an air gap — requested on the node, signed where the authority
+is kept, imported — its node saying in its health when the next request is
+due. Open problem 27. Records: ADR-0034 (amendments 2026-10-15 and
+2026-10-22), ADR-0033 (amendment 2026-10-13).
 
 #### `module-loading`
 
@@ -312,7 +321,7 @@ checked, its `storage` and its connection in the server's own form, each of
 which may name a server or technology of its own, and `[storage.database]` the
 secret; IT's scripts are in `deploy/database`, per data domain, each database
 recording its schema version, and a release's upgrade is written as the
-difference from an earlier one by `xmip-cli database` and
+difference from an earlier one by `xmip database` and
 `Get-XmipDatabaseScript`; a node naming a server is refused as it starts,
 since no Storage node connects to any kind yet. Records: ADR-0015 (amendments
 2026-10-01 and 2026-10-20), ADR-0070 (amendments 2026-10-10 and 2026-10-12),
@@ -391,7 +400,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 283123 lines of production
+Where each repository mounts and what it holds: 287575 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -505,6 +514,12 @@ hold no source to count.
 │   │   │   │   ├── named-pipe                   290
 │   │   │   │   ├── tcp                          277
 │   │   │   │   └── udp                          216
+│   │   │   ├── provision                       4116
+│   │   │   │   ├── internal-ca                 2393
+│   │   │   │   ├── acme                        1224
+│   │   │   │   ├── self-signed                   80
+│   │   │   │       declared, not built 1
+│   │   │   │       platform
 │   │   │   ├── authenticate                    2626
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
@@ -532,12 +547,6 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
-│   │   │   ├── provision                       2428
-│   │   │   │   ├── internal-ca                 1467
-│   │   │   │   ├── acme                        1158
-│   │   │   │   ├── self-signed                   80
-│   │   │   │       declared, not built 1
-│   │   │   │       platform
 │   │   │   ├── identify                        1448
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
@@ -653,7 +662,7 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             8253
+│   │       ├── cli                             8706
 │   │       ├── gui                             5053
 │   │       │   └── vscode                      3236
 │   │       ├── audit                           3958
@@ -663,7 +672,7 @@ hold no source to count.
 │   │       ├── observe                         3779
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      2999  C# 2999 · PowerShell 0
+│   │       ├── powershell                      3244  C# 3244 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -679,7 +688,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30043  C# 27722 · Rust 2025 · PowerShell 296
+│   │   ├── abi                                30652  C# 28331 · Rust 2025 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -701,13 +710,13 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── context                              839
-│   │   ├── node                                 831
+│   │   ├── node                                 832
 │   │   ├── journey                              592
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            28934
+│       ├── runtime                            29398
 │       ├── persist                            12493
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
