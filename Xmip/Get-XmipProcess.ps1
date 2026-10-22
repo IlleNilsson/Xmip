@@ -9,10 +9,11 @@ function Get-XmipProcess {
             and the purpose each declared.
 
         .DESCRIPTION
-            Every System Process Xmip owns is named xmip-<what> (ADR-0053), so
-            the operating system's list is the list:
+            Every System Process Xmip owns is named xmip or xmip-<what>
+            (ADR-0053, amendment 2026-10-22), so the operating system's list
+            is the list:
 
-                Get-Process xmip-* | Stop-Process -Force
+                Get-Process xmip, xmip-* | Stop-Process -Force
 
             stops them all. This says what each one is for before you do. A
             process declares three things where it starts — its name, its
@@ -83,7 +84,9 @@ function Get-XmipProcess {
 
     [hashtable] $declared = Read-XmipProcessDeclaration -Path $Path
 
-    foreach ($process in @(Get-Process -Name 'xmip-*' -ErrorAction SilentlyContinue)) {
+    [object[]] $running = @(Get-Process -Name $script:XmipProcessName -ErrorAction SilentlyContinue)
+
+    foreach ($process in $running) {
         if ($process.ProcessName -notlike $Name) {
             continue
         }
@@ -146,7 +149,7 @@ function Read-XmipProcessDeclaration {
     foreach ($standing in [Xmip.Surface.ProcessDeclaration]::Standing($Path).Processes) {
         $alive = Get-Process -Id $standing.Pid -ErrorAction SilentlyContinue
 
-        if ($null -eq $alive -or $alive.ProcessName -notlike 'xmip-*') {
+        if ($null -eq $alive -or -not (Test-XmipProcessName -Name $alive.ProcessName)) {
             Remove-Item -LiteralPath $standing.File -Force -ErrorAction SilentlyContinue
             continue
         }
@@ -169,4 +172,38 @@ function Read-XmipProcessDeclaration {
     }
 
     return $byId
+}
+
+function Test-XmipProcessName {
+    <#
+        .SYNOPSIS
+            Whether a process name is one Xmip owns: xmip, the command a
+            person types, or xmip-<what> (ADR-0053, amendment 2026-10-22).
+
+        .DESCRIPTION
+            The one rule, beside the names Get-XmipProcess asks the
+            operating system for ($script:XmipProcessName). The owner,
+            2026-09-18: "xmip-cli, not xmip: every System Process Xmip owns
+            matches xmip-*"; and 2026-10-22: "Xmip CLI should be named just
+            xmip". So a forgotten xmip --follow is found and stopped with the
+            rest.
+
+        .PARAMETER Name
+            The process name, without an extension.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Name
+    )
+
+    foreach ($pattern in $script:XmipProcessName) {
+        if ($Name -like $pattern) {
+            return $true
+        }
+    }
+
+    $false
 }

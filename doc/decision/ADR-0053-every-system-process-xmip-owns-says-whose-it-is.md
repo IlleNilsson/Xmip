@@ -63,6 +63,8 @@ Every executable Xmip builds, and every service it registers, is named
 exception: the executable is `xmip-cli`, by the owner's word the same day,
 because a forgotten `--follow` session is exactly the process that holds a
 lock, and a rule with one exception is a rule someone has to remember.
+*Amended 2026-10-22: the command is `xmip`, and the rule is `xmip` or
+`xmip-<what>`; see the amendment of that date.*
 
 | was | is |
 |---|---|
@@ -381,3 +383,29 @@ one line still finds and stops it.
 
 Nothing spawns a Host Subprocess yet
 ([decided, not built](../architecture/estate-map.md#host-subprocess)).
+
+## Amendment, 2026-10-22: the command is `xmip`, and the rule is `xmip` or `xmip-<what>`
+
+The owner, 2026-10-22: *Xmip CLI should be named just xmip, no need for the
+'-cli' part of the name.* Told that clause 1 named it `xmip-cli` by his own
+word of 2026-09-18 — *xmip-cli, not xmip: every System Process Xmip owns
+matches xmip-\** — he approved the assistant's recommendation the same day:
+rename it, and widen the one place that finds Xmip's processes.
+
+1. **The command a person types is `xmip`** (`xmip.exe` on Windows); the
+   repository and crate names, `xmip-core-cli`, stay. No `xmip-cli` alias
+   and no shim: the old name is deleted with every use (CONTRIBUTING.md,
+   nothing is deprecated before the first release).
+2. **Every System Process Xmip owns is named `xmip` or `xmip-<what>`.** The
+   one line becomes `Get-Process xmip, xmip-* | Stop-Process -Force`;
+   `Get-XmipProcess` lists both, and the node's reading of declarations
+   (`xmip-core-node`'s `standing`) takes both, so a forgotten `xmip
+   --follow` is found and stopped with the rest — held by
+   `test/XmipProcess.Test.ps1`.
+3. **No collision**: the PowerShell module is `Xmip`, a module and not a
+   command, and PowerShell resolves an executable on the path by its
+   extension; from the estate's root, `Xmip/` is a folder, and neither
+   Windows nor PowerShell runs a folder; no package names it — winget, AlmaLinux
+   10's repositories (`dnf provides */bin/xmip`), Debian 13's contents
+   (<https://packages.debian.org/search?searchon=contents&keywords=xmip&mode=exactfilename&suite=stable&arch=any>)
+   and npm's registry each answered none on 2026-10-22.

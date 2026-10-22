@@ -44,6 +44,11 @@
 //! an environment opens its firewall for (`listening.rs`; ADR-0015,
 //! amendment 2026-10-21).
 //!
+//! Where `[provision.node]` names the cluster's authority and `serve`, it
+//! answers ACME there for the premises while the node runs, and publishes the
+//! authority's revocation list where `publish` says (`authority.rs`; ADR-0034,
+//! amendment 2026-10-22).
+//!
 //! `--install` lays a node out from its cluster's `xmip.toml` — a starter
 //! where there is none, the node's slice beside it, its data and audit
 //! directories — and registers and starts the service `--definition`
@@ -73,6 +78,7 @@
 
 mod account;
 mod arguments;
+mod authority;
 mod built;
 mod console;
 #[cfg(windows)]

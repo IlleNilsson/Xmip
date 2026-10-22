@@ -242,7 +242,7 @@ whether delivery completed, and why work stopped when it did not.
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
 | Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading): the loader drives the contract table alone, `xmip-service` is built without it, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Service, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md); [decided, not built](doc/architecture/estate-map.md#arrival-validation)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
-| Operational consistency | The `xmip-cli` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
+| Operational consistency | The `xmip` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
 | Deployment flexibility | The same node model on Windows, Linux and macOS; current platforms only ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). | Device, edge, computer, server and hosted nodes, and the clusters made of them, are one product. |
 | Architectural memory | Accepted decision records and executable governance tests. | Tradeoffs survive staff and assistant turnover. |
@@ -390,7 +390,9 @@ yet ([built, in the assembled service](doc/architecture/estate-map.md#certificat
 them — over ACME from any authority a node names, Let's Encrypt one option
 for what Parties reach, the cluster's own authority between nodes, or
 self-signed on a lone offline node — is
-[built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning). Xmip is developed in Sweden and is source-available, which is
+[built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning);
+`xmip-service` serves the cluster's authority as the premises' own ACME
+service. Xmip is developed in Sweden and is source-available, which is
 relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
@@ -447,15 +449,15 @@ Four surfaces read one operator boundary
 ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
 [ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)) through one
 shared library, so they cannot disagree. An MCP client comes in the fifth
-way, through the command line's own: `xmip-cli mcp`, a Model Context
+way, through the command line's own: `xmip mcp`, a Model Context
 Protocol server whose tools are the read commands and whose resources are
 the scopes, each an Xmip URI
 ([ADR-0071](doc/decision/ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md)).
 
 | Surface | Best use |
 | --- | --- |
-| `xmip-cli` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
-| `xmip-cli mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
+| `xmip` | Text for a person; `--json` for one document; `--follow` for JSON Lines as things change, over SSH or a pipe. |
+| `xmip mcp` | An MCP client's way in: MCP over standard input and output, read only, here or over SSH. |
 | PowerShell module | The same answers as objects on the pipeline, composing with filtering, remoting and existing administration practice. |
 | Web GUI | Serves many operators from one host, each by the role at the keyboard, with drill-down to the leaf. |
 | Desktop | The same on one machine. Windows, macOS and Linux: .NET MAUI is cross-platform, Linux through Avalonia's backend for it ([preview](https://avaloniaui.net/blog/maui-avalonia-preview-1)). The same host on Android and iOS is the phone app: an Observer of nodes followed remotely, cluster health first (ADR-0014, amendment 2026-10-14). |
@@ -531,7 +533,7 @@ monitor is not a replacement for it.
 
 Every Xmip program audits, not only the runtime
 ([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md)): the monitors,
-`xmip-cli`, both PowerShell modules, the Playground and the language server
+`xmip`, both PowerShell modules, the Playground and the language server
 record what they start and stop, every act taken through them and every
 failure, through `xmip-core-audit`. A program's records go to `audit.toml` in
 the directory its configuration names as `AuditDirectory`, else the one
@@ -547,7 +549,7 @@ journal or syslog on Linux (`journalctl -t xmip`), the unified log on macOS.
 
 Xmip supports current platforms only
 ([ADR-0021](doc/decision/ADR-0021-current-platforms-only.md)). Linux,
-Windows and macOS are equal: the runtime, the `xmip-cli` command line, the
+Windows and macOS are equal: the runtime, the `xmip` command line, the
 PowerShell module and the web GUI run on all three. The desktop GUI is .NET
 MAUI, cross-platform: Windows and macOS, and Linux through Avalonia's backend
 for .NET MAUI, a preview ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md),
@@ -565,7 +567,7 @@ Windows and AlmaLinux alike, in either technology — both cover both
 systems, and Ansible is kept for familiarity and the project's support (the
 owner, 2026-10-21): the names of the cluster and its nodes, and on each node
 machine its account, the cluster's `xmip.toml`, its certificate from the
-cluster's own authority (`xmip-cli certificate --node`), the package, its
+cluster's own authority (`xmip certificate --node`), the package, its
 slice, the firewall openings its configuration listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
 `xmip-service`'s — `--slice --cluster`, `--listening`, `--install
@@ -649,7 +651,7 @@ as it starts, in words naming both. The
 database servers it is to be put in front of are set up by IT from
 [`deploy/database/postgresql`](deploy/database/postgresql/README.md) and
 [`deploy/database/mssql`](deploy/database/mssql/README.md), and a release's
-upgrade, which only adds, by `xmip-cli database <server> --from <version>`
+upgrade, which only adds, by `xmip database <server> --from <version>`
 and the PowerShell module's database script cmdlet (ADR-0015, amendment 2026-10-20); a
 Storage node reads `[storage.database]` and connects to neither yet
 ([decided, not built](doc/architecture/estate-map.md#database-server)). A
@@ -667,7 +669,7 @@ an order or an act over its operate listener, and declares the file, so the oper
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
 Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
-xmip-cli subscriptions --snapshot /opt/xmip/data/snapshot.toml --location xmip:///C1/node/S1 --name onward --pause
+xmip subscriptions --snapshot /opt/xmip/data/snapshot.toml --location xmip:///C1/node/S1 --name onward --pause
 ```
 
 When the node stops, the file says it stopped.
@@ -676,7 +678,7 @@ When the node stops, the file says it stopped.
 
 Configuration is TOML on disk; JSON is used only on the wire
 ([ADR-0031](doc/decision/ADR-0031-configuration-is-toml-json-is-transport.md)).
-`xmip-cli validate <file>` checks a node configuration without starting anything.
+`xmip validate <file>` checks a node configuration without starting anything.
 
 A node is offline unless its configuration says `online = true`
 ([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
@@ -685,14 +687,14 @@ provisioning at a public edge
 ([built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning)). Online access is a declared choice, never a
 side effect of deployment.
 
-The `xmip-cli` command line answers `xmip-cli health <scope>`, `measure`,
-`list` and `show` over a scope, `xmip-cli validate <file>`, `xmip-cli
+The `xmip` command line answers `xmip health <scope>`, `measure`,
+`list` and `show` over a scope, `xmip validate <file>`, `xmip
 audit`, what every Xmip program recorded, filtered by the Audit view's words,
-`xmip-cli subscriptions`, the Subscriptions the nodes route by, with
-`--pause` or `--resume` on one, and `xmip-cli event-subscriptions`, the Event
+`xmip subscriptions`, the Subscriptions the nodes route by, with
+`--pause` or `--resume` on one, and `xmip event-subscriptions`, the Event
 subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
-one, and `xmip-cli dead-messages`, what each node's Dead Message Queue keeps,
-with `--message` to open one and `--replay` on it, and `xmip-cli journey`,
+one, and `xmip dead-messages`, what each node's Dead Message Queue keeps,
+with `--message` to open one and `--replay` on it, and `xmip journey`,
 the Journeys that failed at each Send Port, a page at a time, with
 `--retry` or `--dismiss` on one; the PowerShell module answers the same as
 objects, the audit, the Subscriptions, the Event subscriptions, the Dead
@@ -700,7 +702,7 @@ Message Queues and the failed Journeys included, and takes listing, Retry
 and Dismiss of failed Journeys as parameters of its scope cmdlet. A person's
 certificate for reaching a node's operate listener, the phone first —
 client authentication alone, its subject the person — is made and signed by
-`xmip-cli certificate --operator <person>` and `xmip-cli certificate
+`xmip certificate --operator <person>` and `xmip certificate
 <request> --sign <file>`, and by the PowerShell module's certificate cmdlet
 with the same two parameter sets: the surface makes its own key
 and request, and the cluster's authority, named by the node configuration's
@@ -710,11 +712,20 @@ amendment 2026-10-15). On the phone and the desktop the key is made in the
 platform's keeper and never leaves it — the Android Keystore, the iOS
 keychain's Secure Enclave, Windows CNG and the TPM — and the host's
 Certificate page makes the request over it, shares it, and keeps the chain
-the authority signs; every handshake is signed by the keeper. Pause and resume are the two acts the
+the authority signs; every handshake is signed by the keeper.
+The cluster's authority is the premises' own ACME service, offline: a node
+serves it where its `[provision.node]` says, with renewal information and
+revocation for any standard client, and `xmip certificate`,
+the PowerShell module's certificate cmdlets and the desktop's Authority
+page set it up, inspect it, revoke from it, hand its anchor out and back it
+up; a node no network reaches it from carries its request to it in a file
+and imports the chain back, each step checked and audited
+([ADR-0034](doc/decision/ADR-0034-certificate-provisioning-versus-usage.md),
+amendment 2026-10-22). Pause and resume are the two acts the
 operator boundary carries, and the only two: the thing that watches must not
 be able to stop the thing it watches
 ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). They are built
-on both — `xmip-cli pause`, `xmip-cli resume`, `Suspend-XmipScope` and
+on both — `xmip pause`, `xmip resume`, `Suspend-XmipScope` and
 `Resume-XmipScope` with `-WhatIf` — and what stays queued is the role gate in
 front of them (ADR-0009). Start, stop and restart of a scope were declined.
 
@@ -737,14 +748,14 @@ isolation and whether the runtime fails closed
 
 An accepted Message that no Subscription matched is in the Dead Message
 Queue and can be replayed once the Subscription is corrected: the Dead
-Message Queue view, `xmip-cli dead-messages` and the PowerShell module list
+Message Queue view, `xmip dead-messages` and the PowerShell module list
 it per cluster and node, open one with its promoted properties and every
 Subscription's decline, and offer Replay to an Operator. A failed
 Journey keeps its position and resumes from its checkpoint; one whose every
 Send Location failed its tries waits in its Send Port's queue, listed at the
 Port's scope with why — every one, also those that failed before a restart
 or on another node — for an Operator to Retry or Dismiss: on the Monitor's
-drill at that scope, with `xmip-cli journey` or with the PowerShell module's
+drill at that scope, with `xmip journey` or with the PowerShell module's
 scope cmdlet. A refused Stream
 never became a Message and remains the sender's responsibility.
 
@@ -783,7 +794,7 @@ cluster names are two clusters side by side, each with its own web GUI.
 
 A run started with `-Hidden` declares itself hidden: an assistant's test run
 beside yours. Nothing shows it unless asked — `Get-XmipTestStatus
--IncludeHidden`, the operator module's audit with `-IncludeHidden`, `xmip-cli
+-IncludeHidden`, the operator module's audit with `-IncludeHidden`, `xmip
 audit --include-hidden`, and the *show test clusters* box on every view of the
 web and desktop — so `Get-XmipTestStatus | Start-XmipOperationWeb` never follows
 one, and a plain `Stop-XmipTest` leaves it running. It is hidden by what it
@@ -843,7 +854,7 @@ pin still shows. `Get-XmipStatus` looks inside every module.
 
 The runtime and modules are Rust on the stable channel. The PowerShell module
 and the GUIs are .NET 11 — the PowerShell module targets `net10.0` because
-`pwsh` hosts it — and so is `xmip-cli` until its Rust replacement, on the
+`pwsh` hosts it — and so is `xmip` until its Rust replacement, on the
 runtime's traits, lands (ADR-0014, amendment 2026-10-12). Spelling is
 checked by typos, in American English, against the root's `_typos.toml`.
 

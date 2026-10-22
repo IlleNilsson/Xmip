@@ -30,6 +30,10 @@
 //!   two Storage nodes over Xmip's mutual TLS, keeping none themselves;
 //!   the primary Storage node is stopped while files are dropped, its
 //!   standby is promoted, and every file dropped arrives once, whole.
+//! - `authority.rs`: a node whose `[provision.node]` serves the cluster's
+//!   authority answers ACME for the premises and publishes its revocation
+//!   list, `--listening` names both ports, and a client obtains, is told
+//!   when to renew and revokes into the list while the node runs.
 //!
 //! A test that measures how long Xmip takes — `carried.rs`, `told.rs` —
 //! takes the machine whole ([`alone`]); every other shares it ([`sharing`]),
@@ -361,6 +365,7 @@ fn told(changed: &Receiver<()>, deadline: Instant, holds: impl Fn() -> bool) -> 
 }
 
 mod accepted;
+mod authority;
 mod carried;
 mod failover;
 mod operate;

@@ -16,9 +16,9 @@
 - Subject: How an MCP client reaches a running Xmip
 - Name: Xmip is reached over MCP through the command line
 - Order: 11
-- Concepts: MCP, the Model Context Protocol; `xmip-cli mcp`; Xmip URI as a resource; read only, the Observer's reach
+- Concepts: MCP, the Model Context Protocol; `xmip mcp`; Xmip URI as a resource; read only, the Observer's reach
 
-**`xmip-cli mcp` is a Model Context Protocol server: a mode of the command
+**`xmip mcp` is a Model Context Protocol server: a mode of the command
 line, not a new program, and the fifth way into the operator boundary. Its
 tools are the command line's read commands and nothing else; its resources
 are the scopes, each an Xmip URI, read as an operator drills. It reads only,
@@ -44,13 +44,13 @@ and a scope is an Xmip URI on one tree. ADR-0009: the roles are Observer,
 Operator and Developer, and the Observer watches and does not act. An MCP
 resource is named by a URI, so the scope tree is already a set of resources.
 
-The design was agreed on 2026-10-12 as *started with*: `xmip-cli mcp` over
+The design was agreed on 2026-10-12 as *started with*: `xmip mcp` over
 standard input and output, read only; two questions stay open for widening
 it.
 
 ## Decision
 
-1. **A mode of the command line.** `xmip-cli mcp` speaks the Model Context
+1. **A mode of the command line.** `xmip mcp` speaks the Model Context
    Protocol — JSON-RPC 2.0, one message a line, on its standard input and
    output, protocol revision `2025-11-25` — to the MCP client that starts it.
    There is no new executable and no new cmdlet. Standard output carries
@@ -87,7 +87,7 @@ it.
    may do.
 8. **Remote is the command line's remote.** On another machine it is the
    same line over SSH (ADR-0014 clause 6): the client starts
-   `ssh <host> xmip-cli mcp`, SSH authenticates, and Xmip opens no listener.
+   `ssh <host> xmip mcp`, SSH authenticates, and Xmip opens no listener.
 
 ## Open
 

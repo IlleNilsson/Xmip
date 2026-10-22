@@ -1,6 +1,6 @@
 #Requires -Version 7.6.7
 
-# Every System Process Xmip owns is named xmip-<what> and declares its name,
+# Every System Process Xmip owns is named xmip or xmip-<what> and declares its name,
 # its location and its purpose (ADR-0053). Get-XmipProcess lists them with what
 # they said; this holds the two rules the listing rests on: where the
 # declarations are, and that a killed process's declaration does not outlive it.
@@ -78,11 +78,11 @@ Describe 'What a killed process left behind' {
         InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
             param($Area)
 
-            # This shell is alive and is not named xmip-*: a recycled pid must
-            # not lend a dead declaration to a stranger.
-            [string] $borrowed = Join-Path $Area "xmip-cli-$PID.toml"
+            # This shell is alive and is not named xmip or xmip-*: a recycled pid
+            # must not lend a dead declaration to a stranger.
+            [string] $borrowed = Join-Path $Area "xmip-$PID.toml"
             Set-Content -LiteralPath $borrowed -Encoding utf8 -Value @(
-                'name = "xmip-cli"'
+                'name = "xmip"'
                 'location = "xmip:///"'
                 'purpose = "runtime"'
                 "pid = $PID"
@@ -162,7 +162,7 @@ Describe 'What a Playground process is called' {
                 'xmip-playground-cluster'         = 'Cluster'
                 'xmip-playground-node'            = 'Node'
                 'xmip-gui-web'                    = ''
-                'xmip-cli'                        = ''
+                'xmip'                            = ''
                 'notepad'                         = ''
             }
 
@@ -201,6 +201,65 @@ Describe 'What a Playground process is called' {
             $layout.Image | Should -BeLike '*.local-work*'
             Get-XmipPlaygroundImageArea -Cluster $Name |
                 Should -Be (Join-Path $layout.Image $Name)
+        }
+    }
+}
+
+Describe 'Which processes are Xmip''s' {
+    <#
+        ADR-0053, amendment 2026-10-22. The owner, 2026-09-18: "xmip-cli, not
+        xmip: every System Process Xmip owns matches xmip-*"; and 2026-10-22:
+        "Xmip CLI should be named just xmip". A forgotten follow session of
+        the command line is found and stopped with the rest.
+    #>
+    It 'is xmip or xmip-<what>, and nothing else' {
+        InModuleScope Xmip {
+            foreach ($owned in 'xmip', 'xmip-service', 'xmip-playground-C1-roll') {
+                Test-XmipProcessName -Name $owned | Should -BeTrue -Because $owned
+            }
+
+            foreach ($other in 'xmipx', 'myxmip', 'notepad', 'pwsh') {
+                Test-XmipProcessName -Name $other | Should -BeFalse -Because $other
+            }
+        }
+    }
+
+    It 'finds and stops a forgotten process named xmip' {
+        # A stand-in for a forgotten `xmip health --follow`: a program that
+        # waits, copied under the command's name, so the test needs no build.
+        [string] $folder = Join-Path -Path $TestDrive -ChildPath 'forgotten'
+        $null = New-Item -ItemType Directory -Path $folder -Force
+        [string] $waiting = if ($IsWindows) {
+            Join-Path -Path $env:SystemRoot -ChildPath 'System32\PING.EXE'
+        }
+        else {
+            (Get-Command -Name 'sleep' -CommandType Application).Source
+        }
+        [string] $xmip = Join-Path -Path $folder -ChildPath ($IsWindows ? 'xmip.exe' : 'xmip')
+        Copy-Item -LiteralPath $waiting -Destination $xmip
+        [string[]] $arguments = $IsWindows ? @('-n', '60', '127.0.0.1') : @('60')
+        [hashtable] $start = @{
+            FilePath     = $xmip
+            ArgumentList = $arguments
+            PassThru     = $true
+        }
+
+        if ($IsWindows) {
+            $start['WindowStyle'] = 'Hidden'
+        }
+
+        $forgotten = Start-Process @start
+
+        try {
+            $found = @(Get-XmipProcess -Name 'xmip' | Where-Object -Property Id -EQ $forgotten.Id)
+            $found.Count | Should -Be 1
+            $found | Stop-Process -Force
+            $forgotten.WaitForExit(5000) | Should -BeTrue
+        }
+        finally {
+            if (-not $forgotten.HasExited) {
+                $forgotten.Kill()
+            }
         }
     }
 }
