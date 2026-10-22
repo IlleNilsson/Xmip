@@ -298,7 +298,7 @@ pipe on Windows, a Unix domain socket elsewhere (ADR-0052, amendment
 one machine ADR-0063 clause 1 allows, recorded in the node's audit where it
 is made (`operate.local`). **Local callers are proven by the operating
 system** — decided by the owner, 2026-10-19 (open problem 35) — and every
-surface on the machine reaches the node here: xmip-cli, the PowerShell module
+surface on the machine reaches the node here: xmip, the PowerShell module
 and both GUIs. The operating system is the gate: on Windows the pipe's
 security descriptor admits the account that made it — the node's — `SYSTEM`
 and the machine's administrators, each account or group `[operate] admit`
@@ -329,7 +329,7 @@ answers*).
 
 **From another machine** a node is operated in two ways, and only two
 (ADR-0014, amendment 2026-10-12). **A command runs there over shell
-remoting** — `ssh <host> xmip-cli …`, PowerShell Remoting over WinRM or
+remoting** — `ssh <host> xmip …`, PowerShell Remoting over WinRM or
 SSH — and brings that remoting's own authentication. **A surface reads,
 follows and acts on the node over its operate listener**: gRPC on
 TCP at the node's one address, on the operate plane's own port, inside
@@ -539,7 +539,7 @@ time:**
   time* — so the audit database is SQLite on an embedded Storage node). The
   `audit.toml` file sink is to be replaced by this, for the
   tools outside a node as well — the cmdlets, the operation web and
-  `xmip-cli` writing to the cluster's Storage nodes (ADR-0062, amendment
+  `xmip` writing to the cluster's Storage nodes (ADR-0062, amendment
   2026-10-01; [decided, not built](estate-map.md#audit-through-storage)); until then
   every program appends to its `audit.toml`
   ([built, in the assembled service](estate-map.md#program-audit)), and the operating

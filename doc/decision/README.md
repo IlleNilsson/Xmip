@@ -725,7 +725,7 @@ own.**
 
 Rust is the language of the runtime; everything in the message path is Rust.
 Across a language boundary everything goes through the C ABI; Rust to Rust,
-through traits (amendment 2026-10-12). The command line, `xmip-cli`, is Rust
+through traits (amendment 2026-10-12). The command line, `xmip`, is Rust
 on the runtime's traits, so it runs where .NET does not; the PowerShell module
 and the GUIs, a MAUI desktop and a Blazor web, are .NET 11 through the C ABI
 (`Xmip.Abi`). The four stay, each for its purpose; the desktop runs on Windows
@@ -904,7 +904,7 @@ its configuration, never guessed from a file in a temp directory.**
 
 ### How an MCP client reaches a running Xmip
 
-**`xmip-cli mcp` is a Model Context Protocol server: a mode of the command
+**`xmip mcp` is a Model Context Protocol server: a mode of the command
 line, not a new program, and the fifth way into the operator boundary. Its
 tools are the command line's read commands and nothing else; its resources
 are the scopes, each an Xmip URI, read as an operator drills. It reads only,
@@ -1036,7 +1036,7 @@ You have a word. This gives you the decision that governs it.
 | Concept | Decided by |
 | --- | --- |
 | `.src` | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
-| `xmip-cli mcp` | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
+| `xmip mcp` | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a contract version | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | a definition has no verb | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
@@ -1066,7 +1066,7 @@ You have a word. This gives you the decision that governs it.
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Change notification, a drop directory told | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Claim, claimable | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
-| CLI, `xmip-cli`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| CLI, `xmip`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |

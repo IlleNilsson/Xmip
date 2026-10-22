@@ -27,7 +27,7 @@ use xmip_runtime::running::Running;
 
 use crate::arguments::Arguments;
 use crate::publication::{self, Publisher};
-use crate::{built, orders};
+use crate::{authority, built, orders};
 
 /// Who stopped the node, as the stop record says it.
 pub type StoppedBy = &'static str;
@@ -95,6 +95,10 @@ pub fn serve(
     let board = publisher.board(tell);
     let Some((_operate, listening)) = operated(program, audit, configuration, &running, &board)
     else {
+        let _ = running.stop();
+        return Ended::Refused;
+    };
+    let Ok(_authority) = authorized(program, audit, configuration) else {
         let _ = running.stop();
         return Ended::Refused;
     };
@@ -285,6 +289,49 @@ fn operated(
                 &format!("{program}: {configuration} {refusal}"),
             );
             None
+        }
+    }
+}
+
+/// The cluster's authority the configuration at `configuration` serves,
+/// said on the console and audited where it serves one, held until the
+/// node drains; refused where it cannot serve, which is audited.
+fn authorized(
+    program: &str,
+    audit: &ProgramAudit,
+    configuration: &str,
+) -> Result<Option<authority::Served>, ()> {
+    let served = xmip_runtime::start::read(configuration)
+        .map_err(|unread| unread.reason)
+        .and_then(|(document, _, _)| authority::serve(&document, Path::new(configuration)));
+    match served {
+        Ok(Some(served)) => {
+            println!(
+                "{program}: the cluster's authority answers ACME at {}",
+                served.directory
+            );
+            if let Some(published) = &served.published {
+                println!("{program}: the cluster's authority publishes its list at {published}");
+            }
+            record(
+                audit,
+                "authority",
+                ExecutionPhase::Begin,
+                &[
+                    ("directory", served.directory.as_str()),
+                    ("published", served.published.as_deref().unwrap_or("")),
+                ],
+            );
+            Ok(Some(served))
+        }
+        Ok(None) => Ok(None),
+        Err(refusal) => {
+            fail(
+                audit,
+                "authority",
+                &format!("{program}: {configuration} {refusal}"),
+            );
+            Err(())
         }
     }
 }

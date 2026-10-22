@@ -1848,7 +1848,7 @@ sink forms a program's chain as it appends to `audit.toml`; the audit keeper
 forms a node's as it keeps each record, the `audit` table laying out the
 writer, the number and both digests. One walk says the first place a chain
 breaks — a record deleted, changed or out of order — or that it is whole:
-`xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
+`xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
 file, `ledger::verify_audit_chain` for Xmip Storage. A record whose write to
 `audit.toml` was interrupted is kept as written: the next append seals it
 with a comment line and a blank line before its own record, so it is in no

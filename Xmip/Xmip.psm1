@@ -25,6 +25,11 @@ Set-StrictMode -Version Latest
 # because it looks like a guarantee.
 [int] $script:XmipSchemaMajor = 2
 
+# The names every System Process Xmip owns answers to: xmip, the command a
+# person types, and xmip-<what> (ADR-0053, amendment 2026-10-22). Asked of
+# the operating system as they stand, and held to by Test-XmipProcessName.
+[string[]] $script:XmipProcessName = @('xmip', 'xmip-*')
+
 # Keys that describe a repository. A child of the estate tree may not share a
 # name with one of these, because TOML cannot hold a scalar and a table at one
 # key. See Assert-XmipNoMetadataCollision.

@@ -245,7 +245,7 @@ it.
 ### The operator surfaces
 
 You watch and operate Xmip from four surfaces, and all four read the same
-library, so they cannot disagree: the command line `xmip-cli`, the PowerShell
+library, so they cannot disagree: the command line `xmip`, the PowerShell
 operator module, the web GUI and the desktop GUI. The command line and the
 PowerShell module talk to Xmip through the runtime library, so build that
 first:
@@ -254,7 +254,7 @@ first:
 cargo build --manifest-path module/platform/runtime/Cargo.toml
 ```
 
-The command line, `xmip-cli`, is built with .NET today:
+The command line, `xmip`, is built with .NET today:
 
 ```powershell
 dotnet build module/core/operation/cli/src/Xmip.Cli
@@ -588,7 +588,7 @@ message path, the one place in Xmip where a letter means anything, and each
 is what that stage moves per second, not a total since the roll began:
 `R:0/s` says stalled, which a rising total never can, and a dash says there
 has been only one publication so far. T and F are counts, on the line only
-when above zero. `xmip-cli --snapshot <path>` names which cluster the
+when above zero. `xmip --snapshot <path>` names which cluster the
 executable reads; it answers one cluster per invocation and shows totals,
 because a single reading has no interval to take a rate over.
 
@@ -658,6 +658,97 @@ Storage nodes, which serve on port 7443 — the port a Storage node's
 what every real node publishes; it drives a node on a machine of its own
 only through the Receive Locations its environment binds, which the
 templates do not bind yet.
+
+### The cluster's authority on the premises
+
+Xmip runs with no internet (ADR-0045), and its certificates still come by
+ACME: the cluster's own authority is the premises' own ACME service
+(ADR-0034, amendment 2026-10-22). Nothing in Xmip ships an authority for
+production; the authority is yours, kept in a folder you choose, and an
+`acme` source may name any other directory on the premises instead. Set it
+up once, on the machine that will keep it:
+
+```powershell
+xmip certificate --authority D:\Xmip\authority --cluster C1 --publish http://ca.xmip.test:8080
+```
+
+or `New-XmipCertificate -Authority D:\Xmip\authority -Cluster C1 -Publish
+http://ca.xmip.test:8080`. It answers with the authority's SHA-256: the
+fingerprint every machine that comes to trust it compares by another way.
+The node that keeps it serves ACME where its configuration says, and its
+revocation list and certificate over plain HTTP at the address you
+published, the one every certificate it signs names:
+
+```toml
+[provision.node]
+source = "xmip-core-provision-internal-ca"
+names = "ca.xmip.test"
+lifetime = "2160h"                       # ninety days
+authority_lifetime = "87600h"
+authority = "D:/Xmip/authority"
+serve = "0.0.0.0:14000"                  # ACME: https://ca.xmip.test:14000/directory
+publish = "0.0.0.0:8080"                 # /crl and /authority.cer, plain HTTP
+published_at = "http://ca.xmip.test:8080"
+```
+
+`xmip-service --listening` names both ports, so the environment opens them.
+Any standard ACME client on the premises uses it — lego, the Go client, is
+proved against it with renewal information (RFC 9773) and revocation:
+
+```powershell
+$env:LEGO_CA_CERTIFICATES = 'D:\Xmip\authority.crt'   # --export --format pem wrote it
+lego run --server https://ca.xmip.test:14000/directory --accept-tos `
+    --email operator@example.org --domains web1.xmip.test --http
+lego certificates revoke --server https://ca.xmip.test:14000/directory `
+    --cert.name web1.xmip.test --reason 4
+```
+
+Inspect the authority, revoke from it, hand its anchor out and back it up:
+
+```powershell
+xmip certificate --inspect D:\Xmip\authority
+xmip certificate --revoke 5B8E9CC6D36BF3DB --authority D:\Xmip\authority --reason keyCompromise
+xmip certificate --export D:\Xmip\authority.cer --authority D:\Xmip\authority --format der
+xmip certificate --export D:\Xmip\authority.crt --authority D:\Xmip\authority --format pem
+xmip certificate --backup E:\backup\authority --authority D:\Xmip\authority
+```
+
+`Get-XmipCertificate -Authority D:\Xmip\authority` does the same, with
+`-Revoke`, `-Export` and `-Backup`, and so does the desktop's Authority page.
+The backup holds the authority's key: keep it as the key is kept.
+
+**Handing the anchor out.** Each of these changes what a machine trusts, and
+is that machine's owner's to run; Xmip runs none of them.
+
+| where | how |
+| --- | --- |
+| Windows, one user | `certutil -user -addstore Root authority.cer`, or `Import-Certificate -FilePath authority.cer -CertStoreLocation Cert:\CurrentUser\Root` |
+| Windows, the machine | the same into `Cert:\LocalMachine\Root`, in an elevated prompt |
+| AlmaLinux, RHEL | copy `authority.crt` into `/etc/pki/ca-trust/source/anchors/`, then `update-ca-trust` |
+| Debian, Ubuntu | copy `authority.crt` into `/usr/local/share/ca-certificates/`, then `update-ca-certificates` |
+| Chrome, Edge on Windows | the Windows store above |
+| Firefox | the enterprise policy `Certificates`, `Install` naming the file — on Linux the one way, since `ImportEnterpriseRoots` reads the Windows and macOS stores alone |
+| Chrome on Linux | `certutil -d sql:$HOME/.local/share/pki/nssdb -A -t "C,," -n "Xmip C1" -i authority.crt` |
+
+**A node no network reaches the authority from.** Its certificate is
+carried by hand, each step checking the file it is given and audited:
+
+```powershell
+# On the node: a fresh key that stays, and a request to carry.
+xmip certificate --node R1 --names R1.xmip.test --out D:\Xmip\tls
+# Where the authority is kept: its signature, its names, ninety days.
+xmip certificate E:\R1\node.csr --authority D:\Xmip\authority --names R1,R1.xmip.test --out E:\R1\node.pem
+# Back on the node: every signature, the key, the names, the anchor; then it is used.
+xmip certificate E:\R1\node.pem --import D:\Xmip\tls
+```
+
+`New-XmipCertificate -Node R1 -Name R1.xmip.test -Path D:\Xmip\tls`,
+`New-XmipCertificate -Request E:\R1\node.csr -Authority D:\Xmip\authority`
+and `New-XmipCertificate -Import E:\R1\node.pem -Path D:\Xmip\tls` are the
+same three. The node says when its next request is due: at
+`xmip:///C1/node/R1/certificate/operate`, Stressed and *renewal due* from two
+thirds of its ninety days, which `xmip certificate --inspect
+D:\Xmip\tls\node.pem` says too.
 
 ## 7. Where next
 

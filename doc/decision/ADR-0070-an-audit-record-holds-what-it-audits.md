@@ -98,7 +98,7 @@ that for now.*
   `digest`, indexed on the writer and the number. One walk,
   `xmip-core-audit`'s `audit_chain::walk`, says the first place a chain
   breaks — a record deleted, changed or out of order — or that it is whole,
-  in words; `xmip-cli audit --verify`, `Get-XmipAudit -Verify` and the Audit
+  in words; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit
   view's *verify chains* walk the chains in the file, through
   `xmip_audit_read_v1`'s `verify`, and the runtime's
   `ledger::verify_audit_chain` walks one Xmip Storage keeps. Verifying reads
@@ -115,7 +115,7 @@ that for now.*
   reports each fragment per file, apart from the chain verdict, in one
   sentence: FAILED for a sealed one, UNFINISHED for the file's end no
   append has sealed yet (`xmip_audit_read_v1`'s `fragments`, .NET's
-  `AuditFragment`); `xmip-cli audit --verify` exits 1 on a sealed fragment
+  `AuditFragment`); `xmip audit --verify` exits 1 on a sealed fragment
   as on a broken chain, and not on an unfinished end. Decided by the
   owner, 2026-10-12: *Let's keep it as built*. The record appended after a
   seal takes the number the interrupted one would have had, since that one

@@ -16,7 +16,7 @@ function Stop-XmipTest {
             done: asks every node beneath the roll to leave through the
             cluster's stop file, waits five seconds, ends what stayed, then
             ends the roll's cluster, then the roll. Nothing is orphaned —
-            Get-Process xmip-* is empty afterwards, and the per-instance
+            Get-Process xmip, xmip-* is empty afterwards, and the per-instance
             images the tree ran under are taken away with it (ADR-0053,
             amendment 2026-09-20). A roll's nodes are the ones beneath it in
             the tree or declared in its cluster, and after the cluster every

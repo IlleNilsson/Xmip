@@ -746,6 +746,28 @@ cluster's authority kept in a folder (`provision::node::issue_into`,
 amendment 2026-10-21), and given them by the template: a key made away from
 the node it is for, which a node's own provisioner ends.
 
+**Offline, both ways, since 2026-10-22** (ADR-0034, amendment 2026-10-22;
+the owner: *There has to be tools, aid, to support 'Let's encrypt', ACME
+when being offline* — both cases). The premises' own ACME service: the node
+whose `[provision.node]` names `internal-ca` and `serve` answers ACME in
+`xmip-service`, with ACME Renewal Information (RFC 9773) and revocation, its
+accounts kept, its revocation list and certificate published over plain
+HTTP at the address every certificate it signs names; a standard client,
+lego 5.5.2, obtains, is told when to renew, revokes and renews against it,
+nothing installed; dns-01 is checked against a DNS server on the premises.
+The authority keeps a register of everything it signed, and every surface
+sets it up, inspects, revokes from, exports and backs up (`xmip
+certificate`, `New-` and `Get-XmipCertificate`, the desktop's Authority
+page; `xmip_operate.h` section 23). Across an air gap: a node writes its
+request to a file, the authority signs it where it is kept, the node imports
+the chain, each step checking the file it is given, and the node's health
+says when the next request is due (`<node>/certificate/<use>`). Node
+certificates last ninety days (the owner, 2026-10-22), and a node's always
+comes from the cluster's authority: Let's Encrypt serves the public server
+side alone. Still open here: Xmip's own provisioner does not ask renewal
+information, and `xmip-service` starts no provisioner for its own
+certificates; win-acme and certbot are not tested.
+
 **Open for the owner before step 5:** Let's Encrypt validates that the node
 controls a name — `http-01` needs the name's public port 80 reaching the
 node's answer, which may listen on any port behind forwarding; `dns-01` needs
@@ -1144,7 +1166,7 @@ a publication's list (`SnapshotOperator`,
 `PublicationReading.FailedJourneysWithin`) still pages by the place in the
 Send Port's queue while a node's own list pages by the place in the index:
 a publication carries no index places. Said so precisely, the same day, in
-`IOperatorSurface.FailedJourneys`, `xmip-cli journey --offset` and
+`IOperatorSurface.FailedJourneys`, `xmip journey --offset` and
 `Get-XmipScope -Offset`; making the two one would mean publishing each
 Journey's place in the index.
 
@@ -1913,9 +1935,9 @@ in words naming both (`Embedded::over`, `embedded/versioned.rs`,
 `PersistError::Schema`); a step needs nothing else there, since a table is a
 kind of record and a column a value of the sealed body. **A node publishes**
 each database it keeps at `<node>/storage/<domain>`, its evidence `schema
-version <n> on <engine>`, so `xmip-cli health`, `Get-XmipHealth`, the GUI's
+version <n> on <engine>`, so `xmip health`, `Get-XmipHealth`, the GUI's
 tree and the publication itself show it, and the service says it as it
-starts. **The tool act** is `xmip-cli database <server> --from <version>
+starts. **The tool act** is `xmip database <server> --from <version>
 [--to <version>] [--out <folder>]` and `Get-XmipDatabaseScript -Server
 -From [-To] [-Path]`, over `xmip_database_upgrade_v1` (`xmip_operate.h`
 section 20); before the first release every upgrade is none and is refused
@@ -2016,7 +2038,7 @@ no longer trusted by itself*.
 Built 2026-10-21. **The loopback trust is deleted**: `GatedOperator.Proven`
 takes a client certificate's subject alone, and a browser or a remote
 surface over loopback presents one like any other caller, or is no one.
-**Every local surface reaches a node at its local endpoint** — xmip-cli, the
+**Every local surface reaches a node at its local endpoint** — xmip, the
 PowerShell module and both GUIs, through the runtime's one connecting end;
 the VS Code extension's language server reaches no node. **On Windows**
 every surface opens the node's pipe lent for identification alone

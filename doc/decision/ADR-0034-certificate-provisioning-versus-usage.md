@@ -391,3 +391,248 @@ anchors a Party's certificate must reach from the same table is the
 assistant's drafting of 2026-10-19, for the owner to overrule: the
 operator's-files source already declared `anchors` as *the PEM anchors a
 peer's certificate must reach*.
+
+## Amendment, 2026-10-22: ACME offline — the premises' own ACME service, and the air gap
+
+**Provenance.** The owner, 2026-10-22: *There has to be tools, aid, to
+support 'Let's encrypt', ACME when being offline.* Asked which case, he
+answered **both**: the premises' own ACME service, and a node with no
+network route at all. The same day: node certificates last **90 days**;
+and, agreeing a finding below, *Let's Encrypt covers only a node's public
+server side; node-to-node mutual TLS always uses the cluster authority's
+certificate.* Nothing in Xmip ships a CA for production: the end user
+chooses their CA (clause 2 of the amendment of 2026-09-24). What follows
+beyond those sentences is the assistant's drafting, each point the owner's
+to strike.
+
+**What was current on 2026-10-22** (each read that day):
+
+- **ACME Renewal Information is a standard**: RFC 9773, June 2025. A server
+  names `renewalInfo` in its directory (section 3); a certificate is named
+  by its authority key identifier's `keyIdentifier` and its serial, each
+  base64url without padding, joined by a dot (section 4.1); the answer is a
+  `suggestedWindow` of `start` and `end` and an optional `explanationURL`
+  (section 4.2), its `Retry-After` how long to wait before asking again
+  (section 4.3); a new order says which certificate it `replaces` (section
+  5) (<https://www.rfc-editor.org/rfc/rfc9773.html>).
+- **Let's Encrypt serves it**: its directory names
+  `https://acme-v02.api.letsencrypt.org/acme/renewal-info`, and offers the
+  profiles `classic`, `tlsserver` and `shortlived`
+  (<https://acme-v02.api.letsencrypt.org/directory>). Its profiles page,
+  updated 2026-10-04: `classic` 90 days, `tlsserver` 45 days, `shortlived`
+  160 hours; `tlsclient`, the last to carry TLS client authentication, *is
+  no longer available* since 2026-07-08
+  (<https://letsencrypt.org/docs/profiles/>). Its schedule: `tlsserver` 45
+  days from 2026-05-13; `classic` 64 days from 2027-02-10 and 45 days from
+  2028-02-16; a client without ARI renews about two thirds of the way
+  through (<https://letsencrypt.org/2025/12/02/from-90-to-45/>). The
+  profiles extension is `draft-ietf-acme-profiles`, submitted to the IESG,
+  not yet an RFC (<https://datatracker.ietf.org/doc/draft-ietf-acme-profiles/>).
+- **OCSP is gone**: Let's Encrypt *turned off our Online Certificate Status
+  Protocol (OCSP) service* on 2025-08-06 and publishes revocation *exclusively
+  via Certificate Revocation Lists (CRLs)*
+  (<https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life/>).
+- **The CA/Browser Forum's schedule** (ballot SC-081v3, passed 2025-04-11;
+  TLS Baseline Requirements 2.3.1, section 1.2.2): a subscriber certificate
+  lasts at most 200 days from 2026-03-15, 100 days from 2027-03-15 and 47
+  days from 2029-03-15; domain validation is reused for 200, 100 and then
+  10 days (<https://cabforum.org/2025/04/11/ballot-sc081v3-introduce-schedule-of-reducing-validity-and-data-reuse-periods/>,
+  <https://raw.githubusercontent.com/cabforum/servercert/main/docs/BR.md>).
+- **The clients**: certbot 5.8.0 (2026-09-01), lego 5.5.2 (2026-09-23;
+  in lego 5 `run` obtains and renews, ARI is on unless `--ari-disable`,
+  revocation is `certificates revoke`, http-01 listens on `--http.address`,
+  and `LEGO_CA_CERTIFICATES` names the anchors it trusts), win-acme 2.2.9.1
+  (2024-05-25, the newest; ARI since 2.2.3; it trusts the Windows store
+  alone, or turns verification off with `ValidateServerCertificate`)
+  (<https://github.com/certbot/certbot/releases>,
+  <https://github.com/go-acme/lego/releases>,
+  <https://go-acme.github.io/lego/references/ref-flags/>,
+  <https://go-acme.github.io/lego/advanced/options/>,
+  <https://github.com/win-acme/win-acme/releases>,
+  <https://www.win-acme.com/reference/settings>).
+- **Where a verifier fetches a list**: Windows' retrieval takes `ldap`,
+  `http`, `https` for a CRL or OCSP alone, and `file`
+  (<https://learn.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptretrieveobjectbyurla>),
+  and practice is plain HTTP: *You MUST NOT serve CDP/AIA/OCSP URLs over
+  HTTPS, use plain HTTP only*
+  (<https://learn.microsoft.com/en-us/answers/questions/169840/how-can-i-configure-cdp-with-https>).
+
+### 1. The cluster's authority keeps a register
+
+The authority kept in a folder (`authority.key`, `authority.pem`) now keeps
+beside them every certificate it signs, by any way — ACME, a node issued on
+the operator's machine (section 22), a carried request, a person's request
+— as `issued/<serial>.pem`, each revocation as `revoked/<serial>`, and the
+list it publishes, `authority.crl`, a version 2 CRL it signs, made again at
+every revocation and when a day old, valid a week
+(`provision::register::Register`, `provision::crl`). Each file is created
+once and never written over, so the node serving ACME and an operator's
+surface never write the same one. No OCSP responder is built: revocation is
+published as a list alone, as Let's Encrypt now publishes it.
+
+### 2. Every certificate says where to check it
+
+Every certificate names its own key, and a leaf its issuer's, by key
+identifiers — the leftmost 160 bits of SHA-256 over the key (RFC 7093,
+method 1) — which a verifier builds a chain by and ARI names a certificate
+by. Where the authority publishes, `published` in its folder, a leaf names
+`<published>/crl` its CRL distribution point and `<published>/authority.cer`
+its issuer's certificate. The address is plain `http://host:port`, refused
+otherwise: a verifier fetches the list before it trusts any TLS.
+
+### 3. The premises' own ACME service
+
+The node whose `[provision.node]` names `source =
+"xmip-core-provision-internal-ca"` and `serve` answers ACME there, in
+`xmip-service` beside the node's path (ADR-0045 clause 1), until it drains;
+`publish` names the plain-HTTP listener for `/crl`, `/authority.cer` and
+`/authority.pem`, `published_at` the address the premises reach it at, and
+`authority` the folder, `authority` beside the configuration unless said.
+`xmip-service --listening` names both ports. The service is completed
+for any standard client:
+
+- the directory names `revokeCert` and `renewalInfo`, and says no
+  external account is required; there are no terms of service;
+- an account is kept in the authority's folder (`acme/accounts/`) and
+  outlives a restart; `onlyReturnExisting` and the account's POST-as-GET
+  are answered;
+- an order and an authorization say when they expire; an order's
+  `replaces` is held to a certificate this authority issued, replaced once
+  (`alreadyReplaced` after);
+- `renewalInfo` answers the window from two thirds to three quarters of a
+  certificate's life — two thirds is the moment every Xmip reader renews
+  at (`provision::renewal_moment`), and Let's Encrypt's advice for a client
+  without ARI — with `Retry-After` six hours; for a revoked certificate a
+  window already passed, so its client renews at once;
+- `revokeCert` is taken from the account the certificate was issued to
+  (`acme/ordered/<serial>`) or signed by the certificate's own key, into the
+  register and the list at once (`alreadyRevoked`, `badRevocationReason`).
+
+**Proved with a standard third-party client**: lego 5.5.2, Go, one binary
+from `.local-work/lego`, nothing installed, trusting the authority through
+`LEGO_CA_CERTIFICATES` alone — no trust store touched. `internal-ca`'s
+`tests/acme/third_party.rs`, run where `XMIP_ACME_LEGO` names the binary
+and said SKIPPED otherwise: lego obtains a certificate by http-01 on its
+`--http.address`; asked again, ARI says it is not due and lego keeps it;
+`lego certificates revoke --reason 4` revokes it into the register and the
+list; asked again, ARI's window has passed and lego renews at once. Xmip's
+own client asks the same (`acme::Client::renewal_window`, `revoke`).
+win-acme is not tested: it trusts the Windows store alone, which this work
+does not touch. certbot is not tested: it is Python, run only in the WSL
+guest if at all, and lego answered the question it would.
+
+**dns-01 against the premises' DNS**: `dns_server`, a DNS server on the
+premises the authority asks a name's TXT records of, over UDP
+(`internal_ca::Resolver`, RFC 1035); an answer cut short is refused, since
+TCP is not built. Writing the record is a DNS provider's module's
+(`DnsWriter`), as before; Xmip ships none for a vendor.
+
+**Renewal offline, checked**: ARI needs only the authority, which is on the
+premises; the list needs the plain-HTTP address its leaves name, reachable
+on the premises; nothing reaches beyond the cluster. Xmip's own provisioner
+still renews at two thirds of the life it read, which is where the window
+opens; it does not yet ask ARI, so a revocation reaches it at its next
+renewal and not at once.
+
+### 4. A node's certificate across an air gap
+
+Three acts, each checking the file it is given (`provision::carried`):
+
+1. **On the node, a request**: a fresh key, `node.next.key`, which never
+   leaves the node, and a PKCS #10 request for it, `node.csr`, naming the
+   node and every name it is reached by, each checked as a host's name;
+   never over a request waiting.
+2. **Where the authority is kept, the signing**: the request's own
+   signature verified, held to what a node's certificate may be
+   (`Purpose::admit`) and, where the signer names any, to exactly the names
+   expected; signed for 90 days for server and client authentication by an
+   authority that exists — never made by this act — and registered.
+3. **On the node, the import**: every signature of the chain checked, the
+   leaf for `node.next.key`'s key and the request's names, serving a node,
+   valid now, the chain ending at an authority that signed itself and that
+   is the node's anchor where it holds `anchors.pem`; only then are
+   `node.pem` and `node.key` written, the anchor too where the node held
+   none — the import then says the authority's SHA-256, to compare by
+   another way — and the request's files removed. A crash between the
+   writes leaves the request's files, and the same import again finishes.
+
+Renewal is the same three acts. **The node says in its health when a
+request is due**: at `<node>/certificate/<use>`, each certificate its
+configuration names — `operate`, `receive`, `storage` — `Fine` while
+current, `Stressed` saying *renewal due* from two thirds of its life,
+`Done` once expired (`provision::renewal::Standing`).
+
+### 5. A node's certificate always comes from the cluster's authority
+
+Between nodes each end presents a certificate for client authentication
+too, which Let's Encrypt has not issued since 2026-07-08 (ADR-0033,
+amendment 2026-10-13). So `[provision.node]` from a source that declares
+`anchors` — ACME, an operator's files — is refused unless `anchors` names
+the cluster authority's anchor: a public authority trusted through the
+operating system's store serves `[provision.receive]` alone, the public
+server side an online node may take from Let's Encrypt
+(`provision::read`, the owner, 2026-10-22).
+
+### 6. The surfaces
+
+`xmip_operate.h` section 23, `xmip_authority_v1`: an act and its arguments
+as JSON, its answer JSON — `set-up`, `inspect`, `read`, `revoke`,
+`export`, `back-up`, `request`, `sign`, `import` — a node's build only, a
+forwarder over the capability (`ffi::authority`). `Xmip.Abi`'s
+`RuntimeCertificates.Authority` binds it; `Xmip.Surface`'s
+`AuthorityCertificate` asks it once for every .NET surface:
+
+| act | `xmip certificate` | PowerShell |
+| --- | --- | --- |
+| set up the authority | `--authority <folder> --cluster <c> [--publish http://host:port]` | `New-XmipCertificate -Authority -Cluster [-Publish]` |
+| inspect it | `--inspect <folder>` | `Get-XmipCertificate -Authority` |
+| read a certificate, renewal due | `--inspect <file>` | `Get-XmipCertificate -Path` |
+| revoke | `--revoke <serial> --authority <folder> [--reason <word>]` | `Get-XmipCertificate -Authority -Serial -Revoke [-Reason]` |
+| hand out the anchor or the list | `--export <file> --authority <folder> [--format pem\|der\|crl]` | `Get-XmipCertificate -Authority -Export [-Format Pem\|Der\|Crl]` |
+| back up | `--backup <folder> --authority <folder>` | `Get-XmipCertificate -Authority -Backup` |
+| a node's request | `--node <node> [--names] [--out <folder>]` | `New-XmipCertificate -Node [-Name] [-Path]` |
+| sign a carried request | `<node.csr> --authority <folder> [--names] [--out <file>]` | `New-XmipCertificate -Request -Authority [-Name] [-Path]` |
+| import it on the node | `<chain> --import <folder>` | `New-XmipCertificate -Import -Path` |
+
+One new cmdlet, `Get-XmipCertificate`, reads, its acts parameters on it as
+`Get-XmipSubscription`'s are (ADR-0014, amendment 2026-09-15). Every act is
+audited — `xmip` audits every command, the PowerShell module every act
+that changes something (ADR-0062). The desktop host gains an Authority page
+— set up, inspect, revoke, export, back up and sign a carried request —
+for a role that may configure; the phone keeps no authority.
+
+**Handing the anchor out** (`doc/getting-started.md`, *The cluster's
+authority on the premises*): the anchor as DER for Windows and PEM for
+Linux; Windows' user store `certutil -user -addstore Root authority.cer` or
+`Import-Certificate -CertStoreLocation Cert:\CurrentUser\Root`, the
+machine's in an elevated prompt; AlmaLinux and RHEL
+`/etc/pki/ca-trust/source/anchors/` and `update-ca-trust`; Debian and
+Ubuntu `/usr/local/share/ca-certificates/*.crt` and
+`update-ca-certificates`; Chrome and Edge on Windows read the system
+store; Firefox through its enterprise policy `Certificates` — `Install` on
+Linux, where `ImportEnterpriseRoots` does nothing; Chrome on Linux its NSS
+database, `$HOME/.local/share/pki/nssdb` from M146. Xmip runs none of them:
+each changes what a machine trusts, and is its owner's to run.
+
+**Proved**: in `xmip-core-provision` (the register, the list read back and
+verified, a revocation never twice, a backup the same authority, the
+carried round trip and every refusal of it, a node issued on the
+operator's machine registered); in `internal-ca` (the premises' test above,
+an account kept across a restart, a stranger refused revocation, the DNS
+server asked over UDP, lego); in the runtime (section 23 end to end); in
+`Xmip.Abi.Test`, `Xmip.Surface.Test` (the round trip, and .NET's own chain
+builder reaching the exported anchor with no store touched), `Xmip.Cli.Test`
+and the PowerShell module's Pester suite.
+
+**Drafted, for the owner to strike**: the register's files and their
+layout; the list valid a week, made again daily; the ARI window from two
+thirds to three quarters and six hours between asks; a revoked
+certificate's window already passed; key identifiers by SHA-256; the
+publication plain HTTP only; an authority set up here valid ten years;
+`Stressed` for renewal due; the cmdlet split, one new `Get-XmipCertificate`
+with its acts; the Authority page's place on the desktop alone.
+
+**Not yet**: `xmip-service` still starts no provisioner for its own
+certificates, and the node holding the authority does not issue itself
+(open problem 27); Xmip's own provisioner does not ask ARI; no OCSP; no
+DNS over TCP; win-acme and certbot untested.

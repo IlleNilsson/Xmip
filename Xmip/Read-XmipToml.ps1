@@ -122,6 +122,12 @@ function Write-XmipToml {
     <#
         The module's one TOML file writer. -NoClobber refuses a file that is
         already there, and the refusal is an error the caller can catch.
+
+        The text is written beside the file and only then moved into place,
+        so a reader finds the file whole or not at all: written in place, a
+        reader polling for it read it empty for the instant between its
+        creation and its text (the estate suite's own test, 2026-10-22). A
+        move over a file a reader holds open for that instant is asked again.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -138,14 +144,40 @@ function Write-XmipToml {
 
     Import-XmipToml
     [string] $text = ConvertTo-Toml -InputObject $Value -Depth 4
+    [string] $full = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+    [string] $beside = "$full.$([System.Guid]::NewGuid().ToString('n')).new"
 
     [hashtable] $written = @{
         InputObject = $text
-        LiteralPath = $Path
+        LiteralPath = $beside
         Encoding    = 'utf8'
-        NoClobber   = $NoClobber.IsPresent
         ErrorAction = 'Stop'
     }
 
     Out-File @written
+
+    try {
+        if ($NoClobber.IsPresent) {
+            [System.IO.File]::Move($beside, $full, $false)
+            return
+        }
+
+        for ([int] $attempt = 1; ; $attempt++) {
+            try {
+                [System.IO.File]::Move($beside, $full, $true)
+                return
+            }
+            catch [System.IO.IOException] {
+                if ($attempt -ge 1000) {
+                    throw
+                }
+
+                [System.Threading.Thread]::Sleep(1)
+            }
+        }
+    }
+    catch {
+        Remove-Item -LiteralPath $beside -Force -ErrorAction SilentlyContinue
+        throw
+    }
 }
