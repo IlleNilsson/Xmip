@@ -11,6 +11,8 @@
 - Amended: 2026-10-19 — `accept.party` built in the node
 - Amended: 2026-10-21 — one file for one computer and for machines of their
   own; a real node is used where its name resolves, built
+- Amended: 2026-10-22 — every node at level 1 a process of the assembled
+  service, driven; a real node driven through the Parties' far end
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -23,7 +25,7 @@
 - Subject: The Playground exercises everything, all the time
 - Name: The Xmip Playground
 - Order: 5
-- Concepts: Playground, exercise, verdict; Development node; simulated node, real node, test level
+- Concepts: Playground, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes
 
 **`xmip-test-playground` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
@@ -795,8 +797,9 @@ what an environment gives a machine's node, the file unchanged:
   each Receive Location a file Location over a drop folder of the run's,
   accepting the folder's circumstance, on the next receiving or executing
   node; each Send Port a file Send Location over a folder of the run's, on
-  the next sending or executing node (`src/bindings.rs`, which the
-  simulated nodes' process stage writes its bindings through too).
+  the next sending or executing node (`configure::placed` since the
+  amendment below, which the simulated nodes' process stage writes its
+  bindings through too).
 
 The Storage nodes start first, the rest once those accept work; every node
 that keeps no Storage reaches them over Xmip's mutual TLS, the primary
@@ -828,10 +831,78 @@ arrive, and its stop record says how many were carried.
 carries — the relayed round trip, the drop box, the exclusive claim, the
 daily backlog — have no node to run on, and the roll runs the round trip in
 its own process, as when no node serves a stage. A node on a machine of its
-own is driven only through the Receive Locations its environment binds,
-which the environment templates do not bind yet.
+own is driven through the Receive Locations its environment binds on the
+Parties' far end (the amendment below).
 
 Provenance: the task's words above. Starting every node as the service by
 default, the `personal-computer` build, routing by the file's name, ending
 the input to stop a node, the folders, the bounds and `<cluster>/carried`
 are the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-10-22: a real node is driven through the Parties' far end
+
+The owner, 2026-10-22: *I'm so eager to try it out, I want to see the
+monitoring, how it works. Deploying to VMs, checking it out on a phone.* The
+environment templates put the file's nodes on machines and bound none of
+their Locations, so the rig read real nodes and could not drive them.
+
+**The far end is Xmip** (clause 5), on machines too. A Receive Location on
+a machine of its own that read a folder there could be reached from the
+host only through a server of the machine's — a file share, an SSH server —
+which clause 5 rules out as a prerequisite. So the rig is the Parties'
+server, as a trading Party's own SFTP server is: it serves SFTP on the host,
+port 7422 on every address (`configure::placed::FAR_END_PORT`), with Xmip's
+own server, one directory to a user (`transport_sftp::serving_each`), and
+each real node fetches from it and puts on it with Xmip's own client
+(`xmip-core-transport-sftp`, which the `personal-computer` site now links).
+The machines open no port for it; the host lets them in on 7422, an
+elevated step of the owner's (`deploy/dsc/msdsc/environment/README.md`).
+
+**One placement, placed once** (`configure::placed`): each Application's
+Receive Locations go round robin, in the file's order, over the nodes
+present declaring `receiving` or `executing`, its Send Ports over those
+declaring `sending` or `executing`. The Playground's `bindings.rs` and its
+own placement are deleted; the nodes it starts on one computer, its
+simulated process stage and the environment all place by it.
+
+- **The environment binds** through the slice: `xmip-service --slice
+  --cluster C1 --node R1 --bind 10.77.0.1 --nodes R1,S1,P1,L1,D1` places
+  every Location over the environment's nodes on the far end at the host,
+  each Receive Location a user of its own named for it, accepting the
+  circumstance of what it fetches, each Send Port a user of its own. The
+  far end's address is the environment's, written once in each template
+  set (`farEnd` in the DSC parameters, `xmip_far_end` in the inventory);
+  the nodes are the environment's mapping, never written again
+  (`objectKeys` of the DSC parameters' `nodes`, the inventory's
+  `xmip_nodes` group). `xmip-service --listening` says no port for a
+  Location whose technology goes to look (`LinkedTransport::waits`, from
+  the technology's own `transport::Waiting`), so a machine's firewall
+  opens nothing for the far end.
+- **The rig drives** (`src/far_end.rs`): where a typed name is real, it
+  places the file's Locations over the real nodes by the same rule, serves
+  each one's user directory, drops each round's file into the Receive
+  Locations' and is told by the far end of each file a Send Location
+  finished writing — never looking on a timer — and `<cluster>/carried`
+  judges as at level 1. A run with real nodes starts no node as
+  `xmip-service` beside them; the rest are simulated. The real nodes typed
+  must be the environment's, or the two place differently.
+- **A file keeps its name both ways over SFTP**: an SFTP arrival carries
+  `file.name`, and an SFTP send names its file as the file family does,
+  the naming placed once in the transport capability
+  (`transport::file_name`), where the file transport kept its own.
+
+Which Receive Location takes which file is the race among the Locations,
+as each drops into its own directory in turn; the Subscriptions route by
+`file.name` whichever took it.
+
+What is not proven here: nothing is applied to a machine. The templates are
+validated by DSC and Ansible without applying them, and the far end and the
+bound slices by the tests (`test/MsdscEnvironment.Test.ps1`, the root's
+`cargo test --test deploy`, configure's and sftp's own). Until the owner
+decides how the Windows machines get the package — WiX 7's license, or the
+portable archive — and while no `.rpm` is built, no node reaches a machine.
+
+Provenance: the owner's words above. Serving the far end from the rig,
+SFTP, the port, one user to a Location, `--bind` and `--nodes`, and
+placing in configure are the assistant's drafting, for the owner to
+overrule.

@@ -18,6 +18,11 @@ parameters:
     identity: D:\Repos\Xmip\.local-work\environment\identity
     credentialPath: D:\Repos\Xmip\.local-work\hyperv\credential.xml
     keyPath: D:\Repos\Xmip\.local-work\hyperv\ssh\xmip
+    # The Parties' far end the Playground serves on the host, where the
+    # machines reach it: the host on the Hyper-V example's switch. Every
+    # Receive Location and Send Port is bound there over SFTP, port 7422
+    # (ADR-0028, amendment 2026-10-22); the host's firewall lets them in.
+    farEnd: 10.77.0.1
   # Build-XmipService -Site personal-computer -Package msi, and the .rpm
   # from the same site (deploy/package/README.md); write the version in.
   packages:

@@ -17,6 +17,17 @@ xmip_cluster_configuration: ""
 # for this node under the cluster's own authority: node.pem, node.key and
 # anchors.pem. Left empty, the node is given no certificate.
 xmip_identity: ""
+# The Parties' far end the Playground serves, where the machines reach it:
+# every Receive Location and Send Port the cluster's file designs is bound
+# there over SFTP, placed over the inventory's nodes, by `xmip-service
+# --slice --bind --nodes` (ADR-0028, amendment 2026-10-22). Left empty,
+# nothing is bound.
+xmip_far_end: ""
+# The nodes the inventory runs, the ones the Locations are placed over.
+xmip_placed: >-
+  {{ groups['xmip_nodes'] | default([])
+  | map('extract', hostvars, 'xmip_node_name') | join(',') }}
+xmip_bound: "{{ ['--bind', xmip_far_end, '--nodes', xmip_placed] if xmip_far_end else [] }}"
 # The estate's package on the controller (deploy/package): the MSI for a
 # Windows machine, the .rpm for an AlmaLinux one.
 xmip_package: ""

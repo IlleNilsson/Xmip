@@ -12,7 +12,9 @@
 //!
 //! The Ansible role asks `xmip-service` for the slice, its cluster and the
 //! ports the firewall opens, and keeps no starter of its own; the example
-//! inventory maps only nodes the file declares. The Microsoft DSC v3
+//! inventory maps only nodes the file declares, and every Location the file
+//! designs is placed on one of them, bound on the Parties' far end, in a
+//! slice the runtime reads. The Microsoft DSC v3
 //! documents are held by `test/MsdscEnvironment.Test.ps1`.
 
 use std::path::{Path, PathBuf};
@@ -25,6 +27,7 @@ const PLAYGROUND: &str = "test/core/playground/configuration/xmip.toml";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
 const INVENTORY: &str = "deploy/dsc/ansible/inventory.example.yml";
+const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
 
 fn source(relative: &str) -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
@@ -145,16 +148,58 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
 
     // The example environment puts only nodes the file declares on machines.
     let inventory = source(INVENTORY);
-    for line in inventory
+    let mapped: Vec<String> = inventory
         .lines()
         .filter(|line| line.contains("xmip_node_name:"))
-    {
-        let named = line.split(':').nth(1).unwrap_or_default().trim();
+        .map(|line| {
+            line.split(':')
+                .nth(1)
+                .unwrap_or_default()
+                .trim()
+                .to_string()
+        })
+        .collect();
+    for named in &mapped {
         assert!(
             nodes.iter().any(|node| node == named),
             "{INVENTORY} maps {named}, which {PLAYGROUND} does not declare"
         );
     }
+
+    // Every node it maps, its Locations placed over the mapped nodes on the
+    // Parties' far end as `xmip-service --slice --bind --nodes` places them
+    // (ADR-0028, amendment 2026-10-22), reads as xmip-service reads it, and
+    // every Location the file designs is placed on one of them.
+    for tasks in [TASKS_WINDOWS, TASKS_LINUX] {
+        assert!(
+            source(tasks).contains("xmip_bound"),
+            "{tasks} binds the Locations"
+        );
+    }
+    assert!(source(DEFAULTS).contains("'--bind', xmip_far_end, '--nodes'"));
+    let bound = xmip_configure::placed::at_far_end(&cluster, &mapped, "10.77.0.1")
+        .expect("places over the mapped nodes");
+    let mut placed = 0;
+    for node in &mapped {
+        let text = xmip_configure::slice_named(&bound, node, &environment)
+            .unwrap_or_else(|problem| panic!("{node} does not slice bound: {problem}"));
+        let document = read(&directory, &format!("bound-{node}"), &text);
+        placed += document
+            .applications
+            .iter()
+            .flat_map(|one| one.receive_locations.iter().chain(&one.send_ports))
+            .filter(|bound| bound.node == *node)
+            .count();
+    }
+    let designed: usize = xmip_configure::applications(&cluster)
+        .expect("designs")
+        .iter()
+        .map(|one| one.receive_locations.len() + one.send_ports.len())
+        .sum();
+    assert_eq!(
+        placed, designed,
+        "every Location is placed on a mapped node"
+    );
 
     std::fs::remove_dir_all(&directory).expect("removes what it wrote");
 }

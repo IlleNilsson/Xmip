@@ -6,7 +6,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      [--purpose test|runtime]\n       \
      xmip-service --configuration <path> --definition\n       \
      xmip-service --configuration <cluster xmip.toml> --node <name> [--cluster <name>] \
-     --slice\n       \
+     [--bind <host[:port]> --nodes <name,...>] --slice\n       \
      xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name> \
      [--account <account>] --install\n       \
      xmip-service --configuration <path> --listening\n       \
@@ -15,10 +15,14 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 \
      --cluster C1 --slice\n\
      example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 \
+     --cluster C1 --bind 10.77.0.1 --nodes R1,S1,P1,L1,D1 --slice\n\
+     example: xmip-service --configuration /opt/xmip/config/xmip.toml --node R1 \
      --cluster C1 --account xmip --install\n\
      example: xmip-service --configuration /opt/xmip/config/xmip-node.toml --listening\n\
      --slice prints the node's configuration, sliced from its cluster's xmip.toml; \
-     --cluster names the cluster where the file names none.\n\
+     --cluster names the cluster where the file names none; --bind places each \
+     Receive Location and Send Port the file designs on the environment's --nodes, \
+     over SFTP on the Parties' far end at <host>, port 7422 where it names none.\n\
      --install writes a starter xmip.toml where there is none, slices the node's \
      configuration beside it where there is none, makes the node's folders, and \
      registers and starts its service, as --account where it is given; --uninstall \
@@ -71,6 +75,12 @@ pub struct Arguments {
     /// The account the node's service runs as, with `--install`; the
     /// platform's default where it is not given.
     pub account: Option<String>,
+    /// The Parties' far end, with `--slice`, each Location the cluster's
+    /// file designs placed there on one of [`Self::nodes`] (ADR-0028,
+    /// amendment 2026-10-22).
+    pub bind: Option<String>,
+    /// The nodes the environment has, with `--bind`.
+    pub nodes: Vec<String>,
 }
 
 impl Arguments {
@@ -85,6 +95,7 @@ impl Arguments {
         let mut configuration = None;
         let mut switches = Vec::new();
         let (mut node, mut cluster, mut account) = (None, None, None);
+        let (mut bind, mut nodes) = (None, Vec::new());
         let mut purpose = Purpose::Runtime;
 
         while let Some(flag) = args.next() {
@@ -99,6 +110,15 @@ impl Arguments {
                 "--node" => node = Some(value()?),
                 "--cluster" => cluster = Some(value()?),
                 "--account" => account = Some(value()?),
+                "--bind" => bind = Some(value()?),
+                "--nodes" => {
+                    nodes = value()?
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|name| !name.is_empty())
+                        .map(String::from)
+                        .collect();
+                }
                 "--console" => switches.push(Mode::Console),
                 "--definition" => switches.push(Mode::Definition),
                 "--slice" => switches.push(Mode::Slice),
@@ -124,6 +144,7 @@ impl Arguments {
         if account.is_some() && mode != Mode::Install {
             return Err("--account is the account --install registers the service as".into());
         }
+        placing(mode, bind.as_ref(), &nodes)?;
         Ok(Self {
             configuration: configuration.ok_or("--configuration names no node configuration")?,
             mode,
@@ -131,6 +152,8 @@ impl Arguments {
             node,
             cluster,
             account,
+            bind,
+            nodes,
         })
     }
 }
@@ -151,6 +174,19 @@ fn names(mode: Mode, node: Option<&String>, cluster: Option<&String>) -> Result<
             Err("--cluster is the cluster --slice or --install names".into())
         }
         _ => Ok(()),
+    }
+}
+
+/// Whether `--bind` and `--nodes` come together, and only with `--slice`.
+fn placing(mode: Mode, bind: Option<&String>, nodes: &[String]) -> Result<(), String> {
+    match (bind, nodes.is_empty()) {
+        (None, true) => Ok(()),
+        _ if mode != Mode::Slice => {
+            Err("--bind and --nodes place the Locations --slice prints".into())
+        }
+        (Some(_), false) => Ok(()),
+        (Some(_), true) => Err("--bind needs --nodes, the nodes the environment has".into()),
+        (None, false) => Err("--nodes needs --bind, the Parties' far end".into()),
     }
 }
 
@@ -204,6 +240,13 @@ mod tests {
             Some("xmip")
         );
 
+        let placed = parsed("--slice --node n --bind h --nodes n,m --configuration xmip.toml")
+            .expect("reads");
+        assert_eq!(
+            (placed.bind.as_deref(), placed.nodes.as_slice()),
+            (Some("h"), ["n".to_string(), "m".to_string()].as_slice())
+        );
+
         let listening = parsed("--listening --configuration xmip-node.toml").expect("reads");
         assert_eq!(listening.mode, Mode::Listening);
 
@@ -247,6 +290,18 @@ mod tests {
                 "exclude each other",
             ),
             ("--configuration a --node", "--node needs a value"),
+            (
+                "--configuration a --slice --node n --bind h",
+                "--bind needs --nodes",
+            ),
+            (
+                "--configuration a --slice --node n --nodes n",
+                "--nodes needs --bind",
+            ),
+            (
+                "--configuration a --listening --bind h --nodes n",
+                "place the Locations --slice prints",
+            ),
             ("--configuration a --purpose Test", "test"),
         ] {
             let refused = parsed(line).expect_err(line);

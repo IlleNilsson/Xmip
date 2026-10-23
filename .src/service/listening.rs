@@ -7,9 +7,12 @@
 //! What listens is what the configuration says: the operate listener at
 //! `[operate] listen`, the Storage listener at `[storage] listen` where the
 //! node declares the Storage role, and each started Receive Location, its own and its
-//! bindings', whose address names a port, over TCP. The cluster's authority, where
-//! `[provision.node]` serves it, listens at its `serve` and `publish`
-//! addresses (ADR-0034, amendment 2026-10-22). A Receive Location whose
+//! bindings', whose address names a port and whose technology waits for
+//! what is sent to it — never one that goes to look, as an SFTP Location
+//! fetching from a far end does (`LinkedTransport::waits`) — over TCP. The
+//! cluster's authority, where `[provision.node]` serves it, listens at its
+//! `serve` and `publish` addresses (ADR-0034, amendment 2026-10-22). A
+//! Receive Location whose
 //! transport listens on UDP is said over TCP too until a transport declares
 //! the protocol it listens on, which none does yet.
 
@@ -73,7 +76,20 @@ fn listening(document: &XmipConfigurationDocument) -> Vec<String> {
         .flat_map(|application| &application.receive_locations)
         .filter(|bound| bound.node == *node)
         .map(|bound| &bound.location);
-    for location in own.chain(bound).filter(|location| location.start) {
+    let linked = crate::built::transports();
+    // A Location whose technology goes to look — a folder, an SFTP server
+    // it fetches from — listens on nothing, whatever port its address names.
+    let waits = |location: &&xmip_configure::ConfiguredLocation| {
+        linked
+            .iter()
+            .find(|one| one.technology() == location.transport)
+            .is_none_or(|one| one.waits(location))
+    };
+    for location in own
+        .chain(bound)
+        .filter(|location| location.start)
+        .filter(waits)
+    {
         if let Some(port) = port_of(&location.address) {
             said.push((port, format!("receive location {}", location.name)));
         }
@@ -113,6 +129,30 @@ mod tests {
         assert_eq!(port_of("/var/xmip/in"), None);
         assert_eq!(port_of("D:/Xmip/in"), None);
         assert_eq!(port_of("host:0"), None);
+    }
+
+    #[cfg(feature = "transport-sftp")]
+    #[test]
+    fn a_location_fetching_from_the_parties_far_end_listens_on_nothing() {
+        let cluster = xmip_configure::fixture::test_cluster();
+        let node = cluster.with_role("receiving").name.clone();
+        let file = format!(
+            "[nodes.{node}]\nroles = \"receiving\"\n\
+             [[xmip_applications]]\nname = \"Orders\"\n\
+             [[xmip_applications.receive_ports]]\nname = \"In\"\n\
+             [[xmip_applications.receive_locations]]\nname = \"From A\"\nreceive_port = \"In\"\n\
+             interaction = \"data-transfer\"\ndepth = \"light\"\n"
+        );
+        let placed =
+            xmip_configure::placed::at_far_end(&file, std::slice::from_ref(&node), "10.77.0.1")
+                .expect("placed");
+        let text = xmip_configure::slice_named(&placed, &node, "listening").expect("slices");
+        let document = xmip_configure::parse_toml(&text).expect("reads");
+        assert!(
+            listening(&document).is_empty(),
+            "{:?}",
+            listening(&document)
+        );
     }
 
     #[test]

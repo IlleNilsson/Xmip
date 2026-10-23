@@ -134,9 +134,13 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
 # is refused as the node starts. A site links the ones it names
 # (deploy/site). tcp terminates TLS where its Location says
-# `tls = true`, with the node's `[provision.receive]` certificate.
+# `tls = true`, with the node's `[provision.receive]` certificate. sftp
+# takes files from and puts them on an SFTP server, each under its name:
+# the Parties' far end the Playground serves nodes on machines of their own
+# (ADR-0028, amendment 2026-10-22).
 transport-file = ["dep:xmip-transport-file"]
 transport-http = ["dep:xmip-transport-http"]
+transport-sftp = ["dep:xmip-transport-sftp"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
 
@@ -213,6 +217,7 @@ xmip-transform = { package = "xmip-core-transform", git = "https://github.com/Il
 xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
 xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
 xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
+xmip-transport-sftp = { package = "xmip-core-transport-sftp", git = "https://github.com/IlleNilsson/xmip-core-transport-sftp", branch = "main", optional = true }
 xmip-transport-tcp = { package = "xmip-core-transport-tcp", git = "https://github.com/IlleNilsson/xmip-core-transport-tcp", branch = "main", optional = true }
 xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://github.com/IlleNilsson/xmip-core-transport-udp", branch = "main", optional = true }
 # xmip-service's console stop on every platform: Ctrl+C and Ctrl+Break in a

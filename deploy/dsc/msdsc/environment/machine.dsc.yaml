@@ -12,7 +12,7 @@ parameters:
     description: >-
       What every node shares: cluster, configuration (the cluster's
       xmip.toml), identity (a folder per node of what New-XmipCertificate
-      -Node wrote), credentialPath, keyPath and linuxAccount.
+      -Node wrote), credentialPath, keyPath, linuxAccount and farEnd.
   packages:
     type: object
     description: Per family, the package's path and the file name it is given there.
@@ -24,6 +24,11 @@ parameters:
     description: >-
       Per family, the account a node's service runs as: its name, and
       ofNode where the node's name follows it.
+  placed:
+    type: string
+    description: >-
+      Every node the environment runs on a machine of its own, comma
+      separated: the nodes its Locations are placed over.
   node:
     type: string
     description: The node, as the cluster's xmip.toml declares it.
@@ -55,6 +60,8 @@ resources:
         'family', parameters('machine').family,
         'node', parameters('node'),
         'cluster', parameters('common').cluster,
+        'bind', parameters('common').farEnd,
+        'placed', parameters('placed'),
         'account', concat(parameters('accounts')[parameters('machine').family].name,
         if(parameters('accounts')[parameters('machine').family].ofNode, parameters('node'), '')),
         'package', parameters('packages')[parameters('machine').family].file,
