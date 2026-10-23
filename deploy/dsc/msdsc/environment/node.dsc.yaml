@@ -1,6 +1,7 @@
 # One Xmip node on its own machine, Windows or AlmaLinux alike: its account,
 # the cluster's xmip.toml, its certificate from the cluster's own authority,
-# the estate's package, which installs and starts its service, its slice,
+# the estate's package, which installs and starts its service, its slice
+# with its Receive Locations and Send Ports bound on the Parties' far end,
 # the firewall openings its configuration listens on, and its service
 # running. Applied on the node machine itself by Xmip.Environment/Machine
 # (environment.example.dsc.yaml), which copies this folder and the files
@@ -30,6 +31,16 @@ parameters:
   cluster:
     type: string
     description: The cluster's name; the cluster's xmip.toml names none.
+  bind:
+    type: string
+    description: >-
+      The Parties' far end the Playground serves, where the machines reach
+      it: each Receive Location and Send Port is bound there over SFTP.
+  placed:
+    type: string
+    description: >-
+      Every node the environment runs on a machine of its own, comma
+      separated: the nodes the cluster's Locations are placed over.
   account:
     type: string
     description: >-
@@ -100,6 +111,8 @@ resources:
       configuration: "[path(parameters('layout').configuration, 'xmip.toml')]"
       node: "[parameters('node')]"
       cluster: "[parameters('cluster')]"
+      bind: "[parameters('bind')]"
+      nodes: "[parameters('placed')]"
   - name: Opening
     type: Xmip.Node/Opening
     requireVersion: ^0.1

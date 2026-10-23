@@ -4,7 +4,9 @@
 # written out, as DSC v3 wants a document (copy loops are deprecated,
 # https://github.com/PowerShell/DSC/issues/1429). Which node runs on which
 # machine is environment.example.parameters.yaml's `nodes`, never the
-# cluster's xmip.toml. README.md says how to run it.
+# cluster's xmip.toml; every node machine is told those nodes, which its
+# node's Locations are placed over (xmip-service --slice --bind --nodes).
+# README.md says how to run it.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.2
@@ -13,7 +15,8 @@ parameters:
     type: object
     description: >-
       What every machine shares: template (this folder), cluster, domain,
-      configuration, identity, credentialPath, keyPath and linuxAccount
+      configuration, identity, credentialPath, keyPath, linuxAccount and
+      farEnd, the address the machines reach the Playground's far end at
       (machine.dsc.yaml).
   packages:
     type: object
@@ -63,7 +66,8 @@ resources:
       parametersContent: >-
         [string(createObject('parameters', createObject('common', parameters('common'),
         'packages', parameters('packages'), 'layout', parameters('layout'),
-        'accounts', parameters('accounts'), 'node', 'R1',
+        'accounts', parameters('accounts'),
+        'placed', join(objectKeys(parameters('nodes')), ','), 'node', 'R1',
         'machine', parameters('nodes').R1)))]
   - name: S1
     type: Microsoft.DSC/Include
@@ -74,7 +78,8 @@ resources:
       parametersContent: >-
         [string(createObject('parameters', createObject('common', parameters('common'),
         'packages', parameters('packages'), 'layout', parameters('layout'),
-        'accounts', parameters('accounts'), 'node', 'S1',
+        'accounts', parameters('accounts'),
+        'placed', join(objectKeys(parameters('nodes')), ','), 'node', 'S1',
         'machine', parameters('nodes').S1)))]
   - name: P1
     type: Microsoft.DSC/Include
@@ -85,7 +90,8 @@ resources:
       parametersContent: >-
         [string(createObject('parameters', createObject('common', parameters('common'),
         'packages', parameters('packages'), 'layout', parameters('layout'),
-        'accounts', parameters('accounts'), 'node', 'P1',
+        'accounts', parameters('accounts'),
+        'placed', join(objectKeys(parameters('nodes')), ','), 'node', 'P1',
         'machine', parameters('nodes').P1)))]
   - name: L1
     type: Microsoft.DSC/Include
@@ -96,7 +102,8 @@ resources:
       parametersContent: >-
         [string(createObject('parameters', createObject('common', parameters('common'),
         'packages', parameters('packages'), 'layout', parameters('layout'),
-        'accounts', parameters('accounts'), 'node', 'L1',
+        'accounts', parameters('accounts'),
+        'placed', join(objectKeys(parameters('nodes')), ','), 'node', 'L1',
         'machine', parameters('nodes').L1)))]
   - name: D1
     type: Microsoft.DSC/Include
@@ -107,5 +114,6 @@ resources:
       parametersContent: >-
         [string(createObject('parameters', createObject('common', parameters('common'),
         'packages', parameters('packages'), 'layout', parameters('layout'),
-        'accounts', parameters('accounts'), 'node', 'D1',
+        'accounts', parameters('accounts'),
+        'placed', join(objectKeys(parameters('nodes')), ','), 'node', 'D1',
         'machine', parameters('nodes').D1)))]

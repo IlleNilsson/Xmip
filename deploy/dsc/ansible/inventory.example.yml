@@ -16,6 +16,10 @@ all:
     xmip_domain: xmip.test
     xmip_cluster_configuration: /mnt/d/Repos/Xmip/test/core/playground/configuration/xmip.toml
     xmip_identity: "/mnt/d/Repos/Xmip/.local-work/environment/identity/{{ xmip_node_name }}"
+    # The Parties' far end the Playground serves on the host, where the
+    # machines reach it: the host on the Hyper-V example's switch, port
+    # 7422 (ADR-0028, amendment 2026-10-22).
+    xmip_far_end: 10.77.0.1
   children:
     windows:
       vars:

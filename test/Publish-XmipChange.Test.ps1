@@ -677,6 +677,30 @@ Describe 'The dependency tree verifies whole before anything lands' {
         }
     }
 
+    It 'finds the crates of an estate cloned under another one''s .local-work' {
+        # 2026-10-23: the skip matched \.local-work\ anywhere in the path, so a
+        # clone under .local-work found no crate of its own and patched none.
+        $clone = Join-Path -Path $TestDrive -ChildPath 'outer/.local-work/clone'
+        $crate = Join-Path -Path $clone -ChildPath 'module/foundation/c'
+        $null = New-Item -ItemType Directory -Path $crate -Force
+        Set-Content -LiteralPath (Join-Path $crate 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip-core-c"', 'version = "0.1.0"'
+        )
+        $run = Join-Path -Path $clone -ChildPath '.local-work/run'
+        $null = New-Item -ItemType Directory -Path $run -Force
+        Set-Content -LiteralPath (Join-Path $run 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip-core-run"', 'version = "0.1.0"'
+        )
+
+        InModuleScope Xmip -Parameters @{ Root = $clone } {
+            param($Root)
+
+            [string[]] $names = @(Get-XmipEstateCrate -RepositoryRoot $Root |
+                    ForEach-Object -MemberName Name)
+            $names | Should -Be @('xmip-core-c')
+        }
+    }
+
     It 'patches every crate one way: the absolute path of its own folder' {
         InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
             param($Root)

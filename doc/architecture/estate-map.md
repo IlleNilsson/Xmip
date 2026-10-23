@@ -400,7 +400,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 289442 lines of production
+Where each repository mounts and what it holds: 289885 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -425,14 +425,14 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6417
+│   │   │   ├── transport                       6492
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
 │   │   │   │   ├── ftp                         2064
 │   │   │   │   ├── nfs                         2045
 │   │   │   │   ├── smb                         1952
-│   │   │   │   ├── sftp                        1830
+│   │   │   │   ├── sftp                        1896
 │   │   │   │   ├── mssql                       1801
 │   │   │   │   ├── ibm-mq                      1770
 │   │   │   │   ├── http                        1747
@@ -467,13 +467,13 @@ hold no source to count.
 │   │   │   │   ├── pop3                         873
 │   │   │   │   ├── azure-service-bus            864
 │   │   │   │   ├── azure-event-grid             858
-│   │   │   │   ├── file                         855
 │   │   │   │   ├── profinet                     852
 │   │   │   │   ├── google-pub-sub               851
 │   │   │   │   ├── redis-streams                836
 │   │   │   │   ├── wireless-hart                833
 │   │   │   │   ├── aws-sqs                      827
 │   │   │   │   ├── dhcp                         824
+│   │   │   │   ├── file                         813
 │   │   │   │   ├── zigbee                       800
 │   │   │   │   ├── thread                       799
 │   │   │   │   ├── smtp                         767
@@ -567,7 +567,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1168
+│   │   │   ├── secret                          1207
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -716,16 +716,16 @@ hold no source to count.
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            29430
+│       ├── runtime                            29466
 │       ├── persist                            12493
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           7120
+│       └── configure                           7363
 └── test/
     └── core/
-        └── playground                         12404
+        └── playground                         12430
 ```
 
 ---

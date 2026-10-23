@@ -265,6 +265,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Resolve-XmipSite.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipWingetManifest.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipPackage.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipApk.ps1')
 . (Join-Path $PSScriptRoot 'Build-XmipRemoteRuntime.ps1')
 . (Join-Path $PSScriptRoot 'Build-XmipService.ps1')
 . (Join-Path $PSScriptRoot 'Sync-XmipEstate.ps1')

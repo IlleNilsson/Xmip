@@ -62,7 +62,7 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
     assert!(said.contains(&format!("{}/tcp", publish.port())), "{said}");
 
     let mut child = spawned(&configuration, &directory);
-    let _ending = Ending(Some(child.id()));
+    let mut ending = Ending(Some(child.id()));
     let lines = lines(&mut child);
     let answers = heard(&lines, "answers ACME at ", Duration::from_secs(30));
     let at = answers
@@ -101,5 +101,7 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
 
     stop(&child);
     assert!(exited(child, Duration::from_secs(30)).success());
+    // Exited: its number may be another process's by now, never ended here.
+    ending.0 = None;
     let _ = std::fs::remove_dir_all(&directory);
 }
