@@ -762,11 +762,21 @@ and reported, so it carries the rule.
 - In Prepare, Receive, Promote, Transform, Processing, Demote and Send, a
   stage goes on past an item that fails, gathers every failure, and fails
   once.
-- What the caller gets is a summary — the stage, how many items it took,
-  how many failed — followed by each failure, its position among the items
-  from one, and its reason. The shape is `xcore::Failures` and
-  `xcore::Failed`, in the lowest layer so every stage shares it; its field
-  names are drafts for the owner.
+- **Like a compiler, batched per stage.** The owner, the same day: *All
+  failures in each stage through Xmip shall report what, where and if
+  possible why. Like a compiler, just batched per stage.* Each failure says
+  what — a stable code and a message; where — the stage, the artifact (a
+  Location, a Port, a unit or a step, by name) and the place inside the
+  data (the item's position, and where known a byte offset, a line and a
+  column, or a path such as an XPath or a JSON Pointer); and why, a cause,
+  where it is known. A stage's failures are one batch: the stage, what an
+  item is called, how many it took, how many failed, and each. It prints
+  as a compiler does: a summary line, then a block per failure.
+- The shape is decided and lives in the lowest layer, so every stage
+  shares it: `xcore::Failures` (`stage`, `item`, `total`, `failed`, and
+  `failed_count()`), `xcore::Failed` (`code`, `message`, `stage`,
+  `artifact`, `at`, `cause`) and `xcore::Place` (`position`, `offset`,
+  `line`, `column`, `path`). The field names are drafts for the owner.
 - Debatching is the first stage built so (ADR-0031, amendment of this
   date): every record is split and every failure gathered, and a split
   with any failure fails once, nothing of it routed.
