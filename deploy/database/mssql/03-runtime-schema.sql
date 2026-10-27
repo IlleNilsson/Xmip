@@ -92,6 +92,8 @@ CREATE TABLE xmip.journey (
     send_location int NOT NULL,
     attempts int NOT NULL,
     message binary(16) NULL,
+    origin binary(16) NULL,
+    open bit NOT NULL,
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
 GO

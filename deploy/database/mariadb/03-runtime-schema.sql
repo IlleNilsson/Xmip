@@ -78,6 +78,8 @@ CREATE TABLE `journey` (
     `send_location` int NOT NULL,
     `attempts` int NOT NULL,
     `message` binary(16) NULL,
+    `origin` binary(16) NULL,
+    `open` boolean NOT NULL,
     CONSTRAINT journey_key PRIMARY KEY (`journey`)
 ) ENGINE=InnoDB;
 
