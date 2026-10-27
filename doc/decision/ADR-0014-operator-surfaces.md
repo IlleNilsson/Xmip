@@ -1269,3 +1269,21 @@ made the file a person puts on a phone.
 
 Provenance: the owner's words above. `-Package apk`, the debug key and the
 file's name are the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-10-27: the SDK is release candidate 3
+
+The owner, 2026-10-27, goes with .NET SDK 11.0.100-rc.3.26522.148, released
+2026-10-25 with a go-live license, and it is the only SDK installed.
+ADR-0021's rule, applied to the 2026-10-19 amendment's toolchain:
+
+- **Every `global.json` names 11.0.100-rc.3.26522.148**, still the preview
+  channel until GA on 10 November 2026.
+- **The packages tied to the SDK follow it:** the ASP.NET Core and logging
+  packages float on 11.0.0-rc.3, and the lock files are restored again.
+- **The MAUI workloads are installed again.** Installing rc.3 removed every
+  workload, which is what refused the gui module's build (NETSDK1147,
+  maui-tizen). The rc.3 band's workload set, 11.0.100-rc.3.26524.4, still
+  carries MAUI 11.0.0-rc.2.26505.5 and Android 37.2.0-rc.2.84.
+
+Provenance: the owner's decision; the versions were read from Microsoft's
+download page and `dotnet workload search version` on 2026-10-27.

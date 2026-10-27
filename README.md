@@ -2,6 +2,10 @@
 
 **Accountable messaging and integration, under your control.**
 
+> **Release status.** `main` is Xmip Continuum, the continuously evolving
+> project stream. There is no Xmip Linear release yet.
+> [release-model.md](doc/governance/release-model.md) defines both.
+
 Xmip is an on-premises-first, cloud-installable messaging and integration
 platform for organizations that must connect systems reliably without making
 a cloud provider their control plane.
@@ -308,13 +312,10 @@ The design record starts at:
 
 ### Current maturity
 
-Xmip has no stable release. `main` is the Continuum, the evolving state of the
-project. A Linear release is a stabilized, reproducible, versioned line cut
-from it; the first has not been cut
-([release-model.md](doc/governance/release-model.md)). The runtime, the
-operator surfaces and the Playground are operational, and since 2026-09-19
-the runtime opens a Module for real: it loads the shared library, resolves
-`xmip_create_module_v1`, refuses a descriptor the loading capability's trait
+The release status at the top of this page says which release this is. The
+runtime, the operator surfaces and the Playground are operational, and since
+2026-09-19 the runtime opens a Module for real: it loads the shared library,
+resolves `xmip_create_module_v1`, refuses a descriptor the loading capability's trait
 version does not admit, and configures, starts and stops the contract
 table through it — the same code for a C Module and a Rust one
 ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading)); no Location
@@ -914,6 +915,12 @@ stopping the run with nothing pushed:
 - **The root:** its crate is tested as a changed module whenever a module
   lands, and its `test/` suite runs when the root itself changed. A change
   to the root alone runs `test/` and not the root crate's cargo steps.
+- **A new module:** a crate where `architecture.toml` mounts a repository
+  that is not a submodule yet. `Get-XmipStatus` lists it by its own path,
+  `(new)`, and not among the files of the module around it; it is verified
+  as a changed module, and then the run is REFUSED with nothing landed,
+  because it has no repository to commit to. Create and compose it
+  (`Sync-XmipEstate`), then land.
 
 Before any of it, `Publish-XmipChange` regenerates the estate map and the
 decision index from the working tree (`New-XmipEstateMap -Save`,
@@ -1039,7 +1046,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
-| `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind. |
+| `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |

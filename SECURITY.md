@@ -32,7 +32,7 @@ Security-sensitive areas include:
 
 ## Supported versions
 
-Until formal releases begin, only the current `main` branch and explicitly identified release branches are considered for security fixes.
+Until the first Xmip Linear release, only `main`, Xmip Continuum, is supported, and only it receives security fixes. See [the release model](doc/governance/release-model.md).
 
 ## Disclosure
 

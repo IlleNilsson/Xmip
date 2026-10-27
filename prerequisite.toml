@@ -166,7 +166,7 @@ optional = true
 probe = "dotnet --version"
 minimum = "11.0"
 channel = "preview"
-note = "For the Blazor surfaces in ADR-0014. Latest preview until .NET 11 reaches stable on 10 November 2026, latest stable from then on: set channel to stable and change the winget identifier to Microsoft.DotNet.SDK.11 on that date. On 2026-10-19 the preview channel is release candidate 2, SDK 11.0.100-rc.2.26504.105 of 2026-10-13, which every global.json names; winget's Microsoft.DotNet.SDK.Preview carries it."
+note = "For the Blazor surfaces in ADR-0014. Latest preview until .NET 11 reaches stable on 10 November 2026, latest stable from then on: set channel to stable and change the winget identifier to Microsoft.DotNet.SDK.11 on that date. On 2026-10-27 the preview channel is release candidate 3, SDK 11.0.100-rc.3.26522.148 of 2026-10-25, which every global.json names; winget's Microsoft.DotNet.SDK.Preview carries it."
 
 [prerequisite.dotnet.windows]
 winget = "Microsoft.DotNet.SDK.Preview"
@@ -180,7 +180,7 @@ fallback = "https://dot.net/v1/dotnet-install.sh"
 [prerequisite.maui]
 role = "developer"
 optional = true
-note = "The MAUI workloads for the desktop and phone GUI (ADR-0014, amendment 2026-10-14). Xmip.Operations builds for Android on every machine and for Windows on Windows, so a landing of xmip-core-gui needs both. A new .NET SDK band removes every workload: install them again after each SDK upgrade. iOS (maui-ios) builds only on macOS. On 2026-10-22 the SDK 11.0.100-rc.2 band's maui and maui-android are 11.0.0-rc.2.26505.5, until .NET 11 is generally available on 2026-11-10."
+note = "The MAUI workloads for the desktop and phone GUI (ADR-0014, amendment 2026-10-14). Xmip.Operations builds for Android on every machine and for Windows on Windows, so a landing of xmip-core-gui needs both. A new .NET SDK band removes every workload: install them again after each SDK upgrade. iOS (maui-ios) builds only on macOS. On 2026-10-27 the SDK 11.0.100-rc.3 band's workload set is 11.0.100-rc.3.26524.4, and its maui and maui-android are still 11.0.0-rc.2.26505.5 (Android 37.2.0-rc.2.84), until .NET 11 is generally available on 2026-11-10."
 
 [prerequisite.maui.windows]
 present_path = ['%ProgramFiles%\dotnet\packs\Microsoft.Android.Sdk.Windows\*', '%ProgramFiles%\dotnet\packs\Microsoft.Maui.Sdk*\*']

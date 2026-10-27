@@ -43,6 +43,7 @@ BeforeAll {
     function Get-XmipLandingSource {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
+            'Get-XmipNewModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
             'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
@@ -698,6 +699,28 @@ Describe 'The dependency tree verifies whole before anything lands' {
             [string[]] $names = @(Get-XmipEstateCrate -RepositoryRoot $Root |
                     ForEach-Object -MemberName Name)
             $names | Should -Be @('xmip-core-c')
+        }
+    }
+
+    It 'walks an estate cloned under another one''s .local-work like any other' {
+        # The estate's one walk prunes a working area by the name of a folder
+        # it enters, never by the path above where it starts (2026-10-27).
+        $clone = Join-Path -Path $TestDrive -ChildPath 'walked/.local-work/clone'
+        $crate = Join-Path -Path $clone -ChildPath 'module/foundation/d'
+        $null = New-Item -ItemType Directory -Path $crate -Force
+        Set-Content -LiteralPath (Join-Path $crate 'Cargo.toml') -Value '[package]'
+        $run = Join-Path -Path $clone -ChildPath 'module/foundation/d/.local-work'
+        $null = New-Item -ItemType Directory -Path $run -Force
+        Set-Content -LiteralPath (Join-Path $run 'Cargo.toml') -Value '[package]'
+
+        InModuleScope Xmip -Parameters @{ Root = $clone } {
+            param($Root)
+
+            [string[]] $found = @(
+                Find-XmipFile -Path (Join-Path $Root 'module') -Filter 'Cargo.toml' |
+                    ForEach-Object { [System.IO.Path]::GetRelativePath($Root, $_.FullName) }
+            )
+            ($found -replace '\\', '/') | Should -Be @('module/foundation/d/Cargo.toml')
         }
     }
 

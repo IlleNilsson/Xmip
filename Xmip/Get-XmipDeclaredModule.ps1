@@ -33,6 +33,10 @@ function Get-XmipDeclaredModule {
             its full path from the estate root. Pre-order: a parent precedes its
             children, which keeps the root order and appends the nested after
             each.
+
+            Then every module that is not a submodule yet: a crate on disk
+            where architecture.toml mounts a repository (Get-XmipNewModule).
+            It has no .git of its own, which is how a caller tells it apart.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -47,7 +51,10 @@ function Get-XmipDeclaredModule {
         throw "No .gitmodules under $RepositoryRoot. Is that the Xmip working tree?"
     }
 
-    Get-XmipSubmodule -Root $RepositoryRoot -Recurse | ForEach-Object { $_.Path }
+    [object[]] $mounted = @(Get-XmipSubmodule -Root $RepositoryRoot -Recurse)
+    $mounted | ForEach-Object { $_.Path }
+
+    Get-XmipNewModule -RepositoryRoot $RepositoryRoot -Submodule $mounted
 }
 
 

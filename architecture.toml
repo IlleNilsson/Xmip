@@ -55,8 +55,8 @@ license = "AGPL-3.0-or-later"
 automaticVerification = false
 
 # The .NET counterpart of [crate]. ADR-0021: current platforms only, which for
-# a build target means the latest — and .NET 11 is a release candidate (rc.2,
-# go-live, 2026-10-13) on the preview channel until it goes stable on
+# a build target means the latest — and .NET 11 is a release candidate (rc.3,
+# go-live, 2026-10-25) on the preview channel until it goes stable on
 # 2026-11-10, which prerequisite.toml already records.
 #
 # Declared here because it was previously written in three places and checked in
