@@ -781,6 +781,14 @@ and reported, so it carries the rule.
   date): every record is split and every failure gathered, and a split
   with any failure fails once, nothing of it routed.
 
-Drafted for the owner, not decided: accumulation works within a stage, and
-a failed stage stops the stages that depend on it, the summary saying where
-it stopped. Every stage but debatching is open problem 51.
+- **A stage with errors stops the path at its end.** The owner, the same
+  day: *Receive, stop with accumulated errors. Process, stop with
+  accumulated errors. Send, stop with accumulated errors. Sometimes the
+  error has to burst out, that is fine. But it is preferred to get
+  accumulated errors per stage.* Each stage collects every error it can;
+  where it has any, the path stops at the end of that stage and reports
+  them, and no later stage runs, not even as a trial. A failure that
+  cannot go on may stop the stage at once, and is reported in the same
+  what, where and why form.
+
+Every stage but debatching is open problem 51.

@@ -1515,11 +1515,16 @@ unit as the artifact, the record's position). A splitting unit says only
 a reason today, so a record's finer place and cause wait for the unit
 trait to carry them.
 
-**Open**: every other stage. Drafted for the owner, not decided:
-accumulation works within a stage, and a failed stage stops the stages
-that depend on it, the summary saying where it stopped. And which items a
-stage counts — a Preparation's steps, a receive's Streams, a send's
-Locations — is each stage's to say.
+Also decided the same day: *Receive, stop with accumulated errors.
+Process, stop with accumulated errors. Send, stop with accumulated errors.
+Sometimes the error has to burst out, that is fine. But it is preferred to
+get accumulated errors per stage.* A stage collects every error it can;
+where it has any, the path stops at the end of that stage and reports
+them, and no later stage runs, not even as a trial. A failure that cannot
+go on may stop the stage at once, reported in the same form.
+
+**Open**: every other stage. Which items a stage counts — a Preparation's
+steps, a receive's Streams, a send's Locations — is each stage's to say.
 
 # Suggested order
 
