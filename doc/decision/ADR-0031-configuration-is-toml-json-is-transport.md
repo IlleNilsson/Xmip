@@ -570,8 +570,9 @@ as soon as it is complete, a failure reported for each record*.
   records up together, by a correlation set keyed on them: the received
   Message's identifier (the batch), the record's position from one, and
   how many records there are. There is no flag for the last record: the
-  position and the count say it. The key names are drafts for the owner:
-  `debatch.message`, `debatch.position` and `debatch.count`.
+  position and the count say it. The key names were decided with the
+  owner's leave, 2026-10-27: `debatch.message`, `debatch.position` and
+  `debatch.count`.
 
 Built 2026-10-27: the capability (`abi::UnitCapability::Debatch`), the
 `[[debatches]]` list and the `debatch` attachment with their refusals and

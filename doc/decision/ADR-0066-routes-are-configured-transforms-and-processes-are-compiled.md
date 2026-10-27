@@ -441,15 +441,16 @@ all the merchandise is hacking away not knowing of the consequences*.
   `send-port`, or a Message Context value by the name a filter reads it by,
   promoted properties among them; and `on_failure`, `block` where it says
   nothing, `skip` to let the rest pass (the owner, 2026-10-22: block by
-  default, skip as an option). A Journey Context value is refused until
-  something sets one. configure refuses an undeclared set, one declared
+  default, skip as an option). A Journey Context value is one of three,
+  `journey:origin`, `journey:subscription` and `journey:previous`
+  (amendment 2026-10-27). configure refuses an undeclared set, one declared
   twice, one with no key and a key that is no key word, at validation and as
   a node starts.
 - **A point names a set** by `correlation_set`: a Receive Location, a
   Receive Port, a Work Process or a Send Port. A BPMN start or receive names
   the set it takes Messages by, `<xmip:correlate set="…"/>`: the start
   initializes it, a later step follows it, and a process may follow several.
-  A Send Location naming a set is drafted, not built.
+  A Send Location names one too (amendment 2026-10-27).
 - **A Receive Location that names none goes one Stream at a time**, keyed by
   its own name: the merchandise update needs nothing configured, and
   `correlation_set = "PerClient"` keyed by `context:Client` spreads orders
@@ -510,3 +511,19 @@ called from a Work Process by `xmip:debatch` (clause 3 of the amendment of
 Debatch, may serve receive as well as process* is read so: a Debatch is a
 `debatch` unit, never a `work-process` one. What a debatch does with its
 records is ADR-0031's, amendment of this date.
+
+## Amendment, 2026-10-27: correlation sets are how Xmip does exclusiveness
+
+The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
+more important than parallelism.* Clause 5 of the amendment of 2026-10-22
+is Xmip's exclusiveness: one winner per artifact; by default one Stream,
+Message or Journey at a time per Receive Location, cluster-wide, from read
+until it leaves through Send; correlation sets open or narrow it at any
+point; a failure blocks until Retry or Dismiss, or skips. Built the same
+day, each recorded in ADR-0024's amendment of this date: a Send Location
+names a set; `journey:origin`, `journey:subscription` and
+`journey:previous` key one; a Stream's Journeys take their places at
+their destinations once the Stream heads its own sequences; a claim
+carries a fence that grows with every holder and every Storage epoch; and
+sets taken in crossing order are refused. Resilience and exclusiveness
+becoming pluggable capabilities is open problem 54.

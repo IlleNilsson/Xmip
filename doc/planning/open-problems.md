@@ -18,98 +18,6 @@ that deletes its answers cannot be told from one nobody has read.
 
 ---
 
-# Structural — naming and boundaries
-
-## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations
-
-"Capability" means *things Xmip does*, and these do things — but nothing about them is
-pluggable, so they have no vendor and no trait to implement.
-
-| option | effect |
-|---|---|
-| **A. Reclassify to Foundation** | honest about what they are; no code change |
-| **B. Give them a plugin surface** | an assignment strategy becomes pluggable — real, but nobody has designed it |
-| **C. Fold into `xmip-core-path`** | they are all path-driven operations |
-
-**Lean: A.** C is tempting but wrong — they are artifact-level verbs in the journey, and
-`path` is an addressing capability. B is the long-term answer if a second assignment strategy
-ever appears; until then it is speculation.
-
-## 5. `transport` carries 44 of the 246 implementations
-
-One repository per protocol is correct. It also means one module owns a third of the build
-and support burden permanently.
-
-| option | effect |
-|---|---|
-| **A. Leave the naming, tier the execution** | declare 44, build six, mark the rest `maturity: reserved` |
-| **B. Group families into shared repositories** | `aws-*` in one repo — fewer repos, breaks one-repo-one-release |
-| **C. Split by transport kind** | `transport-queue`, `transport-file`, `transport-stream` — reintroduces classification into names |
-
-**Lean: A.** The manifest already has `maturity`, and declaring is not building. C is the one
-to avoid: it puts a judgment back into the name, which is exactly what the manifest exists
-to prevent.
-
-## 7. The Operations tier is five near-identical modules
-
-`audit` 9, `report` 6, `observe` 5, `retain` 5, `archive` 5 — and their technology lists
-overlap heavily: postgres, s3, elasticsearch and otlp keep reappearing.
-
-| option | effect |
-|---|---|
-| **A. Leave** | five policies genuinely differ, even if adapters repeat |
-| **B. Merge into one `record` module with modes** | fewer modules; conflates retention policy with audit semantics |
-| **C. Keep five modules, share a store trait** | the adapters stop being written five times |
-
-**Lean: C.** The duplication is `postgres` appearing five times, not the modules. A shared
-store trait in `xmip-core` — or a `store` surface module — removes the repetition without
-pretending archive and audit are the same concern.
-
-## 8. Cloud vendor prefixes are inconsistent
-
-`aws-sqs` and `azure-blob` carry a vendor. `s3` and `gcs` do not.
-
-| option | effect |
-|---|---|
-| **A. Always name the vendor** | `aws-s3`, `google-gcs`, `azure-blob` — consistent, slightly longer |
-| **B. Never, where the product name is unique** | `s3`, `sqs`, `blob` — shorter, but `blob` alone is meaningless |
-| **C. Vendor only on collision** | shortest, but requires knowing the whole namespace to name one thing |
-
-**Lean: A.** "One meaning per token" is much easier to hold when the vendor is always present.
-C fails the test that a namer should not need global knowledge.
-
-## 9. `resilience` and `exclusiveness` are alone in the Platform tier
-
-And `resilience` had no plugin surface in practice, despite six declared
-implementations — until ADR-0048 (2026-09-10) gave it the guard trait the six
-implement. The tier question below stays as it was.
-
-| option | effect |
-|---|---|
-| **A. Leave** | the tier is small but the definition fits |
-| **B. Move both to Capabilities** | dissolves the Platform tier |
-| **C. Move Operations' shared store concern here** | gives the tier a third member with a real reason |
-
-**Lean: A, revisit with 7.** If C happens, the tier earns its place.
-
----
-
-# Repositories and code
-
-## 10. Three modules declared with no repository
-
-`xmip-core-abi`, `xmip-core-transport`, `xmip-core-logic`.
-
-| option | effect |
-|---|---|
-| **A. Create all three** | manifest and reality agree |
-| **B. Create `abi` only** | it is needed by the boundary; the other two are undesigned |
-
-**Lean: B.** Do not create repositories for capabilities whose traits are unsettled — see 6.
-Run `Sync-XmipEstate.ps1` with `-WhatIf` first regardless.
-
----
-
 # Runtime safety
 
 ## 13. Nothing bounds a publication chain — **option A landed**
@@ -1507,7 +1415,7 @@ batched per stage.* Each failure says what (a code and a message), where
 a stage's report is a summary line, then a block per failure.
 
 **Built**: the shape, `xcore::Failures`, `xcore::Failed` and
-`xcore::Place` (the field names drafts for the owner: `stage`, `item`,
+`xcore::Place` (the field names decided with the owner's leave: `stage`, `item`,
 `total`, `failed`; `code`, `message`, `stage`, `artifact`, `at`, `cause`;
 `position`, `offset`, `line`, `column`, `path`), and debatching reporting
 through it (`xmip-core-runtime`'s `split`: code `record-refused`, the
@@ -1525,6 +1433,35 @@ go on may stop the stage at once, reported in the same form.
 
 **Open**: every other stage. Which items a stage counts — a Preparation's
 steps, a receive's Streams, a send's Locations — is each stage's to say.
+
+## 52. A store capability has no module ABI section
+
+Decided by the owner, 2026-10-27, resolving problem 7: *Why not use the
+ABI, there shall not be any duplication of code unless it is modulewize.*
+A store is a capability with a section of its own in `xmip_module.h`; each
+store technology — postgres, s3, elasticsearch, otlp and the rest — is one
+loadable module behind it, written once; audit, report, observe, retain
+and archive stay five modules, each with its own policy and tables, and
+each reaches its store through that section. Not built: the section, its
+Rust mirror in `xmip-core-abi`, and the five moved onto it.
+
+## 53. Cloud technologies named without their vendor
+
+Decided by the owner, 2026-10-27, resolving problem 8: option A, always
+name the vendor. Not done: `s3` renamed `aws-s3`, and every other cloud
+technology that names no vendor renamed the same way, in
+`architecture.toml`, the repositories, the crates, the configuration words
+and every document that names them.
+
+## 54. Resilience and exclusiveness are not pluggable
+
+Decided by the owner, 2026-10-27, resolving problem 9: *I thought we left
+exclusiveness behind us* (ADR-0024), and *There might be some else who want
+to do better on 'resilience' and 'exclusiveness'.* Resilience and
+exclusiveness — the correlation sets and the claim through Xmip Storage —
+become pluggable capabilities, each with a section in `xmip_module.h`, Xmip's
+own the built-in default. Not built: both sections, and Xmip's own
+resilience guards and Sequence behind them.
 
 # Suggested order
 
@@ -2219,3 +2156,48 @@ over a reader and is unchanged. Held by
 `a_file_another_process_holds_as_a_scanner_does_is_replaced_whole`,
 `a_written_file_held_a_moment_is_waited_out_and_left_nowhere` (which fails
 with one try) and `a_switch_that_fails_leaves_nothing_beside_its_target`.
+
+## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
+
+Resolved by the owner, 2026-10-27: they are capabilities with units
+(ADR-0066, amendments 2026-10-22 and 2026-10-27). Promote runs on receive
+only and Demote on send only; Prepare runs at receive, process and send
+(*Prepare can be Receive, Process & Send*); and assign is called by a Work
+Process. Each is a capability a Module's compiled units declare, called
+from the configuration's step entries.
+
+## 5. `transport` carries 44 of the 246 implementations — **Resolved**
+
+Resolved by the owner, 2026-10-27: *each transport should be in it's each
+repo, in its own loadable module. There might be shared code, so stick that
+in a shared repo module. If the shared code is stable.* One repository and
+one loadable module per transport; code they share goes to a shared
+module of its own once it is stable (ADR-0010, amendment 2026-10-27).
+
+## 7. The Operations tier is five near-identical modules — **Resolved**
+
+Resolved by the owner, 2026-10-27: *Why not use the ABI, there shall not be
+any duplication of code unless it is modulewize.* A store capability with
+its own module ABI section; each store technology is one loadable module;
+audit, report, observe, retain and archive stay five modules with their own
+policy and tables. Building the section is open problem 52.
+
+## 8. Cloud vendor prefixes are inconsistent — **Resolved**
+
+Resolved by the owner, 2026-10-27: option A, always name the vendor. The
+renaming is open problem 53.
+
+## 9. `resilience` and `exclusiveness` are alone in the Platform tier — **Resolved**
+
+Resolved by the owner, 2026-10-27: *I thought we left exclusiveness behind
+us* — ADR-0024 replaced it with the claim through Xmip Storage, and the
+correlation sets are how Xmip does exclusiveness (ADR-0024 and ADR-0066,
+amendments 2026-10-27) — and *There might be some else who want to do
+better on 'resilience' and 'exclusiveness'.* Both become pluggable
+capabilities, each with an ABI section and Xmip's own the built-in default;
+building them is open problem 54.
+
+## 10. Three modules declared with no repository — **Resolved**
+
+Stale, the owner, 2026-10-27: `xmip-core-abi` and `xmip-core-transport` have
+their repositories, and `logic` was resolved under problem 6.
