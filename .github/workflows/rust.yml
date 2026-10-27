@@ -121,7 +121,7 @@ jobs:
   phone-ios:
     name: Phone host, iOS simulator
     runs-on: macos-latest
-    # Allowed to fail until the runner's Xcode 27 is stable: .NET 11 rc.2 for
+    # Allowed to fail until the runner's Xcode 27 is stable: .NET 11 rc.3 for
     # iOS needs the iOS 27 SDK, and on 2026-10-15 macos-latest carries 26.6
     # (the owner, 2026-10-15: *Option 2*). Remove this line then.
     continue-on-error: true
@@ -147,7 +147,7 @@ jobs:
         with:
           workspaces: module/platform/runtime -> ../../../.ai-interaction/target-ios
 
-      # The newest Xcode on the runner, a beta included: .NET 11 rc.2 for iOS
+      # The newest Xcode on the runner, a beta included: .NET 11 rc.3 for iOS
       # is built against the iOS 27 SDK, and on 2026-10-15 the runner's
       # Xcode 27 is a public preview beside 26.6, the default.
       - name: Select Xcode
@@ -155,7 +155,7 @@ jobs:
         with:
           xcode-version: latest
 
-      # global.json pins 11.0 release candidate 2 and rolls forward to the
+      # global.json pins 11.0 release candidate 3 and rolls forward to the
       # latest feature, prerelease allowed: the newest 11.0 release candidate
       # or release is one it accepts, and the one a developer has.
       - name: Install .NET

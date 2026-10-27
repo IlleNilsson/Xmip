@@ -22,7 +22,10 @@ function Get-XmipStatus {
 
         .DESCRIPTION
             Every module that has something uncommitted, what it is, and whether
-            it looks like source or like build output.
+            it looks like source or like build output. A module that is no
+            repository yet, a crate where architecture.toml mounts one, is
+            listed by its own path with New true, branch 'new', and every file
+            of it untracked; the repository around it no longer lists them.
 
             Objects out, not text, so
             `Get-XmipStatus | Where-Object Suspicious` answers "is anything
@@ -64,6 +67,17 @@ function Get-XmipStatus {
     # things most likely to be uncommitted while every submodule is clean.
     $estate = @('.') + @(Get-XmipDeclaredModule -RepositoryRoot $RepositoryRoot)
 
+    # A module that is no repository yet holds a crate (Get-XmipNewModule).
+    # It is reported as itself, New, and its files leave the status of the
+    # repository around it.
+    [string[]] $new = @(
+        $estate | Where-Object {
+            [string] $at = Join-Path -Path $RepositoryRoot -ChildPath $_
+            (Test-Path -LiteralPath (Join-Path -Path $at -ChildPath 'Cargo.toml')) -and
+                -not (Test-Path -LiteralPath (Join-Path -Path $at -ChildPath '.git'))
+        }
+    )
+
     foreach ($module in $estate) {
         $path =
             if ($module -eq '.') { $RepositoryRoot }
@@ -74,12 +88,15 @@ function Get-XmipStatus {
             continue
         }
 
-        if (-not (Test-Path -LiteralPath (Join-Path -Path $path -ChildPath '.git'))) {
+        [bool] $isNew = $new -contains $module
+
+        if (-not $isNew -and
+            -not (Test-Path -LiteralPath (Join-Path -Path $path -ChildPath '.git'))) {
             Write-Warning "$module is not a git repository."
             continue
         }
 
-        $git = Get-XmipRepositoryStatus -At $path
+        $git = Get-XmipModuleStatus -At $path -Module $module -New $new -IsNew $isNew
         $files = @($git.Entry | ForEach-Object { $_.Path } | Sort-Object -Unique)
 
         if ($files.Count -eq 0 -and $git.BehindBy -eq 0 -and $git.AheadBy -eq 0) {
@@ -97,6 +114,7 @@ function Get-XmipStatus {
                 AheadBy    = $git.AheadBy
                 BehindBy   = $git.BehindBy
                 Suspicious = $suspicious.Count -gt 0
+                New        = $isNew
             }
 
             continue
@@ -110,9 +128,91 @@ function Get-XmipStatus {
                 State      = $entry.State
                 Path       = $entry.Path
                 Suspicious = [bool] (Test-XmipBuildOutput -Path $entry.Path)
+                New        = $isNew
             }
         }
     }
+}
+
+
+function Get-XmipModuleStatus {
+    <#
+        .SYNOPSIS
+            Get-XmipRepositoryStatus for one module of the estate, or, for a
+            new one, its files as untracked, on no branch.
+
+        .DESCRIPTION
+            A repository's entries inside a new module are left out: those
+            files are the new module's, not the repository's around it.
+
+        .PARAMETER At
+            The module's working tree.
+
+        .PARAMETER Module
+            Its path from the estate root, '.' for the root.
+
+        .PARAMETER New
+            Every new module's path from the estate root.
+
+        .PARAMETER IsNew
+            This module is one of them.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $At,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Module,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $New,
+
+        [Parameter(Mandatory = $true)]
+        [bool] $IsNew
+    )
+
+    if ($IsNew) {
+        # Run inside the folder, git answers for the repository around it and
+        # names each file from the folder.
+        [string[]] $asked = @('ls-files', '--others', '--exclude-standard')
+
+        return [pscustomobject] @{
+            Branch   = 'new'
+            AheadBy  = 0
+            BehindBy = 0
+            Entry    = @(
+                Invoke-XmipGit -At $At -Arguments $asked |
+                    ForEach-Object { [pscustomobject] @{ State = '??'; Path = [string] $_ } }
+            )
+        }
+    }
+
+    [pscustomobject] $git = Get-XmipRepositoryStatus -At $At
+    [string] $prefix = if ($Module -eq '.') { '' } else { "$Module/" }
+    [string[]] $inside = @(
+        $New |
+            Where-Object { $_.StartsWith($prefix, [System.StringComparison]::Ordinal) } |
+            ForEach-Object { $_.Substring($prefix.Length) + '/' }
+    )
+
+    if ($inside.Count -gt 0) {
+        $git.Entry = @(
+            $git.Entry | Where-Object {
+                [string] $path = $_.Path
+                [string[]] $holding = @(
+                    $inside | Where-Object {
+                        $path.StartsWith($_, [System.StringComparison]::Ordinal)
+                    }
+                )
+                $holding.Count -eq 0
+            }
+        )
+    }
+
+    return $git
 }
 
 

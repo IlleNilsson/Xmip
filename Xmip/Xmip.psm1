@@ -275,6 +275,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Get-XmipStatus.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipSubmodule.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipDeclaredModule.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipNewModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipSpelling.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipEstateCrate.ps1')
