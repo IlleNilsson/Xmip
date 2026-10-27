@@ -746,7 +746,7 @@ same (`journey::Received`). Its record says whether it still keeps that place,
 them, so the Stream lets its places go with its last Journey (ADR-0024 and
 ADR-0066, amendments of this date). A Sequential Send Port is no more: the
 Send Port's `execution_style`, `order_key` and `on_failure` are deleted, and a
-Send Port that sends one at a time names a correlation set; a Journey that
+Send Port that sends one at a time names a Correlation; a Journey that
 failed keeps its place, and its sequence waits behind it, where the set's
 `on_failure` is `block`, the default.
 
@@ -783,7 +783,7 @@ and reported, so it carries the rule.
   with any failure fails once, nothing of it routed.
 
 - **A stage with errors stops the path at its end.** The owner, the same
-  day: *Receive, stop with accumulated errors. Process, stop with
+  day: *Receive, stop with accumulated errors.* *Process, stop with
   accumulated errors. Send, stop with accumulated errors. Sometimes the
   error has to burst out, that is fine. But it is preferred to get
   accumulated errors per stage.* Each stage collects every error it can;

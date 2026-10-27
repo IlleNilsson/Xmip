@@ -366,8 +366,8 @@ technologies it carries is (amendment 2026-09-28); until then a design is
 compiled in VS Code.
 
 The same day, beside the kinds of the amendment above: a **Correlation
-Set** is a kind of its own, the cluster's `[[correlation_sets]]`, listed
+Set** is a kind of its own, the cluster's `[[correlations]]`, listed
 after Work Process (`configure::kinds`), and a Receive Location's, Receive
-Port's, Work Process's or Send Port's `correlation_set` is a reference to
+Port's, Work Process's or Send Port's `correlation` is a reference to
 one, followed, found and renamed as the others are
 (`configure::references`; ADR-0031, amendment of this date).

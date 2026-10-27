@@ -1423,8 +1423,8 @@ unit as the artifact, the record's position). A splitting unit says only
 a reason today, so a record's finer place and cause wait for the unit
 trait to carry them.
 
-Also decided the same day: *Receive, stop with accumulated errors.
-Process, stop with accumulated errors. Send, stop with accumulated errors.
+Also decided the same day: *Receive, stop with accumulated errors.*
+*Process, stop with accumulated errors. Send, stop with accumulated errors.
 Sometimes the error has to burst out, that is fine. But it is preferred to
 get accumulated errors per stage.* A stage collects every error it can;
 where it has any, the path stops at the end of that stage and reports
@@ -1458,7 +1458,7 @@ and every document that names them.
 Decided by the owner, 2026-10-27, resolving problem 9: *I thought we left
 exclusiveness behind us* (ADR-0024), and *There might be some else who want
 to do better on 'resilience' and 'exclusiveness'.* Resilience and
-exclusiveness — the correlation sets and the claim through Xmip Storage —
+exclusiveness — the Correlations and the claim through Xmip Storage —
 become pluggable capabilities, each with a section in `xmip_module.h`, Xmip's
 own the built-in default. Not built: both sections, and Xmip's own
 resilience guards and Sequence behind them.
@@ -2161,9 +2161,9 @@ with one try) and `a_switch_that_fails_leaves_nothing_beside_its_target`.
 
 Resolved by the owner, 2026-10-27: they are capabilities with units
 (ADR-0066, amendments 2026-10-22 and 2026-10-27). Promote runs on receive
-only and Demote on send only; Prepare runs at receive, process and send
-(*Prepare can be Receive, Process & Send*); and assign is called by a Work
-Process. Each is a capability a Module's compiled units declare, called
+only and Demote on send only; Prepare runs at receive, process and send;
+and assign is called by a
+Work Process. Each is a capability a Module's compiled units declare, called
 from the configuration's step entries.
 
 ## 5. `transport` carries 44 of the 246 implementations — **Resolved**
@@ -2191,7 +2191,7 @@ renaming is open problem 53.
 
 Resolved by the owner, 2026-10-27: *I thought we left exclusiveness behind
 us* — ADR-0024 replaced it with the claim through Xmip Storage, and the
-correlation sets are how Xmip does exclusiveness (ADR-0024 and ADR-0066,
+Correlations are how Xmip does exclusiveness (ADR-0024 and ADR-0066,
 amendments 2026-10-27) — and *There might be some else who want to do
 better on 'resilience' and 'exclusiveness'.* Both become pluggable
 capabilities, each with an ABI section and Xmip's own the built-in default;

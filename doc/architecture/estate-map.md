@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 299539 lines of production
+Where each repository mounts and what it holds: 300671 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -432,14 +432,14 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6492
+│   │   │   ├── transport                       6513
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
 │   │   │   │   ├── ftp                         2064
 │   │   │   │   ├── nfs                         2045
 │   │   │   │   ├── smb                         1952
-│   │   │   │   ├── sftp                        1830
+│   │   │   │   ├── sftp                        1896
 │   │   │   │   ├── mssql                       1801
 │   │   │   │   ├── ibm-mq                      1770
 │   │   │   │   ├── http                        1747
@@ -474,13 +474,13 @@ hold no source to count.
 │   │   │   │   ├── pop3                         873
 │   │   │   │   ├── azure-service-bus            864
 │   │   │   │   ├── azure-event-grid             858
-│   │   │   │   ├── file                         855
 │   │   │   │   ├── profinet                     852
 │   │   │   │   ├── google-pub-sub               851
 │   │   │   │   ├── redis-streams                836
 │   │   │   │   ├── wireless-hart                833
 │   │   │   │   ├── aws-sqs                      827
 │   │   │   │   ├── dhcp                         824
+│   │   │   │   ├── file                         813
 │   │   │   │   ├── zigbee                       800
 │   │   │   │   ├── thread                       799
 │   │   │   │   ├── smtp                         767
@@ -669,8 +669,8 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             8706
-│   │       ├── gui                             5053
+│   │       ├── cli                             8716
+│   │       ├── gui                             5054
 │   │       │   └── vscode                      3468
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
@@ -679,7 +679,7 @@ hold no source to count.
 │   │       ├── observe                         3817
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      3244  C# 3244 · PowerShell 0
+│   │       ├── powershell                      3258  C# 3258 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -695,11 +695,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30907  C# 28405 · Rust 2206 · PowerShell 296
+│   │   ├── abi                                30913  C# 28411 · Rust 2206 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                2946
+│   │   ├── core                                3034
 │   │   ├── message                             1614
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -718,18 +718,18 @@ hold no source to count.
 │   │   │   └── binary                            38
 │   │   ├── context                              839
 │   │   ├── node                                 832
-│   │   ├── journey                              690
+│   │   ├── journey                              693
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            32375
-│       ├── persist                            12947
+│       ├── runtime                            32962
+│       ├── persist                            13065
 │       │   ├── sqlite                           240
 │       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           7635
+│       └── configure                           7895
 └── test/
     └── core/
         └── playground                         12430
