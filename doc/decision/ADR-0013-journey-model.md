@@ -776,7 +776,8 @@ and reported, so it carries the rule.
   shares it: `xcore::Failures` (`stage`, `item`, `total`, `failed`, and
   `failed_count()`), `xcore::Failed` (`code`, `message`, `stage`,
   `artifact`, `at`, `cause`) and `xcore::Place` (`position`, `offset`,
-  `line`, `column`, `path`). The field names are drafts for the owner.
+  `line`, `column`, `path`). The field names were decided with the
+  owner's leave, 2026-10-27.
 - Debatching is the first stage built so (ADR-0031, amendment of this
   date): every record is split and every failure gathered, and a split
   with any failure fails once, nothing of it routed.

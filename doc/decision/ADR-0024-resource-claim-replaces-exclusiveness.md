@@ -719,3 +719,53 @@ parallel depending on the value in the correlation set.*
 
 Provenance: the rulings quoted are the owner's, 2026-10-22; the queue's
 naming and the origin counting are the assistant's, the owner's to strike.
+
+## Amendment, 2026-10-27: correlation sets are Xmip's exclusiveness
+
+The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
+more important than parallelism.* This record replaced ADR-0017's lease
+with the claim at the endpoint; exclusiveness itself is the correlation
+sets of the amendment of 2026-10-22 and the claim through Xmip Storage.
+The owner confirmed this picture the same day:
+
+- **One winner per artifact**: the claim at the endpoint, and one holder of
+  a Journey through Xmip Storage.
+- **By default one Stream, Message or Journey at a time per Receive
+  Location**, cluster-wide, from read until it leaves through Send, the
+  rest waiting in the Ledger in arrival order.
+- **Correlation sets open or narrow it at any point**: a Receive Location,
+  a Receive Port, a Work Process, a Send Port and a Send Location.
+- **A failure blocks until Retry or Dismiss, or skips**, as the set's
+  `on_failure` says.
+
+What makes it hold, built 2026-10-27:
+
+- **A Send Location names a set** (`correlation_set` on a node's own Send
+  Location or a binding's). A Journey bound for a Send Port takes its place
+  in the Port's sequence and in the sequence of every Send Location the
+  Port may leave by, Port first, in one write (`Journey.sequences`). Every
+  Send Port of every bound Application and every Send Location the
+  document holds counts, so a Journey published on a node that does not
+  send it takes its places all the same — before, it took none.
+- **Journey Context keys**: `journey:origin`, `journey:subscription` and
+  `journey:previous`. The artifact words (`receive-location`,
+  `receive-port`, `work-process`, `send-port`) are the only spelling of
+  what they read.
+- **Places are taken once a Stream heads its own sequences.** A Stream
+  behind the head of its Receive Location's sequence is not being
+  processed, so its Journeys take no place at their destinations until it
+  heads; they are taken in the write that first takes each up then
+  (`runtime::sequence::take_late`). A Stream's Journey a Work Process
+  publishes later never waits behind a Stream that waits for it
+  (`tests/ledger/stream_order.rs`).
+- **A dead holder's key passes on, fenced.** A claim's `fence` is the
+  Storage epoch in the high 32 bits and the Journey's holder count in the
+  low 32, set by Xmip Storage as it takes the claim; a renew, release or
+  hand-on whose token and fence are not the current ones is refused, and
+  the far end is told the fence beside the deduplication key
+  (`transport::Outgoing::fenced`). Proved by killing the holder mid-send
+  (`tests/ledger/fenced.rs`) and by failing over the Storage primary with a
+  claim held: the new epoch's fence is above every fence before it.
+- **Sets taken in crossing order are refused** at validation and as a node
+  starts, in words naming both sets, a path taking each order and the fix
+  — *take X before Y on both paths* (`configure::correlation::crossing`).

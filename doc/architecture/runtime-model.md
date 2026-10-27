@@ -2469,8 +2469,7 @@ day it is a compiled piece executed when called upon.*
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call
 throws `no-unit`); a Journey published on one node woken on another at once
-(open problem 46); a Send Location naming a correlation set; human tasks
-(open problem 50).
+(open problem 46); human tasks (open problem 50).
 
 ### Stages
 

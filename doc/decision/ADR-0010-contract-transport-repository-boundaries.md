@@ -78,3 +78,14 @@ The existing `xmip-handler-file` code is migration input for `xmip-transport-fil
 ## Consequences
 
 The two direction-specific technology groups are replaced by one transport group. SOAP and gRPC move to Logic. Security presentation entries leave the transport taxonomy. Legacy handler provisioning scripts are retired. Existing runtime source is migrated in later implementation pull requests after this architecture decision is accepted.
+
+## Amendment, 2026-10-27: one transport, one repository and one loadable module; shared code in a shared module once stable
+
+The owner, 2026-10-27, resolving open problem 5: *each transport should be
+in it's each repo, in its own loadable module. There might be shared code,
+so stick that in a shared repo module. If the shared code is stable.*
+
+- Each transport is one repository and one loadable module.
+- Code several transports share goes into a shared module of its own, in a
+  repository of its own, once that code is stable; until then it stays with
+  the transport that wrote it.
