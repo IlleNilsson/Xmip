@@ -214,6 +214,8 @@ pub fn transports() -> Vec<LinkedTransport> {
     transports.push(LinkedTransport::of::<xmip_transport_file::FileTransport>());
     #[cfg(feature = "transport-http")]
     transports.push(LinkedTransport::of::<xmip_transport_http::HttpTransport>());
+    #[cfg(feature = "transport-sftp")]
+    transports.push(LinkedTransport::of::<xmip_transport_sftp::SftpTransport>());
     #[cfg(feature = "transport-tcp")]
     transports.push(LinkedTransport::of::<xmip_transport_tcp::TcpTransport>());
     #[cfg(feature = "transport-udp")]

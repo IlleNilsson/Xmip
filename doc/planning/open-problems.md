@@ -2135,3 +2135,34 @@ amendments 2026-10-21). Still drafted: the key `[operate] admit` and its
 reach; a surface stating no wait of its own, which lists the node
 declarations to learn the node's (`deadline::declared`, 0.4 to 0.6 ms of
 processor time on this machine's temporary folder).
+
+## 49. A file kept whole on Windows is refused while another process holds it — **Resolved**
+
+*Resolved 2026-10-23, the day it was found, in the same change.*
+
+Found landing the Parties' far end (ADR-0028, amendment 2026-10-22): the
+runtime's
+`ffi::certificate::tests::a_request_is_written_for_a_person_and_a_distinguished_name_is_refused`
+failed twice in a row under `xgit`, *Access is denied (os error 5)*, at its
+second keep of `operator.pem` over the one it had just written, and passed
+eight times run alone; `%TEMP%\xmip-ffi-request-43908` held another run's
+`.operator.pem.<hex>.new`, left by the same failure. `secret::private_file`
+keeps every key, certificate and chain by writing it beside its place and
+renaming it over (`replace`, `replace_readable`), and on Windows another
+process — a virus scanner reading a file just written — can hold either
+file for a moment. A defect on every end user's machine, not only in tests.
+
+The fix: a holder of the target with delete sharing, as a scanner reads,
+is no obstacle — where the plain rename is refused, the standard library
+renames again with POSIX semantics (`SetFileInformationByHandle`,
+`FileRenameInfoEx`, `FILE_RENAME_FLAG_POSIX_SEMANTICS |
+FILE_RENAME_FLAG_REPLACE_IF_EXISTS`), so it is not written a second time
+here. A holder of the file just written, which no rename gets past, is
+waited out: the switch and the removal of what it leaves are tried again a
+millisecond apart while Windows says the file is held (`ERROR_ACCESS_DENIED`,
+`ERROR_SHARING_VIOLATION`), five times at most, and a switch that fails
+still removes the written file (`private_file::held_out`). Unix renames
+over a reader and is unchanged. Held by
+`a_file_another_process_holds_as_a_scanner_does_is_replaced_whole`,
+`a_written_file_held_a_moment_is_waited_out_and_left_nowhere` (which fails
+with one try) and `a_switch_that_fails_leaves_nothing_beside_its_target`.

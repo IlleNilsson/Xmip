@@ -71,15 +71,10 @@
 
 - name: The node's configuration as xmip-service slices it
   ansible.windows.win_command:
-    argv:
-      - "{{ xmip_program }}"
-      - --configuration
-      - "{{ xmip_configuration }}\\xmip.toml"
-      - --node
-      - "{{ xmip_node_name }}"
-      - --cluster
-      - "{{ xmip_cluster_name }}"
-      - --slice
+    argv: >-
+      {{ [xmip_program, '--configuration', xmip_configuration ~ '\\xmip.toml',
+      '--node', xmip_node_name, '--cluster', xmip_cluster_name]
+      + xmip_bound + ['--slice'] }}
   register: xmip_slice
   changed_when: false
 

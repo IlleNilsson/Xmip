@@ -36,11 +36,16 @@
         "**/.ai-interaction": true,
         "**/.local-work": true
     },
+    // The C/C++ extension checks these against folders alone
+    // (C_Cpp.exclusionPolicy checkFolders), so each names the folder, not
+    // what is inside it: "**/target/**" left target itself scanned.
     "C_Cpp.files.exclude": {
-        "**/target/**": true,
-        "**/target-*/**": true,
-        "**/.ai-interaction/**": true,
-        "**/.local-work/**": true
+        "**/target": true,
+        "**/target-*": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/.ai-interaction": true,
+        "**/.local-work": true
     },
 
     "files.trimTrailingWhitespace": true,

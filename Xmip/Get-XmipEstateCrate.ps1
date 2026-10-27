@@ -29,9 +29,13 @@ function Get-XmipEstateCrate {
     [HashSet[string]] $seen = [HashSet[string]]::new()
 
     # Build output, the assistant's working area and run output hold copies of
-    # manifests; only a module's own Cargo.toml names a crate.
-    [string] $skip = '[\\/](target|target-[^\\/]+|\.git|\.ai-interaction|' +
-        '\.local-work|node_modules)[\\/]'
+    # manifests; only a module's own Cargo.toml names a crate. Build output is
+    # skipped at any depth, the working area and run output at the estate's
+    # root alone, matched on the path below it: an estate cloned under another
+    # one's .local-work finds its own crates.
+    [string] $skip = '^(\.ai-interaction|\.local-work)[\\/]|' +
+        '(^|[\\/])(target|target-[^\\/]+|\.git|node_modules)[\\/]'
+    [string] $root = [System.IO.Path]::GetFullPath($RepositoryRoot)
 
     [hashtable] $manifests = @{
         LiteralPath = $RepositoryRoot
@@ -42,7 +46,7 @@ function Get-XmipEstateCrate {
     }
 
     Get-ChildItem @manifests |
-        Where-Object { $_.FullName -notmatch $skip } |
+        Where-Object { [System.IO.Path]::GetRelativePath($root, $_.FullName) -notmatch $skip } |
         ForEach-Object {
             [string] $text = Get-Content -LiteralPath $_.FullName -Raw
 

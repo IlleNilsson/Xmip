@@ -6,7 +6,10 @@
 //! (`deployment-model.md` section 8); nothing here writes a file. With
 //! `--cluster`, a cluster's file that names no cluster is sliced as that
 //! one, and one naming another is refused (`slice_named`; ADR-0028,
-//! amendment 2026-10-21).
+//! amendment 2026-10-21). With `--bind`, each Receive Location and Send
+//! Port the file designs is placed on the environment's `--nodes` over SFTP
+//! on the Parties' far end first (`placed::at_far_end`; ADR-0028, amendment
+//! 2026-10-22), and the node's own placements are in its slice.
 
 use std::process::ExitCode;
 
@@ -35,8 +38,11 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
         .node
         .as_deref()
         .ok_or("--slice needs --node, the node it slices for")?;
-    let cluster = std::fs::read_to_string(&arguments.configuration)
+    let mut cluster = std::fs::read_to_string(&arguments.configuration)
         .map_err(|error| format!("cannot read {}: {error}", arguments.configuration))?;
+    if let Some(host) = arguments.bind.as_deref() {
+        cluster = xmip_configure::placed::at_far_end(&cluster, &arguments.nodes, host)?;
+    }
     match arguments.cluster.as_deref() {
         Some(name) => xmip_configure::slice_named(&cluster, node, name),
         None => xmip_configure::slice(&cluster, node),

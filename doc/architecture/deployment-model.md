@@ -763,8 +763,11 @@ certificate, key and anchors from the cluster's own authority — issued on
 the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
 section 22, since a node starts no provisioner yet — the estate's package,
 whose `xmip-service --install --account` registers and starts the service as
-the node's account, its slice as `xmip-service --slice --cluster` prints it,
-a firewall opening for exactly the ports `xmip-service --listening` says,
+the node's account, its slice as `xmip-service --slice --cluster --bind
+--nodes` prints it — every Receive Location and Send Port the file designs
+placed over the environment's nodes by `xmip-core-configure`'s one
+placement and bound on the far end the environment names (ADR-0028,
+amendment 2026-10-22) — a firewall opening for exactly the ports `xmip-service --listening` says,
 and its service running. Which node runs on which machine is the templates'
 parameters, never the cluster's file. Nothing in YAML or a template reads,
 slices or writes the configuration: `xmip-core-configure`'s one slicing does

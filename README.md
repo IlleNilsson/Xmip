@@ -568,9 +568,12 @@ systems, and Ansible is kept for familiarity and the project's support (the
 owner, 2026-10-21): the names of the cluster and its nodes, and on each node
 machine its account, the cluster's `xmip.toml`, its certificate from the
 cluster's own authority (`xmip certificate --node`), the package, its
-slice, the firewall openings its configuration listens on, and its service
+slice with every Receive Location and Send Port placed over the
+environment's nodes and bound on the Parties' far end the Playground serves
+(ADR-0028, amendment 2026-10-22), the firewall openings its configuration
+listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
-`xmip-service`'s — `--slice --cluster`, `--listening`, `--install
+`xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
 --account` — and `cargo test --test deploy` reads the Playground's cluster
 file, which the example environment runs, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
@@ -825,7 +828,9 @@ names — real where it answers as that node, REFUSED by name where it does
 not — and never spawned; a name that does not resolve is spawned as before.
 The run says which are real, and `Get-XmipTestStatus` shows them as `Real`.
 The environment templates put the file's nodes on machines
-(`deploy/dsc/msdsc/environment/README.md`).
+(`deploy/dsc/msdsc/environment/README.md`), and the run drives the real
+nodes through the Parties' far end it serves on the host, SFTP on port 7422,
+which their slices bind every Location to (ADR-0028, amendment 2026-10-22).
 
 Use the Playground to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries
@@ -1032,7 +1037,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
 | `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
-| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run). |
+| `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |

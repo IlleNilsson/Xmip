@@ -180,7 +180,7 @@ fallback = "https://dot.net/v1/dotnet-install.sh"
 [prerequisite.maui]
 role = "developer"
 optional = true
-note = "The MAUI workloads for the desktop and phone GUI (ADR-0014, amendment 2026-10-14). Xmip.Operations builds for Android on every machine and for Windows on Windows, so a landing of xmip-core-gui needs both. A new .NET SDK band removes every workload: install them again after each SDK upgrade. iOS (maui-ios) builds only on macOS."
+note = "The MAUI workloads for the desktop and phone GUI (ADR-0014, amendment 2026-10-14). Xmip.Operations builds for Android on every machine and for Windows on Windows, so a landing of xmip-core-gui needs both. A new .NET SDK band removes every workload: install them again after each SDK upgrade. iOS (maui-ios) builds only on macOS. On 2026-10-22 the SDK 11.0.100-rc.2 band's maui and maui-android are 11.0.0-rc.2.26505.5, until .NET 11 is generally available on 2026-11-10."
 
 [prerequisite.maui.windows]
 present_path = ['%ProgramFiles%\dotnet\packs\Microsoft.Android.Sdk.Windows\*', '%ProgramFiles%\dotnet\packs\Microsoft.Maui.Sdk*\*']
@@ -193,10 +193,10 @@ command = "dotnet workload install maui maui-android maui-ios"
 [prerequisite.android-sdk]
 role = "developer"
 optional = true
-note = "The Android SDK the phone build packages with, per user, no elevation. Its installer target expects a cmdline-tools directory and fails without one, so the command creates it first."
+note = "The Android SDK the phone build packages with, per user, no elevation: the platform and build-tools the maui-android workload targets, API 37 with the .NET 11 workloads (checked 2026-10-22). Its installer target expects a cmdline-tools directory and fails without one, so the command creates it first. ANDROID_HOME names it where it is elsewhere. Build-XmipService -Remote Android -Package apk needs it, with the NDK and the Android JDK."
 
 [prerequisite.android-sdk.windows]
-present_path = ['%LOCALAPPDATA%\Android\Sdk\platforms\android-*']
+present_path = ['%ANDROID_HOME%\platforms\android-*', '%LOCALAPPDATA%\Android\Sdk\platforms\android-*']
 command = "New-Item -ItemType Directory -Force -Path $env:LOCALAPPDATA\\Android\\Sdk\\cmdline-tools; dotnet build -t:InstallAndroidDependencies -f net11.0-android -p:AndroidSdkDirectory=$env:LOCALAPPDATA\\Android\\Sdk -p:AcceptAndroidSDKLicenses=True module/core/operation/gui/src/Xmip.Operations"
 
 [prerequisite.android-ndk]
@@ -205,8 +205,19 @@ optional = true
 note = "The Android NDK, whose clang links the Rust runtime library for Android (aarch64-linux-android, x86_64-linux-android; rustup target add both). Unpacked under the SDK's ndk directory, named by its version; latest LTS from Google, checked against the SHA-1 Google publishes."
 
 [prerequisite.android-ndk.windows]
-present_path = ['%LOCALAPPDATA%\Android\Sdk\ndk\*\toolchains\llvm\prebuilt\windows-x86_64']
+present_path = ['%ANDROID_HOME%\ndk\*\toolchains\llvm\prebuilt\windows-x86_64', '%LOCALAPPDATA%\Android\Sdk\ndk\*\toolchains\llvm\prebuilt\windows-x86_64']
 fallback = "https://developer.android.com/ndk/downloads"
+note = "The latest LTS is r30, 30.0.16248370 (checked 2026-10-22 on developer.android.com/ndk/downloads)."
+
+[prerequisite.android-jdk]
+role = "developer"
+optional = true
+note = "The Java Development Kit the .NET for Android build runs its tools with: Microsoft's OpenJDK 21, the one Microsoft tests .NET for Android against (checked 2026-10-22 on learn.microsoft.com/dotnet/android/getting-started/installation/dependencies). Only the phone's APK needs it; it is not the Java event binding's JDK 27 (prerequisite.java). JAVA_HOME names it. Nothing in the phone build uses Node.js."
+
+[prerequisite.android-jdk.windows]
+present_path = ['%ProgramFiles%\Microsoft\jdk-21*\bin\java.exe']
+winget = "Microsoft.OpenJDK.21"
+elevation = true
 
 [prerequisite.typos]
 role = "developer"

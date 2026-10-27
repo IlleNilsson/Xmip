@@ -17,9 +17,12 @@ roles = ["executing", "monitoring", "storage"]
 # node starts what its configuration says (ADR-0050 section 5): without a
 # policy nothing is permitted, so a file dropped in is received and sent on
 # only where the build links one. Every build verifies a drop folder's
-# circumstance itself (the owner, 2026-10-19).
+# circumstance itself (the owner, 2026-10-19). SFTP fetches from and puts
+# on a trading Party's server; the Playground's nodes on machines of their
+# own reach its Parties' far end by it (ADR-0028, amendment 2026-10-22).
 technologies = [
   "xmip-core-transport-file",
+  "xmip-core-transport-sftp",
   "xmip-core-transport-smtp",
   "xmip-core-transport-imap",
   "xmip-core-authorize-location",
