@@ -772,3 +772,26 @@ What makes it hold, built 2026-10-27:
 - **Sets taken in crossing order are refused** at validation and as a node
   starts, in words naming both sets, a path taking each order and the fix
   — *take X before Y on both paths* (`configure::correlation::crossing`).
+- **A Send Port Group names a set.** The owner, 2026-10-27:
+  *Correlations should be set in TOML by Receive Location, Receive Port,
+  Work Process, Send Port Group, Send Port and Send Location*; *a send
+  port group does not have to send in order, it is a spread solution.
+  Success should be audited as each send port does, failures should be
+  audited as they should*; and *The result is a set of ports that
+  succeeded or failed … one has to accumulate the results. Report the
+  results as a set.* So `correlation` on a Send Port Group holds the
+  Group's key for a delivery — the member Journeys one Subscription opens
+  through the Group in one Publication — until the set is complete: every
+  member has succeeded or failed. The members go side by side; the next
+  delivery of the same key waits. Where the set holds a failure, the key
+  follows `on_failure`: held until an operator retries or dismisses the
+  failed member (`block`), or let go (`skip`). Each member is still
+  audited on its own. The key word `send-port-group` reads the Group's
+  name. The path order is Receive Location, Receive Port, Work Process,
+  Send Port Group, Send Port, Send Location: a member takes the Group's
+  place first and its Port's and Locations' once its delivery heads the
+  Group's sequence. Xmip Storage counts a delivery's open members as it
+  counts a Stream's open Journeys and lets the place go with the last
+  (`JourneyFacts::group_delivery` and `group_open`; `Journey.group`, a
+  `GroupDelivery` of its name, delivery, queue, `skips` and members;
+  `tests/ledger/group_correlation.rs`).

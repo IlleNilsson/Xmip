@@ -80,6 +80,8 @@ CREATE TABLE `journey` (
     `message` binary(16) NULL,
     `origin` binary(16) NULL,
     `open` boolean NOT NULL,
+    `group_delivery` binary(16) NULL,
+    `group_open` boolean NOT NULL,
     CONSTRAINT journey_key PRIMARY KEY (`journey`)
 ) ENGINE=InnoDB;
 

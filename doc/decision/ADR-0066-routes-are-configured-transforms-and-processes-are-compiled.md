@@ -532,5 +532,7 @@ The owner, the same day: *I think we can rename correlation_set to
 correlation*, and then the kind with it: a Correlation is declared once
 for the cluster as `[[correlations]]` and named at a point by
 `correlation = "<name>"` — a Receive Location or Receive Port on receive,
-a Work Process, a Send Port or Send Location on send. The type is
-`configure::Correlation`.
+a Work Process, a Send Port Group, a Send Port or Send Location on send.
+The type is `configure::Correlation`. A Send Port Group's holds its key
+for a delivery until every member has succeeded or failed (ADR-0024,
+amendment 2026-10-27).
