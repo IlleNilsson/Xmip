@@ -2456,7 +2456,7 @@ day it is a compiled piece executed when called upon.*
   is complete, and once every record is split each is made the next
   generation of the Message split, in inbound order, carrying the values
   that keep them together. All or nothing: every record is still split
-  past one refused, every failure gathered (`xcore::Failures`), and the
+  past one refused, every failure gathered (`xcore::Outcomes`), and the
   Debatch throws `record-refused` once, its reason a summary and each
   failed record's position; nothing is published (ADR-0031 and ADR-0013,
   amendments 2026-10-27; open problems 47 and 51).
