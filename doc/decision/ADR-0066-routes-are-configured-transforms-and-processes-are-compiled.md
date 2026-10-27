@@ -368,7 +368,7 @@ wait.*
 
 Refused in words, naming the element: compensation, transactions and cancel
 events (*handled with try/catch*); user and manual tasks (*can wait*, open
-problem 49); business-rule tasks (*Rules can be handled in code*); script
+problem 50); business-rule tasks (*Rules can be handled in code*); script
 tasks (a node never interprets); call activities, inclusive, complex and
 event-based gateways, signal, escalation, conditional and link events,
 event subprocesses, loops and multi-instance, ad hoc subprocesses,
@@ -495,3 +495,18 @@ steps, the extension elements' names (`urn:xmip:process:1`, `xmip:call`,
 `xmip:debatch`, `xmip:batch`, `xmip:correlate`, `urn:xmip:expression`), the
 key words, the queue names, the turn's form and section 13's shape are the
 assistant's, each the owner's to strike.
+
+## Amendment, 2026-10-27: a Debatch is a unit of its own capability
+
+The owner, 2026-10-27, agreed as proposed: a splitting unit declares the
+capability `debatch` — the seventh beside `prepare`, `promote`, `demote`,
+`transform`, `work-process` and `validate` (`abi::UnitCapability`) — and
+serves `receive` and `process` alone, which configure holds a unit's
+stages to as it holds Promote to `receive` and Demote to `send`
+(`configure::modules::fixed_stages`). A fifth list of calls,
+`[[debatches]]`, is attached on receive by `debatch = "<entry>"` and
+called from a Work Process by `xmip:debatch` (clause 3 of the amendment of
+2026-10-22). The amendment of 2026-10-22's *a Work Process's flow, a
+Debatch, may serve receive as well as process* is read so: a Debatch is a
+`debatch` unit, never a `work-process` one. What a debatch does with its
+records is ADR-0031's, amendment of this date.

@@ -1417,16 +1417,34 @@ A Work Process's queue waits on the same scan (ADR-0066, amendment
 2026-10-22): a Journey published for it on another node is taken up at the
 next `WORK_SCAN`.
 
-## 47. Debatching and batching are decided, not built
+## 47. Debatching on receive is decided, not built
 
-Decided 2026-10-22 (ADR-0031, amendment 2026-10-22): debatching runs both
-in the receive, streamed — each record published as a Message of its own as
-soon as it is complete, a failure reported for each record — and in an Xmip
-Work Process, one splitting implementation called from both; batching runs
-only in a Work Process (the owner: *It is not stream friendly.*). Neither is
-built: both wait for the Work Process engine, which runs no Work Process
-yet. No configuration key is chosen; any drafted for them is the owner's to
-decide.
+Decided 2026-10-22 and 2026-10-27 (ADR-0031, amendments of both dates;
+ADR-0066, amendment 2026-10-27): debatching runs on receive and in an Xmip
+Work Process, one splitting implementation called from both, a splitting
+unit of the capability `debatch`; batching runs only in a Work Process
+(the owner: *It is not stream friendly.*). A debatch is all or nothing,
+its records in their inbound order, each written as soon as it is
+complete and routed only once every record is split and validated, each
+then a Journey of its own carrying three values that keep the records
+together (drafted `debatch.message`, `debatch.position`, `debatch.count`).
+
+**Built**: a Batch (`xmip:batch`) and a Debatch (`xmip:debatch`) run from
+the Ledger in a Work Process (`xmip-core-runtime`'s `work_step`); the
+splitting placed once, `xmip-core-runtime`'s `split`; a refused record
+throwing `record-refused` with its position; the `debatch` capability,
+`[[debatches]]`, the `debatch` attachment on a Receive Location or Port
+and their refusals (`configure::step`).
+
+**Open**, the receive's half: `arrival` calling `split::Splitting` after
+Message creation, which needs three things not built — the Contract run on
+receive, so each record is validated before any is routed; one write
+routing several Messages, a Publication of many where Xmip Storage's
+Publication holds one Message today; and removing the records written when
+one fails, an Xmip Storage operation it does not have. And a splitting unit
+loaded through the C ABI, which waits for compiled units to run (a node
+gives a Work Process no unit yet, so a Debatch throws `no-unit`). Until
+then a node refuses to start a Location or Port attaching a Debatch.
 
 ## 48. The surfaces' library carries no technology's declaration
 
@@ -1452,7 +1470,7 @@ declaration stays placed once. The plan, its own work after the current:
 
 ---
 
-## 49. Human tasks and waiting on people
+## 50. Human tasks and waiting on people
 
 The owner, 2026-10-22, of the Work Process's BPMN 2.0 subset: *Human tasks,
 waiting for an email, text or a phone call can wait.* A BPMN `userTask` or
@@ -1472,6 +1490,29 @@ name remote documents, and such a technology resolves locally only and
 refuses a remote reference at design and compile time (the owner,
 2026-10-22: *We can only use standards, code and compiled units that
 explicitly work offline!*).
+
+## 51. Failures are accumulated and reported as a summary with details
+
+Decided by the owner, 2026-10-27 (ADR-0013, amendment 2026-10-27):
+*Failures during processing (Receive, Promote, Transform, Processing,
+Demote, Send) shall be accumulated. The caller shall get a summary and
+detailed information of what failed. Each failure would be tedious to
+handle*, and *The same goes for Prepare, summarize failures, then report
+back.* So in Prepare, Receive, Promote, Transform, Processing, Demote and
+Send, a stage goes on past an item that fails, gathers every failure, and
+fails once: a summary — how many items, how many failed — and each failure
+with its position and reason.
+
+**Built**: the shape, `xcore::Failures` and `xcore::Failed` (a draft for
+the owner: `stage`, `item`, `total`, and each failure's `position` and
+`reason`), and debatching reporting through it (`xmip-core-runtime`'s
+`split`).
+
+**Open**: every other stage. Drafted for the owner, not decided:
+accumulation works within a stage, and a failed stage stops the stages
+that depend on it, the summary saying where it stopped. And which items a
+stage counts — a Preparation's steps, a receive's Streams, a send's
+Locations — is each stage's to say.
 
 # Suggested order
 
