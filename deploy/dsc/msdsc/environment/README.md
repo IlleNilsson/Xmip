@@ -23,7 +23,8 @@ of node faking or actual nodes*; ADR-0028, amendment 2026-10-21). It says
 what the cluster is and nothing of where it runs. What the environment adds
 is here, in `environment.example.parameters.yaml`: the cluster's name, its
 DNS domain, which node runs on which machine, the package, the layout, the
-accounts, and the folder of each node's certificate.
+accounts, the folder of each node's certificate, and `farEnd`, where the
+machines reach the Parties' far end the Playground serves.
 
 The example puts five of the file's nine nodes on the Hyper-V example's
 five node machines; the Playground simulates the other four:
@@ -60,10 +61,17 @@ name resolves.
    and the account, whose `xmip-service --install` slices the file already
    there, gives the account what it reads and writes, and registers and
    starts the node's service as that account;
-5. its slice, `xmip-node.toml`, as `xmip-service --slice --cluster` prints
-   it, the service restarted when it changed;
+5. its slice, `xmip-node.toml`, as `xmip-service --slice --cluster --bind
+   --nodes` prints it, the service restarted when it changed: every Receive
+   Location and Send Port the cluster's file designs is placed over the
+   environment's nodes, round robin by their roles, and bound over SFTP on
+   the Parties' far end at `farEnd`, port 7422, each a user of its own
+   there, so a node fetches what the Playground drops and puts what it
+   sends where the Playground is told of it (ADR-0028, amendment
+   2026-10-22). The nodes are the parameters' `nodes`, never written again;
 6. a firewall opening for exactly the ports `xmip-service --listening` says
-   its configuration listens on, and none it no longer does;
+   its configuration listens on, and none it no longer does — none for the
+   far end, which a node reaches and never serves;
 7. its service running and started with the machine: on Windows the
    built-in `Microsoft.Windows/Service`, on AlmaLinux `Xmip.Node/Service`.
 
@@ -132,7 +140,19 @@ Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '10.77.0.*' -Force
 Add-DnsClientNrptRule -Namespace '.xmip.test' -NameServers '10.77.0.10'
 [string[]] $suffixes = @((Get-DnsClientGlobalSetting).SuffixSearchList) + 'xmip.test'
 Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
+[hashtable] $farEnd = @{
+    DisplayName   = 'Xmip Playground, the Parties'' far end'
+    Direction     = 'Inbound'
+    Protocol      = 'TCP'
+    LocalPort     = 7422
+    RemoteAddress = '10.77.0.0/24'
+    Action        = 'Allow'
+}
+New-NetFirewallRule @farEnd
 ```
+
+The last lets the machines reach the far end the Playground serves on this
+host, and nothing else reach it.
 
 Then, not elevated, in an Xmip PowerShell Console: the packages
 (`deploy/package/README.md`; the `.rpm` is written and not built while
@@ -163,8 +183,10 @@ documents refuse to run without the account.
 
 ## Running it
 
-In an Xmip PowerShell Console, with this folder on `PATH` so DSC finds its
-resources. `test` says what differs, `set` makes it so:
+In an Xmip PowerShell Console, not elevated — each document runs itself
+elevated on its machine, through WinRM as the Administrator or SSH with
+sudo — with this folder on `PATH` so DSC finds its resources. `test` says
+what differs and changes nothing, `set` makes it so:
 
 ```powershell
 $env:PATH = "D:\Repos\Xmip\deploy\dsc\msdsc\environment;$env:PATH"
@@ -179,28 +201,47 @@ answer, and the run says which nodes are real. The tester's operator
 certificate is signed by the same authority — a file naming it,
 `D:\Repos\Xmip\.local-work\environment\authority\operator.toml`, holds
 `[service]` with `name`, `cluster_name = "C1"` and `node_name`, and
-`[provision.operator] authority = "."`:
+`[provision.operator] authority = "."`. Type exactly the nodes the
+parameters map, which the Playground places the Locations over as the
+machines did:
 
 ```powershell
-[string] $tester = 'D:\Repos\Xmip\.local-work\environment\tester'
+[string] $local = 'D:\Repos\Xmip\.local-work\environment'
+[string] $tester = "$local\tester"
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
     New-XmipCertificate -Configuration "$local\authority\operator.toml" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, R2, P1, S1, S2, L1, O1, D1, D2 -Certificate $tester
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1, P1, L1, D1 -Certificate $tester
+Get-XmipTestStatus
+Get-XmipHealth -Scope xmip:///C1/carried
+Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\playground\C1-snapshot.toml
 ```
 
-**What runs today.** Every node of the five starts. A node that declares no
-Storage role reaches D1 over Xmip's mutual TLS on the Storage plane's port,
-7443, presenting its own `tls/node.pem`
-([built, in the assembled service](../../../../doc/architecture/estate-map.md#storage-nodes)); D1's
-`xmip-service --listening` says `7443/tcp storage`, so its machine's firewall
-opens it. D2 runs on no machine of the example: every node passes it over,
-and D1 is the primary on its own (ADR-0056, amendment 2026-10-22). The
-Playground reads each real node's publication; it drives the nodes it starts
-on one computer through their Receive Locations, and a node on a machine of
-its own only through the Receive Locations its environment binds, which these
-templates do not yet (ADR-0028, amendment 2026-10-22).
+Open <https://127.0.0.1:5087> in a Web Browser tab: the Monitor follows the
+real nodes as they receive, process and send.
 
+**What runs.** A node that declares no Storage role reaches D1 over Xmip's
+mutual TLS on the Storage plane's port, 7443, presenting its own
+`tls/node.pem`
+([built, in the assembled service](../../../../doc/architecture/estate-map.md#storage-nodes));
+D1's `xmip-service --listening` says `7443/tcp storage`, so its machine's
+firewall opens it. D2 runs on no machine of the example: every node passes
+it over, and D1 is the primary on its own (ADR-0056, amendment
+2026-10-22). The Playground serves the Parties' far end on the host, port
+7422, each Location placed on the real nodes a user of its own there; each
+round it drops a file for every Receive Location, a real receiving node
+fetches it, writes it to the Ledger on D1, and a real sending node puts it
+back under its name, which the far end tells the Playground of:
+`xmip:///C1/carried` says how many of the files dropped arrived and how
+long each took (ADR-0028, amendment 2026-10-22). The other four nodes of the
+file are simulated, and no node is started on the host beside real ones.
+
+**What waits on the owner.** The Windows machines take the MSI, which WiX
+7 builds only once its license is accepted, the owner's decision
+(`deploy/package/README.md`); the AlmaLinux machines take the `.rpm`, which
+is not built while builds are Windows-only. Until both are there, the
+nodes on the machines lacking their package do not run, and the Locations
+placed on them are not fetched.
 ## How it is held
 
 `test/MsdscEnvironment.Test.ps1` holds what can be held without the
@@ -208,6 +249,10 @@ machines: the documents read as YAML by DSC, each declaring every parameter
 it uses; the example environment evaluated by DSC with every resource
 replaced by an echo, each node machine given its node's values and the
 mapping the same as Ansible's inventory, every mapped node declared by the
-cluster's file; the resource manifests found by DSC; and the resources' own
-steps with the machine's commands stubbed. Nothing here has been applied to
-a machine.
+cluster's file, and every node machine told the parameters' nodes and the
+far end it binds to; the resource manifests found by DSC; and the
+resources' own steps with the machine's commands stubbed, the slice asked
+with `--bind` and `--nodes`. The root's `cargo test --test deploy` holds
+that every mapped node's slice, its Locations placed and bound on the far
+end, reads as `xmip-service` reads it, and every Location the file designs
+is placed on one of them. Nothing here has been applied to a machine.

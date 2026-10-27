@@ -34,10 +34,15 @@ system account `xmip` on AlmaLinux; on Windows the virtual account
 authority into `config/tls`, the key private; the estate's package, told
 `XMIP_NODE`, `XMIP_CLUSTER` and `XMIP_ACCOUNT`, whose `xmip-service
 --install` slices the file there and registers and starts the service as
-that account; its slice as `xmip-service --slice --cluster` prints it,
-restarting the node when it changed; a firewall opening for exactly the
-ports `xmip-service --listening` says, and none it no longer does; and its
-service running and started with the machine. The role writes no starter of
+that account; its slice as `xmip-service --slice --cluster --bind --nodes`
+prints it, restarting the node when it changed — every Receive Location and
+Send Port the cluster's file designs placed over the inventory's
+`xmip_nodes`, round robin by their roles, and bound over SFTP on the
+Parties' far end the Playground serves at `xmip_far_end`, port 7422, each a
+user of its own there (ADR-0028, amendment 2026-10-22); a firewall opening
+for exactly the ports `xmip-service --listening` says, and none it no
+longer does — none for the far end, which a node reaches and never serves;
+and its service running and started with the machine. The role writes no starter of
 its own: a node given no cluster file gets the package's, written once in
 `xmip-service --install`.
 
@@ -53,7 +58,9 @@ DNS Server role, PowerShell 7.6 is on every Windows machine, and the
 packages and each node's certificate are made on the host, as
 `deploy/dsc/msdsc/environment/README.md` says under *Before the first run*
 (the certificates under `.local-work/environment/identity/<node>`). The
-host's own names and WinRM's trusted hosts are set the same way.
+host's own names, WinRM's trusted hosts and the firewall opening for the
+Parties' far end are set the same way, in an elevated Xmip PowerShell
+Console.
 
 The controller is the WSL AlmaLinux guest, which reads this clone at
 `/mnt/d/Repos/Xmip`. Once, there:
@@ -79,18 +86,22 @@ the Windows machines' Administrator password:
 ~/.local/share/xmip-ansible/bin/ansible-playbook -i /mnt/d/Repos/Xmip/.local-work/environment/inventory.yml --ask-pass environment.yml
 ```
 
-Then the Playground runs against the machines as
-`deploy/dsc/msdsc/environment/README.md` says under *Running it*, and what
-runs today is the same: D1 starts and answers, and a node declaring no
-Storage role is refused as it starts until Xmip Storage is reached over the
-wire in the assembled service.
+Neither asks for elevation on the controller; the playbook becomes the
+Administrator or root on each machine itself. Then the Playground runs
+against the machines as `deploy/dsc/msdsc/environment/README.md` says under
+*Running it*, typing exactly the inventory's nodes, and what runs is the
+same: the real nodes reach D1 for Xmip Storage, and the Playground drives
+them through the Parties' far end it serves on the host, counting at
+`xmip:///C1/carried` what they carried.
 
 ## How it is held
 
 `ansible-playbook --syntax-check` and `--list-tasks` over the example
 inventory, in the WSL guest; the root crate's `cargo test --test deploy`,
-that the role asks `xmip-service` for the slice, the cluster and the ports
-and keeps no starter, and that every node the inventory maps is declared by
-the cluster's file, which slices for every node and reads as `xmip-service`
-reads it; and `test/MsdscEnvironment.Test.ps1`, that the mapping is the DSC
-example's. Nothing here has been applied to a machine.
+that the role asks `xmip-service` for the slice, the cluster and the ports,
+binds the Locations and keeps no starter, that every node the inventory
+maps is declared by the cluster's file, which slices for every node and
+reads as `xmip-service` reads it, and that each mapped node's slice with its
+Locations bound on the far end reads too, every Location placed; and
+`test/MsdscEnvironment.Test.ps1`, that the mapping is the DSC example's.
+Nothing here has been applied to a machine.

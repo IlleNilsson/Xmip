@@ -75,11 +75,17 @@ function Build-XmipService {
             the --target triple's architecture, else this machine's.
 
         .PARAMETER Package
-            The packages to make of the build: msi, deb, rpm, pkg, archive.
+            The packages to make of the build: msi, deb, rpm, pkg, archive;
+            with -Remote Android, apk, the phone host itself.
 
         .PARAMETER Remote
             The runtime's remote builds to make instead of a site's:
             Desktop, Android, iOS.
+
+        .PARAMETER Address
+            With -Remote Android -Package apk, the node the phone follows,
+            host:port of its operate listener, written into the document
+            the APK ships; left out, the shipped document's own.
 
         .PARAMETER Extension
             The editor extension to build instead of a site: VsCode, the VS
@@ -128,6 +134,14 @@ function Build-XmipService {
             the two libraries Xmip.Operations packages for Android.
 
         .EXAMPLE
+            Build-XmipService -Remote Android -Package apk -Address 10.77.0.53:7401
+
+            Builds the phone host for Android, the runtime's two libraries
+            first, into one APK to side-load that follows the node at
+            10.77.0.53:7401: adb install -r <apk>, or the file copied to the
+            phone and opened there.
+
+        .EXAMPLE
             Build-XmipService -Remote iOS -WhatIf
 
             On macOS, says the two cargo commands and the xcodebuild command
@@ -146,12 +160,17 @@ function Build-XmipService {
         [string[]] $CargoArgument = @(),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Site')]
-        [ValidateSet('msi', 'deb', 'rpm', 'pkg', 'archive')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Remote')]
+        [ValidateSet('msi', 'deb', 'rpm', 'pkg', 'archive', 'apk')]
         [string[]] $Package = @(),
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Remote')]
         [ValidateSet('Desktop', 'Android', 'iOS')]
         [string[]] $Remote,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'Remote')]
+        [ValidatePattern('^(\[[0-9A-Fa-f:.]+\]|[^\s:\[\]]+):\d{1,5}$')]
+        [string] $Address = '',
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Extension')]
         [ValidateSet('VsCode')]
@@ -169,7 +188,20 @@ function Build-XmipService {
     [string] $root = Get-XmipRepositoryRoot
 
     if ($PSCmdlet.ParameterSetName -eq 'Remote') {
-        return @(Build-XmipServiceRemote -Root $root -Remote $Remote)
+        Assert-XmipPhonePackage -Remote $Remote -Package $Package -Address $Address
+        [object[]] $built = @(Build-XmipServiceRemote -Root $root -Remote $Remote)
+
+        if ($Package -contains 'apk' -and
+            $PSCmdlet.ShouldProcess('the phone host, Android', 'dotnet publish an APK')) {
+            $built += New-XmipApk -Root $root -Address $Address
+        }
+
+        return $built
+    }
+
+    if ($Package -contains 'apk') {
+        throw ('REFUSED: -Package apk is the phone host''s, not a site''s: ' +
+            'Build-XmipService -Remote Android -Package apk.')
     }
 
     if ($PSCmdlet.ParameterSetName -eq 'Extension') {

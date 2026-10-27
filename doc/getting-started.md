@@ -673,24 +673,107 @@ make the machines and put the file's nodes on them, Windows and AlmaLinux
 alike: `deploy/dsc/msdsc/hyperv/README.md` for the virtual machines on
 Hyper-V, then `deploy/dsc/msdsc/environment/README.md`, or
 `deploy/dsc/ansible/README.md` for the same in Ansible, for what runs inside
-them. Then a `-Cluster` or `-Nodes` name that resolves is a real node, asked
-with the operator certificate `-Certificate` names:
+them. Each node's slice binds every Receive Location and Send Port of the
+file, placed over the environment's nodes by their roles, on the Parties'
+far end: SFTP the Playground serves on your computer, port 7422, each
+Location a user of its own there (ADR-0028, amendment 2026-10-22). A
+`-Cluster` or `-Nodes` name that resolves is a real node, asked with the
+operator certificate `-Certificate` names; a name that answers as its node
+is real and never spawned, one that does not answer is REFUSED by name, one
+that does not resolve is simulated. The first lines of the run, its board
+and `Get-XmipTestStatus` say which nodes are real. On its machine each node
+presents the certificate its environment gave it, `tls/node.pem`, on its
+operate listener and to the Storage nodes, which serve on port 7443 — the
+port a Storage node's `xmip-service --listening` says, so the environment
+opens it.
+
+The whole way, in order, with Microsoft DSC. **E** marks a step that needs
+an elevated Xmip PowerShell Console; every other step runs in an ordinary
+one. Each README says each step in full.
+
+1. **E** Hyper-V, DSC and the two DSC modules, then restart the computer
+   (`deploy/dsc/msdsc/hyperv/README.md`, *Before the first run*).
+2. The Windows machines' Administrator credential, the AlmaLinux machines'
+   SSH key and the Hyper-V parameters (the same section).
+3. **E** The machines: `dsc config --parameters-file
+   D:\Repos\Xmip\.local-work\hyperv\environment.parameters.yaml set --file
+   D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.dsc.yaml`, and
+   again once they have installed (*Running it*).
+4. **E** On each machine once, as its Administrator or with sudo:
+   PowerShell 7.6 and DSC 3.2 (`deploy/dsc/msdsc/environment/README.md`,
+   *Before the first run*).
+5. **E** On your computer once: WinRM's trusted hosts, the names, and the
+   firewall opening that lets the machines reach the far end,
+   `New-NetFirewallRule -DisplayName 'Xmip Playground, the Parties'' far
+   end' -Direction Inbound -Protocol TCP -LocalPort 7422 -RemoteAddress
+   10.77.0.0/24 -Action Allow` (the same section).
+6. The packages, the cluster's authority and each node's certificate, and
+   the environment's parameters, `linuxAccount` and the version written in
+   (the same section).
+7. The nodes: `dsc config --parameters-file
+   D:\Repos\Xmip\.local-work\environment\environment.parameters.yaml test
+   --file D:\Repos\Xmip\deploy\dsc\msdsc\environment\environment.example.dsc.yaml`,
+   then the same with `set` (*Running it*). Each document runs itself
+   elevated on its machine; on yours it needs none.
+8. The tester's operator certificate (*Running it*), and the run against
+   the machines:
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, R2, P1, S1, S2, L1, O1, D1, D2 `
+Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1, P1, L1, D1 `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
+Get-XmipTestStatus
+Get-XmipHealth -Scope xmip:///C1/carried
+Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-A name that answers as its node is real and never spawned; one that does not
-answer is REFUSED by name; one that does not resolve is started or simulated
-as at level 1. The first lines of the run, its board and `Get-XmipTestStatus`
-say which nodes are real. On its machine each node presents the certificate
-its environment gave it, `tls/node.pem`, on its operate listener and to the
-Storage nodes, which serve on port 7443 — the port a Storage node's
-`xmip-service --listening` says, so the environment opens it. The rig reads
-what every real node publishes; it drives a node on a machine of its own
-only through the Receive Locations its environment binds, which the
-templates do not bind yet.
+Type exactly the nodes the environment maps: the Playground places the
+Locations over them as the machines did. It drops a file into every
+Receive Location's directory on the far end each round; a real receiving
+node fetches it, D1 keeps it, a real sending node puts it back under its
+name, and `xmip:///C1/carried` counts what arrived and how long it took.
+The Web Browser tab at <https://127.0.0.1:5087> follows them on the
+Monitor.
+
+With Ansible, step 7 is `ansible-playbook` from the WSL guest
+(`deploy/dsc/ansible/README.md`); the rest are the same.
+
+Two things wait on the owner of the estate: the Windows machines take the
+MSI, which WiX 7 builds only once its license is accepted, and the
+AlmaLinux machines the `.rpm`, which is not built while builds are
+Windows-only (`deploy/package/README.md`). A machine without its package
+runs no node.
+
+### The operator app on a phone
+
+The desktop host is the phone app too (ADR-0014, amendment 2026-10-14): on
+Android it follows one node over its operate listener and observes it. One
+command builds the app, the runtime's two Android libraries first, and
+`-Address` names the node it follows — here D1 on the machines above, a
+network the phone must reach, over the Wi-Fi of a host that routes to it or
+a VPN:
+
+```powershell
+Build-XmipService -Remote Android -Package apk -Address 10.77.0.53:7401
+```
+
+It needs the maui-android workload, the Android SDK and NDK and
+Microsoft's OpenJDK 21, each optional in `prerequisite.toml`, which says
+how to install each; none needs Node.js. The APK lands at
+`.local-work/package/<version>/xmip-operations-<version>-android.apk`,
+signed with the Android SDK's debug key: for side-loading, not for a
+store. Put it on a phone with USB debugging on:
+
+```powershell
+adb install -r .local-work/package/0.1.1/xmip-operations-0.1.1-android.apk
+```
+
+or copy the file to the phone and open it there, allowing installs from
+that source. On the phone it reads the node it follows from the document
+shipped inside the app, the one `-Address` wrote, and makes its key in
+the Android Keystore on its Certificate page; the cluster's authority signs
+the request it shares (ADR-0034, amendment 2026-10-15). The keeper has not
+run on a phone yet: the first phone that runs it proves it (ADR-0014,
+amendment 2026-10-22).
 
 ### The cluster's authority on the premises
 

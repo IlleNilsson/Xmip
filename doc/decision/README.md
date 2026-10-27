@@ -1162,8 +1162,10 @@ You have a word. This gives you the decision that governs it.
 | outcome | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | packaging online | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | part | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
+| Parties' far end, placing Locations on nodes | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
+| Phone app, APK | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | plane | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Platform is not the default | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |

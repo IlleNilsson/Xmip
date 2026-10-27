@@ -234,6 +234,19 @@ Describe 'The example environment' {
             $machine.parameters.account | Should -Be $account
         }
     }
+
+    It 'tells each node machine the far end and every node the Locations are placed over' {
+        $example = $script:Parsed['environment.example.parameters.yaml']
+        [string] $farEnd = $example.parameters.common.farEnd
+        $farEnd | Should -Not -BeNullOrEmpty
+        [string[]] $mapped = @($script:Nodes.Keys | Sort-Object)
+
+        foreach ($node in $script:Nodes.Keys) {
+            $machine = $script:Evaluated[$node]
+            $machine.parameters.bind | Should -Be $farEnd
+            @($machine.parameters.placed -split ',' | Sort-Object) | Should -Be $mapped
+        }
+    }
 }
 
 Describe 'The Xmip resources'' own steps' {
@@ -256,6 +269,20 @@ Describe 'The Xmip resources'' own steps' {
         [hashtable] $asked = @{ program = 'xmip-service'; configuration = 'xmip-node.toml' }
 
         Get-NodeListening -Instance $asked | Should -Be @('7401/tcp', '9100/tcp')
+    }
+
+    It 'asks xmip-service for the slice with the far end and the nodes, where given' {
+        Mock -CommandName Invoke-NodeProgram -MockWith { $Argument -join ' ' }
+        [hashtable] $asked = @{
+            program = 'xmip-service'; configuration = 'xmip.toml'; node = 'n'; cluster = 'c'
+        }
+
+        Get-NodeSliced -Instance $asked |
+            Should -Be '--configuration xmip.toml --node n --cluster c --slice'
+        $asked.bind = '10.77.0.1'
+        $asked.nodes = 'n,m'
+        Get-NodeSliced -Instance $asked | Should -Be ('--configuration xmip.toml --node n ' +
+            '--cluster c --bind 10.77.0.1 --nodes n,m --slice')
     }
 
     It 'stages a machine''s files in a folder of the machine''s own' {

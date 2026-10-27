@@ -111,6 +111,16 @@ everything else. A `.pkg` people can open is signed with a Developer ID
 Installer certificate and notarized, which needs the owner's Apple
 Developer Program membership.
 
+## The phone app
+
+`Build-XmipService -Remote Android -Package apk -Address <host:port>` makes
+`.local-work/package/<version>/xmip-operations-<version>-android.apk`:
+the operator app for an Android phone, `Xmip.Operations` published for
+`net11.0-android` with the runtime's two Android libraries, signed with the
+Android SDK's debug key for side-loading, never for a store (ADR-0014,
+amendment 2026-10-22). `adb install -r <apk>` puts it on a phone with USB
+debugging on.
+
 ## The archive
 
 `archive/README.md` is the archive's own README, for a person who wants no

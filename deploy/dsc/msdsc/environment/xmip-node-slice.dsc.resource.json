@@ -2,7 +2,7 @@
   "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
   "type": "Xmip.Node/Slice",
   "version": "0.1.0",
-  "description": "The node's configuration as xmip-service --slice prints it from the cluster's xmip.toml; the service restarted when it changed.",
+  "description": "The node's configuration as xmip-service --slice prints it from the cluster's xmip.toml, its Locations placed on the Parties' far end where bind says; the service restarted when it changed.",
   "tags": [
     "Xmip"
   ],
@@ -83,6 +83,14 @@
         },
         "cluster": {
           "description": "The cluster's name.",
+          "type": "string"
+        },
+        "bind": {
+          "description": "The Parties' far end, host or host:port, where each Receive Location and Send Port is bound over SFTP; with nodes.",
+          "type": "string"
+        },
+        "nodes": {
+          "description": "The nodes the environment runs, comma separated, which the Locations are placed over; with bind.",
           "type": "string"
         },
         "_exist": {

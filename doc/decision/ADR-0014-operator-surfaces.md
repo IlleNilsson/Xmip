@@ -18,7 +18,7 @@ context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
 - Subject: The operator surfaces and their language
 - Name: The operator surfaces
 - Order: 1
-- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip`, Rust; Observation, and why it is lossy; Remote operation, WinRM, SSH
+- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip`, Rust; Observation, and why it is lossy; Phone app, APK; Remote operation, WinRM, SSH
 
 Rust is the language of the runtime; everything in the message path is Rust.
 Across a language boundary everything goes through the C ABI; Rust to Rust,
@@ -1227,3 +1227,45 @@ latest `typescript-eslint`, 8.72.0, accepts TypeScript below 6.1 alone
 (<https://registry.npmjs.org/typescript-eslint/latest>), so the CI's lint
 keeps TypeScript 6 and the build compiles with 7. ESLint is 10.13.0, the
 latest.
+
+## Amendment, 2026-10-22: the phone app is one act of the build
+
+The owner, 2026-10-22: *I'm so eager to try it out, I want to see the
+monitoring, how it works. Deploying to VMs, checking it out on a phone.*
+`Xmip.Operations` built for `net11.0-android` since 2026-10-14, but nothing
+made the file a person puts on a phone.
+
+- **One act, on the existing build command** (the amendment of 2026-09-15:
+  as few cmdlets as possible): `Build-XmipService -Remote Android -Package
+  apk -Address <host:port>` builds the runtime's two Android libraries as
+  before, then publishes `Xmip.Operations` for `net11.0-android`, Release,
+  as one APK holding both, to
+  `.local-work/package/<version>/xmip-operations-<version>-android.apk`
+  (`Xmip/New-XmipApk.ps1`). `-Address` is the node the app follows: the
+  shipped `Resources/Raw/xmip.gui.toml` with that `Address` written in is
+  the document the APK carries (`XmipPhoneDocument`), so nobody edits the
+  shipped one; left out, the shipped one goes as it is. `-Package apk` is
+  refused for a site and without Android, and `-Address` without an APK,
+  in words.
+- **Signed for side-loading, not for a store.** No signing key is named,
+  so the build signs with the Android SDK's debug key, made once per user.
+  `adb install -r <apk>`, or the file copied to the phone and opened, puts
+  it on a phone whose owner allowed installing from that source.
+- **What it needs is optional and said** (`prerequisite.toml`, checked
+  2026-10-22): the maui-android workload of the SDK's band, the Android
+  SDK at the API level the workload targets (37), the NDK's latest LTS
+  (r30, 30.0.16248370), and Microsoft's OpenJDK 21, the JDK Microsoft tests
+  .NET for Android with — Java, optional, and not the Java event binding's
+  JDK 27. Nothing in it is JavaScript or needs Node.js.
+- **What only a phone proves.** The Android keeper (the Android Keystore,
+  StrongBox where the phone has one) is built and has never run: on this
+  machine no emulator and no system image is installed, so nothing ran on
+  an emulator either, and none was installed for it. A real phone proves
+  that the key is made in the keeper and never leaves it, that the
+  Certificate page's request is signed by it, that a handshake with a
+  node's operate listener is signed by it, and that the app follows a node
+  over the phone's network — over the VPN the amendment of 2026-10-14 asks
+  for, away from the site.
+
+Provenance: the owner's words above. `-Package apk`, the debug key and the
+file's name are the assistant's drafting, for the owner to overrule.

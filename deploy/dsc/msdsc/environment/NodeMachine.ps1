@@ -262,7 +262,9 @@ function Get-NodeSliced {
     <#
     .SYNOPSIS
     The node's configuration as xmip-service --slice prints it from the
-    cluster's xmip.toml, for the cluster the environment names.
+    cluster's xmip.toml, for the cluster the environment names, and, where
+    the instance gives bind and nodes, with every Receive Location and Send
+    Port placed over those nodes on the Parties' far end.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -273,8 +275,14 @@ function Get-NodeSliced {
 
     [string[]] $argument = @(
         '--configuration', $Instance.configuration, '--node', $Instance.node,
-        '--cluster', $Instance.cluster, '--slice'
+        '--cluster', $Instance.cluster
     )
+
+    if ($Instance.Contains('bind') -and $Instance.bind) {
+        $argument += @('--bind', $Instance.bind, '--nodes', $Instance.nodes)
+    }
+
+    $argument += '--slice'
 
     return (Invoke-NodeProgram -Program $Instance.program -Argument $argument) -join "`n"
 }

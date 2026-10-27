@@ -85,26 +85,17 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
     let text = std::fs::read_to_string(&configuration).expect("reads");
+    // A transport no build of xmip-service links: a feature of its own for
+    // it would make this node start (sftp was this test's until it was
+    // linked, 2026-10-22, and the node then ran on instead of being refused).
     std::fs::write(
         &configuration,
-        text.replacen("xmip-core-transport-tcp", "xmip-core-transport-sftp", 1),
+        text.replacen("xmip-core-transport-tcp", UNLINKED, 1),
     )
     .expect("writes");
 
-    let output = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
-        .args([
-            "--configuration",
-            configuration.to_str().expect("UTF-8"),
-            "--console",
-        ])
-        .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
-        .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
-        .output()
-        .expect("runs");
-
-    assert_eq!(output.status.code(), Some(2));
-    let said = String::from_utf8_lossy(&output.stderr);
-    assert!(said.contains("xmip-core-transport-sftp"), "{said}");
+    let said = refused(&configuration, &directory);
+    assert!(said.contains(UNLINKED), "{said}");
     assert_eq!(declarations(&directory), Vec::<String>::new());
     let _ = std::fs::remove_dir_all(&directory);
 }
@@ -180,10 +171,18 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     let _ = std::fs::remove_dir_all(&directory);
 }
 
+/// A transport technology that is no feature of the root crate.
+const UNLINKED: &str = "xmip-core-transport-smb";
+
+/// How long a refusal may take: a node refused never accepts work, so one
+/// still running after this was not refused, and is killed.
+const REFUSING: Duration = Duration::from_secs(30);
+
 /// What the service says on stderr refusing the node at `configuration`,
-/// which must exit 2.
+/// which must exit 2 within [`REFUSING`]; one that does not is killed and
+/// the test fails saying so, never waits on it.
 fn refused(configuration: &Path, directory: &Path) -> String {
-    let output = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
         .args([
             "--configuration",
             configuration.to_str().expect("UTF-8"),
@@ -191,10 +190,35 @@ fn refused(configuration: &Path, directory: &Path) -> String {
         ])
         .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
         .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
-        .output()
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
         .expect("runs");
-    assert_eq!(output.status.code(), Some(2));
-    String::from_utf8_lossy(&output.stderr).into_owned()
+    let mut stderr = child.stderr.take().expect("its error output");
+    let reading = std::thread::spawn(move || {
+        let mut said = String::new();
+        let _ = std::io::Read::read_to_string(&mut stderr, &mut said);
+        said
+    });
+    let deadline = Instant::now() + REFUSING;
+    let status = loop {
+        if let Some(status) = child.try_wait().expect("asks") {
+            break status;
+        }
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!(
+                "the node at {} was not refused: still running after {REFUSING:?}",
+                configuration.display()
+            );
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    };
+    let said = reading.join().expect("read");
+    assert_eq!(status.code(), Some(2), "{said}");
+    said
 }
 
 #[test]
