@@ -79,6 +79,8 @@ CREATE TABLE xmip.journey (
     send_location integer NOT NULL,
     attempts integer NOT NULL,
     message uuid NULL,
+    origin uuid NULL,
+    open boolean NOT NULL,
     CONSTRAINT journey_key PRIMARY KEY (journey)
 );
 
