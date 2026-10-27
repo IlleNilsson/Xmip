@@ -579,7 +579,7 @@ Built 2026-10-27: the capability (`abi::UnitCapability::Debatch`), the
 the designer's Debatch view (`configure::step`, `configure::kinds`), the
 one splitting implementation (`xmip-core-runtime`'s `split`: records
 written as they complete, made Messages with the three values once all
-are split, every failure gathered in `xcore::Failures`) and the
+are split, every failure gathered in `xcore::Outcomes`) and the
 Work Process's Debatch through it. Decided, not built: the receive's call of it, which needs
 the Contract run on receive, one write routing several Messages, and the
 removal of written records from Xmip Storage (open problem 47); until

@@ -773,8 +773,9 @@ and reported, so it carries the rule.
   item is called, how many it took, how many failed, and each. It prints
   as a compiler does: a summary line, then a block per failure.
 - The shape is decided and lives in the lowest layer, so every stage
-  shares it: `xcore::Failures` (`stage`, `item`, `total`, `failed`, and
-  `failed_count()`), `xcore::Failed` (`code`, `message`, `stage`,
+  shares it: `xcore::Outcomes` (`stage`, `item`, `total`, `succeeded`,
+  `failed`, and `failed_count()`), `xcore::Succeeded` (`position`,
+  `artifact`), `xcore::Failed` (`code`, `message`, `stage`,
   `artifact`, `at`, `cause`) and `xcore::Place` (`position`, `offset`,
   `line`, `column`, `path`). The field names were decided with the
   owner's leave, 2026-10-27.

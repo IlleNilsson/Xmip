@@ -1414,9 +1414,9 @@ batched per stage.* Each failure says what (a code and a message), where
 (the stage, the artifact, the place inside the data) and why where known;
 a stage's report is a summary line, then a block per failure.
 
-**Built**: the shape, `xcore::Failures`, `xcore::Failed` and
-`xcore::Place` (the field names decided with the owner's leave: `stage`, `item`,
-`total`, `failed`; `code`, `message`, `stage`, `artifact`, `at`, `cause`;
+**Built**: the shape, `xcore::Outcomes`, `xcore::Succeeded`, `xcore::Failed`
+and `xcore::Place` (the field names decided with the owner's leave: `stage`,
+`item`, `total`, `succeeded`, `failed`; `position`, `artifact`; `code`, `message`, `stage`, `artifact`, `at`, `cause`;
 `position`, `offset`, `line`, `column`, `path`), and debatching reporting
 through it (`xmip-core-runtime`'s `split`: code `record-refused`, the
 unit as the artifact, the record's position). A splitting unit says only
