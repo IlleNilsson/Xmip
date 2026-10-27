@@ -1249,3 +1249,36 @@ with it. Without `--purpose test` a console node reads nothing of its
 input. The root's service tests hold every node's input open and still stop
 it with Ctrl+Break; the Playground ends it (ADR-0028, amendment of this
 date). The assistant's, 2026-10-22.
+
+## Amendment, 2026-10-27: one behind holds the one ahead back while it is still taking
+
+**Provenance.** The paced fan-out (`send_streamed.rs`,
+`departures_at_their_far_ends_pace_share_one_read_of_each_chunk`) read more
+than twice its chunks in 4 of 20 runs on the Linux guest beside other
+builds. The bound of the amendment of 2026-10-20 — one ahead holds back for
+one behind at most what the kept chunks take the read to pass at its pace —
+is time, and a machine under load stretches a send's turn past it however
+it is measured: the one behind was left behind while still taking.
+Decided, 2026-10-27: *the bulkhead stays, counted in chunks, not time.*
+
+- **What a read keeps is counted in chunks.** A read keeps the chunks it
+  kept before: one where a departure reads it alone and
+  `KEPT_PER_READER` for each other. A departure about to let go of the
+  first kept, which another of its read takes next, waits for that one to
+  take it, for as long as that one keeps taking: each chunk it takes is a
+  word to the one waiting (`stream_share::one_read`, `Source::waits`).
+  Departures paced alike by their far ends go side by side, however long
+  the machine keeps either from its processor.
+- **One that takes nothing for the stall is left behind.** A departure that
+  took no chunk for `[tuning] stream_stall` since its last — its far end
+  stopped, not slowed — is left behind, and the one ahead goes on; the one
+  left reads what it missed from Xmip Storage from its place and comes back,
+  as the amendment of 2026-10-20 says. A stalled Send Port holds the others
+  back for the stall, once: clause 11's bulkhead, bounded by the far end
+  stopping, never by the machine's pace
+  (`a_stalled_far_end_frees_the_other_sends_of_its_stream`).
+- **`[tuning] stream_stall`**, a duration, `100ms` by default
+  (`stream_share::STREAM_STALL`), set per cluster and node in the Cluster
+  TOML like every `[tuning]` key. *The 100 ms is a draft for the owner.*
+- **Deleted:** the read's pace and the time each departure was waited for,
+  which the bound of 2026-10-20 measured.

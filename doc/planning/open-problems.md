@@ -1204,9 +1204,11 @@ amendments 2026-10-19; ADR-0031's `[tuning]` list).
   (ADR-0018, amendment 2026-10-20). *Repaired again 2026-10-20*: on the
   landing it read 425, since departures paced alike never close a gap a
   stall opened, and one behind came back only where the kept chunks came
-  back to it. Now one about to be left behind holds the one ahead back, for
-  at most what the kept chunks take the read to pass over the whole Stream,
-  so a slow Send Port holds the others back no longer than that, once; and
+  back to it. Now one about to be left behind holds the one ahead back for
+  as long as it keeps taking, what is kept counted in chunks, and one that
+  took nothing for `[tuning] stream_stall` is left behind, so a stalled
+  Send Port holds the others back for that, once (ADR-0018, amendment
+  2026-10-27); and
   one behind reads from a read of its Stream that reaches its place, or one
   of its own the next behind shares, the reads coming together as their
   places meet. Under the full suite in parallel beside four
