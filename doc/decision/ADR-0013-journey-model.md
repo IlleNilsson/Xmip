@@ -749,3 +749,28 @@ Send Port's `execution_style`, `order_key` and `on_failure` are deleted, and a
 Send Port that sends one at a time names a correlation set; a Journey that
 failed keeps its place, and its sequence waits behind it, where the set's
 `on_failure` is `block`, the default.
+
+## Amendment, 2026-10-27: failures are accumulated and reported once
+
+The owner, 2026-10-27: *Failures during processing (Receive, Promote,
+Transform, Processing, Demote, Send) shall be accumulated. The caller shall
+get a summary and detailed information of what failed. Each failure would be
+tedious to handle*, and *The same goes for Prepare, summarize failures,
+then report back.* This record owns how a Message's failure is disposed
+and reported, so it carries the rule.
+
+- In Prepare, Receive, Promote, Transform, Processing, Demote and Send, a
+  stage goes on past an item that fails, gathers every failure, and fails
+  once.
+- What the caller gets is a summary — the stage, how many items it took,
+  how many failed — followed by each failure, its position among the items
+  from one, and its reason. The shape is `xcore::Failures` and
+  `xcore::Failed`, in the lowest layer so every stage shares it; its field
+  names are drafts for the owner.
+- Debatching is the first stage built so (ADR-0031, amendment of this
+  date): every record is split and every failure gathered, and a split
+  with any failure fails once, nothing of it routed.
+
+Drafted for the owner, not decided: accumulation works within a stage, and
+a failed stage stops the stages that depend on it, the summary saying where
+it stopped. Every stage but debatching is open problem 51.

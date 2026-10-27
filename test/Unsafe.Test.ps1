@@ -36,6 +36,8 @@ BeforeAll {
         'module/foundation/abi/examples/conforming.rs'          = 'ADR-0012, the probe fixture'
         # A contract's export table (ADR-0061).
         'module/core/capability/contract/.src/export.rs'        = 'ADR-0061 clause 8'
+        # A Work Process unit's export table, xmip_module.h section 13.
+        'module/core/capability/process/.src/export.rs'         = 'ADR-0066, amendment 2026-10-22'
         # The language server loads the runtime's library.
         'module/core/operation/gui/vscode/.src/runtime.rs'      = 'ADR-0014, amendment 2026-09-10'
         # The Windows Event Log and the registry (ADR-0062).

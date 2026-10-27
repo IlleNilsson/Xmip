@@ -2448,7 +2448,17 @@ day it is a compiled piece executed when called upon.*
   in the order the Ledger wrote them (section 3, *Sequences*). A Batch
   collects Messages of the key until it has its `most` or its `within` is due
   and makes them one Message, their Sections in order; a Debatch splits the
-  current Message by a splitting unit and publishes each part.
+  current Message by a splitting unit and publishes each part. The
+  splitting is placed once, `xmip-core-runtime`'s `split`, which the
+  receive's debatching is to call too: a `debatch` unit is fed the bytes a
+  chunk at a time, each record written as a Stream of its own as soon as it
+  is complete, and once every record is split each is made the next
+  generation of the Message split, in inbound order, carrying the values
+  that keep them together. All or nothing: every record is still split
+  past one refused, every failure gathered (`xcore::Failures`), and the
+  Debatch throws `record-refused` once, its reason a summary and each
+  failed record's position; nothing is published (ADR-0031 and ADR-0013,
+  amendments 2026-10-27; open problems 47 and 51).
 - **Try and catch.** An error boundary event catches an error of its code
   thrown inside its task or subprocess — by a failed unit call, or an error
   end event — and leads on; one no scope catches fails the Instance. A timer
@@ -2460,7 +2470,7 @@ day it is a compiled piece executed when called upon.*
 calls through the standard units' registry (a node calls none yet, and a call
 throws `no-unit`); a Journey published on one node woken on another at once
 (open problem 46); a Send Location naming a correlation set; human tasks
-(open problem 49).
+(open problem 50).
 
 ### Stages
 
@@ -2498,12 +2508,12 @@ of an execution scope is always audited.**
 Completed   CompletedWithWarnings   Failed   Canceled   TimedOut   Abandoned
 ```
 
-**How this relates to `JourneyState` — DRAFTED 2026-10-22, for the owner.** A
-Process is one step inside a Journey rather than the Journey itself, so the two
+**How this relates to `JourneyState` — DRAFTED 2026-10-22, for the owner.**
+A Work Process is one step inside a Journey rather than the Journey itself, so the two
 vocabularies stay distinct. What is built: an Instance that ends `Completed`
 leaves the Journey of its last turn `Completed`; one that ends `Failed` — an error
-no scope caught — leaves it `Failed` with the code and why, kept in its Work
-Process's queue for an operator's Retry or Dismiss. A Journey whose turn only
+no scope caught — leaves it `Failed` with the code and why, kept in its
+Work Process's queue for an operator's Retry or Dismiss. A Journey whose turn only
 hands its Message to a waiting Instance is `Completed`; one whose turn starts a
 timer is `Waiting` until it is due. `CompletedWithWarnings`, `Canceled`,
 `TimedOut` and `Abandoned` are not produced yet.

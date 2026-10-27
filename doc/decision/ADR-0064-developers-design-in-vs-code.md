@@ -341,8 +341,8 @@ say plainly where to point it, and `doc/getting-started.md` sets it.
 
 ## Amendment, 2026-10-22: the Work Process designer
 
-Clause 1's third designer. The owner, 2026-10-22: *I would like a Work
-Process to be designed in VS Code, but at the end of the day it is a
+Clause 1's third designer. The owner, 2026-10-22: *I would like
+a Work Process to be designed in VS Code, but at the end of the day it is a
 compiled piece executed when called upon*; the design format, BPMN 2.0
 by default, and what it compiles to are ADR-0066's amendment of this date.
 

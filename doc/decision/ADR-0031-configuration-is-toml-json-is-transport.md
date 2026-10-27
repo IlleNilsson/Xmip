@@ -510,9 +510,9 @@ want Debatching and Batching without a Xmip Work Process. It is not stream
 friendly.* Batching gathers Messages over time, which a stream does not
 wait for; it is a Work Process's.
 
-Decided, not built: debatching and batching wait for the Work Process
-engine (open problem 47). Their configuration keys are not chosen: any
-written for them is a draft for the owner.
+Built in a Work Process: a Batch and a Debatch, the splitting placed once
+in `xmip-core-runtime`'s `split`. The receive's debatching, its key and
+its all-or-nothing rule are the amendment of 2026-10-27's.
 
 ## Amendment, 2026-10-22: correlation sets replace a Send Port's ordering keys
 
@@ -526,5 +526,61 @@ this date). The Send Port's `execution_style`, `order_key` and
 `on_failure` and the Work Process's `execution_style` are deleted with every
 use: a Send Port that sends one at a time names a set keyed by `send-port`.
 A set that is not declared, declared twice, with no key or with a key that
-is no key word is refused at validation and as a node starts. A Work
-Process names its compiled flow by `module` and `unit`.
+is no key word is refused at validation and as a node starts. A
+Work Process names its compiled flow by `module` and `unit`.
+
+## Amendment, 2026-10-27: debatching is all or nothing, and the records keep their order
+
+The owner, 2026-10-27, agreed the three drafts of this amendment's
+predecessor as proposed, and decided two points beside them: *If one
+fails, they all fail*; *Sequence is in order found in inbound stream,
+message*; and *It can be routed if all splits are done and validated, from
+there on they have their own journeys. Context variables keeping them
+together that makes a Work Process to handle them.* This replaces the
+amendment of 2026-10-22's *each record published as a Message of its own
+as soon as it is complete, a failure reported for each record*.
+
+- **A splitting unit declares the capability `debatch`**, serving the
+  stages `receive` and `process` alone (ADR-0066, amendment of this date).
+- **A Receive Location or Receive Port attaches one** by `debatch =
+  "<entry>"`, naming an entry of `[[debatches]]` — `name`, `module`, `unit`
+  and `settings`, as the other calls are — in its own document. A Send
+  Port or Send Location attaching one is refused in words.
+- **Where it runs on receive**: after Prepare and Message creation, before
+  the Contract.
+- **Split as the chunks arrive, routed at the end.** Each record is written
+  into the Ledger as a Stream of its own as soon as it is complete, so
+  memory stays bounded by a record. Every record is split and validated
+  by its Contract before any is routed; then all are routed in one write,
+  in the order they had in the inbound Stream or Message, and from there
+  each is a Journey of its own.
+- **All or nothing, every failure reported.** Where any record fails,
+  nothing is routed, the records written are removed, and the received
+  Message fails as one. The splitting goes on past a failed record, every
+  record still split and validated, writing nothing more, and the failure
+  is reported once: a summary — how many records, how many failed —
+  followed by each failed record's position and reason (the owner, the
+  same day: *Failures … shall be accumulated*; ADR-0013, amendment of this
+  date). In a Work Process the Debatch throws `record-refused`, that
+  report its reason, for the design's error boundary.
+- **Kept together by context**, decided by the owner the same day on
+  Spring Integration's model — its `correlationId`, `sequenceNumber` and
+  `sequenceSize` headers. Each record carries its Message's context and
+  three values tying it to its batch, so a Work Process can take the
+  records up together, by a correlation set keyed on them: the received
+  Message's identifier (the batch), the record's position from one, and
+  how many records there are. There is no flag for the last record: the
+  position and the count say it. The key names are drafts for the owner:
+  `debatch.message`, `debatch.position` and `debatch.count`.
+
+Built 2026-10-27: the capability (`abi::UnitCapability::Debatch`), the
+`[[debatches]]` list and the `debatch` attachment with their refusals and
+the designer's Debatch view (`configure::step`, `configure::kinds`), the
+one splitting implementation (`xmip-core-runtime`'s `split`: records
+written as they complete, made Messages with the three values once all
+are split, every failure gathered in `xcore::Failures`) and the
+Work Process's Debatch through it. Decided, not built: the receive's call of it, which needs
+the Contract run on receive, one write routing several Messages, and the
+removal of written records from Xmip Storage (open problem 47); until
+then a node refuses to start a Location or Port attaching a Debatch, as
+it refuses every unit attachment (`configure::step::unrun`).
