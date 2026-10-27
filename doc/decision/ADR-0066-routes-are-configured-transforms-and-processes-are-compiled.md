@@ -418,7 +418,7 @@ Default would be the receive port, if one would like to broaden it it
 should be able to use promoted values in a message or context values*;
 *As long as the correlation sets are cluster wide*; then, of the default,
 *every receive location should by default be end to end treated. Not the
-receive port, unless opened up by correlation sets to support multiple
+receive port, unless opened up by Correlations to support multiple
 processing through Xmip*; and, replacing the drafts before it, *A default
 correlation set is its receive location name. There might be more streams,
 files, pushing at that receive location. Default one stream, message,
@@ -436,7 +436,7 @@ complicated Correlation Set, Xmip is the tool.* His two examples: an order
 merchandise *Xmip should process one at a time because the person updated
 all the merchandise is hacking away not knowing of the consequences*.
 
-- **`[[correlation_sets]]`**, declared once in the cluster's `xmip.toml`:
+- **`[[correlations]]`**, declared once in the cluster's `xmip.toml`:
   `name`; `keys` — `receive-location`, `receive-port`, `work-process`,
   `send-port`, or a Message Context value by the name a filter reads it by,
   promoted properties among them; and `on_failure`, `block` where it says
@@ -446,14 +446,14 @@ all the merchandise is hacking away not knowing of the consequences*.
   (amendment 2026-10-27). configure refuses an undeclared set, one declared
   twice, one with no key and a key that is no key word, at validation and as
   a node starts.
-- **A point names a set** by `correlation_set`: a Receive Location, a
+- **A point names a set** by `correlation`: a Receive Location, a
   Receive Port, a Work Process or a Send Port. A BPMN start or receive names
   the set it takes Messages by, `<xmip:correlate set="…"/>`: the start
   initializes it, a later step follows it, and a process may follow several.
   A Send Location names one too (amendment 2026-10-27).
 - **A Receive Location that names none goes one Stream at a time**, keyed by
   its own name: the merchandise update needs nothing configured, and
-  `correlation_set = "PerClient"` keyed by `context:Client` spreads orders
+  `correlation = "PerClient"` keyed by `context:Client` spreads orders
   per client.
 - **The Sequence is one mechanism** (`runtime::sequence`): a queue in the
   Ledger per point and key, named by the point and the key's values in full
@@ -484,11 +484,11 @@ all the merchandise is hacking away not knowing of the consequences*.
   traded for a read.
 - **The receive order** (the owner, 2026-10-22: *Every received stream must
   check in, from what Receive Location, Receive Port. It has to propose its
-  identity, be authenticated, authorized, promoted, Correlation Set
+  identity, be authenticated, authorized, promoted, Correlation
   populated, then we can queue the message in the fashion it needs to be
   queued*, and *Identify, Authenticate and Authorize. Those are different
   uses*): check in, Identify, Authenticate, Authorize, Prepare and Message
-  creation, Contract and validation, promotion, the correlation set's key
+  creation, Contract and validation, promotion, the Correlation's key
   populated, queued. Nothing joins a sequence before its key is populated.
 
 Provenance: the rulings quoted are the owner's, 2026-10-22. The program's
@@ -512,13 +512,13 @@ Debatch, may serve receive as well as process* is read so: a Debatch is a
 `debatch` unit, never a `work-process` one. What a debatch does with its
 records is ADR-0031's, amendment of this date.
 
-## Amendment, 2026-10-27: correlation sets are how Xmip does exclusiveness
+## Amendment, 2026-10-27: Correlations are how Xmip does exclusiveness
 
 The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
 more important than parallelism.* Clause 5 of the amendment of 2026-10-22
 is Xmip's exclusiveness: one winner per artifact; by default one Stream,
 Message or Journey at a time per Receive Location, cluster-wide, from read
-until it leaves through Send; correlation sets open or narrow it at any
+until it leaves through Send; Correlations open or narrow it at any
 point; a failure blocks until Retry or Dismiss, or skips. Built the same
 day, each recorded in ADR-0024's amendment of this date: a Send Location
 names a set; `journey:origin`, `journey:subscription` and
@@ -527,3 +527,10 @@ their destinations once the Stream heads its own sequences; a claim
 carries a fence that grows with every holder and every Storage epoch; and
 sets taken in crossing order are refused. Resilience and exclusiveness
 becoming pluggable capabilities is open problem 54.
+
+The owner, the same day: *I think we can rename correlation_set to
+correlation*, and then the kind with it: a Correlation is declared once
+for the cluster as `[[correlations]]` and named at a point by
+`correlation = "<name>"` — a Receive Location or Receive Port on receive,
+a Work Process, a Send Port or Send Location on send. The type is
+`configure::Correlation`.

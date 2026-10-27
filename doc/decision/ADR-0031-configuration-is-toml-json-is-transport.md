@@ -178,7 +178,7 @@ settings are configured*):
   states `interaction` (`composite`, `data-transfer`, `batch-load`) and
   `depth` (`transfer`, `light`, `context`). `[[send_ports]]` gains
   `send_locations` (tried in order), `retry = { attempts, backoff }` on the
-  active Location, `failover` (`next`, `none`), and `correlation_set`,
+  active Location, `failover` (`next`, `none`), and `correlation`,
   the cluster's set its Journeys pass it by one at a time per key (the
   amendment of 2026-10-22 below).
 - **A node's configuration.** `[[parties]]` with `name` and `identities`
@@ -193,7 +193,7 @@ Built 2026-10-03, the Application's keys: an Xmip Application is a section
 of the cluster's `xmip.toml` (the amendment of 2026-10-03, ADR-0064), and
 `xmip-core-configure` reads its `[[receive_ports]]`, each Receive
 Location's `receive_port`, `interaction` and `depth`, and each Send Port's
-`send_locations`, `retry`, `failover` and `correlation_set` (`port.rs`). A
+`send_locations`, `retry`, `failover` and `correlation` (`port.rs`). A
 Receive Location without its Port, naming one the Application does not
 declare, or without its interaction or depth, is a problem of the
 Application, refused at startup phase 3; the execution tree holds the
@@ -514,14 +514,14 @@ Built in a Work Process: a Batch and a Debatch, the splitting placed once
 in `xmip-core-runtime`'s `split`. The receive's debatching, its key and
 its all-or-nothing rule are the amendment of 2026-10-27's.
 
-## Amendment, 2026-10-22: correlation sets replace a Send Port's ordering keys
+## Amendment, 2026-10-22: Correlations replace a Send Port's ordering keys
 
 The owner, 2026-10-22: *A default correlation set is its receive location
 name. … I can widen and strangle parallelism at any configurable point.*
-The cluster's `xmip.toml` declares `[[correlation_sets]]` — `name`, `keys`,
+The cluster's `xmip.toml` declares `[[correlations]]` — `name`, `keys`,
 `on_failure` (`block` where it says nothing, or `skip`) — once for the whole
 cluster, and a Receive Location, a Receive Port, a Work Process or a Send
-Port names one by `correlation_set` (ADR-0024 and ADR-0066, amendments of
+Port names one by `correlation` (ADR-0024 and ADR-0066, amendments of
 this date). The Send Port's `execution_style`, `order_key` and
 `on_failure` and the Work Process's `execution_style` are deleted with every
 use: a Send Port that sends one at a time names a set keyed by `send-port`.
@@ -567,7 +567,7 @@ as soon as it is complete, a failure reported for each record*.
   Spring Integration's model — its `correlationId`, `sequenceNumber` and
   `sequenceSize` headers. Each record carries its Message's context and
   three values tying it to its batch, so a Work Process can take the
-  records up together, by a correlation set keyed on them: the received
+  records up together, by a Correlation keyed on them: the received
   Message's identifier (the batch), the record's position from one, and
   how many records there are. There is no flag for the last record: the
   position and the count say it. The key names were decided with the

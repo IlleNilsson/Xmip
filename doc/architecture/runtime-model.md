@@ -134,7 +134,7 @@ replay state, and the Messages a paused Subscription holds.
 **A Work Process's state is two tables of its own** (built 2026-10-22,
 section 22): **Process Instance**, each Instance's state whole, by its
 identifier, with how many turns it has taken and whether it has ended; and
-**Correlation**, each correlation set's key — named from the Work Process,
+**Correlation**, each Correlation's key — named from the Work Process,
 the set and the key's values in full — and the Instance it belongs to. Both
 are written in a turn's one write and nowhere else, and an Instance only over
 the turn it was read at. Beside them, each Stream that holds a place in a
@@ -385,7 +385,7 @@ whatever sequence it likes is perfectly exclusive and completely unordered.
 
 Ordering needs three things a claim does not supply:
 
-**A key.** Ordered *by what*? A correlation set says: the values work is
+**A key.** Ordered *by what*? A Correlation says: the values work is
 spread over, per Party, per client, per device, so that unrelated sequences run
 in parallel while each sequence stays intact (ADR-0024 and ADR-0066,
 amendments 2026-10-22). Where nothing is configured, a Receive Location orders
@@ -418,10 +418,10 @@ values. I can widen and strangle parallelism at any configurable point*, and
 different values go parallel depending on the value in the correlation set.*
 
 ```text
-[[correlation_sets]]                 declared once, cluster-wide
+[[correlations]]                 declared once, cluster-wide
   name, keys, on_failure            keys: receive-location, receive-port,
                                     work-process, send-port, context:<name>
-correlation_set = "<set>"           at a Receive Location, Receive Port,
+correlation = "<set>"           at a Receive Location, Receive Port,
                                     Work Process or Send Port
 ```
 
@@ -642,7 +642,7 @@ killed mid-send has every Journey it acknowledged sent once it is restarted,
 the one cut short again — at least once, never lost; a send that fails is
 written Failed with why while its sender was acknowledged all the same; a
 retry's backoff holds no thread, and a stop gives its claim back; and a
-Send Port naming a correlation set keeps its order, blocking behind a
+Send Port naming a Correlation keeps its order, blocking behind a
 failure or setting it aside as the set's `on_failure` says. And, built 2026-10-04 (`tests/ledger/
 send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
 Subscription opens one Journey per Port, each in its Port's queue and sent
@@ -770,7 +770,7 @@ External Stream
 
 **The receive order** (the owner, 2026-10-22: *Every received stream must
 check in, from what Receive Location, Receive Port. It has to propose its
-identity, be authenticated, authorized, promoted, Correlation Set populated,
+identity, be authenticated, authorized, promoted, Correlation populated,
 then we can queue the message in the fashion it needs to be queued*, and
 *Identify, Authenticate and Authorize. Those are different uses*). Every
 Stream goes through eight steps, in this order:
@@ -783,7 +783,7 @@ Stream goes through eight steps, in this order:
 4. **Authorize**: what it may do, decided by policy.
 5. **Prepare, Message creation, Contract and validation.**
 6. **Promotion**.
-7. **The correlation set's key populated**, from the Message's context: its
+7. **The Correlation's key populated**, from the Message's context: its
    Receive Location's own sequence, or the set the Location and its Port name
    (section 3, *Sequences*).
 8. **Queued** in the Ledger, as its set says: its place taken in each
@@ -1264,7 +1264,7 @@ The owner accepted four additions:
   written to the Ledger, and the Send pool picks it up when it is due.
 - **The deduplication key is the Journey id**, not the Message id: one
   Message may have several Journeys, each delivered once (section 15).
-- **A sequence's failure policy is its correlation set's**, block by
+- **A sequence's failure policy is its Correlation's**, block by
   default, skip as the option (section 3; the owner, 2026-10-22).
 - **A large Message's outgoing Contract validates streaming**, chunk by
   chunk, or that Send Location refuses to start.
@@ -1281,7 +1281,7 @@ every other is handed it once durable (ADR-0018, amendment 2026-10-20). The
 Publication keeps every Journey that is not held in the queue of where it
 leads — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node
-sends that Port and it names no correlation set, claims it in the same write and
+sends that Port and it names no Correlation, claims it in the same write and
 hands it to the Send pool in memory, so the send costs no sync of its own
 before it starts — where the pool admits it (*Corrected 2026-10-06*
 below). Each pass tries the Port's Send Locations in configured
@@ -1301,7 +1301,7 @@ first), and every Journey no live claim holds is claimed (`[tuning]
 send_lease`) and sent — one a dead node
 left, one whose send was cut short, one no node sending its Port held;
 claims of work in flight are renewed, and a stop gives back the claims of
-what waits. A Send Port naming a correlation set has one Journey of each
+what waits. A Send Port naming a Correlation has one Journey of each
 key in flight at a time, the oldest first, and every Journey waits until its
 Stream heads the sequences it holds end to end (section 3, *Sequences*): a
 pass that finds it does not gives its claim back, tries nothing, and is taken
@@ -2106,14 +2106,14 @@ name            = "ErpOut"
 send_locations  = ["ErpPrimary", "ErpBackup"]       # tried in order
 retry           = { attempts = 3, backoff = "5s" }  # on the active Location
 failover        = "next"          # next | none
-correlation_set = "PerParty"      # one at a time per key, as the set says
+correlation = "PerParty"      # one at a time per key, as the set says
 ```
 
 In the cluster's `xmip.toml`, once for the whole cluster (ADR-0024 and
 ADR-0066, amendments 2026-10-22):
 
 ```toml
-[[correlation_sets]]
+[[correlations]]
 name       = "PerParty"
 keys       = ["context:Party"]   # receive-location | receive-port | work-process |
                                  # send-port | context:<name>, in order
@@ -2128,11 +2128,11 @@ on_failure = "block"            # block where it says nothing | skip
   the receive gates read (section 7).
 - **A Send Port** names its `send_locations`, tried in order; `retry`
   applies to the active Location; `failover` is `next` or `none`
-  (section 10). It may name a `correlation_set`: its Journeys pass it one
+  (section 10). It may name a `correlation`: its Journeys pass it one
   at a time per key (section 3, *Sequences*).
-- **A correlation set** is declared once for the cluster and named at a point
+- **A Correlation** is declared once for the cluster and named at a point
   — a Receive Location, a Receive Port, a Work Process or a Send Port — by
-  `correlation_set`. A Receive Location that names none goes one Stream at a
+  `correlation`. A Receive Location that names none goes one Stream at a
   time, keyed by its own name. A set not declared, declared twice, with no key
   or with a key that is no key word is refused at validation and as a node
   starts. The Send Port's `execution_style`, `order_key` and `on_failure`
@@ -2397,7 +2397,7 @@ every restart in between.
 for the Work Process step (section 3) claims a Journey destined for one
 Work Process. Its state is in the Ledger, never in thread memory, and is
 checkpointed at every turn. Waiting releases its thread; a Message of its key
-in a correlation set resumes it on any capable node. Assignment belongs to a Work Process alone.
+in a Correlation resumes it on any capable node. Assignment belongs to a Work Process alone.
 New content is a new Stream, written in chunks, and a new Message
 generation. Validation gates stand at its input and output (section 20).
 Publishing back goes through routing again, with the chain recorded
@@ -2419,7 +2419,7 @@ day it is a compiled piece executed when called upon.*
   A `[[work_processes]]` entry names its flow by `module` and `unit`. The
   node never reads a design.
 - **Loaded through the C ABI** (`xmip_module.h` section 13): `declared`, what
-  the unit declares — its name, the correlation sets it follows, the names
+  the unit declares — its name, the Correlations it follows, the names
   its decisions read — and `advance`, one turn. A unit compiled from a user's
   design ships apart from Xmip, so a change to a process never rebuilds the
   node.
@@ -2443,7 +2443,7 @@ day it is a compiled piece executed when called upon.*
   table; one waiting for a time is the due time of the Journey whose turn
   started the timer, taken up by a scan when it is due, on any node.
 - **Correlate, Wait, Batch, Debatch.** A start or a receive step names the
-  correlation set it takes Messages by: the start initializes it, a later
+  Correlation it takes Messages by: the start initializes it, a later
   step follows it, and the Messages of one key are handed to their Instance
   in the order the Ledger wrote them (section 3, *Sequences*). A Batch
   collects Messages of the key until it has its `most` or its `within` is due
@@ -2481,7 +2481,7 @@ timeouts and decisions it meets.
 ### Starting and resuming
 
 > A Subscription decides when work **starts**.
-> A correlation set decides when waiting work **resumes**.
+> A Correlation decides when waiting work **resumes**.
 
 A Subscription Instance may correlate an incoming Message to a waiting Process
 Instance. Where the correlation and the wait condition both match, Xmip

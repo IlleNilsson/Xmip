@@ -662,7 +662,7 @@ refused on a Receive Location). Provenance: the ruling is the owner's,
 2026-10-21; the setting's name and `{message}` are the assistant's, for the
 owner to overrule.
 
-## Amendment, 2026-10-22: correlation sets are cluster-wide, and one Sequence orders over the claims
+## Amendment, 2026-10-22: Correlations are cluster-wide, and one Sequence orders over the claims
 
 The owner, 2026-10-22, having read this record again: *As long as the
 correlation sets are cluster wide*, and *when a stream arrives, it might
@@ -677,7 +677,7 @@ That can be processed per client requesting an order. Xmip gets an update
 of all the merchandise, that Xmip should process one at a time because the
 person updated all the merchandise is hacking away not knowing of the
 consequences*; corrected to *every receive location should by default be end
-to end treated. Not the receive port, unless opened up by correlation sets
+to end treated. Not the receive port, unless opened up by Correlations
 to support multiple processing through Xmip*; and settled as *A default
 correlation set is its receive location name. There might be more streams,
 files, pushing at that receive location. Default one stream, message,
@@ -692,10 +692,10 @@ parallel depending on the value in the correlation set.*
   holder at a time, at the endpoint where one exists and through Xmip
   Storage where none does, and says nothing about order.
 - **A Sequence orders over the claims** (`xmip-core-runtime`'s `sequence`;
-  ADR-0066, amendment of this date, clause 5). A correlation set is declared
-  once for the cluster, `[[correlation_sets]]`, and named at a point — a
+  ADR-0066, amendment of this date, clause 5). A Correlation is declared
+  once for the cluster, `[[correlations]]`, and named at a point — a
   Receive Location, a Receive Port, a Work Process, a Send Port — by
-  `correlation_set`. Each key, the full tuple of the set's values, is one
+  `correlation`. Each key, the full tuple of the set's values, is one
   queue in the Ledger, its places in the order they were written; work at
   the point goes on only while it holds the first place. A Journey is still
   claimed before it is worked on; a claimed Journey that does not head its
@@ -720,7 +720,7 @@ parallel depending on the value in the correlation set.*
 Provenance: the rulings quoted are the owner's, 2026-10-22; the queue's
 naming and the origin counting are the assistant's, the owner's to strike.
 
-## Amendment, 2026-10-27: correlation sets are Xmip's exclusiveness
+## Amendment, 2026-10-27: Correlations are Xmip's exclusiveness
 
 The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
 more important than parallelism.* This record replaced ADR-0017's lease
@@ -740,7 +740,7 @@ The owner confirmed this picture the same day:
 
 What makes it hold, built 2026-10-27:
 
-- **A Send Location names a set** (`correlation_set` on a node's own Send
+- **A Send Location names a set** (`correlation` on a node's own Send
   Location or a binding's). A Journey bound for a Send Port takes its place
   in the Port's sequence and in the sequence of every Send Location the
   Port may leave by, Port first, in one write (`Journey.sequences`). Every
