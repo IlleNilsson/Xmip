@@ -1500,13 +1500,20 @@ detailed information of what failed. Each failure would be tedious to
 handle*, and *The same goes for Prepare, summarize failures, then report
 back.* So in Prepare, Receive, Promote, Transform, Processing, Demote and
 Send, a stage goes on past an item that fails, gathers every failure, and
-fails once: a summary — how many items, how many failed — and each failure
-with its position and reason.
+fails once. And the same day: *All failures in each stage through Xmip
+shall report what, where and if possible why. Like a compiler, just
+batched per stage.* Each failure says what (a code and a message), where
+(the stage, the artifact, the place inside the data) and why where known;
+a stage's report is a summary line, then a block per failure.
 
-**Built**: the shape, `xcore::Failures` and `xcore::Failed` (a draft for
-the owner: `stage`, `item`, `total`, and each failure's `position` and
-`reason`), and debatching reporting through it (`xmip-core-runtime`'s
-`split`).
+**Built**: the shape, `xcore::Failures`, `xcore::Failed` and
+`xcore::Place` (the field names drafts for the owner: `stage`, `item`,
+`total`, `failed`; `code`, `message`, `stage`, `artifact`, `at`, `cause`;
+`position`, `offset`, `line`, `column`, `path`), and debatching reporting
+through it (`xmip-core-runtime`'s `split`: code `record-refused`, the
+unit as the artifact, the record's position). A splitting unit says only
+a reason today, so a record's finer place and cause wait for the unit
+trait to carry them.
 
 **Open**: every other stage. Drafted for the owner, not decided:
 accumulation works within a stage, and a failed stage stops the stages
