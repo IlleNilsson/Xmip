@@ -24,6 +24,14 @@ A Linear release must be reproducible.
 
 A Linear release is versioned, tested, documented, and intended for use outside the evolving project stream.
 
+## Cutting a Linear release
+
+A cut rewrites the **Release status** block under the tagline of the root
+`README.md` to name the Linear release: its version, its cut date and the date
+its support ends. Until the first cut, that block says `main` is Xmip
+Continuum and there is no Linear release yet, and `SECURITY.md` supports
+`main` alone.
+
 ## Branch and release mapping
 
 ```text

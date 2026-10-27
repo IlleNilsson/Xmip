@@ -319,6 +319,24 @@ function Publish-XmipChange {
         }
     }
 
+    # A new module is verified with the rest and is no repository to commit
+    # to: run in its folder, git would commit it into the one around it.
+    [string[]] $new = @($status | Where-Object -Property New | ForEach-Object -MemberName Module)
+
+    if ($new.Count -gt 0) {
+        Write-Host 'REFUSED. Verified, and nothing landed. No repository yet:' -ForegroundColor Red
+        $new | ForEach-Object { Write-Host "  $_" }
+        Write-Host 'Create and compose each (Sync-XmipEstate), then run again.'
+
+        return [PSCustomObject]@{
+            PSTypeName = 'Xmip.Change'
+            Landed     = @()
+            Skipped    = $skipped.ToArray()
+            Platform   = $false
+            Verified   = -not $NoVerify
+        }
+    }
+
     # The whole tree verified: push what an interrupted run left committed,
     # then land what changed, dependencies first, without building again.
     if ($unpushed.Count -gt 0) {

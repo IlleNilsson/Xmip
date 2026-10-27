@@ -214,7 +214,7 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
-              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } else { $_.Module }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } elseif ($_.New) { "$($_.Module) (new)" } else { $_.Module }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Suspicious</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Path</PropertyName></TableColumnItem>
@@ -240,7 +240,7 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
-              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } else { $_.Module }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Module -eq '.') { 'the platform repository' } elseif ($_.New) { "$($_.Module) (new)" } else { $_.Module }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Branch</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Changed</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>AheadBy</PropertyName></TableColumnItem>

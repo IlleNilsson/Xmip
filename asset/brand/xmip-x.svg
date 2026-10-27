@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 456 456" width="456" height="456">
+  <title>Xmip</title>
+  <g fill="#75c93b" stroke="#75c93b" stroke-width="8" stroke-linejoin="round">
+    <path d="M56 94 H136 L228 182 L320 94 H400 L290 218 H166 Z"/>
+    <path d="M171 232 L222 282 L145 358 H56 Z"/>
+    <path d="M285 232 L400 358 H311 L234 282 Z"/>
+  </g>
+  <path d="M236 280 L283 233 C287 250 284 266 270 276 Z" fill="#2a9e46"/>
+</svg>
