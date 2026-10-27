@@ -134,8 +134,9 @@ replay state, and the Messages a paused Subscription holds.
 **A Work Process's state is two tables of its own** (built 2026-10-22,
 section 22): **Process Instance**, each Instance's state whole, by its
 identifier, with how many turns it has taken and whether it has ended; and
-**Correlation**, each Correlation's key — named from the Work Process,
-the set and the key's values in full — and the Instance it belongs to. Both
+**Instance Key**, each value an Instance is correlated by — named from the
+Work Process, the Correlation and the key's values in full — and the
+Instance it belongs to. Both
 are written in a turn's one write and nowhere else, and an Instance only over
 the turn it was read at. Beside them, each Stream that holds a place in a
 sequence end to end has its count of open Journeys, kept by the writer in the
@@ -2430,7 +2431,7 @@ day it is a compiled piece executed when called upon.*
   published back through routing, how it ended (`process::flow`).
 - **The Work Process step** (`xmip-core-runtime`'s `work_step`) claims a
   Journey from its Work Process's queue, waits while its Stream does not head
-  its sequences, finds its Instance through the Correlation table — or the
+  its sequences, finds its Instance through the Instance Key table — or the
   one it starts — advances it, carries out its acts, and hands it all on in
   one write (`XmipStorage::turn`): the Journey, the new Messages, the
   Journeys published with their places, the Instance, its correlation keys

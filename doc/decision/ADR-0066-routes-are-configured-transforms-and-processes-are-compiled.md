@@ -401,7 +401,7 @@ waits throws `loops`.
   work on a Message, Messages made one, a Message published, how it ended.
 - **The runtime's Work Process step** (`runtime::work_step`) claims a
   Journey bound for a Work Process, finds its Instance through the
-  Correlation table, advances it, carries out its acts, and hands it all on
+  Instance Key table, advances it, carries out its acts, and hands it all on
   in one write (`XmipStorage::turn`): the Journey, the new Messages, the
   Journeys published, the Instance, its correlation keys, and — where a
   timer waits — the Journey kept at its place with a due time. **Nothing
@@ -409,7 +409,7 @@ waits throws `loops`.
   record in the Ledger. An Instance is written only over the turn it was
   read at, so two nodes taking a turn of one Instance never both write.
 - **Two tables of their own** in the runtime database: Process Instance and
-  Correlation (`persist::storage`'s `instance`).
+  Instance Key (`persist::storage`'s `instance`).
 
 ### 5. Correlation sets, cluster-wide, and the one Sequence
 
@@ -448,7 +448,7 @@ all the merchandise is hacking away not knowing of the consequences*.
   a node starts.
 - **A point names a set** by `correlation`: a Receive Location, a
   Receive Port, a Work Process or a Send Port. A BPMN start or receive names
-  the set it takes Messages by, `<xmip:correlate set="…"/>`: the start
+  the set it takes Messages by, `<xmip:correlate correlation="…"/>`: the start
   initializes it, a later step follows it, and a process may follow several.
   A Send Location names one too (amendment 2026-10-27).
 - **A Receive Location that names none goes one Stream at a time**, keyed by

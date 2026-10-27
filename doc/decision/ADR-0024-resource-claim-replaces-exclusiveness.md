@@ -755,7 +755,10 @@ What makes it hold, built 2026-10-27:
   behind the head of its Receive Location's sequence is not being
   processed, so its Journeys take no place at their destinations until it
   heads; they are taken in the write that first takes each up then
-  (`runtime::sequence::take_late`). A Stream's Journey a Work Process
+  (`runtime::sequence::take_late`), and only by the step that reads the
+  destination's queue in its order — the send scan, or the work scan
+  turning a Work Process that names a Correlation one Journey at a time —
+  so they follow the Ledger's order and no two threads race for them. A Stream's Journey a Work Process
   publishes later never waits behind a Stream that waits for it
   (`tests/ledger/stream_order.rs`).
 - **A dead holder's key passes on, fenced.** A claim's `fence` is the
