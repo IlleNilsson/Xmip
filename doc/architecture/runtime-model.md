@@ -1577,11 +1577,12 @@ waits for its due time.
   five more for each other departure reading it — the room each one's own
   read of Xmip Storage would have held (`stream_share::KEPT_PER_READER`).
   A departure about to let go of the chunk another of its read takes next
-  waits for that one to take it — a thread kept from its processor on a
-  loaded machine — for at most what the kept chunks take the read to pass
-  at its pace, over the whole Stream for each departure waited for, so a
-  slower Send Port holds the others back no longer than that, once
-  (ADR-0018 clause 11, the bulkhead). A departure further behind — a
+  waits for that one to take it, for as long as that one keeps taking:
+  what is kept is counted in chunks, never in time, so a thread kept from
+  its processor on a loaded machine is waited for. One that took no chunk
+  for `[tuning] stream_stall` — its far end stopped — is left behind, so a
+  stalled Send Port holds the others back for that, once (ADR-0018 clause
+  11, the bulkhead; amendment 2026-10-27). A departure further behind — a
   slower far end, a send begun later — asks Xmip Storage for the chunks it
   missed, from the chunk it reached
   (`persist::storage::ChunkReader::shared_from`), from a read of its
