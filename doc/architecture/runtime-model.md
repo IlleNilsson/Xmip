@@ -2133,9 +2133,11 @@ on_failure = "block"            # block where it says nothing | skip
   (section 10). It may name a `correlation`: its Journeys pass it one
   at a time per key (section 3, *Sequences*).
 - **A Correlation** is declared once for the cluster and named at a point
-  — a Receive Location, a Receive Port, a Work Process or a Send Port — by
-  `correlation`. A Receive Location that names none goes one Stream at a
-  time, keyed by its own name. A set not declared, declared twice, with no key
+  — a Receive Location, a Receive Port, a Work Process, a Send Port Group,
+  a Send Port or a Send Location — by `correlation`. A Receive Location
+  that names none goes one Stream at a time, keyed by its own name. A Send
+  Port Group's holds its key for a delivery until every member Send Port
+  has succeeded or failed (ADR-0024, amendment 2026-10-27). A set not declared, declared twice, with no key
   or with a key that is no key word is refused at validation and as a node
   starts. The Send Port's `execution_style`, `order_key` and `on_failure`
   were deleted for it on 2026-10-22.
