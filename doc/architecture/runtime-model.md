@@ -1021,6 +1021,15 @@ Location serializes and demotes, and the Location's last. The Port's are
 the inner layer — what every Location's Stream shares — and the Location's
 the outer, what its transport or Party adds.
 
+The pairs above are one unit each, handed the stage it runs at (the owner,
+2026-10-22: *It is just an enum away what it does in what situation*): the
+standard prepare units of the module built in, `xmip` — Compression,
+CharacterEncoding, TransferEncoding, TextNormalization, Encryption and
+Signature — undo at receive what the far end did and do it at send, a piece
+at a time, and a Work Process's step names its way (ADR-0066, amendment
+2026-10-22). A Preparation Step works on bytes and makes no Message; turning
+one Message's content into a new Message's is Transformation's.
+
 ## 9. Publication and Routing
 
 Publication is part of Routing, not a separate platform concern.
@@ -2462,7 +2471,7 @@ day it is a compiled piece executed when called upon.*
   past one refused, every failure gathered (`xcore::Outcomes`), and the
   Debatch throws `record-refused` once, its reason a summary and each
   failed record's position; nothing is published (ADR-0031 and ADR-0013,
-  amendments 2026-10-27; open problems 47 and 51).
+  amendments 2026-10-27; open problems 47 and 55).
 - **Try and catch.** An error boundary event catches an error of its code
   thrown inside its task or subprocess — by a failed unit call, or an error
   end event — and leads on; one no scope catches fails the Instance. A timer
@@ -2473,7 +2482,7 @@ day it is a compiled piece executed when called upon.*
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call
 throws `no-unit`); a Journey published on one node woken on another at once
-(open problem 46); human tasks (open problem 50).
+(open problem 46); human tasks (open problem 54).
 
 ### Stages
 

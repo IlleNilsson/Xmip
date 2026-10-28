@@ -866,6 +866,45 @@ same three. The node says when its next request is due: at
 thirds of its ninety days, which `xmip certificate --inspect
 D:\Xmip\tls\node.pem` says too.
 
+### Decompress what a Party sends, with a standard unit
+
+Xmip's standard units are there out of the box, at receive, at process and
+at send: Compression, CharacterEncoding, TransferEncoding,
+TextNormalization, Encryption and Signature prepare a Stream; Validate
+holds it to its format or a contract; Promote and Demote read and write a
+value; Convert, Stylesheet and Script transform it. They are the built-in
+module `xmip`, so a step names one by module and unit, and nothing declares
+the module itself. If the files dropped at `Drop` above arrive gzipped,
+the node decompresses them at the Receive Location, before a Message
+exists — a step on the node, attached to the Location by its name. Add
+the step to the node in `.local-work/node/config/xmip.toml`:
+
+```toml
+[[nodes.first.preparation_steps]]
+name     = "Unzip"
+module   = "xmip"
+unit     = "Compression"
+settings = { format = "gzip" }
+```
+
+and name it in `Drop`'s binding, beside its `address`:
+
+```toml
+prepare = ["Unzip"]
+```
+
+At receive, Compression decompresses; the same step on a Send Location
+compresses, and in a Work Process it says which with `direction`. Check it
+as every surface does:
+
+```powershell
+Test-XmipNodeConfiguration -Path .local-work/node/config/xmip.toml
+```
+
+A step's settings are held to what its unit declares, so `format = "rar"`
+is refused in words. Running the steps is decided and not built: a node
+still refuses to start a Location that attaches one, and says so.
+
 ## 7. Where next
 
 - [terminology.md](terminology.md): every word Xmip uses, defined once.

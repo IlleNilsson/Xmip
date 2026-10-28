@@ -1378,9 +1378,71 @@ declaration stays placed once. The plan, its own work after the current:
    declaration through, since a platform service depends on no technology
    (`architecture.toml`).
 
+## 50. Validation and the path languages hold a Stream whole
+
+The standard units stream (ADR-0066, amendment 2026-10-22), and the
+contract technologies Validate calls, and the path languages Promote and
+Demote call, mostly do not: they read `Stream::text` or `Stream::bytes`, so
+what one holds grows with the payload. Recorded as the owner's rule asks
+(*streamed, bounded in memory*), each with its bound and why:
+
+| Technology | Holds | Why |
+| --- | --- | --- |
+| `json-schema`, bare | a piece and one string | streamed since 2026-10-22: well-formedness read through `serde_json`'s reader and discarded |
+| `json-schema`, bound | the document | the schema's keywords look across it (`required`, `oneOf`); a streamed evaluation is a validator of its own |
+| `xml-schema`, `schematron`, `wsdl` | the document, as `roxmltree`'s tree | the XML Schema subset and Schematron's XPath read a tree; well-formedness alone could stream through `quick-xml`, which checks less than `roxmltree` does |
+| `csv`, `fixed-width` | the text | the record walk takes a slice; `message::record`'s streamed walk (2026-10-22) is what a streamed check reads through |
+| `edi-edifact`, `edi-x12`, `hl7-v2` | the text and its segments | the envelope checks count segments across the interchange; a streamed reader keeps the counts and one segment |
+| `yaml`, `toml`, `avro`, `protobuf`, `fhir`, `openapi`, `asyncapi`, `graphql-schema`, `sql`, `toon`, `regex` | the text or the bytes | each parser reads a slice |
+| path languages (`xpath`, `jsonpath`, `dot`, `json-pointer`, `fhirpath`, `index`, `regex`, `edi`, `hl7-v2`) | the form they parse, once per Message | a path reads a parsed form shared by every path of the Message; a promotion that stops early (a Content Selector's `stream-prefix`) is a reader of its own |
+
+Each is bounded by the payload and by nothing else, and each holds it once
+however many gates read it (`Stream::load`, `path::Content`). The order is
+the owner's to decide; the cheapest first are CSV through the streamed
+walk and bare XML through `quick-xml`.
+
+## 51. A module is updated only on the end user's request, and no surface asks yet
+
+Decided by the owner, 2026-10-22 (ADR-0045, amendment 2026-10-22): *The
+offline units may be updated, but on the end user's request, after a
+review.* A module's version is pinned by the configuration
+(`[modules.manifest.identity] version`) and nothing updates it by itself;
+updating is an operator's act on every surface — showing what changes (the
+version, the manifest, the dependencies, the offline declaration), taking the
+end user's approval, audited (ADR-0062). Not built: no surface offers the
+act, and no review is shown.
+
+## 52. CMS and JOSE have no engine
+
+Encryption and Signature take `format = "cms"` and `format = "jose"`
+(ADR-0066, amendment 2026-10-22), and no engine implements either: a step
+naming one is refused when it is opened, in words. OpenPGP's engine, `rpgp`,
+is built. Neither format streams as its common forms are written — CMS in
+DER needs its lengths before its content, so a streamed CMS is BER with
+indefinite lengths, which `xmip-core-library-asn1` refuses; a JWS or JWE in
+compact form spells its whole payload in one token — so each is a design of
+its own, and the dependency (the estate's `aws-lc-rs` and asn1 reader, or a
+third party's) is the owner's to choose. A key protected by a passphrase is
+not opened by any engine yet: where a passphrase is kept is the secret
+capability's (problem 29).
+
+## 53. The XSLT engine pulls in url's DNS lookup
+
+Stylesheet's first engine was `xrust` (XSLT 1.0, Apache-2.0), built as
+`xmip-core-transform-xrust`. It depends on `url`, not optionally, and
+`url`'s `Url::socket_addrs` resolves a host name through the standard
+library's `ToSocketAddrs`: a name lookup over the network. The offline gate
+(`test/Offline.Test.ps1`, ADR-0045, amendment 2026-10-22) admits no crate
+that can reach a network, even where nothing calls it, so the engine is not
+linked and Stylesheet has none: a step naming one is refused when it is
+opened. The repository `xmip-core-transform-xrust` exists and is not
+mounted. Open: an XSLT engine whose dependencies reach no network — `xrust`
+without `url`, upstream or by its fetcher taking a path, or another
+engine.
+
 ---
 
-## 50. Human tasks and waiting on people
+## 54. Human tasks and waiting on people
 
 The owner, 2026-10-22, of the Work Process's BPMN 2.0 subset: *Human tasks,
 waiting for an email, text or a phone call can wait.* A BPMN `userTask` or
@@ -1401,7 +1463,7 @@ refuses a remote reference at design and compile time (the owner,
 2026-10-22: *We can only use standards, code and compiled units that
 explicitly work offline!*).
 
-## 51. Failures are accumulated and reported as a summary with details
+## 55. Failures are accumulated and reported as a summary with details
 
 Decided by the owner, 2026-10-27 (ADR-0013, amendment 2026-10-27):
 *Failures during processing (Receive, Promote, Transform, Processing,
@@ -1436,7 +1498,7 @@ go on may stop the stage at once, reported in the same form.
 **Open**: every other stage. Which items a stage counts — a Preparation's
 steps, a receive's Streams, a send's Locations — is each stage's to say.
 
-## 52. A store capability has no module ABI section
+## 56. A store capability has no module ABI section
 
 Decided by the owner, 2026-10-27, resolving problem 7: *Why not use the
 ABI, there shall not be any duplication of code unless it is modulewize.*
@@ -1447,7 +1509,7 @@ and archive stay five modules, each with its own policy and tables, and
 each reaches its store through that section. Not built: the section, its
 Rust mirror in `xmip-core-abi`, and the five moved onto it.
 
-## 53. Cloud technologies named without their vendor
+## 57. Cloud technologies named without their vendor
 
 Decided by the owner, 2026-10-27, resolving problem 8: option A, always
 name the vendor. Not done: `s3` renamed `aws-s3`, and every other cloud
@@ -1455,7 +1517,7 @@ technology that names no vendor renamed the same way, in
 `architecture.toml`, the repositories, the crates, the configuration words
 and every document that names them.
 
-## 54. Resilience and exclusiveness are not pluggable
+## 58. Resilience and exclusiveness are not pluggable
 
 Decided by the owner, 2026-10-27, resolving problem 9: *I thought we left
 exclusiveness behind us* (ADR-0024), and *There might be some else who want
@@ -1499,6 +1561,13 @@ Phase D: the routes designer's first slice is built, 2026-09-26 (ADR-0064):
 the Xmip Application document and the node's binding in `configure`, and
 the designer in the VS Code extension; running Applications in the
 Playground is the next slice.
+
+Phase D's transformation and prepare are standard units since 2026-10-22
+(ADR-0066, amendment 2026-10-22): XSLT through the engine a step chooses,
+none linked yet; XML, JSON and CSV converted, streamed; compression,
+character and transfer encoding; OpenPGP encryption and signature through
+rpgp. A node runs none of them yet, and CMS, JOSE and XSLT have no engine
+(problems 50 to 53).
 
 Phase D's secrets and BizTalk import have no home in the manifest, and a
 visual mapper none in the surfaces; the owner decides each.
@@ -2182,12 +2251,12 @@ Resolved by the owner, 2026-10-27: *Why not use the ABI, there shall not be
 any duplication of code unless it is modulewize.* A store capability with
 its own module ABI section; each store technology is one loadable module;
 audit, report, observe, retain and archive stay five modules with their own
-policy and tables. Building the section is open problem 52.
+policy and tables. Building the section is open problem 56.
 
 ## 8. Cloud vendor prefixes are inconsistent — **Resolved**
 
 Resolved by the owner, 2026-10-27: option A, always name the vendor. The
-renaming is open problem 53.
+renaming is open problem 57.
 
 ## 9. `resilience` and `exclusiveness` are alone in the Platform tier — **Resolved**
 
@@ -2197,7 +2266,7 @@ Correlations are how Xmip does exclusiveness (ADR-0024 and ADR-0066,
 amendments 2026-10-27) — and *There might be some else who want to do
 better on 'resilience' and 'exclusiveness'.* Both become pluggable
 capabilities, each with an ABI section and Xmip's own the built-in default;
-building them is open problem 54.
+building them is open problem 58.
 
 ## 10. Three modules declared with no repository — **Resolved**
 
