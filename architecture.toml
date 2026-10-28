@@ -401,7 +401,7 @@ dependency = []
     description = "Fixed-width shape: lines as numbered parts, or each line cut into the positions the caller names, no announced type. A xmip-core-message technology."
     [xmip.core.message.form-urlencoded]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-library-net"]
+    dependency = ["xmip-core-stream", "xmip-core-library-codec"]
     [xmip.core.message.hl7-er7]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
@@ -462,7 +462,7 @@ dependency = []
     [xmip.core.transport.http]
     maturity = "scaffolded"
     description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. The event capability's wire event webhook. A xmip-core-transport technology."
-    dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-event", "xmip-core-resilience", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-context", "xmip-core"]
     specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
       dependency = ["xmip-core-library-net", "xmip-core"]
@@ -713,7 +713,7 @@ dependency = []
     dependency = ["xmip-core-sdk", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-context", "xmip-core"]
     [xmip.core.transport.file]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-net", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-library-net", "xmip-core-library-codec", "xmip-core-context", "xmip-core"]
     specification = "Platform file-system behavior and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
     maturity = "scaffolded"
@@ -829,7 +829,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi", "xmip-core-library-net"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi", "xmip-core-node", "xmip-core-library-codec"]
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -948,10 +948,20 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract"]
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
+    [xmip.core.path.edi]
+    maturity = "scaffolded"
+    description = "EDI path: a segment, element and component of an EDIFACT or X12 interchange, read and written, cut by the contract technologies' own syntax. A xmip-core-path technology."
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-edi-edifact", "xmip-core-contract-edi-x12", "xmip-core-stream"]
+    specification = "UN/EDIFACT (ISO 9735) and ASC X12 segment, element and component positions"
     [xmip.core.path.fhirpath]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-library-codec"]
     specification = "HL7 FHIRPath, the normative core over FHIR JSON"
+    [xmip.core.path.hl7-v2]
+    maturity = "scaffolded"
+    description = "HL7 v2 path: a segment, field, component and subcomponent of an ER7 message, read and written, cut by the contract technology's own syntax. A xmip-core-path technology."
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-hl7-v2", "xmip-core-stream"]
+    specification = "HL7 Version 2 encoding rules (ER7) field positions, PID-5-2"
     [xmip.core.path.index]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
@@ -971,58 +981,40 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
 
   [xmip.core.prepare]
-  description = "Stream preparation stages usable before Message creation, during processing and before Send."
+  description = "Preparation: the standard prepare units, on a Stream's bytes, streamed, at receive, process and send."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream"]
-    [xmip.core.prepare.base64]
-    maturity = "reserved"
+  dependency = ["xmip-core", "xmip-core-node", "xmip-core-library-codec"]
     [xmip.core.prepare.bzip2]
     maturity = "reserved"
     [xmip.core.prepare.canonicalize]
-    maturity = "reserved"
-    [xmip.core.prepare.charset]
     maturity = "reserved"
     [xmip.core.prepare.checksum]
     maturity = "reserved"
     [xmip.core.prepare.chunking]
     maturity = "reserved"
-    [xmip.core.prepare.decrypt]
-    maturity = "reserved"
-    [xmip.core.prepare.deflate]
-    maturity = "reserved"
-    [xmip.core.prepare.encrypt]
-    maturity = "reserved"
     [xmip.core.prepare.envelope]
     maturity = "reserved"
     [xmip.core.prepare.framing]
     maturity = "reserved"
-    [xmip.core.prepare.gzip]
-    maturity = "reserved"
     [xmip.core.prepare.hash]
-    maturity = "reserved"
-    [xmip.core.prepare.line-ending]
     maturity = "reserved"
     [xmip.core.prepare.quoted-printable]
     maturity = "reserved"
-    [xmip.core.prepare.sign]
-    maturity = "reserved"
+    [xmip.core.prepare.rpgp]
+    maturity = "scaffolded"
+    dependency = []
+    specification = "OpenPGP, RFC 9580, through rpgp: the first engine of Encryption and Signature"
     [xmip.core.prepare.tar]
-    maturity = "reserved"
-    [xmip.core.prepare.verify-signature]
-    maturity = "reserved"
-    [xmip.core.prepare.zip]
-    maturity = "reserved"
-    [xmip.core.prepare.zstd]
     maturity = "reserved"
 
   [xmip.core.transform]
-  description = "Common Contract-aware transformation functionality."
+  description = "Transformation: one Message's content into a new Message's, by the standard transform units, streamed where the form allows."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-contract", "xmip-core-message", "xmip-core-stream"]
+  dependency = ["xmip-core", "xmip-core-node", "xmip-core-message", "xmip-core-library-codec"]
     [xmip.core.transform.dotnet]
     maturity = "reserved"
     [xmip.core.transform.handlebars]
@@ -1045,8 +1037,13 @@ dependency = []
     maturity = "reserved"
     [xmip.core.transform.xquery]
     maturity = "reserved"
-    [xmip.core.transform.xslt]
-    maturity = "reserved"
+
+  [xmip.core.unit]
+  description = "The standard units: Xmip's built-in module xmip of compiled units at receive, process and send, each implemented in its capability and opened here with the technologies it chooses among."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = ["xmip-core-node", "xmip-core", "xmip-core-prepare", "xmip-core-transform", "xmip-core-contract", "xmip-core-path", "xmip-core-promote", "xmip-core-demote", "xmip-core-process", "xmip-core-prepare-rpgp","xmip-core-contract-asyncapi", "xmip-core-contract-avro", "xmip-core-contract-csv", "xmip-core-contract-edi-edifact", "xmip-core-contract-edi-x12", "xmip-core-contract-fhir", "xmip-core-contract-fixed-width", "xmip-core-contract-graphql-schema", "xmip-core-contract-hl7-v2", "xmip-core-contract-json-schema", "xmip-core-contract-openapi", "xmip-core-contract-protobuf", "xmip-core-contract-regex", "xmip-core-contract-schematron", "xmip-core-contract-sql", "xmip-core-contract-toml", "xmip-core-contract-toon", "xmip-core-contract-wsdl", "xmip-core-contract-xml-schema", "xmip-core-contract-yaml", "xmip-core-path-xpath", "xmip-core-path-jsonpath", "xmip-core-path-dot", "xmip-core-path-json-pointer", "xmip-core-path-index", "xmip-core-path-edi", "xmip-core-path-hl7-v2", "xmip-core-path-regex", "xmip-core-path-fhirpath"]
 
   [xmip.core.assign]
   description = "Common Path-based assignment functionality."
@@ -1056,18 +1053,18 @@ dependency = []
   dependency = ["xmip-core-context", "xmip-core"]
 
   [xmip.core.promote]
-  description = "Promotion into what a Subscription reads; implemented once, by xmip-core-route's Gathering, so this repository holds no code."
+  description = "Promotion: a value out of a Message into its context, the standard Promote unit's, compiled once through the path engine."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = []
+  dependency = ["xmip-core-node", "xmip-core", "xmip-core-context", "xmip-core-path", "xmip-core-contract"]
 
   [xmip.core.demote]
   description = "Common Path-based demotion into Message or artifact configuration."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-contract", "xmip-core-path", "xmip-core"]
+  dependency = ["xmip-core-node", "xmip-core-context", "xmip-core-contract", "xmip-core-path", "xmip-core"]
 
   [xmip.core.identify]
   description = "Common transport-level and message-level identification functionality."
@@ -1077,7 +1074,7 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-ntlm"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-library-net", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-context"]
     [xmip.core.identify.certificate]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -1283,7 +1280,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-path", "xmip-core-assign", "xmip-core-library-codec", "xmip-core-abi"]
+  dependency = ["xmip-core", "xmip-core-node", "xmip-core-path", "xmip-core-assign", "xmip-core-library-codec", "xmip-core-abi"]
     [xmip.core.process.bpmn]
     maturity = "scaffolded"
     dependency = ["xmip-core-process", "xmip-core", "xmip-core-assign", "xmip-core-path", "xmip-core-library-codec"]
@@ -1677,7 +1674,7 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-node"]
+  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-node", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
 
 # Surfaces, ADR-0014. abi is above. These three were named in surface and had
 # no module, so they were invisible to repository creation.
@@ -1755,7 +1752,7 @@ dependency = []
 
 
   [xmip.core.library.net]
-  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, percent-encoding, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
+  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

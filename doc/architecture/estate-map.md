@@ -1,6 +1,6 @@
 # The Xmip estate
 
-338 repositories are declared and 271 of them are
+336 repositories are declared and 275 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -32,17 +32,17 @@ the estate tree, and are counted nowhere below.
 | --- | ---: | ---: | ---: |
 | Foundation | 11 | 11 | 0 |
 | Library | 1 | 0 | 1 |
-| Capability | 20 | 20 | 0 |
+| Capability | 21 | 21 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 295 | 230 | 65 |
-| **Total** | 338 | 271 | 67 |
+| Technology | 292 | 233 | 59 |
+| **Total** | 336 | 275 | 61 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
-| reserved | 64 | 0 | 64 |
-| scaffolded | 273 | 271 | 2 |
+| reserved | 59 | 0 | 59 |
+| scaffolded | 276 | 275 | 1 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -233,25 +233,11 @@ due. Open problem 27. Records: ADR-0034 (amendments 2026-10-15 and
 
 **Opening a Module at run time.** The loader opens a shared library, resolves
 `xmip_create_module_v1`, checks its trait version and configures, starts and
-stops its contract table, and opens a work process table as the flow of the
-Work Processes naming its units (section 13); the work process table is the
-one the message path calls. It is behind the runtime's `dynamic-loading`
-feature, which `xmip-service` is not built with; every other technology is
-linked by feature, so adding one means running `Build-XmipService` again.
-Records: ADR-0025, ADR-0057.
-
-#### `process-execution`
-
-**Compiling a Work Process at design time, and running it.** A BPMN 2.0 design
-compiles to a Work Process program and a unit crate exporting it through
-`xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`);
-the runtime's Work Process step takes a turn of each Instance from the Ledger,
-held by `tests/ledger/work_process.rs` (a Batch in the order received, two
-clients at once never overtaking, a node killed mid-process finishing from the
-Ledger) and the two crates' tests. A unit is opened from its library behind
-the runtime's `dynamic-loading` feature, which `xmip-service` is not built
-with; a unit's settings and calls through the standard units are decided, not
-built. Records: ADR-0066 (amendment 2026-10-22), runtime-model.md section 22.
+stops its contract table, the only table with a host side; nothing on the
+message path calls it. It is behind the runtime's `dynamic-loading` feature,
+which `xmip-service` is not built with; every other technology is linked by
+feature, so adding one means running `Build-XmipService` again. Records:
+ADR-0025, ADR-0057.
 
 #### `resilience-guards`
 
@@ -381,6 +367,13 @@ invites it in: no `InProcess` setting, no .NET hosting and no out-of-process
 channel exist, and a Host Service of its own is refused at start. Records:
 ADR-0018 (amendment 2026-10-05).
 
+#### `process-execution`
+
+**Compiling a Work Process at design time, and running it.** Nothing compiles
+a design and no engine runs one: a Journey to a Work Process ends saying no
+runtime runs it yet (`xmip-core-runtime`'s `departure.rs`). Records: ADR-0066,
+runtime-model.md section 22.
+
 #### `security-profile`
 
 **Security profiles: standard, enterprise, regulated.** No configuration key
@@ -407,7 +400,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 301127 lines of production
+Where each repository mounts and what it holds: 295827 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -424,7 +417,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 67 of them and they
+nowhere — work not begun, not work unmounted. There are 61 of them and they
 hold no source to count.
 
 ```text
@@ -432,7 +425,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6513
+│   │   │   ├── transport                       6492
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -521,9 +514,6 @@ hold no source to count.
 │   │   │   │   ├── named-pipe                   290
 │   │   │   │   ├── tcp                          277
 │   │   │   │   └── udp                          216
-│   │   │   ├── process                         5560
-│   │   │   │       declared, not built 1
-│   │   │   │       bpmn
 │   │   │   ├── provision                       4116
 │   │   │   │   ├── internal-ca                 2393
 │   │   │   │   ├── acme                        1224
@@ -553,10 +543,21 @@ hold no source to count.
 │   │   │   │   ├── jsonpath                     660
 │   │   │   │   ├── fhirpath                     614
 │   │   │   │   ├── dot                          291
+│   │   │   │   ├── hl7-v2                       253
+│   │   │   │   ├── edi                          216
 │   │   │   │   ├── index                        158
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
+│   │   │   ├── transform                       1998
+│   │   │   │       declared, not built 11
+│   │   │   │       dotnet  handlebars  jolt  jq  jsonata  liquid  mustache
+│   │   │   │       rust  tera  wasm  xquery
+│   │   │   ├── prepare                         1791
+│   │   │   │   ├── rpgp                         255
+│   │   │   │       declared, not built 9
+│   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
+│   │   │   │        hash  quoted-printable  tar
 │   │   │   ├── identify                        1448
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
@@ -583,21 +584,21 @@ hold no source to count.
 │   │   │   │   ├── keychain                     106
 │   │   │   │       declared, not built 5
 │   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
-│   │   │   ├── contract                         906
+│   │   │   ├── contract                         948
 │   │   │   │   ├── graphql-schema               846
+│   │   │   │   ├── json-schema                  791
 │   │   │   │   ├── xml-schema                   759
 │   │   │   │   ├── avro                         748
-│   │   │   │   ├── json-schema                  746
 │   │   │   │   ├── toon                         711
 │   │   │   │   ├── protobuf                     691
 │   │   │   │   ├── sql                          633
+│   │   │   │   ├── edi-x12                      534
+│   │   │   │   ├── edi-edifact                  520
 │   │   │   │   ├── fixed-width                  512
-│   │   │   │   ├── edi-edifact                  470
-│   │   │   │   ├── edi-x12                      455
+│   │   │   │   ├── hl7-v2                       392
 │   │   │   │   ├── wsdl                         390
 │   │   │   │   ├── openapi                      385
 │   │   │   │   ├── yaml                         368
-│   │   │   │   ├── hl7-v2                       329
 │   │   │   │   ├── toml                         314
 │   │   │   │   ├── fhir                         294
 │   │   │   │   ├── asyncapi                     243
@@ -607,7 +608,7 @@ hold no source to count.
 │   │   │   │   ├── rust                          83
 │   │   │   │   └── dotnet                        19
 │   │   │   ├── route                            643
-│   │   │   │   ├── metadata                     126
+│   │   │   │   ├── metadata                     123
 │   │   │   │   ├── contract                      86
 │   │   │   │   ├── content                       80
 │   │   │   │   ├── regex                         76
@@ -629,12 +630,15 @@ hold no source to count.
 │   │   │   │   ├── acl                          147
 │   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
+│   │   │   ├── unit                             380
 │   │   │   ├── receive                          174
+│   │   │   ├── demote                           168
 │   │   │   ├── logic                            156
 │   │   │   │   ├── matter                      1129
 │   │   │   │   ├── soap                         274
 │   │   │   │   ├── http-api                     259
 │   │   │   │   └── grpc                         178
+│   │   │   ├── promote                          153
 │   │   │   ├── resilience                       129
 │   │   │   │   ├── circuit-breaker              135
 │   │   │   │   ├── rate-limit                   108
@@ -642,26 +646,17 @@ hold no source to count.
 │   │   │   │   ├── retry                         82
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
-│   │   │   ├── demote                           108
 │   │   │   ├── send                              88
+│   │   │   ├── process                           68
+│   │   │   │       declared, not built 7
+│   │   │   │       bash  command  dotnet  grpc  http  rust  wasm
 │   │   │   ├── assign                            39
-│   │   │   ├── transform                         33
-│   │   │   │       declared, not built 12
-│   │   │   │       dotnet  handlebars  jolt  jq  jsonata  liquid  mustache
-│   │   │   │       rust  tera  wasm  xquery  xslt
-│   │   │   ├── prepare                           29
-│   │   │   │       declared, not built 20
-│   │   │   │       base64  bzip2  canonicalize  charset  checksum  chunking
-│   │   │   │       decrypt  deflate  encrypt  envelope  framing  gzip  hash
-│   │   │   │       line-ending  quoted-printable  sign  tar  verify-signature
-│   │   │   │        zip  zstd
-│   │   │   ├── retain                            27
-│   │   │   │       declared, not built 5
-│   │   │   │       azure-blob  file  gcs  s3  sql
-│   │   │   └── promote                           10
+│   │   │   └── retain                            27
+│   │   │           declared, not built 5
+│   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             6514
-│   │   │   ├── codec                           2718
+│   │   │   ├── net                             6377
+│   │   │   ├── codec                           2790
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
 │   │   │   ├── tls                             1124
@@ -669,17 +664,17 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             8716
-│   │       ├── gui                             5054
-│   │       │   └── vscode                      3468
+│   │       ├── cli                             8706
+│   │       ├── gui                             5053
+│   │       │   └── vscode                      3300
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3817
+│   │       ├── observe                         3865
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      3258  C# 3258 · PowerShell 0
+│   │       ├── powershell                      3244  C# 3244 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -695,12 +690,12 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30913  C# 28411 · Rust 2206 · PowerShell 296
+│   │   ├── abi                                30879  C# 28405 · Rust 2178 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                3075
-│   │   ├── message                             1614
+│   │   ├── core                                2941
+│   │   ├── message                             1706
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             256
@@ -716,20 +711,20 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
+│   │   ├── node                                 955
 │   │   ├── context                              839
-│   │   ├── node                                 832
-│   │   ├── journey                              693
+│   │   ├── journey                              592
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            33030
-│       ├── persist                            13323
-│       │   ├── sqlite                           288
-│       │   ├── rocksdb                          230
+│       ├── runtime                            29466
+│       ├── persist                            12493
+│       │   ├── sqlite                           240
+│       │   ├── rocksdb                          189
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           7895
+│       └── configure                           7545
 └── test/
     └── core/
         └── playground                         12430
@@ -802,9 +797,9 @@ Things Xmip does.
 | `xmip-core-demote` | scaffolded | `module/core/capability/demote` | — |
 | `xmip-core-identify` | scaffolded | `module/core/capability/identify` | 19 |
 | `xmip-core-logic` | scaffolded | `module/core/capability/logic` | 4 |
-| `xmip-core-path` | scaffolded | `module/core/capability/path` | 7 |
-| `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 20 |
-| `xmip-core-process` | scaffolded | `module/core/capability/process` | 1 |
+| `xmip-core-path` | scaffolded | `module/core/capability/path` | 9 |
+| `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 10 |
+| `xmip-core-process` | scaffolded | `module/core/capability/process` | 7 |
 | `xmip-core-promote` | scaffolded | `module/core/capability/promote` | — |
 | `xmip-core-provision` | scaffolded | `module/core/capability/provision` | 4 |
 | `xmip-core-receive` | scaffolded | `module/core/capability/receive` | — |
@@ -813,8 +808,9 @@ Things Xmip does.
 | `xmip-core-route` | scaffolded | `module/core/capability/route` | 7 |
 | `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
-| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 12 |
+| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 11 |
 | `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 88 |
+| `xmip-core-unit` | scaffolded | `module/core/capability/unit` | — |
 
 ### `xmip-core-authenticate`, 18 technologies
 
@@ -853,28 +849,28 @@ All 4 composed in `module/core/capability/logic`.
 
 - **scaffolded**, 4 — grpc, http-api, matter, soap
 
-### `xmip-core-path`, 7 technologies
+### `xmip-core-path`, 9 technologies
 
-All 7 composed in `module/core/capability/path`.
+All 9 composed in `module/core/capability/path`.
 
-- **scaffolded**, 7 — dot, fhirpath, index, json-pointer, jsonpath, regex,
-  xpath
+- **scaffolded**, 9 — dot, edi, fhirpath, hl7-v2, index, json-pointer,
+  jsonpath, regex, xpath
 
-### `xmip-core-prepare`, 20 technologies
+### `xmip-core-prepare`, 10 technologies
 
-Declared, and none composed: `module/core/capability/prepare` has no
-`.gitmodules`.
+1 of 10 composed in `module/core/capability/prepare`; a name marked `*` is one
+the parent does not compose.
 
-- **reserved**, 20 — base64, bzip2, canonicalize, charset, checksum, chunking,
-  decrypt, deflate, encrypt, envelope, framing, gzip, hash, line-ending,
-  quoted-printable, sign, tar, verify-signature, zip, zstd
+- **reserved**, 9 — bzip2*, canonicalize*, checksum*, chunking*, envelope*,
+  framing*, hash*, quoted-printable*, tar*
+- **scaffolded**, 1 — rpgp
 
-### `xmip-core-process`, one technology
+### `xmip-core-process`, 7 technologies
 
 Declared, and none composed: `module/core/capability/process` has no
 `.gitmodules`.
 
-- **scaffolded**, 1 — bpmn
+- **reserved**, 7 — bash, command, dotnet, grpc, http, rust, wasm
 
 ### `xmip-core-provision`, 4 technologies
 
@@ -913,13 +909,13 @@ the parent does not compose.
 - **reserved**, 5 — aws-kms*, azure-key-vault*, keyring*, pkcs11*, vault*
 - **scaffolded**, 3 — dpapi, file, keychain
 
-### `xmip-core-transform`, 12 technologies
+### `xmip-core-transform`, 11 technologies
 
 Declared, and none composed: `module/core/capability/transform` has no
 `.gitmodules`.
 
-- **reserved**, 12 — dotnet, handlebars, jolt, jq, jsonata, liquid, mustache,
-  rust, tera, wasm, xquery, xslt
+- **reserved**, 11 — dotnet, handlebars, jolt, jq, jsonata, liquid, mustache,
+  rust, tera, wasm, xquery
 
 ### `xmip-core-transport`, 88 technologies
 
