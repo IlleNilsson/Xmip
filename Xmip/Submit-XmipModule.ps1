@@ -116,7 +116,10 @@ function Submit-XmipModule {
         # to wherever the stale local main pointed — behind origin after a
         # `git submodule update` — refused over the changed files, left HEAD
         # detached, and the push of that stale main failed (2026-09-12, twice).
-        [string] $branch = @(Invoke-XmipGit -At $path -Arguments @('branch', '--show-current'))[0]
+        # On a detached HEAD git prints nothing: an empty array, which
+        # indexing under StrictMode Latest throws on (2026-10-28).
+        [string] $branch = Invoke-XmipGit -At $path -Arguments @('branch', '--show-current') |
+            Select-Object -First 1
 
         if ([string]::IsNullOrWhiteSpace($branch)) {
             Write-Host "   NOTE: detached HEAD, putting main here" -ForegroundColor Yellow

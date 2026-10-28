@@ -47,10 +47,10 @@ Feature branches
 **Until the first Linear release, work commits directly to Continuum.**
 
 This is a deliberate exception to the branch mapping above, not an oversight.
-The project has one contributor, nothing outside the repository depends on it,
-and no repository other than `Xmip` yet holds content. A pull request in that
-situation is a review of one's own work by oneself, which costs time and
-catches nothing.
+Before the first Linear release nothing outside the estate depends on Xmip,
+and every change is verified by the landing (xgit) before it reaches `main`. A
+pull request in that situation adds a wait and catches nothing the landing
+does not.
 
 The exception ends at the **first Linear release**. From that point the mapping
 above is mandatory: development branches, a pull request, then Continuum or a
