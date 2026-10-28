@@ -195,3 +195,6 @@
 [submodule "module/core/library/mariadb"]
 	path = module/core/library/mariadb
 	url = https://github.com/IlleNilsson/xmip-core-library-mariadb.git
+[submodule "module/core/capability/unit"]
+	path = module/core/capability/unit
+	url = https://github.com/IlleNilsson/xmip-core-unit.git
