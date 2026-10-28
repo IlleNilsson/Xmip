@@ -55,6 +55,8 @@ Secur32 = "Secur32"
 # NFS3ERR_ACCES and its constant, RFC 1813: NFS version 3's access error.
 NFS3ERR_ACCES = "NFS3ERR_ACCES"
 ACCES = "ACCES"
+# flate2, the crate of gzip, zlib and deflate the Compression unit reads through.
+flate2 = "flate2"
 
 [default.extend-words]
 # The test-run parameter names: clusters Cn, nodes Rn, Pn, Sn, Ln, On, Dn.

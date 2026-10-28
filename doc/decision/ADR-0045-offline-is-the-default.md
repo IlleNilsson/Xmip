@@ -159,3 +159,50 @@ and the Ansible role's template write the node configuration
 installed layout's (ADR-0018, amendment 2026-09-30). The estate root's
 `cargo test --test deploy` renders both and reads them as `xmip-service`
 does, and fails on a key the reader does not keep.
+
+## Amendment, 2026-10-22: only what explicitly works offline is admitted
+
+The owner, 2026-10-22, asked to check that the standard units reach for
+nothing online: *We can't be dependent on resources online, check that
+out!* Told that remote references would be refused, he corrected it: *That
+is not helpful. Code or compiled units may work offline or they won't. We
+can only use standards, code and compiled units that explicitly work
+offline! The offline units may be updated, but on the end user's request,
+after a review.*
+
+- **Admission, not refusal.** A dependency, a standard, a technology or a
+  compiled unit is used only where it works offline by what it is: a crate
+  holding any code that can reach a network — an HTTP client, a resolver
+  that fetches, a socket, an online update or telemetry — is not admitted,
+  even where a setting could turn that code off. Refusing a remote reference
+  at runtime is not the rule; having nothing that could follow one is.
+- **Declared.** A Module's manifest says `offline = true` of the module and
+  of each of its units, a required key with no default (`abi`'s
+  `ModuleManifest` and `ModuleUnit`; ADR-0066, amendment of this date); a
+  manifest that says otherwise, or nothing, is refused in words when it is
+  validated and as a node starts.
+- **Held by a test for Xmip's own.** `test/Offline.Test.ps1` reads every
+  package the standard module's build compiles, the estate's and every
+  third party's, for a network client among them and for a line that opens
+  a socket, and fails the gate on either. Each dependency the standard units
+  added was chosen by that rule and its source read: `flate2` (gzip, zlib,
+  deflate, pure-Rust backend), `ruzstd` (zstd), `encoding_rs` (the WHATWG
+  encodings), `quick-xml` (XML read as events), `pgp` (rpgp, OpenPGP; a key's
+  preferred key server is data, never reached) and `rand` (the operating
+  system's randomness). Where a standard names an address — `xsl:include`,
+  a JSON Schema `$ref`, an XML Schema `import`, a key server, a revocation
+  point — the unit reads what lies beside its own file or refuses it, and
+  nothing in it can fetch. The gate held on its first run: `xrust`, the
+  XSLT engine first chosen, depends on `url`, whose `socket_addrs` resolves
+  a name over the network, so no XSLT engine is linked (open problem 53).
+- **The estate's own crates too.** `xmip-core-contract` read a `$ref`'s
+  percent-encoding through `xmip-core-library-net`, Xmip's network library;
+  percent-encoding is an encoding primitive and moved to
+  `xmip-core-library-codec`, so no contract technology compiles code that
+  reaches a network.
+- **Updated on the end user's request, after a review.** A module or unit is
+  never updated by itself: the configuration pins its version
+  (`[modules.manifest.identity] version`), and an update is an operator's
+  act on every surface that shows what changes — the version, the manifest,
+  the dependencies, the offline declaration — takes the end user's approval,
+  and is audited (ADR-0062). Decided, not built (open problem 51).

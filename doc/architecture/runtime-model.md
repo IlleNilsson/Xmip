@@ -948,6 +948,15 @@ Location serializes and demotes, and the Location's last. The Port's are
 the inner layer — what every Location's Stream shares — and the Location's
 the outer, what its transport or Party adds.
 
+The pairs above are one unit each, handed the stage it runs at (the owner,
+2026-10-22: *It is just an enum away what it does in what situation*): the
+standard prepare units of the module built in, `xmip` — Compression,
+CharacterEncoding, TransferEncoding, TextNormalization, Encryption and
+Signature — undo at receive what the far end did and do it at send, a piece
+at a time, and a Work Process's step names its way (ADR-0066, amendment
+2026-10-22). A Preparation Step works on bytes and makes no Message; turning
+one Message's content into a new Message's is Transformation's.
+
 ## 9. Publication and Routing
 
 Publication is part of Routing, not a separate platform concern.

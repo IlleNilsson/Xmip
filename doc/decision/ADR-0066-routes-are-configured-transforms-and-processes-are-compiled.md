@@ -283,3 +283,118 @@ Demote and Transformation views of the designer and the Operation Desktop
 node refuses to start a Port or Location that attaches one, saying this
 runtime runs no compiled unit yet (`configure::step::unrun`, startup phase
 3). The standard units are separate work (`xmip-core-unit`).
+
+## Amendment, 2026-10-22: the standard units
+
+The owner, 2026-10-22: *standard 'functions' like Xml, Json and what not
+should be there out of the box for receive, process and send*, and
+*Validation according to format or custom contracts has to be in there.*
+He approved the list the assistant drew up, with XSLT in it.
+
+**They are Xmip's own module, `xmip`, built in.** A step names a standard
+unit as it names anyone's, by module and unit (`module = "xmip"`,
+`unit = "Compression"`), and no `[[modules]]` entry declares it, nor is its
+manifest written into the configuration: the configuration knows it
+itself, and a `[[modules]]` entry may not take the name (the owner's
+ruling of the same day, relayed: the standard module is built in, its
+manifest carried with the configuration as the surfaces will carry the
+technologies' declarations). Each unit is implemented once, in the
+capability it belongs to, and declared there beside its code as data
+(`xmip-core-node`'s `unit::Declaration`: name, capability, stages,
+settings in xmip-core's one shape), compiled without the code where the
+crate's default feature `units` is off; `configure::standard` writes the
+manifest from those declarations without linking a unit, and
+`xmip-core-unit` opens the same declarations where a node runs them
+(`unit::Unit`, the declaration and how a step opens it), handing each the
+technologies it chooses among. A test in `xmip-core-unit` holds that every
+declaration is opened there and nothing else. A unit's name carries no
+technology and no security (the owner, 2026-10-21): what it works with is
+a setting.
+
+| Unit | Capability | Stages | Settings | Where |
+| --- | --- | --- | --- | --- |
+| Compression | prepare | receive, process, send | `format` gzip, zlib, deflate, zstd, zip; `level`; `entry`; `direction` | `xmip-core-prepare` |
+| CharacterEncoding | prepare | receive, process, send | `encoding`, any WHATWG label or a Unicode form; `direction` | `xmip-core-prepare` |
+| TransferEncoding | prepare | receive, process, send | `format` base64, base64url; `line_length`; `direction` | `xmip-core-prepare` |
+| TextNormalization | prepare | receive, process, send | `byte_order_mark`; `line_ending` | `xmip-core-prepare` |
+| Encryption | prepare | receive, process, send | `format` openpgp, cms, jose; `engine`; `key`; `recipients`; `direction` | `xmip-core-prepare` |
+| Signature | prepare | receive, process, send | `format`; `engine`; `key`; `signers`; `direction` | `xmip-core-prepare` |
+| Validate | validate | receive, process, send | `format`, a contract technology's name; `contract` | `xmip-core-contract` and its technologies |
+| Promote | promote | receive | `property`; `language`, a path language or `context`; `expression` | `xmip-core-promote`, `xmip-core-path` |
+| Demote | demote | send | `property`; `language`; `expression` | `xmip-core-demote`, `xmip-core-path` |
+| Convert | transform | receive, process, send | `from`, `to` xml, json, csv; `arrays`; `root`; `separator`; `header`; `columns` | `xmip-core-transform` |
+| Stylesheet | transform | receive, process, send | `engine`; `stylesheet`; `version` | `xmip-core-transform` |
+| Script | transform | receive, process, send | `runtime` powershell; `script` | `xmip-core-transform` |
+| Debatch | work-process | receive, process | none yet (open problem 47) | declared, not built; `xmip-core-process` |
+
+- **One unit per function, handed its stage.** The owner: *It is just an
+  enum away what it does in what situation.* Compression decompresses at
+  receive and compresses at send; Encryption decrypts and encrypts;
+  Signature verifies and signs. At process, where neither way is the
+  stage's own, the step's `direction` says which, and is required there.
+  Only a prepare unit is a Receive Preparation, a Process Preparation or a
+  Send Preparation; the owner:
+  *A transformation is not a prepare, just so we are clear*. Prepare works
+  on a Stream's bytes, before a Message exists at receive and after
+  serialization at send; Convert, Stylesheet and Script turn one Message's
+  content into a new Message's, and live in `xmip-core-transform` alone.
+- **Streamed.** Every prepare unit and Convert reads a piece at a time and
+  writes as it goes: a Stream of 64 MiB passes each in bounded memory
+  (`tests/bounded.rs` in each crate, the allocator counted by
+  `xmip-core`'s `held`). Convert cannot look ahead, so the XML elements
+  written as JSON arrays are named (`arrays`), and an element repeating
+  unnamed is refused in words, never written as two members of one name.
+  What cannot stream is said: XSLT reads a tree, a script takes its content
+  as text, and a contract technology that reads `Stream::text` whole holds
+  the payload (open problem 50).
+- **Validation is the format's or the contract's, through the contract
+  technologies themselves.** Validate's `format` names a technology of
+  `xmip-core-contract` (`xml-schema`, `json-schema`, `csv`, `edi-edifact`,
+  `hl7-v2` and the rest); with no `contract` it holds well-formedness, with
+  one conformance (ADR-0042). Whether a step validates stays the artifact's
+  `validate` (ADR-0031, amendment 2026-10-05). A custom contract is a unit
+  of the user's own module with the capability `validate`.
+- **Engines are the end user's choice.** The owner, on XSLT: *There are
+  many XSLT transform engines, versions, let the end user choose*, the
+  principle of ADR-0034's chosen authority. Stylesheet's `engine` names one
+  of the engines the node was built with, each a technology of
+  `xmip-core-transform` behind `StylesheetEngine`, declaring the XSLT
+  versions it implements, so a stylesheet needing 3.0 on an engine of 1.0
+  is refused when its step is opened. None is linked yet: the first chosen
+  pulled in a name lookup over the network (open problem 53). SaxonC-HE implements 3.0 under
+  MPL-2.0 marked incompatible with secondary licenses, so it cannot be
+  linked into AGPL Xmip, only loaded as a module of its own (ADR-0061); it
+  is not built. A stylesheet is compiled when its step is opened, never per
+  Message; an engine that compiles ahead of time does it at design time
+  (clause 1). OpenPGP follows the same line: Encryption's and Signature's
+  `engine`, behind `ProtectionEngine`, the first `rpgp`.
+- **Scripts, leniently.** The owner: *There are other transformations, like
+  with compled code or scripts like PowerShell, god forbidd JavaScript*;
+  *We have to be lenient to people that does not know all languages, the
+  operations views just have to report it, suggest improvements. Keeping
+  JavaScript out of it from the begining is one way.* Script runs
+  PowerShell in a process of its own, started when the step is opened and
+  kept warm, the script loaded once and handed one Message's content at a
+  time; JavaScript is refused by name, in words, and no setting allows it
+  (`transform::declaration::script_refusal`, the one rule). A script is never refused
+  for being slow: every operations surface reports a step's cost per
+  Message and suggests a compiled unit where it is costly (the advice is
+  `xmip-core-observe`'s, placed once). Compiled code is a user's own
+  transform unit.
+- **Offline** (ADR-0045, amendment 2026-10-22). No standard unit, engine or
+  dependency holds code that reaches a network; the manifest says
+  `offline = true` of the module and of every unit. What a stylesheet or a
+  schema names beyond itself is read from beside it or refused: Stylesheet
+  answers `xsl:include`, `xsl:import` and `document()` from the
+  stylesheet's folder alone; JSON Schema refuses a `$ref` outside its
+  document, one over a network by name; XML Schema and Schematron refuse
+  `import` and `include` when bound; no key, certificate or revocation is
+  looked up.
+
+Built 2026-10-22, the units and their manifest, not their running: a node
+still refuses a Port or Location that attaches a step (the amendment
+above), so the advice on a step's cost (`observe::advice::step_cost`) is
+built and no surface shows it until a node runs a step. Not built: CMS and JOSE in Encryption and Signature, refused by
+name when a step is opened; Debatch, which the Work Process engine calls;
+Bash in Script. Batching, correlating and waiting are a Work Process's
+own acts, not units.
