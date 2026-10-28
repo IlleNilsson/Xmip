@@ -699,6 +699,11 @@ Describe 'The dependency tree verifies whole before anything lands' {
             [string[]] $names = @(Get-XmipEstateCrate -RepositoryRoot $Root |
                     ForEach-Object -MemberName Name)
             $names | Should -Be @('xmip-core-c')
+
+            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
+            [string] $text = Get-Content -LiteralPath $patch -Raw
+            $text | Should -Match 'xmip-core-c = \{ path = ".+/\.local-work/clone/module/'
+            $text | Should -Not -Match 'xmip-core-run'
         }
     }
 

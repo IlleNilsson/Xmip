@@ -145,6 +145,27 @@ Describe 'What git says of a repository, read once' {
         @($status.Entry | ForEach-Object { "$($_.State)|$($_.Path)" }) |
             Should -Be @(' M|first.txt', '??|new file.txt')
     }
+
+    It 'counts a detached HEAD''s commits against origin''s main' {
+        # 2026-10-28, at root 2cee9d4: a module clones detached, git gives no
+        # ahead count for a detached HEAD, and test/core/playground's pinned
+        # commit read as 0 ahead, so Publish-XmipUnpushed never pushed it.
+        $status = & (Get-Module Xmip) {
+            param($At)
+
+            Invoke-XmipGit -At $At -Arguments @('checkout', '--quiet', '-f', 'main') | Out-Null
+            Invoke-XmipGit -At $At -Arguments @('push', '--quiet', 'origin', 'main') | Out-Null
+            Invoke-XmipGit -At $At -Arguments @('checkout', '--quiet', '--detach') | Out-Null
+            Set-Content -LiteralPath (Join-Path $At 'first.txt') -Value 'pinned'
+            Invoke-XmipGit -At $At -Arguments @('commit', '--quiet', '-am', 'Pinned') | Out-Null
+            Get-XmipRepositoryStatus -At $At
+        } $script:Clone
+
+        $status.Detached | Should -BeTrue
+        $status.HasUpstream | Should -BeFalse
+        $status.AheadBy | Should -Be 1
+        $status.BehindBy | Should -Be 0
+    }
 }
 
 Describe 'What a working tree mounts, read once' {
