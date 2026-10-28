@@ -1707,7 +1707,7 @@ dependency = []
   primaryLanguage = "dotnet"
   dependency = ["xmip-core-abi"]
     [xmip.core.gui.vscode]
-    description = "The VS Code extension, the developer's face of the configuration tool: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI (ADR-0014, amendment 2026-09-10) and draws an Application's routes in a designer (ADR-0064), and the Work Process designer, which reads, edits and compiles a design through the design formats it carries (ADR-0066, amendment 2026-10-22). A xmip-core-gui technology."
+    description = "The VS Code extension: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI, draws an Application's routes, and designs, edits and compiles Work Processes through the design formats it carries (ADR-0014, ADR-0064, ADR-0066). A xmip-core-gui technology."
     maturity = "scaffolded"
     primaryLanguage = "rust"
     dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-process", "xmip-core-process-bpmn"]

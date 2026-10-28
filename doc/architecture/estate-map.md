@@ -1,6 +1,6 @@
 # The Xmip estate
 
-336 repositories are declared and 275 of them are
+330 repositories are declared and 276 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -35,14 +35,14 @@ the estate tree, and are counted nowhere below.
 | Capability | 21 | 21 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 292 | 233 | 59 |
-| **Total** | 336 | 275 | 61 |
+| Technology | 286 | 234 | 52 |
+| **Total** | 330 | 276 | 54 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
-| reserved | 59 | 0 | 59 |
-| scaffolded | 276 | 275 | 1 |
+| reserved | 52 | 0 | 52 |
+| scaffolded | 277 | 276 | 1 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -233,11 +233,25 @@ due. Open problem 27. Records: ADR-0034 (amendments 2026-10-15 and
 
 **Opening a Module at run time.** The loader opens a shared library, resolves
 `xmip_create_module_v1`, checks its trait version and configures, starts and
-stops its contract table, the only table with a host side; nothing on the
-message path calls it. It is behind the runtime's `dynamic-loading` feature,
-which `xmip-service` is not built with; every other technology is linked by
-feature, so adding one means running `Build-XmipService` again. Records:
-ADR-0025, ADR-0057.
+stops its contract table, and opens a work process table as the flow of the
+Work Processes naming its units (section 13); the work process table is the
+one the message path calls. It is behind the runtime's `dynamic-loading`
+feature, which `xmip-service` is not built with; every other technology is
+linked by feature, so adding one means running `Build-XmipService` again.
+Records: ADR-0025, ADR-0057.
+
+#### `process-execution`
+
+**Compiling a Work Process at design time, and running it.** A BPMN 2.0 design
+compiles to a Work Process program and a unit crate exporting it through
+`xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`);
+the runtime's Work Process step takes a turn of each Instance from the Ledger,
+held by `tests/ledger/work_process.rs` (a Batch in the order received, two
+clients at once never overtaking, a node killed mid-process finishing from the
+Ledger) and the two crates' tests. A unit is opened from its library behind
+the runtime's `dynamic-loading` feature, which `xmip-service` is not built
+with; a unit's settings and calls through the standard units are decided, not
+built. Records: ADR-0066 (amendment 2026-10-22), runtime-model.md section 22.
 
 #### `resilience-guards`
 
@@ -367,13 +381,6 @@ invites it in: no `InProcess` setting, no .NET hosting and no out-of-process
 channel exist, and a Host Service of its own is refused at start. Records:
 ADR-0018 (amendment 2026-10-05).
 
-#### `process-execution`
-
-**Compiling a Work Process at design time, and running it.** Nothing compiles
-a design and no engine runs one: a Journey to a Work Process ends saying no
-runtime runs it yet (`xmip-core-runtime`'s `departure.rs`). Records: ADR-0066,
-runtime-model.md section 22.
-
 #### `security-profile`
 
 **Security profiles: standard, enterprise, regulated.** No configuration key
@@ -400,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 295827 lines of production
+Where each repository mounts and what it holds: 307682 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -417,7 +424,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 61 of them and they
+nowhere — work not begun, not work unmounted. There are 54 of them and they
 hold no source to count.
 
 ```text
@@ -425,7 +432,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6492
+│   │   │   ├── transport                       6513
 │   │   │   │   ├── db2                         2654
 │   │   │   │   ├── amqp                        2629
 │   │   │   │   ├── opc-ua                      2424
@@ -549,6 +556,8 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
+│   │   │   ├── process                         2412
+│   │   │   │   └── bpmn                        3173
 │   │   │   ├── transform                       1998
 │   │   │   │       declared, not built 11
 │   │   │   │       dotnet  handlebars  jolt  jq  jsonata  liquid  mustache
@@ -608,7 +617,7 @@ hold no source to count.
 │   │   │   │   ├── rust                          83
 │   │   │   │   └── dotnet                        19
 │   │   │   ├── route                            643
-│   │   │   │   ├── metadata                     123
+│   │   │   │   ├── metadata                     125
 │   │   │   │   ├── contract                      86
 │   │   │   │   ├── content                       80
 │   │   │   │   ├── regex                         76
@@ -647,16 +656,13 @@ hold no source to count.
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
 │   │   │   ├── send                              88
-│   │   │   ├── process                           68
-│   │   │   │       declared, not built 7
-│   │   │   │       bash  command  dotnet  grpc  http  rust  wasm
 │   │   │   ├── assign                            39
 │   │   │   └── retain                            27
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
 │   │   │   ├── net                             6377
-│   │   │   ├── codec                           2790
+│   │   │   ├── codec                           2860
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1559
 │   │   │   ├── tls                             1124
@@ -664,17 +670,17 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             8706
-│   │       ├── gui                             5053
-│   │       │   └── vscode                      3300
+│   │       ├── cli                             8716
+│   │       ├── gui                             5054
+│   │       │   └── vscode                      3475
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3865
+│   │       ├── observe                         3903
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      3244  C# 3244 · PowerShell 0
+│   │       ├── powershell                      3258  C# 3258 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -690,12 +696,12 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30879  C# 28405 · Rust 2178 · PowerShell 296
+│   │   ├── abi                                30913  C# 28411 · Rust 2206 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                2941
-│   │   ├── message                             1706
+│   │   ├── core                                3164
+│   │   ├── message                             1733
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             256
@@ -713,21 +719,21 @@ hold no source to count.
 │   │   │   └── binary                            38
 │   │   ├── node                                 955
 │   │   ├── context                              839
-│   │   ├── journey                              592
+│   │   ├── journey                              745
 │   │   ├── stream                               232
 │   │   ├── party                                186
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            29466
-│       ├── persist                            12493
-│       │   ├── sqlite                           240
-│       │   ├── rocksdb                          189
+│       ├── runtime                            33473
+│       ├── persist                            13379
+│       │   ├── sqlite                           288
+│       │   ├── rocksdb                          230
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           7545
+│       └── configure                           8117
 └── test/
     └── core/
-        └── playground                         12430
+        └── playground                         12446
 ```
 
 ---
@@ -799,7 +805,7 @@ Things Xmip does.
 | `xmip-core-logic` | scaffolded | `module/core/capability/logic` | 4 |
 | `xmip-core-path` | scaffolded | `module/core/capability/path` | 9 |
 | `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 10 |
-| `xmip-core-process` | scaffolded | `module/core/capability/process` | 7 |
+| `xmip-core-process` | scaffolded | `module/core/capability/process` | 1 |
 | `xmip-core-promote` | scaffolded | `module/core/capability/promote` | — |
 | `xmip-core-provision` | scaffolded | `module/core/capability/provision` | 4 |
 | `xmip-core-receive` | scaffolded | `module/core/capability/receive` | — |
@@ -865,12 +871,11 @@ the parent does not compose.
   framing*, hash*, quoted-printable*, tar*
 - **scaffolded**, 1 — rpgp
 
-### `xmip-core-process`, 7 technologies
+### `xmip-core-process`, one technology
 
-Declared, and none composed: `module/core/capability/process` has no
-`.gitmodules`.
+Composed in `module/core/capability/process`.
 
-- **reserved**, 7 — bash, command, dotnet, grpc, http, rust, wasm
+- **scaffolded**, 1 — bpmn
 
 ### `xmip-core-provision`, 4 technologies
 
