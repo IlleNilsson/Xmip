@@ -230,7 +230,9 @@ function Get-XmipRepositoryStatus {
 
             Branch is the branch, or the short commit when HEAD is detached,
             which Detached then says. HasUpstream is false for a branch that
-            tracks nothing, and AheadBy and BehindBy are then 0. Entry is one
+            tracks nothing. AheadBy and BehindBy count against the upstream,
+            or, on a detached HEAD or a branch that tracks nothing, against
+            origin/main, and are 0 when there is no origin/main. Entry is one
             object per changed path, State the two-letter code of
             `git status --short` ('??' for untracked) and Path the path, the
             new one for a rename. Changed counts tracked changes, Untracked
@@ -269,6 +271,23 @@ function Get-XmipRepositoryStatus {
     if ([string] $branch['ab'] -match '^\+(\d+) -(\d+)$') {
         $ahead = [int] $Matches[1]
         $behind = [int] $Matches[2]
+    }
+    elseif ([string] $branch['oid'] -ne '(initial)') {
+        # A detached HEAD, as every module clones, or a branch that tracks
+        # nothing: git gives no `branch.ab`, and a pinned module committed and
+        # not pushed read as 0 ahead, so it was never pushed (2026-10-28, at
+        # root 2cee9d4). Measured against origin's main, where the estate
+        # pushes (ADR-0005); for a missing origin/main git prints nothing.
+        [string[]] $asked = @(
+            'for-each-ref', '--format=%(ahead-behind:HEAD)', 'refs/remotes/origin/main'
+        )
+        [string] $counted = Invoke-XmipGit -At $At -Arguments $asked | Select-Object -First 1
+
+        # origin/main's own ahead and behind of HEAD: HEAD's, the other way round.
+        if ($counted -match '^(\d+) (\d+)$') {
+            $behind = [int] $Matches[1]
+            $ahead = [int] $Matches[2]
+        }
     }
 
     if ($detached) {

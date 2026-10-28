@@ -57,7 +57,8 @@ brew = "powershell"
 [prerequisite.git]
 role = "operator"
 probe = "git --version"
-minimum = "2.40"
+# 2.41: for-each-ref's %(ahead-behind:), how a detached module's unpushed commits are counted.
+minimum = "2.41"
 
 [prerequisite.git.windows]
 winget = "Git.Git"

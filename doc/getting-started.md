@@ -52,7 +52,7 @@ applies it. The versions below change often; **see
 | You need | For | Version |
 | --- | --- | --- |
 | PowerShell, Core edition | all Xmip tooling | 7.6.7 or later; see prerequisite.toml |
-| Git | cloning and submodules | 2.40 or later; see prerequisite.toml |
+| Git | cloning and submodules | 2.41 or later; see prerequisite.toml |
 | PSToml and posh-git | reading Xmip's TOML; the prompt | current; see prerequisite.toml |
 | Pester | the estate's tests | 6.0 or later; see prerequisite.toml |
 | Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.toml |
