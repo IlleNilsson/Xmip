@@ -340,9 +340,9 @@ on Windows.
    A crash at any step leaves the identity kept before; the folder a crash
    left is removed at the next write, and the generation replaced at once.
    Nothing else reads the place's identity files.
-3. **The authority's pair** is written certificate first and key last,
-   never over a key: the key is what says an authority is kept, so a crash
-   between leaves none kept and the next start makes a matching pair.
+3. **The authority's pair** is written key first, never over a key, and
+   then a certificate for whichever key is kept (amended 2026-10-27, see
+   the end of this record).
 4. **The operator key never enters .NET.** `xmip_operator_request_v1` takes
    the folder and writes both files through `provision::operator::
    request_into`; its answer is the two paths, and a file already there is
@@ -636,3 +636,33 @@ with its acts; the Authority page's place on the desktop alone.
 certificates, and the node holding the authority does not issue itself
 (open problem 27); Xmip's own provisioner does not ask ARI; no OCSP; no
 DNS over TCP; win-acme and certbot untested.
+
+## Amendment, 2026-10-27: makers racing for one authority keep one pair
+
+**Amends item 3 of the amendment of 2026-10-16.** Writing the certificate
+first, in place of any, and the key last, never over one, let two makers
+racing for an empty place keep the second's certificate beside the first's
+key: an authority whose every signature fails, and nothing said where it
+was made. Two clusters' first runs, or a run and a web host starting
+together, race for the Playground's one authority since the served nodes
+take it (ADR-0028, amendment of this date). Found reading the code for the
+owner's demo; the coordinator ruled it a defect, not a decision.
+
+- **The key is written first, never over one**, so exactly one maker's key
+  is kept; every other reads it.
+- **Then whoever holds the kept key makes the certificate beside it its
+  own**: one for the key is kept; none is signed from the key and written
+  never over one, a maker that lost that write reading the winner's; one
+  for another key, which a crash under the earlier order left, is
+  replaced. Every maker can sign for the kept key, so nobody waits for
+  anybody.
+- **What every maker returns is read back from the place**, never its own
+  pair in memory, so every maker holds the same bytes.
+- A crash after the key leaves a key with no certificate, and the next
+  start signs one for it. A write another maker's sweep took is tried
+  again, five times at most.
+
+Proved by `provision`'s tests: eight makers racing for one empty place hold
+byte-identical certificates, the one on disk, and a certificate each issues
+verifies against it; a key kept alone is given its certificate; a
+certificate left with no key is replaced by one for the key made.

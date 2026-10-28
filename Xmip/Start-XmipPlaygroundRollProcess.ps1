@@ -54,6 +54,16 @@ function Start-XmipPlaygroundRollProcess {
     }
 
     $publication = Get-XmipPlaygroundPublication -Roll $layout.Roll -Cluster $cluster -Path $path
+
+    # The nodes a run starts as xmip-service are issued under the Playground's
+    # one authority, kept in the area it publishes in; it is made here, by
+    # the one maker that names it, before the roll asks for it (ADR-0028,
+    # amendment 2026-10-27).
+    if (-not [string]::IsNullOrWhiteSpace([string] $Start['Service'])) {
+        [string] $authority = Join-Path -Path $path -ChildPath 'authority'
+        $null = Initialize-XmipPlaygroundAuthority -Folder $authority -Confirm:$false
+    }
+
     $launch = New-XmipPlaygroundRollLaunch -Start $Start
 
     # What it starts audits where the tooling does (ADR-0062).
