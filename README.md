@@ -1087,7 +1087,8 @@ address from another.
 
 ### Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [GOVERNANCE.md](GOVERNANCE.md).
+Feel free to [file an issue](https://github.com/IlleNilsson/Xmip/issues) or
+contribute. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [GOVERNANCE.md](GOVERNANCE.md).
 Established architectural decisions require explicit permission before they
 change
 ([architectural-change-permission.md](doc/governance/architectural-change-permission.md)).
