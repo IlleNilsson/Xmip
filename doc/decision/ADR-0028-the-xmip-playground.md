@@ -906,3 +906,32 @@ Provenance: the owner's words above. Serving the far end from the rig,
 SFTP, the port, one user to a Location, `--bind` and `--nodes`, and
 placing in configure are the assistant's drafting, for the owner to
 overrule.
+
+## Amendment, 2026-10-27: the nodes a run starts are issued under the Playground's one authority
+
+**Amends the amendment of 2026-10-22, *at level 1 every node is a process of
+the assembled service*, where each run made an authority of its own.** That
+authority lived in the run's base under the temporary directory and went
+with the run, so a phone given an operator certificate, or a browser told
+to trust the anchor, had to be given them again at every restart. The
+coordinator, preparing the owner's demo of the four operator surfaces,
+2026-10-27: *served nodes take the persistent Playground authority
+(.local-work/playground/authority) instead of a per-run one, so a
+provisioned phone and a trusted browser survive a restart.*
+
+- **One authority for the Playground**: `environment::authority`, the
+  `authority` folder of the area a roll publishes in — the one
+  `Get-XmipPlaygroundLayout` names, which the web host is served under and a
+  tester's operator certificate is signed by. Each node a run starts gets a
+  fresh certificate under it, as before. `Start-XmipTest` makes the
+  authority where none is kept, through `Initialize-XmipPlaygroundAuthority`,
+  before the run starts a node; that function alone names it, and the run
+  reads the name from the authority's certificate, so the name is written
+  once (the coordinator, the same day: *no second copy*).
+- **It outlives the run.** The run's base still goes with the run; the
+  authority is outside it. Its makers may race — two clusters' first runs,
+  a run and a web host — and keep one pair (ADR-0034, amendment of this
+  date).
+
+Proved by `served::given`'s test: two runs' nodes hold the same anchor, the
+Playground's authority.

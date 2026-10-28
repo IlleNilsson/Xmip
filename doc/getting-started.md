@@ -651,7 +651,8 @@ every node of the Playground's file, when `-Nodes` is left out — each is a
 process of `xmip-service`, the build `Start-XmipTest` makes beside the
 Playground: D1 and D2 keep Xmip Storage, the primary and its standby, and
 every other node reaches them over Xmip's mutual TLS on loopback, with a
-certificate the run issued it. The rig drops files into their Receive
+certificate from the Playground's authority, the one the web GUI is served
+under, kept in .local-work/playground/authority across runs. The rig drops files into their Receive
 Locations and reads what their Send Ports write, and `xmip:///C1/carried`
 says whether every file dropped arrived (ADR-0028, amendment 2026-10-22).
 Where none declares the Storage role, as with `-Nodes R1, P1, S1` above,

@@ -25,10 +25,12 @@ function Get-XmipPlaygroundLayout {
             everything else a run writes here.
 
             Authority is the Playground's own certificate authority, one for
-            every roll in the area: the web host is served https under it and a
+            every roll in the area: the web host is served https under it, a
             tester's operator certificate is signed by it
             (Initialize-XmipPlaygroundAuthority; ADR-0009, amendment
-            2026-10-21).
+            2026-10-21), and the nodes a run starts as xmip-service are issued
+            under it, so it outlives every run (ADR-0028, amendment
+            2026-10-27).
 
             Configuration is the Playground's own cluster xmip.toml, the one
             file a run is the same over whether its nodes are simulated or on
