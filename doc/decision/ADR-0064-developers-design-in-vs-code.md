@@ -419,3 +419,14 @@ personal-computer site names FTP and HTTP. Provenance: the ruling is the
 owner's, 2026-10-28; the names `SCHEMES`, `own_terms`, `scheme_of`,
 `PATH_SCHEME` and `Sending::target`, and the wording of `NOT_STARTED`, are
 the assistant's, for the owner to overrule.
+
+## Amendment, 2026-10-29: a Location's `secret`
+
+Step 3 of the address-only Locations the owner agreed on 2026-10-28: a
+Location's `credentials` key is `secret`, the name of the secret it
+presents to the party it connects to, never the secret, which the
+Administration Database keeps (ADR-0019, amendment 2026-10-29). A name a
+secret cannot have is a problem every node's binding reports, in words
+naming the Location (`configure::ConfiguredLocation::secret_name`, read by
+`settings::location_problems`, the one check the runtime and every surface
+ask). Steps 4 and 5 are not built.

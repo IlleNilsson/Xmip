@@ -784,3 +784,16 @@ follows `xmip-service --listening`, which says `7443/tcp storage` on a node
 declaring the Storage role. The Playground's cluster file says its Storage
 nodes once for every node, `[storage]`; the example's D2 is on no machine,
 and every node passes it over. The assistant's, 2026-10-22.
+
+## Amendment, 2026-10-29: the administration database keeps the secrets Locations name
+
+The administration database gains a table of its own, `secret`, for the
+secrets a Location presents to the party it connects to (ADR-0019,
+amendment of this date): every value but the secret's own in a column of
+its own — its `UUIDv7`, its unique `name`, its `kind`, `set_at` and
+`set_by` — the value in `value`, and an index by name, `secret_name`, which
+on an embedded Storage node holds the name alone. Its own table, never the
+generic `administration` one, by the owner's rule that every type of data
+has its own table and columns. Added in place at schema version 1, since
+nothing is released (open problem 41); the scripts under
+`deploy/database/<server>/` are written again from the one definition.

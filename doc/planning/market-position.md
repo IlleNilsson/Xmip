@@ -180,8 +180,10 @@ takes them (judgment, with the survey behind it):
 5. EDI completeness: interchange control numbers, acknowledgements (997, 999,
    TA1, CONTRL), batching, agreement-driven validation — Party
    agreements in `party`.
-6. Secrets and keys: a local encrypted store, the platform key stores, PKCS#11
-   and a vault. Nothing in the manifest holds a secret. **Needs a home.**
+6. Secrets and keys: the secrets a Location presents are kept in the
+   Administration Database, sealed at rest, keys in the platform key stores
+   (ADR-0019 and ADR-0063, amendments 2026-10-29); PKCS#11 and a vault are
+   reserved. Nothing in the manifest holds a secret.
 7. Sign, encrypt, compress: all twenty `prepare` technologies are reserved,
    and AS2 and AS4 need S/MIME, WS-Security and compression.
 8. One orchestration technology with correlation, timeouts and compensation.

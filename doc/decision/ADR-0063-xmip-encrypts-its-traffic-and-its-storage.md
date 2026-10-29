@@ -224,3 +224,28 @@ holds the other's key-encryption key. `xmip-core-secret`'s
 its node; a key handed is overwritten when dropped. Each database's own
 engine keys — its wrapped data key, and how far a standby has copied — are
 never copied as written. The assistant's drafting, for the owner.
+
+## Amendment, 2026-10-29: a secret a Location presents is sealed at rest as every record is
+
+Clause 4 named the key home *the home phase D's secrets were missing*. The
+secrets a Location presents (ADR-0019, amendment of this date) are kept
+usable, not as verifiers, since the node presents them to the party it
+connects to. The assistant's design, drafted for the owner: **a secret is
+a record of the administration database like any other there, and is
+encrypted at rest by the one layer clause 2 places in `xmip-core-persist`**
+— on an embedded Storage node sealed whole by `EncryptedStore`, AES-256-GCM
+under the administration database's data key, that key wrapped by the
+platform key store's key-encryption key (clause 4). Its index entry holds
+its name alone, never its value, so the files show which secrets exist and
+nothing of them. Between a node and a Storage node it travels inside
+Xmip's mutual TLS (clause 1), and from a surface to a node inside the
+operate listener's TLS or on the local endpoint the operating system
+guards. Behind a database server IT runs, encryption at rest is IT's, as
+the amendment of 2026-10-01 settled for every record.
+
+Considered and not taken: a second seal under a cluster-wide key, so a
+database server would hold the value sealed as well — the estate has no
+key every node shares (each Storage node wraps its own data keys, and the
+cluster's authority signs and seals nothing), and adding one is the
+owner's to decide; and the cluster's authority's key, which signs and is
+not for encryption.

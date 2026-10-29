@@ -27,6 +27,20 @@ CREATE TABLE `administration` (
 
 CREATE INDEX `administration_updated` ON `administration` (`kind`, `updated_at`);
 
+-- each secret a Location names, by its name: its kind, its value, and when and by whom it was last set; its value is never read back out.
+CREATE TABLE `secret` (
+    `secret` binary(16) NOT NULL,
+    `name` varchar(400) NOT NULL,
+    `kind` varchar(32) NOT NULL,
+    `value` longblob NOT NULL,
+    `set_at` datetime(6) NOT NULL,
+    `set_by` varchar(400) NOT NULL,
+    CONSTRAINT secret_key PRIMARY KEY (`secret`),
+    CONSTRAINT secret_unique UNIQUE (`name`)
+) ENGINE=InnoDB;
+
+CREATE INDEX `secret_name` ON `secret` (`name`);
+
 -- The schema version it holds now.
 INSERT INTO `schema_version` (`version`, `recorded_at`) VALUES (1, UTC_TIMESTAMP(6));
 

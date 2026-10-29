@@ -1287,3 +1287,18 @@ ADR-0021's rule, applied to the 2026-10-19 amendment's toolchain:
 
 Provenance: the owner's decision; the versions were read from Microsoft's
 download page and `dotnet workload search version` on 2026-10-27.
+
+## Amendment, 2026-10-29: a secret is set from the surfaces, and never read back
+
+A Location's secret (ADR-0019, amendment 2026-10-29) is set through a node
+at its operate listener — the plane's method `SetSecret`, admitted by role
+and audited as every act, its value never in the audit — and listed by
+`Secrets`, by name, kind, and when and by whom it was set. Across the C ABI
+it is `xmip_operate.h` section 24, `xmip_secret_v1` and `xmip_secrets_v1`
+over a handle of section 17; in `Xmip.Surface`, `IOperatorSurface.SetSecret`
+and `Secrets`, gated by `GatedOperator`. PowerShell has one cmdlet for the
+noun, `Set-XmipSecret`, `-Value` a secure string or `-Path` a file, and
+`-List` to list (the amendment of 2026-09-15). No surface offers a secret's
+value back. Built in pieces, by the owner's order of 2026-10-29: the core
+and PowerShell first; the command line, the GUI's Secrets page and the VS
+Code extension's completion of `secret` follow, each landing on its own.
