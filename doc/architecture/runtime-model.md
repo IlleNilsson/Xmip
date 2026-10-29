@@ -864,9 +864,10 @@ Location that names a Contract until it is.
 **The sender is acknowledged after the whole receive cycle** (the owner: *On
 arrival each Stream is written to the node's Ledger and then when the Receive
 cycle is complete, Promote, Validate and what not then the sender is
-acknowledged*). Data Transfer and Batch Load are acknowledged once the Message
-is accepted and validated; a Composite interaction holds the call until the
-response a Work Process produced (section 11).
+acknowledged*). Every transport is request-response in Xmip: the sender is
+answered with a result code once the Message is accepted and validated, or
+with a response Message where a Work Process answers the request, the call
+held until it does (section 11).
 
 **A polled Location rests; a waiting one is asked again at once**
 (built 2026-10-12). Every transport declares whether its receive waits for
@@ -951,7 +952,7 @@ creation on the Stream is kept; a Message failing Validation is kept and
 answered where the protocol can; no Journey exists (ADR-0013 clauses 1 to 3).
 
 **Where it is configured.** A Receive Port (section 6), a Receive
-Location's interaction type and processing depth (section 7), and retention
+Location's processing depth (section 7), and retention
 and audit policy per Port and Location (section 16) are configured as
 section 20, *Where the runtime's settings are configured*, says.
 
@@ -963,7 +964,7 @@ common actions, Message creation and Publication.
 
 A **Receive Location** defines how a Stream reaches its parent Receive Port. It
 owns the transport binding and endpoint, the accepted identities and
-mechanisms, the interaction type, the response behavior, and any
+mechanisms, the answer to its caller (section 11), and any
 location-specific Content and Contract configuration.
 
 ```text
@@ -980,19 +981,12 @@ one format at their Receive Port: each Location may prepare, hold to a
 Contract, validate, promote and transform what it receives, and the Port
 may do the same in its own format before Publication (section 20).
 
-## 7. Interaction and processing depth
+## 7. Processing depth
 
-These are two independent characteristics and are constantly conflated.
-
-**Interaction** — what the caller expects back:
-
-| | |
-| --- | --- |
-| **Composite** | the caller expects a response composed through configured Xmip work. The Receive Location may wait for a Process-produced response. SOAP, Web API, gRPC. |
-| **Data Transfer** | the caller transfers information and is acknowledged once acceptance succeeds. The Journey then continues asynchronously. |
-| **Batch Load** | a batch or large workload is accepted and acknowledged for later processing. Configuration decides whether it becomes one Journey or many. |
-
-**Processing depth** — how far Xmip interprets the content:
+What the caller gets back is not configured: every transport is
+request-response in Xmip, and the answer is a result code or a response
+Message (section 11; the owner, 2026-10-29). What is configured is how far
+Xmip interprets the content:
 
 | | |
 | --- | --- |
@@ -1000,8 +994,7 @@ These are two independent characteristics and are constantly conflated.
 | **Light** | route on trusted sender, Receive Location, declared type and other metadata. |
 | **Context** | interpret through Content, Contract and Path for content-aware Routing. |
 
-The same transport may serve more than one interaction type. Transfer and Light
-require no Path evaluation, which is what makes them cheap.
+Transfer and Light require no Path evaluation, which is what makes them cheap.
 
 ## 8. Preparation Steps
 
@@ -1686,16 +1679,24 @@ Locations are for:
 > Locations exchange Streams with the outside world. Ports exchange Messages
 > with Xmip.
 
-**Receive side.** A Receive Location may return a response. Data Transfer and
-Batch Load acknowledge as soon as the Message is accepted and validated. Xmip
-does not wait for the Message's travel unless a Composite interaction requires a
-Process-produced response. The Receive Port produces the logical response
-Message; the originating Receive Location transports the response Stream back
-to the caller.
+**Every transport is request-response in Xmip** (the owner, 2026-10-29: *It
+is not that hard, every transport is Request-Response in the Xmip world. A
+response can be a message or an result code*). So whether a Location answers
+is not configured; what it answers with follows from the work.
 
-**Send side.** A Send Location may receive a response Stream. The Send Port
-accepts it and creates the response Message, whose travel **the same
-Journey** records:
+**Receive side.** A Receive Location answers every request. By default the
+answer is a result code, given once the receive cycle has accepted and
+validated the Message — accepted, or refused with why — and the Message
+travels on without the caller. Where a Work Process answers the request, the
+call is held until it does: the Receive Port produces the logical response
+Message, and the originating Receive Location transports the response Stream
+back to the caller.
+
+**Send side.** Every send has an answer. The far end's result code — its
+acknowledgement, status or reply code — decides whether the send succeeded.
+Where the far end answers with content, the Send Location receives a
+response Stream; the Send Port accepts it and creates the response Message,
+whose travel **the same Journey** records:
 
 ```text
 Send Location receives the physical response Stream
@@ -2099,7 +2100,7 @@ runtime configuration never constructs Contract inheritance.**
 **Configuration** is TOML and composes already-implemented, versioned Modules
 and Artifacts. A Receive Location selects, by reference: Transport Handler,
 Content Handler, Contract, accepted identities and mechanisms, authorization,
-interaction type, response behavior, and audit and retention policy.
+processing depth, and audit and retention policy.
 
 ### Where the runtime's settings are configured
 
@@ -2109,10 +2110,11 @@ policy, the order key and a failure policy, Parties on a node,
 and retention and audit policy per Port and Location. The owner,
 2026-10-01: *sort it and present a solution*. The assistant presented one;
 the owner: *If there are no questions, write it down.* Two points were then
-asked one at a time, and the owner answered each *Yes*: interaction type,
-and processing depth with it, sit on the Receive Location, as section 6
-says; and audit policy works like retention, a node default overridable per
-Port and per Location.
+asked one at a time, and the owner answered each *Yes*: processing depth
+sits on the Receive Location, as section 6 says; and audit policy works like
+retention, a node default overridable per Port and per Location. The
+interaction type that sat beside it was taken off the board on 2026-10-29:
+every transport is request-response (section 11).
 
 In an Xmip Application's document:
 
@@ -2123,7 +2125,6 @@ name = "Invoices"
 [[receive_locations]]
 name         = "InvoicesHttp"
 receive_port = "Invoices"         # a Location without a Port is refused
-interaction  = "data-transfer"    # composite | data-transfer | batch-load
 depth        = "light"            # transfer | light | context
 
 [[send_ports]]
@@ -2148,9 +2149,8 @@ on_failure = "block"            # block where it says nothing | skip
 - **A Receive Port** is named, and keeps Message creation and Publication
   (section 6). Each Receive Location names its `receive_port`; a Location
   without one is refused.
-- **A Receive Location** states its `interaction`, which decides when the
-  sender is acknowledged (section 5), and its `depth`, which decides how far
-  the receive gates read (section 7).
+- **A Receive Location** states its `depth`, which decides how far the
+  receive gates read (section 7). It answers every request (section 11).
 - **A Send Port** names its `send_locations`, tried in order; `retry`
   applies to the active Location; `failover` is `next` or `none`
   (section 10). It may name a `correlation`: its Journeys pass it one

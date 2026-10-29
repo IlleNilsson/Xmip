@@ -165,8 +165,10 @@ the runtime's own; the wording is the assistant's.
 configuration had no place for: *sort it and present a solution*. The
 assistant presented one, and the owner: *If there are no questions, write it
 down.* Two points were then asked one at a time, and the owner answered
-each *Yes*: interaction type, and processing depth with it, sit on the
-Receive Location, as `runtime-model.md` section 6 says; and audit policy
+each *Yes*: processing depth sits on the Receive Location, as
+`runtime-model.md` section 6 says (the interaction type beside it was taken
+off on 2026-10-29, ADR-0013's amendment: every transport is
+request-response); and audit policy
 works like retention, `[audit] default` per node, overridable per Port and
 per Location. The key names are the assistant's drafting.
 
@@ -175,8 +177,7 @@ settings are configured*):
 
 - **An Xmip Application's document.** `[[receive_ports]]` with `name`; each
   `[[receive_locations]]` names its `receive_port` (refused without one) and
-  states `interaction` (`composite`, `data-transfer`, `batch-load`) and
-  `depth` (`transfer`, `light`, `context`). `[[send_ports]]` gains
+  states `depth` (`transfer`, `light`, `context`). `[[send_ports]]` gains
   `send_locations` (tried in order), `retry = { attempts, backoff }` on the
   active Location, `failover` (`next`, `none`), and `correlation`,
   the cluster's set its Journeys pass it by one at a time per key (the
@@ -192,10 +193,10 @@ else configured (the amendment above).
 Built 2026-10-03, the Application's keys: an Xmip Application is a section
 of the cluster's `xmip.toml` (the amendment of 2026-10-03, ADR-0064), and
 `xmip-core-configure` reads its `[[receive_ports]]`, each Receive
-Location's `receive_port`, `interaction` and `depth`, and each Send Port's
+Location's `receive_port` and `depth`, and each Send Port's
 `send_locations`, `retry`, `failover` and `correlation` (`port.rs`). A
 Receive Location without its Port, naming one the Application does not
-declare, or without its interaction or depth, is a problem of the
+declare, or without its depth, is a problem of the
 Application, refused at startup phase 3; the execution tree holds the
 Receive Ports a node's bound Receive Locations are at and the Send Ports
 it takes, with their policy. How a Send Port's `send_locations` relate to

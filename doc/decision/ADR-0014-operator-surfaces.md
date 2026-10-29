@@ -221,8 +221,8 @@ that created it on GitHub on 2026-08-26 and cemented it.
 
 **If a management surface over HTTP is ever wanted**, the answer is not a
 module. It is an ordinary Xmip artifact: a Receive Location on
-`transport-http` with `logic-http-api`, using the Composite interaction pattern
-in `runtime-model.md` section 11, routing to Processes. Xmip operated through
+`transport-http` with `logic-http-api`, routing to Processes that answer each
+request with a response Message (`runtime-model.md` section 11). Xmip operated through
 its own message model, with identity, authorization, audit and Journeys applying
 to management operations for free.
 
