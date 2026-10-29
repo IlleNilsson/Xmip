@@ -77,8 +77,9 @@ Contract metadata, execution history — all of it grows as the Message is
 handled. What does not change is the content it refers to: its Sections point
 at Streams, and those Streams stay exactly as they were.
 
-A **Journey** accumulates too: execution history, audit events, lineage. Its
-historical record is appended to, never rewritten.
+A **Journey**, the metadata of a Message's travel, accumulates too:
+execution history, audit events, lineage. It is appended to, never
+rewritten.
 
 **Content changes only through Assignment or Transformation**, and those create
 a new Stream and a new Message generation rather than editing anything. So there
@@ -98,8 +99,8 @@ than once.*
 
 ### Nothing executes on arrival
 
-**Every Stream, Message and Journey is durably queued until it completes or
-retention applies, and is archived before either**
+**Every Stream and Message is durably queued, with its Journeys, until it
+completes or retention applies, and is archived before either**
 (archiving by retention window:
 [built, not in the assembled service](estate-map.md#retention-archiving)). Xmip is queue-driven end to
 end. Arrival enqueues; it does not execute. **A Message rushes through,
@@ -317,13 +318,13 @@ file is flushed, and each Message's chunks waited out the previous
 Message's sync — and a write not yet synced goes with its process, as
 nothing anyone was told of does (ADR-0018, amendment 2026-10-20).
 
-**Work moves by claim.** A node takes a Journey by
-a claim through Xmip Storage: a conditional update in the database — set the
+**Work moves by claim.** A node takes a Message on one way of its travel by
+a claim through Xmip Storage, held in its Journey: a conditional update in the database — set the
 owner where the owner is empty or lapsed — time-limited, and renewed while
 the work runs. A node that dies stops renewing, its claims lapse, and any
 other node capable of the work claims it and resumes from the last finished
-step. Every hand-on is one atomic write — the step's result, the next Journey
-and the claim released together — so a lapse never finds half a step. What
+step. Every hand-on is one atomic write — the step's result, the Message's
+next place and the claim released together — so a lapse never finds half a step. What
 Xmip does and what IT's infrastructure does is `deployment-model.md`
 section 9.
 
@@ -438,15 +439,15 @@ correlation = "<set>"           at a Receive Location, Receive Port,
 - **A place is taken in the write that brings work to the point** — the
   Publication, a hand-on that publishes — and work there goes on only while it
   holds the first place. What does not waits in the Ledger, its claim given
-  back, holding no thread; a step that ends a sequenced Journey reads its
-  queues again at once.
+  back, holding no thread; a step that ends a sequenced Message's travel
+  reads its queues again at once.
 - **A Receive Location's and a Receive Port's sequence is end to end.** The
   Stream's origin — the Message it was received as — holds the place until the
-  last Journey born from it ends, its sends and what a Work Process published
+  last travel born from it ends, its sends and what a Work Process published
   from it among them. Each Journey's record says its origin and whether it is
   still open, and Xmip Storage counts the open ones in the writes that open
   and end them; the last to close lets the places go in that same write.
-- **A Work Process's and a Send Port's sequence holds the Journey** while it is
+- **A Work Process's and a Send Port's sequence holds the Message** while it is
   at that point: until it is handed to its Instance, or sent.
 - **The default costs no write.** A Receive Location that names no set holds
   its own sequence, keyed by its name, its place taken in the Publication's
@@ -560,7 +561,7 @@ its due time kept at its place in its queue (section 10, corrected
 **A node's budget beside its pools, built 2026-10-19** (`open-problems.md`
 problem 38). A pool bounds threads, not what they hold, and each Receive
 Location's pool is its own — its isolation — so a node of many Locations
-had no ceiling of its own, and the Send pool admitted a count of Journeys
+had no ceiling of its own, and the Send pool admitted a count of Messages
 whatever their size. Beside every pool the node keeps budgets
 (`xmip-core-runtime`'s `budget`): the arrivals it carries at once across
 all its Receive Locations (`[tuning]
@@ -641,9 +642,9 @@ leaves the chunks and no Message, and every Message whose receive cycle
 completed before a kill is in the Ledger after it, with its Journeys, and
 reads back as it was received. And for the send step, built 2026-10-03
 (`tests/ledger/send.rs` and `send_killed.rs`): a node killed after its
-Publications and before it sent leaves every Journey it acknowledged to
+Publications and before it sent leaves every Message it acknowledged to
 another node, which takes each up once its claim lapses and sends it; a node
-killed mid-send has every Journey it acknowledged sent once it is restarted,
+killed mid-send has every Message it acknowledged sent once it is restarted,
 the one cut short again — at least once, never lost; a send that fails is
 written Failed with why while its sender was acknowledged all the same; a
 retry's backoff holds no thread, and a stop gives its claim back; and a
@@ -768,11 +769,12 @@ External Stream
     -> Receive Port          logical ingress: creates the Message
     -> Publication           the Message is made available
     -> Routing               evaluated against Subscriptions
-    -> Journey               one per matched Subscription
+    -> the Message travels   one way per matched Subscription, its Journey its metadata
 ```
 
 > Receive Locations receive Streams. Receive Ports create Messages. Publication
-> offers them. Routing decides where they continue. Journeys carry them.
+> offers them. Routing decides where they continue. Journeys record their
+> travel.
 
 **The receive order** (the owner, 2026-10-22: *Every received stream must
 check in, from what Receive Location, Receive Port. It has to propose its
@@ -904,7 +906,7 @@ built.
 is prepared meanwhile** (built 2026-10-20, ADR-0018, amendment 2026-10-20).
 The embedded Storage node's writer answers a Publication once it is decided
 and written, before its sync, and syncs it then (`persist::storage::Durable`);
-the receive cycle hands the Journeys it claimed to the send step at once and
+the receive cycle hands the Messages it claimed to the send step at once and
 ends — the sender acknowledged — only once the Publication is durable. A
 technology whose send keeps what its far end sees back (`Transport::holds_back`)
 is handed the Message at once: the file transport writes and syncs its file
@@ -1059,11 +1061,12 @@ Publication              one event, one identity, immutable
   └── Journey            one per matched Subscription
 ```
 
-A Journey is one line of execution, **not a tree**. A Publication is finished
-when all its Journeys are terminal — not when they all succeed. "3 matched,
+A Journey records one way of a Message's travel, **not a tree**. A
+Publication is finished when all its Journeys are terminal — not when they
+all succeed. "3 matched,
 2 delivered, 1 failed" is expressible without any record having to lie.
 
-Journeys are independent because the world is. If a Process succeeds and an
+The ways are independent because the world is. If a Process succeeds and an
 SFTP Send fails, the file cannot be un-sent. There is no transaction across a
 Send Location, so there is none across a Publication.
 
@@ -1088,9 +1091,9 @@ is one atomic write, in the receive cycle's one statement on one Storage node
 before that write has acknowledged nothing, and the sender sends again. The
 write is kept by its Message: asked again after its answer was lost, it
 writes nothing and answers the claims its node still holds of it, so a
-Journey another node has moved on since is never reset (section 10,
+Message another node has moved on since is never reset (section 10,
 *Corrected 2026-10-06*). A
-paused Subscription's Journey is written and held until the Subscription is
+Message a paused Subscription matched is written and held until the Subscription is
 resumed, and the held ones are picked up oldest first. The chain is recorded
 and bounded (ADR-0026). A sequence's position, by its key, is in the
 Ledger (section 3, *Sequences*), its places taken in the Publication's own
@@ -1116,7 +1119,7 @@ then (`persist::storage::DeadMessage`). The queue is numbered as it is
 written and read oldest first, a page at a time, as a paused Subscription's
 is. **Replay** reads the entry, routes its promoted properties against the
 node's Subscriptions of now and, where something matches, writes the
-Journeys it opens — every one held at the end of its Subscription's queue,
+Message for each with its Journey — every one held at the end of its Subscription's queue,
 since no receive cycle is left to depart from, and picked up from there as a
 resume picks up — its audit record, and the entry taken out, as one write;
 the entry is remembered as replayed, so a Replay asked again after a lost
@@ -1150,7 +1153,7 @@ guessed, and it will be wrong silently.
 
 So a Work Process decides. A duplicate is not refused at a gate — it authenticates,
 validates, becomes a Message and gets Journeys — and a Process that recognizes
-it stops the Journey as `Dismissed`, not `Failed`. See ADR-0013 clause 4c.
+it ends the Message's travel as `Dismissed`, not `Failed`. See ADR-0013 clause 4c.
 
 Where a transport's own specification defines duplicate semantics, the transport
 Module honors them. That is conformance, not judgment.
@@ -1163,15 +1166,15 @@ those instances **form a chain, much like a call stack**: this publication
 happened because that Subscription matched, which happened because an earlier
 Process published, which happened because an earlier Subscription matched.
 
-The chain is what makes a Journey explainable after the fact. Without it, a
+The chain is what makes a Message's travel explainable after the fact. Without it, a
 Message that arrived somewhere unexpected has no answer to "how did it get
 here" beyond a list of things that happened near each other in time.
 
 **The chain is bounded by a ceiling on its depth**, and it is worth saying
 what that does and does not catch. A Process that publishes a Message which
 matches a Subscription that starts the same Process is a loop, and it is the
-classic way an integration platform takes itself down. Every Journey carries
-a depth, a node configures a ceiling, and the constructor that makes a caused
+classic way an integration platform takes itself down. Every Journey keeps
+its Message's depth, a node configures a ceiling, and the constructor that makes a caused
 Journey refuses the link that would pass it — naming the Subscription and the
 Process rather than a number. ADR-0026.
 
@@ -1242,7 +1245,7 @@ Location's (section 20).
 
 A Send Port succeeds when one of its Send Locations succeeds. Retries apply to
 the active Send Location; failover moves to another per Send Port policy. If
-all Send Locations fail, the Journey fails.
+all Send Locations fail, the Message fails there, and its Journey says so.
 
 The identity a Send Location presents resolves per ADR-0006:
 
@@ -1266,11 +1269,12 @@ structured, serializes and demotes in chunks, presents the identity found
 first along the chain above, and delivers on a kept connection.
 
 Retries are on the active Send Location; failover follows the Send Port's
-policy. When every Send Location has failed the Journey is `Failed` and its
-Message stays with it — it does not go to the Dead Message Queue. A response
-from the far end is an ingress — identified, authenticated, authorized and
-audited — and continues the same Journey (section 11). The Journey's end is
-written with its outcome, an Event is produced per outcome (section 17), and
+policy. When every Send Location has failed the Message is `Failed` there,
+in its Journey, and stays in its Send Port's queue — it does not go to the
+Dead Message Queue. A response from the far end is an ingress — identified,
+authenticated, authorized and audited — and its travel is written in the
+same Journey (section 11). The end of the Message's travel is written in its
+Journey with its outcome, an Event is produced per outcome (section 17), and
 its audit is written through Xmip Storage (section 16).
 
 The owner accepted four additions:
@@ -1286,15 +1290,15 @@ The owner accepted four additions:
 
 **Built 2026-10-03** (`xmip-core-runtime`'s `send_step`), closing the
 review finding that inline sends recorded no outcome and nothing took up
-an unfinished Journey. **The receive cycle sends nothing**: it ends at the
-Publication's durable write and the acknowledgement (section 5). Its claimed
-Journeys are handed to the Send pool as soon as the Publication is decided,
-before its sync, and a far end sees one only once the Publication is
+an unfinished send. **The receive cycle sends nothing**: it ends at the
+Publication's durable write and the acknowledgement (section 5). The
+Messages it claimed are handed to the Send pool as soon as the Publication
+is decided, before its sync, and a far end sees one only once the Publication is
 durable: a technology that holds its delivery back (the file transport,
 which renames its file into place last) prepares the send meanwhile, and
 every other is handed it once durable (ADR-0018, amendment 2026-10-20). The
-Publication keeps every Journey that is not held in the queue of where it
-leads — a Send Port's, found by the name-based identifier of
+Publication keeps the Message, for every Subscription not held, in the queue
+of where it leads, each with its Journey — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node
 sends that Port and it names no Correlation, claims it in the same write and
 hands it to the Send pool in memory, so the send costs no sync of its own
@@ -1308,22 +1312,22 @@ sequence's `on_failure` is `block` it stops the sequence behind it, and
 otherwise it lets its place go; or **Recovering**, its due time kept at its place in
 its queue and its claim released, a scan passing over it until it is due
 (corrected 2026-10-16, below; until then its claim was kept to its due
-time and the node kept the Journey in memory to start it again).
+time and the node kept the Message in memory to start it again).
 **Recovery** is a scan: as a node starts and every `[tuning] send_scan`
 after, what is due in each queue it sends is read, in the order it fell
 due (corrected 2026-10-21, below; until then the whole queue, oldest
-first), and every Journey no live claim holds is claimed (`[tuning]
+first), and every Message no live claim holds is claimed (`[tuning]
 send_lease`) and sent — one a dead node
 left, one whose send was cut short, one no node sending its Port held;
 claims of work in flight are renewed, and a stop gives back the claims of
-what waits. A Send Port naming a Correlation has one Journey of each
+what waits. A Send Port naming a Correlation has one Message of each
 key in flight at a time, the oldest first, and no Message is sent until its
 Stream heads the sequences it holds end to end (section 3, *Sequences*): a
 pass that finds it does not gives its claim back, tries nothing, and is taken
-up again once it does. A paused Subscription's resume moves each Journey it
+up again once it does. A paused Subscription's resume moves each Message it
 held to its Send Port's queue in one hand-on, and the send step sends it
 from there. The node's snapshot publishes, at `<node>/send/<Port>`, what
-was sent, what failed — the last Journey that did, and why — and what
+was sent, what failed — the last Message that did, and why — and what
 waits for its due time.
 
 **Built 2026-10-04**, closing what the send step left:
@@ -1333,12 +1337,12 @@ waits for its due time.
   queued in each Port's queue with a Journey of its own as its metadata (the
   Journey's `send_port`), in the Publication's one write; each Port is sent, retried, failed
   and acted on alone. A paused Subscription holds each, and a Replay from the
-  Dead Message Queue opens them the same way. A Group no Application of the
+  Dead Message Queue takes the Message to them the same way. A Group no Application of the
   publishing node declares takes the Message to the Group, where no node
   sends it.
 - **A retry's count is in the Ledger.** The active Send Location and how
   often it was tried are the Journey's `attempts`, written with every
-  hand-on of a send, so a node restarted, or another taking the Journey up,
+  hand-on of a send, so a node restarted, or another taking the Message up,
   counts on from them rather than from zero.
 - **The deduplication key reaches the endpoint.** Every send carries the
   Journey's identifier as the key of what the transport contract's
@@ -1351,11 +1355,11 @@ waits for its due time.
   Redpanda (the record key), Azure Service Bus (`MessageId`), NATS
   JetStream (`Nats-Msg-Id`), AS2 (`Message-ID`), AS4 and Peppol
   (`eb:MessageId`).
-- **Retry and Dismiss** (section 13) are an Operator's acts on a Journey
+- **Retry and Dismiss** (section 13) are an Operator's acts on a Message
   that failed, through the node's orders as Pause and Replay are, audited
   with who acted and gated by role on every surface (`xmip_operate.h`
-  section 16). Each is one hand-on under a claim: Retry writes the Journey
-  Active, its tries begun anew, and moves it to the end of its Send Port's
+  section 16). Each is one hand-on under a claim: Retry writes the Message's
+  Journey Active, its tries begun anew, and moves it to the end of its Send Port's
   queue — keeping its place in its sequence, so the sequence goes on in
   order from it; Dismiss writes it Dismissed, its history kept, and takes it
   out of the queue, so the next of its key goes. An act is taken by a node that sends through the Message's
@@ -1364,14 +1368,14 @@ waits for its due time.
 **Corrected 2026-10-05**, after an external review of the send step:
 
 - **A read is acted on only under its claim.** An operator's Retry or
-  Dismiss reads the Journey, takes its claim, and reads it again: where
-  another writer moved it between the two — another operator's act, a node
-  that sent it — the act is refused in words and nothing is written, so an
-  act never writes back a state the Journey has left. A scan reads a
-  Journey again under its claim with its place in the queue, and sends it
+  Dismiss reads the Message's Journey, takes its claim, and reads it again:
+  where another writer moved it between the two — another operator's act, a
+  node that sent it — the act is refused in words and nothing is written, so
+  an act never writes back a state the Message has left. A scan reads a
+  Message again under its claim with its place in the queue, and sends it
   only where it is still there and still to be sent.
 - **A send whose thread panics is settled.** It is written Failed with why —
-  kept in its queue for an operator, as every Journey that failed is — its
+  kept in its queue for an operator, as every Message that failed is — its
   claim ended, counted and audited; it is never left owned, its claim
   renewed and passed over by every scan.
 - **A scan claims no more than the Send pool can take.** A backlog waits
@@ -1379,8 +1383,8 @@ waits for its due time.
   claims of work in flight are renewed on a thread of their own, every
   third of a lease, so no scan of a backlog, however long, holds a renewal
   back.
-- **The Journeys that failed are discoverable.** A scan that reads a
-  Journey Failed — one that failed before the node restarted, or on another
+- **The Messages that failed are discoverable.** A scan that reads a
+  Message Failed — one that failed before the node restarted, or on another
   node — keeps it as its Send Port's evidence; a read of the whole queue
   forgets one dismissed or sent again elsewhere. The snapshot publishes a
   record at `<node>/send/<Port>` for every Send Port the node sends, apart
@@ -1396,13 +1400,13 @@ waits for its due time.
 
 - **Admission is the one door to the Send pool.** A Publication, a resumed
   Subscription's move and a scan each claim a Message only under a place
-  the pool admits: its most threads, less every Journey the node owns —
+  the pool admits: its most threads, less every Message the node owns —
   handed, queued, sending, or waiting for a retry's due time — and every
   place admitted and not yet owned. What has no place stays durable and
   unclaimed in its queue, and the queue is read again the moment a place
   frees, so a slow far end leaves its backlog in the Ledger and what the
   node holds in memory is bounded by the pool's threads. Until now only a
-  scan asked: a Publication claimed every Journey it opened for a Port the
+  scan asked: a Publication claimed every Message it queued for a Port the
   node sends and handed it on, and the pool queued whatever came. A retry
   waiting for its due time holds no thread but holds its place, so a far
   end failing every send slows its node's admissions rather than filling
@@ -1411,7 +1415,7 @@ waits for its due time.
   queue is claimed and read on the send thread its
   place was admitted for, so a backlog's claims share their commits; until
   now the dispatching claimed them one by one, a commit's sync each, which
-  a backlog refilled through the scan would have paid for every Journey.
+  a backlog refilled through the scan would have paid for every Message.
 - **A Send Port with failed Messages kept is Done.** Its record at
   `<node>/send/<Port>` is Done — blocked or failed, the pain an operator's
   Retry or Dismiss solves (`observability-model.md` section 6) — while any
@@ -1420,10 +1424,10 @@ waits for its due time.
   and was acted on is history in its figures and leaves it Fine. Until now
   it was Fine whatever waited, and left out of what needs attention.
 - **Now and history are published apart.** Every Send Port the node sends
-  publishes its failed Journeys (`observe::FailedJourneys`) — `count` now,
-  zero where none, so a surface says *none now* from the record and never
-  from its absence; `blocked`; the oldest hundred — and, apart from them,
-  `last_failure`, the last Journey that failed there since the node
+  publishes its failed Messages (`observe::FailedJourneys`, read from their
+  Journeys) — `count` now, zero where none, so a surface says *none now*
+  from the record and never from its absence; `blocked`; the oldest hundred
+  — and, apart from them, `last_failure`, the last Message that failed there since the node
   started, which may since have been retried or dismissed.
 - **A Publication is written once, by its Message.** Its write keeps, in
   the same batch, that it was written and the digest of what was asked; a
@@ -1431,14 +1435,14 @@ waits for its due time.
   lost, which a Storage client asks of the next Storage node — writes
   nothing and answers the claims of it its node still holds under their
   tokens, and the node sends only those. Until now a repeated Publication
-  wrote its Message and every Journey again: a Journey another node had
-  completed meanwhile was written back to where the Publication left it,
+  wrote its Message and every Journey again: a Message another node had
+  delivered meanwhile was written back to where the Publication left it,
   queued again and claimed again, completion lost and sent a second time.
   Another Publication of a Message published before is refused; a business
   Message published again is another Message (*Duplicates are a business
   decision*, section 9).
 - **A renewal's answer is acted on.** A renewal that finds a claim another's
-  — it lapsed, and another node took the Journey up — stops the send: no
+  — it lapsed, and another node took the Message up — stops the send: no
   further Send Location is tried from this node, nothing is written, and
   the loss is counted at its Send Port and audited. A renewal Xmip Storage
   does not answer leaves the claim unconfirmed, and the Send Port is Done
@@ -1459,7 +1463,7 @@ waits for its due time.
   (2026-10-12, after a review). A send
   already under way is not called back: it carries the Journey's
   identifier, the key the far end deduplicates by, so another holder's send
-  of the same Journey is the same delivery (section 15). Until now every
+  of the same Message on the same way is the same delivery (section 15). Until now every
   renewal's answer was dropped, and a node that had lost its claim went on
   trying Locations.
 
@@ -1467,7 +1471,7 @@ waits for its due time.
 
 - **A renewal's answer speaks only for the claim it asked about.** Every
   answer — renewed, lost or unanswered — is applied only while the node
-  still holds the Journey under the token the renewal asked with. Until
+  still holds the Message under the token the renewal asked with. Until
   now only a renewed answer was checked: a late lost or unanswered answer
   for a claim whose send had ended marked the claim an operator's Retry had
   taken since lost or unconfirmed, stopping a valid retry and misreporting
@@ -1477,7 +1481,7 @@ waits for its due time.
   claim to the later of now and a lease, or the deadline it holds, and the
   node's own reckoning does the same. Until now a renewal asked before a
   retry's hand-on and answered after it cut the claim back to a lease, so
-  another node could take the Journey up and retry it before its backoff
+  another node could take the Message up and retry it before its backoff
   ended.
 - **A round of renewals is one request.** The node renews every claim in
   flight in one request to Xmip Storage, a third of a lease after the last
@@ -1492,19 +1496,19 @@ waits for its due time.
   Fine again at the first read answered. Until now the failed read ended
   the scan silently, and a Port with no claims and no failures known was
   published Fine while what waited in its queue could not be found.
-- **The failure backlog is indexed.** A Journey read Failed again is found
+- **The failure backlog is indexed.** A Message read Failed again is found
   by its Journey at once, and a whole read of a queue forgets every place
   passed over that has left it; until now each read looked through every
-  Failed Journey of the Port, and what a scan passed over was never
-  forgotten. The node still keeps each Failed Journey of the queues it
+  failed Message of the Port, and what a scan passed over was never
+  forgotten. The node still keeps each failed Message of the queues it
   sends in memory; keeping the count in Xmip Storage is open
   (`open-problems.md` problem 34).
 
 **Corrected 2026-10-16** (`open-problems.md` problem 34):
 
 - **Xmip Storage keeps the failure backlog, the node a window of it.** The
-  hand-on that writes a Journey Failed names its queue and why, and Xmip
-  Storage enters it at the end of that queue's index of failed Journeys
+  hand-on that writes a Message Failed names its queue and why, and Xmip
+  Storage enters it at the end of that queue's index of failed Messages
   and marks its place in the queue failed, in that one write; an
   operator's Retry or Dismiss takes it out in its own. The index is
   numbered as it is written, as every queue is, so how many wait is one
@@ -1513,10 +1517,10 @@ waits for its due time.
   hundred by default), read again only where the index's places moved;
   the snapshot publishes that window, and a surface pages the rest from the
   index, each page one read. A scan passes over a place marked failed
-  without reading its Journey; whether it blocks a sequence is the
-  sequence's, which keeps its place. Until now the node kept every Journey a scan had read Failed,
+  without reading its Message; whether it blocks a sequence is the
+  sequence's, which keeps its place. Until now the node kept every Message a scan had read Failed,
   with why, and every place passed over, so its memory grew with the
-  failures, and every node read each failed Journey once after a restart
+  failures, and every node read each failed Message once after a restart
   to find it again.
 - **A Message waiting for a retry holds no place** (the owner, 2026-10-16;
   `open-problems.md` problem 43). The hand-on that writes it Recovering
@@ -1534,10 +1538,10 @@ waits for its due time.
   apart from load, through `xcore::wake`, on Windows a high-resolution waitable timer where
   a `Condvar` ended on the system tick up to 14 ms late (the owner,
   2026-10-16; ADR-0050, amendment 2026-10-17): a read that passed a
-  Journey's place before its hand-on landed keeps its due time, where at
+  Message's place before its hand-on landed keeps its due time, where at
   first it dropped it and the retry waited for the next `send_scan`, a
   second by default, after it was due. Until now a waiting
-  Journey stayed owned, its claim kept to its due time, and counted against
+  Message stayed owned, its claim kept to its due time, and counted against
   the places every Port shares, so one far end that failed every send
   filled them and the healthy Ports sent nothing until its retries ended.
 - **A pass that tried nothing writes nothing.** A pass whose claim is not
@@ -1550,13 +1554,13 @@ waits for its due time.
 **Corrected 2026-10-17**, a race the change above brought in:
 
 - **A scan's claim reads the place again, its due time with it.** Every
-  claim a scan takes, on any Send Port, reads the Journey's place in its
+  claim a scan takes, on any Send Port, reads the Message's place in its
   queue again under the claim: it is sent only where the place is still
-  there, still this Journey's and due, and its Journey still to be sent;
+  there, still this Message's and due, and the Message still to be sent;
   a place whose retry is not yet due gives the claim back and is woken for
-  at its due time. Releasing a waiting Journey's claim (problem 43, above)
-  let a scan that had read the queue before that Journey's hand-on landed —
-  no due time at its place then, and the Journey no longer owned when the
+  at its due time. Releasing a waiting Message's claim (problem 43, above)
+  let a scan that had read the queue before that Message's hand-on landed —
+  no due time at its place then, and the Message no longer owned when the
   scan looked — take a claim nobody held and send its Message again at
   once: a far end received it twice from one node. Until then only an
   ordered scan read the place again, and it did not look at the due time. Xmip Storage's claim stays as section 3 has it — *set the
@@ -1583,7 +1587,7 @@ waits for its due time.
   Until now departure read each Message whole before its transport sent
   it, since `Transport::send` took a byte slice.
 - **A fan-out's departures read each chunk once.** The departures of one
-  Stream in flight on a node — one Journey for each Send Port a Message
+  Stream in flight on a node — one for each Send Port a Message
   reaches, sent side by side — share one read of it: the first opens it
   from Xmip Storage, and every other takes each chunk from that read, lent,
   never copied, while it keeps up (`xmip-core-runtime`'s `stream_share`).
@@ -1606,7 +1610,7 @@ waits for its due time.
   so the reads of a Stream come together as their places meet (ADR-0018,
   amendments 2026-10-20). Until now each departure read the Stream whole.
 - **A send holds its bytes within the node's budget.** Beside the Send
-  pool's count of Journeys (*Corrected 2026-10-06*, above), what a send
+  pool's count of Messages (*Corrected 2026-10-06*, above), what a send
   holds is held from the node's byte budget for sends (section 3, *A node's
   budget beside its pools*; `[tuning] send_chunks_per_thread`): the whole
   Message besides where its transport gathers it, and where it streams what
@@ -1635,7 +1639,7 @@ name carried the process, and such a file stayed for good.
 problem 40, ADR-0013, amendment 2026-10-19): **a queue is read in its order
 by an index.** Every queue in the Ledger — a Send Port's, a paused
 Subscription's, a node's Dead Message Queue, and a Send Port queue's index
-of failed Journeys — is indexed on its queue and place, written with each
+of failed Messages — is indexed on its queue and place, written with each
 entry and taken out with it; on a database server that index is the table's
 primary key. A page of a queue is one ordered range of the index from its
 place and a read of each entry it finds, and the queue's first place is
@@ -1662,7 +1666,7 @@ is the sequence's (corrected 2026-10-22, section 3, *Sequences*: until then
 an ordered Port's scan read its whole queue in order, the one place order
 was kept, now deleted). How many wait for a retry, and when
 the earliest is due, Xmip Storage keeps and tells (`held_due_places`); a
-scan no longer reads what waits to learn it. A Journey that failed waits
+scan no longer reads what waits to learn it. A Message that failed waits
 for no retry: its due time goes with the mark. Each queue's first entry of
 each part is kept by the one writer, so a read never steps over what was
 taken out before it, which `RocksDB` keeps as marks until it compacts
@@ -1684,19 +1688,19 @@ Locations are for:
 
 **Receive side.** A Receive Location may return a response. Data Transfer and
 Batch Load acknowledge as soon as the Message is accepted and validated. Xmip
-does not wait for the Journey unless a Composite interaction requires a
+does not wait for the Message's travel unless a Composite interaction requires a
 Process-produced response. The Receive Port produces the logical response
 Message; the originating Receive Location transports the response Stream back
 to the caller.
 
 **Send side.** A Send Location may receive a response Stream. The Send Port
-accepts it and creates the response Message, which continues **the same
-Journey**:
+accepts it and creates the response Message, whose travel **the same
+Journey** records:
 
 ```text
 Send Location receives the physical response Stream
 Send Port accepts it and creates the response Message
-Response Message continues the same Journey
+the same Journey records the Response Message's travel
 ```
 
 A response ingress is an ingress. It is identified, authenticated, authorized
@@ -1708,8 +1712,9 @@ a worker without losing the ability to answer.
 
 ## 12. Journey state
 
-A Journey is Active, Waiting, Suspended, Recovering, Completed, Failed or
-Dismissed. Completed, Failed and Dismissed are terminal. Suspended and
+A Journey, the metadata of a Message's travel to one Subscription, says
+where that travel is: Active, Waiting, Suspended, Recovering, Completed,
+Failed or Dismissed. Completed, Failed and Dismissed are terminal. Suspended and
 Recovering are the operator-recoverable path. ADR-0013 clause 7 records the
 vocabulary, and the code is `JourneyState` in `xmip-core-journey`
 (`module/foundation/journey`); this document does not repeat the enum, which
@@ -1719,29 +1724,31 @@ Earlier drafts named a different set — Created, Running, Paused, Waiting, Dead
 Completed, Dismissed. The mapping, and what happened to the two that had no
 equivalent, is in section 23.
 
-**A Failed Journey** cannot continue automatically. Causes include Transport
-Handler, Content Handler, Contract, Process, Send Location, response and
-technical failure. Authentication or authorization can cause it **only once the
-Journey exists**; failures during pre-Publication acceptance are audited receive
-failures.
+**A Message that failed** on one way cannot continue automatically. Causes
+include Transport Handler, Content Handler, Contract, Process, Send Location,
+response and technical failure. Authentication or authorization can cause it
+**only once the Message is published**; failures during pre-Publication
+acceptance are audited receive failures.
 
-A Failed Journey retains its Message, Stream, Receive Port, Receive Location,
-failure stage, failure reason and the audit and retention references needed to
-diagnose it. The state answers *where* the Journey is; the cause answers *why*.
+A failed Message keeps its Stream, and its Journey keeps the Receive Port,
+Receive Location, failure stage, failure reason and the audit and retention
+references needed to diagnose it. The state answers *where* the Message is;
+the cause answers *why*.
 
-**A failed Journey does not send its Message to the Dead Message Queue.** If a
-Message matched three Subscriptions and one Journey failed, the Message *was*
+**A failed Message does not go to the Dead Message Queue.** If a Message
+matched three Subscriptions and failed on one way, the Message *was*
 routed. Only a Message matching zero Subscriptions is undeliverable.
 
 ## 13. Journey control
 
-Commands operating on the same Journey:
+Commands on a Message's travel to one Subscription, found by its Journey:
 
 ```text
 Start   Pause   Continue   Retry   Stop   Dismiss
 ```
 
-**Retry** resumes from the failed audited stage of the same Journey. Xmip may
+**Retry** resumes the Message from the failed audited stage its Journey
+records. Xmip may
 retry automatically per resilience policy; an authorized operator may retry
 after automatic retries are exhausted and the underlying fault is fixed.
 Successful prior actions are not repeated unnecessarily.
@@ -1749,15 +1756,15 @@ Successful prior actions are not repeated unnecessarily.
 **Stop** prevents further execution. The resulting state depends on reason and
 policy.
 
-**Dismiss** intentionally terminates a Journey without deleting its history,
-Messages, Streams, retention or audit.
+**Dismiss** intentionally ends a Message's travel without deleting its
+Journey's history, its Messages, Streams, retention or audit.
 
-Built 2026-10-04 for a Journey that failed at its Send Port (section 10):
-Retry and Dismiss are Operator acts on it, by its identifier, through the
-node's orders, audited and gated by role (`xmip_operate.h` section 16).
-Since 2026-10-05 each is decided on the Journey as read under its claim —
-refused in words where another writer moved it after it was first read —
-and every Journey that failed at a Send Port is listed at the Port's scope,
+Built 2026-10-04 for a Message that failed at its Send Port (section 10):
+Retry and Dismiss are Operator acts on it, by its Journey's identifier,
+through the node's orders, audited and gated by role (`xmip_operate.h`
+section 16). Since 2026-10-05 each is decided on the Message's Journey as
+read under its claim — refused in words where another writer moved it after
+it was first read — and every Message that failed at a Send Port is listed at the Port's scope,
 a page at a time from Xmip Storage, with the two acts on each (section 10).
 Since 2026-10-12 an operator on another machine takes them over the node's
 operate listener (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC inside
@@ -1767,13 +1774,14 @@ the node's `[operate]` grants and applied by the same one apply as an order
 takes them over the same listener's local endpoint — a named pipe on
 Windows, a Unix domain socket elsewhere — the act the user's the operating
 system proves (ADR-0014, amendment 2026-10-13): every .NET surface operates
-a node over gRPC, here and elsewhere alike. Start, Pause, Continue and Stop on one Journey are not
-built.
+a node over gRPC, here and elsewhere alike. Start, Pause, Continue and Stop on one Message's travel
+are not built.
 
 ## 14. Replay
 
-**Replay is not a Journey command and is not Retry.** It creates a *new*
-Journey from a selected historical source:
+**Replay is not a command on a Message's travel and is not Retry.** It sends
+a Message again from a selected historical source, its travel recorded by a
+*new* Journey:
 
 ```text
 a historical Receive Location event
@@ -1788,7 +1796,7 @@ lineage to that source and to the original Journey where one exists.
 - Replay what entered a Receive Location during a period.
 - Replay a Message as it entered a Receive Port, before its actions and
   Publication.
-- Replay a whole Journey from its original starting point.
+- Replay a Message's whole travel from its original starting point.
 
 **The historical source is unchanged, and the Replay is itself audited.**
 
@@ -1811,7 +1819,7 @@ a timeout that interrupts an attempt, are
 not own retry loops.** A handler with its own retry loop cannot be governed by
 policy, and two of them compound multiplicatively.
 
-Once configured retries are exhausted the Journey fails, and an operator may
+Once configured retries are exhausted the Message fails, and an operator may
 retry later. The same primitives are to supervise Host Services, per
 ADR-0018.
 
@@ -1841,11 +1849,11 @@ The rule that follows, and the reason this is stated at all:
 > says so.** It never silently degrades to at-most-once by treating an
 > unacknowledged send as delivered.
 
-A Journey is marked delivered only after the far end confirms. Where the far
-end can deduplicate, the key Xmip hands it is the **Journey id**, not the
-Message id (the owner, 2026-10-01): a Message matched by two Subscriptions to
-one endpoint is two deliveries, and a retry of one Journey is the same
-delivery. A retry waiting for its backoff holds no thread, no claim and no
+A Message is marked delivered, in its Journey, only after the far end
+confirms. Where the far end can deduplicate, the key Xmip hands it is the
+**Journey id**, not the Message id (the owner, 2026-10-01): a Message matched
+by two Subscriptions to one endpoint is two deliveries, and a retry on one
+way is the same delivery. A retry waiting for its backoff holds no thread, no claim and no
 place; its due time is in the Ledger, at its place in its queue (section
 10).
 
@@ -2448,12 +2456,12 @@ day it is a compiled piece executed when called upon.*
   unit's call, an Assignment, a split), Messages made one, a Message
   published back through routing, how it ended (`process::flow`).
 - **The Work Process step** (`xmip-core-runtime`'s `work_step`) claims a
-  Journey from its Work Process's queue, waits while its Stream does not head
+  Message from its Work Process's queue, waits while its Stream does not head
   its sequences, finds its Instance through the Instance Key table — or the
   one it starts — advances it, carries out its acts, and hands it all on in
-  one write (`XmipStorage::turn`): the Journey, the new Messages, the
-  Journeys published with their places, the Instance, its correlation keys
-  set or let go, and, where a timer waits, the Journey kept at its place with
+  one write (`XmipStorage::turn`): the Message's Journey, the new Messages
+  published with their places and Journeys, the Instance, its correlation keys
+  set or let go, and, where a timer waits, the Message kept at its place with
   its due time. An Instance is written only over the turn it was read at, so
   two nodes taking a turn of one Instance never both write; the later gives
   its claim back and takes the turn again from the Instance as it now is.
