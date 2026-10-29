@@ -225,27 +225,35 @@ its node; a key handed is overwritten when dropped. Each database's own
 engine keys — its wrapped data key, and how far a standby has copied — are
 never copied as written. The assistant's drafting, for the owner.
 
-## Amendment, 2026-10-29: a secret a Location presents is sealed at rest as every record is
+## Amendment, 2026-10-29: Xmip seals a secret's value itself, whatever store keeps it
 
 Clause 4 named the key home *the home phase D's secrets were missing*. The
 secrets a Location presents (ADR-0019, amendment of this date) are kept
 usable, not as verifiers, since the node presents them to the party it
-connects to. The assistant's design, drafted for the owner: **a secret is
-a record of the administration database like any other there, and is
-encrypted at rest by the one layer clause 2 places in `xmip-core-persist`**
-— on an embedded Storage node sealed whole by `EncryptedStore`, AES-256-GCM
-under the administration database's data key, that key wrapped by the
-platform key store's key-encryption key (clause 4). Its index entry holds
-its name alone, never its value, so the files show which secrets exist and
-nothing of them. Between a node and a Storage node it travels inside
-Xmip's mutual TLS (clause 1), and from a surface to a node inside the
-operate listener's TLS or on the local endpoint the operating system
-guards. Behind a database server IT runs, encryption at rest is IT's, as
-the amendment of 2026-10-01 settled for every record.
+connects to. **A Storage node seals a secret's value itself before any
+engine or database server sees it: AES-256-GCM under the administration
+database's data key — derived for this one purpose, the key the key home's
+key-encryption key wraps (clause 4) — with the secret's name and kind as
+associated data, so a value moved to another name or kind is refused.**
+The `secret` table's `sealed` column holds ciphertext alone, on an embedded
+Storage node and behind a database server IT runs alike: whoever reads the
+table or its backups, a database administrator included, reads no
+Party's password or key, as BizTalk's Single Sign-On encrypts its store
+under a master secret for the same reason. The sealing is placed once,
+`persist::storage::secret::sealed` (`SecretRecord::sealed`,
+`KeptSecret::opened`), which the embedded node calls and a server backend
+will; on an embedded node the record is then sealed whole again, as every
+record there, and its index entry holds the name alone. This narrows the
+amendment of 2026-10-01 for secrets: *behind a database server IT runs,
+encryption is IT's* still holds for every other record. Between a node and
+a Storage node the value travels inside Xmip's mutual TLS (clause 1), and
+from a surface to a node inside the operate listener's TLS or on the local
+endpoint the operating system guards.
 
-Considered and not taken: a second seal under a cluster-wide key, so a
-database server would hold the value sealed as well — the estate has no
-key every node shares (each Storage node wraps its own data keys, and the
-cluster's authority signs and seals nothing), and adding one is the
-owner's to decide; and the cluster's authority's key, which signs and is
-not for encryption.
+Open for the owner: Storage nodes in front of one database server, round
+robin (option A), each hold their own data keys, so one node's sealed value
+opens only on that node and on the standbys it hands its keys to (the
+amendment of 2026-10-22); a key the Storage nodes of one database share is
+not built, and no server backend is yet. Provenance: the requirement — Xmip
+seals the value whatever store keeps it — is the reviewer's finding of
+2026-10-29, relayed for the owner; the design is the assistant's.

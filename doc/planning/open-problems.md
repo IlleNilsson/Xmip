@@ -1004,8 +1004,8 @@ What remains of the first part:
 
 - **The secrets a Location presents are kept, repaired 2026-10-29.** A
   Location names its proof with `secret = "<name>"` and the secret is kept
-  in the Administration Database's own `secret` table, sealed at rest on an
-  embedded Storage node, read as the Location connects, set with
+  in the Administration Database's own `secret` table, its value sealed by
+  Xmip whatever store keeps it, read as the Location connects, set with
   `Set-XmipSecret` and never read back out (ADR-0019, ADR-0015, ADR-0063,
   ADR-0064 and ADR-0014, amendments 2026-10-29); SFTP presents a password
   or a key, FTP, FTPS, HTTP and HTTPS a password, and SQL Server,
@@ -1016,9 +1016,10 @@ What remains of the first part:
   secret presented by any technology (a client certificate over HTTPS or
   FTPS); the other technologies that log in — AMQP, MQTT, RabbitMQ,
   ActiveMQ, IMAP, POP3, SMB, S3 and the vendors' — which refuse a Location
-  naming a secret as the node starts; and a database server's copy of a
-  value sealed by Xmip as well, which needs a key every node shares
-  (ADR-0063, amendment 2026-10-29). An authenticator a store of verifiers
+  naming a secret as the node starts; and one key the Storage nodes in
+  front of one database server share, so a value one seals another opens:
+  each seals under its own administration data key today, and no server
+  backend is built (ADR-0063, amendment 2026-10-29). An authenticator a store of verifiers
   sets up on receive (`password`, `basic`, `digest`, `scram`, against
   `authenticate::store`; `api-key` and `bearer` against
   `authenticate::secret`) is still not linked, so a Location accepting one

@@ -711,7 +711,10 @@ where the scheme allows, who logs in (`sftp://party-x@host/in`).
   when dropped and never printed.
 - **Where it is kept**: the administration database's `secret` table —
   `secret` (its `UUIDv7`, kept when it is set again), `name` (unique),
-  `kind`, `value`, `set_at`, `set_by` — found by its index `secret_name`
+  `kind`, `sealed` — the value sealed by Xmip under the administration
+  database's data key, its name and kind bound in, whatever store keeps it
+  (ADR-0063, amendment of this date) — `set_at`, `set_by`, found by its index
+  `secret_name`
   (`persist::storage::schema`; the scripts under `deploy/database`). Xmip
   Storage's operations `write_secret`, `read_secret` and `list_secrets`,
   on the embedded Storage node and over the wire alike (operations 34 to

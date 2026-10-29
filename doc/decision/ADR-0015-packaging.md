@@ -791,7 +791,9 @@ The administration database gains a table of its own, `secret`, for the
 secrets a Location presents to the party it connects to (ADR-0019,
 amendment of this date): every value but the secret's own in a column of
 its own — its `UUIDv7`, its unique `name`, its `kind`, `set_at` and
-`set_by` — the value in `value`, and an index by name, `secret_name`, which
+`set_by` — the value in `sealed`, sealed by Xmip before any store keeps
+it, so a database server holds ciphertext alone (ADR-0063, amendment of
+this date), and an index by name, `secret_name`, which
 on an embedded Storage node holds the name alone. Its own table, never the
 generic `administration` one, by the owner's rule that every type of data
 has its own table and columns. Added in place at schema version 1, since

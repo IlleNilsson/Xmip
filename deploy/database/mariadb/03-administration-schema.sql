@@ -27,12 +27,12 @@ CREATE TABLE `administration` (
 
 CREATE INDEX `administration_updated` ON `administration` (`kind`, `updated_at`);
 
--- each secret a Location names, by its name: its kind, its value, and when and by whom it was last set; its value is never read back out.
+-- each secret a Location names, by its name: its kind, its value sealed by Xmip under the administration database's data key, and when and by whom it was last set; its value is never read back out.
 CREATE TABLE `secret` (
     `secret` binary(16) NOT NULL,
     `name` varchar(400) NOT NULL,
     `kind` varchar(32) NOT NULL,
-    `value` longblob NOT NULL,
+    `sealed` longblob NOT NULL,
     `set_at` datetime(6) NOT NULL,
     `set_by` varchar(400) NOT NULL,
     CONSTRAINT secret_key PRIMARY KEY (`secret`),
