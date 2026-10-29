@@ -1518,8 +1518,9 @@ dependency = []
   # The key home, ADR-0063 clause 4, created on the owner's word of
   # 2026-09-25. A Capability rather than Platform by ADR-0058 clause 4: it is
   # not opened for the node's sake alone — persist wraps its data keys here,
-  # and the secrets a transport presents (market-position.md section 8) are
-  # to live here too. Its technologies are the places a key-encryption key is
+  # and the secrets a Location presents are sealed under them in the
+  # administration database (ADR-0019 and ADR-0063, amendments 2026-10-29),
+  # what a secret is said once in xmip-core. Its technologies are the places a key-encryption key is
   # held; the sealing itself is the capability's, once.
   [xmip.core.secret]
   description = "The key home (ADR-0063): a key store wraps and unwraps a data key under a named key-encryption key, creating it when absent, and says which store it is. AES-256-GCM sealing and the keyed hash, once. The platform's key store first; PKCS#11 and vaults as further technologies."

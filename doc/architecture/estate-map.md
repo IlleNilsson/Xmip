@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 308504 lines of production
+Where each repository mounts and what it holds: 310446 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -432,23 +432,23 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       6683
-│   │   │   │   ├── db2                         2657
+│   │   │   ├── transport                       6864
+│   │   │   │   ├── db2                         2668
 │   │   │   │   ├── amqp                        2632
 │   │   │   │   ├── opc-ua                      2432
-│   │   │   │   ├── ftp                         2083
+│   │   │   │   ├── ftp                         2094
 │   │   │   │   ├── nfs                         2048
+│   │   │   │   ├── sftp                        1969
 │   │   │   │   ├── smb                         1955
-│   │   │   │   ├── sftp                        1933
-│   │   │   │   ├── mssql                       1804
-│   │   │   │   ├── http                        1784
+│   │   │   │   ├── http                        1832
+│   │   │   │   ├── mssql                       1815
 │   │   │   │   ├── ibm-mq                      1773
 │   │   │   │   ├── kafka                       1735
-│   │   │   │   ├── oracle                      1482
+│   │   │   │   ├── oracle                      1502
 │   │   │   │   ├── snmp                        1439
 │   │   │   │   ├── nats-jetstream              1351
 │   │   │   │   ├── as4                         1336
-│   │   │   │   ├── postgresql                  1301
+│   │   │   │   ├── postgresql                  1315
 │   │   │   │   ├── secs-gem                    1204
 │   │   │   │   ├── canopen                     1157
 │   │   │   │   ├── s7comm                      1152
@@ -490,8 +490,8 @@ hold no source to count.
 │   │   │   │   ├── syslog                       718
 │   │   │   │   ├── s3                           717
 │   │   │   │   ├── iec-60870-5-104              716
+│   │   │   │   ├── mysql                        714
 │   │   │   │   ├── azure-blob                   703
-│   │   │   │   ├── mysql                        703
 │   │   │   │   ├── mdns                         701
 │   │   │   │   ├── cotp                         695
 │   │   │   │   ├── dds                          694
@@ -510,9 +510,9 @@ hold no source to count.
 │   │   │   │   ├── serial                       516
 │   │   │   │   ├── aws                          513
 │   │   │   │   ├── ethernet                     499
+│   │   │   │   ├── mariadb                      485
 │   │   │   │   ├── can-bus                      478
 │   │   │   │   ├── sqlite                       475
-│   │   │   │   ├── mariadb                      473
 │   │   │   │   ├── bacnet                       459
 │   │   │   │   ├── azure                        449
 │   │   │   │   ├── mllp                         444
@@ -664,7 +664,7 @@ hold no source to count.
 │   │   │   ├── net                             6401
 │   │   │   ├── codec                           2860
 │   │   │   ├── mariadb                         1764
-│   │   │   ├── ssh                             1569
+│   │   │   ├── ssh                             1698
 │   │   │   ├── tls                             1124
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
@@ -680,7 +680,7 @@ hold no source to count.
 │   │       ├── observe                         3903
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      3258  C# 3258 · PowerShell 0
+│   │       ├── powershell                      3470  C# 3470 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
 │   │       │   ├── file                         254
@@ -696,11 +696,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                30910  C# 28408 · Rust 2206 · PowerShell 296
+│   │   ├── abi                                31213  C# 28676 · Rust 2241 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                3164
+│   │   ├── core                                3350
 │   │   ├── message                             1733
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -721,16 +721,16 @@ hold no source to count.
 │   │   ├── context                              839
 │   │   ├── journey                              745
 │   │   ├── stream                               232
-│   │   ├── party                                186
+│   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            33561
-│       ├── persist                            13379
+│       ├── runtime                            33929
+│       ├── persist                            13757
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8130
+│       └── configure                           8148
 └── test/
     └── core/
         └── playground                         12486

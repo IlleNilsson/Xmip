@@ -689,3 +689,68 @@ Provenance: pinning on first contact without a confirmation step is the
 assistant's decision of 2026-10-28, recommended to the owner the same day;
 the names `Pinned`, `pinned_by` and `pinned-keys` are the assistant's, for
 the owner to overrule.
+
+## Amendment, 2026-10-29: a Location names its secret, kept in the Administration Database
+
+Agreed by the owner, 2026-10-29, as step 3 of the address-only Locations
+(ADR-0064, amendment 2026-10-28), with **secret** as the common word, never
+"credential": **a Location that connects to a party names the proof it
+presents with `secret = "<name>"`, and the secret itself is never in the
+TOML: it is kept in the Xmip Administration Database, in a table of its
+own.** No open, standard, cross-platform store exists, so the
+Administration Database it is. The address carries only where to go and,
+where the scheme allows, who logs in (`sftp://party-x@host/in`).
+
+- **Kinds**: `password`; `key`, an SSH private key in OpenSSH's own form,
+  unencrypted; `certificate`, a PEM chain, leaf first, with its private key.
+  What a secret is — its name, its kind and the one check of a value against
+  its kind — is said once, beneath every capability, in `xmip-core`
+  (`xcore::SecretName`, `SecretKind`, `Secret`, and `Secrets`, the trait a
+  node is handed to read one). A name is one to 128 ASCII letters, digits,
+  `.`, `_` and `-`, opening with a letter or digit. A value is overwritten
+  when dropped and never printed.
+- **Where it is kept**: the administration database's `secret` table —
+  `secret` (its `UUIDv7`, kept when it is set again), `name` (unique),
+  `kind`, `value`, `set_at`, `set_by` — found by its index `secret_name`
+  (`persist::storage::schema`; the scripts under `deploy/database`). Xmip
+  Storage's operations `write_secret`, `read_secret` and `list_secrets`,
+  on the embedded Storage node and over the wire alike (operations 34 to
+  36, answers 24 and 25).
+- **Read as the Location connects, not as the node starts** (the
+  transport capability's `Secured`, `Configured::secured_by`): a secret set
+  or replaced reaches the Location's next connection without a restart, and
+  a node whose Location names a secret not set yet still starts — so it can
+  be set through it — that Location failing each attempt with *the secret
+  '<name>' is not set*. One point read of Xmip Storage per connection,
+  never per Message on a kept one. A technology that presents no secret
+  refuses a Location naming one as the node starts.
+- **Presented, in this change**: SFTP, a password or a key
+  (`ssh::private_key`, which reads OpenSSH's form, once); FTP and FTPS, the
+  password of the address's user; HTTP and HTTPS, the password as Basic
+  authentication (RFC 7617) for the address's user; SQL Server,
+  PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2, the login's
+  password (`transport::secured::logged_in`, the one way a technology with
+  a user and password presents it).
+- **Set through a node** (`runtime::secret`): `Set-XmipSecret` reaches the
+  node at its operate listener, which admits the act by role, as every act
+  (ADR-0009), and audits it with the secret's name, never its value
+  (`xmip_operate.h` section 24, `xmip_secret_v1` and `xmip_secrets_v1`).
+  **Reading a value back out is offered on no surface**: a listing says
+  each secret's name, kind, and when and by whom it was set.
+- **`credentials` and `CredentialRef` are deleted** with every use: a
+  Location's `credentials` key is `secret`, and a Party's sending or
+  processing identity names a `SecretName` where it named a store and a
+  reference.
+
+Decided by the assistant while building, for the owner to overrule: the
+secret is read at each connection rather than at the node's start; a
+Receive Location that goes to look — an SFTP or FTP receive — presents its
+secret as a Send Location does, and an HTTP Receive Location, which is
+connected to, presents none; one cmdlet for the noun, `Set-XmipSecret`, its
+listing the parameter `-List` (ADR-0014, amendment 2026-09-15); a node
+named by none on `Set-XmipSecret` is the one node the surface reaches; an
+SSH key is Ed25519 in OpenSSH's form, an encrypted one refused, since its
+passphrase would be a second secret; a `certificate` secret is kept and
+checked and presented by no technology yet. Not built here: a client
+certificate presented over HTTPS or FTPS, the probe and the issued key or
+certificate (step 4), and the hand-out per Receive Location (step 5).

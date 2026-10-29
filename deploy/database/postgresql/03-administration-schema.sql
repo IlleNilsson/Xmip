@@ -28,6 +28,20 @@ CREATE TABLE xmip.administration (
 
 CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 
+-- each secret a Location names, by its name: its kind, its value, and when and by whom it was last set; its value is never read back out.
+CREATE TABLE xmip.secret (
+    secret uuid NOT NULL,
+    name text NOT NULL,
+    kind text NOT NULL,
+    value bytea NOT NULL,
+    set_at timestamptz NOT NULL,
+    set_by text NOT NULL,
+    CONSTRAINT secret_key PRIMARY KEY (secret),
+    CONSTRAINT secret_unique UNIQUE (name)
+);
+
+CREATE INDEX secret_name ON xmip.secret (name);
+
 -- The schema version it holds now.
 INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, now());
 

@@ -1002,23 +1002,32 @@ What remains of it, the owner's to decide:
 
 What remains of the first part:
 
-- **The credential store is a later task.** An authenticator a credential
-  store sets up (`password`, `basic`, `digest`, `scram`, against
+- **The secrets a Location presents are kept, repaired 2026-10-29.** A
+  Location names its proof with `secret = "<name>"` and the secret is kept
+  in the Administration Database's own `secret` table, sealed at rest on an
+  embedded Storage node, read as the Location connects, set with
+  `Set-XmipSecret` and never read back out (ADR-0019, ADR-0015, ADR-0063,
+  ADR-0064 and ADR-0014, amendments 2026-10-29); SFTP presents a password
+  or a key, FTP, FTPS, HTTP and HTTPS a password, and SQL Server,
+  PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
+  password. Built in pieces by the owner's order of the same day; still to
+  land: the command line's secret command, the GUI's Secrets page and the VS
+  Code extension's completion of `secret`. Not built: a `certificate`
+  secret presented by any technology (a client certificate over HTTPS or
+  FTPS); the other technologies that log in — AMQP, MQTT, RabbitMQ,
+  ActiveMQ, IMAP, POP3, SMB, S3 and the vendors' — which refuse a Location
+  naming a secret as the node starts; and a database server's copy of a
+  value sealed by Xmip as well, which needs a key every node shares
+  (ADR-0063, amendment 2026-10-29). An authenticator a store of verifiers
+  sets up on receive (`password`, `basic`, `digest`, `scram`, against
   `authenticate::store`; `api-key` and `bearer` against
-  `authenticate::secret`) is not linked, since no record says where a
-  node's credentials live or how configuration names them, so a Location
-  accepting one is refused as the node starts; and for the same reason the
-  send side's directory holds no configured Party, so a `send` identity is
-  presented by nothing yet. Since 2026-10-28 a Location is entered by its
-  address alone and an SFTP server's host key is pinned on first contact
-  (ADR-0064 and ADR-0019, amendments 2026-10-28); what the owner agreed
-  that day and is not built waits on this store: a Location's
-  `credentials` read, a password, an SSH key or a client certificate both
-  ways; a probe asking the far end which of them it takes; Xmip issuing a
-  key pair or a client certificate from the cluster's authority, `accept`
-  defaulting from the Party's identity; and a hand-out per Receive
+  `authenticate::secret`) is still not linked, so a Location accepting one
+  is refused as the node starts. What the owner agreed on 2026-10-28 and is
+  not built: a probe asking the far end which proof it takes; Xmip issuing
+  a key pair or a client certificate from the cluster's authority, `accept`
+  defaulting from the Party's identity (step 4); and a hand-out per Receive
   Location telling a Party the address to use and how to trust Xmip, on
-  every surface.
+  every surface (step 5).
 - **Decided by the owner, 2026-10-21:** the `location` policy admits
   whoever the Location's mechanisms authenticated, at a Receive and at a
   Send Location; a TLS handshake read waits five seconds by default; a
