@@ -89,3 +89,15 @@ so stick that in a shared repo module. If the shared code is stable.*
 - Code several transports share goes into a shared module of its own, in a
   repository of its own, once that code is stable; until then it stays with
   the transport that wrote it.
+
+## Amendment, 2026-10-28: a transport declares the schemes its addresses are entered with
+
+With ADR-0064's amendment of this date, which lets a Location's address
+choose its transport, each transport says which addresses are its own:
+`transport::Configured::SCHEMES`, lowercase, at least one, the one place a
+scheme is told to belong to a technology. A technology reads its own
+targets under the same list (`net::Target::under(Self::SCHEMES, …)`),
+where each wrote its scheme by hand before. `Configured::own_terms` is the
+address in the technology's own terms, what follows `scheme://` unless the
+technology reads the scheme itself. Provenance: the assistant's, for the
+owner to overrule.

@@ -88,14 +88,10 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     // A transport no build of xmip-service links: a feature of its own for
     // it would make this node start (sftp was this test's until it was
     // linked, 2026-10-22, and the node then ran on instead of being refused).
-    std::fs::write(
-        &configuration,
-        text.replacen("xmip-core-transport-tcp", UNLINKED, 1),
-    )
-    .expect("writes");
+    std::fs::write(&configuration, text.replacen("tcp://", UNLINKED, 1)).expect("writes");
 
     let said = refused(&configuration, &directory);
-    assert!(said.contains(UNLINKED), "{said}");
+    assert!(said.contains("no transport for smb://"), "{said}");
     assert_eq!(declarations(&directory), Vec::<String>::new());
     let _ = std::fs::remove_dir_all(&directory);
 }
@@ -171,8 +167,9 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     let _ = std::fs::remove_dir_all(&directory);
 }
 
-/// A transport technology that is no feature of the root crate.
-const UNLINKED: &str = "xmip-core-transport-smb";
+/// The scheme of a transport technology that is no feature of the root
+/// crate, `xmip-core-transport-smb`'s.
+const UNLINKED: &str = "smb://";
 
 /// How long a refusal may take: a node refused never accepts work, so one
 /// still running after this was not refused, and is killed.

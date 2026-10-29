@@ -133,12 +133,15 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # The transports xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
 # is refused as the node starts. A site links the ones it names
-# (deploy/site). tcp terminates TLS where its Location says
-# `tls = true`, with the node's `[provision.receive]` certificate. sftp
-# takes files from and puts them on an SFTP server, each under its name:
-# the Parties' far end the Playground serves nodes on machines of their own
-# (ADR-0028, amendment 2026-10-22).
+# (deploy/site). Each is chosen by the scheme a Location's address is
+# entered with — a path or file://, ftp:// and ftps://, http:// and
+# https://, sftp://, tcp://, udp:// (ADR-0064, amendment 2026-10-28). tcp
+# terminates TLS where its Location says `tls = true`, with the node's
+# `[provision.receive]` certificate. sftp takes files from and puts them on
+# an SFTP server, each under its name: the Parties' far end the Playground
+# serves nodes on machines of their own (ADR-0028, amendment 2026-10-22).
 transport-file = ["dep:xmip-transport-file"]
+transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
 transport-http = ["dep:xmip-transport-http"]
 transport-sftp = ["dep:xmip-transport-sftp"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
@@ -218,6 +221,7 @@ xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNils
 xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }
 xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
 xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
+xmip-transport-ftp = { package = "xmip-core-transport-ftp", git = "https://github.com/IlleNilsson/xmip-core-transport-ftp", branch = "main", optional = true }
 xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
 xmip-transport-sftp = { package = "xmip-core-transport-sftp", git = "https://github.com/IlleNilsson/xmip-core-transport-sftp", branch = "main", optional = true }
 xmip-transport-tcp = { package = "xmip-core-transport-tcp", git = "https://github.com/IlleNilsson/xmip-core-transport-tcp", branch = "main", optional = true }

@@ -371,3 +371,51 @@ after Work Process (`configure::kinds`), and a Receive Location's, Receive
 Port's, Work Process's or Send Port's `correlation` is a reference to
 one, followed, found and renamed as the others are
 (`configure::references`; ADR-0031, amendment of this date).
+
+## Amendment, 2026-10-28: a Location is entered by its address alone
+
+The owner, 2026-10-28, of a draft that derived everything an address
+already says — the transport, TLS, host, port, path and user — for file,
+FTP, FTPS, SFTP, HTTP and HTTPS: *So lets do it.* The draft's questions,
+answered with it as proposed: the separate keys go, with no alias, and a
+Location given only an address starts.
+
+- **The scheme chooses the transport.** Each transport declares the
+  schemes it answers, in one place, `transport::Configured::SCHEMES` —
+  `file`, `ftp` and `ftps`, `sftp`, `http` and `https`, `tcp`, `kafka` and
+  every other technology's own — and a Location's address, read once by
+  `net::scheme_of` (`ConfiguredLocation::scheme`), chooses the one that
+  declares its scheme. An address with no scheme, a path such as
+  `/var/xmip/in` or `C:\xmip\in`, is a file's (RFC 8089), as `file://` is.
+  A node that carries no transport for a Location's scheme refuses to
+  start it, naming the schemes it carries; two linked transports declaring
+  one scheme are refused the same way (`Linked::scheme_problems`). The
+  runtime's catalogue answers each transport's `schemes`, so every surface
+  completes and checks a Location's settings by its address: the VS Code
+  extension reads them by the scheme of the Location's `address`.
+- **The address says the rest.** `Configured::own_terms` hands a technology
+  its address after `scheme://`, or whole where the technology reads the
+  scheme itself: `ftps://` and `https://` ask for TLS, the user part of
+  `sftp://party-x@host/in` or `ftp://party-x@host/in` is who logs in, the
+  path of an FTP address the directory listed and stored in, an absent port
+  the scheme's own (21, 80, 443). A send names its target in those terms
+  (`Sending::target`).
+- **Deleted, with every use:** a Location's `transport` key; FTP's `tls`
+  setting, `ftps://` saying it; the `user` setting of FTP and SFTP, the
+  address saying it; and FTP's `delete_after_retrieve` — the verdict
+  decides what becomes of a file read, never a setting (ADR-0024,
+  amendment of this date).
+- **A Location starts unless it says `start = false`.** `start` defaults to
+  `true` on every Receive Location, Send Port and Send Location; what every
+  surface shows for one that says `false` is `configure::NOT_STARTED`, now
+  *not started: the configuration says false*, where it said *does not say
+  true* while only `true` started one (the owner, 2026-10-13).
+
+An HTTP Receive Location entered as `https://` would listen in TLS, which
+the HTTP transport does not terminate yet: it is refused as it binds, in
+words saying to enter it as `http://`. `xmip-service` links FTP and FTPS
+beside file, HTTP and SFTP (the root crate's `transport-ftp`), and the
+personal-computer site names FTP and HTTP. Provenance: the ruling is the
+owner's, 2026-10-28; the names `SCHEMES`, `own_terms`, `scheme_of`,
+`PATH_SCHEME` and `Sending::target`, and the wording of `NOT_STARTED`, are
+the assistant's, for the owner to overrule.

@@ -88,8 +88,6 @@ name = "Loopback"
 [[applications.receive_locations]]
 name = "In"
 node = "{node}"
-start = true
-transport = "xmip-core-transport-file"
 address = "{drop}"
 [applications.receive_locations.accept]
 mechanism = ["circumstance"]
@@ -97,8 +95,6 @@ mechanism = ["circumstance"]
 [[applications.send_ports]]
 name = "Out"
 node = "{node}"
-start = true
-transport = "xmip-core-transport-file"
 address = "{out}"
 {APPLICATION}
 [operate]

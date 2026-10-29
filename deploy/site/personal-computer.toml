@@ -20,8 +20,12 @@ roles = ["executing", "monitoring", "storage"]
 # circumstance itself (the owner, 2026-10-19). SFTP fetches from and puts
 # on a trading Party's server; the Playground's nodes on machines of their
 # own reach its Parties' far end by it (ADR-0028, amendment 2026-10-22).
+# FTP and FTPS, HTTP and HTTPS beside it: a Location is entered by its
+# address alone, ftp:// to https:// (ADR-0064, amendment 2026-10-28).
 technologies = [
   "xmip-core-transport-file",
+  "xmip-core-transport-ftp",
+  "xmip-core-transport-http",
   "xmip-core-transport-sftp",
   "xmip-core-transport-smtp",
   "xmip-core-transport-imap",

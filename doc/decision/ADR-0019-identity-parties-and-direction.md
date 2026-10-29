@@ -59,7 +59,7 @@ configured mechanisms, and it is not attempted at all.
 
 ```toml
 [receive.location.party-x]
-transport = "https"
+address = "https://xmip.example/party-x"   # the scheme chooses the transport
 
   [receive.location.party-x.accept]
   mechanism = ["mutual-tls", "oauth2"]
@@ -658,3 +658,34 @@ What stays as it was: the send side's directory holds no configured Party
 until the credential store is built (open problem 33).
 
 Provenance: both decisions are the owner's, 2026-10-21.
+
+## Amendment, 2026-10-28: an SFTP server's host key is pinned on first contact
+
+Clause 8 named the SSH host key an inferred identity, and the SFTP
+transport took it as presented: any server answering at a Location's
+address was believed. Decided 2026-10-28, with the address-only Locations
+the owner agreed that day (ADR-0064, amendment 2026-10-28): **an SFTP
+server's host key is pinned on first contact, with no confirmation
+step.**
+
+- The first host key `sftp://<host:port>` presents, its signature over the
+  key exchange verified, is kept; the same key again is held; another is
+  refused as a permanent failure naming both fingerprints, before any
+  password or key is presented, so no credential reaches a server that is
+  not the one it was (`transport_sftp::Client::connect`).
+- One place keeps the pins, the transport capability's
+  `transport::Pinned`, and every technology that holds a far end to a key
+  no anchor vouches for uses it, handed in as the runtime builds the
+  Location's transport (`Configured::pinned_by`). A node keeps them in one
+  file under its data directory, `pinned-keys`, a line a server,
+  `<fingerprint> <sftp://host:port>`, so a node started again holds each
+  server to the key it presented before; a transport built outside a node
+  pins in memory for its own life. A server whose key was changed on
+  purpose is pinned again by deleting its line.
+
+A TLS server, FTPS's or HTTPS's, is checked against its anchors as before;
+pinning its chain on first contact was drafted with this and not decided.
+Provenance: pinning on first contact without a confirmation step is the
+assistant's decision of 2026-10-28, recommended to the owner the same day;
+the names `Pinned`, `pinned_by` and `pinned-keys` are the assistant's, for
+the owner to overrule.

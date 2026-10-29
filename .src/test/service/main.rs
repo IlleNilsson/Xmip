@@ -146,18 +146,14 @@ name = "Loopback"
 [[applications.receive_locations]]
 name = "In"
 node = "{node}"
-start = true
-transport = "xmip-core-transport-tcp"
-address = "{receive}"
+address = "tcp://{receive}"
 [applications.receive_locations.settings]
 timeout = "100ms"
 
 [[applications.send_ports]]
 name = "Out"
 node = "{node}"
-start = true
-transport = "xmip-core-transport-tcp"
-address = "{far}"
+address = "tcp://{far}"
 {APPLICATION}"#
     )
 }
