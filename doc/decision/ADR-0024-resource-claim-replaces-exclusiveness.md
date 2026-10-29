@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-27
 - Amended: 2026-09-26 — a file is claimed by an atomic rename
-- Amended: 2026-10-01 — a Journey is claimed through Xmip Storage
+- Amended: 2026-10-01 — a Message is claimed through Xmip Storage
 - Amended: 2026-10-13 — one winner for every Receive Location; the file
   family's claim extends to FTP, FTPS and SFTP
 - Amended: 2026-10-19 — a listing claims no more than there is room for; a
@@ -39,7 +39,7 @@ artifact: a listener because a sender reaches one node, a broker by its own
 one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
 the file's turn and renaming it, object stores and databases by their own
 exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
-as a Journey is claimed. Several nodes may poll one directory; the stability
+as a Message is claimed. Several nodes may poll one directory; the stability
 check stays where the system cannot say whether a writer holds a file. A
 drop directory tells the Location of a file as it lands, and its poll is a
 recovery sweep (amendment 2026-10-20).
@@ -203,7 +203,7 @@ lease expiry was invented to provide, obtained without inventing it.
   same problem as *work does not move by itself* — a Message in a store one
   node wrote was that node's work — under a second name, and it belongs with
   however that is eventually designed rather than with a lease reinstated for
-  one case. *Closed by the amendment of 2026-10-01: a Journey is claimed
+  one case. *Closed by the amendment of 2026-10-01: a Message is claimed
   through Xmip Storage.*
 - The acquisition queue, fairness and acquisition timeout of ADR-0017 clauses 13
   and 14 go too. Nothing queues for an artifact: a node that finds one claimed
@@ -263,7 +263,7 @@ every file system offers alike, and the one the Playground's claim already
 used. A claim left by a node that is gone and does not start again is not
 returned yet: the cluster's half of the recovery is open.
 
-## Amendment, 2026-10-01: a Journey is claimed through Xmip Storage
+## Amendment, 2026-10-01: a Message is claimed through Xmip Storage
 
 **Provenance.** The owner, 2026-10-01, validated part by part with the
 assistant, and re-decided later the same day: *to have one or more Xmip Nodes
@@ -282,7 +282,7 @@ The Consequences left Journey recovery across nodes open, because a Journey
 mid-flight is Xmip's own state and has no endpoint to claim it at. Every node
 now reaches the Ledger through Xmip Storage, the nodes declaring the Storage
 role, and behind them one database — a server IT runs, or one embedded
-Storage node (`runtime-model.md` section 3). **A Journey is claimed there**:
+Storage node (`runtime-model.md` section 3). **A Message is claimed there**:
 a conditional update — set the owner where the owner is empty or lapsed —
 time-limited, renewed while the work runs. A dead node's claims lapse, and
 another capable node claims and resumes from the last finished step.
@@ -323,7 +323,7 @@ artifact, whatever its protocol, each kind by the exclusive step it has:
 | a broker | the broker's own one-consumer delivery is the claim |
 | the file family — file, FTP, FTPS, SFTP; SMB, NFS and WebDAV where the same applies | the turn, then the rename (below) |
 | object stores and databases | their own exclusive step: a conditional write, `SELECT … FOR UPDATE SKIP LOCKED`, a conditional update |
-| a protocol with no exclusive step at all — IMAP, POP3 | the claim through Xmip Storage, as a Journey is claimed (amendment 2026-10-01) |
+| a protocol with no exclusive step at all — IMAP, POP3 | the claim through Xmip Storage, as a Message is claimed (amendment 2026-10-01) |
 
 The exclusive step each technology of the last two rows has today, checked
 for this amendment:
@@ -706,7 +706,7 @@ parallel depending on the value in the correlation set.*
   configured; orders per client name a set keyed by the client,
   `keys = ["context:Client"]`, and run side by side, each client's in order.
 - **What a failure does is the set's**: `on_failure`, `block` by default — a
-  Message whose Journey failed, waiting for an operator, keeps its Stream at the head until
+  Message that failed, waiting for an operator, keeps its Stream at the head until
   Retry or Dismiss — and `skip` as the option that lets the rest pass (the
   owner, 2026-10-22). The Send Port's own `execution_style`, `order_key` and
   `on_failure` are deleted with every use.

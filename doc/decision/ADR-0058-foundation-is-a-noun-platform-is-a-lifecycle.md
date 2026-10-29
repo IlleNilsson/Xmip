@@ -32,7 +32,7 @@ observation test is placed there first, and only what is left is Platform.**
 Repository-model.md section 1 has had a test between Capability and Operation
 since 2026-08-26, and it works: *if a Message waits for it, it is a
 Capability* (worded so since ADR-0013's amendment of 2026-10-29: the Message
-travels, its Journey records it). It moved `xmip-core-retain` out of the wrong domain within a day
+travels, the Journey is its metadata). It moved `xmip-core-retain` out of the wrong domain within a day
 of being written, and it is the sentence people quote when the question comes
 up.
 

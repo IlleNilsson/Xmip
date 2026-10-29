@@ -187,7 +187,7 @@ for — at run time, in a deployment, and in what its program is built with
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
 | **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history |
 | **Development** | no stage | exercise Xmip from outside | the Playground (ADR-0028) |
-| **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Journey, hand it on, write an audit record |
+| **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Message, hand it on, write an audit record |
 
 **Executing is the sum of receiving, processing and sending** (the owner,
 2026-10-01: *Leave Executing as a sum of Receiving, Processing and Sending.
@@ -491,7 +491,7 @@ and re-decided later the same day.
 
 **Xmip Storage is the doorway.** The nodes declaring the Storage role
 (section 3) serve every storage operation — write a Stream chunk, write a
-Message, claim a Journey, hand it on, write an audit record — and every
+Message, claim a Message, hand it on, write an audit record — and every
 other node calls them, never a database directly,
 round robin over the Storage nodes (the owner: *to have one or more Xmip
 Nodes with role Storage would be a safety… Xmip could just do a round robin

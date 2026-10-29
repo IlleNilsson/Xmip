@@ -29,8 +29,8 @@ Ports, promoted properties. The words Xmip uses are defined once, in
 - **Subscription**: what picks a published Message up, by its context values:
   its Receive Location, its Receive Port, its promoted properties. The
   Message rushes through, unless it encounters an Xmip Work Process.
-- **Journey**: the record of a Message's travel to one Subscription, from its
-  Publication to its delivery. It survives a restart and ends Completed,
+- **Journey**: metadata on a Message: the history of its travel to one
+  Subscription, from its Publication to its delivery. It survives a restart and ends Completed,
   Failed or Dismissed.
 - **Xmip Work Process**: the integration process you define, which works on a
   Message between arrival and delivery.

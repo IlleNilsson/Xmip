@@ -32,7 +32,7 @@ an Operator, and the sender is acknowledged after the whole receive cycle
 (amendment 2026-10-01).
 
 A Subscription matches a Message by its context values, and the Message
-travels; its Journey records the travel. A Message rushes through, unless it
+travels with a Journey as its metadata. A Message rushes through, unless it
 encounters a Work Process (amendment 2026-10-29).
 
 ## Context
@@ -582,14 +582,14 @@ one write, once.
 **One Journey per Send Port.** Clause 5's *one Journey per matched
 Subscription* holds for a Subscription that leads to a Send Port or to an
 Xmip Process; one that leads to a Send Port Group takes the Message to each Port of
-the Group, in the Group's order, each way recorded by a Journey of its own, in the Publication's one write, each led to
-its Port and kept in its Port's queue (`runtime-model.md` section 10: *A Send
-Port Group is only a named set: routing already made one Journey per Send
-Port in it*). So each Port is sent, retried, failed and dismissed alone, and
+the Group, in the Group's order, in the Publication's one write, kept in each
+Port's queue with a Journey of its own as its metadata (`runtime-model.md`
+section 10: *A Send Port Group is only a named set: routing already took the
+Message to each Send Port in it*). So each Port is sent, retried, failed and dismissed alone, and
 the deduplication key — the Journey's identifier — is one per delivery to
 one endpoint, as section 15 of the runtime model has it.
 
-**A failed Journey stays in its Send Port's queue for an Operator**, and
+**A failed Message stays in its Send Port's queue for an Operator**, and
 the Operator's acts on it are built: **Retry** writes it Active and sends it
 again from the queue, its tries begun anew; **Dismiss** writes it
 `Dismissed`, its history, Message and Stream kept, and takes it out of the
@@ -696,7 +696,7 @@ removed with the entry, as problem 40's index on queue and place is.
 - **On a database server it is an index of its own**, made by the
   scripts beside the table's key; unlike `held_place`, its columns are not
   the key.
-- **A failed Journey is due for no retry**: the hand-on that fails it
+- **A failed Message is due for no retry**: the hand-on that fails it
   takes its due time out with the mark, so it is in the failed part alone.
 - **Xmip Storage reads a part** (`XmipStorage::read_due`, wire operation
   28): what is due, what waits for a retry, or what failed, a page from a
@@ -799,26 +799,30 @@ and reported, so it carries the rule.
 
 Every stage but debatching is open problem 55.
 
-## Amendment, 2026-10-29: the Message travels, its Journey records it
+## Amendment, 2026-10-29: the Stream and its Message travel, the Journey is metadata
 
 The owner, 2026-10-29: *A journey does not wait, it rushes through, unless it
 encounter a Work Process, Pub/Sub wize*; *A message can be subscriped to, not
 a journey, the journey is the ledger of the message*; and *Streams may be
 transformed, creating a new stream. A stream can be assigned. Every stream is
 wrapped in a message and it travels is recorded by it's Journey. That has
-never changed.* The records had drifted from it: they made the Journey the
-traveler, the thing queued, claimed and waiting.
+never changed.*; and *the strem, meassge in in focus, the journey is meta
+data*. The records had drifted from it: they made the Journey the traveler,
+the thing queued, claimed and waiting.
 
+- **The Stream and its Message are in focus.** Every Stream is wrapped in a
+  Message, and the Message is what travels, is queued, claimed, sent,
+  failed and retried.
 - **A Subscription matches a Message**, never a Journey, by its context
   values: its Receive Location, its Receive Port, its promoted properties
-  and its other Message values. The Message is what travels.
-- **A Journey is the record of a Message's travel**, appended and never
-  rewritten. Clause 5 holds: a Message matched by three Subscriptions travels
-  three ways, and each way is recorded by its own Journey.
+  and its other Message values.
+- **A Journey is metadata on a Message**: the history, audit events and
+  lineage of its travel, appended and never rewritten. Clause 5 holds: a
+  Message matched by three Subscriptions travels three ways, each with a
+  Journey of its own, whose identifier is that way's deduplication key.
 - **A Message rushes through, unless it encounters a Work Process.**
 
-`runtime-model.md`, `repository-model.md`, `terminology.md`,
-`getting-started.md`, `open-problems.md`, ADR-0024, ADR-0027 and ADR-0058 say it so:
-where they had a Journey wait, open, be sent or resume, the Message does, and
-its Journey records it. A claim is still taken on a Journey, the record of
-who moves the Message, and the Storage operation keeps that name.
+`runtime-model.md`, `repository-model.md`, `deployment-model.md`,
+`terminology.md`, `getting-started.md`, `open-problems.md`, ADR-0024,
+ADR-0027, ADR-0056 and ADR-0058 say it so: the Message waits, is claimed, is
+sent and resumes, and a Storage node's operations claim a Message.
