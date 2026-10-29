@@ -1,7 +1,8 @@
 # Xmip runtime model
 
 What Xmip does at runtime: how a Stream becomes a Message, how a Message
-becomes Journeys, and what an operator can do to them afterwards.
+travels and its Journeys record it, and what an operator can do to them
+afterwards.
 
 This is the architecture specification. It replaces
 `Xmip-Architecture-Specification-v1.0.md`, `-v1.1.md`, `-v1.2.md` and
@@ -34,7 +35,7 @@ Xmip is:
 
 - Stream-centric at its foundation.
 - Stream- and Message-centric in processing.
-- Journey-centric in execution and operations.
+- Journey-centric in operations: the Journey records a Message's travel.
 - Immutable by design.
 
 ## 2. Stream, Message, Section, Journey
@@ -49,8 +50,11 @@ Contract.**
 **Section** — a stream within a Message, with a section id, metadata and a
 stream reference. Sections reuse stream references when content is unchanged.
 
-**Journey** — one line of execution carrying a Message through Xmip, with its
-history, audit events and lineage.
+**Journey** — the record of a Message's travel to one Subscription: its
+history, audit events and lineage. A Subscription matches a Message, never a
+Journey, by its context values — its Receive Location, its Receive Port, its
+promoted properties and its other Message values; the Message travels, and
+its Journey records it (ADR-0013, amendment 2026-10-29).
 
 A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
@@ -99,7 +103,8 @@ than once.*
 retention applies, and is archived before either**
 (archiving by retention window:
 [built, not in the assembled service](estate-map.md#retention-archiving)). Xmip is queue-driven end to
-end. Arrival enqueues; it does not execute.
+end. Arrival enqueues; it does not execute. **A Message rushes through,
+unless it encounters a Work Process** (ADR-0013, amendment 2026-10-29).
 
 The reason is stated best plainly: **you never know when the hardware has time.**
 A receive burst does not get to decide how much CPU exists, an edge device does

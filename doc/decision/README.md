@@ -58,6 +58,10 @@ Subscription matched is Dead Message Queue state in the Ledger, replayed by
 an Operator, and the sender is acknowledged after the whole receive cycle
 (amendment 2026-10-01).
 
+A Subscription matches a Message by its context values, and the Message
+travels; its Journey records the travel. A Message rushes through, unless it
+encounters a Work Process (amendment 2026-10-29).
+
 → [The Journey model, in full](ADR-0013-journey-model.md) — **still Proposed**
 
 ### Everything that communicates is an Actor
