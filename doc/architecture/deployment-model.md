@@ -534,8 +534,8 @@ time:**
   replay — with who and when (the owner, 2026-10-13;
   [decided, not built](estate-map.md#operator-acts-through-storage));
 - the secrets Locations present, each by name in a table of its own,
-  `secret`, sealed at rest on an embedded Storage node and never read back
-  out (ADR-0019, amendment 2026-10-29);
+  `secret`, each value sealed by Xmip before any store keeps it, so a
+  database server holds ciphertext alone, and never read back out (ADR-0019, amendment 2026-10-29);
 - no audit: since 2026-10-10 the audit keeper moves audit from the runtime
   database to the audit database, on every backend (the owner, of
   2026-10-01: *RocksDB is the first storage for audit records, then

@@ -35,12 +35,12 @@ GO
 CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 GO
 
--- each secret a Location names, by its name: its kind, its value, and when and by whom it was last set; its value is never read back out.
+-- each secret a Location names, by its name: its kind, its value sealed by Xmip under the administration database's data key, and when and by whom it was last set; its value is never read back out.
 CREATE TABLE xmip.secret (
     secret binary(16) NOT NULL,
     name nvarchar(400) NOT NULL,
     kind nvarchar(32) NOT NULL,
-    value varbinary(max) NOT NULL,
+    sealed varbinary(max) NOT NULL,
     set_at datetime2(7) NOT NULL,
     set_by nvarchar(400) NOT NULL,
     CONSTRAINT secret_key PRIMARY KEY (secret),

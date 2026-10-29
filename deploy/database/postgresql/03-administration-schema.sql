@@ -28,12 +28,12 @@ CREATE TABLE xmip.administration (
 
 CREATE INDEX administration_updated ON xmip.administration (kind, updated_at);
 
--- each secret a Location names, by its name: its kind, its value, and when and by whom it was last set; its value is never read back out.
+-- each secret a Location names, by its name: its kind, its value sealed by Xmip under the administration database's data key, and when and by whom it was last set; its value is never read back out.
 CREATE TABLE xmip.secret (
     secret uuid NOT NULL,
     name text NOT NULL,
     kind text NOT NULL,
-    value bytea NOT NULL,
+    sealed bytea NOT NULL,
     set_at timestamptz NOT NULL,
     set_by text NOT NULL,
     CONSTRAINT secret_key PRIMARY KEY (secret),
