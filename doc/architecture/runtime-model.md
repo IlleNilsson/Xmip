@@ -1,8 +1,7 @@
 # Xmip runtime model
 
-What Xmip does at runtime: how a Stream becomes a Message, how a Message
-travels and its Journeys record it, and what an operator can do to them
-afterwards.
+What Xmip does at runtime: how a Stream becomes a Message, how the Message
+travels, and what an operator can do to it afterwards.
 
 This is the architecture specification. It replaces
 `Xmip-Architecture-Specification-v1.0.md`, `-v1.1.md`, `-v1.2.md` and
@@ -34,8 +33,8 @@ observes and recovers information over time.
 Xmip is:
 
 - Stream-centric at its foundation.
-- Stream- and Message-centric in processing.
-- Journey-centric in operations: the Journey records a Message's travel.
+- Stream- and Message-centric in processing and in operations; a Journey is
+  metadata on a Message's travel.
 - Immutable by design.
 
 ## 2. Stream, Message, Section, Journey
@@ -50,11 +49,11 @@ Contract.**
 **Section** — a stream within a Message, with a section id, metadata and a
 stream reference. Sections reuse stream references when content is unchanged.
 
-**Journey** — the record of a Message's travel to one Subscription: its
-history, audit events and lineage. A Subscription matches a Message, never a
-Journey, by its context values — its Receive Location, its Receive Port, its
-promoted properties and its other Message values; the Message travels, and
-its Journey records it (ADR-0013, amendment 2026-10-29).
+**Journey** — metadata on a Message: the history, audit events and lineage
+of its travel to one Subscription. A Subscription matches a Message by its
+context values — its Receive Location, its Receive Port, its promoted
+properties and its other Message values; the Stream, wrapped in its Message,
+is what travels (ADR-0013, amendment 2026-10-29).
 
 A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
@@ -155,7 +154,7 @@ pick up*).
 
 **Xmip Storage is the doorway to it.** The nodes declaring the **Storage**
 role (`deployment-model.md` sections 3 and 7) serve every storage operation —
-write a Stream chunk, write a Message, claim a Journey, hand it on, write an
+write a Stream chunk, write a Message, claim a Message, hand it on, write an
 audit record — and every other node calls those operations, never a database
 directly. A node reaches the Storage nodes
 round robin, from the list of their addresses in its TOML, and more than
@@ -410,8 +409,8 @@ operator intervenes — or it is set aside and the sequence continues, which
 breaks the ordering that was the point. Both are defensible; **neither is a
 default that can be chosen silently**, because the first surprises an operator
 with a stall and the second surprises them with reordering. The owner chose,
-2026-10-22: block by default, skip as an option — a Message whose Journey failed,
-waiting for an operator, keeps its Stream at the head until Retry or Dismiss, and a set's
+2026-10-22: block by default, skip as an option — a Message that failed, waiting
+for an operator, keeps its Stream at the head until Retry or Dismiss, and a set's
 `on_failure = "skip"` lets the rest pass. It is a key of the set, placed once
 (section 20, *Where the runtime's settings are configured*).
 
@@ -651,11 +650,11 @@ retry's backoff holds no thread, and a stop gives its claim back; and a
 Send Port naming a Correlation keeps its order, blocking behind a
 failure or setting it aside as the set's `on_failure` says. And, built 2026-10-04 (`tests/ledger/
 send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
-Subscription takes the Message to each Port, each way recorded by its own
-Journey in its Port's queue and sent or failed alone; every send carries its
+Subscription takes the Message to each Port, in each Port's queue and sent
+or failed alone, a Journey of its own its metadata; every send carries that
 Journey's identifier as its key, the same on every try; a retry's count is
-kept in the Ledger and survives a restart; an Operator's Retry sends the
-Message of a failed Journey again — in its order
+kept in the Ledger and survives a restart; an Operator's Retry sends a
+failed Message again — in its order
 where its sequence blocks behind it — and Dismiss ends it Dismissed and
 lets its sequence go, each audited. And, built 2026-10-22
 (`tests/ledger/work_process.rs`): a client's Messages make one Instance and
@@ -1258,9 +1257,9 @@ identity.
 
 Decided by the owner, 2026-10-01, validated part by part with the assistant.
 
-A Send pool — I/O-bound, bounded as a bulkhead (section 3) — claims a Journey
+A Send pool — I/O-bound, bounded as a bulkhead (section 3) — claims a Message
 destined for a Send Port. A Send Port Group is only a named set: routing
-already made one Journey per Send Port in it. The Send Port may transform,
+already took the Message to each Send Port in it. The Send Port may transform,
 never assign, and picks its Send Locations in configured order. The Send
 Location validates the outgoing Contract while the Message is still
 structured, serializes and demotes in chunks, presents the identity found
@@ -1331,12 +1330,12 @@ waits for its due time.
 
 - **One Journey per Send Port of a Send Port Group.** A Subscription to a
   Group takes the Message to each Port of the Group, in the Group's order,
-  each way recorded by a Journey of its own led to its Port (the Journey's `send_port`) and queued in its Port's
-  queue, in the Publication's one write; each Port is sent, retried, failed
+  queued in each Port's queue with a Journey of its own as its metadata (the
+  Journey's `send_port`), in the Publication's one write; each Port is sent, retried, failed
   and acted on alone. A paused Subscription holds each, and a Replay from the
   Dead Message Queue opens them the same way. A Group no Application of the
-  publishing node declares records one Journey to the Group, whose Message
-  no node sends.
+  publishing node declares takes the Message to the Group, where no node
+  sends it.
 - **A retry's count is in the Ledger.** The active Send Location and how
   often it was tried are the Journey's `attempts`, written with every
   hand-on of a send, so a node restarted, or another taking the Journey up,
@@ -1359,7 +1358,7 @@ waits for its due time.
   Active, its tries begun anew, and moves it to the end of its Send Port's
   queue — keeping its place in its sequence, so the sequence goes on in
   order from it; Dismiss writes it Dismissed, its history kept, and takes it
-  out of the queue, so the next of its key goes. An act is taken by a node that sends through the Journey's
+  out of the queue, so the next of its key goes. An act is taken by a node that sends through the Message's
   Port, the one whose `<node>/send/<Port>` showed it failed.
 
 **Corrected 2026-10-05**, after an external review of the send step:
@@ -1396,7 +1395,7 @@ waits for its due time.
 **Corrected 2026-10-06**, after a review of the same:
 
 - **Admission is the one door to the Send pool.** A Publication, a resumed
-  Subscription's move and a scan each claim a Journey only under a place
+  Subscription's move and a scan each claim a Message only under a place
   the pool admits: its most threads, less every Journey the node owns —
   handed, queued, sending, or waiting for a retry's due time — and every
   place admitted and not yet owned. What has no place stays durable and
@@ -1413,7 +1412,7 @@ waits for its due time.
   place was admitted for, so a backlog's claims share their commits; until
   now the dispatching claimed them one by one, a commit's sync each, which
   a backlog refilled through the scan would have paid for every Journey.
-- **A Send Port with failed Journeys kept is Done.** Its record at
+- **A Send Port with failed Messages kept is Done.** Its record at
   `<node>/send/<Port>` is Done — blocked or failed, the pain an operator's
   Retry or Dismiss solves (`observability-model.md` section 6) — while any
   waits in its queue, the most severe of the Done where one blocks its
@@ -1827,9 +1826,9 @@ setting, and Xmip does not offer a switch that promises otherwise.
 
 Internally, exactly-once holds: a claim through Xmip Storage (section 3)
 means one node owns a unit of work, and every hand-on is one atomic write;
-execution checkpoints in `xmip-core-persist` mean a recovered Message's travel
-resumes from its Journey's last checkpoint rather than restarts, and Messages
-are immutable so a resumed travel cannot half-produce one.
+execution checkpoints in `xmip-core-persist` mean a recovered Message
+resumes from its last checkpoint rather than restarts, and Messages
+are immutable so a resumed one cannot half-produce one.
 
 Externally it depends on what the far side supports. A queue with
 acknowledgment and a deduplication window can be delivered to exactly once. An
@@ -2414,7 +2413,7 @@ every restart in between.
 
 **The cluster persistence is the Ledger** (section 3), behind Xmip Storage
 (the owner, 2026-10-01, validated part by part with the assistant). A pool
-for the Work Process step (section 3) claims a Journey destined for one
+for the Work Process step (section 3) claims a Message destined for one
 Work Process. Its state is in the Ledger, never in thread memory, and is
 checkpointed at every turn. Waiting releases its thread; a Message of its key
 in a Correlation resumes it on any capable node. Assignment belongs to a Work Process alone.

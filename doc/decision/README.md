@@ -59,7 +59,7 @@ an Operator, and the sender is acknowledged after the whole receive cycle
 (amendment 2026-10-01).
 
 A Subscription matches a Message by its context values, and the Message
-travels; its Journey records the travel. A Message rushes through, unless it
+travels with a Journey as its metadata. A Message rushes through, unless it
 encounters a Work Process (amendment 2026-10-29).
 
 → [The Journey model, in full](ADR-0013-journey-model.md) — **still Proposed**
@@ -125,7 +125,7 @@ artifact: a listener because a sender reaches one node, a broker by its own
 one-consumer delivery, the file family — file, FTP, FTPS, SFTP — by taking
 the file's turn and renaming it, object stores and databases by their own
 exclusive step, and a protocol with none, such as IMAP, through Xmip Storage
-as a Journey is claimed. Several nodes may poll one directory; the stability
+as a Message is claimed. Several nodes may poll one directory; the stability
 check stays where the system cannot say whether a writer holds a file. A
 drop directory tells the Location of a file as it lands, and its poll is a
 recovery sweep (amendment 2026-10-20).

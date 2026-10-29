@@ -408,7 +408,7 @@ nodes*.
 
 - **An eighth role, Storage.** A node declaring it is **Xmip Storage**, the
   doorway to all storage: it serves the storage operations — write a Stream
-  chunk, write a Message, claim a Journey, hand it on, write an audit record
+  chunk, write a Message, claim a Message, hand it on, write an audit record
   — and every other node calls them, never a database directly. Configuration
   is not among them: each node reads its own TOML into memory (ADR-0031,
   amendment 2026-10-01). It serves no stage of the message path.

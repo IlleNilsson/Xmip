@@ -328,7 +328,7 @@ is decided and recorded; almost none of it is built, and nothing demonstrates it
 (`runtime-model.md`): nothing runs on arrival, every Stream, Message and Journey
 is written to the Ledger, synced, before anything acts on it, so an accepted
 Message cannot be lost to a crash: a write counts only once the database
-behind Xmip Storage has it durably (2026-10-01). A Message whose Journey is not terminal resumes from its last
+behind Xmip Storage has it durably (2026-10-01). A Message not yet delivered resumes from its last
 checkpoint, position and Message generation together (ADR-0013). Exactly-once is
 internal — one runtime owns a unit of work by the durable claim (ADR-0024),
 checkpoints bound reprocessing — so delivery is at-least-once and edge effects
@@ -1069,7 +1069,7 @@ can be published; admission bounds what is in flight, not this. Repaired the
 same day: a Journey read Failed again is found by its Journey at once, not
 by looking through all of them, and a whole read of a queue forgets every
 place passed over that has left it. What remained: memory still grew with
-the number of failed Journeys kept. Needed: the count, and an index of
+the number of failed Messages kept. Needed: the count, and an index of
 the failed Journeys of each queue, kept by Xmip Storage in the Ledger and
 read from it, with the node keeping a bounded window of the oldest.
 
@@ -2098,7 +2098,7 @@ same day (ADR-0013, amendment 2026-10-21).*
 
 What problems 40 and 43 left: at every `[tuning] send_scan` a scan read
 every entry its Send Port's queue held to find what was due, so a far end
-that failed for an hour made every scan read the Journey of every Message waiting on it,
+that failed for an hour made every scan read every Message waiting on it,
 and a Journey that failed was read at every scan to be passed over.
 Decided by the owner, 2026-10-19: *a send scan reads only what is due*,
 through an ordered index on when each entry is due, written and removed
