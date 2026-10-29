@@ -1010,9 +1010,9 @@ What remains of the first part:
   ADR-0064 and ADR-0014, amendments 2026-10-29); SFTP presents a password
   or a key, FTP, FTPS, HTTP and HTTPS a password, and SQL Server,
   PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
-  password. Built in pieces by the owner's order of the same day; still to
-  land: the command line's secret command, the GUI's Secrets page and the VS
-  Code extension's completion of `secret`. Not built: a `certificate`
+  password. Built in pieces by the owner's order of the same day, the command
+  line's `xmip secret` with them; still to land: the GUI's Secrets page
+  and the VS Code extension's completion of `secret`. Not built: a `certificate`
   secret presented by any technology (a client certificate over HTTPS or
   FTPS); the other technologies that log in — AMQP, MQTT, RabbitMQ,
   ActiveMQ, IMAP, POP3, SMB, S3 and the vendors' — which refuse a Location

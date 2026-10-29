@@ -1298,7 +1298,11 @@ it is `xmip_operate.h` section 24, `xmip_secret_v1` and `xmip_secrets_v1`
 over a handle of section 17; in `Xmip.Surface`, `IOperatorSurface.SetSecret`
 and `Secrets`, gated by `GatedOperator`. PowerShell has one cmdlet for the
 noun, `Set-XmipSecret`, `-Value` a secure string or `-Path` a file, and
-`-List` to list (the amendment of 2026-09-15). No surface offers a secret's
-value back. Built in pieces, by the owner's order of 2026-10-29: the core
-and PowerShell first; the command line, the GUI's Secrets page and the VS
-Code extension's completion of `secret` follow, each landing on its own.
+`-List` to list (the amendment of 2026-09-15); the command line has one
+command for the noun, `xmip secret`, `--set` its act, `--kind` the kind and
+the value from `--file` or standard input, never the line itself. No
+surface offers a secret's value back. Built in pieces, by the owner's order
+of 2026-10-29: the core and PowerShell first, then the command line — the
+.NET `xmip` that ships until the Rust executable replaces it (the amendment
+of 2026-10-12) — then the GUI's Secrets page and the VS Code extension's
+completion of `secret`, each landing on its own.
