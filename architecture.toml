@@ -1674,7 +1674,7 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-node", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
+  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-library-net", "xmip-core-node", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
 
 # Surfaces, ADR-0014. abi is above. These three were named in surface and had
 # no module, so they were invisible to repository creation.
@@ -1710,7 +1710,7 @@ dependency = []
     description = "The VS Code extension: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI, draws an Application's routes, and designs, edits and compiles Work Processes through the design formats it carries (ADR-0014, ADR-0064, ADR-0066). A xmip-core-gui technology."
     maturity = "scaffolded"
     primaryLanguage = "rust"
-    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-process", "xmip-core-process-bpmn"]
+    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-library-net", "xmip-core-process", "xmip-core-process-bpmn"]
 
 
 # What capabilities are built out of, and what a third party may replace like

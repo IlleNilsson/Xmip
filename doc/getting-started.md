@@ -332,8 +332,6 @@ name = "FileCopy"
 [[nodes.first.applications.receive_locations]]
 name = "Drop"
 node = "first"
-start = true
-transport = "xmip-core-transport-file"
 address = ".local-work/node/in"
 [nodes.first.applications.receive_locations.accept]
 mechanism = ["circumstance"]
@@ -341,8 +339,6 @@ mechanism = ["circumstance"]
 [[nodes.first.applications.send_ports]]
 name = "Out"
 node = "first"
-start = true
-transport = "xmip-core-transport-file"
 address = ".local-work/node/out"
 '@
 ```
@@ -362,7 +358,11 @@ What it says, from the top:
 - `[[nodes.first.applications]]` binds `FileCopy` to the node, and says where
   its Locations are: `Drop` reads the folder `.local-work/node/in`, and `Out`
   writes in the folder `.local-work/node/out`.
-- `start = true` starts a Location; only `true` does.
+- Each Location is entered by its `address` alone: a path is a folder,
+  the file transport's, as `file://` would be; `sftp://party@host/in`,
+  `ftps://host/out` or `https://party.example/orders` would choose SFTP,
+  FTPS or HTTPS, logging in as the user the address names. A Location
+  starts unless it says `start = false`.
 - `accept` is what a Receive Location takes; one that says nothing accepts
   nothing. A file dropped in a folder presents no identity of its own, and
   `circumstance` is the drop folder's implied identity: whoever may write in

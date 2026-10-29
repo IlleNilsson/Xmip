@@ -47,7 +47,7 @@ fn started(name: &str, starts: bool) -> (PathBuf, Child, Ending, Receiver<String
         let text = std::fs::read_to_string(&configuration).expect("reads");
         std::fs::write(
             &configuration,
-            text.replace("start = true", "start = false"),
+            text.replace("address = ", "start = false\naddress = "),
         )
         .expect("writes");
     }

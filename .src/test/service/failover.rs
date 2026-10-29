@@ -202,8 +202,7 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
     let binding = |node: &str, kind: &str, name: &str, at: &Path, accept: &str| {
         format!(
             "\n[[applications]]\nname = \"Carried\"\n\n[[applications.{kind}]]\n\
-             name = \"{name}\"\nnode = \"{node}\"\nstart = true\n\
-             transport = \"xmip-core-transport-file\"\naddress = \"{}\"\n{accept}",
+             name = \"{name}\"\nnode = \"{node}\"\naddress = \"{}\"\n{accept}",
             named(at)
         )
     };

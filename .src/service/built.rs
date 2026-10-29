@@ -212,6 +212,8 @@ pub fn transports() -> Vec<LinkedTransport> {
     let mut transports = Vec::new();
     #[cfg(feature = "transport-file")]
     transports.push(LinkedTransport::of::<xmip_transport_file::FileTransport>());
+    #[cfg(feature = "transport-ftp")]
+    transports.push(LinkedTransport::of::<xmip_transport_ftp::FtpTransport>());
     #[cfg(feature = "transport-http")]
     transports.push(LinkedTransport::of::<xmip_transport_http::HttpTransport>());
     #[cfg(feature = "transport-sftp")]
@@ -228,8 +230,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn each_transport_is_linked_by_the_name_a_location_gives_it() {
-        let names: Vec<&str> = transports()
+    fn each_transport_is_linked_by_the_schemes_a_location_is_entered_with() {
+        let linked = Linked {
+            transports: transports(),
+            ..Linked::default()
+        };
+        let names: Vec<&str> = linked
+            .transports
             .iter()
             .map(LinkedTransport::technology)
             .collect();
@@ -241,6 +248,14 @@ mod tests {
                 .iter()
                 .all(|name| name.starts_with("xmip-core-transport-"))
         );
+        assert!(
+            linked
+                .transports
+                .iter()
+                .all(|one| !one.schemes().is_empty()),
+            "every transport is chosen by a scheme"
+        );
+        assert_eq!(linked.scheme_problems(), Vec::<String>::new());
     }
 
     #[cfg(feature = "identify-ip")]
@@ -282,7 +297,7 @@ mod tests {
         )];
         let node = xmip_configure::parse_toml(
             "[service]\nname = \"n\"\ncluster_name = \"c\"\nnode_name = \"d\"\n\n\
-             [[send_locations]]\nname = \"Out\"\ntransport = \"t\"\naddress = \"a\"\n",
+             [[send_locations]]\nname = \"Out\"\naddress = \"a\"\n",
         )
         .expect("reads");
         let started = Started {

@@ -795,3 +795,14 @@ What makes it hold, built 2026-10-27:
   (`JourneyFacts::group_delivery` and `group_open`; `Journey.group`, a
   `GroupDelivery` of its name, delivery, queue, `skips` and members;
   `tests/ledger/group_correlation.rs`).
+
+## Amendment, 2026-10-28: the verdict decides what becomes of a file read
+
+The owner, 2026-10-28, agreeing the address-only Locations (ADR-0064,
+amendment of this date): FTP's `delete_after_retrieve` is deleted, so the
+file, FTP, FTPS and SFTP Locations all do what the verdict says, and
+nothing else: `Accepted` deletes the claimed file, `Refused` returns it
+under its dropped name and remembers it while it is unchanged, `Failed`, or
+an arrival let go without a verdict, returns it to be read again. The
+claim's `consume` argument, which only that setting ever made false, is
+deleted with it (`transport::claim::Claiming::told` and `acknowledgement`).

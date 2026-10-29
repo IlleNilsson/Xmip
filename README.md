@@ -82,7 +82,11 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   Location that accepts `circumstance` — the drop folder's implied identity
   — is received, routed by a Subscription and written in the directory a
   file Send Location's address names, under the name it was dropped under:
-  one node on one computer, file in and file out.
+  one node on one computer, file in and file out. A Location is entered by
+  its address alone, the scheme choosing the transport — a path,
+  `ftp://` or `ftps://`, `sftp://party-x@host/in`, `http://` or `https://`
+  — and an SFTP server's host key is pinned on first contact (ADR-0064 and
+  ADR-0019, amendments 2026-10-28).
 - **Auditing.** The first thing that happens to an arrival, and the last
   to every outcome: the durable record of what Xmip did and how it came
   out. Every step below carries a note of what it audits. Entry, refusal,

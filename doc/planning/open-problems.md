@@ -1009,7 +1009,16 @@ What remains of the first part:
   node's credentials live or how configuration names them, so a Location
   accepting one is refused as the node starts; and for the same reason the
   send side's directory holds no configured Party, so a `send` identity is
-  presented by nothing yet.
+  presented by nothing yet. Since 2026-10-28 a Location is entered by its
+  address alone and an SFTP server's host key is pinned on first contact
+  (ADR-0064 and ADR-0019, amendments 2026-10-28); what the owner agreed
+  that day and is not built waits on this store: a Location's
+  `credentials` read, a password, an SSH key or a client certificate both
+  ways; a probe asking the far end which of them it takes; Xmip issuing a
+  key pair or a client certificate from the cluster's authority, `accept`
+  defaulting from the Party's identity; and a hand-out per Receive
+  Location telling a Party the address to use and how to trust Xmip, on
+  every surface.
 - **Decided by the owner, 2026-10-21:** the `location` policy admits
   whoever the Location's mechanisms authenticated, at a Receive and at a
   Send Location; a TLS handshake read waits five seconds by default; a

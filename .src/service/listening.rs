@@ -82,7 +82,7 @@ fn listening(document: &XmipConfigurationDocument) -> Vec<String> {
     let waits = |location: &&xmip_configure::ConfiguredLocation| {
         linked
             .iter()
-            .find(|one| one.technology() == location.transport)
+            .find(|one| one.chosen_by(location))
             .is_none_or(|one| one.waits(location))
     };
     for location in own
@@ -163,12 +163,10 @@ mod tests {
         let file = format!(
             "[operate]\nlisten = \"0.0.0.0:7401\"\ncertificate = \"node.pem\"\n\
              key = \"node.key\"\nanchors = \"anchors.pem\"\n\
-             [[receive_locations]]\nname = \"orders\"\nstart = true\n\
-             transport = \"xmip-core-transport-tcp\"\naddress = \"0.0.0.0:9100\"\n\
+             [[receive_locations]]\nname = \"orders\"\naddress = \"tcp://0.0.0.0:9100\"\n\
              [[receive_locations]]\nname = \"stopped\"\nstart = false\n\
-             transport = \"xmip-core-transport-tcp\"\naddress = \"0.0.0.0:9101\"\n\
-             [[receive_locations]]\nname = \"drop\"\nstart = true\n\
-             transport = \"xmip-core-transport-file\"\naddress = \"/var/xmip/in\"\n\
+             address = \"tcp://0.0.0.0:9101\"\n\
+             [[receive_locations]]\nname = \"drop\"\naddress = \"/var/xmip/in\"\n\
              [storage]\nlisten = \"0.0.0.0:7443\"\n\
              [nodes.{node}]\nroles = \"storage\"\n[nodes.{other}]\nroles = \"receiving\"\n"
         );
