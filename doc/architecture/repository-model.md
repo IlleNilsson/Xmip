@@ -78,7 +78,7 @@ Platform because a store is opened and closed; `xmip-core-journey` is
 Foundation because a Journey's state is true of the Journey.
 
 **The test between Capability and Operation is the message path.** If a
-Journey waits for it, it is a Capability. `xmip-core-retain` moved on
+Message waits for it, it is a Capability. `xmip-core-retain` moved on
 2026-08-26 for that reason: `disposition.rs` calls it at a gate — *"Stream, by
 xmip-core-retain"* when Message creation is refused, *"Message, by
 xmip-core-retain"* when validation fails — so nothing proceeds until retention
@@ -86,7 +86,7 @@ has taken it.
 
 `audit`, `observe` and `report` stay in Operation because ADR-0014 clause 4
 says observation never sits in the message path. `archive` stays too: it moves
-*already-retained* data on a schedule, and no Journey waits for it.
+*already-retained* data on a schedule, and no Message waits for it.
 
 `retain` had been classified by the company it kept rather than by what it does,
 and its `xmip-core-event` dependency was the tell — eventing is for the
@@ -94,7 +94,7 @@ asynchronous family it was sitting with, not for something called synchronously
 at a gate.
 
 `xmip-core-resilience` moved from Platform to Capability on 2026-09-19, by both
-tests at once. A Journey waits for a retry and for a timeout — the guard runs
+tests at once. A Message waits for a retry and for a timeout — the guard runs
 inside the attempt, and nothing proceeds until it decides (ADR-0048) — so the
 message-path test makes it a Capability. Nothing starts, supervises or stops
 it, so the lifecycle test keeps it out of Platform. Its shape had been saying

@@ -581,15 +581,15 @@ one write, once.
 
 **One Journey per Send Port.** Clause 5's *one Journey per matched
 Subscription* holds for a Subscription that leads to a Send Port or to an
-Xmip Process; one that leads to a Send Port Group opens a Journey for each Port of
-the Group, in the Group's order, in the Publication's one write, each led to
+Xmip Process; one that leads to a Send Port Group takes the Message to each Port of
+the Group, in the Group's order, each way recorded by a Journey of its own, in the Publication's one write, each led to
 its Port and kept in its Port's queue (`runtime-model.md` section 10: *A Send
 Port Group is only a named set: routing already made one Journey per Send
 Port in it*). So each Port is sent, retried, failed and dismissed alone, and
 the deduplication key — the Journey's identifier — is one per delivery to
 one endpoint, as section 15 of the runtime model has it.
 
-**A failed Journey waits for an Operator in its Send Port's queue**, and
+**A failed Journey stays in its Send Port's queue for an Operator**, and
 the Operator's acts on it are built: **Retry** writes it Active and sends it
 again from the queue, its tries begun anew; **Dismiss** writes it
 `Dismissed`, its history, Message and Stream kept, and takes it out of the
@@ -696,7 +696,7 @@ removed with the entry, as problem 40's index on queue and place is.
 - **On a database server it is an index of its own**, made by the
   scripts beside the table's key; unlike `held_place`, its columns are not
   the key.
-- **A failed Journey waits for no retry**: the hand-on that fails it
+- **A failed Journey is due for no retry**: the hand-on that fails it
   takes its due time out with the mark, so it is in the failed part alone.
 - **Xmip Storage reads a part** (`XmipStorage::read_due`, wire operation
   28): what is due, what waits for a retry, or what failed, a page from a
@@ -817,5 +817,8 @@ traveler, the thing queued, claimed and waiting.
   three ways, and each way is recorded by its own Journey.
 - **A Message rushes through, unless it encounters a Work Process.**
 
-`runtime-model.md` sections 1 to 3, `terminology.md` and
-`getting-started.md` say it so.
+`runtime-model.md`, `repository-model.md`, `terminology.md`,
+`getting-started.md`, `open-problems.md`, ADR-0024, ADR-0027 and ADR-0058 say it so:
+where they had a Journey wait, open, be sent or resume, the Message does, and
+its Journey records it. A claim is still taken on a Journey, the record of
+who moves the Message, and the Storage operation keeps that name.

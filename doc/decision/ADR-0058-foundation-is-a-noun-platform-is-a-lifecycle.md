@@ -30,8 +30,9 @@ observation test is placed there first, and only what is left is Platform.**
 ## Context
 
 Repository-model.md section 1 has had a test between Capability and Operation
-since 2026-08-26, and it works: *if a Journey waits for it, it is a
-Capability*. It moved `xmip-core-retain` out of the wrong domain within a day
+since 2026-08-26, and it works: *if a Message waits for it, it is a
+Capability* (worded so since ADR-0013's amendment of 2026-10-29: the Message
+travels, its Journey records it). It moved `xmip-core-retain` out of the wrong domain within a day
 of being written, and it is the sentence people quote when the question comes
 up.
 
@@ -108,7 +109,7 @@ code goes to the nearest crate that already has both.
 ### 4. Platform is not the default
 
 A repository is tested in this order: the message-path test first (if a
-Journey waits for it, it is a Capability), then the observation and governance
+Message waits for it, it is a Capability), then the observation and governance
 test (ADR-0014 clause 4 keeps observation out of the message path, so audit,
 observe, report, archive and the operator surfaces are Operation), then this
 record's two clauses. **What is left is Platform.** Nothing is Platform for
@@ -139,7 +140,7 @@ the domain and is a ratchet rather than a migration.
 - `xmip-core-schedule` **stays, and is on notice.** See clause 7.
 - `xmip-core-resilience` **moves to Capability**, mounting at
   `module/capability/resilience` with its six technologies. Both tests agree:
-  a Journey waits for a retry and for a timeout — the guard runs inside the
+  a Message waits for a retry and for a timeout — the guard runs inside the
   attempt and nothing proceeds until it decides (ADR-0048) — and nothing
   starts, supervises or stops the crate itself. **The repository name, the
   crate name and the URL do not change** (ADR-0011: the domain explains a

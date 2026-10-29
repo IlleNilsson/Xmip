@@ -151,7 +151,7 @@ B — a shared write path — with the difference that no node writes the
 database directly, only Xmip Storage's operations do. The database server's
 failover and the balancing of incoming traffic are IT's. Built since: a
 node's work reaching another node through Xmip Storage over the wire in the
-assembled service, a receiving node's Journey sent by a sending node, and
+assembled service, a Message a receiving node published sent by a sending node, and
 embedded Storage nodes as a primary and its standbys (2026-10-22; problems
 45 and 46); the database server is not. The question as it
 stood before the ruling:
@@ -328,7 +328,7 @@ is decided and recorded; almost none of it is built, and nothing demonstrates it
 (`runtime-model.md`): nothing runs on arrival, every Stream, Message and Journey
 is written to the Ledger, synced, before anything acts on it, so an accepted
 Message cannot be lost to a crash: a write counts only once the database
-behind Xmip Storage has it durably (2026-10-01). A non-terminal Journey resumes from its last
+behind Xmip Storage has it durably (2026-10-01). A Message whose Journey is not terminal resumes from its last
 checkpoint, position and Message generation together (ADR-0013). Exactly-once is
 internal — one runtime owns a unit of work by the durable claim (ADR-0024),
 checkpoints bound reprocessing — so delivery is at-least-once and edge effects
@@ -1069,7 +1069,7 @@ can be published; admission bounds what is in flight, not this. Repaired the
 same day: a Journey read Failed again is found by its Journey at once, not
 by looking through all of them, and a whole read of a queue forgets every
 place passed over that has left it. What remained: memory still grew with
-the number of failed Journeys waiting. Needed: the count, and an index of
+the number of failed Journeys kept. Needed: the count, and an index of
 the failed Journeys of each queue, kept by Xmip Storage in the Ledger and
 read from it, with the node keeping a bounded window of the oldest.
 
@@ -1887,7 +1887,7 @@ claim is cluster-wide without any lease at all. The remaining need for true
 Cluster scope may be small enough to make B's cost absurd. Worth counting the
 real cases before building anything.
 
-## 43. A Journey waiting for a retry holds a place every Port shares — **Resolved**
+## 43. A Message waiting for a retry holds a place every Port shares — **Resolved**
 
 *Resolved 2026-10-16 by the owner's decision of that day, built the same
 day; recorded here 2026-10-16. What it left is problem 40 and the store
@@ -1896,7 +1896,7 @@ encoding below, which no release carries yet.*
 
 Raised by the outside review of 2026-10-16. Admission counts every Journey
 the node owns against one node-wide number of places
-(`runtime/src/send_step/admission.rs`), a Journey waiting for its retry's
+(`runtime/src/send_step/admission.rs`), a Message waiting for its retry's
 due time included: `dispatch.rs` keeps it owned until its next pass ends.
 That holds memory to the pool, as intended, and it lets one failing Send
 Port fill every place with Journeys that only wait, so a scan finds no room
@@ -2098,7 +2098,7 @@ same day (ADR-0013, amendment 2026-10-21).*
 
 What problems 40 and 43 left: at every `[tuning] send_scan` a scan read
 every entry its Send Port's queue held to find what was due, so a far end
-that failed for an hour made every scan read every Journey waiting on it,
+that failed for an hour made every scan read the Journey of every Message waiting on it,
 and a Journey that failed was read at every scan to be passed over.
 Decided by the owner, 2026-10-19: *a send scan reads only what is due*,
 through an ordered index on when each entry is due, written and removed
