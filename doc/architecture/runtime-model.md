@@ -410,8 +410,8 @@ operator intervenes — or it is set aside and the sequence continues, which
 breaks the ordering that was the point. Both are defensible; **neither is a
 default that can be chosen silently**, because the first surprises an operator
 with a stall and the second surprises them with reordering. The owner chose,
-2026-10-22: block by default, skip as an option — a failed Journey waiting for
-an operator keeps its Stream at the head until Retry or Dismiss, and a set's
+2026-10-22: block by default, skip as an option — a Message whose Journey failed,
+waiting for an operator, keeps its Stream at the head until Retry or Dismiss, and a set's
 `on_failure = "skip"` lets the rest pass. It is a key of the set, placed once
 (section 20, *Where the runtime's settings are configured*).
 
@@ -651,10 +651,11 @@ retry's backoff holds no thread, and a stop gives its claim back; and a
 Send Port naming a Correlation keeps its order, blocking behind a
 failure or setting it aside as the set's `on_failure` says. And, built 2026-10-04 (`tests/ledger/
 send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
-Subscription opens one Journey per Port, each in its Port's queue and sent
-or failed alone; every send carries its Journey's identifier as its key,
-the same on every try; a retry's count is kept in the Ledger and survives a
-restart; an Operator's Retry sends a failed Journey again — in its order
+Subscription takes the Message to each Port, each way recorded by its own
+Journey in its Port's queue and sent or failed alone; every send carries its
+Journey's identifier as its key, the same on every try; a retry's count is
+kept in the Ledger and survives a restart; an Operator's Retry sends the
+Message of a failed Journey again — in its order
 where its sequence blocks behind it — and Dismiss ends it Dismissed and
 lets its sequence go, each audited. And, built 2026-10-22
 (`tests/ledger/work_process.rs`): a client's Messages make one Instance and
@@ -1317,7 +1318,7 @@ send_lease`) and sent — one a dead node
 left, one whose send was cut short, one no node sending its Port held;
 claims of work in flight are renewed, and a stop gives back the claims of
 what waits. A Send Port naming a Correlation has one Journey of each
-key in flight at a time, the oldest first, and every Journey waits until its
+key in flight at a time, the oldest first, and no Message is sent until its
 Stream heads the sequences it holds end to end (section 3, *Sequences*): a
 pass that finds it does not gives its claim back, tries nothing, and is taken
 up again once it does. A paused Subscription's resume moves each Journey it
@@ -1329,13 +1330,13 @@ waits for its due time.
 **Built 2026-10-04**, closing what the send step left:
 
 - **One Journey per Send Port of a Send Port Group.** A Subscription to a
-  Group opens a Journey for each Port of the Group, in the Group's order,
-  each led to its Port (the Journey's `send_port`) and queued in its Port's
+  Group takes the Message to each Port of the Group, in the Group's order,
+  each way recorded by a Journey of its own led to its Port (the Journey's `send_port`) and queued in its Port's
   queue, in the Publication's one write; each Port is sent, retried, failed
   and acted on alone. A paused Subscription holds each, and a Replay from the
   Dead Message Queue opens them the same way. A Group no Application of the
-  publishing node declares opens one Journey to the Group, which no node
-  sends.
+  publishing node declares records one Journey to the Group, whose Message
+  no node sends.
 - **A retry's count is in the Ledger.** The active Send Location and how
   often it was tried are the Journey's `attempts`, written with every
   hand-on of a send, so a node restarted, or another taking the Journey up,
@@ -1358,7 +1359,7 @@ waits for its due time.
   Active, its tries begun anew, and moves it to the end of its Send Port's
   queue — keeping its place in its sequence, so the sequence goes on in
   order from it; Dismiss writes it Dismissed, its history kept, and takes it
-  out of the queue, so the next of its key goes. An act is taken by a node that sends the Journey's
+  out of the queue, so the next of its key goes. An act is taken by a node that sends through the Journey's
   Port, the one whose `<node>/send/<Port>` showed it failed.
 
 **Corrected 2026-10-05**, after an external review of the send step:
@@ -1412,7 +1413,7 @@ waits for its due time.
   place was admitted for, so a backlog's claims share their commits; until
   now the dispatching claimed them one by one, a commit's sync each, which
   a backlog refilled through the scan would have paid for every Journey.
-- **A Send Port with failed Journeys waiting is Done.** Its record at
+- **A Send Port with failed Journeys kept is Done.** Its record at
   `<node>/send/<Port>` is Done — blocked or failed, the pain an operator's
   Retry or Dismiss solves (`observability-model.md` section 6) — while any
   waits in its queue, the most severe of the Done where one blocks its
@@ -1518,7 +1519,7 @@ waits for its due time.
   with why, and every place passed over, so its memory grew with the
   failures, and every node read each failed Journey once after a restart
   to find it again.
-- **A Journey waiting for a retry holds no place** (the owner, 2026-10-16;
+- **A Message waiting for a retry holds no place** (the owner, 2026-10-16;
   `open-problems.md` problem 43). The hand-on that writes it Recovering
   keeps its due time at its place in its queue — Xmip Storage's now and the
   backoff, on Xmip Storage's clock — and releases its claim, so it holds no
@@ -1557,7 +1558,7 @@ waits for its due time.
   at its due time. Releasing a waiting Journey's claim (problem 43, above)
   let a scan that had read the queue before that Journey's hand-on landed —
   no due time at its place then, and the Journey no longer owned when the
-  scan looked — take a claim nobody held and send the Journey again at
+  scan looked — take a claim nobody held and send its Message again at
   once: a far end received it twice from one node. Until then only an
   ordered scan read the place again, and it did not look at the due time. Xmip Storage's claim stays as section 3 has it — *set the
   owner where the owner is empty or lapsed* — and already refuses any claim
@@ -1826,9 +1827,9 @@ setting, and Xmip does not offer a switch that promises otherwise.
 
 Internally, exactly-once holds: a claim through Xmip Storage (section 3)
 means one node owns a unit of work, and every hand-on is one atomic write;
-execution checkpoints in `xmip-core-persist` mean a recovered Journey resumes
-rather than restarts, and Messages are immutable so a resumed Journey cannot
-half-produce one.
+execution checkpoints in `xmip-core-persist` mean a recovered Message's travel
+resumes from its Journey's last checkpoint rather than restarts, and Messages
+are immutable so a resumed travel cannot half-produce one.
 
 Externally it depends on what the far side supports. A queue with
 acknowledgment and a deduplication window can be delivered to exactly once. An

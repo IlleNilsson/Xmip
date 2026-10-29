@@ -584,8 +584,8 @@ xmip:///<cluster>[/node/<node>]/SendPort/<name>/SendLocation/<name>
 - **A Port contains its Locations**, so clause 4's tree gains the Port as a
   level.
 - **A Send Port Group stands beside its Send Ports, not above them.** A
-  Subscription to it opens one Journey per Send Port: fan-out, not
-  containment.
+  Subscription to it takes the Message to each Send Port, each way
+  recorded by its own Journey: fan-out, not containment.
 - **A Party is never a segment** (clause 4). Where a configured Party is
   involved, the reading shows it, on its face or in a tooltip.
 

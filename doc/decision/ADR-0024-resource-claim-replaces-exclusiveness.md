@@ -706,7 +706,7 @@ parallel depending on the value in the correlation set.*
   configured; orders per client name a set keyed by the client,
   `keys = ["context:Client"]`, and run side by side, each client's in order.
 - **What a failure does is the set's**: `on_failure`, `block` by default — a
-  failed Journey waiting for an operator keeps its Stream at the head until
+  Message whose Journey failed, waiting for an operator, keeps its Stream at the head until
   Retry or Dismiss — and `skip` as the option that lets the rest pass (the
   owner, 2026-10-22). The Send Port's own `execution_style`, `order_key` and
   `on_failure` are deleted with every use.
