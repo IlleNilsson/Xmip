@@ -415,3 +415,36 @@ a sweep of their own.
 Provenance: the decisions and both naming rules are the owner's, quoted;
 the exports' shapes, one authority for the whole Playground and the
 lifetimes are the assistant's.
+
+## Amendment, 2026-10-29: every plane admits a call before it reads it
+
+Found by an audit of the secrets' path (ADR-0019, amendment of this date):
+the Storage wire answered any certificate under the cluster's anchors —
+a person's operator certificate included — every operation, the secrets'
+too; and a node's operate listener read a call's message before it
+decided who might ask it, and never asked at all of the publication, its
+wait or the secrets' listing. Decided by the assistant, for the owner to
+overrule:
+
+- **One admission for every plane Xmip serves its own parts**,
+  `authorize::plane::admit`: from what the connection proved — who, and a
+  standing ranked least first — and the plane's rules, each the least
+  standing that may ask an action and an operation, `*` an action's every
+  other operation. Nothing proved asks nothing; an operation no rule names
+  is refused. The Storage wire asks it, an Event cluster's serving end is
+  to.
+- **The Storage wire admits nodes alone**: a certificate that
+  authenticates a server — a node's, both ways — asks every read and
+  write, and one that authenticates a client alone — a person's — is
+  refused in words and its connection closed (`persist::storage::server`,
+  `RULES`; `tls::peer::authenticates_servers`). The secrets' operations
+  are named in the rules apart, so no broader rule later grants them.
+- **A node's operate listener decides before it reads**: by the call's
+  method, the identity and the role, `plane::role::admitted`, the one
+  check, which takes the method — the publication and its wait to anyone
+  proven, an act, a secret set and the secrets' listing to an Operator and
+  up (`plane::role::RULES`) — and only then reads the call's message. A
+  screen's act asks the same check through `xmip_act_admitted_v1`.
+
+Not decided: finer rules by a node's roles — which node may read a secret
+— since a node's certificate does not say its roles.

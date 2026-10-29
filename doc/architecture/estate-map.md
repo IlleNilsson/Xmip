@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 310597 lines of production
+Where each repository mounts and what it holds: 311295 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -624,7 +624,7 @@ hold no source to count.
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
-│   │   │   ├── authorize                        409
+│   │   │   ├── authorize                        488
 │   │   │   │   ├── location                     397
 │   │   │   │   ├── abac                         359
 │   │   │   │   ├── opa                          297
@@ -665,12 +665,12 @@ hold no source to count.
 │   │   │   ├── codec                           2860
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1698
-│   │   │   ├── tls                             1124
+│   │   │   ├── tls                             1144
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             8716
+│   │       ├── cli                             9123
 │   │       ├── gui                             5054
 │   │       │   └── vscode                      3491
 │   │       ├── audit                           3958
@@ -724,8 +724,8 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            33929
-│       ├── persist                            13908
+│       ├── runtime                            33993
+│       ├── persist                            14036
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1

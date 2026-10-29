@@ -57,8 +57,14 @@ pub fn issue(place: &Path) -> xmip_tls::Identity {
         .self_signed(&authority_key)
         .expect("the authority again");
     let key = rcgen::KeyPair::generate().expect("a key");
-    let leaf = rcgen::CertificateParams::new(vec!["127.0.0.1".to_string()])
-        .expect("params")
+    let mut params = rcgen::CertificateParams::new(vec!["127.0.0.1".to_string()]).expect("params");
+    // Server and client authentication, as a node's certificate is (ADR-0034):
+    // what the Storage plane admits.
+    params.extended_key_usages = vec![
+        rcgen::ExtendedKeyUsagePurpose::ServerAuth,
+        rcgen::ExtendedKeyUsagePurpose::ClientAuth,
+    ];
+    let leaf = params
         .signed_by(&key, &issuer, &authority_key)
         .expect("issued");
     xmip_tls::Identity::from_pem(

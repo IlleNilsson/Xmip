@@ -1651,6 +1651,7 @@ dependency = []
       "xmip-core-library-sql",
       "xmip-core-library-tls",
       "xmip-core-secret",
+      "xmip-core-authorize",
   ]
     # The engines, each a technology under persist (ADR-0015, amendment
     # 2026-09-25), so a device build can leave RocksDB out. The embedded
