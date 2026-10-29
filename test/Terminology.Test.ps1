@@ -34,7 +34,7 @@ BeforeAll {
             # Frozen 2026-09-06 at the count then present across docs. It may
             # fall, never rise. Qualify a new one (Work Process / Host Subprocess /
             # System Process / Process Definition); do not raise this number.
-            Ceiling = 92
+            Ceiling = 90
         }
     )
 

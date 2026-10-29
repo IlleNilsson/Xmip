@@ -141,7 +141,7 @@ mod tests {
              [[xmip_applications]]\nname = \"Orders\"\n\
              [[xmip_applications.receive_ports]]\nname = \"In\"\n\
              [[xmip_applications.receive_locations]]\nname = \"From A\"\nreceive_port = \"In\"\n\
-             interaction = \"data-transfer\"\ndepth = \"light\"\n"
+             depth = \"light\"\n"
         );
         let placed =
             xmip_configure::placed::at_far_end(&file, std::slice::from_ref(&node), "10.77.0.1")

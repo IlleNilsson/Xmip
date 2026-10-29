@@ -314,7 +314,6 @@ name = "In"
 [[xmip_applications.receive_locations]]
 name = "Drop"
 receive_port = "In"
-interaction = "data-transfer"
 depth = "light"
 
 [[xmip_applications.send_ports]]

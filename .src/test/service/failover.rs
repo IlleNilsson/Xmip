@@ -36,7 +36,6 @@ name = "Carried"
 [[xmip_applications.receive_locations]]
 name = "In"
 receive_port = "Carried"
-interaction = "data-transfer"
 depth = "light"
 
 [[xmip_applications.send_ports]]

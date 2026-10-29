@@ -531,10 +531,10 @@ assistant; his words are quoted where they decided.
   acknowledged*). The lifecycle above runs inside the receive call, with the
   Stream written to the Ledger in chunks through Xmip Storage right
   after transport authorization and before Preparation Steps; Publication
-  writes the Message record, audited; then the sender is acknowledged. Data
-  Transfer and Batch Load are acknowledged once accepted and validated; a
-  Composite interaction holds the call until the response an Xmip Process
-  produced (`runtime-model.md` section 5). Clauses 1 to 3 stand: a refusal
+  writes the Message record, audited; then the sender is answered: a result
+  code once accepted and validated, or, where a Work Process answers the
+  request, the response Message it produced, the call held until then
+  (`runtime-model.md` sections 5 and 11; amendment 2026-10-29). Clauses 1 to 3 stand: a refusal
   at the transport keeps nothing, the Stream is kept from Message creation
   on, and a Message failing Validation is kept and answered where the
   protocol can, with no Journey.
@@ -826,3 +826,18 @@ the thing queued, claimed and waiting.
 `terminology.md`, `getting-started.md`, `open-problems.md`, ADR-0024,
 ADR-0027, ADR-0056 and ADR-0058 say it so: the Message waits, is claimed, is
 sent and resumes, and a Storage node's operations claim a Message.
+
+**Every transport is request-response.** The owner, the same day: *It is not
+that hard, every transport is Request-Response in the Xmip world. A
+response can be a message or an result code*; and *Just taking a
+configuration item of the board*. A Receive Location answers every request:
+a result code once the receive cycle has accepted and validated the Message,
+or the response Message where a Work Process answers the request, the call
+held until it does. Every send has an answer: the far end's result code, or
+a response Stream the Send Port makes a Message of, its travel in the same
+Journey. So a Receive Location's `interaction` — `composite`,
+`data-transfer`, `batch-load` — is deleted with every use: from
+`xmip-core-configure` (`Interaction`, `DesignedReceiveLocation::interaction`
+and the problem of a Location stating none), the samples, the Playground's
+`xmip.toml` and the documents (`runtime-model.md` sections 5, 6, 7, 11 and
+20; ADR-0031). Processing depth stays.
