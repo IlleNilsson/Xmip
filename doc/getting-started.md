@@ -26,10 +26,12 @@ Ports, promoted properties. The words Xmip uses are defined once, in
   and is written to disk before anything acts on it.
 - **Receive Location**: where a Stream arrives, through one transport at one
   address, such as a folder or a port.
-- **Subscription**: what picks a published Message up. Each matching
-  Subscription opens one Journey.
-- **Journey**: one durable line of work for a Message, from its Subscription to
-  its delivery. It survives a restart and ends Completed, Failed or Dismissed.
+- **Subscription**: what picks a published Message up, by its context values:
+  its Receive Location, its Receive Port, its promoted properties. The
+  Message rushes through, unless it encounters an Xmip Work Process.
+- **Journey**: the record of a Message's travel to one Subscription, from its
+  Publication to its delivery. It survives a restart and ends Completed,
+  Failed or Dismissed.
 - **Xmip Work Process**: the integration process you define, which works on a
   Message between arrival and delivery.
 - **Send Port** and **Send Location**: a Send Port delivers a Message through

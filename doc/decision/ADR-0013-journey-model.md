@@ -31,6 +31,10 @@ Subscription matched is Dead Message Queue state in the Ledger, replayed by
 an Operator, and the sender is acknowledged after the whole receive cycle
 (amendment 2026-10-01).
 
+A Subscription matches a Message by its context values, and the Message
+travels; its Journey records the travel. A Message rushes through, unless it
+encounters a Work Process (amendment 2026-10-29).
+
 ## Context
 
 The runtime cannot be written without knowing what happens at each refusal. "A Stream arrives
@@ -794,3 +798,24 @@ and reported, so it carries the rule.
   what, where and why form.
 
 Every stage but debatching is open problem 55.
+
+## Amendment, 2026-10-29: the Message travels, its Journey records it
+
+The owner, 2026-10-29: *A journey does not wait, it rushes through, unless it
+encounter a Work Process, Pub/Sub wize*; *A message can be subscriped to, not
+a journey, the journey is the ledger of the message*; and *Streams may be
+transformed, creating a new stream. A stream can be assigned. Every stream is
+wrapped in a message and it travels is recorded by it's Journey. That has
+never changed.* The records had drifted from it: they made the Journey the
+traveler, the thing queued, claimed and waiting.
+
+- **A Subscription matches a Message**, never a Journey, by its context
+  values: its Receive Location, its Receive Port, its promoted properties
+  and its other Message values. The Message is what travels.
+- **A Journey is the record of a Message's travel**, appended and never
+  rewritten. Clause 5 holds: a Message matched by three Subscriptions travels
+  three ways, and each way is recorded by its own Journey.
+- **A Message rushes through, unless it encounters a Work Process.**
+
+`runtime-model.md` sections 1 to 3, `terminology.md` and
+`getting-started.md` say it so.
