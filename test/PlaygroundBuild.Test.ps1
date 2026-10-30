@@ -180,6 +180,7 @@ Describe 'A build says how it stands' {
             Set-Content -LiteralPath $record -Value 'pid = 1'
 
             Mock Invoke-XmipPlaygroundBuild { 'roll' }
+            Mock Invoke-XmipPlaygroundService { 'service' }
             Mock Start-XmipPlaygroundRollProcess { 7 }
 
             Complete-XmipPlaygroundBuild -Record $record -Handed $handed
