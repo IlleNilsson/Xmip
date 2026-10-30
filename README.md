@@ -266,8 +266,8 @@ immutable Message generations.
 
 A failure is persisted with the Message state, the Journey position, its
 classification, its evidence and the identities involved. An accepted Message
-that no Subscription matched goes to the Dead Message Queue; a failed Journey
-stays a failed Journey. The two are not collapsed into one dead-letter queue,
+that no Subscription matched goes to the Dead Message Queue; a failed Message
+stays a failed Message. The two are not collapsed into one dead-letter queue,
 because their recovery actions differ.
 
 ### Boundaries and scale
@@ -702,12 +702,12 @@ audit`, what every Xmip program recorded, filtered by the Audit view's words,
 `--pause` or `--resume` on one, and `xmip event-subscriptions`, the Event
 subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
 one, and `xmip dead-messages`, what each node's Dead Message Queue keeps,
-with `--message` to open one and `--replay` on it, and `xmip journey`,
-the Journeys that failed at each Send Port, a page at a time, with
+with `--message` to open one and `--replay` on it, and `xmip message`,
+the Messages that failed at each Send Port, a page at a time, with
 `--retry` or `--dismiss` on one; the PowerShell module answers the same as
 objects, the audit, the Subscriptions, the Event subscriptions, the Dead
-Message Queues and the failed Journeys included, and takes listing, Retry
-and Dismiss of failed Journeys as parameters of its scope cmdlet. A person's
+Message Queues and the failed Messages included, and takes listing, Retry
+and Dismiss of failed Messages as parameters of its scope cmdlet. A person's
 certificate for reaching a node's operate listener, the phone first —
 client authentication alone, its subject the person — is made and signed by
 `xmip certificate --operator <person>` and `xmip certificate
@@ -746,7 +746,7 @@ isolation and whether the runtime fails closed
 
 1. Start at the cluster Status and read its evidence.
 2. Drill into the worst node, stage and leaf scope.
-3. Tell a refused Stream, an unmatched Message and a failed Journey apart;
+3. Tell a refused Stream, an unmatched Message and a failed Message apart;
    each has a different owner and a different recovery path.
 4. Read the Audit and the persisted failure state before changing
    configuration. A monitor that showed *an unhandled error* has its record
@@ -763,7 +763,7 @@ Journey keeps its position and resumes from its checkpoint; one whose every
 Send Location failed its tries waits in its Send Port's queue, listed at the
 Port's scope with why — every one, also those that failed before a restart
 or on another node — for an Operator to Retry or Dismiss: on the Monitor's
-drill at that scope, with `xmip journey` or with the PowerShell module's
+drill at that scope, with `xmip message` or with the PowerShell module's
 scope cmdlet. A refused Stream
 never became a Message and remains the sender's responsibility.
 

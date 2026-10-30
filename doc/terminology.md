@@ -290,6 +290,11 @@ A **Section** is a stream contained within a Message, with a section id,
 metadata and a stream reference. Sections may reuse stream references when the
 content is unchanged.
 
+A **Journey** is metadata on a Message: the record of its travel to one
+Subscription. A Stream arrives and becomes a Message; the Message takes its
+Journey through Xmip; the Journey ends when the Message is sent out as a Stream
+(the owner, 2026-10-30; ADR-0013, amendment 2026-10-29).
+
 **The content is immutable; the Message's context grows.** Three things
 happen to a Message, and only two of them make a new one:
 

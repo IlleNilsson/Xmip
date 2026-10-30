@@ -1075,14 +1075,14 @@ read from it, with the node keeping a bounded window of the oldest.
 
 Repaired 2026-10-16. The hand-on that writes a Journey Failed names its
 queue and why (`HandOn::failed`), and Xmip Storage enters it at the end of
-that queue's index of failed Journeys — the `failed_journey` and
-`failed_journey_places` tables, numbered as every queue is — and marks its
+that queue's index of failed Messages — the `failed_message` and
+`failed_message_places` tables, numbered as every queue is — and marks its
 place in the queue failed (`held.failed`), in that one write; an operator's
 Retry or Dismiss takes it out in its own (`HandOn::cleared`). How many wait
 is one read of the index's places (`XmipStorage::read_failed`). The node
 keeps per Send Port that count and the oldest `[tuning] failed_window` (a
 hundred by default), read again only where the index's places moved, and
-publishes them; `xmip_failed_journeys_v1` pages the rest from the index,
+publishes them; `xmip_failed_messages_v1` pages the rest from the index,
 each page one read, its `next` a place in the index. A scan passes over a
 place marked failed without reading its Journey, except where it blocks a
 Sequential Port's sequence (`runtime-model.md` section 10, corrected
@@ -1090,10 +1090,10 @@ Sequential Port's sequence (`runtime-model.md` section 10, corrected
 written Failed before this change, or by a writer that does not name its
 queue, is in no index — before the first release nothing migrates it; and
 a publication's list (`SnapshotOperator`,
-`PublicationReading.FailedJourneysWithin`) still pages by the place in the
+`PublicationReading.FailedMessagesWithin`) still pages by the place in the
 Send Port's queue while a node's own list pages by the place in the index:
 a publication carries no index places. Said so precisely, the same day, in
-`IOperatorSurface.FailedJourneys`, `xmip journey --offset` and
+`IOperatorSurface.FailedMessages`, `xmip message --offset` and
 `Get-XmipScope -Offset`; making the two one would mean publishing each
 Journey's place in the index.
 
@@ -2000,7 +2000,7 @@ index, and before the first release nothing migrates it.
 
 Built 2026-10-19. The schema definition (`persist::storage::schema`)
 indexes each kind of queue on `(queue, sequence)`: `held_place`,
-`dead_message_place`, and `failed_journey_place` — the index of failed
+`dead_message_place`, and `failed_message_place` — the index of failed
 Journeys is numbered and read by the same mechanics, so its gap was the
 same (problem 34), and its record now carries its queue. On a database
 server each is the table's primary key, so the scripts under
@@ -2122,7 +2122,7 @@ holds a sequence behind it, and keeps the queue's order; it reads what is
 due first and again last, so a Journey that moves between the parts while
 they are read — a send's verdict, an operator's Retry, the clock — is read
 in one of them and its sequence never goes on without it (corrected
-2026-10-21, `tests/ledger/journey_act.rs`). On a database
+2026-10-21, `tests/ledger/message_act.rs`). On a database
 server `held_due` is an index of its own, in the scripts under
 `deploy/database/<server>/`.
 
@@ -2147,7 +2147,7 @@ one range of the index from where it was, stepping over each mark once
 ends, so none steps past its end over what was taken out beyond it.
 
 What it leaves: the place index (`held_place`, `dead_message_place`,
-`failed_journey_place`) still keeps its first only as a place no entry is
+`failed_message_place`) still keeps its first only as a place no entry is
 held before, moved when the queue empties, as problem 40 decided, so a page
 of it from the first steps over the marks of what was taken out ahead of
 the oldest entry; the pickup and the window on failed Journeys read it so.

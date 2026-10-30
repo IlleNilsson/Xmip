@@ -53,7 +53,9 @@ stream reference. Sections reuse stream references when content is unchanged.
 of its travel to one Subscription. A Subscription matches a Message by its
 context values — its Receive Location, its Receive Port, its promoted
 properties and its other Message values; the Stream, wrapped in its Message,
-is what travels (ADR-0013, amendment 2026-10-29).
+is what travels (ADR-0013, amendment 2026-10-29). A Stream arrives and
+becomes a Message; the Message takes its Journey through Xmip; the Journey
+ends when the Message is sent out as a Stream (the owner, 2026-10-30).
 
 A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
@@ -650,7 +652,7 @@ written Failed with why while its sender was acknowledged all the same; a
 retry's backoff holds no thread, and a stop gives its claim back; and a
 Send Port naming a Correlation keeps its order, blocking behind a
 failure or setting it aside as the set's `on_failure` says. And, built 2026-10-04 (`tests/ledger/
-send_group.rs`, `journey_act.rs` and `send.rs`): a Send Port Group's
+send_group.rs`, `message_act.rs` and `send.rs`): a Send Port Group's
 Subscription takes the Message to each Port, in each Port's queue and sent
 or failed alone, a Journey of its own its metadata; every send carries that
 Journey's identifier as its key, the same on every try; a retry's count is
@@ -1417,7 +1419,7 @@ waits for its due time.
   and was acted on is history in its figures and leaves it Fine. Until now
   it was Fine whatever waited, and left out of what needs attention.
 - **Now and history are published apart.** Every Send Port the node sends
-  publishes its failed Messages (`observe::FailedJourneys`, read from their
+  publishes its failed Messages (`observe::FailedMessages`, read from their
   Journeys) — `count` now, zero where none, so a surface says *none now*
   from the record and never from its absence; `blocked`; the oldest hundred
   — and, apart from them, `last_failure`, the last Message that failed there since the node

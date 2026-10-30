@@ -271,7 +271,7 @@ as themselves, an Operator's act is taken and audited under that Operator's
 certificate subject and never the host's account, the Playground's tester
 acts by the fake directory on loopback, and every request's user over the
 wire is what its connection proved; and in `Xmip.Gui.Test`
-(`JourneyActsViewTest`): a screen's act is audited as the browser's caller,
+(`MessageActsViewTest`): a screen's act is audited as the browser's caller,
 and one nothing proved is offered no act and the gate takes none.
 
 Provenance: the outside review of 2026-10-06 and the owner's approval of its
