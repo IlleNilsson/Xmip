@@ -183,12 +183,12 @@ Describe 'An xmip line a document shows is one the command line takes' {
 
         # What an act names, as the usage says it (its last paragraph): a node
         # by --location, and the one it acts on by --name, --id, --message or
-        # journey's <id>.
+        # message's <id>.
         [hashtable] $script:Named = @{
             'subscriptions'       = '--name'
             'event-subscriptions' = '--id'
             'dead-messages'       = '--message'
-            'journey'             = '<id>'
+            'message'             = '<id>'
         }
         [string[]] $script:Act = @(
             '--pause', '--resume', '--remove', '--replay', '--retry', '--dismiss'

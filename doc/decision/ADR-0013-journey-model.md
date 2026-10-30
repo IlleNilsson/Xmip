@@ -495,8 +495,9 @@ the owner to overrule.
   *Where it lives is answered 2026-10-01: Ledger state (amendment of that date). Which module
   owns it is still open.*
 - **"Final disposition" versus replay.** An operator who adds the missing Subscription will
-  want to replay from the DMQ, where a faulty Stream is replayable. Either "final" means its
-  Journey ends there, or the asymmetry needs a reason.
+  want to replay from the DMQ, where a faulty Stream is replayable. Either "final" means the
+  Message travels no further — it has no Journey, since a Journey ends only with its Message
+  sent out as a Stream (amendment 2026-10-29) — or the asymmetry needs a reason.
   *Answered 2026-10-01: Replay from the Dead Message Queue is an Operator act (amendment of
   that date).*
 - **`JourneyState` cannot distinguish a sender's bad data from a broken system.** The ABI makes
@@ -647,7 +648,7 @@ index, and before the first release nothing migrates it.
 
 - **One index per kind of queue**, in the one schema definition
   (`persist::storage::schema`): `held_place`, `dead_message_place` and
-  `failed_journey_place`, each on `(queue, sequence)`. The index of failed
+  `failed_message_place`, each on `(queue, sequence)`. The index of failed
   Journeys is numbered as every queue is and read by the same mechanics,
   so it is indexed the same way (problem 34: *a gap the index's first
   place must cross is read place by place, as in every queue*).
@@ -825,7 +826,18 @@ the thing queued, claimed and waiting.
 `runtime-model.md`, `repository-model.md`, `deployment-model.md`,
 `terminology.md`, `getting-started.md`, `open-problems.md`, ADR-0024,
 ADR-0027, ADR-0056 and ADR-0058 say it so: the Message waits, is claimed, is
-sent and resumes, and a Storage node's operations claim a Message.
+sent and resumes, and a Storage node's operations claim a Message. The code
+follows: what is failed, listed, retried and dismissed is the Message, named
+by its Journey's identifier — the C ABI's `xmip_failed_messages_v1`,
+`xmip_publication_failed_messages_v1` and `xmip_message_act_v1`, the order
+noun and the `xmip message` command, `Get-XmipScope -FailedMessage`, and Xmip
+Storage's `failed_message` tables.
+
+**Where a Journey begins and ends.** The owner, 2026-10-30: *Stream, Message
+which takes a Journey through Xmip. The journey ends with the message being
+sent as a stream.* A Stream arrives and becomes a Message; the Message takes
+its Journey through Xmip; the Journey ends when the Message is sent out as a
+Stream (`runtime-model.md` section 2, `terminology.md`).
 
 **Every transport is request-response.** The owner, the same day: *It is not
 that hard, every transport is Request-Response in the Xmip world. A

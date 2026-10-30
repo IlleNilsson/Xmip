@@ -130,25 +130,25 @@ CREATE TABLE xmip.held_due_places (
     CONSTRAINT held_due_places_key PRIMARY KEY (queue)
 );
 
--- the Journeys that failed waiting in each Send Port's queue for an operator, in the order they failed, each once, with its place in the queue and why, written with the failure and taken out with the operator's act.
-CREATE TABLE xmip.failed_journey (
+-- the Messages that failed waiting in each Send Port's queue for an operator, in the order they failed, each once, with its place in the queue and why, written with the failure and taken out with the operator's act.
+CREATE TABLE xmip.failed_message (
     queue uuid NOT NULL,
     sequence bigint NOT NULL,
     journey uuid NOT NULL,
     place bigint NOT NULL,
     reason text NOT NULL,
     failed_at timestamptz NOT NULL,
-    CONSTRAINT failed_journey_key PRIMARY KEY (queue, sequence),
-    CONSTRAINT failed_journey_unique UNIQUE (queue, journey)
+    CONSTRAINT failed_message_key PRIMARY KEY (queue, sequence),
+    CONSTRAINT failed_message_unique UNIQUE (queue, journey)
 );
 
--- each queue's index of failed Journeys: its first place, its next and how many failed Journeys wait in the queue.
-CREATE TABLE xmip.failed_journey_places (
+-- each queue's index of failed Messages: its first place, its next and how many failed Messages wait in the queue.
+CREATE TABLE xmip.failed_message_places (
     queue uuid NOT NULL,
     first_place bigint NOT NULL,
     next_place bigint NOT NULL,
     failed bigint NOT NULL,
-    CONSTRAINT failed_journey_places_key PRIMARY KEY (queue)
+    CONSTRAINT failed_message_places_key PRIMARY KEY (queue)
 );
 
 -- each node's Dead Message Queue: every Message nothing matched, at its place, with its receive context, what its gates concluded, its promoted properties and each Subscription's reason for declining, each once.

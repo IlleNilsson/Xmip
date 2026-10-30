@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 311275 lines of production
+Where each repository mounts and what it holds: 311294 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -670,14 +670,14 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             9123
-│   │       ├── gui                             5054
+│   │       ├── cli                             9126
+│   │       ├── gui                             5056
 │   │       │   └── vscode                      3491
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3903
+│   │       ├── observe                         3905
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      3470  C# 3470 · PowerShell 0
@@ -696,7 +696,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31213  C# 28676 · Rust 2241 · PowerShell 296
+│   │   ├── abi                                31219  C# 28681 · Rust 2242 · PowerShell 296
 │   │   ├── event                               5607
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -724,7 +724,7 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            33993
+│       ├── runtime                            33999
 │       ├── persist                            14036
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
