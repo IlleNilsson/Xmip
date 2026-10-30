@@ -1332,5 +1332,19 @@ publication; a file read as text, as `Set-XmipSecret -Path` and
 web host the time is the server's zone and the invariant culture — the
 browser's zone could only be said by a script, which the GUI does not
 carry, and the GUI builds with invariant globalization
-(`Directory.Build.props`); the VS Code extension's completion of `secret`
-is the piece still to land.
+(`Directory.Build.props`).
+
+The fourth piece, the VS Code extension, landed the same day. `secret` is a
+key of every Receive and Send Location as `xmip-core-configure`'s reading of
+a Location has it, so the editor suggests it, its hover and suggestion say
+what it means, and the designer's inspector offers it and shows that meaning
+beside the key: the words are the reader's own, `ConfiguredLocation::MEANINGS`,
+carried in the keys and the offered keys (ADR-0064, amendment 2026-10-13),
+never a list in the extension. A `secret` that is no secret's name — a key
+or a certificate written in, a password holding a character no name may —
+is refused by the runtime's validation, and a Location
+now refuses every key it does not read, so a deleted one (`transport`, the
+proof's old table) is said where it is written, on a node's own Location as
+on a bound one. The extension reaches no node: `xmip-lsp` loads the
+runtime's library and nothing else, so it does not complete a secret's
+names from a node's listing, and none is built for it.
