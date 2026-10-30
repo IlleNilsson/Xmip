@@ -149,7 +149,7 @@ each such fragment apart from them. Records: ADR-0062, ADR-0070.
 #### `send-port-retry`
 
 **A Send Port's retry.** A Send Port tries each Send Location again by its
-`retry = { attempts, backoff }`, and a Journey whose every Location failed its
+`retry = { attempts, backoff }`, and a Message whose every Location failed its
 tries is written Failed and waits for Retry or Dismiss. Records: ADR-0013,
 runtime-model.md section 10.
 

@@ -54,8 +54,10 @@ of its travel to one Subscription. A Subscription matches a Message by its
 context values — its Receive Location, its Receive Port, its promoted
 properties and its other Message values; the Stream, wrapped in its Message,
 is what travels (ADR-0013, amendment 2026-10-29). A Stream arrives and
-becomes a Message; the Message takes its Journey through Xmip; the Journey
-ends when the Message is sent out as a Stream (the owner, 2026-10-30).
+becomes a Message; the Message travels through Xmip and its Journey records
+the travel; the Journey ends when the Message is sent out as a Stream (the
+owner, 2026-10-30). The owner, the same day: *the message is centric,
+journey is a support for the message*.
 
 A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
@@ -65,7 +67,11 @@ Message.**
 should be the same before and after Prepare, the stream changes, and it will
 be in the message history*). On the Receive and the Send side, Prepare
 changes the Message's Stream and not the Message: the Message is the same
-before and after, and the Stream it had stays in its history. Not built.
+before and after, and its Journey records the Stream Prepare replaced. Not
+built. The owner, 2026-10-30: *Once a message is altered by Prepare,
+Transform or Assign it should be recorded in its Journey.* Each Prepare,
+Transform and Assign that alters a Message is recorded in the Message's
+Journey.
 
 ## 3. Immutability
 
@@ -81,7 +87,8 @@ at Streams, and those Streams stay exactly as they were.
 
 A **Journey**, the metadata of a Message's travel, accumulates too:
 execution history, audit events, lineage. It is appended to, never
-rewritten.
+rewritten. Every Prepare, Transform and Assign that alters the Message is
+recorded in it (the owner, 2026-10-30).
 
 **Content changes only through Assignment or Transformation**, and those create
 a new Stream and a new Message generation rather than editing anything. So there
@@ -134,9 +141,12 @@ it, which is what makes replay from a checkpoint meaningful and what makes
 
 The queue has a name: **the Ledger** (the owner, 2026-10-01: *ToDo is a bad
 name, propose a better one*; the assistant proposed Ledger; the owner:
-*Ledger is good*). It holds every Stream, written in chunks, every Message
-and every Journey, with the state of each Work Process, retry, failure and
-replay state, and the Messages a paused Subscription holds.
+*Ledger is good*). The owner, 2026-10-30: *The Ledger is the evidence of
+messages being traveled by a Journey*, and *I can travel, a journey is
+recorded*: the Message travels, and its travel is recorded as its Journey,
+which never travels itself. It holds every Stream, written in chunks, every
+Message and every Journey, with the state of each Work Process, retry,
+failure and replay state, and the Messages a paused Subscription holds.
 
 **A Work Process's state is two tables of its own** (built 2026-10-22,
 section 22): **Process Instance**, each Instance's state whole, by its
@@ -310,7 +320,7 @@ the doorway to it*, above), so the sync that covers them is that node's (the
 owner, 2026-10-03). The embedded Storage node's writer answers a Publication
 once it is written and decided, and syncs it right after: the answer carries
 when it is durable (`persist::storage::Durable`), what the receive cycle and
-every send of its Journeys wait on before anything is acknowledged or seen
+every send of its Messages waits on before anything is acknowledged or seen
 by a far end (section 10; ADR-0018, amendment 2026-10-20). Every other write
 is answered once durable. The write-ahead log is written to its file by the
 sync alone (`RocksDB`'s `manual_wal_flush`): a write before it is kept in
