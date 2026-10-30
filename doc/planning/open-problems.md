@@ -1011,8 +1011,9 @@ What remains of the first part:
   or a key, FTP, FTPS, HTTP and HTTPS a password, and SQL Server,
   PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
   password. Built in pieces by the owner's order of the same day, the command
-  line's `xmip secret` with them; still to land: the GUI's Secrets page
-  and the VS Code extension's completion of `secret`. Not built: a `certificate`
+  line's `xmip secret` with them, and the GUI's Secrets page on 2026-10-30
+  (ADR-0014, amendment 2026-10-30); still to land: the VS Code extension's
+  completion of `secret`. Not built: a `certificate`
   secret presented by any technology (a client certificate over HTTPS or
   FTPS); the other technologies that log in — AMQP, MQTT, RabbitMQ,
   ActiveMQ, IMAP, POP3, SMB, S3 and the vendors' — which refuse a Location

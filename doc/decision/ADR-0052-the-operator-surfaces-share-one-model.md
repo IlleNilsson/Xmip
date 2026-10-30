@@ -1941,3 +1941,11 @@ not a wait (CONTRIBUTING).
   milliseconds, of which about 60 is the key and the rest PowerShell's first
   run of the module's own code; a change still rebuilds, in about 2 seconds.
   `test/OperatorModule.Test.ps1` holds the key and the reuse decision.
+
+## Amendment, 2026-10-30: an eighth view, the Secrets
+
+The GUI's Secrets view, `/secrets`, ordered by the owner as the third piece
+of the secrets (ADR-0014, amendments 2026-10-29 and 2026-10-30), stands
+on the bar between the Event subscriptions and the Audit. It is a thin face
+as the others are: what it lists and sets is `Xmip.Surface`'s, behind the
+one gate, and it stands at one node, since a secret is a node's.
