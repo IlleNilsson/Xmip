@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 311610 lines of production
+Where each repository mounts and what it holds: 311661 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -672,7 +672,7 @@ hold no source to count.
 │   │   └── operation/
 │   │       ├── cli                             9126
 │   │       ├── gui                             5348
-│   │       │   └── vscode                      3491
+│   │       │   └── vscode                      3500
 │   │       ├── audit                           3958
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -730,7 +730,7 @@ hold no source to count.
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8128
+│       └── configure                           8170
 └── test/
     └── core/
         └── playground                         12486
