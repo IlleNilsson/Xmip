@@ -246,7 +246,7 @@ record = ["ADR-0048"]
 [implementation.send-port-retry]
 name = "A Send Port's retry"
 state = "assembled"
-note = "A Send Port tries each Send Location again by its `retry = { attempts, backoff }`, and a Journey whose every Location failed its tries is written Failed and waits for Retry or Dismiss."
+note = "A Send Port tries each Send Location again by its `retry = { attempts, backoff }`, and a Message whose every Location failed its tries is written Failed and waits for Retry or Dismiss."
 record = ["ADR-0013", "runtime-model.md section 10"]
 
 [implementation.send-resilience]
@@ -1427,7 +1427,7 @@ dependency = []
     maturity = "reserved"
 
   [xmip.core.retain]
-  description = "Holds what a gate refused and what policy says to keep. In the message path: a Journey waits for it."
+  description = "Holds what a gate refused and what policy says to keep. In the message path: a Message waits for it."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
@@ -1640,7 +1640,7 @@ dependency = []
   ]
 
   [xmip.core.persist]
-  description = "Xmip Storage: its operations over the runtime and administration databases (Stream chunks, Messages, Journeys, held Journeys, the Dead Message Queue, claims, hand-ons, audit, operator state), the embedded Storage node, the wire over mutual TLS, one Storage node per statement, and the database schema. Embedded records encrypted (ADR-0063)."
+  description = "Xmip Storage: its operations over the runtime and administration databases (Stream chunks, Messages, Journeys, held Messages, the Dead Message Queue, claims, hand-ons, audit, operator state), the embedded Storage node, the wire over mutual TLS, one Storage node per statement, and the database schema. Embedded records encrypted (ADR-0063)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"

@@ -54,8 +54,8 @@ repositories are mounted under `module/` as git submodules.
 
 Xmip accepts Streams from applications, files, queues, databases, mailboxes and
 devices. It decides whether each arrival is acceptable, turns accepted content
-into a Message, and the Message takes one or more Journeys through Xmip, on
-each of which it is processed and delivered to a destination. If a delivery cannot
+into a Message, and the Message travels through Xmip, processed and delivered
+to each destination, every way it travels recorded as a Journey. If a delivery cannot
 complete, Xmip keeps the state and reports the reason instead of treating a
 transport acknowledgement as a successful application delivery.
 
@@ -66,8 +66,8 @@ deserialized and validated against a Contract
 ([decided, not built](doc/architecture/estate-map.md#arrival-validation)); if that fails, the refusal
 is reported, the Stream is disregarded, and the failure is audited. If it
 holds, the content is published into Xmip as a
-Message, and where a Subscription picks the Message up a Journey begins, to
-a Work Process, a Send Port or a Send Port Group. The terms, in that order:
+Message, and where a Subscription picks the Message up it travels on, its
+Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms, in that order:
 
 - **Stream.** What arrives at a Receive Location: bytes from a file, a
   socket, a queue, a mailbox, the rows a SQL statement returns, a device on

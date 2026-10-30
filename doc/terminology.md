@@ -266,8 +266,11 @@ collected one waits, and its failure mode is nobody turning up. Reported as one
 number, an unreachable Party and an idle one look identical.
 
 Between the two sits the **Ledger**, which holds every Stream, Message and
-Journey until *every* departure is settled. A Journey with two destinations
-reached and one awaiting collection is unfinished, and the Ledger is the only
+Journey until *every* departure is settled. The owner, 2026-10-30: *The
+Ledger is the evidence of messages being traveled by a Journey*, and *I can
+travel, a journey is recorded*: the Message travels, each one's travel
+recorded as its Journey. A Message with two destinations reached and one
+awaiting collection has an unfinished Journey, and the Ledger is the only
 place that state can live without lying about it in one direction or the
 other. What the Ledger holds is **durable** once it is on disk: a sender is
 acknowledged, and a far end sees a Message, only then (ADR-0018, amendment
@@ -291,9 +294,13 @@ metadata and a stream reference. Sections may reuse stream references when the
 content is unchanged.
 
 A **Journey** is metadata on a Message: the record of its travel to one
-Subscription. A Stream arrives and becomes a Message; the Message takes its
-Journey through Xmip; the Journey ends when the Message is sent out as a Stream
-(the owner, 2026-10-30; ADR-0013, amendment 2026-10-29).
+Subscription. A Stream arrives and becomes a Message; the Message travels
+through Xmip and its Journey records the travel, never traveling itself; the
+Journey ends when the Message is sent out as a Stream (the owner, 2026-10-30;
+ADR-0013, amendment 2026-10-29). The owner, the same day: *the message is
+centric, journey is a support for the message*. Once a Message is altered by
+Prepare, Transform or Assign, that is recorded in its Journey (the owner,
+2026-10-30).
 
 **The content is immutable; the Message's context grows.** Three things
 happen to a Message, and only two of them make a new one:
