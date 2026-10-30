@@ -94,7 +94,7 @@ CREATE INDEX journey_previous ON xmip.journey (previous_journey);
 
 CREATE INDEX journey_message ON xmip.journey (message);
 
--- the Journeys a paused Subscription holds, at their place in its queue, each once.
+-- the Messages a paused Subscription holds, at their place in its queue, each once, by its Journey.
 CREATE TABLE xmip.held (
     queue uuid NOT NULL,
     sequence bigint NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE xmip.held_places (
     CONSTRAINT held_places_key PRIMARY KEY (queue)
 );
 
--- each queue's places in the order its Journeys are due: the place no Journey due since it was held is before, the due time and place no retry is before, and how many keep a retry's due time.
+-- each queue's places in the order its Messages are due: the place no Message due since it was held is before, the due time and place no retry is before, and how many keep a retry's due time.
 CREATE TABLE xmip.held_due_places (
     queue uuid NOT NULL,
     first_due_place bigint NOT NULL,
@@ -183,14 +183,14 @@ CREATE TABLE xmip.dead_message_replayed (
     CONSTRAINT dead_message_replayed_key PRIMARY KEY (queue, message)
 );
 
--- each Message published, with the digest of its Publication, so a Publication asked again writes nothing and resets no Journey moved on since.
+-- each Message published, with the digest of its Publication, so a Publication asked again writes nothing and resets no Message moved on since.
 CREATE TABLE xmip.publication (
     message uuid NOT NULL,
     digest bytea NOT NULL,
     CONSTRAINT publication_key PRIMARY KEY (message)
 );
 
--- the claim on each Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
+-- the claim on each Message, by its Journey: its holder, its token, when it lapses, and whether it was given back or its step handed on.
 CREATE TABLE xmip.claim (
     journey uuid NOT NULL,
     holder text NOT NULL,

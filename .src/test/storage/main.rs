@@ -91,8 +91,8 @@ fn journey(number: u64) -> JourneyId {
     JourneyId::new(0x0199_0000_0000_7000_8000_0000_0000_0000 | u128::from(number))
 }
 
-/// The hand-on of Journey `number`: its result, three Messages it made,
-/// and the Journey that goes on from it.
+/// The hand-on of the Message of the Journey `number`: its result, three
+/// Messages it made, and the Journey of the one that goes on from it.
 fn hand_on(number: u64, claim: xmip_persist::storage::Claim) -> HandOn {
     HandOn {
         claim,

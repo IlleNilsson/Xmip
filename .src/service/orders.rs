@@ -1,7 +1,7 @@
 //! The orders an operator leaves for the node `xmip-service` runs: a pause
 //! or a resume of one of its Subscriptions (ADR-0013, amendment
 //! 2026-09-30), a Replay of a Message its Dead Message Queue keeps
-//! (ADR-0052, amendment 2026-10-01), and a Retry or Dismiss of a Journey it
+//! (ADR-0052, amendment 2026-10-01), and a Retry or Dismiss of a Message it
 //! sends that failed (`runtime-model.md` section 13), taken the moment the
 //! operating system says one was left and applied through the runtime's
 //! act, which records it in this process's audit and writes what it leaves

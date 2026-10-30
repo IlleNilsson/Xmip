@@ -33,7 +33,7 @@ pub fn write_until_killed(node: &dyn XmipStorage) {
     }
 }
 
-/// Claims a Journey and hands it on, one after another, saying each.
+/// Claims a Message and hands it on, one after another, saying each.
 pub fn hand_on_until_killed(node: &dyn XmipStorage) {
     let lease = Duration::from_secs(300);
     let holder = xmip_configure::fixture::test_cluster().node_scope(0);
