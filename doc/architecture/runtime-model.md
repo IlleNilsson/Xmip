@@ -53,11 +53,12 @@ stream reference. Sections reuse stream references when content is unchanged.
 of its travel to one Subscription. A Subscription matches a Message by its
 context values — its Receive Location, its Receive Port, its promoted
 properties and its other Message values; the Stream, wrapped in its Message,
-is what travels (ADR-0013, amendment 2026-10-29). A Stream arrives and
-becomes a Message; the Message travels through Xmip and its Journey records
-the travel; the Journey ends when the Message is sent out as a Stream (the
-owner, 2026-10-30). The owner, the same day: *the message is centric,
-journey is a support for the message*.
+is what travels (ADR-0013, amendment 2026-10-29). The owner, 2026-10-30:
+*Stream first, goes into a message, handled by a journey.* The Stream comes
+first and goes into a Message; the Message is handled by its Journey through
+Xmip, which records the travel; the Journey ends when the Message is sent out
+as a Stream. The owner, the same day: *the message is centric, journey is a
+support for the message*.
 
 A new Message is created when Xmip performs an operation producing a new
 message state — Assignment or Transformation. **Routing alone creates no new
