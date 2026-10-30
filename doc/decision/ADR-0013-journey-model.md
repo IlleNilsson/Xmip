@@ -835,9 +835,10 @@ Storage's `failed_message` tables.
 
 **Where a Journey begins and ends.** The owner, 2026-10-30: *Stream, Message
 which takes a Journey through Xmip. The journey ends with the message being
-sent as a stream.* A Stream arrives and becomes a Message; the Message
-travels through Xmip and its Journey records the travel; the Journey ends
-when the Message is sent out as a Stream (`runtime-model.md` section 2,
+sent as a stream.* And: *Stream first, goes into a message, handled by a
+journey.* The Stream comes first and goes into a Message; the Message is
+handled by its Journey through Xmip, which records the travel; the Journey
+ends when the Message is sent out as a Stream (`runtime-model.md` section 2,
 `terminology.md`). The owner, the same day: *the message is centric, journey
 is a support for the message*; *I can travel, a journey is recorded*: only
 the Message travels, and its Journey is recorded, never traveling or moving

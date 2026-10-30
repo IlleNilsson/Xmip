@@ -294,10 +294,11 @@ metadata and a stream reference. Sections may reuse stream references when the
 content is unchanged.
 
 A **Journey** is metadata on a Message: the record of its travel to one
-Subscription. A Stream arrives and becomes a Message; the Message travels
-through Xmip and its Journey records the travel, never traveling itself; the
-Journey ends when the Message is sent out as a Stream (the owner, 2026-10-30;
-ADR-0013, amendment 2026-10-29). The owner, the same day: *the message is
+Subscription. The owner, 2026-10-30: *Stream first, goes into a message,
+handled by a journey.* The Stream comes first and goes into a Message; the
+Message is handled by its Journey through Xmip, which records the travel,
+never traveling itself; the Journey ends when the Message is sent out as a
+Stream (ADR-0013, amendment 2026-10-29). The owner, the same day: *the message is
 centric, journey is a support for the message*. Once a Message is altered by
 Prepare, Transform or Assign, that is recorded in its Journey (the owner,
 2026-10-30).
