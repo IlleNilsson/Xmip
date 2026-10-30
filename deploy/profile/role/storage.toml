@@ -1,5 +1,5 @@
 # The storage role: Xmip Storage, the doorway every other node calls for
-# all storage — write a Stream chunk, write a Message, claim a Journey,
+# all storage — write a Stream chunk, write a Message, claim a Message,
 # hand it on, write an audit record — never a database directly
 # (NodeRole::Storage, ADR-0056, amendment 2026-10-01, the Storage role).
 # The root crate's features a node in this role is built with: persist,

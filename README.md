@@ -54,8 +54,8 @@ repositories are mounted under `module/` as git submodules.
 
 Xmip accepts Streams from applications, files, queues, databases, mailboxes and
 devices. It decides whether each arrival is acceptable, turns accepted content
-into a Message, and gives that Message one or more Journeys. Each Journey can
-process the Message and deliver it to its destination. If a delivery cannot
+into a Message, and the Message takes one or more Journeys through Xmip, on
+each of which it is processed and delivered to a destination. If a delivery cannot
 complete, Xmip keeps the state and reports the reason instead of treating a
 transport acknowledgement as a successful application delivery.
 
@@ -125,17 +125,18 @@ a Work Process, a Send Port or a Send Port Group. The terms, in that order:
   ([ADR-0013](doc/decision/ADR-0013-journey-model.md), amendment 2026-09-30).
   *Audited: each pickup, by which Subscription, and a Message nothing
   picked up.*
-- **Journey.** One durable line of work for a Message, begun by one
-  Subscription, ending at the Work Process's answer or at the delivery. It
-  checkpoints and survives a restart, and it ends Completed, Failed, or
-  Dismissed when an operator stops it on purpose.
+- **Journey.** Metadata on a Message: the record of its travel to one
+  Subscription, begun where that Subscription matches it and ended when the
+  Message is sent out as a Stream or the Work Process answers. It is
+  checkpointed and survives a restart, and it ends Completed, Failed, or
+  Dismissed when an operator stops the Message on purpose.
   *Audited: its beginning, each passing on, and how it ended.*
 - **Processing.** What a Work Process does when a Subscription starts one:
   a definition running step by step and answering with a Message, no
   Message, or waiting for something named; a Message it answers with is
   published into Xmip like any other. It is not an operating system
   process, it receives no Streams and delivers nothing outside, and its
-  state belongs to the cluster, never to a thread or a node. A Journey to a
+  state belongs to the cluster, never to a thread or a node. A Message bound for a
   Send Port has no Processing. A node declares and plans its Work Processes
   ([built, in the assembled service](doc/architecture/estate-map.md#process-declaration)); compiling
   one at design time and running it are
@@ -759,7 +760,7 @@ Queue and can be replayed once the Subscription is corrected: the Dead
 Message Queue view, `xmip dead-messages` and the PowerShell module list
 it per cluster and node, open one with its promoted properties and every
 Subscription's decline, and offer Replay to an Operator. A failed
-Journey keeps its position and resumes from its checkpoint; one whose every
+Message keeps its Journey's position and resumes from its checkpoint; one whose every
 Send Location failed its tries waits in its Send Port's queue, listed at the
 Port's scope with why — every one, also those that failed before a restart
 or on another node — for an Operator to Retry or Dismiss: on the Monitor's
