@@ -1306,3 +1306,31 @@ of 2026-10-29: the core and PowerShell first, then the command line — the
 .NET `xmip` that ships until the Rust executable replaces it (the amendment
 of 2026-10-12) — then the GUI's Secrets page and the VS Code extension's
 completion of `secret`, each landing on its own.
+
+## Amendment, 2026-10-30: the GUI's Secrets page
+
+The third piece of the amendment of 2026-10-29, built: the GUI's **Secrets**
+view, `/secrets`, on the bar between the Event subscriptions and the Audit,
+in both hosts. It lists the secrets a node keeps through
+`IOperatorSurface.Secrets` — name, kind, when set and by whom, never a
+value — and sets or replaces one through `IOperatorSurface.SetSecret` behind
+`GatedOperator`, its value typed into a password field or read from a
+chosen file, let go before the act is raised and recorded nowhere; the
+host's audit says `secret.set` with the name and the kind. A time is shown
+where the person is, in the zone and culture of the machine the view is
+drawn for, with its offset from UTC; records keep UTC. The listing and the
+act are an Operator's and up, as the node's rule for `Secrets` and
+`SetSecret` has it, so an Observer is shown neither
+(`module/core/operation/gui/README.md`, *The Secrets view*).
+
+Decided by the assistant while building, for the owner to overrule: the
+view's place on the bar; one node at a time — the one the surface reaches,
+or the one the address names — since a secret is a node's; the listing
+asked as the view opens, moves and sets, not at each tick of the
+publication; a file read as text, as `Set-XmipSecret -Path` and
+`xmip secret --file` read it, a mebibyte at most. Not reached here: on the
+web host the time is the server's zone and the invariant culture — the
+browser's zone could only be said by a script, which the GUI does not
+carry, and the GUI builds with invariant globalization
+(`Directory.Build.props`); the VS Code extension's completion of `secret`
+is the piece still to land.
