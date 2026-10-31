@@ -1548,6 +1548,55 @@ become pluggable capabilities, each with a section in `xmip_module.h`, Xmip's
 own the built-in default. Not built: both sections, and Xmip's own
 resilience guards and Sequence behind them.
 
+## 59. A claim no authenticator checked
+
+The owner, 2026-10-29: *First you present your identity, then you get
+identified. Then we look to authentication, do your identification hold
+up. When authenticated we look for Authorization, then you may enter your
+load, stream.* No claim may reach authorization, or be recorded as proven,
+without an authenticator having checked it (ADR-0019, amendment
+2026-10-30). The receive spine already was so. Landed 2026-10-30: the
+Message Context's `proven` read from the gate's verdict, not the
+mechanism's catalog; every claim beyond one a layer recorded as claimed
+(`IdentityFacts::unchecked`).
+
+Not built, the assistant's drafts:
+
+- **The operate plane's caller, through the one gate.** The listener takes
+  a certificate's subject (`plane::served`) or the local endpoint's
+  account as a bare name, and `xmip_act_admitted_v1` takes a host's word
+  for proof (`proven`, a byte); `GatedOperator.Proven` in `Xmip.Surface`
+  calls any non-empty subject proven, in .NET's spelling of a subject. The
+  draft: a `peer-credentials` authenticator beside `Circumstance`; the
+  plane's claim run through `authenticate::authenticate`; `admitted`
+  taking the authenticated identity; `xmip_caller_proven_v1` answering the
+  proven caller of a secure session (section 21) in place of the byte; and
+  `GatedOperator.Proven` deleted. The ADR-0009 amendment comes with it.
+  Today's rule stays: a caller nothing proved acts on nothing.
+- **The SSH and FTP servers check the password.** `ssh::userauth` admits
+  any password and calls the result `Authenticated`; the FTP server
+  answers any `PASS` with 230; the SFTP far end chooses a user's directory
+  by that unchecked name. These are Xmip's server sides for the loopback
+  and the Playground's far ends. The draft: `ssh::userauth::Offered`
+  (user, secret) asked of a check the server is handed, the check
+  `authenticate/password`'s, the fixtures given real secrets. To settle
+  first: `architecture.toml` says identity presentation is not a
+  transport's, so the server is handed the check rather than linking an
+  authenticator; anonymous FTP; and the real nodes' far end
+  (`far_end.rs`), whose Locations' secrets would have to be enrolled
+  there.
+
+Waiting on the owner:
+
+- **May a claimed identity be authorized?** `authorize::Subject::matches`
+  reads no verdict, so an X12 interchange or a drop folder's circumstance,
+  both claimed, meets a rule naming its Party as a proven identity does.
+  Asked: whether a rule may require proven.
+- **A claim a broker vouches for** — `amqp.user-id`, which the broker
+  checks against its connection, an SQS sender id — has no authenticator,
+  so a Location accepting it is refused. Asked: whether a third party's
+  word counts, and as what.
+
 # Suggested order
 
 Rewritten 2026-09-23. The owner asked what Xmip needs against the

@@ -757,3 +757,34 @@ passphrase would be a second secret; a `certificate` secret is kept and
 checked and presented by no technology yet. Not built here: a client
 certificate presented over HTTPS or FTPS, the probe and the issued key or
 certificate (step 4), and the hand-out per Receive Location (step 5).
+
+## Amendment, 2026-10-30: every claim authenticated
+
+The owner, 2026-10-29: *First you present your identity, then you get
+identified. Then we look to authentication, do your identification hold
+up. When authenticated we look for Authorization, then you may enter your
+load, stream.* The receive spine (`runtime::arrival`) was already in that
+order. A review the same day queued one rule on it: **no identity a caller
+presents reaches authorization, or is recorded as its proven identity,
+without an authenticator having checked it; a claim nothing checks is
+recorded as claimed, never as proven.**
+
+- **The verdict, not the mechanism, says proven.** `xmip.transport.proven`
+  and `xmip.message.proven` in the Message Context were written from the
+  assurance the mechanism's catalog states (`Mechanism::authenticates`),
+  so a drop folder's circumstance, which its authenticator answers
+  *claimed*, read as proven. They are now written from the gate's verdict
+  (`context::Verified::is_proven`, the one answer to "proven"), with
+  `xmip.transport.verified` and `xmip.message.verified` beside them, the
+  verdict's word: `proven` or `claimed`.
+- **One claim per layer is authenticated; every other is recorded as
+  claimed.** An arrival may present more than one claim. The first the
+  identifiers read on a layer goes to the gate as before; every other was
+  dropped unrecorded. It is now kept on `IdentityFacts::unchecked`
+  (`context::UncheckedClaim`: mechanism, value, how it was established, its
+  proof left behind), recorded as claimed and handed to no authorizer. The
+  identity facts' binary form is form 2, the unchecked claims after the
+  alignment.
+
+Open, in open problem 59: the operate plane's caller proven through the
+same gate, and the SSH and FTP servers' passwords checked.
