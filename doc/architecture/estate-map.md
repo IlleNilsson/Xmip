@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 311661 lines of production
+Where each repository mounts and what it holds: 311799 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -718,13 +718,13 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
 │   │   ├── node                                 955
-│   │   ├── context                              839
+│   │   ├── context                              929
 │   │   ├── journey                              745
 │   │   ├── stream                               232
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            34021
+│       ├── runtime                            34069
 │       ├── persist                            14038
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
