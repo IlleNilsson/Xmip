@@ -891,7 +891,8 @@ the claim waits 1.57 to 1.79 ms; the carry takes 3.68 to 3.87 ms, the sent
 file's own work 2.06 to 2.08 ms and the Ledger's durable copy of the payload
 0.98 to 1.06 ms beside it, so Xmip's own share is 0.60 to 0.83 ms, held
 under a millisecond beside the machine's own wake for each of its five
-hand-offs between threads by `.src/test/service/carried.rs`, run alone.
+hand-offs between threads by `.src/test/service/carried.rs`, run alone in
+a test program of its own, `xmip-service-measured` (2026-10-31).
 
 *Repaired again 2026-10-20, under load.* The runtime's loopback node test
 (`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
@@ -1558,9 +1559,18 @@ without an authenticator having checked it (ADR-0019, amendment
 2026-10-30). The receive spine already was so. Landed 2026-10-30: the
 Message Context's `proven` read from the gate's verdict, not the
 mechanism's catalog; every claim beyond one a layer recorded as claimed
-(`IdentityFacts::unchecked`).
+(`IdentityFacts::unchecked`). Landed 2026-10-31 (ADR-0019, amendment
+2026-10-31): a fourth verdict, `vouched`; each Receive Location's minimum
+per layer, `accept.transport` and `accept.message`, `proven` where absent,
+checked in `authorize::authorize` before any policy is asked.
 
 Not built, the assistant's drafts:
+
+- **The broker's word, vouched.** An authenticator for `amqp.user-id`,
+  which the broker checks against its connection, and an SQS sender id,
+  answering `vouched` only where Xmip's own connection to that broker is
+  proven — its certificate verified and the Location's secret accepted —
+  and `claimed` otherwise, the broker named in its evidence.
 
 - **The operate plane's caller, through the one gate.** The listener takes
   a certificate's subject (`plane::served`) or the local endpoint's
@@ -1585,17 +1595,6 @@ Not built, the assistant's drafts:
   authenticator; anonymous FTP; and the real nodes' far end
   (`far_end.rs`), whose Locations' secrets would have to be enrolled
   there.
-
-Waiting on the owner:
-
-- **May a claimed identity be authorized?** `authorize::Subject::matches`
-  reads no verdict, so an X12 interchange or a drop folder's circumstance,
-  both claimed, meets a rule naming its Party as a proven identity does.
-  Asked: whether a rule may require proven.
-- **A claim a broker vouches for** — `amqp.user-id`, which the broker
-  checks against its connection, an SQS sender id — has no authenticator,
-  so a Location accepting it is refused. Asked: whether a third party's
-  word counts, and as what.
 
 # Suggested order
 

@@ -976,8 +976,13 @@ durable copy — the payload appended to a file kept open and synced, as the
 write-ahead log keeps it — 0.98 to 1.06 ms: what is left, Xmip's own share,
 is 0.60 to 0.83 ms. `carried.rs` holds it under a millisecond beside the
 machine's own wake for each of the path's five hand-offs between threads
-(`xcore::latency::PlainWake`), and runs alone among the service tests, the
-others sharing the machine and it taking it whole. Beyond the
+(`xcore::latency::PlainWake`), and runs alone: it and `told.rs` are
+`xmip-service-measured` (`.src/test/service/measured.rs`), a test program of
+their own that cargo runs after the other service tests, never beside them,
+each of the two taking that program's machine whole (2026-10-31: run in the
+same program as the others, under a lock that kept them out while it
+measured, it still went 7 to 11 ms over in landings, and passed alone).
+Beyond the
 sent file alone it is 1.6 to 1.8 ms, the Ledger's own sync among it: the two
 syncs land on one disk, which takes them one after the other, so the sent
 file's sync waits for the Ledger's. Taking the Ledger's sync off that path

@@ -788,3 +788,30 @@ recorded as claimed, never as proven.**
 
 Open, in open problem 59: the operate plane's caller proven through the
 same gate, and the SSH and FTP servers' passwords checked.
+
+## Amendment, 2026-10-31: a Location's minimum, and vouched
+
+The owner, 2026-10-31, on the assistant's suggestions: *Take a stab at it,
+it must be secure.* Nothing in a node's configuration names an
+authorization rule yet — the `location` policy admits anyone a Location
+accepts — so the Location, not a rule, says how strong a claim it takes.
+
+- **Four verdicts, the strongest first:** `proven`, `vouched`, `claimed`,
+  `refused` (`context::Verified`). **Vouched** is a claim a third party Xmip
+  proved checked and says so — a broker that matched a message's user id
+  against the connection it authenticated — as strong as Xmip's own proof
+  of that party and never called proven. The identity facts' binary form
+  is form 3.
+- **Each Receive Location takes a minimum per layer**, `accept.transport`
+  and `accept.message`, each `proven`, `vouched` or `claimed`, and
+  `proven` where absent (`context::Minimum`). A drop folder writes
+  `transport = "claimed"`; a Location taking an X12 interchange's sender
+  writes `message = "claimed"`. Refused meets none.
+- **The minimum is checked in `authorize::authorize`, before misalignment
+  and before any policy is asked**, so no authorization technology can
+  grant on a weaker claim; the denial names `verification`. A Send
+  Location authorizes again what its Receive Location took
+  (`Minimum::TAKEN`); a program in the node's own process is held to
+  `proven`.
+
+Not built: the authenticator that answers vouched for a broker's word.

@@ -153,7 +153,6 @@ fn arrived(changed: &Receiver<()>, out: &Path, count: usize) -> Vec<String> {
 
 #[test]
 fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run() {
-    let _machine = super::sharing();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-failover-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
@@ -214,7 +213,8 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
             "receive_locations",
             "In",
             &drop,
-            "[applications.receive_locations.accept]\nmechanism = [\"circumstance\"]\n",
+            "[applications.receive_locations.accept]\nmechanism = [\"circumstance\"]\n\
+             transport = \"claimed\"\n",
         ),
     );
     let sending = configured(

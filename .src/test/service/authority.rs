@@ -29,7 +29,6 @@ fn serving(directory: &Path, serve: &str, publish: &str, challenge: u16) -> Path
 
 #[test]
 fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
-    let _machine = sharing();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-authority-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);

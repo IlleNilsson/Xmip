@@ -38,11 +38,21 @@ required-features = ["node", "audit", "observe", "authenticate"]
 
 # Starts xmip-service in a console over loopback, carries Messages to it,
 # reads what it publishes, acts on it as a surface does and stops it the way a
-# terminal or a service manager does; and carries a file dropped in to a
-# file sent out.
+# terminal or a service manager does; and carries files across a Storage
+# node's failover.
 [[test]]
 name = "xmip-service"
 path = ".src/test/service/main.rs"
+required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite", "provision-internal-ca"]
+
+# Starts xmip-service as xmip-service's tests do and measures how long Xmip
+# takes, against the millisecond rule: a file dropped in carried to a file
+# sent out, an order acted on, a service nothing tells left idle. A program
+# of its own, run by cargo after xmip-service and never beside it, so what
+# it measures is Xmip's work and not its neighbors'.
+[[test]]
+name = "xmip-service-measured"
+path = ".src/test/service/measured.rs"
 required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite", "provision-internal-ca"]
 
 # Renders every node configuration deploy/ writes and reads it the way
