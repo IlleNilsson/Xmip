@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 311799 lines of production
+Where each repository mounts and what it holds: 311951 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -527,7 +527,7 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    2626
+│   │   │   ├── authenticate                    2627
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -624,11 +624,11 @@ hold no source to count.
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
-│   │   │   ├── authorize                        488
+│   │   │   ├── authorize                        510
 │   │   │   │   ├── location                     397
 │   │   │   │   ├── abac                         359
-│   │   │   │   ├── opa                          297
-│   │   │   │   ├── cedar                        290
+│   │   │   │   ├── opa                          289
+│   │   │   │   ├── cedar                        282
 │   │   │   │   ├── policy                       249
 │   │   │   │   ├── transport                    206
 │   │   │   │   ├── role                         200
@@ -640,7 +640,7 @@ hold no source to count.
 │   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
 │   │   │   ├── unit                             380
-│   │   │   ├── receive                          174
+│   │   │   ├── receive                          178
 │   │   │   ├── demote                           168
 │   │   │   ├── logic                            156
 │   │   │   │   ├── matter                      1129
@@ -697,7 +697,7 @@ hold no source to count.
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
 │   │   ├── abi                                31219  C# 28681 · Rust 2242 · PowerShell 296
-│   │   ├── event                               5607
+│   │   ├── event                               5615
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                3350
@@ -717,23 +717,23 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
+│   │   ├── context                             1004
 │   │   ├── node                                 955
-│   │   ├── context                              929
 │   │   ├── journey                              745
 │   │   ├── stream                               232
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            34069
+│       ├── runtime                            34098
 │       ├── persist                            14038
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8170
+│       └── configure                           8193
 └── test/
     └── core/
-        └── playground                         12486
+        └── playground                         12492
 ```
 
 ---

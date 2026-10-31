@@ -13,7 +13,6 @@ use super::*;
 
 #[test]
 fn a_node_is_read_and_acted_on_over_its_operate_listener() {
-    let _machine = sharing();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-operate-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
@@ -81,7 +80,6 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
 /// system user this test runs as.
 #[test]
 fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
-    let _machine = sharing();
     let directory = std::env::temp_dir().join(format!("xmip-service-local-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
@@ -100,7 +98,6 @@ fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
 /// configuration names it* — and declares how long a call there waits.
 #[test]
 fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
-    let _machine = sharing();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-unnamed-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);

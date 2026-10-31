@@ -336,6 +336,7 @@ node = "first"
 address = ".local-work/node/in"
 [nodes.first.applications.receive_locations.accept]
 mechanism = ["circumstance"]
+transport = "claimed"
 
 [[nodes.first.applications.send_ports]]
 name = "Out"

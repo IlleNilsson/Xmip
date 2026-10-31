@@ -24,7 +24,7 @@
 //! beside the machine's own wake for each hand-off between threads the
 //! path makes (`xcore::latency::PlainWake`, measured round by round under
 //! the same load; `CONTRIBUTING.md`, *Rust is here for one reason*), run
-//! alone among the tests here. How long a file
+//! alone, in `xmip-service-measured` (`measured.rs`). How long a file
 //! waits in the drop directory before it is claimed is printed apart: the
 //! file system's change notification wakes the Location, which lists the
 //! directory and claims the file by its turn and rename (ADR-0024,
@@ -91,6 +91,7 @@ node = "{node}"
 address = "{drop}"
 [applications.receive_locations.accept]
 mechanism = ["circumstance"]
+transport = "claimed"
 
 [[applications.send_ports]]
 name = "Out"
