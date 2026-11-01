@@ -247,16 +247,26 @@ fn drained_record(
     .map(|(name, count)| (name, count.to_string()));
     let mut properties = vec![("node", location), ("by", by), ("drained_ms", drained)];
     properties.extend(counts.iter().map(|(name, count)| (*name, count.as_str())));
+    // Xmip's own share of a sent Message's time, the fastest of five, where
+    // the node measured one (`Outcomes::own_share`): what the millisecond
+    // rule holds.
+    let own = outcomes.own_share.map(|own| own.as_nanos().to_string());
+    if let Some(own) = &own {
+        properties.push(("own_share_ns", own.as_str()));
+    }
     record(audit, "stop", ExecutionPhase::Finished, &properties);
-    let said = format!(
-        "stopped by {by}, drained in {drained} ms: {}",
+    let share = outcomes
+        .own_share
+        .map(|own| format!("; Xmip's own share per Message {own:?}"))
+        .unwrap_or_default();
+    format!(
+        "stopped by {by}, drained in {drained} ms: {}{share}",
         counts
             .iter()
             .map(|(name, count)| format!("{name} {count}"))
             .collect::<Vec<_>>()
             .join(", ")
-    );
-    said
+    )
 }
 
 /// The node's operate listeners over what `board` holds (ADR-0067) —

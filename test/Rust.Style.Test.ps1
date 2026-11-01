@@ -222,4 +222,14 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
 
         $missing.Count | Should -Be 0 -Because ($missing -join "`n")
     }
+
+    It 'builds the estate''s own crates optimized in every build under its root' {
+        # rust-style.md section 5b (the owner, 2026-11-01): the millisecond
+        # rule is measured on the optimized build, so a crate's own tests run
+        # optimized code. Set once, in the configuration every cargo build
+        # under the estate root reads.
+        [string] $text = Get-Content -LiteralPath (Join-Path $script:Root '.cargo/config.toml') -Raw
+
+        $text | Should -Match '(?m)^\[profile\.dev\]\s*\r?\nopt-level\s*=\s*3'
+    }
 }

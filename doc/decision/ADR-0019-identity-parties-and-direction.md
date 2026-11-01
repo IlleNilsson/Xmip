@@ -814,4 +814,14 @@ accepts — so the Location, not a rule, says how strong a claim it takes.
   (`Minimum::TAKEN`); a program in the node's own process is held to
   `proven`.
 
-Not built: the authenticator that answers vouched for a broker's word.
+- **The broker's word is `broker`**, an identifier and an authenticator in
+  every build beside the circumstance. The transport writes the sender
+  field the broker delivered (`amqp.user-id`, `ibm-mq.user-identifier`,
+  `sqs.sender-id`), the broker's host under `broker`, and its word under
+  `broker.verified` only where its own connection proved the broker — the
+  broker's certificate verified for its host and the Location's secret
+  accepted — never from a header. The authenticator answers vouched for
+  that word with the broker named, claimed without it, and refuses any
+  other word. Today only `aws-sqs` over `https://` with the Location's
+  secret writes it; the AMQP and IBM MQ transports have no TLS, so their
+  senders are claimed.

@@ -473,9 +473,10 @@ exactly one file allowed.
 That file is `module/foundation/core/src/system.rs`, xmip-core's calls to the
 operating system behind safe functions: the kernel event and the
 high-resolution timer `wake::Wake` waits on, one of each per waiting thread,
-and, behind `test-support`, the processor time a thread and the process have
-used (`QueryThreadCycleTime` and `QueryProcessCycleTime` on Windows,
-`clock_gettime` on Unix) that `processor_time` reads. `wake` itself is safe
+and, behind `std` since 2026-11-01, the processor time a thread and the
+process have used (`QueryThreadCycleTime` and `QueryProcessCycleTime` on
+Windows, `clock_gettime` on Unix) that `processor_time` reads, which a node
+counts its own share of each Message in (`spent`). `wake` itself is safe
 code; every other target waits on `std::sync::Condvar` as before.
 `test/Unsafe.Test.ps1` lists the file.
 

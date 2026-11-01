@@ -9,6 +9,15 @@
 ROCKSDB_LIB_DIR = { value = ".local-work/native/rocksdb/11.8.1", relative = true }
 ROCKSDB_STATIC = "1"
 
+# The estate's own crates build optimized in a debug build too, as what they
+# depend on does already (`[profile.dev.package."*"]` in each workspace root):
+# the millisecond rule is measured on the optimized build (the owner,
+# 2026-11-01). One place, read by every build under the estate root; debug
+# assertions and debug information stay as a debug build has them
+# (`doc/governance/rust-style.md` section 5b).
+[profile.dev]
+opt-level = 3
+
 # The Windows libraries RocksDB's port layer calls (UUIDs, paths). Its own
 # build names them when it compiles RocksDB; linking the kept one, we do.
 [target.'cfg(windows)']

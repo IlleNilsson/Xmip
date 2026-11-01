@@ -1,6 +1,6 @@
 //! `--install --account`: the account the node's service runs as, and what
 //! it is given (ADR-0015, amendment 2026-10-21). Without it the service
-//! runs as the platform's default, LocalSystem or root, as before.
+//! runs as the platform's default, `LocalSystem` or root, as before.
 //!
 //! The account reads the node's configuration and the folder its operate
 //! listener's key is in, and writes its data and its logs — each folder

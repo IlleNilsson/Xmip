@@ -982,7 +982,23 @@ their own that cargo runs after the other service tests, never beside them,
 each of the two taking that program's machine whole (2026-10-31: run in the
 same program as the others, under a lock that kept them out while it
 measured, it still went 7 to 11 ms over in landings, and passed alone).
-Beyond the
+Since 2026-11-01 the node counts the share itself, as the owner set it that
+day: *the processor time its threads spent working for the Message*, on the
+optimized build. Each thread that works for a Message counts its processor
+time into the Message's account, except inside the payload's I/O — its
+Stream read, the Ledger's appends and syncs, its send — and the Storage
+node's writer shares each batch's among its writes; the node reports the
+fastest of five as `Outcomes::own_share`, which `carried.rs` and the
+runtime's loopback node test hold under a millisecond, with no allowance
+for a wake. Not counted: the scheduler's and an interrupt's time charged to
+a thread it wakes, and what a transport does before it hands a Message
+over (open problem 33, *Counted by the node itself*). The transport's
+telling of its far end and its Stream's closing are its I/O as its Stream's
+read is, so neither is the share; counted, the telling — a drop folder's
+file deleted — landed in it or not by which thread came first, which a
+loaded machine decided; and on x86-64 a count is turned into time at the
+time-stamp counter's rate, which no preemption moves (open problem 33,
+*Measured again*). Beyond the
 sent file alone it is 1.6 to 1.8 ms, the Ledger's own sync among it: the two
 syncs land on one disk, which takes them one after the other, so the sent
 file's sync waits for the Ledger's. Taking the Ledger's sync off that path

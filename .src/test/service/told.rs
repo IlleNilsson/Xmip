@@ -17,7 +17,8 @@
 //! round is held under the millisecond plus that take plus four plain
 //! wakes.
 
-use xmip_core::latency::{FIVE, PlainWake, spread};
+use xmip_core::fastest::FIVE;
+use xmip_core::latency::{PlainWake, spread};
 
 use super::*;
 

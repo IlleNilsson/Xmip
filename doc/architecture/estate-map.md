@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 311951 lines of production
+Where each repository mounts and what it holds: 312748 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -476,10 +476,10 @@ hold no source to count.
 │   │   │   │   ├── azure-event-grid             861
 │   │   │   │   ├── profinet                     855
 │   │   │   │   ├── google-pub-sub               854
+│   │   │   │   ├── aws-sqs                      853
 │   │   │   │   ├── redis-streams                839
 │   │   │   │   ├── wireless-hart                836
 │   │   │   │   ├── file                         832
-│   │   │   │   ├── aws-sqs                      830
 │   │   │   │   ├── dhcp                         827
 │   │   │   │   ├── zigbee                       803
 │   │   │   │   ├── thread                       802
@@ -527,7 +527,7 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    2627
+│   │   │   ├── authenticate                    2695
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -567,7 +567,7 @@ hold no source to count.
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
-│   │   │   ├── identify                        1448
+│   │   │   ├── identify                        1506
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
 │   │   │   │   ├── dns                          195
@@ -587,7 +587,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1207
+│   │   │   ├── secret                          1225
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -662,7 +662,7 @@ hold no source to count.
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
 │   │   │   ├── net                             6401
-│   │   │   ├── codec                           2860
+│   │   │   ├── codec                           2890
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1698
 │   │   │   ├── tls                             1144
@@ -673,7 +673,7 @@ hold no source to count.
 │   │       ├── cli                             9126
 │   │       ├── gui                             5348
 │   │       │   └── vscode                      3500
-│   │       ├── audit                           3958
+│   │       ├── audit                           3962
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
@@ -700,7 +700,7 @@ hold no source to count.
 │   │   ├── event                               5615
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                3350
+│   │   ├── core                                3693
 │   │   ├── message                             1733
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -717,15 +717,15 @@ hold no source to count.
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
-│   │   ├── context                             1004
+│   │   ├── context                             1022
 │   │   ├── node                                 955
 │   │   ├── journey                              745
 │   │   ├── stream                               232
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            34098
-│       ├── persist                            14038
+│       ├── runtime                            34181
+│       ├── persist                            14190
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1
