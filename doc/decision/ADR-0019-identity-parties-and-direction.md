@@ -787,7 +787,10 @@ recorded as claimed, never as proven.**
   alignment.
 
 Open, in open problem 59: the operate plane's caller proven through the
-same gate, and the SSH and FTP servers' passwords checked.
+same gate, and the SSH and FTP servers' passwords checked. The first is
+built (ADR-0009, amendment 2026-11-01): `peer-credentials` and the
+handshake verified beside the circumstance, and the plane's caller what
+`authenticate::authenticate` answered.
 
 ## Amendment, 2026-10-31: a Location's minimum, and vouched
 
@@ -825,3 +828,46 @@ accepts — so the Location, not a rule, says how strong a claim it takes.
   other word. Today only `aws-sqs` over `https://` with the Location's
   secret writes it; the AMQP and IBM MQ transports have no TLS, so their
   senders are claimed.
+
+## Amendment, 2026-11-01: the SSH and FTP servers check the password
+
+The second item the amendment of 2026-10-30 left open in open problem 59,
+built on the assistant's draft with the owner's assistant settling its
+three questions. Xmip's SSH and FTP servers — the loopbacks' far ends and
+the Playground's — admitted any password, and the SFTP far end chose a
+user's directory by that unchecked name.
+
+- **The server is handed the check; it links no authenticator.**
+  `architecture.toml`: *Credential and identity presentation is a
+  security responsibility, not a transport technology.* A login offered
+  is `net::login::Offered` (user, secret), asked of a
+  `net::login::Check`, one home for SSH and FTP. `ssh::userauth::serve`
+  admits a password only where the check admits it, and lets a client go
+  after six requests (`MOST_ATTEMPTS`, `OpenSSH`'s own); the FTP session
+  answers `PASS` 230 only where the check admits the user `USER` named,
+  and every command but the login's 530 until then.
+- **The check that proves a password is the password gate's**,
+  `PasswordAuthenticator::admits`, its own verdict on the `password`
+  claim; a loopback, which knows its one client, checks the one login its
+  near end presents (`net::login::only`).
+- **Anonymous FTP is refused**: `anonymous` and `ftp` are answered 530
+  before any check is asked. Anonymous stays an authenticated outcome at
+  a Receive Location's gate; it is not a login Xmip's FTP server takes.
+- **The real nodes' far end checks the secrets their own Locations
+  hold.** Each placement on the Parties' far end names the secret
+  `far-end.<user>` (`configure::placed::far_end_secret`); the Playground
+  mints its password, sets it on the Location's node through that node's
+  operate listener — the node's secret store, the one place the value is
+  kept, never read back out — and the far end keeps only its salted
+  verifier. The drop box's far ends mint each Party's password the same
+  way, written beside the server's address for the nodes the run starts.
+- **Nothing presents a login it was not given.** The built-in SFTP login
+  `xmip`/`xmip` and the FTP client's anonymous login are deleted: a
+  Location that names no secret presents nothing (SSH's `none` method, or
+  no `USER`), and Xmip's servers refuse it.
+
+Decided by the assistant while building: a minted password of full
+entropy is enrolled at one PBKDF2 iteration, so a login stays under a
+millisecond. Not closed: a key is admitted on its signature alone, what it
+is worth left to the `ssh-key` gate, so the SFTP far end still chooses a
+directory by the user a key names.

@@ -1669,31 +1669,48 @@ broker's word, `broker`, vouched where the transport's own connection
 proved the broker and claimed otherwise — `aws-sqs` over `https://` the
 one transport that proves it today.
 
-Not built, the assistant's drafts:
+Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
 
-- **The operate plane's caller, through the one gate.** The listener takes
-  a certificate's subject (`plane::served`) or the local endpoint's
-  account as a bare name, and `xmip_act_admitted_v1` takes a host's word
-  for proof (`proven`, a byte); `GatedOperator.Proven` in `Xmip.Surface`
-  calls any non-empty subject proven, in .NET's spelling of a subject. The
-  draft: a `peer-credentials` authenticator beside `Circumstance`; the
-  plane's claim run through `authenticate::authenticate`; `admitted`
-  taking the authenticated identity; `xmip_caller_proven_v1` answering the
-  proven caller of a secure session (section 21) in place of the byte; and
-  `GatedOperator.Proven` deleted. The ADR-0009 amendment comes with it.
-  Today's rule stays: a caller nothing proved acts on nothing.
-- **The SSH and FTP servers check the password.** `ssh::userauth` admits
-  any password and calls the result `Authenticated`; the FTP server
-  answers any `PASS` with 230; the SFTP far end chooses a user's directory
-  by that unchecked name. These are Xmip's server sides for the loopback
-  and the Playground's far ends. The draft: `ssh::userauth::Offered`
-  (user, secret) asked of a check the server is handed, the check
-  `authenticate/password`'s, the fixtures given real secrets. To settle
-  first: `architecture.toml` says identity presentation is not a
-  transport's, so the server is handed the check rather than linking an
-  authenticator; anonymous FTP; and the real nodes' far end
-  (`far_end.rs`), whose Locations' secrets would have to be enrolled
-  there.
+- **The operate plane's caller, through the one gate.** The plane's claim
+  is run through `authenticate::authenticate` (`plane::caller`): a
+  certificate's subject as `mutual-tls`, verified by
+  `authenticate::Handshake`, the handshake's rule moved down from the
+  technology, and the local endpoint's account as `peer-credentials`,
+  verified by `authenticate::PeerCredentials`, both beside `Circumstance`;
+  `plane::role::admitted` takes the authenticated identity, only a proven
+  one anyone; `xmip_caller_proven_v1` answers the proven caller of a
+  secure session (section 21) and `xmip_act_admitted_v1`'s `proven` byte
+  is deleted; `GatedOperator.Proven` is deleted, `ProvenCaller` reading
+  the runtime's answer alone (`ProvenConnection`). Today's rule stays: a
+  caller nothing proved acts on nothing. Not closed: the screen's gate
+  still takes the name its host passes; an opaque caller the runtime hands
+  out would bind it.
+
+Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
+
+- **The SSH and FTP servers check the password.** Xmip's server sides
+  for the loopbacks and the Playground's far ends are handed the check
+  rather than linking an authenticator, since identity presentation is
+  not a transport's (`architecture.toml`): `net::login::Offered` (user,
+  secret) asked of a `net::login::Check`. `ssh::userauth::serve` admits a
+  password only where the check admits it and lets a client go after six
+  requests; the FTP session answers `PASS` 230 only where the check
+  admits the user `USER` named, refuses `anonymous` and `ftp` before any
+  check is asked, and answers every command but the login's 530 until
+  then; the SFTP far end chooses a directory only by a name the check
+  admitted, or a verified key signed for. The check is
+  `authenticate/password`'s (`PasswordAuthenticator::admits`); the
+  loopbacks check the one login their near end presents
+  (`net::login::only`); the Playground's drop box mints each Party's
+  password per server, and the real nodes' far end mints each
+  Location's, sets it on the Location's node through its operate
+  listener (`far-end.<user>`, named by `configure::placed`) and keeps
+  only the verifier. The built-in SFTP login `xmip`/`xmip` and the FTP
+  client's anonymous login are deleted: a Location that names no secret
+  presents nothing, and Xmip's servers refuse it. Not closed: a key is
+  admitted on its signature alone, what it is worth left to the
+  `ssh-key` gate, so the SFTP far end still chooses a directory by the
+  user a key names.
 
 # Suggested order
 

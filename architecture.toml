@@ -455,7 +455,7 @@ dependency = []
     description = "AS4: the OASIS ebMS 3.0 AS4 profile, EDI over SOAP with WS-Security and reception awareness."
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.ftp]
-      dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core"]
+      dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     maturity = "scaffolded"
     description = "FTP and FTPS transport: one file is one Stream; a Location lists, claims and retrieves, or stores, in passive binary mode, or serves clients directly; FTPS behind the tls feature. A xmip-core-transport technology."
     specification = "IETF RFC 959, passive mode and binary type; RFC 3659 MLSD, SIZE and MDTM; FTPS by RFC 4217 with the estate's TLS"
@@ -1845,6 +1845,7 @@ dependency = []
       "xmip-core-archive-sqlite",
       "xmip-core-audit",
       "xmip-core-authenticate",
+      "xmip-core-authenticate-password",
       "xmip-core-authorize",
       "xmip-core-authorize-party",
       "xmip-core-configure",
