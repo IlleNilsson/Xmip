@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 312748 lines of production
+Where each repository mounts and what it holds: 312834 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -436,14 +436,14 @@ hold no source to count.
 │   │   │   │   ├── db2                         2668
 │   │   │   │   ├── amqp                        2632
 │   │   │   │   ├── opc-ua                      2432
-│   │   │   │   ├── ftp                         2094
 │   │   │   │   ├── nfs                         2048
-│   │   │   │   ├── sftp                        1969
 │   │   │   │   ├── smb                         1955
+│   │   │   │   ├── ftp                         1869
 │   │   │   │   ├── http                        1832
 │   │   │   │   ├── mssql                       1815
 │   │   │   │   ├── ibm-mq                      1773
 │   │   │   │   ├── kafka                       1735
+│   │   │   │   ├── sftp                        1705
 │   │   │   │   ├── oracle                      1502
 │   │   │   │   ├── snmp                        1439
 │   │   │   │   ├── nats-jetstream              1351
@@ -527,7 +527,7 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    2695
+│   │   │   ├── authenticate                    2820
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -543,9 +543,9 @@ hold no source to count.
 │   │   │   │   ├── certificate                  139
 │   │   │   │   ├── api-key                       99
 │   │   │   │   ├── bearer                        94
-│   │   │   │   ├── mutual-tls                    86
+│   │   │   │   ├── password                      81
 │   │   │   │   ├── basic                         76
-│   │   │   │   └── password                      68
+│   │   │   │   └── mutual-tls                    74
 │   │   │   ├── path                            2431
 │   │   │   │   ├── jsonpath                     660
 │   │   │   │   ├── fhirpath                     614
@@ -567,7 +567,7 @@ hold no source to count.
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
-│   │   │   ├── identify                        1506
+│   │   │   ├── identify                        1509
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
 │   │   │   │   ├── dns                          195
@@ -661,10 +661,10 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             6401
+│   │   │   ├── net                             6459
 │   │   │   ├── codec                           2890
 │   │   │   ├── mariadb                         1764
-│   │   │   ├── ssh                             1698
+│   │   │   ├── ssh                             1746
 │   │   │   ├── tls                             1144
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
@@ -696,7 +696,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31219  C# 28681 · Rust 2242 · PowerShell 296
+│   │   ├── abi                                31290  C# 28753 · Rust 2241 · PowerShell 296
 │   │   ├── event                               5615
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -724,16 +724,16 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            34181
+│       ├── runtime                            34321
 │       ├── persist                            14190
 │       │   ├── sqlite                           288
 │       │   ├── rocksdb                          230
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8193
+│       └── configure                           8208
 └── test/
     └── core/
-        └── playground                         12492
+        └── playground                         12606
 ```
 
 ---

@@ -448,3 +448,60 @@ overrule:
 
 Not decided: finer rules by a node's roles — which node may read a secret
 — since a node's certificate does not say its roles.
+
+## Amendment, 2026-11-01: the operate plane's caller, through the one gate
+
+Open problem 59's draft, built: the owner, 2026-10-29, *First you present
+your identity, then you get identified. Then we look to authentication, do
+your identification hold up. When authenticated we look for
+Authorization*, and ADR-0019's amendment of 2026-10-30: no identity
+reaches authorization *without an authenticator having checked it*. The
+operate plane took its caller around that gate: the listener read a
+certificate's subject (`plane::served`) or the local endpoint's account as
+a bare name and handed it to the role check as proven;
+`xmip_act_admitted_v1` took a host's word for proof, a `proven` byte; and
+`GatedOperator.Proven` called any non-empty subject proven, in .NET's
+spelling of it.
+
+- **The plane's claim goes through `authenticate::authenticate`**, read
+  once in `plane::caller` for every plane: a certificate's subject as
+  `mutual-tls`, its handshake the proof, and the local endpoint's account
+  as `peer-credentials`, *detected* from the connection, the operating
+  system's word the proof. Each plane accepts the one mechanism its
+  connection carries; an operator is no Party, so the registry is empty.
+  A refusal ends the connection, told to the node's audit.
+- **Two verifiers beside `Circumstance`**, since every node's operate
+  listener proves every caller (ADR-0050, amendment 2026-10-20):
+  `authenticate::PeerCredentials`, proven only for an account the system
+  named, and `authenticate::Handshake`, the handshake's rule moved down
+  from the `mutual-tls` technology, which now asks it before it narrows by
+  issuer — a platform service may not depend on a technology
+  (`architecture.toml`), and the rule has one home.
+- **`plane::role::admitted` takes the authenticated identity**, and only
+  one the gate called *proven* is anyone; vouched, claimed and refused act
+  on nothing. A screen's act is admitted by the same rule
+  (`role::act_admitted`).
+- **`xmip_caller_proven_v1`** (`xmip_operate.h` section 21) answers who a
+  web host's browser is: the session's certificate through the same gate,
+  the identity it answered, empty for no one. `SecureConnection` carries it
+  as a `ProvenConnection`, and `ProvenCaller` reads it and nothing else.
+  `xmip_act_admitted_v1` loses its byte: `who` is that answer, or a
+  desktop's operating system user, and empty is no one.
+- **`GatedOperator.Proven` is deleted** with every use; a subject a host
+  reads off its connection proves nothing.
+
+Today's rule stays: a caller nothing proved acts on nothing.
+
+Not closed: `xmip_act_admitted_v1` still takes the name its host passes,
+so a host that passes a name the runtime did not answer is believed. A
+browser's circuit outlives the session that proved it, so binding the two
+would take an opaque caller the runtime hands out and the gate takes back;
+not built.
+
+Proved in the runtime (`plane::caller`, `plane::role`, the section 18 and
+21 exports, `secure_listener`), `xmip-core-authenticate` (`handshake`,
+`peer_credentials`) and `Xmip.Surface.Test` (`BrowserCallerTest`: a
+certificate the runtime did not answer for proves no one).
+
+Provenance: the draft and every name are the assistant's, for the owner to
+overrule.
