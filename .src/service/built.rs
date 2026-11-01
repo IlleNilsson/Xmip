@@ -64,7 +64,9 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
 /// The authenticators this build carries, each taken where a Receive
 /// Location the node starts accepts its mechanism: `circumstance` in every
 /// build, since every node infers a circumstance where nothing was
-/// presented (ADR-0019 clause 7), and those the site linked.
+/// presented (ADR-0019 clause 7); `broker` in every build, which answers
+/// for the sender a broker delivered a message as (ADR-0019, amendment
+/// 2026-10-31); and those the site linked.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -73,6 +75,7 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
 pub fn authenticators() -> Vec<Box<dyn Authenticator>> {
     let mut authenticators: Vec<Box<dyn Authenticator>> = Vec::new();
     authenticators.push(Box::new(xmip_authenticate::Circumstance));
+    authenticators.push(Box::new(xmip_authenticate::Broker));
     #[cfg(feature = "authenticate-mutual-tls")]
     authenticators.push(Box::new(xmip_authenticate_mutual_tls::Verifier::new()));
     authenticators
@@ -180,7 +183,8 @@ pub fn key_stores() -> Vec<LinkedKeyStore> {
 /// asks them: the first claim an arrival carries is the one authenticated
 /// (`xmip_runtime::arrival`), so a credential the sender presented comes
 /// before the peer it connected from, and the certificate a TLS handshake
-/// verified before a credential sent inside the connection.
+/// verified before a credential sent inside the connection, and the sender
+/// a broker delivered a message as before the peer address.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -197,6 +201,7 @@ pub fn transport_identifiers() -> Vec<Box<dyn TransportIdentifier>> {
     identifiers.push(Box::new(xmip_identify_api_key::ApiKey::default()));
     #[cfg(feature = "identify-username")]
     identifiers.push(Box::new(xmip_identify_username::Username::default()));
+    identifiers.push(Box::new(xmip_identify::broker::Broker));
     #[cfg(feature = "identify-ip")]
     identifiers.push(Box::new(xmip_identify_ip::IpIdentifier::new()));
     identifiers

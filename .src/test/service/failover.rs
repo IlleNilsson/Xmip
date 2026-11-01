@@ -63,43 +63,44 @@ fn declaring(role: &str) -> Vec<String> {
 }
 
 /// The configuration of `node`, declaring `roles`, in a folder of its own
-/// beneath `directory`: reaching the Storage nodes `listed` with the
-/// certificate `directory`'s `tls` holds, serving them at `listen` where it
+/// beneath `directory`: reaching the Storage nodes at `addresses` with the
+/// certificate `directory`'s `tls` holds, serving them at `served` where it
 /// is one, and `bound` — its bindings of the Application.
 fn configured(
     directory: &Path,
     (node, roles): (&str, &str),
-    (listed, listen): (&[String], Option<&str>),
+    (addresses, served): (&[String], Option<&str>),
     bound: &str,
 ) -> PathBuf {
     let own = directory.join(node);
     std::fs::create_dir_all(&own).expect("a folder");
     let tls = named(&directory.join("tls"));
-    let nodes: Vec<String> = listed.iter().map(|at| format!("\"{at}\"")).collect();
-    let listen = listen
+    let quoted: Vec<String> = addresses.iter().map(|at| format!("\"{at}\"")).collect();
+    let listen_line = served
         .map(|at| format!("listen = \"{at}\"\n"))
         .unwrap_or_default();
+    let local = format!("xmip-failover-{}-{node}", std::process::id());
     let text = format!(
         "roles = \"{roles}\"\n\n[service]\nname = \"xmip-{node}\"\ncluster_name = \"{cluster}\"\n\
          node_name = \"{node}\"\ndata = \"data\"\n\n\
          [tuning]\nstorage_silence = \"500ms\"\nsend_scan = \"50ms\"\nreceive_backoff = \"50ms\"\n\n\
-         [storage]\nnodes = [{nodes}]\n{listen}certificate = \"{tls}/node.pem\"\n\
+         [storage]\nnodes = [{nodes}]\n{listen_line}certificate = \"{tls}/node.pem\"\n\
          key = \"{tls}/node.key\"\nanchors = \"{tls}/anchors.pem\"\n\
          {bound}{APPLICATION}\n[operate]\nlocal = \"{local}\"\n",
         cluster = test_cluster().name,
-        nodes = nodes.join(", "),
-        local = format!("xmip-failover-{}-{node}", std::process::id()),
+        nodes = quoted.join(", "),
     );
     let path = own.join(format!("{node}.toml"));
     std::fs::write(&path, text).expect("written");
     path
 }
 
+/// A node running: its process, what ends it if the test does not, and the
+/// lines it says.
+type Running = (Child, Ending, Receiver<String>);
+
 /// A node started from `configuration`, once it says it accepts work.
-fn started(
-    configuration: &Path,
-    scope: &str,
-) -> (Child, Ending, std::sync::mpsc::Receiver<String>) {
+fn started(configuration: &Path, scope: &str) -> Running {
     let folder = configuration.parent().expect("its folder");
     let mut child = spawned(configuration, folder);
     let ending = Ending(Some(child.id()));
@@ -134,7 +135,11 @@ fn names(out: &Path) -> Vec<String> {
             entries
                 .filter_map(Result::ok)
                 .map(|entry| entry.file_name().to_string_lossy().into_owned())
-                .filter(|name| name.ends_with(".edi"))
+                .filter(|name| {
+                    Path::new(name)
+                        .extension()
+                        .is_some_and(|extension| extension.eq_ignore_ascii_case("edi"))
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -151,11 +156,9 @@ fn arrived(changed: &Receiver<()>, out: &Path, count: usize) -> Vec<String> {
     names(out)
 }
 
-#[test]
-fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-failover-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+/// The certificate, key and anchors every node reaches Xmip Storage with,
+/// written to `directory`'s `tls`.
+fn certified(directory: &Path) {
     let authority = xmip_runtime::fixture::Authority::new();
     let (certificate, key, anchors) = authority.pem("node");
     std::fs::create_dir_all(directory.join("tls")).expect("a folder");
@@ -166,28 +169,23 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
     ] {
         std::fs::write(directory.join("tls").join(file), pem).expect("written");
     }
-    let (drop, out) = (directory.join("in"), directory.join("out"));
-    std::fs::create_dir_all(&drop).expect("the drop directory");
-    std::fs::create_dir_all(&out).expect("the send directory");
-    let storage = declaring("storage");
-    let listed: Vec<String> = storage
-        .iter()
-        .map(|_| xmip_net::fixture::unheld().to_string())
-        .collect();
-    let (receiver, sender) = (
-        declaring("receiving")[0].clone(),
-        declaring("sending")[0].clone(),
-    );
-    let cluster = test_cluster().scope();
-    let scope = |node: &str| format!("{cluster}/node/{node}");
+}
 
+/// The scope `node` says it accepts work in.
+fn scope(node: &str) -> String {
+    format!("{}/node/{node}", test_cluster().scope())
+}
+
+/// The cluster's two Storage nodes started, each serving at its own of
+/// `addresses`: the primary, then its standby.
+fn storage_started(directory: &Path, addresses: &[String]) -> (Running, Running) {
     let mut primary = None;
     let mut standby = None;
-    for (place, node) in storage.iter().enumerate().take(2) {
+    for (place, node) in declaring("storage").iter().enumerate().take(2) {
         let path = configured(
-            &directory,
+            directory,
             (node, "storage"),
-            (&listed, Some(&listed[place])),
+            (addresses, Some(&addresses[place])),
             "",
         );
         let running = started(&path, &scope(node));
@@ -197,34 +195,91 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
             standby = Some(running);
         }
     }
-    let binding = |node: &str, kind: &str, name: &str, at: &Path, accept: &str| {
-        format!(
-            "\n[[applications]]\nname = \"Carried\"\n\n[[applications.{kind}]]\n\
-             name = \"{name}\"\nnode = \"{node}\"\naddress = \"{}\"\n{accept}",
-            named(at)
-        )
-    };
+    (primary.expect("the primary"), standby.expect("the standby"))
+}
+
+/// `node`'s binding of the Application's `kind` called `name` to `at`,
+/// with `accept` after it.
+fn binding(node: &str, kind: &str, name: &str, at: &Path, accept: &str) -> String {
+    format!(
+        "\n[[applications]]\nname = \"Carried\"\n\n[[applications.{kind}]]\n\
+         name = \"{name}\"\nnode = \"{node}\"\naddress = \"{}\"\n{accept}",
+        named(at)
+    )
+}
+
+/// The receiving node taking files dropped in `drop`, and the sending node
+/// writing each to `out`, started reaching Xmip Storage at `addresses`.
+fn carriers_started(
+    directory: &Path,
+    (drop, out): (&Path, &Path),
+    addresses: &[String],
+) -> (Running, Running) {
+    let (receiver, sender) = (
+        declaring("receiving")[0].clone(),
+        declaring("sending")[0].clone(),
+    );
     let receiving = configured(
-        &directory,
+        directory,
         (&receiver, "receiving"),
-        (&listed, None),
+        (addresses, None),
         &binding(
             &receiver,
             "receive_locations",
             "In",
-            &drop,
+            drop,
             "[applications.receive_locations.accept]\nmechanism = [\"circumstance\"]\n\
              transport = \"claimed\"\n",
         ),
     );
     let sending = configured(
-        &directory,
+        directory,
         (&sender, "sending"),
-        (&listed, None),
-        &binding(&sender, "send_ports", "Out", &out, ""),
+        (addresses, None),
+        &binding(&sender, "send_ports", "Out", out, ""),
     );
-    let (r_child, mut r_ending, r_said) = started(&receiving, &scope(&receiver));
-    let (s_child, mut s_ending, s_said) = started(&sending, &scope(&sender));
+    let receiving_node = started(&receiving, &scope(&receiver));
+    let sending_node = started(&sending, &scope(&sender));
+    (receiving_node, sending_node)
+}
+
+/// A node stopped by the console, once it has exited.
+fn stopped((child, mut ending, said): Running) {
+    stop(&child);
+    heard(&said, "stopped by the console", Duration::from_secs(10));
+    assert!(exited(child, Duration::from_secs(10)).success());
+    ending.0 = None;
+}
+
+/// Every file dropped is in `out`, once, nothing beside it, and whole.
+fn all_arrived_whole(arrived: &[String], out: &Path) {
+    let expected: Vec<String> = {
+        let mut names: Vec<String> = (0..2 * HALF).map(|n| format!("order-{n}.edi")).collect();
+        names.sort();
+        names
+    };
+    assert_eq!(arrived, expected, "every file once, nothing beside it");
+    for number in 0..2 * HALF {
+        let sent = std::fs::read(out.join(format!("order-{number}.edi"))).expect("arrived");
+        assert_eq!(sent, content(number), "order-{number}.edi whole");
+    }
+}
+
+#[test]
+fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run() {
+    let directory =
+        std::env::temp_dir().join(format!("xmip-service-failover-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&directory);
+    certified(&directory);
+    let (drop, out) = (directory.join("in"), directory.join("out"));
+    std::fs::create_dir_all(&drop).expect("the drop directory");
+    std::fs::create_dir_all(&out).expect("the send directory");
+    let addresses: Vec<String> = declaring("storage")
+        .iter()
+        .map(|_| xmip_net::fixture::unheld().to_string())
+        .collect();
+    let (primary, standby) = storage_started(&directory, &addresses);
+    let (receiving, sending) = carriers_started(&directory, (&drop, &out), &addresses);
 
     let began = Instant::now();
     dropped(&directory, &drop, (0, HALF));
@@ -233,47 +288,23 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
     assert_eq!(before.len(), HALF, "before the failover: {before:?}");
     let carried_before = began.elapsed();
 
-    let (p_child, mut p_ending, p_said) = primary.take().expect("the primary");
     let stopping = Instant::now();
     dropped(&directory, &drop, (HALF, HALF / 2));
-    stop(&p_child);
-    heard(&p_said, "stopped by the console", Duration::from_secs(10));
-    assert!(exited(p_child, Duration::from_secs(10)).success());
-    p_ending.0 = None;
+    stopped(primary);
     let primary_stopped = stopping.elapsed();
     dropped(&directory, &drop, (HALF + HALF / 2, HALF - HALF / 2));
     let after = arrived(&changed, &out, 2 * HALF);
     let failed_over = stopping.elapsed();
 
-    let expected: Vec<String> = {
-        let mut names: Vec<String> = (0..2 * HALF).map(|n| format!("order-{n}.edi")).collect();
-        names.sort();
-        names
-    };
-    assert_eq!(after, expected, "every file once, nothing beside it");
-    for number in 0..2 * HALF {
-        let sent = std::fs::read(out.join(format!("order-{number}.edi"))).expect("arrived");
-        assert_eq!(sent, content(number), "order-{number}.edi whole");
-    }
+    all_arrived_whole(&after, &out);
     println!(
         "carried {HALF} files through the primary in {carried_before:?}, and {HALF} more across \
          its stop and the standby's promotion in {failed_over:?}, the primary stopped after \
          {primary_stopped:?}"
     );
 
-    for (child, ending, said) in [
-        (s_child, &mut s_ending, s_said),
-        (r_child, &mut r_ending, r_said),
-    ] {
-        stop(&child);
-        heard(&said, "stopped by the console", Duration::from_secs(10));
-        assert!(exited(child, Duration::from_secs(10)).success());
-        ending.0 = None;
-    }
-    let (d_child, mut d_ending, d_said) = standby.take().expect("the standby");
-    stop(&d_child);
-    heard(&d_said, "stopped by the console", Duration::from_secs(10));
-    assert!(exited(d_child, Duration::from_secs(10)).success());
-    d_ending.0 = None;
+    stopped(sending);
+    stopped(receiving);
+    stopped(standby);
     let _ = std::fs::remove_dir_all(&directory);
 }

@@ -180,6 +180,22 @@ load is a defect (`CONTRIBUTING.md`). The first build after a dependency
 changes takes longer; every build after it is cached. `test/Rust.Style.Test.ps1`
 holds every workspace root to it.
 
+**The estate's own crates build optimized too** (the owner, 2026-11-01: the
+millisecond rule is measured on the optimized build). Set once, in the
+configuration every cargo build under the estate root reads,
+`.cargo/config.toml`:
+
+```toml
+[profile.dev]
+opt-level = 3
+```
+
+so a crate's own tests — the runtime's, the root's measured service tests —
+run its code as it ships, with debug assertions and debug information kept.
+A workspace root built alone, outside the estate, keeps only its
+dependencies optimized. `test/Rust.Style.Test.ps1` holds the configuration
+to it.
+
 ## 6. What this does not enforce
 
 Module layout beyond file length, whether a `struct` should have been three, and

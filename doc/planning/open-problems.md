@@ -894,6 +894,108 @@ under a millisecond beside the machine's own wake for each of its five
 hand-offs between threads by `.src/test/service/carried.rs`, run alone in
 a test program of its own, `xmip-service-measured` (2026-10-31).
 
+*Counted by the node itself, 2026-11-01.* The share above was a total less
+I/O timed apart, beside it, and noise decided it: alone on a quiet machine
+it read 928 µs, 0, 0, 2.07 ms and 910 µs. The owner, 2026-11-01: Xmip's own
+share is *the processor time its threads spent working for the Message*,
+and the millisecond is measured on the optimized build (`.cargo/config.toml`
+builds every crate under the estate root at opt-level 3; `rust-style.md`
+section 5b). Each Message has an account (`xcore::spent`), opened as its
+transport hands it over; each thread that works for it — the carrying
+thread, the send thread — counts its processor time into it
+(`xcore::processor_time`: `QueryThreadCycleTime` on Windows, its rate
+measured once as the node starts, `CLOCK_THREAD_CPUTIME_ID` elsewhere),
+except inside the payload's I/O: its Stream read from its transport, the
+Ledger's appends and syncs, its send, the Message read back from the
+Ledger as it is sent among it. The Storage node's writer counts each batch
+on an account of its own and shares it equally among the batch's writes
+(`persist::storage::Durable::worked`). The node keeps the fastest of five
+(`xcore::fastest`) as `Outcomes::own_share` and says it as its stop
+record's `own_share_ns`; both `carried.rs` and the runtime's loopback node
+test hold it under a millisecond, with no allowance for a wake, since a
+thread waiting runs nothing, and print the time end to end beside it.
+Two things are not counted: the scheduler's and an interrupt's time the
+operating system charges to a thread it wakes, a few microseconds at a
+time, and whatever a transport does before it hands a Message over — its
+listing, its claim, its accept.
+
+On the way, the Storage node's writer was found to wait on nothing — no
+timer, no gather window, no lock; its time is the batch's own work: about
+seventeen point reads, each a keyed hash, a `RocksDB` read and an
+authenticated open, the Publication's SHA-1 digest, sealing, and two index
+ranges per queue that each queue's first is found again with
+(`persist::storage::due::settle`). Those ranges are now read only where
+they can change the first: every entry of a part is at or after where its
+first was, so a first the batch wrote at or before it is the first, and a
+part that held no retry still holds none — a lone Message published to an
+empty queue reads no range (about 70 µs fewer). Counted so, built optimized
+(2026-11-01): the runtime's loopback test 0.85, 0.93 and 0.80 ms alone and
+0.56 ms beside its suite; `carried.rs` 0.89, 1.12 (over) and 0.93 ms alone
+and 0.98 ms after the service's other tests. Of a loopback Message's share
+about 0.26 to 0.39 ms is its part of the Storage node's batch and 0.30 to
+0.43 ms the carrying and send threads. Still open: a file's share sits at
+the millisecond, and what of it is Xmip's work to take off the path.
+
+*Measured again, 2026-11-01, where the share grew under load.* `carried.rs`
+read 0.89 to 1.12 ms alone and 1.98 ms in a landing. Three errors in the
+measurement, each repaired:
+
+- **The far end's telling was counted by a race.** A drop folder's
+  acknowledgement — the claimed file deleted, 0.38 to 0.73 ms of the
+  operating system's time on the carrying thread — runs once the
+  Publication is durable, beside the send. It landed in the share only
+  where the carrying thread finished before the send thread read the
+  share, which a loaded machine made the rule. It is the transport's I/O
+  with its far end, as its Stream's read is, and is timed apart now
+  (`receiving::telling`).
+- **The Stream's closing was counted.** The transport's file let go of after
+  its last read, 40 to 60 µs, is part of that read's I/O
+  (`xcore::spent::ReadOnIo`, which closes inside `on_io`).
+- **The rate was read low.** A thread's cycles against the clock, the most of
+  five spins of a millisecond, read up to 0.8 % low under a parallel build
+  and 0.2 % low idle — a thread's cycles leave out its preemptions and the
+  interrupts it took — and every duration read at it was that much too
+  long. On x86-64 a thread's cycles are the time-stamp counter's
+  (`QueryThreadCycleTime` against `RDTSC` over a 5 ms spin: 0.998), so the
+  rate is that counter against the clock, the median of five, which
+  neither moves (`xcore::processor_time`).
+
+Not an error, and not taken out: the same work runs longer under load. A
+fixed piece of work measured 393 µs on an idle machine, 560 to 720 µs under
+a parallel build, and 615 to 642 µs on the same machine an hour later with
+only a browser beside it — the processor's clock falls as its cores are busy
+or it is hot, another thread shares the core, and a system call costs more
+(`QueryThreadCycleTime` itself 0.86 µs beside the browser, 2.1 to 3.8 µs
+under a build).
+
+Work taken off the path, each measured by phase on the threads before it
+was changed: a Stream's first chunk is read into eight kilobytes of room,
+not grown from thirty-two bytes nor a whole chunk set aside (a 64 KiB block of
+the operating system's heap cost 3.6 to 10 µs to take and give back, eight
+kilobytes 0.2 µs); the Storage node's writer reads each record once a batch
+(`persist::storage::commit::Batch::before`: three of a Publication's sixteen
+reads were the same record read again to lay out its columns and to find
+its queue's first); a record found is opened without first spelling the
+words a refusal of it would say; a sealed value is sealed after its layout
+byte in one allocation (`secret::DataKey::seal_after`); SHA-1 reads each
+whole block where the message is, never copying it to pad it; and an audit
+record's TOML quotes each value where it is written (`codec::toml::quote_into`).
+
+Measured after, built optimized, each run beside the fixed work above as
+the machine's speed then: alone 0.84, 0.42, 0.77, 0.36 and 0.43 ms (the
+fixed work 1249, 509, 441, 397 and 384 µs); while the runtime's suite runs
+its tests 0.73, 0.49 and 0.52 ms; while it compiles 1.25, 0.99 and 1.08 ms
+(the fixed work 807 to 1285 µs). Built without debug assertions and
+overflow checks, alone, 0.34 to 0.64 ms: no difference the machine's own
+spread lets be seen. Still open: under a parallel build the share is over
+the millisecond in two runs of three, because the work itself runs two to
+three times longer there. What would take off more is the owner's to
+decide: a Publication writes some fourteen sealed records and reads
+thirteen (about 10 to 20 µs each, a keyed hash, a `RocksDB` read and an
+authenticated open), and the operating system's heap costs 0.1 to 0.4 µs
+for each of the path's several hundred allocations, where a faster
+allocator is another external party.
+
 *Repaired again 2026-10-20, under load.* The runtime's loopback node test
 (`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
 its load alone and up to 2.8 ms beside the rest of the suite: each
@@ -1562,15 +1664,12 @@ mechanism's catalog; every claim beyond one a layer recorded as claimed
 (`IdentityFacts::unchecked`). Landed 2026-10-31 (ADR-0019, amendment
 2026-10-31): a fourth verdict, `vouched`; each Receive Location's minimum
 per layer, `accept.transport` and `accept.message`, `proven` where absent,
-checked in `authorize::authorize` before any policy is asked.
+checked in `authorize::authorize` before any policy is asked; and the
+broker's word, `broker`, vouched where the transport's own connection
+proved the broker and claimed otherwise — `aws-sqs` over `https://` the
+one transport that proves it today.
 
 Not built, the assistant's drafts:
-
-- **The broker's word, vouched.** An authenticator for `amqp.user-id`,
-  which the broker checks against its connection, and an SQS sender id,
-  answering `vouched` only where Xmip's own connection to that broker is
-  proven — its certificate verified and the Location's secret accepted —
-  and `claimed` otherwise, the broker named in its evidence.
 
 - **The operate plane's caller, through the one gate.** The listener takes
   a certificate's subject (`plane::served`) or the local endpoint's
