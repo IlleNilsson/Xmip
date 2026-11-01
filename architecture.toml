@@ -1846,6 +1846,7 @@ dependency = []
       "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authenticate-password",
+      "xmip-core-authenticate-ssh-key",
       "xmip-core-authorize",
       "xmip-core-authorize-party",
       "xmip-core-configure",

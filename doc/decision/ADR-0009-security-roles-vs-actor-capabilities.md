@@ -485,18 +485,58 @@ spelling of it.
   web host's browser is: the session's certificate through the same gate,
   the identity it answered, empty for no one. `SecureConnection` carries it
   as a `ProvenConnection`, and `ProvenCaller` reads it and nothing else.
-  `xmip_act_admitted_v1` loses its byte: `who` is that answer, or a
-  desktop's operating system user, and empty is no one.
+  `xmip_act_admitted_v1` loses its byte, and its `who` then the
+  handle below.
 - **`GatedOperator.Proven` is deleted** with every use; a subject a host
   reads off its connection proves nothing.
 
 Today's rule stays: a caller nothing proved acts on nothing.
 
-Not closed: `xmip_act_admitted_v1` still takes the name its host passes,
-so a host that passes a name the runtime did not answer is believed. A
-browser's circuit outlives the session that proved it, so binding the two
-would take an opaque caller the runtime hands out and the gate takes back;
-not built.
+**Closed the same day: a caller crosses as an opaque handle, never a
+name.** `xmip_act_admitted_v1` took the name its host passed, so a host
+passing a name the runtime never answered was believed. Built
+(`xmip_operate.h` sections 18 and 21; decided by the assistant, each in
+one line):
+
+- **The runtime hands out a handle for every caller its gate proved**
+  (`plane::held`): a 64-bit number from the operating system's random
+  source (`codec::random`), never 0, which is no one; the identity the gate
+  answered is kept behind it, and `xmip_act_admitted_v1` takes the handle
+  in place of `who`. A handle unknown, released, revoked, expired or forged
+  is no one.
+- **`xmip_caller_proven_v1` hands out the session's** (`out_caller`), the
+  name beside it for display alone.
+- **Each holder holds its own and releases it**: a browser's circuit, which
+  outlives the session, takes its own (`xmip_caller_hold_v1`,
+  `HeldCaller.Hold`) and releases it when the circuit ends
+  (`xmip_caller_release_v1`, the scoped `RoleContext` disposed); the
+  session releases its own when it ends.
+- **No handle outlives what proved it**: past the certificate's `notAfter`
+  (`authenticate::x509::not_after_of`) it is no one, and stopping the
+  listener revokes every handle its sessions proved and any it would hand
+  out after (`plane::held::revoke`). At most 65536 are held; past that a
+  new caller is no one.
+- **The desktop's caller is the runtime's word, not .NET's**:
+  `GatedOperator.HostUser`, the environment's user name, is deleted with
+  every use; `xmip_caller_process_v1` reads the account this process runs
+  as from the operating system — its own token on Windows
+  (`net::pipe::running_as`), its effective user on Unix — and proves it as
+  `peer-credentials`, the same reading a local endpoint makes of a process
+  connecting (`plane::local::running_as`); the tester directory knows that
+  name (`RoleAssignment.ProcessCaller`).
+- **The .NET side carries the handle**: `HeldCaller` in `Xmip.Abi`,
+  `SecureSurfaceSession.Caller`, `ProvenConnection`, `ProvenCaller` (the
+  handle in the request's `xmip-caller` claim, a circuit holding its own),
+  `RoleContext.Caller` and `GatedOperator`; `RoleContext.Who` and
+  `HeldCaller.Name` are for display.
+- **The local endpoint needed nothing**: no name crosses
+  `xmip_remote_open_local_v1` or `xmip_remote_act_v1`, and the node reads
+  the account from the connection.
+
+Still a limit: the handle binds a screen's act to a caller the runtime
+proved, inside the host's own process; a hostile host in that process can
+still act through the node as its own account. The node deciding for a
+relayed caller is the next step (the amendment below).
 
 Proved in the runtime (`plane::caller`, `plane::role`, the section 18 and
 21 exports, `secure_listener`), `xmip-core-authenticate` (`handshake`,

@@ -21,7 +21,7 @@
 //! it is held under a millisecond**, the fastest of five as the node reports
 //! it in its stop record (`Outcomes::own_share`; `CONTRIBUTING.md`, *Rust is
 //! here for one reason*), built optimized and run alone, in
-//! `xmip-service-measured` (`measured.rs`). A thread waiting for a wake
+//! the root's timing program, `measured` (`measured.rs`). A thread waiting for a wake
 //! runs nothing, so no wake is counted; the file's time end to end is
 //! printed beside it. How long a file
 //! waits in the drop directory before it is claimed is printed apart: the
@@ -113,7 +113,6 @@ fn lies(directory: &Path, name: &str) -> bool {
 
 #[test]
 fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
-    let _machine = alone();
     let directory =
         std::env::temp_dir().join(format!("xmip-service-carried-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);

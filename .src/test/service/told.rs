@@ -74,7 +74,6 @@ fn ended(directory: &Path, child: Child, mut ending: Ending, said: &Receiver<Str
 
 #[test]
 fn an_order_is_acted_on_the_moment_it_is_left() {
-    let _machine = alone();
     let (directory, child, ending, said) = started("told", true);
     let operator = operator();
     let plain = PlainWake::start();
@@ -127,7 +126,6 @@ fn file_taken(beside: &Path) -> Duration {
 
 #[test]
 fn a_service_nothing_tells_uses_next_to_no_processor() {
-    let _machine = alone();
     // Nothing started, so what is measured is the service's own: a
     // Receive Location's transport waits on its own terms.
     let (directory, child, ending, said) = started("idle", false);

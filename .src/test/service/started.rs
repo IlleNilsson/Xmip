@@ -1,6 +1,6 @@
 //! `xmip-service` started in a console over loopback, as an operating
 //! system or a terminal starts it: what every test of both programs that
-//! start it — `xmip-service` and `xmip-service-measured` — starts, tells,
+//! start it — `xmip-service` and the timing program `measured` — starts, tells,
 //! hears and stops it with, here once.
 
 use std::io::{BufRead, BufReader};

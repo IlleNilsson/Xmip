@@ -44,7 +44,8 @@ BeforeAll {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
             'Get-XmipNewModule.ps1',
-            'Test-XmipModule.ps1', 'Test-XmipDotnetModule.ps1', 'Submit-XmipModule.ps1',
+            'Test-XmipModule.ps1', 'Test-XmipMeasuredProgram.ps1', 'Test-XmipDotnetModule.ps1',
+            'Submit-XmipModule.ps1',
             'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
             'Test-XmipPlatform.ps1', 'Test-XmipRuntimeLibraryReader.ps1',
@@ -314,6 +315,81 @@ rustls = { version = "0.23", optional = true }
 
             @($script:XmipUnbuildableFeature.Keys).Count | Should -Be 0 -Because $because
         }
+    }
+}
+
+Describe 'A module''s timing program runs last, alone' {
+    # rust-style.md section 5c: landings failed at random on timing tests run
+    # inside a module's parallel suite (2026-11-01).
+    BeforeAll {
+        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-measured-$([guid]::NewGuid())"
+        New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
+
+        $script:Declared = Join-Path $script:Fixture 'declared.toml'
+        Set-Content -LiteralPath $script:Declared -Value @'
+[package]
+name = "xmip-core-example"
+
+[[test]]
+name = "ledger"
+path = "tests/ledger/main.rs"
+
+# The module's timing program.
+[[test]]
+name = "measured"
+path = "tests/measured/main.rs"
+test = false
+required-features = ["test-support"]
+
+[dev-dependencies]
+'@
+        $script:Tested = Join-Path $script:Fixture 'tested.toml'
+        Set-Content -LiteralPath $script:Tested -Value @'
+[package]
+name = "xmip-core-example"
+
+[[test]]
+name = "measured"
+path = "tests/measured/main.rs"
+'@
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'finds the program named measured, and nothing where none is declared' {
+        InModuleScope Xmip -Parameters @{ Declared = $script:Declared; Fixture = $script:Fixture } {
+            Get-XmipMeasuredDeclaration -ManifestPath $Declared | Should -Match 'test = false'
+
+            $bare = Join-Path $Fixture 'bare.toml'
+            Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
+            Get-XmipMeasuredDeclaration -ManifestPath $bare | Should -BeNullOrEmpty
+        }
+    }
+
+    It 'fails a program cargo would run among the module''s other tests' {
+        InModuleScope Xmip -Parameters @{ Tested = $script:Tested } {
+            Mock Write-Host { }
+
+            Test-XmipMeasuredProgram -ManifestPath $Tested | Should -BeFalse
+        }
+    }
+
+    It 'is run by the module''s verification after its feature tests, one test at a time' {
+        [string] $module = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipModule.ps1')
+        [string] $program = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
+
+        [int] $features = $module.IndexOf('& cargo test @through --features')
+        [int] $measured = $module.IndexOf('$passed = Test-XmipMeasuredProgram @measured')
+
+        $features | Should -BeGreaterThan 0
+        $measured | Should -BeGreaterThan $features
+        $module | Should -Match 'CheckOnly    = \$true'
+        $program | Should -Match '--test-threads=1'
+        $program | Should -Match 'cargo clippy @Through --test \$program'
     }
 }
 

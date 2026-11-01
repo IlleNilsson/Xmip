@@ -976,12 +976,13 @@ durable copy — the payload appended to a file kept open and synced, as the
 write-ahead log keeps it — 0.98 to 1.06 ms: what is left, Xmip's own share,
 is 0.60 to 0.83 ms. `carried.rs` holds it under a millisecond beside the
 machine's own wake for each of the path's five hand-offs between threads
-(`xcore::latency::PlainWake`), and runs alone: it and `told.rs` are
-`xmip-service-measured` (`.src/test/service/measured.rs`), a test program of
-their own that cargo runs after the other service tests, never beside them,
-each of the two taking that program's machine whole (2026-10-31: run in the
-same program as the others, under a lock that kept them out while it
-measured, it still went 7 to 11 ms over in landings, and passed alone).
+(`xcore::latency::PlainWake`), and runs alone: it and `told.rs` are the
+root's timing program, `measured` (`.src/test/service/measured.rs`), which a
+plain `cargo test` leaves out and the landing runs after every other test of
+the root, never beside them, one test at a time (2026-10-31: run in the same
+program as the others, under a lock that kept them out while it measured, it
+still went 7 to 11 ms over in landings, and passed alone; 2026-11-01: the
+rule holds for every module, `rust-style.md` section 5c).
 Since 2026-11-01 the node counts the share itself, as the owner set it that
 day: *the processor time its threads spent working for the Message*, on the
 optimized build. Each thread that works for a Message counts its processor
@@ -1303,3 +1304,46 @@ Decided, 2026-10-27: *the bulkhead stays, counted in chunks, not time.*
   TOML like every `[tuning]` key. *The 100 ms is a draft for the owner.*
 - **Deleted:** the read's pace and the time each departure was waited for,
   which the bound of 2026-10-20 measured.
+
+## Amendment, 2026-11-01: a Storage batch is decided on the thread of the caller that leads it
+
+**Provenance.** `carried.rs`, alone, read Xmip's own share of a file at
+0.68 ms on a quiet machine and 1.15 ms on one hot from building. Measured
+by phase on each thread, the embedded Storage node's Publication batch was
+about half of it, and every step of the batch ran three to five times
+slower than the same step on a thread that had just run: each write woke
+the writer's own thread, on a processor whose caches had gone cold, and the
+batch's first read alone took some 30 µs. Run on the calling thread instead,
+the same batch took about 40 percent of its time.
+
+- **The caller that finds no batch being decided leads.** There is no
+  writer thread any more (`xmip-storage-commit` is deleted). A write joins
+  the queue of writes waiting (`persist::storage::commit::Waiting`); where
+  none is being decided, its caller decides every write waiting as one
+  batch, on its own thread, under the batch's own account
+  (`xcore::spent`), so its Message is not charged with the others' work.
+  Writes that arrive meanwhile wait, and are the next batch: group commit,
+  as `RocksDB`'s own write group is led. Once its own write is answered, a
+  leader hands the lead to the first write still waiting, whose caller it
+  wakes, so no caller decides others' writes for long.
+- **Nothing else changes.** Each write is still answered once its batch is
+  written and synced after, on the sync thread, with the batch's `Durable`;
+  a batch is still one engine write; claims are still decided one after the
+  other, and the first wins.
+- **A batch that panics answers every write in it**, with an error, and
+  the writer reads its audit sequence again from what was written; the lead
+  goes on, so no caller waits for an answer that never comes.
+- **Also taken off the path:** a Publication is handed to Xmip Storage by
+  value and never copied (`XmipStorage::publish`); SHA-1 runs its eighty
+  rounds as four runs of twenty, never asking which round it is in
+  (`codec::sha1`, 23 µs to 6 µs over a Publication's 2.4 KB); and `RocksDB`
+  keeps a Bloom filter over whole keys in its memory table and its table
+  files, so a read of a record that is not there, most of a Publication's
+  reads, searches neither.
+
+Measured after (2026-11-01, `carried.rs` alone, the optimized build): 0.44,
+0.29, 0.24, 0.27 and 0.25 ms on a quiet machine, and 0.34 to 0.48 ms with it
+36 to 43 percent busy with other programs, against 0.68 ms before on a quiet
+machine; the runtime's
+loopback node test, alone, 0.24, 0.28 and 0.28 ms, against 0.71 to
+0.87 ms. Storage keeps the same records in the same tables.
