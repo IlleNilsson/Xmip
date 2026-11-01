@@ -1,7 +1,7 @@
 //! `xmip-service` started in a console over loopback, as an operating
 //! system or a terminal starts it, and held to what it does (ADR-0018,
 //! amendments 2026-09-28 and 2026-09-30). What every test here starts it
-//! with is `started.rs`, shared with `xmip-service-measured`; each test is
+//! with is `started.rs`, shared with the timing program `measured`; each test is
 //! in the file named for what it proves:
 //!
 //! - `stop.rs`: a stop drains the node and the process exits 0, within a
@@ -28,10 +28,10 @@
 //!   list, `--listening` names both ports, and a client obtains, is told
 //!   when to renew and revokes into the list while the node runs.
 //!
-//! A test that measures how long Xmip takes is not here: it is in
-//! `xmip-service-measured` (`measured.rs`), a program of its own that cargo
-//! runs after this one, so what it measures is Xmip's work and not these
-//! tests'.
+//! A test that measures how long Xmip takes is not here: it is in the
+//! root's timing program, `measured` (`measured.rs`), which the landing runs
+//! after this one, alone, one test at a time, so what it measures is Xmip's
+//! work and not these tests' (`doc/governance/rust-style.md` section 5c).
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its

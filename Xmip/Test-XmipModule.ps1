@@ -94,8 +94,9 @@ function Get-XmipBuildableFeature {
 function Test-XmipModule {
     <#
         .SYNOPSIS
-            Runs each module's own tests, then builds every feature it declares.
-            Returns the ones that failed.
+            Runs each module's own tests, then tests every feature it declares,
+            then its timing program alone (Test-XmipMeasuredProgram). Returns
+            the ones that failed.
 
         .DESCRIPTION
             **`cargo test` compiles the default feature set and nothing else**,
@@ -222,6 +223,16 @@ function Test-XmipModule {
                 & cargo clippy @through --all-targets @withFeatures -- -D warnings 2>&1 |
                     ForEach-Object { Write-Host $_ }
                 [bool] $checked = $LASTEXITCODE -eq 0
+
+                if ($checked) {
+                    [hashtable] $measured = @{
+                        ManifestPath = $manifest
+                        Feature      = $declared
+                        Through      = $through
+                        CheckOnly    = $true
+                    }
+                    $checked = Test-XmipMeasuredProgram @measured
+                }
             }
             finally {
                 Pop-Location
@@ -343,6 +354,17 @@ function Test-XmipModule {
                     & cargo test @through --features ($features -join ',') 2>&1 |
                         ForEach-Object { Write-Host $_ }
                     $passed = $LASTEXITCODE -eq 0
+                }
+
+                # The module's timing program last, alone, once everything
+                # else of it has passed (rust-style.md section 5c).
+                if ($passed) {
+                    [hashtable] $measured = @{
+                        ManifestPath = $manifest
+                        Feature      = $features
+                        Through      = $through
+                    }
+                    $passed = Test-XmipMeasuredProgram @measured
                 }
             }
 

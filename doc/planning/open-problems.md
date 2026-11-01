@@ -892,7 +892,7 @@ file's own work 2.06 to 2.08 ms and the Ledger's durable copy of the payload
 0.98 to 1.06 ms beside it, so Xmip's own share is 0.60 to 0.83 ms, held
 under a millisecond beside the machine's own wake for each of its five
 hand-offs between threads by `.src/test/service/carried.rs`, run alone in
-a test program of its own, `xmip-service-measured` (2026-10-31).
+the root's timing program, `measured` (2026-10-31).
 
 *Counted by the node itself, 2026-11-01.* The share above was a total less
 I/O timed apart, beside it, and noise decided it: alone on a quiet machine
@@ -995,6 +995,25 @@ thirteen (about 10 to 20 µs each, a keyed hash, a `RocksDB` read and an
 authenticated open), and the operating system's heap costs 0.1 to 0.4 µs
 for each of the path's several hundred allocations, where a faster
 allocator is another external party.
+
+*Taken off again, 2026-11-01: the Storage batch on the caller's thread.*
+`carried.rs` read 1.15 ms alone on a machine hot from 20 minutes of builds.
+Measured by phase, a lone Message's Publication batch, about half its
+share, ran three to five times slower than the same work on a thread that
+had just run: each write woke the writer's own thread on a processor whose
+caches had gone cold. Now no thread of its own decides a batch. The caller
+that finds none being decided leads it on its own thread, and the writes
+that arrive meanwhile are the next batch (`persist::storage::commit::Waiting`;
+ADR-0018, amendment 2026-11-01). Also taken off: the Publication is handed
+over by value, never copied; SHA-1 runs its rounds without asking which
+round it is in (23 to 6 µs); and `RocksDB` keeps a whole-key Bloom filter,
+so a read of a record that is not there searches neither the memory table
+nor a table file. After, alone: 0.44, 0.29, 0.24, 0.27 and 0.25 ms on a
+quiet machine, and 0.34 to 0.48 ms with it 36 to 43 percent busy with other
+programs, against 0.68 ms before on a quiet machine; the runtime's loopback
+node test 0.24, 0.28 and 0.28 ms, against 0.71 to 0.87 ms. Still open: under
+a parallel build the work itself
+runs two to three times longer.
 
 *Repaired again 2026-10-20, under load.* The runtime's loopback node test
 (`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
@@ -1682,9 +1701,16 @@ Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
   secure session (section 21) and `xmip_act_admitted_v1`'s `proven` byte
   is deleted; `GatedOperator.Proven` is deleted, `ProvenCaller` reading
   the runtime's answer alone (`ProvenConnection`). Today's rule stays: a
-  caller nothing proved acts on nothing. Not closed: the screen's gate
-  still takes the name its host passes; an opaque caller the runtime hands
-  out would bind it.
+  caller nothing proved acts on nothing. Closed the same day: the screen's
+  gate takes an opaque handle the runtime handed out for a caller it
+  proved (`plane::held`; `xmip_caller_proven_v1`, `xmip_caller_hold_v1`,
+  `xmip_caller_release_v1`, `xmip_caller_named_v1`,
+  `xmip_caller_process_v1`), never a name; a handle released, revoked
+  with its listener, past its certificate or forged is no one; and the
+  desktop's caller is the account the runtime reads from the operating
+  system, `GatedOperator.HostUser` deleted. Open: the node deciding for a
+  caller a web host relays, so a hostile host in the same process cannot
+  act as its own account.
 
 Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 
@@ -1707,10 +1733,18 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   listener (`far-end.<user>`, named by `configure::placed`) and keeps
   only the verifier. The built-in SFTP login `xmip`/`xmip` and the FTP
   client's anonymous login are deleted: a Location that names no secret
-  presents nothing, and Xmip's servers refuse it. Not closed: a key is
-  admitted on its signature alone, what it is worth left to the
-  `ssh-key` gate, so the SFTP far end still chooses a directory by the
-  user a key names.
+  presents nothing, and Xmip's servers refuse it.
+- **The SSH server checks the key.** A key offered is
+  `net::login::OfferedKey` (user, public key blob) beside `Offered`, and
+  the server is handed one check for both (`net::login::Offer`):
+  `ssh::userauth::serve` verifies the signature, then admits the key only
+  where the check admits it for the user it names. The check is the
+  `ssh-key` gate's (`Verifier::admits`, the lookup and narrowing its
+  `verify` uses); a loopback admits the one key its near end presents
+  (`net::login::only_key`, through `sftp::Credential::admitted_as`), and
+  the Playground's drop box and real nodes' far end enroll no key. The
+  SFTP far end chooses a directory only by a name the check admitted,
+  with its password or its key.
 
 # Suggested order
 

@@ -868,6 +868,36 @@ user's directory by that unchecked name.
 
 Decided by the assistant while building: a minted password of full
 entropy is enrolled at one PBKDF2 iteration, so a login stays under a
-millisecond. Not closed: a key is admitted on its signature alone, what it
-is worth left to the `ssh-key` gate, so the SFTP far end still chooses a
-directory by the user a key names.
+millisecond.
+
+**Closed the same day: a key is checked as the password is.** The first
+build left a key admitted on its signature alone, which proves the client
+holds the key and not that the key is the user's, so the SFTP far end
+still chose a directory by the user a key merely named. Now:
+
+- **One check for both.** A key offered is `net::login::OfferedKey` (the
+  user, and the public key's blob as it travels on the wire), beside
+  `Offered`; the server is handed one `net::login::Check` over
+  `net::login::Offer`, either of the two. `ssh::userauth::serve` verifies
+  the signature first, then asks the check, and admits only what it
+  admits; a key it does not admit is turned down like a wrong password,
+  inside the same six requests. The FTP session asks the check of a
+  password, as before.
+- **The check that says a key is the user's is the ssh-key gate's**,
+  `authenticate_ssh_key::Verifier::admits(user, key)`: the same lookup by
+  fingerprint among the `authorized_keys` the gate holds, and the same
+  narrowing to one user (`AuthorizedKey::for_user`), as its `verify`,
+  placed once and called by both. The server still links no authenticator.
+- **Every far end enrolls the keys it accepts.** A loopback admits its near
+  end's user with the one password or key it presents
+  (`sftp::Credential::admitted_as`, over `net::login::only` and the new
+  `net::login::only_key`); the SFTP tests enroll each key they log in
+  with for its user. The Playground's check is both gates
+  (`login::checking(passwords, keys)`); the drop box and the real nodes'
+  far end enroll no key, since every Location there logs in by password,
+  so a key is refused there whatever user it signed for.
+
+Decided by the assistant while building: a key an `authorized_keys` line
+does not narrow to one user stays authorized for any user, as the gate
+always read it; every far end enrolls its keys narrowed with `for_user`,
+so no directory is chosen by a name nothing checked.

@@ -72,6 +72,7 @@ breaking.
 | A filename repeating its crate | 5 | yes |
 | `mod.rs` | 5 | yes |
 | A repeated name covering two subjects | 5 | reported, judged by people |
+| A timing test in its module's `measured` program, run last and alone | 5c | run so by `Publish-XmipChange` at landing; where one sits is not checked yet |
 | One subject per file | 1 | reviewed by people |
 
 **400 is taken from measurement, not chosen.** On 2026-08-27 the estate's
@@ -195,6 +196,45 @@ run its code as it ships, with debug assertions and debug information kept.
 A workspace root built alone, outside the estate, keeps only its
 dependencies optimized. `test/Rust.Style.Test.ps1` holds the configuration
 to it.
+
+## 5c. A timing test runs alone, in its module's `measured` program
+
+A test that holds Xmip to a time — the millisecond rule's fastest of five
+(`xcore::latency`'s `spread` and `at_once`), a Message's own share
+(`xcore::spent`), a budget of milliseconds an operation — is in its module's
+timing program and nowhere else: the cargo test target `measured`, declared
+with `test = false` so a plain `cargo test` leaves it out:
+
+```toml
+[[test]]
+name = "measured"
+path = "tests/measured/main.rs"
+test = false
+```
+
+The landing runs it after every other test of the module has passed, with
+every feature the module declares and one test thread
+(`Test-XmipMeasuredProgram`, the rule's one implementation), and lints it
+apart, since `--all-targets` leaves it out too. Modules verify one after
+another, so nothing else runs beside it. By hand, the same:
+
+```powershell
+cargo test --test measured --all-features -- --test-threads=1
+```
+
+The owner, 2026-11-01, after landings failed at random on timing tests run
+inside a module's parallel suite: the other tests' load slowed the measured
+work 1.5 to 3 times — the clock drops, and hyperthread siblings share a
+core — and each passed alone. The root's service tests were moved the same
+way the day before (ADR-0018). A test that only proves something ends or
+waits — a stop within seconds, a timeout given up within twice its wait —
+is not a timing test, and stays where it is.
+
+A timing test that needs a module's private items takes them through the
+estate's `test-support` convention: `#[cfg(any(test, feature =
+"test-support"))] pub mod fixture;` or the like, as little as the test needs,
+and `required-features = ["test-support"]` on the program where the crate
+does not already give its tests that feature.
 
 ## 6. What this does not enforce
 

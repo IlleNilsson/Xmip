@@ -899,6 +899,10 @@ stopping the run with nothing pushed:
   features, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`
   with its default features, then `cargo test --features` naming every
   feature its `Cargo.toml` declares. Clippy is not run with those features.
+  Last, the module's timing program, `measured`, where it has one: linted,
+  then `cargo test --test measured --features` naming every feature, with
+  one test thread, nothing else running beside it
+  (`doc/governance/rust-style.md` section 5c).
 - **Each changed .NET module:** `dotnet build` of every project, `dotnet
   test` of every `*.Test.csproj` and the module's Pester tests, the runtime
   library built first. The runtime's remote build is built before the module
