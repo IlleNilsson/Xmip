@@ -7,7 +7,8 @@
     machines: what can be held on any machine, unelevated.
 
     - The Microsoft DSC v3 documents and the example parameters parse as
-      YAML, read by DSC itself; each document declares every parameter it
+      YAML, read by the module's YAML reader and evaluated by DSC below;
+      each document declares every parameter it
       uses and uses every one it declares — but staging, which
       Xmip.Environment/Machine gives every document it applies.
     - The resource manifests of the folder are found by DSC.
@@ -39,26 +40,8 @@ BeforeAll {
     [string[]] $script:Document = @('environment.example.dsc.yaml', 'machine.dsc.yaml',
         'node.dsc.yaml', 'name.dsc.yaml')
 
-    # A YAML file as DSC reads it: Echo hands its input back as JSON, and an
-    # expression in a resource's input is not evaluated.
-    function Read-DscYaml {
-        param(
-            [Parameter(Mandatory = $true)]
-            [string] $Path
-        )
 
-        # A YAML document's start marker is no line of a mapping's value.
-        [string[]] $lines = @(Get-Content -LiteralPath $Path | Where-Object { $_ -ne '---' } |
-            ForEach-Object { "  $_" })
-        [string] $echo = "output:`n" + ($lines -join "`n")
-        [string] $json = dsc resource get --resource Microsoft.DSC.Debug/Echo --input $echo
-        if ($LASTEXITCODE -ne 0) {
-            throw "dsc could not read $Path as YAML."
-        }
-        return ($json | ConvertFrom-Json -AsHashtable).actualState.output
-    }
-
-    # A copy of a document, as JSON, whose every instance is an Echo of its
+    # A copy of a document, in YAML, whose every instance is an Echo of its
     # type and properties, its condition kept, so evaluating it changes
     # nothing; an Include names the copy of the file it includes.
     function Write-EchoDocument {
@@ -67,7 +50,7 @@ BeforeAll {
             [string] $Name
         )
 
-        [hashtable] $document = Read-DscYaml -Path (Join-Path $script:Template $Name)
+        [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $Name)
         $document.Remove('directives')
         $document.resources = @($document.resources | ForEach-Object {
             if ($_.type -eq 'Microsoft.DSC/Include') {
@@ -84,7 +67,7 @@ BeforeAll {
                 $echo
             }
         })
-        $document | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $TestDrive $Name)
+        Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
     # The example environment evaluated: each instance's Echo by name, an
@@ -93,12 +76,12 @@ BeforeAll {
         foreach ($name in $script:Document) {
             Write-EchoDocument -Name $name
         }
-        [hashtable] $parameters = Read-DscYaml -Path (
+        [hashtable] $parameters = Read-XmipTestYaml -Path (
             Join-Path $script:Template 'environment.example.parameters.yaml')
         $parameters.parameters.common.template = [string] $TestDrive
         $parameters.parameters.common.linuxAccount = 'account'
-        [string] $file = Join-Path $TestDrive 'parameters.json'
-        $parameters | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $file
+        [string] $file = Join-Path $TestDrive 'parameters.yaml'
+        Write-XmipTestYaml -Path $file -Value $parameters
         [string] $environment = Join-Path $TestDrive 'environment.example.dsc.yaml'
         [string] $json = dsc config --parameters-file $file get --file $environment
         if ($LASTEXITCODE -ne 0) {
@@ -119,11 +102,11 @@ BeforeAll {
     if ($script:HasDsc) {
         $script:Parsed = @{}
         foreach ($name in $script:Document + 'environment.example.parameters.yaml') {
-            $script:Parsed[$name] = Read-DscYaml -Path (Join-Path $script:Template $name)
+            $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
         }
         $script:Evaluated = Invoke-EchoEnvironment
         $script:Nodes = $script:Parsed['environment.example.parameters.yaml'].parameters.nodes
-        [hashtable] $inventory = Read-DscYaml -Path (
+        [hashtable] $inventory = Read-XmipTestYaml -Path (
             Join-Path $script:Root 'deploy/dsc/ansible/inventory.example.yml')
         $script:Inventory = $inventory.all.children.xmip_nodes.hosts
     }
@@ -153,9 +136,9 @@ Describe 'The documents' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
-    It 'requires DSC 3.2 or newer in <_>' -ForEach @('environment.example.dsc.yaml',
+    It 'requires DSC 3.3 or newer in <_>' -ForEach @('environment.example.dsc.yaml',
         'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
-        $script:Parsed[$_].directives.version | Should -Be '^3.2'
+        $script:Parsed[$_].directives.version | Should -Be '^3.3'
     }
 
     It 'uses no Windows PowerShell adapter' {

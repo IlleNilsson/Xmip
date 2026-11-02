@@ -106,14 +106,21 @@ and it cost real work.
   Xmip's reader; a connection through Xmip's transport. A tool that takes
   the platform's way instead records why. The owner, 2026-09-26: *Xmip shall
   use its own tool chain, dogfooding as much as possible.*
-- **JSON is for transfer; TOML and YAML are for configuration.** What a
-  person writes or reads to configure anything — Xmip, a deployment
-  template, a tool's settings — is TOML or YAML. JSON is a wire form: what a
-  program hands another on its input and output, over a connection or in a
-  file nobody edits. A tool that takes YAML is given YAML, as the Microsoft
-  DSC template's resource manifests are; one that takes JSON alone records
-  why. The owner, 2026-11-02: *JSON is for transfer, not configuration. YAML
-  and TOML are for configuration.*
+- **Xmip's configuration is TOML.** Every setting Xmip and its tooling read
+  — the Cluster TOML, the estate's manifests, a module's settings — is TOML,
+  and a new one is too. YAML is not an Xmip configuration syntax: it is
+  written only where a deployment tool needs it, Microsoft DSC and Ansible
+  beside it in `deploy/dsc`, and a tool that takes neither TOML nor YAML is
+  not used. JSON, XML and the like are for transfer: what a program hands
+  another on its input and output. The owner, 2026-11-02: *JSON is for
+  transfer, not configuration*; *Xmip prefers TOML*; *MS DSC takes YAML or
+  it is out*; *YAML is not an Xmip configuration syntax but needed for DSC.
+  JSON is for transfer.*
+- **While Xmip is designed, everything is the latest release.** Rust, .NET,
+  PowerShell, every crate, package, module and tool: the newest release when
+  the work is done, a floor raised as soon as a release is out. The owner,
+  2026-11-02: *We shall always go with the latest. We are designing. Latest
+  Rust, .NET, and whatever.*
 - **Until the first release, nothing is deprecated: it is deleted.** A word,
   a technology, a parameter or a file that is wrong goes, with every use of
   it, in the same change; nothing is marked obsolete, kept for
@@ -182,7 +189,7 @@ prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
 failed.
 
 **The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
-PowerShell Core 7.6.7 or newer, with PSToml and posh-git, and Pester 6.
+PowerShell Core 7.6.7 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
 Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
 .NET 11 SDK, release candidate 3 (11.0.100-rc.3.26522.148) until GA on
 2026-11-10, but the PowerShell binary module targets net10.0 because pwsh

@@ -18,7 +18,9 @@
     modules named 'Xmip' are currently loaded", which reads as a broken test.
 
     It also defines Get-XmipTestCluster, the one place a PowerShell test
-    takes a cluster's or a node's name from (ADR-0056, amendment 2026-10-03).
+    takes a cluster's or a node's name from (ADR-0056, amendment 2026-10-03),
+    and Read-XmipTestYaml and Write-XmipTestYaml, the module's YAML reader
+    and writer for a test.
 
     Not a test file: Pester is told its extension, .Test.ps1, and this is not
     one.
@@ -30,6 +32,42 @@ $script:Root = (Resolve-Path -LiteralPath (Join-Path -Path $PSScriptRoot -ChildP
 
 Get-Module -Name Xmip -All | Remove-Module -Force -ErrorAction SilentlyContinue
 Import-Module -Name (Join-Path -Path $script:Root -ChildPath 'Xmip/Xmip.psd1') -Force
+
+function Read-XmipTestYaml {
+    <#
+        .SYNOPSIS
+        A YAML file read by the module's one reader (Read-XmipYaml.ps1).
+    #>
+    [CmdletBinding()]
+    [OutputType([object])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    return (& (Get-Module -Name Xmip) { param($Path) Read-XmipYaml -Path $Path } $Path)
+}
+
+function Write-XmipTestYaml {
+    <#
+        .SYNOPSIS
+        A YAML file written by the module's one writer (Read-XmipYaml.ps1).
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+
+        [Parameter(Mandatory = $true)]
+        [System.Collections.IDictionary] $Value
+    )
+
+    & (Get-Module -Name Xmip) {
+        param($Path, $Value)
+        Write-XmipYaml -Path $Path -Value $Value
+    } $Path $Value
+}
 
 function Get-XmipTestCluster {
     <#

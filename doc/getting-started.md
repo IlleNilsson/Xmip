@@ -55,7 +55,7 @@ applies it. The versions below change often; **see
 | --- | --- | --- |
 | PowerShell, Core edition | all Xmip tooling | 7.6.7 or later; see prerequisite.toml |
 | Git | cloning and submodules | 2.41 or later; see prerequisite.toml |
-| PSToml and posh-git | reading Xmip's TOML; the prompt | current; see prerequisite.toml |
+| PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.toml |
 | Pester | the estate's tests | 6.0 or later; see prerequisite.toml |
 | Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.toml |
 | A linker | linking Rust | see prerequisite.toml |
@@ -703,7 +703,7 @@ one. Each README says each step in full.
    D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.dsc.yaml`, and
    again once they have installed (*Running it*).
 4. **E** On each machine once, as its Administrator or with sudo:
-   PowerShell 7.6 and DSC 3.2 (`deploy/dsc/msdsc/environment/README.md`,
+   PowerShell 7.6 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).
 5. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,

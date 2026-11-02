@@ -108,11 +108,14 @@ function Copy-EnvironmentDocument {
 
     [hashtable] $parameters = $Instance.parameters.Clone()
     $parameters.staging = $staging
-    [string] $json = @{ parameters = $parameters } | ConvertTo-Json -Depth 10
-    [string] $file = "$staging${separator}parameters.json"
-    Invoke-Command -Session $Session -ArgumentList $file, $json -ScriptBlock {
-        param($File, $Json)
-        [System.IO.File]::WriteAllText($File, $Json)
+    # The parameters are configuration, so dsc is given YAML (CONTRIBUTING),
+    # written on this host by powershell-yaml; the far end needs no module.
+    Import-Module -Name powershell-yaml
+    [string] $yaml = @{ parameters = $parameters } | ConvertTo-Yaml
+    [string] $file = "$staging${separator}parameters.yaml"
+    Invoke-Command -Session $Session -ArgumentList $file, $yaml -ScriptBlock {
+        param($File, $Yaml)
+        [System.IO.File]::WriteAllText($File, $Yaml)
     }
 
     return $file

@@ -17,7 +17,8 @@
     operating system and per manager, and this picks the one actually present.
 
     Reporting is the default. -Install acts, the same rule as Sync-XmipEstate:
-    it installs what is missing and what is below its floor. An optional
+    it installs what is missing and what is below its floor, and a gallery
+    module older than the gallery's newest release. An optional
     toolchain is taken only with -IncludeOptional; without it, one absent is
     SKIPPED OPTIONAL and one below its floor OUTDATED OPTIONAL, and neither
     fails the run.
@@ -182,18 +183,11 @@ function Install-XmipPrerequisite {
         # Gallery modules install by name and carry no per-system table.
         if ([string](Get-TomlValue -Node $item -Name 'source' -Default '') -eq 'psgallery') {
             $id = [string](Get-TomlValue -Node $item -Name 'id' -Default $name)
-            $present = @(Get-Module -ListAvailable -Name $id)
-            $good = $present -and (-not $minimum -or
-                ($present | Where-Object { $_.Version -ge [version]$minimum }))
-
-            # Declared empty and filled only when there is something to sort.
-            # Casting an empty array to [version] throws, and $present is empty
-            # on the MISSING path that also wants to print this.
-            [string] $newest = ''
-
-            if ($present) {
-                $newest = [string](@($present.Version | Sort-Object -Descending)[0])
-            }
+            # The gallery's newest is the floor while Xmip is designed.
+            $module = Get-XmipGalleryModule -Id $id
+            [string] $newest = $module.Newest
+            if ($module.Latest) { $minimum = $module.Latest }
+            $good = $newest -and (-not $minimum -or [version]$newest -ge [version]$minimum)
 
             if ($good) {
                 Write-Host "PRESENT: $name  ($newest)"
@@ -205,12 +199,12 @@ function Install-XmipPrerequisite {
             elseif (-not $Install) {
                 [string] $why = 'MISSING: {0}' -f $name
 
-                if ($present) {
+                if ($newest) {
                     $why = 'OUTDATED: {0} is {1}' -f $name, $newest
                 }
 
                 Write-Warning "$why; Xmip requires $minimum or later. ADR-0021."
-                [string] $status = if ($present) { 'outdated' } else { 'missing' }
+                [string] $status = if ($newest) { 'outdated' } else { 'missing' }
                 Add-XmipPrerequisiteResult -Name $name -Status $status -Detail 'psgallery'
             }
             elseif ($PSCmdlet.ShouldProcess($id, 'Install from the PowerShell Gallery')) {
