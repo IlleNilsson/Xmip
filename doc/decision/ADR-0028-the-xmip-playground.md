@@ -481,9 +481,9 @@ nothing else) and on the tests: *we are missing parties in the tests. The
 tests need to cover possible scenarios and also look real*; on the scenarios
 first proposed —
 one Party that only fails, another always refused: *that is a bad scenario
-you painted. All parties has mostly good communication there are good and
+you painted. All parties have mostly good communication there are good and
 bad days over parties, transports and streams*; and: *The Monitoring &
-Topology view, during tests has to show that everyting is at some time.
+Topology view, during tests has to show that everything is at some time.
 Have a time span filter of 1 minute and inject faults every 50 seconds
 would work. Then one could pause, expand the time span to investigate the
 historical errors.*
@@ -502,12 +502,12 @@ historical errors.*
 ## Amendment, 2026-10-13: the Parties built, and flows named as an ERP's
 
 The owner, 2026-10-13, watching his Playground run: *You have not
-Implementet more Parties than Party-X. It is better, but not good enough.*
+Implemented more Parties than Party-X. It is better, but not good enough.*
 Of its Locations and Ports, one Application named after the test: *just do
 not make sense*, and, asked whether to name them as an ERP's documents:
 *Yes, use ERP names.* And of a name that carried its protocol: *The
 protocol shall not be in the Send or Receive Port, Location. That is
-infered information, which one should se in the operation tools.*
+inferred information, which one should see in the operation tools.*
 
 The amendment of 2026-10-06 is built:
 

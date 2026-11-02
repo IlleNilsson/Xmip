@@ -178,7 +178,7 @@ the leaves up so nothing is orphaned (ADR-0028, amendment 2026-09-19).
 ## Amendment, 2026-09-20: the name says which cluster and which node
 
 The owner, reading `Get-Process Xmip-*` with two clusters rolling: *these
-process names does not tell an operator or developer much. … Cluster, Node
+process names do not tell an operator or developer much. … Cluster, Node
 and test suite shall be incorporated in the process name.* Eleven rows said
 `xmip-playground-node` six times over, `xmip-playground-cluster` twice and
 `xmip-playground-roll` twice, and nothing in the list said which cluster any

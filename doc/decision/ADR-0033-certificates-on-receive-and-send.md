@@ -255,7 +255,7 @@ proceed and to write the decision down.
 
 ## Amendment, 2026-10-13: Let's Encrypt is an option, and step 5 is built
 
-The owner, 2026-10-13: *When we have internet, Let's use Let's Encryp, ACME
+The owner, 2026-10-13: *When we have internet, Let's use Let's Encrypt, ACME
 for Receive Locations and between nodes.*
 
 **What Let's Encrypt no longer issues.** Its certificates have carried no

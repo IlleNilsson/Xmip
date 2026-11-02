@@ -722,7 +722,7 @@ naming and the origin counting are the assistant's, the owner's to strike.
 
 ## Amendment, 2026-10-27: Correlations are Xmip's exclusiveness
 
-The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
+The owner, 2026-10-27: *So let's work on that, that is exclusiveness! Way
 more important than parallelism.* This record replaced ADR-0017's lease
 with the claim at the endpoint; exclusiveness itself is the correlation
 sets of the amendment of 2026-10-22 and the claim through Xmip Storage.

@@ -452,7 +452,7 @@ Not decided: finer rules by a node's roles — which node may read a secret
 ## Amendment, 2026-11-01: the operate plane's caller, through the one gate
 
 Open problem 59's draft, built: the owner, 2026-10-29, *First you present
-your identity, then you get identified. Then we look to authentication, do
+your identity, then you get identified. Then we look to authentication, does
 your identification hold up. When authenticated we look for
 Authorization*, and ADR-0019's amendment of 2026-10-30: no identity
 reaches authorization *without an authenticator having checked it*. The

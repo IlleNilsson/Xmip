@@ -29,11 +29,11 @@ The owner, 2026-10-05, while the estate was landing an external review's
 fixes, two of which had come from parts reaching a concrete implementation
 — the runtime's tests opening another module's library by a path into its
 build output, and the runtime unable to ask a transport what it holds
-because the `Transport` trait had no way to say it: *I'm not shure what you
-are doing, but traits/interfaces via Dependeny Injection might be a god
-thing*; and then: *I thing whe need trait/interface Dependency Injection
-everywhere. It is a whay to loosen up the dependecncy tree and also let int
-providers, previosly known as 3'rd party or acme.*
+because the `Transport` trait had no way to say it: *I'm not sure what you
+are doing, but traits/interfaces via Dependency Injection might be a good
+thing*; and then: *I think we need trait/interface Dependency Injection
+everywhere. It is a way to loosen up the dependency tree and also let in
+providers, previously known as third party or acme.*
 
 The estate already holds the rule at its main seams — `Transport` for every
 transport, `Engine` behind Xmip Storage, `ContractFactory` for contracts,

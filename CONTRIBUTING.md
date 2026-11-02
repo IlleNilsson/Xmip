@@ -78,7 +78,7 @@ and it cost real work.
   turn the one others call. A second copy held equal by a test is still a
   second copy, and a language boundary is not a reason for one: the surface
   calls across it. The owner, 2026-09-24: *Code shall be uniquely placed,
-  used by others, whom in turn has unique code used by others. It is common
+  used by others, who in turn have unique code used by others. It is common
   sense.*
 - **Rust is here for one reason: memory-safe performance.** Anything that
   takes more than a millisecond, apart from the load it carries, is a defect
@@ -105,7 +105,7 @@ and it cost real work.
   `xmip-core-library-tls`, not the operating system's stack; a format through
   Xmip's reader; a connection through Xmip's transport. A tool that takes
   the platform's way instead records why. The owner, 2026-09-26: *Xmip shall
-  use its own tool chain, dog fooding as much as possible.*
+  use its own tool chain, dogfooding as much as possible.*
 - **Until the first release, nothing is deprecated: it is deleted.** A word,
   a technology, a parameter or a file that is wrong goes, with every use of
   it, in the same change; nothing is marked obsolete, kept for
@@ -183,9 +183,11 @@ the VS Code extension's shell with TypeScript 7's native compiler, and no
 Node.js outside its CI (ADR-0014, amendment 2026-10-22), and each of those is optional: every
 language but Rust is optional for Xmip itself (the owner, 2026-10-20), a
 binding whose tool is absent is said SKIPPED and fails nothing, and .NET
-and PowerShell are the operator surfaces' and the tooling's. Spelling is checked by typos 1.51,
-in American English, with the root's `_typos.toml`. `prerequisite.toml` has
-each.
+and PowerShell are the operator surfaces' and the tooling's. `prerequisite.toml` has
+each. Spelling, in American English, is checked by whoever writes, the
+owner's own words quoted included, corrected where he misspelled (the
+owner, 2026-11-02: *I think we can take away the _typos, I'll just let you
+do the spellchecking*).
 
 **Writing PowerShell.** Every script must remain cross-platform. Use advanced
 functions and native PowerShell parameter sets, and support `ShouldProcess`

@@ -50,7 +50,7 @@ BeforeAll {
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
             'Test-XmipPlatform.ps1', 'Test-XmipRuntimeLibraryReader.ps1',
             'Get-XmipRemainingTime.ps1', 'Get-XmipVerifyTime.ps1',
-            'Update-XmipGeneratedDocument.ps1', 'Test-XmipSpelling.ps1'
+            'Update-XmipGeneratedDocument.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -890,7 +890,7 @@ Describe 'The dependency tree verifies whole before anything lands' {
     }
 
     It 'lands only after the verification loop, so a failure pushes nothing' {
-        # 2026-10-05, the owner: *Do dependecy tree build and stop when a leaf
+        # 2026-10-05, the owner: *Do dependency tree build and stop when a leaf
         # fails*. Before, each module was pushed as soon as it verified, and a
         # failure halfway left the estate half landed.
         [int] $verify = $script:Source.IndexOf('Test-XmipChangeTree @tree')

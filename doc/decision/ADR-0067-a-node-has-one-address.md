@@ -111,7 +111,7 @@ heartbeat (alive), Xmip Storage, node to node (sync) — and the Receive and
 Send Locations for communication. Separate addresses where the network
 allows; separate listeners always (ADR-0067). The local pipe stays the
 service account's and Administrators'.* And of a beginner's machine, the
-same day: *For a beginner setup we can't demand mulitple IP adresses, port
+same day: *For a beginner setup we can't demand multiple IP addresses, port
 segmentation have to due.*
 
 - **A listener per purpose, always.** IT operators reach the machine on

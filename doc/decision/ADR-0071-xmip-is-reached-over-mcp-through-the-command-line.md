@@ -31,8 +31,8 @@ model outside the message path and named the step that is credible: *an MCP
 server over the read-only operator boundary*. Nothing was built. The owner,
 2026-10-12: *What happened to MCP?* — and *It has to be designed and built*.
 And the same day, of how: *As we have Uri's into Xmip It should be simple to
-get one started.* And, of what it is: *MCP is hardley AI, it just exposes
-functionallity* — a protocol any client may speak, not an AI feature; this
+get one started.* And, of what it is: *MCP is hardly AI, it just exposes
+functionality* — a protocol any client may speak, not an AI feature; this
 record names no AI, and Xmip offers MCP as it offers its other surfaces.
 
 The records already decide most of it. ADR-0014: every operator surface is

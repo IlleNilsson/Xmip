@@ -487,7 +487,7 @@ escaping and nothing else.
 | r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | the owner, 2026-09-25: the runtime writes them at arrival from properties the transport hands with `Arrived` (ADR-0046, amendment) |
 | s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Playground's `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
 | t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
-| u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dog fooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
+| u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dogfooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
 | v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Work Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Work Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
 
 **One concept, several copies, the same behavior.** Loopback rigs in 51
@@ -655,7 +655,7 @@ amendment 2026-10-21), and given them by the template: a key made away from
 the node it is for, which a node's own provisioner ends.
 
 **Offline, both ways, since 2026-10-22** (ADR-0034, amendment 2026-10-22;
-the owner: *There has to be tools, aid, to support 'Let's encrypt', ACME
+the owner: *There has to be tools, aid, to support 'Let's Encrypt', ACME
 when being offline* — both cases). The premises' own ACME service: the node
 whose `[provision.node]` names `internal-ca` and `serve` answers ACME in
 `xmip-service`, with ACME Renewal Information (RFC 9773) and revocation, its
@@ -1644,7 +1644,7 @@ steps, a receive's Streams, a send's Locations — is each stage's to say.
 ## 56. A store capability has no module ABI section
 
 Decided by the owner, 2026-10-27, resolving problem 7: *Why not use the
-ABI, there shall not be any duplication of code unless it is modulewize.*
+ABI, there shall not be any duplication of code unless it is modulewise.*
 A store is a capability with a section of its own in `xmip_module.h`; each
 store technology — postgres, s3, elasticsearch, otlp and the rest — is one
 loadable module behind it, written once; audit, report, observe, retain
@@ -1663,7 +1663,7 @@ and every document that names them.
 ## 58. Resilience and exclusiveness are not pluggable
 
 Decided by the owner, 2026-10-27, resolving problem 9: *I thought we left
-exclusiveness behind us* (ADR-0024), and *There might be some else who want
+exclusiveness behind us* (ADR-0024), and *There might be someone else who wants
 to do better on 'resilience' and 'exclusiveness'.* Resilience and
 exclusiveness — the Correlations and the claim through Xmip Storage —
 become pluggable capabilities, each with a section in `xmip_module.h`, Xmip's
@@ -1673,7 +1673,7 @@ resilience guards and Sequence behind them.
 ## 59. A claim no authenticator checked
 
 The owner, 2026-10-29: *First you present your identity, then you get
-identified. Then we look to authentication, do your identification hold
+identified. Then we look to authentication, does your identification hold
 up. When authenticated we look for Authorization, then you may enter your
 load, stream.* No claim may reach authorization, or be recorded as proven,
 without an authenticator having checked it (ADR-0019, amendment
@@ -2474,7 +2474,7 @@ from the configuration's step entries.
 
 ## 5. `transport` carries 44 of the 246 implementations — **Resolved**
 
-Resolved by the owner, 2026-10-27: *each transport should be in it's each
+Resolved by the owner, 2026-10-27: *each transport should be in its each
 repo, in its own loadable module. There might be shared code, so stick that
 in a shared repo module. If the shared code is stable.* One repository and
 one loadable module per transport; code they share goes to a shared
@@ -2483,7 +2483,7 @@ module of its own once it is stable (ADR-0010, amendment 2026-10-27).
 ## 7. The Operations tier is five near-identical modules — **Resolved**
 
 Resolved by the owner, 2026-10-27: *Why not use the ABI, there shall not be
-any duplication of code unless it is modulewize.* A store capability with
+any duplication of code unless it is modulewise.* A store capability with
 its own module ABI section; each store technology is one loadable module;
 audit, report, observe, retain and archive stay five modules with their own
 policy and tables. Building the section is open problem 56.
@@ -2498,7 +2498,7 @@ renaming is open problem 57.
 Resolved by the owner, 2026-10-27: *I thought we left exclusiveness behind
 us* — ADR-0024 replaced it with the claim through Xmip Storage, and the
 Correlations are how Xmip does exclusiveness (ADR-0024 and ADR-0066,
-amendments 2026-10-27) — and *There might be some else who want to do
+amendments 2026-10-27) — and *There might be someone else who wants to do
 better on 'resilience' and 'exclusiveness'.* Both become pluggable
 capabilities, each with an ABI section and Xmip's own the built-in default;
 building them is open problem 58.

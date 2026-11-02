@@ -14,7 +14,7 @@ function New-XmipLocalPatch {
             module verifies only against siblings already pushed — which is why
             the landing used to push between tests. With every crate patched to
             its local path, the whole dependency tree verifies before anything
-            is pushed (the owner, 2026-10-05: *Do dependecy tree build and stop
+            is pushed (the owner, 2026-10-05: *Do dependency tree build and stop
             when a leaf fails*).
     #>
     [CmdletBinding()]

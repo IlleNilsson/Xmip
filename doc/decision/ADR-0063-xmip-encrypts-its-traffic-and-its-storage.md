@@ -159,7 +159,7 @@ is placed once). How the .NET programs reach the library is problem 29,
 step 6.
 
 The owner restated the reason the same day, wider than TLS: *Xmip shall use
-its own tool chain, dog fooding as much as possible* — now a hard-learned
+its own tool chain, dogfooding as much as possible* — now a hard-learned
 rule in `CONTRIBUTING.md`.
 
 ## Amendment, 2026-10-01: Xmip Storage is reached over Xmip's TLS

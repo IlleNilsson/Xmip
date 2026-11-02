@@ -357,7 +357,7 @@ provider means.
 
 On the invented third party: *"third parties aka acme, as NOT in the
 certification protocol ACME"*, and then: *"Let's dump acme as a word for third
-party. Let's just use 3'rd party instead."*
+party. Let's just use third party instead."*
 
 **Clause 24. There is no placeholder company. A grammar slot says what a
 fictional company only pretended to say.** `Acme` was this record's example
@@ -652,7 +652,7 @@ Clause 24 above says there is no placeholder company. The sweep of 2026-09-20
 left nine places holding one, and on 2026-09-23 the assistant wrote four more
 into a new mount rule — `xmip-acme-transport`, `module/acme/capability/...` —
 in `Get-XmipMountPath`, its test, `repository-model.md` and ADR-0028's
-amendment. The owner: *We were not to use acme any more, 3'rd party or
+amendment. The owner: *We were not to use acme any more, third party or
 provider*, and *ACME is for the certificate provider*.
 
 - **Prose and doc comments take the grammar slot**: `xmip-<provider>-transport`

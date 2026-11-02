@@ -395,7 +395,7 @@ peer's certificate must reach*.
 ## Amendment, 2026-10-22: ACME offline — the premises' own ACME service, and the air gap
 
 **Provenance.** The owner, 2026-10-22: *There has to be tools, aid, to
-support 'Let's encrypt', ACME when being offline.* Asked which case, he
+support 'Let's Encrypt', ACME when being offline.* Asked which case, he
 answered **both**: the premises' own ACME service, and a node with no
 network route at all. The same day: node certificates last **90 days**;
 and, agreeing a finding below, *Let's Encrypt covers only a node's public

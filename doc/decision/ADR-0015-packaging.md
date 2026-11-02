@@ -352,8 +352,8 @@ section 8).
 ## Amendment, 2026-10-13: packages an end user installs, macOS among them
 
 **Provenance.** The owner, 2026-10-13: *In the deploy folder we need some
-kind of setup binarie(es) to get things started for End Users* — and:
-*Well do the Windows, Linux and hopefully the OS X setup.* Builds are
+kind of setup binaries to get things started for End Users* — and:
+*We'll do the Windows, Linux and hopefully the OS X setup.* Builds are
 Windows-only by his choice of the moment, so the Windows packages are built
 and tested, and the Linux and macOS ones are written complete and not built.
 
@@ -500,7 +500,7 @@ a built archive target.
 ## Amendment, 2026-10-14: databases are technologies, not a domain
 
 **Provenance.** The owner, 2026-10-14: *I guess the profile domain is
-abit wonky. Database.toml. Databases are technologies, not a domain. When
+a bit wonky. Database.toml. Databases are technologies, not a domain. When
 building & testing transports, there is where the build & tests shall
 occur.* He answered *Go ahead* to deleting the `database` domain and the
 requirement that a profile places every built technology.

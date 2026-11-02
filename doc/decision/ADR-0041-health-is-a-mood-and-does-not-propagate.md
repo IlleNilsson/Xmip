@@ -123,7 +123,7 @@ Drafted by the assistant on the owner's instruction to consolidate, refactor
 and re-engineer, 2026-09-14; the names are the ones clause 1 already listed.
 
 **Corrected 2026-09-24.** The owner: *Code shall be uniquely placed, used by
-others, whom in turn has unique code used by others. It is common sense.* The
+others, who in turn have unique code used by others. It is common sense.* The
 name had one home in .NET and a table in the stylesheet besides — each mood's
 class painted its token directly — and the words a mood is called by were
 written in C# and in the Playground again. Now a mood's word, the mood a word

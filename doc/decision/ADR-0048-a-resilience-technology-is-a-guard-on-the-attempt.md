@@ -101,7 +101,7 @@ The owner, 2026-10-06, asked how Xmip's resilience stands against the Polly
 open-source project as its goal, and, shown that Xmip has the basic form of
 five of Polly's strategies, no hedging, no pipeline builder, no telemetry
 and no chaos strategies, used only by three transports: *We only need Send
-Port Group, Send Port and Send Location to utilize 'polly'-resillianze. The
+Port Group, Send Port and Send Location to utilize 'polly'-resilience. The
 rest is internal Rust matters.*
 
 - **Polly is the goal for what an operator configures**, and the place it is
@@ -118,10 +118,10 @@ rest is internal Rust matters.*
 
 ## Amendment, 2026-10-06: answered, confirmed and unconfirmed sends
 
-The owner, 2026-10-06: *we have to think about non Request-Respone
+The owner, 2026-10-06: *we have to think about non Request-Response
 protocols like FILE, (S)FTP(S) and broadcast*; and, on the design the
-assistant then drew: *do your best over Request-Respone protocols and non
-Request-Respone protocols what ever we wanna call them.* The names and the
+assistant then drew: *do your best over Request-Response protocols and non
+Request-Response protocols whatever we wanna call them.* The names and the
 table are the assistant's.
 
 - **Each transport declares how its send completes** — a capability it

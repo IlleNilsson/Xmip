@@ -42,7 +42,7 @@ function Test-XmipChangeTree {
     )
 
     # The dependency tree is verified whole, then landed whole (the owner,
-    # 2026-10-05: *Do dependecy tree build and stop when a leaf fails*).
+    # 2026-10-05: *Do dependency tree build and stop when a leaf fails*).
     #
     # Every estate crate is patched to its working tree, so the tree verifies
     # before anything is pushed, leaves first, and the first module that

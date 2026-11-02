@@ -23,7 +23,7 @@ Journey stopped and its Replay or Retry, its Message is a Dead Message.**
 ## Context
 
 The owner, 2026-10-09: *We are not trying to be able to replay a journey if
-the circumstances has changed. Lets say that a Work Process got shut down
+the circumstances have changed. Let's say that a Work Process got shut down
 waiting for another stream/message. Before the replay or retry the
 Work Process or Pub/Sub configuration changed, Xmip shall call that a Dead
 Message(es). BizTalk and other solutions to my knowledge can't get that

@@ -104,7 +104,7 @@ Describe 'What a killed process left behind' {
 Describe 'What a Playground process is called' {
     <#
         ADR-0053, amendment 2026-09-20. The owner, reading eleven rows of
-        Get-Process with two clusters up: "these process names does not tell an
+        Get-Process with two clusters up: "these process names do not tell an
         operator or developer much. Cluster, Node and test suite shall be
         incorporated in the process name."
     #>

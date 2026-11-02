@@ -7,7 +7,7 @@
     lines, a line at most 100 columns (CONTRIBUTING, *Read before writing*).
     C# had no gate until 2026-10-13, and eight files over 400 and fifty-four
     lines over 100 were found then. The owner, the same day: *I have clearly
-    stated we do not want wide or long files! Make the small, usefull and
+    stated we do not want wide or long files! Make them small, useful and
     includable!*
 
     The count is the estate's one, Get-XmipSourceFile's: a C# file's every

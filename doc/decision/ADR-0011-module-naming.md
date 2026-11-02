@@ -241,7 +241,7 @@ estate uses ACME for what RFC 8555 means by it — certificate provisioning, in
 ADR-0033 and ADR-0034 — so the same four letters named both the protocol Xmip
 depends on and a company Xmip invented. The owner struck the invented company
 rather than the protocol: *"Let's dump acme as a word for third party. Let's just
-use 3'rd party instead."*
+use third party instead."*
 
 `saxon` stays. It is a real XSLT vendor, named here deliberately as a real
 example of the provider slot in use, and it was never a placeholder.
@@ -251,7 +251,7 @@ example of the provider slot in use, and it was never a placeholder.
 Nothing of Oracle's is in Xmip's foundation: what starts a node and Xmip
 Storage name and depend on no Oracle product. The databases Xmip Storage can
 stand in front of are SQL Server, PostgreSQL and MariaDB; Oracle Database and
-MySQL are never among them. The owner: *"mssql, postgresl and mariadb can bee
+MySQL are never among them. The owner: *"mssql, postgresql and mariadb can be
 chosen for the core, Oracle is not supported for the core, only for transport
 (OracleDB and MySQL)."* As transports, Xmip ships
 `xmip-core-transport-oracle` (Oracle Database), `xmip-core-transport-mysql`
@@ -266,9 +266,9 @@ MariaDB is a Xmip Storage server, so the library the foundation reaches is
 named for MariaDB. What MySQL does differently — its logins first — lives in
 `xmip-core-transport-mysql` alone, so a change Oracle makes to MySQL reaches
 neither MariaDB nor Storage. The owner: *"One never knows what Oracle does or
-do not."*
+does not."*
 
 PL/SQL stays a provider's: the token-discipline example shows it under
-`xmip-<provider>-contract-oracle`. The owner: *"PL-SQL from Oracle we will keep
-our hands off. If an 3'rd party or provider want's to inlude it, it is on
+`xmip-<provider>-contract-oracle`. The owner: *"PL/SQL from Oracle we will keep
+our hands off. If a third party or provider wants to include it, it is on
 them."*

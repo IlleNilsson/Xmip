@@ -189,7 +189,7 @@ public.*
 
 ## Amendment, 2026-10-19: every reference moves to the latest
 
-The owner, 2026-10-19: *Lets be real, we are designing for the future,
+The owner, 2026-10-19: *Let's be real, we are designing for the future,
 update all references. PowerShell has gone to 7.6.7, .NET has skipped
 forward. Maybe Rust has* — and *latest of .NET, Python and Java as well.*
 The rule above, applied on that date; each version read from its publisher:
@@ -204,7 +204,6 @@ The rule above, applied on that date; each version read from its publisher:
 | Java | 27, the current JDK; 25 is the current long-term support release | GA 2026-09-15 |
 | Python | 3.15 | python.org, 2026-10-09 |
 | Node | 26 for the VS Code extension; long-term support from 2026-10-28 | nodejs.org |
-| typos | 1.51 or later, the spelling check, with the root's `_typos.toml` | github.com/crate-ci/typos, 2026-10-06 |
 
 **Java follows the current release, not the long-term one.** The foreign
 function and memory API the Java binding uses is final since 22, so the

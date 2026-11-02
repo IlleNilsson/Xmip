@@ -364,7 +364,7 @@ operators on operate, the heartbeat on alive, Xmip Storage, node to node on
 sync, and the Receive and Send Locations; *separate addresses where the
 network allows; separate listeners always*. By default they share the
 node's one address on a port each — *for a beginner setup we can't demand
-mulitple IP adresses, port segmentation have to due* — and `[sync]`,
+multiple IP addresses, port segmentation have to due* — and `[sync]`,
 `[alive]` and `[storage]` are shaped as `[operate]` is
 ([decided, not built](estate-map.md#node-listeners)).
 
@@ -506,7 +506,7 @@ whatever the backend.** The ruling of 2026-10-01 kept two (the owner: *We
 still need the distinction between runtime and administration databases,
 regardless of backend database technology*). It is extended, not
 contradicted: audit leaves the administration database for a third, the
-audit database (the owner, 2026-10-10: *The audit part might be better of
+audit database (the owner, 2026-10-10: *The audit part might be better off
 in its own database so it can be hosted on a different set of nodes,
 different storage*; ADR-0070, amendment 2026-10-10):
 
@@ -590,7 +590,7 @@ cluster's authority, and trusts that authority — `[storage] certificate`,
 table shaped as `[operate]` is (ADR-0067, amendment 2026-10-22).
 
 **Each data domain names where it is kept, in a table of its own** (the
-owner, 2026-10-10: *i would do it like runtime, storage, connection string.
+owner, 2026-10-10: *I would do it like runtime, storage, connection string.
 Same for audit and administration*, and *Yes, better*; ADR-0070, amendment
 2026-10-10): `[runtime]`, `[administration]` and `[audit]`, each with
 `storage` — `rocksdb`, `sqlite`, `postgresql`, `mssql` or `mariadb` — and

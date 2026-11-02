@@ -613,10 +613,10 @@ remote over SSH as clause 6 says (ADR-0071).
 ## Amendment, 2026-10-12: the command line is Rust; across languages the ABI, Rust to Rust the traits
 
 **Supersedes the amendment of 2026-08-26 where it makes the executable
-.NET.** The owner, 2026-10-12: *I'm questioning my desicions, regarding the
+.NET.** The owner, 2026-10-12: *I'm questioning my decisions, regarding the
 CLI, the CLI has to be usable without .NET. If you are on an MCU or any kind
 of edge device, .NET might not be the way to go. So ABI is fine, CLI should
-be Rust relying on ABI, Powershell should also rely on ABI* — asked whether
+be Rust relying on ABI, PowerShell should also rely on ABI* — asked whether
 the GUI stays .NET over the ABI: *Go ahead* — and, the same day, the rule
 behind it: *I like .NET, but on MCU, Edge devices it is to heavy. A clean C
 by Rust CLI is the way. So the CLI goes, Rust, ABI. Where PowerShell is it
@@ -651,7 +651,7 @@ xmip-core-gui          .NET 11      desktop and web, through the C ABI (Xmip.Abi
 ## Amendment, 2026-10-12: a surface reaches another node over gRPC, SignalR only to a GUI
 
 **Amends clause 6.** The owner, 2026-10-12, finding the remote surfaces
-still on SignalR: *I thaugt we droped SignalR for evertyhing but GUI/Web* —
+still on SignalR: *I thought we dropped SignalR for everything but GUI/Web* —
 and, told they were not yet: *Go do it then, I'm not a fan of waiting.* He
 had ruled it on 2026-10-05 (ADR-0052, amendment of that date): *Events is
 the way to go, even between processes using gRPC over net pipe, even
@@ -724,8 +724,8 @@ via Blazor. All (G)UI Tools has there purpose.*
 - `README.md`, the gui README and `doc/planning/compatibility.md` say where
   the desktop runs.
 - **A target gets its tools by what its OS offers, not by who makes it.**
-  The owner, the same day: *runtime is goining to all specified targets,
-  Operations is going to various targtes depending if their OS has only UI
+  The owner, the same day: *runtime is going to all specified targets,
+  Operations is going to various targets depending if their OS has only UI
   or GUI, regardless of OS maker.* The runtime is designed for every target
   `doc/planning/compatibility.md` names. An operating system with a text
   interface only gets the command line; one with a graphical interface gets
@@ -741,7 +741,7 @@ via Blazor. All (G)UI Tools has there purpose.*
 reaches another node over gRPC*, which said it for another machine only.**
 The lead proposed that a .NET surface operate a node on its own machine the
 way it operates one on another; the owner, 2026-10-13, agreeing: *Fix it and
-dissagree more often, just tell me first.*
+disagree more often, just tell me first.*
 
 - **Operating a node goes over gRPC for every .NET surface, local and remote
   alike**: its health, figures and scopes, its Journeys, Dead Messages and
@@ -870,24 +870,24 @@ deadline thread are the assistant's, for the owner to overrule.
 
 ## Amendment, 2026-10-14: the desktop host on the phone, and an MCP server to talk to Xmip
 
-**Provenance.** The owner, 2026-10-14: *we ne a phone app. The operator
-wants to know whar is going on. Extend it on .NET Blazor.* Offered three
+**Provenance.** The owner, 2026-10-14: *we need a phone app. The operator
+wants to know what is going on. Extend it on .NET Blazor.* Offered three
 forms — the MAUI host on phone targets, the web GUI made phone-shaped, a
 separate phone host — he chose the MAUI host on phone targets, and, for
 what the operator sees first, cluster health. Of MCP: *I know, that requires
-internet, so it is not the first choice, but it has to be an apportunity as
+internet, so it is not the first choice, but it has to be an opportunity as
 MCP*; *MCP does not relate to apps on a phone*; *As a developer or operator
 I can ask the MCP server, What do you got*; *What the MCP server responds is
 my way to talk to Xmip*; corrected, *No, it gives me answers on how to talk
 to Xmip*; and, told what the Model Context Protocol offers — prompts,
 resources, tools, and `server/discover` with the three lists for *What do
 you got* — *Great, so that is what the Xmip MCP Server has to do, the
-implementation is one of, generall, the questions, request beeing asked is
+implementation is one of, general, the questions, request being asked is
 per installation.* Of how a phone reaches the nodes away from the site:
 *VPN, would be nice, not only for the phone apps*; asked whether Xmip
 provides it or relies on one out of the box, *Depends if it is hard or shall
 we use out of the box*; told that the hard part is each OS's virtual network
-interface and that WireGuard ships for every target, *So lets get it out of
+interface and that WireGuard ships for every target, *So let's get it out of
 the box. Now we have Phone apps and VS Code extensions and VPN, we depend on
 external parties. Let's keep that to a minimum.*
 
@@ -899,7 +899,7 @@ external parties. Let's keep that to a minimum.*
   Location, Xmip Process and Send Location by its health, with the reason,
   a tap drilling down. Offered the web GUI over the VPN instead, to depend
   on fewer parties, the owner kept it: *Native GUI for the phones, fueled by
-  blazor if possible.* *And an iPhone target, not only Android.* With no
+  Blazor if possible.* *And an iPhone target, not only Android.* With no
   Mac, the iOS target is written but neither built nor tested until one is
   at hand: *I do not have a Mac so that has to be pseudo, virtual ... Test
   will be done later.* Built for Android the same day, not yet run on a
@@ -959,7 +959,7 @@ Provenance: the owner's decision, quoted; the wording is the assistant's.
 
 ## Amendment, 2026-10-19: the toolchain moves to the latest
 
-The owner, 2026-10-19: *Lets be real, we are designing for the future,
+The owner, 2026-10-19: *Let's be real, we are designing for the future,
 update all references.* ADR-0021's rule, applied to this record's toolchain
 sentences (the 2026-08-26 and 2026-08-30 amendments):
 

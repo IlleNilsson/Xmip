@@ -345,7 +345,7 @@ were not: each is retained as **the only home for Xmip's own code of its
 capability**, and each stays unmounted until the first of that code is
 written, because the rule keeps the name and not an empty mount.
 
-**Only home means Xmip's own.** The owner: *3'rd parties may create their own
+**Only home means Xmip's own.** The owner: *Third parties may create their own
 repos regarding all repos.* A third party may keep migration, scheduling,
 diagnosis — or any capability the estate has — in a repository of its own
 under its own provider name, as ADR-0011 names them. What the rule forbids is
