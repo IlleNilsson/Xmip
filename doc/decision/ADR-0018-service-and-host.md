@@ -1241,7 +1241,8 @@ millisecond beyond load is a defect.
   thread only once it is written, so the sync that tells it holds it; the
   thread syncs whatever it was handed before the writer's thread ends.
 - **A key's cipher and keyed hash are set up once.** `secret::DataKey`
-  set up AES-256-GCM and HMAC-SHA-256 from its bytes for every seal, open
+  set up AES-256-GCM and HMAC-SHA-256 (keyed BLAKE3 since ADR-0063's
+  amendment of 2026-11-02) from its bytes for every seal, open
   and keyed hash, some sixty a Message; it keeps them now, set up at their
   first use, and seals and opens in place, one allocation each.
 

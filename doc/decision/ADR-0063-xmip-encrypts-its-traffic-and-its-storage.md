@@ -83,7 +83,8 @@ three: the platform and pluggable, a vault only, or PKCS#11 only.
 Built 2026-09-25, clauses 2 and 4 (problem 29, steps 1 to 4). The key home
 is `xmip-core-secret`, a Capability: `KeyStore` wraps and unwraps a data key
 under a named key-encryption key, and `DataKey` is the one place the estate
-seals at rest — AES-256-GCM, HKDF-SHA-256 and HMAC-SHA-256 through aws-lc-rs.
+seals at rest — AES-256-GCM and HKDF-SHA-256 through aws-lc-rs, and the
+keyed hash, keyed BLAKE3 since the amendment of 2026-11-02.
 Its technologies are `dpapi` (Windows, user scope), `file` (Linux and every
 Unix: `0600` in `0700`, refused when wider) and `keychain` (macOS, built and
 not yet run there); `pkcs11`, `vault`, `azure-key-vault` and `aws-kms` are
@@ -257,3 +258,26 @@ amendment of 2026-10-22); a key the Storage nodes of one database share is
 not built, and no server backend is yet. Provenance: the requirement — Xmip
 seals the value whatever store keeps it — is the reviewer's finding of
 2026-10-29, relayed for the owner; the design is the assistant's.
+
+## Amendment, 2026-11-02: the keyed hash is keyed BLAKE3
+
+The keyed hash that names what a store keeps (clause 2) is keyed BLAKE3,
+not HMAC-SHA-256. A Storage node computes it for every record it reads or
+writes, some forty times a Message, and on a record's short place
+HMAC-SHA-256 through aws-lc-rs cost about 2 µs where keyed BLAKE3 costs a
+fifth of that. A Work Process turn measured in memory went from a median of
+270 to 400 µs, its slowest above a millisecond, to 190 to 260 µs, its
+slowest under 0.7 ms (`work_turn`, release build, three runs each on the
+owner's machine under the same load). Keyed BLAKE3 is a pseudorandom
+function under a 256-bit key, which is what a lookup name needs: the same
+place gives the same name, and the name says nothing of the place without
+the key. It is built in pure Rust (the `blake3` crate, features `std` and
+`pure`), nothing assembled, since a place is one block.
+
+BLAKE3 is not a NIST algorithm. A build that must be FIPS 140 validated
+hashes with HMAC-SHA-256 again; none is required today. A store written
+before this amendment is not read by a node after it: its records are found
+under the old names. Before Xmip's first release nothing is migrated.
+
+The owner, 2026-11-02: *If keyed BLAKE3 is secure enough go with it, I only
+have experience with HMAC, but I can learn.*
