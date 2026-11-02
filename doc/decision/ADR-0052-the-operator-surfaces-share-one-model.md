@@ -1674,7 +1674,7 @@ changes here:
 
 `observe`'s `topology/draw.rs` and `publication.rs`, the runtime's
 `running/publication.rs` and the root crate's
-`.src/test/service/publication.rs` prove it; the Playground's topology
+`.src/test/measured/publication.rs` prove it; the Playground's topology
 tests hold the roll's picture unchanged.
 
 Provenance: the requirement is ADR-0018's amendment of this date; moving the

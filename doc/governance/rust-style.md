@@ -72,7 +72,7 @@ breaking.
 | A filename repeating its crate | 5 | yes |
 | `mod.rs` | 5 | yes |
 | A repeated name covering two subjects | 5 | reported, judged by people |
-| A timing test in its module's `measured` program, run last and alone | 5c | run so by `Publish-XmipChange` at landing; where one sits is not checked yet |
+| A timing test in its module's `measured` program, run last and alone | 5c | yes: run so by `Publish-XmipChange` at landing, and where one sits by `test/Timing.Test.ps1` |
 | One subject per file | 1 | reviewed by people |
 
 **400 is taken from measurement, not chosen.** On 2026-08-27 the estate's
@@ -226,15 +226,30 @@ The owner, 2026-11-01, after landings failed at random on timing tests run
 inside a module's parallel suite: the other tests' load slowed the measured
 work 1.5 to 3 times — the clock drops, and hyperthread siblings share a
 core — and each passed alone. The root's service tests were moved the same
-way the day before (ADR-0018). A test that only proves something ends or
-waits — a stop within seconds, a timeout given up within twice its wait —
-is not a timing test, and stays where it is.
+way the day before (ADR-0018), and every other module's on 2026-11-02. A
+test that only proves something ends or waits — a lower bound alone, or an
+upper bound of a second or more, such as a stop within seconds — is not a
+timing test, and stays where it is; an upper bound under a second is one.
 
-A timing test that needs a module's private items takes them through the
-estate's `test-support` convention: `#[cfg(any(test, feature =
-"test-support"))] pub mod fixture;` or the like, as little as the test needs,
-and `required-features = ["test-support"]` on the program where the crate
-does not already give its tests that feature.
+Where a test mixes the two — a thousand sends on one session and that
+session replaced, and the thousand timed — it is split: the behavior stays
+where it was, and the timing program holds the time over the same far end,
+reached through the crate's public surface. A timing test that needs a
+module's private items takes them through the estate's `test-support`
+convention: `#[cfg(any(test, feature = "test-support"))] pub mod fixture;`
+or the like, as little as the test needs, and `required-features =
+["test-support"]` on the program where the crate does not already give its
+tests that feature. What a module's tests and its timing program both stand
+up — a far end, a schema, a crowded node — is written once, in a file
+under the program's folder both include with `#[path]`, or behind
+`test-support`; a helper of a line or two, such as a scratch directory, is
+written again rather than shared.
+
+`test/Timing.Test.ps1` holds it: a timing assertion — an `assert!` holding
+a measured time, a fastest of five or a figure read in milliseconds or
+less, under a bound below a second, or a call of `xcore::latency::at_once` —
+anywhere in a module's tests outside a `measured` folder fails it, and so
+does a `measured` program declared without `test = false`.
 
 ## 6. What this does not enforce
 

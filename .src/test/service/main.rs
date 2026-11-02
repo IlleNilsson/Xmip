@@ -11,10 +11,6 @@
 //! - `operate.rs`: a node configured with `[operate]` is reached on its
 //!   operate listener as a surface on another machine reaches it, its
 //!   publication read and an act taken as the certificate's subject.
-//! - `publication.rs`: the node publishes its snapshot where it declares,
-//!   read by observe's one reader; a pause left where the snapshot says the
-//!   node takes orders shows paused in the next one; and the stop leaves it
-//!   saying so.
 //! - `accepted.rs`: a Receive Location terminating TLS with the node's
 //!   `[provision.receive]` certificate accepts a Stream from the Party its
 //!   `accept.party` names, through the build's own identity technologies,
@@ -29,9 +25,11 @@
 //!   when to renew and revokes into the list while the node runs.
 //!
 //! A test that measures how long Xmip takes is not here: it is in the
-//! root's timing program, `measured` (`measured.rs`), which the landing runs
-//! after this one, alone, one test at a time, so what it measures is Xmip's
-//! work and not these tests' (`doc/governance/rust-style.md` section 5c).
+//! root's timing program, `measured` (`.src/test/measured`), which the
+//! landing runs after this one, alone, one test at a time, so what it
+//! measures is Xmip's work and not these tests'
+//! (`doc/governance/rust-style.md` section 5c). The node's publication, a
+//! pause left where it takes orders shown paused at once, is there too.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
@@ -45,44 +43,13 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 use xmip_net::fixture::unheld;
-use xmip_observe::{Act, Noun, Order};
-use xmip_transport::Transport;
-use xmip_transport_tcp::TcpTransport;
+use xmip_observe::Act;
 
 mod started;
 use started::*;
-
-const MESSAGES: u64 = 50;
-
-/// Send one Message, asking again while the Receive Location has not yet
-/// bound — it binds on its first receive. Bounded, and never a sleep.
-fn deliver(address: &str, payload: &[u8]) {
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        match TcpTransport::loopback().send(address, payload) {
-            Ok(()) => return,
-            Err(refused) if refused.retryable && Instant::now() < deadline => {
-                std::thread::yield_now();
-            }
-            Err(failed) => panic!("the node took nothing at {address}: {failed:?}"),
-        }
-    }
-}
-
-fn declarations(directory: &Path) -> Vec<String> {
-    std::fs::read_dir(directory.join("process"))
-        .map(|entries| {
-            entries
-                .flatten()
-                .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
-                .collect()
-        })
-        .unwrap_or_default()
-}
 
 mod accepted;
 mod authority;
 mod failover;
 mod operate;
-mod publication;
 mod stop;

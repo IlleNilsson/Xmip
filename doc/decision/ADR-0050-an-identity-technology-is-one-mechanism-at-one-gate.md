@@ -535,7 +535,7 @@ Locations.** The amendment of 2026-10-19 left a send refused there.
   nineteenth repository, `xmip-core-authenticate-circumstance`, is the
   owner's (open problem 33).
 
-Proved by `.src/test/service/carried.rs`: a file dropped in, accepted by
+Proved by `.src/test/measured/carried.rs`: a file dropped in, accepted by
 the circumstance, admitted by `location` at the Receive Location and at the
 Send Location, arrives in the send directory.
 

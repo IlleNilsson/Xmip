@@ -4,25 +4,27 @@
 //! purposes the Xmip Nodes of Storage type can use SQLite in memory for
 //! administration and `RocksDB` for runtime*) — in processes of its own,
 //! killed hard, and reached over Xmip's TLS. What every test here opens and
-//! starts is here once; each test is in the file named for what it proves:
+//! starts is here once, in `node.rs` and `authority.rs`, which the root's
+//! timing program shares; each test is in the file named for what it proves:
 //!
 //! - `kill.rs`: a write acknowledged is there after the process is killed,
 //!   and a hand-on killed at any moment is all there or not at all;
 //! - `served.rs`: a node reaches a Storage node process over mutual TLS,
 //!   carries on through the next when one is killed, and the audit keeper
 //!   moves each record once; and the latency of a write, measured idle,
-//!   locally and over TLS (`runtime-model.md` section 3, *What proves it*);
-//! - `wire.rs`: a read and a write over the wire to the primary of two
-//!   Storage nodes, its standby copying every write behind it, cost less
-//!   than a millisecond beyond the same calls in process.
+//!   locally and over TLS (`runtime-model.md` section 3, *What proves it*).
+//!
+//! What a read and a write cost over the wire beyond the same calls in
+//! process is the root's timing program's (`.src/test/measured/wire.rs`).
 //!
 //! A child is this same test program, started again with
 //! [`CHILD`] naming what it does: [`child`] is the test that does it, and
 //! does nothing where nothing is named.
 
+mod authority;
 mod kill;
+mod node;
 mod served;
-mod wire;
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -31,65 +33,14 @@ use std::sync::Arc;
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
-use xmip_core::{JourneyId, MessageId};
-use xmip_persist::storage::{
-    Embedded, HandOn, JourneyRecord, MessageRecord, StorageServer, XmipStorage,
-};
-use xmip_persist_rocksdb::RocksDb;
-use xmip_persist_sqlite::Sqlite;
-use xmip_secret::{Held, KekName, KeyStore};
+use node::{TestNode, directory, journey, percentiles, test_node, test_node_over, timed};
+use xmip_core::MessageId;
+use xmip_persist::storage::{HandOn, JourneyRecord, MessageRecord, StorageServer};
 
 /// The environment variable naming what a child does.
 const CHILD: &str = "XMIP_STORAGE_CHILD";
 /// The environment variable naming the directory a child keeps its node in.
 const PLACE: &str = "XMIP_STORAGE_PLACE";
-
-/// The test Storage node.
-type TestNode = Embedded<RocksDb, Sqlite>;
-
-/// A directory of a test's own, empty.
-fn directory(test: &str) -> PathBuf {
-    let path = std::env::temp_dir().join(format!("xmip-storage-{test}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&path);
-    std::fs::create_dir_all(&path).expect("directory");
-    path
-}
-
-/// The platform's key store over `keys` (ADR-0063 clause 4), so a child
-/// and the test that reopens what it wrote unwrap the same data key.
-fn keys(keys: &Path) -> Box<dyn KeyStore> {
-    #[cfg(windows)]
-    let store = Held::new(xmip_secret_dpapi::Dpapi::new(keys));
-    #[cfg(not(windows))]
-    let store = Held::new(xmip_secret_file::KeyFile::new(keys));
-    Box::new(store)
-}
-
-/// The test Storage node in `place`, its administration and audit
-/// databases in memory.
-fn test_node(place: &Path) -> TestNode {
-    let administration = Sqlite::in_memory().expect("the administration database");
-    let audit = Sqlite::in_memory().expect("the audit database");
-    test_node_over(place, administration, audit)
-}
-
-/// The test Storage node in `place` over `administration` and `audit`.
-fn test_node_over(place: &Path, administration: Sqlite, audit: Sqlite) -> TestNode {
-    // The key directory is the key store's to make: it makes it private,
-    // and a directory made here with the default mode it would refuse
-    // (ADR-0063 clause 4).
-    std::fs::create_dir_all(place).expect("its directory");
-    let runtime = RocksDb::open(&place.join("runtime")).expect("the runtime database");
-    let kek = KekName::new("storage").expect("a name");
-    let keys = keys(&place.join("key"));
-    Embedded::open(runtime, administration, audit, keys.as_ref(), &kek)
-        .expect("the test Storage node")
-}
-
-/// The Journey numbered `number` in a test.
-fn journey(number: u64) -> JourneyId {
-    JourneyId::new(0x0199_0000_0000_7000_8000_0000_0000_0000 | u128::from(number))
-}
 
 /// The hand-on of the Message of the Journey `number`: its result, three
 /// Messages it made, and the Journey of the one that goes on from it.
@@ -199,28 +150,4 @@ fn child() {
         }
         other => panic!("no child does '{other}'"),
     }
-}
-
-/// The node's operations, timed: each write's latency, sorted.
-fn timed(node: &dyn XmipStorage, writes: u64, body: &[u8]) -> Vec<Duration> {
-    let mut taken: Vec<Duration> = (0..writes)
-        .map(|number| {
-            let record = JourneyRecord {
-                journey: journey(number),
-                body: body.to_vec(),
-                facts: xmip_persist::storage::JourneyFacts::default(),
-            };
-            let started = std::time::Instant::now();
-            node.write_journey(&record).expect("written");
-            started.elapsed()
-        })
-        .collect();
-    taken.sort();
-    taken
-}
-
-/// The median and the 99th percentile of what [`timed`] measured.
-fn percentiles(taken: &[Duration]) -> (Duration, Duration) {
-    let at = |share: usize| taken[(taken.len() * share / 100).min(taken.len() - 1)];
-    (at(50), at(99))
 }

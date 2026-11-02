@@ -545,3 +545,88 @@ certificate the runtime did not answer for proves no one).
 
 Provenance: the draft and every name are the assistant's, for the owner to
 overrule.
+
+## Amendment, 2026-11-01: the node decides for a caller a web host relays
+
+The amendment above left a limit: a handle binds a screen's act to a caller
+the host's runtime proved, but inside the host's own process, and an act
+reached the node as the host's own account. The owner, the same day: *an
+in-process handle cannot stop a hostile host in the same process, so the
+node must decide.* Built (decided by the assistant, each in one line):
+
+- **A relay vouches, the node verifies.** An identity `[operate] relay`
+  names — an account on the local endpoint, a certificate's subject on the
+  network listener — hands the node the leaf certificate its browser
+  presented (`Vouch`, `plane::call::VOUCH`). The node verifies it against
+  its own `[operate] anchors` for client authentication
+  (`authenticate::x509::verify`, `Chain::from_der`), runs it through its
+  own authentication gate (`plane::caller::certificate`) and holds the
+  caller (`plane::vouched`), answering a handle of its own, a random
+  64-bit number as every caller handle is (`plane::handle`).
+- **Every call for that caller names the node's handle** in a header,
+  `xmip-caller`, so the node decides whose call it is before it reads the
+  call. The node acts for the caller only where the connection's identity
+  is a relay and the handle was issued to that very identity, before its
+  certificate's `notAfter` and not yet let go (`Unvouch`); a handle
+  presented through any other identity is no one. The act is admitted by
+  the caller's own role, never the relay's: **relaying grants no act of its
+  own**, and a relay's own calls are judged by its own role as any
+  caller's. No relay configured, no one is relayed, refused in words.
+- **The audit says both**: `who` is the caller, and `through` the relay it
+  came through.
+- **The host's registry is a cache of what the nodes said**: every holder
+  of one caller shares one proof (`plane::held::Proof`), which keeps each
+  node's handle, vouched for lazily on the first act to that node, since
+  one web host operates several nodes and clusters. When the last holder
+  lets the caller go — the session, the circuit, the listener stopping —
+  each node is told (`Unvouch`), on the surface's own bounded line
+  (`Shared::called`). A node that no longer knows the handle — it started
+  again — answers that it holds no caller by it, and the caller is vouched
+  for once more.
+- **The caller crosses the C boundary as the handle**: `xmip_remote_act_v1`,
+  `xmip_secret_v1` and `xmip_secrets_v1` take `uint64_t caller`, 0 for this
+  side itself; a caller the operating system proved for this process — a
+  desktop's — is this side's own connection. In .NET, `RemoteNode.Act`,
+  `SetSecret` and `Secrets` take the `HeldCaller`, and so does every act of
+  `IOperatorSurface` — a parameter, never ambient state, which an await
+  resuming on another thread would lose or hand to another request (the
+  owner, the same day): `GatedOperator` hands an admitted act on for its
+  own caller, whatever caller the act names, and the command line and the
+  PowerShell module pass none, acting as themselves. Proved by two callers
+  acting at once, through one surface in the runtime and through the gate in
+  .NET, each reaching the node as their own.
+- **The Playground** names the account its run runs as as each node's one
+  relay, so the tester's web host relays the tester's browser.
+
+**The limit, written for the owner**: the node does not take part in the
+browser's handshake, so a compromised web host can act for anyone whose
+certificate it has held while that certificate is valid — within that
+caller's own role, and visibly in the node's audit, `through` the host. It
+cannot make up an identity: the certificate must reach the node's own
+anchors. Binding the handshake's freshness to the node closes even that,
+and is the next step; ending the browser's mutual TLS in the node itself
+is the owner's choice, not built. Not built either: a chain with
+intermediates (the leaf alone is handed over, as an operator certificate
+the cluster's authority signs needs), and a node's handles outliving a
+host that died without letting them go, until each certificate ends or the
+node starts again.
+
+Proved in the runtime (`plane::vouched`, `plane::held`, `plane::call`,
+`tests/plane/relayed.rs`: an act relayed is the browser's by its own role
+and audited through the host, refused as the browser where its role is
+Observer, no one once let go; an identity that is no relay, a certificate
+under other anchors and a node relaying for no one act for no one; two
+callers acting at once through one surface each reach the node as their
+own),
+`xmip-core-configure` (`[operate] relay` takes `anchors`),
+`xmip-core-authenticate` (`Chain::from_der`), `Xmip.Surface.Test`
+(`GatedCallerTest`: two callers acting at once through the gate, hopping
+threads, each reach the surface behind it as their own) and the Playground
+(`served::given`: a tester's operator certificate, signed by the
+Playground's one authority as `New-XmipCertificate -Request` has it
+signed, is verified and relayed by every node a run starts, whose
+`tls/anchors.pem` is that authority).
+
+Provenance: the owner's decision of 2026-11-01, as the coordinator relayed
+it; the names `Vouch`, `Unvouch`, `relay`, `plane::vouched` and `through`
+the assistant's, agreed the same day.

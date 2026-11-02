@@ -434,7 +434,7 @@ publishes its node through the one publication there is (ADR-0052;
   still refused a round later is audited as the failure to `publish`, once,
   not at every round (ADR-0062).
 
-The root crate's test (`.src/test/service/publication.rs`) starts the
+The root crate's test (`.src/test/measured/publication.rs`) starts the
 service over loopback with a store and a Subscription, reads the snapshot
 where the service declares it through observe's reader — the function the
 runtime's library forwards to every .NET surface
@@ -773,7 +773,7 @@ wrong.* A node is told as a surface is.
 - **A refused write is asked again a millisecond later** (`publication::AGAIN`),
   not at a look that no longer exists.
 
-The root crate's `.src/test/service/told.rs` holds both halves. An order is
+The root crate's `.src/test/measured/told.rs` holds both halves. An order is
 measured from left to its answer heard, the fastest of five beside a plain
 wake (`xcore::latency`), and held under a millisecond plus four plain wakes
 plus what reading and removing its file takes, measured beside it by
@@ -881,7 +881,7 @@ build of `xmip-service` carries the authenticate capability and its
 `circumstance` takes a dropped file on an installed node (ADR-0019,
 amendment 2026-10-20), and a file Send Location writes each Message in the
 directory its address names under the name it was received under
-(ADR-0024, amendment 2026-10-20). `.src/test/service/carried.rs` starts one
+(ADR-0024, amendment 2026-10-20). `.src/test/measured/carried.rs` starts one
 node, its roles executing and storage, and proves a file dropped in arrives
 whole in the send directory under its name, counted in its audit; Xmip's
 own work around the payload measured 6.7 to 9.8 ms, the fastest of five,
@@ -940,7 +940,7 @@ chunks for each other departure.
 ## Amendment, 2026-10-20: a Publication is answered before its sync, and a far end sees it only once durable
 
 Measured against the millisecond rule on the getting-started node
-(`.src/test/service/carried.rs`), a file took 6.2 ms, the fastest of five,
+(`.src/test/measured/carried.rs`), a file took 6.2 ms, the fastest of five,
 from its claim to its file whole in the send directory, of which the sent
 file's own write, sync and rename took 2.8 ms: some 3.4 ms of Xmip's own.
 Profiled step by step, the gates, the route and the hand-offs between
@@ -977,7 +977,7 @@ write-ahead log keeps it — 0.98 to 1.06 ms: what is left, Xmip's own share,
 is 0.60 to 0.83 ms. `carried.rs` holds it under a millisecond beside the
 machine's own wake for each of the path's five hand-offs between threads
 (`xcore::latency::PlainWake`), and runs alone: it and `told.rs` are the
-root's timing program, `measured` (`.src/test/service/measured.rs`), which a
+root's timing program, `measured` (`.src/test/measured/main.rs`), which a
 plain `cargo test` leaves out and the landing runs after every other test of
 the root, never beside them, one test at a time (2026-10-31: run in the same
 program as the others, under a lock that kept them out while it measured, it
