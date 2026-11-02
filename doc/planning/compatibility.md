@@ -44,4 +44,7 @@ Blazor. All (G)UI Tools has there purpose*; and 2026-10-19: *.NET MAUI is
 cross platform* (ADR-0014, amendments 2026-10-13 and 2026-10-19).
 
 *Written, not run*: the code is written for the target, and nothing runs
-there until the owner lifts Windows only.
+there until the owner lifts Windows only. The owner, 2026-11-02: *Just
+build Windows, we can get back to other OS and target*: the continuous
+integration builds and tests on Windows alone, the desktop GUI is built
+for Windows alone, and the Android, iOS and device builds wait.

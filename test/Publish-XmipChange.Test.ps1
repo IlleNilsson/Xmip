@@ -43,6 +43,7 @@ BeforeAll {
     function Get-XmipLandingSource {
         [string[]] $family = @(
             'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
+            'Test-XmipCodeChange.ps1',
             'Get-XmipNewModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipMeasuredProgram.ps1', 'Test-XmipDotnetModule.ps1',
             'Submit-XmipModule.ps1',
@@ -940,6 +941,49 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
             @(Get-XmipModuleConsumer -RepositoryRoot $Root -Module 'module/foundation/c').Count |
                 Should -Be 0
         }
+    }
+
+    It 'spares the consumers of a change that is comments and prose alone' {
+        $remote = Join-Path -Path $TestDrive -ChildPath 'commented.git'
+        $estate = Join-Path -Path $TestDrive -ChildPath 'commented'
+        $module = Join-Path -Path $estate -ChildPath 'module/foundation/a'
+        $null = & git init --quiet --bare $remote
+        $null = & git clone --quiet $remote $module 2>&1
+        $null = New-Item -ItemType Directory -Path (Join-Path $module 'src')
+        Set-Content -LiteralPath (Join-Path $module 'src/lib.rs') -Value @(
+            '// What it does.', 'pub fn one() -> u8 {', '    1', '}')
+        $null = & git -C $module add -A
+        $null = & git -C $module -c user.name=x -c user.email=x@example.com commit --quiet -m one
+        $null = & git -C $module push --quiet -u origin HEAD 2>&1
+
+        InModuleScope Xmip -Parameters @{ Root = $estate; Path = $module } {
+            param($Root, $Path)
+
+            [hashtable] $at = @{ RepositoryRoot = $Root; Module = 'module/foundation/a' }
+            [string] $lib = Join-Path $Path 'src/lib.rs'
+
+            Set-Content -LiteralPath $lib -Value @(
+                '// What it does, said better.', 'pub fn one() -> u8 {', '    1', '}')
+            Set-Content -LiteralPath (Join-Path $Path 'README.md') -Value 'Prose.'
+            Test-XmipCodeChange @at | Should -BeFalse
+
+            Set-Content -LiteralPath $lib -Value @(
+                '// What it does.', 'pub fn one() -> u8 {', '    2', '}')
+            Test-XmipCodeChange @at | Should -BeTrue
+
+            & git -C $Path checkout --quiet -- src/lib.rs
+            Set-Content -LiteralPath (Join-Path $Path 'src/two.rs') -Value '// New.'
+            Test-XmipCodeChange @at | Should -BeTrue
+
+            Remove-Item -LiteralPath (Join-Path $Path 'src/two.rs')
+            [string[]] $who = @('-c', 'user.name=x', '-c', 'user.email=x@example.com')
+            $null = & git -C $Path add -A
+            $null = & git -C $Path @who commit --quiet -m prose
+            Test-XmipCodeChange @at | Should -BeTrue
+        }
+
+        [string] $spared = 'Get-XmipModuleConsumer -RepositoryRoot \$RepositoryRoot -Module \$coded'
+        $script:Source | Should -Match $spared
     }
 
     It 'pushes what an interrupted run left only after the tree verified' {

@@ -34,8 +34,7 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
             because two manifests that must agree eventually stop agreeing.
             A project built for several platforms names each in
             TargetFrameworks, under whatever condition, and every one is
-            returned: the MAUI host names Windows, Android and iOS (ADR-0014,
-            amendment 2026-10-14). Returns '' when none is stated.
+            returned. Returns '' when none is stated.
         #>
         function Get-TargetFramework {
             [CmdletBinding()]

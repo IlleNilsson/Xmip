@@ -20,16 +20,11 @@ env:
   ROCKSDB_COMPILE: "1"
 
 jobs:
-  # Every operating system Xmip targets, each reported on its own: one that
-  # fails does not cancel the others (the owner, 2026-10-06: *let's turn on
-  # all the OSes we can for tests and all for targets and see how we do*).
+  # Windows alone for now (the owner, 2026-11-02: *Just build Windows, we can
+  # get back to other OS and target*); Xmip is still designed for every one.
   workspace:
-    name: Workspace build and tests (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    name: Workspace build and tests
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -60,30 +55,18 @@ jobs:
       - name: Check
         run: cargo check --workspace --all-targets --all-features --locked
 
-      # A node's local endpoint is in the folder systemd (Linux) or launchd
-      # (macOS) makes for the node's account at install; the folder never
-      # moves (ADR-0014, amendment 2026-10-13), so the runner makes it as an
-      # install would, for the account the tests run as.
-      - name: Local endpoint folder
-        if: runner.os != 'Windows'
-        run: |
-          folder=$([ "$RUNNER_OS" = "Linux" ] && echo /run/xmip || echo /var/run/xmip)
-          sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" "$folder"
-
       - name: Test
         run: cargo test --workspace --all-features --locked
 
   sites:
     name: Site builds
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: thumbv7em-none-eabihf
 
       # Cargo.lock is not committed (.gitignore says why): it is resolved
       # once, here, from the branches ADR-0005 tracks, and every cargo step
@@ -100,8 +83,7 @@ jobs:
         run: Install-Module -Name PSToml -Scope CurrentUser -Force
 
       # Each example site through the one place a site becomes a build
-      # (ADR-0015, amendment 2026-10-01). The device's is refused, in words
-      # naming what builds for it instead, which is the next step.
+      # (ADR-0015, amendment 2026-10-01).
       - name: Example sites
         shell: pwsh
         run: |
@@ -109,79 +91,3 @@ jobs:
           foreach ($site in 'hospital-interface', 'factory-gateway', 'personal-computer', 'b2b-exchange') {
               Build-XmipService -Site $site -CargoArgument '--locked'
           }
-
-      - name: Device, xmip-core alone
-        run: |
-          git submodule update --init module/foundation/core
-          cargo build --manifest-path module/foundation/core/Cargo.toml --no-default-features --features serde --target thumbv7em-none-eabihf
-
-  # The phone host for the iPhone, built where Apple's tools run: the owner
-  # has no Mac (ADR-0014, amendment 2026-10-14). For the simulator, so
-  # nothing is signed; built, never run.
-  phone-ios:
-    name: Phone host, iOS simulator
-    runs-on: macos-latest
-    # Allowed to fail until the runner's Xcode 27 is stable: .NET 11 rc.3 for
-    # iOS needs the iOS 27 SDK, and on 2026-10-15 macos-latest carries 26.6
-    # (the owner, 2026-10-15: *Option 2*). Remove this line then.
-    continue-on-error: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      # The runtime the remote build is made from, and what Xmip.Operations
-      # references: its own gui module and xmip-core-abi's Xmip.Surface. The
-      # runtime's estate dependencies are git dependencies on the branches
-      # ADR-0005 tracks, so nothing is patched to a working tree here; a
-      # landing does that (New-XmipLocalPatch), before anything is pushed.
-      - name: Submodules
-        run: git submodule update --init module/platform/runtime module/foundation/abi module/core/operation/gui
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-ios, aarch64-apple-ios-sim
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: module/platform/runtime -> ../../../.ai-interaction/target-ios
-
-      # The newest Xcode on the runner, a beta included: .NET 11 rc.3 for iOS
-      # is built against the iOS 27 SDK, and on 2026-10-15 the runner's
-      # Xcode 27 is a public preview beside 26.6, the default.
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest
-
-      # global.json pins 11.0 release candidate 3 and rolls forward to the
-      # latest feature, prerelease allowed: the newest 11.0 release candidate
-      # or release is one it accepts, and the one a developer has.
-      - name: Install .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 11.0.x
-          dotnet-quality: preview
-
-      # Android too: Xmip.Operations targets Android on every machine, and
-      # restore reads every target framework before the iOS one is built.
-      - name: Install the MAUI iOS and Android workloads
-        working-directory: module/core/operation/gui
-        run: dotnet workload install maui-ios maui-android
-
-      # The one place the remote build is made (Build-XmipRemoteRuntime):
-      # a static library for a device and the simulator, joined into the
-      # xcframework Xmip.Abi.Native.props links.
-      - name: Remote runtime, iOS
-        shell: pwsh
-        run: |
-          Import-Module ./Xmip/Xmip.psd1
-          Build-XmipService -Remote iOS
-
-      # From the gui module, so its global.json chooses the SDK. Xcode's
-      # version is not held to the one .NET for iOS names: this checks that
-      # the host builds.
-      - name: Xmip.Operations, iOS simulator
-        working-directory: module/core/operation/gui
-        run: dotnet build src/Xmip.Operations/Xmip.Operations.csproj -f net11.0-ios -c Debug -p:RuntimeIdentifier=iossimulator-arm64 -p:ValidateXcodeVersion=false

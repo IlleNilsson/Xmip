@@ -271,37 +271,21 @@ Describe 'A landing builds the remote build before the module that needs it' {
         }
     }
 
-    It 'skips the phone host, with the reason, where the NDK is absent' {
+    # Only Windows is built for now (the owner, 2026-11-02: *Just build
+    # Windows, we can get back to other OS and target*): the phone host
+    # verifies with no Android build.
+    It 'builds Desktop before Xmip.Abi, once, and nothing for the phone host' {
         InModuleScope Xmip -Parameters @{ Root = $script:Root } {
             param($Root)
-            Mock Find-XmipAndroidNdk { '' }
-
-            $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
-                'module/core/operation/gui')
-
-            $tree.Skipped | Should -Be @('module/core/operation/gui')
-            $tree.Failed | Should -BeNullOrEmpty
-            Should -Invoke Build-XmipRemoteRuntime -Times 0
-            Should -Invoke Write-Host -ParameterFilter {
-                "$Object" -like 'SKIPPED.*the Android NDK is absent here.'
-            }
-        }
-    }
-
-    It 'builds Android before the phone host and Desktop before Xmip.Abi, once each' {
-        InModuleScope Xmip -Parameters @{ Root = $script:Root } {
-            param($Root)
-            Mock Find-XmipAndroidNdk { 'ndk-bin' }
 
             $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
                 'module/foundation/abi', 'module/core/operation/gui')
 
             $tree.Verified.Count | Should -Be 2
+            $tree.Skipped | Should -BeNullOrEmpty
+            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
                 $Platform -eq 'Desktop' -and $Patch -eq 'patch.toml'
-            }
-            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
-                $Platform -eq 'Android'
             }
         }
     }
