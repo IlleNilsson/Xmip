@@ -20,8 +20,8 @@ use xmip_persist_rocksdb::RocksDb;
 use xmip_persist_sqlite::Sqlite;
 use xmip_secret::KekName;
 
-use super::served::{authority, issue};
-use super::{directory, journey, keys, percentiles, test_node, timed};
+use super::authority::{authority, issue};
+use super::node::{directory, journey, keys, percentiles, test_node, timed};
 
 /// Each connect and each read a node makes of a Storage node.
 const TIMEOUT: Duration = Duration::from_secs(10);

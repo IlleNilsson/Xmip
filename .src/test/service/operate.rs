@@ -48,7 +48,7 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     assert_eq!(read.node, node_scope());
 
     let (outcome, sentence) = surface
-        .act(&node_scope(), "subscription", "onward", "pause")
+        .act(0, &node_scope(), ("subscription", "onward", "pause"))
         .expect("the node answers");
     assert_eq!(outcome, Outcome::Taken, "{sentence}");
     let deadline = Instant::now() + Duration::from_secs(5);
@@ -133,7 +133,7 @@ fn operated_locally(directory: &Path, configuration: &Path, endpoint: &str) {
     let read = Publication::read(&published).expect("a publication");
     assert_eq!(read.node, node_scope());
     let (outcome, sentence) = surface
-        .act(&node_scope(), "subscription", "onward", "pause")
+        .act(0, &node_scope(), ("subscription", "onward", "pause"))
         .expect("the node answers");
     assert_eq!(outcome, Outcome::Taken, "{sentence}");
     // The node declares how long a call there waits, its `[tuning]

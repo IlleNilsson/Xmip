@@ -870,7 +870,7 @@ wait, and the service test is back to the Location's tenth of a second,
 passing at `RUST_TEST_THREADS=4` across six runs (ADR-0033, amendment
 2026-10-20); and every one-machine example site declares `storage`
 (ADR-0056 and ADR-0015, the amendments of 2026-10-20). Proved in the
-assembled service by `.src/test/service/carried.rs`: one node, roles
+assembled service by `.src/test/measured/carried.rs`: one node, roles
 executing and storage, a file Receive Location accepting by circumstance,
 the Loopback Application's Subscription, a file Send Port; ten files
 dropped one after another each arrive whole in the send directory under
@@ -891,7 +891,7 @@ the claim waits 1.57 to 1.79 ms; the carry takes 3.68 to 3.87 ms, the sent
 file's own work 2.06 to 2.08 ms and the Ledger's durable copy of the payload
 0.98 to 1.06 ms beside it, so Xmip's own share is 0.60 to 0.83 ms, held
 under a millisecond beside the machine's own wake for each of its five
-hand-offs between threads by `.src/test/service/carried.rs`, run alone in
+hand-offs between threads by `.src/test/measured/carried.rs`, run alone in
 the root's timing program, `measured` (2026-10-31).
 
 *Counted by the node itself, 2026-11-01.* The share above was a total less
@@ -1708,9 +1708,18 @@ Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
   `xmip_caller_process_v1`), never a name; a handle released, revoked
   with its listener, past its certificate or forged is no one; and the
   desktop's caller is the account the runtime reads from the operating
-  system, `GatedOperator.HostUser` deleted. Open: the node deciding for a
-  caller a web host relays, so a hostile host in the same process cannot
-  act as its own account.
+  system, `GatedOperator.HostUser` deleted. Then the node decides for a
+  caller a web host relays (ADR-0009, the amendment after): an identity
+  `[operate] relay` names hands the node the browser's certificate
+  (`Vouch`), which the node verifies against its own anchors and gate
+  before it answers a handle of its own (`plane::vouched`); every call for
+  the caller names it (`xmip-caller`), the act admitted by the caller's own
+  role, never the relay's, and audited `through` the relay; the host lets
+  it go (`Unvouch`); `xmip_remote_act_v1`, `xmip_secret_v1` and
+  `xmip_secrets_v1` take the caller. Open: a compromised host can still act
+  for anyone whose certificate it has held while it is valid, within their
+  role and in the audit; binding the browser's handshake to the node
+  closes it.
 
 Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 

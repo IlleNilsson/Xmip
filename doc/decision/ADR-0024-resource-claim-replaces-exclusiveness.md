@@ -531,7 +531,7 @@ Keep the atomic write and the node-named temporary file** (the amendment of
 Proved by the file transport's tests (a Message written under its received
 name in the directory a relative or absolute address names; a Message with
 no name, or a path for one, refused and nothing written; a dropped file
-saying its name) and by `.src/test/service/carried.rs` in the assembled
+saying its name) and by `.src/test/measured/carried.rs` in the assembled
 service.
 
 Provenance: the ruling is the owner's, 2026-10-19; `file.name`, the `KEPT`
@@ -543,7 +543,7 @@ carries no file name was decided on 2026-10-21 (below).
 
 A file dropped on the getting-started node waited about 1.7 seconds for its
 claim (`doc/getting-started.md`), and 64 to 77 ms at a 50 ms poll in
-`.src/test/service/carried.rs`: the Location listed its directory at its
+`.src/test/measured/carried.rs`: the Location listed its directory at its
 poll interval, and took a file only at the listing after the one that found
 it unchanged. The owner, 2026-10-20: *make the file Receive Location react to
 the file system's change notification, and keep the stability check

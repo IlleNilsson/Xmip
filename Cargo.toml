@@ -47,13 +47,15 @@ required-features = ["node", "audit", "observe", "authenticate", "transport-tcp"
 
 # Starts xmip-service as xmip-service's tests do and measures how long Xmip
 # takes, against the millisecond rule: a file dropped in carried to a file
-# sent out, an order acted on, a service nothing tells left idle. The root's
+# sent out, an order acted on, a pause published at once, a service nothing
+# tells left idle; and a Storage call over the wire beside one in process,
+# over what the storage tests open (.src/test/storage). The root's
 # timing program (rust-style.md section 5c): a plain cargo test leaves it out,
 # and the landing runs it after every other test of the root, alone, one test
 # at a time, so what it measures is Xmip's work and not its neighbors'.
 [[test]]
 name = "measured"
-path = ".src/test/service/measured.rs"
+path = ".src/test/measured/main.rs"
 test = false
 required-features = ["node", "audit", "observe", "authenticate", "transport-tcp", "transport-file", "identify-ip", "identify-certificate", "authenticate-mutual-tls", "authorize-location", "persist-rocksdb", "persist-sqlite", "provision-internal-ca"]
 

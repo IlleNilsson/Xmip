@@ -624,7 +624,7 @@ Built the same day:
   the node inferred from where the Stream arrived, never one a sender
   presented, so a passed or detected circumstance is refused, and the
   verdict is *claimed*. Proved in the assembled service by
-  `.src/test/service/carried.rs`.
+  `.src/test/measured/carried.rs`.
 
 The drafted points of 2026-10-19 that these answer are struck: a Party's
 identifier is no longer its place, and a value no longer resolves whatever
