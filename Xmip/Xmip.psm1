@@ -241,6 +241,7 @@ function Assert-XmipModuleCurrent {
 # missing. PowerShell itself is the only prerequisite Xmip cannot install, and
 # #requires states that floor.
 . (Join-Path $PSScriptRoot 'Read-XmipToml.ps1')
+. (Join-Path $PSScriptRoot 'Read-XmipYaml.ps1')
 . (Join-Path $PSScriptRoot 'Expand-XmipEstate.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipManifest.ps1')
 . (Join-Path $PSScriptRoot 'Install-XmipModule.ps1')

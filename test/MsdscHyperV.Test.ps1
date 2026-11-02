@@ -5,9 +5,10 @@
     The Microsoft DSC v3 template for Hyper-V (deploy/dsc/msdsc/hyperv)
     without Hyper-V: what can be held on any machine, unelevated.
 
-    - The documents and the example parameters parse as YAML, read by DSC
-      itself; each document declares every parameter it uses and uses every
-      one it declares, and depends only on its own instances.
+    - The documents and the example parameters parse as YAML, read by the
+      module's YAML reader and evaluated by DSC below; each document
+      declares every parameter it uses and uses every one it declares, and
+      depends only on its own instances.
     - The example environment runs through DSC with every resource replaced
       by Microsoft.DSC.Debug/Echo: each machine gets every value its
       document asks for, and is the machine README.md's table names.
@@ -33,24 +34,8 @@ BeforeAll {
     [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml',
         'environment.example.dsc.yaml')
 
-    # A YAML file as DSC reads it: Echo hands its input back as JSON, and
-    # an expression in a resource's input is not evaluated.
-    function Read-DscYaml {
-        param(
-            [Parameter(Mandatory = $true)]
-            [string] $Path
-        )
 
-        [string[]] $lines = @(Get-Content -LiteralPath $Path | ForEach-Object { "  $_" })
-        [string] $echo = "output:`n" + ($lines -join "`n")
-        [string] $json = dsc resource get --resource Microsoft.DSC.Debug/Echo --input $echo
-        if ($LASTEXITCODE -ne 0) {
-            throw "dsc could not read $Path as YAML."
-        }
-        return ($json | ConvertFrom-Json -AsHashtable).actualState.output
-    }
-
-    # A copy of a document, as JSON, whose every instance is an Echo of its
+    # A copy of a document, in YAML, whose every instance is an Echo of its
     # properties, so evaluating it changes nothing; Includes stay.
     function Write-EchoDocument {
         param(
@@ -58,7 +43,7 @@ BeforeAll {
             [string] $Name
         )
 
-        [hashtable] $document = Read-DscYaml -Path (Join-Path $script:Template $Name)
+        [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $Name)
         $document.Remove('metadata')
         $document.resources = @(foreach ($instance in $document.resources) {
             if ($instance.type -eq 'Microsoft.DSC/Include') {
@@ -70,7 +55,7 @@ BeforeAll {
             @{ name = $instance.name; type = 'Microsoft.DSC.Debug/Echo'
                 properties = @{ output = $output } }
         })
-        $document | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $TestDrive $Name)
+        Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
     # The example environment evaluated: each machine's Echo results by name.
@@ -78,12 +63,12 @@ BeforeAll {
         foreach ($name in $script:Document) {
             Write-EchoDocument -Name $name
         }
-        [hashtable] $parameters = Read-DscYaml -Path (
+        [hashtable] $parameters = Read-XmipTestYaml -Path (
             Join-Path $script:Template 'environment.example.parameters.yaml')
         $parameters.parameters.common.template = [string] $TestDrive
         $parameters.parameters.common.linuxAccount = 'account'
-        [string] $file = Join-Path $TestDrive 'parameters.json'
-        $parameters | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $file
+        [string] $file = Join-Path $TestDrive 'parameters.yaml'
+        Write-XmipTestYaml -Path $file -Value $parameters
         [string] $environment = Join-Path $TestDrive 'environment.example.dsc.yaml'
         [string] $json = dsc config --parameters-file $file get --file $environment
         if ($LASTEXITCODE -ne 0) {
@@ -103,7 +88,7 @@ BeforeAll {
     if ($script:HasDsc) {
         $script:Parsed = @{}
         foreach ($name in $script:Document + 'environment.example.parameters.yaml') {
-            $script:Parsed[$name] = Read-DscYaml -Path (Join-Path $script:Template $name)
+            $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
         }
         $script:Evaluated = Invoke-EchoEnvironment
         $script:Machine = @($script:Evaluated.Keys | Where-Object { $_ -ne 'Network' } |

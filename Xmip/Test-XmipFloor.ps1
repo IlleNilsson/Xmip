@@ -192,6 +192,39 @@ function Resolve-XmipRole {
     return $seen
 }
 
+function Get-XmipGalleryModule {
+    <#
+        A PowerShell Gallery module: the newest version installed, empty where
+        none is, and the gallery's newest release, the floor while Xmip is
+        designed (CONTRIBUTING). Latest is empty where the gallery does not
+        answer, offline, and the declared minimum is then all there is.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Id
+    )
+
+    [string] $newest = Get-Module -ListAvailable -Name $Id |
+        Sort-Object -Property Version -Descending |
+        Select-Object -First 1 -ExpandProperty Version
+    [string] $latest = ''
+
+    try {
+        $latest = [string](Find-Module -Name $Id -ErrorAction Stop).Version
+    }
+    catch {
+        Write-Host "    the gallery did not answer; $Id is judged by its declared floor"
+    }
+
+    [pscustomobject]@{
+        Id     = $Id
+        Newest = $newest
+        Latest = $latest
+    }
+}
+
 function Read-XmipRustCheck {
     <#
         What `rustup check` said about one toolchain: what it is and what is

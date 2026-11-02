@@ -77,22 +77,21 @@ role = "developer"
 source = "psgallery"
 id = "Pester"
 channel = "stable"
-minimum = "6.0"
+minimum = "6.2.0"
 note = """
-Latest stable, no pinned version — the same rule as Rust. Pester 6 requires
-PowerShell 7.4 or later, which the 7.6.7 floor above already guarantees.
-
-The minimum is 6.0 rather than a specific build because Pester 6 changed how
-discovery works: it now discovers and runs per file, where 5 discovered every
-file first. That is invisible for isolated tests and is the sort of thing worth
-stating a floor for.
+The latest release, the floor of every gallery module while Xmip is designed:
+Install-XmipPrerequisite compares what is installed with the gallery's newest
+and installs that, and the minimum here is the latest release when it was
+last raised. Pester 6 requires PowerShell 7.4 or later, which the PowerShell
+floor above already guarantees. Pester 6 discovers and runs per file, where 5
+discovered every file first.
 
 Windows ships Pester 3 in the system module path and PowerShell autoloads the
 first Pester it finds, so the old one wins unless told otherwise. Pester 3 has
 no -Output parameter and does not understand BeforeAll or -Because, so test/
 fails to run at all rather than reporting anything useful:
 
-    Import-Module Pester -MinimumVersion 6.0.0 -Force
+    Import-Module Pester -MinimumVersion 6.2.0 -Force
 
 Installing needs -SkipPublisherCheck, because the Pester 3 already in the
 module path carries a different Microsoft signature.
@@ -108,12 +107,26 @@ used by accident.
 role = "operator"
 source = "psgallery"
 id = "PSToml"
+minimum = "0.5.0"
 note = "Reads the Xmip TOML manifests. PowerShell has no built-in TOML parser. Operating system independent, so it carries no per-system table."
+
+[prerequisite.powershellyaml]
+role = "operator"
+source = "psgallery"
+id = "powershell-yaml"
+minimum = "0.4.12"
+note = """
+Reads and writes YAML, the configuration a tool that takes no TOML is given:
+the parameters the Microsoft DSC template hands dsc, and the DSC documents its
+tests read. PowerShell has no built-in YAML parser; this is Cloudbase's, on
+YamlDotNet. Operating system independent, so it carries no per-system table.
+"""
 
 [prerequisite.poshgit]
 role = "operator"
 source = "psgallery"
 id = "posh-git"
+minimum = "1.1.0"
 note = """
 The prompt: the branch, how far ahead and behind, and what is changed, in
 front of every command. Get-XmipStatus answers the same question for the whole
@@ -233,9 +246,9 @@ elevation = true
 role = "operator"
 optional = true
 probe = "dsc --version"
-minimum = "3.2"
+minimum = "3.3"
 channel = "stable"
-note = "Microsoft DSC v3, the standalone dsc command (3.3.0 the current release on 2026-10-21; 3.2.0 generally available 2026-04-29). The host that runs deploy/dsc/msdsc and every machine an environment document is applied on need it, with PowerShell 7.6, which the Xmip resources run in."
+note = "Microsoft DSC v3, the standalone dsc command (3.3.0 the current release on 2026-11-02, and the floor; 3.2.0 generally available 2026-04-29). The host that runs deploy/dsc/msdsc and every machine an environment document is applied on need it, with PowerShell 7.6, which the Xmip resources run in."
 
 [prerequisite.dsc.windows]
 winget = "Microsoft.DSC"

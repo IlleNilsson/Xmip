@@ -6,7 +6,7 @@
 # (environment.example.dsc.yaml); README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
-  version: ^3.2
+  version: ^3.3
   securityContext: elevated
 parameters:
   staging:

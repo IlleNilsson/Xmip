@@ -81,7 +81,7 @@ slices it or knows a port.
 ## The resources
 
 DSC v3 is a standalone command, and its resources are executables that
-speak JSON (checked 2026-10-21: 3.3.0 current, 3.2.0 general availability
+speak JSON (checked 2026-11-02: 3.3.0 the current release, 3.2.0 general availability
 on 2026-04-29). The documents use a built-in resource wherever one fits and
 an Xmip resource of this folder for the rest: PowerShell 7 scripts behind
 resource manifests, on Windows and AlmaLinux alike. The Windows PowerShell
@@ -105,7 +105,7 @@ a document on the machine it runs on, so `Xmip.Environment/Machine` copies
 this folder, a node's files and its parameters to the machine's staging
 folder — WinRM to a Windows machine as its Administrator, SSH to an
 AlmaLinux one with its key — and runs `dsc` there, elevated. Every document
-requires DSC `^3.2` and each resource `^0.1`.
+requires DSC `^3.3`, the current release, and each resource `^0.1`.
 
 | File | Is |
 | --- | --- |
@@ -124,7 +124,7 @@ The machines are installed (`deploy/dsc/msdsc/hyperv`), and XMIP-DC01 runs
 the DNS Server role; the domain controller's own template is not written.
 
 **On each machine**, once, as its Administrator or with sudo: PowerShell
-7.6 and Microsoft DSC 3.2 or newer — `winget install --id Microsoft.PowerShell
+7.6 and Microsoft DSC 3.3 or newer — `winget install --id Microsoft.PowerShell
 --exact` and `winget install --id Microsoft.DSC --exact` on Windows, the
 `powershell` and `dsc` packages from Microsoft's package repository on
 AlmaLinux — and on AlmaLinux PowerShell as an SSH subsystem,
