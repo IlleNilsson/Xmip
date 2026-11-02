@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 320232 lines of production
+Where each repository mounts and what it holds: 322498 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -438,7 +438,7 @@ hold no source to count.
 │   │   │   │   ├── opc-ua                      2513
 │   │   │   │   ├── nfs                         2165
 │   │   │   │   ├── smb                         2024
-│   │   │   │   ├── http                        1969
+│   │   │   │   ├── http                        1985
 │   │   │   │   ├── mssql                       1897
 │   │   │   │   ├── ibm-mq                      1887
 │   │   │   │   ├── ftp                         1869
@@ -587,7 +587,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1225
+│   │   │   ├── secret                          1264
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -663,9 +663,9 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             6601
 │   │   │   ├── codec                           2898
+│   │   │   ├── tls                             2446
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1755
-│   │   │   ├── tls                             1222
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
@@ -724,13 +724,13 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            36553
+│       ├── runtime                            37538
 │       ├── persist                            14650
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8242
+│       └── configure                           8244
 └── test/
     └── core/
         └── playground                         12782

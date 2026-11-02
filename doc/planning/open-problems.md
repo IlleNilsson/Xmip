@@ -1716,10 +1716,17 @@ Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
   the caller names it (`xmip-caller`), the act admitted by the caller's own
   role, never the relay's, and audited `through` the relay; the host lets
   it go (`Unvouch`); `xmip_remote_act_v1`, `xmip_secret_v1` and
-  `xmip_secrets_v1` take the caller. Open: a compromised host can still act
-  for anyone whose certificate it has held while it is valid, within their
-  role and in the audit; binding the browser's handshake to the node
-  closes it.
+  `xmip_secrets_v1` take the caller. Then the browser's handshake is bound
+  to the node (ADR-0009, amendment 2026-11-02): the node issues its relays
+  fresh nonces (`Nonces`, `plane::fresh`), the host binds them into the
+  `ServerHello` random and hands each node the recorded transcript
+  (`tls::possession`), and the node vouches only once the browser's
+  CertificateVerify verifies with its certificate's key, the random holds
+  its own unspent nonce, and the server certificate is the relay's own
+  listener (`plane::possessed`); TLS 1.3 and 1.2 alike, no session resumed.
+  Open, for the owner: a compromised host can act only for a browser that
+  made a fresh handshake with it, and for as long as it keeps the node's
+  handle; ending the browser's TLS in the node itself takes even that away.
 
 Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 

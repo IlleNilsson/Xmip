@@ -207,7 +207,7 @@ on Windows an access list of the user the process runs as and `SYSTEM`,
 protected from inheritance), synced, then moved into place whole, the
 directory synced after on Unix. A node's identity switches as one through a
 generation folder named by one file (ADR-0034, amendment 2026-10-16). The
-access list is set in `.src/private_file/dacl.rs`, the one file of the crate
+access list is set in `.src/private_file/windows.rs`, the one file of the crate
 that allows unsafe code (ADR-0050, amendment 2026-09-25).
 
 ## Amendment, 2026-10-22: a standby keeps its primary's data keys, wrapped under its own
