@@ -116,7 +116,7 @@ requires DSC `^3.2` and each resource `^0.1`.
 | `name.dsc.yaml` | the names, on the DNS server |
 | `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentName.ps1` | the `Xmip.Environment` resources |
-| `*.dsc.resource.json` | their manifests |
+| `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 
 ## Before the first run
 
