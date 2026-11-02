@@ -106,7 +106,8 @@ and it cost real work.
   Xmip's reader; a connection through Xmip's transport. A tool that takes
   the platform's way instead records why. The owner, 2026-09-26: *Xmip shall
   use its own tool chain, dogfooding as much as possible.*
-- **Xmip's configuration is TOML.** Every setting Xmip and its tooling read
+- **Xmip's configuration is TOML first, YAML later, never JSON or XML; JSON
+  and XML are for transfer.** Every setting Xmip and its tooling read
   — the Cluster TOML, the estate's manifests, a module's settings — is TOML,
   and a new one is too. YAML is not an Xmip configuration syntax: it is
   written only where a deployment tool needs it, Microsoft DSC and Ansible
@@ -115,7 +116,10 @@ and it cost real work.
   another on its input and output. The owner, 2026-11-02: *JSON is for
   transfer, not configuration*; *Xmip prefers TOML*; *MS DSC takes YAML or
   it is out*; *YAML is not an Xmip configuration syntax but needed for DSC.
-  JSON is for transfer.*
+  JSON is for transfer*; *TOML first, YAML later, never JSON or XML for
+  configuration. JSON and XML are for transfer*; *It is general: TOML for
+  configuration, YAML is an excuse. JSON and XML are for transfer of
+  data.*
 - **While Xmip is designed, everything is the latest release.** Rust, .NET,
   PowerShell, every crate, package, module and tool: the newest release when
   the work is done, a floor raised as soon as a release is out. The owner,
