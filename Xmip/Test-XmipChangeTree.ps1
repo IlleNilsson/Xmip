@@ -54,11 +54,12 @@ function Test-XmipChangeTree {
     [bool] $runtimeBuilt = $false
 
     # The runtime's remote build, from the working tree, before the module
-    # that needs it: the Desktop one Xmip.Abi's tests load, the Android ones
-    # the phone host packages (Build-XmipRemoteRuntime.ps1).
+    # that needs it: the Desktop one Xmip.Abi's tests load
+    # (Build-XmipRemoteRuntime.ps1). The phone host's Android build waits
+    # with every target but Windows (the owner, 2026-11-02: *Just build
+    # Windows, we can get back to other OS and target*).
     [hashtable] $remoteFor = @{
-        'module/foundation/abi'     = 'Desktop'
-        'module/core/operation/gui' = 'Android'
+        'module/foundation/abi' = 'Desktop'
     }
 
     [string] $sharedTarget = if ($env:CARGO_TARGET_DIR) {
@@ -157,14 +158,10 @@ function Test-XmipChangeTree {
             [bool] $verifiable = (Test-Path -LiteralPath $manifest) -or
                 @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
 
-            # A phone build needs the Android NDK, an optional prerequisite.
             [string] $why = ''
 
             if (-not $verifiable) {
                 $why = "$module has no Cargo.toml and no project to verify."
-            }
-            elseif ($remoteFor[$module] -eq 'Android' -and -not (Find-XmipAndroidNdk)) {
-                $why = "$module builds for Android, and the Android NDK is absent here."
             }
 
             if (-not $All -and $why) {

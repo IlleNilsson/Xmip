@@ -905,11 +905,9 @@ stopping the run with nothing pushed:
   test` of every `*.Test.csproj` and the module's Pester tests, the runtime
   library built first. The runtime's remote build is built before the module
   that needs it, changed or consuming: this machine's before
-  `module/foundation/abi`, whose tests load it, and Android's, for a device
-  and the emulator, before `module/core/operation/gui`, which packages them
-  (`Build-XmipService -Remote Desktop, Android` builds the same by hand).
-  Without the Android NDK the gui module is reported SKIPPED, unverifiable
-  here, and does not land. Each `dotnet build` and `dotnet test` runs at most
+  `module/foundation/abi`, whose tests load it (`Build-XmipService -Remote
+  Desktop` builds the same by hand). Only Windows is built for now: the
+  Android build waits with every other target. Each `dotnet build` and `dotnet test` runs at most
   four MSBuild nodes (`-m:4`).
 - **The Event bindings in other languages,** where a changed module carries
   `verify-event-bindings.ps1` (`module/foundation/abi`): C and C++ through
@@ -920,7 +918,9 @@ stopping the run with nothing pushed:
   one whose tool is here and fails stops the run.
 - **Each unchanged module that consumes a changed one:** `cargo clippy
   --all-targets --features <every declared feature> -- -D warnings`, which
-  compiles it and its tests against the change; its tests do not run.
+  compiles it and its tests against the change; its tests do not run. A
+  change that is only comments, Markdown or `doc/` has no consumers
+  checked: it cannot change what they do.
 - **The root:** its crate is tested as a changed module whenever a module
   lands, and its `test/` suite runs when the root itself changed. A change
   to the root alone runs `test/` and not the root crate's cargo steps.

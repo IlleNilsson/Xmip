@@ -278,9 +278,17 @@ function Publish-XmipChange {
     }
 
     # What changed lands; what consumes it, unchanged, is compiled and linted
-    # against it so a broken API shows before anything is pushed.
+    # against it so a broken API shows before anything is pushed. A module
+    # whose change is comments and prose alone cannot break a consumer, so
+    # its consumers are not checked for it (Test-XmipCodeChange).
+    [string[]] $coded = @(
+        $status.Module | Where-Object {
+            Test-XmipCodeChange -RepositoryRoot $RepositoryRoot -Module $_
+        }
+    )
     [string[]] $consumers = @(
-        Get-XmipModuleConsumer -RepositoryRoot $RepositoryRoot -Module $status.Module
+        Get-XmipModuleConsumer -RepositoryRoot $RepositoryRoot -Module $coded |
+            Where-Object { $status.Module -notcontains $_ }
     )
     [string[]] $ordered = @(
         Sort-XmipModuleDependency -RepositoryRoot $RepositoryRoot -Module (
