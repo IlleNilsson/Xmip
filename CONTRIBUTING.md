@@ -106,6 +106,14 @@ and it cost real work.
   Xmip's reader; a connection through Xmip's transport. A tool that takes
   the platform's way instead records why. The owner, 2026-09-26: *Xmip shall
   use its own tool chain, dogfooding as much as possible.*
+- **JSON is for transfer; TOML and YAML are for configuration.** What a
+  person writes or reads to configure anything — Xmip, a deployment
+  template, a tool's settings — is TOML or YAML. JSON is a wire form: what a
+  program hands another on its input and output, over a connection or in a
+  file nobody edits. A tool that takes YAML is given YAML, as the Microsoft
+  DSC template's resource manifests are; one that takes JSON alone records
+  why. The owner, 2026-11-02: *JSON is for transfer, not configuration. YAML
+  and TOML are for configuration.*
 - **Until the first release, nothing is deprecated: it is deleted.** A word,
   a technology, a parameter or a file that is wrong goes, with every use of
   it, in the same change; nothing is marked obsolete, kept for
