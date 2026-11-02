@@ -44,9 +44,10 @@ BeforeAll {
         'module/core/operation/audit/src/windows_event_log.rs' = 'ADR-0050, amendment 2026-09-25'
         # CryptProtectData and CryptUnprotectData: the key home on Windows.
         'module/core/capability/secret/dpapi/src/crypt_protect.rs' = 'ADR-0063 clause 4'
-        # The owner-only access list of a private file on Windows: every key
-        # and identity the estate keeps on disk (secret::private_file).
-        'module/core/capability/secret/.src/private_file/dacl.rs' = 'ADR-0063 clause 4'
+        # A private file's calls to Windows: the owner-only access list and
+        # the move that never replaces, for every key and identity the
+        # estate keeps on disk (secret::private_file).
+        'module/core/capability/secret/.src/private_file/windows.rs' = 'ADR-0063 clause 4'
         # xmip-core's calls to the operating system: the timed wait's kernel
         # event and high-resolution timer on Windows, and the processor time
         # tests measure with.

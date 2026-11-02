@@ -536,7 +536,7 @@ one line):
 Still a limit: the handle binds a screen's act to a caller the runtime
 proved, inside the host's own process; a hostile host in that process can
 still act through the node as its own account. The node deciding for a
-relayed caller is the next step (the amendment below).
+relayed caller is the next step (the amendments below).
 
 Proved in the runtime (`plane::caller`, `plane::role`, the section 18 and
 21 exports, `secure_listener`), `xmip-core-authenticate` (`handshake`,
@@ -598,8 +598,8 @@ node must decide.* Built (decided by the assistant, each in one line):
 - **The Playground** names the account its run runs as as each node's one
   relay, so the tester's web host relays the tester's browser.
 
-**The limit, written for the owner**: the node does not take part in the
-browser's handshake, so a compromised web host can act for anyone whose
+**The limit, written for the owner** (closed by the amendment of
+2026-11-02 below): the node does not take part in the browser's handshake, so a compromised web host can act for anyone whose
 certificate it has held while that certificate is valid — within that
 caller's own role, and visibly in the node's audit, `through` the host. It
 cannot make up an identity: the certificate must reach the node's own
@@ -630,3 +630,98 @@ signed, is verified and relayed by every node a run starts, whose
 Provenance: the owner's decision of 2026-11-01, as the coordinator relayed
 it; the names `Vouch`, `Unvouch`, `relay`, `plane::vouched` and `through`
 the assistant's, agreed the same day.
+
+## Amendment, 2026-11-02: the browser's possession of its key, proven to the node
+
+The amendment above left one limit: the node verified a browser's
+certificate, which a compromised web host could hand on after the browser
+had gone. The owner, through the coordinator, the same day: *the node can
+take part in the handshake's freshness*, since Xmip owns its TLS. Built
+(decided by the assistant, each in one line; agreed the same day):
+
+- **The node issues fresh nonces to its relays** (`Nonces`,
+  `plane::fresh`): 16 random bytes each, issued to the relay's account for
+  the listener certificate the relay names, good for 30 seconds and spent
+  once. A relay a certificate proved, on the network listener, names a
+  listener of its own subject. Each node keeps its own, with its relays and
+  the callers it holds (`plane::vouched::Relaying`).
+- **The host binds them into the browser's handshake**: as a handshake
+  starts, one nonce of every node the host follows (`remote::fresh`, kept
+  ahead and refilled behind, so no browser waits on a round trip, and never
+  asked of a node the follow knows lost) is bound into the first 24 bytes of
+  the `ServerHello` random, SHA-256 over them in order
+  (`tls::possession::binding`, through a random source of the possession
+  module's own; the last 8 bytes stay random for TLS 1.2's downgrade
+  sentinel).
+- **The host records the handshake** (`tls::possession::handshaken`) and
+  recovers its transcript, the handshake messages from the ClientHello
+  through the client's CertificateVerify; TLS 1.3's sealed records are read
+  with the two handshake traffic secrets the possession module's own key log
+  keeps for that one handshake and zeroes after — never written, logged or
+  kept on the session, and in no other configuration.
+- **The host hands every bound node the transcript at once** (`Vouch`,
+  `"transcript"` and `"nonces"`; `"certificate"` is deleted), before the
+  session is handed over (`secured::proven`): the first node on the
+  handshake's own thread, each other on a thread kept for it
+  (`plane::workers`), all at once, so a session's start waits one round trip
+  and the slowest node's check however many nodes the host follows; a node
+  not bound into a session acts for its caller on nothing, and says the
+  browser proves itself again as it reconnects.
+- **The node checks, in words, and vouches only after**
+  (`plane::possessed`): the client's CertificateVerify verifies with its
+  certificate's key over the transcript (`tls::possession::proved`; TLS 1.3
+  and 1.2 both, a retried 1.3 handshake's first ClientHello as its
+  `message_hash`); the random is bound to the nonces handed with it; one of
+  them is this node's, fresh, issued to this relay, and is spent; the
+  transcript's server certificate is the listener that nonce was issued for,
+  under the node's own anchors; then the browser's chain, read from the
+  transcript, is verified for client authentication and run through the
+  node's gate as before.
+- **TLS 1.2 is held as 1.3 is**: its CertificateVerify signs every message
+  before it, the random included, so 1.2 sessions are relayed too.
+- **No session is resumed**: a resumed session carries no CertificateVerify,
+  so the proving listener keeps no session and sends no ticket, and every
+  browser connection makes a full handshake.
+- **The random's draw order is pinned**: rustls 0.23.45 draws a random for a
+  `HelloRetryRequest` and another for the `ServerHello`, and TLS 1.2 a
+  session ID after it, so every 32-byte draw on an armed handshake thread is
+  bound; a test of recorded handshakes over TLS 1.3, 1.3 retried and 1.2
+  fails if a later rustls draws otherwise, and the node then refuses relay in
+  words, never vouching.
+
+Measured as Xmip's own share — processor time, never a wait on the network
+or another program (`xcore::spent`; the runtime's timing program, ten runs,
+the fastest of 31 sessions each): the host spends 0.13 to 0.36 ms of its
+own on a session proven to one node and 0.32 to 0.65 ms on one proven to
+three at once — binding, the gate, the transcript recovered and each
+`Vouch` made and sent, about 0.1 ms of that per node, the plane's own call
+(`SecureSession::own`); a node spends 0.20 to 0.38 ms checking a browser it
+has not seen, about half the possession proof's signature and half the
+browser's chain, its issuer's signature dominating, and the chain is not
+checked again for a browser it knows. The added start, said only, was 0.26
+to 0.99 ms on a machine at 91% load; a thread started per node for each
+session had added 2.2 to 2.6 ms.
+
+**The limit that remains**: a compromised web host can act only for a
+browser that made a fresh handshake with it holding its key — within that
+browser's own role, visibly in the node's audit `through` the host, and,
+since the host keeps the node's handle, until it lets it go, the browser's
+certificate ends or the node starts again. It can neither make up an
+identity nor replay a certificate it once saw. Ending the browser's mutual
+TLS in the node itself would take even that away; that is the owner's
+choice, not built.
+
+Proved in `xmip-core-library-tls` (`possession`: the binding, the
+transcript recovered and proved for TLS 1.3, 1.3 retried and 1.2, a byte
+changed proving nothing, a browser presenting no certificate proving
+nothing; the timing program) and the runtime (`plane::fresh`,
+`plane::possessed`, `tests/plane/relayed.rs` over a real secure listener, a
+browser's handshake and a relaying node: an act the browser's by its own
+role, audited through the host; a node relaying for no one and one trusting
+another authority acting for no one; two browsers at once each as their
+own; the timing program).
+
+Provenance: the owner's decision of 2026-11-02, as the coordinator relayed
+it, with its three additions (the server certificate, the pinned draw, the
+secrets kept for one handshake); the names `Nonces`, `plane::fresh`,
+`plane::possessed`, `tls::possession` and `secured` the assistant's.

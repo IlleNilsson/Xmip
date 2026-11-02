@@ -901,3 +901,18 @@ Decided by the assistant while building: a key an `authorized_keys` line
 does not narrow to one user stays authorized for any user, as the gate
 always read it; every far end enrolls its keys narrowed with `for_user`,
 so no directory is chosen by a name nothing checked.
+
+## Amendment, 2026-11-02: a caller a web host relays is proven by the node, not vouched
+
+An operator's browser reaches a node through the web host that takes its
+TLS (ADR-0009, amendments 2026-11-01 and 2026-11-02). The node does not
+take the host's word for it, which would make the caller *vouched* — a
+claim a third party proved — and act on nothing at an operate plane that
+admits only the proven: it is handed the browser's handshake, bound to a
+nonce of its own, and checks the browser's CertificateVerify with its
+certificate's key, the chain against its own anchors and the identity
+through its own gate (`plane::possessed`, `plane::vouched`). So the caller
+is *proven*, by the node, as one its own listener had terminated would be;
+the host it came through is recorded beside it (`through`), and the
+plane's word `Vouch` names the host's act of handing it over, not the
+verdict.
