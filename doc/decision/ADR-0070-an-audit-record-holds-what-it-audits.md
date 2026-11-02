@@ -29,7 +29,7 @@ message and stream. … If authorities want to do Auditing, they need to see
 the untarnished data in the Audit log, what do you propose?* Until then
 `runtime-model.md` said Audit *uses retention to show Messages and their
 Streams at audited events*: a reference to content nothing guaranteed was
-still there, or unchanged. The proposal below was accepted: *So lets go with
+still there, or unchanged. The proposal below was accepted: *So let's go with
 that for now.*
 
 ## Decision
@@ -142,7 +142,7 @@ if that helps; today it is the administration database
 
 The owner, asked whether each audited Stream's digest and length should be
 visible rather than sealed in the record: *Yes, when the Xmip Core or its
-Providers uses the Audit functionality the whole shebang goes to audit. How
+Providers use the Audit functionality the whole shebang goes to audit. How
 else could a serious government, bank or insurance company work?* An audit
 written by Xmip's core or by any provider's module carries everything it
 audits, laid out where a column can hold it: each audited Stream is a row of
@@ -191,7 +191,7 @@ shared is the code that reads chunks (`ChunkReader`), not a table.
 
 ## Amendment, 2026-10-10: audit is a database of its own
 
-The owner: *The audit part might be better of in its own database so it can
+The owner: *The audit part might be better off in its own database so it can
 be hosted on a different set of nodes, different storage*, and *So the
 02-databases.sql script has to be re-engineered into statements per data
 domain.* The first amendment of 2026-10-09 allowed audit *a storage of its
@@ -223,7 +223,7 @@ node would reach by a list of its own.
 ## Amendment, 2026-10-10: each data domain is a table of its own
 
 Asked how the three data domains are configured in the Cluster TOML, the
-owner: *i would do it like runtime, storage, connection string. Same for
+owner: *I would do it like runtime, storage, connection string. Same for
 audit and administration*; shown the form, *Yes, better.* Each domain is a
 table of its own, `[runtime]`, `[administration]` and `[audit]`, each with
 `storage`, the technology its database is kept on — `rocksdb`, `sqlite`,

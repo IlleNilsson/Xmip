@@ -761,7 +761,7 @@ certificate (step 4), and the hand-out per Receive Location (step 5).
 ## Amendment, 2026-10-30: every claim authenticated
 
 The owner, 2026-10-29: *First you present your identity, then you get
-identified. Then we look to authentication, do your identification hold
+identified. Then we look to authentication, does your identification hold
 up. When authenticated we look for Authorization, then you may enter your
 load, stream.* The receive spine (`runtime::arrival`) was already in that
 order. A review the same day queued one rule on it: **no identity a caller

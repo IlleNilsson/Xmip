@@ -35,7 +35,7 @@ named, never placed somewhere that cannot serve it.**
 
 The owner, 2026-09-19, having just ruled that a node carries the roles
 suitable for its purpose: *a node may have online capability, some feature
-capability, authentication or runtime capability. Those are criterias to
+capability, authentication or runtime capability. Those are criteria to
 work with.*
 
 The estate had anticipated this and never said what a capability is.
@@ -281,7 +281,7 @@ is now one rule.
   refusal sentence equal.
 
   **Corrected the same day, 2026-09-24.** The owner: *Code shall be uniquely
-  placed, used by others, whom in turn has unique code used by others. It is
+  placed, used by others, who in turn have unique code used by others. It is
   common sense.* Neither keeps a copy. The runtime's library exports the
   words and the parse (`xmip_stage_words_v1`, `xmip_stage_declared_v1`,
   `xmip_operate.h` section 7, forwarding to `node::Stage`);
@@ -310,7 +310,7 @@ assistant's drafting of problem 25's row.
 
 ## Amendment, 2026-10-01: a node declares its roles, and the stages are theirs
 
-The owner, 2026-10-01, on the node roles: *Thats it and I want to add
+The owner, 2026-10-01, on the node roles: *That's it and I want to add
 Receiving, Processing and Sending. Leave Executing as a sum of Receiving,
 Processing and Sending. Executing would be used for Low Latency.* And on the
 profiles the same roles now pick a build by: *We can try that and add runtime
@@ -441,7 +441,7 @@ record's open question on declaring roles in the TOML, named above;
 ## Amendment, 2026-10-03: one statement, one Storage node
 
 The round robin is per statement, not per operation (the owner: *When
-accessing storage, it should be the same storage node through out a
+accessing storage, it should be the same storage node throughout a
 statement, even if it is repetitive. Writing chunk 1 to n should be regarded
 as one statement, one call against StorageN*; the Publication and its
 Journeys are the same statement). A receive cycle's chunks, its Publication
@@ -496,7 +496,7 @@ cluster's as it is. The node count is deleted — `-Nodes <count>`,
 ## Amendment, 2026-10-12: a node's letter, and the test clusters' nodes
 
 The owner, 2026-10-12: *Rn, Pn, Sn are as the prefix says, Receiving,
-Procesing & Sending. We are missing Ln nodes, Low latency nodes. We are also
+Processing & Sending. We are missing Ln nodes, Low latency nodes. We are also
 missing Operation nodes*; and for Storage nodes, S being Sending's: *Dn for
 Data will be the name for Storage Nodes*.
 
@@ -516,8 +516,8 @@ Data will be the name for Storage Nodes*.
 - **The test clusters carry one of each kind.** C1 (`test/xmip.toml`): R1,
   R2, P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/xmip.toml`): R1, S1 and
   L1. `test/NodeName.Test.ps1` knows the Ln, On and Dn shapes. R2 joined C1
-  the same day, the owner: *We need an R2, to stress the obvious, concurrecny
-  of reasources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
+  the same day, the owner: *We need an R2, to stress the obvious, concurrency
+  of resources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
   receiving nodes on one shared drop, each file taken by exactly one.
 
 ## Amendment, 2026-10-20: only a node with the Storage role stores

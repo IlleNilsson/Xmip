@@ -586,8 +586,8 @@ configurable switch. InProcess = true | false*
   unless excluded; every other runtime is invited only by configuration.**
   The owner, the same day: *Read it as InProcess with threads is default
   true, any other runtime has to be opt in by configuration*; *As long as
-  they are on the peremiter the are within Xmip Processes, otherwise they
-  have to be exclusivley invited. I do not like JVM or dotnet Runtime within
+  they are on the perimeter they are within Xmip Processes, otherwise they
+  have to be exclusively invited. I do not like JVM or dotnet Runtime within
   our perfect Rust code*; and, correcting the assistant's reading: *I said
   that dotnet runtime was invited unless excluded.* So `InProcess`
   defaults to `true`, and .NET runs on threads within the Xmip Host Process

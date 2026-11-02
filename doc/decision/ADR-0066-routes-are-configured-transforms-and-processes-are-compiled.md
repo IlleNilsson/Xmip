@@ -226,7 +226,7 @@ is a call to it with arguments.
   Location's settings in, each with its kind, default or requirement, words
   and meaning (`abi::UnitSetting`, xmip-core's `Setting` as data).
 - **Stages.** The owner: *So there has to be a need for a separation of
-  prepeare units. Like receive, process and send*, and then: *Maybe we
+  prepare units. Like receive, process and send*, and then: *Maybe we
   should use the terms Receive, Process and Send Preparation more clear. The
   code used in a prepare situation is usually similar. It is just an enum
   away what it does in what situation.* A unit lists the stages it serves,
@@ -273,7 +273,7 @@ is a call to it with arguments.
 - **Assignment is not configured.** The owner: *Assignments are not
   configured, they are done by primarily Work Processes.* No key names one;
   a Work Process's compiled code assigns through the assign capability.
-  And: *Transformation and Assignment where ever they occur, creates a new
+  And: *Transformation and Assignment wherever they occur, create a new
   message from a previous or created message* (terminology).
 
 Built 2026-10-22, the reference, not the running: `abi::unit`,
@@ -369,10 +369,10 @@ a setting.
   (clause 1). OpenPGP follows the same line: Encryption's and Signature's
   `engine`, behind `ProtectionEngine`, the first `rpgp`.
 - **Scripts, leniently.** The owner: *There are other transformations, like
-  with compled code or scripts like PowerShell, god forbidd JavaScript*;
-  *We have to be lenient to people that does not know all languages, the
+  with compiled code or scripts like PowerShell, God forbid JavaScript*;
+  *We have to be lenient to people who do not know all languages, the
   operations views just have to report it, suggest improvements. Keeping
-  JavaScript out of it from the begining is one way.* Script runs
+  JavaScript out of it from the beginning is one way.* Script runs
   PowerShell in a process of its own, started when the step is opened and
   kept warm, the script loaded once and handed one Message's content at a
   time; JavaScript is refused by name, in words, and no setting allows it
@@ -403,7 +403,7 @@ own acts, not units.
 
 The owner, 2026-10-22: *I would like a Work Process to be designed in VS
 Code, but at the end of the day it is a compiled piece executed when called
-upon. … there are BPEL solutions out there, no need to invent the wheel
+upon. … there are BPEL solutions out there, no need to reinvent the wheel
 unless we have to*; then *go with the best functionality agreeing with Xmip
 licensing*, and *Go for it*. Of the choice made, BPMN 2.0: *It can not be
 the only choice, just the default one.* Clause 1's other half for Work
@@ -629,7 +629,7 @@ records is ADR-0031's, amendment of this date.
 
 ## Amendment, 2026-10-27: Correlations are how Xmip does exclusiveness
 
-The owner, 2026-10-27: *So lets work on that, that is exclusiveness! Way
+The owner, 2026-10-27: *So let's work on that, that is exclusiveness! Way
 more important than parallelism.* Clause 5 of the amendment of 2026-10-22
 is Xmip's exclusiveness: one winner per artifact; by default one Stream,
 Message or Journey at a time per Receive Location, cluster-wide, from read

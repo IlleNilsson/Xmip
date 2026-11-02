@@ -657,7 +657,7 @@ of the rig's processes, read *the cluster's nodes*.
   `Xmip.Surface` reads it as a `RunHeader`, and the web GUI says it in one
   line at the top of all three views. The prompt is unchanged.
 - **Ruled the same day: a node carries the roles suitable for its purpose.**
-  Asked, the owner: *Rn, Pn, Sn are nodes that carries roles.* The
+  Asked, the owner: *Rn, Pn, Sn are nodes that carry roles.* The
   assistant wrote that back as one role to a node, and was corrected the
   same hour: *a node carries roles suitable for its purpose.* So a node is
   not fenced to one stage: the roles it carries are the ones its purpose
@@ -891,7 +891,7 @@ untouched: its surface is its own, and this changes nothing it reads.
 
 **R, P and S are a rate, not a total.** The owner, the same day, on the segment
 this amendment had just widened: *the CLI/PowerShell status number does not mean
-anything over time. There has to be a logical cap on summarising the R, P, S, T
+anything over time. There has to be a logical cap on summarizing the R, P, S, T
 and F numbers or do a completely different prompt visualization.* Asked to
 choose between a rate, a rolling window and a sparkline, he picked **the rate —
 what is moving now**. A total is bounded by uptime and grows whatever happens; a
@@ -948,7 +948,7 @@ scope in neither.
 ## Amendment, 2026-09-24: scope containment has two writers and one set of cases
 
 **Struck by the owner, 2026-09-24:** *Code shall be uniquely placed, used by
-others, whom in turn has unique code used by others. It is common sense.* Two
+others, who in turn have unique code used by others. It is common sense.* Two
 writers held to one set of cases are two copies, and a language boundary is no
 reason for a second: the surface calls across it. The amendment "one
 implementation, and the surfaces call the runtime's exports", below, replaces
@@ -1035,8 +1035,8 @@ script module loads the operator module and calls it — the next amendment.)*
 
 ## Amendment, 2026-09-24: one implementation, and the surfaces call the runtime's exports
 
-The owner, 2026-09-24: *Code shall be uniquely placed, used by others, whom in
-turn has unique code used by others. It is common sense.* And, against
+The owner, 2026-09-24: *Code shall be uniquely placed, used by others, who in
+turn have unique code used by others. It is common sense.* And, against
 collapsing everything into one place: layered, one home per concept. The
 amendment "scope containment has two writers and one set of cases", above, is
 struck by it. Each rule below has one implementation, in the crate that owns
@@ -1400,7 +1400,7 @@ of *consolidate, refactor and re-engineer if needed*.
 The ruling of 2026-09-24 — scope containment keeps two writers, held
 together by one shared set of cases, because a surface loads no Rust library
 — is the owner's, and he struck it the same day: *Code shall be uniquely
-placed, used by others, whom in turn has unique code used by others. It is
+placed, used by others, who in turn have unique code used by others. It is
 common sense.* The amendment that replaces it — one implementation per
 concept in its owning crate, forwarded by the runtime's exports and called by
 every surface — is the owner's ruling and the lead's design, drafted by the
@@ -1814,7 +1814,7 @@ own user, and from elsewhere without one nothing is taken.
 
 The owner, 2026-10-05, restating the amendment of 2026-09-15 for every
 process, not only the surfaces: *Of course polling is the only way in some
-circumstances, put not preffered. Events is the way to go, even between
+circumstances, but not preferred. Events is the way to go, even between
 processes using gRPC over net pipe, even between machines using gRPC over
 TCP.*
 
@@ -1846,7 +1846,7 @@ to be told by while the host is unreachable. Found by an external review,
 ## Amendment, 2026-10-06: a time span, paused and widened
 
 The owner, 2026-10-06: *The Monitoring & Topology view, during tests has to
-show that everyting is at some time. Have a time span filter of 1 minute and
+show that everything is at some time. Have a time span filter of 1 minute and
 inject faults every 50 seconds would work. Then one could pause, expand the
 time span to investigate the historical errors.*
 

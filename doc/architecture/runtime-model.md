@@ -176,7 +176,7 @@ one Storage node is the safety (the owner: *to
 have one or more Xmip Nodes with role Storage would be a safety… Xmip could
 just do a round robin over Xmip Nodes roled Storage*). The round robin is
 per statement, not per operation (the owner, 2026-10-03: *When accessing
-storage, it should be the same storage node through out a statement, even if
+storage, it should be the same storage node throughout a statement, even if
 it is repetitive. Writing chunk 1 to n should be regarded as one statement,
 one call against StorageN* — and the Publication and its Journeys are the
 same statement): a receive cycle's chunks, its Publication and its Journeys
@@ -230,11 +230,11 @@ distinction between runtime and administration databases, regardless of
 backend database technology*): the **runtime database**, which is the
 Ledger, and the **administration database**. It is extended, not
 contradicted, by a third, the **audit database** (the owner, 2026-10-10:
-*The audit part might be better of in its own database so it can be hosted
+*The audit part might be better off in its own database so it can be hosted
 on a different set of nodes, different storage*; ADR-0070, amendment
 2026-10-10). Each is a table of its own in the configuration,
 `[runtime]`, `[administration]` and `[audit]`, its `storage` and its
-`connection` (the owner, 2026-10-10: *i would do it like runtime, storage,
+`connection` (the owner, 2026-10-10: *I would do it like runtime, storage,
 connection string. Same for audit and administration*), so each may be on
 another technology and another server: on an embedded Storage node RocksDB
 and two SQLite stores, under the data directory where a table is left out;
@@ -1694,7 +1694,7 @@ Locations are for:
 
 **Every transport is request-response in Xmip** (the owner, 2026-10-29: *It
 is not that hard, every transport is Request-Response in the Xmip world. A
-response can be a message or an result code*). So whether a Location answers
+response can be a message or a result code*). So whether a Location answers
 is not configured; what it answers with follows from the work.
 
 **Receive side.** A Receive Location answers every request. By default the
@@ -2217,7 +2217,7 @@ Recorded in ADR-0031, amendment 2026-10-01, the configuration's record.
 
 Decided by the owner, 2026-10-05, weighed against BizTalk, whose Pipeline
 Components are Xmip's Preparation Steps and whose Maps are its
-Transformations: *one want to be able to perform all these steps on the
+Transformations: *one wants to be able to perform all these steps on the
 Port & Location.* Each of the Receive Port, Receive Location, Send Port and
 Send Location may configure Prepare, a Contract and Transform, the receive
 pair Promote and the send pair Demote, every one optional, so a designer

@@ -129,7 +129,7 @@ The owner, 2026-10-05, ruled on runtimes inside Xmip's own processes
 (ADR-0018, amendment 2026-10-05): *Read it as InProcess with threads is
 default true, any other runtime has to be opt in by configuration*; *I said
 that dotnet runtime was invited unless excluded*; and *I do not want other
-runtimes to interfer with potential perfect Rust code.*
+runtimes to interfere with potential perfect Rust code.*
 
 A contract module is loaded into the Xmip Host Process, so decision 3 follows
 that ruling:

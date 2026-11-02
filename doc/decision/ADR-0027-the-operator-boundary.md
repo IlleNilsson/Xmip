@@ -309,8 +309,8 @@ what and why.
 
 ## Amendment, 2026-09-24: section 7, the rules a surface calls
 
-The owner, 2026-09-24: *Code shall be uniquely placed, used by others, whom in
-turn has unique code used by others. It is common sense.* The surfaces wrote
+The owner, 2026-09-24: *Code shall be uniquely placed, used by others, who in
+turn have unique code used by others. It is common sense.* The surfaces wrote
 again what the runtime's crates already decide — whether one scope is beneath
 another (clause 3), the stage words, what a mood is called and painted, which
 record is the worst — and a language boundary was the reason given. It is not

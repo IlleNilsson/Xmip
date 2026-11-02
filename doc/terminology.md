@@ -314,8 +314,8 @@ happen to a Message, and only two of them make a new one:
 | **Assignment** | context: values set from a literal or another value | new, from a previous or a created Message | next; the Sections are shared |
 | **Transformation** | content: a new Stream | new, from a previous or a created Message | next |
 
-The owner, 2026-10-22: *Transformation and Assignment where ever they
-occur, creates a new message from a previous or created message* — the
+The owner, 2026-10-22: *Transformation and Assignment wherever they
+occur, create a new message from a previous or created message* — the
 source may be a Message a Work Process constructed itself. And: *Assignments
 are not configured, they are done by primarily Work Processes*: no key of
 the configuration names one; a Work Process's compiled code assigns through

@@ -293,7 +293,7 @@ function Publish-XmipChange {
     Write-Host $against -ForegroundColor Cyan
 
     # The dependency tree is verified whole, then landed whole (the owner,
-    # 2026-10-05: *Do dependecy tree build and stop when a leaf fails*).
+    # 2026-10-05: *Do dependency tree build and stop when a leaf fails*).
     [hashtable] $tree = @{
         RepositoryRoot = $RepositoryRoot
         Ordered        = $ordered

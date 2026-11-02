@@ -296,20 +296,20 @@ file, not three, and the node's section wins.
 artifact configures Prepare, Promote, Demote and Transformation: *Look at
 BizTalk how it is done, Prepare would be PipelineComponent, Transform would
 be Map, Promote, Demote are the same terminology.* Weighing his design
-against BizTalk's: *I have a nagging feeling that one want to be able to
-perform all these steps on the Port & Location. Lets say you have two
+against BizTalk's: *I have a nagging feeling that one wants to be able to
+perform all these steps on the Port & Location. Let's say you have two
 Receive Locations in one Receive Port. The format on one Receive Location
 may not be the same as for the other. The format shall end up as the same
-in the Receive Port. The reveser goes for Send*; on Prepare, *There could be
-cases where one want to prepeare on bot levles*; on Contracts, *I think that
-need to go on boh places for both Receive & Send. Then the designer,
-developer, end user has a posibility to place functionallity where it
-belongs for the current case*; and on validation: *Contracts does not
-decide wheter validation should be done or not. It is the configuration of
+in the Receive Port. The reverse goes for Send*; on Prepare, *There could be
+cases where one wants to prepare on both levels*; on Contracts, *I think that
+needs to go on both places for both Receive & Send. Then the designer,
+developer, end user has a possibility to place functionality where it
+belongs for the current case*; and on validation: *Contracts do not
+decide whether validation should be done or not. It is the configuration of
 the Receive Port, Receive Location, Send Port and Send Location*; *there
 might or might not be a contract configured. During development validation
-by a contracts is default on for Receive. For Send there might or might not
-be a contract configured. During development validation by a contracts is
+by a contract is default on for Receive. For Send there might or might not
+be a contract configured. During development validation by a contract is
 optional*; asked whether that meant the designer's default or the
 runtime's: *Yes on all.* The order of the steps within a level and the key
 names are the assistant's drafting.
@@ -469,7 +469,7 @@ amendment above, point 3). The editor never ships a slice itself. Open
 problem 31.
 
 Where each node is: the owner, asked whether its address is written under
-`[nodes.<name>]`: *The cluster knows the adresses.* The shipping Xmip
+`[nodes.<name>]`: *The cluster knows the addresses.* The shipping Xmip
 Service learns each node's address from cluster membership — node
 registration in the administration database (`deployment-model.md`,
 *The administration database holds*) — not from `xmip.toml`.
@@ -500,13 +500,13 @@ settings drafted on 2026-10-05 are replaced by them. `contract`,
 decided, not built.
 
 **Debatching, on both sides.** Asked whether debatching belongs in the
-receive or in an Xmip Work Process, the owner, 2026-10-22: *I'm not shure,
+receive or in an Xmip Work Process, the owner, 2026-10-22: *I'm not sure,
 can we go with both?* So both: in the receive, streamed — each record
 published as a Message of its own as soon as it is complete, a failure
 reported for each record — and in an Xmip Work Process. One splitting
 implementation, placed once, is called from both.
 
-**Batching only in an Xmip Work Process.** The owner: *I'm not shure that I
+**Batching only in an Xmip Work Process.** The owner: *I'm not sure that I
 want Debatching and Batching without a Xmip Work Process. It is not stream
 friendly.* Batching gathers Messages over time, which a stream does not
 wait for; it is a Work Process's.

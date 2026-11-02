@@ -100,7 +100,7 @@ ADR-0025 and module-model.md.
 The owner, 2026-10-05 (ADR-0018, amendment 2026-10-05): *Read it as
 InProcess with threads is default true, any other runtime has to be opt in
 by configuration*; *I said that dotnet runtime was invited unless excluded*;
-and *I do not want other runtimes to interfer with potential perfect Rust
+and *I do not want other runtimes to interfere with potential perfect Rust
 code.* A Module that brings a .NET runtime is loaded into the
 Xmip Host Process unless configuration excludes it; a Module that brings a
 JVM, a Python interpreter or any other runtime is loaded there only when

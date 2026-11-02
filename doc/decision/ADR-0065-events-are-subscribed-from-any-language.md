@@ -281,7 +281,7 @@ the owner's to strike.
 ## Amendment, 2026-10-02: any node is the cluster's door
 
 The owner, 2026-10-02: *Pub/Sub is cluster central. So when external code
-expect Subscription Events, they should be able to hook up to any node and
+expects Subscription Events, they should be able to hook up to any node and
 expect events from the complete cluster.* The cluster's endpoint of the
 amendment of 2026-09-26 is every node of the cluster: a subscriber connects
 to whichever node it reaches and receives the Events of every node that
@@ -352,9 +352,9 @@ Provenance: the owner's ruling, quoted; the wording is the assistant's.
 The owner, 2026-10-05, ruled on runtimes inside Xmip's own processes
 (ADR-0018, amendment 2026-10-05): *Read it as InProcess with threads is
 default true, any other runtime has to be opt in by configuration*; *As long
-as they are on the peremiter the are within Xmip Processes, otherwise they
-have to be exclusivley invited*; *I said that dotnet runtime was invited
-unless excluded*; and *I do not want other runtimes to interfer with
+as they are on the perimeter they are within Xmip Processes, otherwise they
+have to be exclusively invited*; *I said that dotnet runtime was invited
+unless excluded*; and *I do not want other runtimes to interfere with
 potential perfect Rust code.*
 
 - "In process" in this record means the subscriber's process: a C, C++,

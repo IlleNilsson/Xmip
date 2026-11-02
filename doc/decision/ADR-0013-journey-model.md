@@ -803,12 +803,12 @@ Every stage but debatching is open problem 55.
 ## Amendment, 2026-10-29: the Stream and its Message travel, the Journey is metadata
 
 The owner, 2026-10-29: *A journey does not wait, it rushes through, unless it
-encounter a Work Process, Pub/Sub wize*; *A message can be subscriped to, not
+encounters a Work Process, Pub/Sub wise*; *A message can be subscribed to, not
 a journey, the journey is the ledger of the message*; and *Streams may be
 transformed, creating a new stream. A stream can be assigned. Every stream is
-wrapped in a message and it travels is recorded by it's Journey. That has
-never changed.*; and *the strem, meassge in in focus, the journey is meta
-data*. The records had drifted from it: they made the Journey the traveler,
+wrapped in a message and its travel is recorded by its Journey. That has
+never changed.*; and *the stream, message is in focus, the journey is
+metadata*. The records had drifted from it: they made the Journey the traveler,
 the thing queued, claimed and waiting.
 
 - **The Stream and its Message are in focus.** Every Stream is wrapped in a
@@ -850,8 +850,8 @@ should be recorded in its Journey* (`runtime-model.md` sections 2 and 3).
 
 **Every transport is request-response.** The owner, the same day: *It is not
 that hard, every transport is Request-Response in the Xmip world. A
-response can be a message or an result code*; and *Just taking a
-configuration item of the board*. A Receive Location answers every request:
+response can be a message or a result code*; and *Just taking a
+configuration item off the board*. A Receive Location answers every request:
 a result code once the receive cycle has accepted and validated the Message,
 or the response Message where a Work Process answers the request, the call
 held until it does. Every send has an answer: the far end's result code, or

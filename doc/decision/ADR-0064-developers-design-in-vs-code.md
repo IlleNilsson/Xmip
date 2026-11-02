@@ -253,7 +253,7 @@ not see that need for Operation Web version*). ADR-0031, amendment
 ## Amendment, 2026-10-13: create, edit, delete; suggestions, lookups, validations
 
 The owner, 2026-10-13, trying the extension: *Nice attempt, but not really
-usefull VS Code extension*; what it must do: *Create, Edit, Delete.
+useful VS Code extension*; what it must do: *Create, Edit, Delete.
 Suggestions, Lookups, Validations*; and *Refine it and I'll try again.*
 The text editor over the cluster's `xmip.toml` is where a developer works,
 so it gains all six, each by clause 5: the rules in Rust, reached through
@@ -376,7 +376,7 @@ one, followed, found and renamed as the others are
 
 The owner, 2026-10-28, of a draft that derived everything an address
 already says — the transport, TLS, host, port, path and user — for file,
-FTP, FTPS, SFTP, HTTP and HTTPS: *So lets do it.* The draft's questions,
+FTP, FTPS, SFTP, HTTP and HTTPS: *So let's do it.* The draft's questions,
 answered with it as proposed: the separate keys go, with no alias, and a
 Location given only an address starts.
 

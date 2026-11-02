@@ -21,8 +21,8 @@ env:
 
 jobs:
   # Every operating system Xmip targets, each reported on its own: one that
-  # fails does not cancel the others (the owner, 2026-10-06: *lets turn on
-  # all the OS's we can for tests and all for targets and see how we do*).
+  # fails does not cancel the others (the owner, 2026-10-06: *let's turn on
+  # all the OSes we can for tests and all for targets and see how we do*).
   workspace:
     name: Workspace build and tests (${{ matrix.os }})
     strategy:

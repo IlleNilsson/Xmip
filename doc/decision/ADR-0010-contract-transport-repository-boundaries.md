@@ -82,7 +82,7 @@ The two direction-specific technology groups are replaced by one transport group
 ## Amendment, 2026-10-27: one transport, one repository and one loadable module; shared code in a shared module once stable
 
 The owner, 2026-10-27, resolving open problem 5: *each transport should be
-in it's each repo, in its own loadable module. There might be shared code,
+in its each repo, in its own loadable module. There might be shared code,
 so stick that in a shared repo module. If the shared code is stable.*
 
 - Each transport is one repository and one loadable module.

@@ -3,7 +3,7 @@
 What runs where: each feature against each target Xmip is to run on or reach.
 A draft of 2026-10-06, to be worked on; no cell is verified yet.
 
-The owner, 2026-10-06: *As an endpoint we must be able to target MCU's.* Rust
+The owner, 2026-10-06: *As an endpoint we must be able to target MCUs.* Rust
 compiles to bare metal as C does, so an MCU endpoint is a `no_std` build.
 And: *It is Rust aka C, the basics should run on all devices.* So the
 foundation is to be `no_std` throughout; today only `xmip-core` is.
