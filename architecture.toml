@@ -13,11 +13,11 @@ architectureVersion = "0.15.0"
 minimumScriptVersion = "1.5.0"
 name = "Xmip Architecture"
 owner = "IlleNilsson"
-surface = ["abi", "cli", "gui", "powershell"]
+surface = ["abi", "cli", "powershell", "gui"]
 
 [powershellRuntime]
 edition = "Core"
-version = "7.6.7"
+version = "7.7.0"
 versionPolicy = "minimum"
 crossPlatform = true
 windowsPowerShellSupported = false
@@ -68,22 +68,10 @@ primaryLanguage = "dotnet"
 targetFramework = "net11.0"
 sdk = "preview"
 
-# An assembly is loaded by something, and when that something owns the runtime,
-# it decides the target. The estate builds with the latest SDK either way.
 #
-# pwsh 7.6.7 hosts .NET 10 and carries its own runtime. A net11.0 build of the
-# PowerShell module compiles cleanly and is then refused at Import-Module with
-# "Could not load file or assembly 'System.Runtime, Version=11.0.0.0'", because
-# an assembly cannot load into a runtime older than it targets. Re-proved
-# 2026-09-03 rather than taken from the comment that claimed it.
-#
-# This follows pwsh upward. When pwsh hosts .NET 11, this line moves and the
-# exception disappears. abi is on the list since 2026-09-09 because the one
-# .NET binding (ADR-0014, amendment 2026-09-09) is loaded by the PowerShell
-# module as much as by the others, and a .NET 11 surface can reference a .NET
-# 10 library where the reverse would not hold.
-hostedTargetFramework = "net10.0"
-hostedBy = ["powershell", "abi"]
+# The PowerShell module and the binding it loads target it too: pwsh 7.7, the
+# floor, hosts .NET 11, and the net10.0 exception they had while pwsh hosted
+# .NET 10 is gone (ADR-0014, amendment 2026-11-02).
 
 # One template per language, keyed by primaryLanguage.
 #

@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 # Resolved per call rather than at load: the repository is found by looking
 # for architecture.toml, and the module may be loaded from outside it.

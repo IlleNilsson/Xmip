@@ -55,7 +55,7 @@ files, schema 1.28.0, generated from the MSI) and
 in `-CargoArgument` makes the arm64 MSI.
 
 - **WiX 7 needs its EULA accepted.** WiX Toolset 7 (NuGet
-  `WixToolset.Sdk` 7.0.0) is under the Open Source Maintenance Fee, and it
+  `WixToolset.Sdk` 7.0.1) is under the Open Source Maintenance Fee, and it
   builds nothing until its EULA is accepted once per user and machine.
   That is the owner's decision; until it is made, `-Package msi` is
   REFUSED, naming the command that accepts it.

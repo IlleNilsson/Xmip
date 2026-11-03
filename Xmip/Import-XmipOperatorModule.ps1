@@ -1,4 +1,4 @@
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 Set-StrictMode -Version Latest
 
@@ -209,7 +209,7 @@ function Set-XmipOperatorModuleRoot {
 
         .DESCRIPTION
             xmip.powershell.toml as shipped reaches the estate root from the
-            project's bin/Debug/net10.0, nine levels up, and its Snapshot is
+            project's bin/Debug/net11.0, nine levels up, and its Snapshot is
             relative to the module's directory. A build under
             .local-work/operator/<key> lies three levels down, so the shipped
             path climbed past the root: Get-XmipHealth read

@@ -1,4 +1,4 @@
-#Requires -Version 7.6.7
+#Requires -Version 7.7.0
 
 # The operator module is built once per change, not once per session
 # (Import-XmipOperatorModule): into .local-work/operator/<key>, the key naming

@@ -12,9 +12,10 @@
 - Order: 3
 - Concepts: Pester, PowerShell, .NET, Rust versions; Version floors, channels
 
-Xmip tracks the current stable release of every platform it depends on and
-carries no compatibility with superseded ones. PowerShell 7.6.7 Core, .NET 11,
-latest stable Rust, Pester 6 (the amendment of 2026-10-19 has every version).
+Xmip tracks the newest release of every platform it depends on and carries
+no compatibility with superseded ones. PowerShell 7.7.0 Core, .NET 11, latest
+stable Rust, Pester 6 (the amendments of 2026-10-19 and 2026-11-02 have every
+version).
 
 **The version numbers are not the decision** — they will be history soon enough.
 The decision is the rule that produced them, which is why `prerequisite.toml`
@@ -75,7 +76,7 @@ Concretely, at the time of writing:
 
 | | Xmip requires | Explicitly not supported |
 | --- | --- | --- |
-| PowerShell | 7.6.7 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
+| PowerShell | 7.7.0 or later, Core edition | Windows PowerShell (5.1, .NET Framework) |
 | .NET | 11 | 8, 9, 10 |
 | Rust | latest stable, via `rust-toolchain.toml` | any pinned older toolchain |
 | Pester | 6 or later | 3, 5 |
@@ -97,7 +98,7 @@ does not freeze anything.
 ### Corollaries
 
 **A version floor is a real refusal.** `#requires -PSEdition Core` and
-`#requires -Version 7.6.7` are not advisory. A machine below the floor is told so
+`#requires -Version 7.7.0` are not advisory. A machine below the floor is told so
 by PowerShell, by name and version, and nothing runs. That error message *is*
 the compatibility documentation.
 
@@ -216,6 +217,24 @@ Amazon Corretto 27.
 
 The GitHub Actions the workflows use move to their current majors:
 `actions/checkout@v7`, `actions/setup-dotnet@v6`, `actions/setup-node@v7`.
+
+## Amendment, 2026-11-02: the floor is the latest release, a release candidate included
+
+The owner, 2026-11-02: *Set the latest to what we have. Do that always.
+Notify me of updates of underlying components*, and *7.7.0-rc.x, .NET 11
+rc.x, Rust x.* A floor is no longer the newest stable release alone: it is
+the latest release, a release candidate included, raised the day it is out.
+Applied that day:
+
+| | Xmip requires | Source |
+| --- | --- | --- |
+| PowerShell | 7.7.0 or later, Core edition: every `#requires` and manifest; 7.7.0-rc.1 passes it | GitHub releases, 2026-10-29 |
+| PowerShell Gallery modules | the gallery's newest: Pester 6.2.0, PSToml 0.5.0, powershell-yaml 0.4.12, posh-git 1.1.0; `Install-XmipPrerequisite` compares | PowerShell Gallery |
+| Microsoft DSC | 3.3, the newest stable | GitHub releases, 2026-09-17 |
+| Crates and NuGet packages | the newest release of each | crates.io, nuget.org |
+
+PowerShell 7.7 hosts .NET 11, so the exception above for what pwsh loads
+follows it (ADR-0014).
 
 ## Alternatives considered
 

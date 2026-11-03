@@ -16,13 +16,13 @@
   decision (ADR-0015, amendment 2026-10-13), so nothing here accepts it, and
   Build-XmipService refuses in words, naming the command, until it is.
 -->
-<Project Sdk="WixToolset.Sdk/7.0.0">
+<Project Sdk="WixToolset.Sdk/7.0.1">
   <PropertyGroup>
     <OutputName>xmip-$(XmipVersion)-$(XmipSite)-$(Platform)</OutputName>
     <DefineConstants>BinaryDirectory=$(XmipBinaryDirectory)</DefineConstants>
     <DefineConstants>$(DefineConstants);Version=$(XmipVersion);Site=$(XmipSite)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.1" />
   </ItemGroup>
 </Project>

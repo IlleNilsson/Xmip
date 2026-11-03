@@ -1,4 +1,4 @@
-#Requires -Version 7.6.7
+#Requires -Version 7.7.0
 
 # The deploy profiles and sites (ADR-0015, amendment 2026-10-01). A site under
 # deploy/site picks a target and its node roles from the profiles under

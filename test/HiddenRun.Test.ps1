@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
     A test run can be hidden. The owner, 2026-09-29: *If you need a cluster for

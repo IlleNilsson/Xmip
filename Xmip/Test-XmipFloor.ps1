@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
 .SYNOPSIS
@@ -48,7 +48,7 @@ function Get-XmipReportedVersion {
         Extracts a comparable version from whatever a tool prints for
         --version. The shapes differ and none of them are a bare version:
 
-            pwsh    PowerShell 7.6.7
+            pwsh    PowerShell 7.7.0-rc.1
             dotnet  11.0.100-rc.3.26522.148
             git     git version 2.45.1
             rustup  rustup 1.27.1 (28d1352db 2026-03-05)

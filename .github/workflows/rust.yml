@@ -78,6 +78,20 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
+      # The runner's pwsh is older than Xmip's floor, the newest PowerShell
+      # the estate has (ADR-0021, amendment 2026-11-02): that release, first
+      # on the PATH of every later step. It moves with prerequisite.toml.
+      - name: Install PowerShell
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'v7.7.0-rc.1'
+          $to = Join-Path $env:RUNNER_TEMP 'pwsh'
+          gh release download $tag --repo PowerShell/PowerShell --pattern "PowerShell-$($tag.TrimStart('v'))-win-x64.zip" --dir $env:RUNNER_TEMP
+          Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "PowerShell-$($tag.TrimStart('v'))-win-x64.zip") -DestinationPath $to
+          Add-Content -Path $env:GITHUB_PATH -Value $to
+
       - name: Install PSToml
         shell: pwsh
         run: Install-Module -Name PSToml -Scope CurrentUser -Force
