@@ -20,7 +20,8 @@ function Deploy-XmipEnvironment {
             applied again every thirty seconds, which moves it on, until it
             answers from its disk and its media are removed.
 
-            One line is written per step, with the time left. Everything DSC
+            One line is written per step: ETD, ATD and ETA, the time elapsed,
+            left and in all. Everything DSC
             says goes to .local-work/deploy/<environment>/run.log. A Hyper-V
             template asks for elevation: run it in an elevated Xmip
             PowerShell Console. -WhatIf tests and changes nothing.
@@ -61,6 +62,7 @@ function Deploy-XmipEnvironment {
     [hashtable[]] $step = @(Get-XmipDeployStep -Environment $environment -Template $template)
     [datetime] $started = [datetime]::UtcNow
     [System.Collections.Generic.List[hashtable]] $waiting = @()
+    [hashtable] $last = @{}
     [hashtable] $line = @{ Count = $step.Count; Started = $started }
     for ([int] $index = 0; $index -lt $step.Count; $index++) {
         [hashtable] $asked = @{ Step = $step[$index]; Operation = $operation; Log = $log }
@@ -69,18 +71,22 @@ function Deploy-XmipEnvironment {
         if ($apply -and -not $result.InDesiredState) {
             $waiting.Add($step[$index])
         }
-        [pscustomobject] $result
+        $last[$step[$index].Name] = $result
     }
     while ($waiting.Count -gt 0) {
         Start-Sleep -Seconds 30
         foreach ($next in @($waiting)) {
             [hashtable] $result = Invoke-XmipDeployStep -Step $next -Operation 'set' -Log $log
             Write-XmipDeployLine -Step $next -Result $result -Index -1 @line
+            $last[$next.Name] = $result
             if ($result.InDesiredState) {
                 $waiting.Remove($next) | Out-Null
-                [pscustomobject] $result
             }
         }
+    }
+    # Each step's last result, once, after the lines, so a table never splits them.
+    foreach ($each in $step) {
+        [pscustomobject] $last[$each.Name]
     }
 }
 
@@ -226,25 +232,36 @@ function Invoke-XmipDeployStep {
         $env:PATH = $path
     }
     $json | Add-Content -LiteralPath $trace
+    [int] $seconds = ([datetime]::UtcNow - $begun).TotalSeconds
+    [string[]] $errors = @(Get-Content -LiteralPath $trace -Tail 200 |
+        Where-Object { $_ -match 'ERROR' } | Select-Object -Last 3)
+    [bool] $elevation = ($errors -join ' ') -match 'Elevated security context required'
+    if ($exit -ne 0 -and $Operation -eq 'test' -and -not $elevation) {
+        # Some resources (HyperVDsc's DVD drives, NetworkingDsc's address)
+        # throw when tested before what they build on exists, as on a fresh
+        # host; set makes that first. Testing says so and goes on.
+        return @{ Step = $Step.Name; InDesiredState = $false; Seconds = $seconds
+            Note = 'cannot be tested until the steps before it are made' }
+    }
     if ($exit -ne 0) {
-        [string[]] $errors = @(Get-Content -LiteralPath $trace -Tail 200 |
-            Where-Object { $_ -match 'ERROR' } | Select-Object -Last 3)
         throw "REFUSED: $($Step.Name): dsc $Operation exit $exit. $($errors -join ' ') ($trace)"
     }
     [object[]] $results = @(($json | ConvertFrom-Json -AsHashtable)['results'])
     [object[]] $differ = @($results | Where-Object { -not $_['result']['inDesiredState'] })
-    [bool] $inDesiredState = $differ.Count -eq 0
     return @{
         Step = $Step.Name
-        InDesiredState = $inDesiredState
-        Seconds = [int] ([datetime]::UtcNow - $begun).TotalSeconds
+        InDesiredState = $differ.Count -eq 0
+        Seconds = $seconds
+        Note = ''
     }
 }
 
 function Write-XmipDeployLine {
     <#
-        One line per step: which, how it stands, and the time left at the
-        pace so far. -Index -1 is a round of waiting for an installation.
+        One line per step: the departure, expected and actual, and the
+        estimated arrival, clock times; the time elapsed, left and in all;
+        then which step and how it stands. -Index -1 is a round of waiting
+        for an installation, whose end is not known.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -265,17 +282,30 @@ function Write-XmipDeployLine {
         [datetime] $Started
     )
 
-    [timespan] $elapsed = [datetime]::UtcNow - $Started
-    [string] $state = if ($Result.InDesiredState) { 'in its desired state' } else {
-        'not yet in its desired state'
-    }
-    [string] $where = if ($Index -ge 0) {
-        [timespan] $left = [timespan]::FromSeconds(
+    [datetime] $now = [datetime]::UtcNow
+    [timespan] $elapsed = $now - $Started
+    [string] $state = if ($Result.InDesiredState) { 'in its desired state' }
+    elseif ($Result.Note) { "not yet in its desired state, $($Result.Note)" }
+    else { 'not yet in its desired state' }
+    # The departure, expected and actual, is the command's start; the arrival
+    # is estimated at the pace so far. A round of waiting has no estimate.
+    [string] $departure = $Started.ToLocalTime().ToString('HH:mm')
+    [string] $left = 'unknown'
+    [string] $total = 'unknown'
+    [string] $eta = 'unknown'
+    if ($Index -ge 0) {
+        [timespan] $remaining = [timespan]::FromSeconds(
             $elapsed.TotalSeconds / ($Index + 1) * ($Count - $Index - 1))
-        "ETA $($left.ToString('hh\:mm\:ss')), step $($Index + 1) of $Count"
+        $left = $remaining.ToString('h\:mm\:ss')
+        $total = ($elapsed + $remaining).ToString('h\:mm\:ss')
+        $eta = $now.Add($remaining).ToLocalTime().ToString('HH:mm')
     }
-    else {
-        "waiting, $($elapsed.ToString('hh\:mm\:ss')) so far"
-    }
-    Write-Host -Object "$where`: $($Step.Name) $state ($($Result.Seconds) s)"
+    [string] $place = if ($Index -ge 0) { "step $($Index + 1) of $Count" } else { 'waiting' }
+    # A middle dot between the fields, written by its code point.
+    [string] $dot = " $([char] 0x00B7) "
+    [string] $times = @(
+        "ETD: $departure", "ATD: $departure", "ETA: $eta"
+        "Elapsed: $($elapsed.ToString('h\:mm\:ss'))", "Left: $left", "Total: $total"
+    ) -join $dot
+    Write-Host -Object "$times$dot${place}: $($Step.Name) $state ($($Result.Seconds) s)"
 }
