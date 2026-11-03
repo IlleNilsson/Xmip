@@ -1390,3 +1390,12 @@ package at its latest release, a major included, sets `engines.vscode` to
 the `@types/vscode` it installed, compiles and tests, and hands back
 `package.json` and `package-lock.json` as an artifact to land. It never
 pushes; the workflow reads the repository only.
+
+## Amendment, 2026-11-03: VS Code opens the Operations Web
+
+The owner, 2026-11-03, asked whether VS Code has an operations view: *It
+will need it. Developers needs to see what happens with their changes* —
+and *We have operations Web, just incorporate that.* The extension's command
+**Xmip: Open Operations** opens the Operations Web in VS Code's own browser
+view at the address the `xmip.operations.url` setting names, required; no
+page is drawn twice, and the shell holds no rule for finding the address.
