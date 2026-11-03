@@ -12,6 +12,10 @@
 
     "git.openRepositoryInParentFolders": "never",
     "git.repositoryScanMaxDepth": 4,
+    // .local-work and .ai-interaction are ignored by git and never part of
+    // the estate; a clone there showed in the Source Control view as 119
+    // changes nobody could land (2026-11-03).
+    "git.repositoryScanIgnoredFolders": ["node_modules", ".local-work", ".ai-interaction"],
     "scm.alwaysShowRepositories": true,
 
     // 43 repositories times target/ is a large number of files nobody wants
