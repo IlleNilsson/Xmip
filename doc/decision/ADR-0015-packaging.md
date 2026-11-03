@@ -799,3 +799,48 @@ generic `administration` one, by the owner's rule that every type of data
 has its own table and columns. Added in place at schema version 1, since
 nothing is released (open problem 41); the scripts under
 `deploy/database/<server>/` are written again from the one definition.
+
+## Amendment, 2026-11-03: the machines in one command, on Hyper-V or libvirt
+
+The owner, 2026-11-03: *It should be easy, now it is hard*; *one should be
+able to set up the Core.Playground on virtual servers with msdsc or Ansible
+by a command*; *From whatever platform, you should be able fire up the test
+environment with DSC*; and of the language of what manages it: *.NET or
+PowerShell. That is for management, Rust is for runtime.*
+
+**One command.** `Deploy-XmipEnvironment -Path <environment.toml>` makes an
+environment's machines and waits until each is installed. The environment
+file is TOML, Xmip's configuration: the hypervisor, whose template it
+selects (`deploy/dsc/msdsc/<hypervisor>`), the network, the images and the
+machines, with the nodes each runs. It applies the template's
+`network.dsc.yaml`, then `machine.dsc.yaml` once per machine, each on its
+own with the parameters it declares, and applies a machine's again every
+thirty seconds while it installs. One line per step says the time left.
+`-WhatIf` tests and changes nothing. `environment.example.dsc.yaml` and
+its parameters, which included each machine with `Microsoft.DSC/Include`,
+are deleted: DSC reads an included document's state before it sets
+anything, and NetworkingDsc's address and HyperVDsc's DVD drives throw
+where the switch or VM is not yet there.
+
+**Hyper-V keeps its DSC resources.** HyperVDsc and NetworkingDsc stay, run
+through the Windows PowerShell adapter; that adapter needs the machine's
+execution policy at RemoteSigned, set once. The documents ask for
+elevation with the `securityContext` directive, DSC 3.3's form.
+
+**libvirt, for a Linux host.** DSC v3 has no resource for libvirt and none
+is published (checked 2026-11-03), so `deploy/dsc/msdsc/libvirt` brings
+three of Xmip's own, in PowerShell 7 behind manifests as `Xmip.Node` is:
+`Xmip.Libvirt/Network` (NAT, and DHCP and DNS giving each machine its
+address and name and answering the nodes' and the cluster's names, so no
+DNS server of the environment's own is needed), `Xmip.Libvirt/Pool` and
+`Xmip.Libvirt/Machine`. It ran on 2026-11-03 in the WSL AlmaLinux guest:
+XMIP-IN01 installed unattended through Secure Boot in seven minutes. A TPM
+is given where the host has one to give, never required (the owner, the
+same day: *TPM should not be required, just a plus*). A macOS host is not
+written yet.
+
+**The answers are one code for both.** The Windows answer file, the
+kickstart and the answer medium moved to `deploy/dsc/msdsc/answer`; the MAC
+prefix and the guest services' package are each hypervisor's, and the
+medium is written with the image mastering API where the host has it, with
+xorriso otherwise.

@@ -1,0 +1,107 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Libvirt/Machine
+version: '0.1.0'
+description: >-
+  One machine as a libvirt domain, installed unattended from its operating
+  system's ISO.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - set
+  input: stdin
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - address
+      - memoryGB
+      - cpu
+      - diskGB
+      - pool
+      - network
+      - image
+    properties:
+      name:
+        description: 'The machine''s name, its domain''s and its computer''s.'
+        type: string
+      environment:
+        description: 'The environment''s name, written in the domain''s description.'
+        type: string
+      address:
+        type: string
+      memoryGB:
+        type: integer
+      cpu:
+        type: integer
+      diskGB:
+        type: integer
+      pool:
+        type: string
+      network:
+        description: 'name, gateway, prefixLength and dnsServer.'
+        type: object
+      image:
+        description: 'path, sha256, family (Windows or Linux) and edition.'
+        type: object
+      domainName:
+        type: string
+      linuxAccount:
+        type: string
+      sshPublicKeyPath:
+        type: string
+      credentialPath:
+        type: string
+      installation:
+        readOnly: true
+        type: string
+      running:
+        readOnly: true
+        type: boolean
+      findings:
+        readOnly: true
+        type: array
+      _inDesiredState:
+        type: boolean
+        readOnly: true

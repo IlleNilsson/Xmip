@@ -8,7 +8,11 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path -Path $PSScriptRoot -ChildPath 'MachineAnswer.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath '../answer/MachineAnswer.ps1')
+
+# Hyper-V's MAC prefix: the adapters' static MACs end in the address's last
+# three octets (MachineAnswer.ps1).
+$script:MacPrefix = '00155D'
 
 # Where the VM's drives sit on SCSI controller 0: the disk VMHyperV attaches
 # first, then the two DVD drives machine.dsc.yaml adds.
@@ -30,7 +34,7 @@ function Get-MachineHardwareFinding {
     )
 
     [string] $name = $Machine.name
-    [string] $mac = Get-MachineMacAddress -Address $Machine.address
+    [string] $mac = Get-MachineMacAddress -Address $Machine.address -Prefix $script:MacPrefix
     if (@(Get-VMNetworkAdapter -VMName $name).MacAddress -notcontains $mac) {
         Write-Output -InputObject "${name}: its adapter has not the static MAC $mac."
     }
@@ -71,7 +75,7 @@ function Set-MachineHardware {
     if (-not $PSCmdlet.ShouldProcess($name, 'Set the static MAC, firmware and TPM')) {
         return
     }
-    [string] $mac = Get-MachineMacAddress -Address $Machine.address
+    [string] $mac = Get-MachineMacAddress -Address $Machine.address -Prefix $script:MacPrefix
     Set-VMNetworkAdapter -VMName $name -StaticMacAddress $mac
     [object[]] $drives = @(
         Get-VMHardDiskDrive -VMName $name -ControllerLocation $script:DiskLocation
@@ -205,7 +209,12 @@ function Start-MachineInstallation {
         throw "REFUSED: $iso has SHA-256 $hash, not $($Machine.image.sha256)."
     }
     [string] $answer = Get-MachineAnswerPath -Machine $Machine
-    [hashtable] $medium = Get-MachineAnswerMedium -Machine $Machine
+    [hashtable] $asked = @{
+        Machine = $Machine
+        MacAddress = Get-MachineMacAddress -Address $Machine.address -Prefix $script:MacPrefix
+        GuestPackage = 'hyperv-daemons'
+    }
+    [hashtable] $medium = Get-MachineAnswerMedium @asked
     New-MachineAnswerMedium -Path $answer -Medium $medium -Confirm:$false
     [string] $name = $Machine.name
     [hashtable] $drive = @{ VMName = $name; ControllerNumber = 0 }

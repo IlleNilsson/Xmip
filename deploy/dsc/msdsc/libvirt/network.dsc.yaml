@@ -1,0 +1,38 @@
+# The network and pool an environment's machines share on one libvirt host:
+# a network with NAT whose DHCP and DNS give each machine its address and
+# name and answer the names the environment adds, and a directory pool for
+# the machines' disks, images and answer media. README.md says how to run it.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+parameters:
+  environment:
+    type: string
+    description: The environment's name; the pool is named for it.
+  root:
+    type: string
+    description: The pool's directory on the host, which libvirt makes.
+  network:
+    type: object
+    description: >-
+      name (the network's in libvirt), bridge (at most fifteen characters),
+      gateway (the host's address on it) and prefixLength.
+  machines:
+    type: array
+    description: Each machine, its name and address.
+  names:
+    type: array
+    description: The names the environment adds, each a name and its addresses.
+resources:
+  - name: Network
+    type: Xmip.Libvirt/Network
+    properties:
+      name: "[parameters('network').name]"
+      bridge: "[parameters('network').bridge]"
+      gateway: "[parameters('network').gateway]"
+      prefixLength: "[parameters('network').prefixLength]"
+      machines: "[parameters('machines')]"
+      names: "[parameters('names')]"
+  - name: Pool
+    type: Xmip.Libvirt/Pool
+    properties:
+      name: "[parameters('environment')]"
+      path: "[parameters('root')]"

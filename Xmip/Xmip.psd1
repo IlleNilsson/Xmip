@@ -54,6 +54,7 @@
         'Get-XmipSourceFile'
         'New-XmipEstateMap'
         'Get-XmipHistory'
+        'Deploy-XmipEnvironment'
         'Start-XmipTest'
         'Get-XmipTestStatus'
         'Stop-XmipTest'

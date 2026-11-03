@@ -16,8 +16,8 @@ amendment 2026-10-21); the domain and PostgreSQL are not written yet.
 
 ## The example environment
 
-`environment.example.dsc.yaml` and `environment.example.parameters.yaml`
-describe ten machines:
+`environment.example.toml`, which `Deploy-XmipEnvironment` reads,
+describes ten machines:
 
 | Machine | Operating system | Role | Memory | CPUs | Disk | Address |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -92,11 +92,20 @@ Save-PSResource -Name HyperVDsc -Prerelease -Repository PSGallery -Path $modules
 Save-PSResource -Name NetworkingDsc -Repository PSGallery -Path $modules -TrustRepository
 ```
 
-The three ISOs go where the parameters name them, under
+The two Windows PowerShell DSC modules run in Windows PowerShell 5.1 through
+DSC's adapter, whose default execution policy refuses every script; the
+policy for the user alone was not enough (2026-11-03), so it is set for the
+machine, once, in the same console:
+
+```powershell
+powershell.exe -NoProfile -Command 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force'
+```
+
+The ISOs go where the environment file names them, under
 `D:\Downloads\OS\Images`. Then, as the Windows user that will run DSC, not
 elevated: the Administrator credential of the Windows machines, encrypted to
 that user on this host, the SSH key of the AlmaLinux machines, and the
-parameters copied to where they are yours:
+environment file copied to where it is yours:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\hyperv'
@@ -104,35 +113,35 @@ New-Item -ItemType Directory -Force -Path "$local\ssh"
 Get-Credential -UserName 'Administrator' -Message 'The Windows machines' |
     Export-Clixml -LiteralPath "$local\credential.xml"
 ssh-keygen -t ed25519 -N '' -f "$local\ssh\xmip"
-[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.parameters.yaml'
-Copy-Item -LiteralPath $example -Destination "$local\environment.parameters.yaml"
+[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.toml'
+Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
 ```
 
-In the copy, write in `linuxAccount` under `common`: the account the
-kickstart creates on the AlmaLinux machines. It is not decided, so the
-example has none, and the documents refuse to run without it.
+In the copy, write in `linux_account`, the account the kickstart creates on
+the AlmaLinux machines, `ssh_public_key` and `credential`, and strike the
+machines you do not want.
 
 ## Running it
 
 In an elevated Xmip PowerShell Console, as the same user; the documents
-refuse to run unelevated. `test` says what differs, `set` makes it so:
+refuse to run unelevated. One command makes the network and every machine,
+and waits until each is installed; `-WhatIf` says what differs and changes
+nothing:
 
 ```powershell
-[string] $environment = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.dsc.yaml'
-[string] $parameters = 'D:\Repos\Xmip\.local-work\hyperv\environment.parameters.yaml'
-dsc config --parameters-file $parameters test --file $environment
-dsc config --parameters-file $parameters set --file $environment
+Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
+Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
 ```
 
-The first `set` makes the network and every VM and starts each installing.
-An installation runs on its own; run `set` again once the machines have
-installed, and `test` reports each installed, its media gone, and running.
-
-Another environment is a copy of `environment.example.dsc.yaml` with its own
-machines, one `Microsoft.DSC/Include` of `machine.dsc.yaml` each: DSC v3 is
-moving away from loops in a document
-([PowerShell/DSC#1429](https://github.com/PowerShell/DSC/issues/1429)), so
-each machine is written out.
+It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,
+each on its own with the parameters it declares, and writes one line per
+step with the time left. It does not use `Microsoft.DSC/Include`: DSC reads
+an included document's state before it sets anything, and NetworkingDsc's
+address and HyperVDsc's DVD drives throw where the switch or the VM is not
+there yet. An installation runs on its own; while a machine installs, its
+document is applied again every thirty seconds until it is installed, its
+media gone, and running. Everything DSC says goes to
+`.local-work\deploy\<environment>\run.log`.
 
 ## The files
 
@@ -140,11 +149,10 @@ each machine is written out.
 | --- | --- |
 | `network.dsc.yaml` | the switch, the host's address on it, NAT |
 | `machine.dsc.yaml` | one machine: folder, disk, VM, DVD drives, hardware, installation |
-| `environment.example.dsc.yaml` | the example environment: the network and its ten machines |
-| `environment.example.parameters.yaml` | what the example's machines share |
+| `environment.example.toml` | the example environment: the network and its ten machines, as `Deploy-XmipEnvironment` reads it |
 | `HyperVMachine.ps1` | the hardware and the installation, run by `machine.dsc.yaml` |
-| `MachineAnswer.ps1` | the install answers and the answer medium |
-| `autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
+| `../answer/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
+| `../answer/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
 
 The resources, and where a script stands in for one:
 
@@ -163,15 +171,15 @@ The resources, and where a script stands in for one:
 The Windows PowerShell DSC modules run through the
 [`Microsoft.Adapter/WindowsPowerShell`][adapter]
 adapter, the scripts through `Microsoft.DSC.Transitional/PowerShellScript` in
-PowerShell 7; the machines are included with
-[`Microsoft.DSC/Include`][include].
+PowerShell 7. The documents ask for elevation with the `securityContext`
+directive, the form DSC 3.3 reads.
 HyperVDsc is [dsccommunity/HyperVDsc](https://github.com/dsccommunity/HyperVDsc),
 NetworkingDsc [dsccommunity/NetworkingDsc](https://github.com/dsccommunity/NetworkingDsc).
 
 `test/MsdscHyperV.Test.ps1` holds what can be held without Hyper-V: the
-documents read as YAML by DSC, their parameters, the example environment
-evaluated by DSC with every resource replaced by an echo, this table of
+documents read as YAML by DSC, their parameters, the example environment as
+`Deploy-XmipEnvironment` applies it, each step evaluated by DSC with every
+resource replaced by an echo, this table of
 machines against it, the install answers and the answer medium.
 
 [adapter]: https://learn.microsoft.com/powershell/dsc/reference/resources/microsoft/windows/windowspowershell
-[include]: https://learn.microsoft.com/powershell/dsc/reference/resources/microsoft/dsc/include

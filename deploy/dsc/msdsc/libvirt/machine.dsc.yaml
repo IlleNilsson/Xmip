@@ -1,0 +1,55 @@
+# One machine on a libvirt host, installed unattended from its operating
+# system's ISO into the environment's pool and network (network.dsc.yaml).
+# Deploy-XmipEnvironment applies it once per machine; README.md says how.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+parameters:
+  environment:
+    type: string
+    description: The environment's name, its pool's and each domain's description.
+  credentialPath:
+    type: string
+    description: The Administrator credential of the Windows machines, Export-Clixml.
+  sshPublicKeyPath:
+    type: string
+    description: The ed25519 public key the AlmaLinux machines' account is given.
+  linuxAccount:
+    type: string
+    description: The account the kickstart creates on the AlmaLinux machines.
+  domainName:
+    type: string
+    description: The DNS domain; an AlmaLinux machine's host name is in it.
+  network:
+    type: object
+    description: name, gateway, prefixLength and dnsServer.
+  image:
+    type: object
+    description: The ISO the machine installs from, path, sha256, family and edition.
+  name:
+    type: string
+    description: The machine's name, its domain's and its computer's.
+  address:
+    type: string
+    description: The machine's IPv4 address on the network.
+  memoryGB:
+    type: int
+  cpu:
+    type: int
+  diskGB:
+    type: int
+resources:
+  - name: Machine
+    type: Xmip.Libvirt/Machine
+    properties:
+      name: "[parameters('name')]"
+      environment: "[parameters('environment')]"
+      address: "[parameters('address')]"
+      memoryGB: "[parameters('memoryGB')]"
+      cpu: "[parameters('cpu')]"
+      diskGB: "[parameters('diskGB')]"
+      pool: "[parameters('environment')]"
+      network: "[parameters('network')]"
+      domainName: "[parameters('domainName')]"
+      linuxAccount: "[parameters('linuxAccount')]"
+      sshPublicKeyPath: "[parameters('sshPublicKeyPath')]"
+      credentialPath: "[parameters('credentialPath')]"
+      image: "[parameters('image')]"

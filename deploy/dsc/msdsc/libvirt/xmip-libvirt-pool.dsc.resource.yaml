@@ -1,0 +1,71 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Libvirt/Pool
+version: '0.1.0'
+description: >-
+  A directory pool libvirt keeps for the machines' disks, images and answer
+  media.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Pool
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Pool
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Pool
+    - -Operation
+    - set
+  input: stdin
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - path
+    properties:
+      name:
+        description: 'The pool''s name in libvirt.'
+        type: string
+      path:
+        description: 'Its directory on the host, which libvirt makes.'
+        type: string
+      findings:
+        readOnly: true
+        type: array
+      _inDesiredState:
+        type: boolean
+        readOnly: true
