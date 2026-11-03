@@ -1,0 +1,87 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Libvirt/Network
+version: '0.1.0'
+description: >-
+  A libvirt network with NAT, the host its gateway, whose DHCP and DNS give
+  each machine its address and name, and answer the names the environment
+  adds.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./libvirt.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - set
+  input: stdin
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - bridge
+      - gateway
+      - prefixLength
+    properties:
+      name:
+        description: 'The network''s name in libvirt.'
+        type: string
+      bridge:
+        description: 'The bridge the host makes for it, at most fifteen characters.'
+        type: string
+      gateway:
+        description: 'The host''s address on it.'
+        type: string
+      prefixLength:
+        type: integer
+      machines:
+        description: >-
+          Each machine, its name and address: a DHCP host by its static MAC,
+          and a DNS host.
+        type: array
+      names:
+        description: 'The names the environment adds: each a name and its addresses.'
+        type: array
+      findings:
+        readOnly: true
+        type: array
+      _inDesiredState:
+        type: boolean
+        readOnly: true

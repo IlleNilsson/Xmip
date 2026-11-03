@@ -31,12 +31,12 @@ BeforeAll {
     . (Join-Path $script:Template 'HyperVMachine.ps1')
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
-    [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml',
-        'environment.example.dsc.yaml')
+    [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml')
+    [string] $script:ExamplePath = Join-Path $script:Template 'environment.example.toml'
 
 
     # A copy of a document, in YAML, whose every instance is an Echo of its
-    # properties, so evaluating it changes nothing; Includes stay.
+    # properties, so evaluating it changes nothing.
     function Write-EchoDocument {
         param(
             [Parameter(Mandatory = $true)]
@@ -44,13 +44,9 @@ BeforeAll {
         )
 
         [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $Name)
-        $document.Remove('metadata')
+        # The elevated security context is the real run's; an Echo needs none.
+        $document.Remove('directives')
         $document.resources = @(foreach ($instance in $document.resources) {
-            if ($instance.type -eq 'Microsoft.DSC/Include') {
-                $instance.Remove('dependsOn')
-                $instance
-                continue
-            }
             [hashtable] $output = @{ type = $instance.type; properties = $instance.properties }
             @{ name = $instance.name; type = 'Microsoft.DSC.Debug/Echo'
                 properties = @{ output = $output } }
@@ -58,40 +54,55 @@ BeforeAll {
         Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
-    # The example environment evaluated: each machine's Echo results by name.
+    # The example environment as Deploy-XmipEnvironment applies it, one
+    # document per step with the parameters it declares, each evaluated by
+    # DSC as Echoes: each step's Echo results by instance name.
     function Invoke-EchoEnvironment {
         foreach ($name in $script:Document) {
             Write-EchoDocument -Name $name
         }
-        [hashtable] $parameters = Read-XmipTestYaml -Path (
-            Join-Path $script:Template 'environment.example.parameters.yaml')
-        $parameters.parameters.common.template = [string] $TestDrive
-        $parameters.parameters.common.linuxAccount = 'account'
-        [string] $file = Join-Path $TestDrive 'parameters.yaml'
-        Write-XmipTestYaml -Path $file -Value $parameters
-        [string] $environment = Join-Path $TestDrive 'environment.example.dsc.yaml'
-        [string] $json = dsc config --parameters-file $file get --file $environment
-        if ($LASTEXITCODE -ne 0) {
-            throw 'dsc could not evaluate the example environment.'
-        }
+        [hashtable[]] $steps = @(InModuleScope Xmip -Parameters @{
+            Path = $script:ExamplePath; Template = [string] $TestDrive
+        } {
+            param($Path, $Template)
+            $environment = Read-XmipToml -Path $Path
+            $environment['linux_account'] = 'account'
+            Get-XmipDeployStep -Environment $environment -Template $Template
+        })
         [hashtable] $result = @{}
-        foreach ($include in ($json | ConvertFrom-Json -AsHashtable).results) {
+        foreach ($step in $steps) {
+            [Collections.IDictionary] $declared = (
+                Read-XmipTestYaml -Path $step.Document).parameters
+            [hashtable] $value = @{}
+            foreach ($name in $declared.Keys) {
+                $value[$name] = $step.Value[$name]
+            }
+            [string] $file = Join-Path $TestDrive "$($step.Name).parameters.yaml"
+            Write-XmipTestYaml -Path $file -Value @{ parameters = $value }
+            [string] $json = dsc config --parameters-file $file get --file $step.Document
+            if ($LASTEXITCODE -ne 0) {
+                throw "dsc could not evaluate the example's $($step.Name)."
+            }
             [hashtable] $instance = @{}
-            foreach ($echo in $include.result) {
+            foreach ($echo in ($json | ConvertFrom-Json -AsHashtable).results) {
                 $instance[$echo.name] = $echo.result.actualState.output
             }
-            $result[$include.name] = $instance
+            $result[$step.Name] = $instance
         }
         return $result
     }
 
     if ($script:HasDsc) {
         $script:Parsed = @{}
-        foreach ($name in $script:Document + 'environment.example.parameters.yaml') {
+        foreach ($name in $script:Document) {
             $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
         }
+        $script:Example = InModuleScope Xmip -Parameters @{ Path = $script:ExamplePath } {
+            param($Path)
+            Read-XmipToml -Path $Path
+        }
         $script:Evaluated = Invoke-EchoEnvironment
-        $script:Machine = @($script:Evaluated.Keys | Where-Object { $_ -ne 'Network' } |
+        $script:Machine = @($script:Evaluated.Keys | Where-Object { $_ -ne 'network' } |
             Sort-Object | ForEach-Object {
                 [pscustomobject] $script:Evaluated[$_]['Installation'].properties.input
             })
@@ -105,13 +116,12 @@ Describe 'The documents' {
         }
     }
 
-    It 'parses <_> as YAML' -ForEach @('network.dsc.yaml', 'machine.dsc.yaml',
-        'environment.example.dsc.yaml', 'environment.example.parameters.yaml') {
+    It 'parses <_> as YAML' -ForEach @('network.dsc.yaml', 'machine.dsc.yaml') {
         $script:Parsed[$_] | Should -Not -BeNullOrEmpty
     }
 
     It 'declares in <_> every parameter it uses, and uses every one' -ForEach @(
-        'network.dsc.yaml', 'machine.dsc.yaml', 'environment.example.dsc.yaml') {
+        'network.dsc.yaml', 'machine.dsc.yaml') {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Template $_) -Raw
         [string[]] $used = @([regex]::Matches($text, "parameters\('(\w+)'\)") |
             ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
@@ -120,7 +130,7 @@ Describe 'The documents' {
     }
 
     It 'depends in <_> only on its own instances' -ForEach @(
-        'network.dsc.yaml', 'machine.dsc.yaml', 'environment.example.dsc.yaml') {
+        'network.dsc.yaml', 'machine.dsc.yaml') {
         [object[]] $resources = $script:Parsed[$_].resources
         [string[]] $own = @($resources | ForEach-Object { "$($_.type)|$($_.name)" })
         [string[]] $named = @($resources | Where-Object { $_.Contains('dependsOn') } |
@@ -139,17 +149,16 @@ Describe 'The example environment' {
     }
 
     It 'gives the network every value it asks for' {
-        [hashtable] $network = $script:Evaluated['Network']
+        [hashtable] $network = $script:Evaluated['network']
         $network['Switch'].properties.Name | Should -Be 'Xmip'
         $network['Gateway'].properties.IPAddress | Should -Be @('10.77.0.1/24')
         $network['Nat'].properties.input.prefix | Should -Be '10.77.0.0/24'
     }
 
     It 'gives each machine a VM of its own values' {
-        [hashtable] $example = $script:Parsed['environment.example.parameters.yaml']
-        [string] $root = $example.parameters.common.root
+        [string] $root = $script:Example['root']
         foreach ($machine in $script:Machine) {
-            [hashtable] $vm = $script:Evaluated[$machine.name -replace '-', ' ']
+            [hashtable] $vm = $script:Evaluated[$machine.name]
             # DSC's path() joins with a backslash on Windows.
             [string] $directory = "$root\$($machine.name)"
             $vm['Virtual machine'].properties.VhdPath | Should -Be "$directory\os.vhdx"
@@ -162,15 +171,16 @@ Describe 'The example environment' {
     It 'has unique names, addresses and MACs, every address on the network' {
         # ForEach-Object, not .address: an array's .Address is its own method.
         [string[]] $addresses = @($script:Machine | ForEach-Object { $_.address })
-        [string[]] $macs = @($addresses | ForEach-Object { Get-MachineMacAddress -Address $_ })
+        [string[]] $macs = @($addresses | ForEach-Object {
+            Get-MachineMacAddress -Address $_ -Prefix '00155D' })
         $script:Machine.Count | Should -Be 10
         @($script:Machine | ForEach-Object { $_.name } | Sort-Object -Unique).Count |
             Should -Be 10
         @($addresses | Sort-Object -Unique).Count | Should -Be 10
         @($macs | Sort-Object -Unique).Count | Should -Be 10
-        [object] $network = $script:Parsed['environment.example.parameters.yaml'].parameters.network
-        [string] $mask = Get-MachineNetmask -PrefixLength $network.prefixLength
-        [uint32] $want = ([ipaddress] ($network.prefix -replace '/.*$')).Address
+        [string] $prefix = $script:Example['network']['prefix']
+        [string] $mask = Get-MachineNetmask -PrefixLength ([int] ($prefix -replace '^.*/', ''))
+        [uint32] $want = ([ipaddress] ($prefix -replace '/.*$')).Address
         $addresses | Where-Object {
             (([ipaddress] $_).Address -band ([ipaddress] $mask).Address) -ne $want
         } | Should -BeNullOrEmpty
@@ -211,9 +221,16 @@ Describe 'The install answers' {
     It 'gives each AlmaLinux machine a kickstart with its host name, address and key' {
         [string] $key = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDummyKeyForTheTestOnly'
         foreach ($machine in @($script:Machine | Where-Object { $_.image.family -eq 'Linux' })) {
-            [string] $kickstart = Get-MachineKickstart -Machine $machine -PublicKey $key
-            [string] $mac = (Get-MachineMacAddress -Address $machine.address) -replace (
-                '(..)(?!$)'), '$1:'
+            [string] $raw = Get-MachineMacAddress -Address $machine.address -Prefix '00155D'
+            [hashtable] $asked = @{
+                Machine = $machine
+                PublicKey = $key
+                MacAddress = $raw
+                GuestPackage = 'hyperv-daemons'
+            }
+            [string] $kickstart = Get-MachineKickstart @asked
+            [string] $mac = $raw -replace '(..)(?!$)', '$1:'
+            $kickstart | Should -Match '(?m)^hyperv-daemons$'
             [string] $hostName = "$($machine.name.ToLowerInvariant()).xmip.test"
             $kickstart | Should -Match "--device=$mac --bootproto=static --ip=$($machine.address) "
             $kickstart | Should -Match '--netmask=255\.255\.255\.0 --gateway=10\.77\.0\.1 '

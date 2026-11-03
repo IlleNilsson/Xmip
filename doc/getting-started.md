@@ -697,11 +697,11 @@ one. Each README says each step in full.
 1. **E** Hyper-V, DSC and the two DSC modules, then restart the computer
    (`deploy/dsc/msdsc/hyperv/README.md`, *Before the first run*).
 2. The Windows machines' Administrator credential, the AlmaLinux machines'
-   SSH key and the Hyper-V parameters (the same section).
-3. **E** The machines: `dsc config --parameters-file
-   D:\Repos\Xmip\.local-work\hyperv\environment.parameters.yaml set --file
-   D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.dsc.yaml`, and
-   again once they have installed (*Running it*).
+   SSH key and the environment file (the same section).
+3. **E** The machines, made and installed in one command:
+   `Deploy-XmipEnvironment -Path
+   D:\Repos\Xmip\.local-work\deploy\hyperv.toml` (*Running it*). On a Linux
+   host, the libvirt template does the same (`deploy/dsc/msdsc/libvirt/README.md`).
 4. **E** On each machine once, as its Administrator or with sudo:
    PowerShell 7.7 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).

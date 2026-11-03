@@ -4,9 +4,8 @@
 # set, and the installation itself. An environment document includes it once
 # per machine; README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
-metadata:
-  Microsoft.DSC:
-    securityContext: elevated
+directives:
+  securityContext: elevated
 parameters:
   template:
     type: string

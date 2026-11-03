@@ -565,7 +565,7 @@ amendment 2026-10-19).
 | --- | --- | --- | --- |
 | PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`) and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the same | the same |
+| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`), made by `Deploy-XmipEnvironment`, and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the machines on KVM through libvirt (`libvirt`), by the same command; the rest the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The environment templates put a cluster's nodes on machines of their own,
@@ -1058,6 +1058,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
+| `Deploy-XmipEnvironment` | Make an environment's machines with Microsoft DSC v3 from one TOML file: the network, then each machine installed from its ISO, on Hyper-V or libvirt (`deploy/dsc/msdsc/<hypervisor>`); `-WhatIf` tests. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |

@@ -1,0 +1,38 @@
+# The Playground's machines on a Linux host's KVM, through libvirt: what
+# Deploy-XmipEnvironment reads. Copy it to .local-work/deploy/libvirt.toml
+# and write in linux_account and ssh_public_key.
+#
+# The network's DHCP and DNS give each machine its address and name, and
+# answer the names of the nodes each machine runs and of the cluster, so the
+# environment needs no DNS server of its own.
+
+name = "xmip"
+hypervisor = "libvirt"
+# The pool's directory, which libvirt makes and owns.
+root = "/var/lib/libvirt/images/xmip"
+domain = "xmip.test"
+cluster = "C1"
+linux_account = ""
+ssh_public_key = ""
+
+[network]
+name = "xmip"
+bridge = "virbr-xmip"
+prefix = "10.77.0.0/24"
+gateway = "10.77.0.1"
+dns_server = "10.77.0.1"
+nat = true
+
+[images.AlmaLinux10]
+path = "/mnt/d/Downloads/OS/Images/AlmaLinux/AlmaLinux-10.2-x86_64-dvd.iso"
+sha256 = "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
+family = "Linux"
+
+[[machines]]
+name = "XMIP-IN01"
+address = "10.77.0.61"
+image = "AlmaLinux10"
+memory_gb = 4
+cpu = 2
+disk_gb = 32
+nodes = ["R1"]

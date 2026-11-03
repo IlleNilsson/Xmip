@@ -350,6 +350,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Get-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipProcess.ps1')
+. (Join-Path $PSScriptRoot 'Deploy-XmipEnvironment.ps1')
 
 # Xmip.psd1 is the one home of the version and of what is exported: the
 # manifest filters what this exports down to FunctionsToExport and

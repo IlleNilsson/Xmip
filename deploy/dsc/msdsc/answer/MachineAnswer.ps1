@@ -2,8 +2,9 @@
 #requires -Version 7.7.0
 # What an unattended installation reads, written for one machine: Windows
 # Setup's autounattend.xml and Anaconda's kickstart, and the small ISO image
-# that carries them. Each answer is text and nothing else. $Machine is the
-# input machine.dsc.yaml gives its Installation resource.
+# that carries them. Each answer is text and nothing else. One home for every
+# virtualization template (hyperv, libvirt), which dot-sources it; $Machine
+# is the machine as the template's document gives it.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -14,18 +15,23 @@ $script:UnattendComponent = 'processorArchitecture="amd64" ' +
 function Get-MachineMacAddress {
     <#
     .SYNOPSIS
-    The static MAC a machine is given: Hyper-V's prefix 00-15-5D and the last
-    three octets of its address, so a kickstart can match its adapter by MAC.
+    The static MAC a machine is given: its hypervisor's prefix (Hyper-V's
+    00155D, KVM's 525400) and the last three octets of its address, so a
+    kickstart can match its adapter by MAC.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $Address
+        [string] $Address,
+
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^[0-9A-F]{6}$')]
+        [string] $Prefix
     )
 
     [byte[]] $bytes = ([ipaddress]::Parse($Address)).GetAddressBytes()
-    return '00155D{0:X2}{1:X2}{2:X2}' -f $bytes[1], $bytes[2], $bytes[3]
+    return '{0}{1:X2}{2:X2}{3:X2}' -f $Prefix, $bytes[1], $bytes[2], $bytes[3]
 }
 
 function ConvertTo-UnattendPassword {
@@ -108,7 +114,8 @@ function Get-MachineKickstart {
     installing: the host name, the static address on the adapter with the
     machine's static MAC, the network's DNS server, the Linux account with
     the given SSH key, no password and sudo without one, root locked, sshd
-    and firewalld enabled. LF line endings.
+    and firewalld enabled, and the hypervisor's guest services. LF line
+    endings.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -117,11 +124,19 @@ function Get-MachineKickstart {
         [object] $Machine,
 
         [Parameter(Mandatory = $true)]
-        [string] $PublicKey
+        [string] $PublicKey,
+
+        [Parameter(Mandatory = $true)]
+        [string] $MacAddress,
+
+        # The package of the hypervisor's guest services: hyperv-daemons on
+        # Hyper-V, qemu-guest-agent on KVM.
+        [Parameter(Mandatory = $true)]
+        [string] $GuestPackage
     )
 
     [string] $hostName = "$($Machine.name.ToLowerInvariant()).$($Machine.domainName)"
-    [string] $mac = (Get-MachineMacAddress -Address $Machine.address) -replace '(..)(?!$)', '$1:'
+    [string] $mac = $MacAddress -replace '(..)(?!$)', '$1:'
     [object] $network = $Machine.network
     [string] $netmask = Get-MachineNetmask -PrefixLength $network.prefixLength
     [string] $user = $Machine.linuxAccount
@@ -155,7 +170,7 @@ function Get-MachineKickstart {
         'firewalld'
         'sudo'
         'tar'
-        'hyperv-daemons'
+        $GuestPackage
         '%end'
         ''
         '%post --erroronfail'
@@ -201,7 +216,13 @@ function Get-MachineAnswerMedium {
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $true)]
-        [object] $Machine
+        [object] $Machine,
+
+        [Parameter(Mandatory = $true)]
+        [string] $MacAddress,
+
+        [Parameter(Mandatory = $true)]
+        [string] $GuestPackage
     )
 
     if ($Machine.image.family -eq 'Windows') {
@@ -218,15 +239,37 @@ function Get-MachineAnswerMedium {
     [string] $key = Get-MachinePublicKey -Path $Machine.sshPublicKeyPath
     return @{
         Label = 'OEMDRV'
-        File = [ordered] @{ 'ks.cfg' = Get-MachineKickstart -Machine $Machine -PublicKey $key }
+        File = [ordered] @{
+            'ks.cfg' = Get-MachineKickstart -Machine $Machine -PublicKey $key -MacAddress (
+                $MacAddress) -GuestPackage $GuestPackage
+        }
+    }
+}
+
+function Test-MachineImageMastering {
+    <#
+    .SYNOPSIS
+    Whether this host has the image mastering API: a COM class only Windows
+    registers; elsewhere asking for one is refused, which is the answer too.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
+
+    try {
+        return $null -ne [type]::GetTypeFromProgID('IMAPI2FS.MsftFileSystemImage')
+    }
+    catch [System.PlatformNotSupportedException] {
+        return $false
     }
 }
 
 function New-MachineAnswerMedium {
     <#
     .SYNOPSIS
-    Writes an answer medium as an ISO image (ISO 9660 with Joliet names),
-    through the image mastering API every Windows host has: no tool to install.
+    Writes an answer medium as an ISO image (ISO 9660 with Joliet names):
+    through the image mastering API where the host has it, as every Windows
+    host does, otherwise through xorriso, which virt-install brings.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
@@ -248,6 +291,15 @@ function New-MachineAnswerMedium {
         foreach ($name in $Medium.File.Keys) {
             [string] $file = Join-Path -Path $stage -ChildPath $name
             [IO.File]::WriteAllText($file, $Medium.File[$name], $utf8)
+        }
+        if (-not (Test-MachineImageMastering)) {
+            [string[]] $iso = @('-as', 'mkisofs', '-quiet', '-output', $Path,
+                '-volid', $Medium.Label, '-joliet', '-rational-rock', $stage)
+            & xorriso @iso
+            if ($LASTEXITCODE -ne 0) {
+                throw "REFUSED: xorriso could not write $Path."
+            }
+            return
         }
         [object] $image = New-Object -ComObject IMAPI2FS.MsftFileSystemImage
         # 1 is ISO 9660 and 2 is Joliet: both read by WinPE and by Anaconda.

@@ -2,9 +2,8 @@
 # internal virtual switch, the host's address on it, which is the machines'
 # gateway, and outbound NAT for that prefix. README.md says how to run it.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
-metadata:
-  Microsoft.DSC:
-    securityContext: elevated
+directives:
+  securityContext: elevated
 parameters:
   environment:
     type: string
