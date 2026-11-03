@@ -470,7 +470,7 @@ microsoft/typescript-go releases it for each platform
 Build-XmipService -Extension VsCode compiles the VS Code extension's shell
 with it and packages the VSIX; Node.js is never needed on a developer's
 machine (the owner, 2026-10-22; ADR-0014, amendment 2026-10-22). The shell's
-lint and tests run in its CI alone.
+tests run in its CI alone.
 """
 
 [archive.typescript.windows-x64]

@@ -30,8 +30,8 @@ function Test-XmipExtensionShell {
             checked against the lock's integrity, and its shell and webview
             compiled by the native compiler, an optional developer
             prerequisite (prerequisite.toml, [archive.typescript]). Every
-            rule is the Rust server's and tested in Rust; the shell's lint
-            and tests run in its CI alone, where Node lives in a throwaway
+            rule is the Rust server's and tested in Rust; the shell's tests
+            run in its CI alone, where Node lives in a throwaway
             runner, and are said SKIPPED here.
 
         .PARAMETER Path
@@ -74,7 +74,7 @@ function Test-XmipExtensionShell {
         return $false
     }
 
-    [string] $skipped = "   SKIPPED: the shell's lint and tests run in its CI alone, where " +
+    [string] $skipped = "   SKIPPED: the shell's tests run in its CI alone, where " +
         'Node.js lives in a throwaway runner (ADR-0014, amendment 2026-10-22)'
 
     Write-Host $skipped -ForegroundColor Yellow
