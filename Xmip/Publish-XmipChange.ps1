@@ -253,15 +253,16 @@ function Publish-XmipChange {
         Publish-XmipPin -RepositoryRoot $RepositoryRoot -Message $Message
 
         # Landed is empty and that is correct: it counts modules and no module
-        # changed. Platform says the run did something, because `Landed {}` and
-        # `Verified False` on their own read as a failed run — which is how a
-        # successful landing was reported as nothing happening on 2026-08-29.
+        # changed. Platform says the run did something, because `Landed {}` on
+        # its own reads as a failed run — which is how a successful landing was
+        # reported as nothing happening on 2026-08-29. Verified says whether the
+        # root was tested, as it does for a module landing.
         return [PSCustomObject]@{
             PSTypeName = 'Xmip.Change'
             Landed     = @()
             Skipped    = @()
             Platform   = $true
-            Verified   = $false
+            Verified   = -not $NoVerify
         }
     }
 
