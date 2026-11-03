@@ -1,4 +1,4 @@
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 Set-StrictMode -Version Latest
 

@@ -18,8 +18,8 @@
 
     Description          = 'Tooling for the Xmip estate: prerequisites, GitHub reconciliation and local repositories.'
 
-    # ADR-0021: current platforms only. Core edition, 7.6.7 or later.
-    PowerShellVersion    = '7.6.7'
+    # ADR-0021: current platforms only. Core edition, 7.7.0 or later.
+    PowerShellVersion    = '7.7.0'
     CompatiblePSEditions = @('Core')
 
     # Two modules from the gallery, both declared in prerequisite.toml:

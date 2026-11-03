@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
     The runtime's remote build (ADR-0014, amendment 2026-10-14), built once in

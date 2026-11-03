@@ -563,7 +563,7 @@ amendment 2026-10-19).
 
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
-| PowerShell 7.6.7 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
+| PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
 | Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`) and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
@@ -864,8 +864,7 @@ pin still shows. `Get-XmipStatus` looks inside every module.
 ### Build, test, land
 
 The runtime and modules are Rust on the stable channel. The PowerShell module
-and the GUIs are .NET 11 — the PowerShell module targets `net10.0` because
-`pwsh` hosts it — and so is `xmip` until its Rust replacement, on the
+and the GUIs are .NET 11, which `pwsh` 7.7 hosts, and so is `xmip` until its Rust replacement, on the
 runtime's traits, lands (ADR-0014, amendment 2026-10-12). Spelling, in
 American English, is checked by whoever writes; no tool checks it.
 

@@ -54,7 +54,7 @@ the inventory does. The collections are `ansible.windows` and
 ## Before the first run
 
 The machines are installed (`deploy/dsc/msdsc/hyperv`), XMIP-DC01 runs the
-DNS Server role, PowerShell 7.6 is on every Windows machine, and the
+DNS Server role, PowerShell 7.7 is on every Windows machine, and the
 packages and each node's certificate are made on the host, as
 `deploy/dsc/msdsc/environment/README.md` says under *Before the first run*
 (the certificates under `.local-work/environment/identity/<node>`). The

@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
     A roll builds detached. The owner, 2026-10-13, of Start-XmipTest holding his

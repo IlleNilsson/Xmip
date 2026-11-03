@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
     A wait with no bound turns a failure into a hang, and a hang has no

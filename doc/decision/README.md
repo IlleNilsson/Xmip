@@ -781,9 +781,10 @@ release's upgrade scripts only add (amendment 2026-10-20).
 
 ### Current platforms only
 
-Xmip tracks the current stable release of every platform it depends on and
-carries no compatibility with superseded ones. PowerShell 7.6.7 Core, .NET 11,
-latest stable Rust, Pester 6 (the amendment of 2026-10-19 has every version).
+Xmip tracks the newest release of every platform it depends on and carries
+no compatibility with superseded ones. PowerShell 7.7.0 Core, .NET 11, latest
+stable Rust, Pester 6 (the amendments of 2026-10-19 and 2026-11-02 have every
+version).
 
 **The version numbers are not the decision** — they will be history soon enough.
 The decision is the rule that produced them, which is why `prerequisite.toml`

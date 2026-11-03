@@ -1,10 +1,10 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
     ADR-0021 for .NET: every project the estate ships targets the framework
-    architecture.toml declares, and a project a host loads targets the one
-    that host runs.
+    architecture.toml declares, the PowerShell module and the binding pwsh
+    loads included.
 #>
 
 Describe 'ADR-0021: the .NET surfaces are on the latest target' {
@@ -85,25 +85,14 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
     }
 
     It 'gives every project the target the manifest declares' {
-        # The exception is declared, not assumed. A project under a module
-        # named by hostedBy is loaded by a host that owns the runtime — pwsh
-        # runs .NET 10 and refuses a net11.0 assembly at Import-Module — so it
-        # targets hostedTargetFramework, and so does the one .NET binding it
-        # loads (abi, ADR-0014 amendment 2026-09-09). Everything else takes
-        # the latest.
+        # No exception: the PowerShell module and the binding it loads were
+        # net10.0 while pwsh hosted .NET 10, and pwsh 7.7, the floor, hosts
+        # .NET 11 (ADR-0014, amendment 2026-11-02).
         [string[]] $wrong = @()
-        [string] $hosts = @($script:Policy.hostedBy) -join '|'
+        [string] $expected = $script:Policy.targetFramework
 
         foreach ($file in $script:Csproj) {
             [string] $where = $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
-            [bool] $hosted = $where -match "[\\/]($hosts)[\\/]"
-
-            [string] $expected = if ($hosted) {
-                $script:Policy.hostedTargetFramework
-            }
-            else {
-                $script:Policy.targetFramework
-            }
 
             # A platform suffix is the version, not a different version. A MAUI
             # Windows app must target net11.0-windows10.0.19041.0 — the suffix
@@ -118,7 +107,7 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
                     $actual.StartsWith($suffix, [System.StringComparison]::Ordinal)
 
                 if (-not $ok) {
-                    $wrong += "$where is '$actual', expected '$expected' (hosted: $hosted)"
+                    $wrong += "$where is '$actual', expected '$expected'"
                 }
             }
         }

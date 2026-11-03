@@ -27,9 +27,7 @@ pub fn issue(place: &Path) -> xmip_tls::Identity {
     let authority_pem = std::fs::read_to_string(place.join("authority.pem")).expect("read");
     let authority_key = std::fs::read_to_string(place.join("authority-key.pem")).expect("read");
     let authority_key = rcgen::KeyPair::from_pem(&authority_key).expect("the authority's key");
-    let issuer = authority_params()
-        .self_signed(&authority_key)
-        .expect("the authority again");
+    let issuer = rcgen::Issuer::new(authority_params(), authority_key);
     let key = rcgen::KeyPair::generate().expect("a key");
     let mut params = rcgen::CertificateParams::new(vec!["127.0.0.1".to_string()]).expect("params");
     // Server and client authentication, as a node's certificate is (ADR-0034):
@@ -38,9 +36,7 @@ pub fn issue(place: &Path) -> xmip_tls::Identity {
         rcgen::ExtendedKeyUsagePurpose::ServerAuth,
         rcgen::ExtendedKeyUsagePurpose::ClientAuth,
     ];
-    let leaf = params
-        .signed_by(&key, &issuer, &authority_key)
-        .expect("issued");
+    let leaf = params.signed_by(&key, &issuer).expect("issued");
     xmip_tls::Identity::from_pem(
         leaf.pem().as_bytes(),
         key.serialize_pem().as_bytes(),

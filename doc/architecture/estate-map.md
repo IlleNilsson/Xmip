@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 322493 lines of production
+Where each repository mounts and what it holds: 322476 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -527,7 +527,7 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    2861
+│   │   │   ├── authenticate                    2862
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         595
 │   │   │   │   ├── kerberos                     569
@@ -663,9 +663,9 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             6601
 │   │   │   ├── codec                           2898
-│   │   │   ├── tls                             2446
+│   │   │   ├── tls                             2442
 │   │   │   ├── mariadb                         1764
-│   │   │   ├── ssh                             1755
+│   │   │   ├── ssh                             1756
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
@@ -696,8 +696,8 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31965  C# 29398 · Rust 2271 · PowerShell 296
-│   │   ├── event                               5729
+│   │   ├── abi                                31972  C# 29405 · Rust 2271 · PowerShell 296
+│   │   ├── event                               5720
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                3897
@@ -724,8 +724,8 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37538
-│       ├── persist                            14650
+│       ├── runtime                            37528
+│       ├── persist                            14647
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1

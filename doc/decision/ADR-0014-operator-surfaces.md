@@ -1348,3 +1348,18 @@ proof's old table) is said where it is written, on a node's own Location as
 on a bound one. The extension reaches no node: `xmip-lsp` loads the
 runtime's library and nothing else, so it does not complete a secret's
 names from a node's listing, and none is built for it.
+
+## Amendment, 2026-11-02: what pwsh loads is net11.0 too
+
+PowerShell's floor is 7.7.0 (ADR-0021, amendment 2026-11-02), and pwsh 7.7
+hosts .NET 11, so the exception of 2026-08-30 is gone: the PowerShell module
+and the binding it loads, `Xmip.Abi` and `Xmip.Surface`, target net11.0 like
+every other project, and `architecture.toml` no longer names a hosted target.
+The module compiles against `Microsoft.PowerShell.SDK` 7.7.0-rc.1, PowerShell
+7's own surface, in place of `PowerShellStandard.Library`, Windows PowerShell
+5.1's, and takes only its compile assets: pwsh provides the rest. The
+binding's configuration and Event Log packages follow .NET 11, the copies
+pwsh 7.7 carries, and the test projects no longer roll a net10.0 build
+forward onto .NET 11. The test projects are on xUnit v3, run by VSTest
+through `xunit.runner.visualstudio` (`IsTestingPlatformApplication` false)
+until the estate's `dotnet test` moves to Microsoft's testing platform.

@@ -121,10 +121,18 @@ and it cost real work.
   configuration, YAML is an excuse. JSON and XML are for transfer of
   data.*
 - **While Xmip is designed, everything is the latest release.** Rust, .NET,
-  PowerShell, every crate, package, module and tool: the newest release when
-  the work is done, a floor raised as soon as a release is out. The owner,
+  PowerShell, every crate, package, module and tool: the latest release when
+  the work is done, a release candidate included — PowerShell 7.7.0-rc.x,
+  .NET 11 rc.x, Rust's latest — and every floor set to it the day it is
+  out. Whoever works here tells the
+  owner when an underlying component has a newer release. The owner,
   2026-11-02: *We shall always go with the latest. We are designing. Latest
-  Rust, .NET, and whatever.*
+  Rust, .NET, and whatever*; *Set the latest to what we have. Do that
+  always. Notify me of updates of underlying components*; *7.7.0-rc.x,
+  .NET 11 rc.x, Rust x.* When Xmip is ready for general availability, its
+  first Linear release, every dependency is pinned to its generally available
+  release: *Once Xmip is ready for GA we will nail it to that GA, Linear
+  release.*
 - **Until the first release, nothing is deprecated: it is deleted.** A word,
   a technology, a parameter or a file that is wrong goes, with every use of
   it, in the same change; nothing is marked obsolete, kept for
@@ -193,11 +201,11 @@ prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
 failed.
 
 **The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
-PowerShell Core 7.6.7 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
+PowerShell Core 7.7.0 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
 Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
 .NET 11 SDK, release candidate 3 (11.0.100-rc.3.26522.148) until GA on
-2026-11-10, but the PowerShell binary module targets net10.0 because pwsh
-hosts it (ADR-0014, amendments 2026-08-30, 2026-10-19 and 2026-10-27). The event bindings build with Java 27, Python 3.15 and zig,
+2026-11-10, and every project targets net11.0, the PowerShell binary module
+included, which pwsh 7.7 hosts on .NET 11 (ADR-0014, amendment 2026-11-02). The event bindings build with Java 27, Python 3.15 and zig,
 the VS Code extension's shell with TypeScript 7's native compiler, and no
 Node.js outside its CI (ADR-0014, amendment 2026-10-22), and each of those is optional: every
 language but Rust is optional for Xmip itself (the owner, 2026-10-20), a

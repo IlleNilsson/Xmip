@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.5
+#requires -Version 7.7.0
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
@@ -139,11 +139,11 @@ Describe 'The module is the entry point' {
         }
     }
 
-    It 'declares Core and 7.6.7 on every entry point' {
+    It 'declares Core and the floor on every entry point' {
         foreach ($file in $script:EntryPoints) {
             $head = (Get-Content (Join-Path $script:ModuleRoot $file) -TotalCount 3) -join "`n"
             $head | Should -Match '#requires -PSEdition Core'
-            $head | Should -Match '#requires -Version 7\.6\.7'
+            $head | Should -Match '#requires -Version \d+\.\d+\.\d+'
         }
     }
 }

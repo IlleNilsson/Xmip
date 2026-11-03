@@ -1,5 +1,5 @@
 #requires -PSEdition Core
-#requires -Version 7.6.7
+#requires -Version 7.7.0
 
 <#
 .SYNOPSIS
@@ -191,7 +191,7 @@ function Test-XmipDotnetModule {
     # loaded by whoever is using it. On 2026-09-03 this gate reported
     # xmip-core-powershell as failing when nothing was wrong with it: the
     # owner's terminal, open since the previous day, held
-    # bin/Debug/net10.0/Xmip.PowerShell.dll and MSBuild gave up after ten
+    # bin/Debug/net11.0/Xmip.PowerShell.dll and MSBuild gave up after ten
     # retries. A gate that an operator's open session can fail is not a gate,
     # and the first instinct — close the terminal — is the wrong fix.
     #

@@ -53,7 +53,7 @@ applies it. The versions below change often; **see
 
 | You need | For | Version |
 | --- | --- | --- |
-| PowerShell, Core edition | all Xmip tooling | 7.6.7 or later; see prerequisite.toml |
+| PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.toml |
 | Git | cloning and submodules | 2.41 or later; see prerequisite.toml |
 | PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.toml |
 | Pester | the estate's tests | 6.0 or later; see prerequisite.toml |
@@ -405,7 +405,7 @@ dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
 Or, as objects, from the PowerShell operator module:
 
 ```powershell
-$operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net10.0'
+$operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net11.0'
 Import-Module -Name "./$operator/Xmip.PowerShell.psd1"
 Test-XmipNodeConfiguration -Path .local-work/node/config/xmip.toml
 ```
@@ -496,7 +496,7 @@ dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
     measure xmip:///learning --local xmip-first
 Import-Module -Name Xmip
-$operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net10.0'
+$operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net11.0'
 Import-Module -Name "./$operator/Xmip.PowerShell.psd1"
 Get-XmipHealth -Scope xmip:///learning -Local xmip-first
 ```
@@ -703,7 +703,7 @@ one. Each README says each step in full.
    D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.dsc.yaml`, and
    again once they have installed (*Running it*).
 4. **E** On each machine once, as its Administrator or with sudo:
-   PowerShell 7.6 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
+   PowerShell 7.7 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).
 5. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,
