@@ -8,7 +8,7 @@
     is TypeScript too (the owner, 2026-10-22: *But not JavaScript.*; ADR-0014,
     amendment 2026-10-22): what runs as JavaScript is the compiler's output,
     build output that is never tracked. The extension's ESLint configuration
-    was the last .mjs and became eslint.config.ts the same day.
+    was the last .mjs; ESLint itself went on 2026-11-03.
 
     Every repository of the estate is asked what it tracks, the root and each
     submodule, so a .js, .mjs or .cjs file committed anywhere fails here.

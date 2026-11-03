@@ -1363,3 +1363,30 @@ pwsh 7.7 carries, and the test projects no longer roll a net10.0 build
 forward onto .NET 11. The test projects are on xUnit v3, run by VSTest
 through `xunit.runner.visualstudio` (`IsTestingPlatformApplication` false)
 until the estate's `dotnet test` moves to Microsoft's testing platform.
+
+## Amendment, 2026-11-03: the shell has no linter, and its packages are raised in CI
+
+The owner, 2026-11-03: *Why would we want TypeScript, Node.js … I said no
+JavaScript!!!* — and, once VS Code's reason stood beside it, *I get it, for
+VS Code. Just keep it to a minimum and up to date. I do not endorse
+JavaScript or Chromium.* The extension's shell stays only because VS Code's
+extension host runs nothing but JavaScript and its designers are webviews;
+it holds no rule, and it is kept to the minimum with every package at its
+latest release.
+
+ESLint, `@eslint/js` and `typescript-eslint` are deleted with
+`eslint.config.ts` and the CI's lint step: the latest `typescript-eslint`,
+8.72.1, accepts TypeScript below 6.1 alone, which held the shell below
+TypeScript 7 (the owner: *Drop ESLint from shell, there are better ways*).
+The compiler is the check: `strict`, `noUnusedLocals`,
+`noUnusedParameters`, `noImplicitReturns`, `noImplicitOverride`,
+`noFallthroughCasesInSwitch` and `noUncheckedIndexedAccess`, in the shell's
+and the webview's `tsconfig.json`, both compiling clean with TypeScript
+7.0.2.
+
+The packages are raised where Node.js runs alone, the repository's CI: its
+Verify workflow, run with `update`, writes the lock anew from every
+package at its latest release, a major included, sets `engines.vscode` to
+the `@types/vscode` it installed, compiles and tests, and hands back
+`package.json` and `package-lock.json` as an artifact to land. It never
+pushes; the workflow reads the repository only.
