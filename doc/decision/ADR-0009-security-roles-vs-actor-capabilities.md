@@ -566,8 +566,10 @@ node must decide.* Built (decided by the assistant, each in one line):
 - **Every call for that caller names the node's handle** in a header,
   `xmip-caller`, so the node decides whose call it is before it reads the
   call. The node acts for the caller only where the connection's identity
-  is a relay and the handle was issued to that very identity, before its
-  certificate's `notAfter` and not yet let go (`Unvouch`); a handle
+  is a relay and the handle was issued to that very identity, before the
+  earliest `notAfter` of the path the node verified — the leaf's, an
+  intermediate's or the anchor's (`authenticate::x509::Path::not_after`,
+  amendment 2026-11-04) — and not yet let go (`Unvouch`); a handle
   presented through any other identity is no one. The act is admitted by
   the caller's own role, never the relay's: **relaying grants no act of its
   own**, and a relay's own calls are judged by its own role as any
