@@ -261,6 +261,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Invoke-XmipGit.ps1')
 . (Join-Path $PSScriptRoot 'Move-XmipSubmodule.ps1')
 . (Join-Path $PSScriptRoot 'Invoke-XmipCompose.ps1')
+. (Join-Path $PSScriptRoot 'Write-XmipBrand.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipBuiltTechnology.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipProfile.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipSite.ps1')

@@ -300,6 +300,9 @@ function Get-XmipExtensionManifest {
 
     [string] $description = [System.Security.SecurityElement]::Escape($Package.description)
     [string] $categories = $Package.categories -join ','
+    # The mark package.json names as its icon (asset/brand/brand.toml), where
+    # VS Code and a gallery show the extension, as vsce writes it.
+    [string] $icon = "extension/$($Package.icon)"
 
     return @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -320,6 +323,7 @@ function Get-XmipExtensionManifest {
           Value="$($Package.repository.url)" />
     </Properties>
     <License>extension/LICENSE.txt</License>
+    <Icon>$icon</Icon>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Code" />
@@ -331,6 +335,8 @@ function Get-XmipExtensionManifest {
     <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md"
         Addressable="true" />
     <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt"
+        Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="$icon"
         Addressable="true" />
   </Assets>
 </PackageManifest>

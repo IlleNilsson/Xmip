@@ -19,6 +19,9 @@
 .EXAMPLE
     Import-Module ./Xmip.psm1
     Sync-XmipEstate -Create -Configure -WhatIf
+
+.EXAMPLE
+    Sync-XmipEstate -Brand
 #>
 # The domains that start Xmip on a node: linked into the node binary, one of
 # them per estate, and so mounted with no provider in the path. Every other
@@ -147,6 +150,10 @@ function Sync-XmipEstate {
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
+        # The brand carried to every surface asset/brand/brand.toml names:
+        # the icon and resource made from the mark, and each repository's
+        # copy (Write-XmipBrand). Local; alone, GitHub is not asked.
+        [switch] $Brand,
         [switch] $IncludeReserved,
         [switch] $Report,
         # Restrict -Create to these repository names. Without it, -Create makes
@@ -169,6 +176,11 @@ function Sync-XmipEstate {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
     if (-not $ReportPath) { $ReportPath = Join-Path $WorkingDirectory 'architecture-report.json' }
+
+    if ($Brand) {
+        Write-XmipBrand
+        if (-not ($Create -or $Configure -or $Compose -or $Cargo -or $Report)) { return }
+    }
 
     # The GitHub connection every helper is handed, rather than one they read
     # out of this function's scope. They were nested here and read it
