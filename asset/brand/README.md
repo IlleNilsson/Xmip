@@ -11,10 +11,18 @@ same values.
 | `xmip-x.png` | The X mark, 1024 × 1024, transparent background. |
 | `icon/xmip-x-<size>.png` | The X mark at 16, 32, 48, 64, 128, 256 and 512, each downscaled from the 1024 PNG with high-quality bicubic smoothing. |
 | `xmip-logo.png` | The logo: the X mark followed by "mip", 888 × 403, transparent background. |
+| `xmip-x.ico` | The Windows icon: the PNGs at 16 to 256 packed as they are, nothing redrawn. Made by `Sync-XmipEstate -Brand`. |
+| `xmip-x.res` | That icon as a Windows resource, linked into each Rust executable by its `build.rs`. Made by `Sync-XmipEstate -Brand`. |
+| `brand.toml` | Every surface that shows the mark or the logo, the copy it keeps and the file that names it. |
 
-Copies in use: the web GUI's `wwwroot/xmip-x.png` and `wwwroot/xmip-logo.png`,
-and the phone and desktop app's `Resources/AppIcon/appicon.png` (the 1024
-mark).
+**Where it is used.** [`brand.toml`](brand.toml) lists every surface: this
+README's repository, `xmip-service`, `xmip-lsp`, the `xmip` command line,
+the VS Code extension, the PowerShell module, the desktop and phone app, and
+the web GUI. A repository of its own cannot reach this directory, so it keeps
+a copy; `Sync-XmipEstate -Brand` writes each copy and the icon and resource
+from what is here, and `test/Brand.Test.ps1` fails where a surface does not
+name its mark or a copy differs. Change the mark here, run the command, and
+every surface follows.
 
 ## Colors
 

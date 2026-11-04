@@ -1,0 +1,66 @@
+# Every surface that shows the Xmip mark or logo: what it shows, taken from
+# this directory (`from`); the copy it keeps where it is a repository of its
+# own, which cannot reach this one (`copy`); and the file that names it
+# (`in`), holding `names`. Sync-XmipEstate -Brand writes each copy and the
+# icon and resource made from the mark; test/Brand.Test.ps1 holds every
+# surface to this list.
+
+[[surface]]
+name = "The estate's README"
+from = "xmip-logo.png"
+in = "README.md"
+names = "asset/brand/xmip-logo.png"
+
+[[surface]]
+name = "The node service executable, xmip-service"
+from = "xmip-x.res"
+in = ".src/build.rs"
+names = "asset/brand/xmip-x.res"
+
+[[surface]]
+name = "The VS Code extension"
+from = "icon/xmip-x-128.png"
+copy = "module/core/operation/gui/vscode/extension/media/xmip-x.png"
+in = "module/core/operation/gui/vscode/extension/package.json"
+names = "\"icon\": \"media/xmip-x.png\""
+
+[[surface]]
+name = "The language server executable, xmip-lsp"
+from = "xmip-x.res"
+copy = "module/core/operation/gui/vscode/.src/xmip-x.res"
+in = "module/core/operation/gui/vscode/.src/build.rs"
+names = ".src/xmip-x.res"
+
+[[surface]]
+name = "The command line executable, xmip"
+from = "xmip-x.ico"
+copy = "module/core/operation/cli/src/Xmip.Cli/xmip-x.ico"
+in = "module/core/operation/cli/src/Xmip.Cli/Xmip.Cli.csproj"
+names = "<ApplicationIcon>xmip-x.ico</ApplicationIcon>"
+
+[[surface]]
+name = "The PowerShell module"
+from = "icon/xmip-x-128.png"
+in = "module/core/operation/powershell/src/Xmip.PowerShell/Xmip.PowerShell.psd1"
+names = "https://raw.githubusercontent.com/IlleNilsson/Xmip/main/asset/brand/icon/xmip-x-128.png"
+
+[[surface]]
+name = "The desktop and phone app"
+from = "xmip-x.png"
+copy = "module/core/operation/gui/src/Xmip.Operations/Resources/AppIcon/appicon.png"
+in = "module/core/operation/gui/src/Xmip.Operations/Xmip.Operations.csproj"
+names = "Resources\\AppIcon\\appicon.png"
+
+[[surface]]
+name = "The web GUI's tab"
+from = "xmip-x.png"
+copy = "module/core/operation/gui/src/Xmip.Gui/wwwroot/xmip-x.png"
+in = "module/core/operation/gui/src/Xmip.Gui.Web/Components/App.razor"
+names = "_content/Xmip.Gui/xmip-x.png"
+
+[[surface]]
+name = "The GUI's header"
+from = "xmip-logo.png"
+copy = "module/core/operation/gui/src/Xmip.Gui/wwwroot/xmip-logo.png"
+in = "module/core/operation/gui/src/Xmip.Gui/Components/TopNav.razor"
+names = "_content/Xmip.Gui/xmip-logo.png"

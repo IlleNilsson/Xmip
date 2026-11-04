@@ -18,6 +18,8 @@ edition = "2024"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/IlleNilsson/Xmip"
 description = "The Xmip platform, assembled from its modules."
+# Links the Xmip mark into each executable as its Windows icon.
+build = ".src/build.rs"
 
 [lib]
 name = "xmip"

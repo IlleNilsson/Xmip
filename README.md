@@ -1,5 +1,7 @@
 # Xmip
 
+![Xmip](asset/brand/xmip-logo.png)
+
 **Accountable messaging and integration, under your control.**
 
 > **Release status.** `main` is Xmip Continuum, the continuously evolving
@@ -1047,7 +1049,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
@@ -1068,6 +1070,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 Sync-XmipEstate                                       # report drift
 Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
 Sync-XmipEstate -Compose                              # wire the submodule tree locally
+Sync-XmipEstate -Brand                                # the mark to every surface (asset/brand)
 Build-XmipService -Site hospital-interface -WhatIf    # what a site builds, without building
 Sync-XmipRepository -Status                           # dirty, ahead, behind
 Get-XmipStatus
