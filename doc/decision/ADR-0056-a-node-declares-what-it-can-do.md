@@ -626,9 +626,14 @@ names no `listen` is refused at phase 3, in words. `xmip-service
   One that cannot take the writes on from where it is is copied whole
   first; it keeps its primary's data keys, handed inside the mutual TLS and
   wrapped under its own key-encryption key (ADR-0063, amendment of this
-  date). The primary keeps `[tuning] storage_kept` bytes of each database's
-  writes (64 MiB) for a standby behind it, and beats every `[tuning]
-  storage_beat` (100 ms) while it has nothing to hand on.
+  date). A whole copy is marked under way in the standby's runtime
+  database before anything is wiped and unmarked only once every database
+  is in; a standby so marked, its copy cut short even across a restart,
+  says so in its standing and is never promoted, so part of a Ledger never
+  becomes the Ledger (amendment 2026-11-04). The primary keeps `[tuning]
+  storage_kept` bytes of each database's writes (64 MiB) for a standby
+  behind it, and beats every `[tuning] storage_beat` (100 ms) while it has
+  nothing to hand on.
 - **Each promotion raises the epoch.** A primary that meets a primary of a
   later epoch steps down; a node keeps the latest epoch it met and does not
   ask a primary of an earlier one. A standby serves no operation: it answers

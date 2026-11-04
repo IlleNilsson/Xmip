@@ -652,7 +652,9 @@ round robin alone each keep a Ledger of their own. The Storage nodes listed
 settle the primary among themselves; each standby copies the primary's
 engine writes in order, asynchronously, copied whole first where it cannot
 take them on, keeping the primary's data keys under its own key-encryption
-key (ADR-0063, amendment 2026-10-22); each promotion raises the epoch, and
+key (ADR-0063, amendment 2026-10-22), and is never promoted while a whole
+copy into it is under way or was cut short (ADR-0056, amendment
+2026-11-04); each promotion raises the epoch, and
 a primary of an earlier one is not asked. The promote is the standbys' own,
 not a command, and there is no witness: two sides of a partition can each
 promote a primary (open problem 45). A stays the choice for a database
