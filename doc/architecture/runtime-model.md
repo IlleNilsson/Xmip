@@ -155,8 +155,11 @@ identifier, with how many turns it has taken and whether it has ended; and
 **Instance Key**, each value an Instance is correlated by — named from the
 Work Process, the Correlation and the key's values in full — and the
 Instance it belongs to. Both
-are written in a turn's one write and nowhere else, and an Instance only over
-the turn it was read at. Beside them, each Stream that holds a place in a
+are written in a turn's one write and nowhere else, an Instance only over
+the turn it was read at, and a key only where it belongs to no Instance or
+to the one writing it: two first arrivals of one key never both start an
+Instance, the later joins the first when taken again, and a key is let go
+only by its own Instance (ADR-0066, amendment 2026-11-04). Beside them, each Stream that holds a place in a
 sequence end to end has its count of open Journeys, kept by the writer in the
 writes that open and end them (*Sequences*, below).
 
@@ -2478,6 +2481,8 @@ day it is a compiled piece executed when called upon.*
   its due time. An Instance is written only over the turn it was read at, so
   two nodes taking a turn of one Instance never both write; the later gives
   its claim back and takes the turn again from the Instance as it now is.
+  A correlation key is set in that write only where no other Instance holds
+  it, so two first arrivals of one key on any nodes start one Instance.
 - **Nothing waits on a thread.** An Instance waiting for a Message is a
   record in the Process Instance table and its keys in the Correlation
   table; one waiting for a time is the due time of the Journey whose turn

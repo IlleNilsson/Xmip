@@ -523,6 +523,11 @@ waits throws `loops`.
   waits on a thread**: an Instance waiting for a Message or a time is a
   record in the Ledger. An Instance is written only over the turn it was
   read at, so two nodes taking a turn of one Instance never both write.
+  A correlation key is written in that same write only where it belongs to
+  no Instance or to the one writing it, and let go only by the Instance it
+  belongs to: two first arrivals of one key, on one node or several, start
+  one Instance, and the later, taken again, joins it (amendment
+  2026-11-04).
 - **Two tables of their own** in the runtime database: Process Instance and
   Instance Key (`persist::storage`'s `instance`).
 
