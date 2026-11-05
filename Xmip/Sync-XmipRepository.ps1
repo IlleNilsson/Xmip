@@ -73,7 +73,7 @@ function Sync-XmipRepository {
         [Parameter(ParameterSetName = 'Distribute')]
         [string] $SourcePath = ((Get-XmipRepositoryRoot)),
 
-        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.xmip'),
+        [string] $ManifestPath = (Get-XmipEstateLayout).Manifest,
         # Beside the script's repository, not inside it. The natural place to run
         # this from is the repository that holds it, and cloning thirty siblings
         # into your own working tree is not what anyone means by -Clone.

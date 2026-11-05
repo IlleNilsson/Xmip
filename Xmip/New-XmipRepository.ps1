@@ -183,7 +183,7 @@ function Set-XmipRepository {
             ForEach-Object { [string](Get-XmipPropertyValue -Object $_ -Name 'name') })
     if ($long.Count -gt 0) {
         throw ("REFUSED: GitHub takes a description of 350 characters or fewer, and " +
-            "architecture.xmip gives more for $($long -join ', ').")
+            "$script:XmipManifestName gives more for $($long -join ', ').")
     }
 
     foreach ($repository in $chosen) {

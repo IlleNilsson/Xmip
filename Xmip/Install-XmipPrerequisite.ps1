@@ -46,7 +46,7 @@ function Install-XmipPrerequisite {
         # Report what is missing, or actually install it.
         [switch] $Install,
 
-        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.xmip'),
+        [string] $ManifestPath = (Get-XmipEstateLayout).Prerequisite,
 
         [switch] $IncludeOptional,
 
@@ -65,8 +65,8 @@ function Install-XmipPrerequisite {
 
     if (-not (Get-Module -ListAvailable -Name PSToml)) {
         if (-not $Install) {
-            Write-Warning ('MISSING: PSToml, which is needed to read prerequisite.xmip. ' +
-                'Re-run with -Install.')
+            Write-Warning ('MISSING: PSToml, which is needed to read ' +
+                "$script:XmipPrerequisiteName. Re-run with -Install.")
             return
         }
         if ($PSCmdlet.ShouldProcess('PSToml', 'Install from the PowerShell Gallery')) {

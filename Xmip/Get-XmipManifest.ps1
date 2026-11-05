@@ -145,8 +145,7 @@ function Get-XmipManifest {
     [CmdletBinding()]
     [OutputType([pscustomobject])]
     param(
-        [Parameter(Mandatory = $true)]
-        [string] $Path
+        [string] $Path = (Get-XmipEstateLayout).Manifest
     )
 
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {

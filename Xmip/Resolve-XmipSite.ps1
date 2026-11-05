@@ -75,7 +75,7 @@ function Resolve-XmipSite {
 
     if ($unknown.Count -gt 0) {
         throw ("REFUSED: site $siteName names $($unknown -join ', '), " +
-            'which is no built technology (architecture.xmip).')
+            "which is no built technology ($script:XmipManifestName).")
     }
 
     [object[]] $needed = @(

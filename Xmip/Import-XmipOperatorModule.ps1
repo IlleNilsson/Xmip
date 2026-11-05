@@ -190,7 +190,7 @@ function Import-XmipOperatorModule {
     }
 
     [string] $root = Get-XmipRepositoryRoot
-    [string] $built = Join-Path -Path $root -ChildPath '.local-work/operator'
+    [string] $built = (Get-XmipEstateLayout -Root $root).Operator
     [string] $output = Join-Path -Path $built -ChildPath (Get-XmipOperatorModuleKey -Root $root)
 
     if (-not (Test-XmipOperatorModuleBuild -Directory $output)) {

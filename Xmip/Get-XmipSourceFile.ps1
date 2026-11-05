@@ -29,7 +29,7 @@
 # Find-XmipFile never descends into one.
 [string[]] $script:XmipSourceSkip = @(
     'target', 'bin', 'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work',
-    '.local-work'
+    $script:XmipWorkName
 )
 
 # The trees the estate composes into: ADR-0016. `template/` is Rust the estate

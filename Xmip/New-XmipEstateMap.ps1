@@ -213,7 +213,7 @@ function New-XmipEstateMap {
         $Root = Get-XmipRepositoryRoot
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.xmip')
+    $manifest = Get-XmipManifest -Path (Get-XmipEstateLayout -Root $Root).Manifest
     [PSCustomObject[]] $repository = @(Get-XmipEstateRepository -Root $Root)
     [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 
@@ -242,7 +242,7 @@ function New-XmipEstateMap {
         [string] $html = New-XmipEstatePage @page
 
         if ($Save) {
-            [string] $where = Join-Path $Root '.local-work/estate-map.html'
+            [string] $where = (Get-XmipEstateLayout -Root $Root).EstateMap
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $where) | Out-Null
             Set-Content -LiteralPath $where -Value $html -NoNewline -Encoding utf8
             Write-Host "OK       wrote $where"

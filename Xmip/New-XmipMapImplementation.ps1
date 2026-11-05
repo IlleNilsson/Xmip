@@ -68,7 +68,7 @@ function Get-XmipMapImplementation {
             [string] $state = [string](Get-TomlValue -Node $node -Name 'state' -Default '')
 
             if ($state -notin $order) {
-                throw ("architecture.xmip [implementation.$key] says state = '$state'; " +
+                throw ("$script:XmipManifestName [implementation.$key] says state = '$state'; " +
                     "it is one of: $($order -join ', ')")
             }
 

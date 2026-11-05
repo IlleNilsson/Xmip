@@ -96,13 +96,14 @@ function Get-XmipRepositoryRoot {
         return $found
     }
 
-    throw "No architecture.xmip found at or above '$StartAt' or where this module lives ($origin)."
+    throw ("No $script:XmipManifestName found at or above '$StartAt' or where this " +
+        "module lives ($origin).")
 }
 
 
 function Find-XmipRepositoryRoot {
     <#
-        Walks up from one directory until architecture.xmip appears; empty
+        Walks up from one directory until the estate's manifest appears; empty
         when it never does. The search Get-XmipRepositoryRoot runs twice.
     #>
     [CmdletBinding()]
@@ -115,7 +116,7 @@ function Find-XmipRepositoryRoot {
     [System.IO.DirectoryInfo] $directory = [System.IO.DirectoryInfo]::new($StartAt)
 
     while ($null -ne $directory) {
-        [string] $candidate = Join-Path $directory.FullName 'architecture.xmip'
+        [string] $candidate = Join-Path $directory.FullName $script:XmipManifestName
 
         if (Test-Path -LiteralPath $candidate -PathType Leaf) {
             return $directory.FullName
@@ -240,6 +241,7 @@ function Assert-XmipModuleCurrent {
 # at import time. So a bare machine can import the module and ask what it is
 # missing. PowerShell itself is the only prerequisite Xmip cannot install, and
 # #requires states that floor.
+. (Join-Path $PSScriptRoot 'Get-XmipEstateLayout.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipToml.ps1')
 . (Join-Path $PSScriptRoot 'Read-XmipYaml.ps1')
 . (Join-Path $PSScriptRoot 'Expand-XmipEstate.ps1')

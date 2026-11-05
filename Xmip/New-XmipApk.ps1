@@ -78,7 +78,7 @@ function New-XmipApk {
     $cargo = Read-XmipToml -Path (Join-Path $Root 'Cargo.toml')
     $crate = Get-TomlValue -Node $cargo -Name 'package'
     [string] $version = Get-TomlValue -Node $crate -Name 'version'
-    [string] $output = Join-Path $Root ".local-work/package/$version"
+    [string] $output = Join-Path (Get-XmipEstateLayout -Root $Root).Package $version
     [string] $stage = Join-Path $output 'android'
     [string] $project = Join-Path $Root 'module/core/operation/gui/src/Xmip.Operations'
 

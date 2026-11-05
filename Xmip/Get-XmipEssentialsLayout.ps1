@@ -46,7 +46,8 @@ function Get-XmipEssentialsLayout {
     [OutputType([PSCustomObject])]
     param()
 
-    [string] $root = Get-XmipRepositoryRoot
+    [pscustomobject] $estate = Get-XmipEstateLayout
+    [string] $root = $estate.Root
     [string] $essentials = Join-Path -Path $root -ChildPath 'test/core/essentials'
 
     # Where cargo builds is cargo's own answer, not an assumption:
@@ -74,10 +75,10 @@ function Get-XmipEssentialsLayout {
         Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
-        Area       = Join-Path -Path $root -ChildPath '.local-work/essentials'
-        Authority  = Join-Path -Path $root -ChildPath '.local-work/essentials/authority'
-        Image      = Join-Path -Path $root -ChildPath '.local-work/essentials/image'
-        Estate     = Join-Path -Path $root -ChildPath '.local-work/estate'
+        Area       = $estate.Essentials
+        Authority  = Join-Path -Path $estate.Essentials -ChildPath 'authority'
+        Image      = Join-Path -Path $estate.Essentials -ChildPath 'image'
+        Estate     = $estate.Estate
         Suffix     = $suffix
     }
 }
