@@ -24,11 +24,13 @@
 # reads as 'at or under  characters' in the output.
 [int] $script:MaximumLineLength = 100
 [int] $script:MaximumFunctionLines = 35
+. (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
     [int] $script:MaximumLineLength = 100
     [int] $script:MaximumFunctionLines = 35
+. (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 
     # Named once: both the file walk and the nesting calculation ask the same
     # question of the AST, and a predicate defined twice drifts.
@@ -480,7 +482,6 @@ Describe 'PowerShell style, section 1: a file has one subject' {
             on 2026-09-27. Production means the module under Xmip/: a test
             file is not production, as a Rust file's tests are not.
         #>
-        [int] $script:MaximumFileLines = 400
 
         [string] $module = Join-Path $script:Root 'Xmip'
         $script:ProductionFiles = @(
@@ -488,7 +489,7 @@ Describe 'PowerShell style, section 1: a file has one subject' {
         )
     }
 
-    It 'keeps every file of the module at or under 400 lines' {
+    It "keeps every file of the module at or under $script:MaximumFileLines lines" {
         [string[]] $over = @(
             foreach ($file in $script:ProductionFiles) {
                 [int] $length = @(Get-Content -LiteralPath $file.FullName).Count

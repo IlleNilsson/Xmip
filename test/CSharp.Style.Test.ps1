@@ -14,12 +14,12 @@
     line, a test file's included.
 #>
 
-[int] $script:MaximumFileLines = 400
+. (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 [int] $script:MaximumColumns = 100
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
-    [int] $script:MaximumFileLines = 400
+    . (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
     [int] $script:MaximumColumns = 100
     $script:Files = @(Get-XmipSourceFile -Root $script:Root -Language 'C#')
 }

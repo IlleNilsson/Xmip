@@ -19,11 +19,11 @@
 
 # At file scope, not in BeforeAll: Pester discovers test names before BeforeAll
 # runs, and a name interpolating a variable set there reads as 'over  lines'.
-[int] $script:MaximumFileLines = 400
+. (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
-    [int] $script:MaximumFileLines = 400
+    . (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 
     # The counter used to live here, where nothing else could reach it, and
     # the estate map needed the same number. Two counters disagree within a
