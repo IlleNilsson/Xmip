@@ -120,7 +120,7 @@ function Get-XmipRemoteRuntimeBuild {
         [string] $Patch = ''
     )
 
-    [string[]] $common = @('-j', '2', '--no-default-features', '--features', 'remote')
+    [string[]] $common = @('--no-default-features', '--features', 'remote')
 
     if ($Patch) {
         $common += @('--config', $Patch)

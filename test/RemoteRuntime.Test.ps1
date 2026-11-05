@@ -105,7 +105,7 @@ Describe 'The Android NDK is found where the prerequisite puts it' {
 }
 
 Describe 'Each remote build is one cargo command' {
-    It 'builds Android for a device and the emulator, release, API level 26, -j 2' {
+    It 'builds Android for a device and the emulator, release, API level 26' {
         [string] $ndk = Join-Path $TestDrive 'ndk-bin'
         [object[]] $build = Get-XmipTestBuild -Platform Android -Ndk $ndk
         [string] $script = if ($IsWindows) { '.cmd' } else { '' }
@@ -118,7 +118,7 @@ Describe 'Each remote build is one cargo command' {
             [string] $clang = Join-Path $ndk "${triple}26-clang$script"
 
             ($one.CargoArgument -join ' ') | Should -Be (
-                "--release --target $triple -j 2 --no-default-features --features remote")
+                "--release --target $triple --no-default-features --features remote")
             $one.Environment["CARGO_TARGET_$($under.ToUpperInvariant())_LINKER"] |
                 Should -Be $clang
             $one.Environment["CC_$under"] | Should -Be $clang
@@ -128,13 +128,13 @@ Describe 'Each remote build is one cargo command' {
         }
     }
 
-    It 'builds Desktop where Xmip.Abi''s tests load it, debug, -j 2' {
+    It 'builds Desktop where Xmip.Abi''s tests load it, debug' {
         [object[]] $build = Get-XmipTestBuild -Platform Desktop
         [string] $into = Join-Path $script:Root '.ai-interaction/target-remote'
 
         $build.Count | Should -Be 1
         [string] $command = $build[0].CargoArgument -join ' '
-        $command | Should -Be '-j 2 --no-default-features --features remote'
+        $command | Should -Be '--no-default-features --features remote'
         $build[0].TargetDirectory | Should -Be $into
         $build[0].Library | Should -BeLike (Join-Path $into 'debug/*xmip_core_runtime.*')
     }
@@ -165,7 +165,7 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
             Mock -ModuleName Xmip Assert-XmipMacOS { }
         }
 
-        It 'builds a static library for a device and the simulator, release, iOS 15, -j 2' {
+        It 'builds a static library for a device and the simulator, release, iOS 15' {
             [object[]] $build = Get-XmipTestBuild -Platform iOS
             [string] $ios = Join-Path $script:Root '.ai-interaction/target-ios'
 
@@ -176,7 +176,7 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
 
                 ($one.Subcommand -join ' ') | Should -Be 'rustc --lib --crate-type staticlib'
                 ($one.CargoArgument -join ' ') | Should -Be (
-                    "--release --target $triple -j 2 --no-default-features --features remote")
+                    "--release --target $triple --no-default-features --features remote")
                 $one.TargetDirectory | Should -Be $ios
                 $one.Environment['IPHONEOS_DEPLOYMENT_TARGET'] | Should -Be '15.0'
                 $one.Library | Should -Be (Join-Path $ios (
@@ -196,7 +196,7 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
 
             $command.Count | Should -Be 3
             $command[0] | Should -Be ('cargo rustc --lib --crate-type staticlib --release ' +
-                '--target aarch64-apple-ios -j 2 --no-default-features --features remote')
+                '--target aarch64-apple-ios --no-default-features --features remote')
             $command[1] | Should -BeLike '* --target aarch64-apple-ios-sim *'
             $command[2] | Should -Be (
                 "xcodebuild -create-xcframework -library $device -library $sim -output $output")

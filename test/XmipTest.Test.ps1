@@ -31,15 +31,8 @@ BeforeAll {
     function Get-XmipStartSource {
         [string] $module = Join-Path (Get-XmipRepositoryRoot) 'Xmip'
 
-        [string[]] $family = @(
-            'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1', 'Start-XmipEstateSuite.ps1'
-            'Resolve-XmipEssentialsChoice.ps1', 'Start-XmipEssentialsRoll.ps1'
-            'Start-XmipEssentialsBuild.ps1', 'Start-XmipEssentialsRollProcess.ps1'
-        )
-
-        return (($family | ForEach-Object {
-                    Get-Content -Raw -LiteralPath (Join-Path $module $_)
-                }) -join "`n")
+        return ((Get-ChildItem -LiteralPath $module -Filter '*.ps1' |
+                    ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName }) -join "`n")
     }
 
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
@@ -226,7 +219,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         # that was running it. A thread job kept the runspace apart and held
         # the console until it ended: ten minutes, on 2026-09-25. A process
         # of its own keeps both apart, and nothing waits for it.
-        [string] $door = Get-XmipStartSource
+        [string] $door = InModuleScope Xmip { "${function:Start-XmipEstateSuite}" }
 
         $door | Should -Match '-EncodedCommand' -Because 'the suite removes the module it runs in'
         $door | Should -Not -Match 'Start-ThreadJob|Receive-Job'
