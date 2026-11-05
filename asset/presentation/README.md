@@ -43,48 +43,43 @@ The logo stays in [the brand directory](../brand/README.md).
 - Review changed sections in both formats, including narration and captions.
   Keep slides understandable without a presenter.
 
-## Authoring tools
+## Authoring workflow
 
-The tools in `tools/` preserve the authoring workflow. They are publishing
-helpers, not Xmip runtime code or estate dependencies. They use external media
-libraries because Xmip does not supply slide, voice or video authoring tools.
-Temporary transfer data, renders and caches stay in `.ai-interaction/presentation/`.
+The editable PowerPoint and shared TOML story are the authoring masters.
+Use the story's layout, screen text, narration and source references when
+revising either format. The PNG artwork and WAV tracks can also be used in a
+video editor. Retain the format, hosts and visual conventions above.
 
-Requirements: Python 3.11+ with tomllib, Node.js, the Codex presentation runtime's
-@oai/artifact-tool, Playwright with Chromium, and, only when voices change,
-kokoro-js with @huggingface/transformers and a local
-onnx-community/Kokoro-82M-v1.0-ONNX fp32 model cache.
+The repository does not track JavaScript or TypeScript publishing recipes.
+A media-authoring session may generate temporary recipes in
+`.ai-interaction/presentation/`, using the presentation skill or a media editor.
+The project sources and approved media in this directory remain the durable inputs.
 
-Set PRESENTATION_NODE_MODULES to the external node_modules directory for the tool
-being run. Set PRESENTATION_BROWSER to a Chromium executable, or install
-Playwright's default Chromium. Set PRESENTATION_MODEL_CACHE for voice generation.
-The authoring tools use no machine-specific paths; model weights stay local.
-Voices are af_heart
-(female) and am_michael (male), at speed 1.
-
-From the repository root:
+The Python preparation helper requires Python 3.11+ with tomllib. From the root:
 
 ```text
 python asset/presentation/tools/prepare.py --validate
 python asset/presentation/tools/prepare.py
-node asset/presentation/tools/render-slides.mjs
-node asset/presentation/tools/render-video.mjs --check-only
 ```
 
-Preparation does not reuse narration whose transcript differs from the story.
-After editing narration, run tools/narrate.mjs with its dependencies and model
-cache configured, then prepare.py --collect-narration to collect matching WAVs
-and timing into this directory. Prepare again before rendering. Unchanged
-approved tracks are reused.
+Preparation checks project source references and writes temporary JSON transfer
+data plus copies of matching voice tracks and host images into the working area.
+JSON here is an interchange format; the tracked editorial source is TOML.
+It does not reuse a voice track when its transcript differs from the story.
 
-The slide renderer writes build/draft-overview.pptx beneath the working area.
-Use the presentation skill's finalization checks and inspect rendered slides
-before replacing the tracked PowerPoint. Run the video renderer without
---check-only for the full animation and SRT; recording runs in real time.
-Outputs are beneath the working area's output/ directory. Review playback,
-scene boundaries and captions before replacing the tracked files. Keep the short
-tracked filenames above. The current video was compressed after rendering;
-a fresh render need not be byte-identical.
+For replacement narration, retain the approved pronunciation and voice character.
+The current tracks use Kokoro-82M-v1.0-ONNX, fp32, af_heart (female) and
+am_michael (male), at speed 1. Model weights and voice tooling stay outside Git.
+Place regenerated overview-narration-N.wav and overview-narration-N.json files
+in the working area's build/ directory, with N starting at zero. Timing JSON
+is an array of sentence objects containing text, start and duration in seconds.
+Run prepare.py --collect-narration to validate and collect matching audio and
+timing, then run preparation again before rendering.
+
+Inspect slides and validate the PowerPoint package before replacing the tracked
+deck. Review video playback, scene boundaries and captions before replacing the
+MP4 and SRT. The current video was compressed after rendering; a new render need
+not be byte-identical. Keep the short tracked filenames above.
 
 Commit the story, changed media and both final formats together. Follow
 [CONTRIBUTING.md](../../CONTRIBUTING.md) for the repository workflow.
