@@ -132,24 +132,19 @@ function Invoke-XmipEssentialsBuild {
 
         # Cargo's first error is kept, so a failed build says why in its own
         # words and not only its exit code (Get-XmipTestStatus shows it).
-        [string] $first = ''
-        & cargo build --config $patch @bins 2>&1 | ForEach-Object {
-            [string] $line = "$_"
-
-            if ($first -eq '' -and $line -match '^error') {
-                $first = $line
-            }
-
-            Write-Verbose $line
-        }
+        [string[]] $building = @('build', '--config', $patch) + $bins
+        [pscustomobject] $built = Invoke-XmipTool -Tool cargo -Argument $building -Output Keep
+        $built.Said | ForEach-Object { Write-Verbose $_ }
+        [string] $first = @($built.Said | Where-Object { $_ -match '^error' } |
+            Select-Object -First 1) -join ''
     }
     finally {
         Pop-Location
     }
 
-    if ($LASTEXITCODE -ne 0) {
+    if (-not $built.Passed) {
         [string] $why = if ($first -ne '') { ": $first" } else { '.' }
-        throw "cargo build --bin $Binary exited $LASTEXITCODE in $($layout.Essentials)$why"
+        throw "cargo build --bin $Binary failed in $($layout.Essentials)$why"
     }
 
     return $path

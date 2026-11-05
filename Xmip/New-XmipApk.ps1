@@ -106,10 +106,8 @@ function New-XmipApk {
         Set-Content -LiteralPath $document -Value $named.Replace($text, $line, 1) -NoNewline
         $argument += "-p:XmipPhoneDocument=$document"
     }
-    & dotnet @argument 2>&1 | ForEach-Object { Write-Host "    dotnet| $_" }
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "FAILED: dotnet publish of $project for Android exited $LASTEXITCODE."
+    if (-not (Invoke-XmipTool -Tool dotnet -Argument $argument -Prefix '    dotnet| ').Passed) {
+        throw "FAILED: dotnet publish of $project for Android."
     }
 
     $signed = @(Get-ChildItem -LiteralPath $stage -Filter '*-Signed.apk' -File)

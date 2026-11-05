@@ -147,11 +147,11 @@ function Install-XmipNativeLibrary {
     try {
         $env:ROCKSDB_COMPILE = '1'
         $env:CARGO_TARGET_DIR = $build
-        & cargo build --manifest-path (Join-Path -Path $crate -ChildPath 'Cargo.toml') |
-            Out-Host
+        [string] $crateManifest = Join-Path -Path $crate -ChildPath 'Cargo.toml'
+        [string[]] $building = @('build', '--manifest-path', $crateManifest)
 
-        if ($LASTEXITCODE -ne 0) {
-            throw "RocksDB did not compile: cargo build in $crate exited $LASTEXITCODE."
+        if (-not (Invoke-XmipTool -Tool cargo -Argument $building).Passed) {
+            throw "RocksDB did not compile: cargo build in $crate failed."
         }
     }
     finally {

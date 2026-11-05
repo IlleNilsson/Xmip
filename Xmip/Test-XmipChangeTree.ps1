@@ -371,9 +371,7 @@ function Build-XmipTestLibrary {
     Push-Location -LiteralPath (Join-Path -Path $RepositoryRoot -ChildPath $Module)
 
     try {
-        & cargo build --config $Patch 2>&1 | ForEach-Object { Write-Host $_ }
-
-        $LASTEXITCODE -eq 0
+        (Invoke-XmipTool -Tool cargo -Argument @('build', '--config', $Patch)).Passed
     }
     finally {
         Pop-Location

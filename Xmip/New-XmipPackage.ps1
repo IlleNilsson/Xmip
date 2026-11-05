@@ -213,10 +213,10 @@ function Build-XmipRuntimeLibrary {
     Push-Location -LiteralPath (Join-Path $Root 'module/platform/runtime')
 
     try {
-        & cargo @Subcommand @CargoArgument 2>&1 | ForEach-Object { Write-Host "     cargo| $_" }
+        [string[]] $building = $Subcommand + $CargoArgument
 
-        if ($LASTEXITCODE -ne 0) {
-            throw "FAILED: the runtime library's cargo build exited $LASTEXITCODE."
+        if (-not (Invoke-XmipTool -Tool cargo -Argument $building -Prefix '     cargo| ').Passed) {
+            throw "FAILED: the runtime library's cargo build."
         }
     }
     finally {
@@ -263,7 +263,8 @@ function New-XmipMsi {
         "-p:BaseIntermediateOutputPath=$intermediate"
     )
 
-    [string[]] $said = @(& dotnet @argument 2>&1 | ForEach-Object { "$_" })
+    [pscustomobject] $built = Invoke-XmipTool -Tool dotnet -Argument $argument -Output Keep
+    [string[]] $said = $built.Said
     $said | ForEach-Object { Write-Host "    dotnet| $_" }
 
     if ($said -match 'WIX7015') {
@@ -273,8 +274,8 @@ function New-XmipMsi {
             "To accept it, once: dotnet build $project -t:AcceptEula -p:EulaId=wix7")
     }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "FAILED: dotnet build of $project exited $LASTEXITCODE."
+    if (-not $built.Passed) {
+        throw "FAILED: dotnet build of $project."
     }
 
     [string] $msi = Join-Path $Output "xmip-$Version-$Site-$platform.msi"
