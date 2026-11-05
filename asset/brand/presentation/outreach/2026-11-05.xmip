@@ -1,0 +1,379 @@
+# Outreach record; contacts were published by the linked official sources.
+date = "2026-11-05"
+status = "submitted_to_outlook"
+recipient_count = 34
+national_coverage = 27
+eu_institution_contacts = 2
+company_contacts = 5
+material_commit = "2b6f47190aa13aed305220592c81829869f846a5"
+delivery_confirmed = false
+repository_url = "https://github.com/IlleNilsson/Xmip"
+subject = "Xmip: open-source messaging and integration — project introduction"
+
+# The body and introductions preserve the exact sent wording.
+message_template = """\
+Hello,\n\n{introduction}\n\nXmip is an open-source messaging and integration \
+platform being developed in Rust, with an on-premises-first, cloud-installable \
+approach. The project focuses on keeping integration under the organisation’s \
+control.\n\nI have prepared two self-guided introductions for technology \
+leaders, developers and operators. They cover the project’s architecture and \
+direction, including TOML configuration, VS Code tooling, phone-based operations \
+and cross-platform working.\n\nVideo — approximately 11 \
+minutes:\nhttps://media.githubusercontent.com/media/IlleNilsson/Xmip/2b6f47190aa\
+13aed305220592c81829869f846a5/asset/brand/presentation/Xmip-overview.mp4\n\nPowe\
+rPoint — 28 slides:\nhttps://media.githubusercontent.com/media/IlleNilsson/Xmip/\
+2b6f47190aa13aed305220592c81829869f846a5/asset/brand/presentation/Xmip-overview.\
+pptx\n\nProject and source:\nhttps://github.com/IlleNilsson/Xmip\n\nI would \
+welcome feedback on the approach and the requirements that matter to your \
+organisation. Could you share this with the appropriate architecture, \
+integration or open-source team, or let me know whom I should contact?\n\nKind \
+regards,\nIlian Nilsson"""
+
+[[recipient]]
+country = "Austria"
+organization = "Federal Chancellery"
+email = "post.vii-6@bka.gv.at"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Federal Chancellery in Austria to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Belgium"
+organization = "FPS BOSA"
+email = "interoperability@bosa.fgov.be"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting FPS BOSA in Belgium to introduce Xmip to your digital-government \
+and interoperability colleagues."""
+
+[[recipient]]
+country = "Croatia"
+organization = "MPUDT"
+email = "data.interoperability@mpudt.hr"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting MPUDT in Croatia to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Cyprus"
+organization = "DITS"
+email = "director@dits.dmrid.gov.cy"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DITS in Cyprus to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Czechia"
+organization = "DIA"
+email = "oha@dia.gov.cz"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DIA in Czechia to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Denmark"
+organization = "DIGST"
+email = "arkitektur@digst.dk"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DIGST in Denmark to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Finland"
+organization = "Finance Ministry"
+email = "yhteentoimiva.eurooppa@gov.fi"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Finance Ministry in Finland to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "France"
+organization = "DINUM"
+email = "interoperable@modernisation.gouv.fr"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DINUM in France to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Germany"
+organization = "DigitalService"
+email = "interoperabel@digitalservice.bund.de"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DigitalService in Germany to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Hungary"
+organization = "DMU"
+email = "international@dmu.gov.hu"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DMU in Hungary to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Lithuania"
+organization = "VSSA"
+email = "interoperability@vssa.lt"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting VSSA in Lithuania to introduce Xmip to your digital-government \
+and interoperability colleagues."""
+
+[[recipient]]
+country = "Luxembourg"
+organization = "Digitalisation Ministry"
+email = "cciop@digital.etat.lu"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Digitalisation Ministry in Luxembourg to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Malta"
+organization = "MITA"
+email = "interoperability.mita@gov.mt"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting MITA in Malta to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Netherlands"
+organization = "Digital Government"
+email = "bureau.architectuur@minbzk.nl"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Digital Government in Netherlands to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Poland"
+organization = "Digital Affairs"
+email = "iea@cyfra.gov.pl"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Digital Affairs in Poland to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Portugal"
+organization = "ARTE"
+email = "reg_interoperabilidade@arte.gov.pt"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting ARTE in Portugal to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Romania"
+organization = "ADR"
+email = "interoperability@adr.gov.ro"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting ADR in Romania to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Slovenia"
+organization = "Digital Transformation"
+email = "interoperabilnost.mdp@gov.si"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting Digital Transformation in Slovenia to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Spain"
+organization = "AEAD"
+email = "interoperable@digital.gob.es"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting AEAD in Spain to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Sweden"
+organization = "DIGG"
+email = "infrastrukturansvarig@digg.se"
+route = "Interoperability team"
+source = "https://interoperable-europe.ec.europa.eu/national-competent-authorities"
+introduction = """\
+I’m contacting DIGG in Sweden to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Bulgaria"
+organization = "Electronic Governance Ministry"
+email = "mail@egov.government.bg"
+route = "General ministry mailbox; request IT routing"
+source = "https://www.identity.egov.bg/wps/portal/egov/en/your%20europe/home"
+introduction = """\
+I’m contacting Electronic Governance Ministry in Bulgaria to introduce Xmip to \
+your digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Estonia"
+organization = "Justice and Digital Affairs"
+email = "info@justdigi.ee"
+route = "General ministry mailbox; request IT routing"
+source = "https://www.justdigi.ee/en/press-contacts"
+introduction = """\
+I’m contacting Justice and Digital Affairs in Estonia to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Greece"
+organization = "Digital Governance Ministry"
+email = "info@mindigital.gr"
+route = "General ministry mailbox; request IT routing"
+source = "https://www.mindigital.gr/kids-wallet-privacy-policy"
+introduction = """\
+I’m contacting Digital Governance Ministry in Greece to introduce Xmip to your \
+digital-government and interoperability colleagues."""
+
+[[recipient]]
+country = "Ireland"
+organization = "OGCIO"
+email = "digital@per.gov.ie"
+route = "Digital/ICT Strategy"
+source = "https://www.ogcio.gov.ie/en/corporate-pages/about-us/"
+introduction = """\
+I’m contacting OGCIO in Ireland to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Italy"
+organization = "AgID"
+email = "area.interoperabilita@agid.gov.it"
+route = "Interoperability team"
+source = """\
+https://trasparenza.agid.gov.it/page/40/details/5065/servizio-interoperabilita.h\
+tml"""
+introduction = """\
+I’m contacting AgID in Italy to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Latvia"
+organization = "VARAM"
+email = "pasts@varam.gov.lv"
+route = "General ministry mailbox; request IT routing"
+source = """\
+https://www.varam.gov.lv/en/ministry-smart-administration-and-regional-developme\
+nt"""
+introduction = """\
+I’m contacting VARAM in Latvia to introduce Xmip to your digital-government and \
+interoperability colleagues."""
+
+[[recipient]]
+country = "Slovakia"
+organization = "MIRRI"
+email = "kontakt@mirri.gov.sk"
+route = "General ministry mailbox; request IT routing"
+source = "https://mirri.gov.sk/en/contact/"
+introduction = """\
+I’m contacting MIRRI in Slovakia to introduce Xmip to your digital-government \
+and interoperability colleagues."""
+
+[[recipient]]
+country = "EU"
+organization = "European Commission OSPO"
+email = "DIGIT-OSPO@ec.europa.eu"
+route = "Open-source programme office"
+source = """\
+https://interoperable-europe.ec.europa.eu/sites/default/files/inline-files/LEOS%\
+20Webinar%20Presentation%20%281%29%20OSPO.pdf"""
+introduction = """\
+I’m contacting European Commission OSPO to introduce Xmip and ask about the \
+appropriate route for sharing it with European public-sector technology teams."""
+
+[[recipient]]
+country = "EU"
+organization = "European Commission OSOR"
+email = "EU-OSOR@ec.europa.eu"
+route = "Open-source observatory"
+source = """\
+https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-oso\
+r/open-source-contact-directory"""
+introduction = """\
+I’m contacting European Commission OSOR to introduce Xmip and ask about the \
+appropriate route for sharing it with European public-sector technology teams."""
+
+[[recipient]]
+country = "Sweden"
+organization = "Ericsson"
+email = "opensource@ericsson.com"
+route = "Open-source team"
+source = "https://github.com/Ericsson"
+introduction = """\
+I’m contacting the Ericsson open-source team to introduce Xmip and ask whether \
+its approach is relevant to your integration or platform-engineering colleagues."""
+
+[[recipient]]
+country = "Germany"
+organization = "Siemens"
+email = "opensource@siemens.com"
+route = "Open-source team"
+source = "https://opensource.siemens.com/team/"
+introduction = """\
+I’m contacting the Siemens open-source team to introduce Xmip and ask whether \
+its approach is relevant to your integration or platform-engineering colleagues."""
+
+[[recipient]]
+country = "Germany"
+organization = "SAP"
+email = "ospo@sap.com"
+route = "Open-source programme office"
+source = "https://github.com/SAP"
+introduction = """\
+I’m contacting the SAP open-source team to introduce Xmip and ask whether its \
+approach is relevant to your integration or platform-engineering colleagues."""
+
+[[recipient]]
+country = "Germany"
+organization = "Bosch"
+email = "opensource@bosch.com"
+route = "Open-source programme office"
+source = "https://opensource.bosch.com/corporate-information.html"
+introduction = """\
+I’m contacting the Bosch open-source team to introduce Xmip and ask whether its \
+approach is relevant to your integration or platform-engineering colleagues."""
+
+[[recipient]]
+country = "Germany"
+organization = "Mercedes-Benz"
+email = "foss@mercedes-benz.com"
+route = "Open-source community team"
+source = "https://opensource.mercedes-benz.com/team/"
+introduction = """\
+I’m contacting the Mercedes-Benz open-source team to introduce Xmip and ask \
+whether its approach is relevant to your integration or platform-engineering \
+colleagues."""
