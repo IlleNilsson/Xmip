@@ -158,6 +158,10 @@ function Publish-XmipChange {
         break
     }
 
+    # On main before anything is generated or verified, and each changed module too.
+
+    Assert-XmipLandable -At $RepositoryRoot
+
     # The estate map and the decision index first, before the estate is read
     # and before anything is verified, so test/ compares them with the tree
     # being landed and the pin commits them with it. A source change used to
@@ -179,6 +183,10 @@ function Publish-XmipChange {
     # module, because its commit has to be last: it records where the modules
     # ended up.
     [object[]] $status = @($estate | Where-Object { $_.Module -ne '.' -and $_.Changed -gt 0 })
+
+    foreach ($module in $status) {
+        Assert-XmipLandable -At (Join-Path -Path $RepositoryRoot -ChildPath $module.Module)
+    }
 
     # Ahead means committed and not pushed — from an interrupted run, usually.
     #
