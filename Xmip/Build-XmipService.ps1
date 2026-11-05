@@ -61,7 +61,7 @@ function Build-XmipService {
             .ai-interaction/target-ios, joined by xcodebuild into the
             xmip_core_runtime.xcframework Xmip.Operations links; the
             estate's CI builds it on macOS (.github/workflows/rust.yml, job
-            phone-ios). Cargo runs with -j 2, one build at a time. -WhatIf
+            phone-ios). One build at a time, as every cargo runs. -WhatIf
             says the commands. Returns Platform, Triple, Path and Length per
             library and per xcframework. A landing builds Desktop and
             Android itself before the module that needs it.

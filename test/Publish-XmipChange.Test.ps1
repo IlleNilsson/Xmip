@@ -32,32 +32,12 @@ BeforeAll {
 
     <#
         .SYNOPSIS
-        The landing's source, every file of it.
-
-        .DESCRIPTION
-        Publish-XmipChange was one file of 1,586 lines until 2026-09-22 and is
-        a family of files now, each named for what it defines. A test that
-        asks what the landing's code says reads all of them, so it does not
-        care which file a line was moved to.
+        The module's source, every file of it, so a test that asks what the
+        landing's code says does not care which file a line is in.
     #>
     function Get-XmipLandingSource {
-        [string[]] $family = @(
-            'Publish-XmipChange.ps1', 'Get-XmipStatus.ps1', 'Get-XmipDeclaredModule.ps1',
-            'Test-XmipCodeChange.ps1',
-            'Get-XmipNewModule.ps1',
-            'Test-XmipModule.ps1', 'Test-XmipMeasuredProgram.ps1', 'Test-XmipDotnetModule.ps1',
-            'Invoke-XmipTool.ps1',
-            'Submit-XmipModule.ps1',
-            'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
-            'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
-            'Test-XmipPlatform.ps1', 'Test-XmipRuntimeLibraryReader.ps1',
-            'Get-XmipRemainingTime.ps1', 'Get-XmipVerifyTime.ps1',
-            'Update-XmipGeneratedDocument.ps1'
-        )
-
-        return (($family | ForEach-Object {
-                    Get-Content -Raw -LiteralPath (Join-Path $script:ModuleRoot $_)
-                }) -join "`n")
+        return ((Get-ChildItem -LiteralPath $script:ModuleRoot -Filter '*.ps1' |
+                    ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName }) -join "`n")
     }
 
     $script:ManifestPath = Join-Path $script:ModuleRoot 'Xmip.psd1'
