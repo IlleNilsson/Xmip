@@ -671,3 +671,18 @@ stops mid-run) and `wire` test (a call over the wire within a millisecond
 of the same in process), the runtime's and persist's tests, and the
 Essentials at level 1, every node a process (ADR-0028, amendment of this
 date).
+
+## Amendment, 2026-11-05: the web GUI runs on a node with the Monitoring role
+
+The owner, 2026-10-02: *It should be run on a node with the appropriate
+role*; and 2026-11-05, naming it: *With the monitoring role, the operator is
+another role, using the web as a tool. The operator has its CLI and
+PowerShell on its computer.*
+
+- The web GUI, `xmip-gui-web`, is hosted on a node that declares the
+  Monitoring role, as that role's surface for inspecting runtime state.
+- The operator is a security role of its own (ADR-0009), not a node role: a
+  person who uses the web as a tool, and whose command line and PowerShell
+  run on the operator's own computer, reaching the cluster from outside.
+- Not built: today the web host is started on the operator's computer by
+  `Start-XmipOperationWeb`. Hosting it on a Monitoring node follows.

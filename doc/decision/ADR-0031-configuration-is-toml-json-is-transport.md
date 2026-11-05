@@ -606,3 +606,20 @@ owns, and names without the prefix the extension now says.
 - **Editors read it as TOML**: the VS Code extension maps `.xmip` to TOML and
   validates every `.xmip` document; `.gitattributes` has GitHub show it as
   TOML.
+
+## Amendment, 2026-11-05: one module reads, handles and saves configuration
+
+The owner, 2026-11-05: *we need one module, functionality that reads,
+handles and saves configuration*; and on how a machine with nothing yet
+installed reads `prerequisite.xmip`: *Do your best.*
+
+- `xmip-core-configure` is that module for every `.xmip` file: it knows each
+  file's name and place, reads it, validates it, and saves an edit with
+  `toml_edit`, keeping comments and layout. The surfaces reach it in the
+  order ABI, CLI, PowerShell, GUI; nothing else parses TOML or builds a
+  file's path.
+- A machine without cargo takes the module prebuilt, from Xmip's own
+  release, as it later takes `xmip-service`; the estate builds its own once
+  cargo is there. There is one reader either way.
+- Not built: the estate's PowerShell still reads through `Read-XmipToml`
+  and PSToml. Their replacement follows.

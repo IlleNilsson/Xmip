@@ -564,3 +564,22 @@ holds both folders.
 
 Provenance: the assistant's, following the owner's refinement of
 2026-09-25, for the owner to confirm or overrule.
+
+## Amendment, 2026-11-05: `pam` and `windows` call their host, and Xmip works with the platform's identity
+
+The owner, 2026-11-05, on whether the two host verifiers may call the
+operating system's C interface: *Yes it is okay, and Xmip needs interaction
+with OS or platform identity, permissions, belonging.*
+
+- `pam` calls the host's PAM stack and `windows` its SSPI, each in one named
+  file as rust-style.md section 5a has it: `unsafe_code = "deny"` in the
+  crate, lowered in that file alone with its reason, every block saying
+  where its pointers come from, how long they live and who frees them, and
+  `test/Unsafe.Test.ps1` naming the file. The note above, *`pam` and
+  `windows` bind nothing yet*, is answered.
+- Beyond a login, Xmip works with the platform's identity: who an account
+  is, what it is permitted, and the groups it belongs to, read from the
+  operating system or platform where a node runs, for identification,
+  authentication and authorization alike.
+- Not built: both verifiers still refuse a real login. The bindings, and
+  what reads an account's permissions and groups, follow.

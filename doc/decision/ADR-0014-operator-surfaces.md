@@ -1399,3 +1399,31 @@ and *We have operations Web, just incorporate that.* The extension's command
 **Xmip: Open Operations** opens the Operations Web in VS Code's own browser
 view at the address the `xmip.operations.url` setting names, required; no
 page is drawn twice, and the shell holds no rule for finding the address.
+## Amendment, 2026-11-05: the Rust command line's ten choices, as decided on 2026-10-12
+
+The owner, 2026-10-12, on the choices the move of the command line to Rust
+needed: *I'm not that tech savy, you decide, I'll change later if needed.*
+Decided then as recommended, and not recorded until now:
+
+1. **Finding the runtime library** before it loads is one rule, written in
+   Rust and exported from the ABI's own small library, so .NET calls it too.
+2. **The command line's own configuration** is read before the runtime loads
+   through `xmip-core-configure`, the one module that reads configuration
+   (ADR-0031, amendment of this date).
+3. **The rules it moves** go to observe, the scope model and the words, and
+   to the runtime, the surface choice and remote.
+4. **Header facts**, such as status names and ABI versions, it takes from the
+   `xmip-core-abi` crate directly: the contract, not the runtime.
+5. **A probe's sentence:** the one operators see today, the C# command
+   line's, wins, written once in Rust.
+6. **Audit when no runtime loads:** the audit capability's operating-system
+   log fallback, as the language server and the service have.
+7. **Following a snapshot file:** the `notify` crate.
+8. **Remote:** the C# command line stays until the Rust one reaches it,
+   `--remote` included, and is deleted then.
+9. **Devices without a dynamic loader:** a static-link build over the same C
+   symbols.
+10. **Both in one repository during the move:** `xgit` tests both sides while
+    both exist.
+
+Not built: the Rust command line. The C# one is still the only one.
