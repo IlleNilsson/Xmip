@@ -258,15 +258,13 @@ function Stop-XmipTest {
             Stop-XmipTestCluster -Parent $number -Cluster "$($roll.Cluster)"
 
             try {
-                Stop-Process -Id $number -Force -ErrorAction Stop
+                Stop-XmipProcess -Id $number -ErrorAction Stop
             }
             catch {
                 [string] $why = $_.Exception.Message
                 Write-Error "REFUSED: roll $number could not be stopped from this session: $why"
                 continue
             }
-
-            Wait-Process -Id $number -Timeout 5 -ErrorAction SilentlyContinue
 
             if (-not [string]::IsNullOrWhiteSpace($roll.Record)) {
                 Remove-Item -LiteralPath $roll.Record -Force -ErrorAction SilentlyContinue

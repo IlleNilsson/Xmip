@@ -263,3 +263,25 @@ Describe 'Which processes are Xmip''s' {
         }
     }
 }
+
+Describe 'The module stops a process in one place' {
+    It 'calls Stop-Process only in Stop-XmipProcess' {
+        [string] $folder = Join-Path $script:Root 'Xmip'
+        [string[]] $calling = @(Get-ChildItem -LiteralPath $folder -Filter '*.ps1' |
+            Where-Object { $_.Name -ne 'Stop-XmipProcess.ps1' } |
+            ForEach-Object {
+                [string] $file = $_.Name
+                [System.Management.Automation.Language.Ast] $tree =
+                    [System.Management.Automation.Language.Parser]::ParseFile(
+                        $_.FullName, [ref] $null, [ref] $null)
+                $tree.FindAll({
+                        param($node)
+
+                        $node -is [System.Management.Automation.Language.CommandAst] -and
+                            $node.GetCommandName() -eq 'Stop-Process'
+                    }, $true) | ForEach-Object { "${file}:$($_.Extent.StartLineNumber)" }
+            })
+
+        $calling | Should -BeNullOrEmpty
+    }
+}

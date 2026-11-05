@@ -92,8 +92,7 @@ function Stop-XmipTestNode {
         }
 
         [int[]] $ids = @($chosen | ForEach-Object { $_.Id })
-        Wait-Process -Id $ids -Timeout 5 -ErrorAction SilentlyContinue
-        Stop-Process -Id $ids -Force -ErrorAction SilentlyContinue
+        Stop-XmipProcess -Id $ids -Grace 5 -ErrorAction SilentlyContinue
 
         foreach ($stop in $stops) {
             Remove-Item -LiteralPath $stop -Force -ErrorAction Ignore
