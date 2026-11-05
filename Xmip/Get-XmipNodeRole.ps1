@@ -83,7 +83,7 @@ function Get-XmipNodeRole {
             tests whole, which is a real answer and not an error;
             Start-XmipTest says so in words where RoundTrip was asked for. The
             other way to have the message path covered is to omit -Nodes, and
-            take the Playground's own cluster file's nodes with the roles it
+            take the Essentials' own cluster file's nodes with the roles it
             declares.
 
         .PARAMETER Name
@@ -213,7 +213,7 @@ function Get-XmipNodeRoleRefusal {
             node serving any stage is no refusal — the roll runs RoundTrip
             whole — and neither is a run that does not include RoundTrip. No
             -Test means every test, RoundTrip among them. The roll refuses the
-            same way (test/core/playground/src/roster.rs); this says it before
+            same way (test/core/essentials/src/roster.rs); this says it before
             a process starts.
 
         .PARAMETER Nodes
@@ -275,7 +275,7 @@ function Get-XmipNodeRoleRefusal {
         "roles declared, or executing; no node declares $($missing -join ' or '). " +
         'State them with -NodeRole, one entry per node — ' +
         "-NodeRole @{ $($Nodes[0]) = 'receiving' } — or omit -Nodes and take " +
-        "the Playground's own cluster file's nodes, which declares their roles.")
+        "the Essentials' own cluster file's nodes, which declares their roles.")
 }
 
 function Get-XmipNodeRoleWarning {
@@ -339,5 +339,5 @@ function Get-XmipNodeRoleWarning {
         'across the nodes. A node name says nothing about what it does (ADR-0056). ' +
         "Split the message path with -NodeRole @{ $($named[0]) = 'receiving' } " +
         "and so on, or give one node 'executing', or omit -Nodes to take the " +
-        "Playground's own cluster file's nodes as it declares them.")
+        "Essentials' own cluster file's nodes as it declares them.")
 }

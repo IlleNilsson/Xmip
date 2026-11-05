@@ -1046,6 +1046,15 @@ at a time, and a Work Process's step names its way (ADR-0066, amendment
 2026-10-22). A Preparation Step works on bytes and makes no Message; turning
 one Message's content into a new Message's is Transformation's.
 
+**Text is translated at the boundary, by itself** (ADR-0038, amendment
+2026-11-05: Xmip works on text and stores it in UTF-8). A text Stream that
+arrives in another encoding is translated to UTF-8 as the last of Receive
+Preparation, from the encoding its Location or Contract declares, after
+whatever undid a signature, an encryption or a compression; a text Stream
+leaving for a target that declares another encoding is translated from
+UTF-8 as the first of Send Preparation. Neither is a step a Location
+names. Binary is never translated.
+
 ## 9. Publication and Routing
 
 Publication is part of Routing, not a separate platform concern.
@@ -1912,7 +1921,7 @@ to SQLite, RocksDB for speed, SQLite for persistence over time*). The
 operating system's log stays the fallback when it cannot be written
 (ADR-0062, amendment 2026-10-01;
 [decided, not built](estate-map.md#audit-through-storage)). Every program writes its
-records to its `audit.toml` today
+records to its `audit.xmip` today
 ([built, in the assembled service](estate-map.md#program-audit)).
 
 **Retention** (`xmip-core-retain`) holds Messages, Streams or durable Stream
@@ -1926,7 +1935,7 @@ category, using time, size, count, state or hold rules.
 retained history. Targets may include CSV, SQL, JSON, Parquet, XML, Avro, file
 systems, object stores and custom providers. Both are
 [built, not in the assembled service](estate-map.md#retention-archiving): the
-Playground drives them, a node does not.
+Essentials drives them, a node does not.
 
 Audit comes first conceptually. An audit record spells out the Message it
 audits, as it was, and its Streams' bytes with their digests, so the copy is
@@ -1956,13 +1965,13 @@ stream, in chunks*).
 2026-10-10): every record carries its number in its writer's chain — the
 node's, or the program's where no node writes it — and the SHA-256 digest of
 the record before it there, and its own over its canonical form. The file
-sink forms a program's chain as it appends to `audit.toml`; the audit keeper
+sink forms a program's chain as it appends to `audit.xmip`; the audit keeper
 forms a node's as it keeps each record, the `audit` table laying out the
 writer, the number and both digests. One walk says the first place a chain
 breaks — a record deleted, changed or out of order — or that it is whole:
 `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
 file, `ledger::verify_audit_chain` for Xmip Storage. A record whose write to
-`audit.toml` was interrupted is kept as written: the next append seals it
+`audit.xmip` was interrupted is kept as written: the next append seals it
 with a comment line and a blank line before its own record, so it is in no
 chain and the next record continues from the last complete one, and a
 verification reports it per file apart from the chain verdict — FAILED once
@@ -2151,7 +2160,7 @@ failover        = "next"          # next | none
 correlation = "PerParty"      # one at a time per key, as the set says
 ```
 
-In the cluster's `xmip.toml`, once for the whole cluster (ADR-0024 and
+In `cluster.xmip`, once for the whole cluster (ADR-0024 and
 ADR-0066, amendments 2026-10-22):
 
 ```toml
@@ -2583,7 +2592,7 @@ both a liability and a denial-of-service surface. Section 4 states the result.
 **2. Journey states — two different enums.**
 v1.0 named seven operational states. The root's `src/journey_model.rs`
 implemented six when this conflict was written; it merged into
-`xmip-core-journey` on 2026-08-27 (`doc/planning/allocation.toml`), which
+`xmip-core-journey` on 2026-08-27 (`doc/planning/allocation.xmip`), which
 implements seven, and ADR-0013 clause 7 records the code.
 
 *Resolved:* the code. The mapping, and the two that had no equivalent:

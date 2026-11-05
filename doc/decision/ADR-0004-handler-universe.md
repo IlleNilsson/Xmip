@@ -7,7 +7,7 @@ Superseded by ADR-0010.
 ADR-0010 replaced the handler universe with the contract and transport
 repository boundaries, and ADR-0011 retired `handler` as a repository-name
 segment. This record is kept because the reasoning below produced the
-technology lists that architecture.toml now carries, but nothing in it is
+technology lists that architecture.xmip now carries, but nothing in it is
 current. Do not implement from it.
 
 The previous header read "Superseded by ADR-0005 when ADR-0005 is accepted",
@@ -26,7 +26,7 @@ integration, business, cloud, healthcare, industrial, energy, finance,
 logistics, government, database, file, network, messaging and device.
 
 **Superseded by *Contract, transport and representation stay separate*.** Kept
-because its reasoning produced the technology lists `architecture.toml` now
+because its reasoning produced the technology lists `architecture.xmip` now
 carries. Nothing in it is current — do not implement from it.
 
 ## Decision

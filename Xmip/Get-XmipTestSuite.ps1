@@ -3,13 +3,13 @@
 Set-StrictMode -Version Latest
 
 # A test suite carries a provider, exactly as a module does (ADR-0011), and
-# the qualified form is the canonical one: Xmip's own two are Core.Playground
+# the qualified form is the canonical one: Xmip's own two are Core.Essentials
 # and Core.Estate, which is what every surface prints, records and documents
-# (ADR-0059, amendment 2026-09-20; the owner: "It's name is Core.Playground,
+# (ADR-0059, amendment 2026-09-20; the owner: "It's name is Core.Essentials,
 # to give place for third parties"). A bare name is still accepted and is
 # canonicalized to the qualified one. Said once here, so no surface spells the
-# Playground's name for itself and none of them can disagree.
-[string] $script:XmipPlaygroundSuite = 'Core.Playground'
+# Essentials' name for itself and none of them can disagree.
+[string] $script:XmipEssentialsSuite = 'Core.Essentials'
 [string] $script:XmipEstateSuite = 'Core.Estate'
 
 # Where a provider declares a suite of its own: one TOML file per suite in
@@ -24,7 +24,7 @@ function Get-XmipTestSuite {
             caller gives -Suite, who provides it, and how it starts.
 
         .DESCRIPTION
-            Core.Playground and Core.Estate are known to the module, so the
+            Core.Essentials and Core.Estate are known to the module, so the
             estate's own gate runs on a fresh clone with nothing declared.
             Every other suite is a third party's, declared in a TOML file under
             test/suite and read here. A declaration that is malformed is
@@ -43,7 +43,7 @@ function Get-XmipTestSuite {
         [string] $Path
     )
 
-    New-XmipTestSuite -Provider 'Core' -Name 'Playground' -Kind 'roll'
+    New-XmipTestSuite -Provider 'Core' -Name 'Essentials' -Kind 'roll'
     New-XmipTestSuite -Provider 'Core' -Name 'Estate' -Kind 'pester'
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -62,7 +62,7 @@ function Get-XmipTestSuite {
     # broken one is warned about by name and is absent, so asking for it
     # refuses with the same words as a suite nobody declared, and Xmip's two
     # are unaffected (ADR-0055 clause 5; a warning is not silence).
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter '*.toml' -File)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter '*.xmip' -File)) {
         try {
             Read-XmipTestSuiteDeclaration -Path $file.FullName
         }
@@ -78,17 +78,17 @@ function New-XmipTestSuite {
         .SYNOPSIS
             One suite as the Xmip.TestSuite object every surface reads. The
             canonical spelling is Provider.Name for everyone, Xmip's own two
-            included — Core.Playground, Core.Estate — and a caller is matched
+            included — Core.Essentials, Core.Estate — and a caller is matched
             against it without regard to case.
 
         .PARAMETER Provider
             Who publishes the suite. Core is Xmip itself (ADR-0011).
 
         .PARAMETER Name
-            What the provider calls the suite: Playground, Estate.
+            What the provider calls the suite: Essentials, Estate.
 
         .PARAMETER Kind
-            How it starts: roll is the Playground's detached roll, pester is
+            How it starts: roll is the Essentials' detached roll, pester is
             the estate's Pester files, command is a provider's own command.
 
         .PARAMETER Command
@@ -147,15 +147,15 @@ function Get-XmipNamedTestSuite {
         .DESCRIPTION
             A name is matched against the canonical <Provider>.<Name> and,
             for the reserved provider alone, against the bare name, so
-            Playground and Core.Playground are the one suite and the one
-            spelling that comes back is Core.Playground (ADR-0011; ADR-0059,
+            Essentials and Core.Essentials are the one suite and the one
+            spelling that comes back is Core.Essentials (ADR-0011; ADR-0059,
             amendment 2026-09-20). A bare name reaches Xmip's own suites and
             no one else's. Case never matters, here or anywhere.
 
             The match is a wildcard, as -Test's is and as Get-XmipTestNode
             -Name's is (the owner, 2026-09-19: "Filter the -Suite as the -Test
             parameter"), so -Suite * is every suite this estate knows and
-            -Suite *Play* is the Playground. A literal name holds no wildcard
+            -Suite *Ess* is the Essentials. A literal name holds no wildcard
             character and selects exactly one suite, so nothing an operator
             typed before this means anything else now.
 
@@ -251,8 +251,8 @@ function Test-XmipWholeSuite {
             run all tests in the test suite).
 
         .DESCRIPTION
-            Core.Playground and Core.Estate both did this already and did it
-            by two unrelated accidents — an unset XMIP_PLAYGROUND_SCENARIOS
+            Core.Essentials and Core.Estate both did this already and did it
+            by two unrelated accidents — an unset XMIP_ESSENTIALS_SCENARIOS
             that the roll reads as every scenario, and an empty -Test that
             Pester reads as every file. Two behaviors that happen to agree are
             not a rule; this is the rule, and all three branches ask it.
@@ -342,7 +342,7 @@ function Get-XmipTestChoice {
             so far. Private; the completer asks the module for it.
 
         .PARAMETER Suite
-            The suite typed so far; empty is the Playground.
+            The suite typed so far; empty is the Essentials.
 
         .PARAMETER Word
             What has been typed of the test.
@@ -361,14 +361,14 @@ function Get-XmipTestChoice {
 
     # Qualified or bare, both name the estate's suite, and Core.Estate is the
     # spelling (ADR-0059, amendment 2026-09-20); omitted, -Suite is the
-    # Playground.
+    # Essentials.
     [string[]] $names = if ($Suite -ieq 'Estate' -or $Suite -ieq 'Core.Estate') {
         [string] $root = Get-XmipRepositoryRoot
         Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
             ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
     }
     else {
-        @($script:XmipPlaygroundTest.Keys)
+        @($script:XmipEssentialsTest.Keys)
     }
 
     $names | Where-Object { $_ -like "$Word*" }

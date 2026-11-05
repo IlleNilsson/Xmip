@@ -3,11 +3,11 @@
 
 <#
 .SYNOPSIS
-    A Playground roll's run record: where it is and what it says.
+    An Essentials roll's run record: where it is and what it says.
 
 .DESCRIPTION
-    Start-XmipPlaygroundRoll writes one record per roll, roll-<pid>.toml, in
-    the roll area; Get-XmipTestStatus reads it, Start-XmipPlaygroundRoll asks
+    Start-XmipEssentialsRoll writes one record per roll, roll-<pid>.xmip, in
+    the roll area; Get-XmipTestStatus reads it, Start-XmipEssentialsRoll asks
     which rolls a cluster already has and clears the stale ones, and
     Stop-XmipTest deletes it. The name is decided here and nowhere else.
 
@@ -31,7 +31,7 @@ function Get-XmipRollRecordPath {
         [int] $Id
     )
 
-    return (Join-Path -Path $Path -ChildPath "roll-$Id.toml")
+    return (Join-Path -Path $Path -ChildPath "roll-$Id.xmip")
 }
 
 
@@ -69,7 +69,7 @@ function Get-XmipRollRecord {
         $files = @(Get-Item -LiteralPath $one -ErrorAction SilentlyContinue)
     }
     elseif (Test-Path -LiteralPath $Path -PathType Container) {
-        $files = @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.toml' -File)
+        $files = @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.xmip' -File)
     }
 
     foreach ($file in $files) {

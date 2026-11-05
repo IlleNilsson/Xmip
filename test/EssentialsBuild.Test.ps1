@@ -46,14 +46,14 @@ Describe 'Start-XmipTest returns before the build' {
         InModuleScope Xmip -Parameters $given {
             param($Cluster, $Node, $Area)
 
-            Mock Start-XmipPlaygroundBuild { 4242 }
-            Mock Invoke-XmipPlaygroundBuild { throw 'the console built' }
-            Mock Get-XmipPlaygroundPublication { throw 'no binary in this test' }
+            Mock Start-XmipEssentialsBuild { 4242 }
+            Mock Invoke-XmipEssentialsBuild { throw 'the console built' }
+            Mock Get-XmipEssentialsPublication { throw 'no binary in this test' }
             Mock Get-XmipTestStatus { }
             Mock Write-Host { }
 
             [hashtable] $door = @{
-                Suite    = 'Core.Playground'
+                Suite    = 'Core.Essentials'
                 Cluster  = $Cluster
                 Nodes    = @($Node)
                 NodeRole = @{ $Node = 'executing' }
@@ -62,8 +62,8 @@ Describe 'Start-XmipTest returns before the build' {
             }
             Start-XmipTest @door
 
-            Should -Invoke Invoke-XmipPlaygroundBuild -Times 0
-            Should -Invoke Start-XmipPlaygroundBuild -Times 1 -ParameterFilter {
+            Should -Invoke Invoke-XmipEssentialsBuild -Times 0
+            Should -Invoke Start-XmipEssentialsBuild -Times 1 -ParameterFilter {
                 $Start.Cluster -eq $Cluster -and $Start.Rounds -eq 1 -and
                     $Start.Path -eq $Area -and $Start.Snapshot -eq ''
             }
@@ -80,8 +80,8 @@ Describe 'Start-XmipTest returns before the build' {
             $script:Building = [pscustomobject]@{
                 Id = 99; Kind = 'build'; State = 'building'; Cluster = $Cluster
             }
-            Mock Get-XmipPlaygroundBuild { $script:Building }
-            Mock Start-XmipPlaygroundBuild { 1 }
+            Mock Get-XmipEssentialsBuild { $script:Building }
+            Mock Start-XmipEssentialsBuild { 1 }
 
             [hashtable] $door = @{
                 Cluster  = $Cluster
@@ -92,19 +92,19 @@ Describe 'Start-XmipTest returns before the build' {
 
             { Start-XmipTest @door -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED*rolling or building as pid 99*'
-            Should -Invoke Start-XmipPlaygroundBuild -Times 0
+            Should -Invoke Start-XmipEssentialsBuild -Times 0
         }
     }
 
     It 'builds only in the detached half, which the console starts encoded' {
         [string] $module = Join-Path $script:Root 'Xmip'
         [string] $console = Get-Content -Raw -LiteralPath (
-            Join-Path $module 'Start-XmipPlaygroundRoll.ps1')
+            Join-Path $module 'Start-XmipEssentialsRoll.ps1')
         [string] $detached = Get-Content -Raw -LiteralPath (
-            Join-Path $module 'Start-XmipPlaygroundBuild.ps1')
+            Join-Path $module 'Start-XmipEssentialsBuild.ps1')
 
-        $console | Should -Not -Match 'Invoke-XmipPlaygroundBuild'
-        $detached | Should -Match 'Invoke-XmipPlaygroundBuild -Binary roll'
+        $console | Should -Not -Match 'Invoke-XmipEssentialsBuild'
+        $detached | Should -Match 'Invoke-XmipEssentialsBuild -Binary roll'
         $detached | Should -Match '-EncodedCommand'
     }
 }
@@ -117,17 +117,17 @@ Describe 'A build says how it stands' {
         InModuleScope Xmip -Parameters @{ Log = $log } {
             param($Log)
 
-            Get-XmipPlaygroundBuildProgress -Log $Log | Should -Be 'building'
+            Get-XmipEssentialsBuildProgress -Log $Log | Should -Be 'building'
 
             Set-Content -LiteralPath $Log -Value @(
                 '   Compiling first-crate v0.1.0 (path)'
                 '   Compiling second-crate v0.1.0'
             )
-            Get-XmipPlaygroundBuildProgress -Log $Log |
+            Get-XmipEssentialsBuildProgress -Log $Log |
                 Should -Be 'building: 2 crates compiled, last second-crate'
 
             Add-Content -LiteralPath $Log -Value '    Finished `dev` profile in 9.0s'
-            Get-XmipPlaygroundBuildProgress -Log $Log |
+            Get-XmipEssentialsBuildProgress -Log $Log |
                 Should -Be 'built 2 crates; starting the roll'
         }
     }
@@ -139,26 +139,26 @@ Describe 'A build says how it stands' {
             param($Cluster, $Node, $Area)
 
             [hashtable] $start = @{
-                Suite = 'Core.Playground'; Cluster = $Cluster; Stress = 'Calm'
+                Suite = 'Core.Essentials'; Cluster = $Cluster; Stress = 'Calm'
                 Test = @(); Rounds = 1; Nodes = @($Node); OnlineNodes = @()
                 Hidden = $false; Snapshot = ''; Path = $Area
                 Log = Join-Path $Area 'build-1.log'
             }
             [string] $handed = Join-Path $Area 'build-1.clixml'
-            [string] $record = Join-Path $Area 'build-1.toml'
+            [string] $record = Join-Path $Area 'build-1.xmip'
             Export-Clixml -LiteralPath $handed -InputObject $start -Depth 5
 
-            Mock Invoke-XmipPlaygroundBuild {
+            Mock Invoke-XmipEssentialsBuild {
                 throw 'cargo build --bin roll exited 101 in here: error: could not compile'
             }
-            Mock Start-XmipPlaygroundRollProcess { 7 }
+            Mock Start-XmipEssentialsRollProcess { 7 }
 
-            Complete-XmipPlaygroundBuild -Record $record -Handed $handed
+            Complete-XmipEssentialsBuild -Record $record -Handed $handed
 
             Test-Path -LiteralPath $handed | Should -BeFalse
-            Should -Invoke Start-XmipPlaygroundRollProcess -Times 0
+            Should -Invoke Start-XmipEssentialsRollProcess -Times 0
 
-            $build = Get-XmipPlaygroundBuild -Path $Area
+            $build = Get-XmipEssentialsBuild -Path $Area
             $build.Kind | Should -Be 'build'
             $build.State | Should -Be 'FAILED'
             $build.Cluster | Should -Be $Cluster
@@ -175,17 +175,17 @@ Describe 'A build says how it stands' {
 
             [hashtable] $start = @{ Cluster = $Cluster; Nodes = @($Node); Path = $Area }
             [string] $handed = Join-Path $Area 'build-2.clixml'
-            [string] $record = Join-Path $Area 'build-2.toml'
+            [string] $record = Join-Path $Area 'build-2.xmip'
             Export-Clixml -LiteralPath $handed -InputObject $start -Depth 5
             Set-Content -LiteralPath $record -Value 'pid = 1'
 
-            Mock Invoke-XmipPlaygroundBuild { 'roll' }
-            Mock Invoke-XmipPlaygroundService { 'service' }
-            Mock Start-XmipPlaygroundRollProcess { 7 }
+            Mock Invoke-XmipEssentialsBuild { 'roll' }
+            Mock Invoke-XmipEssentialsService { 'service' }
+            Mock Start-XmipEssentialsRollProcess { 7 }
 
-            Complete-XmipPlaygroundBuild -Record $record -Handed $handed
+            Complete-XmipEssentialsBuild -Record $record -Handed $handed
 
-            Should -Invoke Start-XmipPlaygroundRollProcess -Times 1 -ParameterFilter {
+            Should -Invoke Start-XmipEssentialsRollProcess -Times 1 -ParameterFilter {
                 $Start.Cluster -eq $Cluster
             }
             Test-Path -LiteralPath $record | Should -BeFalse
@@ -200,18 +200,18 @@ Describe 'A build says how it stands' {
 
             foreach ($pair in @(@('3', $Cluster), @('4', "${Cluster}2"))) {
                 [hashtable] $start = @{ Cluster = $pair[1]; Log = "$Area/build-$($pair[0]).log" }
-                $written = New-XmipPlaygroundBuildRecord -Start $start -Id 2000000000 -Started (
+                $written = New-XmipEssentialsBuildRecord -Start $start -Id 2000000000 -Started (
                     [datetime] '2026-10-13T10:00:00Z')
-                Write-XmipToml -Path (Join-Path $Area "build-$($pair[0]).toml") -Value $written
+                Write-XmipToml -Path (Join-Path $Area "build-$($pair[0]).xmip") -Value $written
             }
 
-            [object[]] $builds = @(Get-XmipPlaygroundBuild -Path $Area)
+            [object[]] $builds = @(Get-XmipEssentialsBuild -Path $Area)
             $builds.Count | Should -Be 2
             $builds | ForEach-Object { $_.State | Should -Be 'FAILED' }
             $builds[0].Fault | Should -BeLike '*ended without starting its roll*'
 
-            Remove-XmipPlaygroundBuildEnded -Path $Area -Cluster $Cluster -Confirm:$false
-            @(Get-XmipPlaygroundBuild -Path $Area | ForEach-Object { $_.Cluster }) |
+            Remove-XmipEssentialsBuildEnded -Path $Area -Cluster $Cluster -Confirm:$false
+            @(Get-XmipEssentialsBuild -Path $Area | ForEach-Object { $_.Cluster }) |
                 Should -Be @("${Cluster}2")
         }
     }
@@ -225,7 +225,7 @@ Describe 'Stop-XmipTest stops a build' {
             param($Cluster, $Node, $Area)
 
             [hashtable] $sleeping = @{
-                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipPlaygroundLayout).Suffix)"
+                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipEssentialsLayout).Suffix)"
                 ArgumentList = @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120')
                 PassThru     = $true
             }
@@ -237,17 +237,17 @@ Describe 'Stop-XmipTest stops a build' {
             $process = Start-Process @sleeping
             [string] $log = Join-Path $Area 'build-5.log'
             Set-Content -LiteralPath $log -Value '   Compiling only-crate v0.1.0'
-            [hashtable] $start = @{ Suite = 'Core.Playground'; Cluster = $Cluster; Log = $log }
+            [hashtable] $start = @{ Suite = 'Core.Essentials'; Cluster = $Cluster; Log = $log }
             [hashtable] $began = @{ Start = $start; Id = $process.Id; Started = $process.StartTime }
-            [string] $record = Join-Path $Area 'build-5.toml'
-            Write-XmipToml -Path $record -Value (New-XmipPlaygroundBuildRecord @began)
+            [string] $record = Join-Path $Area 'build-5.xmip'
+            Write-XmipToml -Path $record -Value (New-XmipEssentialsBuildRecord @began)
 
-            $build = Get-XmipPlaygroundBuild -Path $Area
+            $build = Get-XmipEssentialsBuild -Path $Area
             $build.State | Should -Be 'building'
             $build.Tally | Should -Be 'building: 1 crate compiled, last only-crate'
 
             $script:BuildArea = $Area
-            Mock Get-XmipTestStatus { Get-XmipPlaygroundBuild -Path $script:BuildArea }
+            Mock Get-XmipTestStatus { Get-XmipEssentialsBuild -Path $script:BuildArea }
 
             Stop-XmipTest -Id $process.Id -Confirm:$false
 
@@ -260,7 +260,7 @@ Describe 'Stop-XmipTest stops a build' {
         InModuleScope Xmip {
             Mock Get-XmipTestStatus {
                 [pscustomobject]@{
-                    Id = 6; Kind = 'build'; State = 'FAILED'; Suite = 'Core.Playground'
+                    Id = 6; Kind = 'build'; State = 'FAILED'; Suite = 'Core.Essentials'
                 }
             }
 

@@ -16,7 +16,7 @@ it. `transport/src/lib.rs` was called "transport" and held five protocols, a
 TLS client, an error taxonomy, a claim model and a header parser. Every one of
 those is a thing; none of them is "transport".
 
-**The estate already declares this shape one level up.** `architecture.toml`
+**The estate already declares this shape one level up.** `architecture.xmip`
 gives each protocol its own repository — `xmip-core-transport-kafka` and eighty
 siblings. One file per subject is the same principle inside a crate, and it is
 what makes lifting a subject out into its own repository a move rather than a
@@ -176,7 +176,7 @@ while the crate's own code stays debuggable. Unoptimized, a parser such as
 `toml` runs about twenty times slower; that, not Xmip, was behind a week of
 tests failing on time and a cluster that judged healthy nodes hung
 (2026-09-25). The owner, 2026-09-26, chose it for every crate over the
-Playground alone, under the rule that anything over a millisecond apart from
+Essentials alone, under the rule that anything over a millisecond apart from
 load is a defect (`CONTRIBUTING.md`). The first build after a dependency
 changes takes longer; every build after it is cached. `test/Rust.Style.Test.ps1`
 holds every workspace root to it.
@@ -250,6 +250,16 @@ a measured time, a fastest of five or a figure read in milliseconds or
 less, under a bound below a second, or a call of `xcore::latency::at_once` —
 anywhere in a module's tests outside a `measured` folder fails it, and so
 does a `measured` program declared without `test = false`.
+
+## 5d. A test that runs a minute fails the landing
+
+Every `cargo test` of a landing runs through `Invoke-XmipCargoTest`. The
+first time libtest says a test *has been running for over 60 seconds*, the
+run is stopped with every process beneath it, the test is named, and the
+module fails. The minute is libtest's own word, not a limit Xmip sets: no
+test needs it, so a test that reaches it waits on something that will not
+come. On 2026-11-04 a landing waited
+two hours on seven TLS tests that never ended, and nothing said so.
 
 ## 6. What this does not enforce
 

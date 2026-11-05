@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-05
 - Related: ADR-0011 (module and repository naming), ADR-0030 (prefix external
-  names), ADR-0028 (the Xmip Playground), ADR-0029 (observation has history),
+  names), ADR-0028 (the Xmip Essentials), ADR-0029 (observation has history),
   ADR-0015 and ADR-0018 (amendments 2026-10-01: Xmip Storage, and a node's
   configuration read into memory)
 
@@ -29,15 +29,15 @@ transport"*; *"we only want JSON in memory or on the network, not as
 configuration."* It is written down here so it is not re-litigated a fifth time.
 
 The estate already lived this before it was recorded: `architecture.json` was
-deleted for `architecture.toml`, and the .NET hosts read `xmip.gui.toml` through
+deleted for `architecture.xmip`, and the .NET hosts read `gui.xmip` through
 a TOML configuration provider rather than `appsettings.json`.
 
 ## Decision
 
 ### 1. Configuration is TOML
 
-Everything Xmip reads its own settings from is TOML: `architecture.toml`, node
-configuration, `xmip.gui.toml`, and any file that follows. There is no JSON
+Everything Xmip reads its own settings from is TOML: `architecture.xmip`, node
+configuration, `gui.xmip`, and any file that follows. There is no JSON
 configuration anywhere in the estate, and none is to be added.
 
 ### 2. JSON is transport
@@ -49,7 +49,7 @@ available: Xmip has to speak JSON to the world.
 ### 3. On disk is TOML, even for data the estate writes for itself
 
 A file the estate persists — configuration or its own runtime data, like the
-Playground's snapshot and history — is TOML. JSON is reserved for what lives in
+Essentials' snapshot and history — is TOML. JSON is reserved for what lives in
 memory or on the network. A persisted file is neither, so it is TOML. (ADR-0029
 clause 5 applies this to the history file.)
 
@@ -191,7 +191,7 @@ Each is read into the node's execution tree as it starts, like everything
 else configured (the amendment above).
 
 Built 2026-10-03, the Application's keys: an Xmip Application is a section
-of the cluster's `xmip.toml` (the amendment of 2026-10-03, ADR-0064), and
+of `cluster.xmip` (the amendment of 2026-10-03, ADR-0064), and
 `xmip-core-configure` reads its `[[receive_ports]]`, each Receive
 Location's `receive_port` and `depth`, and each Send Port's
 `send_locations`, `retry`, `failover` and `correlation` (`port.rs`). A
@@ -244,14 +244,14 @@ it is held.
 
 Provenance: the owner's rulings, quoted; the wording is the assistant's.
 
-## Amendment, 2026-10-03: one `xmip.toml` per cluster, sliced to each node
+## Amendment, 2026-10-03: one `cluster.xmip` per cluster, sliced to each node
 
 **Provenance.** The owner, 2026-10-03: *All these outwards, hardware
 assumptions and calculations should be configurable per cluster and node.
 Kept in the Cluster TOML file*; *There is one xmip.toml file per cluster.
 When deployed the sections regarding a node will be sliced to that node.*
 
-- **A cluster's configuration is one file, `xmip.toml`.** What the whole
+- **A cluster's configuration is one file, `cluster.xmip`.** What the whole
   cluster shares is in it once; what concerns one node is in that node's
   sections, `[nodes.<name>]`.
 - **Deployment slices it.** Desired state (`deployment-model.md` section 8)
@@ -388,15 +388,15 @@ This replaces `runtime-model.md`'s single receive gate and single send
 validation with one per level, and answers which artifact configures a
 Preparation Step, a promotion, a demotion and a Transformation. Not built.
 
-## Amendment, 2026-10-05: only the cluster's `xmip.toml` is edited
+## Amendment, 2026-10-05: only `cluster.xmip` is edited
 
 **Provenance.** The owner, 2026-10-05: *node TOML files shall not be
 edited, only cluster TOML files, the files are sliced / node and
 distributed. […] Of course the node TOML files can be changed, but that
 breaks configuration rules.*
 
-- **The cluster's `xmip.toml` is the one configuration anyone edits** — by
-  hand, in the VS Code designer or in any tool. A node's `xmip-node.toml`
+- **`cluster.xmip` is the one configuration anyone edits** — by
+  hand, in the VS Code designer or in any tool. A node's `node.xmip`
   is the slice desired state writes from it (the amendment of 2026-10-03,
   `deployment-model.md` section 8), never edited.
 - **A node's file changed by hand breaks this rule**: the next deployment
@@ -415,13 +415,13 @@ this rule. The owner: *Change it, we edit the cluster TOML file, drilling
 down to nodes and artifacts from the overview of the cluster.*
 
 Built 2026-10-05, the Operation Desktop: its Configure page opens the
-cluster's file `xmip.gui.toml`'s `ClusterConfiguration` names, on an
+cluster's file `gui.xmip`'s `ClusterConfiguration` names, on an
 overview of the cluster, and drills to a node, to artifacts by kind and to
 an entry, every view and edit through `xmip_operate.h` section 10; a
 node's own document is shown with the slicing's refusal and never edited.
 Save writes the file, validates it, slices it per node through the new
 `xmip_cluster_slices_v1` and writes each slice to
-`<SliceDirectory>/<node>/xmip-node.toml`, each step audited per node; the
+`<SliceDirectory>/<node>/node.xmip`, each step audited per node; the
 desktop's own node (`Node`) is shipped and started from its slice, every
 other node is *sliced, not shipped* until a node's slice can be placed
 remotely (open problem 31). `NodeConfiguration`, `ConfigStore` and the
@@ -472,7 +472,7 @@ Where each node is: the owner, asked whether its address is written under
 `[nodes.<name>]`: *The cluster knows the addresses.* The shipping Xmip
 Service learns each node's address from cluster membership — node
 registration in the administration database (`deployment-model.md`,
-*The administration database holds*) — not from `xmip.toml`.
+*The administration database holds*) — not from `cluster.xmip`.
 
 ## Amendment, 2026-10-22: no Pipeline, the attachment keys decided, and debatching on both sides
 
@@ -519,7 +519,7 @@ its all-or-nothing rule are the amendment of 2026-10-27's.
 
 The owner, 2026-10-22: *A default correlation set is its receive location
 name. … I can widen and strangle parallelism at any configurable point.*
-The cluster's `xmip.toml` declares `[[correlations]]` — `name`, `keys`,
+`cluster.xmip` declares `[[correlations]]` — `name`, `keys`,
 `on_failure` (`block` where it says nothing, or `skip`) — once for the whole
 cluster, and a Receive Location, a Receive Port, a Work Process or a Send
 Port names one by `correlation` (ADR-0024 and ADR-0066, amendments of
@@ -586,3 +586,23 @@ the Contract run on receive, one write routing several Messages, and the
 removal of written records from Xmip Storage (open problem 47); until
 then a node refuses to start a Location or Port attaching a Debatch, as
 it refuses every unit attachment (`configure::step::unrun`).
+
+## Amendment, 2026-11-04: an Xmip file ends in `.xmip`; it is TOML inside
+
+The owner, 2026-11-04: *It should be .xmip but it is toml inside.* Asked
+which files and whether their names change, he chose every TOML file Xmip
+owns, and names without the prefix the extension now says.
+
+- **Every file Xmip owns ends in `.xmip`** and is TOML inside, read and
+  written as TOML as before: a cluster's `cluster.xmip` (was `xmip.toml`), a
+  node's slice `node.xmip` (was `xmip-node.toml`), the surfaces' `gui.xmip`,
+  `cli.xmip` and `powershell.xmip`, the deploy profiles and sites, what the
+  runtime and the Essentials persist, and the estate's own
+  `architecture.xmip`, `prerequisite.xmip`, `asset/brand/brand.xmip` and
+  `doc/planning/allocation.xmip`.
+- **What another tool names stays**: `Cargo.toml`, `rust-toolchain.toml`,
+  `.cargo/config.toml`. The `toml` Contract technology checks TOML content,
+  not Xmip's files, and keeps its name.
+- **Editors read it as TOML**: the VS Code extension maps `.xmip` to TOML and
+  validates every `.xmip` document; `.gitattributes` has GitHub show it as
+  TOML.

@@ -205,7 +205,7 @@ when audit itself fails
 
 **Every Xmip program records what it does and every failure through
 `xmip-core-audit` — the runtime and its node, the web and desktop monitors,
-the command line, both PowerShell modules, the Playground's roll, cluster and
+the command line, both PowerShell modules, the Essentials' roll, cluster and
 node processes, the language server and the estate's own tooling — not the
 runtime alone. The record is written once, in the audit capability; a .NET
 program and PowerShell reach it through the runtime's library, as they reach
@@ -411,7 +411,7 @@ prefix.**
 
 Load timing is configuration, per Module. The default comes from
 `architecturalDomain`, which every repository already declares in
-`architecture.toml`: Foundation, Capabilities and Platform load **eager**
+`architecture.xmip`: Foundation, Capabilities and Platform load **eager**
 because they are on the path a Message travels, and Operations load **delayed**
 because they observe the path rather than carry it. Nothing new to declare.
 
@@ -541,7 +541,7 @@ interface lives in the repository it belongs to. A Rust contract becomes a
 library a node loads through the C ABI by one line, the contract capability's
 `export_contract!`. A module loaded through the ABI is a separate work under
 any license; a module linked into Xmip is AGPL-3.0-or-later. A provider
-declares its modules in core's `architecture.toml`. The SDK, `xmip-core-sdk`
+declares its modules in core's `architecture.xmip`. The SDK, `xmip-core-sdk`
 at the estate root, `sdk/`, holds only what a module is tested on:
 simulators, emulators and, for now, the local ACME server.**
 
@@ -563,7 +563,7 @@ xmip-<provider>-<module>-<standard>
 ```
 
 Shortest singular form, a verb where the module does something, the recognized
-standard name for a technology. In `architecture.toml` the TOML tree path **is**
+standard name for a technology. In `architecture.xmip` the TOML tree path **is**
 the name — dots become hyphens and nothing else happens.
 
 → [Module and repository naming, in full](ADR-0011-module-naming.md)
@@ -595,7 +595,7 @@ integration, business, cloud, healthcare, industrial, energy, finance,
 logistics, government, database, file, network, messaging and device.
 
 **Superseded by *Contract, transport and representation stay separate*.** Kept
-because its reasoning produced the technology lists `architecture.toml` now
+because its reasoning produced the technology lists `architecture.xmip` now
 carries. Nothing in it is current — do not implement from it.
 
 → [The handler universe, in full](ADR-0004-handler-universe.md) — **superseded by [ADR-0010](ADR-0010-contract-transport-repository-boundaries.md)**
@@ -631,14 +631,14 @@ first word this governs; the same three moves handle the next.
 
 ### A repository may declare its mount and mark itself optional
 
-**The Playground is its own repository (`xmip-test-playground`), and it is not a
+**The Essentials is its own repository (`xmip-test-essentials`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `test/playground`, not under `module/`, and it is declared
+estate root as `test/essentials`, not under `module/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.
 
-→ [The Playground is optional scaffolding, in full](ADR-0036-playground-is-optional-scaffolding.md)
+→ [The Essentials is optional scaffolding, in full](ADR-0036-essentials-is-optional-scaffolding.md)
 
 ### A message-carrying error type is declared once, not per crate
 
@@ -667,8 +667,8 @@ does
 
 **Code that two technologies both need lives in the crate both already
 depend on: their parent capability, or the technology they both ride on. A
-technology never copies a sibling's file. The playground's adapters follow
-the same rule through the playground's own shared modules.**
+technology never copies a sibling's file. The essentials' adapters follow
+the same rule through the essentials' own shared modules.**
 
 → [A technology shares through its capability, in full](ADR-0044-a-technology-shares-through-its-capability.md)
 
@@ -700,7 +700,7 @@ observation test is placed there first, and only what is left is Platform.**
 ### How a reader sees the whole estate, and why it is not drawn by hand
 
 **The whole estate is one generated document. `New-XmipEstateMap` reads
-`architecture.toml` and the `.gitmodules` files and writes
+`architecture.xmip` and the `.gitmodules` files and writes
 `doc/architecture/estate-map.md`, which names every declared repository, the
 domain and parent it sits under, its declared maturity, and whether it is
 composed in this working tree. `test/EstateMap.Test.ps1` regenerates it and
@@ -787,7 +787,7 @@ stable Rust, Pester 6 (the amendments of 2026-10-19 and 2026-11-02 have every
 version).
 
 **The version numbers are not the decision** — they will be history soon enough.
-The decision is the rule that produced them, which is why `prerequisite.toml`
+The decision is the rule that produced them, which is why `prerequisite.xmip`
 and `rust-toolchain.toml` express channels rather than pins. A floor states what
 would break; it does not freeze anything.
 
@@ -832,9 +832,9 @@ rather than as an aspiration in a document.
 
 → [The operator boundary, in full](ADR-0027-the-operator-boundary.md)
 
-### The Playground exercises everything, all the time
+### The Essentials exercises everything, all the time
 
-**`xmip-test-playground` exercises Xmip continuously.** It spawns Development
+**`xmip-test-essentials` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
@@ -843,14 +843,14 @@ routed, delivered, contract held — published as health on its own scope. The
 pair that breaks turns red on the same page as everything else, and is named.
 
 It is a **node role, not a test suite**. `NodeRole::Development` already exists
-beside Operational, Monitoring and Executing; a Playground node is a Development
+beside Operational, Monitoring and Executing; an Essentials node is a Development
 node and the role is the isolation — it never touches a production node.
 
 It is also **the source of real measurement**: Streams in, Journeys through,
 Messages out, per stage and per pair, into the snapshot the operator boundary
 reads. Until it runs, a throughput card shows a dash.
 
-→ [The Xmip Playground, in full](ADR-0028-the-xmip-playground.md)
+→ [The Xmip Essentials, in full](ADR-0028-the-xmip-essentials.md)
 
 ### The operator boundary reads observation over time, not only its latest
 
@@ -883,9 +883,9 @@ written, and who drives it
 in its own crate, by implementing the capability's `Loopback` trait: stand
 up the far end, say where it listens, send from a fresh near end, take the
 one arrival, and declare the ceiling and the refusals that are facts about
-the protocol. The Playground drives every transport through one adapter over
+the protocol. The Essentials drives every transport through one adapter over
 that trait and writes no dance of its own. A new transport is a `loopback()`
-constructor in its crate and one line in the Playground's list.**
+constructor in its crate and one line in the Essentials' list.**
 
 → [A transport brings its own far end, in full](ADR-0051-a-transport-brings-its-own-far-end.md)
 
@@ -958,8 +958,8 @@ run one without naming tests, and how a filter selects among them
   wildcard on a filter
 
 **A test suite is named `<Provider>.<Name>`, the same rule that names every
-module (ADR-0011): `Core.Playground` is the name, and it is what the estate
-prints, records and documents. `core` is Xmip itself, so a bare `Playground`
+module (ADR-0011): `Core.Essentials` is the name, and it is what the estate
+prints, records and documents. `core` is Xmip itself, so a bare `Essentials`
 is accepted as its shorthand and canonicalized; a third party names itself
 and adds a suite by declaring it rather than by editing Xmip. Naming no test
 runs the whole suite, for every suite and every provider.**
@@ -1092,7 +1092,7 @@ You have a word. This gives you the decision that governs it.
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | dependency injection | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | designer | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
-| Development node | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| Development node | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | directory of many usages | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
@@ -1102,6 +1102,7 @@ You have a word. This gives you the decision that governs it.
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | environment template | [Packaging and distribution](ADR-0015-packaging.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
+| Essentials, exercise, verdict | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
@@ -1141,7 +1142,7 @@ You have a word. This gives you the decision that governs it.
 | MCP, the Model Context Protocol | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
-| Mount, declared versus computed | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| Mount, declared versus computed | [The Essentials is optional scaffolding](ADR-0036-essentials-is-optional-scaffolding.md) |
 | mounted repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | MSI, winget, deb, rpm, OCI, pkg, launchd | [Packaging and distribution](ADR-0015-packaging.md) |
 | Naming, external versus internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
@@ -1163,17 +1164,16 @@ You have a word. This gives you the decision that governs it.
 | operate | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
-| optional repository | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| optional repository | [The Essentials is optional scaffolding](ADR-0036-essentials-is-optional-scaffolding.md) |
 | outcome | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | packaging online | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | part | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
-| Parties' far end, placing Locations on nodes | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| Parties' far end, placing Locations on nodes | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | Party | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Pester, PowerShell, .NET, Rust versions | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | Phone app, APK | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | plane | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Platform is not the default | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
-| Playground, exercise, verdict | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
 | prefix external, not internal | [Prefix external names, not internal ones](ADR-0030-prefix-external-names.md) |
 | Previous journey | [The Journey model](ADR-0013-journey-model.md) |
 | principal evidence | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
@@ -1211,7 +1211,7 @@ You have a word. This gives you the decision that governs it.
 | Shape | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Shared code | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | shared declaration | [One error declaration](ADR-0037-one-error-declaration.md) |
-| simulated node, real node, test level | [The Xmip Playground](ADR-0028-the-xmip-playground.md) |
+| simulated node, real node, test level | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | simulator | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | Source | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | source, deployment | [Certificate provisioning versus usage](ADR-0034-certificate-provisioning-versus-usage.md) |
@@ -1226,7 +1226,7 @@ You have a word. This gives you the decision that governs it.
 | System Process names | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | tamper evidence | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | target, site | [Packaging and distribution](ADR-0015-packaging.md) |
-| test scaffolding | [The Playground is optional scaffolding](ADR-0036-playground-is-optional-scaffolding.md) |
+| test scaffolding | [The Essentials is optional scaffolding](ADR-0036-essentials-is-optional-scaffolding.md) |
 | the archive owner | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the carrier technology | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
@@ -1310,7 +1310,7 @@ is nowhere else.
 | [0025](ADR-0025-when-a-module-loads.md) | When a Module loads | refines ADR-0018 phase 6 |
 | [0026](ADR-0026-bounding-a-publication-chain.md) | Bounding a publication chain | |
 | [0027](ADR-0027-the-operator-boundary.md) | The operator boundary | |
-| [0028](ADR-0028-the-xmip-playground.md) | The Xmip Playground | |
+| [0028](ADR-0028-the-xmip-essentials.md) | The Xmip Essentials | |
 | [0029](ADR-0029-observation-has-history.md) | Observation has history | |
 | [0030](ADR-0030-prefix-external-names.md) | Prefix external names, not internal ones | |
 | [0031](ADR-0031-configuration-is-toml-json-is-transport.md) | Configuration is TOML; JSON is transport | |
@@ -1318,7 +1318,7 @@ is nowhere else.
 | [0033](ADR-0033-certificates-on-receive-and-send.md) | Certificates on Receive and Send | |
 | [0034](ADR-0034-certificate-provisioning-versus-usage.md) | Certificate provisioning versus usage | |
 | [0035](ADR-0035-overloaded-words-stay-qualified.md) | Overloaded words stay qualified | |
-| [0036](ADR-0036-playground-is-optional-scaffolding.md) | The Playground is optional scaffolding | |
+| [0036](ADR-0036-essentials-is-optional-scaffolding.md) | The Essentials is optional scaffolding | |
 | [0037](ADR-0037-one-error-declaration.md) | One error declaration | |
 | [0038](ADR-0038-locale-neutral-internally.md) | Locale-neutral internally | |
 | [0039](ADR-0039-a-module-may-bring-a-versioned-runtime.md) | A Module may bring a versioned runtime | |

@@ -9,7 +9,7 @@
     Reports and installs what a machine needs to run or build Xmip.
 
 .DESCRIPTION
-    prerequisite.toml declares what is needed; this decides what to do about it
+    prerequisite.xmip declares what is needed; this decides what to do about it
     on the machine it is running on.
 
     PowerShell runs on Windows, Linux and macOS and the package manager differs
@@ -46,7 +46,7 @@ function Install-XmipPrerequisite {
         # Report what is missing, or actually install it.
         [switch] $Install,
 
-        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml'),
+        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.xmip'),
 
         [switch] $IncludeOptional,
 
@@ -65,7 +65,7 @@ function Install-XmipPrerequisite {
 
     if (-not (Get-Module -ListAvailable -Name PSToml)) {
         if (-not $Install) {
-            Write-Warning ('MISSING: PSToml, which is needed to read prerequisite.toml. ' +
+            Write-Warning ('MISSING: PSToml, which is needed to read prerequisite.xmip. ' +
                 'Re-run with -Install.')
             return
         }

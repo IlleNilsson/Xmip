@@ -2,7 +2,7 @@
 #requires -Version 7.7.0
 
 <#
-    The Playground is started by a person and by nothing else. On 2026-09-12
+    The Essentials is started by a person and by nothing else. On 2026-09-12
     the owner found a roll, forty nodes and a web host restarting themselves
     every thirty seconds from a hidden shell an assistant had left behind, and
     ruled: clean instructions, and processes start when he says. These are the
@@ -24,7 +24,7 @@ BeforeAll {
 
         .DESCRIPTION
         One file of 944 lines until 2026-09-22 and a family now: the cmdlet,
-        the suite groups, the estate's suite, the Playground's checks and the
+        the suite groups, the estate's suite, the Essentials' checks and the
         roll it hands its work to. A test asking what the start does reads all
         of them, so it does not care which file a line moved to.
     #>
@@ -33,8 +33,8 @@ BeforeAll {
 
         [string[]] $family = @(
             'Start-XmipTest.ps1', 'Start-XmipTestSuiteGroup.ps1', 'Start-XmipEstateSuite.ps1'
-            'Resolve-XmipPlaygroundChoice.ps1', 'Start-XmipPlaygroundRoll.ps1'
-            'Start-XmipPlaygroundBuild.ps1', 'Start-XmipPlaygroundRollProcess.ps1'
+            'Resolve-XmipEssentialsChoice.ps1', 'Start-XmipEssentialsRoll.ps1'
+            'Start-XmipEssentialsBuild.ps1', 'Start-XmipEssentialsRollProcess.ps1'
         )
 
         return (($family | ForEach-Object {
@@ -73,7 +73,7 @@ Describe 'Start, Get and Stop, and nothing else' {
 
     It 'starts, reports and stops a test run under the names the owner chose' {
         # 2026-09-12: Start-XmipTest, Get-XmipTestStatus and Stop-XmipTest — the
-        # Playground is one suite Xmip provides, and a transport's or a
+        # Essentials is one suite Xmip provides, and a transport's or a
         # contract's suite may join it. He voted for Start, not Invoke: Invoke
         # is for crossing a boundary — a language, a process, a computer — and
         # a test run crosses none. The Pester door is -Suite Core.Estate.
@@ -87,7 +87,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         Get-Command -Module Xmip -Name 'Invoke-XmipTest*' | Should -BeNullOrEmpty
     }
 
-    It 'reads "Start-XmipTest Core.Playground HeavyLoad" as suite then test, nothing by position' {
+    It 'reads "Start-XmipTest Core.Essentials HeavyLoad" as suite then test, nothing by position' {
         # 2026-09-12: typed positionally, the second word landed on -Stress.
         $parameters = (Get-Command -Name Start-XmipTest).Parameters
         [hashtable] $position = @{}
@@ -107,7 +107,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         $position.Test | Should -Be 1
     }
 
-    It 'offers the Playground and the estate suite by name, Playground first' {
+    It 'offers the Essentials and the estate suite by name, Essentials first' {
         # ADR-0059: a suite carries its provider, and which suites there are
         # cannot be a ValidateSet, since a provider declares its own. The shape
         # is the door; the completer is the offer (ADR-0055 clauses 1 and 4).
@@ -125,12 +125,12 @@ Describe 'Start, Get and Stop, and nothing else' {
             $completer.ScriptBlock.Invoke('Start-XmipTest', 'Suite', '', $null, @{})
         )
 
-        $offered | Should -Be @('Core.Playground', 'Core.Estate')
+        $offered | Should -Be @('Core.Essentials', 'Core.Estate')
     }
 
     It 'canonicalizes every spelling to the qualified name, and accepts the bare one' {
         # The owner, 2026-09-20: "Sort it, there was a decision made. It's
-        # name is Core.Playground, to give place for third parties." The
+        # name is Core.Essentials, to give place for third parties." The
         # qualified form is canonical again; a bare name is still accepted
         # and resolves to it, so nothing he has typed refuses (ADR-0059,
         # amendment 2026-09-20). The assertion is on what comes back, not on
@@ -138,9 +138,9 @@ Describe 'Start, Get and Stop, and nothing else' {
         InModuleScope Xmip {
             [object[]] $known = @(Get-XmipTestSuite)
 
-            foreach ($spelling in 'Playground', 'Core.Playground', 'core.playground') {
+            foreach ($spelling in 'Essentials', 'Core.Essentials', 'core.essentials') {
                 (Get-XmipNamedTestSuite -Name $spelling -Known $known).Name |
-                    Should -Be 'Core.Playground'
+                    Should -Be 'Core.Essentials'
                 Get-XmipTestSuiteRefusal -Name $spelling -Known $known | Should -Be ''
             }
 
@@ -155,20 +155,20 @@ Describe 'Start, Get and Stop, and nothing else' {
             # a suite of the same name.
             [hashtable] $declared = @{
                 Provider = 'Example'
-                Name     = 'Playground'
+                Name     = 'Essentials'
                 Kind     = 'command'
                 Command  = 'Start-ExampleXmipTest'
             }
             [object[]] $third = @($known; New-XmipTestSuite @declared)
 
-            @(Get-XmipNamedTestSuite -Name 'Playground' -Known $third).Name |
-                Should -Be 'Core.Playground'
+            @(Get-XmipNamedTestSuite -Name 'Essentials' -Known $third).Name |
+                Should -Be 'Core.Essentials'
         }
     }
 
     It 'refuses a bare name nobody provides, and says how a provider''s is spelled' {
         [string] $expected = '*REFUSED. No test suite is called Nonsense*' +
-            'Core.Playground, Core.Estate*<Provider>.<Name>*'
+            'Core.Essentials, Core.Estate*<Provider>.<Name>*'
 
         { Start-XmipTest -Suite Nonsense -ErrorAction Stop } |
             Should -Throw -ExpectedMessage $expected
@@ -183,15 +183,15 @@ Describe 'Start, Get and Stop, and nothing else' {
             [object[]] $known = @(Get-XmipTestSuite)
 
             @(Get-XmipNamedTestSuite -Name '*' -Known $known | ForEach-Object { $_.Name }) |
-                Should -Be @('Core.Playground', 'Core.Estate')
-            @(Get-XmipNamedTestSuite -Name '*Play*' -Known $known).Name |
-                Should -Be 'Core.Playground'
+                Should -Be @('Core.Essentials', 'Core.Estate')
+            @(Get-XmipNamedTestSuite -Name '*Ess*' -Known $known).Name |
+                Should -Be 'Core.Essentials'
             @(Get-XmipNamedTestSuite -Name 'Core.*' -Known $known).Count | Should -Be 2
             @(Get-XmipNamedTestSuite -Name 'Nope*' -Known $known).Count | Should -Be 0
 
             Get-XmipTestSuiteRefusal -Name '*' -Known $known | Should -Be ''
             Get-XmipTestSuiteRefusal -Name 'Nope*' -Known $known |
-                Should -BeLike 'REFUSED. No test suite matches Nope*Core.Playground, Core.Estate*'
+                Should -BeLike 'REFUSED. No test suite matches Nope*Core.Essentials, Core.Estate*'
         }
 
         { Start-XmipTest -Suite 'Nope*' -ErrorAction Stop } |
@@ -199,8 +199,8 @@ Describe 'Start, Get and Stop, and nothing else' {
     }
 
     It 'runs every suite a pattern matched, in order, and says which are about to run' {
-        # -Suite * is the Playground and the estate, each started the way it
-        # starts. -Cluster belongs to the Playground alone and is dropped for
+        # -Suite * is the Essentials and the estate, each started the way it
+        # starts. -Cluster belongs to the Essentials alone and is dropped for
         # the Pester suite rather than refused, because a pattern chose the
         # group; an operator who named one suite is still refused.
         [string[]] $said = @(
@@ -208,15 +208,15 @@ Describe 'Start, Get and Stop, and nothing else' {
                 ForEach-Object { "$_" }
         )
 
-        "$said" | Should -BeLike '*Running 2 suites in order: Core.Playground, Core.Estate.*'
-        "$said" | Should -BeLike '*OK 2 suites started: Core.Playground, Core.Estate.*'
+        "$said" | Should -BeLike '*Running 2 suites in order: Core.Essentials, Core.Estate.*'
+        "$said" | Should -BeLike '*OK 2 suites started: Core.Essentials, Core.Estate.*'
     }
 
     It 'refuses a qualified suite nobody provides, naming the suites there are' {
-        [string] $expected = '*REFUSED. No test suite is called Example.Playground*' +
-            'Core.Playground, Core.Estate*'
+        [string] $expected = '*REFUSED. No test suite is called Example.Essentials*' +
+            'Core.Essentials, Core.Estate*'
 
-        { Start-XmipTest -Suite Example.Playground -ErrorAction Stop } |
+        { Start-XmipTest -Suite Example.Essentials -ErrorAction Stop } |
             Should -Throw -ExpectedMessage $expected
     }
 
@@ -233,9 +233,9 @@ Describe 'Start, Get and Stop, and nothing else' {
         $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
     }
 
-    It 'refuses Playground switches on the estate suite' {
+    It 'refuses Essentials switches on the estate suite' {
         { Start-XmipTest -Suite Core.Estate -Stress Harsh -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*belong to Core.Playground, not Core.Estate*'
+            Should -Throw -ExpectedMessage '*belong to Core.Essentials, not Core.Estate*'
     }
 
     It 'rehearses every Start and Stop with -WhatIf' {
@@ -260,9 +260,9 @@ Describe 'Start, Get and Stop, and nothing else' {
 
     It 'finds the repository from any directory, through where the module lives' {
         # 2026-09-12: from his home directory every cmdlet threw "No
-        # architecture.toml found at or above". The module is a junction into
+        # architecture.xmip found at or above". The module is a junction into
         # the repository; its own location answers when the directory does not.
-        $manifest = Get-Item (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-Item (Join-Path $script:Root 'architecture.xmip')
         [string] $expected = $manifest.Directory.FullName
 
         Get-XmipRepositoryRoot -StartAt ([System.IO.Path]::GetTempPath()) | Should -Be $expected
@@ -287,16 +287,16 @@ Describe 'The environment a roll is started with' {
     It 'sets only what was chosen, with the names the roll reads' {
         InModuleScope Xmip {
             $least = @{ Stress = 'Harsh'; Area = 'a' }
-            $environment = New-XmipPlaygroundEnvironment @least
+            $environment = New-XmipEssentialsEnvironment @least
 
-            $environment.XMIP_PLAYGROUND_STRESS | Should -Be 'harsh'
-            $environment.XMIP_PLAYGROUND_AREA | Should -Be 'a'
+            $environment.XMIP_ESSENTIALS_STRESS | Should -Be 'harsh'
+            $environment.XMIP_ESSENTIALS_AREA | Should -Be 'a'
             $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_ONLINE_NODES'
+            $environment.Keys | Should -Not -Contain 'XMIP_ESSENTIALS_ONLINE_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_TEST_CLUSTER'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_MAX_SECONDS'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_SCENARIOS'
-            $environment.Keys | Should -Not -Contain 'XMIP_PLAYGROUND_CLUSTER'
+            $environment.Keys | Should -Not -Contain 'XMIP_ESSENTIALS_MAX_SECONDS'
+            $environment.Keys | Should -Not -Contain 'XMIP_ESSENTIALS_SCENARIOS'
+            $environment.Keys | Should -Not -Contain 'XMIP_ESSENTIALS_CLUSTER'
         }
     }
 
@@ -318,16 +318,16 @@ Describe 'The environment a roll is started with' {
                 Image       = 'i'
                 Area        = 'a'
             }
-            $environment = New-XmipPlaygroundEnvironment @chosen
+            $environment = New-XmipEssentialsEnvironment @chosen
 
-            $environment.XMIP_PLAYGROUND_SCENARIOS | Should -Be 'round-trip,heavy-load'
+            $environment.XMIP_ESSENTIALS_SCENARIOS | Should -Be 'round-trip,heavy-load'
             $environment.XMIP_TEST_CLUSTER | Should -Be $Cluster.Path
-            $environment.XMIP_PLAYGROUND_ONLINE_NODES | Should -Be "$r,$s"
-            $environment.XMIP_PLAYGROUND_CLUSTER | Should -Be $Cluster.Name
-            $environment.XMIP_PLAYGROUND_MAX_SECONDS | Should -Be '900'
-            $environment.XMIP_PLAYGROUND_TIME_FACTOR | Should -Be '9.5E-06'
-            $environment.XMIP_PLAYGROUND_LOAD_BYTES | Should -Be '512mb'
-            $environment.XMIP_PLAYGROUND_IMAGES | Should -Be 'i'
+            $environment.XMIP_ESSENTIALS_ONLINE_NODES | Should -Be "$r,$s"
+            $environment.XMIP_ESSENTIALS_CLUSTER | Should -Be $Cluster.Name
+            $environment.XMIP_ESSENTIALS_MAX_SECONDS | Should -Be '900'
+            $environment.XMIP_ESSENTIALS_TIME_FACTOR | Should -Be '9.5E-06'
+            $environment.XMIP_ESSENTIALS_LOAD_BYTES | Should -Be '512mb'
+            $environment.XMIP_ESSENTIALS_IMAGES | Should -Be 'i'
         }
     }
 
@@ -351,7 +351,7 @@ Describe 'The environment a roll is started with' {
             [string] $file = Write-XmipTestCluster @typed
             $read = Read-XmipTestCluster -Path $file
 
-            $file | Should -Be (Join-Path $area "$($Cluster.Name).xmip.toml")
+            $file | Should -Be (Join-Path $area "$($Cluster.Name).xmip")
             $read.Name | Should -Be $Cluster.Name
             [string[]] $ordinal = @($r, $p)
             [Array]::Sort($ordinal, [StringComparer]::Ordinal)
@@ -389,7 +389,7 @@ Describe 'The environment a roll is started with' {
             # file name (ADR-0053, amendment 2026-09-20) — and nothing more.
             # The owner, 2026-09-20: "A node is a node and can have one or
             # more roles, roll is something different." The marker in
-            # xmip-playground-<cluster>-node-<name> carries the kind, so no
+            # xmip-essentials-<cluster>-node-<name> carries the kind, so no
             # word is reserved and no name is refused for the shape's sake.
             foreach ($free in 'roll', 'Cluster', "$r-roll", "$p-cluster", 'node') {
                 { Assert-XmipNodeName -Nodes $free } | Should -Not -Throw
@@ -401,7 +401,7 @@ Describe 'The environment a roll is started with' {
         # The owner's names — HeavyLoad, LowLatency — over the roll's scenario
         # names. SCENARIOS in scenario.rs is the roll's list and the node's; the
         # map must cover it exactly, or a test is unreachable or names nothing.
-        [string] $scenarios = Join-Path $script:Root 'test/core/playground/src/scenario.rs'
+        [string] $scenarios = Join-Path $script:Root 'test/core/essentials/src/scenario.rs'
         [string] $roll = Get-Content -Raw $scenarios
         [string] $pattern = '(?s)const SCENARIOS: \[&str; \d+\] = \[(.*?)\];'
         [string] $list = [regex]::Match($roll, $pattern).Groups[1].Value
@@ -410,14 +410,14 @@ Describe 'The environment a roll is started with' {
         )
 
         InModuleScope Xmip -Parameters @{ Scenarios = $scenarios } {
-            [string[]] $mapped = @($script:XmipPlaygroundTest.Values | Sort-Object)
+            [string[]] $mapped = @($script:XmipEssentialsTest.Values | Sort-Object)
 
             $mapped | Should -Be @($Scenarios | Sort-Object)
-            ConvertTo-XmipPlaygroundScenario -Test 'HeavyLoad', 'LowLatency' |
+            ConvertTo-XmipEssentialsScenario -Test 'HeavyLoad', 'LowLatency' |
                 Should -Be @('heavy-load', 'low-latency')
             ConvertTo-XmipTestName -Scenario 'low-latency' | Should -Be 'LowLatency'
             ConvertTo-XmipTestName -Scenario 'node' | Should -Be 'node'
-            { ConvertTo-XmipPlaygroundScenario -Test 'Typo' } |
+            { ConvertTo-XmipEssentialsScenario -Test 'Typo' } |
                 Should -Throw -ExpectedMessage 'REFUSED. No test matches Typo*'
         }
     }
@@ -426,7 +426,7 @@ Describe 'The environment a roll is started with' {
         # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
         [string] $node = $script:Stage.receiving
 
-        { Start-XmipTest -Suite Core.Playground -Nodes $node -ErrorAction Stop } |
+        { Start-XmipTest -Suite Core.Essentials -Nodes $node -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*you name it*'
         (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
@@ -558,7 +558,7 @@ Describe 'The environment a roll is started with' {
             Get-XmipNodeRoleWarning | Should -Be ''
         }
 
-        # A node the Playground's own cluster file declares takes the roles it
+        # A node the Essentials' own cluster file declares takes the roles it
         # declares there (ADR-0028, amendment 2026-10-21), so nothing is said;
         # nodes it does not declare declare none, and that is said.
         [string[]] $declared = @($script:Stage.receiving, $script:Stage.processing,
@@ -711,16 +711,16 @@ Describe 'The environment a roll is started with' {
         # variable the roll reads that no parameter can set is a switch an
         # operator cannot reach from PowerShell.
         [string] $roll = @(
-            'test/core/playground/src/bin/roll.rs'
-            'test/core/playground/src/environment.rs'
+            'test/core/essentials/src/bin/roll.rs'
+            'test/core/essentials/src/environment.rs'
         ) | ForEach-Object { Get-Content -Raw (Join-Path $script:Root $_) }
         [string[]] $documented = @(
-            [regex]::Matches($roll, 'XMIP_PLAYGROUND_[A-Z_]+') |
+            [regex]::Matches($roll, 'XMIP_ESSENTIALS_[A-Z_]+') |
                 ForEach-Object { $_.Value } |
                 Sort-Object -Unique |
-                Where-Object { $_ -ne 'XMIP_PLAYGROUND_NODE' }
+                Where-Object { $_ -ne 'XMIP_ESSENTIALS_NODE' }
         )
-        [string] $file = Join-Path $script:Root 'Xmip/New-XmipPlaygroundEnvironment.ps1'
+        [string] $file = Join-Path $script:Root 'Xmip/New-XmipEssentialsEnvironment.ps1'
         [string] $builder = Get-Content -Raw -LiteralPath $file
 
         foreach ($variable in $documented) {
@@ -740,20 +740,20 @@ Describe 'A suite carries its provider' {
 
             [string] $area = Join-Path $Area 'suite'
             New-Item -ItemType Directory -Path $area | Out-Null
-            Set-Content -LiteralPath (Join-Path $area 'example.toml') -Encoding utf8 -Value @(
+            Set-Content -LiteralPath (Join-Path $area 'example.xmip') -Encoding utf8 -Value @(
                 'provider = "Example"'
-                'name = "Playground"'
+                'name = "Essentials"'
                 'command = "Start-ExampleXmipTest"'
             )
 
             [object[]] $known = @(Get-XmipTestSuite -Path $area)
 
             @($known | ForEach-Object { $_.Name }) |
-                Should -Be @('Core.Playground', 'Core.Estate', 'Example.Playground')
+                Should -Be @('Core.Essentials', 'Core.Estate', 'Example.Essentials')
             $known[2].Kind | Should -Be 'command'
             $known[2].Command | Should -Be 'Start-ExampleXmipTest'
             $known[2].Provider | Should -Be 'Example'
-            Get-XmipTestSuiteRefusal -Name 'example.playground' -Known $known |
+            Get-XmipTestSuiteRefusal -Name 'example.essentials' -Known $known |
                 Should -Be ''
         }
     }
@@ -764,10 +764,10 @@ Describe 'A suite carries its provider' {
 
             [string] $area = Join-Path $Area 'bad'
             New-Item -ItemType Directory -Path $area | Out-Null
-            [string] $file = Join-Path $area 'half.toml'
+            [string] $file = Join-Path $area 'half.xmip'
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
                 'provider = "Example"'
-                'name = "Playground"'
+                'name = "Essentials"'
             )
 
             [object[]] $read = @(
@@ -779,7 +779,7 @@ Describe 'A suite carries its provider' {
 
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
                 'provider = "core"'
-                'name = "Playground"'
+                'name = "Essentials"'
                 'command = "Start-ExampleXmipTest"'
             )
 
@@ -792,7 +792,7 @@ Describe 'A suite carries its provider' {
 
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
                 'provider = "Example Ltd"'
-                'name = "Playground"'
+                'name = "Essentials"'
                 'command = "Start-ExampleXmipTest"'
             )
 
@@ -812,15 +812,15 @@ Describe 'A suite carries its provider' {
             [string] $c = $Cluster.Name
             [hashtable] $made = @{
                 Provider = 'Example'
-                Name     = 'Playground'
+                Name     = 'Essentials'
                 Kind     = 'command'
                 Command  = 'Start-ExampleXmipTest'
-                Source   = 'example.toml'
+                Source   = 'example.xmip'
             }
             $theirs = New-XmipTestSuite @made
 
             { Start-XmipProviderSuite -Suite $theirs -Bound @{} -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*REFUSED. Example.Playground starts with*'
+                Should -Throw -ExpectedMessage '*REFUSED. Example.Essentials starts with*'
 
             # The provider's own command, once this session has it. -Test is
             # handed on only when tests were named: nothing named is the whole
@@ -861,13 +861,13 @@ Describe 'A suite carries its provider' {
             Test-XmipWholeSuite -Test @('') | Should -BeTrue
             Test-XmipWholeSuite -Test 'HeavyLoad' | Should -BeFalse
 
-            # Playground: no scenarios named is every scenario, which the
+            # Essentials: no scenarios named is every scenario, which the
             # roll reads from the variable being unset.
             $whole = @{ Stress = 'Calm'; Area = 'a' }
-            $environment = New-XmipPlaygroundEnvironment @whole
+            $environment = New-XmipEssentialsEnvironment @whole
 
-            $environment.ContainsKey('XMIP_PLAYGROUND_SCENARIOS') | Should -BeFalse
-            (New-XmipPlaygroundEnvironment @whole -Test HeavyLoad).XMIP_PLAYGROUND_SCENARIOS |
+            $environment.ContainsKey('XMIP_ESSENTIALS_SCENARIOS') | Should -BeFalse
+            (New-XmipEssentialsEnvironment @whole -Test HeavyLoad).XMIP_ESSENTIALS_SCENARIOS |
                 Should -Be 'heavy-load'
 
             # Estate: no file named is every *.Test.ps1 under test/, and
@@ -881,7 +881,7 @@ Describe 'A suite carries its provider' {
         # instance -Test *. Wildcards and not regular expressions (ADR-0059):
         # Rust.Style is a test name and the dot in it is a dot.
         InModuleScope Xmip {
-            [string[]] $seven = @($script:XmipPlaygroundTest.Keys)
+            [string[]] $seven = @($script:XmipEssentialsTest.Keys)
 
             Expand-XmipTestName -Test 'Round*' -Known $seven | Should -Be @('RoundTrip')
             @(Expand-XmipTestName -Test '*' -Known $seven).Count | Should -Be $seven.Count
@@ -896,15 +896,15 @@ Describe 'A suite carries its provider' {
             { Expand-XmipTestName -Test 'Nope*' -Known $seven } |
                 Should -Throw -ExpectedMessage 'REFUSED. No test matches Nope**RoundTrip*'
 
-            ConvertTo-XmipPlaygroundScenario -Test 'Round*' | Should -Be @('round-trip')
+            ConvertTo-XmipEssentialsScenario -Test 'Round*' | Should -Be @('round-trip')
 
             # -Test * is the whole suite, exactly as omitting it is: neither
-            # sets XMIP_PLAYGROUND_SCENARIOS, which is how the roll is told.
+            # sets XMIP_ESSENTIALS_SCENARIOS, which is how the roll is told.
             $whole = @{ Stress = 'Calm'; Area = 'a' }
-            $star = New-XmipPlaygroundEnvironment @whole -Test '*'
-            $none = New-XmipPlaygroundEnvironment @whole
+            $star = New-XmipEssentialsEnvironment @whole -Test '*'
+            $none = New-XmipEssentialsEnvironment @whole
 
-            $star.ContainsKey('XMIP_PLAYGROUND_SCENARIOS') | Should -BeFalse
+            $star.ContainsKey('XMIP_ESSENTIALS_SCENARIOS') | Should -BeFalse
             @($star.Keys | Sort-Object) | Should -Be @($none.Keys | Sort-Object)
             Test-XmipWholeSuite -Test '*' | Should -BeTrue
         }
@@ -966,14 +966,14 @@ Describe 'What a node was started with' {
             $self = Get-Process -Id $PID
             [hashtable] $declared = @{
                 $PID = [ordered]@{
-                    name        = "xmip-playground-$($Cluster.Name)-node-$p"
+                    name        = "xmip-essentials-$($Cluster.Name)-node-$p"
                     location    = $location
                     purpose     = 'test'
                     node        = $p
                     shared      = 'D:\a b\shared'
                     stress      = 'harsh'
                     rounds      = '0'
-                    snapshot    = "D:\a b\$p.toml"
+                    snapshot    = "D:\a b\$p.xmip"
                     interval_ms = '500'
                     role        = 'processing,sending'
                     online      = 'true'
@@ -986,7 +986,7 @@ Describe 'What a node was started with' {
             $node.Shared | Should -Be 'D:\a b\shared'
             $node.Stress | Should -Be 'harsh'
             $node.Rounds | Should -Be 0
-            $node.Snapshot | Should -Be "D:\a b\$p.toml"
+            $node.Snapshot | Should -Be "D:\a b\$p.xmip"
             $node.Interval | Should -Be ([timespan]::FromMilliseconds(500))
             $node.Role | Should -Be 'processing,sending'
             $node.Online | Should -BeTrue
@@ -1013,9 +1013,9 @@ Describe 'What a run says' {
         [string] $scope = $script:Cluster.Scope
         [string] $claimed = $script:Stage.processing
         [string] $receiver = $script:Stage.receiving
-        $script:Snapshot = Join-Path $TestDrive "$($script:Cluster.Name)-snapshot.toml"
+        $script:Snapshot = Join-Path $TestDrive "$($script:Cluster.Name)-snapshot.xmip"
         @"
-source = "playground"
+source = "essentials"
 node = "$scope"
 
 [[records]]
@@ -1139,7 +1139,7 @@ observed_unix_nanos = 1789208338038783900
         [string] $two = Join-Path $TestDrive 'two'
         New-Item -ItemType Directory -Path $two | Out-Null
         [string[]] $files = @($script:Cluster.Name, "$($script:Cluster.Name)2") |
-            ForEach-Object { "$_-snapshot.toml" }
+            ForEach-Object { "$_-snapshot.xmip" }
 
         foreach ($file in $files) {
             Copy-Item -Path $script:Snapshot -Destination (Join-Path $two $file)
@@ -1176,20 +1176,20 @@ Describe 'A cluster rolls once' {
             # the first, which begins the second.
             [string] $one = "$($Name[0])$Name"
             [string] $ten = "${one}0"
-            Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
-                'suite = "Playground"'
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4242.xmip') -Encoding utf8 -Value @(
+                'suite = "Essentials"'
                 "cluster = `"$one`""
                 'pid = 4242'
             )
-            Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
-                'suite = "Core.Playground"'
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4343.xmip') -Encoding utf8 -Value @(
+                'suite = "Core.Essentials"'
                 "cluster = `"$ten`""
                 'pid = 4343'
             )
 
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $one) | Should -Be @(4242)
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $ten) | Should -Be @(4343)
-            @(Get-XmipPlaygroundRolling -Path $Area -Cluster $Name).Count | Should -Be 0
+            @(Get-XmipEssentialsRolling -Path $Area -Cluster $one) | Should -Be @(4242)
+            @(Get-XmipEssentialsRolling -Path $Area -Cluster $ten) | Should -Be @(4343)
+            @(Get-XmipEssentialsRolling -Path $Area -Cluster $Name).Count | Should -Be 0
         }
     }
 }
@@ -1199,7 +1199,7 @@ Describe 'What a web host reads' {
         InModuleScope Xmip {
             [string] $line = 'xmip-gui-web.exe ' +
                 '--Kestrel:Endpoints:Http:Url=http://127.0.0.1:5087 ' +
-                '--Xmip:Surface=snapshot "--Xmip:Snapshot=D:\a b\snapshot.toml"'
+                '--Xmip:Surface=snapshot "--Xmip:Snapshot=D:\a b\snapshot.xmip"'
 
             Read-XmipOperationWebArgument -CommandLine $line -Name 'Kestrel:Endpoints:Http:Url' |
                 Should -Be 'http://127.0.0.1:5087'
@@ -1213,7 +1213,7 @@ Describe 'What a web host reads' {
         InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
             param($Name)
 
-            $rolling = [PSCustomObject]@{ Suite = 'Core.Playground'; Cluster = $Name }
+            $rolling = [PSCustomObject]@{ Suite = 'Core.Essentials'; Cluster = $Name }
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
             Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
             Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
@@ -1222,7 +1222,7 @@ Describe 'What a web host reads' {
             "$said" | Should -BeLike "*will not show the roll $Name*Get-XmipTestStatus |*"
 
             # A snapshot that is there: ADR-0055 refuses one that is not.
-            [string] $real = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-warn.toml'
+            [string] $real = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-warn.xmip'
             Set-Content -LiteralPath $real -Value '' -NoNewline
 
             try {
@@ -1242,7 +1242,7 @@ Describe 'What a web host reads' {
         InModuleScope Xmip {
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
 
-            [string] $gone = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-no-such.toml'
+            [string] $gone = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-no-such.xmip'
 
             { Start-XmipOperationWeb -Snapshot $gone } |
                 Should -Throw -ExpectedMessage '*REFUSED*No snapshot*'
@@ -1262,7 +1262,7 @@ Describe 'What a web host reads' {
             param($Name)
 
             [string] $coming = Join-Path ([System.IO.Path]::GetTempPath()) (
-                "xmip-$Name-snapshot.toml")
+                "xmip-$Name-snapshot.xmip")
             $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $coming }
 
             Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
@@ -1282,7 +1282,7 @@ Describe 'What a web host reads' {
             param($Name)
 
             [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) (
-                "xmip-$Name-never-snapshot.toml")
+                "xmip-$Name-never-snapshot.xmip")
             $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $never }
             $script:asked = 0
 
@@ -1336,28 +1336,28 @@ Describe 'A run whose binaries changed underneath it' {
     <#
         2026-09-19: the owner's roll, its cluster and its nodes were alive
         while Get-XmipTestStatus and Get-XmipTestNode said nothing, because the
-        Playground binaries had been rebuilt under the running processes. A
+        Essentials binaries had been rebuilt under the running processes. A
         process Xmip started and cannot find is a process Xmip cannot stop, so
         the file on disk no longer decides, and a disagreement is said.
     #>
     BeforeAll {
-        $script:Built = 'D:/playground/target/debug/xmip-playground-roll.exe'
-        $script:Moved = 'D:/playground/target/debug/xmip-playground-roll.exe.old'
+        $script:Built = 'D:/essentials/target/debug/xmip-essentials-roll.exe'
+        $script:Moved = 'D:/essentials/target/debug/xmip-essentials-roll.exe.old'
     }
 
-    It 'is still the Playground''s run, and the image is said not to be the file' {
+    It 'is still the Essentials''s run, and the image is said not to be the file' {
         InModuleScope Xmip -Parameters @{ Built = $script:Built; Moved = $script:Moved } {
             param($Built, $Moved)
 
             [hashtable] $rebuilt = @{
                 Id       = 4242
-                Name     = 'xmip-playground-roll'
+                Name     = 'xmip-essentials-roll'
                 Image    = $Moved
                 Declared = ''
                 Expected = $Built
             }
 
-            Test-XmipPlaygroundImage @rebuilt -WarningVariable said -WarningAction Continue |
+            Test-XmipEssentialsImage @rebuilt -WarningVariable said -WarningAction Continue |
                 Should -BeTrue -Because 'it is the run, whatever happened to the file'
             "$said" | Should -BeLike '*rebuilt, renamed or moved*'
         }
@@ -1370,13 +1370,13 @@ Describe 'A run whose binaries changed underneath it' {
             # ADR-0053: it said where it started, and that does not change.
             [hashtable] $elevated = @{
                 Id       = 4242
-                Name     = 'xmip-playground-roll'
+                Name     = 'xmip-essentials-roll'
                 Image    = ''
                 Declared = $Built
                 Expected = $Built
             }
 
-            Test-XmipPlaygroundImage @elevated -WarningVariable quiet | Should -BeTrue
+            Test-XmipEssentialsImage @elevated -WarningVariable quiet | Should -BeTrue
             $quiet | Should -BeNullOrEmpty -Because 'nothing disagreed'
         }
     }
@@ -1393,7 +1393,7 @@ Describe 'A run whose binaries changed underneath it' {
                 Expected = $Built
             }
 
-            Test-XmipPlaygroundImage @stranger | Should -BeFalse
+            Test-XmipEssentialsImage @stranger | Should -BeFalse
         }
     }
 
@@ -1402,10 +1402,10 @@ Describe 'A run whose binaries changed underneath it' {
         # by the image file's current name, so a rebuild renamed every parent
         # and no node had a roll to be stopped with.
         InModuleScope Xmip {
-            [hashtable] $said = @{ 4242 = @{ name = 'xmip-playground-cluster' } }
+            [hashtable] $said = @{ 4242 = @{ name = 'xmip-essentials-cluster' } }
 
             Resolve-XmipProcessName -Id 4242 -Declared $said |
-                Should -Be 'xmip-playground-cluster'
+                Should -Be 'xmip-essentials-cluster'
             Resolve-XmipProcessName -Id 0 -Declared $said | Should -Be ''
             Resolve-XmipProcessName -Id 2000000000 -Declared @{ } | Should -Be ''
         }
@@ -1468,18 +1468,18 @@ Describe 'A stopped roll leaves no node of its cluster running' {
             [string] $longer = "${c}0"
             [string] $node = $Cluster.Nodes[0]
             [hashtable] $declared = @{
-                4242 = @{ name = "xmip-playground-$c-roll"; location = $Cluster.Scope }
-                4243 = @{ name = "xmip-playground-$c-cluster"; location = $Cluster.Scope }
+                4242 = @{ name = "xmip-essentials-$c-roll"; location = $Cluster.Scope }
+                4243 = @{ name = "xmip-essentials-$c-cluster"; location = $Cluster.Scope }
                 4244 = @{
-                    name     = "xmip-playground-$c-node-$node"
+                    name     = "xmip-essentials-$c-node-$node"
                     location = "$($Cluster.Scope)/node/$node"
                 }
                 4245 = @{
-                    name     = "xmip-playground-$longer-node-$node"
+                    name     = "xmip-essentials-$longer-node-$node"
                     location = "xmip:///$longer/node/$node"
                 }
             }
-            Mock Get-XmipPlaygroundProcess { }
+            Mock Get-XmipEssentialsProcess { }
             Mock Wait-Process { }
             Mock Stop-Process { }
             Mock Read-XmipProcessDeclaration { $declared }
@@ -1505,7 +1505,7 @@ Describe 'A stopped roll leaves no node of its cluster running' {
 Describe 'What a history file holds' {
     <#
         ADR-0029: a history point is a counted measurement over time. Every
-        history the Playground published between 2026-09-05 and 2026-09-19
+        history the Essentials published between 2026-09-05 and 2026-09-19
         held none, and no surface said so.
     #>
     It 'is read back point by point, oldest first' {
@@ -1514,7 +1514,7 @@ Describe 'What a history file holds' {
         InModuleScope Xmip -Parameters $given {
             param($Area, $Scope)
 
-            [string] $path = Join-Path $Area 'history.toml'
+            [string] $path = Join-Path $Area 'history.xmip'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
                 "node = `"$Scope`""
                 '[[points]]'
@@ -1555,7 +1555,7 @@ Describe 'What a history file holds' {
         InModuleScope Xmip -Parameters $given {
             param($Area, $Scope)
 
-            [string] $path = Join-Path $Area 'empty-history.toml'
+            [string] $path = Join-Path $Area 'empty-history.xmip'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
                 "node = `"$Scope`""
                 'points = []'
@@ -1584,7 +1584,7 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
             [PSCustomObject]@{
                 Id      = $Id
                 Cluster = $Cluster
-                Suite   = 'Core.Playground'
+                Suite   = 'Core.Essentials'
                 Tests   = $Tests
             }
         }
@@ -1723,8 +1723,8 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
         InModuleScope Xmip -Parameters $given {
             param($Tiny, $Area)
 
-            $real = Get-XmipPlaygroundLayout
-            Mock -CommandName Get-XmipPlaygroundLayout -MockWith {
+            $real = Get-XmipEssentialsLayout
+            Mock -CommandName Get-XmipEssentialsLayout -MockWith {
                 [PSCustomObject]@{ Root = $real.Root; Estate = $Area; Suffix = $real.Suffix }
             }
 
@@ -1776,7 +1776,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
             param($Area)
 
             New-Item -ItemType Directory -Path $Area | Out-Null
-            Set-Content -LiteralPath (Join-Path $Area 'estate-20260925-120000-000.toml') -Value @(
+            Set-Content -LiteralPath (Join-Path $Area 'estate-20260925-120000-000.xmip') -Value @(
                 'suite = "Core.Estate"'
                 'pid = 2000000000'
                 'started = "2026-09-25T10:00:00.0000000Z"'
@@ -1801,7 +1801,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
 
             New-Item -ItemType Directory -Path $Area | Out-Null
             [hashtable] $sleeping = @{
-                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipPlaygroundLayout).Suffix)"
+                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipEssentialsLayout).Suffix)"
                 ArgumentList = @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120')
                 PassThru     = $true
             }
@@ -1812,7 +1812,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
 
             $process = Start-Process @sleeping
             [hashtable] $start = @{
-                Record  = Join-Path $Area 'estate-20260925-120000-001.toml'
+                Record  = Join-Path $Area 'estate-20260925-120000-001.xmip'
                 Suite   = 'Core.Estate'
                 Path    = $Area
                 Log     = Join-Path $Area 'estate-20260925-120000-001.log'

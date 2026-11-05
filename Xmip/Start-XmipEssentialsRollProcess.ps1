@@ -3,11 +3,11 @@
 
 <#
 .SYNOPSIS
-    Spawning a built Playground roll and writing its run record.
+    Spawning a built Essentials roll and writing its run record.
 
 .DESCRIPTION
-    The second half of Start-XmipPlaygroundRoll until 2026-10-13, when the build
-    stopped holding the console: the detached build (Start-XmipPlaygroundBuild)
+    The second half of Start-XmipEssentialsRoll until 2026-10-13, when the build
+    stopped holding the console: the detached build (Start-XmipEssentialsBuild)
     calls this once cargo has finished, in its own pwsh, with everything the
     console decided handed over as one value.
 
@@ -15,7 +15,7 @@
 #>
 
 
-function Start-XmipPlaygroundRollProcess {
+function Start-XmipEssentialsRollProcess {
     <#
         .SYNOPSIS
             Spawns the roll of a run whose binaries are built, and writes the
@@ -28,7 +28,7 @@ function Start-XmipPlaygroundRollProcess {
             build began.
 
         .PARAMETER Start
-            What Start-XmipPlaygroundRoll decided: Suite, Cluster, Stress,
+            What Start-XmipEssentialsRoll decided: Suite, Cluster, Stress,
             Test, Rounds, Nodes, NodeRole, OnlineNodes, Path, ClusterFile,
             Named, Seconds, TimeFactor, Hidden, Choice and What.
     #>
@@ -39,32 +39,32 @@ function Start-XmipPlaygroundRollProcess {
         [hashtable] $Start
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
     [string] $cluster = $Start.Cluster
     [string] $path = $Start.Path
     [string[]] $nodes = @($Start.Nodes)
     [string] $clusterFile = $Start.ClusterFile
     [bool] $hidden = [bool] $Start.Hidden
 
-    [int[]] $rolling = @(Get-XmipPlaygroundRolling -Path $path -Cluster $cluster)
+    [int[]] $rolling = @(Get-XmipEssentialsRolling -Path $path -Cluster $cluster)
 
     if ($rolling.Count -gt 0) {
         throw ("REFUSED: cluster $cluster began rolling as pid $($rolling -join ', ') " +
             'while this one built.')
     }
 
-    $publication = Get-XmipPlaygroundPublication -Roll $layout.Roll -Cluster $cluster -Path $path
+    $publication = Get-XmipEssentialsPublication -Roll $layout.Roll -Cluster $cluster -Path $path
 
-    # The nodes a run starts as xmip-service are issued under the Playground's
+    # The nodes a run starts as xmip-service are issued under the Essentials'
     # one authority, kept in the area it publishes in; it is made here, by
     # the one maker that names it, before the roll asks for it (ADR-0028,
     # amendment 2026-10-27).
     if (-not [string]::IsNullOrWhiteSpace([string] $Start['Service'])) {
         [string] $authority = Join-Path -Path $path -ChildPath 'authority'
-        $null = Initialize-XmipPlaygroundAuthority -Folder $authority -Confirm:$false
+        $null = Initialize-XmipEssentialsAuthority -Folder $authority -Confirm:$false
     }
 
-    $launch = New-XmipPlaygroundRollLaunch -Start $Start
+    $launch = New-XmipEssentialsRollLaunch -Start $Start
 
     # What it starts audits where the tooling does (ADR-0062).
     Initialize-XmipAudit
@@ -104,7 +104,7 @@ function Start-XmipPlaygroundRollProcess {
 }
 
 
-function New-XmipPlaygroundRollLaunch {
+function New-XmipEssentialsRollLaunch {
     <#
         .SYNOPSIS
             The Start-Process arguments a roll is spawned with: its image, its
@@ -113,8 +113,8 @@ function New-XmipPlaygroundRollLaunch {
         .DESCRIPTION
             A process name is its image file's name, so the roll, its cluster
             and every node run images linked for this cluster: the operating
-            system then says xmip-playground-<cluster>-node-<node>, both names
-            the operator's, rather than one more xmip-playground-node (the
+            system then says xmip-essentials-<cluster>-node-<node>, both names
+            the operator's, rather than one more xmip-essentials-node (the
             owner, 2026-09-20; ADR-0053, amendment). The roll finds its
             cluster binary beside its own image and the cluster finds the node
             binary the same way, which is why all three are linked here.
@@ -124,7 +124,7 @@ function New-XmipPlaygroundRollLaunch {
             whose.
 
         .PARAMETER Start
-            What Start-XmipPlaygroundRoll decided.
+            What Start-XmipEssentialsRoll decided.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -133,21 +133,21 @@ function New-XmipPlaygroundRollLaunch {
         [hashtable] $Start
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
     [hashtable] $choice = $Start.Choice
-    $choice.Image = Get-XmipPlaygroundImageArea -Cluster $Start.Cluster
-    [string] $image = New-XmipPlaygroundImage -Cluster $Start.Cluster
+    $choice.Image = Get-XmipEssentialsImageArea -Cluster $Start.Cluster
+    [string] $image = New-XmipEssentialsImage -Cluster $Start.Cluster
 
     if (-not [string]::IsNullOrWhiteSpace([string] $Start['Service'])) {
         $choice.Service = [string] $Start['Service']
     }
 
-    [hashtable] $environment = New-XmipPlaygroundEnvironment @choice
+    [hashtable] $environment = New-XmipEssentialsEnvironment @choice
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
     [hashtable] $launch = @{
         FilePath               = $image
-        WorkingDirectory       = $layout.Playground
+        WorkingDirectory       = $layout.Essentials
         Environment            = $environment
         WindowStyle            = 'Hidden'
         PassThru               = $true

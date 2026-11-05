@@ -82,7 +82,7 @@ function Test-XmipChangeTree {
 
         if (-not $NoVerify) {
             $patch = New-XmipLocalPatch -RepositoryRoot $RepositoryRoot
-            # A test that runs cargo itself, as the Playground's build of its
+            # A test that runs cargo itself, as the Essentials' build of its
             # binaries does, resolves through the same working trees: cargo
             # passes no --config down to a cargo a test starts.
             $env:XMIP_CARGO_CONFIG = $patch
@@ -216,14 +216,14 @@ function Test-XmipChangeTree {
             if ($module -eq 'module/platform/runtime' -and $failed.Count -eq 0) {
                 [hashtable] $contractLibrary = @{
                     RepositoryRoot = $RepositoryRoot
-                    Module         = 'module/core/capability/contract/rust'
+                    Module         = 'test/core/module'
                     Patch          = $patch
                     Library        = $unhashed
                 }
 
                 if (Build-XmipTestLibrary @contractLibrary) {
-                    [string] $file = if ($IsWindows) { 'xmip_core_contract_rust.dll' }
-                    else { 'libxmip_core_contract_rust.so' }
+                    [string] $file = if ($IsWindows) { 'xmip_core_test_module.dll' }
+                    else { 'libxmip_core_test_module.so' }
                     $env:XMIP_MODULE_LIBRARY =
                         Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
                 }

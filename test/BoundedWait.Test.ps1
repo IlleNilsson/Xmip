@@ -5,7 +5,7 @@
     A wait with no bound turns a failure into a hang, and a hang has no
     verdict.
 
-    The Playground's own test suite wedged six times running before anyone
+    The Essentials' own test suite wedged six times running before anyone
     could say why: the process froze at a fixed CPU number with every thread
     in a wait it had asked for, and a landing that should have failed in two
     seconds never finished. The cause was the same line written in a dozen

@@ -101,7 +101,7 @@ SQLite store did not move when the monolith was distributed on 2026-08-26.
 
 What it costs, as the Open section said and the owner took knowingly: a C++
 toolchain and libclang in every build that includes the runtime store,
-harder cross-compilation to arm64, larger artifacts. `prerequisite.toml`
+harder cross-compilation to arm64, larger artifacts. `prerequisite.xmip`
 declares the toolchain; the AlmaLinux guest verifies the Linux build. Each
 engine is a technology under `persist`, so a device build can leave RocksDB
 out.
@@ -110,7 +110,7 @@ Encryption of what is stored is not the engine's (ADR-0063).
 
 Built 2026-09-25: `xmip-core-persist-rocksdb` and `xmip-core-persist-sqlite`,
 each a `persist::Engine` under persist's `EncryptedStore`, tested on Windows
-and on the AlmaLinux guest. `prerequisite.toml` declares libclang (and, on
+and on the AlmaLinux guest. `prerequisite.xmip` declares libclang (and, on
 Linux, the C++ compiler); the first Windows build of RocksDB took some twenty
 minutes. RocksDB is built without compression, since what it stores is
 ciphertext.
@@ -125,7 +125,7 @@ objected to. The name `hosted`, the role compositions and the vetoes are
 the drafting's, and the owner's to strike.
 
 **What a package is built with is a site's.** A site,
-`deploy/site/<name>.toml`, picks a target and node roles, each a profile
+`deploy/site/<name>.xmip`, picks a target and node roles, each a profile
 under `deploy/profile`, a TOML file named by its word (ADR-0031), and its
 technologies:
 
@@ -149,7 +149,7 @@ technologies:
   sum and adds nothing (`roles = ["receiving", "processing", "sending"]`);
   `operational` brings cluster, event, persist, retain, archive and
   resilience; `monitoring` brings event and report; `development`, the
-  Playground's, composes executing, operational and monitoring.
+  Essentials', composes executing, operational and monitoring.
   `xmip-service`'s own features — node, audit, observe — are always on, and
   say so in one place: its `[[bin]] required-features` in `Cargo.toml`.
 - **Technologies**, what it integrates with (`technologies`): the
@@ -284,7 +284,7 @@ and Xmip Storage is reached over Xmip's TLS (ADR-0063, amendment of this
 date). The target profiles follow this record since the build of the same
 day: every target that keeps a store carries RocksDB and claims both
 engines, none refuses either, and the storage role,
-`deploy/profile/role/storage.toml`, brings SQLite for the administration
+`deploy/profile/role/storage.xmip`, brings SQLite for the administration
 database.
 
 **An operator guide per database server** (the owner, 2026-10-01: *We have
@@ -389,14 +389,14 @@ among them yet.
 
 **One command installs, in every package.** A package carries two files,
 `xmip-service` and the runtime library, and runs
-`xmip-service --configuration <layout>/config/xmip.toml --node <node>
+`xmip-service --configuration <layout>/config/cluster.xmip --node <node>
 --cluster <cluster> --install` (`.src/service/install.rs`): it writes a
-starter cluster `xmip.toml` where there is none — one node, offline
+starter cluster `cluster.xmip` where there is none — one node, offline
 (ADR-0045), its operate listener's local endpoint named `xmip-<node>` like
-its service (ADR-0014, amendment 2026-10-13) — slices `xmip-node.toml` from
+its service (ADR-0014, amendment 2026-10-13) — slices `node.xmip` from
 it, makes `modules`, `logs`, the data directory and `data/audit`, and
 registers and starts the Xmip Service that `registration.rs` defines, to
-start with the machine. `--configuration <layout>/config/xmip-node.toml
+start with the machine. `--configuration <layout>/config/node.xmip
 --uninstall` stops the service, waits for the drain and removes it, and
 deletes nothing else (ADR-0040): no configuration, data, audit or log. A
 configuration already there is never written over. So an installer
@@ -479,8 +479,8 @@ the archive targets, he answered *Yes*.
 only the `archive` feature.*
 
 **Archive targets are chosen by the roles that archive.** The roles that
-carry the `archive` feature, `deploy/profile/role/sending.toml` and
-`operational.toml`, name the archive targets they carry in `archives`, by
+carry the `archive` feature, `deploy/profile/role/sending.xmip` and
+`operational.xmip`, name the archive targets they carry in `archives`, by
 repository name, as a target names its technologies in `claims`: the ten
 under `xmip-core-archive` — `azure-blob`, `file`, `gcs`, `mariadb`,
 `mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite`. A composed role
@@ -523,7 +523,7 @@ the plan's `Domains`. Nothing in the estate groups technologies for a
 deployment.
 
 **A site names its technologies.** `technologies` in
-`deploy/site/<name>.toml` lists, by repository name as a role names its
+`deploy/site/<name>.xmip` lists, by repository name as a role names its
 archive targets, the built technologies its end user chose, across
 capabilities. `Resolve-XmipSite` REFUSES, in words, a name that is no
 built technology (`Get-XmipBuiltTechnology`), links each the root crate has
@@ -532,7 +532,7 @@ as `Technologies`; the target vetoes a technology's feature as it vetoes a
 role's. The five example sites name what their descriptions say.
 
 **Every built technology is built and tested.** `test/Deploy.Test.ps1`
-holds each technology `architecture.toml` declares built to being mounted
+holds each technology `architecture.xmip` declares built to being mounted
 as a declared module, which the landing builds with every feature it
 declares and tests (`Publish-XmipChange`, `Test-XmipModule`), and to having
 tests of its own. It found `xmip-core-persist-postgresql` declared
@@ -561,7 +561,7 @@ amendment 2026-10-20).
 roles.** A site names the archive targets its end user chose in its
 `technologies`, by repository name, as it names every other technology
 (amendment 2026-10-19). The roles that archive keep the `archive` feature —
-`sending.toml` and `operational.toml` — and name no target. Deleted, with
+`sending.xmip` and `operational.xmip` — and name no target. Deleted, with
 every use: the roles' `archives`, `Get-XmipRoleArchive`,
 `Get-XmipArchiveTarget`, the plan's `Archives`, and the tests that held a
 role carrying `archive` to naming targets and a site's archiving roles to
@@ -576,7 +576,7 @@ build carries.
 
 **`retain` joins the sending role's features** (the owner, 2026-10-20).
 
-**Only a node with the Storage role stores.** `development.toml` composes
+**Only a node with the Storage role stores.** `development.xmip` composes
 `storage` beside executing, operational and monitoring, and the example
 site `personal-computer`, one machine, declares `storage`: this answers
 the 2026-10-13 open item *a site whose node starts on its own*. The other
@@ -676,14 +676,14 @@ and each does all five of the example's node machines, Windows Server 2025
 and AlmaLinux 10 alike, and the DNS server: `deploy/dsc/msdsc/environment`
 and `deploy/dsc/ansible` (the playbook `environment.yml`, the role
 `xmip_node`, extended, and the role `xmip_name`). Given a cluster's
-`xmip.toml` and the machines, each:
+`cluster.xmip` and the machines, each:
 
 - gives the environment's DNS server an A record for the cluster, holding
   every node machine's address, and one for each node, holding its
   machine's;
 - gives each node machine its node's account — a virtual account of its
   own, `NT SERVICE\xmip-<node>`, on Windows, a system account, `xmip`, on
-  Linux — the cluster's `xmip.toml`, and its certificate, key and anchors
+  Linux — `cluster.xmip`, and its certificate, key and anchors
   from the cluster's own authority (Xmip's internal CA, never the
   platform's), issued beforehand by `New-XmipCertificate -Node` on the
   operator's machine, the key private to the node;
@@ -704,7 +704,7 @@ onto machines is each template's parameters —
 `environment.example.parameters.yaml` and `inventory.example.yml`, held
 equal by `test/MsdscEnvironment.Test.ps1` — and never the cluster's file:
 the example runs R1 on XMIP-IN01, S1 on XMIP-OUT01, P1 on XMIP-APP01, L1
-on XMIP-APP02 and D1 on XMIP-APP03, and the Playground simulates the rest.
+on XMIP-APP02 and D1 on XMIP-APP03, and the Essentials simulates the rest.
 
 **Microsoft DSC v3 as it is** (checked 2026-10-21: 3.3.0 current, 3.2.0
 general availability 2026-04-29, 3.2.3 on the owner's machine). DSC is a
@@ -729,7 +729,7 @@ replaces any of them.
 **Ansible as it is** (ansible-core 2.21.5, 2026-10-05): PowerShell 7 on
 the Windows machines (`ansible_pwsh_interpreter`), WinRM to them and SSH to
 AlmaLinux, `ansible.windows`, `ansible.posix` and the builtin modules. The
-role's starter template, `templates/xmip.toml.j2`, is deleted: a node with
+role's starter template, `templates/cluster.xmip.j2`, is deleted: a node with
 no cluster file of its own is given the package's starter, written once in
 `xmip-service --install`.
 
@@ -740,7 +740,7 @@ the node's configuration and its key's folder and write on its data and
 logs (`account.rs`; on Windows after the registration, when a virtual
 account exists, and before the start); without it the platform's default,
 as before. `--cluster` with `--slice`, and with `--install` where the
-machine's `xmip.toml` names no cluster: the one file names none
+machine's `cluster.xmip` names no cluster: the one file names none
 (`configure::slice_named`). `--listening`: the ports a node's configuration
 listens on, one line each, `<port>/tcp <listener>` — its operate listener,
 and each started Receive Location whose address names a port
@@ -770,7 +770,7 @@ the WSL AlmaLinux guest. Neither has been run against a machine.
 Which account a node runs as was open (the amendment of 2026-10-13); the
 virtual account and `xmip` are the assistant's draft of 2026-10-21, for the
 owner to strike. DSC and Ansible are optional prerequisites, for test level
-2 alone (`prerequisite.toml`).
+2 alone (`prerequisite.xmip`).
 
 ## Amendment, 2026-10-22: every node of the example environment runs
 
@@ -781,7 +781,7 @@ until today only D1 did. Nothing the templates do changed: each node's
 certificate from the cluster's authority is what it presents to the
 Storage nodes as well as on its operate listener, and the firewall opening
 follows `xmip-service --listening`, which says `7443/tcp storage` on a node
-declaring the Storage role. The Playground's cluster file says its Storage
+declaring the Storage role. The Essentials' cluster file says its Storage
 nodes once for every node, `[storage]`; the example's D2 is on no machine,
 and every node passes it over. The assistant's, 2026-10-22.
 
@@ -803,12 +803,12 @@ nothing is released (open problem 41); the scripts under
 ## Amendment, 2026-11-03: the machines in one command, on Hyper-V or libvirt
 
 The owner, 2026-11-03: *It should be easy, now it is hard*; *one should be
-able to set up the Core.Playground on virtual servers with msdsc or Ansible
+able to set up the Core.Essentials on virtual servers with msdsc or Ansible
 by a command*; *From whatever platform, you should be able fire up the test
 environment with DSC*; and of the language of what manages it: *.NET or
 PowerShell. That is for management, Rust is for runtime.*
 
-**One command.** `Deploy-XmipEnvironment -Path <environment.toml>` makes an
+**One command.** `Deploy-XmipEnvironment -Path <environment.xmip>` makes an
 environment's machines and waits until each is installed. The environment
 file is TOML, Xmip's configuration: the hypervisor, whose template it
 selects (`deploy/dsc/msdsc/<hypervisor>`), the network, the images and the

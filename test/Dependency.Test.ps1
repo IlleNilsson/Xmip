@@ -5,7 +5,7 @@
     The manifest says what each repository depends on, and until 2026-09-22 it
     said something else from what the builds did: generated side by side, the
     two disagreed for most modules — `runtime` used sixteen estate crates and
-    declared six, `receive` used three it never declared, the Playground used
+    declared six, `receive` used three it never declared, the Essentials used
     a hundred and twenty-three and declared five. A declaration nobody checks
     is a guess that was right once. The owner asked for the estate to be
     consolidated; the first thing consolidated was the record of what uses
@@ -18,7 +18,7 @@
     repository has no build to compare, and its list stays the plan.
 
     When this fails, the build changed and the manifest did not. Put the
-    repositories it names into `architecture.toml` as it says — the build is
+    repositories it names into `architecture.xmip` as it says — the build is
     what is true.
 #>
 
@@ -49,7 +49,7 @@ Describe 'The manifest says what each build uses' {
         )
 
         $drift | Should -BeNullOrEmpty -Because (
-            "the build is what is true, so architecture.toml follows it:`n" + ($drift -join "`n")
+            "the build is what is true, so architecture.xmip follows it:`n" + ($drift -join "`n")
         )
     }
 

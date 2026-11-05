@@ -15,8 +15,8 @@ Set-StrictMode -Version Latest
     what the run writes when it ends, Stop-XmipDetachedRun (in Stop-XmipTest.ps1)
     ends it early; what reads a run is here.
 
-    A run is one TOML record under .local-work/estate (Get-XmipPlaygroundLayout's
-    Estate), named for the time it started: estate-<yyyyMMdd-HHmmss-fff>.toml,
+    A run is one TOML record under .local-work/estate (Get-XmipEssentialsLayout's
+    Estate), named for the time it started: estate-<yyyyMMdd-HHmmss-fff>.xmip,
     beside the run's own log. Start writes what it started; the run itself
     writes the verdict over it when Pester returns — the counts, the duration
     and every failure's path and message. Read through Get-TomlValue, the one
@@ -50,14 +50,14 @@ function Get-XmipEstateRun {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = (Get-XmipPlaygroundLayout).Estate
+        $Path = (Get-XmipEssentialsLayout).Estate
     }
 
     if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
         return
     }
 
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'estate-*.toml' -File)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'estate-*.xmip' -File)) {
         $record = Read-XmipToml -Path $file.FullName
         ConvertTo-XmipEstateRun -Record $record -File $file.FullName -Area $Path
     }
@@ -148,7 +148,7 @@ function Test-XmipDetachedAlive {
         .SYNOPSIS
             Whether the process a record names is still that run's pwsh, and
             not another process that was later given the same id: an estate
-            run's, or a roll's detached build's (Get-XmipPlaygroundBuild).
+            run's, or a roll's detached build's (Get-XmipEssentialsBuild).
 
         .PARAMETER Id
             The process id the record names.

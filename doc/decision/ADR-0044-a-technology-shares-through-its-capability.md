@@ -18,8 +18,8 @@
 
 **Code that two technologies both need lives in the crate both already
 depend on: their parent capability, or the technology they both ride on. A
-technology never copies a sibling's file. The playground's adapters follow
-the same rule through the playground's own shared modules.**
+technology never copies a sibling's file. The essentials' adapters follow
+the same rule through the essentials' own shared modules.**
 
 ## Context
 
@@ -73,12 +73,12 @@ the metadata text through the capability; they keep their own quoting, their
 own bytes literal and their own way of reading an id back. The rule moves what
 is *the same*, not what is *similar*.
 
-### 3. The playground follows the rule through its own modules
+### 3. The essentials follows the rule through its own modules
 
-Every adapter file in the playground — `industrial.rs`, `broker.rs`,
+Every adapter file in the essentials — `industrial.rs`, `broker.rs`,
 `storage.rs`, `remote.rs` and the rest — shares through `roundtrip.rs`,
 `cabinet.rs` and `support.rs`, never by repeating a helper. The scan runs
-over the playground as well.
+over the essentials as well.
 
 ### 4. Problem 7's lean, applied
 

@@ -10,9 +10,9 @@ set -e
 
 case "$1" in
     remove | 0)
-        if [ -f /opt/xmip/config/xmip-node.toml ]; then
+        if [ -f /opt/xmip/config/node.xmip ]; then
             /opt/xmip/bin/xmip-service \
-                --configuration /opt/xmip/config/xmip-node.toml \
+                --configuration /opt/xmip/config/node.xmip \
                 --uninstall
         fi
         ;;

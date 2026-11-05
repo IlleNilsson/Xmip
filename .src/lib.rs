@@ -3,7 +3,7 @@
 //! This crate holds no behavior. Every module is its own repository, and this
 //! re-exports them so `xmip` stays one import for anyone who wants the whole
 //! platform rather than one capability. What used to live here went to the
-//! repositories that own it on 2026-08-26; `doc/planning/allocation.toml` is
+//! repositories that own it on 2026-08-26; `doc/planning/allocation.xmip` is
 //! the ledger of where each part went and why.
 //!
 //! Its one program is `xmip-service` (`.src/service/`), the Xmip Service,

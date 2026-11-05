@@ -5,15 +5,15 @@
 //! two, so the layout, the starter and the registration are written here
 //! once and in no package's own script.
 //!
-//! `--install`, with the cluster's `xmip.toml` at `--configuration`:
+//! `--install`, with `cluster.xmip` at `--configuration`:
 //!
-//! 1. writes a starter `xmip.toml` there, where there is none: the cluster
+//! 1. writes a starter `cluster.xmip` there, where there is none: the cluster
 //!    `--cluster` names, the node `--node` names, declaring the storage
 //!    role, for one node keeps Xmip Storage itself (ADR-0056, amendment
 //!    2026-10-20), offline (ADR-0045); its
 //!    local operate endpoint needs no line, for it always starts, named
 //!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13);
-//! 2. slices the node's configuration, `xmip-node.toml` beside it, where
+//! 2. slices the node's configuration, `node.xmip` beside it, where
 //!    there is none — `xmip-core-configure`'s one slicing, as the cluster
 //!    `--cluster` names where the cluster's file names none (ADR-0028,
 //!    amendment 2026-10-21);
@@ -46,8 +46,8 @@ use crate::arguments::Arguments;
 use crate::definition::{self, text};
 use crate::run;
 
-/// The node's configuration, sliced beside its cluster's `xmip.toml`.
-pub const NODE_FILE: &str = "xmip-node.toml";
+/// The node's configuration, sliced beside its cluster's `cluster.xmip`.
+pub const NODE_FILE: &str = "node.xmip";
 
 /// The installed layout's folders beside `config` that nothing else makes
 /// (ADR-0015 clause 10): `data` is the node configuration's to say, and
@@ -145,12 +145,12 @@ fn uninstalled(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, St
     deregister(&name, &node)
 }
 
-/// The starter `xmip.toml` of a one-node cluster: what a package writes
+/// The starter `cluster.xmip` of a one-node cluster: what a package writes
 /// where the machine has none of its own.
 fn starter(cluster: &str, node: &str) -> String {
     let service = node_service_name(node);
     format!(
-        "# The cluster's configuration, xmip.toml, as an Xmip package starts it:\n\
+        "# The cluster's configuration, cluster.xmip, as an Xmip package starts it:\n\
          # one node, offline, operated from this machine on its local endpoint,\n\
          # {service}, which always starts (ADR-0015, amendment 2026-10-13;\n\
          # ADR-0014, amendments 2026-10-13). The node's configuration,\n\

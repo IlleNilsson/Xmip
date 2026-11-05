@@ -1,9 +1,9 @@
 # The Xmip estate
 
-330 repositories are declared and 276 of them are
+326 repositories are declared and 275 of them are
 mounted in this working tree.
 
-**Generated from `architecture.toml` and from the `.gitmodules` files
+**Generated from `architecture.xmip` and from the `.gitmodules` files
 of the estate, by `New-XmipEstateMap`.** ADR-0020 clause 5 rules that
 a document listing repositories is a second source of truth and will
 be wrong within a week; a view of the manifest is not a second source
@@ -35,14 +35,14 @@ the estate tree, and are counted nowhere below.
 | Capability | 21 | 21 | 0 |
 | Operation | 8 | 7 | 1 |
 | Platform | 3 | 3 | 0 |
-| Technology | 286 | 234 | 52 |
-| **Total** | 330 | 276 | 54 |
+| Technology | 282 | 233 | 49 |
+| **Total** | 326 | 275 | 51 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
-| reserved | 52 | 0 | 52 |
-| scaffolded | 277 | 276 | 1 |
+| reserved | 49 | 0 | 49 |
+| scaffolded | 276 | 275 | 1 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -108,10 +108,10 @@ Records: ADR-0033 (amendment 2026-10-19), ADR-0063.
 #### `configuration-saving`
 
 **Saving and slicing the cluster's configuration.** The Operation Desktop
-saves the cluster's `xmip.toml`, validated by the runtime and audited, and
-slices it through `xmip_cluster_slices_v1`; desired state slices it on each
-node (`xmip-service --slice`). A changed slice takes effect when the node
-starts again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
+saves `cluster.xmip`, validated by the runtime and audited, and slices it
+through `xmip_cluster_slices_v1`; desired state slices it on each node
+(`xmip-service --slice`). A changed slice takes effect when the node starts
+again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
 
 #### `embedded-storage`
 
@@ -137,8 +137,8 @@ started. Records: ADR-0018, ADR-0064.
 #### `program-audit`
 
 **Every Xmip program audits to its audit file.** `xmip-service`, `xmip`, both
-PowerShell modules, the web host, the language server and the Playground
-record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
+PowerShell modules, the web host, the language server and the Essentials
+record through `xmip-core-audit`'s `ProgramAudit` into `audit.xmip`,
 synchronously: a record is appended before `record` returns, chained in its
 writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
 system's log the fallback; the next append seals a record whose write was
@@ -163,7 +163,7 @@ earlier epoch not asked, and refused at start in words where it names nothing
 to present; a node with the Storage role serves Xmip Storage at `[storage]
 listen`, and `xmip-service --listening` says its port; every node publishes at
 `<node>/storage` which Storage it uses and whether it answered, Done where
-none did. Held by the root's `failover` and `wire` tests and the Playground's
+none did. Held by the root's `failover` and `wire` tests and the Essentials'
 level 1, every node a process. Records: ADR-0056 (amendments 2026-10-01 and
 2026-10-22), ADR-0067 (amendment 2026-10-22).
 
@@ -264,7 +264,7 @@ interrupt one. Records: ADR-0048.
 #### `retention-archiving`
 
 **Archiving by retention window.** `xmip-core-retain` and `xmip-core-archive`
-are driven by the Playground on a simulated clock; a node has no retention or
+are driven by the Essentials on a simulated clock; a node has no retention or
 archive step and reads no `[retention]` table. Records: ADR-0040.
 
 ### Decided, not built
@@ -274,7 +274,7 @@ archive step and reads no `[retention]` table. Records: ADR-0040.
 **Holding a Stream to a named Contract.** A node refuses to start a Receive or
 Send Location that names a Contract, in words: arrival holds no Stream to one
 yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate,
-and the Playground holds its generated content to them in its own harness, not
+and the Essentials holds its generated content to them in its own harness, not
 at a node's Location. Records: ADR-0042, ADR-0031 (amendment 2026-10-05).
 
 #### `artifact-scope`
@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 322669 lines of production
+Where each repository mounts and what it holds: 324366 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -424,7 +424,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 54 of them and they
+nowhere — work not begun, not work unmounted. There are 51 of them and they
 hold no source to count.
 
 ```text
@@ -558,15 +558,15 @@ hold no source to count.
 │   │   │   │   └── xpath                         49
 │   │   │   ├── process                         2412
 │   │   │   │   └── bpmn                        3173
-│   │   │   ├── transform                       2034
-│   │   │   │       declared, not built 11
-│   │   │   │       dotnet  handlebars  jolt  jq  jsonata  liquid  mustache
-│   │   │   │       rust  tera  wasm  xquery
-│   │   │   ├── prepare                         1827
+│   │   │   ├── prepare                         2232
 │   │   │   │   ├── rpgp                         255
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
+│   │   │   ├── transform                       2046
+│   │   │   │       declared, not built 8
+│   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
+│   │   │   │       xquery
 │   │   │   ├── identify                        1509
 │   │   │   │   ├── saml                         345
 │   │   │   │   ├── api-key                      227
@@ -613,9 +613,7 @@ hold no source to count.
 │   │   │   │   ├── schematron                   274
 │   │   │   │   ├── asyncapi                     243
 │   │   │   │   ├── regex                        207
-│   │   │   │   ├── csv                          140
-│   │   │   │   ├── rust                          83
-│   │   │   │   └── dotnet                        19
+│   │   │   │   └── csv                          140
 │   │   │   ├── route                            739
 │   │   │   │   ├── metadata                     125
 │   │   │   │   ├── contract                      86
@@ -663,7 +661,7 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             6601
 │   │   │   ├── codec                           2898
-│   │   │   ├── tls                             2442
+│   │   │   ├── tls                             2458
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1756
 │   │   │   ├── sql                             1013
@@ -696,11 +694,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31972  C# 29405 · Rust 2271 · PowerShell 296
-│   │   ├── event                               5720
+│   │   ├── abi                                31974  C# 29407 · Rust 2271 · PowerShell 296
+│   │   ├── event                               5725
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                3897
+│   │   ├── core                                4059
 │   │   ├── message                             1733
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -724,7 +722,7 @@ hold no source to count.
 │   │   ├── party                                179
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37561
+│       ├── runtime                            37586
 │       ├── persist                            14756
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
@@ -733,7 +731,8 @@ hold no source to count.
 │       └── configure                           8244
 └── test/
     └── core/
-        └── playground                         12782
+        ├── essentials                         13871
+        └── module                                83
 ```
 
 ---
@@ -799,7 +798,7 @@ Things Xmip does.
 | `xmip-core-assign` | scaffolded | `module/core/capability/assign` | — |
 | `xmip-core-authenticate` | scaffolded | `module/core/capability/authenticate` | 18 |
 | `xmip-core-authorize` | scaffolded | `module/core/capability/authorize` | 14 |
-| `xmip-core-contract` | scaffolded | `module/core/capability/contract` | 22 |
+| `xmip-core-contract` | scaffolded | `module/core/capability/contract` | 20 |
 | `xmip-core-demote` | scaffolded | `module/core/capability/demote` | — |
 | `xmip-core-identify` | scaffolded | `module/core/capability/identify` | 19 |
 | `xmip-core-logic` | scaffolded | `module/core/capability/logic` | 4 |
@@ -814,7 +813,7 @@ Things Xmip does.
 | `xmip-core-route` | scaffolded | `module/core/capability/route` | 7 |
 | `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
-| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 11 |
+| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 8 |
 | `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 88 |
 | `xmip-core-unit` | scaffolded | `module/core/capability/unit` | — |
 
@@ -833,13 +832,13 @@ All 14 composed in `module/core/capability/authorize`.
 - **scaffolded**, 14 — abac, acl, artifact, cedar, claim, contract, location,
   opa, party, policy, rbac, role, scope, transport
 
-### `xmip-core-contract`, 22 technologies
+### `xmip-core-contract`, 20 technologies
 
-All 22 composed in `module/core/capability/contract`.
+All 20 composed in `module/core/capability/contract`.
 
-- **scaffolded**, 22 — asyncapi, avro, csv, dotnet, edi-edifact, edi-x12,
-  fhir, fixed-width, graphql-schema, hl7-v2, json-schema, openapi, protobuf,
-  regex, rust, schematron, sql, toml, toon, wsdl, xml-schema, yaml
+- **scaffolded**, 20 — asyncapi, avro, csv, edi-edifact, edi-x12, fhir,
+  fixed-width, graphql-schema, hl7-v2, json-schema, openapi, protobuf, regex,
+  schematron, sql, toml, toon, wsdl, xml-schema, yaml
 
 ### `xmip-core-identify`, 19 technologies
 
@@ -914,13 +913,13 @@ the parent does not compose.
 - **reserved**, 5 — aws-kms*, azure-key-vault*, keyring*, pkcs11*, vault*
 - **scaffolded**, 3 — dpapi, file, keychain
 
-### `xmip-core-transform`, 11 technologies
+### `xmip-core-transform`, 8 technologies
 
 Declared, and none composed: `module/core/capability/transform` has no
 `.gitmodules`.
 
-- **reserved**, 11 — dotnet, handlebars, jolt, jq, jsonata, liquid, mustache,
-  rust, tera, wasm, xquery
+- **reserved**, 8 — handlebars, jolt, jq, jsonata, liquid, mustache, tera,
+  xquery
 
 ### `xmip-core-transport`, 88 technologies
 
@@ -953,7 +952,7 @@ Running and governing Xmip.
 | `xmip-core-observe` | scaffolded | `module/core/operation/observe` | 2 |
 | `xmip-core-powershell` | scaffolded | `module/core/operation/powershell` | — |
 | `xmip-core-report` | scaffolded | `module/core/operation/report` | 6 |
-| `xmip-core-test` | reserved | not mounted | 1 |
+| `xmip-core-test` | reserved | not mounted | 2 |
 
 ### `xmip-core-archive`, 10 technologies
 
@@ -989,12 +988,12 @@ Declared, and none composed: `module/core/operation/report` has no
 
 - **reserved**, 6 — csv, html, json, pdf, prometheus, sql
 
-### `xmip-core-test`, one technology
+### `xmip-core-test`, 2 technologies
 
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 1 — playground
+- **scaffolded**, 2 — essentials, module
 
 ---
 

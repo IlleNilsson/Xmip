@@ -1,6 +1,6 @@
 ---
 # One Xmip node on its own machine, Windows or AlmaLinux alike, in the same
-# steps: its account, the cluster's xmip.toml, its certificate from the
+# steps: its account, cluster.xmip, its certificate from the
 # cluster's own authority, the estate's package (whose `xmip-service
 # --install` lays the node out, slices it and registers and starts its
 # service), its slice kept as `xmip-service --slice` prints it, a firewall

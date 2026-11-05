@@ -29,7 +29,7 @@ function Get-XmipBuiltTechnology {
             a primaryLanguage; a surface's children drive a node from outside,
             ADR-0014), whatever sits under a library (linked into what uses
             it, never loaded, the owner 2026-09-23), and optional scaffolding
-            such as the Playground, which exercises Xmip from outside
+            such as the Essentials, which exercises Xmip from outside
             (ADR-0036).
 
             The leaf is the last segment of the technology's position in the

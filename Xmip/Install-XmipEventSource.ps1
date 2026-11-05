@@ -27,7 +27,7 @@ function Install-XmipEventSource {
             or the platform has none.
 
         .PARAMETER Manifest
-            prerequisite.toml, as Read-XmipToml read it.
+            prerequisite.xmip, as Read-XmipToml read it.
 
         .PARAMETER ManifestPath
             Its path, beside which the ABI header declares the source's name.

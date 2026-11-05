@@ -59,9 +59,9 @@ Describe 'What a killed process left behind' {
 
             # No process has this id: the highest a pid can be on Windows is
             # far below it, and Linux stops at four million by default.
-            [string] $stale = Join-Path $Area 'xmip-playground-node-2000000000.toml'
+            [string] $stale = Join-Path $Area 'xmip-essentials-node-2000000000.xmip'
             Set-Content -LiteralPath $stale -Encoding utf8 -Value @(
-                'name = "xmip-playground-node"'
+                'name = "xmip-essentials-node"'
                 "location = `"$Location`""
                 'purpose = "test"'
                 'pid = 2000000000'
@@ -80,7 +80,7 @@ Describe 'What a killed process left behind' {
 
             # This shell is alive and is not named xmip or xmip-*: a recycled pid
             # must not lend a dead declaration to a stranger.
-            [string] $borrowed = Join-Path $Area "xmip-$PID.toml"
+            [string] $borrowed = Join-Path $Area "xmip-$PID.xmip"
             Set-Content -LiteralPath $borrowed -Encoding utf8 -Value @(
                 'name = "xmip"'
                 'location = "xmip:///"'
@@ -101,7 +101,7 @@ Describe 'What a killed process left behind' {
     }
 }
 
-Describe 'What a Playground process is called' {
+Describe 'What an Essentials process is called' {
     <#
         ADR-0053, amendment 2026-09-20. The owner, reading eleven rows of
         Get-Process with two clusters up: "these process names do not tell an
@@ -112,16 +112,16 @@ Describe 'What a Playground process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            Get-XmipPlaygroundImageName -Cluster $Name -What 'roll' |
-                Should -Be "xmip-playground-$Name-roll"
-            Get-XmipPlaygroundImageName -Cluster $Name -What 'cluster' |
-                Should -Be "xmip-playground-$Name-cluster"
-            Get-XmipPlaygroundImageName -Cluster $Name -What "node-$Node" |
-                Should -Be "xmip-playground-$Name-node-$Node"
+            Get-XmipEssentialsImageName -Cluster $Name -What 'roll' |
+                Should -Be "xmip-essentials-$Name-roll"
+            Get-XmipEssentialsImageName -Cluster $Name -What 'cluster' |
+                Should -Be "xmip-essentials-$Name-cluster"
+            Get-XmipEssentialsImageName -Cluster $Name -What "node-$Node" |
+                Should -Be "xmip-essentials-$Name-node-$Node"
 
             # Clause 1 is untouched: the owner's one line still finds them.
             foreach ($what in 'roll', 'cluster', "node-$Node") {
-                Get-XmipPlaygroundImageName -Cluster $Name -What $what |
+                Get-XmipEssentialsImageName -Cluster $Name -What $what |
                     Should -BeLike 'xmip-*'
             }
         }
@@ -134,16 +134,16 @@ Describe 'What a Playground process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            [string] $prefix = "xmip-playground-$Name"
-            Get-XmipPlaygroundImageName -Cluster $Name -What 'node-roll' |
+            [string] $prefix = "xmip-essentials-$Name"
+            Get-XmipEssentialsImageName -Cluster $Name -What 'node-roll' |
                 Should -Be "$prefix-node-roll"
-            Get-XmipPlaygroundImageName -Cluster $Name -What 'node-roll' |
-                Should -Not -Be (Get-XmipPlaygroundImageName -Cluster $Name -What 'roll')
+            Get-XmipEssentialsImageName -Cluster $Name -What 'node-roll' |
+                Should -Not -Be (Get-XmipEssentialsImageName -Cluster $Name -What 'roll')
 
-            Get-XmipPlaygroundImageKind -Name "$prefix-node-roll" | Should -Be 'Node'
-            Get-XmipPlaygroundImageKind -Name "$prefix-node-cluster" | Should -Be 'Node'
-            Get-XmipPlaygroundImageKind -Name "$prefix-roll" | Should -Be 'Roll'
-            Get-XmipPlaygroundImageKind -Name "$prefix-cluster" | Should -Be 'Cluster'
+            Get-XmipEssentialsImageKind -Name "$prefix-node-roll" | Should -Be 'Node'
+            Get-XmipEssentialsImageKind -Name "$prefix-node-cluster" | Should -Be 'Node'
+            Get-XmipEssentialsImageKind -Name "$prefix-roll" | Should -Be 'Roll'
+            Get-XmipEssentialsImageKind -Name "$prefix-cluster" | Should -Be 'Cluster'
         }
     }
 
@@ -152,42 +152,42 @@ Describe 'What a Playground process is called' {
             param($Name, $Node)
 
             # A node called node is a node too.
-            [string] $prefix = "xmip-playground-$Name"
+            [string] $prefix = "xmip-essentials-$Name"
             [hashtable] $expected = @{
                 "$prefix-roll"                    = 'Roll'
                 "$prefix-cluster"                 = 'Cluster'
                 "$prefix-node-$Node"              = 'Node'
                 "$prefix-node-node"               = 'Node'
-                'xmip-playground-roll'            = 'Roll'
-                'xmip-playground-cluster'         = 'Cluster'
-                'xmip-playground-node'            = 'Node'
+                'xmip-essentials-roll'            = 'Roll'
+                'xmip-essentials-cluster'         = 'Cluster'
+                'xmip-essentials-node'            = 'Node'
                 'xmip-gui-web'                    = ''
                 'xmip'                            = ''
                 'notepad'                         = ''
             }
 
             foreach ($name in $expected.Keys) {
-                Get-XmipPlaygroundImageKind -Name $name | Should -Be $expected[$name]
+                Get-XmipEssentialsImageKind -Name $name | Should -Be $expected[$name]
             }
         }
     }
 
-    It 'is the Playground''s own where its image is, whatever the built file is called' {
+    It 'is the Essentials''s own where its image is, whatever the built file is called' {
         # The image is deliberately not the built binary: a process name is
         # its image's name. Nothing but this module writes that directory, so
-        # a process running out of it is the Playground's without a warning
+        # a process running out of it is the Essentials' without a warning
         # about a binary that changed under it.
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            [string] $area = (Get-XmipPlaygroundLayout).Image
-            [string] $image = Join-Path $area $Name "xmip-playground-$Name-node-$Node.exe"
+            [string] $area = (Get-XmipEssentialsLayout).Image
+            [string] $image = Join-Path $area $Name "xmip-essentials-$Name-node-$Node.exe"
 
-            Test-XmipPlaygroundOwnImage -Path $image | Should -BeTrue
-            Test-XmipPlaygroundOwnImage -Path '' | Should -BeFalse
-            Test-XmipPlaygroundOwnImage -Path 'C:/Windows/notepad.exe' | Should -BeFalse
-            Test-XmipPlaygroundOwnImage -Path (
-                Join-Path (Get-XmipPlaygroundLayout).Playground 'target/debug/x.exe') |
+            Test-XmipEssentialsOwnImage -Path $image | Should -BeTrue
+            Test-XmipEssentialsOwnImage -Path '' | Should -BeFalse
+            Test-XmipEssentialsOwnImage -Path 'C:/Windows/notepad.exe' | Should -BeFalse
+            Test-XmipEssentialsOwnImage -Path (
+                Join-Path (Get-XmipEssentialsLayout).Essentials 'target/debug/x.exe') |
                 Should -BeFalse
         }
     }
@@ -196,10 +196,10 @@ Describe 'What a Playground process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            $layout = Get-XmipPlaygroundLayout
+            $layout = Get-XmipEssentialsLayout
 
             $layout.Image | Should -BeLike '*.local-work*'
-            Get-XmipPlaygroundImageArea -Cluster $Name |
+            Get-XmipEssentialsImageArea -Cluster $Name |
                 Should -Be (Join-Path $layout.Image $Name)
         }
     }
@@ -214,7 +214,7 @@ Describe 'Which processes are Xmip''s' {
     #>
     It 'is xmip or xmip-<what>, and nothing else' {
         InModuleScope Xmip {
-            foreach ($owned in 'xmip', 'xmip-service', 'xmip-playground-C1-roll') {
+            foreach ($owned in 'xmip', 'xmip-service', 'xmip-essentials-C1-roll') {
                 Test-XmipProcessName -Name $owned | Should -BeTrue -Because $owned
             }
 

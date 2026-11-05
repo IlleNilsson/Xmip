@@ -85,7 +85,7 @@ that builds and evaluates the same tree, so the tree lives below all of
 them. Not in route: a transform depending on route for its expressions
 would depend on the wrong capability. Not in `path/predicate`, where the
 grammar was: that is a technology, and `configure` is a platform service,
-which `architecture.toml`'s policy lets depend on a capability and never on
+which `architecture.xmip`'s policy lets depend on a capability and never on
 a technology. Path is what route (its `content` technology) and transform
 already build on, and its parser cursor is shared with FHIRPath
 (ADR-0044); FHIRPath stays its own language. `xmip-core-path-predicate`,
@@ -556,7 +556,7 @@ complicated Correlation Set, Xmip is the tool.* His two examples: an order
 merchandise *Xmip should process one at a time because the person updated
 all the merchandise is hacking away not knowing of the consequences*.
 
-- **`[[correlations]]`**, declared once in the cluster's `xmip.toml`:
+- **`[[correlations]]`**, declared once in `cluster.xmip`:
   `name`; `keys` — `receive-location`, `receive-port`, `work-process`,
   `send-port`, or a Message Context value by the name a filter reads it by,
   promoted properties among them; and `on_failure`, `block` where it says

@@ -1,6 +1,6 @@
 # One node machine of an environment, from the machine DSC runs on:
 # node.dsc.yaml applied there by Xmip.Environment/Machine, given the
-# cluster's xmip.toml, the node's certificate, key and anchors from the
+# cluster's cluster.xmip, the node's certificate, key and anchors from the
 # cluster's own authority, and the estate's package for its family. An
 # environment document includes it once for each node; README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
@@ -11,7 +11,7 @@ parameters:
     type: object
     description: >-
       What every node shares: cluster, configuration (the cluster's
-      xmip.toml), identity (a folder per node of what New-XmipCertificate
+      cluster.xmip), identity (a folder per node of what New-XmipCertificate
       -Node wrote), credentialPath, keyPath, linuxAccount and farEnd.
   packages:
     type: object
@@ -31,7 +31,7 @@ parameters:
       separated: the nodes its Locations are placed over.
   node:
     type: string
-    description: The node, as the cluster's xmip.toml declares it.
+    description: The node, as cluster.xmip declares it.
   machine:
     type: object
     description: The machine the node runs on, from the mapping in the parameters.
@@ -49,7 +49,7 @@ resources:
       document: node.dsc.yaml
       files: >-
         [createObject(
-        'xmip.toml', parameters('common').configuration,
+        'cluster.xmip', parameters('common').configuration,
         'node.pem', path(parameters('common').identity, parameters('node'), 'node.pem'),
         'node.key', path(parameters('common').identity, parameters('node'), 'node.key'),
         'anchors.pem', path(parameters('common').identity, parameters('node'), 'anchors.pem'),

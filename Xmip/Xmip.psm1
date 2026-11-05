@@ -59,7 +59,7 @@ Set-StrictMode -Version Latest
 function Get-XmipRepositoryRoot {
     <#
         Finds the Xmip repository by walking up from the current location until
-        architecture.toml appears.
+        architecture.xmip appears.
 
         $PSScriptRoot cannot answer this. Once the module is linked onto
         PSModulePath it lives outside the repository, and when it is loaded by
@@ -96,13 +96,13 @@ function Get-XmipRepositoryRoot {
         return $found
     }
 
-    throw "No architecture.toml found at or above '$StartAt' or where this module lives ($origin)."
+    throw "No architecture.xmip found at or above '$StartAt' or where this module lives ($origin)."
 }
 
 
 function Find-XmipRepositoryRoot {
     <#
-        Walks up from one directory until architecture.toml appears; empty
+        Walks up from one directory until architecture.xmip appears; empty
         when it never does. The search Get-XmipRepositoryRoot runs twice.
     #>
     [CmdletBinding()]
@@ -115,7 +115,7 @@ function Find-XmipRepositoryRoot {
     [System.IO.DirectoryInfo] $directory = [System.IO.DirectoryInfo]::new($StartAt)
 
     while ($null -ne $directory) {
-        [string] $candidate = Join-Path $directory.FullName 'architecture.toml'
+        [string] $candidate = Join-Path $directory.FullName 'architecture.xmip'
 
         if (Test-Path -LiteralPath $candidate -PathType Leaf) {
             return $directory.FullName
@@ -280,6 +280,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Test-XmipCodeChange.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNewModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipModule.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipCargoTest.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipMeasuredProgram.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipEstateCrate.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipLocalPatch.ps1')
@@ -308,31 +309,31 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'New-XmipEstateMap.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipHistory.ps1')
 
-# Xmip's test suites — the Playground is the first — and the web monitor on
+# Xmip's test suites — the Essentials is the first — and the web monitor on
 # this machine: Start, Get and Stop for
 # each of the roll, the emulated nodes and the web host, and Get for what a run
 # says. Nothing in the estate starts any of them on its own (owner, 2026-09-12).
 . (Join-Path $PSScriptRoot 'Read-XmipTestSuiteDeclaration.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestSuite.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundLayout.ps1')
-. (Join-Path $PSScriptRoot 'New-XmipPlaygroundImage.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundProcess.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEssentialsLayout.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipEssentialsImage.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEssentialsProcess.ps1')
 . (Join-Path $PSScriptRoot 'Resolve-XmipClusterFile.ps1')
 . (Join-Path $PSScriptRoot 'Import-XmipOperatorModule.ps1')
 . (Join-Path $PSScriptRoot 'Write-XmipAudit.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNodeRole.ps1')
 . (Join-Path $PSScriptRoot 'Write-XmipTestCluster.ps1')
-. (Join-Path $PSScriptRoot 'New-XmipPlaygroundEnvironment.ps1')
+. (Join-Path $PSScriptRoot 'New-XmipEssentialsEnvironment.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipRollRecord.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipTestStatus.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTestSuiteGroup.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipEstateSuite.ps1')
 . (Join-Path $PSScriptRoot 'Complete-XmipEstateRun.ps1')
-. (Join-Path $PSScriptRoot 'Resolve-XmipPlaygroundChoice.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipPlaygroundRoll.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipPlaygroundBuild.ps1')
-. (Join-Path $PSScriptRoot 'Get-XmipPlaygroundBuild.ps1')
-. (Join-Path $PSScriptRoot 'Start-XmipPlaygroundRollProcess.ps1')
+. (Join-Path $PSScriptRoot 'Resolve-XmipEssentialsChoice.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipEssentialsRoll.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipEssentialsBuild.ps1')
+. (Join-Path $PSScriptRoot 'Get-XmipEssentialsBuild.ps1')
+. (Join-Path $PSScriptRoot 'Start-XmipEssentialsRollProcess.ps1')
 . (Join-Path $PSScriptRoot 'Start-XmipTest.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipTestStatus.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipEstateRun.ps1')
@@ -347,7 +348,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Start-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipOperationWebAnswering.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipOperationWebSnapshotArgument.ps1')
-. (Join-Path $PSScriptRoot 'Initialize-XmipPlaygroundAuthority.ps1')
+. (Join-Path $PSScriptRoot 'Initialize-XmipEssentialsAuthority.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Stop-XmipOperationWeb.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipProcess.ps1')

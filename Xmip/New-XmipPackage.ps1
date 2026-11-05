@@ -39,7 +39,7 @@ function Assert-XmipPackageBuildable {
             { $_ -in 'deb', 'rpm' } {
                 "A .$kind is built on Linux, x86-64 or arm64, from " +
                 'deploy/package/linux/nfpm.yaml by nfpm 2.48, with cargo, libclang and a ' +
-                'C++ compiler (prerequisite.toml) to build xmip-service there.'
+                'C++ compiler (prerequisite.xmip) to build xmip-service there.'
             }
             'pkg' {
                 'A .pkg is built on macOS from deploy/package/macos by pkgbuild and ' +

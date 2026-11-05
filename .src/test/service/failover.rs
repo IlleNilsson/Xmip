@@ -90,7 +90,7 @@ fn configured(
         cluster = test_cluster().name,
         nodes = quoted.join(", "),
     );
-    let path = own.join(format!("{node}.toml"));
+    let path = own.join(format!("{node}.xmip"));
     std::fs::write(&path, text).expect("written");
     path
 }

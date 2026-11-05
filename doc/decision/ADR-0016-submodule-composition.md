@@ -24,7 +24,7 @@ commits, and reconciliation never uses `git submodule update --remote`.
 
 ## Context
 
-`architecture.toml` schema 2.0 makes the tree the data. A repository name is
+`architecture.xmip` schema 2.0 makes the tree the data. A repository name is
 derived from its position:
 
 ```
@@ -42,7 +42,7 @@ Three things already in `main` disagree with that:
    contains no entries.
 2. `Invoke-SynchronizeSubmodules` reads a flat `repositories[]` array with
    per-repository `submodule.enabled` and `submodule.path` — schema 1, which
-   `architecture.toml` does not have and should not grow.
+   `architecture.xmip` does not have and should not grow.
 3. `modules/` was occupied by sixteen README files under the abandoned .NET
    taxonomy (`modules/ip/tcp/http/Xmip.Handler.Soap/`), while also being the
    value of `default.submoduleRoot`. Cleared in `a3b001e` along with
@@ -75,8 +75,8 @@ pins what starts a node by its domain alone, `xmip-core` at
 `module/foundation/core` and `xmip-core-runtime` at `module/platform/runtime`,
 and every other module at `module/<provider>/<domain>/<leaf>`,
 `xmip-core-transport` at `module/core/capability/transport` and another
-provider's at `module/<theirs>/…` beside it. A Playground is test scaffolding
-and mounts at `test/<provider>/playground` (ADR-0028); the templates stay at
+provider's at `module/<theirs>/…` beside it. An Essentials is test scaffolding
+and mounts at `test/<provider>/essentials` (ADR-0028); the templates stay at
 `template/<language>`, belonging to no provider.
 
 As first written, this amendment read *provider before purpose* as replacing
@@ -148,7 +148,7 @@ and nothing moves under them.
 Sixty-nine files removed in `a3b001e`: `modules/` (16), `handlers/` (35),
 `doc/submodules/` (11), `doc/architecture/handler-submodules-*.md` (6) and
 `.gitmodules.planned`. Every leaf under `handlers/` was checked against the
-199 implementation entries in `architecture.toml` first; the only six that did
+199 implementation entries in `architecture.xmip` first; the only six that did
 not match were aliases of entries that do exist — `apache-kafka` for `kafka`,
 `edi` for `edi-x12`, `hl7` for `hl7-v2`, `raw-tcp` for `tcp`, `raw-udp` for
 `udp`, `web-api` for `openapi`. Nothing was lost.
@@ -176,7 +176,7 @@ should be marked superseded rather than deleted.
 - `crates/` still carries pre-ADR-0011 names (`xmip-module-abi`,
   `xmip-handler-file`, `xmip-module-api`) against manifest names
   (`xmip-core-abi`, `xmip-core-transport`, `xmip-core-api`). Submodules do not
-  fix that and it is not this ADR's business. `doc/planning/allocation.toml`
+  fix that and it is not this ADR's business. `doc/planning/allocation.xmip`
   now decides each of them: `xmip-handler-file` folds into
   `xmip-core-transport` as an implementation module rather than becoming the
   first level-two repository.

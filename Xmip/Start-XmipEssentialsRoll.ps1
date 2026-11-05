@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Starting one Playground roll: its choices, what already rolls, and the roll itself.
+    Starting one Essentials roll: its choices, what already rolls, and the roll itself.
 
 .DESCRIPTION
     Apart from Start-XmipTest.ps1 since 2026-09-22, when that file was 944 lines
@@ -15,11 +15,11 @@
 #>
 
 
-function Get-XmipPlaygroundChoice {
+function Get-XmipEssentialsChoice {
     <#
         .SYNOPSIS
             The optional roll switches the caller actually gave, as the
-            arguments New-XmipPlaygroundEnvironment takes for them.
+            arguments New-XmipEssentialsEnvironment takes for them.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -46,7 +46,7 @@ function Get-XmipPlaygroundChoice {
 }
 
 
-function Get-XmipPlaygroundRolling {
+function Get-XmipEssentialsRolling {
     <#
         .SYNOPSIS
             The pids rolling as a cluster, from the run records in a directory.
@@ -75,7 +75,7 @@ function Get-XmipPlaygroundRolling {
 }
 
 
-function Remove-XmipPlaygroundStaleRecord {
+function Remove-XmipEssentialsStaleRecord {
     <#
         .SYNOPSIS
             Deletes run records whose roll is no longer running — a roll that
@@ -88,13 +88,13 @@ function Remove-XmipPlaygroundStaleRecord {
         [string] $Path
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
 
     foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
         $process = Get-Process -Id $recorded.Id -ErrorAction SilentlyContinue
         [bool] $alive = $null -ne $process -and
-            (Get-XmipPlaygroundImageKind -Name $process.ProcessName) -eq 'Roll' -and
-            (Test-XmipPlaygroundBinary -Process $process -Path $layout.Roll)
+            (Get-XmipEssentialsImageKind -Name $process.ProcessName) -eq 'Roll' -and
+            (Test-XmipEssentialsBinary -Process $process -Path $layout.Roll)
 
         if (-not $alive) {
             Remove-Item -LiteralPath $recorded.File -Force
@@ -103,23 +103,23 @@ function Remove-XmipPlaygroundStaleRecord {
 }
 
 
-# Which live processes are the Playground's is Get-XmipPlaygroundProcess.ps1:
-# Test-XmipPlaygroundBinary moved there on 2026-09-19, with the finding that a
+# Which live processes are the Essentials' is Get-XmipEssentialsProcess.ps1:
+# Test-XmipEssentialsBinary moved there on 2026-09-19, with the finding that a
 # rebuilt binary must not make a running roll disappear.
 
 
-function Start-XmipPlaygroundRoll {
+function Start-XmipEssentialsRoll {
     <#
         .SYNOPSIS
-            Starts one Playground roll for Start-XmipTest, detached: the build
+            Starts one Essentials roll for Start-XmipTest, detached: the build
             and the roll run in a pwsh of their own, and this returns at once.
 
         .DESCRIPTION
-            The Playground's own work, once Start-XmipTest has chosen the
+            The Essentials' own work, once Start-XmipTest has chosen the
             suite and refused what it cannot run: lay the run out, refuse a
             cluster already rolling or building, write the run's cluster file,
             and hand the rest — the build, the roll's spawn and its run record
-            — to Start-XmipPlaygroundBuild. Part of Start-XmipTest's body
+            — to Start-XmipEssentialsBuild. Part of Start-XmipTest's body
             until 2026-09-22, when that one function was 610 lines against
             the 400 the estate allows a file.
 
@@ -224,13 +224,13 @@ function Start-XmipPlaygroundRoll {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = $layout.Area
     }
 
-    [hashtable] $choice = Get-XmipPlaygroundChoice -Bound $Bound
+    [hashtable] $choice = Get-XmipEssentialsChoice -Bound $Bound
     $choice.Stress = $Stress
     $choice.Test = $Test
     $choice.Area = $Path
@@ -239,19 +239,19 @@ function Start-XmipPlaygroundRoll {
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
     [string] $with = if (-not $boundNodes) {
-        ", the nodes of $((Get-XmipPlaygroundLayout).Configuration)"
+        ", the nodes of $((Get-XmipEssentialsLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
     [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online as cluster $Cluster"
 
-    if (-not $Caller.ShouldProcess("the Xmip Playground in $Path", "Start a $what")) {
+    if (-not $Caller.ShouldProcess("the Xmip Essentials in $Path", "Start a $what")) {
         return
     }
 
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    Remove-XmipPlaygroundStaleRecord -Path $Path
-    Remove-XmipPlaygroundBuildEnded -Path $Path -Cluster $Cluster
+    Remove-XmipEssentialsStaleRecord -Path $Path
+    Remove-XmipEssentialsBuildEnded -Path $Path -Cluster $Cluster
 
     # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
     # ruling 1 of 2026-09-14). Two under one name publish to one file and each
@@ -259,8 +259,8 @@ function Start-XmipPlaygroundRoll {
     # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank. A
     # cluster still building is about to roll, and is refused the same way.
     [int[]] $rolling = @(
-        Get-XmipPlaygroundRolling -Path $Path -Cluster $Cluster
-        Get-XmipPlaygroundBuild -Path $Path |
+        Get-XmipEssentialsRolling -Path $Path -Cluster $Cluster
+        Get-XmipEssentialsBuild -Path $Path |
             Where-Object { $_.State -eq 'building' -and $_.Cluster -eq $Cluster } |
             ForEach-Object { $_.Id }
     )
@@ -272,15 +272,15 @@ function Start-XmipPlaygroundRoll {
         return
     }
 
-    # The nodes are the cluster's xmip.toml (ADR-0056, amendment 2026-10-03),
-    # the Playground's own, one file for one computer and for machines of
+    # The nodes are cluster.xmip (ADR-0056, amendment 2026-10-03),
+    # the Essentials' own, one file for one computer and for machines of
     # their own (ADR-0028, amendment 2026-10-21): the run's file is written
     # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
-    # or, where it says none, the Playground's file declares; omitted, its
+    # or, where it says none, the Essentials' file declares; omitted, its
     # every node. XMIP_TEST_CLUSTER names it to the roll, and the run record
     # says the nodes it declares. Only typed names are resolved for a real
     # node, so they alone are named to the roll.
-    $declared = Read-XmipPlaygroundCluster
+    $declared = Read-XmipEssentialsCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
     [hashtable] $written = @{
@@ -326,7 +326,7 @@ function Start-XmipPlaygroundRoll {
     $choice.Hidden = $hidden
 
     # Everything the roll is spawned and recorded with, handed to the
-    # detached build as one value (Start-XmipPlaygroundRollProcess).
+    # detached build as one value (Start-XmipEssentialsRollProcess).
     [hashtable] $start = @{
         Suite       = $Suite
         Cluster     = $Cluster
@@ -356,7 +356,7 @@ function Start-XmipPlaygroundRoll {
         [hashtable] $where = @{ Roll = $layout.Roll; Cluster = $Cluster; Path = $Path }
 
         try {
-            $snapshot = (Get-XmipPlaygroundPublication @where).Snapshot
+            $snapshot = (Get-XmipEssentialsPublication @where).Snapshot
         }
         catch {
             Write-Verbose "the roll built before could not say where it publishes: $_"
@@ -364,7 +364,7 @@ function Start-XmipPlaygroundRoll {
     }
 
     $start.Snapshot = $snapshot
-    [int] $id = Start-XmipPlaygroundBuild -Start $start
+    [int] $id = Start-XmipEssentialsBuild -Start $start
 
     # The prompt, where this session shows one, follows the roll just started:
     # the shipped document names one cluster, and on 2026-09-18 a roll of a

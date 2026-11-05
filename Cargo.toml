@@ -154,7 +154,7 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # https://, sftp://, tcp://, udp:// (ADR-0064, amendment 2026-10-28). tcp
 # terminates TLS where its Location says `tls = true`, with the node's
 # `[provision.receive]` certificate. sftp takes files from and puts them on
-# an SFTP server, each under its name: the Parties' far end the Playground
+# an SFTP server, each under its name: the Parties' far end the Essentials
 # serves nodes on machines of their own (ADR-0028, amendment 2026-10-22).
 transport-file = ["dep:xmip-transport-file"]
 transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
@@ -174,7 +174,7 @@ provision-internal-ca = ["dep:xmip-provision", "dep:xmip-provision-internal-ca"]
 # store over, and which every target that keeps a store links
 # (deploy/profile/target); and SQLite, an embedded Storage node's
 # administration database, which the storage role links
-# (deploy/profile/role/storage.toml). Each brings the key home with it: a
+# (deploy/profile/role/storage.xmip). Each brings the key home with it: a
 # store is always sealed (ADR-0063).
 persist-rocksdb = ["persist", "secret", "dep:xmip-persist-rocksdb"]
 persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]
@@ -248,7 +248,7 @@ xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://githu
 ctrlc = { version = "3.5", features = ["termination"] }
 
 [dev-dependencies]
-# The test cluster's names, from its `xmip.toml` (`configure::fixture`;
+# The test cluster's names, from its `cluster.xmip` (`configure::fixture`;
 # ADR-0056, amendment 2026-10-03): no test writes a cluster or node name.
 xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main", features = ["test-support"] }
 # The deploy test walks a rendered configuration's keys, as configure's reader

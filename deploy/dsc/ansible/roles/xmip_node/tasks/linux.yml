@@ -22,10 +22,10 @@
     - "{{ xmip_staging }}"
   become: true
 
-- name: The cluster's xmip.toml
+- name: cluster.xmip
   ansible.builtin.copy:
     src: "{{ xmip_cluster_configuration }}"
-    dest: "{{ xmip_configuration }}/xmip.toml"
+    dest: "{{ xmip_configuration }}/cluster.xmip"
     mode: '0644'
   when: xmip_cluster_configuration | length > 0
   become: true
@@ -74,7 +74,7 @@
 - name: The node's configuration as xmip-service slices it
   ansible.builtin.command:
     argv: >-
-      {{ [xmip_program, '--configuration', xmip_configuration ~ '/xmip.toml',
+      {{ [xmip_program, '--configuration', xmip_configuration ~ '/cluster.xmip',
       '--node', xmip_node_name, '--cluster', xmip_cluster_name]
       + xmip_bound + ['--slice'] }}
   register: xmip_slice
@@ -84,7 +84,7 @@
 - name: The node's configuration where it reads it
   ansible.builtin.copy:
     content: "{{ xmip_slice.stdout }}\n"
-    dest: "{{ xmip_configuration }}/xmip-node.toml"
+    dest: "{{ xmip_configuration }}/node.xmip"
     mode: '0644'
   notify: Restart the Xmip node
   become: true
@@ -94,7 +94,7 @@
     argv:
       - "{{ xmip_program }}"
       - --configuration
-      - "{{ xmip_configuration }}/xmip-node.toml"
+      - "{{ xmip_configuration }}/node.xmip"
       - --listening
   register: xmip_listening
   changed_when: false

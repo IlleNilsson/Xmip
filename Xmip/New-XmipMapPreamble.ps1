@@ -49,7 +49,7 @@ function New-XmipMapPreamble {
         "$($Repository.Count) repositories are declared and $mounted of them are"
         'mounted in this working tree.'
         ''
-        '**Generated from `architecture.toml` and from the `.gitmodules` files'
+        '**Generated from `architecture.xmip` and from the `.gitmodules` files'
         'of the estate, by `New-XmipEstateMap`.** ADR-0020 clause 5 rules that'
         'a document listing repositories is a second source of truth and will'
         'be wrong within a week; a view of the manifest is not a second source'

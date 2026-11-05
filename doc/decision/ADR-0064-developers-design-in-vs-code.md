@@ -45,7 +45,7 @@ Xmip Process vocabulary is phase C's first open item.
 ### 1. Routes first, then transforms, then processes
 
 The owner, from three: routes first — they run already, so a drawn route can
-be seen routing a Message in the Playground the same day. Transforms follow; the
+be seen routing a Message in the Essentials the same day. Transforms follow; the
 process designer comes after the Xmip Process vocabulary is settled.
 
 ### 2. An Xmip Application holds the design
@@ -75,7 +75,7 @@ a Message at arrival (`arrival.rs`,
 `a_bound_applications_subscription_routes_a_message`). `xmip_validate_v1`
 reads either document and tells them apart by the `[application]` table, so
 every surface validates an Application as it validates a node. Running an
-Application in the Playground is the next slice.
+Application in the Essentials is the next slice.
 
 ### 3. Its name is Xmip Application
 
@@ -119,7 +119,7 @@ TOML, and the text editor and the designer follow each other both ways.
 
 - The configuration model gains the Xmip Application document and the node's
   binding of it; `configure` parses both, the runtime starts what a node
-  binds, and the Playground runs Applications instead of hand-written
+  binds, and the Essentials runs Applications instead of hand-written
   Subscriptions.
 - The first designer draws an Application's routes: Receive Locations, the
   Subscriptions and their filters (property, operator, value, and/or
@@ -181,7 +181,7 @@ and answers them through `xmip_operate.h` section 12,
 `xmip_technology_catalogue_v1`, bound in `Xmip.Abi` as `RuntimeCatalogue`;
 `xmip-lsp` completes and explains a Location's transport, contract and
 settings from it and answers `xmip/technologies` for the form the next
-slice draws. The runtime names no technology (`architecture.toml`: a
+slice draws. The runtime names no technology (`architecture.xmip`: a
 platform service depends on no technology repository), so a technology
 enters its catalogue through `catalogue::carry`; which technologies the
 runtime library the surfaces load carries is the owner's to decide.
@@ -197,12 +197,12 @@ The runtime library the surfaces load runs no node and carries nothing
 (ADR-0018, amendment 2026-09-28; open problem 20); which technologies it
 should carry is still the owner's to decide.
 
-## Amendment, 2026-10-03: one `xmip.toml`, every designer a view of it
+## Amendment, 2026-10-03: one `cluster.xmip`, every designer a view of it
 
 The owner, 2026-10-03: *Developers, Operators deal with the one xmip.toml
 file … VS Code's Xmip Extension shall work against this one / cluster toml
 file*; *At runtime, when they have been published/sectioned there are
-multiple.* Developers and operators author one `xmip.toml` per cluster, its
+multiple.* Developers and operators author one `cluster.xmip` per cluster, its
 Xmip Applications among its sections; publishing sections it into the files
 each node runs (ADR-0031, amendment of this date). The extension opens that
 one file, and every designer — Cluster, Node, Receive Port, Receive
@@ -214,12 +214,12 @@ Built 2026-10-03. An Xmip Application is a section of the cluster's file,
 (`xmip-core-configure`, `XmipApplication` in `application.rs`, `section.rs`,
 read by `parse_application`, its one reading). The separate Application
 document — its `[application]` header, a binding's `document` path and the
-`*.application.toml` files — is deleted: a binding binds the section of
+`*.application.xmip` files — is deleted: a binding binds the section of
 its name and refuses any other key; `binding_problems` refuses one the
 configuration does not hold and reports its design's problems, the slice
 gives a node only the sections its bindings name, and the runtime reads
-each bound section as the node starts. The Playground's RoundTrip
-Application is a section of its cluster's `configuration/xmip.toml`, and
+each bound section as the node starts. The Essentials' RoundTrip
+Application is a section of its cluster's `configuration/cluster.xmip`, and
 each node's configuration is sliced from it. The designer's views are
 configure's `views.rs` — one view per kind in the order above, each entry
 wherever the file holds it (shared, a node's own, a binding's, an
@@ -241,7 +241,7 @@ yet: no key was invented for them.
 
 The owner, 2026-10-05: *Change it, we edit the cluster TOML file, drilling
 down to nodes and artifacts from the overview of the cluster.* The
-Operation Desktop's Configure page is a view of the cluster's `xmip.toml`
+Operation Desktop's Configure page is a view of `cluster.xmip`
 as the VS Code designer is, through the same `xmip_operate.h` section 10,
 bound once in .NET as `RuntimeRules.Design`. Section 10 has a fifth
 export, `xmip_cluster_slices_v1`, the one slicing (`configure::slice`) for
@@ -255,7 +255,7 @@ not see that need for Operation Web version*). ADR-0031, amendment
 The owner, 2026-10-13, trying the extension: *Nice attempt, but not really
 useful VS Code extension*; what it must do: *Create, Edit, Delete.
 Suggestions, Lookups, Validations*; and *Refine it and I'll try again.*
-The text editor over the cluster's `xmip.toml` is where a developer works,
+The text editor over `cluster.xmip` is where a developer works,
 so it gains all six, each by clause 5: the rules in Rust, reached through
 the runtime's library, and the extension only wiring.
 
@@ -357,7 +357,7 @@ how it is drawn and edited and what it compiles to are the design format's
 (`xmip-core-process-bpmn`) and `xmip-core-process`'s, answered by
 `xmip-lsp` itself (`xmip/process`, `xmip/processEdit`,
 `xmip/processCompile`), because a design format is a technology and the
-runtime's library, a platform service, names none (`architecture.toml`).
+runtime's library, a platform service, names none (`architecture.xmip`).
 **Compile** writes the Work Process unit's crate and its `[[modules]]`
 entry beside the design. Which design formats the runtime's library the
 .NET surfaces load carries, so that the PowerShell module and the Operation

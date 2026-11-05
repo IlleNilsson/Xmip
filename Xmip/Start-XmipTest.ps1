@@ -12,7 +12,7 @@ function Start-XmipTest {
         .DESCRIPTION
             Xmip provides its tests as suites, and -Suite says which one runs.
             A suite carries the provider who publishes it, exactly as a module
-            does (ADR-0011): Core.Playground is a roll that runs detached
+            does (ADR-0011): Core.Essentials is a roll that runs detached
             until you stop it, Get-XmipTestStatus says what runs and
             Stop-XmipTest ends it; Core.Estate is the Pester suite under
             test/, the estate's memory of every past defect, which runs in a
@@ -20,7 +20,7 @@ function Start-XmipTest {
             A third party's suite is <Provider>.<Name> and joins by a
             declaration rather than by an edit to Xmip.
 
-            The Playground (ADR-0028) is the estate's integration test over
+            The Essentials (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
             a snapshot, a history and the recent activity as TOML files a
             monitor reads. This starts exactly one roll as a background
@@ -43,28 +43,28 @@ function Start-XmipTest {
             Get-XmipTestStatus says building, with the crates compiled, until
             the nodes start, or FAILED with cargo's first error; Stop-XmipTest
             stops it. Under -Path: `build-<start time>.log`, the roll's
-            `roll-<start time>.log` and `.err`, and `roll-<pid>.toml`.
+            `roll-<start time>.log` and `.err`, and `roll-<pid>.xmip`.
 
         .PARAMETER Suite
-            Which test suite to run: Core.Playground (the default) or
+            Which test suite to run: Core.Essentials (the default) or
             Core.Estate, which are Xmip's own. Every suite is
             <Provider>.<Name> and core is the reserved provider that means
-            Xmip itself (ADR-0011), so Core.Playground is how the Playground
+            Xmip itself (ADR-0011), so Core.Essentials is how the Essentials
             is spelled — in the run record, in every refusal and on every
-            surface. A bare Playground is still accepted and resolves to it,
+            surface. A bare Essentials is still accepted and resolves to it,
             so nothing typed before this means anything else now. A third
             party's suite carries its own provider: <Provider>.<Name>. Case
-            does not matter. The Playground parameters below belong to the
-            Playground alone.
+            does not matter. The Essentials parameters below belong to the
+            Essentials alone.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite this estate knows, -Suite
-            *Play* is the Playground, and a literal name is one suite as
+            *Ess* is the Essentials, and a literal name is one suite as
             before. A pattern matching nothing is REFUSED, naming it and the
             suites there are, before anything starts.
 
             Several suites matched run one after another in the order they
-            are listed, each returning what it returns — the Playground a
+            are listed, each returning what it returns — the Essentials a
             detached roll, the estate a detached Pester run, both back at
             once, a provider's whatever its command gives — so a caller reads
             the stream by type. It is said in words which are about to run and
@@ -79,7 +79,7 @@ function Start-XmipTest {
             company (ADR-0059, amendment 2026-09-20):
 
                 provider = "Example"
-                name     = "Playground"
+                name     = "Essentials"
                 command  = "Start-ExampleXmipTest"
 
             Start-XmipTest hands that command everything it was given beside
@@ -96,7 +96,7 @@ function Start-XmipTest {
         .PARAMETER Test
             Which tests of the suite to run. Omit it, for any suite and any
             provider, and the whole suite runs (the owner, 2026-09-19). The
-            Playground's are RoundTrip, LowLatency, HeavyLoad, Retention,
+            Essentials' are RoundTrip, LowLatency, HeavyLoad, Retention,
             Filing, ExclusiveClaim and DailyBacklog. The estate's are its
             Pester files by name: Allocation, Decision, Rust.Style, XmipTest
             and the rest of test/. Tab completes either.
@@ -121,8 +121,8 @@ function Start-XmipTest {
         .PARAMETER Nodes
             The nodes, by name — one process each: -Nodes R1, P1, S1 is three called that
             under one cluster called -Cluster. They are written, with
-            -Cluster and -NodeRole, into the run's own cluster xmip.toml,
-            <Path>/<Cluster>.xmip.toml, and XMIP_TEST_CLUSTER names it to the
+            -Cluster and -NodeRole, into the run's own cluster cluster.xmip,
+            <Path>/<Cluster>.xmip, and XMIP_TEST_CLUSTER names it to the
             roll: a node is configuration (ADR-0056, amendment 2026-10-03), and
             there is no count. What each node does is the
             roles it is started with (ADR-0056), stated with
@@ -139,14 +139,14 @@ function Start-XmipTest {
             anything starts. An empty list, @(), is no nodes at any level.
 
             A node's name is also the last word of its process name —
-            xmip-playground-<cluster>-node-<node> (ADR-0053, amendment
+            xmip-essentials-<cluster>-node-<node> (ADR-0053, amendment
             2026-09-20) — so it takes the shape -Cluster takes, and that is
             all: no word is reserved, and a node called roll is a node called
             roll. Anything a file cannot be called is REFUSED before a process
             starts.
 
-            Omit it and the run takes every node of the Playground's own
-            cluster file, test/core/playground/configuration/xmip.toml, one
+            Omit it and the run takes every node of the Essentials' own
+            cluster file, test/core/essentials/configuration/cluster.xmip, one
             process each, declaring the roles its roles key says. A role the
             message path needs and no node declares is
             REFUSED before anything starts, as for named nodes. The run record
@@ -163,10 +163,10 @@ function Start-XmipTest {
             exactly, by comma or plus; any other word ('Sending' and the old
             'receive' too), or a node -Nodes does not name, is REFUSED before
             anything starts. A node the table does not name declares what the
-            Playground's own cluster file declares for it, and nothing where
+            Essentials' own cluster file declares for it, and nothing where
             that file does not declare it.
             ADR-0056 names two further kinds of capability, authentication and
-            runtime, which the Playground does not model.
+            runtime, which the Essentials does not model.
 
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
@@ -178,7 +178,7 @@ function Start-XmipTest {
             — required: you name the cluster, and a test spawns a cluster and
             its nodes, never invents a name for one (the owner, 2026-09-14
             and 2026-09-19). The scope root is xmip:///<Cluster> and the run
-            publishes to <Cluster>-snapshot.toml beside its history and
+            publishes to <Cluster>-snapshot.xmip beside its history and
             activity. Any name a file can carry will do, and none means
             anything to Xmip. Two rolls with two names are two clusters side
             by side, each with its own web GUI:
@@ -194,9 +194,9 @@ function Start-XmipTest {
             Omit for a megabyte.
 
         .PARAMETER Path
-            Playground: where the run writes — snapshot, history, activity,
+            Essentials: where the run writes — snapshot, history, activity,
             run record and the roll's own log; defaults to
-            `.local-work/playground` under the repository. Estate: the
+            `.local-work/essentials` under the repository. Estate: the
             directory of Pester tests; defaults to test/ under the repository.
 
         .PARAMETER PassThru
@@ -209,20 +209,20 @@ function Start-XmipTest {
             leave it out until "show test clusters" is ticked, as
             Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
             declaration hides it, never its name. The assistant's test cluster
-            is started so, always: Start-XmipTest -Suite Core.Playground
+            is started so, always: Start-XmipTest -Suite Core.Essentials
             -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
             @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 
         .EXAMPLE
-            # Omitted -Nodes: the Playground's own cluster file's nodes
+            # Omitted -Nodes: the Essentials' own cluster file's nodes
             # ([nodes.R1] roles = "receiving", and so on).
-            Start-XmipTest -Suite Core.Playground -Cluster C1
+            Start-XmipTest -Suite Core.Essentials -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1 -PassThru |
+            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -242,7 +242,7 @@ function Start-XmipTest {
             Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Example.Playground -Cluster C1
+            Start-XmipTest -Suite Example.Essentials -Cluster C1
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
@@ -251,12 +251,12 @@ function Start-XmipTest {
             Start-XmipTest -Suite * -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite *Play* -Cluster C1
+            Start-XmipTest -Suite *Ess* -Cluster C1
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]
     param(
-        # The sentence is "start the Playground's HeavyLoad": suite first, then
+        # The sentence is "start the Essentials' HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).
         #
         # Neither the set nor the shape is declared here (ADR-0055 clauses 1
@@ -277,7 +277,7 @@ function Start-XmipTest {
                 & $module { param($Word) Get-XmipTestSuiteChoice -Word $Word } $wordToComplete
             }
         })]
-        [string] $Suite = 'Core.Playground',
+        [string] $Suite = 'Core.Essentials',
 
         # The hardest level, because an omitted selector means the most the
         # rig can give and not a cautious default (the owner, 2026-09-19;
@@ -379,22 +379,22 @@ function Start-XmipTest {
         return Start-XmipProviderSuite -Suite $chosen -Bound $PSBoundParameters
     }
 
-    # The Playground's own work: checking the choice, then building, spawning
+    # The Essentials' own work: checking the choice, then building, spawning
     # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
     # still decide there, and a parameter nobody gave is not handed on.
-    [hashtable] $playground = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
+    [hashtable] $essentials = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
     [string[]] $handed = @('Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor',
         'Nodes', 'NodeRole', 'OnlineNodes', 'Cluster', 'Path', 'PassThru')
 
     foreach ($name in $handed) {
-        $playground[$name] = Get-Variable -Name $name -ValueOnly
+        $essentials[$name] = Get-Variable -Name $name -ValueOnly
     }
 
-    $resolved = Resolve-XmipPlaygroundChoice -Choice $playground
+    $resolved = Resolve-XmipEssentialsChoice -Choice $essentials
 
     if ($null -eq $resolved) {
         return
     }
 
-    Start-XmipPlaygroundRoll @resolved
+    Start-XmipEssentialsRoll @resolved
 }

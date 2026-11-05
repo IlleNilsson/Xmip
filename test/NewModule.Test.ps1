@@ -2,7 +2,7 @@
 #requires -Version 7.7.0
 
 <#
-    A crate written where architecture.toml mounts a repository that is not a
+    A crate written where architecture.xmip mounts a repository that is not a
     submodule yet is a module of the estate, listed by its own name. Until
     2026-10-27 it was untracked files of the module around it: Get-XmipStatus
     and the landing's verification named it nowhere, and it was verified only
@@ -57,7 +57,7 @@ BeforeAll {
         "`tpath = module/core/capability/path"
         "`turl = https://example.invalid/xmip-core-path.git"
     )
-    Set-Content -LiteralPath (Join-Path $script:Estate 'architecture.toml') -Value @(
+    Set-Content -LiteralPath (Join-Path $script:Estate 'architecture.xmip') -Value @(
         'schemaVersion = "2.0.0"'
         '[xmip.core]'
         'description = "Core."'

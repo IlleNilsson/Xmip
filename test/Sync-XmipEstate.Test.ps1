@@ -17,7 +17,7 @@ BeforeAll {
     )
 
     # Read once: every test below asks the same manifest.
-    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
 
     # What the estate actually checks out, from .gitmodules rather than from
     # the manifest: the tests that compare the two would pass comparing the
@@ -60,7 +60,7 @@ Describe 'The manifest' {
         # built work as un-started. The reader refuses a silent one now, so
         # reading the manifest above is the check. ADR-0060, amendment
         # 2026-09-19.
-        [string] $path = Join-Path $TestDrive 'silent.toml'
+        [string] $path = Join-Path $TestDrive 'silent.xmip'
         Set-Content -LiteralPath $path -Encoding utf8 -Value @(
             'schemaVersion = "2.0.0"'
             '[xmip.core]'
@@ -151,7 +151,7 @@ Describe 'The module is the entry point' {
 Describe 'ADR-0021: current platforms only, enforced' {
     BeforeAll {
         $script:Prereq = InModuleScope Xmip {
-            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
+            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.xmip')
         }
     }
 
@@ -181,14 +181,14 @@ Describe 'ADR-0021: current platforms only, enforced' {
     }
 
     It 'keeps the manifest floor and the #requires floor in step' {
-        # The one that drifts silently: prerequisite.toml says 7.6.7 while an
+        # The one that drifts silently: prerequisite.xmip says 7.6.7 while an
         # entry point still says 7.6, and nothing notices. On 2026-08-27 three
         # documents said 7.6, one said 7.6.3, and an example printed 7.6.5.
         $declared = [string]$script:Prereq.prerequisite.powershell.minimum
 
         foreach ($file in $script:EntryPoints) {
             $head = (Get-Content (Join-Path $script:ModuleRoot $file) -TotalCount 3) -join "`n"
-            [string] $because = "$file must state the same floor as prerequisite.toml"
+            [string] $because = "$file must state the same floor as prerequisite.xmip"
 
             $head | Should -Match ([regex]::Escape("#requires -Version $declared")) -Because $because
         }
@@ -335,7 +335,7 @@ Describe 'The estate is more than its modules' {
     }
 
     It 'leaves a provider other than core a subtree of its own' {
-        # The owner, 2026-09-23: the Playground had taken test/playground and
+        # The owner, 2026-09-23: the Essentials had taken test/essentials and
         # left nowhere for anyone else's; what starts a node carries no
         # provider, everything else does, provider before purpose. Read as one
         # rule, foundation went under core; the owner, 2026-09-24: *Do you think
@@ -373,12 +373,13 @@ Describe 'The estate is more than its modules' {
         # Checked against the tree rather than the function: a hand-declared
         # mount could still break the rule. What starts a node is
         # module/foundation/ and module/platform/; every other module is
-        # module/<provider>/<domain>/; a Playground is test/<provider>/; a
-        # template belongs to no provider and stays at template/<language>.
+        # module/<provider>/<domain>/; what exercises a provider's work is
+        # test/<provider>/; a template belongs to no provider and stays at
+        # template/<language>.
         foreach ($at in @($script:Submodule | ForEach-Object { $_.Path })) {
             [string] $shape = '^(module/(foundation|platform)/[a-z0-9-]+|' +
                 'module/(?!foundation/|platform/)[a-z0-9]+/[a-z]+/[a-z0-9-]+|' +
-                'test/[a-z0-9]+/playground|template/[a-z]+|sdk)$'
+                'test/[a-z0-9]+/[a-z0-9-]+|template/[a-z]+|sdk)$'
             $at | Should -Match $shape -Because "$at is where a submodule mounts"
         }
     }

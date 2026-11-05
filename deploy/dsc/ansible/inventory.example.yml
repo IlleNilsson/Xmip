@@ -1,22 +1,22 @@
 ---
-# The Playground's cluster on the Hyper-V example's machines
+# The Essentials' cluster on the Hyper-V example's machines
 # (deploy/dsc/msdsc/hyperv). Copy it to
 # .local-work/environment/inventory.yml and write in linux_account, the
 # account the AlmaLinux machines were installed with; the paths are the
 # controller's, here the WSL guest's view of this clone.
 #
-# The cluster's xmip.toml is the Playground's own, the one file a test runs
+# cluster.xmip is the Essentials' own, the one file a test runs
 # whether its nodes are simulated or on machines of their own (the owner,
 # 2026-10-21). Which node runs on which machine is here, never in that file:
 # the mapping is the environment's. The nodes the file declares and no
-# machine here carries — R2, S2, O1 and D2 — the Playground simulates.
+# machine here carries — R2, S2, O1 and D2 — the Essentials simulates.
 all:
   vars:
     xmip_cluster_name: C1
     xmip_domain: xmip.test
-    xmip_cluster_configuration: /mnt/d/Repos/Xmip/test/core/playground/configuration/xmip.toml
+    xmip_cluster_configuration: /mnt/d/Repos/Xmip/test/core/essentials/configuration/cluster.xmip
     xmip_identity: "/mnt/d/Repos/Xmip/.local-work/environment/identity/{{ xmip_node_name }}"
-    # The Parties' far end the Playground serves on the host, where the
+    # The Parties' far end the Essentials serves on the host, where the
     # machines reach it: the host on the Hyper-V example's switch, port
     # 7422 (ADR-0028, amendment 2026-10-22).
     xmip_far_end: 10.77.0.1

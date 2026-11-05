@@ -38,7 +38,7 @@ Be specific. "Drafted by an assistant, reviewed by the owner" says nothing. Name
 
 A repository may be added, removed or renamed only through a change that updates the manifest, the affected architecture documents and the affected decision records **together, in one change**.
 
-Not because ceremony is good, but because these three drift apart silently and in a particular order: the manifest is edited because something has to work today, the documents are left for later, and later does not come. `architecture.toml` then describes an estate the documents do not, and neither of them is wrong enough to notice.
+Not because ceremony is good, but because these three drift apart silently and in a particular order: the manifest is edited because something has to work today, the documents are left for later, and later does not come. `architecture.xmip` then describes an estate the documents do not, and neither of them is wrong enough to notice.
 
 `test/Allocation.Test.ps1` catches part of this — a move whose destination is not a declared repository fails — but it cannot see a repository that was renamed while a document went on using the old name. That part is a human obligation, which is why it is written here rather than left to the tooling.
 

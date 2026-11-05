@@ -1,24 +1,24 @@
-# What environment.example.dsc.yaml's machines are given: the Playground's
+# What environment.example.dsc.yaml's machines are given: the Essentials'
 # cluster on the Hyper-V example's machines (deploy/dsc/msdsc/hyperv). Copy
 # it to .local-work/environment/environment.parameters.yaml and write in
 # linuxAccount, the account the AlmaLinux machines were installed with; the
 # documents refuse to run without it.
 #
-# The cluster's xmip.toml is the Playground's own, the one file a test runs
+# cluster.xmip is the Essentials' own, the one file a test runs
 # whether its nodes are simulated or on machines of their own (the owner,
 # 2026-10-21). Which node runs on which machine is here, never in that file:
 # the mapping is the environment's. The nodes the file declares and no
-# machine here carries — R2, S2, O1 and D2 — the Playground simulates.
+# machine here carries — R2, S2, O1 and D2 — the Essentials simulates.
 parameters:
   common:
     template: D:\Repos\Xmip\deploy\dsc\msdsc\environment
     cluster: C1
     domain: xmip.test
-    configuration: D:\Repos\Xmip\test\core\playground\configuration\xmip.toml
+    configuration: D:\Repos\Xmip\test\core\essentials\configuration\cluster.xmip
     identity: D:\Repos\Xmip\.local-work\environment\identity
     credentialPath: D:\Repos\Xmip\.local-work\hyperv\credential.xml
     keyPath: D:\Repos\Xmip\.local-work\hyperv\ssh\xmip
-    # The Parties' far end the Playground serves on the host, where the
+    # The Parties' far end the Essentials serves on the host, where the
     # machines reach it: the host on the Hyper-V example's switch. Every
     # Receive Location and Send Port is bound there over SFTP, port 7422
     # (ADR-0028, amendment 2026-10-22); the host's firewall lets them in.

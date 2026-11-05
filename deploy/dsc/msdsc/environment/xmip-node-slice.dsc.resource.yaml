@@ -3,7 +3,7 @@ type: Xmip.Node/Slice
 version: '0.1.0'
 description: >-
   The node's configuration as xmip-service --slice prints it from the cluster's
-  xmip.toml, its Locations placed on the Parties' far end where bind says; the
+  cluster.xmip, its Locations placed on the Parties' far end where bind says; the
   service restarted when it changed.
 tags:
   - Xmip
@@ -65,7 +65,7 @@ schema: !embedded
         description: 'xmip-service, as the package installed it.'
         type: string
       configuration:
-        description: 'The cluster''s xmip.toml on this machine.'
+        description: 'The cluster''s cluster.xmip on this machine.'
         type: string
       node:
         description: 'The node this machine is.'

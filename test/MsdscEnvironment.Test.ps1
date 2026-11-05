@@ -16,7 +16,7 @@
       by Microsoft.DSC.Debug/Echo: the names are given every node machine's
       address, each node machine is given its node's files and values, the
       mapping of nodes onto machines is the Ansible inventory's, and every
-      node mapped is one the Playground's cluster file declares.
+      node mapped is one the Essentials' cluster file declares.
     - The Xmip resources' own steps that touch nothing but a folder:
       a file in place, the ports a configuration listens on, the staging
       folder.
@@ -111,7 +111,7 @@ BeforeAll {
         $script:Inventory = $inventory.all.children.xmip_nodes.hosts
     }
 
-    $script:Declared = InModuleScope Xmip { Read-XmipPlaygroundCluster }
+    $script:Declared = InModuleScope Xmip { Read-XmipEssentialsCluster }
 }
 
 Describe 'The documents' {
@@ -173,7 +173,7 @@ Describe 'The example environment' {
         }
     }
 
-    It 'maps only nodes the Playground''s cluster file declares' {
+    It 'maps only nodes the Essentials''s cluster file declares' {
         foreach ($node in $script:Nodes.Keys) {
             $node | Should -BeIn $script:Declared.Nodes
         }
@@ -206,7 +206,7 @@ Describe 'The example environment' {
             $machine.document | Should -Be 'node.dsc.yaml'
             $machine.parameters.node | Should -Be $node
             $machine.parameters.family | Should -Be $script:Nodes[$node].family
-            $machine.files.Keys | Should -Contain 'xmip.toml'
+            $machine.files.Keys | Should -Contain 'cluster.xmip'
             $machine.files['node.key'] | Should -BeLike "*$node*node.key"
             [string] $account = if ($machine.parameters.family -eq 'Windows') {
                 "NT SERVICE\xmip-$node"
@@ -234,9 +234,10 @@ Describe 'The example environment' {
 
 Describe 'The Xmip resources'' own steps' {
     It 'finds a file in place only once it holds its source''s bytes' {
-        [string] $source = Join-Path $TestDrive 'source.toml'
+        [string] $source = Join-Path $TestDrive 'source.xmip'
         Set-Content -LiteralPath $source -Value 'one'
-        [hashtable] $file = @{ path = (Join-Path $TestDrive 'config/xmip.toml'); source = $source }
+        [string] $path = Join-Path $TestDrive 'config/cluster.xmip'
+        [hashtable] $file = @{ path = $path; source = $source }
 
         (Get-NodeFileState -Instance $file)._exist | Should -BeFalse
         Set-NodeFile -Instance $file -Confirm:$false
@@ -249,7 +250,7 @@ Describe 'The Xmip resources'' own steps' {
         Mock -CommandName Invoke-NodeProgram -MockWith {
             @('7401/tcp operate', '9100/tcp receive location orders', '7401/tcp again', 'noise')
         }
-        [hashtable] $asked = @{ program = 'xmip-service'; configuration = 'xmip-node.toml' }
+        [hashtable] $asked = @{ program = 'xmip-service'; configuration = 'node.xmip' }
 
         Get-NodeListening -Instance $asked | Should -Be @('7401/tcp', '9100/tcp')
     }
@@ -257,14 +258,14 @@ Describe 'The Xmip resources'' own steps' {
     It 'asks xmip-service for the slice with the far end and the nodes, where given' {
         Mock -CommandName Invoke-NodeProgram -MockWith { $Argument -join ' ' }
         [hashtable] $asked = @{
-            program = 'xmip-service'; configuration = 'xmip.toml'; node = 'n'; cluster = 'c'
+            program = 'xmip-service'; configuration = 'cluster.xmip'; node = 'n'; cluster = 'c'
         }
 
         Get-NodeSliced -Instance $asked |
-            Should -Be '--configuration xmip.toml --node n --cluster c --slice'
+            Should -Be '--configuration cluster.xmip --node n --cluster c --slice'
         $asked.bind = '10.77.0.1'
         $asked.nodes = 'n,m'
-        Get-NodeSliced -Instance $asked | Should -Be ('--configuration xmip.toml --node n ' +
+        Get-NodeSliced -Instance $asked | Should -Be ('--configuration cluster.xmip --node n ' +
             '--cluster c --bind 10.77.0.1 --nodes n,m --slice')
     }
 

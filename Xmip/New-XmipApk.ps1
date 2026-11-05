@@ -92,8 +92,8 @@ function New-XmipApk {
     )
 
     if ($Address) {
-        [string] $shipped = Join-Path $project 'Resources/Raw/xmip.gui.toml'
-        [string] $document = Join-Path $output 'android-xmip.gui.toml'
+        [string] $shipped = Join-Path $project 'Resources/Raw/gui.xmip'
+        [string] $document = Join-Path $output 'android-gui.xmip'
         $null = New-Item -ItemType Directory -Path $output -Force
         [string] $text = Get-Content -LiteralPath $shipped -Raw
         [string] $line = "Address = `"$Address`""

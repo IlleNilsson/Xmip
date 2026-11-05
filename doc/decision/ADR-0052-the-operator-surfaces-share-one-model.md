@@ -56,7 +56,7 @@ several times over and the record broken in the places nobody had tested:
 - `Beneath(candidate, scope)`, the scope-tree predicate, three times
   character for character across `FileOperator`, `SampleOperator` and
   `Cluster.razor`, and a fourth variant beside them. The surface choice —
-  playground snapshot, else native, else sample, then start a node — twice,
+  essentials snapshot, else native, else sample, then start a node — twice,
   in the web host and the desktop host. TOML configuration reading four
   times. Status to English twice, in `NativeOperator` and the CLI. The mood
   to color map twice, in the stylesheet where ADR-0041 puts it and in an
@@ -67,7 +67,7 @@ several times over and the record broken in the places nobody had tested:
 - The web host loads the runtime and starts a node, and shows Pause and
   Resume to anyone who sets a role — ADR-0014's 2026-09-05 amendment says
   the web GUI reads snapshots and nothing else.
-- Both hosts read a playground snapshot in the temp directory *first*, so a
+- Both hosts read a essentials snapshot in the temp directory *first*, so a
   stale file silently replaces a live node.
 - Paused is detected by matching the evidence string `paused by`, and the
   sample surface reports a paused scope as Stressed; `HealthState.Paused`
@@ -132,7 +132,7 @@ The web host reads a surface and renders it. It does not load the runtime
 to start a node, and it shows no Pause or Resume: its role is Observer, and
 that is not configurable. The desktop host monitors and configures, as
 ADR-0014 says. Which surface a host reads — native over a library, or a
-snapshot at a path — is stated in its `xmip.gui.toml`; nothing is chosen by
+snapshot at a path — is stated in its `gui.xmip`; nothing is chosen by
 finding a file in the temp directory. A snapshot path that does not exist is
 said so on the page, not silently replaced.
 
@@ -237,27 +237,27 @@ applied to the GUI as it stands.
    module and both GUIs exist to solve a problem, and each of them drills
    from the cluster to the leaf that explains the mood; a surface that
    stops short of the leaf has stopped short of its purpose.
-   In the playground a roll is a cluster (ADR-0028), so a second cluster to
+   In the essentials a roll is a cluster (ADR-0028), so a second cluster to
    navigate to is a second roll with a name — the owner's example,
-   `Start-XmipTest -Suite Playground -Test RoundTrip -Nodes R1, P1, S1, O1
+   `Start-XmipTest -Suite Essentials -Test RoundTrip -Nodes R1, P1, S1, O1
    -OnlineNodes O1 -SuiteName SN2`. The owner withdrew the name the same
    evening — *my naming was wrong here* — since `-Suite` is already
-   Playground or Estate and the thing named is a cluster: the parameter is
+   Essentials or Estate and the thing named is a cluster: the parameter is
    **`-Cluster SN2`**, true to ADR-0028. Landed the same night: a roll's
    scope root is `xmip:///<cluster>`, its nodes hang under it, it publishes
-   to `<cluster>-snapshot.toml` and keeps its own scratch, so two rolls are
+   to `<cluster>-snapshot.xmip` and keeps its own scratch, so two rolls are
    two clusters side by side, each with its own web monitor
    (`Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...`).
    One page navigating between them is what stays queued.
-   What the playground topology draws is what the owner is after, in his
+   What the essentials topology draws is what the owner is after, in his
    words: **the fleet, the shared store, one process per node**. For the
    tests, each OS process simulates a node on a different computer, and that
    is good enough; a firewall and a reverse proxy between them come later.
 2. **Every view names the exact scope.** The monitor, the topology and the
    drill-down say which Receive Location, which Xmip Process and which Send
    Location, never only the transport and the contract beneath them. The
-   playground drills stage → transport → contract because its scopes are
-   built that way (ADR-0028); that is the playground's shape, not the
+   essentials drills stage → transport → contract because its scopes are
+   built that way (ADR-0028); that is the essentials' shape, not the
    product's. A node run from configuration (Suggested order, item 1) has
    Locations and Xmip Processes by name, and the views show those names.
 3. **The topology shows Xmip's own communication.** The page's statement
@@ -291,7 +291,7 @@ applied to the GUI as it stands.
    node must say so where the eye rests. The prompt segment names the node
    beside the mood — `[Xmip alpha holding]` — whenever the session is remote,
    so an operator on more nodes than one never acts on the wrong one.
-6. **A name in an example is only an example.** The playground's examples and
+6. **A name in an example is only an example.** The essentials' examples and
    fixtures were renamed the same day, from alpha, beta and gamma to R1, P1
    and S1, on the assistant's argument that a name saying the stage reads at
    a glance in a prompt, a row and a drill-down where a Greek letter says
@@ -303,7 +303,7 @@ applied to the GUI as it stands.
    evening. So the rule this ruling leaves behind is the narrow one: an
    example needs a name, any name a file can carry will do, and nothing in
    Xmip reads one. What a node does is the capability it declares
-   (ADR-0056), and the playground runs the stages a node declared, never the
+   (ADR-0056), and the essentials runs the stages a node declared, never the
    stages its name suggests. Where the estate shows an example it varies the
    spelling on purpose, so that none of them reads as the shape a name is
    supposed to take.
@@ -325,21 +325,21 @@ applied to the GUI as it stands.
    nodes, their roles are by configuration, I name the clusters. I start
    them when I want to.* And on the fleet: *by tests, you may spawn nodes,
    not cluster, when needed.* So `-Cluster` is required for a roll and the
-   roll binary refuses without `XMIP_PLAYGROUND_CLUSTER`; the estate module
-   invents no cluster name, and the built-in *playground* cluster is gone.
+   roll binary refuses without `XMIP_ESSENTIALS_CLUSTER`; the estate module
+   invents no cluster name, and the built-in *essentials* cluster is gone.
    The level's own numbered fleet stays (ADR-0028): a test spawns the nodes
    it needs, and that is the tests' business only — in a real environment
    nodes are spawned by the orchestrator, Kubernetes, .NET Aspire or their
    kin, never by Xmip; the tests' fleet is System Processes on one machine,
    for now (the owner, the same night). Ruling 6 is read in that light: R1 is the name the owner gave
    a node, not a role — what a node does is its configuration (ADR-0009),
-   and in the playground every node runs every stage. Landed the same
+   and in the essentials every node runs every stage. Landed the same
    night.
 
 Landed the same day: the renaming (6), and the first of the topology (3) —
-the playground's fleet publishes its nodes, its shared store and each node's
+the essentials' fleet publishes its nodes, its shared store and each node's
 exchanges under `[topology]` in the snapshot the web GUI reads
-(`test/playground/src/topology.rs`), so the view is no longer empty over a
+(`test/essentials/src/topology.rs`), so the view is no longer empty over a
 roll. Recorded and queued, not built: the third view (1), the exact names
 (2), the topology over the native boundary (3), the configuration drill (4)
 and the prompt (5), as Suggested order item 3 in
@@ -443,7 +443,7 @@ second. The fix is not faster filtering. It is none.
   prompt reads the root's rollup and figures.
 
 Proved in `Xmip.Surface.Test`: the index says what the record-by-record
-helpers say, and it indexes a Playground's eleven thousand leaves well within
+helpers say, and it indexes an Essentials's eleven thousand leaves well within
 one render. Built the same day, on the owner's word.
 
 ## Amendment, 2026-09-18: a published file is flushed, and the executable chooses too
@@ -453,23 +453,23 @@ prompt for PowerShell and CLI if possible still does not work.* It said
 `[Xmip unavailable]` while the C1 snapshot lay where the document said,
 because that snapshot, its history and its activity file were each the
 right length and nothing but zeros: a hard stop on 2026-09-16 came after
-the Playground's rename and before the data reached the disk. A rename is
+the Essentials' rename and before the data reached the disk. A rename is
 journaled and file contents are not, and `write_atomic` had only written
 and renamed. Two consequences, built the same day:
 
 - **A publisher flushes before it renames.** `write_atomic` in the
-  Playground writes the sibling temp file, flushes it to the device, then
+  Essentials writes the sibling temp file, flushes it to the device, then
   renames it over the target. A reader sees the previous file or this one,
   never a torn one and never an empty one; this is what *atomic* meant in
   clause 3 all along. Any Xmip publisher that writes a snapshot follows the
   same order.
 - **The executable's document chooses its surface, as every other host's
   does.** Clause 3 and the amendment of 2026-09-15 said *any host's
-  document*, and `xmip.cli.toml` was read for `RuntimeLibrary` alone; the
+  document*, and `cli.xmip` was read for `RuntimeLibrary` alone; the
   executable could follow a library or `--remote`, never a snapshot. Now
   `SurfaceOpen` reads the same `[Xmip]` keys — `Surface`, `RuntimeLibrary`,
   `Snapshot`, `Url` — and the line wins over the document: `--remote`, then
-  `--runtime`, then what is written. As shipped, `xmip.cli.toml` follows
+  `--runtime`, then what is written. As shipped, `cli.xmip` follows
   the C1 roll, the same file the PowerShell prompt follows, so `xmip show
   xmip:///C1` and `[R… P… S… T… F…]` say the same thing from the same
   publication. `validate` still asks a runtime. Proved in `Xmip.Cli.Test`:
@@ -479,7 +479,7 @@ and renamed. Two consequences, built the same day:
 
 The owner, the same evening: *I still can't get the prompt to show status
 while running test.* The roll was cluster CC1, publishing
-`CC1-snapshot.toml` every tick, and the prompt followed `C1-snapshot.toml`,
+`CC1-snapshot.xmip` every tick, and the prompt followed `C1-snapshot.xmip`,
 the one file the shipped document names; it sat frozen on another cluster's
 last publication. Clause 3 stands — a surface is stated, never guessed — and
 the operator had stated it, to `Start-XmipTest -Cluster CC1`, which knew
@@ -533,7 +533,7 @@ posh-git's does, `[main ≡ +0 ~1 -0]` there and `[R1 ≡ R:5.3K P:60 S:60]`
 here: what the prompt is at, the sign when square, the counts. What it is
 at is the last name every published scope shares — a node's own
 publication shares its node, a cluster's only the cluster — in the color of
-the worst stage, and a segment that is only a kind, the Playground's
+the worst stage, and a segment that is only a kind, the Essentials'
 `node`, names nothing. A count is as it is below a thousand and then in K,
 M and G, one decimal below ten of a unit.
 
@@ -555,7 +555,7 @@ length one may be.
 The owner, past midnight, on a prompt that showed nothing at all: *need
 more, or something is wrong.* Something was. Three rolls ran as cluster CC1,
 started from three consoles, each with its own three nodes and all
-publishing to the one `CC1-snapshot.toml`; a surface saw 803, 2,259 and
+publishing to the one `CC1-snapshot.xmip`; a surface saw 803, 2,259 and
 11,499 leaves in turn. And the prompt was blank because one read had
 collided with a publisher: on Windows a file being renamed over answers a
 reader with a sharing violation or with *access denied*, the second is not
@@ -607,7 +607,7 @@ nothing of use.*
   row, branch or leaf, is a place a link can land. Ruling 4 of 2026-09-14,
   built for what the surfaces publish today; the declaration behind a row
   stays queued with the native boundary.
-- **The Topology draws all there is, and that is the finding.** A Playground
+- **The Topology draws all there is, and that is the finding.** An Essentials
   node runs the same two scenarios as every other, against one shared
   directory; R1, P1 and S1 are names, and a name says nothing about a role
   (ruling 8). There is no traffic from a receiving node to a processing
@@ -616,7 +616,7 @@ nothing of use.*
   surface (clause 1). Beneath that sits `open-problems.md` problem 17, *how
   does work reach another node*, lean A and undecided: the product itself
   does not yet hand work between nodes. What the owner asked for is
-  therefore a Playground that rehearses a staged path — endpoints outside,
+  therefore an Essentials that rehearses a staged path — endpoints outside,
   a stage per node by configuration, and the hop between nodes — and that
   waits on his word on problem 17, asked the same evening. Recorded and
   queued, not built.
@@ -711,11 +711,11 @@ the roll spawns*. A roll still means exactly one cluster — `Start-XmipTest`
 still refuses a name already rolling, and the cluster is still the owner's to
 name (ruling 8) — but the roll no longer is the cluster.
 
-Nothing a surface reads changes. The roll publishes `<Cluster>-snapshot.toml`
+Nothing a surface reads changes. The roll publishes `<Cluster>-snapshot.xmip`
 at the same path with the same shape: `[run]`, `[[records]]`, `[[counts]]`,
 and the topology of this record's previous amendment — the cluster, its
 nodes, their stages, an endpoint per transport, and the handoff links. The
-cluster publishes its own half to `<Cluster>-cluster.toml` beside it, which
+cluster publishes its own half to `<Cluster>-cluster.xmip` beside it, which
 is the roll's input and no surface's. ADR-0028 and ADR-0053 carry the rest.
 
 ## Amendment, 2026-09-18: the executable is `xmip-cli`
@@ -817,7 +817,7 @@ rolling at once, and it was wider than a missing page:
   `PromptMonitor.Follow` on every start (amendment of 2026-09-18), so the last
   roll started won and the segment silently followed one publication of two.
 - **The web views showed neither.** A host started without `-Snapshot` falls
-  back to its own `xmip.gui.toml`, which names the native surface, and the page
+  back to its own `gui.xmip`, which names the native surface, and the page
   read `NATIVE — no runtime library at … · nothing recorded · 0 node(s)`.
 - **The documented easy path refused itself.** `Get-XmipTestStatus |
   Start-XmipOperationWeb` piped two objects at a `[string]` parameter, and the
@@ -847,7 +847,7 @@ banner, tile, figure or prompt ever spans them. What is shared is the face.
   not say which it was showing. `Xmip.Surface.Test` proves the two, the one, the
   roll that ends mid-read and the refusal.
 - **A host names its clusters in its document or on its line.** `Xmip:Snapshot`
-  takes a path as before or a list — `Snapshot = ["…/C1-snapshot.toml", …]`,
+  takes a path as before or a list — `Snapshot = ["…/C1-snapshot.xmip", …]`,
   `--Xmip:Snapshot:0=… --Xmip:Snapshot:1=…`. A list wins over a path, because
   the two reach the same key from different sources and a line naming two
   clusters must not be quietly replaced by the one the shipped document names.
@@ -883,7 +883,7 @@ banner, tile, figure or prompt ever spans them. What is shared is the face.
 **The executable owes one thing, and it is not several clusters.** `xmip-cli`
 answers one question at one scope and ends; it has no session to navigate and
 nothing it could combine. What it lacked over two rolls was a way to say *which*
-without editing `xmip.cli.toml`, so it gains `--snapshot <path>`, between
+without editing `cli.xmip`, so it gains `--snapshot <path>`, between
 `--remote` and `--runtime` in the precedence the amendment of 2026-09-18 set,
 and reads the first where a document names several. The desktop routes to the
 same pages and holds its one surface as a set of one. The VS Code extension is
@@ -952,7 +952,7 @@ others, who in turn have unique code used by others. It is common sense.* Two
 writers held to one set of cases are two copies, and a language boundary is no
 reason for a second: the surface calls across it. The amendment "one
 implementation, and the surfaces call the runtime's exports", below, replaces
-this one; `src/scope-vector.toml` and both tests that read it are gone. What
+this one; `src/scope-vector.xmip` and both tests that read it are gone. What
 follows is kept as it was ruled, so the record shows what was struck.
 
 Open problem 25, row k: `ScopeTree.Beneath` read a scope by its path, the
@@ -969,7 +969,7 @@ remote surfaces run with no runtime beside them, and a board compares
 thousands of records at a time.
 
 **One set of cases holds the two to one rule.**
-`src/scope-vector.toml` in xmip-core-observe is the statement: each case a
+`src/scope-vector.xmip` in xmip-core-observe is the statement: each case a
 scope, a candidate, whether one contains the other, and where useful the
 path and whether it is the root. A test in `observe` reads it and
 `ScopeTreeTest` in `Xmip.Surface.Test` reads the same file, copied beside
@@ -1000,8 +1000,8 @@ is the model's — and each face now renders it; neither writes it.
   cmdlet that reads a scope ask it. So `Get-XmipHealth`, `Suspend-XmipScope`
   and `Resume-XmipScope` take `-Remote`, `-Snapshot` and `-Library` as named
   parameters in the executable's order, `-Library` is no longer mandatory, and
-  with none of them the module's own `xmip.powershell.toml` decides, as
-  `xmip.cli.toml` decides for the executable: clause 1's one discovery rule,
+  with none of them the module's own `powershell.xmip` decides, as
+  `cli.xmip` decides for the executable: clause 1's one discovery rule,
   reaching the cmdlets at last. `Test-XmipNodeConfiguration -Library` finds
   its runtime by `RuntimeLibrary.Stated`, as `xmip-cli validate --runtime`.
 - **What a scope argument selects** is `ScopeSelection`, moved out of the
@@ -1049,7 +1049,7 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
 |---|---|---|---|
 | Scope containment, a scope's parts | `observe::Scope::contains`, `Scope::segments` (xmip-core-observe) | `xmip_scope_contains_v1`, `xmip_scope_parts_v1` | `ScopeTree.Beneath` and `Parts`, and through them `ScopeIndex`, `ScopePattern`, every face, and the script module's `Get-XmipTestResult` |
 | The stage words, a declaration's parse | `node::Stage::WORDS`, `Stage::declared` (xmip-core-node) | `xmip_stage_words_v1`, `xmip_stage_declared_v1` | `ScopeTree.Stages`, `NodeCapability.Ordered`, and the script module's `ConvertTo-XmipNodeCapability`, its RoundTrip refusal and its roster reading |
-| A mood's word, the mood a word names, its color's name | `observe::Health::word`, `named`, `color` (xmip-core-observe) | `xmip_health_word_v1`, `xmip_health_named_v1`, `xmip_health_color_v1` | `English.Mood`, `MoodOf`, `Color`, and through them `SnapshotOperator`, the GUI (`MoodClass`), the prompt (`SegmentRender.Traffic`), the command line and `Get-XmipTestResult`; the Playground's publisher, which is Rust, calls `Health::word` and `named` itself |
+| A mood's word, the mood a word names, its color's name | `observe::Health::word`, `named`, `color` (xmip-core-observe) | `xmip_health_word_v1`, `xmip_health_named_v1`, `xmip_health_color_v1` | `English.Mood`, `MoodOf`, `Color`, and through them `SnapshotOperator`, the GUI (`MoodClass`), the prompt (`SegmentRender.Traffic`), the command line and `Get-XmipTestResult`; the Essentials' publisher, which is Rust, calls `Health::word` and `named` itself |
 | The worst-first order | `observe::Standing` and `Standing::worst_first` (xmip-core-observe), which `Snapshot::health` sorts by | `xmip_health_order_v1` | `ScopeTree.WorstFirst`, `Worst` and `Branches`, `ScopeIndex` (one call per publication, every "which is worse" after it a lookup of the runtime's answer), the prompt's worst stage and `Get-XmipTestResult -Worst` |
 | Runtime discovery | `RuntimeLibrary` (`Xmip.Surface`) | none: it finds the library the others are called in | every .NET surface and, through the operator module, the script module |
 
@@ -1108,14 +1108,14 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
 | Concept | The one implementation | Export | Callers | Copies removed |
 |---|---|---|---|---|
 | The rollup: a parent is Fine or Holding | `observe::Health::rolled` | `xmip_health_rolled_v1` | `ScopeTree.Rolled`, and through it `Rollup`, `Branches`, `ScopeIndex`, `English.Rollup`, `MoodClass` and every face; `Snapshot::worst` in Rust | `ScopeTree.Rolled`'s own comparison; `Snapshot::worst`'s inline one |
-| Counted words and the kind a stage counts | `observe::Counted::word`, `named`, `ALL`, `at` (new `observe/.src/counted.rs`, `Counted` moved there) | `xmip_counted_word_v1`, `xmip_stage_counted_v1` | `English.Kind` (the command line's figure names), `ScopeTree.CountedAt` (the board's tiles, the prompt); the Playground and the publication reader in Rust | the Playground's `counted_name`, `counted_named` and `COUNTED`; `SnapshotOperator.ParseCounted`; `ScopeTree.CountedAt`'s table; `MeasureCommand`'s six literal keys |
+| Counted words and the kind a stage counts | `observe::Counted::word`, `named`, `ALL`, `at` (new `observe/.src/counted.rs`, `Counted` moved there) | `xmip_counted_word_v1`, `xmip_stage_counted_v1` | `English.Kind` (the command line's figure names), `ScopeTree.CountedAt` (the board's tiles, the prompt); the Essentials and the publication reader in Rust | the Essentials' `counted_name`, `counted_named` and `COUNTED`; `SnapshotOperator.ParseCounted`; `ScopeTree.CountedAt`'s table; `MeasureCommand`'s six literal keys |
 | Whether a stage pauses, what a thing at it is called | `node::Stage::pausable`, `Stage::location` | `xmip_stage_pausable_v1`, `xmip_stage_location_v1` | `ScopeTree.Pausable` (the Cluster page's pause button), `ScopeTree.Location` (the Configuration page's kind) | `Cluster.razor`'s `IsPausable`; `Configuration.razor`'s three stage cases |
-| A node's capability evidence and a run's entry for it | `node::Capability` (`evidence`, `from_evidence`, `entry`, `from_entry`; new `node/src/capability.rs`, moved from the Playground) and where the record sits, `observe::capability` (`scope`, `declared`) | `xmip_capability_published_v1`, `xmip_capability_entry_v1` | `NodeCapability.Declared` (now given the record's scope, and null for any other record), `NodeCapability.Started`, and through them `ScopeIndex`, `RunHeader` and the Configuration page's kind | the Playground's `Capability` and its hand-built `name=a+b` in the roster and the run; `NodeCapability`'s `declares `/`; online;` parse and its `=` split; `ScopeIndex.Declaration`'s and `Configuration.razor`'s test of a leaf called `capability` |
-| The topology model and its words (node kind, origin, pattern) | `observe::topology` (`Topology`, `TopologyNode`, `TopologyLink`, `NodeKind`, `Origin`, `Pattern`), moved from the Playground | section 8, as values | the Playground draws with it; every surface reads it through the reader below | the Playground's string-typed model; `SnapshotOperator.ParseNodeKind`, `ParseOrigin`, `ParsePattern` |
-| The run header | `observe::Run`, moved from the Playground (which keeps only `run::started`, filling it) | section 8 | `RunHeader.From` | `RunHeader.Read`'s TOML walk |
-| A publication's shape: its keys, its words, what an unknown word reads as | `observe::Publication` (`of`, `whole`, `to_toml`, `read`, `snapshot`) | section 8: `xmip_publication_read_v1` and its seven companions (ADR-0027's amendment of the same date) | `SnapshotOperator` through `Xmip.Abi`'s `PublicationReader`, and the Playground's roll, cluster and nodes in Rust | the Playground's `SnapshotReport` and its readers; `SnapshotOperator`'s TOML walk (`Rows`, `Text`, `Number`, `Real`, `ParseState`, `ParseObserved`, the topology parse) |
-| The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/.src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Playground's `history_toml` | the Playground's `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
-| The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/.src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Playground's `activity_toml` | the Playground's `ActivityReport`/`ItemReport` and its own `kind_name` word list |
+| A node's capability evidence and a run's entry for it | `node::Capability` (`evidence`, `from_evidence`, `entry`, `from_entry`; new `node/src/capability.rs`, moved from the Essentials) and where the record sits, `observe::capability` (`scope`, `declared`) | `xmip_capability_published_v1`, `xmip_capability_entry_v1` | `NodeCapability.Declared` (now given the record's scope, and null for any other record), `NodeCapability.Started`, and through them `ScopeIndex`, `RunHeader` and the Configuration page's kind | the Essentials' `Capability` and its hand-built `name=a+b` in the roster and the run; `NodeCapability`'s `declares `/`; online;` parse and its `=` split; `ScopeIndex.Declaration`'s and `Configuration.razor`'s test of a leaf called `capability` |
+| The topology model and its words (node kind, origin, pattern) | `observe::topology` (`Topology`, `TopologyNode`, `TopologyLink`, `NodeKind`, `Origin`, `Pattern`), moved from the Essentials | section 8, as values | the Essentials draws with it; every surface reads it through the reader below | the Essentials' string-typed model; `SnapshotOperator.ParseNodeKind`, `ParseOrigin`, `ParsePattern` |
+| The run header | `observe::Run`, moved from the Essentials (which keeps only `run::started`, filling it) | section 8 | `RunHeader.From` | `RunHeader.Read`'s TOML walk |
+| A publication's shape: its keys, its words, what an unknown word reads as | `observe::Publication` (`of`, `whole`, `to_toml`, `read`, `snapshot`) | section 8: `xmip_publication_read_v1` and its seven companions (ADR-0027's amendment of the same date) | `SnapshotOperator` through `Xmip.Abi`'s `PublicationReader`, and the Essentials' roll, cluster and nodes in Rust | the Essentials' `SnapshotReport` and its readers; `SnapshotOperator`'s TOML walk (`Rows`, `Text`, `Number`, `Real`, `ParseState`, `ParseObserved`, the topology parse) |
+| The history file (a node's throughput over time) | `observe::Curve` (`of`, `to_toml`, `read`; new `observe/.src/curve.rs`) | section 8: `xmip_curve_read_v1`, `xmip_curve_points_v1`, `xmip_curve_free_v1` | `Get-XmipHistory` through the operator module (`PublicationReader.Curve`); the Essentials' `history_toml` | the Essentials' `HistoryReport`/`PointReport`; `Get-XmipHistory`'s `ConvertFrom-Toml` walk and its `-Counted` word list (now refused against the runtime's words) |
+| The activity file (the recent items) | `observe::Recent` (`of`, `to_toml`, `read`; new `observe/.src/recent.rs`) and `ItemKind::name`/`named` | none: no surface reads the file yet | the Essentials' `activity_toml` | the Essentials' `ActivityReport`/`ItemReport` and its own `kind_name` word list |
 | The language server's validate entrypoint and its shape | `abi::operate::XMIP_VALIDATE_ENTRYPOINT`, `ValidateFn` (and `StartFn` beside it) | — (a Rust-to-Rust copy) | `xmip-lsp`'s `runtime.rs`; the runtime's `ffi/start.rs` proves both exports have the declared shape | `runtime.rs`'s own `ENTRYPOINT` bytes and `ValidateFn` |
 
 - **A publication is read in one place.** `SnapshotOperator` hands the file's
@@ -1123,7 +1123,7 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
   key and no word. What a reader does not know it decides once, in
   `observe::Publication`: a mood no one is called is Stressed, so it shows (the
   surface's rule until now); a counted kind no one is called is skipped (the
-  Playground's rule until now — the surface counted it as Streams, which
+  Essentials' rule until now — the surface counted it as Streams, which
   inflated a figure); a topology word falls back as the surface's did. A count
   crosses at the scope it was recorded at: the surface put every count at the
   publication's own scope, which only a roll's file made true.
@@ -1131,7 +1131,7 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
   surface asks whether a record is a node's declaration by giving the runtime
   its scope; it no longer reads meaning from a leaf's name.
 - **The topology's parents are Fine or Holding.** ADR-0041 already decided
-  it: the Playground draws the cluster, a node, a stage, an endpoint and the
+  it: the Essentials draws the cluster, a node, a stage, an endpoint and the
   shared store in the mood of a record at its own scope, else
   `Health::rolled` over the worst beneath it, with that record's evidence; a
   link, which is no parent, keeps the worst leaf at either end. Until
@@ -1139,7 +1139,7 @@ in the runtime's library, one binding in `Xmip.Abi`, and callers.
 - **The history file and the activity file each have one writing.** A
   history is `observe::Curve`, read for `Get-XmipHistory` by the runtime; the
   cmdlet walks no TOML and refuses a counted word the runtime does not name.
-  The activity file is `observe::Recent`; nothing outside the Playground
+  The activity file is `observe::Recent`; nothing outside the Essentials
   reads it yet, so it has no export — the day a surface reads it, it reads
   through one beside the curve's.
 - **Message treatment presets are `message`'s.** `MessageTreatment::CONVERSATION`,
@@ -1189,7 +1189,7 @@ changed, and each was a fault of its own layer.
   topology draws now does. A row's kind is what the publisher's topology says
   the thing is (`observe::topology`: cluster, node, stage, endpoint, and
   beneath an endpoint the technology), where a topology is published: read
-  from the depth alone, a Playground cluster — its nodes beneath a `node`
+  from the depth alone, an Essentials cluster — its nodes beneath a `node`
   segment — came out one level off, the nodes' rollup branch saying *node*,
   a node *scope*, a receive stage *receive location*. Without a topology the
   depth is all there is and decides as before.
@@ -1208,7 +1208,7 @@ changed, and each was a fault of its own layer.
   three links each, and lists every link inside it. A line is still selected
   by a click, for its whole record.
 - **Traffic: configured and observed, and what passed, on the line.** The
-  fault was in what the Playground published. It drew a link only for a pair
+  fault was in what the Essentials published. It drew a link only for a pair
   of stages a handoff had crossed, marked every one `both` whether or not
   anything configured it, and wrote a rate of zero always. So a path the
   roster configured and nobody used was not drawn at all, and usage was a
@@ -1232,7 +1232,7 @@ changed, and each was a fault of its own layer.
   not yet a child by the time `Get-XmipTestStatus` read their parent, which
   therefore said *Nodes: none*, and `Stop-XmipTest` asked none of them to
   leave and ended their cluster under seventeen. A node that has not published
-  once is now starting, not hung, for two minutes (the Playground's
+  once is now starting, not hung, for two minutes (the Essentials'
   `cluster/member.rs`; superseded by the amendment of 2026-09-26: ten
   seconds, and liveness by beats rather than rounds); a node is its roll's by the tree or by the location it
   declared in the roll's cluster (ADR-0053); and after the cluster
@@ -1242,7 +1242,7 @@ Proved by `Xmip.Gui.Test` (`ClusterTopologyTest`: one cluster row, the kinds
 the publisher says, every node a link, the drill by address, configured and
 observed traffic both drawn and said), `Xmip.Surface.Test` (the fixture's
 three links with their origins and rates, `English.Traffic`), `observe`'s
-`topology.rs` (`rate_since`), the Playground's `topology.rs` (a configured
+`topology.rs` (`rate_since`), the Essentials' `topology.rs` (a configured
 path drawn before its first handoff) and `cluster.rs` (a starting node is not
 restarted), and `test/XmipTest.Test.ps1` (a stopped roll ends every process
 declared in its cluster and nothing declared in another).
@@ -1317,7 +1317,7 @@ tests.
 
 ## Amendment, 2026-09-26: a node is alive by its beats, and starting for ten seconds
 
-The owner, 2026-09-26: a Playground node that has not shown it is alive
+The owner, 2026-09-26: an Essentials node that has not shown it is alive
 counts as starting for **ten seconds**, after which its silence is a hang and
 the cluster restarts it. The two minutes of the amendment of 2026-09-25 were
 an agent's number, and they treated the symptom. The cluster judged a node
@@ -1329,17 +1329,17 @@ something takes more than a millisecond, apart from load, something is
 wrong.*
 
 Liveness is now separated from round completion. A node beats (the
-Playground's `heartbeat.rs`). Its first beat is the first thing it does —
+Essentials' `heartbeat.rs`). Its first beat is the first thing it does —
 the command line read, then the beat, before it audits, declares itself or
 loads a test — and lands within milliseconds of the process being asked to
 start (tens of milliseconds measured on the owner's machine, the operating
 system's own start-up included). Then it beats every tenth of a second from
 a thread of its own. The beat travels on the channel the node already had:
 a file in the directory its publication is in, `<name>.beat` beside
-`<name>.toml`, holding when it beat and how many rounds it had finished. It
+`<name>.xmip`, holding when it beat and how many rounds it had finished. It
 is kept tiny and is a plain overwrite, neither flushed nor renamed, because a
 beat ten times a second must cost no more than a small write; rewriting the
-whole publication that often would not. It is the Playground's and not
+whole publication that often would not. It is the Essentials' and not
 observe's, because only the cluster reads it; no surface does. The cluster
 (`cluster/liveness.rs`) tells each node the interval it judges by, and ten
 seconds stays the outer bound: a node is hung when it has not beaten within
@@ -1361,7 +1361,7 @@ pass reads each node's beat alone, and reads and parses a node's publication
 only when the beat's round count moves (a node beats at once when it
 finishes a round, so none is missed); the view is rebuilt, and the cluster's
 file written, only when a node's round was read or what the cluster says of a
-node's process changed; and the Playground builds its dependencies
+node's process changed; and the Essentials builds its dependencies
 optimized in the debug profile, since toml and serde unoptimized were twenty
 times slower. Measured again: a pass over an idle node costs about a third of
 a millisecond (a test holds it under one, and that nothing is parsed
@@ -1371,7 +1371,7 @@ that beats and has not finished a round is *starting: beating, its first
 round under way*; one that has not beaten is *starting, no beat yet*; a
 restart says the node stopped beating.
 
-Proved by the Playground's `cluster/liveness.rs` (ten seconds from the start,
+Proved by the Essentials' `cluster/liveness.rs` (ten seconds from the start,
 ten seconds after the last beat, and never a round), `heartbeat.rs` (the
 first beat is on disk when the heartbeat starts, within milliseconds, and
 beats go on between rounds), and `cluster.rs`: a spawned node's first beat
@@ -1448,7 +1448,7 @@ The owner: *Something is sending streams to a Xmip Node. A Xmip Node sends
 streams to somethings.* The Topology stopped at the nodes: a cluster's
 receive stages received from nothing drawn and its send stages delivered to
 nothing drawn. What is outside is drawn now, by **Party** (ADR-0019), never
-by transport far end — the Playground's receive and send stages each face 80
+by transport far end — the Essentials' receive and send stages each face 80
 and more transports, and a box per far end would be unreadable.
 
 - **A Party is a kind of topology thing.** `observe::NodeKind::Party`, word
@@ -1465,9 +1465,9 @@ and more transports, and a box per far end would be unreadable.
   that leaf is under. The Party's box is Fine or Holding over the worst it
   faces (ADR-0041). Which side a Party is on is said by its links, never by
   its id or its name.
-- **The Playground's Party is its own.** A Playground cluster has one Party,
+- **The Essentials' Party is its own.** An Essentials cluster has one Party,
   `party-x` — the identity its Receive Locations accept and its Send
-  Locations present (the playground's `identity::PARTY`, written once) — and
+  Locations present (the essentials' `identity::PARTY`, written once) — and
   its test peers are the far end of every transport. It is drawn on each side
   it is on.
 - **Senders left, receivers right.** Where Parties are drawn the canvas reads
@@ -1480,7 +1480,7 @@ and more transports, and a box per far end would be unreadable.
   endpoints, worst first by the runtime's order, each in its state and one
   click from its record.
 
-Proved by the playground's `topology.rs` (the Parties, their links, the
+Proved by the essentials' `topology.rs` (the Parties, their links, the
 aggregated counts and the worst leaf), `observe`'s `topology.rs`, the
 runtime's `wire.rs`, `xmip-core-abi`'s `operate/publication.rs`,
 `Xmip.Abi.Test` (`OperateAbiTest`: the header's values), `Xmip.Surface.Test`
@@ -1541,9 +1541,9 @@ record; what it changes here:
   date the web host was hard-wired Observer, two weeks after this record
   and ADR-0014 said the web offers every role. Both hosts now take the role
   by one rule, `RoleAssignment` in `Xmip.Surface` since 2026-10-06, for
-  each proven caller: a role the run states, `Role` in `xmip.gui.toml` else
+  each proven caller: a role the run states, `Role` in `gui.xmip` else
   `XMIP_ROLE`, is the role, and a word that is no role is Observer; a run
-  that states none has its role from the directory — the Playground's fake
+  that states none has its role from the directory — the Essentials' fake
   one allows the tester (ADR-0009, amendment 2026-09-14, *the tester is
   God*) — and with no directory the role is Observer (ADR-0009, amendment
   2026-10-06). An Operator is offered the acts; an Observer is shown the
@@ -1649,22 +1649,22 @@ word and the marking are the assistant's drafting, for the owner to overrule.
 ## Amendment, 2026-09-30: a running node publishes, and the drawing is observe's
 
 `xmip-service` publishes the node it runs (ADR-0018, amendment of this
-date), so the views show a real node and not only a Playground roll. What it
+date), so the views show a real node and not only an Essentials roll. What it
 changes here:
 
 - **One drawing.** The cluster, its nodes, their stages and the endpoints
   beneath them (the amendment of 2026-09-14, ruling 3), and the Parties on
   each side (the amendment of 2026-09-29), are drawn by
   `observe::topology::draw` and `observe::topology::party` — moved there
-  from the Playground, which drew them alone until this date. The Playground
+  from the Essentials, which drew them alone until this date. The Essentials
   calls them and adds only what a roll has: its handoffs and its shared
   store. A running node calls them through `Running::publication`. Which
-  Party is the publisher's to say: the Playground's `party-x`, and a node's
+  Party is the publisher's to say: the Essentials' `party-x`, and a node's
   `any-party` while its configuration can name none. An endpoint is the
   segment beneath a stage: a transport in a roll, a Location on a node.
 - **One writer.** Every publication is written whole or not at all by
   `observe::publication::write_atomic` (`Publication::write`), moved there
-  from the Playground.
+  from the Essentials.
 - **A node's publication.** Its `node` is the node's location,
   `xmip:///<cluster>/node/<name>`, and a face names its cluster by the one
   first segment its scopes share, as it names any publication without a
@@ -1674,7 +1674,7 @@ changes here:
 
 `observe`'s `topology/draw.rs` and `publication.rs`, the runtime's
 `running/publication.rs` and the root crate's
-`.src/test/measured/publication.rs` prove it; the Playground's topology
+`.src/test/measured/publication.rs` prove it; the Essentials' topology
 tests hold the roll's picture unchanged.
 
 Provenance: the requirement is ADR-0018's amendment of this date; moving the
@@ -1752,17 +1752,17 @@ list view to open one. The record names the header's `location`
 The owner, 2026-10-02: *make it so that the desktop version opens multiple
 clusters too.* The amendment of 2026-09-20 had the desktop hold "its one
 surface as a set of one". It now opens its surfaces by the web host's one rule,
-`SurfaceChoice.OpenAll`: one snapshot per cluster where its `xmip.gui.toml`
+`SurfaceChoice.OpenAll`: one snapshot per cluster where its `gui.xmip`
 names several (`Snapshot` as a list), and moves between them as the web does.
 Configure's commands still answer one surface, the first cluster's
 (`SurfaceChoice.OpenFirst`'s rule), which is the one a node is started from.
 
 ## Amendment, 2026-10-03: a snapshot is read once per change, and never by a render
 
-Measured 2026-10-02: one Playground cluster snapshot (2 MB, 11,504 records)
+Measured 2026-10-02: one Essentials cluster snapshot (2 MB, 11,504 records)
 read through `SnapshotOperator.Topology()` took 867 ms, and the Topology
 page's first render over two clusters 1,751 ms. The snapshot was already read
-once per file write; but the Playground rewrites it every tick, the page that
+once per file write; but the Essentials rewrites it every tick, the page that
 rendered after a tick read it on the render, and the chooser above every view
 asks every cluster whether it still publishes, so each render read every
 changed cluster. By the millisecond rule (CONTRIBUTING) that is a defect.
@@ -1859,7 +1859,7 @@ time span to investigate the historical errors.*
 - The span reads the history the nodes keep (ADR-0029); a fault outside
   what history keeps is said to be outside it, never shown as green. Every
   surface takes the span: the CLI and the PowerShell module as a parameter.
-  Not built. The Playground's fault every 50 seconds is ADR-0028's amendment
+  Not built. The Essentials' fault every 50 seconds is ADR-0028's amendment
   of the same date.
 
 ## Note, 2026-10-12: the remote surface is the runtime's, over gRPC

@@ -90,7 +90,7 @@ stays off the path — the envelope, the channel, what happens when capacity is
 exhausted and which conditions are never suppressible — is
 `module/core/operation/audit/doc/audit-record.md`, *Performance*.
 That design is [decided, not built](estate-map.md#bounded-audit-channel): a program
-records synchronously into its `audit.toml` today
+records synchronously into its `audit.xmip` today
 ([built, in the assembled service](estate-map.md#program-audit)), and writing audit
 through Xmip Storage is [decided, not built](estate-map.md#audit-through-storage).
 
@@ -256,7 +256,7 @@ its own audit persistence — the moment two exist, no query can answer a questi
 that spans both.
 
 **Nor does any Xmip program** (ADR-0062). The web and desktop monitors, the
-command line, both PowerShell modules, the Playground's processes, the
+command line, both PowerShell modules, the Essentials' processes, the
 language server and the estate's own tooling record what they start and stop,
 every act an operator takes through them and every failure, through the same
 capability — a .NET program and PowerShell through the runtime's library. When

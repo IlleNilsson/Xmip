@@ -12,11 +12,11 @@ Set-StrictMode -Version Latest
 #
 # ADR-0053, amendment 2026-09-20.
 
-function Get-XmipPlaygroundImageArea {
+function Get-XmipEssentialsImageArea {
     <#
         .SYNOPSIS
             Where one cluster's images live: a directory of its own under the
-            Playground's image area, so two clusters never share a file.
+            Essentials' image area, so two clusters never share a file.
 
         .PARAMETER Cluster
             The cluster the images are for.
@@ -28,14 +28,14 @@ function Get-XmipPlaygroundImageArea {
         [string] $Cluster
     )
 
-    return Join-Path -Path (Get-XmipPlaygroundLayout).Image -ChildPath $Cluster
+    return Join-Path -Path (Get-XmipEssentialsLayout).Image -ChildPath $Cluster
 }
 
-function Get-XmipPlaygroundImageName {
+function Get-XmipEssentialsImageName {
     <#
         .SYNOPSIS
-            What one instance of the Playground is called:
-            xmip-playground-<cluster>-<what>, where what is roll, cluster or
+            What one instance of the Essentials is called:
+            xmip-essentials-<cluster>-<what>, where what is roll, cluster or
             node-<name>. Pure.
 
         .PARAMETER Cluster
@@ -46,8 +46,8 @@ function Get-XmipPlaygroundImageName {
             what makes the kind a shape rather than a word a node may not be
             called. The owner, 2026-09-20: a node is a node and can have one
             or more roles, roll is something different. So
-            xmip-playground-C1-node-roll is the node called roll, and
-            xmip-playground-C1-roll is still the roll; nothing collides and no
+            xmip-essentials-C1-node-roll is the node called roll, and
+            xmip-essentials-C1-roll is still the roll; nothing collides and no
             name is refused (ADR-0053, amendment 2026-09-20).
     #>
     [CmdletBinding()]
@@ -60,15 +60,15 @@ function Get-XmipPlaygroundImageName {
         [string] $What
     )
 
-    return "xmip-playground-$Cluster-$What"
+    return "xmip-essentials-$Cluster-$What"
 }
 
-function New-XmipPlaygroundImage {
+function New-XmipEssentialsImage {
     <#
         .SYNOPSIS
             Links the binaries a roll's tree runs into the cluster's own image
             area and answers the roll's image, the one the operator will see as
-            xmip-playground-<cluster>-roll.
+            xmip-essentials-<cluster>-roll.
 
         .DESCRIPTION
             Three files are laid down here. The roll's carries the cluster's
@@ -97,29 +97,29 @@ function New-XmipPlaygroundImage {
         [string] $Cluster
     )
 
-    $layout = Get-XmipPlaygroundLayout
-    [string] $area = Get-XmipPlaygroundImageArea -Cluster $Cluster
+    $layout = Get-XmipEssentialsLayout
+    [string] $area = Get-XmipEssentialsImageArea -Cluster $Cluster
 
-    if (-not $PSCmdlet.ShouldProcess($area, 'Link the Playground images')) {
+    if (-not $PSCmdlet.ShouldProcess($area, 'Link the Essentials images')) {
         return ''
     }
 
-    Remove-XmipPlaygroundImage -Cluster $Cluster -Confirm:$false
+    Remove-XmipEssentialsImage -Cluster $Cluster -Confirm:$false
     New-Item -ItemType Directory -Path $area -Force | Out-Null
 
-    [string] $name = Get-XmipPlaygroundImageName -Cluster $Cluster -What 'roll'
+    [string] $name = Get-XmipEssentialsImageName -Cluster $Cluster -What 'roll'
     [string] $roll = Join-Path -Path $area -ChildPath "$name$($layout.Suffix)"
 
-    Copy-XmipPlaygroundImage -Source $layout.Roll -Image $roll
-    Copy-XmipPlaygroundImage -Source $layout.Cluster -Image (
+    Copy-XmipEssentialsImage -Source $layout.Roll -Image $roll
+    Copy-XmipEssentialsImage -Source $layout.Cluster -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Cluster))
-    Copy-XmipPlaygroundImage -Source $layout.Node -Image (
+    Copy-XmipEssentialsImage -Source $layout.Node -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Node))
 
     return $roll
 }
 
-function Copy-XmipPlaygroundImage {
+function Copy-XmipEssentialsImage {
     <#
         .SYNOPSIS
             One image: a hard link to the built binary, or a copy of it where a
@@ -156,7 +156,7 @@ function Copy-XmipPlaygroundImage {
     }
 }
 
-function Remove-XmipPlaygroundImage {
+function Remove-XmipEssentialsImage {
     <#
         .SYNOPSIS
             Takes a cluster's images away. A process holds its own image open,
@@ -173,13 +173,13 @@ function Remove-XmipPlaygroundImage {
         [string] $Cluster
     )
 
-    [string] $area = Get-XmipPlaygroundImageArea -Cluster $Cluster
+    [string] $area = Get-XmipEssentialsImageArea -Cluster $Cluster
 
     if (-not (Test-Path -LiteralPath $area)) {
         return
     }
 
-    if (-not $PSCmdlet.ShouldProcess($area, 'Remove the Playground images')) {
+    if (-not $PSCmdlet.ShouldProcess($area, 'Remove the Essentials images')) {
         return
     }
 
@@ -195,12 +195,12 @@ function Remove-XmipPlaygroundImage {
     Remove-Item -LiteralPath $area -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
 }
 
-function Test-XmipPlaygroundOwnImage {
+function Test-XmipEssentialsOwnImage {
     <#
         .SYNOPSIS
-            Whether a path is one of the Playground's own per-instance images.
-            Nothing but New-XmipPlaygroundImage and the roll's tree write that
-            directory, so a process running out of it is the Playground's,
+            Whether a path is one of the Essentials' own per-instance images.
+            Nothing but New-XmipEssentialsImage and the roll's tree write that
+            directory, so a process running out of it is the Essentials',
             whatever the binary beside the repository is called now.
 
         .PARAMETER Path
@@ -218,7 +218,7 @@ function Test-XmipPlaygroundOwnImage {
         return $false
     }
 
-    [string] $area = (Get-XmipPlaygroundLayout).Image
+    [string] $area = (Get-XmipEssentialsLayout).Image
 
     try {
         [string] $full = [System.IO.Path]::GetFullPath($Path)
@@ -232,20 +232,20 @@ function Test-XmipPlaygroundOwnImage {
         [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-function Get-XmipPlaygroundImageKind {
+function Get-XmipEssentialsImageKind {
     <#
         .SYNOPSIS
-            Which of the Playground's three a process name is: Roll, Cluster,
+            Which of the Essentials' three a process name is: Roll, Cluster,
             Node, or the empty string for a name that is none of them. Pure.
 
         .DESCRIPTION
-            The name is xmip-playground-<cluster>-<what> since 2026-09-20, and
-            xmip-playground-<what> where no cluster named it — a roll started by
+            The name is xmip-essentials-<cluster>-<what> since 2026-09-20, and
+            xmip-essentials-<what> where no cluster named it — a roll started by
             hand, or this crate's own tests. What is roll, cluster, or
             node-<name>, and the node marker is read first: it is what lets a
             node be called roll without being one (the owner, 2026-09-20). A
             name carrying no marker and ending in neither word is a node too,
-            which is what the bare xmip-playground-node is.
+            which is what the bare xmip-essentials-node is.
 
         .PARAMETER Name
             The process name.
@@ -258,7 +258,7 @@ function Get-XmipPlaygroundImageKind {
         [string] $Name
     )
 
-    [string] $prefix = 'xmip-playground-'
+    [string] $prefix = 'xmip-essentials-'
 
     if ($Name -notlike "$prefix*" -or $Name.Length -le $prefix.Length) {
         return ''
@@ -266,7 +266,7 @@ function Get-XmipPlaygroundImageKind {
 
     [string] $rest = $Name.Substring($prefix.Length).ToLowerInvariant()
 
-    # The marker before the endings: xmip-playground-<cluster>-node-roll is
+    # The marker before the endings: xmip-essentials-<cluster>-node-roll is
     # the node called roll, never the cluster's roll, and that is the whole
     # point of the marker.
     if ($rest.Contains('-node-')) {

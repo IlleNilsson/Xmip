@@ -3,8 +3,8 @@
   The Xmip MSI (ADR-0015 clause 2, amendment 2026-10-13). It installs
   xmip-service and the runtime library under Program Files\Xmip\bin, and then
   runs xmip-service itself with ProgramData\Xmip as the layout (clause 10).
-  Its install switch writes the starter xmip.toml where there is none,
-  slices the node's xmip-node.toml, makes the modules, logs, data and audit
+  Its install switch writes the starter cluster.xmip where there is none,
+  slices the node's node.xmip, makes the modules, logs, data and audit
   folders, and registers and starts the Xmip Service — automatic start, as
   `registration.rs` defines it. Removing the MSI runs its uninstall switch,
   which stops and removes the service; configuration, data, audit and logs
@@ -13,14 +13,14 @@
   registration are xmip-service's, written once; nothing here copies them.
 
   Three public properties. The first two are the machine's name unless
-  given; the cluster is used where the machine's xmip.toml names none, the
+  given; the cluster is used where the machine's cluster.xmip names none, the
   starter's or one an environment template put there (ADR-0028, amendment
   2026-10-21). The account is the platform's default, LocalSystem, unless
   given, and is given what the node reads and writes (ADR-0015, amendment
   2026-10-21):
 
     XMIP_NODE     the node this machine is
-    XMIP_CLUSTER  the cluster, where the machine's xmip.toml names none
+    XMIP_CLUSTER  the cluster, where the machine's cluster.xmip names none
     XMIP_ACCOUNT  the account the node's service runs as
 
   msiexec /i xmip-<version>-<site>-x64.msi XMIP_NODE=<node> XMIP_CLUSTER=<cluster>
@@ -87,22 +87,22 @@
     <SetProperty Id="XmipInstall" Before="XmipInstall" Sequence="execute"
                  Condition="NOT XMIP_ACCOUNT"
                  Value="&quot;[#XmipServiceExe]&quot;
-                        --configuration &quot;[CONFIGFOLDER]xmip.toml&quot;
+                        --configuration &quot;[CONFIGFOLDER]cluster.xmip&quot;
                         --node &quot;[XMIP_NODE]&quot;
                         --cluster &quot;[XMIP_CLUSTER]&quot; --install" />
     <SetProperty Id="XmipInstall" Action="SetXmipInstallAsAccount" Before="XmipInstall"
                  Sequence="execute" Condition="XMIP_ACCOUNT"
                  Value="&quot;[#XmipServiceExe]&quot;
-                        --configuration &quot;[CONFIGFOLDER]xmip.toml&quot;
+                        --configuration &quot;[CONFIGFOLDER]cluster.xmip&quot;
                         --node &quot;[XMIP_NODE]&quot;
                         --cluster &quot;[XMIP_CLUSTER]&quot;
                         --account &quot;[XMIP_ACCOUNT]&quot; --install" />
     <SetProperty Id="XmipInstallRollback" Before="XmipInstallRollback" Sequence="execute"
                  Value="&quot;[#XmipServiceExe]&quot;
-                        --configuration &quot;[CONFIGFOLDER]xmip-node.toml&quot; --uninstall" />
+                        --configuration &quot;[CONFIGFOLDER]node.xmip&quot; --uninstall" />
     <SetProperty Id="XmipUninstall" Before="XmipUninstall" Sequence="execute"
                  Value="&quot;[#XmipServiceExe]&quot;
-                        --configuration &quot;[CONFIGFOLDER]xmip-node.toml&quot; --uninstall" />
+                        --configuration &quot;[CONFIGFOLDER]node.xmip&quot; --uninstall" />
 
     <InstallExecuteSequence>
       <Custom Action="XmipInstallRollback" Before="XmipInstall"

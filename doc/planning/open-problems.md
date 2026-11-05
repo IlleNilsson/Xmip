@@ -4,7 +4,7 @@ Options per problem, with a lean. Nothing here is decided.
 
 **A problem keeps its number for life.** The numbers are cited from outside
 this file — ADR-0024 cites 18, ADR-0014 cites 16, ADR-0002 and
-`allocation.toml` cite 19 — so renumbering would silently repoint a citation at
+`allocation.xmip` cite 19 — so renumbering would silently repoint a citation at
 someone else's problem. Sections are ordered so the numbers ascend; they are
 not renumbered to make them.
 
@@ -178,7 +178,7 @@ only answer for a server cluster.
 2026-09-26: ADR-0067 gives a node one address with operate, sync and alive as
 listeners on it; option A's protocol is the sync listener.
 
-2026-09-19: the Playground hands work R -> P -> S between node processes through
+2026-09-19: the Essentials hands work R -> P -> S between node processes through
 per-node inboxes in the cluster's shared directory, each hop recorded. This is
 option A rehearsed in the rig only; it rules nothing for the runtime, which stays
 the owner's to decide.
@@ -210,7 +210,7 @@ Four of its items were still true, and this register is where they belong:
   question and ADR-0018's Host Services, still undesigned between nodes.
 - **A typed configuration loader.** `xmip-core-configure` exists;
   full validation against what the manifests declare does not. The format
-  half is decided: one `xmip.toml` per cluster, sliced to each node
+  half is decided: one `cluster.xmip` per cluster, sliced to each node
   (ADR-0031, amendment 2026-10-03).
 - **The management plane.** `webapi` and `gui` are empty repositories.
   `powershell` no longer is — three cmdlets over the ABI and eighteen tests
@@ -320,7 +320,7 @@ holds; it answers nothing here.
 
 ## 23. Recovery is decided but undemonstrated, and unbuilt below the contracts
 
-A power cut during a Playground run on 2026-09-06 asked the plain question: what
+A power cut during an Essentials run on 2026-09-06 asked the plain question: what
 survives a shutdown, a network drop, or an attached device going away. The model
 is decided and recorded; almost none of it is built, and nothing demonstrates it.
 
@@ -354,7 +354,7 @@ owed (`runtime-model.md` section 3). A device
 mount that vanishes after a claim-rename but before completion is the same gap in
 the attached-device case. Single-node restart recovers; failover does not.
 
-**Undemonstrated.** The Playground is a harness — in-memory scenario state,
+**Undemonstrated.** The Essentials is a harness — in-memory scenario state,
 temp dirs rebuilt each run — so a power cut just re-rolls it and it proves
 nothing about recovery. A **blackout** scenario (kill a node mid-Journey,
 restart, assert resume from checkpoint with no loss and no double-effect) is the
@@ -417,7 +417,7 @@ behind the `port` feature and nothing in any test opens a port.
 own device stand-in on top of that line — `m-bus/src/loopback.rs` has a
 loopback meter, `hart/src/loopback.rs` a loopback field device. This is the
 same duplication `transport/.src/loopback.rs` was written to end one level up,
-where the dance had been written in the Playground *forty-two times over*
+where the dance had been written in the Essentials *forty-two times over*
 (ADR-0051). It has reappeared below, per protocol, unremarked.
 
 **What none of them can prove.** A serial bus is multi-drop: several devices
@@ -476,16 +476,16 @@ escaping and nothing else.
 | f | TOML string quoting | the node declaration escapes three characters; archive's copy escapes all | **Resolved 2026-09-24:** `codec::toml::{quote, unquote}` is the one TOML basic string, every control character escaped; the node's declaration and the file archive's sidecar use it, and the archive now reads a quoted key holding `=` |
 | g | msmq over https | always writes `http://`; its `tls` feature does nothing | **Resolved 2026-09-24:** msmq sends through `http::endpoint` as as2, as4 and webdav do; `msmqs://`, `https://` and `DIRECT=HTTPS://` queues go over the one TLS behind `tls`, are refused rather than sent in the clear without it, and a test holds both |
 | h | A null context value | route's `X` reads null as present, `context:X` as absent | **Resolved 2026-09-24:** `route::routable`, beside `text_of`, is the one reading; `X`, `context:X`, `header:`, `party:`, `regex:` and `content:` read a missing value and a Null as absent and refuse bytes, a test holds both spellings, and ADR-0046 records the owner's ruling |
-| i | A node's capability | parsed three ways: Playground and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). Since 2026-10-01 a node declares its roles instead, `node::NodeRole::declared` the one parse, forwarded as `xmip_role_declared_v1` (ADR-0056, amendment 2026-10-01). |
+| i | A node's capability | parsed three ways: Essentials and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). Since 2026-10-01 a node declares its roles instead, `node::NodeRole::declared` the one parse, forwarded as `xmip_role_declared_v1` (ADR-0056, amendment 2026-10-01). |
 | j | A health color | `SegmentRender.Traffic` maps Paused yellow and Holding red, the prompt grey and orange | **Resolved 2026-09-24:** the prompt paints `English.Color`'s name in posh-git's palette (`SegmentRender.Paint`); `Traffic` holds no table of its own and `PromptMonitor.Paint` is gone (ADR-0041, clarified) |
-| k | Scope containment | `observe` compares text, `ScopeTree` strips scheme and authority first | **Resolved 2026-09-24:** `observe::Scope` is the one implementation of containment and a scope's parts; the runtime's library forwards it (`xmip_scope_contains_v1`, `xmip_scope_parts_v1`) and `ScopeTree` calls it, so the snapshot and every surface answer by one rule; the two-writer ruling and `scope-vector.toml` are struck by the owner (ADR-0052, amendments 2026-09-24) |
+| k | Scope containment | `observe` compares text, `ScopeTree` strips scheme and authority first | **Resolved 2026-09-24:** `observe::Scope` is the one implementation of containment and a scope's parts; the runtime's library forwards it (`xmip_scope_contains_v1`, `xmip_scope_parts_v1`) and `ScopeTree` calls it, so the snapshot and every surface answer by one rule; the two-writer ruling and `scope-vector.xmip` are struck by the owner (ADR-0052, amendments 2026-09-24) |
 | l | Landing a pin | `Publish-XmipPin` checked only the push, so a failed commit followed by an empty push reported success | **Resolved 2026-09-23:** `Invoke-XmipGit` is the one way the module runs git, and a test refuses any other |
 | m | Reading TOML in PowerShell | three readers assume one of the two shapes PSToml has returned | **Resolved 2026-09-24:** every reader goes through `Get-TomlValue`, `Get-XmipDeclaredText` is gone, and `test/Toml.Test.ps1` holds the readers on both shapes and refuses a reader that asks for one |
 | n | Promotion at arrival | `runtime/src/arrival.rs` routes with `Promoted::from_context` rather than `route::promote`, so in a running node bytes under a bare `X` decline as nothing promoted instead of being refused, and no prefixed property (`header:`, `party:`, ...) is read at arrival | **Resolved 2026-09-25:** arrival promotes every name its Subscriptions' filters use through `route::Gathering`, compiled once with the Runtime, before the Journey opens; a Null is absent, and bytes under a bare `X` or a prefix no loaded technology provides refuse the Message (`Refused::Promotion`), and the runtime's tests hold a bare `X` of bytes, a Null and `party:sender` read at arrival (ADR-0046) |
 | p | The operator surfaces' rules | the CLI and `Xmip.PowerShell` each wrote which surface to read, the runtime override, wildcard selection, the acts, the validation verdict, status meaning, the ABI boundaries, probe conformance and the mood, figure and nothing-at wording; five of them disagreed (the cmdlets took scopes literally, never used the discovery rule, reported one boundary, never judged a probe, and said `Unknown` where the CLI said `unknown`) | **Resolved 2026-09-24** (the owner: *CLI and PowerShell shall share*; *code shall be uniquely placed*): each rule is written once — in its Rust crate where the runtime owns it (scope, stage, mood word and color, worst-first order, called through `xmip_operate.h` section 7), else in `Xmip.Abi` or `Xmip.Surface` — and tested there; the cmdlets take `-Remote`, `-Snapshot`, an optional `-Library` and wildcard scopes as the executable does, and the script module loads the operator module and keeps no capability words, snapshot reader or mood ranking of its own (ADR-0052, amendments 2026-09-24) |
 | q | Where a node sits in a scope | `ScopeTree.Node` takes segment 0, so the Monitor's rows name the cluster as a record's node, and the prompt's `SegmentRender.At` reads the literal `node` segment itself: the scope's shape known in two surfaces (found 2026-09-25) | **Resolved 2026-09-25:** `observe::Scope::node` and `Scope::stage` are the one reading — the node the segment after the `node` marker beneath the cluster, never the cluster, the stage the first stage word beneath it — forwarded as `xmip_scope_node_v1` (`xmip_operate.h` section 7) and bound once in `RuntimeRules.Node`; `ScopeTree.Node`, `ScopeTree.Stage`, `ScopeIndex` and the prompt's `SegmentRender.At` call it, and a Monitor row names the node, not the cluster (ADR-0027, ADR-0052, amendments 2026-09-25) |
 | r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | the owner, 2026-09-25: the runtime writes them at arrival from properties the transport hands with `Arrived` (ADR-0046, amendment) |
-| s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Playground's `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
+| s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Essentials' `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
 | t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
 | u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dogfooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
 | v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Work Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Work Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
@@ -517,7 +517,7 @@ a test.
 
 **Done 2026-09-25:** the `Loopback` trait learned `exchanges_in_order` and `FarEnd::datagram`, and 16 `round` and 26 `unblock` overrides are gone (ADR-0051); HTTP/1.1 is one codec, `net::http`, with `net::Endpoint` and `net::head`, and http keeps TLS, serving and status (ADR-0044); the CAN pair is one `can_bus::loopback::Session`; `xmip-core-library-ssh` holds RFC 4251's types (ADR-0050); a header is `<protocol>.header.<name>` with case folded per protocol (ADR-0046).
 
-**Owned by the wrong crate.** The Playground holds the snapshot format the
+**Owned by the wrong crate.** The Essentials holds the snapshot format the
 surfaces read, the topology and run header they draw, retention's policy,
 node capability and placement, and a claim by rename it documents elsewhere
 as unsafe; the runtime holds Message treatment presets `message` owns.
@@ -617,7 +617,7 @@ reaches, and two tests, `identity-local` and `identity-online`.
 What exists: certificate **usage** — mutual TLS on Receive and Send, a stand-in
 certificate authority, the certificate authenticators — and, since 2026-10-13,
 the sources that **obtain** one, proved in their own tests. What does not: a
-running node using them, and the Playground's two identity tests; identity is
+running node using them, and the Essentials' two identity tests; identity is
 still a stage inside `round-trip`.
 
 | step | what | state |
@@ -625,7 +625,7 @@ still a stage inside `round-trip`.
 | 1 | `xmip-core-provision` declared and created, its trait in the capability (a provider may ship a certificate source) | done 2026-10-13 |
 | 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names | done 2026-10-13: http-01 on any port, dns-01 through a provider's `DnsWriter`; tls-alpn-01 not built |
 | 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME | done 2026-10-13; `internal-ca` also serves ACME to the cluster |
-| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Playground test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
+| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Essentials test is not built, and whether it runs step-ca (the SDK, `prerequisite.xmip`) is the owner's |
 | 5 | `identity-online` on nodes that declare online, against Let's Encrypt | configuration only; open below |
 
 The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
@@ -682,7 +682,7 @@ node's answer, which may listen on any port behind forwarding; `dns-01` needs
 write access to the name's DNS, through a DNS provider's `DnsWriter`, and no
 port. A laptop has neither. `identity-online` needs one of them named: a
 domain and the way its DNS is written, or a public host and its port 80 the
-Playground may use. Its configuration is `[provision.receive]` with `source =
+Essentials may use. Its configuration is `[provision.receive]` with `source =
 "xmip-core-provision-acme"`, `directory` Let's Encrypt's, `names` that domain,
 `agree_terms = true` and the challenge chosen (`node-configuration.md`).
 
@@ -700,7 +700,7 @@ runs under any Service Identity, a gMSA least of all.
 | 4 | Linux: an AD-joined host with a gMSA ticket fetched by a daemon (e.g. `credentials-fetcher`), verified on AlmaLinux before it is claimed |
 
 **Open for the owner before step 2 can be proven:** a test domain — a domain
-controller Xmip's tests may use, or one the Playground stands up.
+controller Xmip's tests may use, or one the Essentials stands up.
 
 ## 29. Xmip stores nothing, encrypts nothing at rest, and has no home for keys
 
@@ -713,14 +713,14 @@ and no engine.
 |---|---|
 | 1 | the key home, **decided 2026-09-25** (ADR-0063 clause 4): `xmip-core-secret`, a new capability, created and declared; the platform key store its first technology per platform (DPAPI/CNG, the kernel keyring or a service-only file, the keychain), PKCS#11 and vaults after. **Built 2026-09-25:** `KeyStore`, `DataKey` (the one AES-256-GCM, HKDF and HMAC), `dpapi` tested on Windows, `file` on AlmaLinux, `keychain` built and not run on macOS; `pkcs11`, `vault`, `azure-key-vault`, `aws-kms` reserved; `keyring` reserved, because the kernel keyring forgets a key at a restart — the owner decides what it is for |
 | 2 | `persist` gains its encryption layer: AES-256-GCM per record, lookup keys by keyed hash, a record that fails its tag audited as a failure. **Built 2026-09-25:** `EncryptedStore` over the `Engine` trait, and a `RuntimeStore`; a failed tag is `PersistError::Refused` with scope and reason, audited by the caller — wiring that caller to `xmip-core-audit` is open |
-| 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
+| 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.xmip`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
 | 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
 | 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SecureSurface` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
 | 6 | the .NET programs' TLS through `xmip-core-library-tls`, not the platform's (the owner, 2026-09-26; ADR-0063, amendment): the web host's and the remote surface's connections terminate in the Rust library — through the runtime's library as a stream the .NET side reads and writes, or a Rust front in the web host's process — so the hybrid exchange holds on every Xmip connection |
 
 ## 30. HTTP/3 is declared and not built
 
-`architecture.toml` declares the http technology over *IETF RFC 9110, with
+`architecture.xmip` declares the http technology over *IETF RFC 9110, with
 the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents*. HTTP/1.1 is
 `net::http` and HTTP/2 `net::http2` since 2026-09-25 (ADR-0043 and ADR-0044,
 amendments 2026-09-25), the version chosen per connection by ALPN or prior
@@ -752,8 +752,8 @@ service advertises it (step 5). No one writes code to get HTTP/3.
 The owner, 2026-10-05 (ADR-0031, amendment): *When editing is done, the
 cluster TOML file is sliced into node TOML files and shipped to each node on
 save.* The Operation Desktop slices on save through `xmip_cluster_slices_v1`
-and writes each slice to `<SliceDirectory>/<node>/xmip-node.toml`; only its
-own node, `xmip.gui.toml`'s `Node`, counts as shipped, and every other node
+and writes each slice to `<SliceDirectory>/<node>/node.xmip`; only its
+own node, `gui.xmip`'s `Node`, counts as shipped, and every other node
 shows *sliced, not shipped*. Desired state slices on the node itself
 (`xmip-service --slice --cluster`; the environment templates of ADR-0015,
 amendment 2026-10-21). Missing: an operate-plane act that places a
@@ -796,7 +796,7 @@ inside the runtime's tests, which hand it stand-in gates; the program an
 operator installs runs none of it. Needed: the identity technologies of
 ADR-0050 linked into the service and chosen by configuration (ADR-0068: handed
 in), a Storage node in the service, and the first database server client.
-`architecture.toml` `[implementation]` says the same per capability.
+`architecture.xmip` `[implementation]` says the same per capability.
 
 *Narrowed the same day.* The owner: *The first stream will come from
 somewhere, it will carry its identity via transport or on its message*, and
@@ -1455,7 +1455,7 @@ standby promoted once its primary is gone. Three things are left:
 
 ## 46. A Journey published on one node waits for another's send scan
 
-Measured 2026-10-22 in the Playground at level 1, every node a process
+Measured 2026-10-22 in the Essentials at level 1, every node a process
 (ADR-0028, amendment 2026-10-22): a file received on one node and sent by
 another took about 630 ms from its drop to its arrival, the median, where
 one received and sent by the same node took about 7 ms. The sending node
@@ -1519,7 +1519,7 @@ declaration stays placed once. The plan, its own work after the current:
 2. The crates in batches, each landed in its own repository.
 3. A gathering crate last, which the surfaces' runtime build links every
    declaration through, since a platform service depends on no technology
-   (`architecture.toml`).
+   (`architecture.xmip`).
 
 ## 50. Validation and the path languages hold a Stream whole
 
@@ -1657,7 +1657,7 @@ Rust mirror in `xmip-core-abi`, and the five moved onto it.
 Decided by the owner, 2026-10-27, resolving problem 8: option A, always
 name the vendor. Not done: `s3` renamed `aws-s3`, and every other cloud
 technology that names no vendor renamed the same way, in
-`architecture.toml`, the repositories, the crates, the configuration words
+`architecture.xmip`, the repositories, the crates, the configuration words
 and every document that names them.
 
 ## 58. Resilience and exclusiveness are not pluggable
@@ -1731,9 +1731,9 @@ Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
 Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 
 - **The SSH and FTP servers check the password.** Xmip's server sides
-  for the loopbacks and the Playground's far ends are handed the check
+  for the loopbacks and the Essentials' far ends are handed the check
   rather than linking an authenticator, since identity presentation is
-  not a transport's (`architecture.toml`): `net::login::Offered` (user,
+  not a transport's (`architecture.xmip`): `net::login::Offered` (user,
   secret) asked of a `net::login::Check`. `ssh::userauth::serve` admits a
   password only where the check admits it and lets a client go after six
   requests; the FTP session answers `PASS` 230 only where the check
@@ -1743,7 +1743,7 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   admitted, or a verified key signed for. The check is
   `authenticate/password`'s (`PasswordAuthenticator::admits`); the
   loopbacks check the one login their near end presents
-  (`net::login::only`); the Playground's drop box mints each Party's
+  (`net::login::only`); the Essentials' drop box mints each Party's
   password per server, and the real nodes' far end mints each
   Location's, sets it on the Location's node through its operate
   listener (`far-end.<user>`, named by `configure::placed`) and keeps
@@ -1758,7 +1758,7 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   `ssh-key` gate's (`Verifier::admits`, the lookup and narrowing its
   `verify` uses); a loopback admits the one key its near end presents
   (`net::login::only_key`, through `sftp::Credential::admitted_as`), and
-  the Playground's drop box and real nodes' far end enroll no key. The
+  the Essentials' drop box and real nodes' far end enroll no key. The
   SFTP far end chooses a directory only by a name the check admitted,
   with its password or its key.
 
@@ -1795,7 +1795,7 @@ D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
 Phase D: the routes designer's first slice is built, 2026-09-26 (ADR-0064):
 the Xmip Application document and the node's binding in `configure`, and
 the designer in the VS Code extension; running Applications in the
-Playground is the next slice.
+Essentials is the next slice.
 
 Phase D's transformation and prepare are standard units since 2026-10-22
 (ADR-0066, amendment 2026-10-22): XSLT through the engine a step chooses,
@@ -1849,7 +1849,7 @@ retires entries from stops being an order.
                                        program that does it outside a test —
                                        `xmip-service`, the root crate's
                                        executable (ADR-0018, amendment
-                                       2026-09-26) — and the Playground
+                                       2026-09-26) — and the Essentials
                                        running Applications on it; the
                                        surfaces' `xmip_start_v1` still plans
                                        and does not run (problem 20)
@@ -1879,9 +1879,9 @@ retires entries from stops being an order.
                                        configuration and the binaries (not
                                        yet published); Topology navigates
                                        to another cluster when allowed, a
-                                       second named roll in the playground,
+                                       second named roll in the essentials,
                                        Start-XmipTest -Cluster <cluster> (the
-                                       playground topology, -Cluster and the
+                                       essentials topology, -Cluster and the
                                        chooser that moves a view between
                                        clusters are all landed, ADR-0052,
                                        amendment 2026-09-20); every
@@ -1898,13 +1898,13 @@ retires entries from stops being an order.
                                        desktop; the prompt names the node
                                        when the session is remote; a role
                                        comes from a directory, the
-                                       playground's is a fake one that
+                                       essentials' is a fake one that
                                        allows the tester, and
                                        Start-XmipTest -Directory names
                                        which: kind, name and address
                                        (ADR-0009,
                                        amendment 2026-09-14). The surfaces
-                                       are demonstrable over the playground
+                                       are demonstrable over the essentials
                                        and not yet testable for real (the
                                        owner, 2026-09-14 evening): the runtime
                                        module had no tests, the GUI none of
@@ -2007,7 +2007,7 @@ them. Moving them out of `src/` stops them reading as live code, which is the ac
 
 *Resolved by option B, recorded here 2026-09-03.*
 
-`architecture.toml` and the workspace `Cargo.toml` both say edition 2021. The
+`architecture.xmip` and the workspace `Cargo.toml` both say edition 2021. The
 manifest key is `[crate]`; `cratePolicy` appears nowhere in its history, so the
 name below was already wrong when it was written.
 
@@ -2381,7 +2381,7 @@ Raised by the outside review of 2026-10-08 as a decision to reconsider:
 ADR-0009's exception (the owner's *Go with A* of 2026-10-03) made every
 certificate-free caller over this machine's loopback the operating system
 user the host runs as (`GatedOperator.Proven`). With a role stated for the
-run, or a Playground host's tester directory, another local user acted as
+run, or an Essentials host's tester directory, another local user acted as
 that account, and a reverse proxy forwarding to loopback extended the same
 trust to remote callers; the audit named the host's account. Decided by
 the owner, 2026-10-19: *local callers are proven by the operating system*,
@@ -2422,7 +2422,7 @@ Decided by the owner, 2026-10-21, and built the same day: *a Unix socket
 belongs to `[operate] group`, the node's own group where it is left out,
 and is `0660`, the node's peer check staying the second gate
 (`plane::local::unix`; proved in the AlmaLinux 10 guest); an account's name
-is kept until the node restarts; and *the Playground tester in the web GUI
+is kept until the node restarts; and *the Essentials tester in the web GUI
 acts with an operator certificate* — the roll's host serves https on
 127.0.0.1 under the roll's authority, in Xmip's own TLS, the tester
 presents a certificate from `New-XmipCertificate -Operator`, and the tester

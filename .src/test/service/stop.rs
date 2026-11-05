@@ -57,7 +57,7 @@ fn a_stop_drains_the_node_and_the_service_exits_zero() {
     );
 
     let audit =
-        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+        std::fs::read_to_string(directory.join("audit").join("audit.xmip")).expect("it audited");
     for said in [
         "action = \"start\"",
         "action = \"stop\"",
@@ -153,7 +153,7 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     );
 
     let audit =
-        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+        std::fs::read_to_string(directory.join("audit").join("audit.xmip")).expect("it audited");
     for said in [
         "subscription.pause",
         "subscription.resume",
@@ -281,7 +281,7 @@ place = \"taken\"
     assert!(said.contains("did not open"), "{said}");
     assert_eq!(declarations(&directory), Vec::<String>::new());
     let audit =
-        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+        std::fs::read_to_string(directory.join("audit").join("audit.xmip")).expect("it audited");
     assert!(audit.contains("xmip-core-secret-vault"), "{audit}");
     let _ = std::fs::remove_dir_all(&directory);
 }

@@ -108,7 +108,7 @@ rest is internal Rust matters.*
   configured is the send side alone: a Send Port Group, a Send Port and a
   Send Location each name the guards — retry, timeout, circuit breaker,
   fallback, rate limiting, concurrency limit, hedging — and their settings
-  in `xmip.toml`, and every send through them goes through that pipeline.
+  in `cluster.xmip`, and every send through them goes through that pipeline.
 - **Everywhere else, resilience is the code's own business**: a transport,
   a Receive Location or Xmip Storage handles its failures inside Rust as its
   technology needs, with nothing to configure.
@@ -145,7 +145,7 @@ table are the assistant's.
   | rate limit, concurrency limit | yes | yes | yes, above all |
   | hedging | only where the far end deduplicates | refused: two files | refused: two datagrams |
 
-- **Configuration refuses what cannot be honored**: `xmip.toml` naming a
+- **Configuration refuses what cannot be honored**: `cluster.xmip` naming a
   guard a Send Location's transport cannot honor is refused at start, in
   words naming the guard, the kind and why. An unconfirmed send is said to
   be at most once (`runtime-model.md` section 15).

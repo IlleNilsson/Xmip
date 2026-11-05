@@ -15,8 +15,8 @@ It is a template for creating Xmip environments, never a lab.
 
 ## The one file, and the environment
 
-The cluster's `xmip.toml` is the Playground's own,
-`test/core/playground/configuration/xmip.toml`: the one file a test runs
+`cluster.xmip` is the Essentials' own,
+`test/core/essentials/configuration/cluster.xmip`: the one file a test runs
 whether its nodes are simulated on one computer or on machines of their own
 (the owner, 2026-10-21: *one TOML file that can be run for tests regardless
 of node faking or actual nodes*; ADR-0028, amendment 2026-10-21). It says
@@ -24,10 +24,10 @@ what the cluster is and nothing of where it runs. What the environment adds
 is here, in `environment.example.parameters.yaml`: the cluster's name, its
 DNS domain, which node runs on which machine, the package, the layout, the
 accounts, the folder of each node's certificate, and `farEnd`, where the
-machines reach the Parties' far end the Playground serves.
+machines reach the Parties' far end the Essentials serves.
 
 The example puts five of the file's nine nodes on the Hyper-V example's
-five node machines; the Playground simulates the other four:
+five node machines; the Essentials simulates the other four:
 
 | Node | Roles | Machine | Operating system | Address |
 | --- | --- | --- | --- | --- |
@@ -45,7 +45,7 @@ for the owner to strike.
 **The DNS server**, XMIP-DC01 (`name.dsc.yaml`): the zone, `xmip.test`,
 where it is not there, and an A record for the cluster, `C1`, holding every
 node machine's address, and one for each node holding its machine's. A node
-finds another by its name — `D1:7443` — and the Playground uses a node whose
+finds another by its name — `D1:7443` — and the Essentials uses a node whose
 name resolves.
 
 **Each node machine** (`node.dsc.yaml`), in this order:
@@ -53,7 +53,7 @@ name resolves.
 1. its account: on AlmaLinux the system account `xmip`, made here; on
    Windows the virtual account `NT SERVICE\xmip-<node>`, which exists with
    its service and is never made;
-2. the cluster's `xmip.toml` in the package's config folder;
+2. `cluster.xmip` in the package's config folder;
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;
@@ -61,13 +61,13 @@ name resolves.
    and the account, whose `xmip-service --install` slices the file already
    there, gives the account what it reads and writes, and registers and
    starts the node's service as that account;
-5. its slice, `xmip-node.toml`, as `xmip-service --slice --cluster --bind
+5. its slice, `node.xmip`, as `xmip-service --slice --cluster --bind
    --nodes` prints it, the service restarted when it changed: every Receive
    Location and Send Port the cluster's file designs is placed over the
    environment's nodes, round robin by their roles, and bound over SFTP on
    the Parties' far end at `farEnd`, port 7422, each a user of its own
-   there, so a node fetches what the Playground drops and puts what it
-   sends where the Playground is told of it (ADR-0028, amendment
+   there, so a node fetches what the Essentials drops and puts what it
+   sends where the Essentials is told of it (ADR-0028, amendment
    2026-10-22). The nodes are the parameters' `nodes`, never written again;
 6. a firewall opening for exactly the ports `xmip-service --listening` says
    its configuration listens on, and none it no longer does — none for the
@@ -133,7 +133,7 @@ AlmaLinux — and on AlmaLinux PowerShell as an SSH subsystem,
 
 **On the host**, in an elevated Xmip PowerShell Console, once: WinRM may
 reach the Windows machines by address, and the host asks XMIP-DC01 for the
-environment's names, so `R1` and `C1` resolve where the Playground runs.
+environment's names, so `R1` and `C1` resolve where the Essentials runs.
 
 ```powershell
 Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '10.77.0.*' -Force
@@ -141,7 +141,7 @@ Add-DnsClientNrptRule -Namespace '.xmip.test' -NameServers '10.77.0.10'
 [string[]] $suffixes = @((Get-DnsClientGlobalSetting).SuffixSearchList) + 'xmip.test'
 Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
 [hashtable] $farEnd = @{
-    DisplayName   = 'Xmip Playground, the Parties'' far end'
+    DisplayName   = 'Xmip Essentials, the Parties'' far end'
     Direction     = 'Inbound'
     Protocol      = 'TCP'
     LocalPort     = 7422
@@ -151,7 +151,7 @@ Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
 New-NetFirewallRule @farEnd
 ```
 
-The last lets the machines reach the far end the Playground serves on this
+The last lets the machines reach the far end the Essentials serves on this
 host, and nothing else reach it.
 
 Then, not elevated, in an Xmip PowerShell Console: the packages
@@ -196,25 +196,25 @@ dsc config --parameters-file $parameters test --file $environment
 dsc config --parameters-file $parameters set --file $environment
 ```
 
-Then the Playground runs against the machines: the names typed resolve and
+Then the Essentials runs against the machines: the names typed resolve and
 answer, and the run says which nodes are real. The tester's operator
 certificate is signed by the same authority — a file naming it,
-`D:\Repos\Xmip\.local-work\environment\authority\operator.toml`, holds
+`D:\Repos\Xmip\.local-work\environment\authority\operator.xmip`, holds
 `[service]` with `name`, `cluster_name = "C1"` and `node_name`, and
 `[provision.operator] authority = "."`. Type exactly the nodes the
-parameters map, which the Playground places the Locations over as the
+parameters map, which the Essentials places the Locations over as the
 machines did:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
 [string] $tester = "$local\tester"
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
-    New-XmipCertificate -Configuration "$local\authority\operator.toml" -Path "$tester\operator.pem"
+    New-XmipCertificate -Configuration "$local\authority\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1, P1, L1, D1 -Certificate $tester
+Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 -Certificate $tester
 Get-XmipTestStatus
 Get-XmipHealth -Scope xmip:///C1/carried
-Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\playground\C1-snapshot.toml
+Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\C1-snapshot.xmip
 ```
 
 Open <https://127.0.0.1:5087> in a Web Browser tab: the Monitor follows the
@@ -227,11 +227,11 @@ mutual TLS on the Storage plane's port, 7443, presenting its own
 D1's `xmip-service --listening` says `7443/tcp storage`, so its machine's
 firewall opens it. D2 runs on no machine of the example: every node passes
 it over, and D1 is the primary on its own (ADR-0056, amendment
-2026-10-22). The Playground serves the Parties' far end on the host, port
+2026-10-22). The Essentials serves the Parties' far end on the host, port
 7422, each Location placed on the real nodes a user of its own there; each
 round it drops a file for every Receive Location, a real receiving node
 fetches it, writes it to the Ledger on D1, and a real sending node puts it
-back under its name, which the far end tells the Playground of:
+back under its name, which the far end tells the Essentials of:
 `xmip:///C1/carried` says how many of the files dropped arrived and how
 long each took (ADR-0028, amendment 2026-10-22). The other four nodes of the
 file are simulated, and no node is started on the host beside real ones.

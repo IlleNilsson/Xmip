@@ -1,5 +1,5 @@
 //! Every node configuration `deploy/` writes, read the way `xmip-service`
-//! reads its own: the Playground's cluster `xmip.toml` — the one file a
+//! reads its own: the Essentials' cluster `cluster.xmip` — the one file a
 //! test runs whether its nodes are simulated or on machines of their own
 //! (ADR-0028, amendment 2026-10-21), which the environment templates under
 //! `deploy/dsc` put on each node machine — sliced to every node it declares
@@ -23,7 +23,7 @@ use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::catalogue;
 use xmip_runtime::execution_tree::build_execution_tree;
 
-const PLAYGROUND: &str = "test/core/playground/configuration/xmip.toml";
+const ESSENTIALS: &str = "test/core/essentials/configuration/cluster.xmip";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
 const INVENTORY: &str = "deploy/dsc/ansible/inventory.example.yml";
@@ -68,7 +68,7 @@ fn holds(table: &toml::Table, path: &str) -> bool {
 fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
     let config = directory.join(name).join("config");
     std::fs::create_dir_all(&config).expect("creates the layout");
-    let path: PathBuf = config.join("xmip-node.toml");
+    let path: PathBuf = config.join("node.xmip");
     std::fs::write(&path, text).expect("writes the configuration");
 
     let (document, applications, _) = xmip_runtime::start::read(&path.to_string_lossy())
@@ -116,23 +116,23 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         "the role writes no starter of its own: the package's xmip-service --install does"
     );
 
-    // The Playground's file is the one a test runs whether its nodes are
+    // The Essentials' file is the one a test runs whether its nodes are
     // simulated or on machines of their own (ADR-0028, amendment
     // 2026-10-21): every node it declares slices as the environment names
     // the cluster and reads as xmip-service reads it.
-    let cluster = source(PLAYGROUND);
+    let cluster = source(ESSENTIALS);
     assert_eq!(
         xmip_configure::cluster::cluster_name(&cluster).expect("reads"),
         None,
-        "{PLAYGROUND} names no cluster: where it runs is the environment's"
+        "{ESSENTIALS} names no cluster: where it runs is the environment's"
     );
     let environment = xmip_configure::fixture::test_cluster().name;
     let nodes = xmip_configure::cluster::nodes(&cluster).expect("declares its nodes");
-    assert!(!nodes.is_empty(), "{PLAYGROUND} declares its nodes");
+    assert!(!nodes.is_empty(), "{ESSENTIALS} declares its nodes");
     for node in &nodes {
         let text = xmip_configure::slice_named(&cluster, node, &environment)
             .unwrap_or_else(|problem| panic!("{node} does not slice: {problem}"));
-        let document = read(&directory, &format!("playground-{node}"), &text);
+        let document = read(&directory, &format!("essentials-{node}"), &text);
         assert_eq!(document.service.cluster_name, environment);
         assert_eq!(document.service.node_name, *node);
         let operate = document
@@ -162,7 +162,7 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     for named in &mapped {
         assert!(
             nodes.iter().any(|node| node == named),
-            "{INVENTORY} maps {named}, which {PLAYGROUND} does not declare"
+            "{INVENTORY} maps {named}, which {ESSENTIALS} does not declare"
         );
     }
 

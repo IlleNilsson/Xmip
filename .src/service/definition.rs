@@ -133,7 +133,7 @@ mod tests {
         let service = ServiceDefinition::for_node(
             &node,
             "/opt/xmip/bin/xmip-service",
-            "/opt/xmip/config/xmip-node.toml",
+            "/opt/xmip/config/node.xmip",
             "/opt/xmip",
         )
         .with_variable(DIRECTORY_VARIABLE, "/opt/xmip/data/audit");

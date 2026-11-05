@@ -75,7 +75,7 @@ And what was not:
   depends on 16 Xmip crates and not one of them is a technology. The `xmip`
   assembly crate at the repository root names 33, all of them Foundation,
   Capabilities, Platform or Operations. The one place technologies are
-  linked is `test/playground`, which names 123 distinct Xmip crates, 111 of
+  linked is `test/essentials`, which names 123 distinct Xmip crates, 111 of
   them with a fourth name part — a technology under ADR-0011.
 
 The measured coupling, counted on 2026-09-19 by searching every `Cargo.toml`
@@ -297,7 +297,7 @@ happens.
   delayed Module is loaded on the first call that needs it. Until step 2
   there is nothing to delay.
 - **A node still cannot use a technology.** The runtime links none and
-  loads none; only `test/playground` names them. That is the plainest
+  loads none; only `test/essentials` names them. That is the plainest
   statement of why this work matters, and it is not a new fact — it is what
   the queue's item 1, *run a node for real*, has been waiting on.
 - **For the owner to rule on.** Four things this record found and does not
@@ -405,7 +405,7 @@ Both loading files are behind the `dynamic-loading` feature, which existed
 for this and had never held a loader.
 
 **What it opened.** `module/capability/contract/rust`'s
-`xmip_core_contract_rust.dll` and `module/capability/contract/c`'s
+`xmip_core_test_module.dll` and `module/capability/contract/c`'s
 `xmip_core_contract_c.dll`, both already built in the estate, both driven
 through the same code with no branch on language — a byte range validated,
 `implies("descriptor")` answering `any`, `implies` on a key the standard
@@ -421,7 +421,7 @@ the field and both values, and a refused module is destroyed and unloaded
 rather than kept:
 
 ```text
-xmip-core-contract-rust 0.1.0 (abi 1, trait 1.0) answers the 'contract'
+xmip-core-test-module 0.1.0 (abi 1, trait 1.0) answers the 'contract'
 trait and 'transport' is loading it: descriptor.module must equal the
 loading capability
 ```
@@ -546,7 +546,7 @@ The C contract technology the loader was first proven against is gone, with
 the C++, Go, Java and Python ones and the probe that drove them: no other
 runtime and no unchecked native code is hosted in an Xmip process unless
 configuration invites it (ADR-0018 and ADR-0042, amendments 2026-10-05).
-The loader is proven against `xmip-core-contract-rust` by the runtime's
+The loader is proven against `xmip-core-test-module` by the runtime's
 `ffi::loaded_contract` tests.
 
 ## Amendment, 2026-10-19: the trait sends a stream, as the table does

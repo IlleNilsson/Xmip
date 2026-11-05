@@ -110,7 +110,7 @@ mod tests {
         let base = std::env::temp_dir().join(format!("xmip-account-{}", std::process::id()));
         let config = base.join("config");
         std::fs::create_dir_all(&config).expect("makes the layout");
-        let file = config.join("xmip-node.toml");
+        let file = config.join("node.xmip");
         let cluster = format!(
             "[operate]\nlisten = \"0.0.0.0:7401\"\ncertificate = \"tls/node.pem\"\n\
              key = \"tls/node.key\"\nanchors = \"tls/anchors.pem\"\n\

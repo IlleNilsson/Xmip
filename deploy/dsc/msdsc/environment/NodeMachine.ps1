@@ -199,7 +199,7 @@ function Install-NodePackage {
     Install the estate's package, telling it the node, the cluster and the
     account: the MSI's XMIP_NODE, XMIP_CLUSTER and XMIP_ACCOUNT, the .rpm's
     variables of the same names. Either runs xmip-service --install, which
-    slices the cluster's xmip.toml already in place, and registers and
+    slices cluster.xmip already in place, and registers and
     starts the node's service as that account.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -244,8 +244,8 @@ function Install-NodePackage {
 function Get-NodeSliceFile {
     <#
     .SYNOPSIS
-    Where the node reads its configuration: xmip-node.toml beside the
-    cluster's xmip.toml.
+    Where the node reads its configuration: node.xmip beside the
+    cluster's cluster.xmip.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -255,14 +255,14 @@ function Get-NodeSliceFile {
     )
 
     [string] $folder = Split-Path -Path $Instance.configuration
-    return Join-Path -Path $folder -ChildPath 'xmip-node.toml'
+    return Join-Path -Path $folder -ChildPath 'node.xmip'
 }
 
 function Get-NodeSliced {
     <#
     .SYNOPSIS
     The node's configuration as xmip-service --slice prints it from the
-    cluster's xmip.toml, for the cluster the environment names, and, where
+    cluster's cluster.xmip, for the cluster the environment names, and, where
     the instance gives bind and nodes, with every Receive Location and Send
     Port placed over those nodes on the Parties' far end.
     #>

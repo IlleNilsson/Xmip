@@ -4,7 +4,7 @@
 - Date: 2026-09-07
 - Related: ADR-0010 (contract and transport repository boundaries), ADR-0016
   (submodule composition, amended 2026-09-07), ADR-0011 (naming), ADR-0028 (the
-  Playground), doc/development/creating-transports-contracts-and-processes.md,
+  Essentials), doc/development/creating-transports-contracts-and-processes.md,
   ADR-0018 (amendment 2026-10-05: no other runtime in an Xmip process unless
   invited)
 
@@ -32,7 +32,7 @@ process unless configuration invites it (amendment 2026-10-05).**
 ## Context
 
 By 2026-09-07 the contract capability held one technology, `csv`, against
-twenty-three declared, and the Playground carried its own JSON and XML checks
+twenty-three declared, and the Essentials carried its own JSON and XML checks
 waiting for the estate's to land. Building the rest raised three questions the
 manifest did not answer, and the owner answered each the same day.
 
@@ -82,13 +82,11 @@ in `-json-schema`, every EDIFACT directory in `-edi-edifact`. A version is not a
 repository. The owner corrected the assistant's proposal of a repository per
 version on 2026-09-07.
 
-### 3. A contract in Rust or .NET
+### 3. A contract of one's own is an external module
 
-The language entries under `xmip.core.contract` are `dotnet` and `rust`. Each
-is the way to author a contract as a module in that language over the ABI
-(ADR-0012), the counterpart of the format technologies. JavaScript is absent
-by decision, not omission; C, C++, Go, Java and Python were removed by the
-amendment of 2026-10-05.
+The technologies under `xmip.core.contract` are formats; none is a language.
+A contract of one's own is an external module behind the C ABI (ADR-0012),
+compiled by its author (the amendment of 2026-11-05).
 
 ## Consequences
 
@@ -98,7 +96,7 @@ amendment of 2026-10-05.
   copybooks, `edi-edifact`, and the `dotnet` template. Each documents the subset
   of its schema language it reads and refuses the rest by name at bind time, so
   an operator learns at configuration, not from a Stream that passed.
-- The Playground validates JSON and XML through the estate's own technologies
+- The Essentials validates JSON and XML through the estate's own technologies
   and exercises every contract technology over every transport (ADR-0028); its
   stand-in checks are gone.
 - `json-schema` asserts `pattern` and `format`, which it could not before the
@@ -123,7 +121,7 @@ other languages than dotnet, you have the list, Python, Java and what not, just
 not JavaScript*. The two-claim wording, the bind-time refusal and the
 consequences are the assistant's drafting of them.
 
-## Amendment, 2026-10-05: a contract in Rust or .NET
+## Amendment, 2026-10-05: no other runtime in the Xmip Host Process
 
 The owner, 2026-10-05, ruled on runtimes inside Xmip's own processes
 (ADR-0018, amendment 2026-10-05): *Read it as InProcess with threads is
@@ -142,9 +140,9 @@ that ruling:
   process: the JVM through JNI and CPython through a C shim, Go through
   cgo, C and C++ as native code with no Rust checks. They are gone, with
   their repositories' mounts under `xmip-core-contract`, their
-  `architecture.toml` entries, the probe that drove them, xgit's `verify.ps1`
+  `architecture.xmip` entries, the probe that drove them, xgit's `verify.ps1`
   gate that existed only for them, and the Go toolchain in
-  `prerequisite.toml`.
+  `prerequisite.xmip`.
 - The reserved transform and process entries in C, C++, Go, Java, Lua,
   PowerShell and Python went with them for the same reason; the .NET ones
   stay.
@@ -154,3 +152,22 @@ that ruling:
 
 The owner's 2026-09-07 ruling, *contracts can be formed by other languages
 than dotnet*, is superseded for contracts loaded in process.
+
+## Amendment, 2026-11-05: an external module handles its own compilation
+
+The owner, 2026-11-05: *The core, the runtime shall be Rust. Rust can call or
+be called up on by other languages in their compiled form. No JavaScript*, and
+*The external modules, assemblies handles their own compilation, not up to
+Xmip.*
+
+- Xmip defines the C ABI (ADR-0012) and loads what is behind it; it neither
+  compiles an external module nor lists its language. Decision 3 says so.
+- The language entries are gone: `xmip-core-contract-dotnet`, with its
+  repository, and the reserved `transform` entries `dotnet`, `rust` and
+  `wasm`. A language is how a module was built, not a technology of a
+  capability.
+- `xmip-core-contract-rust` was an external module the runtime's loader is
+  tested against (ADR-0057), not a slot for a language: it is
+  `xmip-core-test-module` at `test/core/module`, beside the Essentials.
+- Which runtimes may enter an Xmip process stays as the amendment of
+  2026-10-05 and ADR-0018 say.

@@ -93,6 +93,30 @@ then: *streams are streams, do not enforce UTF unless asked for.*
   written only where a Party's Contract or a technology's settings declare
   them.
 
+## Amendment, 2026-11-05: Xmip works on text and stores it in UTF-8
+
+The owner, 2026-11-05: *All work and storage has to be done in UTF-8.*
+UTF-16 was weighed as a cluster's choice and not taken: every reader in
+Xmip — the Contracts, the Paths, Convert, the language's own strings, JSON
+between systems (RFC 8259 section 8.1) — reads UTF-8, so a UTF-16 cluster
+would translate in front of every step that reads text and double what it
+stores, for nothing a target cannot be given on the way out.
+
+- **Work is UTF-8.** Every step that reads a Stream as text — a Contract, a
+  Path, a Map, Convert, Routing on content — reads UTF-8.
+- **Storage is UTF-8.** Text in the Ledger and the archive is UTF-8.
+- **Translated at the boundary, by itself.** A text Stream in another
+  encoding is translated to UTF-8 once, as it arrives, in Receive
+  Preparation, from the encoding its Location or Contract declares; and
+  once on its way out, in Send Preparation, to the encoding its target
+  declares. Both follow from the declaration; no step names them.
+- **A stream is still bytes.** Binary — an archive, an image, a signed
+  envelope before it is verified — is never translated (the amendment of
+  2026-09-26 stands). A signature or an encryption is undone before the
+  text is translated, since it covers the bytes as sent; what is stored
+  is the translated text. Keeping a Party's exact bytes, for a dispute,
+  is archiving them before translation, a choice of its own.
+
 ## Provenance
 
 The position is the owner's, 2026-09-06: English internally, globalization only

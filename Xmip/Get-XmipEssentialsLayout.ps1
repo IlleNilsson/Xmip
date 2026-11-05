@@ -2,17 +2,17 @@
 
 Set-StrictMode -Version Latest
 
-function Get-XmipPlaygroundLayout {
+function Get-XmipEssentialsLayout {
     <#
         .SYNOPSIS
-            Where the Playground's binaries, the web host and this machine's
-            run output live. One answer for every playground cmdlet.
+            Where the Essentials' binaries, the web host and this machine's
+            run output live. One answer for every essentials cmdlet.
 
         .DESCRIPTION
             The roll, cluster and node binaries are cargo's debug build under
-            test/core/playground; the web host is the GUI's debug build. Everything
+            test/core/essentials; the web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
-            goes under .local-work/playground, the device-local folder the
+            goes under .local-work/essentials, the device-local folder the
             estate reserves for running Xmip here (CONTRIBUTING.md:
             .local-work is where). Nothing here is created; Start-* create
             what they use.
@@ -24,22 +24,22 @@ function Get-XmipPlaygroundLayout {
             never copies of the repository, and they are device-local like
             everything else a run writes here.
 
-            Authority is the Playground's own certificate authority, one for
+            Authority is the Essentials' own certificate authority, one for
             every roll in the area: the web host is served https under it, a
             tester's operator certificate is signed by it
-            (Initialize-XmipPlaygroundAuthority; ADR-0009, amendment
+            (Initialize-XmipEssentialsAuthority; ADR-0009, amendment
             2026-10-21), and the nodes a run starts as xmip-service are issued
             under it, so it outlives every run (ADR-0028, amendment
             2026-10-27).
 
-            Configuration is the Playground's own cluster xmip.toml, the one
+            Configuration is the Essentials' own cluster cluster.xmip, the one
             file a run is the same over whether its nodes are simulated or on
             machines of their own (ADR-0028, amendment 2026-10-21): the nodes
             a run spawns where -Nodes names none, and what the environment
             templates under deploy/dsc put on each node machine.
 
             Estate is where a run of the estate's Pester suite writes its
-            record and its log: .local-work/estate, beside the Playground's
+            record and its log: .local-work/estate, beside the Essentials'
             area and not inside it, since it is no roll's.
     #>
     [CmdletBinding()]
@@ -47,7 +47,7 @@ function Get-XmipPlaygroundLayout {
     param()
 
     [string] $root = Get-XmipRepositoryRoot
-    [string] $playground = Join-Path -Path $root -ChildPath 'test/core/playground'
+    [string] $essentials = Join-Path -Path $root -ChildPath 'test/core/essentials'
 
     # Where cargo builds is cargo's own answer, not an assumption:
     # CARGO_TARGET_DIR moves it, and this follows, so the cmdlets link and run
@@ -57,7 +57,7 @@ function Get-XmipPlaygroundLayout {
     # by another session's roll sets it there and builds without touching it.
     [string] $chosen = $env:CARGO_TARGET_DIR
     [string] $target = if ([string]::IsNullOrWhiteSpace($chosen)) {
-        Join-Path -Path $playground -ChildPath 'target/debug'
+        Join-Path -Path $essentials -ChildPath 'target/debug'
     }
     else {
         Join-Path -Path $chosen -ChildPath 'debug'
@@ -68,24 +68,24 @@ function Get-XmipPlaygroundLayout {
 
     return [PSCustomObject]@{
         Root       = $root
-        Playground = $playground
-        Configuration = Join-Path -Path $playground -ChildPath 'configuration/xmip.toml'
-        Roll       = Join-Path -Path $target -ChildPath "xmip-playground-roll$suffix"
-        Cluster    = Join-Path -Path $target -ChildPath "xmip-playground-cluster$suffix"
-        Node       = Join-Path -Path $target -ChildPath "xmip-playground-node$suffix"
+        Essentials = $essentials
+        Configuration = Join-Path -Path $essentials -ChildPath 'configuration/cluster.xmip'
+        Roll       = Join-Path -Path $target -ChildPath "xmip-essentials-roll$suffix"
+        Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
+        Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
-        Area       = Join-Path -Path $root -ChildPath '.local-work/playground'
-        Authority  = Join-Path -Path $root -ChildPath '.local-work/playground/authority'
-        Image      = Join-Path -Path $root -ChildPath '.local-work/playground/image'
+        Area       = Join-Path -Path $root -ChildPath '.local-work/essentials'
+        Authority  = Join-Path -Path $root -ChildPath '.local-work/essentials/authority'
+        Image      = Join-Path -Path $root -ChildPath '.local-work/essentials/image'
         Estate     = Join-Path -Path $root -ChildPath '.local-work/estate'
         Suffix     = $suffix
     }
 }
 
-function Invoke-XmipPlaygroundBuild {
+function Invoke-XmipEssentialsBuild {
     <#
         .SYNOPSIS
-            Builds one Playground binary, cargo's lines on the Verbose stream.
+            Builds one Essentials binary, cargo's lines on the Verbose stream.
             Cargo is a no-op when the binary is current, so this always runs:
             a stale binary silently running yesterday's scenarios is the thing
             it prevents.
@@ -104,25 +104,25 @@ function Invoke-XmipPlaygroundBuild {
         [string] $Binary
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
     [string] $path = switch ($Binary) {
         'roll' { $layout.Roll }
         'cluster' { $layout.Cluster }
         default { $layout.Node }
     }
 
-    Write-Verbose "cargo build --bin $Binary in $($layout.Playground)"
-    Push-Location -LiteralPath $layout.Playground
+    Write-Verbose "cargo build --bin $Binary in $($layout.Essentials)"
+    Push-Location -LiteralPath $layout.Essentials
 
     try {
-        [string[]] $bins = @('--bin', 'xmip-playground-node')
+        [string[]] $bins = @('--bin', 'xmip-essentials-node')
 
         if ($Binary -in 'roll', 'cluster') {
-            $bins += @('--bin', 'xmip-playground-cluster')
+            $bins += @('--bin', 'xmip-essentials-cluster')
         }
 
         if ($Binary -eq 'roll') {
-            $bins += @('--bin', 'xmip-playground-roll')
+            $bins += @('--bin', 'xmip-essentials-roll')
         }
 
         # The estate as it is on disk, every estate crate patched to its
@@ -149,13 +149,13 @@ function Invoke-XmipPlaygroundBuild {
 
     if ($LASTEXITCODE -ne 0) {
         [string] $why = if ($first -ne '') { ": $first" } else { '.' }
-        throw "cargo build --bin $Binary exited $LASTEXITCODE in $($layout.Playground)$why"
+        throw "cargo build --bin $Binary exited $LASTEXITCODE in $($layout.Essentials)$why"
     }
 
     return $path
 }
 
-function Invoke-XmipPlaygroundService {
+function Invoke-XmipEssentialsService {
     <#
         .SYNOPSIS
             Builds the xmip-service a run of `Cluster` starts its nodes as, and
@@ -165,9 +165,9 @@ function Invoke-XmipPlaygroundService {
             Built as the personal-computer site builds it (Build-XmipService):
             every stage, Xmip Storage and the file transport, against the
             estate as it is on disk (New-XmipLocalPatch), in a build
-            directory of its own, .local-work/playground/service/target. The
+            directory of its own, .local-work/essentials/service/target. The
             binary is copied
-            to .local-work/playground/service/<cluster>, so a later build never
+            to .local-work/essentials/service/<cluster>, so a later build never
             changes what a running roll's nodes run (ADR-0028, amendment
             2026-10-22).
 
@@ -181,10 +181,10 @@ function Invoke-XmipPlaygroundService {
         [string] $Cluster
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
     [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
 
-    # A build directory of its own: one shared with the Playground's own
+    # A build directory of its own: one shared with the Essentials' own
     # build, a workspace whose lock pins other revisions, left rustc finding
     # two builds of one estate crate and refusing the service (2026-10-22).
     [string] $target = Join-Path -Path $layout.Area -ChildPath 'service/target'
@@ -208,27 +208,27 @@ function Invoke-XmipPlaygroundService {
 }
 
 
-function Get-XmipPlaygroundPublication {
+function Get-XmipEssentialsPublication {
     <#
         .SYNOPSIS
             Where the roll of a cluster publishes its snapshot, history and
             activity in an area, as the roll itself says.
 
         .DESCRIPTION
-            The names are the Playground's to decide (environment.rs,
+            The names are the Essentials' to decide (environment.rs,
             publish_paths), so this asks the roll binary —
-            `xmip-playground-roll --publication <cluster> <area>`, which
+            `xmip-essentials-roll --publication <cluster> <area>`, which
             prints them and starts nothing — rather than naming the files a
             second time. Refused in words when the roll cannot answer.
 
         .PARAMETER Roll
-            The roll binary, from Invoke-XmipPlaygroundBuild.
+            The roll binary, from Invoke-XmipEssentialsBuild.
 
         .PARAMETER Cluster
             The cluster the roll rolls as.
 
         .PARAMETER Path
-            The area the roll publishes in, as XMIP_PLAYGROUND_AREA tells it.
+            The area the roll publishes in, as XMIP_ESSENTIALS_AREA tells it.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]

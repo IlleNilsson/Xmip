@@ -17,14 +17,14 @@ function Start-XmipOperationWeb {
             .local-work/web/web-<start time>.log and .err, and every start,
             refusal and failure is audited (ADR-0062), as the host itself
             audits its own start, stop and every error it logs.
-            Without -Snapshot the host reads what its own xmip.gui.toml says.
+            Without -Snapshot the host reads what its own gui.xmip says.
 
             Each browser acts as the caller its connection proved — a client
             certificate, over this machine's loopback as from anywhere — with
             the role the host grants that caller (ADR-0009, amended 2026-10-06
-            and 2026-10-21): the role xmip.gui.toml or XMIP_ROLE states, else
-            the directory it names, else Observer. Over a Playground roll the
-            host is told the Playground's fake directory, which allows the
+            and 2026-10-21): the role gui.xmip or XMIP_ROLE states, else
+            the directory it names, else Observer. Over an Essentials roll the
+            host is told the Essentials' fake directory, which allows the
             tester every role and no one else: the user the host runs as, and
             the subject of the tester's operator certificate, -Tester. A
             browser is never that user for reaching loopback. A browser
@@ -36,12 +36,12 @@ function Start-XmipOperationWeb {
 
             Over a roll, unless -Url or -Certificate says otherwise, the host
             is served https://127.0.0.1:5087 in Xmip's own TLS under the
-            Playground's authority, .local-work/playground/authority, made
-            there the first time (Initialize-XmipPlaygroundAuthority), and
+            Essentials' authority, .local-work/essentials/authority, made
+            there the first time (Initialize-XmipEssentialsAuthority), and
             verifies a browser's certificate against it. From nothing to acting
             in the browser: New-XmipCertificate -Operator <person> -Path
             <folder>; New-XmipCertificate -Request <folder>/operator.csr
-            -Configuration .local-work/playground/authority/operator.toml
+            -Configuration .local-work/essentials/authority/operator.xmip
             -Path <folder>/operator.pem; give the browser that chain with
             operator.key and trust authority.pem; then
             Get-XmipTestStatus | Start-XmipOperationWeb -Tester <person>.
@@ -76,12 +76,12 @@ function Start-XmipOperationWeb {
             The snapshot file or files to monitor, one per cluster. Bound from
             the pipeline, so a Start-XmipTest -PassThru object names one and
             two rolls on the pipeline name two. A node xmip-service runs
-            publishes its own, snapshot.toml in its data directory, and
+            publishes its own, snapshot.xmip in its data directory, and
             Get-XmipProcess names it (ADR-0018, amendment 2026-09-30).
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087, plain http on
-            loopback, and to https://127.0.0.1:5087 over a Playground roll. Use
+            loopback, and to https://127.0.0.1:5087 over an Essentials roll. Use
             https://0.0.0.0:5443 with -Certificate, -PrivateKey and
             -TrustAnchor to reach it from another device on the network (the
             firewall must also allow the port); https://127.0.0.1:5443 serves
@@ -90,7 +90,7 @@ function Start-XmipOperationWeb {
 
         .PARAMETER Certificate
             The PEM certificate chain, leaf first, the host presents on https.
-            Named with -PrivateKey. Unset, the host's xmip.gui.toml or
+            Named with -PrivateKey. Unset, the host's gui.xmip or
             XMIP_CERTIFICATE decides (ADR-0063 clause 1; where the file comes from
             is provisioning's, ADR-0034).
 
@@ -99,11 +99,11 @@ function Start-XmipOperationWeb {
 
         .PARAMETER TrustAnchor
             The PEM anchors a caller's certificate must reach. Unset, the host's
-            xmip.gui.toml or XMIP_TRUST_ANCHOR; https needs one, since Xmip
+            gui.xmip or XMIP_TRUST_ANCHOR; https needs one, since Xmip
             trusts no operating system's trust store (ADR-0063).
 
         .PARAMETER Tester
-            The person the Playground's tester is, as New-XmipCertificate
+            The person the Essentials' tester is, as New-XmipCertificate
             -Operator named them: a browser presenting that operator
             certificate, CN=<person>, acts with every role over a roll.
 
@@ -114,7 +114,7 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Playground -Cluster C1 -Stress Harsh -PassThru |
+            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress Harsh -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -127,11 +127,11 @@ function Start-XmipOperationWeb {
             Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
+            Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
 
         .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
-            $snapshot = '.local-work/playground/C1-snapshot.toml'
+            $snapshot = '.local-work/essentials/C1-snapshot.xmip'
             Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
     #>
     [CmdletBinding(SupportsShouldProcess)]
@@ -216,7 +216,7 @@ function Start-XmipOperationWeb {
             Wait-XmipSnapshot -Path $named
         }
 
-        $layout = Get-XmipPlaygroundLayout
+        $layout = Get-XmipEssentialsLayout
         [string] $source = 'module/core/operation/gui/src/Xmip.Gui.Web'
         [string] $project = Join-Path -Path $layout.Root -ChildPath $source
         [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
@@ -242,7 +242,7 @@ function Start-XmipOperationWeb {
             $arguments += '--Xmip:Surface=snapshot'
             $arguments += Get-XmipOperationWebSnapshotArgument -Snapshot $following
 
-            # A web host over a Playground roll's file is a test's, and says so
+            # A web host over an Essentials roll's file is a test's, and says so
             # in its declaration (ADR-0053); over anything else it is runtime.
             [string] $area = [System.IO.Path]::GetFullPath($layout.Area)
             $under = [System.StringComparison]::OrdinalIgnoreCase
@@ -250,7 +250,7 @@ function Start-XmipOperationWeb {
                 $following | Where-Object { $_.StartsWith($area, $under) }
             ).Count -gt 0
 
-            # And its roles come from the Playground's fake directory, which
+            # And its roles come from the Essentials' fake directory, which
             # allows the tester and no one else (ADR-0009, amendments
             # 2026-09-14, 2026-10-06 and 2026-10-21): the user the host runs
             # as, and the subject of the tester's operator certificate, which
@@ -286,11 +286,11 @@ function Start-XmipOperationWeb {
         # says so, and says how (the owner's console, twice, 2026-09-19).
         if ($following.Count -eq 0) {
             [string] $rolling = (Get-XmipTestStatus |
-                    Where-Object -Property Suite -EQ -Value $script:XmipPlaygroundSuite |
+                    Where-Object -Property Suite -EQ -Value $script:XmipEssentialsSuite |
                     ForEach-Object -MemberName Cluster) -join ', '
 
             if ($rolling) {
-                Write-Warning ("No -Snapshot: this host reads its own xmip.gui.toml and will " +
+                Write-Warning ("No -Snapshot: this host reads its own gui.xmip and will " +
                     "not show the roll $rolling. To follow it: " +
                     'Get-XmipTestStatus | Start-XmipOperationWeb')
             }
@@ -322,10 +322,10 @@ function Start-XmipOperationWeb {
             return
         }
 
-        # Over a roll, https under the Playground's authority, the host's
+        # Over a roll, https under the Essentials' authority, the host's
         # certificate issued anew, unless the call named its own.
         if ($rolls -and $Url.StartsWith('https:') -and -not $Certificate) {
-            $kept = Initialize-XmipPlaygroundAuthority -Folder $layout.Authority -Confirm:$false
+            $kept = Initialize-XmipEssentialsAuthority -Folder $layout.Authority -Confirm:$false
             $arguments += "--Xmip:Certificate=$($kept.Certificate)"
             $arguments += "--Xmip:PrivateKey=$($kept.PrivateKey)"
 

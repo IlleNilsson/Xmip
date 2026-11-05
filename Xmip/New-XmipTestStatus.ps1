@@ -25,7 +25,7 @@ function New-XmipTestStatus {
 
         .PARAMETER Kind
             roll, pester, or build: a roll still building, before it rolls
-            (Get-XmipPlaygroundBuild).
+            (Get-XmipEssentialsBuild).
 
         .PARAMETER State
             running, building, OK or FAILED, in words.

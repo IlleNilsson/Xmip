@@ -4,8 +4,8 @@
 //! ```text
 //! xmip-service --configuration <path> [--console] [--purpose test|runtime]
 //! xmip-service --configuration <path> --definition
-//! xmip-service --configuration <cluster xmip.toml> --node <name> [--cluster <name>] --slice
-//! xmip-service --configuration <cluster xmip.toml> --node <name> --cluster <name>
+//! xmip-service --configuration <cluster cluster.xmip> --node <name> [--cluster <name>] --slice
+//! xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name>
 //!     [--account <account>] --install
 //! xmip-service --configuration <path> --listening
 //! xmip-service --configuration <path> --uninstall
@@ -35,7 +35,7 @@
 //! place it is written, so an installer registers what the runtime generates.
 //!
 //! `--slice` prints the node `--node` names its configuration, sliced from
-//! the cluster's `xmip.toml` at `--configuration` by `xmip-core-configure`'s
+//! `cluster.xmip` at `--configuration` by `xmip-core-configure`'s
 //! one slicing (`slice.rs`; ADR-0031, amendment 2026-10-03): desired state
 //! writes each node what it prints. `--cluster` names the cluster a file
 //! that names none runs as (ADR-0028, amendment 2026-10-21).
@@ -49,7 +49,7 @@
 //! authority's revocation list where `publish` says (`authority.rs`; ADR-0034,
 //! amendment 2026-10-22).
 //!
-//! `--install` lays a node out from its cluster's `xmip.toml` — a starter
+//! `--install` lays a node out from its cluster's `cluster.xmip` — a starter
 //! where there is none, the node's slice beside it, its data and audit
 //! directories — and registers and starts the service `--definition`
 //! prints, as `--account` where it is given (`account.rs`); `--uninstall`
@@ -66,7 +66,7 @@
 //! for it — a pause or a resume of a Subscription — from `<data>/orders`,
 //! the moment the operating system tells it one was left (`orders.rs`), and
 //! publishes what the node says of itself — its health, figures, topology
-//! and Subscriptions — to `<data>/snapshot.toml`, every quarter of a second
+//! and Subscriptions — to `<data>/snapshot.xmip`, every quarter of a second
 //! and at once after an order or an act over its operate listener, where
 //! the operation surfaces read it (`publication.rs`; ADR-0018, amendments
 //! 2026-09-30 and 2026-10-17). Between them it waits to be told, using no

@@ -7,7 +7,7 @@
 
 .DESCRIPTION
     What `New-XmipEstateMap` renders, as objects. Two facts are joined here:
-    `architecture.toml` says what the estate is, and the `.gitmodules` files
+    `architecture.xmip` says what the estate is, and the `.gitmodules` files
     say what this working tree has composed of it.
 
     Composition is read at two levels, because that is where it is written
@@ -53,7 +53,7 @@ function Get-XmipEstateRepository {
         $Root = Get-XmipRepositoryRoot
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.toml')
+    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.xmip')
     [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 
     # Every mount's full path to the repository at it, so a .NET project

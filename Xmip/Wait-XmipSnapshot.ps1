@@ -3,7 +3,7 @@
 Set-StrictMode -Version Latest
 
 # How long a fresh roll is given to publish its first round before the wait
-# below gives up and says so. A Playground round is minutes, not hours.
+# below gives up and says so. An Essentials round is minutes, not hours.
 [timespan] $script:SnapshotWait = [timespan]::FromMinutes(10)
 
 

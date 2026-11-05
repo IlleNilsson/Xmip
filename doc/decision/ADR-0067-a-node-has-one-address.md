@@ -33,7 +33,7 @@ so traffic cannot starve it. The assistant argued that the separation that
 matters is of sockets, not addresses; that a separate heartbeat network lets a
 node answer beats while its data path is dead, alive but unable to work and
 holding its claims; and that three addresses break the container, the hosted
-virtual machine and the laptop running the Playground. Events belong to the
+virtual machine and the laptop running the Essentials. Events belong to the
 cluster, not a node (ADR-0065). The owner: *so let's go with one IP*, and, of
 the host's address or an additional one, agreed the host's by default.
 
