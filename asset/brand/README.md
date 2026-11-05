@@ -24,7 +24,7 @@ from what is here, and `test/Brand.Test.ps1` fails where a surface does not
 name its mark or a copy differs. Change the mark here, run the command, and
 every surface follows.
 
-The [project presentation](../presentation/README.md) also uses this logo.
+The [project presentation](presentation/README.md) also uses this logo.
 Its shared editorial source names the logo for both formats in the same manifest.
 
 ## Colors

@@ -44,7 +44,7 @@ repositories are mounted under `module/` as git submodules.
 | Reader | Start here |
 | --- | --- |
 | Trying Xmip on your own computer | [Getting started](doc/getting-started.md): clone, build, configure, carry a file in to a file out, watch it |
-| Viewing the project overview | [Presentation and video](asset/presentation/README.md) |
+| Viewing the project overview | [Presentation and video](asset/brand/presentation/README.md) |
 | New to Xmip | [Beginner](#beginner) |
 | Responsible for the engineering | [Chief Engineering Officer](#chief-engineering-officer) |
 | Evaluating Xmip for an organization | [Chief Information Officer](#chief-information-officer) |
