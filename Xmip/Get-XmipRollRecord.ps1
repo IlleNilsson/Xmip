@@ -62,27 +62,17 @@ function Get-XmipRollRecord {
         [int] $Id = 0
     )
 
-    [System.IO.FileInfo[]] $files = @()
+    [string] $one = if ($Id -gt 0) { "$Id" } else { '*' }
 
-    if ($Id -gt 0) {
-        [string] $one = Get-XmipRollRecordPath -Path $Path -Id $Id
-        $files = @(Get-Item -LiteralPath $one -ErrorAction SilentlyContinue)
-    }
-    elseif (Test-Path -LiteralPath $Path -PathType Container) {
-        $files = @(Get-ChildItem -LiteralPath $Path -Filter 'roll-*.xmip' -File)
-    }
-
-    foreach ($file in $files) {
-        [string] $number = $file.BaseName -replace '^roll-', ''
-
-        if ($number -notmatch '^\d+$') {
+    foreach ($read in @(Read-XmipRunRecord -Path $Path -Kind roll -Name $one)) {
+        if ($read.Name -notmatch '^\d+$') {
             continue
         }
 
         [pscustomobject] @{
-            Id     = [int] $number
-            File   = $file.FullName
-            Record = Read-XmipToml -Path $file.FullName
+            Id     = [int] $read.Name
+            File   = $read.File
+            Record = $read.Record
         }
     }
 }

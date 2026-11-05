@@ -41,13 +41,8 @@ function Get-XmipEssentialsBuild {
         [string] $Path
     )
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
-        return
-    }
-
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'build-*.xmip' -File)) {
-        $record = Read-XmipToml -Path $file.FullName
-        ConvertTo-XmipEssentialsBuild -Record $record -File $file.FullName -Area $Path
+    foreach ($read in @(Read-XmipRunRecord -Path $Path -Kind build)) {
+        ConvertTo-XmipEssentialsBuild -Record $read.Record -File $read.File -Area $Path
     }
 }
 
