@@ -3,6 +3,12 @@ version = 1
 language = "en"
 pronunciation = "Smip"
 brand_lime = "#75c93b"
+logo = "asset/brand/xmip-logo.png"
+frame_width = 1280
+frame_height = 720
+frames_per_second = 24
+voice_delay_seconds = 0.5
+scene_padding_seconds = 2
 
 [[section]]
 title = "Xmip"

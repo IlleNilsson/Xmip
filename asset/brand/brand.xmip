@@ -68,11 +68,11 @@ names = "_content/Xmip.Gui/xmip-logo.png"
 [[surface]]
 name = "The project PowerPoint"
 from = "xmip-logo.png"
-in = "asset/presentation/tools/render-slides.mjs"
+in = "asset/presentation/story.xmip"
 names = "asset/brand/xmip-logo.png"
 
 [[surface]]
 name = "The project video"
 from = "xmip-logo.png"
-in = "asset/presentation/tools/render-video.mjs"
+in = "asset/presentation/story.xmip"
 names = "asset/brand/xmip-logo.png"
