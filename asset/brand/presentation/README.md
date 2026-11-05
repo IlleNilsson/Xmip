@@ -23,7 +23,7 @@ into the story so the video does not drift from it.
 `assets/` holds four approved transparent character images: female and male
 hosts, each welcoming and flexing. `audio/` holds their approved voice tracks
 and generated sentence timing. These PNGs and WAVs are generated assets.
-The logo stays in [the brand directory](../brand/README.md).
+The logo stays in [the brand directory](../README.md).
 
 ## Presentation conventions
 
@@ -58,8 +58,8 @@ The project sources and approved media in this directory remain the durable inpu
 The Python preparation helper requires Python 3.11+ with tomllib. From the root:
 
 ```text
-python asset/presentation/tools/prepare.py --validate
-python asset/presentation/tools/prepare.py
+python asset/brand/presentation/tools/prepare.py --validate
+python asset/brand/presentation/tools/prepare.py
 ```
 
 Preparation checks project source references and writes temporary JSON transfer
@@ -82,4 +82,4 @@ MP4 and SRT. The current video was compressed after rendering; a new render need
 not be byte-identical. Keep the short tracked filenames above.
 
 Commit the story, changed media and both final formats together. Follow
-[CONTRIBUTING.md](../../CONTRIBUTING.md) for the repository workflow.
+[CONTRIBUTING.md](../../../CONTRIBUTING.md) for the repository workflow.

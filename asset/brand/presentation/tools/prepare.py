@@ -6,7 +6,7 @@ import shutil
 import tomllib
 
 MATERIAL = Path(__file__).resolve().parents[1]
-ROOT = MATERIAL.parents[1]
+ROOT = MATERIAL.parents[2]
 WORK = ROOT / '.ai-interaction' / 'presentation'
 
 
