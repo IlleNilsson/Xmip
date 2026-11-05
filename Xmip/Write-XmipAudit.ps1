@@ -21,8 +21,7 @@ function Initialize-XmipAudit {
     param()
 
     if ([string]::IsNullOrWhiteSpace($env:XMIP_AUDIT_DIRECTORY)) {
-        $env:XMIP_AUDIT_DIRECTORY = Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath (
-            '.local-work/audit')
+        $env:XMIP_AUDIT_DIRECTORY = (Get-XmipEstateLayout).Audit
     }
 }
 

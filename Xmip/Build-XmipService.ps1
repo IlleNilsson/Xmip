@@ -217,7 +217,8 @@ function Build-XmipService {
         [hashtable] $packaging = @{
             Extension = $shell
             License   = Join-Path -Path $module -ChildPath 'LICENSE'
-            Into      = Join-Path -Path $root -ChildPath '.local-work/package/vscode'
+            Into      = Join-Path -Path (Get-XmipEstateLayout -Root $root).Package -ChildPath (
+                'vscode')
         }
         [string] $vsix = New-XmipExtensionPackage @packaging
         Write-XmipStep -Message "OK: built the VS Code extension, $vsix"
@@ -225,7 +226,7 @@ function Build-XmipService {
         return [pscustomobject]@{ Extension = $Extension; Path = $vsix }
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $root 'architecture.xmip')
+    $manifest = Get-XmipManifest -Path (Get-XmipEstateLayout -Root $root).Manifest
     [hashtable] $asked = @{
         Root          = $root
         Site          = $Site

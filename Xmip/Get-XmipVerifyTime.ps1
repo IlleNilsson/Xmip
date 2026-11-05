@@ -13,8 +13,6 @@
     Style: doc/governance/powershell-style.md
 #>
 
-# Where the durations are kept, relative to the repository root.
-[string] $script:XmipVerifyTimeFile = '.local-work/verify-time.json'
 
 function Get-XmipVerifyTime {
     <#
@@ -35,7 +33,7 @@ function Get-XmipVerifyTime {
     )
 
     [hashtable] $time = @{}
-    [string] $path = Join-Path -Path $RepositoryRoot -ChildPath $script:XmipVerifyTimeFile
+    [string] $path = (Get-XmipEstateLayout -Root $RepositoryRoot).VerifyTime
 
     if (-not (Test-Path -LiteralPath $path)) {
         return $time
@@ -72,7 +70,7 @@ function Set-XmipVerifyTime {
         [timespan] $Duration
     )
 
-    [string] $path = Join-Path -Path $RepositoryRoot -ChildPath $script:XmipVerifyTimeFile
+    [string] $path = (Get-XmipEstateLayout -Root $RepositoryRoot).VerifyTime
     [hashtable] $time = Get-XmipVerifyTime -RepositoryRoot $RepositoryRoot
     $time[$Name] = $Duration
 

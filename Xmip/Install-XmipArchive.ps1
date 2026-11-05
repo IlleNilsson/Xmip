@@ -46,12 +46,12 @@ function Get-XmipArchiveTool {
     )
 
     Import-XmipToml
-    $manifest = Read-XmipToml -Path (Join-Path -Path $Root -ChildPath 'prerequisite.xmip')
+    $manifest = Read-XmipToml -Path (Get-XmipEstateLayout -Root $Root).Prerequisite
     $archives = Get-TomlValue -Node $manifest -Name 'archive' -Default $null
     $tool = Get-TomlValue -Node $archives -Name $Name -Default $null
 
     if ($null -eq $tool) {
-        throw "prerequisite.xmip declares no [archive.$Name]."
+        throw "$script:XmipPrerequisiteName declares no [archive.$Name]."
     }
 
     [string] $architecture =
@@ -59,7 +59,8 @@ function Get-XmipArchiveTool {
     [string] $platform = "$(Get-XmipOperatingSystem)-$architecture"
     $asset = Get-TomlValue -Node $tool -Name $platform -Default $null
     [string] $version = [string](Get-TomlValue -Node $tool -Name 'version')
-    [string] $directory = Join-Path -Path $Root -ChildPath ".local-work/tool/$Name/$version"
+    [string] $tool = (Get-XmipEstateLayout -Root $Root).Tool
+    [string] $directory = Join-Path -Path $tool -ChildPath "$Name/$version"
     [string] $executable = ''
 
     if ($null -ne $asset) {
@@ -204,7 +205,7 @@ function Expand-XmipArchiveTool {
 
         if ($digest -ne $Tool.Sha256) {
             throw ("REFUSED: $($Tool.Url) has SHA-256 $($digest.ToLower()), and " +
-                "prerequisite.xmip states $($Tool.Sha256); nothing was unpacked.")
+                "$script:XmipPrerequisiteName states $($Tool.Sha256); nothing was unpacked.")
         }
 
         # tar ships with Windows 10 and later, macOS and Linux alike.

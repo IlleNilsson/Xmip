@@ -165,7 +165,7 @@ function Sync-XmipEstate {
         # parameter - the gate that enforces it caught this parameter's first
         # spelling.
         [string[]] $Only = @(),
-        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.xmip'),
+        [string] $ManifestPath = (Get-XmipEstateLayout).Manifest,
         [string] $WorkingDirectory = (Join-Path (Get-XmipRepositoryRoot) '.ai-work'),
         [string] $ReportPath,
         [string] $GitHubToken = $env:GITHUB_TOKEN,

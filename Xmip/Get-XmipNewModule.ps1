@@ -54,7 +54,7 @@ function Get-XmipNewModule {
         [object[]] $Submodule
     )
 
-    [string] $architecture = Join-Path -Path $RepositoryRoot -ChildPath 'architecture.xmip'
+    [string] $architecture = (Get-XmipEstateLayout -Root $RepositoryRoot).Manifest
     [hashtable] $found = @{
         RepositoryRoot = $RepositoryRoot
         Submodule      = $Submodule

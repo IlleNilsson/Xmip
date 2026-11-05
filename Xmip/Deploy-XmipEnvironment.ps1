@@ -52,7 +52,7 @@ function Deploy-XmipEnvironment {
     if (-not (Test-Path -LiteralPath (Join-Path $template 'machine.dsc.yaml'))) {
         throw "REFUSED: no template for the hypervisor '$hypervisor': $template"
     }
-    [string] $log = Join-Path $estate ".local-work/deploy/$name"
+    [string] $log = Join-Path (Get-XmipEstateLayout -Root $estate).Deploy $name
     New-Item -Path $log -ItemType Directory -Force -WhatIf:$false | Out-Null
     [bool] $apply = $PSCmdlet.ShouldProcess($name, 'Make its network and machines')
     [string] $operation = if ($apply) { 'set' } else { 'test' }

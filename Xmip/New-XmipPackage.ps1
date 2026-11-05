@@ -39,7 +39,7 @@ function Assert-XmipPackageBuildable {
             { $_ -in 'deb', 'rpm' } {
                 "A .$kind is built on Linux, x86-64 or arm64, from " +
                 'deploy/package/linux/nfpm.yaml by nfpm 2.48, with cargo, libclang and a ' +
-                'C++ compiler (prerequisite.xmip) to build xmip-service there.'
+                "C++ compiler ($script:XmipPrerequisiteName) to build xmip-service there."
             }
             'pkg' {
                 'A .pkg is built on macOS from deploy/package/macos by pkgbuild and ' +
@@ -98,7 +98,7 @@ function New-XmipPackage {
     $cargo = Read-XmipToml -Path (Join-Path $Root 'Cargo.toml')
     $crate = Get-TomlValue -Node $cargo -Name 'package'
     [string] $version = Get-TomlValue -Node $crate -Name 'version'
-    [string] $output = Join-Path $Root ".local-work/package/$version"
+    [string] $output = Join-Path (Get-XmipEstateLayout -Root $Root).Package $version
     [string] $stage = Join-Path $output "$Site-windows-$($built.Architecture)"
     [string] $bin = Join-Path $stage 'xmip/bin'
 

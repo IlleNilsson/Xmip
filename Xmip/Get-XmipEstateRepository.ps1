@@ -53,7 +53,7 @@ function Get-XmipEstateRepository {
         $Root = Get-XmipRepositoryRoot
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.xmip')
+    $manifest = Get-XmipManifest -Path (Get-XmipEstateLayout -Root $Root).Manifest
     [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 
     # Every mount's full path to the repository at it, so a .NET project

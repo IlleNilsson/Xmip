@@ -33,7 +33,7 @@ function Get-XmipEstateCrate {
     # skipped at any depth, the working area and run output at the estate's
     # root alone, matched on the path below it: an estate cloned under another
     # one's .local-work finds its own crates.
-    [string] $skip = '^(\.ai-interaction|\.local-work)[\\/]|' +
+    [string] $skip = "^(\.ai-interaction|$([regex]::Escape($script:XmipWorkName)))[\\/]|" +
         '(^|[\\/])(target|target-[^\\/]+|\.git|node_modules)[\\/]'
     [string] $root = [System.IO.Path]::GetFullPath($RepositoryRoot)
 

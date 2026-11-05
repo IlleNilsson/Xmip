@@ -24,7 +24,7 @@ function New-XmipLocalPatch {
         [string] $RepositoryRoot
     )
 
-    [string] $directory = Join-Path -Path $RepositoryRoot -ChildPath '.local-work/landing'
+    [string] $directory = (Get-XmipEstateLayout -Root $RepositoryRoot).Landing
     $null = New-Item -ItemType Directory -Path $directory -Force
     [string] $patch = Join-Path -Path $directory -ChildPath 'patch.xmip'
 

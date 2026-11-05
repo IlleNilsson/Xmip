@@ -363,7 +363,7 @@ function Start-XmipOperationWeb {
         # that dies at start says why in a file, not on a console nobody kept
         # (ADR-0062, the failure that prompted it). Named for the start time,
         # since Start-Process wants the file named before the pid exists.
-        [string] $area = Join-Path -Path $layout.Root -ChildPath '.local-work/web'
+        [string] $area = (Get-XmipEstateLayout -Root $layout.Root).Web
         Initialize-XmipAudit
         $null = New-Item -ItemType Directory -Path $area -Force
         [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
