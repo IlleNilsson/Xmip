@@ -21,7 +21,7 @@ source references. The PowerPoint is editable; carry textual corrections back
 into the story so the video does not drift from it.
 
 `assets/` holds four approved transparent character images: female and male
-hosts, each welcoming and flexing. `audio/` holds their approved voice tracks
+hosts, each welcoming and flexing. `audio/` holds their current voice tracks
 and generated sentence timing. These PNGs and WAVs are generated assets.
 The logo stays in [the brand directory](../README.md).
 
@@ -30,6 +30,8 @@ The logo stays in [the brand directory](../README.md).
 - Explain Xmip through its own purpose and strengths. Do not name competitors,
   shame other products or users, or imply superiority through belittling comparisons.
 - Use English. Pronounce Xmip as **Smip**, one syllable.
+- Keep the female voice as the reference for a warm, conversational pairing.
+  The male voice should be light and friendly, with comparable pace and loudness.
 - The female host speaks first and stands to the left of the male. A solo female
   host also stands on the left.
 - Keep the hosts fictional, ageless, modest and plainly drawn. Avoid realism,
@@ -69,7 +71,12 @@ It does not reuse a voice track when its transcript differs from the story.
 
 For replacement narration, retain the approved pronunciation and voice character.
 The current tracks use Kokoro-82M-v1.0-ONNX, fp32, af_heart (female) and
-am_michael (male), at speed 1. Model weights and voice tooling stay outside Git.
+am_puck (male), generated at speed 1. The male sentences are tempo-matched to
+the checked-in caption durations, preserving pitch. Both voices use two-pass
+loudness normalization targeting -18 LUFS, a -2 dBTP ceiling and an 11 LU
+loudness range. Preserve sentence timing when replacing audio in the existing
+video; otherwise regenerate its captions and scene timing together.
+Model weights and voice tooling stay outside Git.
 Place regenerated overview-narration-N.wav and overview-narration-N.json files
 in the working area's build/ directory, with N starting at zero. Timing JSON
 is an array of sentence objects containing text, start and duration in seconds.
