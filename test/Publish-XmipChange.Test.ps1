@@ -748,8 +748,8 @@ Describe 'A module the estate is about to pin is on origin first' {
     It 'refuses to continue when such a push fails' {
         # Throwing, not warning. A failed push here is the one condition that
         # produces the unclonable estate this whole Describe is about. Since
-        # 2026-09-23 the throw is Invoke-XmipGit's, so what is held is that the
-        # push goes through it and is not asked with -Test, which never throws.
+        # Push-XmipMain throws when the push fails or origin's main is not the
+        # commit, so what is held is that the push goes through it.
         [System.Management.Automation.Language.FunctionDefinitionAst] $function =
             $script:Ast.Find({
                 param($node)
@@ -764,12 +764,10 @@ Describe 'A module the estate is about to pin is on origin first' {
             param($node)
 
             $node -is [System.Management.Automation.Language.CommandAst] -and
-                $node.GetCommandName() -eq 'Invoke-XmipGit' -and
-                $node.Extent.Text -match "'push'"
+                $node.GetCommandName() -eq 'Push-XmipMain'
         }, $true)
 
-        $push | Should -Not -BeNullOrEmpty -Because 'the push runs through Invoke-XmipGit'
-        $push | Should -Not -Match '-Test\b' -Because 'a push asked with -Test never throws'
+        $push | Should -Not -BeNullOrEmpty -Because 'the push runs through Push-XmipMain'
     }
 
     It 'completes a commit rather than making one' {
@@ -1209,5 +1207,58 @@ Describe 'A landing regenerates the generated documents before it verifies' {
         ([regex]::Matches($source, 'New-XmipEstateMap -Root')).Count | Should -Be 1
         ([regex]::Matches($source, 'Update-XmipGeneratedDocument -RepositoryRoot')).Count |
             Should -Be 1
+    }
+}
+
+Describe 'A landing lands on main, and says so only once origin''s main is its commit' {
+    It 'refuses a repository on another branch, and takes main or a detached head' {
+        [string] $repository = Join-Path $TestDrive 'branched'
+        git init -q -b feature $repository
+        [string[]] $commit = @(
+            '-c', 'user.name=x', '-c', 'user.email=x@example.com',
+            'commit', '-q', '--allow-empty', '-m', 'one'
+        )
+        git -C $repository @commit
+
+        InModuleScope Xmip -Parameters @{ At = $repository } {
+            param([string] $At)
+
+            { Assert-XmipLandable -At $At } |
+                Should -Throw -ExpectedMessage '*on the branch feature*'
+            git -C $At checkout -q -b main
+            { Assert-XmipLandable -At $At } | Should -Not -Throw
+            git -C $At checkout -q --detach
+            { Assert-XmipLandable -At $At } | Should -Not -Throw
+        }
+    }
+
+    It 'fails a push after which origin''s main is not the commit' {
+        InModuleScope Xmip {
+            Mock Invoke-XmipGit {
+                switch ($Arguments[0]) {
+                    'rev-parse' { 'aaaa' }
+                    'ls-remote' { "bbbb`trefs/heads/main" }
+                }
+            }
+
+            { Push-XmipMain -At 'X' } |
+                Should -Throw -ExpectedMessage "FAILED:*'bbbb', not this commit, aaaa*"
+            Should -Invoke Invoke-XmipGit -ParameterFilter {
+                $Arguments[0] -eq 'push' -and $Arguments[2] -eq 'HEAD:refs/heads/main'
+            }
+        }
+    }
+
+    It 'passes a push after which origin''s main is the commit' {
+        InModuleScope Xmip {
+            Mock Invoke-XmipGit {
+                switch ($Arguments[0]) {
+                    'rev-parse' { 'aaaa' }
+                    'ls-remote' { "aaaa`trefs/heads/main" }
+                }
+            }
+
+            { Push-XmipMain -At 'X' } | Should -Not -Throw
+        }
     }
 }

@@ -74,8 +74,7 @@ function Publish-XmipPin {
 
         if ($ahead -gt 0) {
             Write-Host "   pushing $ahead committed pin(s) to origin..." -ForegroundColor DarkGray
-            Invoke-XmipGit -At $RepositoryRoot -Arguments @('push', 'origin', 'main', '--quiet') |
-                Out-Null
+            Push-XmipMain -At $RepositoryRoot
 
             Write-Host 'OK. Estate pushed.' -ForegroundColor Green
 

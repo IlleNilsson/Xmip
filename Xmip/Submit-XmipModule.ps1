@@ -69,7 +69,7 @@ function Publish-XmipUnpushed {
         }
 
         # Throws on failure: the estate must not pin a commit origin does not have.
-        Invoke-XmipGit -At $path -Arguments @('push', 'origin', 'HEAD:main', '--quiet') | Out-Null
+        Push-XmipMain -At $path
 
         Write-Output $name
     }
@@ -215,7 +215,7 @@ function Submit-XmipRepositoryChange {
     Invoke-XmipGit -At $At -Arguments @('commit', '-m', $subject, '--quiet') | Out-Null
 
     Write-Host '   pushing to origin...' -ForegroundColor DarkGray
-    Invoke-XmipGit -At $At -Arguments @('push', 'origin', 'main', '--quiet') | Out-Null
+    Push-XmipMain -At $At
 
     return $staged
 }
