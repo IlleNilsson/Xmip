@@ -46,7 +46,7 @@ BeforeAll {
             'Test-XmipCodeChange.ps1',
             'Get-XmipNewModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipMeasuredProgram.ps1', 'Test-XmipDotnetModule.ps1',
-            'Invoke-XmipCargoTest.ps1',
+            'Invoke-XmipTool.ps1',
             'Submit-XmipModule.ps1',
             'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
@@ -384,14 +384,14 @@ path = "tests/measured/main.rs"
         [string] $program = Get-Content -Raw -LiteralPath (
             Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
 
-        [int] $features = $module.IndexOf('Invoke-XmipCargoTest -Argument $withFeatures')
+        [int] $features = $module.IndexOf('Invoke-XmipTool -Tool cargo -Argument $withFeatures')
         [int] $measured = $module.IndexOf('$passed = Test-XmipMeasuredProgram @measured')
 
         $features | Should -BeGreaterThan 0
         $measured | Should -BeGreaterThan $features
         $module | Should -Match 'CheckOnly    = \$true'
         $program | Should -Match '--test-threads=1'
-        $program | Should -Match 'cargo clippy @Through --test \$program'
+        $program | Should -Match 'Invoke-XmipTool -Tool cargo -Argument \$linting'
     }
 }
 
@@ -402,7 +402,7 @@ Describe 'A test that never ends fails the landing in a minute' {
     It 'stops the run at libtest''s first word of a test running a minute, and names it' {
         InModuleScope Xmip {
             Mock Write-Host { }
-            Mock Stop-XmipCargoRun { }
+            Mock Stop-XmipToolRun { }
             Mock cargo {
                 'test a::passes ... ok'
                 'test b::waits has been running for over 60 seconds'
@@ -410,8 +410,8 @@ Describe 'A test that never ends fails the landing in a minute' {
                 $global:LASTEXITCODE = 0
             }
 
-            Invoke-XmipCargoTest -Argument @() | Should -BeFalse
-            Should -Invoke Stop-XmipCargoRun -Times 1 -Exactly
+            (Invoke-XmipTool -Tool cargo -Argument @('test')).Passed | Should -BeFalse
+            Should -Invoke Stop-XmipToolRun -Times 1 -Exactly
             Should -Invoke Write-Host -ParameterFilter {
                 "$Object" -like '*FAILED. b::waits ran a minute*'
             }
@@ -421,25 +421,67 @@ Describe 'A test that never ends fails the landing in a minute' {
     It 'passes a run whose tests all end, and stops nothing' {
         InModuleScope Xmip {
             Mock Write-Host { }
-            Mock Stop-XmipCargoRun { }
+            Mock Stop-XmipToolRun { }
             Mock cargo {
                 'test a::passes ... ok'
                 $global:LASTEXITCODE = 0
             }
 
-            Invoke-XmipCargoTest -Argument @() | Should -BeTrue
-            Should -Invoke Stop-XmipCargoRun -Times 0 -Exactly
+            (Invoke-XmipTool -Tool cargo -Argument @('test')).Passed | Should -BeTrue
+            Should -Invoke Stop-XmipToolRun -Times 0 -Exactly
+        }
+    }
+}
+
+Describe 'Every cargo and dotnet the module runs takes twelve of the machine, set in one place' {
+    # The owner, 2026-11-02: cargo -j 12, test threads 12, dotnet -m:12.
+
+    It 'gives cargo twelve jobs and twelve test threads for the call, and puts them back after' {
+        InModuleScope Xmip {
+            Mock Write-Host { }
+            $env:CARGO_BUILD_JOBS = $null
+            $env:RUST_TEST_THREADS = $null
+            Mock cargo {
+                "jobs=$env:CARGO_BUILD_JOBS threads=$env:RUST_TEST_THREADS"
+                $global:LASTEXITCODE = 0
+            }
+
+            (Invoke-XmipTool -Tool cargo -Argument @('build') -Output Keep).Said |
+                Should -Be 'jobs=12 threads=12'
+            $env:CARGO_BUILD_JOBS | Should -BeNullOrEmpty
+            $env:RUST_TEST_THREADS | Should -BeNullOrEmpty
         }
     }
 
-    It 'runs every cargo test of a landing through it' {
-        [string] $module = Get-Content -Raw -LiteralPath (
-            Join-Path $script:ModuleRoot 'Test-XmipModule.ps1')
-        [string] $program = Get-Content -Raw -LiteralPath (
-            Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
+    It 'gives a dotnet build or test twelve nodes, and leaves other subcommands alone' {
+        InModuleScope Xmip {
+            Mock dotnet {
+                $args -join ' '
+                $global:LASTEXITCODE = 0
+            }
 
-        "$module`n$program" | Should -Not -Match '& cargo test'
-        $module | Should -Match 'Invoke-XmipCargoTest -Argument \$through'
+            (Invoke-XmipTool -Tool dotnet -Argument @('test', 'x.csproj') -Output Keep).Said |
+                Should -Be 'test x.csproj -m:12'
+            (Invoke-XmipTool -Tool dotnet -Argument @('--version') -Output Keep).Said |
+                Should -Be '--version'
+        }
+    }
+
+    It 'says a failed call failed' {
+        InModuleScope Xmip {
+            Mock cargo { $global:LASTEXITCODE = 101 }
+
+            (Invoke-XmipTool -Tool cargo -Argument @('build') -Output None).Passed | Should -BeFalse
+        }
+    }
+
+    It 'is the only place in the module that runs cargo or dotnet' {
+        [string[]] $calling = @(Get-ChildItem -LiteralPath $script:ModuleRoot -Filter '*.ps1' |
+            Where-Object { $_.Name -ne 'Invoke-XmipTool.ps1' } |
+            Select-String -Pattern '^\s*[^#]*&\s*(cargo|dotnet)\b' |
+            ForEach-Object { "$($_.Filename):$($_.LineNumber)" })
+
+        $calling | Should -BeNullOrEmpty
     }
 }
 
@@ -929,13 +971,13 @@ Describe 'The dependency tree verifies whole before anything lands' {
             Join-Path $script:ModuleRoot 'Test-XmipChangeTree.ps1')
 
         foreach ($call in 'Test-XmipModule @verify', 'Test-XmipModule @service',
-            'cargo build --config') {
+            "Invoke-XmipTool -Tool cargo -Argument @('build', '--config'") {
             [int] $at = $tree.IndexOf($call)
             $at | Should -BeGreaterThan 0
             [string] $before = $tree.Substring(0, $at)
             [int] $clear = $before.LastIndexOf('Clear-XmipUnhashedLibrary -TargetDirectory')
             $clear | Should -BeGreaterThan 0
-            $before.Substring($clear) | Should -Not -Match '& cargo|Test-XmipModule @'
+            $before.Substring($clear) | Should -Not -Match 'Invoke-XmipTool|Test-XmipModule @'
         }
     }
 

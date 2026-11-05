@@ -86,9 +86,6 @@ function Test-XmipExtensionShell {
 # (xmip-core-abi's, ADR-0065).
 [string] $script:XmipEventBinding = 'verify-event-bindings.ps1'
 
-# The most MSBuild nodes a landing's dotnet build or test runs at once, given
-# as -m: to each.
-[int] $script:XmipDotnetNodes = 4
 
 
 function Test-XmipEventBinding {
@@ -208,14 +205,10 @@ function Test-XmipDotnetModule {
             [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
 
             [string[]] $building = @(
-                'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo',
-                "-m:$script:XmipDotnetNodes"
+                'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo'
             )
 
-            & dotnet @building 2>&1 |
-                ForEach-Object { Write-Host $_ }
-
-            if ($LASTEXITCODE -ne 0) {
+            if (-not (Invoke-XmipTool -Tool dotnet -Argument $building).Passed) {
                 return $false
             }
         }
@@ -232,15 +225,9 @@ function Test-XmipDotnetModule {
     foreach ($csproj in $suite) {
         Write-Host "   dotnet test $($csproj.Name)..." -ForegroundColor DarkGray
 
-        [string[]] $testing = @(
-            'test', $csproj.FullName, '--verbosity', 'quiet', '--nologo',
-            "-m:$script:XmipDotnetNodes"
-        )
+        [string[]] $testing = @('test', $csproj.FullName, '--verbosity', 'quiet', '--nologo')
 
-        & dotnet @testing 2>&1 |
-            ForEach-Object { Write-Host $_ }
-
-        if ($LASTEXITCODE -ne 0) {
+        if (-not (Invoke-XmipTool -Tool dotnet -Argument $testing).Passed) {
             return $false
         }
     }

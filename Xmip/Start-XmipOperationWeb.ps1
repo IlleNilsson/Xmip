@@ -343,10 +343,11 @@ function Start-XmipOperationWeb {
             return
         }
 
-        [string[]] $said = @(& dotnet build $project --verbosity quiet --nologo 2>&1)
+        [string[]] $building = @('build', $project, '--verbosity', 'quiet', '--nologo')
+        [pscustomobject] $built = Invoke-XmipTool -Tool dotnet -Argument $building -Output Keep
 
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "REFUSED. The web host did not build:`n$($said -join "`n")"
+        if (-not $built.Passed) {
+            Write-Error "REFUSED. The web host did not build:`n$($built.Said -join "`n")"
             return
         }
 

@@ -79,10 +79,10 @@ function Test-XmipMeasuredProgram {
     }
 
     Write-Host "   checking lints of $program..." -ForegroundColor DarkGray
-    & cargo clippy @Through --test $program @withFeatures -- -D warnings 2>&1 |
-        ForEach-Object { Write-Host $_ }
+    [string[]] $linting = @('clippy') + $Through + '--test' + $program + $withFeatures +
+        '--' + '-D' + 'warnings'
 
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Invoke-XmipTool -Tool cargo -Argument $linting).Passed) {
         Write-Host "   FAILED lints. Run: cargo clippy --test $program" -ForegroundColor Red
         return $false
     }
@@ -92,10 +92,10 @@ function Test-XmipMeasuredProgram {
     }
 
     Write-Host "   timing, $program alone, one test at a time..." -ForegroundColor DarkGray
-    [string[]] $alone = $Through + '--test' + $program + $withFeatures + '--' +
+    [string[]] $alone = @('test') + $Through + '--test' + $program + $withFeatures + '--' +
         '--test-threads=1'
 
-    Invoke-XmipCargoTest -Argument $alone
+    (Invoke-XmipTool -Tool cargo -Argument $alone).Passed
 }
 
 

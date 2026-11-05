@@ -280,7 +280,7 @@ function Assert-XmipModuleCurrent {
 . (Join-Path $PSScriptRoot 'Test-XmipCodeChange.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipNewModule.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipModule.ps1')
-. (Join-Path $PSScriptRoot 'Invoke-XmipCargoTest.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-XmipTool.ps1')
 . (Join-Path $PSScriptRoot 'Test-XmipMeasuredProgram.ps1')
 . (Join-Path $PSScriptRoot 'Get-XmipEstateCrate.ps1')
 . (Join-Path $PSScriptRoot 'New-XmipLocalPatch.ps1')

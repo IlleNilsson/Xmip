@@ -324,10 +324,8 @@ function Invoke-XmipServiceBuild {
     Push-Location -LiteralPath $Root
 
     try {
-        & cargo @Argument 2>&1 | ForEach-Object { Write-Host "     cargo| $_" }
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "FAILED: cargo $($Argument -join ' ') exited $LASTEXITCODE."
+        if (-not (Invoke-XmipTool -Tool cargo -Argument $Argument -Prefix '     cargo| ').Passed) {
+            throw "FAILED: cargo $($Argument -join ' ')."
         }
     }
     finally {

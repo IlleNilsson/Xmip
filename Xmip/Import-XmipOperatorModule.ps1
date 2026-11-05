@@ -274,12 +274,12 @@ function Build-XmipOperatorModule {
     [string] $id = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
     [string] $staging = "$Output.build-$id"
     [string[]] $building = @(
-        'build', $project, '--output', $staging, '--verbosity', 'quiet', '--nologo',
-        "-m:$script:XmipDotnetNodes"
+        'build', $project, '--output', $staging, '--verbosity', 'quiet', '--nologo'
     )
-    [string[]] $said = @(& dotnet @building 2>&1)
+    [pscustomobject] $built = Invoke-XmipTool -Tool dotnet -Argument $building -Output Keep
+    [string[]] $said = $built.Said
 
-    if ($LASTEXITCODE -ne 0) {
+    if (-not $built.Passed) {
         Remove-Item -LiteralPath $staging -Recurse -Force -ErrorAction SilentlyContinue
         throw ("The operator module did not build, and Xmip reads capabilities and " +
             "snapshots through it. Run: dotnet build $project`n$($said -join "`n")")
