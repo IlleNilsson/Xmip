@@ -36,23 +36,23 @@ Xmip is being developed for organizations that need dependable messaging \
 and integration under their own control.\
 """
 start = 0
-duration = 8.35
+duration = 7.425
 
 [[scene.caption]]
 text = """\
 It carries forward familiar integration concepts while putting deployment \
 and data under organizational control.\
 """
-start = 8.53
-duration = 8.425
+start = 7.605
+duration = 7.5
 
 [[scene.caption]]
 text = """\
 Its central promise is accountability: once a message is accepted, its \
 journey and outcome give operators evidence they can act on.\
 """
-start = 17.135
-duration = 9.95
+start = 15.285
+duration = 8.9
 
 [[scene]]
 file = "scene-03.wav"
@@ -84,23 +84,23 @@ file = "scene-04.wav"
 [[scene.caption]]
 text = "For a CIO, Xmip keeps infrastructure decisions within the organization."
 start = 0
-duration = 5.7
+duration = 5.2
 
 [[scene.caption]]
 text = """\
 Nodes can be placed close to systems, at remote sites or on chosen hosting \
 infrastructure.\
 """
-start = 5.88
-duration = 7.225
+start = 5.38
+duration = 6.4
 
 [[scene.caption]]
 text = """\
 Open implementation and recorded architecture make it possible to assess \
 the platform and understand how it evolves.\
 """
-start = 13.285
-duration = 8.9
+start = 11.96
+duration = 7.9
 
 [[scene]]
 file = "scene-05.wav"
@@ -142,25 +142,25 @@ file = "scene-06.wav"
 [[scene.caption]]
 text = "Acceptance is the handover of responsibility."
 start = 0
-duration = 3.975
+duration = 3.275
 
 [[scene.caption]]
 text = "Before it, the sender owns the stream."
-start = 4.155
-duration = 3.05
+start = 3.455
+duration = 2.575
 
 [[scene.caption]]
 text = "After it, Xmip persists a message and records its progress."
-start = 7.385
-duration = 4.625
+start = 6.21
+duration = 3.925
 
 [[scene.caption]]
 text = """\
 Keeping refusal distinct from a later delivery failure helps both \
 organizations understand which side should act next.\
 """
-start = 12.19
-duration = 8.525
+start = 10.315
+duration = 7.975
 
 [[scene]]
 file = "scene-07.wav"
@@ -192,28 +192,28 @@ file = "scene-08.wav"
 [[scene.caption]]
 text = "Recovery starts with the outcome."
 start = 0
-duration = 2.775
+duration = 2.25
 
 [[scene.caption]]
 text = "A routing issue calls for correction and replay."
-start = 2.955
-duration = 3.7
+start = 2.43
+duration = 3.15
 
 [[scene.caption]]
 text = """\
 A failed delivery calls for investigation and retry, or an intentional \
 dismissal.\
 """
-start = 6.835
-duration = 6.95
+start = 5.76
+duration = 6.325
 
 [[scene.caption]]
 text = """\
 Xmip keeps those actions distinct, while configured attempts and backoff \
 handle repeated delivery attempts.\
 """
-start = 13.965
-duration = 7.625
+start = 12.265
+duration = 7.075
 
 [[scene]]
 file = "scene-09.wav"
@@ -243,12 +243,12 @@ file = "scene-10.wav"
 [[scene.caption]]
 text = "Configuration in Visual Studio Code is a flex moment."
 start = 0
-duration = 4.875
+duration = 4.15
 
 [[scene.caption]]
 text = "Text editing and graphical designers work with the same configuration."
-start = 5.055
-duration = 5.5
+start = 4.33
+duration = 4.9
 
 [[scene.caption]]
 text = """\
@@ -256,8 +256,8 @@ Completion, validation and reference-aware renaming help developers make \
 consistent changes, while Xmip’s language server supplies the rules behind \
 the design.\
 """
-start = 10.735
-duration = 11.85
+start = 9.41
+duration = 10.6
 
 [[scene]]
 file = "scene-11.wav"
@@ -265,28 +265,28 @@ file = "scene-11.wav"
 [[scene.caption]]
 text = "TOML is another flex moment."
 start = 0
-duration = 3
+duration = 2.35
 
 [[scene.caption]]
 text = """\
 Xmip configuration stays in readable text that teams can version, compare \
 and review.\
 """
-start = 3.18
-duration = 6.575
+start = 2.53
+duration = 6.125
 
 [[scene.caption]]
 text = "The designer works with that same source."
-start = 9.935
-duration = 3.075
+start = 8.835
+duration = 2.525
 
 [[scene.caption]]
 text = """\
 This makes configuration an engineering artifact the team can understand \
 and maintain together.\
 """
-start = 13.19
-duration = 7.275
+start = 11.54
+duration = 6.55
 
 [[scene]]
 file = "scene-12.wav"
@@ -326,31 +326,31 @@ Xmip separates how data travels, how it is represented, and what the \
 integration does with it.\
 """
 start = 0
-duration = 7.075
+duration = 6.3
 
 [[scene.caption]]
 text = """\
 Contracts define acceptance rules, while processing expresses business \
 flow.\
 """
-start = 7.255
-duration = 6
+start = 6.48
+duration = 5.35
 
 [[scene.caption]]
 text = """\
 Providers extend individual capabilities through explicit interfaces and a \
 versioned C boundary.\
 """
-start = 13.435
-duration = 7.625
+start = 12.01
+duration = 6.825
 
 [[scene.caption]]
 text = """\
 That modular architecture lets the platform evolve without treating every \
 change as a replacement.\
 """
-start = 21.24
-duration = 7.6
+start = 19.015
+duration = 6.55
 
 [[scene]]
 file = "scene-14.wav"
@@ -387,23 +387,23 @@ file = "scene-15.wav"
 [[scene.caption]]
 text = "Trust is explicit at Xmip’s boundaries."
 start = 0
-duration = 3.325
+duration = 2.7
 
 [[scene.caption]]
 text = """\
 Parties carry identities, receive locations define what they accept, and \
 outbound exchanges use their own identity.\
 """
-start = 3.505
-duration = 9.375
+start = 2.88
+duration = 8.3
 
 [[scene.caption]]
 text = """\
 Certificate authentication, protected storage connections and encrypted \
 embedded data give that architecture concrete foundations.\
 """
-start = 13.06
-duration = 10
+start = 11.36
+duration = 8.875
 
 [[scene]]
 file = "scene-16.wav"
@@ -435,23 +435,23 @@ file = "scene-17.wav"
 [[scene.caption]]
 text = "A deployment is a composition of roles and capabilities."
 start = 0
-duration = 4.65
+duration = 4.1
 
 [[scene.caption]]
 text = """\
 Executing brings the message stages together in one process, while other \
 roles serve storage, observation and operation.\
 """
-start = 4.83
-duration = 9.075
+start = 4.28
+duration = 8.55
 
 [[scene.caption]]
 text = """\
 Site builds select the target and technologies; configuration determines \
 what the node starts.\
 """
-start = 14.085
-duration = 7.075
+start = 13.01
+duration = 6.45
 
 [[scene]]
 file = "scene-18.wav"
@@ -515,20 +515,20 @@ Operators can choose a command line, PowerShell, desktop or web interface \
 without learning a different platform model.\
 """
 start = 0
-duration = 8.825
+duration = 7.825
 
 [[scene.caption]]
 text = "The same scopes and meanings guide investigation."
-start = 9.005
-duration = 3.975
+start = 8.005
+duration = 3.2
 
 [[scene.caption]]
 text = """\
 Automation and visual inspection become different ways to work with the \
 same operational evidence.\
 """
-start = 13.16
-duration = 7.35
+start = 11.385
+duration = 6.55
 
 [[scene]]
 file = "scene-21.wav"
@@ -565,20 +565,20 @@ file = "scene-22.wav"
 [[scene.caption]]
 text = "Health should tell an operator where to look and what to do."
 start = 0
-duration = 4.15
+duration = 3.475
 
 [[scene.caption]]
 text = "Xmip uses named conditions and scope navigation."
-start = 4.33
-duration = 4.425
+start = 3.655
+duration = 3.65
 
 [[scene.caption]]
 text = """\
 A parent holding points into its children, where the affected resource and \
 its reason help distinguish a deliberate pause from strain or failure.\
 """
-start = 8.935
-duration = 9.9
+start = 7.485
+duration = 9.225
 
 [[scene]]
 file = "scene-23.wav"
@@ -613,23 +613,23 @@ file = "scene-24.wav"
 [[scene.caption]]
 text = "Xmip also exposes read-only access through the Model Context Protocol."
 start = 0
-duration = 6.275
+duration = 5.275
 
 [[scene.caption]]
 text = """\
 Clients can inspect health, measurements, audit and journeys through tools \
 and scoped resources.\
 """
-start = 6.455
-duration = 6.85
+start = 5.455
+duration = 6.05
 
 [[scene.caption]]
 text = """\
 The behavior follows the command line, and each answer is audited, keeping \
 observation connected to established operational controls.\
 """
-start = 13.485
-duration = 9.875
+start = 11.685
+duration = 8.825
 
 [[scene]]
 file = "scene-25.wav"
@@ -675,23 +675,23 @@ The engineering approach connects decisions to implementation and \
 verification.\
 """
 start = 0
-duration = 5.975
+duration = 5.35
 
 [[scene.caption]]
 text = """\
 Capability boundaries make ownership clear, while the Essentials and test \
 harnesses exercise behavior and expose evidence.\
 """
-start = 6.155
-duration = 9.025
+start = 5.53
+duration = 8.275
 
 [[scene.caption]]
 text = """\
 For the project team, progress means a demonstrated flow and reproducible \
 results, alongside the design.\
 """
-start = 15.36
-duration = 8.2
+start = 13.985
+duration = 7.575
 
 [[scene]]
 file = "scene-27.wav"
