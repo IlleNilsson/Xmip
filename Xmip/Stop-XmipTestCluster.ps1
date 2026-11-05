@@ -56,8 +56,7 @@ function Stop-XmipTestCluster {
     )
 
     foreach ($process in $clusters) {
-        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-        Wait-Process -Id $process.Id -Timeout 5 -ErrorAction SilentlyContinue
+        Stop-XmipProcess -Id $process.Id -ErrorAction SilentlyContinue
         Write-Verbose "stopped cluster $($process.Id) of roll $Parent"
     }
 
@@ -79,8 +78,7 @@ function Stop-XmipTestCluster {
             continue
         }
 
-        Stop-Process -Id ([int] $id) -Force -ErrorAction SilentlyContinue
-        Wait-Process -Id ([int] $id) -Timeout 5 -ErrorAction SilentlyContinue
+        Stop-XmipProcess -Id ([int] $id) -ErrorAction SilentlyContinue
         Write-Verbose "stopped $($said['name']) $id, declared in cluster $Cluster"
     }
 }

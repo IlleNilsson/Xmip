@@ -1473,16 +1473,15 @@ Describe 'A stopped roll leaves no node of its cluster running' {
                 }
             }
             Mock Get-XmipEssentialsProcess { }
-            Mock Wait-Process { }
-            Mock Stop-Process { }
+            Mock Stop-XmipProcess { }
             Mock Read-XmipProcessDeclaration { $declared }
 
             Stop-XmipTestCluster -Parent 4242 -Cluster $c
 
-            Should -Invoke Stop-Process -Times 1 -Exactly -ParameterFilter { $Id -eq 4243 }
-            Should -Invoke Stop-Process -Times 1 -Exactly -ParameterFilter { $Id -eq 4244 }
-            Should -Invoke Stop-Process -Times 0 -Exactly -ParameterFilter { $Id -eq 4245 }
-            Should -Invoke Stop-Process -Times 0 -Exactly -ParameterFilter { $Id -eq 4242 }
+            Should -Invoke Stop-XmipProcess -Times 1 -Exactly -ParameterFilter { $Id -eq 4243 }
+            Should -Invoke Stop-XmipProcess -Times 1 -Exactly -ParameterFilter { $Id -eq 4244 }
+            Should -Invoke Stop-XmipProcess -Times 0 -Exactly -ParameterFilter { $Id -eq 4245 }
+            Should -Invoke Stop-XmipProcess -Times 0 -Exactly -ParameterFilter { $Id -eq 4242 }
         }
     }
 

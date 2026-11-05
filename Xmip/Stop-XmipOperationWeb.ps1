@@ -74,7 +74,7 @@ function Stop-XmipOperationWeb {
             }
 
             if ($PSCmdlet.ShouldProcess("web monitor at $($found.Url) (pid $number)", 'Stop')) {
-                Stop-Process -Id $number -Force -ErrorAction SilentlyContinue
+                Stop-XmipProcess -Id $number -ErrorAction SilentlyContinue
                 Write-XmipAudit -Action 'Stop-XmipOperationWeb' -Phase Finished -Property @{
                     Id  = $number
                     Url = $found.Url
