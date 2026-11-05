@@ -64,3 +64,15 @@ from = "xmip-logo.png"
 copy = "module/core/operation/gui/src/Xmip.Gui/wwwroot/xmip-logo.png"
 in = "module/core/operation/gui/src/Xmip.Gui/Components/TopNav.razor"
 names = "_content/Xmip.Gui/xmip-logo.png"
+
+[[surface]]
+name = "The project PowerPoint"
+from = "xmip-logo.png"
+in = "asset/presentation/tools/render-slides.mjs"
+names = "asset/brand/xmip-logo.png"
+
+[[surface]]
+name = "The project video"
+from = "xmip-logo.png"
+in = "asset/presentation/tools/render-video.mjs"
+names = "asset/brand/xmip-logo.png"

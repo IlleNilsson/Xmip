@@ -1,0 +1,1246 @@
+# Shared editorial source for both formats; TOML inside.
+version = 1
+language = "en"
+pronunciation = "Smip"
+brand_lime = "#75c93b"
+
+[[section]]
+title = "Xmip"
+headline = "Messaging and integration\nUnder your control"
+screen = "Messaging and integration\nFor leaders, developers and operators"
+voice = "female"
+power = "both"
+narration = """\
+Welcome to Xmip, an open-source messaging and integration platform written \
+in Rust. It is on premises first and cloud installable, so organizations \
+choose where their integration runs. This is the Xmip project story: what \
+it connects, how it records responsibility, and how people design and \
+operate it.\
+"""
+sources = [
+  "README.md",
+  "CONTRIBUTING.md"
+]
+note = "Xmip Continuum · Project overview"
+layout = [
+  "cover",
+  "Messaging and integration\nUnder your control"
+]
+
+[[section]]
+title = "Xmip’s purpose"
+headline = "Messaging and integration\nIn your own estate"
+screen = """\
+On-premises first\nCloud-installable\nFamiliar integration concepts, \
+modular foundations\
+"""
+voice = "male"
+power = false
+narration = """\
+Xmip is being developed for organizations that need dependable messaging \
+and integration under their own control. It carries forward familiar \
+integration concepts while putting deployment and data under \
+organizational control. Its central promise is accountability: once a \
+message is accepted, its journey and outcome give operators evidence they \
+can act on.\
+"""
+sources = [
+  "README.md",
+  "doc/planning/market-position.md"
+]
+note = ""
+layout = [
+  "three",
+  "Xmip’s purpose",
+  [
+    [
+      "Organizational control",
+      "On premises first",
+      """\
+Connect systems in your own estate, with cloud installation when you \
+choose.\
+"""
+    ],
+    [
+      "Integration continuity",
+      "Familiar concepts",
+      """\
+Receive Locations, Send Ports and Work Processes carry integration \
+knowledge forward.\
+"""
+    ],
+    [
+      "Accountability",
+      "Keep the evidence",
+      """\
+Accepted Messages, their Journeys and recorded outcomes make failures \
+investigable.\
+"""
+    ]
+  ],
+  """\
+Open-source Rust platform. No hosted control-plane dependency. Offline \
+operation by design.\
+"""
+]
+
+[[section]]
+title = "For the CEO"
+headline = "Business continuity and freedom to choose"
+screen = """\
+Understand the business exchange\nKeep deployment choices open\nEvaluate \
+value in a real flow\
+"""
+voice = "female"
+power = false
+narration = """\
+For a CEO, the question is what happens to the business when a system \
+exchange stops. Xmip focuses on accountable outcomes, recovery and \
+organizational choice. A practical evaluation connects those principles to \
+a real process, its owner and its business impact.\
+"""
+sources = [
+  "README.md"
+]
+note = ""
+layout = [
+  "split",
+  "For the CEO",
+  [
+    [
+      "Business continuity",
+      "Keep the exchange moving",
+      """\
+Understand an interruption, identify responsibility and recover the \
+business flow.\
+"""
+    ],
+    [
+      "Freedom to choose",
+      "Keep your options open",
+      """\
+Control deployment and assess an open implementation against your \
+organization’s needs.\
+"""
+    ]
+  ],
+  "Evaluate value through one real exchange and its business owner."
+]
+
+[[section]]
+title = "For the CIO"
+headline = "Control of infrastructure and data"
+screen = """\
+Choose where integration runs\nReview source and architecture\nKeep \
+infrastructure decisions in-house\
+"""
+voice = "male"
+power = false
+narration = """\
+For a CIO, Xmip keeps infrastructure decisions within the organization. \
+Nodes can be placed close to systems, at remote sites or on chosen hosting \
+infrastructure. Open implementation and recorded architecture make it \
+possible to assess the platform and understand how it evolves.\
+"""
+sources = [
+  "README.md",
+  "doc/architecture/deployment-model.md"
+]
+note = ""
+layout = [
+  "three",
+  "For the CIO",
+  [
+    [
+      "Placement",
+      "Choose the infrastructure",
+      "On premises, at an edge site or on hosting you select."
+    ],
+    [
+      "Control",
+      "Keep the control plane",
+      "Xmip’s architecture avoids dependence on a hosted control plane."
+    ],
+    [
+      "Stewardship",
+      "Review the implementation",
+      """\
+Source, interface contracts and recorded decisions support technical \
+assessment.\
+"""
+    ]
+  ]
+]
+
+[[section]]
+title = "An order through Xmip"
+headline = "One business exchange, visible responsibility"
+screen = """\
+Sales system → Receive Location\nMessage → Subscription → Journey\nSend \
+Location → Warehouse\
+"""
+voice = "female"
+power = false
+narration = """\
+Consider an illustrative order travelling from a sales system to a \
+warehouse. A Receive Location accepts the stream, and Xmip persists a \
+message. Matching subscriptions open journeys to the destinations that \
+want it. A Send Location attempts delivery to the warehouse. That journey \
+gives an interrupted exchange a place and an outcome to investigate.\
+"""
+sources = [
+  "README.md",
+  "doc/terminology.md"
+]
+note = "Illustrative business flow"
+layout = [
+  "journey",
+  "An order through Xmip",
+  [
+    [
+      "01",
+      "Receive",
+      "A sales system hands a Stream to a Receive Location."
+    ],
+    [
+      "02",
+      "Accept and route",
+      "Xmip persists a Message. Matching Subscriptions open Journeys."
+    ],
+    [
+      "03",
+      "Deliver",
+      "A Send Location carries the order to the warehouse."
+    ]
+  ],
+  """\
+Illustrative order flow. Each destination has a Journey with its own \
+progress and outcome.\
+"""
+]
+
+[[section]]
+title = "Acceptance and accountability"
+headline = "A clear handover of responsibility"
+screen = """\
+Before acceptance: sender responsibility\nAfter acceptance: a persisted \
+Message\nRefusal and failure remain distinct\
+"""
+voice = "male"
+power = false
+narration = """\
+Acceptance is the handover of responsibility. Before it, the sender owns \
+the stream. After it, Xmip persists a message and records its progress. \
+Keeping refusal distinct from a later delivery failure helps both \
+organizations understand which side should act next.\
+"""
+sources = [
+  "README.md",
+  "doc/architecture/estate-map.md"
+]
+note = ""
+layout = [
+  "split",
+  "The acceptance boundary",
+  [
+    [
+      "Before acceptance",
+      "Sender responsibility",
+      """\
+The Stream belongs to its sender. A refused arrival has not become Xmip’s \
+responsibility.\
+"""
+    ],
+    [
+      "After acceptance",
+      "Persisted Message",
+      """\
+Xmip records the accepted content and its progress through the platform.\
+"""
+    ]
+  ],
+  "A refusal and a later delivery failure call for different actions."
+]
+
+[[section]]
+title = "Subscriptions and routing"
+headline = "Publish once, match each destination"
+screen = """\
+Context values select destinations\nOne Journey per matching \
+Subscription\nPause, hold and resume deliberately\
+"""
+voice = "female"
+power = false
+narration = """\
+A subscription expresses which messages a destination wants. Each match \
+opens a journey, while an unmatched message remains available for replay. \
+Operators can pause a subscription without discarding its work, then \
+resume the held messages in the order they arrived.\
+"""
+sources = [
+  "doc/architecture/estate-map.md",
+  "doc/decision/ADR-0013-journey-model.md"
+]
+note = ""
+layout = [
+  "rows",
+  "Subscriptions and routing",
+  [
+    [
+      "Match",
+      """\
+Context values select a Send Port, Send Port Group or Work Process. Each \
+match opens a Journey.\
+"""
+    ],
+    [
+      "Hold",
+      """\
+A paused Subscription keeps matching work. Resume picks it up oldest \
+first.\
+"""
+    ],
+    [
+      "Replay",
+      """\
+An unmatched Message remains in the Dead Message Queue until routing is \
+corrected and it is replayed.\
+"""
+    ]
+  ]
+]
+
+[[section]]
+title = "Recovery and delivery"
+headline = "An outcome you can act on"
+screen = """\
+Completed, Failed or Dismissed\nConfigured retry and backoff\nReplay \
+routing issues; retry delivery failures\
+"""
+voice = "male"
+power = false
+narration = """\
+Recovery starts with the outcome. A routing issue calls for correction and \
+replay. A failed delivery calls for investigation and retry, or an \
+intentional dismissal. Xmip keeps those actions distinct, while configured \
+attempts and backoff handle repeated delivery attempts.\
+"""
+sources = [
+  "doc/architecture/estate-map.md",
+  "doc/decision/ADR-0013-journey-model.md"
+]
+note = ""
+layout = [
+  "rows",
+  "Recovery follows the outcome",
+  [
+    [
+      "Unmatched",
+      "Correct the routing, then replay the Message."
+    ],
+    [
+      "Failed delivery",
+      """\
+Inspect the Journey and retry, following configured attempts and backoff.\
+"""
+    ],
+    [
+      "Deliberate stop",
+      """\
+Dismiss intentionally. Completed, Failed and Dismissed remain distinct \
+outcomes.\
+"""
+    ]
+  ]
+]
+
+[[section]]
+title = "Applications and bindings"
+headline = "Design the integration once"
+screen = """\
+Application: integration intent\nBinding: placement and addresses\nOne \
+design across deployment environments\
+"""
+voice = "female"
+power = false
+narration = """\
+An Xmip Application describes the integration itself. A binding places \
+that application on a node and supplies its environment. This separation \
+lets developers reason about the business exchange while deployment \
+choices determine which systems, addresses and machines participate.\
+"""
+sources = [
+  "doc/decision/ADR-0064-developers-design-in-vs-code.md"
+]
+note = ""
+layout = [
+  "split",
+  "Application and binding",
+  [
+    [
+      "Application",
+      "What the integration does",
+      """\
+Receive Ports, Subscriptions, Send Ports and Work Processes describe the \
+exchange.\
+"""
+    ],
+    [
+      "Binding",
+      "Where it runs",
+      """\
+A node selects the Application and supplies its deployment context and \
+addresses.\
+"""
+    ]
+  ],
+  "The integration’s intent stays separate from its machines and endpoints."
+]
+
+[[section]]
+title = "Configuration in VS Code"
+headline = "Design where developers already work"
+screen = """\
+Text and graphical design share one file\nCompletion, validation and \
+reference-aware rename\nRules come from Xmip’s language server\
+"""
+voice = "male"
+power = true
+narration = """\
+Configuration in Visual Studio Code is a flex moment. Text editing and \
+graphical designers work with the same configuration. Completion, \
+validation and reference-aware renaming help developers make consistent \
+changes, while Xmip’s language server supplies the rules behind the \
+design.\
+"""
+sources = [
+  "doc/decision/ADR-0064-developers-design-in-vs-code.md"
+]
+note = ""
+layout = [
+  "feature",
+  "Configuration\nin VS Code",
+  [
+    [
+      "One source",
+      "Text editing and graphical design share cluster.xmip."
+    ],
+    [
+      "Helpful tools",
+      "Completion, validation, lookups and reference-aware renaming."
+    ],
+    [
+      "Shared rules",
+      "Xmip’s Rust language server owns the design rules."
+    ]
+  ]
+]
+
+[[section]]
+title = "TOML configuration"
+headline = "Configuration your team can review"
+screen = """\
+Readable TOML configuration\nVersion, compare and review changes\nText is \
+the shared source of design\
+"""
+voice = "male"
+power = true
+narration = """\
+TOML is another flex moment. Xmip configuration stays in readable text \
+that teams can version, compare and review. The designer works with that \
+same source. This makes configuration an engineering artifact the team can \
+understand and maintain together.\
+"""
+sources = [
+  "CONTRIBUTING.md",
+  "doc/decision/ADR-0064-developers-design-in-vs-code.md"
+]
+note = ""
+layout = [
+  "feature",
+  "Configuration\nyou can read",
+  [
+    [
+      "TOML throughout",
+      "Cluster settings, estate manifests and module settings."
+    ],
+    [
+      "Reviewable changes",
+      "Version configuration, compare changes and review intent."
+    ],
+    [
+      "One design",
+      "The graphical view remains connected to the same text."
+    ]
+  ]
+]
+
+[[section]]
+title = "Work Processes"
+headline = "Business flow with durable state"
+screen = """\
+Step-by-step business flow\nBPMN designs compile to Work Process \
+units\nExecution state belongs to the Ledger\
+"""
+voice = "female"
+power = false
+narration = """\
+Some exchanges need business steps as well as delivery. Xmip models these \
+as Work Processes, designed in BPMN and compiled into executable units. \
+Their state belongs to the ledger, so waiting work does not hold a thread. \
+Compilation and execution exist as components; connecting them into the \
+assembled service remains a project milestone.\
+"""
+sources = [
+  "doc/architecture/estate-map.md",
+  """\
+doc/decision/ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md\
+"""
+]
+note = "Components built; assembled-service integration ahead"
+layout = [
+  "journey",
+  "Work Processes",
+  [
+    [
+      "01",
+      "Define",
+      "Describe business steps in a BPMN design."
+    ],
+    [
+      "02",
+      "Compile",
+      "Turn the design into a Work Process unit."
+    ],
+    [
+      "03",
+      "Run and wait",
+      "Produce a Message, finish without one or wait for something named."
+    ]
+  ],
+  """\
+BPMN compilation and execution exist as components; integration into the \
+assembled service is a project milestone.\
+"""
+]
+
+[[section]]
+title = "A modular foundation"
+headline = "Independent capabilities, explicit boundaries"
+screen = """\
+Separate transport, content and processing\nVersioned C ABI at module \
+boundaries\nExtend the capability your system needs\
+"""
+voice = "male"
+power = false
+narration = """\
+Xmip separates how data travels, how it is represented, and what the \
+integration does with it. Contracts define acceptance rules, while \
+processing expresses business flow. Providers extend individual \
+capabilities through explicit interfaces and a versioned C boundary. That \
+modular architecture lets the platform evolve without treating every \
+change as a replacement.\
+"""
+sources = [
+  "doc/decision/ADR-0012-module-boundary.md",
+  "doc/decision/ADR-0010-contract-transport-repository-boundaries.md",
+  "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md"
+]
+note = ""
+layout = [
+  "three",
+  "Independent capabilities",
+  [
+    [
+      "Transport",
+      "How data travels",
+      "Move data without deciding what its content means."
+    ],
+    [
+      "Content and Contracts",
+      "What the data means",
+      """\
+Represent data and define acceptance rules independently of transport.\
+"""
+    ],
+    [
+      "Processing",
+      "What happens next",
+      """\
+Route Messages and express business flow through defined capabilities.\
+"""
+    ]
+  ],
+  "A versioned C ABI specifies module ownership, lifetimes and errors."
+]
+
+[[section]]
+title = "The technology estate"
+headline = "From business systems to the edge"
+screen = """\
+Files and file transfer\nWeb, brokers and databases\nIndustrial and edge \
+communication\
+"""
+voice = "female"
+power = false
+narration = """\
+Xmip’s technology estate spans file transfer, web communication, message \
+brokers, databases and industrial systems. SFTP, HTTP, AMQP, Kafka, \
+PostgreSQL and OPC UA are examples of that scope. A site build chooses the \
+technologies it needs. This is the estate’s breadth, with availability \
+depending on the capability and its integration into the service.\
+"""
+sources = [
+  "doc/architecture/estate-map.md"
+]
+note = "Technology estate; capability availability varies"
+layout = [
+  "catalog",
+  "Across the technology estate",
+  [
+    [
+      "Files and transfer",
+      "Files, SFTP"
+    ],
+    [
+      "Web communication",
+      "HTTP"
+    ],
+    [
+      "Message brokers",
+      "AMQP, Kafka"
+    ],
+    [
+      "Databases",
+      "PostgreSQL"
+    ],
+    [
+      "Industrial systems",
+      "OPC UA"
+    ],
+    [
+      "Independent content",
+      "Representation and Contracts"
+    ]
+  ],
+  """\
+Examples from the technology estate; a site build selects its \
+technologies. Availability varies by capability.\
+"""
+]
+
+[[section]]
+title = "Identity and security"
+headline = "Explicit trust at each boundary"
+screen = """\
+Parties and accepted identities\nIndependent inbound and outbound \
+identity\nMutual TLS and encrypted embedded storage\
+"""
+voice = "male"
+power = false
+narration = """\
+Trust is explicit at Xmip’s boundaries. Parties carry identities, receive \
+locations define what they accept, and outbound exchanges use their own \
+identity. Certificate authentication, protected storage connections and \
+encrypted embedded data give that architecture concrete foundations.\
+"""
+sources = [
+  "doc/decision/ADR-0019-identity-parties-and-direction.md",
+  "doc/architecture/estate-map.md",
+  "doc/decision/ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md"
+]
+note = ""
+layout = [
+  "split",
+  "Trust at the boundary",
+  [
+    [
+      "Inbound",
+      "Declare what is accepted",
+      """\
+Receive Locations name accepted mechanisms and Parties. A Party holds \
+identities for its exchanges.\
+"""
+    ],
+    [
+      "Outbound",
+      "Present the chosen identity",
+      "The security model gives Send Locations their own outward identity."
+    ]
+  ],
+  """\
+Working foundations include certificate authentication, mutual TLS for \
+Storage and encrypted embedded storage.\
+"""
+]
+
+[[section]]
+title = "Xmip Storage and the Ledger"
+headline = "Work belongs to the platform"
+screen = """\
+A shared persistence boundary\nEmbedded or remotely reached \
+Storage\nMessages, Journeys and pending work\
+"""
+voice = "female"
+power = false
+narration = """\
+Xmip Storage gives work a persistent home. A small deployment can host \
+storage within its own node, while other nodes reach it over mutual TLS. \
+The ledger holds messages, journeys and pending work, separate from \
+administration and audit concerns.\
+"""
+sources = [
+  "doc/architecture/deployment-model.md",
+  "doc/architecture/estate-map.md"
+]
+note = ""
+layout = [
+  "three",
+  "Storage with clear responsibilities",
+  [
+    [
+      "Runtime",
+      "The Ledger",
+      "Messages, Journeys and pending work."
+    ],
+    [
+      "Administration",
+      "The operating setup",
+      "Configuration and administrative state."
+    ],
+    [
+      "Audit",
+      "The recorded history",
+      "Actions and outcomes form a distinct data domain."
+    ]
+  ],
+  """\
+Xmip Storage is the persistence boundary. Use an embedded Storage node or \
+reach Storage over mutual TLS.\
+"""
+]
+
+[[section]]
+title = "Deployment and node roles"
+headline = "Compose the runtime for the site"
+screen = """\
+Select target, roles and technologies\nCombine stages in an Executing \
+node\nPlace storage and observation deliberately\
+"""
+voice = "male"
+power = false
+narration = """\
+A deployment is a composition of roles and capabilities. Executing brings \
+the message stages together in one process, while other roles serve \
+storage, observation and operation. Site builds select the target and \
+technologies; configuration determines what the node starts.\
+"""
+sources = [
+  "doc/architecture/deployment-model.md"
+]
+note = ""
+layout = [
+  "journey",
+  "A site’s runtime",
+  [
+    [
+      "01",
+      "Select the target",
+      "Choose the site’s platform and deployment footprint."
+    ],
+    [
+      "02",
+      "Select capabilities",
+      "Build the required roles and technologies into the runtime."
+    ],
+    [
+      "03",
+      "Configure the node",
+      "Start what the site needs from the capabilities the build contains."
+    ]
+  ],
+  """\
+Executing combines Receiving, Processing and Sending in one process. Other \
+roles cover operation, monitoring, development and Storage.\
+"""
+]
+
+[[section]]
+title = "Cross-OS working"
+headline = "One node model across your estate"
+screen = """\
+Architecture targets: Windows, Linux and macOS\nOne model; site-specific \
+roles and technologies\
+"""
+voice = "female"
+power = "both-power"
+narration = """\
+Cross-operating-system working is a shared flex moment. Xmip’s \
+architecture targets Windows, Linux and Mac computers with one integration \
+model. Site builds select the roles and technologies for a developer \
+machine, an edge gateway or a server. Packaging and validation progress \
+separately on each platform.\
+"""
+sources = [
+  "doc/architecture/deployment-model.md"
+]
+note = "Architecture targets; packaging and validation vary"
+layout = [
+  "feature-pair",
+  "One model\nAcross operating systems",
+  "Architecture targets: Windows, Linux and macOS",
+  """\
+One integration model for developer machines, edge gateways and \
+servers.\n\nSite builds select capabilities; packaging and validation vary \
+by platform.\
+"""
+]
+
+[[section]]
+title = "Offline by design"
+headline = "Internet access is a choice"
+screen = """\
+Prepare packages, deploy locally\nNo hosted control-plane \
+dependency\nExplicit online capability\
+"""
+voice = "female"
+power = false
+narration = """\
+Offline operation is part of Xmip’s design. Packages can be prepared where \
+dependencies are reachable, then brought into disconnected environments. \
+Internet access is an explicit capability, supporting sites where \
+connectivity is restricted, intermittent or deliberately absent.\
+"""
+sources = [
+  "doc/decision/ADR-0045-offline-is-the-default.md",
+  "README.md"
+]
+note = ""
+layout = [
+  "journey",
+  "Offline by design",
+  [
+    [
+      "01",
+      "Prepare",
+      "Build packages where dependencies are available."
+    ],
+    [
+      "02",
+      "Bring them in",
+      "Move packages into the disconnected environment."
+    ],
+    [
+      "03",
+      "Operate locally",
+      "Installation and runtime follow Xmip’s offline-first design."
+    ]
+  ],
+  """\
+Online capability is declared explicitly. Connectivity can be restricted, \
+intermittent or intentionally absent.\
+"""
+]
+
+[[section]]
+title = "One operating model"
+headline = "Different surfaces, shared meaning"
+screen = """\
+CLI and PowerShell for automation\nDesktop and web for investigation\nThe \
+same scopes, meanings and actions\
+"""
+voice = "male"
+power = false
+narration = """\
+Operators can choose a command line, PowerShell, desktop or web interface \
+without learning a different platform model. The same scopes and meanings \
+guide investigation. Automation and visual inspection become different \
+ways to work with the same operational evidence.\
+"""
+sources = [
+  "doc/decision/ADR-0014-operator-surfaces.md",
+  "doc/decision/README.md"
+]
+note = ""
+layout = [
+  "split",
+  "One operating model",
+  [
+    [
+      "Automation",
+      "CLI and PowerShell",
+      """\
+Repeat operational tasks and inspect the same scopes through commands.\
+"""
+    ],
+    [
+      "Investigation",
+      "Desktop and web",
+      "Drill from the cluster to a node and the affected resource."
+    ]
+  ],
+  """\
+Status, measurements, Subscriptions, Messages and Journeys retain their \
+meaning across the surfaces.\
+"""
+]
+
+[[section]]
+title = "Operations in your phone"
+headline = "Cluster awareness wherever you are"
+screen = """\
+Cluster health and scope navigation\nRemote observation in the mobile \
+design\
+"""
+voice = "female"
+power = true
+narration = """\
+Operations in your phone is a flex moment in Xmip’s design. The mobile \
+host brings the same cluster health and scope navigation to Android and \
+iPhone targets. It follows nodes remotely in the Observer role. Device \
+validation remains a project milestone, while the principle stays the \
+same: understand the affected scope wherever you are.\
+"""
+sources = [
+  "doc/decision/ADR-0014-operator-surfaces.md"
+]
+note = "Mobile design; device validation remains ahead"
+layout = [
+  "feature",
+  "Operations\nin your phone",
+  [
+    [
+      "Start with the cluster",
+      "The mobile design starts with cluster health."
+    ],
+    [
+      "Find what needs attention",
+      "Drill into the affected scope."
+    ],
+    [
+      "Carry the same model",
+      "Observe nodes remotely using the shared operational vocabulary."
+    ]
+  ]
+]
+
+[[section]]
+title = "Health and investigation"
+headline = "From the cluster to the cause"
+screen = """\
+Fine or Holding at parent scopes\nDrill into the affected resource\nWords \
+and reasons guide action\
+"""
+voice = "male"
+power = false
+narration = """\
+Health should tell an operator where to look and what to do. Xmip uses \
+named conditions and scope navigation. A parent holding points into its \
+children, where the affected resource and its reason help distinguish a \
+deliberate pause from strain or failure.\
+"""
+sources = [
+  "doc/decision/ADR-0041-health-is-a-mood-and-does-not-propagate.md"
+]
+note = ""
+layout = [
+  "journey",
+  "From health to the cause",
+  [
+    [
+      "01",
+      "Cluster",
+      "Fine or Holding gives the first direction."
+    ],
+    [
+      "02",
+      "Affected scope",
+      "Holding tells the operator to drill into the children."
+    ],
+    [
+      "03",
+      "Resource and reason",
+      "Distinguish a pause, active work, strain or a blocked resource."
+    ]
+  ],
+  "Health uses words that describe the situation and guide investigation."
+]
+
+[[section]]
+title = "Audit and evidence"
+headline = "Understand what happened over time"
+screen = """\
+Observation: current activity\nAudit: actions and outcomes over \
+time\nChained records with verification\
+"""
+voice = "female"
+power = false
+narration = """\
+Current observation and audit answer different questions. Observation \
+shows what is happening now. Audit records actions and outcomes over time. \
+Chained program records, verification and journey evidence help the team \
+investigate a specific exchange instead of guessing from disconnected \
+symptoms.\
+"""
+sources = [
+  "doc/architecture/estate-map.md",
+  "doc/decision/README.md"
+]
+note = ""
+layout = [
+  "split",
+  "Observation and audit",
+  [
+    [
+      "Observation",
+      "What is happening now",
+      "Current activity and health direct attention to the affected scope."
+    ],
+    [
+      "Audit",
+      "What happened over time",
+      """\
+Shared program audit, chained records and verification preserve the \
+recorded sequence.\
+"""
+    ]
+  ],
+  "Use Messages and Journeys to investigate a specific exchange."
+]
+
+[[section]]
+title = "MCP access"
+headline = "Read Xmip through a standard protocol"
+screen = """\
+Read-only tools and Xmip URI resources\nShared command behavior\nAudited \
+answers\
+"""
+voice = "male"
+power = false
+narration = """\
+Xmip also exposes read-only access through the Model Context Protocol. \
+Clients can inspect health, measurements, audit and journeys through tools \
+and scoped resources. The behavior follows the command line, and each \
+answer is audited, keeping observation connected to established \
+operational controls.\
+"""
+sources = [
+  """\
+doc/decision/ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md\
+"""
+]
+note = ""
+layout = [
+  "rows",
+  "MCP access",
+  [
+    [
+      "Read",
+      """\
+The xmip mcp command exposes read-only operator tools and Xmip URI \
+resources.\
+"""
+    ],
+    [
+      "Inspect",
+      """\
+Query health, status, measurements, audit, Subscriptions and Journeys.\
+"""
+    ],
+    [
+      "Trace",
+      "Tools follow the same command behavior. Every answer is audited."
+    ]
+  ]
+]
+
+[[section]]
+title = "Open source"
+headline = "Freedom to inspect and extend"
+screen = """\
+AGPL-3.0-or-later\nStudy, contribute and extend\nExplicit interfaces for \
+specialist providers\
+"""
+voice = "female"
+power = true
+narration = """\
+Open source is a flex moment because teams can inspect, improve and extend \
+Xmip. The platform is licensed under the GNU Affero General Public \
+License, version three or later. Recorded architecture and explicit \
+capability interfaces support that freedom. Independent modules loaded \
+across the documented boundary can use their publisher’s chosen license.\
+"""
+sources = [
+  "CONTRIBUTING.md",
+  "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md"
+]
+note = "AGPL-3.0-or-later"
+layout = [
+  "feature",
+  "Open source\nOpen to your team",
+  [
+    [
+      "Inspect",
+      "Review the implementation and architectural decisions."
+    ],
+    [
+      "Contribute",
+      "Study the code and improve the platform."
+    ],
+    [
+      "Extend",
+      "Build specialist capabilities against explicit interfaces."
+    ]
+  ]
+]
+
+[[section]]
+title = "Engineering discipline"
+headline = "Decisions, implementation and evidence"
+screen = """\
+Architecture decisions with reasons\nExplicit capability \
+ownership\nBehavior exercised through repeatable tests\
+"""
+voice = "male"
+power = false
+narration = """\
+The engineering approach connects decisions to implementation and \
+verification. Capability boundaries make ownership clear, while the \
+Essentials and test harnesses exercise behavior and expose evidence. For \
+the project team, progress means a demonstrated flow and reproducible \
+results, alongside the design.\
+"""
+sources = [
+  "CONTRIBUTING.md",
+  "doc/decision/ADR-0028-the-xmip-essentials.md",
+  "doc/architecture/estate-map.md"
+]
+note = ""
+layout = [
+  "journey",
+  "Engineering with evidence",
+  [
+    [
+      "01",
+      "Decide",
+      "Connect requirements to recorded architectural choices."
+    ],
+    [
+      "02",
+      "Implement",
+      "Keep capability ownership and dependencies explicit."
+    ],
+    [
+      "03",
+      "Verify",
+      "Exercise behavior through the Essentials and repeatable module tests."
+    ]
+  ],
+  """\
+Progress is a demonstrated flow and reproducible evidence alongside its \
+design.\
+"""
+]
+
+[[section]]
+title = "Project stage and next milestones"
+headline = "Continuum is the development stream"
+screen = """\
+Working foundation: messaging, recovery, Storage and audit\nNext: complete \
+service integration and deployment hardening\nContinuum today; Linear for \
+product releases\
+"""
+voice = "female"
+power = false
+narration = """\
+Xmip Continuum is the active development stream. The working foundation \
+covers messaging, recovery, storage and program audit. Next milestones \
+bring the broader components into the assembled service and complete \
+deployment validation. Linear names the product release model; no Linear \
+release has shipped yet.\
+"""
+sources = [
+  "doc/architecture/estate-map.md",
+  "doc/governance/release-model.md",
+  "README.md"
+]
+note = """\
+Platform packaging is progressing; Android and iOS device validation \
+remains ahead\
+"""
+layout = [
+  "three",
+  "Project stage and milestones",
+  [
+    [
+      "Working foundation",
+      "Continuum today",
+      "Receive, route and send. Recovery, Storage and program audit."
+    ],
+    [
+      "Integration",
+      "Connect the components",
+      """\
+Bring Work Process execution, dynamic loading and Contract validation into \
+the assembled service.\
+"""
+    ],
+    [
+      "Release preparation",
+      "Toward Linear",
+      """\
+Complete platform packaging, mobile validation and deployment hardening.\
+"""
+    ]
+  ],
+  """\
+Continuum is the development stream. Linear names the product release \
+model.\
+"""
+]
+
+[[section]]
+title = "Xmip in one view"
+headline = "Connect systems\nRecord responsibility"
+screen = """\
+Business continuity and infrastructure choice\nTOML configuration and VS \
+Code design\nHealth, Messages, Journeys and recovery\
+"""
+voice = "female"
+power = "both"
+narration = """\
+Xmip brings the story together: connect systems under your control, define \
+the exchange in readable configuration, and follow its recorded outcome. \
+Leaders assess business continuity and infrastructure choice. Developers \
+work in TOML and Visual Studio Code. Operators follow health, messages and \
+journeys to investigate and recover the exchange. That is the platform \
+this project is building.\
+"""
+sources = [
+  "README.md",
+  "doc/getting-started.md"
+]
+note = ""
+layout = [
+  "closing",
+  "Xmip connects systems\nand records responsibility",
+  "Design the exchange.\nRun it. Follow its outcome.",
+  [
+    [
+      "CEO",
+      "Business continuity and choice"
+    ],
+    [
+      "CIO",
+      "Infrastructure and data control"
+    ],
+    [
+      "Developer",
+      "TOML and VS Code"
+    ],
+    [
+      "Operator",
+      "Health, evidence and recovery"
+    ]
+  ]
+]
