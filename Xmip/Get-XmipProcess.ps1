@@ -29,15 +29,15 @@ function Get-XmipProcess {
             Declared false: the name is the rule, the declaration the courtesy.
 
             A process that publishes a snapshot says where, and Snapshot is
-            it: an xmip-service node publishes to snapshot.toml in its data
+            it: an xmip-service node publishes to snapshot.xmip in its data
             directory (ADR-0018, amendment 2026-09-30), so the listing pipes
             into Start-XmipOperationWeb, which binds Snapshot by name.
 
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
-            -Name 'xmip-playground-*' is every roll, cluster and node on this
-            machine, and -Name 'xmip-playground-C1-*' is the tree of a
-            cluster someone called C1, since a Playground process carries
+            -Name 'xmip-essentials-*' is every roll, cluster and node on this
+            machine, and -Name 'xmip-essentials-C1-*' is the tree of a
+            cluster someone called C1, since an Essentials process carries
             its cluster and what it is (ADR-0053, amendment 2026-09-20). Every
             Xmip process unless said.
 
@@ -58,7 +58,7 @@ function Get-XmipProcess {
             Get-XmipProcess -Purpose Test | Stop-Process -Force
 
         .EXAMPLE
-            Get-XmipProcess -Name 'xmip-playground-C1-*'
+            Get-XmipProcess -Name 'xmip-essentials-C1-*'
 
         .EXAMPLE
             Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
@@ -127,7 +127,7 @@ function Read-XmipProcessDeclaration {
             operating system's processes can, and removes the files of the
             ones that do not. Each declaration is a dictionary of what the
             file says — name, location, purpose, pid, started_unix, path, and
-            whatever else the process said of itself, such as a Playground
+            whatever else the process said of itself, such as an Essentials
             node's flags — and file, where it stands.
 
         .PARAMETER Path

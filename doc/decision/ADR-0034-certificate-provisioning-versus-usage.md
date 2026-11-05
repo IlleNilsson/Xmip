@@ -4,13 +4,13 @@
 - Date: 2026-09-06
 - Amended: 2026-09-24 — provisioning is a capability, `xmip-core-provision`;
   ACME is used on-premises against a local ACME server and over the internet;
-  the Playground tests both, `identity-local` and `identity-online`
+  the Essentials tests both, `identity-local` and `identity-online`
 - Amended: 2026-10-13 — Let's Encrypt is an option a node chooses, never a
   default; the capability and three of its sources are built
 - Amended: 2026-10-15 — a third purpose, `operator`: a person's surface makes
   its own key and request, and the cluster's authority signs it
 - Related: ADR-0033 (certificates on Receive and Send), ADR-0019 (the identity
-  pipeline), ADR-0021 (current platforms), ADR-0028 (the offline Playground),
+  pipeline), ADR-0021 (current platforms), ADR-0028 (the offline Essentials),
   deployment-model.md
 
 ## In brief
@@ -34,8 +34,8 @@ on-premises with or without internet access, in the cloud, and on a tiny device.
 Those deployments do not share a way to obtain a certificate — a laptop with no
 network cannot reach an ACME server; a private Party has no public domain to
 validate — but they share how a certificate is used once present. Collapsing the
-two is what made "proper Let's Encrypt in the Playground" look sensible when the
-Playground is offline by design (ADR-0028) and Let's Encrypt needs public
+two is what made "proper Let's Encrypt in the Essentials" look sensible when the
+Essentials is offline by design (ADR-0028) and Let's Encrypt needs public
 reachability. Separated, the question answers itself.
 
 ## Decision
@@ -57,7 +57,7 @@ reachability. Separated, the question answers itself.
 | Cloud edge with a public domain | public | Let's Encrypt / ACME (domain-validated) |
 | On-premises, private Parties | private | an internal certificate authority + mutual-TLS |
 | Managed cloud | platform | a platform issuer — KMS, cert-manager |
-| On-premises without internet, laptop, the Playground | offline | a self-signed or stand-in certificate authority |
+| On-premises without internet, laptop, the Essentials | offline | a self-signed or stand-in certificate authority |
 | A tiny device (Meadow-class) | provisioned into it | a certificate pushed in; no on-device ACME |
 
 The estate's default for private, high-assurance Party integration is the
@@ -73,15 +73,15 @@ or the transport. Obtaining and renewing a certificate is not the same code as
 proving one during a handshake, and a deployment swaps its source without
 touching usage.
 
-### 4. The Playground exercises usage, not public provisioning
+### 4. The Essentials exercises usage, not public provisioning
 
-The Playground is offline (ADR-0028), so it exercises **usage** — mutual-TLS on
+The Essentials is offline (ADR-0028), so it exercises **usage** — mutual-TLS on
 Receive and Send over loopback, with a stand-in certificate authority — and it
 already simulates **provisioning faults** ("ACME challenge failed", "certificate
 expired"). It does not, and will not, perform real public issuance: there is no
 public name on a laptop with no network for an authority to validate. Real ACME
 and Let's Encrypt are exercised only where there is a public domain, which is a
-deployment scenario outside the offline Playground.
+deployment scenario outside the offline Essentials.
 
 ## Consequences
 
@@ -89,7 +89,7 @@ deployment scenario outside the offline Playground.
   present, the mutual-TLS/certificate authenticators). **Provisioning** — the
   ACME/Let's Encrypt client and the internal-CA source — is a separate track
   behind the provisioner abstraction, not a step in the usage chain.
-- The Playground's certificate exercise, when built, uses a stand-in CA and is
+- The Essentials' certificate exercise, when built, uses a stand-in CA and is
   honest that it is not issuing publicly.
 - No deployment scenario is left without a certificate story: each row of the
   table has a source.
@@ -120,16 +120,16 @@ that service: *step-ca is only for test. The end user will choose their CA.*
    Let's Encrypt; a node that does not uses the certificate authority its end
    user configures — any ACME service on the premises, or an internal CA. The
    end user chooses their CA; Xmip ships none for production.
-3. **The Playground tests identity twice**, as two tests of the
-   `Core.Playground` suite rather than one stage of the round trip:
+3. **The Essentials tests identity twice**, as two tests of the
+   `Core.Essentials` suite rather than one stage of the round trip:
    - **`identity-local`** — a node that is not online obtains its certificate
-     by ACME from **step-ca** (Smallstep, Apache-2.0), which the Playground runs
+     by ACME from **step-ca** (Smallstep, Apache-2.0), which the Essentials runs
      on the machine, and presents it on mutual TLS. No internet, repeatable, on
      every node. step-ca is the test's certificate authority only (the owner,
      2026-09-24); nothing in a production node depends on it.
    - **`identity-online`** — a node that declares itself online obtains its
      certificate by ACME from Let's Encrypt, and presents it.
-4. **Clause 4 is amended.** The Playground still does not issue publicly from a
+4. **Clause 4 is amended.** The Essentials still does not issue publicly from a
    laptop with nothing to prove, which is what clause 4 guarded; but it does
    perform real ACME issuance: against step-ca always, and against Let's
    Encrypt where a node is online.
@@ -150,7 +150,7 @@ Built the same day: `xmip-core-provision` with `acme`, `internal-ca` and
 `self-signed`; `platform` stays reserved. What `identity-local` proves — a
 node not online obtains its certificate by ACME and presents it on mutual
 TLS — is proved in `internal-ca`'s own tests against the authority's ACME
-server, offline, with nothing installed; the Playground's `identity-local`
+server, offline, with nothing installed; the Essentials' `identity-local`
 test, and whether it still runs step-ca, are not built and remain the
 owner's to say. ADR-0033's amendment of 2026-10-13 holds the detail.
 
@@ -195,7 +195,7 @@ assistant's draft, each point marked, for the owner to strike.
    other assumption (ADR-0031, amendment 2026-10-03). The table names no
    `source`.
 5. **Where the code is** — the assistant's draft, because of a rule in
-   `architecture.toml`: *Platform services must not depend on specific
+   `architecture.xmip`: *Platform services must not depend on specific
    Technology repositories.* The surfaces reach Rust through the runtime's
    library (ADR-0014, amendment 2026-10-12), which may not link
    `internal-ca`. So what an authority signs and how — the request read and
@@ -644,7 +644,7 @@ first, in place of any, and the key last, never over one, let two makers
 racing for an empty place keep the second's certificate beside the first's
 key: an authority whose every signature fails, and nothing said where it
 was made. Two clusters' first runs, or a run and a web host starting
-together, race for the Playground's one authority since the served nodes
+together, race for the Essentials' one authority since the served nodes
 take it (ADR-0028, amendment of this date). Found reading the code for the
 owner's demo; the coordinator ruled it a defect, not a decision.
 

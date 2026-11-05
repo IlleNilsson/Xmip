@@ -1,4 +1,4 @@
-# ADR-0028: The Xmip Playground
+# ADR-0028: The Xmip Essentials
 
 - Status: Accepted
 - Date: 2026-09-05
@@ -13,6 +13,7 @@
   own; a real node is used where its name resolves, built
 - Amended: 2026-10-22 — every node at level 1 a process of the assembled
   service, driven; a real node driven through the Parties' far end
+- Amended: 2026-11-04 — the Playground is named Essentials, everywhere
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -22,12 +23,12 @@
 ## In brief
 
 - Theme: Operating Xmip
-- Subject: The Playground exercises everything, all the time
-- Name: The Xmip Playground
+- Subject: The Essentials exercises everything, all the time
+- Name: The Xmip Essentials
 - Order: 5
-- Concepts: Playground, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes
+- Concepts: Essentials, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes
 
-**`xmip-test-playground` exercises Xmip continuously.** It spawns Development
+**`xmip-test-essentials` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
@@ -36,7 +37,7 @@ routed, delivered, contract held — published as health on its own scope. The
 pair that breaks turns red on the same page as everything else, and is named.
 
 It is a **node role, not a test suite**. `NodeRole::Development` already exists
-beside Operational, Monitoring and Executing; a Playground node is a Development
+beside Operational, Monitoring and Executing; an Essentials node is a Development
 node and the role is the isolation — it never touches a production node.
 
 It is also **the source of real measurement**: Streams in, Journeys through,
@@ -48,7 +49,7 @@ reads. Until it runs, a throughput card shows a dash.
 ROADMAP section 7 lists contract and conformance tests, failure and recovery
 tests, and performance and overload tests, all as things a release does. The
 owner's requirement, 2026-09-05, is the same thing running all the time: *a test
-playground, constantly activating receive locations, monitoring send, for all
+essentials, constantly activating receive locations, monitoring send, for all
 transport protocols and content contracts.*
 
 Two facts make it cheap. `xmip-core-transport` already carries http, smtp, tcp,
@@ -58,26 +59,26 @@ nothing external is stood up. And `registration.rs` already generates what a
 System Process needs, so spawning a node is what the runtime does anyway.
 
 The operator boundary landed the day before this record, with a card per stage
-and nothing to count. The Playground is what counts.
+and nothing to count. The Essentials is what counts.
 
 ## Decision
 
-### 1. One repository, `xmip-test-playground`
+### 1. One repository, `xmip-test-essentials`
 
 Operations domain, an operational capability. The name is the owner's and the
-proper noun is **Xmip Playground**, in terminology.md.
+proper noun is **Xmip Essentials**, in terminology.md.
 
 **The provider segment is `test`, not `core`** — the owner's call, 2026-09-05,
 renamed the same day it was created. `core` is what Xmip is; `test` is what
-exercises it, and it is a namespace another provider may join with a playground
-of their own, `xmip-<theirs>-playground`, under the estate's rules unchanged.
+exercises it, and it is a namespace another provider may join with a essentials
+of their own, `xmip-<theirs>-essentials`, under the estate's rules unchanged.
 The `xmip.test` root is reserved: there is no `xmip-test` crate, only what sits
 beneath it.
 
 ### 2. It spawns processes
 
 Nodes, generators and watchers run as System Processes on the machine the
-Playground runs on. Nothing is virtualized and nothing is containerized —
+Essentials runs on. Nothing is virtualized and nothing is containerized —
 process isolation is what the operating system provides, and it is what
 Development nodes get. A process that hangs is killed and restarted like any
 other Host Service.
@@ -128,8 +129,8 @@ exclusive-claim, daily-backlog).
 RoundTrip is the first test, not the only one; each asks a different
 question of the same estate over the same adapters, and every roll honors
 a wall-clock maximum and a factor on simulated time. What the scenarios are
-and how the limits work is the Playground's own manual,
-`test/playground/README.md`, since 2026-09-12 (ADR-0020 clause 6: a record
+and how the limits work is the Essentials' own manual,
+`test/essentials/README.md`, since 2026-09-12 (ADR-0020 clause 6: a record
 decides, a document describes).
 
 ### 4. A verdict is health, per stage
@@ -145,8 +146,8 @@ Journey through, Send a Message out — the three the stage cards count.
 
 ### 4a. The world does not run green: injected faults
 
-Loopback never fails, so a Playground of nothing but loopback proves the
-transports work and proves nothing about the monitoring. So the Playground
+Loopback never fails, so an Essentials of nothing but loopback proves the
+transports work and proves nothing about the monitoring. So the Essentials
 injects the faults a real integration suffers, on all three stages, of three
 transport-and-content kinds an operator triages by: **transport** (reset,
 timeout, port in use, lost datagram), **addressing** (unresolved host, no route,
@@ -161,7 +162,7 @@ Identity faults are their own axis — clause 4b.
 A Receive Location does not only receive bytes: it **identifies** who is claimed,
 **authenticates** the claim, and **authorizes** what it may do — the invariant
 pipeline of ADR-0019, in that order. A Send Location **presents** an identity to
-the far end (ADR-0033). The Playground exercises this by driving the estate's
+the far end (ADR-0033). The Essentials exercises this by driving the estate's
 real gates — `identify_transport`, `authenticate`, `authorize` — with stand-in
 implementers over mutual-TLS, so a fault is a genuine `Refusal` or
 `Decision::Denied`, not a fabricated string. Each Receive step publishes as a
@@ -177,25 +178,25 @@ throughput: a Stream is received once, not once per identity step.
 ### 5. The far end is Xmip
 
 Wherever a transport has both a server and a client in `xmip-core-transport`,
-the Playground uses them as the counterparty. A transport that has only one
+the Essentials uses them as the counterparty. A transport that has only one
 side is exercised as far as that side allows and the verdict says so. No
-external broker, server or service is a prerequisite for the Playground to run.
+external broker, server or service is a prerequisite for the Essentials to run.
 
 ### 6. Measurement comes from it
 
-The Playground's nodes publish counts per stage into the snapshot. That is
+The Essentials' nodes publish counts per stage into the snapshot. That is
 where the numbers on the operator's page come from before any production
 traffic exists, and it is how a regression in throughput is seen as a number
 rather than felt as a complaint.
 
 ## Consequences
 
-- `xmip-test-playground` is declared in `architecture.toml` and created through
+- `xmip-test-essentials` is declared in `architecture.xmip` and created through
   `Sync-XmipEstate`, from the Rust template, mounted at
-  `test/playground`.
-- **Xmip Playground** is a term in terminology.md.
+  `test/essentials`.
+- **Xmip Essentials** is a term in terminology.md.
 - Phases four to nine of startup (ADR-0018) — actually starting processes,
-  loading Modules, accepting work — are what the Playground needs first and
+  loading Modules, accepting work — are what the Essentials needs first and
   does not have. Its first version spawns nodes that plan and validate, which is
   what the runtime can do today, and grows with the runtime.
 - The 79 declared, empty technology repositories each get exercised the day
@@ -204,7 +205,7 @@ rather than felt as a complaint.
 ## Alternatives considered
 
 **Containers or virtual machines per node.** Rejected by the owner: the
-Playground spins processes, and the operating system already isolates them.
+Essentials spins processes, and the operating system already isolates them.
 Virtualization would add a dependency to the one tool whose job is to have none.
 
 **A test suite run at release.** What ROADMAP section 7 describes. Not rejected
@@ -212,16 +213,16 @@ Virtualization would add a dependency to the one tool whose job is to have none.
 it landed, and it produces no measurement in between.
 
 **Exercising against external systems.** Real Parties, real brokers. Rejected
-as the default: the Playground has to run on a laptop with no network. Xmip's
+as the default: the Essentials has to run on a laptop with no network. Xmip's
 own transports are the counterparty, and an external system is an optional
 extra target when one is available.
 
 ## Provenance
 
-The requirement and the name are the owner's, 2026-09-05: *a test playground,
+The requirement and the name are the owner's, 2026-09-05: *a test essentials,
 constantly activating receive locations, monitoring send, for all transport
 protocols and content contracts*, spinning processes with no virtualization,
-called the Xmip Playground. Clauses 1 to 6 are the assistant's drafting of it,
+called the Xmip Essentials. Clauses 1 to 6 are the assistant's drafting of it,
 on the instruction to proceed.
 
 ## Amendment, 2026-09-09: difficulty
@@ -232,7 +233,7 @@ The owner: *incorporate higher difficulty, stress on all tests; we need about
 The stress level, the ceiling every transport declares, the tests at every
 level, the half-of-what-is-free budget of 2026-09-11, the far end's move into
 the transport under ADR-0051 and the cluster's node processes are decided
-here and described in `test/playground/README.md`, where they moved on
+here and described in `test/essentials/README.md`, where they moved on
 2026-09-12.
 
 The decisions, in one line each: **the level** is one axis, `calm`,
@@ -244,7 +245,7 @@ other work, measured again before every round; **the far end** is the
 transport's own; **a node is a process**, and a cluster's nodes are spawned,
 merged and restarted by the roll.
 
-2026-09-19, the owner: what the Playground spawns is a cluster and its nodes;
+2026-09-19, the owner: what the Essentials spawns is a cluster and its nodes;
 the word fleet is retired **here**.
 
 Retired from the rig, not from the estate. The assistant wrote the same day
@@ -259,28 +260,28 @@ who owns many of a thing.
 What was wrong was borrowing it for a group of test node processes, which
 is a cluster and was already called one. The owner, noticing the word gone
 from the suites: *I used Fleet in an example.* His example stands, in
-ADR-0052 and in the Playground's README; the word keeps its own meaning
+ADR-0052 and in the Essentials' README; the word keeps its own meaning
 everywhere it had one.
 
 ## Amendment, 2026-09-19: even clusters are spawned as processes
 
 The owner: *even clusters have to be spawned as processes during tests.*
 
-Decision 2 says the Playground spawns processes. Until this day the cluster
-was not one of them: `xmip-playground-roll` was both the test and the cluster
+Decision 2 says the Essentials spawns processes. Until this day the cluster
+was not one of them: `xmip-essentials-roll` was both the test and the cluster
 — it declared itself at `xmip:///<Cluster>` and spawned the node processes
 itself. It is now three deep, and each of the three declares itself
 (ADR-0053):
 
 - **the roll is the test.** It chooses the scenarios, sets the stress, runs
   the tests that stay in its own process, judges, draws the board, and
-  publishes `<Cluster>-snapshot.toml` — the one file the prompt, the CLI and
+  publishes `<Cluster>-snapshot.xmip` — the one file the prompt, the CLI and
   the GUI read, unchanged in path and in shape.
 - **the cluster is a process the roll spawns**, one per roll (this record's
   rule is untouched: a roll is one cluster). It owns the store its nodes
   share, spawns and supervises them, restarts one that hangs, merges what each
   published, adds the rollup at `xmip:///<cluster>/node` that no node can say
-  about itself, and publishes all of it to `<Cluster>-cluster.toml`, which the
+  about itself, and publishes all of it to `<Cluster>-cluster.xmip`, which the
   roll merges.
 - **the nodes are processes the cluster spawns**, as decision 2 and the
   2026-09-09 amendment already say.
@@ -290,14 +291,14 @@ stops its own nodes before it goes, however it is ended; `Stop-XmipTest` ends
 the tree from the leaves up. Nothing is orphaned: `Get-Process xmip-*` is
 empty afterwards.
 
-The details are `test/playground/README.md`, as 3a says.
+The details are `test/essentials/README.md`, as 3a says.
 
 ## Amendment, 2026-09-19: a real node is used, a simulated one is the fallback
 
 The owner, the same day: *if there are actual DNS names for clusters and
 nodes, the test shall use them instead of spawning test processes.*
 
-Spawning is not the point of the Playground; having something to test against
+Spawning is not the point of the Essentials; having something to test against
 is. A simulated node exists because there is no real one, and where a real one
 exists the rig has no business inventing a second.
 
@@ -336,9 +337,9 @@ Two defects, found the same day the cluster became a process of its own.
 
 **What was wrong.** `Get-XmipTestStatus` and `Get-XmipTestNode` judged a
 process by the file on disk: the image the operating system reports it running
-had to be the Playground binary under `test/playground/target/debug`, and a
+had to be the Essentials binary under `test/essentials/target/debug`, and a
 process that failed that test was dropped without a word. The owner rebuilt the
-Playground while his roll was rolling. Twenty-one processes — a roll, its
+Essentials while his roll was rolling. Twenty-one processes — a roll, its
 cluster and its nodes — went on running, and every cmdlet meant to manage
 them answered with nothing. `Get-XmipProcess` found all twenty-one, because it
 asks what each process declared of itself (ADR-0053) rather than what is on
@@ -370,34 +371,34 @@ started and cannot find is a process Xmip cannot stop.**
 - **A process that declared itself is found even when this machine no longer
   calls it by that name**, and that, too, is said.
 
-The lookup lives in `Xmip/Get-XmipPlaygroundProcess.ps1`; it moved out of
+The lookup lives in `Xmip/Get-XmipEssentialsProcess.ps1`; it moved out of
 `Xmip/Start-XmipTest.ps1` with this change. `test/XmipTest.Test.ps1` holds the
 tests, over the judgment itself rather than over a running binary — the suite
 still starts nothing.
 
 The other defect of that day, a history file that had never held a point, is
 ADR-0029's: the rule it broke is what a history point is, not what the
-Playground spawns. It is recorded there.
+Essentials spawns. It is recorded there.
 
-## Amendment, 2026-09-23: the Playground is core's, and says so
+## Amendment, 2026-09-23: the Essentials is core's, and says so
 
 The owner, reading the estate map: *there is no room for 3rd parties there is
-test/playground. It should be test/core/playground so there is room for
-test/3rd party/playground. Corresponding repos would be
-xmip-core-test-playground and xmip-<3rd party>-test-playground.*
+test/essentials. It should be test/core/essentials so there is room for
+test/3rd party/essentials. Corresponding repos would be
+xmip-core-test-essentials and xmip-<3rd party>-test-essentials.*
 
 He is right, and the reason is in the name. A repository is
 `xmip-<provider>-<module>` (repository-model.md, section 2), so
-`xmip-test-playground` read as *provider `test`, module `playground`* — and
+`xmip-test-essentials` read as *provider `test`, module `essentials`* — and
 the manifest said as much, calling `test` a provider namespace others may
 join. But that left a second provider only the provider's own slot to take:
-`xmip-<provider>-playground` claims a module named playground rather than saying
-is test scaffolding, and the path `test/playground` had no room at all.
+`xmip-<provider>-essentials` claims a module named essentials rather than saying
+is test scaffolding, and the path `test/essentials` had no room at all.
 
 - **`test` is the kind of work, not the provider.** The repository is
-  `xmip-core-test-playground`, declared at `xmip.core.test.playground`,
-  mounted at `test/core/playground`. A second provider's is
-  `xmip-<theirs>-test-playground` at `test/<theirs>/playground`, declared the
+  `xmip-core-test-essentials`, declared at `xmip.core.test.essentials`,
+  mounted at `test/core/essentials`. A second provider's is
+  `xmip-<theirs>-test-essentials` at `test/<theirs>/essentials`, declared the
   same way under their own provider, and every rule here applies to it
   unchanged.
 - **Core's own paths do not move.** A path without a provider in it means
@@ -405,16 +406,16 @@ is test scaffolding, and the path `test/playground` had no room at all.
   than core mounts under a subtree of its own. The rule is written down now
   rather than invented when the first third-party module arrives.
 - **The rename kept its history.** GitHub redirects the old name, the
-  submodule moved with `git mv`, and the crate is `xmip-core-test-playground`.
+  submodule moved with `git mv`, and the crate is `xmip-core-test-essentials`.
   Clause 1 above still holds: one repository, optional, ADR-0036.
 
-## Amendment, 2026-09-24: the Playground stays at test/core/playground
+## Amendment, 2026-09-24: the Essentials stays at test/core/essentials
 
-For a day the Playground was moved to `module/core/test/playground`, on a
+For a day the Essentials was moved to `module/core/test/essentials`, on a
 reading of the owner's *provider before purpose* as putting everything a
 provider ships under `module/`. The owner, 2026-09-24, asked where it belongs,
-and answered: `test/core/playground`, as placed above. A second provider's is
-`test/<theirs>/playground`.
+and answered: `test/core/essentials`, as placed above. A second provider's is
+`test/<theirs>/essentials`.
 
 The second bullet above no longer holds, for a different reason. Core's modules
 did move: the owner's rule of 2026-09-23 is that what starts a node mounts with
@@ -435,8 +436,8 @@ owner's rule, capability not name), so a cluster called CT is shown like any
 other, and a run is hidden because it said so when it was started.
 
 - **The declaration.** `Start-XmipTest -Hidden` declares the run hidden. It
-  belongs to the Playground alone, as `-Cluster` does. The run record says
-  `hidden = true`; `XMIP_PLAYGROUND_HIDDEN` tells the roll, whose cluster and
+  belongs to the Essentials alone, as `-Cluster` does. The run record says
+  `hidden = true`; `XMIP_ESSENTIALS_HIDDEN` tells the roll, whose cluster and
   nodes inherit it; the roll's `[run]` table says `hidden = true`
   (`observe::Run::hidden`, crossing section 8's head as `hidden`); the roll,
   its cluster and every node add `hidden = "true"` to their process
@@ -459,7 +460,7 @@ other, and a run is hidden because it said so when it was started.
   `xmip-cli audit --include-hidden` read its records. The views are ADR-0052's
   amendment of the same date.
 - **How the assistant's test cluster is started, always:**
-  `Start-XmipTest -Suite Core.Playground -Cluster CT -Test RoundTrip
+  `Start-XmipTest -Suite Core.Essentials -Cluster CT -Test RoundTrip
   -Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 =
   'send' } -Hidden`, and stopped with `Stop-XmipTest -Cluster CT
   -IncludeHidden`.
@@ -501,7 +502,7 @@ historical errors.*
 
 ## Amendment, 2026-10-13: the Parties built, and flows named as an ERP's
 
-The owner, 2026-10-13, watching his Playground run: *You have not
+The owner, 2026-10-13, watching his Essentials run: *You have not
 Implemented more Parties than Party-X. It is better, but not good enough.*
 Of its Locations and Ports, one Application named after the test: *just do
 not make sense*, and, asked whether to name them as an ERP's documents:
@@ -511,7 +512,7 @@ inferred information, which one should see in the operation tools.*
 
 The amendment of 2026-10-06 is built:
 
-- **The Parties are configuration.** The Playground's `configuration/xmip.toml`
+- **The Parties are configuration.** The Essentials' `configuration/cluster.xmip`
   declares them as `[[parties]]`, each with `name` and `identities`, in the
   shape `runtime-model.md` gives (ADR-0031, amendment 2026-10-01) —
   `Party-A` to `Party-E` as shipped, renamed there. The parse is placed once,
@@ -519,7 +520,7 @@ The amendment of 2026-10-06 is built:
   `parties`), which open problem 33 named as missing: a Party without a
   name or an identity, a name twice, or an identity two Parties hold is a
   problem every node's binding reports. The cluster designer has a Party
-  view (`configure::views`). Nothing in the Playground's code or tests names
+  view (`configure::views`). Nothing in the Essentials' code or tests names
   a Party; a test reads them from the file.
 - **Several Parties, each on several transports and streams, both
   directions** (`src/parties.rs`): the Party at a transport's place in the
@@ -543,7 +544,7 @@ The amendment of 2026-10-06 is built:
 - **Drawn and named per Party.** `observe::topology::party::draw` takes the
   Parties and, for each, the transports it is reached over on each side; a
   link counts what its stage counted over the Party's transports and its
-  mood is the worst of the Party's endpoints. The Playground's ledger counts
+  mood is the worst of the Party's endpoints. The Essentials' ledger counts
   per stage and transport, `<node>/<stage>/<transport>`, which a stage's
   figure sums. A running node still draws `any-party` over every endpoint:
   no Location says which Party it serves until `accept.party` is read. The
@@ -585,10 +586,10 @@ The amendment of 2026-10-06 is built:
   twice and by whom and each never taken.
 
 This supersedes ADR-0052's amendment of 2026-09-29 where it says a
-Playground cluster has one Party, `party-x`.
+Essentials cluster has one Party, `party-x`.
 
 Proved by `configure`'s `party.rs`, `section.rs` and `views.rs`, `observe`'s
-`topology/party.rs`, and the Playground's `parties.rs`, `rotation.rs`,
+`topology/party.rs`, and the Essentials' `parties.rs`, `rotation.rs`,
 `identity.rs`, `subscribing.rs`, `topology.rs`, `run.rs`, `drop_box.rs` and
 `drop_box/judged.rs`.
 
@@ -613,11 +614,11 @@ from the start, and the estate's Pester suite since 2026-09-25.
   before anything starts — a choice it cannot run, and a cluster already
   rolling or still building — and writes the run's cluster file there. The
   build and the roll's spawn then run in a pwsh of their own
-  (`Start-XmipPlaygroundBuild`), which spawns the roll once cargo has
-  finished (`Start-XmipPlaygroundRollProcess`) and writes its run record as
+  (`Start-XmipEssentialsBuild`), which spawns the roll once cargo has
+  finished (`Start-XmipEssentialsRollProcess`) and writes its run record as
   before.
 - **Building is the run's state.** The build writes a record,
-  `build-<start time>.toml`, beside the rolls' records, and its output to
+  `build-<start time>.xmip`, beside the rolls' records, and its output to
   `build-<start time>.log`. `Get-XmipTestStatus` lists it as kind `build`,
   state `building`, with how many crates cargo has compiled and the last of
   them — cargo prints no total when its output is not a terminal, so the
@@ -634,7 +635,7 @@ were about `Start-XmipTest`. A first `Write-XmipAudit` in a session still
 holds the console for the operator module's `dotnet build`, seconds rather
 than minutes; that is not this amendment's.
 
-Proved by `test/PlaygroundBuild.Test.ps1`.
+Proved by `test/EssentialsBuild.Test.ps1`.
 
 Provenance: the owner's words above. The record's shape, the counted
 progress and the refusal of a second start while building are the
@@ -644,14 +645,14 @@ assistant's drafting, for the owner to overrule.
 
 What the amendment of 2026-10-13 left unbuilt, a Receive Location held to
 the Parties it names, is built in the node (ADR-0019, amendment
-2026-10-19). The Playground's gates count a Party's identifier and resolve
+2026-10-19). The Essentials' gates count a Party's identifier and resolve
 a claim as a node does, through `configure::party::id` and
 `configure::party::place_holding`, rather than each its own copy. The
 `[run]` table carries no Parties still.
 
 ## Amendment, 2026-10-20: the Parties carry their ids and their identities' mechanism and purpose
 
-Each of the Playground's `[[parties]]` is written with its `id`, a UUIDv7
+Each of the Essentials' `[[parties]]` is written with its `id`, a UUIDv7
 minted once with it, and each identity as `{ mechanism = "mutual-tls",
 purpose = "receive", value = "CN=…" }` (the owner, 2026-10-19; ADR-0019,
 amendment 2026-10-20). The gates resolve a claim through
@@ -662,9 +663,9 @@ Party by the id it is written with (`Parties::id`), as a node does;
 ## Amendment, 2026-10-21: one file for one computer and for machines of their own
 
 The owner, 2026-10-21: *one TOML file that can be run for tests regardless
-of node faking or actual nodes.* The Playground's own cluster file,
-`configuration/xmip.toml`, is that file. At test level 1, one computer, its
-nodes are processes the Playground spawns; at test level 2 the same file's
+of node faking or actual nodes.* The Essentials' own cluster file,
+`configuration/cluster.xmip`, is that file. At test level 1, one computer, its
+nodes are processes the Essentials spawns; at test level 2 the same file's
 nodes run as `xmip-service` on machines of their own — the Hyper-V
 example's XMIP-APP01 to XMIP-APP03 (Windows Server 2025), XMIP-IN01 and
 XMIP-OUT01 (AlmaLinux 10) — and the same scenarios run at both levels. A
@@ -703,18 +704,18 @@ pairs on through, their beats, their orders and each one's embedded store
 beneath it.
 
 **The run's nodes are the file's.** `Start-XmipTest` without `-Nodes`
-spawns every node the Playground's file declares, with the roles it
-declares, where the test cluster's `test/xmip.toml` was taken before; with
+spawns every node the Essentials' file declares, with the roles it
+declares, where the test cluster's `test/cluster.xmip` was taken before; with
 `-Nodes`, a node `-NodeRole` says nothing of takes the roles the file
 declares for it. The run's cluster file is still written from what was
-typed (`Write-XmipTestCluster`, `Read-XmipPlaygroundCluster`,
-`Join-XmipNodeRole`). `test/xmip.toml` stays the estate's tests' cluster.
+typed (`Write-XmipTestCluster`, `Read-XmipEssentialsCluster`,
+`Join-XmipNodeRole`). `test/cluster.xmip` stays the estate's tests' cluster.
 
 **A real node is used when its name resolves** — the amendment of
 2026-09-19, built (`src/real.rs`).
 
 - **Only the names typed.** `-Cluster`, and the nodes `-Nodes` named, which
-  `Start-XmipTest` hands the roll as `XMIP_PLAYGROUND_NAMED`; an omitted
+  `Start-XmipTest` hands the roll as `XMIP_ESSENTIALS_NAMED`; an omitted
   `-Nodes` takes the file's nodes, names nobody typed, and resolves none.
   Each is resolved by this machine's resolver at the port the file says
   that node is operated on.
@@ -722,7 +723,7 @@ typed (`Write-XmipTestCluster`, `Read-XmipPlaygroundCluster`,
 - **One that resolves must answer and declare itself**: over its operate
   listener, inside Xmip's mutual TLS, asked with the tester's operator
   certificate — `Start-XmipTest -Certificate <folder>`,
-  `XMIP_PLAYGROUND_CERTIFICATE`, holding `operator.pem`, `operator.key` and
+  `XMIP_ESSENTIALS_CERTIFICATE`, holding `operator.pem`, `operator.key` and
   `anchors.pem` from the cluster's own authority — its publication's scope
   must be `xmip:///<cluster>/node/<name>` and it must say what it can do,
   its `<node>/capability` record, whose roles it then runs by in the run.
@@ -755,35 +756,35 @@ ADR-0015's amendment of the same date.
 
 Provenance: the owner's words above. Declaring the nine nodes in the file,
 the five the example puts on machines, `-Certificate` and its files,
-`XMIP_PLAYGROUND_NAMED`, `<node>/reached`, and observing rather than driving
+`XMIP_ESSENTIALS_NAMED`, `<node>/reached`, and observing rather than driving
 a real node until Storage is assembled are the assistant's drafting, for the
 owner to overrule.
 
 ## Amendment, 2026-10-22: at level 1 every node is a process of the assembled service, and the rig drives them
 
-The task given 2026-10-22: the full Playground run with every node a
+The task given 2026-10-22: the full Essentials run with every node a
 process, R, S, P and L reaching D1 and D2 over the wire, over a real
 loopback connection, through the same code as on a machine; and the
-Playground driving real nodes, the rig sending them work through their
+Essentials driving real nodes, the rig sending them work through their
 Receive Locations, where it observed them.
 
 **Every node of the run that is not real is started as `xmip-service`**
-where the run is given one (`XMIP_PLAYGROUND_SERVICE`) and one of those
+where the run is given one (`XMIP_ESSENTIALS_SERVICE`) and one of those
 nodes declares the Storage role, which the rest reach — every node of the
 file, where `-Nodes` is left out — and simulated where not
 (`src/served.rs`). `Start-XmipTest` builds it as the
 `personal-computer` site builds it — every stage, Xmip Storage and the file
 transport — in a build directory of its own,
-`.local-work/playground/service/target`, since one shared with the
-Playground's build left rustc finding two builds of one estate crate, and
-keeps it at `.local-work/playground/service/<cluster>`, so a later build
-never changes what a running roll's nodes run; the Playground
+`.local-work/essentials/service/target`, since one shared with the
+Essentials' build left rustc finding two builds of one estate crate, and
+keeps it at `.local-work/essentials/service/<cluster>`, so a later build
+never changes what a running roll's nodes run; the Essentials
 itself and the service are built against the estate as it is on disk, every
 estate crate patched to its working tree as a landing verifies
 (`New-XmipLocalPatch`). The run is the nodes' environment and gives each
 what an environment gives a machine's node, the file unchanged:
 
-- its slice of the Playground's cluster file under the run's cluster name,
+- its slice of the Essentials' cluster file under the run's cluster name,
   in a folder of its own beneath the run's directory, its data beside it;
 - its certificate, key and anchors from an authority of the run's own
   (`provision::node`, for its name, `127.0.0.1` and `localhost`), which it
@@ -812,7 +813,7 @@ does not killed. A roll killed ends their input with it.
 
 **The rig drives them: Carried** (`src/carried.rs`). Each round it drops a
 file into each bound drop folder, written beside it and renamed in, the
-next of the Playground's twenty content contracts each time, named
+next of the Essentials' twenty content contracts each time, named
 `<contract>-<number>` (`Contract::file_name`). The cluster file's
 Subscriptions route by that name — `file.name like '<contract>-%'`, what a
 file Receive Location gives every Message it takes — where they read
@@ -861,7 +862,7 @@ elevated step of the owner's (`deploy/dsc/msdsc/environment/README.md`).
 **One placement, placed once** (`configure::placed`): each Application's
 Receive Locations go round robin, in the file's order, over the nodes
 present declaring `receiving` or `executing`, its Send Ports over those
-declaring `sending` or `executing`. The Playground's `bindings.rs` and its
+declaring `sending` or `executing`. The Essentials' `bindings.rs` and its
 own placement are deleted; the nodes it starts on one computer, its
 simulated process stage and the environment all place by it.
 
@@ -907,7 +908,7 @@ SFTP, the port, one user to a Location, `--bind` and `--nodes`, and
 placing in configure are the assistant's drafting, for the owner to
 overrule.
 
-## Amendment, 2026-10-27: the nodes a run starts are issued under the Playground's one authority
+## Amendment, 2026-10-27: the nodes a run starts are issued under the Essentials' one authority
 
 **Amends the amendment of 2026-10-22, *at level 1 every node is a process of
 the assembled service*, where each run made an authority of its own.** That
@@ -915,16 +916,16 @@ authority lived in the run's base under the temporary directory and went
 with the run, so a phone given an operator certificate, or a browser told
 to trust the anchor, had to be given them again at every restart. The
 coordinator, preparing the owner's demo of the four operator surfaces,
-2026-10-27: *served nodes take the persistent Playground authority
-(.local-work/playground/authority) instead of a per-run one, so a
+2026-10-27: *served nodes take the persistent Essentials authority
+(.local-work/essentials/authority) instead of a per-run one, so a
 provisioned phone and a trusted browser survive a restart.*
 
-- **One authority for the Playground**: `environment::authority`, the
+- **One authority for the Essentials**: `environment::authority`, the
   `authority` folder of the area a roll publishes in — the one
-  `Get-XmipPlaygroundLayout` names, which the web host is served under and a
+  `Get-XmipEssentialsLayout` names, which the web host is served under and a
   tester's operator certificate is signed by. Each node a run starts gets a
   fresh certificate under it, as before. `Start-XmipTest` makes the
-  authority where none is kept, through `Initialize-XmipPlaygroundAuthority`,
+  authority where none is kept, through `Initialize-XmipEssentialsAuthority`,
   before the run starts a node; that function alone names it, and the run
   reads the name from the authority's certificate, so the name is written
   once (the coordinator, the same day: *no second copy*).
@@ -934,4 +935,19 @@ provisioned phone and a trusted browser survive a restart.*
   date).
 
 Proved by `served::given`'s test: two runs' nodes hold the same anchor, the
-Playground's authority.
+Essentials' authority.
+
+## Amendment, 2026-11-04: the Playground is named Essentials
+
+The owner, 2026-11-04, of the suites Core.Estate and Core.Playground:
+*Core.Playground should be Core.Essentials and Core.Estate should stay*, and
+then: *I guess we can leave the term Playground, we are past that.*
+
+The name goes everywhere, with no alias kept: the suite is `Core.Essentials`;
+the crate is `test/core/essentials` in the repository
+`xmip-core-test-essentials`, its binaries `xmip-essentials-node`,
+`xmip-essentials-cluster` and `xmip-essentials-roll`; the cmdlets are
+`Start-XmipEssentialsRoll`, `Start-XmipEssentialsBuild` and their kin; the
+variables are `XMIP_ESSENTIALS_*`; a run's output is under
+`.local-work/essentials`; and a node's process is named `xmip-essentials-C1`
+and so on (ADR-0053). What the Essentials is and does is unchanged.

@@ -4,7 +4,7 @@
 <#
 .SYNOPSIS
     The estate map's section on what is built: one implementation state per
-    user-facing capability, read from architecture.toml's [implementation].
+    user-facing capability, read from architecture.xmip's [implementation].
 
 .DESCRIPTION
     A documentation review of 2026-10-06 found documents describing decided
@@ -25,7 +25,7 @@
 #>
 
 # The four states, in the map's order, and the words a document cites them
-# by. The key is what architecture.toml writes.
+# by. The key is what architecture.xmip writes.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipImplementationState = [ordered]@{
     'assembled' = 'built, in the assembled service'
     'built'     = 'built, not in the assembled service'
@@ -68,7 +68,7 @@ function Get-XmipMapImplementation {
             [string] $state = [string](Get-TomlValue -Node $node -Name 'state' -Default '')
 
             if ($state -notin $order) {
-                throw ("architecture.toml [implementation.$key] says state = '$state'; " +
+                throw ("architecture.xmip [implementation.$key] says state = '$state'; " +
                     "it is one of: $($order -join ', ')")
             }
 

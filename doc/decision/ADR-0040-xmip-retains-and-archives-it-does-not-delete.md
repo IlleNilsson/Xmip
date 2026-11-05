@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-06
-- Related: ADR-0013 (the Journey model), ADR-0028 (the Xmip Playground),
+- Related: ADR-0013 (the Journey model), ADR-0028 (the Xmip Essentials),
   doc/architecture/observability-model.md, `xmip-core-retain`
 
 ## In brief
@@ -21,7 +21,7 @@ archive owner's decision, not Xmip's.**
 
 ## Context
 
-The owner, 2026-09-06, watching the Playground's secretary scenario, which had
+The owner, 2026-09-06, watching the Essentials' secretary scenario, which had
 grown a third stage called *purge*: *First keep retention, then archive. If all
 fails, archive. Do not delete — that is not Xmip's responsibility. Xmip gets
 data, transforms, waits for business decisions, sends one or multiple data. Xmip
@@ -68,7 +68,7 @@ theirs to hold and theirs to answer for.
 
 ### 4. The scenario matches
 
-The Playground's Retention test — the secretary scenario until 2026-09-19, when
+The Essentials' Retention test — the secretary scenario until 2026-09-19, when
 the owner replaced the old scenario wording with the test names everywhere — is
 two stages, **retain**, then **archive** (ADR-0028).
 Archived items accumulate; the scenario never purges them, because Xmip never
@@ -77,7 +77,7 @@ leak, which is the property the scenario exists to prove.
 
 ## Consequences
 
-- `xmip-core-retain`'s `RetentionAction` loses `Delete`; only the playground
+- `xmip-core-retain`'s `RetentionAction` loses `Delete`; only the essentials
   consumed it, so the change is contained.
 - The secretary scenario drops its `purge` stage and its "delete by age" path.
 - terminology.md's retention vocabulary stays *retention* and *archiving*; no

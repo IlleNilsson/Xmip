@@ -77,7 +77,8 @@ Service with it, exactly as the ABI specification requires of any Module.
 ## Consequences
 
 - A technology Module may be authored in .NET, Java or Python and plugged in over
-  the ABI; `xmip-core-contract-dotnet` is the first so declared.
+  the ABI, built by its author; the estate declares none (ADR-0042, amendment
+  2026-11-05).
 - Such a Module's manifest and node profile must account for the runtime and its
   version; deployment for a node hosting managed Modules is heavier by that
   runtime.

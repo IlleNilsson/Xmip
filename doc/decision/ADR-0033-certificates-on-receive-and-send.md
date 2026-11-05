@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-05
 - Related: ADR-0019 (identity, parties, direction), ADR-0022 (identity classes),
-  ADR-0010 (contract and transport boundaries), ADR-0028 (the Playground's
+  ADR-0010 (contract and transport boundaries), ADR-0028 (the Essentials'
   injected faults), ADR-0034 (provisioning versus usage — this record is the
   *usage* half; provisioning, including where Let's Encrypt fits, is there)
 
@@ -110,9 +110,9 @@ Each is security-critical and lands on its own, tested, rather than as one drop.
 - The transport crate's `tls` feature grows a server path; it stops being
   client-only. Its crypto still comes from rustls, the one place the estate
   admits a crypto dependency, kept behind the feature.
-- `xmip-core-authenticate-certificate` (already declared in `architecture.toml`)
+- `xmip-core-authenticate-certificate` (already declared in `architecture.xmip`)
   gains the two authenticators; an ACME capability is added for provisioning.
-- The Playground's authentication faults (ADR-0028) become exercisable against a
+- The Essentials' authentication faults (ADR-0028) become exercisable against a
   real mechanism rather than only simulated.
 - `open-problems.md` gains this as a prioritized item.
 

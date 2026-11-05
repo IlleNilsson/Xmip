@@ -57,7 +57,7 @@ automaticVerification = false
 # The .NET counterpart of [crate]. ADR-0021: current platforms only, which for
 # a build target means the latest — and .NET 11 is a release candidate (rc.3,
 # go-live, 2026-10-25) on the preview channel until it goes stable on
-# 2026-11-10, which prerequisite.toml already records.
+# 2026-11-10, which prerequisite.xmip already records.
 #
 # Declared here because it was previously written in three places and checked in
 # none: the template's Directory.Build.props, and a <TargetFramework> in each of
@@ -144,7 +144,7 @@ record = ["ADR-0019 (amendments 2026-10-19 and 2026-10-20)", "ADR-0024 (amendmen
 [implementation.arrival-validation]
 name = "Holding a Stream to a named Contract"
 state = "decided"
-note = "A node refuses to start a Receive or Send Location that names a Contract, in words: arrival holds no Stream to one yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate, and the Playground holds its generated content to them in its own harness, not at a node's Location."
+note = "A node refuses to start a Receive or Send Location that names a Contract, in words: arrival holds no Stream to one yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate, and the Essentials holds its generated content to them in its own harness, not at a node's Location."
 record = ["ADR-0042", "ADR-0031 (amendment 2026-10-05)"]
 
 [implementation.security-profile]
@@ -168,7 +168,7 @@ record = ["ADR-0034 (amendments 2026-10-15 and 2026-10-22)", "ADR-0033 (amendmen
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Playground record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
+note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.xmip`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
 record = ["ADR-0062", "ADR-0070"]
 
 [implementation.audit-through-storage]
@@ -246,7 +246,7 @@ record = ["ADR-0048 (amendments 2026-10-06)"]
 [implementation.retention-archiving]
 name = "Archiving by retention window"
 state = "built"
-note = "`xmip-core-retain` and `xmip-core-archive` are driven by the Playground on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
+note = "`xmip-core-retain` and `xmip-core-archive` are driven by the Essentials on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
 record = ["ADR-0040"]
 
 [implementation.embedded-storage]
@@ -258,7 +258,7 @@ record = ["ADR-0015 (amendments 2026-10-01 and 2026-10-20)", "ADR-0056 (amendmen
 [implementation.storage-nodes]
 name = "Storage nodes reached over mutual TLS"
 state = "assembled"
-note = "A node without the Storage role reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS, presenting the certificate, key and anchors `[storage]` names — the node's own, from the cluster's authority — a standby passed over, a primary of an earlier epoch not asked, and refused at start in words where it names nothing to present; a node with the Storage role serves Xmip Storage at `[storage] listen`, and `xmip-service --listening` says its port; every node publishes at `<node>/storage` which Storage it uses and whether it answered, Done where none did. Held by the root's `failover` and `wire` tests and the Playground's level 1, every node a process."
+note = "A node without the Storage role reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS, presenting the certificate, key and anchors `[storage]` names — the node's own, from the cluster's authority — a standby passed over, a primary of an earlier epoch not asked, and refused at start in words where it names nothing to present; a node with the Storage role serves Xmip Storage at `[storage] listen`, and `xmip-service --listening` says its port; every node publishes at `<node>/storage` which Storage it uses and whether it answered, Done where none did. Held by the root's `failover` and `wire` tests and the Essentials' level 1, every node a process."
 record = ["ADR-0056 (amendments 2026-10-01 and 2026-10-22)", "ADR-0067 (amendment 2026-10-22)"]
 
 [implementation.storage-standby]
@@ -282,7 +282,7 @@ record = ["ADR-0031 (amendment 2026-10-05)", "runtime-model.md section 20"]
 [implementation.configuration-saving]
 name = "Saving and slicing the cluster's configuration"
 state = "assembled"
-note = "The Operation Desktop saves the cluster's `xmip.toml`, validated by the runtime and audited, and slices it through `xmip_cluster_slices_v1`; desired state slices it on each node (`xmip-service --slice`). A changed slice takes effect when the node starts again."
+note = "The Operation Desktop saves `cluster.xmip`, validated by the runtime and audited, and slices it through `xmip_cluster_slices_v1`; desired state slices it on each node (`xmip-service --slice`). A changed slice takes effect when the node starts again."
 record = ["ADR-0031 (amendments 2026-10-01, 2026-10-05)"]
 
 [implementation.configuration-delivery]
@@ -839,10 +839,6 @@ dependency = []
     [xmip.core.contract.csv]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
-    [xmip.core.contract.dotnet]
-    description = "Content contracts authored as .NET modules over the Xmip ABI — the .NET counterpart of the Rust contract technologies."
-    primaryLanguage = "dotnet"
-    maturity = "scaffolded"
     [xmip.core.contract.fhir]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -871,10 +867,6 @@ dependency = []
     description = "Schematron content contract: business rules over XML, the way Peppol, UBL, ISO 20022 and HL7 CDA state them. A xmip-core-contract technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
-    [xmip.core.contract.rust]
-    maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
-    primaryLanguage = "rust"
     [xmip.core.contract.sql]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
@@ -1003,8 +995,6 @@ dependency = []
   repositoryRole = "common-capability"
   maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-node", "xmip-core-message", "xmip-core-library-codec"]
-    [xmip.core.transform.dotnet]
-    maturity = "reserved"
     [xmip.core.transform.handlebars]
     maturity = "reserved"
     [xmip.core.transform.jolt]
@@ -1017,11 +1007,7 @@ dependency = []
     maturity = "reserved"
     [xmip.core.transform.mustache]
     maturity = "reserved"
-    [xmip.core.transform.rust]
-    maturity = "reserved"
     [xmip.core.transform.tera]
-    maturity = "reserved"
-    [xmip.core.transform.wasm]
     maturity = "reserved"
     [xmip.core.transform.xquery]
     maturity = "reserved"
@@ -1356,7 +1342,7 @@ dependency = []
     maturity = "reserved"
     [xmip.core.audit.file]
     maturity = "reserved"
-    description = "Records appended as TOML tables to audit.toml in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
+    description = "Records appended as TOML tables to audit.xmip in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
     [xmip.core.audit.kafka]
     maturity = "reserved"
     [xmip.core.audit.mssql]
@@ -1796,27 +1782,27 @@ dependency = []
 
 # What exercises Xmip, under the provider whose work it exercises. `test` is
 # the kind of work, not a provider: until 2026-09-23 it stood in the provider's
-# place — xmip-test-playground at test/playground — and left nowhere for anyone
-# else's. A second provider's is xmip-<theirs>-test-playground at
-# test/<theirs>/playground, and the estate's rules apply to it unchanged.
+# place — xmip-test-essentials at test/essentials — and left nowhere for anyone
+# else's. A second provider's is xmip-<theirs>-test-essentials at
+# test/<theirs>/essentials, and the estate's rules apply to it unchanged.
   [xmip.core.test]
-  description = "What exercises Xmip: the Playground, and what follows it. Every provider may have one."
+  description = "What exercises Xmip: the Essentials, and what follows it. Every provider may have one."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "reserved"
   dependency = []
 
-  [xmip.core.test.playground]
-  description = "The Xmip Playground: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
+  [xmip.core.test.essentials]
+  description = "The Xmip Essentials: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # Test scaffolding, not a capability the runtime loads: it mounts outside
   # module/, and it is optional — the estate builds and runs without it
-  # (ADR-0036). Under the provider, because another provider's playground
-  # mounts at test/<theirs>/playground beside it (the owner, 2026-09-23, and
+  # (ADR-0036). Under the provider, because another provider's essentials
+  # mounts at test/<theirs>/essentials beside it (the owner, 2026-09-23, and
   # again 2026-09-24 when it had been moved under module/).
-  mount = "test/core/playground"
+  mount = "test/core/essentials"
   optional = true
   dependency = [
       "xmip-core",
@@ -1969,3 +1955,14 @@ dependency = []
       "xmip-core-transport-wireless-m-bus",
       "xmip-core-transport-zigbee",
   ]
+
+  [xmip.core.test.module]
+  description = "An external module: a content contract built by itself and loaded over the ABI, the one the runtime's loader is tested against (ADR-0057). An external module or assembly handles its own compilation, not Xmip (ADR-0042, amendment 2026-11-05)."
+  architecturalDomain = "Operation"
+  repositoryRole = "operational-capability"
+  maturity = "scaffolded"
+  # Test scaffolding beside the Essentials: the runtime links nothing of it,
+  # and its tests load the library it builds.
+  mount = "test/core/module"
+  primaryLanguage = "rust"
+  dependency = ["xmip-core-contract", "xmip-core-stream", "xmip-core"]

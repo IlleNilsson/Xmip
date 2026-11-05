@@ -301,7 +301,7 @@ the network could write to.
 - The identity vocabulary — mechanism, layer, class, assurance, purpose, and
   clause 8's two — lives in `xmip-core`. `xmip-core-identify`, `-authenticate`
   and `-authorize` depend on it and **never on `xmip-core-party`**, which is what
-  `architecture.toml` already said. The gates answer with a `PartyId`; resolving
+  `architecture.xmip` already said. The gates answer with a `PartyId`; resolving
   the Party happens elsewhere. Proving a credential and knowing whose it is are
   different questions, and a gate able to see the answer to the second would
   eventually decide something with it.
@@ -564,7 +564,7 @@ Locations a node starts: each admits what its `accept` declares it takes,
 its Parties narrowed at authentication and not a second time.
 
 **Drafted, for the owner to overrule.** A configured Party's identifier is
-its place among `[[parties]]`, counted from one, as the Playground already
+its place among `[[parties]]`, counted from one, as the Essentials already
 counted (`configure::party::id`); every node of a cluster holds the same
 list, so each gives a Party the same identifier, and a Party written in
 another place has another. A configured identity names neither its
@@ -606,7 +606,7 @@ Built the same day:
   or with another Party's, is a problem every node's binding reports, and a
   node refuses to start on it: *the Party 'x' has no id: a Party is written
   with its id, a UUIDv7 minted once with it*. `configure::party::id`, the
-  place counted from one, is deleted with every use; the Playground's
+  place counted from one, is deleted with every use; the Essentials'
   Parties carry ids of their own (ADR-0028, amendment 2026-10-20).
 - **Identities** (`configure::PartyIdentity`): `{ mechanism, purpose, value
   }`, the mechanism by the name it declares, the purpose `receive` or
@@ -834,11 +834,11 @@ accepts — so the Location, not a rule, says how strong a claim it takes.
 The second item the amendment of 2026-10-30 left open in open problem 59,
 built on the assistant's draft with the owner's assistant settling its
 three questions. Xmip's SSH and FTP servers — the loopbacks' far ends and
-the Playground's — admitted any password, and the SFTP far end chose a
+the Essentials' — admitted any password, and the SFTP far end chose a
 user's directory by that unchecked name.
 
 - **The server is handed the check; it links no authenticator.**
-  `architecture.toml`: *Credential and identity presentation is a
+  `architecture.xmip`: *Credential and identity presentation is a
   security responsibility, not a transport technology.* A login offered
   is `net::login::Offered` (user, secret), asked of a
   `net::login::Check`, one home for SSH and FTP. `ssh::userauth::serve`
@@ -855,7 +855,7 @@ user's directory by that unchecked name.
   a Receive Location's gate; it is not a login Xmip's FTP server takes.
 - **The real nodes' far end checks the secrets their own Locations
   hold.** Each placement on the Parties' far end names the secret
-  `far-end.<user>` (`configure::placed::far_end_secret`); the Playground
+  `far-end.<user>` (`configure::placed::far_end_secret`); the Essentials
   mints its password, sets it on the Location's node through that node's
   operate listener — the node's secret store, the one place the value is
   kept, never read back out — and the far end keeps only its salted
@@ -892,7 +892,7 @@ still chose a directory by the user a key merely named. Now:
   end's user with the one password or key it presents
   (`sftp::Credential::admitted_as`, over `net::login::only` and the new
   `net::login::only_key`); the SFTP tests enroll each key they log in
-  with for its user. The Playground's check is both gates
+  with for its user. The Essentials' check is both gates
   (`login::checking(passwords, keys)`); the drop box and the real nodes'
   far end enroll no key, since every Location there logs in by password,
   so a key is refused there whatever user it signed for.

@@ -158,9 +158,9 @@
 	path = template/dotnet
 	url = https://github.com/IlleNilsson/xmip-template-dotnet.git
 	ignore = dirty
-[submodule "test/core/playground"]
-	path = test/core/playground
-	url = https://github.com/IlleNilsson/xmip-core-test-playground
+[submodule "test/core/essentials"]
+	path = test/core/essentials
+	url = https://github.com/IlleNilsson/xmip-core-test-essentials
 	ignore = dirty
 [submodule "module/core/library/asn1"]
 	path = module/core/library/asn1
@@ -198,3 +198,7 @@
 [submodule "module/core/capability/unit"]
 	path = module/core/capability/unit
 	url = https://github.com/IlleNilsson/xmip-core-unit.git
+[submodule "test/core/module"]
+	path = test/core/module
+	url = https://github.com/IlleNilsson/xmip-core-test-module
+	ignore = dirty

@@ -28,7 +28,7 @@ interface lives in the repository it belongs to. A Rust contract becomes a
 library a node loads through the C ABI by one line, the contract capability's
 `export_contract!`. A module loaded through the ABI is a separate work under
 any license; a module linked into Xmip is AGPL-3.0-or-later. A provider
-declares its modules in core's `architecture.toml`. The SDK, `xmip-core-sdk`
+declares its modules in core's `architecture.xmip`. The SDK, `xmip-core-sdk`
 at the estate root, `sdk/`, holds only what a module is tested on:
 simulators, emulators and, for now, the local ACME server.**
 
@@ -96,10 +96,10 @@ choose. A module linked into Xmip at build time is part of Xmip and is
 AGPL-3.0-or-later, as ADR-0023 says. No license text changes. CONTRIBUTING's
 *the boundary is the trait* becomes *the boundary is the ABI*.
 
-**7. A provider declares its modules in core's `architecture.toml`**, under its
+**7. A provider declares its modules in core's `architecture.xmip`**, under its
 own provider — `[xmip.<provider>.…]` — through a change to this repository, as
 core's are. The mount follows ADR-0016: `module/<provider>/<domain>/<leaf>`,
-and a Playground at `test/<provider>/playground`.
+and an Essentials at `test/<provider>/essentials`.
 
 **8. The SDK may hold `unsafe`, confined to its export modules** (the owner,
 2026-09-24). The export stands on the far side of the C boundary and must know
@@ -177,7 +177,7 @@ only contain simulator/emulators, local ACME server for now*, and
 3. **Decision 8 moves with the export.** The contract capability denies
    `unsafe` everywhere but its `export` module, where each block carries a
    `SAFETY` comment and tests drive the table as a host would. A provider's
-   crate still forbids `unsafe`, and `xmip-core-contract-rust` still shows it.
+   crate still forbids `unsafe`, and `xmip-core-test-module` still shows it.
 4. **Decision 10 lapses**: the transport error stayed in the capability, and so
    did its conversions.
 5. **Decision 9 is the SDK's whole content**: the simulated media — the serial

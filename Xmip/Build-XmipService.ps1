@@ -8,7 +8,7 @@ function Build-XmipService {
             and technologies need, and nothing else.
 
         .DESCRIPTION
-            A site, deploy/site/<name>.toml, picks one target (device, edge,
+            A site, deploy/site/<name>.xmip, picks one target (device, edge,
             computer, server or hosted), the node roles it serves and the
             technologies its user chose, by repository name; the profiles
             under deploy/profile say what a target and a role bring
@@ -92,7 +92,7 @@ function Build-XmipService {
             Code extension (ADR-0014, amendment 2026-10-22). Its packages
             are restored from its lock, each checked against the lock's
             integrity; its TypeScript shell is compiled by TypeScript's
-            native compiler, the [archive.typescript] of prerequisite.toml;
+            native compiler, the [archive.typescript] of prerequisite.xmip;
             and its VSIX is zipped by PowerShell into
             .local-work/package/vscode. No Node.js. Returns Extension and
             Path.
@@ -110,7 +110,7 @@ function Build-XmipService {
 
         .EXAMPLE
             $arm = '--target', 'aarch64-unknown-linux-gnu'
-            Build-XmipService -Site mill.toml -CargoArgument $arm
+            Build-XmipService -Site mill.xmip -CargoArgument $arm
 
             Builds a site kept outside the estate for a 64-bit ARM Linux
             machine: the edge target's first triple.
@@ -225,7 +225,7 @@ function Build-XmipService {
         return [pscustomobject]@{ Extension = $Extension; Path = $vsix }
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $root 'architecture.toml')
+    $manifest = Get-XmipManifest -Path (Join-Path $root 'architecture.xmip')
     [hashtable] $asked = @{
         Root          = $root
         Site          = $Site

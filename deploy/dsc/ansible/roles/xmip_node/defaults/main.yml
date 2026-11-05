@@ -1,13 +1,13 @@
 ---
 # One Xmip node on its own machine, Windows or AlmaLinux alike (README.md).
 #
-# The node this host is: its key under [nodes] in the cluster's xmip.toml.
+# The node this host is: its key under [nodes] in cluster.xmip.
 xmip_node_name: ""
-# The cluster's name. The cluster's xmip.toml names none: where it runs is
+# The cluster's name. cluster.xmip names none: where it runs is
 # the environment's, so `xmip-service --install --cluster` and `--slice
 # --cluster` give it (ADR-0028, amendment 2026-10-21).
 xmip_cluster_name: ""
-# The cluster's xmip.toml on the controller (ADR-0031, amendment
+# cluster.xmip on the controller (ADR-0031, amendment
 # 2026-10-03): one file for the whole cluster, each node's configuration
 # sliced from it on the node by `xmip-service --slice`. Left empty, the
 # package's `xmip-service --install` writes its starter, one node keeping
@@ -17,7 +17,7 @@ xmip_cluster_configuration: ""
 # for this node under the cluster's own authority: node.pem, node.key and
 # anchors.pem. Left empty, the node is given no certificate.
 xmip_identity: ""
-# The Parties' far end the Playground serves, where the machines reach it:
+# The Parties' far end the Essentials serves, where the machines reach it:
 # every Receive Location and Send Port the cluster's file designs is bound
 # there over SFTP, placed over the inventory's nodes, by `xmip-service
 # --slice --bind --nodes` (ADR-0028, amendment 2026-10-22). Left empty,
@@ -46,4 +46,4 @@ xmip_staging: "{{ 'C:\\ProgramData\\Xmip\\environment' if ansible_os_family == '
 # target, roles and chosen technologies need. The node configuration names
 # no technology: the node loads what its configuration names, from what
 # that build linked (ADR-0025, amendment 2026-09-28).
-xmip_site: deploy/site/personal-computer.toml
+xmip_site: deploy/site/personal-computer.xmip

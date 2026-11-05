@@ -34,30 +34,30 @@ Describe 'A run declares itself hidden and is listed only when asked' {
         InModuleScope Xmip {
             $least = @{ Stress = 'Calm'; Area = 'a' }
 
-            (New-XmipPlaygroundEnvironment @least -Hidden).XMIP_PLAYGROUND_HIDDEN |
+            (New-XmipEssentialsEnvironment @least -Hidden).XMIP_ESSENTIALS_HIDDEN |
                 Should -Be 'true'
-            (New-XmipPlaygroundEnvironment @least).Keys |
-                Should -Not -Contain 'XMIP_PLAYGROUND_HIDDEN'
+            (New-XmipEssentialsEnvironment @least).Keys |
+                Should -Not -Contain 'XMIP_ESSENTIALS_HIDDEN'
         }
     }
 
     It 'reads the variable the roll reads, from the file that reads it' {
         # environment.rs is the one place the roll reads a variable.
         [string] $roll = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'test/core/playground/src/environment.rs')
+            Join-Path $script:Root 'test/core/essentials/src/environment.rs')
 
-        $roll | Should -Match 'XMIP_PLAYGROUND_HIDDEN'
+        $roll | Should -Match 'XMIP_ESSENTIALS_HIDDEN'
     }
 
-    It 'belongs to the Playground alone, and records it in the run record' {
+    It 'belongs to the Essentials alone, and records it in the run record' {
         InModuleScope Xmip {
-            $script:XmipPlaygroundOnly | Should -Contain 'Hidden'
+            $script:XmipEssentialsOnly | Should -Contain 'Hidden'
         }
 
         (Get-Command -Name Start-XmipTest).Parameters['Hidden'].ParameterType |
             Should -Be ([switch])
         [string] $roll = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'Xmip/Start-XmipPlaygroundRollProcess.ps1')
+            Join-Path $script:Root 'Xmip/Start-XmipEssentialsRollProcess.ps1')
         $roll | Should -Match 'hidden\s+= \$hidden'
     }
 
@@ -75,23 +75,23 @@ Describe 'A run declares itself hidden and is listed only when asked' {
 
             Mock Get-XmipEstateRun { }
             Mock Get-XmipTestNode { }
-            Mock Get-XmipPlaygroundProcess { $script:Two }
+            Mock Get-XmipEssentialsProcess { $script:Two }
             Mock Get-XmipRollRecord {
                 # The first declared itself hidden; the second declared
                 # nothing.
                 [bool] $hidden = $Id -eq $script:Two[0].Id
                 [PSCustomObject]@{
                     Id     = $Id
-                    File   = "roll-$Id.toml"
+                    File   = "roll-$Id.xmip"
                     Record = @{
-                        suite    = 'Core.Playground'
+                        suite    = 'Core.Essentials'
                         cluster  = if ($hidden) {
                             $script:HiddenCluster
                         }
                         else {
                             $script:ShownCluster
                         }
-                        snapshot = 'nowhere-snapshot.toml'
+                        snapshot = 'nowhere-snapshot.xmip'
                         hidden   = $hidden
                     }
                 }
@@ -119,13 +119,13 @@ Describe 'A run declares itself hidden and is listed only when asked' {
 
             Mock Get-XmipEstateRun { }
             Mock Get-XmipTestNode { }
-            Mock Get-XmipPlaygroundProcess { $script:One }
+            Mock Get-XmipEssentialsProcess { $script:One }
             Mock Get-XmipRollRecord {
                 [PSCustomObject]@{
                     Id     = $Id
-                    File   = "roll-$Id.toml"
+                    File   = "roll-$Id.xmip"
                     Record = @{
-                        cluster = $script:HiddenCluster; snapshot = 'nowhere-snapshot.toml'
+                        cluster = $script:HiddenCluster; snapshot = 'nowhere-snapshot.xmip'
                     }
                 }
             }
@@ -142,11 +142,11 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             $script:ShownCluster = $ShownCluster
             Mock Get-XmipTestStatus {
                 [PSCustomObject]@{
-                    Id = 21; Kind = 'roll'; State = 'running'; Suite = 'Core.Playground'
+                    Id = 21; Kind = 'roll'; State = 'running'; Suite = 'Core.Essentials'
                     Cluster = $script:HiddenCluster; Tests = @(); Hidden = $true; Stress = 'calm'
                 }
                 [PSCustomObject]@{
-                    Id = 22; Kind = 'roll'; State = 'running'; Suite = 'Core.Playground'
+                    Id = 22; Kind = 'roll'; State = 'running'; Suite = 'Core.Essentials'
                     Cluster = $script:ShownCluster; Tests = @(); Hidden = $false; Stress = 'calm'
                 }
             }

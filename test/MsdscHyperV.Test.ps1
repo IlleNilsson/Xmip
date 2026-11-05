@@ -32,7 +32,7 @@ BeforeAll {
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
     [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml')
-    [string] $script:ExamplePath = Join-Path $script:Template 'environment.example.toml'
+    [string] $script:ExamplePath = Join-Path $script:Template 'environment.example.xmip'
 
 
     # A copy of a document, in YAML, whose every instance is an Echo of its

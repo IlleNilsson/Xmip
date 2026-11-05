@@ -6,7 +6,7 @@
 
 <#
 .SYNOPSIS
-    Reconciles the Xmip repository estate on GitHub with architecture.toml.
+    Reconciles the Xmip repository estate on GitHub with architecture.xmip.
 
 .DESCRIPTION
     Remote only. Creates repositories that the manifest names and GitHub does
@@ -86,7 +86,7 @@ function Get-XmipMountPath {
 
     # An explicit mount wins over the computed path. Almost nothing declares one
     # — the path computed below is right for a module. One whose owner is
-    # reserved (a library, the Playground) mounts where it says.
+    # reserved (a library, the Essentials) mounts where it says.
     [string] $declaredMount = [string](
         Get-XmipPropertyValue -Object $Repository -Name 'mount' -Default ''
     )
@@ -150,7 +150,7 @@ function Sync-XmipEstate {
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
-        # The brand carried to every surface asset/brand/brand.toml names:
+        # The brand carried to every surface asset/brand/brand.xmip names:
         # the icon and resource made from the mark, and each repository's
         # copy (Write-XmipBrand). Local; alone, GitHub is not asked.
         [switch] $Brand,
@@ -165,7 +165,7 @@ function Sync-XmipEstate {
         # parameter - the gate that enforces it caught this parameter's first
         # spelling.
         [string[]] $Only = @(),
-        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.toml'),
+        [string] $ManifestPath = (Join-Path (Get-XmipRepositoryRoot) 'architecture.xmip'),
         [string] $WorkingDirectory = (Join-Path (Get-XmipRepositoryRoot) '.ai-work'),
         [string] $ReportPath,
         [string] $GitHubToken = $env:GITHUB_TOKEN,

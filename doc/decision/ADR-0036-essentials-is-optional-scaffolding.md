@@ -1,34 +1,36 @@
-# ADR-0036: The Playground is optional scaffolding, mounted at the estate root
+# ADR-0036: The Essentials is optional scaffolding, mounted at the estate root
 
 - Status: Accepted
 - Date: 2026-09-06
-- Related: ADR-0016 (submodule composition), ADR-0028 (the Xmip Playground),
+- Amended: 2026-11-04 — the Playground is named Essentials (ADR-0028,
+  amendment of that date)
+- Related: ADR-0016 (submodule composition), ADR-0028 (the Xmip Essentials),
   ADR-0011 (module and repository naming), doc/architecture/repository-model.md
 
 ## In brief
 
 - Theme: The shape of the estate
 - Subject: A repository may declare its mount and mark itself optional
-- Name: The Playground is optional scaffolding
+- Name: The Essentials is optional scaffolding
 - Order: 8
 - Concepts: Mount, declared versus computed; optional repository; test scaffolding
 
-**The Playground is its own repository (`xmip-test-playground`), and it is not a
+**The Essentials is its own repository (`xmip-test-essentials`), and it is not a
 capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `test/playground`, not under `module/`, and it is declared
+estate root as `test/essentials`, not under `module/`, and it is declared
 optional: the estate builds and runs without it.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.
 
 ## Context
 
-The owner, 2026-09-06: the Playground *should be in its own repository, mounted
+The owner, 2026-09-06: the Essentials *should be in its own repository, mounted
 as an optional submodule.* It was already its own repository, but mounted at
-`module/operation/playground` — the domain-grouped path `Get-XmipMountPath`
+`module/operation/essentials` — the domain-grouped path `Get-XmipMountPath`
 computes from `architecturalDomain`. That path says "a module the runtime loads
-under Operations", which the Playground is not: it spawns nodes and drives every
+under Operations", which the Essentials is not: it spawns nodes and drives every
 transport and contract through them (ADR-0028). Its provider namespace is already
-`test` (`[xmip.test.playground]`), so the mount was the part still saying the
+`test` (`[xmip.test.essentials]`), so the mount was the part still saying the
 wrong thing.
 
 ## Decision
@@ -37,15 +39,15 @@ wrong thing.
 
 `Get-XmipMountPath` computes `module/<domain>/<leaf>` for a module, which is
 right for a capability. A repository that is not a capability may declare
-`mount`, and the declared value wins. The Playground declares
-`mount = "test/playground"`: the estate root, beside the estate's own tests,
+`mount`, and the declared value wins. The Essentials declares
+`mount = "test/essentials"`: the estate root, beside the estate's own tests,
 not under `module/`. This is the first non-`module/` submodule mount, and the
 mechanism is general — any future non-module repository uses the same key.
 
 ### 2. Optional is declared, and recorded now
 
 `optional = true` marks a repository the estate builds and runs without. The
-Playground is the first: nothing in the runtime depends on it, and a checkout
+Essentials is the first: nothing in the runtime depends on it, and a checkout
 without it is a complete Xmip. The flag is **recorded now**; the tooling that
 acts on it — not cloning it by default, excluding it from the core landing gate —
 is deferred (the owner's call, 2026-09-06). Recording it first means the manifest
@@ -59,17 +61,17 @@ are added; the repository, its name, and its dependencies are untouched.
 
 ## Consequences
 
-- `architecture.toml` gains `mount` and `optional` on `[xmip.test.playground]`;
+- `architecture.xmip` gains `mount` and `optional` on `[xmip.test.essentials]`;
   `Resolve-XmipNodeFacts`, `Expand-XmipEstate` and `New-XmipRepositoryEntry` carry
   them onto the manifest, and `Get-XmipMountPath` honors `mount`.
-- `.gitmodules` mounts the submodule at `test/playground`; the working tree moves
+- `.gitmodules` mounts the submodule at `test/essentials`; the working tree moves
   there by `git mv`.
-- ADR-0028's path reference is updated to `test/playground`.
+- ADR-0028's path reference is updated to `test/essentials`.
 - No module repository changes: this is a superproject move plus the resolver.
 
 ## Provenance
 
-The requirement is the owner's, 2026-09-06: the Playground in its own repository,
+The requirement is the owner's, 2026-09-06: the Essentials in its own repository,
 mounted as an optional submodule, at the estate root under a test path. The
 `mount`/`optional` mechanism and the deferral of the optional tooling are the
 assistant's drafting of it, on the instruction to proceed and write it down.

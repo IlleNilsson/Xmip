@@ -28,13 +28,13 @@ function Deploy-XmipEnvironment {
 
         .PARAMETER Path
             The environment file, as deploy/dsc/msdsc/<hypervisor>/
-            environment.example.toml shows it.
+            environment.example.xmip shows it.
 
         .EXAMPLE
-            Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
+            Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.xmip'
 
         .EXAMPLE
-            Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
+            Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.xmip' -WhatIf
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     [OutputType([pscustomobject])]

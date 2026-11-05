@@ -9,7 +9,7 @@ function Get-XmipTestNode {
             nodes and the ones started by hand — one object each.
 
         .DESCRIPTION
-            A node is a process running the Playground's own node binary
+            A node is a process running the Essentials' own node binary
             (ADR-0028 clause 2). What it is doing is what it declared where it
             started (ADR-0053), read by the node: its name, stress level, what
             roles it declared, whether it may assume the internet, its
@@ -26,7 +26,7 @@ function Get-XmipTestNode {
             2026-10-01), in the words -NodeRole takes them: 'receiving',
             'processing,sending', 'executing', or empty for a node that
             declared no role and runs whole tests itself. Online is the online
-            capability of the same record. The Playground models neither
+            capability of the same record. The Essentials models neither
             authentication nor runtime capability, so neither is here.
 
         .PARAMETER Name
@@ -50,10 +50,10 @@ function Get-XmipTestNode {
     )
 
     $ErrorActionPreference = 'Stop'
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
 
     [System.Diagnostics.Process[]] $processes = @(
-        Get-XmipPlaygroundProcess -Name 'xmip-playground-*' -Path $layout.Node -Kind Node
+        Get-XmipEssentialsProcess -Name 'xmip-essentials-*' -Path $layout.Node -Kind Node
     )
 
     [hashtable] $declared = Read-XmipProcessDeclaration
@@ -110,18 +110,18 @@ function ConvertTo-XmipTestNode {
 
     # Judged by which of the three the name is, never by the whole name: since
     # 2026-09-20 a process carries its cluster, so
-    # xmip-playground-<cluster>-cluster is that cluster's and
-    # xmip-playground-cluster is one nobody named. A node called cluster is
-    # xmip-playground-<cluster>-node-cluster and is neither.
+    # xmip-essentials-<cluster>-cluster is that cluster's and
+    # xmip-essentials-cluster is one nobody named. A node called cluster is
+    # xmip-essentials-<cluster>-node-cluster and is neither.
     [string] $named = Resolve-XmipProcessName -Id $above -Declared $known
 
-    if ((Get-XmipPlaygroundImageKind -Name $named) -eq 'Cluster') {
+    if ((Get-XmipEssentialsImageKind -Name $named) -eq 'Cluster') {
         $parent = try { $parent.Parent } catch { $null }
         $above = if ($null -ne $parent) { $parent.Id } else { 0 }
         $named = Resolve-XmipProcessName -Id $above -Declared $known
     }
 
-    [bool] $ofRoll = (Get-XmipPlaygroundImageKind -Name $named) -eq 'Roll'
+    [bool] $ofRoll = (Get-XmipEssentialsImageKind -Name $named) -eq 'Roll'
     # What the node was started with is what it declared (ADR-0053): the
     # node binary says its flags in its declaration, and nothing here reads
     # its command line. A node that declared nothing says nothing.
@@ -130,7 +130,7 @@ function ConvertTo-XmipTestNode {
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestNode'
-        Suite      = $script:XmipPlaygroundSuite
+        Suite      = $script:XmipEssentialsSuite
         Name       = Get-TomlValue -Node $said -Name 'node'
         Id         = $Process.Id
         Stress     = Get-TomlValue -Node $said -Name 'stress'

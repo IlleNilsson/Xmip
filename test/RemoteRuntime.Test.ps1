@@ -140,9 +140,9 @@ Describe 'Each remote build is one cargo command' {
     }
 
     It 'reads the working trees in a landing, through its patch' {
-        [object[]] $build = Get-XmipTestBuild -Platform Desktop -Patch 'patch.toml'
+        [object[]] $build = Get-XmipTestBuild -Platform Desktop -Patch 'patch.xmip'
 
-        ($build[0].CargoArgument -join ' ') | Should -BeLike '* --config patch.toml'
+        ($build[0].CargoArgument -join ' ') | Should -BeLike '* --config patch.xmip'
     }
 }
 
@@ -259,7 +259,7 @@ Describe 'The phone host reads what the build writes' {
 Describe 'A landing builds the remote build before the module that needs it' {
     BeforeEach {
         InModuleScope Xmip {
-            Mock New-XmipLocalPatch { 'patch.toml' }
+            Mock New-XmipLocalPatch { 'patch.xmip' }
             Mock Get-XmipEstateCrate { }
             Mock Get-XmipVerifyTime { @{} }
             Mock Set-XmipVerifyTime { }
@@ -285,7 +285,7 @@ Describe 'A landing builds the remote build before the module that needs it' {
             $tree.Skipped | Should -BeNullOrEmpty
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
-                $Platform -eq 'Desktop' -and $Patch -eq 'patch.toml'
+                $Platform -eq 'Desktop' -and $Patch -eq 'patch.xmip'
             }
         }
     }

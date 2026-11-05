@@ -26,7 +26,7 @@ function Get-XmipTestOfRoll {
         .DESCRIPTION
             What the run was started with, or, for a run started without
             -Test, every test of its suite — which is what it drives. A suite
-            whose tests this cannot list, which is any but the Playground,
+            whose tests this cannot list, which is any but the Essentials,
             drives nothing that can be named here.
 
         .PARAMETER Roll
@@ -45,8 +45,8 @@ function Get-XmipTestOfRoll {
         return $started
     }
 
-    if ("$($Roll.Suite)" -eq $script:XmipPlaygroundSuite) {
-        return [string[]] @($script:XmipPlaygroundTest.Keys)
+    if ("$($Roll.Suite)" -eq $script:XmipEssentialsSuite) {
+        return [string[]] @($script:XmipEssentialsTest.Keys)
     }
 
     return [string[]] @()

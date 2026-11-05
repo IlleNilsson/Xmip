@@ -134,7 +134,7 @@ Describe 'A complete configuration a document shows is one the runtime would sta
 
                 foreach ($example in $Marked) {
                     $count++
-                    [string] $file = Join-Path -Path $Area -ChildPath "example-$count.toml"
+                    [string] $file = Join-Path -Path $Area -ChildPath "example-$count.xmip"
                     Set-Content -LiteralPath $file -Value $example.Text -Encoding utf8NoBOM
 
                     [object] $verdict = Test-XmipNodeConfiguration -Path $file -Library $Runtime

@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-05
-- Related: ADR-0027 (the operator boundary), ADR-0028 (the Xmip Playground),
+- Related: ADR-0027 (the operator boundary), ADR-0028 (the Xmip Essentials),
   ADR-0013 (the Journey model), observability-model.md section 6
 
 ## In brief
@@ -24,14 +24,14 @@ holds numbers and states for watching.
 ## Context
 
 The owner's requirement, 2026-09-05: *abi, cli, ui and gui shall have history.*
-While watching the playground roll, the present tense is not enough — an
+While watching the essentials roll, the present tense is not enough — an
 operator needs to see a pair that flickered red an hour ago, or throughput
 climbing over a shift. ADR-0027 already carries a **window** on every
 measurement and versions the boundary independently, so history is an addition,
 not a redesign.
 
 Two producers exist. The runtime retains history in memory and answers the ABI;
-the Playground, which has no runtime yet, writes its history to a file the file
+the Essentials, which has no runtime yet, writes its history to a file the file
 surface reads. Both hold the same shape, so a surface reads history the same way
 whichever is behind it.
 
@@ -67,13 +67,13 @@ reads what was retained.
 
 A surface with no history to show says so, as it does for a missing snapshot.
 
-### 5. The Playground writes history to a file
+### 5. The Essentials writes history to a file
 
-Until a runtime retains it, the Playground writes its snapshot and its history
+Until a runtime retains it, the Essentials writes its snapshot and its history
 to files beside each other, and the file surface reads them. The files are
 **TOML**: on disk the estate is TOML, and JSON is reserved for what lives in
 memory or on the wire (the owner's rule, 2026-09-05 — the same reason
-`architecture.json` was deleted for `architecture.toml`). They are bounded the
+`architecture.json` was deleted for `architecture.xmip`). They are bounded the
 same way the in-memory series is: the writer keeps the last N points.
 
 ## Consequences
@@ -105,16 +105,16 @@ to proceed.
 ## Amendment, 2026-09-19: a point is the measurement at the scope it names
 
 **What was wrong.** Clause 1 says a point is what a snapshot carries at one
-instant, and clause 5 says the Playground writes its history to a file. Neither
+instant, and clause 5 says the Essentials writes its history to a file. Neither
 said at **which scope** the file's points are counted, and the two halves
 disagreed in the code. A snapshot file carries the node's throughput as
 `Snapshot::measure` rolls it up — every count at and beneath the node, summed.
 A history keeps a series per scope exactly as it was recorded, and reads one
-exact scope back. The Playground's scenarios record beneath the node, each
+exact scope back. The Essentials' scenarios record beneath the node, each
 under its own subtree, and nothing was ever recorded at the node itself, so the
 series for the node was empty.
 
-**What it cost.** Every `*-history.toml` the Playground ever published held
+**What it cost.** Every `*-history.xmip` the Essentials ever published held
 `points = []` — from the day this record was accepted, 2026-09-05, to the day
 it was found, 2026-09-19. `Get-XmipHistory` emitted nothing, the ABI's series
 held nothing and the GUI drew no curve. Nobody noticed for a fortnight because
@@ -128,7 +128,7 @@ one it read was empty.
   happened to be recorded at that exact scope. The producer retains it that
   way, so the boundary still reads what was retained and computes nothing
   (clause 3, ADR-0027 clause 6).
-- **The Playground records it each round**: `test/playground/src/curve.rs`
+- **The Essentials records it each round**: `test/essentials/src/curve.rs`
   records the snapshot, which keeps every scope's own series, and beside it the
   node's rollup, which is the curve the file carries. Its tests assert that a
   round driven the way a roll drives one leaves points in the file — and that

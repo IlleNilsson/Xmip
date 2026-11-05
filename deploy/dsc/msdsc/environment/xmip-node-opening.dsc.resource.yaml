@@ -63,7 +63,7 @@ schema: !embedded
         description: 'xmip-service, as the package installed it.'
         type: string
       configuration:
-        description: 'The node''s xmip-node.toml.'
+        description: 'The node''s node.xmip.'
         type: string
       node:
         description: 'The node this machine is.'

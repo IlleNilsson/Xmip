@@ -1,6 +1,6 @@
 #!/bin/sh
 # After the .pkg is unpacked (distribution.xml): xmip-service lays the node
-# out under /opt/xmip and registers it — the starter config/xmip.toml where
+# out under /opt/xmip and registers it — the starter config/cluster.xmip where
 # there is none, the node's slice, the folders, and the launchd daemon
 # registration.rs writes, loaded, after the daemon that makes /var/run/xmip
 # for the node's account, where its local endpoint is. An upgrade keeps the configuration and
@@ -8,7 +8,7 @@
 #
 # XMIP_NODE and XMIP_CLUSTER name the node and the cluster, each the
 # machine's local host name unless set; the cluster is used where the
-# machine's xmip.toml names none. XMIP_ACCOUNT names the account the node's
+# machine's cluster.xmip names none. XMIP_ACCOUNT names the account the node's
 # daemon runs as, root unless set (ADR-0015 and ADR-0028, amendments
 # 2026-10-21).
 #
@@ -20,14 +20,14 @@ cluster="${XMIP_CLUSTER:-$node}"
 
 if [ -n "${XMIP_ACCOUNT:-}" ]; then
     /opt/xmip/bin/xmip-service \
-        --configuration /opt/xmip/config/xmip.toml \
+        --configuration /opt/xmip/config/cluster.xmip \
         --node "$node" \
         --cluster "$cluster" \
         --account "$XMIP_ACCOUNT" \
         --install
 else
     /opt/xmip/bin/xmip-service \
-        --configuration /opt/xmip/config/xmip.toml \
+        --configuration /opt/xmip/config/cluster.xmip \
         --node "$node" \
         --cluster "$cluster" \
         --install

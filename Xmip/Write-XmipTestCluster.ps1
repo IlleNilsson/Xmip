@@ -3,11 +3,11 @@
 Set-StrictMode -Version Latest
 
 <#
-    A test run's cluster, as configuration: the xmip.toml whose [nodes] are the
+    A test run's cluster, as configuration: the cluster.xmip whose [nodes] are the
     nodes a roll spawns (ADR-0056, amendment 2026-10-03: names are parameters
     and configuration). Start-XmipTest writes the run's own file from
     -Cluster, and the nodes -Nodes names or, where it names none, every node
-    the Playground's own cluster file declares, each with the roles -NodeRole
+    the Essentials' own cluster file declares, each with the roles -NodeRole
     states or that file declares (ADR-0028, amendment 2026-10-21: one file
     for one computer and for machines of their own), and names it to the
     roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
@@ -19,8 +19,8 @@ Set-StrictMode -Version Latest
 function Get-XmipTestClusterPath {
     <#
         .SYNOPSIS
-            The test cluster's xmip.toml: the file XMIP_TEST_CLUSTER names,
-            else the estate's test/xmip.toml.
+            The test cluster's cluster.xmip: the file XMIP_TEST_CLUSTER names,
+            else the estate's test/cluster.xmip.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -30,13 +30,13 @@ function Get-XmipTestClusterPath {
         return $env:XMIP_TEST_CLUSTER
     }
 
-    return Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test/xmip.toml'
+    return Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test/cluster.xmip'
 }
 
 function Read-XmipTestCluster {
     <#
         .SYNOPSIS
-            A cluster's xmip.toml as a test run reads it: its name, its nodes
+            A cluster's cluster.xmip as a test run reads it: its name, its nodes
             in ordinal order, the roles each declares as written, and its
             scope. The module's one reading of a cluster's nodes.
 
@@ -46,7 +46,7 @@ function Read-XmipTestCluster {
             for with -Nodes @().
 
         .PARAMETER Path
-            The cluster's xmip.toml.
+            cluster.xmip.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -81,12 +81,12 @@ function Read-XmipTestCluster {
 function Get-XmipClusterNodeRole {
     <#
         .SYNOPSIS
-            The nodes a cluster's xmip.toml declares, in ordinal order, and
+            The nodes a cluster's cluster.xmip declares, in ordinal order, and
             the roles each declares as written: the module's one reading of
             a cluster's [nodes].
 
         .PARAMETER Document
-            The cluster's xmip.toml, as Read-XmipToml read it.
+            cluster.xmip, as Read-XmipToml read it.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -108,10 +108,10 @@ function Get-XmipClusterNodeRole {
     return [pscustomobject]@{ Nodes = $names; Role = $role }
 }
 
-function Read-XmipPlaygroundCluster {
+function Read-XmipEssentialsCluster {
     <#
         .SYNOPSIS
-            The nodes the Playground's own cluster xmip.toml declares and the
+            The nodes the Essentials' own cluster cluster.xmip declares and the
             roles each declares. It names no cluster: where it runs is the
             run's or the environment's (ADR-0028, amendment 2026-10-21).
     #>
@@ -119,7 +119,7 @@ function Read-XmipPlaygroundCluster {
     [OutputType([pscustomobject])]
     param()
 
-    [string] $path = (Get-XmipPlaygroundLayout).Configuration
+    [string] $path = (Get-XmipEssentialsLayout).Configuration
     return Get-XmipClusterNodeRole -Document (Read-XmipToml -Path $path)
 }
 
@@ -127,7 +127,7 @@ function Join-XmipNodeRole {
     <#
         .SYNOPSIS
             The roles each of -Nodes declares in a run: what -NodeRole states
-            for it, else what the Playground's file declares, else none.
+            for it, else what the Essentials' file declares, else none.
 
         .PARAMETER Nodes
             The run's nodes.
@@ -136,7 +136,7 @@ function Join-XmipNodeRole {
             What -NodeRole stated per node, or $null.
 
         .PARAMETER Declared
-            What the Playground's file declares per node (Read-XmipPlaygroundCluster).
+            What the Essentials' file declares per node (Read-XmipEssentialsCluster).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -175,12 +175,12 @@ function Join-XmipNodeRole {
 function Write-XmipTestCluster {
     <#
         .SYNOPSIS
-            Writes a run's cluster xmip.toml from what was typed — the
+            Writes a run's cluster cluster.xmip from what was typed — the
             cluster, its nodes and the roles each declares — and returns its
             path.
 
         .DESCRIPTION
-            <Path>/<Cluster>.xmip.toml: [service] with the cluster's name, and
+            <Path>/<Cluster>.xmip: [service] with the cluster's name, and
             one [nodes.<node>] per node, with roles where -NodeRole states
             them, in node::NodeRole's words as ConvertTo-XmipNodeRole says
             them. A node -NodeRole does not name declares nothing. Replaced
@@ -232,7 +232,7 @@ function Write-XmipTestCluster {
         $document.nodes = $declared
     }
 
-    [string] $file = Join-Path -Path $Path -ChildPath "$Cluster.xmip.toml"
+    [string] $file = Join-Path -Path $Path -ChildPath "$Cluster.xmip"
 
     if ($PSCmdlet.ShouldProcess($file, 'Write the run''s cluster file')) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null

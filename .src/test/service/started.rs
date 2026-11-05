@@ -215,7 +215,7 @@ impl Drop for Ending {
 /// a key to it by adding a line.
 pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
     std::fs::create_dir_all(directory).expect("a directory");
-    let path = directory.join(format!("{}.toml", node_name()));
+    let path = directory.join(format!("{}.xmip", node_name()));
     let text = format!(
         "{}\n[operate]\nlocal = \"{}\"\n",
         node(receive, &unheld().to_string()),

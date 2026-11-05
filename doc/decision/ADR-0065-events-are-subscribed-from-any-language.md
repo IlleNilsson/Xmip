@@ -212,12 +212,12 @@ point the owner's to overrule.
   subscription and a Subscription (amendment 2026-09-30).
 - **The snapshot carries the subscriptions.** A node records what its hub
   holds in its snapshot (`Snapshot::record_event_subscription`), a
-  publication writes them as `[[event_subscriptions]]`, the Playground's
+  publication writes them as `[[event_subscriptions]]`, the Essentials'
   cluster and roll merge them as they merge health, and a surface reads them
   through `xmip_publication_event_subscriptions_v1`. None is persisted: a subscription
   lives in its process's hub, and the snapshot says what the hub held when
   it was taken.
-- **Every Playground node subscribes two Parties**, through the hub and
+- **Every Essentials node subscribes two Parties**, through the hub and
   nothing of its own: *operations* hears every Event on the node and is
   called back; *on-call* hears the failures and is drained each round. A
   node raises an Event for each stage it serves whose failing pairs changed
@@ -235,13 +235,13 @@ point the owner's to overrule.
   lists and, with `--pause`, `--resume` or `--remove` on one named by
   `--location` and `--id`, acts; `Get-XmipEventSubscription` is the one
   cmdlet for the noun, the act a parameter set with `-WhatIf`.
-- **Not yet.** No Playground node forwards over the wire, so every
+- **Not yet.** No Essentials node forwards over the wire, so every
   subscription the view lists is in process. A snapshot lists what its
   publisher last published, so an act left for a node shows within a round,
   not at once.
 
 Provenance: the owner's requirement, quoted; the model, the order
-through the publication, the Playground's Parties and the view's form are
+through the publication, the Essentials' Parties and the view's form are
 the assistant's, for the owner to overrule.
 
 ## Amendment, 2026-09-30: every name of the Event kind says Event
@@ -323,7 +323,7 @@ means the assistant's):
   Party allow-list: a hub's gate (`gate`) is the `authorize::Authorizer`s it
   is handed (`Hub::authorize_by`), the node's as it starts, or one the
   program hosting the hub takes from the authorize capability — "these
-  Parties" is the party technology's `PartyPolicy`, which the Playground and
+  Parties" is the party technology's `PartyPolicy`, which the Essentials and
   every test hand their hub, never a copy of it. Across the C boundary the
   trait is a callback the hosting program hands over —
   `xmip_event_authorize_v1`, answering allow, deny or no opinion of each
@@ -368,7 +368,7 @@ potential perfect Rust code.*
   technologies did that and are gone, with the reserved transform and
   process entries in C, C++, Go, Java, Lua, PowerShell and Python (ADR-0042,
   amendment 2026-10-05).
-- The JDK, Python and zig stay in `prerequisite.toml`, now for these
+- The JDK, Python and zig stay in `prerequisite.xmip`, now for these
   bindings alone; the Go toolchain served only a contract technology and is
   gone.
 

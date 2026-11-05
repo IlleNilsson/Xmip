@@ -20,14 +20,14 @@ From an elevated prompt (an Administrator terminal on Windows, `sudo` on
 Linux and macOS), in the unpacked `xmip` folder:
 
 ```powershell
-bin/xmip-service --configuration config/xmip.toml --node <node> --cluster <cluster> --install
+bin/xmip-service --configuration config/cluster.xmip --node <node> --cluster <cluster> --install
 ```
 
 This is what every Xmip package runs. It writes a starter cluster
-configuration, `config/xmip.toml`, if there is none — one node, declaring
+configuration, `config/cluster.xmip`, if there is none — one node, declaring
 the `storage` role so it keeps its own storage, offline,
 operated from this machine on its local endpoint — slices the node's own
-configuration, `config/xmip-node.toml`, from it, makes the `modules`,
+configuration, `config/node.xmip`, from it, makes the `modules`,
 `logs`, `data` and `data/audit` folders, and registers and starts the Xmip
 Service, `xmip-<node>`, to start with the machine. A configuration already
 there is never written over.
@@ -35,7 +35,7 @@ there is never written over.
 To remove the service again:
 
 ```powershell
-bin/xmip-service --configuration config/xmip-node.toml --uninstall
+bin/xmip-service --configuration config/node.xmip --uninstall
 ```
 
 It stops the service, waiting for the node to drain, and removes it.
@@ -45,11 +45,11 @@ Delete the folder yourself when you no longer want them.
 ## Run it in a terminal instead
 
 Without elevation and without registering anything: write
-`config/xmip.toml` yourself, slice the node's configuration from it, and
+`config/cluster.xmip` yourself, slice the node's configuration from it, and
 run the node until Ctrl+C.
 
 ```toml
-# config/xmip.toml
+# config/cluster.xmip
 [service]
 name = "xmip-<node>"
 cluster_name = "<cluster>"
@@ -71,8 +71,8 @@ named pipe on Windows, `/run/xmip/xmip-<node>.sock` on Linux and
 that folder must exist and be yours; the service's unit or daemon makes it.
 
 ```powershell
-bin/xmip-service --configuration config/xmip.toml --node <node> --slice > config/xmip-node.toml
-bin/xmip-service --configuration config/xmip-node.toml --console
+bin/xmip-service --configuration config/cluster.xmip --node <node> --slice > config/node.xmip
+bin/xmip-service --configuration config/node.xmip --console
 ```
 
 ## What to read next

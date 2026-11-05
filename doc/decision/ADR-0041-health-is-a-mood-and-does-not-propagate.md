@@ -5,7 +5,7 @@
 - Related: ADR-0027 (the operator boundary, amendment 2026-09-05 "three states,
   no fourth"; amendments 2026-09-24, the mood's word, color, order and
   rollup exported),
-  ADR-0028 (the Playground), ADR-0052 (amendment 2026-09-24, one
+  ADR-0028 (the Essentials), ADR-0052 (amendment 2026-09-24, one
   implementation), doc/architecture/observability-model.md
 
 ## In brief
@@ -31,7 +31,7 @@ the parent is displeased and reports `Holding` — drill in. A parent is only ev
 
 ## Context
 
-The owner, 2026-09-06, watching a Playground board go a sea of red: a rollup that
+The owner, 2026-09-06, watching an Essentials board go a sea of red: a rollup that
 propagated the worst state upward meant one red leaf turned its transport, its
 scenario and the cluster all red, so the top of the tree screamed the moment
 anything anywhere failed. *The severity on lower levels must not propagate to a
@@ -89,7 +89,7 @@ The dashboard softens; the gate does not.
   the header calls them moods.
 - The GUIs render each mood to a color (Paused slate, Working blue, Stressed
   yellow, Exhausted burnt, Holding orange, …); the mapping is theirs alone.
-- The Playground publishes moods (`fine`/`paused`/`working`/`stressed`/
+- The Essentials publishes moods (`fine`/`paused`/`working`/`stressed`/
   `exhausted`/`done`/`holding`) as its state, and its board and terminal readout
   read as moods.
 - A scope an operator has paused is in the `Paused` state, not `Stressed`: a
@@ -126,7 +126,7 @@ and re-engineer, 2026-09-14; the names are the ones clause 1 already listed.
 others, who in turn have unique code used by others. It is common sense.* The
 name had one home in .NET and a table in the stylesheet besides — each mood's
 class painted its token directly — and the words a mood is called by were
-written in C# and in the Playground again. Now a mood's word, the mood a word
+written in C# and in the Essentials again. Now a mood's word, the mood a word
 names, its color's name and the worst-first order are `observe::Health` and
 `observe::Standing`, written once in Rust; the runtime's library forwards them
 (`xmip_operate.h` section 7) and `English` calls them. The stylesheet paints
@@ -142,7 +142,7 @@ Holding over anything else — was written in `observe::Snapshot::worst` and
 again in `ScopeTree.Rolled`. It is `observe::Health::rolled` now; the
 snapshot calls it and the surfaces call it through `xmip_health_rolled_v1`
 (ADR-0052, amendment "the last cross-language copies, and a publication read
-once"). The Playground's topology draws its parents — the cluster, a node, a
+once"). The Essentials' topology draws its parents — the cluster, a node, a
 stage, an endpoint, the shared store — through it too, the same day: Fine or
 Holding over the worst beneath, a record at the thing's own scope keeping its
 mood, and a link the worst leaf at either end. Until then a drawn parent

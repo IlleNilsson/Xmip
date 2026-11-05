@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Building and spawning a Playground roll detached, in a pwsh of its own.
+    Building and spawning an Essentials roll detached, in a pwsh of its own.
 
 .DESCRIPTION
     Start-XmipTest built the roll in the console until 2026-10-13, and a first
@@ -11,14 +11,14 @@
     his console during the first build: the build runs detached too, as the
     estate's Pester suite has since 2026-09-25 — Start starts, Get-XmipTestStatus
     observes, Stop-XmipTest stops (the owner, 2026-09-12: nothing starts
-    itself). What reads a build's record is Get-XmipPlaygroundBuild.ps1; what
-    spawns the roll once built is Start-XmipPlaygroundRollProcess.ps1.
+    itself). What reads a build's record is Get-XmipEssentialsBuild.ps1; what
+    spawns the roll once built is Start-XmipEssentialsRollProcess.ps1.
 
     Style: doc/governance/powershell-style.md
 #>
 
 
-function Start-XmipPlaygroundBuild {
+function Start-XmipEssentialsBuild {
     <#
         .SYNOPSIS
             Starts the build and spawn of one roll in a pwsh of its own,
@@ -29,11 +29,11 @@ function Start-XmipPlaygroundBuild {
             build-<start time>.clixml, which the build reads and deletes
             first. Its output — cargo's lines among it — goes to
             build-<start time>.log beside the record, where
-            Get-XmipPlaygroundBuild reads how far it has come.
+            Get-XmipEssentialsBuild reads how far it has come.
 
         .PARAMETER Start
-            What Start-XmipPlaygroundRoll decided, as
-            Start-XmipPlaygroundRollProcess takes it, with Snapshot: where the
+            What Start-XmipEssentialsRoll decided, as
+            Start-XmipEssentialsRollProcess takes it, with Snapshot: where the
             roll will publish, or empty when that is not known yet.
     #>
     [CmdletBinding()]
@@ -43,17 +43,17 @@ function Start-XmipPlaygroundBuild {
         [hashtable] $Start
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [string] $stem = Join-Path -Path $Start.Path -ChildPath "build-$stamp"
-    [string] $record = "$stem.toml"
+    [string] $record = "$stem.xmip"
     [string] $handed = "$stem.clixml"
     $Start.Log = "$stem.log"
 
     Export-Clixml -LiteralPath $handed -InputObject $Start -Depth 5
 
     [string] $shell = Join-Path -Path $PSHOME -ChildPath "pwsh$($layout.Suffix)"
-    [string] $script = New-XmipPlaygroundBuildCommand -Record $record -Handed $handed
+    [string] $script = New-XmipEssentialsBuildCommand -Record $record -Handed $handed
     [string] $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($script))
 
     [hashtable] $launch = @{
@@ -76,7 +76,7 @@ function Start-XmipPlaygroundBuild {
     # Written only where the build has not already written its own: a record
     # that cannot be clobbered never relies on the build being slower.
     [hashtable] $began = @{ Start = $Start; Id = $process.Id; Started = $process.StartTime }
-    $written = New-XmipPlaygroundBuildRecord @began
+    $written = New-XmipEssentialsBuildRecord @began
 
     try {
         Write-XmipToml -Path $record -Value $written -NoClobber
@@ -89,7 +89,7 @@ function Start-XmipPlaygroundBuild {
 }
 
 
-function New-XmipPlaygroundBuildCommand {
+function New-XmipEssentialsBuildCommand {
     <#
         .SYNOPSIS
             The script a detached build executes in its own pwsh.
@@ -123,19 +123,19 @@ function New-XmipPlaygroundBuildCommand {
         "Import-Module -Name $manifest"
         '& (Get-Module -Name Xmip | Select-Object -First 1) {'
         '    param([string] $Record, [string] $Handed)'
-        '    Complete-XmipPlaygroundBuild -Record $Record -Handed $Handed -Verbose'
+        '    Complete-XmipEssentialsBuild -Record $Record -Handed $Handed -Verbose'
         "} $(& $quote $Record) $(& $quote $Handed) *>&1 | ForEach-Object { `"`$_`" }"
     ) -join [Environment]::NewLine
 }
 
 
-function New-XmipPlaygroundBuildRecord {
+function New-XmipEssentialsBuildRecord {
     <#
         .SYNOPSIS
             A build record: what was started, by which pid, and when.
 
         .PARAMETER Start
-            What Start-XmipPlaygroundRoll decided, with Snapshot and Log.
+            What Start-XmipEssentialsRoll decided, with Snapshot and Log.
 
         .PARAMETER Id
             The build's process id.
@@ -174,7 +174,7 @@ function New-XmipPlaygroundBuildRecord {
 }
 
 
-function Complete-XmipPlaygroundBuild {
+function Complete-XmipEssentialsBuild {
     <#
         .SYNOPSIS
             What a detached build does in its own pwsh: build the binaries,
@@ -207,16 +207,16 @@ function Complete-XmipPlaygroundBuild {
     Remove-Item -LiteralPath $Handed -Force
 
     try {
-        Invoke-XmipPlaygroundBuild -Binary roll | Out-Null
+        Invoke-XmipEssentialsBuild -Binary roll | Out-Null
         # The xmip-service every node of the run not real is started as.
-        $start.Service = Invoke-XmipPlaygroundService -Cluster $start.Cluster
-        [int] $roll = Start-XmipPlaygroundRollProcess -Start $start
+        $start.Service = Invoke-XmipEssentialsService -Cluster $start.Cluster
+        [int] $roll = Start-XmipEssentialsRollProcess -Start $start
         Remove-Item -LiteralPath $Record -Force -ErrorAction SilentlyContinue
         Write-Verbose "built; cluster $($start.Cluster) rolls as pid $roll"
     }
     catch {
         [datetime] $began = (Get-Process -Id $PID).StartTime
-        $written = New-XmipPlaygroundBuildRecord -Start $start -Id $PID -Started $began
+        $written = New-XmipEssentialsBuildRecord -Start $start -Id $PID -Started $began
         $written.state = 'FAILED'
         $written.fault = $_.Exception.Message
         $written.finished = [datetime]::UtcNow.ToString('o')

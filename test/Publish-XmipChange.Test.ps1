@@ -46,6 +46,7 @@ BeforeAll {
             'Test-XmipCodeChange.ps1',
             'Get-XmipNewModule.ps1',
             'Test-XmipModule.ps1', 'Test-XmipMeasuredProgram.ps1', 'Test-XmipDotnetModule.ps1',
+            'Invoke-XmipCargoTest.ps1',
             'Submit-XmipModule.ps1',
             'Publish-XmipPin.ps1', 'New-XmipLocalPatch.ps1', 'Get-XmipEstateCrate.ps1',
             'Clear-XmipUnhashedLibrary.ps1', 'Test-XmipChangeTree.ps1',
@@ -294,7 +295,7 @@ rustls = { version = "0.23", optional = true }
 
     It 'says nothing for a manifest with no features table' {
         InModuleScope Xmip -Parameters @{ Fixture = $script:Fixture } {
-            $bare = Join-Path $Fixture 'bare.toml'
+            $bare = Join-Path $Fixture 'bare.xmip'
             Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
 
             @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'module/nowhere').Count |
@@ -326,7 +327,7 @@ Describe 'A module''s timing program runs last, alone' {
         $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-measured-$([guid]::NewGuid())"
         New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
 
-        $script:Declared = Join-Path $script:Fixture 'declared.toml'
+        $script:Declared = Join-Path $script:Fixture 'declared.xmip'
         Set-Content -LiteralPath $script:Declared -Value @'
 [package]
 name = "xmip-core-example"
@@ -344,7 +345,7 @@ required-features = ["test-support"]
 
 [dev-dependencies]
 '@
-        $script:Tested = Join-Path $script:Fixture 'tested.toml'
+        $script:Tested = Join-Path $script:Fixture 'tested.xmip'
         Set-Content -LiteralPath $script:Tested -Value @'
 [package]
 name = "xmip-core-example"
@@ -363,7 +364,7 @@ path = "tests/measured/main.rs"
         InModuleScope Xmip -Parameters @{ Declared = $script:Declared; Fixture = $script:Fixture } {
             Get-XmipMeasuredDeclaration -ManifestPath $Declared | Should -Match 'test = false'
 
-            $bare = Join-Path $Fixture 'bare.toml'
+            $bare = Join-Path $Fixture 'bare.xmip'
             Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
             Get-XmipMeasuredDeclaration -ManifestPath $bare | Should -BeNullOrEmpty
         }
@@ -383,7 +384,7 @@ path = "tests/measured/main.rs"
         [string] $program = Get-Content -Raw -LiteralPath (
             Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
 
-        [int] $features = $module.IndexOf('& cargo test @through --features')
+        [int] $features = $module.IndexOf('Invoke-XmipCargoTest -Argument $withFeatures')
         [int] $measured = $module.IndexOf('$passed = Test-XmipMeasuredProgram @measured')
 
         $features | Should -BeGreaterThan 0
@@ -391,6 +392,54 @@ path = "tests/measured/main.rs"
         $module | Should -Match 'CheckOnly    = \$true'
         $program | Should -Match '--test-threads=1'
         $program | Should -Match 'cargo clippy @Through --test \$program'
+    }
+}
+
+Describe 'A test that never ends fails the landing in a minute' {
+    # 2026-11-04: a landing waited two hours on seven TLS tests that waited on
+    # each other; libtest only said each had run over 60 seconds.
+
+    It 'stops the run at libtest''s first word of a test running a minute, and names it' {
+        InModuleScope Xmip {
+            Mock Write-Host { }
+            Mock Stop-XmipCargoRun { }
+            Mock cargo {
+                'test a::passes ... ok'
+                'test b::waits has been running for over 60 seconds'
+                'test c::waits has been running for over 60 seconds'
+                $global:LASTEXITCODE = 0
+            }
+
+            Invoke-XmipCargoTest -Argument @() | Should -BeFalse
+            Should -Invoke Stop-XmipCargoRun -Times 1 -Exactly
+            Should -Invoke Write-Host -ParameterFilter {
+                "$Object" -like '*FAILED. b::waits ran a minute*'
+            }
+        }
+    }
+
+    It 'passes a run whose tests all end, and stops nothing' {
+        InModuleScope Xmip {
+            Mock Write-Host { }
+            Mock Stop-XmipCargoRun { }
+            Mock cargo {
+                'test a::passes ... ok'
+                $global:LASTEXITCODE = 0
+            }
+
+            Invoke-XmipCargoTest -Argument @() | Should -BeTrue
+            Should -Invoke Stop-XmipCargoRun -Times 0 -Exactly
+        }
+    }
+
+    It 'runs every cargo test of a landing through it' {
+        [string] $module = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipModule.ps1')
+        [string] $program = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
+
+        "$module`n$program" | Should -Not -Match '& cargo test'
+        $module | Should -Match 'Invoke-XmipCargoTest -Argument \$through'
     }
 }
 

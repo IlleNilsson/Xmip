@@ -2,14 +2,14 @@
 
 Set-StrictMode -Version Latest
 
-function Initialize-XmipPlaygroundAuthority {
+function Initialize-XmipEssentialsAuthority {
     <#
         .SYNOPSIS
-            The Playground's authority, kept under its area, and a certificate
+            The Essentials' authority, kept under its area, and a certificate
             for the web host under it; made where none is kept.
 
         .DESCRIPTION
-            The Playground tester acts in the web GUI with an operator
+            The Essentials tester acts in the web GUI with an operator
             certificate (ADR-0009, amendment 2026-10-21): the host serves
             https on 127.0.0.1 under the roll's authority and the tester
             presents a certificate that authority signed. The authority is
@@ -20,20 +20,20 @@ function Initialize-XmipPlaygroundAuthority {
             of it is the runtime's (xmip_operate.h section 21, through
             Xmip.Surface's RuntimeLibrary); nothing here writes a key.
 
-            Beside them, operator.toml names the folder in
+            Beside them, operator.xmip names the folder in
             [provision.operator], so the tester has their request signed by
             the same authority with the operator module's own cmdlet:
             New-XmipCertificate -Request <operator.csr> -Configuration
-            <Authority>/operator.toml. The runtime reads that file as a node
+            <Authority>/operator.xmip. The runtime reads that file as a node
             configuration, so it carries a [service] table: the cluster the
-            Playground rolls, as its xmip.toml names it (Get-XmipTestClusterPath),
+            Essentials rolls, as its cluster.xmip names it (Get-XmipTestClusterPath),
             and the folder's name as the node's, which no node runs as.
 
             Returns the host's Certificate, PrivateKey and TrustAnchor, and the
             Configuration a tester signs by.
 
         .PARAMETER Folder
-            Where the authority is kept. Get-XmipPlaygroundLayout's Authority
+            Where the authority is kept. Get-XmipEssentialsLayout's Authority
             unless given.
 
         .PARAMETER HostName
@@ -44,7 +44,7 @@ function Initialize-XmipPlaygroundAuthority {
     [OutputType([PSCustomObject])]
     param(
         [Parameter()]
-        [string] $Folder = (Get-XmipPlaygroundLayout).Authority,
+        [string] $Folder = (Get-XmipEssentialsLayout).Authority,
 
         [Parameter()]
         [string] $HostName = '127.0.0.1'
@@ -53,7 +53,7 @@ function Initialize-XmipPlaygroundAuthority {
     $ErrorActionPreference = 'Stop'
     [string] $full = [System.IO.Path]::GetFullPath($Folder)
 
-    [string] $act = "Keep the Playground's authority and issue $HostName"
+    [string] $act = "Keep the Essentials' authority and issue $HostName"
 
     if (-not $PSCmdlet.ShouldProcess($full, $act)) {
         return
@@ -64,24 +64,24 @@ function Initialize-XmipPlaygroundAuthority {
     $issued = $null
     [string] $refused = ''
 
-    if (-not $hosting.Issue($full, 'Xmip Playground authority', $HostName, $full,
+    if (-not $hosting.Issue($full, 'Xmip Essentials authority', $HostName, $full,
             [ref] $issued, [ref] $refused)) {
-        throw "REFUSED. The Playground's authority at ${full}: $refused"
+        throw "REFUSED. The Essentials' authority at ${full}: $refused"
     }
 
-    [string] $configuration = Join-Path -Path $full -ChildPath 'operator.toml'
+    [string] $configuration = Join-Path -Path $full -ChildPath 'operator.xmip'
 
     if (-not (Test-Path -LiteralPath $configuration)) {
         # Names are configuration (ADR-0056, amendment 2026-10-03): the
-        # cluster the Playground rolls, from its xmip.toml, and the folder's.
+        # cluster the Essentials rolls, from its cluster.xmip, and the folder's.
         [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
         [string] $place = Split-Path -Path $full -Leaf
         Set-Content -LiteralPath $configuration -Encoding utf8NoBOM -Value @(
-            "# What signs a Playground tester's operator request (ADR-0009, amendment"
+            "# What signs an Essentials tester's operator request (ADR-0009, amendment"
             '# 2026-10-21): New-XmipCertificate -Request <operator.csr> -Configuration'
             '# this file. The runtime reads it as a node configuration; no node runs as it.'
             '[service]'
-            'name = "xmip-playground-authority"'
+            'name = "xmip-essentials-authority"'
             "cluster_name = `"$cluster`""
             "node_name = `"$place`""
             ''

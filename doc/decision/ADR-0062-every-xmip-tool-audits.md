@@ -27,7 +27,7 @@
 
 **Every Xmip program records what it does and every failure through
 `xmip-core-audit` — the runtime and its node, the web and desktop monitors,
-the command line, both PowerShell modules, the Playground's roll, cluster and
+the command line, both PowerShell modules, the Essentials' roll, cluster and
 node processes, the language server and the estate's own tooling — not the
 runtime alone. The record is written once, in the audit capability; a .NET
 program and PowerShell reach it through the runtime's library, as they reach
@@ -85,14 +85,14 @@ record behind it is a defect.
 
 ## Consequences
 
-- The web host's unhandled errors, the Playground's crashes and a landing
+- The web host's unhandled errors, the Essentials' crashes and a landing
   that stopped are all found in one place, or in the operating system's log
   when that place was down.
 - Registering the `Xmip` event source on Windows needs elevation once; the
   prerequisite installer does it, and until it has, the fallback writes
   under the Application log's existing .NET runtime source and says so.
 - The audit capability grows an operating-system sink per platform; each is
-  a technology under it, declared in `architecture.toml`.
+  a technology under it, declared in `architecture.xmip`.
 - Every surface and tool changes in the same change (the owner's rule:
   surfaces stay current).
 
@@ -102,7 +102,7 @@ record behind it is a defect.
   keeps failures always, persists to the sink, and sends what the sink could
   not keep — or everything, with no sink — to `OperatingSystemLog`; clause
   3's rule is written there once. `ProgramAudit` is a program's audit, and
-  its default sink is `FileSink`, `audit.toml` in the directory the program
+  its default sink is `FileSink`, `audit.xmip` in the directory the program
   was told, else `XMIP_AUDIT_DIRECTORY`, else none. An address's user and
   password never reach a record (`redaction.rs`).
 - **The operating system's log.** On Unix one datagram to the local syslog
@@ -125,7 +125,7 @@ record behind it is a defect.
   failure, its acts on a scope, the prompt's failures); the script module's
   `Write-XmipAudit` in `Start-XmipTest`, `Stop-XmipTest`,
   `Start-XmipOperationWeb`, `Stop-XmipOperationWeb` and
-  `Publish-XmipChange`; the Playground's roll, cluster and node processes
+  `Publish-XmipChange`; the Essentials' roll, cluster and node processes
   and the language server, which call the capability directly. The web
   host's console is kept in `.local-work/web` beside its run, as a roll's
   is; the estate's records go to `.local-work/audit`.
@@ -157,7 +157,7 @@ The owner, 2026-09-29: *The operation web needs an audit view: audited
 entries in the clusters. Drill-down, sorting and filtering.* The form was
 left to the assistant (*do your best and I'll view it*). Every program had
 audited since 2026-09-25 and nothing read the records back: an operator
-opened `audit.toml` in an editor, and nothing in a record said which cluster
+opened `audit.xmip` in an editor, and nothing in a record said which cluster
 or node it belonged to except a program's name, which nothing at runtime may
 read for meaning.
 
@@ -165,7 +165,7 @@ read for meaning.
 
 A process that belongs somewhere in Xmip writes on every record the
 location it declares (ADR-0053 clause 3): `location = "xmip:///C1"` for a
-Playground roll and its cluster, `xmip:///C1/node/R1` for a node and for the
+Essentials roll and its cluster, `xmip:///C1/node/R1` for a node and for the
 Xmip Service. The one writer puts it there — `ProgramAudit::locate`, set
 once where the process declares itself and shared by every clone, the panic
 hook's among them — so no caller writes it of its own. A program that serves
@@ -176,7 +176,7 @@ none and stand under their host too; nothing is inferred from their names.
 ### 6. The audit is read in one place
 
 The reader is the capability's, beside the writer: `audit_store` reads
-`audit.toml`, and reads again only what was appended since — the file only
+`audit.xmip`, and reads again only what was appended since — the file only
 grows, so a view that reads again on every change of a cluster reads a few
 hundred bytes. It keeps an index of the file, never its records, and reads
 a page at a time (amendment 2026-10-16). `audit_query::AuditQuery` is
@@ -264,7 +264,7 @@ speed, SQLite for persistence over time.*
   an embedded Storage node those are RocksDB and SQLite; behind a database
   server they are two separate databases on IT's servers
   (`deployment-model.md` section 7).
-- **The file sink is replaced.** `ProgramAudit`'s `FileSink`, `audit.toml`,
+- **The file sink is replaced.** `ProgramAudit`'s `FileSink`, `audit.xmip`,
   and the reader over it (clause 6) give way to Xmip Storage; the code
   follows this record.
 - **Clause 3 stands.** When audit cannot persist, the record goes to the
@@ -290,7 +290,7 @@ filtered, grouped and sorted all of them for every query whatever page it
 returned, and the keeper's inbox had no bound.
 
 - **The reader keeps no record** (clause 6 amended). `audit_store::ask`
-  answers an `AuditQuery` a page at a time from `audit.toml`, through an
+  answers an `AuditQuery` a page at a time from `audit.xmip`, through an
   index of the file it extends with what was appended since: blocks of
   records by their bytes, each with its earliest and latest time and how
   many records of each kind it holds. The words, the groups, the counts and

@@ -150,7 +150,7 @@ Describe 'The style document describes what is enforced' {
 
 Describe 'ADR-0021: one edition, and the manifest knows which' {
     BeforeAll {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
 
         [string] $script:Declared = $manifest.crate.edition
 

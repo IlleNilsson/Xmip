@@ -357,7 +357,7 @@ one, and a node it ran held in memory for its own life. Now:
   engine's lock held by another process, a key that does not unwrap —
   before anything serves. A program that linked no engine, starting a node
   that names no store, holds in memory as before; a program that opened a
-  store itself (the Playground) hands it over and that one is the node's.
+  store itself (the Essentials) hands it over and that one is the node's.
 - **`xmip-service` links them by build feature**: `persist-rocksdb` for a
   server or hosted site, `persist-sqlite` for an edge or computer site
   (ADR-0015, amendment 2026-10-01), and with either the
@@ -381,7 +381,7 @@ are refused with exit 2. What the pause held is not seen there: the build
 links no authenticator, so every Stream is refused at its gate before
 routing (the amendment of 2026-09-28), and that a held Message survives a
 restart is proved where Streams route, in the runtime's `pickup` and the
-Playground.
+Essentials.
 
 Provenance: the owner, 2026-09-30, *Sort what you can*, after the gap was
 reported. The keys, their defaults, the data directory, the order place and
@@ -393,7 +393,7 @@ named, for the owner to overrule.
 `xmip-service` ran a node, kept its store and took its orders, and published
 nothing: no operation surface could see a real node — its Monitor, its
 Topology, its Subscriptions — and a surface had nowhere to read where to
-leave a pause. Only the Playground's rolls published. Now the service
+leave a pause. Only the Essentials' rolls published. Now the service
 publishes its node through the one publication there is (ADR-0052;
 `observe::Publication`, ADR-0027):
 
@@ -407,22 +407,22 @@ publishes its node through the one publication there is (ADR-0052;
   each kind (Streams at receive, Journeys at process, Messages at send, and
   what failed at the node), its Subscriptions with their standing, and the
   node drawn as a topology. The drawing is `observe::topology::draw` and
-  `party`, the one every publisher calls, moved there from the Playground
+  `party`, the one every publisher calls, moved there from the Essentials
   (ADR-0052, amendment of this date). A node's configuration names no Party
   yet, so the Party on each side is drawn as `any-party`.
-- **Where.** `<data>/snapshot.toml`, beside `<data>/orders`, in the node's
+- **Where.** `<data>/snapshot.xmip`, beside `<data>/orders`, in the node's
   data directory, and the publication's `orders` names that directory, so
   a surface leaves a pause where the node takes it. The service declares the
   file (ADR-0053, `snapshot`); `Get-XmipProcess` lists it as `Snapshot`, and
   `Start-XmipOperationWeb` binds it by name, so an operator opens the web
   over a node with
   `Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb`, or with
-  `Start-XmipOperationWeb -Snapshot <data>/snapshot.toml`.
+  `Start-XmipOperationWeb -Snapshot <data>/snapshot.xmip`.
 - **How.** Whole or not at all: `observe::publication::write_atomic`, the
-  one writer, moved there from the Playground, which calls it too.
+  one writer, moved there from the Essentials, which calls it too.
 - **When.** As the node starts to accept work; at the look after an order
   was applied, so a pause shows in the next publication, not a round later;
-  otherwise every quarter of a second, the Playground's round. Once more
+  otherwise every quarter of a second, the Essentials' round. Once more
   after the drain, saying the node stopped — the node, its System Process,
   its modules and its Locations Done, what it declared and its
   Subscriptions' standing kept (`running::publication::stopped`) — so a
@@ -1270,7 +1270,7 @@ no console of its own to press Ctrl+Break in, starts the node with its
 input held open and ends it to stop it, and a node whose rig went stops
 with it. Without `--purpose test` a console node reads nothing of its
 input. The root's service tests hold every node's input open and still stop
-it with Ctrl+Break; the Playground ends it (ADR-0028, amendment of this
+it with Ctrl+Break; the Essentials ends it (ADR-0028, amendment of this
 date). The assistant's, 2026-10-22.
 
 ## Amendment, 2026-10-27: one behind holds the one ahead back while it is still taking

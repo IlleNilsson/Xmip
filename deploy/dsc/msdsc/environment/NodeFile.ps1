@@ -2,7 +2,7 @@
 
 <#
     The files a node machine is given (node.resource.ps1, kind File): the
-    cluster's xmip.toml and the node's certificate, its key private.
+    cluster's cluster.xmip and the node's certificate, its key private.
 
     Style: doc/governance/powershell-style.md
 #>

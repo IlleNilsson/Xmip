@@ -248,7 +248,7 @@ function Test-XmipModule {
                 & cargo update 2>&1 | Out-Null
             }
 
-            Write-Host '   testing...' -ForegroundColor DarkGray
+            [bool] $passed = $true
 
             # Written as it arrives, and still returning nothing.
             #
@@ -264,10 +264,12 @@ function Test-XmipModule {
             # hung one were the same picture, and the only way to tell them
             # apart was to wait and find out.
             #
-            # Write-Host inside ForEach-Object gives both: each line appears
-            # when cargo emits it, and the block returns nothing.
-            & cargo test @through 2>&1 | ForEach-Object { Write-Host $_ }
-            $passed = $LASTEXITCODE -eq 0
+            # Invoke-XmipCargoTest writes each line when cargo emits it,
+            # returns only whether it passed, and ends a test that never does.
+            if ($passed) {
+                Write-Host '   testing...' -ForegroundColor DarkGray
+                $passed = Invoke-XmipCargoTest -Argument $through
+            }
 
             # rust-style.md says CI runs cargo fmt --check. It does, in a
             # workflow triggered by hand, which is not the path code lands on.
@@ -333,9 +335,8 @@ function Test-XmipModule {
                     # Tested, not only built: a feature-gated test or a
                     # test-only compile error escaped `cargo build` (an
                     # external review, 2026-10-05).
-                    & cargo test @through --features ($features -join ',') 2>&1 |
-                        ForEach-Object { Write-Host $_ }
-                    $passed = $LASTEXITCODE -eq 0
+                    [string[]] $withFeatures = $through + '--features' + ($features -join ',')
+                    $passed = Invoke-XmipCargoTest -Argument $withFeatures
                 }
 
                 # The module's timing program last, alone, once everything

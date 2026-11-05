@@ -92,10 +92,10 @@ function Test-XmipMeasuredProgram {
     }
 
     Write-Host "   timing, $program alone, one test at a time..." -ForegroundColor DarkGray
-    & cargo test @Through --test $program @withFeatures -- --test-threads=1 2>&1 |
-        ForEach-Object { Write-Host $_ }
+    [string[]] $alone = $Through + '--test' + $program + $withFeatures + '--' +
+        '--test-threads=1'
 
-    $LASTEXITCODE -eq 0
+    Invoke-XmipCargoTest -Argument $alone
 }
 
 

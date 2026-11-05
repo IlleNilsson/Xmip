@@ -14,8 +14,8 @@
       asked, readable by its owner alone.
     - Package: the estate's package installed, which runs xmip-service
       --install with the node, the cluster and the account.
-    - Slice: the node's configuration, xmip-node.toml, as xmip-service
-      --slice prints it from the cluster's xmip.toml; the service is
+    - Slice: the node's configuration, node.xmip, as xmip-service
+      --slice prints it from cluster.xmip; the service is
       restarted when it changed.
     - Opening: a firewall opening for each port xmip-service --listening
       says the node's configuration listens on, and no other.

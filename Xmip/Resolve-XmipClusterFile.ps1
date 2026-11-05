@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 function Resolve-XmipClusterFile {
     <#
         .SYNOPSIS
-            The one `<cluster>-<kind>.toml` in a directory, or a refusal that
+            The one `<cluster>-<kind>.xmip` in a directory, or a refusal that
             names the clusters found there.
 
         .DESCRIPTION
@@ -32,7 +32,7 @@ function Resolve-XmipClusterFile {
     )
 
     [System.IO.FileInfo[]] $files = @(
-        Get-ChildItem -Path $Directory -Filter "*-$Kind.toml" -File | Sort-Object -Property Name
+        Get-ChildItem -Path $Directory -Filter "*-$Kind.xmip" -File | Sort-Object -Property Name
     )
 
     if ($files.Count -eq 1) {
@@ -41,7 +41,7 @@ function Resolve-XmipClusterFile {
 
     if ($files.Count -eq 0) {
         # The caller's own "No <kind> file at" message follows, on this path.
-        return Join-Path -Path $Directory -ChildPath "<cluster>-$Kind.toml"
+        return Join-Path -Path $Directory -ChildPath "<cluster>-$Kind.xmip"
     }
 
     [string] $names = ($files | ForEach-Object { $_.Name }) -join ', '

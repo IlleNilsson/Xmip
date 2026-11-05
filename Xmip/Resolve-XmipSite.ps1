@@ -7,7 +7,7 @@
     technologies need, refused where the target cannot have one.
 
 .DESCRIPTION
-    A site (deploy/site/<name>.toml) picks a target, its roles and the
+    A site (deploy/site/<name>.xmip) picks a target, its roles and the
     technologies its user chose, by repository name (ADR-0015, amendment
     2026-10-19). The build carries the target's features, every role's, and
     each chosen technology, archive targets among them (amendment
@@ -75,7 +75,7 @@ function Resolve-XmipSite {
 
     if ($unknown.Count -gt 0) {
         throw ("REFUSED: site $siteName names $($unknown -join ', '), " +
-            'which is no built technology (architecture.toml).')
+            'which is no built technology (architecture.xmip).')
     }
 
     [object[]] $needed = @(
@@ -149,18 +149,18 @@ function Find-XmipSiteFile {
         [string] $Site
     )
 
-    if ($Site.EndsWith('.toml') -and (Test-Path -LiteralPath $Site -PathType Leaf)) {
+    if ($Site.EndsWith('.xmip') -and (Test-Path -LiteralPath $Site -PathType Leaf)) {
         return (Resolve-Path -LiteralPath $Site).ProviderPath
     }
 
     [string] $directory = Join-Path $Root $script:XmipSiteDirectory
-    [string] $named = Join-Path $directory "$Site.toml"
+    [string] $named = Join-Path $directory "$Site.xmip"
 
     if (Test-Path -LiteralPath $named -PathType Leaf) {
         return $named
     }
 
-    [string[]] $known = @(Get-ChildItem -LiteralPath $directory -Filter '*.toml' -File).BaseName
+    [string[]] $known = @(Get-ChildItem -LiteralPath $directory -Filter '*.xmip' -File).BaseName
 
     throw "REFUSED: there is no site called '$Site'; the sites are $($known -join ', ')."
 }

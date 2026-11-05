@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-# Which live processes are the Playground's. The file on disk is not the
+# Which live processes are the Essentials'. The file on disk is not the
 # answer: on 2026-09-19 the owner's roll, its cluster and its nodes were
 # alive while Get-XmipTestStatus and Get-XmipTestNode said nothing, because
 # the binaries had been rebuilt under the running processes and the lookup
@@ -13,30 +13,30 @@ Set-StrictMode -Version Latest
 # stop, so this finds by declaration first, by name second, and says in words
 # when the file and the image disagree (ADR-0055).
 
-function Get-XmipPlaygroundProcess {
+function Get-XmipEssentialsProcess {
     <#
         .SYNOPSIS
-            Every live process running one Playground binary: the ones the
+            Every live process running one Essentials binary: the ones the
             operating system names, and the ones that declared themselves as
             it, whatever has happened to the file since they started.
 
         .PARAMETER Name
             The process name, wildcards allowed. Since 2026-09-20 a
-            Playground process is named for its cluster and what it is —
-            xmip-playground-C1-roll, xmip-playground-C1-node-R1, for a
+            Essentials process is named for its cluster and what it is —
+            xmip-essentials-C1-roll, xmip-essentials-C1-node-R1, for a
             cluster someone called C1 and a node they called R1,
-            both names free — so the Playground's own callers ask for
-            xmip-playground-* and say which of the three with -Kind.
+            both names free — so the Essentials' own callers ask for
+            xmip-essentials-* and say which of the three with -Kind.
             xmip-gui-web is named outright.
 
         .PARAMETER Path
             Where the binary is expected to be. A process whose image is
             elsewhere is still this one's, and it is said. A process running
-            one of the Playground's own per-instance images is this one's
+            one of the Essentials' own per-instance images is this one's
             without a word, because nothing else writes that directory.
 
         .PARAMETER Kind
-            Which of the Playground's three: Roll, Cluster or Node. The name
+            Which of the Essentials' three: Roll, Cluster or Node. The name
             says it — a node carries the marker node-, and a name without one
             ending in -roll or -cluster is that — so a roll's tree is found by
             kind rather than by twenty names.
@@ -61,11 +61,11 @@ function Get-XmipPlaygroundProcess {
     [bool] $byKind = $PSBoundParameters.ContainsKey('Kind')
 
     foreach ($process in @(Get-Process -Name $Name -ErrorAction SilentlyContinue)) {
-        if ($byKind -and (Get-XmipPlaygroundImageKind -Name $process.ProcessName) -ne $Kind) {
+        if ($byKind -and (Get-XmipEssentialsImageKind -Name $process.ProcessName) -ne $Kind) {
             continue
         }
 
-        if (Test-XmipPlaygroundBinary -Process $process -Path $Path -Declared $declared) {
+        if (Test-XmipEssentialsBinary -Process $process -Path $Path -Declared $declared) {
             $found.Add($process.Id)
             $process
         }
@@ -81,7 +81,7 @@ function Get-XmipPlaygroundProcess {
             continue
         }
 
-        if ($byKind -and (Get-XmipPlaygroundImageKind -Name $said) -ne $Kind) {
+        if ($byKind -and (Get-XmipEssentialsImageKind -Name $said) -ne $Kind) {
             continue
         }
 
@@ -102,7 +102,7 @@ function Get-XmipPlaygroundProcess {
     }
 }
 
-function Test-XmipPlaygroundBinary {
+function Test-XmipEssentialsBinary {
     <#
         .SYNOPSIS
             Whether a process is the named Xmip binary — its own build where
@@ -147,13 +147,13 @@ function Test-XmipPlaygroundBinary {
 
     [string] $image = try { $Process.Path } catch { '' }
 
-    # A process running one of the Playground's own per-instance images is the
-    # Playground's, and nothing about it disagrees: the image is not the built
+    # A process running one of the Essentials' own per-instance images is the
+    # Essentials', and nothing about it disagrees: the image is not the built
     # binary on purpose, because a process name is its image's name and an
     # operator asked to read the cluster and the node off it (ADR-0053,
     # amendment 2026-09-20). Nothing but this module writes that directory.
-    if ((Test-XmipPlaygroundOwnImage -Path $started) -or
-        (Test-XmipPlaygroundOwnImage -Path $image)) {
+    if ((Test-XmipEssentialsOwnImage -Path $started) -or
+        (Test-XmipEssentialsOwnImage -Path $image)) {
         return $true
     }
 
@@ -165,10 +165,10 @@ function Test-XmipPlaygroundBinary {
         Expected = $Path
     }
 
-    return Test-XmipPlaygroundImage @judgment
+    return Test-XmipEssentialsImage @judgment
 }
 
-function Test-XmipPlaygroundImage {
+function Test-XmipEssentialsImage {
     <#
         .SYNOPSIS
             The judgment itself, over what a process says of itself: the

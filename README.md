@@ -120,7 +120,7 @@ Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms
   queue: nothing failed, nothing wanted it, and it is republished once the
   Subscription is corrected. A Subscription is configuration, added and
   removed in the Xmip Application that draws it, a section of the
-  cluster's one `xmip.toml`; an operator
+  cluster's one `cluster.xmip`; an operator
   pauses one — what it matches is held in the node's runtime store, nothing
   lost, surviving a restart — and resumes it, and what it held is picked up
   oldest first
@@ -181,7 +181,7 @@ Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms
   ([ADR-0040](doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md);
   archiving by retention window is
   [built, not in the assembled service](doc/architecture/estate-map.md#retention-archiving): the
-  Playground runs it, a node does not).
+  Essentials runs it, a node does not).
 - **Status.** Every leaf has a mood: Fine, Paused, Working, Stressed,
   Exhausted or Done. A scope above a leaf is Holding when a leaf beneath it
   needs attention, and it carries that leaf and its evidence, so the worst
@@ -207,7 +207,7 @@ build the package from the estate ([Getting started](doc/getting-started.md), th
 | Configuration, data, audit, logs | `ProgramData\Xmip` | `/opt/xmip` | `/opt/xmip` |
 | The service | Windows service `xmip-<node>` | systemd unit `xmip-<node>` | launchd daemon `xmip-<node>` |
 
-The installer writes a starter configuration, `config/xmip.toml` — one node
+The installer writes a starter configuration, `config/cluster.xmip` — one node
 named after the machine, offline, operated on this machine through its
 local endpoint `xmip-<node>` — unless one is there already, and starts the
 service. Give the MSI `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>` to name them
@@ -229,7 +229,7 @@ starter configuration `--install` writes declares it for its one node.
 [Getting started](doc/getting-started.md) is the first run, step by step,
 and its one home: what a machine needs, the clone and the estate's
 PowerShell module, compiling the Xmip Service, a node of your own that
-carries a file in to a file out, and the Playground, Xmip's own integration
+carries a file in to a file out, and the Essentials, Xmip's own integration
 rehearsal, with its monitor.
 
 Nothing in Xmip starts on its own. You name a cluster and its nodes, you
@@ -275,7 +275,7 @@ because their recovery actions differ.
 
 ### Boundaries and scale
 
-The architecture manifest, [`architecture.toml`](architecture.toml), is the
+The architecture manifest, [`architecture.xmip`](architecture.xmip), is the
 estate's dependency graph and the only place its repositories are counted.
 Foundation defines what Xmip is; Capabilities define what it does; Technology
 repositories implement those capabilities; Operations run and govern the
@@ -302,7 +302,7 @@ recommendations whose breach requires prior agreement and a recorded reason.
 One command lands a change across every affected repository in dependency
 order and refuses when a gate fails.
 
-The Playground ([ADR-0028](doc/decision/ADR-0028-the-xmip-playground.md)) is
+The Essentials ([ADR-0028](doc/decision/ADR-0028-the-xmip-essentials.md)) is
 an integration test over time: every transport by every contract, round after
 round, with injected faults, at four stress levels, with a cluster's nodes as
 processes contending over real files and handing work receive to process to
@@ -322,7 +322,7 @@ The design record starts at:
 ### Current maturity
 
 The release status at the top of this page says which release this is. The
-runtime, the operator surfaces and the Playground are operational, and since
+runtime, the operator surfaces and the Essentials are operational, and since
 2026-09-19 the runtime opens a Module for real: it loads the shared library,
 resolves `xmip_create_module_v1`, refuses a descriptor the loading capability's trait
 version does not admit, and configures, starts and stops the contract
@@ -335,7 +335,7 @@ distinction for every repository, and it belongs in every technical
 evaluation. [`doc/planning/open-problems.md`](doc/planning/open-problems.md)
 lists what is undecided, in order, with options and a recommendation for
 each. Routes are drawn in VS Code's designer and held in an Xmip Application,
-a section of the cluster's one `xmip.toml` (ADR-0064); Events are subscribed from any language (ADR-0065) and exported
+a section of the cluster's one `cluster.xmip` (ADR-0064); Events are subscribed from any language (ADR-0065) and exported
 over OTLP and Prometheus. The Monitor view is the first operator screen, with
 the Configuration tree and the Topology beside it.
 
@@ -417,7 +417,7 @@ that policy engaged; the record acknowledges this.
 
 ### A responsible adoption path
 
-1. **Prove the operational model.** Run the Playground and inspect failure,
+1. **Prove the operational model.** Run the Essentials and inspect failure,
    recovery and monitoring behavior.
 2. **Select one bounded integration.** Prefer a flow with a known Contract,
    clear ownership and a measurable delivery outcome.
@@ -523,14 +523,14 @@ account the operating system names; the desktop's, the user running it — and
 one nothing proved watches and acts on nothing. Loopback proves where a
 caller is, not who: a tcp connection over it presents a certificate like any
 other (open problem 35). Both GUIs grant a caller a role by one rule: a role the run states
-(`Role` in `xmip.gui.toml`, else `XMIP_ROLE`) is every proven caller's; else
+(`Role` in `gui.xmip`, else `XMIP_ROLE`) is every proven caller's; else
 the directory the host is told (`Directory`) answers; else Observer. A node's
 operate listener grants every caller it proved — by certificate, or on its
 local endpoint by the operating system, which lets open it only the node's
 account, the machine's administrators and whom `[operate] admit` names —
 the role its `[operate] role` states (ADR-0014, amendments 2026-10-12,
 2026-10-13 and 2026-10-21). The
-Playground's directory is a fake one that allows the tester, and
+Essentials' directory is a fake one that allows the tester, and
 `Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
 gate as its caller, never under a name the caller gives, refused in words
 where the caller's role may not act and audited as that caller either way
@@ -541,9 +541,9 @@ monitor is not a replacement for it.
 
 Every Xmip program audits, not only the runtime
 ([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md)): the monitors,
-`xmip`, both PowerShell modules, the Playground and the language server
+`xmip`, both PowerShell modules, the Essentials and the language server
 record what they start and stop, every act taken through them and every
-failure, through `xmip-core-audit`. A program's records go to `audit.toml` in
+failure, through `xmip-core-audit`. A program's records go to `audit.xmip` in
 the directory its configuration names as `AuditDirectory`, else the one
 `XMIP_AUDIT_DIRECTORY` names, appended before the act that recorded them
 goes on ([built, in the assembled service](doc/architecture/estate-map.md#program-audit)); writing
@@ -566,7 +566,7 @@ amendment 2026-10-19).
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
 | PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
-| Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
+| Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.xmip`](prerequisite.xmip), one package per operating system and package manager | | |
 | Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`), made by `Deploy-XmipEnvironment`, and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the machines on KVM through libvirt (`libvirt`), by the same command; the rest the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
@@ -574,20 +574,20 @@ The environment templates put a cluster's nodes on machines of their own,
 Windows and AlmaLinux alike, in either technology — both cover both
 systems, and Ansible is kept for familiarity and the project's support (the
 owner, 2026-10-21): the names of the cluster and its nodes, and on each node
-machine its account, the cluster's `xmip.toml`, its certificate from the
+machine its account, `cluster.xmip`, its certificate from the
 cluster's own authority (`xmip certificate --node`), the package, its
 slice with every Receive Location and Send Port placed over the
-environment's nodes and bound on the Parties' far end the Playground serves
+environment's nodes and bound on the Parties' far end the Essentials serves
 (ADR-0028, amendment 2026-10-22), the firewall openings its configuration
 listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
 `xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
---account` — and `cargo test --test deploy` reads the Playground's cluster
+--account` — and `cargo test --test deploy` reads the Essentials' cluster
 file, which the example environment runs, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
 machines (ADR-0028, amendment 2026-10-21).
 
-A site, `deploy/site/<name>.toml`, says what one deployment's program is
+A site, `deploy/site/<name>.xmip`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
 `server` or `hosted`), the node **roles** it serves (`receiving`,
 `processing`, `sending`, `executing`, `operational`, `monitoring`,
@@ -629,7 +629,7 @@ Ctrl+C. A node it cannot start is refused in words with exit code 2, and no
 service manager restarts that. `xmip-service --configuration <path>
 --definition` prints what this platform's service manager is told about the
 node's service: the systemd unit, the launchd property list, or the
-`sc.exe create` arguments. `xmip-service --configuration <cluster xmip.toml>
+`sc.exe create` arguments. `xmip-service --configuration <cluster cluster.xmip>
 --node <node> --cluster <cluster> --install` registers that service and
 starts it, after laying the node out from a starter configuration where
 there is none, and `--uninstall` removes it; every package runs them
@@ -674,13 +674,13 @@ its publications — and survives its restart
 [built, in the assembled service](doc/architecture/estate-map.md#subscription-pause)).
 It publishes what the node says of itself — its health and figures, its
 topology with the Parties on each side, its Subscriptions and where it takes
-orders — to `data/snapshot.toml`, every quarter of a second and at once after
+orders — to `data/snapshot.xmip`, every quarter of a second and at once after
 an order or an act over its operate listener, and declares the file, so the operation surfaces open over it:
 
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
-Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.toml
-xmip subscriptions --snapshot /opt/xmip/data/snapshot.toml --location xmip:///C1/node/S1 --name onward --pause
+Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
+xmip subscriptions --snapshot /opt/xmip/data/snapshot.xmip --location xmip:///C1/node/S1 --name onward --pause
 ```
 
 When the node stops, the file says it stopped.
@@ -772,11 +772,11 @@ never became a Message and remains the sender's responsibility.
 
 ### Rehearsal
 
-The Playground runs Xmip's own tests continuously, at a chosen stress level,
+The Essentials runs Xmip's own tests continuously, at a chosen stress level,
 over as many node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Test HeavyLoad, LowLatency `
+Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test HeavyLoad, LowLatency `
     -Stress Harsh -Nodes R1, R2, P1, S1 -OnlineNodes R1 `
     -NodeRole @{ R1 = 'receiving'; R2 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
 Get-XmipTestStatus
@@ -813,7 +813,7 @@ declared, never by its name (ADR-0028, amendment 2026-09-30). The assistant's
 test cluster is started so, and stopped by name:
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
+Start-XmipTest -Suite Core.Essentials -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
     -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 Stop-XmipTest -Cluster C2 -IncludeHidden
 ```
@@ -821,11 +821,11 @@ Stop-XmipTest -Cluster C2 -IncludeHidden
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
-give, and the nodes are the Playground's own cluster file's,
-`test/core/playground/configuration/xmip.toml`, each declaring the roles
+give, and the nodes are the Essentials' own cluster file's,
+`test/core/essentials/configuration/cluster.xmip`, each declaring the roles
 that file gives it, so the message path runs between the node processes.
 Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file,
-a node `-NodeRole` says nothing of taking the roles the Playground's file
+a node `-NodeRole` says nothing of taking the roles the Essentials' file
 declares. A node is configuration and there is no count (ADR-0056, amendment
 2026-10-03); in a real environment an orchestrator spawns nodes, never Xmip.
 
@@ -840,7 +840,7 @@ The environment templates put the file's nodes on machines
 nodes through the Parties' far end it serves on the host, SFTP on port 7422,
 which their slices bind every Location to (ADR-0028, amendment 2026-10-22).
 
-Use the Playground to practice diagnosis and recovery, to verify an
+Use the Essentials to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries
 organizational data.
 
@@ -876,19 +876,19 @@ Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, d
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
 Get-XmipTestStatus                                    # building, running, OK or FAILED
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
+Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
 Start-XmipTest -Suite * -Cluster C1                   # every suite this estate knows
 ```
 
 Four kinds of test. `Publish-XmipChange` runs the first three where a
-change touched them, and never the Playground:
+change touched them, and never the Essentials:
 
 | Suite | Runs | Command |
 | --- | --- | --- |
 | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests` |
-| The Playground's own | `test/core/playground` | `cargo test` in `test/core/playground` |
+| The Essentials' own | `test/core/essentials` | `cargo test` in `test/core/essentials` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
-| The Playground | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Playground -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+| The Essentials | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Essentials -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 
 What it runs before anything is pushed, every estate crate patched to its
 working tree and built in the one shared directory, the first failure
@@ -925,7 +925,7 @@ stopping the run with nothing pushed:
 - **The root:** its crate is tested as a changed module whenever a module
   lands, and its `test/` suite runs when the root itself changed. A change
   to the root alone runs `test/` and not the root crate's cargo steps.
-- **A new module:** a crate where `architecture.toml` mounts a repository
+- **A new module:** a crate where `architecture.xmip` mounts a repository
   that is not a submodule yet. `Get-XmipStatus` lists it by its own path,
   `(new)`, and not among the files of the module around it; it is verified
   as a changed module, and then the run is REFUSED with nothing landed,
@@ -941,16 +941,16 @@ estimated from the average of the modules measured so far, or before the first
 from what the same modules took last time; the root crate and `test/` come
 from their last run. The durations are kept in `.local-work/verify-time.json`.
 
-Run `Start-XmipTest -Suite Core.Estate` and a Playground roll yourself before
+Run `Start-XmipTest -Suite Core.Estate` and an Essentials roll yourself before
 landing anything non-trivial; `-NoVerify` skips every step above. Until the
 first Linear release, work commits directly to `main`
 ([release-model.md](doc/governance/release-model.md)).
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
 (ADR-0011, ADR-0059), and `core` is the reserved provider that means Xmip
-itself — so Xmip's own two are `Core.Playground` and `Core.Estate`, and that
-is what every record, refusal and surface spells. A bare `Playground` is
-accepted and resolves to `Core.Playground`, so nothing you have typed stops
+itself — so Xmip's own two are `Core.Essentials` and `Core.Estate`, and that
+is what every record, refusal and surface spells. A bare `Essentials` is
+accepted and resolves to `Core.Essentials`, so nothing you have typed stops
 working. A provider's suite carries its own name: `<Provider>.<Name>`.
 A provider adds a suite by dropping a declaration in `test/suite` —
 `provider`, `name` and the `command` that starts it — with no edit to Xmip's
@@ -971,7 +971,7 @@ omitting it, and a pattern that matches nothing is refused by name before
 anything starts. Wildcards and not regular expressions, so the dot in
 `Rust.Style` is the dot you typed. `Get-XmipTestStatus -Cluster 'C*'`,
 `Stop-XmipTest -Cluster 'C*' -Test 'Heavy*'`, `Get-XmipTestResult -Node 'R*'` and
-`Get-XmipProcess -Name 'xmip-playground-*'` match the same way. `-Suite`
+`Get-XmipProcess -Name 'xmip-essentials-*'` match the same way. `-Suite`
 filters too (the owner, 2026-09-19): `-Suite *` runs every suite this estate
 knows, one after another, and says in words which are about to run and which
 did not start. A parameter that names what to start — `-Cluster` and `-Nodes`
@@ -980,14 +980,14 @@ on `Start-XmipTest` — is exact.
 ### Layout
 
 ```text
-architecture.toml     the estate: every repository, named by its position in the tree
-prerequisite.toml     what a machine needs, per role and operating system
+architecture.xmip     the estate: every repository, named by its position in the tree
+prerequisite.xmip     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
 Xmip/                 the estate's PowerShell module
 .src/                 the assembly crate xmip, and xmip-service, the Xmip Service
 module/               the modules: foundation/ and platform/ start a node, the rest
                       at module/<provider>/<domain>/<leaf>
-test/                 the estate's Pester suite; test/core/playground is the Playground
+test/                 the estate's Pester suite; test/core/essentials is the Essentials
 deploy/               the sites and profiles a build is made from (site/, profile/),
                       and desired state per technology under dsc/: msdsc/
                       (Microsoft DSC v3: hyperv/, the machines on Hyper-V, and
@@ -1038,7 +1038,7 @@ authoritative.
 4. Put shared behavior in the capability that owns it, never in each
    technology ([ADR-0044](doc/decision/ADR-0044-a-technology-shares-through-its-capability.md)).
 5. Keep dependencies explicit and within the direction rules of
-   `architecture.toml`.
+   `architecture.xmip`.
 6. Add the test for the behavior or the defect before landing the change.
 
 ### The estate module
@@ -1049,22 +1049,22 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.xmip`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
-| `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
+| `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.xmip`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Playground`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Essentials`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Deploy-XmipEnvironment` | Make an environment's machines with Microsoft DSC v3 from one TOML file: the network, then each machine installed from its ISO, on Hyper-V or libvirt (`deploy/dsc/msdsc/<hypervisor>`); `-WhatIf` tests. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
-| `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |
+| `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.xmip`'s nesting into repositories. |
 
 ```powershell
 Sync-XmipEstate                                       # report drift
@@ -1082,7 +1082,7 @@ Get-XmipStatus
 The module audits its own acts through the audit capability, reached through
 the operator module (ADR-0062): every start and stop of a test or a web
 monitor, every refusal and failure of those commands, and a landing that
-stopped or finished, into `.local-work/audit/audit.toml` — the directory it
+stopped or finished, into `.local-work/audit/audit.xmip` — the directory it
 sets `XMIP_AUDIT_DIRECTORY` to for the session when nothing else did, so
 everything it starts records there too. `Start-XmipOperationWeb` keeps the
 host's console in `.local-work/web`, as a roll's is kept beside the roll.

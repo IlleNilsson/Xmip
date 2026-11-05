@@ -5,7 +5,7 @@
 # by what it declares or by its place, never by a literal (the owner,
 # 2026-10-03). `XMIP_TEST_CLUSTER`, a path, names another file in its place.
 #
-# A cluster's xmip.toml: the shared sections once, each node's under
+# A cluster's cluster.xmip: the shared sections once, each node's under
 # [nodes.<name>] (ADR-0031, amendment 2026-10-03). `roles` is what each node
 # declares, in `node::NodeRole`'s words (ADR-0056, amendment 2026-10-01).
 

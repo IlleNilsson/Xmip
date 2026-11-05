@@ -1,10 +1,10 @@
-# The Playground's cluster on the Hyper-V example's machines, run from the
+# The Essentials' cluster on the Hyper-V example's machines, run from the
 # host: the names on the DNS server first, then machine.dsc.yaml once for
 # each node machine, Windows and AlmaLinux alike. One instance per node,
 # written out, as DSC v3 wants a document (copy loops are deprecated,
 # https://github.com/PowerShell/DSC/issues/1429). Which node runs on which
 # machine is environment.example.parameters.yaml's `nodes`, never the
-# cluster's xmip.toml; every node machine is told those nodes, which its
+# cluster's cluster.xmip; every node machine is told those nodes, which its
 # node's Locations are placed over (xmip-service --slice --bind --nodes).
 # README.md says how to run it.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
@@ -16,7 +16,7 @@ parameters:
     description: >-
       What every machine shares: template (this folder), cluster, domain,
       configuration, identity, credentialPath, keyPath, linuxAccount and
-      farEnd, the address the machines reach the Playground's far end at
+      farEnd, the address the machines reach the Essentials' far end at
       (machine.dsc.yaml).
   packages:
     type: object

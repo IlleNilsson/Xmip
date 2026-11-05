@@ -66,7 +66,7 @@ function Start-XmipEstateSuite {
         [string[]] $Test = @()
     )
 
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = Join-Path -Path $layout.Root -ChildPath 'test'
@@ -91,7 +91,7 @@ function Start-XmipEstateSuite {
 
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [hashtable] $run = @{
-        Record = Join-Path -Path $area -ChildPath "estate-$stamp.toml"
+        Record = Join-Path -Path $area -ChildPath "estate-$stamp.xmip"
         Suite  = $script:XmipEstateSuite
         Path   = (Resolve-Path -LiteralPath $Path).ProviderPath
         Test   = $named

@@ -42,27 +42,27 @@ Ports, promoted properties. The words Xmip uses are defined once, in
 - **Xmip Service**: `xmip-service`, the one program the operating system starts
   on a machine. It reads the configuration and runs everything else.
 - **Node**: one Xmip Service and the configuration it runs by.
-- **Cluster**: the nodes that share one configuration file, `xmip.toml`.
+- **Cluster**: the nodes that share one configuration file, `cluster.xmip`.
 
 ## 2. What you need
 
-`prerequisite.toml` at the root of the estate decides what a machine needs, per
+`prerequisite.xmip` at the root of the estate decides what a machine needs, per
 role and per operating system, and `Install-XmipPrerequisite` (section 3)
 applies it. The versions below change often; **see
-[prerequisite.toml](../prerequisite.toml)** for the current ones.
+[prerequisite.xmip](../prerequisite.xmip)** for the current ones.
 
 | You need | For | Version |
 | --- | --- | --- |
-| PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.toml |
-| Git | cloning and submodules | 2.41 or later; see prerequisite.toml |
-| PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.toml |
-| Pester | the estate's tests | 6.0 or later; see prerequisite.toml |
-| Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.toml |
-| A linker | linking Rust | see prerequisite.toml |
-| libclang (LLVM) | building the runtime store, RocksDB | see prerequisite.toml |
-| A C++ compiler, libudev | Linux only | see prerequisite.toml |
-| .NET SDK 11 | the command line, the PowerShell operator module, the GUIs | see prerequisite.toml |
-| .NET MAUI workloads | the desktop GUI only | see prerequisite.toml |
+| PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.xmip |
+| Git | cloning and submodules | 2.41 or later; see prerequisite.xmip |
+| PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.xmip |
+| Pester | the estate's tests | 6.0 or later; see prerequisite.xmip |
+| Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.xmip |
+| A linker | linking Rust | see prerequisite.xmip |
+| libclang (LLVM) | building the runtime store, RocksDB | see prerequisite.xmip |
+| A C++ compiler, libudev | Linux only | see prerequisite.xmip |
+| .NET SDK 11 | the command line, the PowerShell operator module, the GUIs | see prerequisite.xmip |
+| .NET MAUI workloads | the desktop GUI only | see prerequisite.xmip |
 
 The linker is Visual Studio Build Tools with the C++ workload on Windows, the
 command line tools on macOS, and `build-essential` or `gcc` on Linux.
@@ -186,7 +186,7 @@ file under `deploy/site/`, and it names three things:
 - the **technologies** you chose, by repository name, such as
   `xmip-core-transport-file`.
 
-This is `deploy/site/personal-computer.toml`, its comments left out:
+This is `deploy/site/personal-computer.xmip`, its comments left out:
 
 ```toml
 description = "A person's computer: files and mail, one node of its own."
@@ -232,8 +232,8 @@ is a file anywhere; give its path instead of a name:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path .local-work/site
-Copy-Item -Path deploy/site/personal-computer.toml -Destination .local-work/site/my-computer.toml
-Build-XmipService -Site ./.local-work/site/my-computer.toml -WhatIf
+Copy-Item -Path deploy/site/personal-computer.xmip -Destination .local-work/site/my-computer.xmip
+Build-XmipService -Site ./.local-work/site/my-computer.xmip -WhatIf
 ```
 
 The build sets what is possible; the node's configuration picks from it when
@@ -285,7 +285,7 @@ session: a loaded module locks its files, and a build into them fails.
 
 ### One file per cluster
 
-A cluster is configured in one file, `xmip.toml`. What every node shares is
+A cluster is configured in one file, `cluster.xmip`. What every node shares is
 written once at the top; what concerns one node goes under `[nodes.<name>]`,
 in the same sections. The node's value wins where both say one. Each node
 declares its roles there; Xmip reads nothing into a name, and what a node does
@@ -300,7 +300,7 @@ file dropped in one folder to another.
 
 ```powershell
 New-Item -ItemType Directory -Force -Path .local-work/node/config, .local-work/node/in, .local-work/node/out
-Set-Content -Path .local-work/node/config/xmip.toml -Value @'
+Set-Content -Path .local-work/node/config/cluster.xmip -Value @'
 [service]
 name = "xmip"
 cluster_name = "learning"
@@ -376,16 +376,16 @@ page is the root of the clone.
 ### Slicing
 
 A node never reads the cluster's file. It reads its **slice**: the shared
-sections and its own, merged, written as `xmip-node.toml`. You edit only the
-cluster's `xmip.toml`; a slice is always written for you and never edited by
+sections and its own, merged, written as `node.xmip`. You edit only the
+cluster's `cluster.xmip`; a slice is always written for you and never edited by
 hand.
 
 Slice the node's configuration out of it with the Xmip Service you built:
 
 ```powershell
-./target/debug/xmip-service --configuration .local-work/node/config/xmip.toml `
+./target/debug/xmip-service --configuration .local-work/node/config/cluster.xmip `
     --node first --slice |
-    Set-Content -Path .local-work/node/config/xmip-node.toml
+    Set-Content -Path .local-work/node/config/node.xmip
 ```
 
 Ask for a node the file does not declare and the slice is refused, naming the
@@ -394,12 +394,12 @@ nodes it does declare.
 ### Validating
 
 Check a file without starting anything. Both commands take a cluster's
-`xmip.toml` or a node's slice; a cluster's file is checked node by node, and
+`cluster.xmip` or a node's slice; a cluster's file is checked node by node, and
 each problem says which node it belongs to.
 
 ```powershell
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
-    validate .local-work/node/config/xmip.toml
+    validate .local-work/node/config/cluster.xmip
 ```
 
 Or, as objects, from the PowerShell operator module:
@@ -407,7 +407,7 @@ Or, as objects, from the PowerShell operator module:
 ```powershell
 $operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net11.0'
 Import-Module -Name "./$operator/Xmip.PowerShell.psd1"
-Test-XmipNodeConfiguration -Path .local-work/node/config/xmip.toml
+Test-XmipNodeConfiguration -Path .local-work/node/config/cluster.xmip
 ```
 
 The VS Code extension and the desktop GUI validate through the same call, as
@@ -415,7 +415,7 @@ you type.
 
 ### Editing in VS Code
 
-The VS Code extension edits the cluster's `xmip.toml` with suggestions,
+The VS Code extension edits `cluster.xmip` with suggestions,
 lookups, fixes and the cluster designer, every answer the runtime's. It
 needs two settings, and the runtime's library is one of them, always: the
 extension's language server looks for no runtime of its own (ADR-0064,
@@ -452,7 +452,7 @@ Start the node in this Xmip PowerShell Console. It runs until you press
 Ctrl+C:
 
 ```powershell
-./target/debug/xmip-service --configuration .local-work/node/config/xmip-node.toml --console
+./target/debug/xmip-service --configuration .local-work/node/config/node.xmip --console
 ```
 
 On Linux and macOS, the folder of the node's local endpoint must exist and be
@@ -486,7 +486,7 @@ On its way it was received, accepted by `circumstance`, admitted by the
 Subscription and sent by the Send Port `Out`. The node audits each step.
 
 The node keeps its data beside its configuration, in `.local-work/node/data`.
-It publishes what it says of itself to `.local-work/node/data/snapshot.toml`
+It publishes what it says of itself to `.local-work/node/data/snapshot.xmip`
 four times a second, and serves a local endpoint, `xmip-first`, that only this
 machine reaches. From the second Xmip PowerShell Console, watch it:
 
@@ -512,7 +512,7 @@ and the Send Port `Out`, with what each has done.
 The web GUI reads the node's snapshot:
 
 ```powershell
-Start-XmipOperationWeb -Snapshot .local-work/node/data/snapshot.toml
+Start-XmipOperationWeb -Snapshot .local-work/node/data/snapshot.xmip
 ```
 
 Open <http://127.0.0.1:5087> in a Web Browser tab. The Monitor view follows
@@ -532,16 +532,16 @@ Stop-XmipOperationWeb
 ```
 
 From here, add Receive Locations, Send Locations and Subscriptions to the
-cluster's `xmip.toml`, validate it, slice it again, and restart the node. A
+cluster's `cluster.xmip`, validate it, slice it again, and restart the node. A
 changed slice takes effect when the node starts again.
 
 To run the node as a service that starts with the machine, see
 [the portable archive's README](../deploy/package/archive/README.md) and
 `Get-Help -Name Build-XmipService -Full` for its `-Package` parameter.
 
-### Watch Messages move, in the Playground
+### Watch Messages move, in the Essentials
 
-The **Xmip Playground** is Xmip's own rehearsal. It starts a cluster of nodes
+The **Xmip Essentials** is Xmip's own rehearsal. It starts a cluster of nodes
 as processes on your machine and carries payloads through them, round after
 round, over every transport and content contract, the file transport among
 them. It needs no network and no other software.
@@ -550,15 +550,15 @@ Start a cluster called `C1` with three nodes, one per stage: receive, process,
 send.
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
+Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
     -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -OnlineNodes R1
 ```
 
 `-NodeRole` states each node's roles — receiving, processing and sending one
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-Omit `-Nodes` and the run takes every node of the Playground's own cluster
-file, `test/core/playground/configuration/xmip.toml`, whose `[nodes.R1]
+Omit `-Nodes` and the run takes every node of the Essentials' own cluster
+file, `test/core/essentials/configuration/cluster.xmip`, whose `[nodes.R1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
@@ -567,7 +567,7 @@ records that `R1` may assume a route to the internet and the others may not
 (ADR-0045): it is the receiving edge, the node that may obtain its server
 certificate over ACME from a public authority (ADR-0033, ADR-0034;
 [built, not in the assembled service](architecture/estate-map.md#certificate-provisioning)).
-The switch permits; nothing in the Playground reaches out.
+The switch permits; nothing in the Essentials reaches out.
 
 It returns at once and builds in the background. Ask how it is going:
 
@@ -579,7 +579,7 @@ It says `building` until the nodes start, then `running`, or `FAILED` with the
 first error. The names `C1`, `R1`, `P1` and `S1` are yours to choose; this page
 uses `C1` because the surfaces in a fresh clone are set to follow it.
 
-The Playground injects faults on purpose, of the kinds real integrations
+The Essentials injects faults on purpose, of the kinds real integrations
 suffer: a reset connection, an unresolved host, content that fails its
 contract. Expect the cluster to be Holding and some leaves Done; the file
 transport is the one path it keeps fault-free.
@@ -587,12 +587,12 @@ transport is the one path it keeps fault-free.
 Watch it on each surface:
 
 ```powershell
-Get-XmipTestResult -Path .local-work/playground/C1-snapshot.toml -Worst
+Get-XmipTestResult -Path .local-work/essentials/C1-snapshot.xmip -Worst
 Get-XmipHealth -Scope xmip:///C1
 Get-XmipScope -Scope xmip:///C1/*
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- show xmip:///C1
 dotnet run --project module/core/operation/cli/src/Xmip.Cli -- measure xmip:///C1
-Start-XmipOperationWeb -Snapshot .local-work/playground/C1-snapshot.toml
+Start-XmipOperationWeb -Snapshot .local-work/essentials/C1-snapshot.xmip
 ```
 
 The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the board
@@ -607,7 +607,7 @@ the views say which cluster they are on and move between them (ADR-0052,
 amendment 2026-09-20):
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
+Start-XmipTest -Suite Core.Essentials -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
     -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' } -OnlineNodes R1
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
@@ -628,9 +628,9 @@ executable reads; it answers one cluster per invocation and shows totals,
 because a single reading has no interval to take a rate over.
 
 Every System Process Xmip owns is named `xmip-<what>` and declares its name,
-its location and its purpose, test or runtime (ADR-0053). A Playground
-process says which cluster and which node it is — `xmip-playground-C1-roll`,
-`xmip-playground-C1-cluster`, `xmip-playground-C1-node-R1` (amendment
+its location and its purpose, test or runtime (ADR-0053). An Essentials
+process says which cluster and which node it is — `xmip-essentials-C1-roll`,
+`xmip-essentials-C1-cluster`, `xmip-essentials-C1-node-R1` (amendment
 2026-09-20). `Get-XmipProcess` lists them with what they said, and one line
 stops every one of them, whatever started it:
 
@@ -649,19 +649,19 @@ Stop-XmipOperationWeb
 
 Everything above is test level 1: one computer, every node a process the run
 spawned. Where the run's nodes include one declaring the Storage role —
-every node of the Playground's file, when `-Nodes` is left out — each is a
+every node of the Essentials' file, when `-Nodes` is left out — each is a
 process of `xmip-service`, the build `Start-XmipTest` makes beside the
-Playground: D1 and D2 keep Xmip Storage, the primary and its standby, and
+Essentials: D1 and D2 keep Xmip Storage, the primary and its standby, and
 every other node reaches them over Xmip's mutual TLS on loopback, with a
-certificate from the Playground's authority, the one the web GUI is served
-under, kept in .local-work/playground/authority across runs. The rig drops files into their Receive
+certificate from the Essentials' authority, the one the web GUI is served
+under, kept in .local-work/essentials/authority across runs. The rig drops files into their Receive
 Locations and reads what their Send Ports write, and `xmip:///C1/carried`
 says whether every file dropped arrived (ADR-0028, amendment 2026-10-22).
 Where none declares the Storage role, as with `-Nodes R1, P1, S1` above,
 every node is simulated.
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C1
+Start-XmipTest -Suite Core.Essentials -Cluster C1
 Get-XmipHealth -Scope xmip:///C1/carried
 Get-XmipHealth -Scope xmip:///C1/node/R1/storage
 ```
@@ -678,7 +678,7 @@ Hyper-V, then `deploy/dsc/msdsc/environment/README.md`, or
 `deploy/dsc/ansible/README.md` for the same in Ansible, for what runs inside
 them. Each node's slice binds every Receive Location and Send Port of the
 file, placed over the environment's nodes by their roles, on the Parties'
-far end: SFTP the Playground serves on your computer, port 7422, each
+far end: SFTP the Essentials serves on your computer, port 7422, each
 Location a user of its own there (ADR-0028, amendment 2026-10-22). A
 `-Cluster` or `-Nodes` name that resolves is a real node, asked with the
 operator certificate `-Certificate` names; a name that answers as its node
@@ -700,14 +700,14 @@ one. Each README says each step in full.
    SSH key and the environment file (the same section).
 3. **E** The machines, made and installed in one command:
    `Deploy-XmipEnvironment -Path
-   D:\Repos\Xmip\.local-work\deploy\hyperv.toml` (*Running it*). On a Linux
+   D:\Repos\Xmip\.local-work\deploy\hyperv.xmip` (*Running it*). On a Linux
    host, the libvirt template does the same (`deploy/dsc/msdsc/libvirt/README.md`).
 4. **E** On each machine once, as its Administrator or with sudo:
    PowerShell 7.7 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).
 5. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,
-   `New-NetFirewallRule -DisplayName 'Xmip Playground, the Parties'' far
+   `New-NetFirewallRule -DisplayName 'Xmip Essentials, the Parties'' far
    end' -Direction Inbound -Protocol TCP -LocalPort 7422 -RemoteAddress
    10.77.0.0/24 -Action Allow` (the same section).
 6. The packages, the cluster's authority and each node's certificate, and
@@ -722,14 +722,14 @@ one. Each README says each step in full.
    the machines:
 
 ```powershell
-Start-XmipTest -Suite Core.Playground -Cluster C1 -Nodes R1, S1, P1, L1, D1 `
+Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
 Get-XmipHealth -Scope xmip:///C1/carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-Type exactly the nodes the environment maps: the Playground places the
+Type exactly the nodes the environment maps: the Essentials places the
 Locations over them as the machines did. It drops a file into every
 Receive Location's directory on the far end each round; a real receiving
 node fetches it, D1 keeps it, a real sending node puts it back under its
@@ -760,7 +760,7 @@ Build-XmipService -Remote Android -Package apk -Address 10.77.0.53:7401
 ```
 
 It needs the maui-android workload, the Android SDK and NDK and
-Microsoft's OpenJDK 21, each optional in `prerequisite.toml`, which says
+Microsoft's OpenJDK 21, each optional in `prerequisite.xmip`, which says
 how to install each; none needs Node.js. The APK lands at
 `.local-work/package/<version>/xmip-operations-<version>-android.apk`,
 signed with the Android SDK's debug key: for side-loading, not for a
@@ -880,7 +880,7 @@ module `xmip`, so a step names one by module and unit, and nothing declares
 the module itself. If the files dropped at `Drop` above arrive gzipped,
 the node decompresses them at the Receive Location, before a Message
 exists — a step on the node, attached to the Location by its name. Add
-the step to the node in `.local-work/node/config/xmip.toml`:
+the step to the node in `.local-work/node/config/cluster.xmip`:
 
 ```toml
 [[nodes.first.preparation_steps]]
@@ -901,7 +901,7 @@ compresses, and in a Work Process it says which with `direction`. Check it
 as every surface does:
 
 ```powershell
-Test-XmipNodeConfiguration -Path .local-work/node/config/xmip.toml
+Test-XmipNodeConfiguration -Path .local-work/node/config/cluster.xmip
 ```
 
 A step's settings are held to what its unit declares, so `format = "rar"`

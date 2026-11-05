@@ -5,7 +5,7 @@
 //!
 //! The runtime says what the node is (`Running::publication`), observe
 //! writes it whole or not at all (`observe::Publication::write`), and this
-//! decides only where and when. **Where**: `<data>/snapshot.toml`, beside
+//! decides only where and when. **Where**: `<data>/snapshot.xmip`, beside
 //! the node's `orders`, in its data directory (`[service] data`); the
 //! service declares it (ADR-0053, `snapshot`), so whoever finds the process
 //! finds its publication, and `Start-XmipOperationWeb -Snapshot` opens the
@@ -49,7 +49,7 @@ pub const AGAIN: Duration = Duration::from_millis(1);
 
 /// Where the node publishes, beneath its data directory.
 pub fn place(running: &Running) -> PathBuf {
-    running.data().join("snapshot.toml")
+    running.data().join("snapshot.xmip")
 }
 
 /// What publishes the node, and what it published last.

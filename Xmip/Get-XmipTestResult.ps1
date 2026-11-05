@@ -11,7 +11,7 @@ function Get-XmipTestResult {
 
         .DESCRIPTION
             A snapshot is published by a roll, so what this reads is the
-            Playground's and says so.
+            Essentials' and says so.
             Reads the snapshot TOML a roll writes after every round (ADR-0028
             clause 4: a verdict is health, per scope) through the surfaces' own
             reader, Xmip.Surface's SnapshotOperator in the operator module, and
@@ -34,8 +34,8 @@ function Get-XmipTestResult {
 
         .PARAMETER Path
             The snapshot file, or a directory holding exactly one
-            `<cluster>-snapshot.toml`; with more than one cluster there, name
-            the file. Defaults to `.local-work/playground` under the
+            `<cluster>-snapshot.xmip`; with more than one cluster there, name
+            the file. Defaults to `.local-work/essentials` under the
             repository. For -Suite Core.Estate alone, the directory of its
             run records, `.local-work/estate` unless said.
 
@@ -55,7 +55,7 @@ function Get-XmipTestResult {
             the scope. For Core.Estate, the first failure.
 
         .PARAMETER Suite
-            Which suite's results: Core.Playground, the default, or
+            Which suite's results: Core.Essentials, the default, or
             Core.Estate, as Start-XmipTest -Suite names them, wildcards
             allowed. A provider's suite reports through its own command and
             is REFUSED here, naming it.
@@ -70,7 +70,7 @@ function Get-XmipTestResult {
             Get-XmipTestResult -Test RoundTrip -Worst
 
         .EXAMPLE
-            Get-XmipTestResult -Path .local-work/playground/C1-snapshot.toml -Node R1
+            Get-XmipTestResult -Path .local-work/essentials/C1-snapshot.xmip -Node R1
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]
@@ -91,13 +91,13 @@ function Get-XmipTestResult {
 
         [Parameter()]
         [SupportsWildcards()]
-        [string] $Suite = $script:XmipPlaygroundSuite
+        [string] $Suite = $script:XmipEssentialsSuite
     )
 
     $ErrorActionPreference = 'Stop'
 
     # Which suite is read as Start-XmipTest reads it, so Estate and
-    # Core.Estate are one; a snapshot is the Playground's, a record of
+    # Core.Estate are one; a snapshot is the Essentials', a record of
     # failures the estate's, and a provider's suite reports through its own
     # command.
     [object[]] $known = @(Get-XmipTestSuite)
@@ -118,7 +118,7 @@ function Get-XmipTestResult {
     [bool] $rolls = @($matched | Where-Object { $_.Kind -eq 'roll' }).Count -gt 0
 
     # -Path is the estate's record directory only when the estate alone was
-    # asked for; beside the Playground it is the snapshot's.
+    # asked for; beside the Essentials it is the snapshot's.
     if (@($matched | Where-Object { $_.Kind -eq 'pester' }).Count -gt 0) {
         [string] $area = if ($rolls) { '' } else { $Path }
         Get-XmipEstateResult -Path $area -Test $Test -Worst:$Worst
@@ -129,7 +129,7 @@ function Get-XmipTestResult {
     }
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = (Get-XmipPlaygroundLayout).Area
+        $Path = (Get-XmipEssentialsLayout).Area
     }
 
     if (Test-Path -LiteralPath $Path -PathType Container) {
@@ -251,7 +251,7 @@ function ConvertTo-XmipTestResult {
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestResult'
-        Suite      = $script:XmipPlaygroundSuite
+        Suite      = $script:XmipEssentialsSuite
         Test       = ConvertTo-XmipTestName -Scenario $scenario
         Scenario   = $scenario
         Node       = $node

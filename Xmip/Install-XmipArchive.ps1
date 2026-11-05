@@ -7,7 +7,7 @@
     Install-XmipPrerequisite: no package manager, and no Node.js.
 
 .DESCRIPTION
-    prerequisite.toml's [archive.<name>] tables: a version, and per
+    prerequisite.xmip's [archive.<name>] tables: a version, and per
     operating system and architecture (windows-x64, linux-arm64, ...) the
     release asset's url, its SHA-256 and the program inside it. The archive
     is unpacked under .local-work/tool/<name>/<version>, device-local state
@@ -30,7 +30,7 @@ function Get-XmipArchiveTool {
             this platform takes, and whether the tool is there.
 
         .PARAMETER Root
-            The estate root, holding prerequisite.toml.
+            The estate root, holding prerequisite.xmip.
 
         .PARAMETER Name
             The tool's key under [archive], such as typescript.
@@ -46,12 +46,12 @@ function Get-XmipArchiveTool {
     )
 
     Import-XmipToml
-    $manifest = Read-XmipToml -Path (Join-Path -Path $Root -ChildPath 'prerequisite.toml')
+    $manifest = Read-XmipToml -Path (Join-Path -Path $Root -ChildPath 'prerequisite.xmip')
     $archives = Get-TomlValue -Node $manifest -Name 'archive' -Default $null
     $tool = Get-TomlValue -Node $archives -Name $Name -Default $null
 
     if ($null -eq $tool) {
-        throw "prerequisite.toml declares no [archive.$Name]."
+        throw "prerequisite.xmip declares no [archive.$Name]."
     }
 
     [string] $architecture =
@@ -90,7 +90,7 @@ function Install-XmipArchive {
             for each.
 
         .PARAMETER Manifest
-            prerequisite.toml, as Read-XmipToml read it.
+            prerequisite.xmip, as Read-XmipToml read it.
 
         .PARAMETER ManifestPath
             Its path, at the estate root.
@@ -204,7 +204,7 @@ function Expand-XmipArchiveTool {
 
         if ($digest -ne $Tool.Sha256) {
             throw ("REFUSED: $($Tool.Url) has SHA-256 $($digest.ToLower()), and " +
-                "prerequisite.toml states $($Tool.Sha256); nothing was unpacked.")
+                "prerequisite.xmip states $($Tool.Sha256); nothing was unpacked.")
         }
 
         # tar ships with Windows 10 and later, macOS and Linux alike.

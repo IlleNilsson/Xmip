@@ -195,3 +195,13 @@ is. ADR-0059's amendment of 2026-09-20 records why — `acme` collided with the
 ACME provisioning protocol ADR-0033 and ADR-0034 actually use — and ADR-0011's
 amendment of the same day carries it through the naming rule. The surface-module
 example in this record moves to `xmip-<provider>-abi` for the same reason.
+
+## Amendment, 2026-11-05: an external module handles its own compilation
+
+The owner, 2026-11-05: *The external modules, assemblies handles their own
+compilation, not up to Xmip.* A module or assembly from outside the estate is
+built by its author, in whatever compiled form calls or is called over this
+boundary; Xmip loads it and holds it to the boundary, and has no build, entry
+or template per language for it (ADR-0042, amendment of this date).
+`xmip-core-test-module` at `test/core/module` is the one the runtime's loader
+is tested against.

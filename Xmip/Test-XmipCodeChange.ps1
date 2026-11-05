@@ -63,6 +63,7 @@ function Test-XmipCodeChange {
                 '*.cs' { '//' }
                 '*.ps1' { '#' }
                 '*.psm1' { '#' }
+                '*.xmip' { '#' }
                 '*.toml' { '#' }
                 '*.yml' { '#' }
                 default { '' }

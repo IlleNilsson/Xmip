@@ -80,7 +80,7 @@ jobs:
 
       # The runner's pwsh is older than Xmip's floor, the newest PowerShell
       # the estate has (ADR-0021, amendment 2026-11-02): that release, first
-      # on the PATH of every later step. It moves with prerequisite.toml.
+      # on the PATH of every later step. It moves with prerequisite.xmip.
       - name: Install PowerShell
         shell: pwsh
         env:

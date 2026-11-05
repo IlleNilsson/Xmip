@@ -65,7 +65,7 @@ schema: !embedded
         type: string
       node:
         description: >-
-          The node this machine is, as the cluster's xmip.toml declares it.
+          The node this machine is, as cluster.xmip declares it.
         type: string
       cluster:
         description: 'The cluster''s name.'

@@ -11,7 +11,7 @@
     needs that the source does not hold as such is made here from its PNGs,
     never redrawn: xmip-x.ico packs the mark at 16 to 256, each PNG as it
     is, and xmip-x.res holds that icon as a Windows resource a Rust
-    executable links. asset/brand/brand.toml names each surface, the file
+    executable links. asset/brand/brand.xmip names each surface, the file
     that shows the mark and, where the surface is a repository of its own,
     the copy it keeps; Sync-XmipEstate -Brand writes them, and
     test/Brand.Test.ps1 fails where one differs from what this makes.
@@ -170,7 +170,7 @@ function Write-XmipResourceEntry {
 }
 
 function Get-XmipBrandSurface {
-    # Each surface asset/brand/brand.toml names: what it shows, from where,
+    # Each surface asset/brand/brand.xmip names: what it shows, from where,
     # the copy it keeps, if any, and the file that names it.
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -178,7 +178,7 @@ function Get-XmipBrandSurface {
         [string] $Root = (Get-XmipRepositoryRoot)
     )
 
-    $brand = Read-XmipToml -Path (Join-Path $Root 'asset/brand/brand.toml')
+    $brand = Read-XmipToml -Path (Join-Path $Root 'asset/brand/brand.xmip')
 
     foreach ($surface in @($brand['surface'])) {
         [pscustomobject] @{

@@ -1,6 +1,6 @@
 ---
 # The names of a cluster and its nodes on the environment's DNS server
-# (README.md). A node finds another by its name, and the Playground uses a
+# (README.md). A node finds another by its name, and the Essentials uses a
 # node whose name resolves (ADR-0028, amendment 2026-10-21).
 #
 # The DNS domain the names are in.

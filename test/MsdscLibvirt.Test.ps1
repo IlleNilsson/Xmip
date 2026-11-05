@@ -30,7 +30,7 @@ BeforeAll {
 
     # The names are configuration (ADR-0056): the example's own node and cluster.
     $script:Example = InModuleScope Xmip -Parameters @{
-        Path = Join-Path $script:Template 'environment.example.toml'
+        Path = Join-Path $script:Template 'environment.example.xmip'
     } {
         param($Path)
         Read-XmipToml -Path $Path
@@ -134,7 +134,7 @@ Describe 'The domain' {
 Describe 'The example, as Deploy-XmipEnvironment reads it' {
     It 'applies the network, then each machine, with every parameter declared' {
         [hashtable[]] $steps = @(InModuleScope Xmip -Parameters @{
-            Path = Join-Path $script:Template 'environment.example.toml'
+            Path = Join-Path $script:Template 'environment.example.xmip'
             Template = $script:Template
         } {
             param($Path, $Template)

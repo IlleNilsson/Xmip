@@ -36,10 +36,10 @@ The estate is governed by its own records, and they are current:
   exempt, and whatever can reformat a file in a second is exempt least of all.
 - `doc/planning/open-problems.md` — what is open and in what order. Problem
   19 and the Suggested order section are the queue.
-- `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
+- `doc/planning/allocation.xmip` — the ledger of what moved where. Tested by
   `test/Allocation.Test.ps1`; keep it true when files move.
 
-Repository placement is governed by [`architecture.toml`](architecture.toml).
+Repository placement is governed by [`architecture.xmip`](architecture.xmip).
 New repositories, dependencies and technology implementations must fit the
 classification and dependency rules in that manifest.
 
@@ -190,7 +190,7 @@ module is tested, leaves first; every unchanged module that consumes one is
 compiled and linted with its tests against it; the root crate is tested
 whenever a module lands; and a changed root runs its own `test/`. A changed
 module is linted with its default features and tested with every feature it
-declares; the Playground is never run. `README.md`, *Build, test, land*,
+declares; the Essentials is never run. `README.md`, *Build, test, land*,
 lists the commands. The first failure stops the run with nothing pushed. Only then
 does it push what an interrupted run left committed, land each changed
 module, dependencies first, and the root last.
@@ -210,7 +210,7 @@ the VS Code extension's shell with TypeScript 7's native compiler, and no
 Node.js outside its CI (ADR-0014, amendment 2026-10-22), and each of those is optional: every
 language but Rust is optional for Xmip itself (the owner, 2026-10-20), a
 binding whose tool is absent is said SKIPPED and fails nothing, and .NET
-and PowerShell are the operator surfaces' and the tooling's. `prerequisite.toml` has
+and PowerShell are the operator surfaces' and the tooling's. `prerequisite.xmip` has
 each. Spelling, in American English, is checked by whoever writes, the
 owner's own words quoted included, corrected where he misspelled (the
 owner, 2026-11-02: *I think we can take away the _typos, I'll just let you
@@ -318,7 +318,7 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
-configuration, what a test run writes: `playground/` for the rolls,
+configuration, what a test run writes: `essentials/` for the rolls,
 `estate/` for the estate's Pester runs, `web/` for what a web monitor
 `Start-XmipOperationWeb` started wrote to its console, `operator/` for the
 operator module the estate's tooling builds once per change (ADR-0052), and

@@ -142,7 +142,7 @@ fn a_configured_party_is_accepted_over_tls_and_another_refused_and_audited() {
     assert!(stopped.contains("received 2"), "{stopped}");
     assert!(stopped.contains("refused 1"), "{stopped}");
     let audit =
-        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
+        std::fs::read_to_string(directory.join("audit").join("audit.xmip")).expect("it audited");
     for said in [
         "\"xmip.transport.mechanism\" = \"mutual-tls\"",
         &format!("\"xmip.transport.identity\" = \"CN={}\"", subject(&other)),

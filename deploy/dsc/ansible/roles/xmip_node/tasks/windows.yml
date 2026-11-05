@@ -12,10 +12,10 @@
     - "{{ xmip_configuration }}"
     - "{{ xmip_staging }}"
 
-- name: The cluster's xmip.toml
+- name: cluster.xmip
   ansible.windows.win_copy:
     src: "{{ xmip_cluster_configuration }}"
-    dest: "{{ xmip_configuration }}\\xmip.toml"
+    dest: "{{ xmip_configuration }}\\cluster.xmip"
   when: xmip_cluster_configuration | length > 0
 
 - name: The certificate's folder, inheriting nothing
@@ -72,7 +72,7 @@
 - name: The node's configuration as xmip-service slices it
   ansible.windows.win_command:
     argv: >-
-      {{ [xmip_program, '--configuration', xmip_configuration ~ '\\xmip.toml',
+      {{ [xmip_program, '--configuration', xmip_configuration ~ '\\cluster.xmip',
       '--node', xmip_node_name, '--cluster', xmip_cluster_name]
       + xmip_bound + ['--slice'] }}
   register: xmip_slice
@@ -81,7 +81,7 @@
 - name: The node's configuration where it reads it
   ansible.windows.win_copy:
     content: "{{ xmip_slice.stdout }}"
-    dest: "{{ xmip_configuration }}\\xmip-node.toml"
+    dest: "{{ xmip_configuration }}\\node.xmip"
   notify: Restart the Xmip node
 
 - name: The ports the node's configuration listens on
@@ -89,7 +89,7 @@
     argv:
       - "{{ xmip_program }}"
       - --configuration
-      - "{{ xmip_configuration }}\\xmip-node.toml"
+      - "{{ xmip_configuration }}\\node.xmip"
       - --listening
   register: xmip_listening
   changed_when: false

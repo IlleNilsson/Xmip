@@ -39,7 +39,7 @@ function Get-XmipProfileName {
     )
 
     [string] $directory = Join-Path $Root "$script:XmipProfileDirectory/$Kind"
-    [object[]] $file = @(Get-ChildItem -LiteralPath $directory -Filter '*.toml' -File)
+    [object[]] $file = @(Get-ChildItem -LiteralPath $directory -Filter '*.xmip' -File)
 
     return @($file.BaseName | Sort-Object)
 }
@@ -71,7 +71,7 @@ function Get-XmipProfile {
         throw "REFUSED: there is no $Kind called '$Name'; the ${Kind}s are $($known -join ', ')."
     }
 
-    return (Read-XmipToml -Path (Join-Path $Root "$script:XmipProfileDirectory/$Kind/$Name.toml"))
+    return (Read-XmipToml -Path (Join-Path $Root "$script:XmipProfileDirectory/$Kind/$Name.xmip"))
 }
 
 

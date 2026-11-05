@@ -117,7 +117,7 @@ files, simpler installation, stricter security, constrained hardware, offline
 deployment or deterministic behavior.
 
 **A purpose-compiled runtime is a site's build.** A site,
-`deploy/site/<name>.toml`, picks one target, the node roles it serves
+`deploy/site/<name>.xmip`, picks one target, the node roles it serves
 (`deploy/profile/role`, one per `NodeRole` word; executing is receiving,
 processing and sending in one process) and the technologies its user
 chose, by repository name: which technologies a node carries is every end
@@ -186,7 +186,7 @@ for — at run time, in a deployment, and in what its program is built with
 | **Executing** | all three, in one process | everything the three may | a whole Journey with no process hop: the low-latency choice |
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
 | **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history |
-| **Development** | no stage | exercise Xmip from outside | the Playground (ADR-0028) |
+| **Development** | no stage | exercise Xmip from outside | the Essentials (ADR-0028) |
 | **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Message, hand it on, write an audit record |
 
 **Executing is the sum of receiving, processing and sending** (the owner,
@@ -221,7 +221,7 @@ role stores** (the owner, 2026-10-20): every other node calls a Storage node
 through `[storage] nodes`, a one-machine node and a development node carry
 the role, and a node declaring neither the role nor `[storage] nodes` is
 refused as it starts, in words naming both (ADR-0056, amendment
-2026-10-20). A node declares its roles in the cluster's `xmip.toml`,
+2026-10-20). A node declares its roles in `cluster.xmip`,
 `[nodes.<name>] roles`, which the slice gives its own configuration.
 `node::NodeRole::Storage` is
 the role, and `xmip-core-persist`'s `storage` is Xmip Storage: its
@@ -246,7 +246,7 @@ preservation host, recovery coordinator and cluster coordinator are
 capabilities or operational responsibilities, implemented by Artifact
 Instances, Modules or profiles, and they do not extend the role model.
 
-**A role also picks what is built.** `deploy/profile/role/<role>.toml`, one
+**A role also picks what is built.** `deploy/profile/role/<role>.xmip`, one
 per role, says which capabilities a deployment's program carries for it,
 and a site names its roles beside its target and its technologies, archive
 targets among them (ADR-0015, amendments 2026-10-01, 2026-10-19 and
@@ -463,9 +463,9 @@ configuration, and registers the Xmip Service where services exist.
 
 **Every package does that by running one command**, `xmip-service --install`
 (ADR-0015, amendment 2026-10-13; `deploy/package`): it lays the node out,
-writes a starter cluster `xmip.toml` where there is none — one node,
+writes a starter cluster `cluster.xmip` where there is none — one node,
 offline, operated at its local endpoint `xmip-<node>`, which always starts
-— slices the node's `xmip-node.toml` from it, makes `data/audit`, and
+— slices the node's `node.xmip` from it, makes `data/audit`, and
 registers and starts the Xmip Service as `registration.rs` defines it, to
 start with the machine: a Windows service, a systemd unit that makes
 `/run/xmip` for the node's account, a launchd daemon beside one that makes
@@ -541,11 +541,11 @@ time:**
   2026-10-01: *RocksDB is the first storage for audit records, then
   transferred to SQLite, RocksDB for speed, SQLite for persistence over
   time* — so the audit database is SQLite on an embedded Storage node). The
-  `audit.toml` file sink is to be replaced by this, for the
+  `audit.xmip` file sink is to be replaced by this, for the
   tools outside a node as well — the cmdlets, the operation web and
   `xmip` writing to the cluster's Storage nodes (ADR-0062, amendment
   2026-10-01; [decided, not built](estate-map.md#audit-through-storage)); until then
-  every program appends to its `audit.toml`
+  every program appends to its `audit.xmip`
   ([built, in the assembled service](estate-map.md#program-audit)), and the operating
   system's log stays the fallback (ADR-0062 clause 3).
 
@@ -739,7 +739,7 @@ Desired state tooling installs the package and brings a node to its configured
 state: directory layout, persistence and management store paths, module folder,
 node TOML, service registration and running state.
 
-**A cluster's configuration is one `xmip.toml`, sliced to each node as it is
+**A cluster's configuration is one `cluster.xmip`, sliced to each node as it is
 deployed** (the owner, 2026-10-03: *There is one xmip.toml file per cluster.
 When deployed the sections regarding a node will be sliced to that node*;
 ADR-0031, amendment 2026-10-03): desired state writes each node the
@@ -761,9 +761,9 @@ Each technology has its folder under `deploy/dsc`: `msdsc` and `ansible`,
 and each holds the same environment templates — Microsoft DSC v3's
 `deploy/dsc/msdsc/environment`, Ansible's playbook `environment.yml` with
 the roles `xmip_name` and `xmip_node` — each for Windows and AlmaLinux alike
-(ADR-0015, amendment 2026-10-21). Given a cluster's `xmip.toml` and the
+(ADR-0015, amendment 2026-10-21). Given a cluster's `cluster.xmip` and the
 machines, they give the DNS server the names of the cluster and its nodes,
-and each node machine its account, the cluster's `xmip.toml`, its
+and each node machine its account, `cluster.xmip`, its
 certificate, key and anchors from the cluster's own authority — issued on
 the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
 section 22, since a node starts no provisioner yet — the estate's package,
@@ -786,9 +786,9 @@ actual nodes*; ADR-0028, amendment 2026-10-21). Its nodes, their roles, the
 Storage nodes each reaches, by name, the operate listener on the wildcard
 address, and its certificate's paths relative to the configuration — and no
 cluster name, no machine's address, no absolute path. The environment names
-the cluster: the Playground's run, or `--cluster` on a machine, which the
+the cluster: the Essentials' run, or `--cluster` on a machine, which the
 slice writes where the file names none (`configure::slice_named`). The
-Playground's own file is such a file, and the example environment runs it;
+Essentials' own file is such a file, and the example environment runs it;
 the estate root's `cargo test --test deploy` slices it for every node it
 declares and reads each slice as `xmip-service` does.
 

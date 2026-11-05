@@ -1,5 +1,5 @@
 # One Xmip node on its own machine, Windows or AlmaLinux alike: its account,
-# the cluster's xmip.toml, its certificate from the cluster's own authority,
+# cluster.xmip, its certificate from the cluster's own authority,
 # the estate's package, which installs and starts its service, its slice
 # with its Receive Locations and Send Ports bound on the Parties' far end,
 # the firewall openings its configuration listens on, and its service
@@ -20,21 +20,21 @@ parameters:
     type: string
     description: >-
       Where Xmip.Environment/Machine copied this folder and the files:
-      xmip.toml, node.pem, node.key, anchors.pem and the package.
+      cluster.xmip, node.pem, node.key, anchors.pem and the package.
   family:
     type: string
     allowedValues: [Windows, Linux]
     description: The machine's operating system.
   node:
     type: string
-    description: The node this machine is, as the cluster's xmip.toml declares it.
+    description: The node this machine is, as cluster.xmip declares it.
   cluster:
     type: string
-    description: The cluster's name; the cluster's xmip.toml names none.
+    description: The cluster's name; cluster.xmip names none.
   bind:
     type: string
     description: >-
-      The Parties' far end the Playground serves, where the machines reach
+      The Parties' far end the Essentials serves, where the machines reach
       it: each Receive Location and Send Port is bound there over SFTP.
   placed:
     type: string
@@ -65,8 +65,8 @@ resources:
     type: Xmip.Node/File
     requireVersion: ^0.1
     properties:
-      path: "[path(parameters('layout').configuration, 'xmip.toml')]"
-      source: "[path(parameters('staging'), 'files', 'xmip.toml')]"
+      path: "[path(parameters('layout').configuration, 'cluster.xmip')]"
+      source: "[path(parameters('staging'), 'files', 'cluster.xmip')]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -108,7 +108,7 @@ resources:
       - "[resourceId('Xmip.Node/Package', 'Package')]"
     properties:
       program: "[parameters('layout').program]"
-      configuration: "[path(parameters('layout').configuration, 'xmip.toml')]"
+      configuration: "[path(parameters('layout').configuration, 'cluster.xmip')]"
       node: "[parameters('node')]"
       cluster: "[parameters('cluster')]"
       bind: "[parameters('bind')]"
@@ -120,7 +120,7 @@ resources:
       - "[resourceId('Xmip.Node/Slice', 'Slice')]"
     properties:
       program: "[parameters('layout').program]"
-      configuration: "[path(parameters('layout').configuration, 'xmip-node.toml')]"
+      configuration: "[path(parameters('layout').configuration, 'node.xmip')]"
       node: "[parameters('node')]"
   - name: Windows service
     type: Microsoft.Windows/Service

@@ -69,7 +69,7 @@ function Install-XmipNativeLibrary {
             roles build nothing.
 
         .PARAMETER Manifest
-            prerequisite.toml, as Read-XmipToml read it; unused, taken as
+            prerequisite.xmip, as Read-XmipToml read it; unused, taken as
             Install-XmipEventSource takes it.
 
         .PARAMETER ManifestPath

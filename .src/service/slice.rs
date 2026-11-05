@@ -1,5 +1,5 @@
 //! `--slice`: the node's configuration, sliced from its cluster's
-//! `xmip.toml` by `xmip-core-configure`'s one slicing (ADR-0031, amendment
+//! `cluster.xmip` by `xmip-core-configure`'s one slicing (ADR-0031, amendment
 //! 2026-10-03: *When deployed the sections regarding a node will be sliced
 //! to that node*). Desired state runs it on each node it deploys and writes
 //! what it prints where the node reads its configuration

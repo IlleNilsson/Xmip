@@ -148,7 +148,7 @@ Describe 'What git says of a repository, read once' {
 
     It 'counts a detached HEAD''s commits against origin''s main' {
         # 2026-10-28, at root 2cee9d4: a module clones detached, git gives no
-        # ahead count for a detached HEAD, and test/core/playground's pinned
+        # ahead count for a detached HEAD, and test/core/essentials' pinned
         # commit read as 0 ahead, so Publish-XmipUnpushed never pushed it.
         $status = & (Get-Module Xmip) {
             param($At)

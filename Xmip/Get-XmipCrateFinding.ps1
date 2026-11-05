@@ -22,7 +22,7 @@
     .DESCRIPTION
     Two things are reconciled, both derived rather than maintained.
 
-    **The Cargo package name is the repository name.** architecture.toml sets
+    **The Cargo package name is the repository name.** architecture.xmip sets
     primaryCrateMatchesRepository. A dependency may use a shorter local key,
     such as `xmip-message`, while its package remains `xmip-core-message`.
 

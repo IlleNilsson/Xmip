@@ -11,8 +11,8 @@ project's support, and an environment uses one of the two, never a mix
 other tech for familiarity and support for the project.*). It is a template
 for creating Xmip environments, never a lab.
 
-The cluster's `xmip.toml` is the Playground's own,
-`test/core/playground/configuration/xmip.toml`, the one file a test runs
+`cluster.xmip` is the Essentials' own,
+`test/core/essentials/configuration/cluster.xmip`, the one file a test runs
 whether its nodes are simulated or on machines of their own (ADR-0028,
 amendment 2026-10-21). Which node runs on which machine is the inventory's,
 `inventory.example.yml`, never that file's; the example is the same mapping
@@ -30,7 +30,7 @@ XMIP-OUT01, P1 on XMIP-APP01, L1 on XMIP-APP02 and D1 on XMIP-APP03, and
 The role `xmip_node` gives each node machine, in order: its account (the
 system account `xmip` on AlmaLinux; on Windows the virtual account
 `NT SERVICE\xmip-<node>`, which exists with its service); the cluster's
-`xmip.toml`; its certificate, key and anchors from the cluster's own
+`cluster.xmip`; its certificate, key and anchors from the cluster's own
 authority into `config/tls`, the key private; the estate's package, told
 `XMIP_NODE`, `XMIP_CLUSTER` and `XMIP_ACCOUNT`, whose `xmip-service
 --install` slices the file there and registers and starts the service as
@@ -38,7 +38,7 @@ that account; its slice as `xmip-service --slice --cluster --bind --nodes`
 prints it, restarting the node when it changed — every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
 `xmip_nodes`, round robin by their roles, and bound over SFTP on the
-Parties' far end the Playground serves at `xmip_far_end`, port 7422, each a
+Parties' far end the Essentials serves at `xmip_far_end`, port 7422, each a
 user of its own there (ADR-0028, amendment 2026-10-22); a firewall opening
 for exactly the ports `xmip-service --listening` says, and none it no
 longer does — none for the far end, which a node reaches and never serves;
@@ -87,10 +87,10 @@ the Windows machines' Administrator password:
 ```
 
 Neither asks for elevation on the controller; the playbook becomes the
-Administrator or root on each machine itself. Then the Playground runs
+Administrator or root on each machine itself. Then the Essentials runs
 against the machines as `deploy/dsc/msdsc/environment/README.md` says under
 *Running it*, typing exactly the inventory's nodes, and what runs is the
-same: the real nodes reach D1 for Xmip Storage, and the Playground drives
+same: the real nodes reach D1 for Xmip Storage, and the Essentials drives
 them through the Parties' far end it serves on the host, counting at
 `xmip:///C1/carried` what they carried.
 

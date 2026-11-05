@@ -1,5 +1,5 @@
-# The Playground's machines on a Linux host's KVM, through libvirt: what
-# Deploy-XmipEnvironment reads. Copy it to .local-work/deploy/libvirt.toml
+# The Essentials' machines on a Linux host's KVM, through libvirt: what
+# Deploy-XmipEnvironment reads. Copy it to .local-work/deploy/libvirt.xmip
 # and write in linux_account and ssh_public_key.
 #
 # The network's DHCP and DNS give each machine its address and name, and

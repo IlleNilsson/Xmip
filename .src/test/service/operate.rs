@@ -102,7 +102,7 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
         std::env::temp_dir().join(format!("xmip-service-unnamed-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     std::fs::create_dir_all(&directory).expect("a directory");
-    let configuration = directory.join(format!("{}.toml", node_name()));
+    let configuration = directory.join(format!("{}.xmip", node_name()));
     let text = format!(
         "{}\n[operate]\nrole = \"operator\"\n",
         node(&unheld().to_string(), &unheld().to_string())

@@ -16,8 +16,8 @@
 #>
 
 
-# The parameters that mean something only to the Playground suite.
-[string[]] $script:XmipPlaygroundOnly = @(
+# The parameters that mean something only to the Essentials suite.
+[string[]] $script:XmipEssentialsOnly = @(
     'Cluster',
     'Stress', 'Rounds', 'Duration', 'TimeFactor'
     'Nodes', 'OnlineNodes', 'NodeRole', 'LoadBytes', 'PassThru', 'Hidden'
@@ -33,8 +33,8 @@ function Resolve-XmipTestSuite {
             Which suites there are is read, never declared at the parameter: a
             third party's is a file it dropped, and this session may have
             started before it existed. Whatever was typed, the suite says what
-            it is called: a bare Playground resolves to the Playground and the
-            record carries the canonical spelling, Core.Playground (ADR-0059,
+            it is called: a bare Essentials resolves to the Essentials and the
+            record carries the canonical spelling, Core.Essentials (ADR-0059,
             amendment 2026-09-20). Part of Start-XmipTest's body until
             2026-09-30.
 
@@ -64,7 +64,7 @@ function Start-XmipPesterSuite {
     <#
         .SYNOPSIS
             Starts the estate's Pester suite for Start-XmipTest, refusing a
-            switch that belongs to the Playground alone.
+            switch that belongs to the Essentials alone.
 
         .DESCRIPTION
             Part of Start-XmipTest's body until 2026-09-30, when -Hidden took
@@ -105,11 +105,11 @@ function Start-XmipPesterSuite {
         [string[]] $Test = @()
     )
 
-    [string[]] $foreign = @($Bound.Keys | Where-Object { $_ -in $script:XmipPlaygroundOnly })
+    [string[]] $foreign = @($Bound.Keys | Where-Object { $_ -in $script:XmipEssentialsOnly })
 
     if ($foreign.Count -gt 0) {
         Write-Error ("-$($foreign -join ', -') belong to " +
-            "$script:XmipPlaygroundSuite, not $Suite.")
+            "$script:XmipEssentialsSuite, not $Suite.")
         return
     }
 
@@ -132,7 +132,7 @@ function Start-XmipTestSuiteGroup {
             records, the same -WhatIf. Two things differ, and only because a
             pattern chose the group rather than an operator naming one suite.
 
-            A switch that belongs to the Playground alone is dropped for the
+            A switch that belongs to the Essentials alone is dropped for the
             estate's Pester suite rather than refused — -Suite * -Cluster
             <cluster> is not a mistake about -Cluster; it is a roll on that
             cluster with the estate's files beside it. A provider's command keeps everything,
@@ -175,7 +175,7 @@ function Start-XmipTestSuiteGroup {
         $forward['ErrorAction'] = 'Stop'
 
         if ($one.Kind -eq 'pester') {
-            foreach ($only in $script:XmipPlaygroundOnly) {
+            foreach ($only in $script:XmipEssentialsOnly) {
                 $forward.Remove($only)
             }
         }

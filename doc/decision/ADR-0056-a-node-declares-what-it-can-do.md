@@ -106,18 +106,18 @@ Three records point at a thing none of them defines. This one defines it.
 - Open problem 17 keeps its question — how work *moves* — and loses the
   prior one: which node could take it is answerable before any protocol
   exists to carry it there.
-- **The Playground models two of the four, and says which two.** Online
+- **The Essentials models two of the four, and says which two.** Online
   capability was already there — `-OnlineNodes`, the `--online` flag and
   the `switch` record, published per node since ADR-0045 — and feature
   capability landed with this record, as the stages of the message path a
   node can serve: `--can receive`, `--can process,send`, one or more per
-  node. Both live in one value (`test/playground/src/capability.rs`), so
+  node. Both live in one value (`test/essentials/src/capability.rs`), so
   the rig has one notion of what a node can do and not two. A node is
   started with its capability, publishes it at
   `xmip:///<cluster>/node/<name>/capability`, and the topology takes a
   node's stages from that record; `[run]` says what each node was started
   with. **Authentication and runtime capability are not modeled**: the
-  Playground verifies no credential and isolates no identity context, so
+  Essentials verifies no credential and isolates no identity context, so
   either would be a word with nothing behind it. The node's own capability
   record says so in as many words, rather than leaving a reader to guess
   which of the four a silent rig means.
@@ -255,7 +255,7 @@ the allowance is the assistant's drafting of it.
 ## Amendment, 2026-09-24: the node crate reads the words, lowercase exactly
 
 Open problem 25, row i: a declared capability was read three ways. The
-Playground and PowerShell refused an unknown word and ignored case;
+Essentials and PowerShell refused an unknown word and ignored case;
 `Xmip.Surface` dropped an unknown word without a word and matched case
 exactly. The decision above is unchanged; how and where the words are read
 is now one rule.
@@ -269,7 +269,7 @@ is now one rule.
   `+`, blanks ignored, returned in path order, and any word that is not one
   of the three is REFUSED, naming every such word and the words there are
   (ADR-0055).
-- **The Playground reads through it**: `--can`, `--nodes` and a published
+- **The Essentials reads through it**: `--can`, `--nodes` and a published
   capability record alike. Its own `Stage` copy is gone; every verdict, hop
   and scope uses the node's.
 - **PowerShell and `Xmip.Surface` keep a copy**, because neither reaches
@@ -294,9 +294,9 @@ is now one rule.
 - **The two forms a declaration is said in are the node crate's too**, the
   same day. What a node publishes of itself — `declares receive,send;
   online; …` — and the entry a run lists it by — `edge-01=receive+send` —
-  were written by the Playground and read again by `Xmip.Surface`. Both are
+  were written by the Essentials and read again by `Xmip.Surface`. Both are
   `node::Capability` now (`evidence`, `from_evidence`, `entry`,
-  `from_entry`), moved from the Playground, which keeps only the flags it
+  `from_entry`), moved from the Essentials, which keeps only the flags it
   starts a node process with; where the record sits, `<node>/capability`, is
   `observe::capability`'s. The surfaces call both through
   `xmip_capability_published_v1` and `xmip_capability_entry_v1` (ADR-0052,
@@ -341,16 +341,16 @@ name, and the name is the role.
   its roles alone. `Stage` stays the stage of the message path and the scope
   words, and declares nothing.
 - **Deleted, with every use:** `Stage::declared`; `xmip_stage_declared_v1`;
-  the Playground's `--can` flag; `Start-XmipTest -NodeCapability` and the
+  the Essentials' `--can` flag; `Start-XmipTest -NodeCapability` and the
   script module's `ConvertTo-XmipNodeCapability`, `Get-XmipNodeCapability`,
   `Get-XmipNodeCapabilityText`, `Assert-XmipNodeCapability`,
   `Get-XmipNodeCapabilityRefusal` and `Get-XmipNodeCapabilityWarning`;
-  `XMIP_PLAYGROUND_NODE_CAPABILITIES`; `[run].capabilities` and
-  `XMIP_RUN_CAPABILITIES`; the `capability` key of a Playground node's
+  `XMIP_ESSENTIALS_NODE_CAPABILITIES`; `[run].capabilities` and
+  `XMIP_RUN_CAPABILITIES`; the `capability` key of an Essentials node's
   declaration and `Get-XmipTestNode`'s `Capability`.
 - **In their place:** `-NodeRole @{ R1 = 'receiving'; P1 = 'processing';
   S1 = 'sending' }` (or `@{ E1 = 'executing' }`), `--role`,
-  `XMIP_PLAYGROUND_NODE_ROLES`, `[run].roles` and `XMIP_RUN_ROLES`, the
+  `XMIP_ESSENTIALS_NODE_ROLES`, `[run].roles` and `XMIP_RUN_ROLES`, the
   declaration's `role` key and `Get-XmipTestNode`'s `Role`, all in role words;
   the evidence reads `declares receiving,sending; online; …`, or `declares no
   role`. `xmip_operate.h` section 7 gains `xmip_role_words_v1`,
@@ -362,7 +362,7 @@ name, and the name is the role.
   binds `RoleWords` and `RoleStages`; the script module's
   `Get-XmipNodeRole.ps1` holds the role functions, `Get-XmipNodeRoleWord`
   among them, and keeps no word list.
-- **Executing keeps its Journey.** In the Playground a node declaring
+- **Executing keeps its Journey.** In the Essentials a node declaring
   executing hands each pair it received on to itself at process and at send
   (`Roster::target`), so the whole path runs in its one process while the
   other nodes hand on between processes — ADR-0018 clause 10a rehearsed in
@@ -374,11 +374,11 @@ name, and the name is the role.
   three runtime roles — Executor, Reader, Writer — for the same subject. They
   are the node roles now: Executor is receiving, processing, sending or
   executing; Reader is monitoring; Writer is operational; development is the
-  Playground's (ADR-0028). The section's rule *do not create a role per
+  Essentials' (ADR-0028). The section's rule *do not create a role per
   capability* named receive, process and send hosts among the capabilities it
   kept out of the role model; the owner ruled them in, and the section says
   so. A deployment's roles also pick what its program is built with
-  (`deploy/profile/role/<role>.toml`, one per role; ADR-0015, amendment
+  (`deploy/profile/role/<role>.xmip`, one per role; ADR-0015, amendment
   2026-10-01).
 
 **Not decided here.** How a node's TOML configuration states its roles —
@@ -391,7 +391,7 @@ Provenance: the seven roles, the three new ones and Executing as their sum
 for low latency are the owner's, 2026-10-01, quoted above, as is the
 direction to consolidate the declaration into the role. The mapping from
 Executor, Reader and Writer, the collapsing of the three into executing, and
-the Playground's executing node keeping its pairs are the assistant's
+the Essentials' executing node keeping its pairs are the assistant's
 drafting of them.
 
 ## Amendment, 2026-10-01: the Storage role
@@ -430,7 +430,7 @@ nodes*.
 
 Built 2026-10-01: `node::NodeRole::Storage`, the eighth word, `storage`,
 serving no stage; the surfaces read it through `xmip_role_words_v1` as they
-read the others, and `deploy/profile/role/storage.toml` is what a Storage
+read the others, and `deploy/profile/role/storage.xmip` is what a Storage
 node's program is built with. Xmip Storage itself — its operations, the
 embedded Storage node, the wire over Xmip's TLS and the round robin — is
 `xmip-core-persist`'s `storage`. How a node's configuration declares the
@@ -468,29 +468,29 @@ way to go, Xmip.toml.*
 
 - **No cluster or node name is written in code or tests.** The invented names
   are struck everywhere outside these records, as the stage letters were.
-- **A test's names come from configuration**: the test cluster's `xmip.toml`
-  (`test/xmip.toml`, ADR-0031 amendment of this date), or the one a run names
+- **A test's names come from configuration**: the test cluster's `cluster.xmip`
+  (`test/cluster.xmip`, ADR-0031 amendment of this date), or the one a run names
   — `Start-XmipTest` passes `-Cluster` and `-Nodes` and the cluster file it
   writes. One fixture per language reads it; a test finds a node by what it
   declares or by position, never by a literal name.
-- **Where a name may stand**: in an `xmip.toml`, in a README, in the help
+- **Where a name may stand**: in an `cluster.xmip`, in a README, in the help
   examples of a command, and in a binary's usage text — C1, R1, P1, S1 as the
   owner types them. `test/NodeName.Test.ps1` refuses any other.
 
 Built 2026-10-03: one fixture per language — `configure::fixture`
 (`test_cluster`, `other_cluster`), .NET's `TestCluster` (`Read`,
 `ReadOther`) and PowerShell's `Get-XmipTestCluster` — reading
-`test/xmip.toml` and the second test cluster's `test/other/xmip.toml`, each
+`test/cluster.xmip` and the second test cluster's `test/other/cluster.xmip`, each
 node's roles through `configure::cluster::roles`; every literal cluster and
 node name in code and tests moved onto them, and the snapshot fixtures a
 .NET test holds to a test cluster are allowed by `test/NodeName.Test.ps1`'s
-`$script:Held`, which also catches the `Nn` shape. A Playground roll's nodes
+`$script:Held`, which also catches the `Nn` shape. An Essentials roll's nodes
 are its cluster file's `[nodes]` (`Roster::of_cluster`), named by
 `XMIP_TEST_CLUSTER`: `Start-XmipTest -Cluster -Nodes -NodeRole` writes the
 run's own (`Write-XmipTestCluster`), and an omitted `-Nodes` takes the test
 cluster's as it is. The node count is deleted — `-Nodes <count>`,
-`XMIP_PLAYGROUND_NODES`, `XMIP_PLAYGROUND_NODE_NAMES`,
-`XMIP_PLAYGROUND_NODE_ROLES`, `roll --roster <level>`,
+`XMIP_ESSENTIALS_NODES`, `XMIP_ESSENTIALS_NODE_NAMES`,
+`XMIP_ESSENTIALS_NODE_ROLES`, `roll --roster <level>`,
 `Get-XmipNodeComplement`, `complement.rs` and `Stress::nodes`.
 
 ## Amendment, 2026-10-12: a node's letter, and the test clusters' nodes
@@ -513,8 +513,8 @@ Data will be the name for Storage Nodes*.
   amendment 2026-10-02: *they should be able to hook up to any node and
   expect events from the complete cluster*), so a node only for them would
   contradict it.
-- **The test clusters carry one of each kind.** C1 (`test/xmip.toml`): R1,
-  R2, P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/xmip.toml`): R1, S1 and
+- **The test clusters carry one of each kind.** C1 (`test/cluster.xmip`): R1,
+  R2, P1, S1, S2, L1, O1, D1 and D2; C2 (`test/other/cluster.xmip`): R1, S1 and
   L1. `test/NodeName.Test.ps1` knows the Ln, On and Dn shapes. R2 joined C1
   the same day, the owner: *We need an R2, to stress the obvious, concurrency
   of resources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
@@ -540,14 +540,14 @@ one-machine node carries Storage, and so does `development`.
   naming both: the storage role, and `[storage] nodes`. A role word that is
   no role is refused there too, in `NodeRole::declared`'s words.
 - **A one-machine node carries Storage**, and so does the `development`
-  role (`deploy/profile/role/development.toml`; ADR-0015, amendment
+  role (`deploy/profile/role/development.xmip`; ADR-0015, amendment
   2026-10-20). The starter `xmip-service --install` writes and the Ansible
   role's starter declare `storage` for their one node, and the example site
   `personal-computer` declares it.
 
 **Where a node's configuration says its roles.** This answers the storage
 half of what this record left *not decided* on 2026-10-01 — how a node's
-TOML states its roles. The cluster's `xmip.toml` already declared them per
+TOML states its roles. `cluster.xmip` already declared them per
 node, `[nodes.<name>] roles` (the amendment of 2026-10-03); the slice gives
 them to the node's own configuration as its top-level `roles`, and
 `xmip-core-configure` now reads them there (the document's `roles`), the
@@ -572,7 +572,7 @@ does not: its target, a device, refuses `persist` and builds no
 
 `doc/getting-started.md`, the first run the root `README.md` links first,
 takes a new user from a fresh clone to a node of their own and the
-Playground, so it names a cluster and its nodes as a README does: `learning`
+Essentials, so it names a cluster and its nodes as a README does: `learning`
 and `first` for the node it configures, C1, R1, P1 and S1 for the roll.
 `test/NodeName.Test.ps1` allows it beside a README.md and refuses every
 other document still. That the guide counts as help was the assistant's
@@ -592,7 +592,7 @@ was recorded as option C, *later, only if option A's latency is too slow*
 (`deployment-model.md` section 7). **Drafted, for the owner:** option A — a
 database server behind the Storage nodes — is not built, and embedded
 Storage nodes round robin alone each keep a Ledger of their own, so the
-Playground's D1 and D2 shared nothing; option C is brought forward for
+Essentials' D1 and D2 shared nothing; option C is brought forward for
 embedded Storage nodes, as below, and A stays the choice for a database
 server.
 
@@ -669,5 +669,5 @@ one reading of a plane's identity, which `[operate]` reads through too);
 root's `failover` test (every file dropped arrives once while the primary
 stops mid-run) and `wire` test (a call over the wire within a millisecond
 of the same in process), the runtime's and persist's tests, and the
-Playground at level 1, every node a process (ADR-0028, amendment of this
+Essentials at level 1, every node a process (ADR-0028, amendment of this
 date).

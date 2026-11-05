@@ -16,7 +16,7 @@ amendment 2026-10-21); the domain and PostgreSQL are not written yet.
 
 ## The example environment
 
-`environment.example.toml`, which `Deploy-XmipEnvironment` reads,
+`environment.example.xmip`, which `Deploy-XmipEnvironment` reads,
 describes ten machines:
 
 | Machine | Operating system | Role | Memory | CPUs | Disk | Address |
@@ -113,8 +113,8 @@ New-Item -ItemType Directory -Force -Path "$local\ssh"
 Get-Credential -UserName 'Administrator' -Message 'The Windows machines' |
     Export-Clixml -LiteralPath "$local\credential.xml"
 ssh-keygen -t ed25519 -N '' -f "$local\ssh\xmip"
-[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.toml'
-Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
+[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.xmip'
+Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\hyperv.xmip'
 ```
 
 In the copy, write in `linux_account`, the account the kickstart creates on
@@ -129,8 +129,8 @@ and waits until each is installed; `-WhatIf` says what differs and changes
 nothing:
 
 ```powershell
-Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
-Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
+Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.xmip' -WhatIf
+Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.xmip'
 ```
 
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,
@@ -149,7 +149,7 @@ media gone, and running. Everything DSC says goes to
 | --- | --- |
 | `network.dsc.yaml` | the switch, the host's address on it, NAT |
 | `machine.dsc.yaml` | one machine: folder, disk, VM, DVD drives, hardware, installation |
-| `environment.example.toml` | the example environment: the network and its ten machines, as `Deploy-XmipEnvironment` reads it |
+| `environment.example.xmip` | the example environment: the network and its ten machines, as `Deploy-XmipEnvironment` reads it |
 | `HyperVMachine.ps1` | the hardware and the installation, run by `machine.dsc.yaml` |
 | `../answer/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
 | `../answer/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |

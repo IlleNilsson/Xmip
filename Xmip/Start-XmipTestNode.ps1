@@ -9,7 +9,7 @@ function Start-XmipTestNode {
             stress you say, online or not — without a roll.
 
         .DESCRIPTION
-            Each node is one process of the Playground's node binary (ADR-0028
+            Each node is one process of the Essentials' node binary (ADR-0028
             clause 2), running the ExclusiveClaim and DailyBacklog tests over a directory
             the whole set shares, so the contention is between real processes.
             Each publishes its own snapshot under -Path and writes its own
@@ -42,7 +42,7 @@ function Start-XmipTestNode {
 
         .PARAMETER Path
             Where the nodes publish and log. Defaults to
-            `.local-work/playground/node` under the repository.
+            `.local-work/essentials/node` under the repository.
 
         .PARAMETER Shared
             The directory the nodes contend over. Defaults to `shared` under
@@ -92,7 +92,7 @@ function Start-XmipTestNode {
     )
 
     $ErrorActionPreference = 'Stop'
-    $layout = Get-XmipPlaygroundLayout
+    $layout = Get-XmipEssentialsLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = Join-Path -Path $layout.Area -ChildPath 'node'
@@ -119,7 +119,7 @@ function Start-XmipTestNode {
         return
     }
 
-    [string] $binary = Invoke-XmipPlaygroundBuild -Binary node
+    [string] $binary = Invoke-XmipEssentialsBuild -Binary node
     New-Item -ItemType Directory -Path $Path, $Shared -Force | Out-Null
     Remove-Item -LiteralPath (Join-Path -Path $Shared -ChildPath 'stop') -Force -ErrorAction Ignore
 
@@ -138,7 +138,7 @@ function Start-XmipTestNode {
                 '--shared', $Shared
                 '--stress', $Stress.ToLowerInvariant()
                 '--rounds', "$Rounds"
-                '--snapshot', (Join-Path -Path $Path -ChildPath "$nodeName.toml")
+                '--snapshot', (Join-Path -Path $Path -ChildPath "$nodeName.xmip")
                 '--interval-ms', "$([int] $Interval.TotalMilliseconds)"
                 '--online', $(if ($isOnline) { 'true' } else { 'false' })
             )

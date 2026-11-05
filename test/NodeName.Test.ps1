@@ -12,7 +12,7 @@
     owner, 2026-10-03: *You invented alpha and beta some time ago*;
     *Parameters and configuration is the way to go, Xmip.toml* (ADR-0056,
     amendment 2026-10-03). A test takes its cluster's and nodes' names from the
-    test cluster's xmip.toml through its language's one fixture — Rust's
+    test cluster's cluster.xmip through its language's one fixture — Rust's
     configure::fixture, .NET's TestCluster, PowerShell's Get-XmipTestCluster —
     and finds a node by what it declares or by its place. No name is written.
 
@@ -40,14 +40,14 @@
 
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
-    - an xmip.toml, a cluster's configuration;
+    - an cluster.xmip, a cluster's configuration;
     - a README.md, and doc/getting-started.md, the first run the README links
       first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
       .ps1 or .psm1 that is not a test;
     - a binary's usage text: a Rust `const USAGE`, and the `Text` of a C#
       Usage.cs, to the line that closes the string;
-    - a snapshot fixture a test holds to a test cluster's xmip.toml, which
+    - a snapshot fixture a test holds to a test cluster's cluster.xmip, which
       is configuration that test checks: $script:Held names each and the
       test that holds it, and is held to that test in turn.
 
@@ -116,25 +116,25 @@ BeforeAll {
     }
 
     # A snapshot fixture whose names a test holds to a test cluster's
-    # xmip.toml: the test's file and the test.
+    # cluster.xmip: the test's file and the test.
     [string] $surface = 'module/foundation/abi/dotnet/Xmip.Surface.Test'
     $script:Held = @{
-        "$surface/Fixture/cluster.toml"    = @{
+        "$surface/Fixture/cluster.xmip"    = @{
             Test = "$surface/ClusterSnapshotTest.cs"
             Name = 'TheClusterFixtureIsTheTestClustersOwn'
         }
-        "$surface/Fixture/snapshot.toml"   = @{
+        "$surface/Fixture/snapshot.xmip"   = @{
             Test = "$surface/ClusterSnapshotTest.cs"
             Name = 'TheNodesAreWhatThePublisherDrawsAsNodes'
         }
-        "$surface/Fixture/cluster-c2.toml" = @{
+        "$surface/Fixture/cluster-c2.xmip" = @{
             Test = "$surface/ClusterSurfacesTest.cs"
             Name = 'TheSecondFixtureIsTheSecondTestClustersOwn'
         }
     }
 
     $script:Extension = @(
-        '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.toml', '.md', '.json'
+        '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.xmip', '.toml', '.md', '.json'
     )
     $script:Candidate = [regex]::new(
         '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSNLOD][0-9]+|CT)\b|' +
@@ -175,7 +175,7 @@ BeforeAll {
     <#
         .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an xmip.toml and a README.md, the .EXAMPLE and .PARAMETER
+        all of an cluster.xmip and a README.md, the .EXAMPLE and .PARAMETER
         sections of a script's help, a binary's usage text.
     #>
     function Get-NodeNameHelpLine([string] $Path, [string[]] $Line) {
@@ -184,7 +184,7 @@ BeforeAll {
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
         if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
-            $leaf -like '*xmip.toml') {
+            $leaf -like '*cluster.xmip') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -310,7 +310,7 @@ Describe 'No cluster or node is named in code or tests' {
         )
 
         $found | Should -BeNullOrEmpty -Because (
-            ('a name is configuration: take it from the test cluster''s xmip.toml ' +
+            ('a name is configuration: take it from the test cluster''s cluster.xmip ' +
                 'through the fixture, by role or place (ADR-0056, amendment 2026-10-03)'))
     }
 
@@ -327,7 +327,7 @@ Describe 'No cluster or node is named in code or tests' {
             "scope = `"xmip:///$any`""
             "format!(`"{}/node/$any/receive`", cluster.scope())"
             "`"node/$any/process`""
-            "xmip-playground-$($cluster.Name)-node-$node"
+            "xmip-essentials-$($cluster.Name)-node-$node"
             "--nodes $any=receiving,$other=sending"
             "-NodeRole @{ $node = 'receiving' }"
             "Start-XmipTest -Nodes $node, $other"
@@ -388,8 +388,8 @@ Describe 'No cluster or node is named in code or tests' {
             Should -HaveCount 4 -Because 'a test''s names are configuration, never examples'
         @(Find-NodeName -Path 'module/core/example/README.md' -Line $example) |
             Should -BeNullOrEmpty -Because 'a README shows the owner''s names'
-        @(Find-NodeName -Path 'test/xmip.toml' -Line "[nodes.$($cluster.Nodes[0])]") |
-            Should -BeNullOrEmpty -Because 'an xmip.toml is where a name is configured'
+        @(Find-NodeName -Path 'test/cluster.xmip' -Line "[nodes.$($cluster.Nodes[0])]") |
+            Should -BeNullOrEmpty -Because 'an cluster.xmip is where a name is configured'
         @(Find-NodeName -Path 'doc/getting-started.md' -Line $example) |
             Should -BeNullOrEmpty -Because 'the getting-started guide is the first run'
         @(Find-NodeName -Path 'doc/guide.md' -Line $example) |

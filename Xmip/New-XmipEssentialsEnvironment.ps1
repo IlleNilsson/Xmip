@@ -2,12 +2,12 @@
 
 Set-StrictMode -Version Latest
 
-# The Playground's tests by the names a person asks for them, and the scope
+# The Essentials' tests by the names a person asks for them, and the scope
 # segment the roll drives and publishes each under
-# (test/core/playground/src/bin/roll.rs). The owner's shape, 2026-09-12:
-# Start-XmipTest -Suite Core.Playground -Test HeavyLoad. 2026-09-19, the owner: the
+# (test/core/essentials/src/bin/roll.rs). The owner's shape, 2026-09-12:
+# Start-XmipTest -Suite Core.Essentials -Test HeavyLoad. 2026-09-19, the owner: the
 # old scenario wording is replaced by the test names everywhere.
-[System.Collections.Specialized.OrderedDictionary] $script:XmipPlaygroundTest = [ordered]@{
+[System.Collections.Specialized.OrderedDictionary] $script:XmipEssentialsTest = [ordered]@{
     RoundTrip      = 'round-trip'
     LowLatency     = 'low-latency'
     HeavyLoad      = 'heavy-load'
@@ -17,7 +17,7 @@ Set-StrictMode -Version Latest
     DailyBacklog   = 'daily-backlog'
 }
 
-function ConvertTo-XmipPlaygroundScenario {
+function ConvertTo-XmipEssentialsScenario {
     <#
         .SYNOPSIS
             The roll's scenario names for the tests a person named, in order.
@@ -34,12 +34,12 @@ function ConvertTo-XmipPlaygroundScenario {
     )
 
     [string[]] $wanted = @(
-        Expand-XmipTestName -Test $Test -Known @($script:XmipPlaygroundTest.Keys)
+        Expand-XmipTestName -Test $Test -Known @($script:XmipEssentialsTest.Keys)
     )
     [string[]] $scenarios = @()
 
     foreach ($name in $wanted) {
-        $scenarios += $script:XmipPlaygroundTest[$name]
+        $scenarios += $script:XmipEssentialsTest[$name]
     }
 
     return $scenarios
@@ -60,8 +60,8 @@ function ConvertTo-XmipTestName {
         [string] $Scenario
     )
 
-    foreach ($name in $script:XmipPlaygroundTest.Keys) {
-        if ($script:XmipPlaygroundTest[$name] -eq $Scenario) {
+    foreach ($name in $script:XmipEssentialsTest.Keys) {
+        if ($script:XmipEssentialsTest[$name] -eq $Scenario) {
             return $name
         }
     }
@@ -156,7 +156,7 @@ function Assert-XmipNodeName {
 
         .DESCRIPTION
             A node's name is the last word of its process name and so a file
-            name — xmip-playground-<cluster>-node-<node> (ADR-0053, amendment
+            name — xmip-essentials-<cluster>-node-<node> (ADR-0053, amendment
             2026-09-20) — which is why the shape is the one -Cluster takes,
             and that is the whole of it. No word is reserved: the name carries
             a node marker, so a node called roll is a node called roll (the
@@ -201,7 +201,7 @@ function Assert-XmipNodeName {
     }
 }
 
-function New-XmipPlaygroundEnvironment {
+function New-XmipEssentialsEnvironment {
     <#
         .SYNOPSIS
             The environment a roll is started with: every switch the roll reads,
@@ -209,7 +209,7 @@ function New-XmipPlaygroundEnvironment {
             against the roll's own documentation.
 
         .DESCRIPTION
-            The variables are the roll's (test/core/playground/src/bin/roll.rs) and
+            The variables are the roll's (test/core/essentials/src/bin/roll.rs) and
             carry the xmip prefix because they are external names (ADR-0030).
             Only what the caller chose is set — an unset variable is the
             roll's own default, and a roll started by hand behaves the same.
@@ -268,29 +268,29 @@ function New-XmipPlaygroundEnvironment {
     )
 
     # The roll names its snapshot, history and activity in the area itself
-    # (Get-XmipPlaygroundPublication asks it where).
+    # (Get-XmipEssentialsPublication asks it where).
     [hashtable] $environment = @{
-        XMIP_PLAYGROUND_STRESS = $Stress.ToLowerInvariant()
-        XMIP_PLAYGROUND_AREA   = $Area
+        XMIP_ESSENTIALS_STRESS = $Stress.ToLowerInvariant()
+        XMIP_ESSENTIALS_AREA   = $Area
     }
 
     # Nothing named is the whole suite (the owner, 2026-09-19), and
     # Test-XmipWholeSuite is the one place that decides it. An unset
-    # XMIP_PLAYGROUND_SCENARIOS is how the roll is told so.
+    # XMIP_ESSENTIALS_SCENARIOS is how the roll is told so.
     if (-not (Test-XmipWholeSuite -Test $Test)) {
-        [string[]] $scenarios = ConvertTo-XmipPlaygroundScenario -Test $Test
-        $environment.XMIP_PLAYGROUND_SCENARIOS = $scenarios -join ','
+        [string[]] $scenarios = ConvertTo-XmipEssentialsScenario -Test $Test
+        $environment.XMIP_ESSENTIALS_SCENARIOS = $scenarios -join ','
     }
 
     # The named cluster: the roll's scope root and the nodes' (ADR-0028). The
     # roll refuses without one; the name is the owner's, never invented here.
     if (-not [string]::IsNullOrWhiteSpace($Cluster)) {
-        $environment.XMIP_PLAYGROUND_CLUSTER = $Cluster
+        $environment.XMIP_ESSENTIALS_CLUSTER = $Cluster
     }
 
-    # The nodes are the cluster's xmip.toml, each one process declaring the
+    # The nodes are cluster.xmip, each one process declaring the
     # roles its roles key says (ADR-0056, amendment 2026-10-03): the run's
-    # own, written from -Cluster and the nodes -Nodes or the Playground's own
+    # own, written from -Cluster and the nodes -Nodes or the Essentials' own
     # cluster file names (Write-XmipTestCluster). The
     # variable is the one every test fixture reads.
     # With them, which may assume the internet (ADR-0045), by name: none
@@ -298,22 +298,22 @@ function New-XmipPlaygroundEnvironment {
     if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {
         $environment.XMIP_TEST_CLUSTER = $ClusterFile
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
-        $environment.XMIP_PLAYGROUND_ONLINE_NODES = $online -join ','
+        $environment.XMIP_ESSENTIALS_ONLINE_NODES = $online -join ','
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture
 
     if ($null -ne $Duration) {
         [double] $seconds = ([timespan] $Duration).TotalSeconds
-        $environment.XMIP_PLAYGROUND_MAX_SECONDS = $seconds.ToString($invariant)
+        $environment.XMIP_ESSENTIALS_MAX_SECONDS = $seconds.ToString($invariant)
     }
 
     if ($null -ne $TimeFactor) {
-        $environment.XMIP_PLAYGROUND_TIME_FACTOR = ([double] $TimeFactor).ToString('R', $invariant)
+        $environment.XMIP_ESSENTIALS_TIME_FACTOR = ([double] $TimeFactor).ToString('R', $invariant)
     }
 
     if (-not [string]::IsNullOrWhiteSpace($LoadBytes)) {
-        $environment.XMIP_PLAYGROUND_LOAD_BYTES = $LoadBytes
+        $environment.XMIP_ESSENTIALS_LOAD_BYTES = $LoadBytes
     }
 
     # Where this run's per-instance images go, so the cluster process and each
@@ -321,7 +321,7 @@ function New-XmipPlaygroundEnvironment {
     # it is (ADR-0053, amendment 2026-09-20). Unset, nothing is linked and each
     # keeps the binary's own name, which is what a roll started by hand does.
     if (-not [string]::IsNullOrWhiteSpace($Image)) {
-        $environment.XMIP_PLAYGROUND_IMAGES = $Image
+        $environment.XMIP_ESSENTIALS_IMAGES = $Image
     }
 
     # A run that declares itself hidden says so to the roll, which says it in
@@ -329,7 +329,7 @@ function New-XmipPlaygroundEnvironment {
     # and say it in their declarations and on every audit record (ADR-0028,
     # amendment 2026-09-30). Unset, the run is shown, whatever it is called.
     if ($Hidden) {
-        $environment.XMIP_PLAYGROUND_HIDDEN = 'true'
+        $environment.XMIP_ESSENTIALS_HIDDEN = 'true'
     }
 
     # The nodes the operator typed, the only node names the roll resolves to
@@ -339,11 +339,11 @@ function New-XmipPlaygroundEnvironment {
     [string[]] $typed = @($Named | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
     if ($typed.Count -gt 0) {
-        $environment.XMIP_PLAYGROUND_NAMED = $typed -join ','
+        $environment.XMIP_ESSENTIALS_NAMED = $typed -join ','
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Certificate)) {
-        $environment.XMIP_PLAYGROUND_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
+        $environment.XMIP_ESSENTIALS_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
     }
 
     # The xmip-service the run starts every node as that is neither real nor
@@ -351,7 +351,7 @@ function New-XmipPlaygroundEnvironment {
     # its Receive Locations (ADR-0028, amendment 2026-10-22). Unset, every
     # node not real is simulated.
     if (-not [string]::IsNullOrWhiteSpace($Service)) {
-        $environment.XMIP_PLAYGROUND_SERVICE = [System.IO.Path]::GetFullPath($Service)
+        $environment.XMIP_ESSENTIALS_SERVICE = [System.IO.Path]::GetFullPath($Service)
     }
 
     return $environment

@@ -3,13 +3,13 @@
 
 <#
 .SYNOPSIS
-    A Playground roll that is still building, as its build record says it.
+    An Essentials roll that is still building, as its build record says it.
 
 .DESCRIPTION
     A roll builds before it rolls, and since 2026-10-13 the build runs detached
     as the roll does: the owner, that day, of Start-XmipTest holding his console
-    during the first build. Start-XmipPlaygroundBuild starts it and writes one
-    record per build, build-<start time>.toml, in the roll area; the build
+    during the first build. Start-XmipEssentialsBuild starts it and writes one
+    record per build, build-<start time>.xmip, in the roll area; the build
     removes it once the roll it spawned has its own run record, or writes into
     it why it FAILED. Get-XmipTestStatus lists what is here beside the rolls;
     Stop-XmipTest stops a build as it stops an estate run.
@@ -18,10 +18,10 @@
 #>
 
 
-function Get-XmipPlaygroundBuild {
+function Get-XmipEssentialsBuild {
     <#
         .SYNOPSIS
-            Every recorded Playground build in a roll area, as the
+            Every recorded Essentials build in a roll area, as the
             Xmip.TestStatus objects Get-XmipTestStatus lists.
 
         .DESCRIPTION
@@ -45,14 +45,14 @@ function Get-XmipPlaygroundBuild {
         return
     }
 
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'build-*.toml' -File)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'build-*.xmip' -File)) {
         $record = Read-XmipToml -Path $file.FullName
-        ConvertTo-XmipPlaygroundBuild -Record $record -File $file.FullName -Area $Path
+        ConvertTo-XmipEssentialsBuild -Record $record -File $file.FullName -Area $Path
     }
 }
 
 
-function ConvertTo-XmipPlaygroundBuild {
+function ConvertTo-XmipEssentialsBuild {
     <#
         .SYNOPSIS
             One build record as an Xmip.TestStatus of kind build.
@@ -92,7 +92,7 @@ function ConvertTo-XmipPlaygroundBuild {
 
     if ($state -eq '' -and (Test-XmipDetachedAlive -Id $id -Started $started)) {
         $state = 'building'
-        $tally = Get-XmipPlaygroundBuildProgress -Log $log
+        $tally = Get-XmipEssentialsBuildProgress -Log $log
     }
     else {
         if ($state -eq '') {
@@ -131,7 +131,7 @@ function ConvertTo-XmipPlaygroundBuild {
 }
 
 
-function Get-XmipPlaygroundBuildProgress {
+function Get-XmipEssentialsBuildProgress {
     <#
         .SYNOPSIS
             How far a running build has come, in words, from cargo's lines in
@@ -191,7 +191,7 @@ function Get-XmipPlaygroundBuildProgress {
 }
 
 
-function Remove-XmipPlaygroundBuildEnded {
+function Remove-XmipEssentialsBuildEnded {
     <#
         .SYNOPSIS
             Deletes what the ended builds of one cluster left — record, log
@@ -215,7 +215,7 @@ function Remove-XmipPlaygroundBuildEnded {
         [string] $Cluster
     )
 
-    foreach ($build in @(Get-XmipPlaygroundBuild -Path $Path)) {
+    foreach ($build in @(Get-XmipEssentialsBuild -Path $Path)) {
         if ($build.State -eq 'building' -or $build.Cluster -ne $Cluster) {
             continue
         }
@@ -224,9 +224,9 @@ function Remove-XmipPlaygroundBuildEnded {
             continue
         }
 
-        [string] $stem = $build.Record -replace '\.toml$', ''
+        [string] $stem = $build.Record -replace '\.xmip$', ''
 
-        foreach ($extension in 'toml', 'log', 'err', 'clixml') {
+        foreach ($extension in 'xmip', 'log', 'err', 'clixml') {
             Remove-Item -LiteralPath "$stem.$extension" -Force -ErrorAction SilentlyContinue
         }
     }

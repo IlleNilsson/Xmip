@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-19
 - Related: ADR-0014 (the operator surfaces), ADR-0011 (names), ADR-0052
-  (the operator surfaces share one model), ADR-0028 (the Playground),
+  (the operator surfaces share one model), ADR-0028 (the Essentials),
   ADR-0053 (every System Process says whose it is)
 
 ## In brief
@@ -40,7 +40,7 @@ That afternoon produced the evidence.
   before and could not have known.
 - `Get-XmipTestStatus | Start-XmipOperationWeb` with nothing rolling
   named no run, and started a host over no surface.
-- The Playground's roll met a scenario name it did not know, wrote one
+- The Essentials' roll met a scenario name it did not know, wrote one
   line to standard error and rolled on without it. A typo cost a whole
   run.
 
@@ -91,7 +91,7 @@ an empty page what it had decided.
     nothing is rolling; and warns, when a roll is running and no
     `-Snapshot` was given, that this host will not show it and how to
     follow it.
-  - The Playground's roll refuses an unknown scenario name and lists the
+  - The Essentials' roll refuses an unknown scenario name and lists the
     names there are, instead of printing and rolling on.
   - `Start-XmipTest` refuses a RoundTrip over role nodes whose roster has
     no R, no P or no S, before anything is spawned.

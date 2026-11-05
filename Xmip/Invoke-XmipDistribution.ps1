@@ -52,7 +52,7 @@ function Get-XmipRepositoryName {
 
 function Invoke-XmipDistribution {
     <#
-        Executes doc/planning/allocation.toml: every [[move]], and every
+        Executes doc/planning/allocation.xmip: every [[move]], and every
         [[decision]] that carries a destination, from the source working tree
         into the repository that owns the file. Sync-XmipRepository
         -Distribute.
@@ -184,7 +184,7 @@ function Invoke-XmipDistribution {
         $at = Join-Path $Destination $repository
         if ($PSCmdlet.ShouldProcess($repository, 'Commit adopted files')) {
             Invoke-XmipGit -At $at -Arguments @('commit', '--quiet', '-m',
-                'Adopt the files this repository owns, per Xmip allocation.toml') | Out-Null
+                'Adopt the files this repository owns, per Xmip allocation.xmip') | Out-Null
         }
     }
 

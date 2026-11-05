@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Generates doc/architecture/estate-map.md from architecture.toml.
+    Generates doc/architecture/estate-map.md from architecture.xmip.
 
 .DESCRIPTION
     `repository-model.md` section 7 draws where the modules mount. It is
@@ -213,7 +213,7 @@ function New-XmipEstateMap {
         $Root = Get-XmipRepositoryRoot
     }
 
-    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.toml')
+    $manifest = Get-XmipManifest -Path (Join-Path $Root 'architecture.xmip')
     [PSCustomObject[]] $repository = @(Get-XmipEstateRepository -Root $Root)
     [hashtable] $composed = Get-XmipMountedPath -Root $Root -Recurse
 

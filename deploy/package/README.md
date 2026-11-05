@@ -6,19 +6,19 @@ library, both built from a site by `Build-XmipService -Site <name>`
 (`deploy/site`), and runs one command once they are on disk:
 
 ```text
-xmip-service --configuration <layout>/config/xmip.toml \
+xmip-service --configuration <layout>/config/cluster.xmip \
   --node <node> --cluster <cluster> --install
 ```
 
 That command — written once, in `xmip-service` (`.src/service/install.rs`)
 — lays the node out (`bin`, `config`, `modules`, `data`, `logs`; clause 10),
-writes a starter cluster `xmip.toml` where there is none (one node,
+writes a starter cluster `cluster.xmip` where there is none (one node,
 offline; its local operate endpoint, `xmip-<node>`, always starts and needs
 no line), slices the
-node's `xmip-node.toml` from it, makes `data/audit`, and registers the Xmip
+node's `node.xmip` from it, makes `data/audit`, and registers the Xmip
 Service `xmip-<node>` the way `registration.rs` defines it, to start with
 the machine, and starts it. Removal runs
-`xmip-service --configuration <layout>/config/xmip-node.toml --uninstall`,
+`xmip-service --configuration <layout>/config/node.xmip --uninstall`,
 which stops the service, waits for the drain and removes it; configuration,
 data, audit and logs stay (ADR-0040). No package keeps its own copy of the
 layout, the starter or the registration.
@@ -61,7 +61,7 @@ in `-CargoArgument` makes the arm64 MSI.
   REFUSED, naming the command that accepts it.
 - **Install**: `msiexec /i <msi>` from an elevated prompt, optionally with
   `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>`; each is the computer's name
-  otherwise, and the cluster is used where the machine's `xmip.toml` names
+  otherwise, and the cluster is used where the machine's `cluster.xmip` names
   none. Binaries go to `Program Files\Xmip\bin`, the rest of the layout to
   `ProgramData\Xmip`. The service runs as LocalSystem, the platform default,
   unless `XMIP_ACCOUNT="NT SERVICE\xmip-<node>"` names its own virtual
@@ -106,7 +106,7 @@ The layout is `/opt/xmip`; the daemon is
 every boot, since macOS empties `/var/run` as it starts; the node's local
 endpoint is `/var/run/xmip/xmip-<node>.sock`. macOS has no removal for a
 package: `sudo /opt/xmip/bin/xmip-service --configuration
-/opt/xmip/config/xmip-node.toml --uninstall` removes the daemon and keeps
+/opt/xmip/config/node.xmip --uninstall` removes the daemon and keeps
 everything else. A `.pkg` people can open is signed with a Developer ID
 Installer certificate and notarized, which needs the owner's Apple
 Developer Program membership.

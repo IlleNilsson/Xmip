@@ -117,7 +117,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let _ = std::fs::remove_dir_all(&directory);
     let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
-    let snapshot = directory.join("data").join("snapshot.toml");
+    let snapshot = directory.join("data").join("snapshot.xmip");
     let node = node_scope();
 
     let mut child = spawned(&configuration, &directory);
@@ -132,7 +132,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let declared = declarations(&directory);
     assert!(
         declared.iter().any(|text| text.contains("snapshot = ")
-            && text.contains("snapshot.toml")
+            && text.contains("snapshot.xmip")
             && text.contains(&format!("location = \"{node}\""))),
         "the service declares where it publishes: {declared:?}"
     );

@@ -13,7 +13,7 @@ BeforeDiscovery {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     $script:SiteName = @(
-        Get-ChildItem -LiteralPath (Join-Path $script:Root 'deploy/site') -Filter '*.toml' |
+        Get-ChildItem -LiteralPath (Join-Path $script:Root 'deploy/site') -Filter '*.xmip' |
             ForEach-Object { @{ Name = $_.BaseName } }
     )
 }
@@ -21,7 +21,7 @@ BeforeDiscovery {
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
+    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
 
     # Everything the tests ask, read once through the module's own readers
     # and handed out as plain values.
@@ -67,7 +67,7 @@ BeforeAll {
 
         [string] $sites = Join-Path $Root 'deploy/site'
 
-        foreach ($file in Get-ChildItem -LiteralPath $sites -Filter '*.toml') {
+        foreach ($file in Get-ChildItem -LiteralPath $sites -Filter '*.xmip') {
             $site = Read-XmipToml -Path $file.FullName
             $read.SiteTarget[$file.BaseName] = [string] (Get-TomlValue -Node $site -Name 'target')
         }
@@ -207,7 +207,7 @@ Describe 'Every site becomes a build, or is refused where its target says' {
     }
 
     It 'builds the technologies its site names, and links those it can' {
-        [string] $path = Join-Path $TestDrive 'chosen.toml'
+        [string] $path = Join-Path $TestDrive 'chosen.xmip'
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["receiving"]'
@@ -225,7 +225,7 @@ Describe 'Every site becomes a build, or is refused where its target says' {
     # an archive target is a technology like every other, and the role that
     # archives brings the archive feature, not the targets.
     It 'builds the archive targets its site names, beside its role''s archive feature' {
-        [string] $path = Join-Path $TestDrive 'archived.toml'
+        [string] $path = Join-Path $TestDrive 'archived.xmip'
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["sending"]'
@@ -241,7 +241,7 @@ Describe 'Every site becomes a build, or is refused where its target says' {
     }
 
     It 'refuses a role the target refuses a feature of, in words' {
-        [string] $path = Join-Path $TestDrive 'roaming.toml'
+        [string] $path = Join-Path $TestDrive 'roaming.xmip'
         Set-Content -LiteralPath $path -Value @(
             'target = "computer"'
             'roles = ["operational"]'
@@ -254,7 +254,7 @@ Describe 'Every site becomes a build, or is refused where its target says' {
     }
 
     It 'refuses a site naming no profile there is' {
-        [string] $path = Join-Path $TestDrive 'unknown.toml'
+        [string] $path = Join-Path $TestDrive 'unknown.xmip'
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["astronomy"]'
@@ -265,7 +265,7 @@ Describe 'Every site becomes a build, or is refused where its target says' {
     }
 
     It 'refuses a site naming no built technology' {
-        [string] $path = Join-Path $TestDrive 'unbuilt.toml'
+        [string] $path = Join-Path $TestDrive 'unbuilt.xmip'
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["executing"]'
@@ -284,10 +284,10 @@ Describe 'The deploy files name a site' {
     ) {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Root $_) -Raw
 
-        [string] $named = '(?m)^\s*(site|xmip_site): deploy/site/(?<site>[a-z0-9-]+)\.toml\s*$'
+        [string] $named = '(?m)^\s*(site|xmip_site): deploy/site/(?<site>[a-z0-9-]+)\.xmip\s*$'
 
         $text -match $named | Should -BeTrue -Because "$_ names the site its node is built from"
-        Join-Path $script:Root "deploy/site/$($Matches['site']).toml" | Should -Exist
+        Join-Path $script:Root "deploy/site/$($Matches['site']).xmip" | Should -Exist
     }
 }
 

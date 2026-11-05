@@ -29,7 +29,7 @@ function Test-XmipExtensionShell {
             amendment 2026-10-22): its packages restored from its lock, each
             checked against the lock's integrity, and its shell and webview
             compiled by the native compiler, an optional developer
-            prerequisite (prerequisite.toml, [archive.typescript]). Every
+            prerequisite (prerequisite.xmip, [archive.typescript]). Every
             rule is the Rust server's and tested in Rust; the shell's tests
             run in its CI alone, where Node lives in a throwaway
             runner, and are said SKIPPED here.
@@ -102,7 +102,7 @@ function Test-XmipEventBinding {
             Every language but Rust is optional for Xmip itself (the owner,
             2026-10-20: *every language except Rust is optional*): C and C++
             through zig, Java and Python are optional prerequisites
-            (prerequisite.toml). A binding whose tool is absent here is
+            (prerequisite.xmip). A binding whose tool is absent here is
             SKIPPED in words by the script — "SKIPPED: Java not installed;
             the Java Event binding is not verified" — and fails nothing; one
             whose tool is here and fails fails the module. The script loads

@@ -3,27 +3,27 @@
 
 <#
 .SYNOPSIS
-    What Start-XmipTest refuses and warns of for a Playground roll, before
+    What Start-XmipTest refuses and warns of for an Essentials roll, before
     anything is built or spawned.
 
 .DESCRIPTION
     Part of Start-XmipTest until 2026-09-27, when that file was 474 lines
     against the 400 the estate allows. Start-XmipTest chooses the suite;
-    this checks what was asked of the Playground; Start-XmipPlaygroundRoll
+    this checks what was asked of the Essentials; Start-XmipEssentialsRoll
     builds, spawns and records.
 
     Style: doc/governance/powershell-style.md
 #>
 
 
-function Resolve-XmipPlaygroundChoice {
+function Resolve-XmipEssentialsChoice {
     <#
         .SYNOPSIS
             The roll's arguments with -Test resolved to the tests it names,
             or $null after saying in words why the roll is refused.
 
         .PARAMETER Choice
-            What Start-XmipTest hands Start-XmipPlaygroundRoll, Bound among it.
+            What Start-XmipTest hands Start-XmipEssentialsRoll, Bound among it.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -46,7 +46,7 @@ function Resolve-XmipPlaygroundChoice {
         $Choice.Test = @()
     }
     else {
-        [string[]] $known = @($script:XmipPlaygroundTest.Keys)
+        [string[]] $known = @($script:XmipEssentialsTest.Keys)
         $Choice.Test = @(Expand-XmipTestName -Test $Choice.Test -Known $known)
     }
 
@@ -76,19 +76,19 @@ function Resolve-XmipPlaygroundChoice {
         return $null
     }
 
-    # A node named with no role states the roles the Playground's own file
+    # A node named with no role states the roles the Essentials' own file
     # declares for it (ADR-0028, amendment 2026-10-21).
     if ($Choice.Bound.ContainsKey('Nodes')) {
         [hashtable] $joined = @{
             Nodes    = $Choice.Nodes
             NodeRole = $Choice.NodeRole
-            Declared = (Read-XmipPlaygroundCluster).Role
+            Declared = (Read-XmipEssentialsCluster).Role
         }
         $Choice.NodeRole = Join-XmipNodeRole @joined
     }
 
-    # The nodes named; the Playground file's are asked where they are read
-    # (Start-XmipPlaygroundRoll).
+    # The nodes named; the Essentials file's are asked where they are read
+    # (Start-XmipEssentialsRoll).
     [hashtable] $asked = @{
         Nodes    = $Choice.Nodes
         Test     = $Choice.Test
