@@ -1762,6 +1762,24 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   SFTP far end chooses a directory only by a name the check admitted,
   with its password or its key.
 
+## 60. What each transport does with what it refuses, and where it resumes
+
+Follow-ups queued while transports were built in October, written down on
+2026-11-05 from working notes that never reached a record. None is the
+owner's ruling; each is a gap in a built transport.
+
+- **Where a reader resumes:** Kafka's and Kinesis's cursors kept through Xmip
+  Storage; a lease for SQLite; a polled read remembering the last value it
+  refused.
+- **What a refused Message becomes at its source:** IBM MQ's to the queue's
+  backout queue (`BOQNAME`); Service Bus's dead-letter over AMQP; IMAP's
+  moved to a folder.
+- **The wire:** library-net streaming bodies rather than holding them; an SSH
+  channel of Xmip's own; a 401 answered with the challenge of the
+  Location's authenticator.
+- **To check:** the clause numbers cited for DNP3, Zigbee, LoRaWAN, J1939
+  and BACnet.
+
 # Suggested order
 
 Rewritten 2026-09-23. The owner asked what Xmip needs against the

@@ -185,7 +185,7 @@ for — at run time, in a deployment, and in what its program is built with
 | **Sending** | the send stage | deliver Messages out | a Send Port, demote, serialize, send |
 | **Executing** | all three, in one process | everything the three may | a whole Journey with no process hop: the low-latency choice |
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
-| **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history |
+| **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history; the web GUI (ADR-0056, amendment 2026-11-05) |
 | **Development** | no stage | exercise Xmip from outside | the Essentials (ADR-0028) |
 | **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Message, hand it on, write an audit record |
 

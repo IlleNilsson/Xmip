@@ -399,38 +399,32 @@ node's program linked, never a side file.
   paused it (`observe::PauseState`), what it picked up since the node
   started, what it holds, and since when its state stands. A publication
   writes them as `[[subscriptions]]`.
-- **A pause holds, and loses nothing** (`xmip-core-runtime`'s
-  `pickup::Pickup`). Every Message routing matches to a paused Subscription
-  is held: no Journey opens for that Subscription (clause 5) and nothing
-  departs; the Message is kept as persist's `HeldMessage`, numbered in the
-  order it was held, and counted as held. A keyed store keeps no order, so
-  the Subscription's `SubscriptionHold` carries the range of what it holds.
-  Nothing is deleted (ADR-0040): a held record is released only once its
-  Subscription has picked the Message up. The other Subscriptions a Message
-  matched pick it up as they would have. ADR-0041's pause of a scope is a
-  mood on a stage's published health and holds no Message, and a
-  Subscription has no stage scope for it to pause; this is not a second
-  pause of that one, but the first that holds Messages.
-- **A resume picks up what was held, oldest first.** Each held Message is
-  picked up as if routing had just matched it, and a Journey opens for it
-  then; while a resumed Subscription still has held Messages to pick up,
-  what it matches joins the end of them, so it picks up in the order it
-  matched. On a running node the runtime picks them up on a thread of its
-  own and departs each where its Subscription leads (`held_work.rs`):
-  departure authorizes again, now, as it always does (clause 8); the
-  identity arrival concluded is held in its words and read back through the
-  mechanism this node's authenticators declare under that name — a
-  mechanism is never built from a record — and a Message whose mechanism
-  the node no longer carries does not depart, in words.
-- **A pause survives a restart.** The records said nothing of a pause
-  outliving its process: a scope's pause lives in the published snapshot and
-  is gone with it. The owner's steer settles it for a Subscription: its
-  `SubscriptionHold` — paused, by whom, since when, the range it holds — is
-  written on every act and every hold and read back as the node takes its
-  Subscriptions up, so one paused before a restart is paused after it,
-  holding what it held, and one resumed whose held Messages were not all
-  picked up when the node stopped picks them up as it starts. A node whose
-  program linked no runtime store holds in memory, for the node's life.
+- **A pause holds, and loses nothing, in the Ledger** (`xmip-core-runtime`'s
+  `pickup::Pickup`). Every Message a Publication matches to a paused
+  Subscription is held: the Publication's one write keeps it at the end of
+  that Subscription's queue in Xmip Storage (`persist::storage::Hold`), so a
+  receive whose hold was not written is not acknowledged, and nothing is
+  held in memory. No Journey opens for that Subscription (clause 5) and
+  nothing departs. Nothing is deleted (ADR-0040). The other Subscriptions a
+  Message matched pick it up as they would have. ADR-0041's pause of a
+  scope is a mood on a stage's published health and holds no Message; this
+  is not a second pause of that one, but the one that holds Messages.
+- **A resume picks up what was held, oldest first**, in the order Xmip
+  Storage numbered it: each is moved on, in one hand-on, to the queue of the
+  Send Port its Subscription leads to, and sent from there by the send step
+  as every Message is (`held_work.rs`). A queue that cannot be read is read
+  again from where it was, never past what was not read. While a
+  Subscription's queue holds anything, what it matches joins the end of it,
+  so it is picked up in the order it matched. Departure authorizes again,
+  now, as it always does (clause 8), through the mechanism this node's
+  authenticators declare under the identity's name; a Message whose
+  mechanism the node no longer carries does not depart, in words.
+- **A pause survives a restart.** The pause is operator state in the
+  administration database — paused, by whom, since when
+  (`deployment-model.md` section 7) — written by every act before the act is
+  said to be done, and read back as the node takes its Subscriptions up: one
+  paused before a restart is paused after it, holding what it held in the
+  Ledger.
 - **No remove.** A Subscription is configuration, drawn in an Xmip
   Application (ADR-0064) and added and removed in its TOML. `observe::Noun`
   says which acts each noun takes — a Subscription pause and resume, an
