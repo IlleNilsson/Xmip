@@ -53,13 +53,8 @@ function Get-XmipEstateRun {
         $Path = (Get-XmipEssentialsLayout).Estate
     }
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
-        return
-    }
-
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter 'estate-*.xmip' -File)) {
-        $record = Read-XmipToml -Path $file.FullName
-        ConvertTo-XmipEstateRun -Record $record -File $file.FullName -Area $Path
+    foreach ($read in @(Read-XmipRunRecord -Path $Path -Kind estate)) {
+        ConvertTo-XmipEstateRun -Record $read.Record -File $read.File -Area $Path
     }
 }
 
