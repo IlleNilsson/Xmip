@@ -1,0 +1,757 @@
+# Generated sentence timing for the checked-in narration.
+
+[[scene]]
+file = "scene-01.wav"
+
+[[scene.caption]]
+text = """\
+Welcome to Xmip, an open-source messaging and integration platform written \
+in Rust.\
+"""
+start = 0
+duration = 5.625
+
+[[scene.caption]]
+text = """\
+It is on premises first and cloud installable, so organizations choose \
+where their integration runs.\
+"""
+start = 5.805
+duration = 6.575
+
+[[scene.caption]]
+text = """\
+This is the Xmip project story: what it connects, how it records \
+responsibility, and how people design and operate it.\
+"""
+start = 12.56
+duration = 7.825
+
+[[scene]]
+file = "scene-02.wav"
+
+[[scene.caption]]
+text = """\
+Xmip is being developed for organizations that need dependable messaging \
+and integration under their own control.\
+"""
+start = 0
+duration = 8.35
+
+[[scene.caption]]
+text = """\
+It carries forward familiar integration concepts while putting deployment \
+and data under organizational control.\
+"""
+start = 8.53
+duration = 8.425
+
+[[scene.caption]]
+text = """\
+Its central promise is accountability: once a message is accepted, its \
+journey and outcome give operators evidence they can act on.\
+"""
+start = 17.135
+duration = 9.95
+
+[[scene]]
+file = "scene-03.wav"
+
+[[scene.caption]]
+text = """\
+For a CEO, the question is what happens to the business when a system \
+exchange stops.\
+"""
+start = 0
+duration = 5.775
+
+[[scene.caption]]
+text = "Xmip focuses on accountable outcomes, recovery and organizational choice."
+start = 5.955
+duration = 5.425
+
+[[scene.caption]]
+text = """\
+A practical evaluation connects those principles to a real process, its \
+owner and its business impact.\
+"""
+start = 11.56
+duration = 6.975
+
+[[scene]]
+file = "scene-04.wav"
+
+[[scene.caption]]
+text = "For a CIO, Xmip keeps infrastructure decisions within the organization."
+start = 0
+duration = 5.7
+
+[[scene.caption]]
+text = """\
+Nodes can be placed close to systems, at remote sites or on chosen hosting \
+infrastructure.\
+"""
+start = 5.88
+duration = 7.225
+
+[[scene.caption]]
+text = """\
+Open implementation and recorded architecture make it possible to assess \
+the platform and understand how it evolves.\
+"""
+start = 13.285
+duration = 8.9
+
+[[scene]]
+file = "scene-05.wav"
+
+[[scene.caption]]
+text = """\
+Consider an illustrative order travelling from a sales system to a \
+warehouse.\
+"""
+start = 0
+duration = 4.875
+
+[[scene.caption]]
+text = "A Receive Location accepts the stream, and Xmip persists a message."
+start = 5.055
+duration = 4.675
+
+[[scene.caption]]
+text = "Matching subscriptions open journeys to the destinations that want it."
+start = 9.91
+duration = 4.75
+
+[[scene.caption]]
+text = "A Send Location attempts delivery to the warehouse."
+start = 14.84
+duration = 3.85
+
+[[scene.caption]]
+text = """\
+That journey gives an interrupted exchange a place and an outcome to \
+investigate.\
+"""
+start = 18.87
+duration = 5.3
+
+[[scene]]
+file = "scene-06.wav"
+
+[[scene.caption]]
+text = "Acceptance is the handover of responsibility."
+start = 0
+duration = 3.975
+
+[[scene.caption]]
+text = "Before it, the sender owns the stream."
+start = 4.155
+duration = 3.05
+
+[[scene.caption]]
+text = "After it, Xmip persists a message and records its progress."
+start = 7.385
+duration = 4.625
+
+[[scene.caption]]
+text = """\
+Keeping refusal distinct from a later delivery failure helps both \
+organizations understand which side should act next.\
+"""
+start = 12.19
+duration = 8.525
+
+[[scene]]
+file = "scene-07.wav"
+
+[[scene.caption]]
+text = "A subscription expresses which messages a destination wants."
+start = 0
+duration = 4.3
+
+[[scene.caption]]
+text = """\
+Each match opens a journey, while an unmatched message remains available \
+for replay.\
+"""
+start = 4.48
+duration = 5.65
+
+[[scene.caption]]
+text = """\
+Operators can pause a subscription without discarding its work, then \
+resume the held messages in the order they arrived.\
+"""
+start = 10.31
+duration = 7.825
+
+[[scene]]
+file = "scene-08.wav"
+
+[[scene.caption]]
+text = "Recovery starts with the outcome."
+start = 0
+duration = 2.775
+
+[[scene.caption]]
+text = "A routing issue calls for correction and replay."
+start = 2.955
+duration = 3.7
+
+[[scene.caption]]
+text = """\
+A failed delivery calls for investigation and retry, or an intentional \
+dismissal.\
+"""
+start = 6.835
+duration = 6.95
+
+[[scene.caption]]
+text = """\
+Xmip keeps those actions distinct, while configured attempts and backoff \
+handle repeated delivery attempts.\
+"""
+start = 13.965
+duration = 7.625
+
+[[scene]]
+file = "scene-09.wav"
+
+[[scene.caption]]
+text = "An Xmip Application describes the integration itself."
+start = 0
+duration = 3.95
+
+[[scene.caption]]
+text = "A binding places that application on a node and supplies its environment."
+start = 4.13
+duration = 5.15
+
+[[scene.caption]]
+text = """\
+This separation lets developers reason about the business exchange while \
+deployment choices determine which systems, addresses and machines \
+participate.\
+"""
+start = 9.46
+duration = 10
+
+[[scene]]
+file = "scene-10.wav"
+
+[[scene.caption]]
+text = "Configuration in Visual Studio Code is a flex moment."
+start = 0
+duration = 4.875
+
+[[scene.caption]]
+text = "Text editing and graphical designers work with the same configuration."
+start = 5.055
+duration = 5.5
+
+[[scene.caption]]
+text = """\
+Completion, validation and reference-aware renaming help developers make \
+consistent changes, while Xmip’s language server supplies the rules behind \
+the design.\
+"""
+start = 10.735
+duration = 11.85
+
+[[scene]]
+file = "scene-11.wav"
+
+[[scene.caption]]
+text = "TOML is another flex moment."
+start = 0
+duration = 3
+
+[[scene.caption]]
+text = """\
+Xmip configuration stays in readable text that teams can version, compare \
+and review.\
+"""
+start = 3.18
+duration = 6.575
+
+[[scene.caption]]
+text = "The designer works with that same source."
+start = 9.935
+duration = 3.075
+
+[[scene.caption]]
+text = """\
+This makes configuration an engineering artifact the team can understand \
+and maintain together.\
+"""
+start = 13.19
+duration = 7.275
+
+[[scene]]
+file = "scene-12.wav"
+
+[[scene.caption]]
+text = "Some exchanges need business steps as well as delivery."
+start = 0
+duration = 4.05
+
+[[scene.caption]]
+text = """\
+Xmip models these as Work Processes, designed in BPMN and compiled into \
+executable units.\
+"""
+start = 4.23
+duration = 7.225
+
+[[scene.caption]]
+text = "Their state belongs to the ledger, so waiting work does not hold a thread."
+start = 11.635
+duration = 4.65
+
+[[scene.caption]]
+text = """\
+Compilation and execution exist as components; connecting them into the \
+assembled service remains a project milestone.\
+"""
+start = 16.465
+duration = 8.4
+
+[[scene]]
+file = "scene-13.wav"
+
+[[scene.caption]]
+text = """\
+Xmip separates how data travels, how it is represented, and what the \
+integration does with it.\
+"""
+start = 0
+duration = 7.075
+
+[[scene.caption]]
+text = """\
+Contracts define acceptance rules, while processing expresses business \
+flow.\
+"""
+start = 7.255
+duration = 6
+
+[[scene.caption]]
+text = """\
+Providers extend individual capabilities through explicit interfaces and a \
+versioned C boundary.\
+"""
+start = 13.435
+duration = 7.625
+
+[[scene.caption]]
+text = """\
+That modular architecture lets the platform evolve without treating every \
+change as a replacement.\
+"""
+start = 21.24
+duration = 7.6
+
+[[scene]]
+file = "scene-14.wav"
+
+[[scene.caption]]
+text = """\
+Xmip’s technology estate spans file transfer, web communication, message \
+brokers, databases and industrial systems.\
+"""
+start = 0
+duration = 8.5
+
+[[scene.caption]]
+text = "SFTP, HTTP, AMQP, Kafka, PostgreSQL and OPC UA are examples of that scope."
+start = 8.68
+duration = 8.1
+
+[[scene.caption]]
+text = "A site build chooses the technologies it needs."
+start = 16.96
+duration = 3.325
+
+[[scene.caption]]
+text = """\
+This is the estate’s breadth, with availability depending on the \
+capability and its integration into the service.\
+"""
+start = 20.465
+duration = 7.05
+
+[[scene]]
+file = "scene-15.wav"
+
+[[scene.caption]]
+text = "Trust is explicit at Xmip’s boundaries."
+start = 0
+duration = 3.325
+
+[[scene.caption]]
+text = """\
+Parties carry identities, receive locations define what they accept, and \
+outbound exchanges use their own identity.\
+"""
+start = 3.505
+duration = 9.375
+
+[[scene.caption]]
+text = """\
+Certificate authentication, protected storage connections and encrypted \
+embedded data give that architecture concrete foundations.\
+"""
+start = 13.06
+duration = 10
+
+[[scene]]
+file = "scene-16.wav"
+
+[[scene.caption]]
+text = "Xmip Storage gives work a persistent home."
+start = 0
+duration = 3.075
+
+[[scene.caption]]
+text = """\
+A small deployment can host storage within its own node, while other nodes \
+reach it over mutual TLS.\
+"""
+start = 3.255
+duration = 6.975
+
+[[scene.caption]]
+text = """\
+The ledger holds messages, journeys and pending work, separate from \
+administration and audit concerns.\
+"""
+start = 10.41
+duration = 6.7
+
+[[scene]]
+file = "scene-17.wav"
+
+[[scene.caption]]
+text = "A deployment is a composition of roles and capabilities."
+start = 0
+duration = 4.65
+
+[[scene.caption]]
+text = """\
+Executing brings the message stages together in one process, while other \
+roles serve storage, observation and operation.\
+"""
+start = 4.83
+duration = 9.075
+
+[[scene.caption]]
+text = """\
+Site builds select the target and technologies; configuration determines \
+what the node starts.\
+"""
+start = 14.085
+duration = 7.075
+
+[[scene]]
+file = "scene-18.wav"
+
+[[scene.caption]]
+text = "Cross-operating-system working is a shared flex moment."
+start = 0
+duration = 3.925
+
+[[scene.caption]]
+text = """\
+Xmip’s architecture targets Windows, Linux and Mac computers with one \
+integration model.\
+"""
+start = 4.105
+duration = 6.075
+
+[[scene.caption]]
+text = """\
+Site builds select the roles and technologies for a developer machine, an \
+edge gateway or a server.\
+"""
+start = 10.36
+duration = 6.525
+
+[[scene.caption]]
+text = "Packaging and validation progress separately on each platform."
+start = 17.065
+duration = 4.525
+
+[[scene]]
+file = "scene-19.wav"
+
+[[scene.caption]]
+text = "Offline operation is part of Xmip’s design."
+start = 0
+duration = 3.4
+
+[[scene.caption]]
+text = """\
+Packages can be prepared where dependencies are reachable, then brought \
+into disconnected environments.\
+"""
+start = 3.58
+duration = 6.575
+
+[[scene.caption]]
+text = """\
+Internet access is an explicit capability, supporting sites where \
+connectivity is restricted, intermittent or deliberately absent.\
+"""
+start = 10.335
+duration = 8.8
+
+[[scene]]
+file = "scene-20.wav"
+
+[[scene.caption]]
+text = """\
+Operators can choose a command line, PowerShell, desktop or web interface \
+without learning a different platform model.\
+"""
+start = 0
+duration = 8.825
+
+[[scene.caption]]
+text = "The same scopes and meanings guide investigation."
+start = 9.005
+duration = 3.975
+
+[[scene.caption]]
+text = """\
+Automation and visual inspection become different ways to work with the \
+same operational evidence.\
+"""
+start = 13.16
+duration = 7.35
+
+[[scene]]
+file = "scene-21.wav"
+
+[[scene.caption]]
+text = "Operations in your phone is a flex moment in Xmip’s design."
+start = 0
+duration = 4.3
+
+[[scene.caption]]
+text = """\
+The mobile host brings the same cluster health and scope navigation to \
+Android and iPhone targets.\
+"""
+start = 4.48
+duration = 6.95
+
+[[scene.caption]]
+text = "It follows nodes remotely in the Observer role."
+start = 11.61
+duration = 3.45
+
+[[scene.caption]]
+text = """\
+Device validation remains a project milestone, while the principle stays \
+the same: understand the affected scope wherever you are.\
+"""
+start = 15.24
+duration = 8.475
+
+[[scene]]
+file = "scene-22.wav"
+
+[[scene.caption]]
+text = "Health should tell an operator where to look and what to do."
+start = 0
+duration = 4.15
+
+[[scene.caption]]
+text = "Xmip uses named conditions and scope navigation."
+start = 4.33
+duration = 4.425
+
+[[scene.caption]]
+text = """\
+A parent holding points into its children, where the affected resource and \
+its reason help distinguish a deliberate pause from strain or failure.\
+"""
+start = 8.935
+duration = 9.9
+
+[[scene]]
+file = "scene-23.wav"
+
+[[scene.caption]]
+text = "Current observation and audit answer different questions."
+start = 0
+duration = 3.95
+
+[[scene.caption]]
+text = "Observation shows what is happening now."
+start = 4.13
+duration = 3
+
+[[scene.caption]]
+text = "Audit records actions and outcomes over time."
+start = 7.31
+duration = 3.45
+
+[[scene.caption]]
+text = """\
+Chained program records, verification and journey evidence help the team \
+investigate a specific exchange instead of guessing from disconnected \
+symptoms.\
+"""
+start = 10.94
+duration = 10.275
+
+[[scene]]
+file = "scene-24.wav"
+
+[[scene.caption]]
+text = "Xmip also exposes read-only access through the Model Context Protocol."
+start = 0
+duration = 6.275
+
+[[scene.caption]]
+text = """\
+Clients can inspect health, measurements, audit and journeys through tools \
+and scoped resources.\
+"""
+start = 6.455
+duration = 6.85
+
+[[scene.caption]]
+text = """\
+The behavior follows the command line, and each answer is audited, keeping \
+observation connected to established operational controls.\
+"""
+start = 13.485
+duration = 9.875
+
+[[scene]]
+file = "scene-25.wav"
+
+[[scene.caption]]
+text = """\
+Open source is a flex moment because teams can inspect, improve and extend \
+Xmip.\
+"""
+start = 0
+duration = 5.95
+
+[[scene.caption]]
+text = """\
+The platform is licensed under the GNU Affero General Public License, \
+version three or later.\
+"""
+start = 6.13
+duration = 6.875
+
+[[scene.caption]]
+text = """\
+Recorded architecture and explicit capability interfaces support that \
+freedom.\
+"""
+start = 13.185
+duration = 5.6
+
+[[scene.caption]]
+text = """\
+Independent modules loaded across the documented boundary can use their \
+publisher’s chosen license.\
+"""
+start = 18.965
+duration = 6.875
+
+[[scene]]
+file = "scene-26.wav"
+
+[[scene.caption]]
+text = """\
+The engineering approach connects decisions to implementation and \
+verification.\
+"""
+start = 0
+duration = 5.975
+
+[[scene.caption]]
+text = """\
+Capability boundaries make ownership clear, while the Essentials and test \
+harnesses exercise behavior and expose evidence.\
+"""
+start = 6.155
+duration = 9.025
+
+[[scene.caption]]
+text = """\
+For the project team, progress means a demonstrated flow and reproducible \
+results, alongside the design.\
+"""
+start = 15.36
+duration = 8.2
+
+[[scene]]
+file = "scene-27.wav"
+
+[[scene.caption]]
+text = "Xmip Continuum is the active development stream."
+start = 0
+duration = 3.55
+
+[[scene.caption]]
+text = """\
+The working foundation covers messaging, recovery, storage and program \
+audit.\
+"""
+start = 3.73
+duration = 5.475
+
+[[scene.caption]]
+text = """\
+Next milestones bring the broader components into the assembled service \
+and complete deployment validation.\
+"""
+start = 9.385
+duration = 7.075
+
+[[scene.caption]]
+text = "Linear names the product release model; no Linear release has shipped yet."
+start = 16.64
+duration = 4.65
+
+[[scene]]
+file = "scene-28.wav"
+
+[[scene.caption]]
+text = """\
+Xmip brings the story together: connect systems under your control, define \
+the exchange in readable configuration, and follow its recorded outcome.\
+"""
+start = 0
+duration = 9.95
+
+[[scene.caption]]
+text = "Leaders assess business continuity and infrastructure choice."
+start = 10.13
+duration = 4.15
+
+[[scene.caption]]
+text = "Developers work in TOML and Visual Studio Code."
+start = 14.46
+duration = 3.875
+
+[[scene.caption]]
+text = """\
+Operators follow health, messages and journeys to investigate and recover \
+the exchange.\
+"""
+start = 18.515
+duration = 6.225
+
+[[scene.caption]]
+text = "That is the platform this project is building."
+start = 24.92
+duration = 3.15
