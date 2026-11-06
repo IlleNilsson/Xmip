@@ -1,0 +1,104 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Environment/Slice
+version: '0.1.0'
+description: >-
+  On the machine DSC is run on, a node's configuration as xmip-service --slice
+  prints it from the cluster's cluster.xmip, signed by the environment's
+  authority, written with that authority's certificate where
+  Xmip.Environment/Machine ships them from; a node never slices.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Slice
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Slice
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Slice
+    - -Operation
+    - set
+  input: stdin
+  implementsPretest: true
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - program
+      - configuration
+      - authority
+      - into
+      - node
+      - cluster
+    properties:
+      program:
+        description: 'xmip-service on this machine.'
+        type: string
+      configuration:
+        description: 'The cluster''s cluster.xmip on this machine.'
+        type: string
+      authority:
+        description: >-
+          The folder the environment's authority is kept in on this machine,
+          which signs every node's slice; made there where none is kept.
+        type: string
+      into:
+        description: >-
+          The node's folder the slice is written into, as node.xmip, and the
+          authority's certificate beside it, as authority/authority.pem.
+        type: string
+      node:
+        description: 'The node sliced for.'
+        type: string
+      cluster:
+        description: 'The cluster''s name.'
+        type: string
+      bind:
+        description: >-
+          The Parties' far end, host or host:port, where each Receive Location
+          and Send Port is bound over SFTP; with nodes.
+        type: string
+      nodes:
+        description: >-
+          The nodes the environment runs, comma separated, which the Locations
+          are placed over; with bind.
+        type: string
+      _exist:
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

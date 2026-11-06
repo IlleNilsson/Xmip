@@ -84,7 +84,7 @@ function Set-NodeFile {
     New-Item -ItemType Directory -Force -Path $folder | Out-Null
 
     if ($private -and $IsWindows -and -not (Get-Acl -LiteralPath $folder).AreAccessRulesProtected) {
-        Invoke-NodeProgram -Program 'icacls.exe' -Argument @(
+        Invoke-DscProgram -Program 'icacls.exe' -Argument @(
             $folder, '/inheritance:r', '/grant:r', '*S-1-5-18:(OI)(CI)F',
             '*S-1-5-32-544:(OI)(CI)F'
         ) | Out-Null
@@ -96,10 +96,10 @@ function Set-NodeFile {
         return
     }
 
-    Invoke-NodeProgram -Program 'chmod' -Argument @('0600', $Instance.path) | Out-Null
+    Invoke-DscProgram -Program 'chmod' -Argument @('0600', $Instance.path) | Out-Null
 
     if ($Instance.Contains('owner') -and $Instance.owner) {
-        Invoke-NodeProgram -Program 'chown' -Argument @($Instance.owner, $Instance.path) |
+        Invoke-DscProgram -Program 'chown' -Argument @($Instance.owner, $Instance.path) |
             Out-Null
     }
 }

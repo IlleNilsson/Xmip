@@ -763,17 +763,20 @@ and each holds the same environment templates — Microsoft DSC v3's
 the roles `xmip_name` and `xmip_node` — each for Windows and AlmaLinux alike
 (ADR-0015, amendment 2026-10-21). Given a cluster's `cluster.xmip` and the
 machines, they give the DNS server the names of the cluster and its nodes,
-and each node machine its account, `cluster.xmip`, its
+and each node machine its account, its slice — sliced and signed on the
+machine the environment is deployed from by `xmip-service --slice --cluster
+--bind --nodes --authority`, with the environment's authority, and shipped
+with that authority's certificate alone, so a node never slices and runs
+only a slice its cluster signed (ADR-0031, amendment 2026-11-06) — its
 certificate, key and anchors from the cluster's own authority — issued on
 the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
 section 22, since a node starts no provisioner yet — the estate's package,
-whose `xmip-service --install --account` registers and starts the service as
-the node's account, its slice as `xmip-service --slice --cluster --bind
---nodes` prints it — every Receive Location and Send Port the file designs
-placed over the environment's nodes by `xmip-core-configure`'s one
-placement and bound on the far end the environment names (ADR-0028,
-amendment 2026-10-22) — a firewall opening for exactly the ports `xmip-service --listening` says,
-and its service running. Which node runs on which machine is the templates'
+whose `xmip-service --install --account` registers and starts the service
+as the node's account, a firewall opening for exactly the ports
+`xmip-service --listening` says, and its service running. Each slice has
+every Receive Location and Send Port the file designs placed over the
+environment's nodes by `xmip-core-configure`'s one placement and bound on
+the far end the environment names (ADR-0028, amendment 2026-10-22). Which node runs on which machine is the templates'
 parameters, never the cluster's file. Nothing in YAML or a template reads,
 slices or writes the configuration: `xmip-core-configure`'s one slicing does
 (`module/platform/configure/doc/cluster-configuration.md`), and the node

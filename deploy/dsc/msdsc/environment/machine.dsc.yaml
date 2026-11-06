@@ -1,8 +1,12 @@
-# One node machine of an environment, from the machine DSC runs on:
-# node.dsc.yaml applied there by Xmip.Environment/Machine, given the
-# cluster's cluster.xmip, the node's certificate, key and anchors from the
-# cluster's own authority, and the estate's package for its family. An
-# environment document includes it once for each node; README.md says how.
+# One node machine of an environment, from the machine DSC runs on: the
+# node's slice of the cluster's cluster.xmip, sliced and signed here by the
+# environment's authority (Xmip.Environment/Slice), then node.dsc.yaml
+# applied there by Xmip.Environment/Machine, given that slice and the
+# authority's certificate, the node's certificate, key and anchors from the
+# cluster's own authority, and the estate's package for its family. A node
+# never slices and never holds the authority's key (ADR-0031, amendment
+# 2026-11-06). An environment document includes it once for each node;
+# README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.3
@@ -11,8 +15,11 @@ parameters:
     type: object
     description: >-
       What every node shares: cluster, configuration (the cluster's
-      cluster.xmip), identity (a folder per node of what New-XmipCertificate
-      -Node wrote), credentialPath, keyPath, linuxAccount and farEnd.
+      cluster.xmip), program (this machine's xmip-service, which slices),
+      authority (the folder the environment's authority is kept in here),
+      slices (where each node's signed slice is written here, a folder per
+      node), identity (a folder per node of what New-XmipCertificate -Node
+      wrote), credentialPath, keyPath, linuxAccount and farEnd.
   packages:
     type: object
     description: Per family, the package's path and the file name it is given there.
@@ -36,9 +43,23 @@ parameters:
     type: object
     description: The machine the node runs on, from the mapping in the parameters.
 resources:
+  - name: Node slice
+    type: Xmip.Environment/Slice
+    requireVersion: ^0.1
+    properties:
+      program: "[parameters('common').program]"
+      configuration: "[parameters('common').configuration]"
+      authority: "[parameters('common').authority]"
+      into: "[path(parameters('common').slices, parameters('node'))]"
+      node: "[parameters('node')]"
+      cluster: "[parameters('common').cluster]"
+      bind: "[parameters('common').farEnd]"
+      nodes: "[parameters('placed')]"
   - name: Node machine
     type: Xmip.Environment/Machine
     requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Environment/Slice', 'Node slice')]"
     properties:
       name: "[parameters('machine').name]"
       address: "[parameters('machine').address]"
@@ -49,7 +70,8 @@ resources:
       document: node.dsc.yaml
       files: >-
         [createObject(
-        'cluster.xmip', parameters('common').configuration,
+        'node.xmip', path(parameters('common').slices, parameters('node'), 'node.xmip'),
+        'authority.pem', path(parameters('common').slices, parameters('node'), 'authority', 'authority.pem'),
         'node.pem', path(parameters('common').identity, parameters('node'), 'node.pem'),
         'node.key', path(parameters('common').identity, parameters('node'), 'node.key'),
         'anchors.pem', path(parameters('common').identity, parameters('node'), 'anchors.pem'),
@@ -60,8 +82,6 @@ resources:
         'family', parameters('machine').family,
         'node', parameters('node'),
         'cluster', parameters('common').cluster,
-        'bind', parameters('common').farEnd,
-        'placed', parameters('placed'),
         'account', concat(parameters('accounts')[parameters('machine').family].name,
         if(parameters('accounts')[parameters('machine').family].ofNode, parameters('node'), '')),
         'package', parameters('packages')[parameters('machine').family].file,

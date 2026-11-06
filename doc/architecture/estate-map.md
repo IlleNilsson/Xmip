@@ -110,12 +110,13 @@ Records: ADR-0033 (amendment 2026-10-19), ADR-0063.
 **Saving and slicing the cluster's configuration.** The Operation Desktop
 saves `cluster.xmip`, validated by the runtime and audited, and slices it
 through `xmip_cluster_signed_slice_v1`, each slice signed by the cluster's
-authority beside the file; desired state slices it on each node (`xmip-service
---slice`), signed the same way. A node runs only a slice that verifies against
-the authority's certificate beside it, refuses and audits one changed by hand
-and runs its last accepted slice instead (`runtime::signed`). A changed slice
-takes effect when the node starts again. Records: ADR-0031 (amendments
-2026-10-01, 2026-10-05, 2026-11-06).
+authority beside the file; desired state slices it and signs it on the machine
+the environment is deployed from (`xmip-service --slice --authority`) and
+ships each node its slice and the authority's certificate alone. A node runs
+only a slice that verifies against the authority's certificate beside it,
+refuses and audits one changed by hand and runs its last accepted slice
+instead (`runtime::signed`). A changed slice takes effect when the node starts
+again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05, 2026-11-06).
 
 #### `embedded-storage`
 
@@ -411,7 +412,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 324754 lines of production
+Where each repository mounts and what it holds: 324770 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -726,7 +727,7 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37799
+│       ├── runtime                            37815
 │       ├── persist                            14708
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288

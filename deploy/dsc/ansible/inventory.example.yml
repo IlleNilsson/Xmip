@@ -16,6 +16,13 @@ all:
     xmip_domain: xmip.test
     xmip_cluster_configuration: /mnt/d/Repos/Xmip/test/core/essentials/configuration/cluster.xmip
     xmip_identity: "/mnt/d/Repos/Xmip/.local-work/environment/identity/{{ xmip_node_name }}"
+    # The environment's authority, which issued the nodes' certificates and
+    # signs each node's slice here on the controller; only its certificate is
+    # shipped (ADR-0031, amendment 2026-11-06). xmip_slicer is the
+    # controller's xmip-service: cargo build at the estate root in the WSL
+    # guest.
+    xmip_authority: /mnt/d/Repos/Xmip/.local-work/environment/authority
+    xmip_slicer: /mnt/d/Repos/Xmip/target/debug/xmip-service
     # The Parties' far end the Essentials serves on the host, where the
     # machines reach it: the host on the Hyper-V example's switch, port
     # 7422 (ADR-0028, amendment 2026-10-22).

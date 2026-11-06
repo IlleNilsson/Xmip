@@ -25,7 +25,7 @@ function Get-NodeListening {
 
     [string[]] $argument = @('--configuration', $Instance.configuration, '--listening')
 
-    return @(Invoke-NodeProgram -Program $Instance.program -Argument $argument |
+    return @(Invoke-DscProgram -Program $Instance.program -Argument $argument |
             Where-Object { $_ -match '^\d+/(tcp|udp)\b' } |
             ForEach-Object { ($_ -split '\s+')[0] } | Sort-Object -Unique)
 }
@@ -49,14 +49,14 @@ function Get-NodeOpened {
                 Sort-Object -Unique)
     }
 
-    [string[]] $services = @(Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+    [string[]] $services = @(Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', '--get-services'))
 
     if (("$services" -split '\s+') -notcontains "xmip-$Node") {
         return @()
     }
 
-    [string[]] $ports = @(Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+    [string[]] $ports = @(Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', "--service=xmip-$Node", '--get-ports'))
 
     return @(("$ports" -split '\s+') | Where-Object { $_ } | Sort-Object -Unique)
@@ -103,26 +103,26 @@ function Set-NodeOpened {
 
     [string] $service = "xmip-$node"
 
-    [string[]] $services = @(Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+    [string[]] $services = @(Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', '--get-services'))
 
     if (("$services" -split '\s+') -notcontains $service) {
-        Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+        Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', "--new-service=$service") | Out-Null
     }
 
     foreach ($port in @(Get-NodeOpened -Node $node)) {
-        Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+        Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', "--service=$service", "--remove-port=$port") | Out-Null
     }
 
     foreach ($port in $wanted) {
-        Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+        Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
             '--permanent', "--service=$service", "--add-port=$port") | Out-Null
     }
 
-    Invoke-NodeProgram -Program 'firewall-cmd' -Argument @(
+    Invoke-DscProgram -Program 'firewall-cmd' -Argument @(
         '--permanent', "--add-service=$service") | Out-Null
-    Invoke-NodeProgram -Program 'firewall-cmd' -Argument @('--reload') | Out-Null
+    Invoke-DscProgram -Program 'firewall-cmd' -Argument @('--reload') | Out-Null
 }
 

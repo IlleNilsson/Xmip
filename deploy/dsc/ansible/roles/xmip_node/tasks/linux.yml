@@ -22,12 +22,41 @@
     - "{{ xmip_staging }}"
   become: true
 
-- name: cluster.xmip
+- name: The folder of the authority that signed the node's configuration
+  ansible.builtin.file:
+    path: "{{ xmip_configuration }}/authority"
+    state: directory
+    mode: '0755'
+  when: xmip_slice is not skipped
+  become: true
+
+- name: The certificate of the authority that signed it, which the node checks it by
   ansible.builtin.copy:
-    src: "{{ xmip_cluster_configuration }}"
-    dest: "{{ xmip_configuration }}/cluster.xmip"
+    src: "{{ xmip_authority }}/authority.pem"
+    dest: "{{ xmip_configuration }}/authority/authority.pem"
     mode: '0644'
-  when: xmip_cluster_configuration | length > 0
+  when: xmip_slice is not skipped
+  notify: Restart the Xmip node
+  become: true
+
+- name: The node's configuration as it is
+  ansible.builtin.slurp:
+    src: "{{ xmip_configuration }}/node.xmip"
+  register: xmip_held
+  failed_when: false
+  when: xmip_slice is not skipped
+  become: true
+
+- name: The node's configuration where it reads it, where the text it signs differs
+  ansible.builtin.copy:
+    content: "{{ xmip_slice.stdout }}\n"
+    dest: "{{ xmip_configuration }}/node.xmip"
+    mode: '0644'
+  when: >-
+    xmip_slice is not skipped and (xmip_held.content is not defined
+    or (xmip_held.content | b64decode).split('\n[signature]\n')[0]
+    != xmip_slice.stdout.split('\n[signature]\n')[0])
+  notify: Restart the Xmip node
   become: true
 
 - name: The certificate's folder, the node's account's
@@ -71,23 +100,6 @@
     XMIP_ACCOUNT: "{{ xmip_account }}"
   become: true
 
-- name: The node's configuration as xmip-service slices it
-  ansible.builtin.command:
-    argv: >-
-      {{ [xmip_program, '--configuration', xmip_configuration ~ '/cluster.xmip',
-      '--node', xmip_node_name, '--cluster', xmip_cluster_name]
-      + xmip_bound + ['--slice'] }}
-  register: xmip_slice
-  changed_when: false
-  become: true
-
-- name: The node's configuration where it reads it
-  ansible.builtin.copy:
-    content: "{{ xmip_slice.stdout }}\n"
-    dest: "{{ xmip_configuration }}/node.xmip"
-    mode: '0644'
-  notify: Restart the Xmip node
-  become: true
 
 - name: The ports the node's configuration listens on
   ansible.builtin.command:

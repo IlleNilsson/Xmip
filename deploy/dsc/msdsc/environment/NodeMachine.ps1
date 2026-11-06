@@ -11,31 +11,6 @@
 
 Set-StrictMode -Version Latest
 
-function Invoke-NodeProgram {
-    <#
-    .SYNOPSIS
-    Run a program and answer its standard output's lines; a failure throws
-    with what it said.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Program,
-
-        [Parameter()]
-        [string[]] $Argument = @()
-    )
-
-    [string[]] $said = @(& $Program @Argument 2>&1 | ForEach-Object { "$_" })
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Program $($Argument -join ' ') exited $LASTEXITCODE`: $($said -join ' ')"
-    }
-
-    return $said
-}
-
 function Get-NodeMachineState {
     <#
     .SYNOPSIS
@@ -65,8 +40,7 @@ function Get-NodeMachineState {
             $state._exist = Test-NodePackage -Node $Instance.node
         }
         'Slice' {
-            [string] $have = Get-NodeSlice -Instance $Instance
-            $state._exist = $have -ceq (Get-NodeSliced -Instance $Instance)
+            $state._exist = Test-NodeSlice -Instance $Instance
         }
         'Opening' {
             $state.ports = @(Get-NodeListening -Instance $Instance)
@@ -166,7 +140,7 @@ function New-NodeAccount {
     )
 
     if ($PSCmdlet.ShouldProcess($Name, 'Make the node''s service account')) {
-        Invoke-NodeProgram -Program 'useradd' -Argument @(
+        Invoke-DscProgram -Program 'useradd' -Argument @(
             '--system', '--no-create-home', '--home-dir', '/opt/xmip',
             '--shell', '/sbin/nologin', $Name
         ) | Out-Null
@@ -237,82 +211,65 @@ function Install-NodePackage {
     $env:XMIP_NODE = $Instance.node
     $env:XMIP_CLUSTER = $Instance.cluster
     $env:XMIP_ACCOUNT = $Instance.account
-    Invoke-NodeProgram -Program 'dnf' -Argument @('install', '--assumeyes', $Instance.path) |
+    Invoke-DscProgram -Program 'dnf' -Argument @('install', '--assumeyes', $Instance.path) |
         Out-Null
 }
 
-function Get-NodeSliceFile {
+function Get-NodeSlicePlace {
     <#
     .SYNOPSIS
-    Where the node reads its configuration: node.xmip beside the
-    cluster's cluster.xmip.
+    Each file of the node's slice where the node reads it, beside what it
+    was shipped as: node.xmip in the configuration folder, and the
+    certificate of the authority that signed it in authority/authority.pem
+    there, which the node checks it by (ADR-0031, amendment 2026-11-06).
     #>
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([hashtable[]])]
     param(
         [Parameter(Mandatory = $true)]
         [hashtable] $Instance
     )
 
-    [string] $folder = Split-Path -Path $Instance.configuration
-    return Join-Path -Path $folder -ChildPath 'node.xmip'
+    return @(
+        @{
+            path   = Join-Path -Path $Instance.configuration -ChildPath 'node.xmip'
+            source = $Instance.source
+        },
+        @{
+            path   = Join-Path -Path $Instance.configuration -ChildPath 'authority/authority.pem'
+            source = $Instance.certificate
+        }
+    )
 }
 
-function Get-NodeSliced {
+function Test-NodeSlice {
     <#
     .SYNOPSIS
-    The node's configuration as xmip-service --slice prints it from the
-    cluster's cluster.xmip, for the cluster the environment names, and, where
-    the instance gives bind and nodes, with every Receive Location and Send
-    Port placed over those nodes on the Parties' far end.
+    Whether the node reads the slice it was shipped, and checks it by the
+    certificate it was shipped with.
     #>
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)]
         [hashtable] $Instance
     )
 
-    [string[]] $argument = @(
-        '--configuration', $Instance.configuration, '--node', $Instance.node,
-        '--cluster', $Instance.cluster
-    )
-
-    if ($Instance.Contains('bind') -and $Instance.bind) {
-        $argument += @('--bind', $Instance.bind, '--nodes', $Instance.nodes)
+    foreach ($file in Get-NodeSlicePlace -Instance $Instance) {
+        if (-not (Get-NodeFileState -Instance $file)._exist) {
+            return $false
+        }
     }
-
-    $argument += '--slice'
-
-    return (Invoke-NodeProgram -Program $Instance.program -Argument $argument) -join "`n"
-}
-
-function Get-NodeSlice {
-    <#
-    .SYNOPSIS
-    The node's configuration as it is; empty where there is none.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
-    )
-
-    [string] $file = Get-NodeSliceFile -Instance $Instance
-
-    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
-        return ''
-    }
-
-    return (Get-Content -LiteralPath $file) -join "`n"
+    return $true
 }
 
 function Set-NodeSlice {
     <#
     .SYNOPSIS
-    Write the node's slice where it reads it, and restart its service so it
-    runs by it: a changed slice takes effect when the node starts again.
+    Put the shipped slice and its authority's certificate where the node
+    reads them, and restart its service where it is installed, so it runs by
+    it: a changed slice takes effect when the node starts again. Placed before
+    the package, the slice is what xmip-service --install reads.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -320,24 +277,28 @@ function Set-NodeSlice {
         [hashtable] $Instance
     )
 
-    [string] $file = Get-NodeSliceFile -Instance $Instance
+    [hashtable[]] $files = Get-NodeSlicePlace -Instance $Instance
 
-    if (-not $PSCmdlet.ShouldProcess($file, 'Write the node''s slice and restart it')) {
+    if (-not $PSCmdlet.ShouldProcess($files[0].path, 'Place the node''s slice and restart it')) {
         return
     }
 
-    [string] $sliced = Get-NodeSliced -Instance $Instance
-    Set-Content -LiteralPath $file -Value $sliced -Encoding utf8NoBOM
+    foreach ($file in $files) {
+        Set-NodeFile -Instance $file -Confirm:$false
+    }
+
+    if (-not (Test-NodePackage -Node $Instance.node)) {
+        return
+    }
 
     if ($IsWindows) {
         Restart-Service -Name "xmip-$($Instance.node)"
         return
     }
 
-    Invoke-NodeProgram -Program 'systemctl' -Argument @('restart', "xmip-$($Instance.node)") |
+    Invoke-DscProgram -Program 'systemctl' -Argument @('restart', "xmip-$($Instance.node)") |
         Out-Null
 }
-
 function Test-NodeServiceRunning {
     <#
     .SYNOPSIS
@@ -369,6 +330,6 @@ function Start-NodeService {
     )
 
     if ($PSCmdlet.ShouldProcess($Name, 'Enable and start')) {
-        Invoke-NodeProgram -Program 'systemctl' -Argument @('enable', '--now', $Name) | Out-Null
+        Invoke-DscProgram -Program 'systemctl' -Argument @('enable', '--now', $Name) | Out-Null
     }
 }
