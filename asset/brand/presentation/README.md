@@ -6,12 +6,13 @@ This directory is the working home for both formats. Revise them together.
 ## View
 
 - [PowerPoint: 28 slides](Xmip-overview.pptx)
-- [Animated video: about 10 minutes 54 seconds](Xmip-overview.mp4)
+- [Animated video: about 11 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
-files. The current exports were reviewed on 2026-11-05. Project source references
-record the documentation used, rather than a promise of release readiness.
+files. The opening definition was updated and checked on 2026-11-06. Project
+source references record the documentation used, rather than a promise of
+release readiness.
 
 ## Edit
 
@@ -29,6 +30,8 @@ The logo stays in [the brand directory](../README.md).
 
 - Explain Xmip through its own purpose and strengths. Do not name competitors,
   shame other products or users, or imply superiority through belittling comparisons.
+- Xmip stands for **Cross OS Messaging & Integration Platform**. Declare the full
+  name in both openings, including video narration and captions.
 - Use English. Pronounce Xmip as **Smip**, one syllable.
 - Keep the female voice as the reference for a warm, conversational pairing.
   The male voice should sound natural, clear and assured, with comparable loudness.

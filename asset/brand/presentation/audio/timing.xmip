@@ -4,27 +4,28 @@
 file = "scene-01.wav"
 
 [[scene.caption]]
-text = """\
-Welcome to Xmip, an open-source messaging and integration platform written \
-in Rust.\
-"""
+text = "Welcome to Xmip."
 start = 0
-duration = 5.625
+duration = 1.8
 
 [[scene.caption]]
-text = """\
-It is on premises first and cloud installable, so organizations choose \
-where their integration runs.\
-"""
-start = 5.805
+text = "Xmip stands for Cross OS Messaging & Integration Platform."
+start = 1.98
+duration = 4.75
+
+[[scene.caption]]
+text = "It is an open-source messaging and integration platform written in Rust."
+start = 6.91
+duration = 4.975
+
+[[scene.caption]]
+text = "It is on premises first and cloud installable, so organizations choose where their integration runs."
+start = 12.065
 duration = 6.575
 
 [[scene.caption]]
-text = """\
-This is the Xmip project story: what it connects, how it records \
-responsibility, and how people design and operate it.\
-"""
-start = 12.56
+text = "This is the Xmip project story: what it connects, how it records responsibility, and how people design and operate it."
+start = 18.82
 duration = 7.825
 
 [[scene]]

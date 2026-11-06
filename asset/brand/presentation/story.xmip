@@ -12,13 +12,14 @@ scene_padding_seconds = 2
 
 [[section]]
 title = "Xmip"
-headline = "Messaging and integration\nUnder your control"
-screen = "Messaging and integration\nFor leaders, developers and operators"
+headline = "Cross OS\nMessaging & Integration Platform"
+screen = "Xmip stands for Cross OS Messaging & Integration Platform"
 voice = "female"
 power = "both"
 narration = """\
-Welcome to Xmip, an open-source messaging and integration platform written \
-in Rust. It is on premises first and cloud installable, so organizations \
+Welcome to Xmip. Xmip stands for Cross OS Messaging & Integration Platform. \
+It is an open-source messaging and integration platform written in Rust. \
+It is on premises first and cloud installable, so organizations \
 choose where their integration runs. This is the Xmip project story: what \
 it connects, how it records responsibility, and how people design and \
 operate it.\
@@ -30,7 +31,7 @@ sources = [
 note = "Xmip Continuum · Project overview"
 layout = [
   "cover",
-  "Messaging and integration\nUnder your control"
+  "Cross OS\nMessaging &\nIntegration Platform"
 ]
 
 [[section]]
