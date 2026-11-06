@@ -282,7 +282,7 @@ record = ["ADR-0031 (amendment 2026-10-05)", "runtime-model.md section 20"]
 [implementation.configuration-saving]
 name = "Saving and slicing the cluster's configuration"
 state = "assembled"
-note = "The Operation Desktop saves `cluster.xmip`, validated by the runtime and audited, and slices it through `xmip_cluster_signed_slice_v1`, each slice signed by the cluster's authority beside the file; desired state slices it on each node (`xmip-service --slice`), signed the same way. A node runs only a slice that verifies against the authority's certificate beside it, refuses and audits one changed by hand and runs its last accepted slice instead (`runtime::signed`). A changed slice takes effect when the node starts again."
+note = "The Operation Desktop saves `cluster.xmip`, validated by the runtime and audited, and slices it through `xmip_cluster_signed_slice_v1`, each slice signed by the cluster's authority beside the file; desired state slices it and signs it on the machine the environment is deployed from (`xmip-service --slice --authority`) and ships each node its slice and the authority's certificate alone. A node runs only a slice that verifies against the authority's certificate beside it, refuses and audits one changed by hand and runs its last accepted slice instead (`runtime::signed`). A changed slice takes effect when the node starts again."
 record = ["ADR-0031 (amendments 2026-10-01, 2026-10-05, 2026-11-06)"]
 
 [implementation.configuration-delivery]

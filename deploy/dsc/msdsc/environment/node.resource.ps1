@@ -41,7 +41,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-foreach ($part in 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1') {
+foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1') {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
 }
 

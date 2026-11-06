@@ -26,6 +26,7 @@ use xmip_runtime::execution_tree::build_execution_tree;
 const ESSENTIALS: &str = "test/core/essentials/configuration/cluster.xmip";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
+const TASKS_SLICE: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/slice.yml";
 const INVENTORY: &str = "deploy/dsc/ansible/inventory.example.yml";
 const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
 
@@ -97,17 +98,41 @@ fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
 }
 
 #[test]
-fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
-    let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
-
+fn the_controller_slices_and_signs_and_a_node_never_slices() {
+    // The controller slices and signs each node's configuration with the
+    // environment's authority; a node is given the slice and the authority's
+    // certificate, never slices and never holds the key (ADR-0031,
+    // amendment 2026-11-06).
+    let slicing = source(TASKS_SLICE);
+    for asked in [
+        "--slice",
+        "--cluster",
+        "--authority",
+        "xmip_bound",
+        "delegate_to: localhost",
+    ] {
+        assert!(
+            slicing.contains(asked),
+            "{TASKS_SLICE} slices and signs on the controller: {asked}"
+        );
+    }
     for tasks in [TASKS_WINDOWS, TASKS_LINUX] {
         let text = source(tasks);
-        for asked in ["xmip-service", "--slice", "--cluster", "--listening"] {
+        for asked in [
+            "xmip_slice.stdout",
+            "authority.pem",
+            "[signature]",
+            "--listening",
+        ] {
             assert!(
                 text.contains(asked),
-                "{tasks} asks xmip-service for the slice, its cluster and its ports: {asked}"
+                "{tasks} places the signed slice and its authority's certificate: {asked}"
             );
         }
+        assert!(
+            !text.contains("--slice") && !text.contains("cluster.xmip'"),
+            "{tasks} never slices on the node"
+        );
     }
     assert!(
         !Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -115,6 +140,11 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
             .exists(),
         "the role writes no starter of its own: the package's xmip-service --install does"
     );
+}
+
+#[test]
+fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
+    let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
 
     // The Essentials' file is the one a test runs whether its nodes are
     // simulated or on machines of their own (ADR-0028, amendment
@@ -170,12 +200,7 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     // Parties' far end as `xmip-service --slice --bind --nodes` places them
     // (ADR-0028, amendment 2026-10-22), reads as xmip-service reads it, and
     // every Location the file designs is placed on one of them.
-    for tasks in [TASKS_WINDOWS, TASKS_LINUX] {
-        assert!(
-            source(tasks).contains("xmip_bound"),
-            "{tasks} binds the Locations"
-        );
-    }
+
     assert!(source(DEFAULTS).contains("'--bind', xmip_far_end, '--nodes'"));
     let bound = xmip_configure::placed::at_far_end(&cluster, &mapped, "10.77.0.1")
         .expect("places over the mapped nodes");

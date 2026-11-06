@@ -6,7 +6,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      [--purpose test|runtime]\n       \
      xmip-service --configuration <path> --definition\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> [--cluster <name>] \
-     [--bind <host[:port]> --nodes <name,...>] --slice\n       \
+     [--bind <host[:port]> --nodes <name,...>] [--authority <folder>] --slice\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name> \
      [--account <account>] --install\n       \
      xmip-service --configuration <path> --listening\n       \
@@ -22,9 +22,12 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      --slice prints the node's configuration, sliced from its cluster's cluster.xmip; \
      --cluster names the cluster where the file names none; --bind places each \
      Receive Location and Send Port the file designs on the environment's --nodes, \
-     over SFTP on the Parties' far end at <host>, port 7422 where it names none.\n\
-     --install writes a starter cluster.xmip where there is none, slices the node's \
-     configuration beside it where there is none, makes the node's folders, and \
+     over SFTP on the Parties' far end at <host>, port 7422 where it names none; \
+     what --slice prints is signed by the cluster's authority kept in --authority, \
+     beside cluster.xmip where it names none, made there where none is kept.\n\
+     --install, where the node has no configuration yet, writes a starter cluster.xmip \
+     where there is none and slices and signs the node's configuration beside it; it \
+     makes the node's folders, and \
      registers and starts its service, as --account where it is given; --uninstall \
      stops and removes the service of the node configured at <path> and deletes \
      nothing. Both need elevation.\n\
@@ -81,6 +84,11 @@ pub struct Arguments {
     pub bind: Option<String>,
     /// The nodes the environment has, with `--bind`.
     pub nodes: Vec<String>,
+    /// The folder the cluster's authority is kept in, with `--slice`: the
+    /// machine deploying the environment's, never a node's (ADR-0031,
+    /// amendment 2026-11-06); the `authority` folder beside the cluster's
+    /// file where it names none.
+    pub authority: Option<String>,
 }
 
 impl Arguments {
@@ -96,6 +104,7 @@ impl Arguments {
         let mut switches = Vec::new();
         let (mut node, mut cluster, mut account) = (None, None, None);
         let (mut bind, mut nodes) = (None, Vec::new());
+        let mut authority = None;
         let mut purpose = Purpose::Runtime;
 
         while let Some(flag) = args.next() {
@@ -111,6 +120,7 @@ impl Arguments {
                 "--cluster" => cluster = Some(value()?),
                 "--account" => account = Some(value()?),
                 "--bind" => bind = Some(value()?),
+                "--authority" => authority = Some(value()?),
                 "--nodes" => {
                     nodes = value()?
                         .split(',')
@@ -145,6 +155,11 @@ impl Arguments {
             return Err("--account is the account --install registers the service as".into());
         }
         placing(mode, bind.as_ref(), &nodes)?;
+        if authority.is_some() && mode != Mode::Slice {
+            return Err(
+                "--authority is the folder --slice signs with the cluster's authority from".into(),
+            );
+        }
         Ok(Self {
             configuration: configuration.ok_or("--configuration names no node configuration")?,
             mode,
@@ -154,6 +169,7 @@ impl Arguments {
             account,
             bind,
             nodes,
+            authority,
         })
     }
 }
@@ -247,6 +263,10 @@ mod tests {
             (Some("h"), ["n".to_string(), "m".to_string()].as_slice())
         );
 
+        let signing = parsed("--slice --node n --authority keep --configuration cluster.xmip")
+            .expect("reads");
+        assert_eq!(signing.authority.as_deref(), Some("keep"));
+
         let listening = parsed("--listening --configuration node.xmip").expect("reads");
         assert_eq!(listening.mode, Mode::Listening);
 
@@ -301,6 +321,10 @@ mod tests {
             (
                 "--configuration a --listening --bind h --nodes n",
                 "place the Locations --slice prints",
+            ),
+            (
+                "--configuration a --install --node n --cluster c --authority k",
+                "--authority is the folder --slice signs",
             ),
             ("--configuration a --purpose Test", "test"),
         ] {

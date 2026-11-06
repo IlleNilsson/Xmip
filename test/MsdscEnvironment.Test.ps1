@@ -31,8 +31,8 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
-    foreach ($part in 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-        'EnvironmentMachine.ps1') {
+    foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
+        'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1') {
         . (Join-Path $script:Template $part)
     }
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
@@ -71,7 +71,7 @@ BeforeAll {
     }
 
     # The example environment evaluated: each instance's Echo by name, an
-    # Include's beneath it.
+    # Include's machine beneath it, and its slice as "<name> slice".
     function Invoke-EchoEnvironment {
         foreach ($name in $script:Document) {
             Write-EchoDocument -Name $name
@@ -89,11 +89,18 @@ BeforeAll {
         }
         [hashtable] $result = @{}
         foreach ($instance in ($json | ConvertFrom-Json -AsHashtable).results) {
-            $result[$instance.name] = if ($instance.type -eq 'Microsoft.DSC/Include') {
-                $instance.result[0].result.actualState.output.properties
+            if ($instance.type -ne 'Microsoft.DSC/Include') {
+                $result[$instance.name] = $instance.result.actualState.output.properties
+                continue
             }
-            else {
-                $instance.result.actualState.output.properties
+            foreach ($included in $instance.result) {
+                $output = $included.result.actualState.output
+                switch ($output.type) {
+                    'Xmip.Environment/Machine' { $result[$instance.name] = $output.properties }
+                    'Xmip.Environment/Slice' {
+                        $result["$($instance.name) slice"] = $output.properties
+                    }
+                }
             }
         }
         return $result
@@ -161,6 +168,7 @@ Describe 'The documents' {
         }
 
         $found | Should -Be @('Xmip.Environment/Machine', 'Xmip.Environment/Name',
+            'Xmip.Environment/Slice',
             'Xmip.Node/Account', 'Xmip.Node/File', 'Xmip.Node/Opening', 'Xmip.Node/Package',
             'Xmip.Node/Service', 'Xmip.Node/Slice')
     }
@@ -206,7 +214,12 @@ Describe 'The example environment' {
             $machine.document | Should -Be 'node.dsc.yaml'
             $machine.parameters.node | Should -Be $node
             $machine.parameters.family | Should -Be $script:Nodes[$node].family
-            $machine.files.Keys | Should -Contain 'cluster.xmip'
+            # The node is given its slice, signed here, and the authority's
+            # certificate; never the cluster's file (ADR-0031, 2026-11-06).
+            $machine.files.Keys | Should -Contain 'node.xmip'
+            $machine.files.Keys | Should -Contain 'authority.pem'
+            $machine.files.Keys | Should -Not -Contain 'cluster.xmip'
+            $machine.files['node.xmip'] | Should -BeLike "**node.xmip"
             $machine.files['node.key'] | Should -BeLike "*$node*node.key"
             [string] $account = if ($machine.parameters.family -eq 'Windows') {
                 "NT SERVICE\xmip-$node"
@@ -225,9 +238,12 @@ Describe 'The example environment' {
         [string[]] $mapped = @($script:Nodes.Keys | Sort-Object)
 
         foreach ($node in $script:Nodes.Keys) {
-            $machine = $script:Evaluated[$node]
-            $machine.parameters.bind | Should -Be $farEnd
-            @($machine.parameters.placed -split ',' | Sort-Object) | Should -Be $mapped
+            $slice = $script:Evaluated["$node slice"]
+            $slice.node | Should -Be $node
+            $slice.bind | Should -Be $farEnd
+            @($slice.nodes -split ',' | Sort-Object) | Should -Be $mapped
+            $slice.authority | Should -Be $example.parameters.common.authority
+            $slice.into | Should -BeLike "*$node"
         }
     }
 }
@@ -247,7 +263,7 @@ Describe 'The Xmip resources'' own steps' {
     }
 
     It 'opens the ports xmip-service --listening says, each once' {
-        Mock -CommandName Invoke-NodeProgram -MockWith {
+        Mock -CommandName Invoke-DscProgram -MockWith {
             @('7401/tcp operate', '9100/tcp receive location orders', '7401/tcp again', 'noise')
         }
         [hashtable] $asked = @{ program = 'xmip-service'; configuration = 'node.xmip' }
@@ -255,18 +271,47 @@ Describe 'The Xmip resources'' own steps' {
         Get-NodeListening -Instance $asked | Should -Be @('7401/tcp', '9100/tcp')
     }
 
-    It 'asks xmip-service for the slice with the far end and the nodes, where given' {
-        Mock -CommandName Invoke-NodeProgram -MockWith { $Argument -join ' ' }
+    It 'asks xmip-service here for the slice the environment''s authority signs, placed as given' {
+        Mock -CommandName Invoke-DscProgram -MockWith { $Argument -join ' ' }
         [hashtable] $asked = @{
             program = 'xmip-service'; configuration = 'cluster.xmip'; node = 'n'; cluster = 'c'
+            authority = 'keep'
         }
 
-        Get-NodeSliced -Instance $asked |
-            Should -Be '--configuration cluster.xmip --node n --cluster c --slice'
+        [string] $asking = '--configuration cluster.xmip --node n --cluster c --authority keep'
+        Get-EnvironmentSliced -Instance $asked | Should -Be "$asking --slice`n"
         $asked.bind = '10.77.0.1'
         $asked.nodes = 'n,m'
-        Get-NodeSliced -Instance $asked | Should -Be ('--configuration cluster.xmip --node n ' +
-            '--cluster c --bind 10.77.0.1 --nodes n,m --slice')
+        Get-EnvironmentSliced -Instance $asked |
+            Should -Be "$asking --bind 10.77.0.1 --nodes n,m --slice`n"
+    }
+
+    It 'compares a signed slice by the text it signs, the same however often it is signed' {
+        [string] $text = "[service]`nnode_name = `"n`"`n"
+        foreach ($value in 'a', 'b') {
+            Get-EnvironmentSignedText -Slice "$text[signature]`nvalue = `"$value`"`n" |
+                Should -BeExactly $text
+        }
+        Get-EnvironmentSignedText -Slice $text | Should -BeExactly $text
+    }
+
+    It 'places the node''s shipped slice and its authority''s certificate, then finds them' {
+        Mock -CommandName Test-NodePackage -MockWith { $false }
+        [string] $shipped = Join-Path $TestDrive 'files'
+        New-Item -ItemType Directory -Force -Path $shipped | Out-Null
+        Set-Content -LiteralPath (Join-Path $shipped 'node.xmip') -Value 'slice'
+        Set-Content -LiteralPath (Join-Path $shipped 'authority.pem') -Value 'certificate'
+        [hashtable] $slice = @{
+            configuration = Join-Path $TestDrive 'config'
+            source        = Join-Path $shipped 'node.xmip'
+            certificate   = Join-Path $shipped 'authority.pem'
+            node          = 'n'
+        }
+
+        Test-NodeSlice -Instance $slice | Should -BeFalse
+        Set-NodeSlice -Instance $slice -Confirm:$false
+        Test-NodeSlice -Instance $slice | Should -BeTrue
+        Join-Path $TestDrive 'config/authority/authority.pem' | Should -Exist
     }
 
     It 'stages a machine''s files in a folder of the machine''s own' {

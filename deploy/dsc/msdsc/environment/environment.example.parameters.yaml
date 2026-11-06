@@ -15,6 +15,13 @@ parameters:
     cluster: C1
     domain: xmip.test
     configuration: D:\Repos\Xmip\test\core\essentials\configuration\cluster.xmip
+    # This machine's xmip-service, which slices each node's configuration and
+    # signs it with the environment's authority kept in authority, writing it
+    # into slices, a folder per node; the nodes are shipped what it wrote and
+    # never slice (ADR-0031, amendment 2026-11-06).
+    program: D:\Repos\Xmip\.ai-interaction\target-windows\debug\xmip-service.exe
+    authority: D:\Repos\Xmip\.local-work\environment\authority
+    slices: D:\Repos\Xmip\.local-work\environment\slice
     identity: D:\Repos\Xmip\.local-work\environment\identity
     credentialPath: D:\Repos\Xmip\.local-work\hyperv\credential.xml
     keyPath: D:\Repos\Xmip\.local-work\hyperv\ssh\xmip

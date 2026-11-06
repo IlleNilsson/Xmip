@@ -1,13 +1,13 @@
 ---
 # One Xmip node on its own machine, Windows or AlmaLinux alike, in the same
-# steps: its account, cluster.xmip, its certificate from the
-# cluster's own authority, the estate's package (whose `xmip-service
-# --install` lays the node out, slices it and registers and starts its
-# service), its slice kept as `xmip-service --slice` prints it, a firewall
-# opening for exactly the ports `xmip-service --listening` says its
-# configuration listens on, and its service running. How each step is done
-# on each system is windows.yml's and linux.yml's; every rule about the
-# node is xmip-service's, which the role asks.
+# steps: its slice, sliced and signed on the controller (slice.yml), and the
+# certificate of the authority that signed it, its account, its certificate
+# from the cluster's own authority, the estate's package (whose
+# `xmip-service --install` lays the node out and registers and starts its
+# service), a firewall opening for exactly the ports `xmip-service
+# --listening` says its configuration listens on, and its service running.
+# How each step is done on each system is windows.yml's and linux.yml's;
+# every rule about the node is xmip-service's, which the role asks.
 
 - name: Refuse a node, a cluster or a package left unnamed
   ansible.builtin.assert:
@@ -18,6 +18,18 @@
     fail_msg: >-
       REFUSED: xmip_node_name, xmip_cluster_name and xmip_package name the
       node this host is, its cluster and the package it is installed from.
+
+- name: Refuse a cluster's file with no authority to sign its slices
+  ansible.builtin.assert:
+    that:
+      - xmip_cluster_configuration | length == 0 or xmip_authority | length > 0
+    fail_msg: >-
+      REFUSED: xmip_authority names the folder on the controller the
+      environment's authority is kept in, which signs each node's slice; a
+      node runs only a slice its cluster's authority signed.
+
+- name: The node's configuration, sliced and signed on the controller
+  ansible.builtin.import_tasks: slice.yml
 
 - name: The node on a Windows machine
   ansible.builtin.import_tasks: windows.yml

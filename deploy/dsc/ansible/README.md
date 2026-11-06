@@ -29,19 +29,25 @@ XMIP-OUT01, P1 on XMIP-APP01, L1 on XMIP-APP02 and D1 on XMIP-APP03, and
 
 The role `xmip_node` gives each node machine, in order: its account (the
 system account `xmip` on AlmaLinux; on Windows the virtual account
-`NT SERVICE\xmip-<node>`, which exists with its service); the cluster's
-`cluster.xmip`; its certificate, key and anchors from the cluster's own
-authority into `config/tls`, the key private; the estate's package, told
-`XMIP_NODE`, `XMIP_CLUSTER` and `XMIP_ACCOUNT`, whose `xmip-service
---install` slices the file there and registers and starts the service as
-that account; its slice as `xmip-service --slice --cluster --bind --nodes`
-prints it, restarting the node when it changed — every Receive Location and
+`NT SERVICE\xmip-<node>`, which exists with its service); its slice,
+`node.xmip`, as the controller's `xmip-service --slice --cluster --bind
+--nodes --authority` prints it (`tasks/slice.yml`, `xmip_slicer`), signed by
+the environment's authority kept on the controller in `xmip_authority`, with
+that authority's certificate in `config/authority/authority.pem`, replaced
+only where the text it signs differs and restarting the node when it
+changed — the node never slices and never holds the authority's key, so a
+`node.xmip` edited on it is refused there (ADR-0031, amendment 2026-11-06) —
+every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
 `xmip_nodes`, round robin by their roles, and bound over SFTP on the
 Parties' far end the Essentials serves at `xmip_far_end`, port 7422, each a
 user of its own there (ADR-0028, amendment 2026-10-22); a firewall opening
 for exactly the ports `xmip-service --listening` says, and none it no
 longer does — none for the far end, which a node reaches and never serves;
+its certificate, key and anchors from the cluster's own authority into
+`config/tls`, the key private; the estate's package, told `XMIP_NODE`,
+`XMIP_CLUSTER` and `XMIP_ACCOUNT`, whose `xmip-service --install` lays the
+node out by its slice and registers and starts the service as that account;
 and its service running and started with the machine. The role writes no starter of
 its own: a node given no cluster file gets the package's, written once in
 `xmip-service --install`.

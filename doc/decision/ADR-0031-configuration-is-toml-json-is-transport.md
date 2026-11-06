@@ -674,6 +674,13 @@ Desktop's save (`xmip_cluster_signed_slice_v1`), which writes the
 authority's certificate beside each slice it delivers. A test writes its
 node through `runtime::fixture::write_signed`.
 
-Not built: points 3 and 4. The desired-state templates slice
-`cluster.xmip` on each node they deploy, so each node signs its own slice
-there; signing moves to the machine that deploys.
+The desired-state templates slice and sign on the machine the environment
+is deployed from, never on a node: `xmip-service --slice --authority`
+signs each node's slice with the environment's authority there, the one
+`New-XmipCertificate -Node` issues the nodes' certificates from, and a node
+is shipped its slice and that authority's certificate alone
+(`Xmip.Environment/Slice` and `Xmip.Node/Slice` in Microsoft DSC v3; the
+role `xmip_node`'s `tasks/slice.yml` in Ansible). `--install` writes a
+starter `cluster.xmip` only for a node that has no slice yet.
+
+Not built: points 3 and 4.

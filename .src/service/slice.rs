@@ -4,9 +4,10 @@
 //! to that node*). Desired state runs it on each node it deploys and writes
 //! what it prints where the node reads its configuration
 //! (`deployment-model.md` section 8). What it prints is signed by the
-//! cluster's authority kept beside the cluster's file, made there where none
-//! is (`signed::signed_beside`; ADR-0031, amendment 2026-11-06); nothing
-//! else is written. With
+//! cluster's authority kept in `--authority`, the machine deploying the
+//! environment's, or beside the cluster's file where it names none, made there
+//! where none is (`signed`; ADR-0031, amendment 2026-11-06); nothing else is
+//! written. With
 //! `--cluster`, a cluster's file that names no cluster is sliced as that
 //! one, and one naming another is refused (`slice_named`; ADR-0028,
 //! amendment 2026-10-21). With `--bind`, each Receive Location and Send
@@ -57,5 +58,13 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
         ),
     };
     let configuration = std::path::Path::new(&arguments.configuration);
-    xmip_runtime::signed::signed_beside(configuration, &name, &cluster, &sliced)
+    match arguments.authority.as_deref() {
+        Some(place) => xmip_runtime::signed::signed_by_kept(
+            std::path::Path::new(place),
+            &name,
+            &cluster,
+            &sliced,
+        ),
+        None => xmip_runtime::signed::signed_beside(configuration, &name, &cluster, &sliced),
+    }
 }

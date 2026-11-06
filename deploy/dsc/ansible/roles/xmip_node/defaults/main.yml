@@ -9,10 +9,18 @@ xmip_node_name: ""
 xmip_cluster_name: ""
 # cluster.xmip on the controller (ADR-0031, amendment
 # 2026-10-03): one file for the whole cluster, each node's configuration
-# sliced from it on the node by `xmip-service --slice`. Left empty, the
-# package's `xmip-service --install` writes its starter, one node keeping
-# Xmip Storage itself.
+# sliced from it and signed on the controller by `xmip-service --slice
+# --authority` (ADR-0031, amendment 2026-11-06). Left empty, the package's
+# `xmip-service --install` writes its starter, one node keeping Xmip Storage
+# itself, and signs it with an authority of its own.
 xmip_cluster_configuration: ""
+# The controller's xmip-service, which slices and signs; a build for the
+# controller's own system.
+xmip_slicer: xmip-service
+# The folder on the controller the environment's authority is kept in, the
+# one New-XmipCertificate -Node issues the nodes' certificates from: it signs
+# every node's slice, and only its certificate leaves the controller.
+xmip_authority: ""
 # A folder on the controller holding what New-XmipCertificate -Node wrote
 # for this node under the cluster's own authority: node.pem, node.key and
 # anchors.pem. Left empty, the node is given no certificate.

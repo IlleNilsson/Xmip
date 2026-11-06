@@ -91,11 +91,14 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
     run::record(audit, "install", ExecutionPhase::Begin, &[("node", node)]);
     std::fs::create_dir_all(&directory).map_err(|error| said(&directory, &error))?;
 
-    if !cluster_file.exists() {
-        write(&cluster_file, &starter(cluster, node))?;
-    }
     let node_file = directory.join(NODE_FILE);
+    // A node given its slice, signed where the environment is deployed from,
+    // is laid out by it alone: no cluster's file is written beside it
+    // (ADR-0031, amendment 2026-11-06).
     if !node_file.exists() {
+        if !cluster_file.exists() {
+            write(&cluster_file, &starter(cluster, node))?;
+        }
         let source =
             std::fs::read_to_string(&cluster_file).map_err(|error| said(&cluster_file, &error))?;
         let sliced = if xmip_configure::cluster::cluster_name(&source)?.is_some() {

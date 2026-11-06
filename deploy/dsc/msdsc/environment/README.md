@@ -48,31 +48,42 @@ node machine's address, and one for each node holding its machine's. A node
 finds another by its name — `D1:7443` — and the Essentials uses a node whose
 name resolves.
 
+**Each node's slice, on this machine** (`machine.dsc.yaml`,
+`Xmip.Environment/Slice`), before its machine is set up: `node.xmip` as
+this machine's `xmip-service --slice --cluster --bind --nodes --authority`
+prints it, signed by the environment's authority kept in `authority`, and
+that authority's certificate beside it, written into `slices/<node>`: every
+Receive Location and Send Port the cluster's file designs is placed over the
+environment's nodes, round robin by their roles, and bound over SFTP on the
+Parties' far end at `farEnd`, port 7422, each a user of its own there, so a
+node fetches what the Essentials drops and puts what it sends where the
+Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
+parameters' `nodes`, never written again. A node never slices and never
+holds the authority's key, so a `node.xmip` edited on it is refused there
+and the node runs its last accepted slice (ADR-0031, amendment
+2026-11-06). A signature differs each time it is made, so a slice is made
+again only where the text it signs differs.
+
 **Each node machine** (`node.dsc.yaml`), in this order:
 
 1. its account: on AlmaLinux the system account `xmip`, made here; on
    Windows the virtual account `NT SERVICE\xmip-<node>`, which exists with
    its service and is never made;
-2. `cluster.xmip` in the package's config folder;
+2. its slice, `node.xmip`, in the package's config folder, and the
+   authority's certificate in `authority/authority.pem` beside it, as they
+   were shipped; the service restarted when they changed and the package is
+   installed;
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;
 4. the estate's package, the MSI or the `.rpm`, told the node, the cluster
-   and the account, whose `xmip-service --install` slices the file already
-   there, gives the account what it reads and writes, and registers and
-   starts the node's service as that account;
-5. its slice, `node.xmip`, as `xmip-service --slice --cluster --bind
-   --nodes` prints it, the service restarted when it changed: every Receive
-   Location and Send Port the cluster's file designs is placed over the
-   environment's nodes, round robin by their roles, and bound over SFTP on
-   the Parties' far end at `farEnd`, port 7422, each a user of its own
-   there, so a node fetches what the Essentials drops and puts what it
-   sends where the Essentials is told of it (ADR-0028, amendment
-   2026-10-22). The nodes are the parameters' `nodes`, never written again;
-6. a firewall opening for exactly the ports `xmip-service --listening` says
+   and the account, whose `xmip-service --install` lays the node out by the
+   slice already there, gives the account what it reads and writes, and
+   registers and starts the node's service as that account;
+5. a firewall opening for exactly the ports `xmip-service --listening` says
    its configuration listens on, and none it no longer does — none for the
    far end, which a node reaches and never serves;
-7. its service running and started with the machine: on Windows the
+6. its service running and started with the machine: on Windows the
    built-in `Microsoft.Windows/Service`, on AlmaLinux `Xmip.Node/Service`.
 
 Every rule about the node is `xmip-service`'s: nothing here reads the TOML,
@@ -90,9 +101,10 @@ adapter is used nowhere here.
 | Instance | Resource |
 | --- | --- |
 | the account | `Xmip.Node/Account` (AlmaLinux; Windows needs none) |
-| the cluster's file, the certificate, key and anchors | `Xmip.Node/File` |
+| the certificate, key and anchors | `Xmip.Node/File` |
 | the package | `Xmip.Node/Package` |
-| the slice | `Xmip.Node/Slice` |
+| each node's slice, made and signed on this machine | `Xmip.Environment/Slice` |
+| the slice in place on the node | `Xmip.Node/Slice` |
 | the firewall | `Xmip.Node/Opening` |
 | the service | `Microsoft.Windows/Service` on Windows, `Xmip.Node/Service` on AlmaLinux |
 | the names | `Xmip.Environment/Name` |

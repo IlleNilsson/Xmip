@@ -1,0 +1,19 @@
+---
+# The node's configuration sliced and signed on the controller, never on the
+# node: the controller's `xmip-service --slice` signs it with the
+# environment's authority kept in xmip_authority, and the node is given that
+# slice and the authority's certificate alone, never its key, so a file
+# edited on the node is refused there (ADR-0031, amendment 2026-11-06).
+# A signature differs each time it is made, so the node's file is replaced
+# only where the text it signs differs (windows.yml, linux.yml).
+
+- name: The node's configuration, sliced and signed on the controller
+  ansible.builtin.command:
+    argv: >-
+      {{ [xmip_slicer, '--configuration', xmip_cluster_configuration,
+      '--node', xmip_node_name, '--cluster', xmip_cluster_name,
+      '--authority', xmip_authority] + xmip_bound + ['--slice'] }}
+  delegate_to: localhost
+  register: xmip_slice
+  changed_when: false
+  when: xmip_cluster_configuration | length > 0

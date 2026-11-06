@@ -2,9 +2,10 @@ $schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
 type: Xmip.Node/Slice
 version: '0.1.0'
 description: >-
-  The node's configuration as xmip-service --slice prints it from the cluster's
-  cluster.xmip, its Locations placed on the Parties' far end where bind says; the
-  service restarted when it changed.
+  The node's configuration, node.xmip, as the machine deploying the environment
+  sliced and signed it, and the certificate of the authority that signed it,
+  authority/authority.pem beside it, in place; the service restarted when they
+  changed and it is installed. The node never slices.
 tags:
   - Xmip
 get:
@@ -56,32 +57,22 @@ schema: !embedded
     $schema: https://json-schema.org/draft/2020-12/schema
     type: object
     required:
-      - program
       - configuration
+      - source
+      - certificate
       - node
-      - cluster
     properties:
-      program:
-        description: 'xmip-service, as the package installed it.'
-        type: string
       configuration:
-        description: 'The cluster''s cluster.xmip on this machine.'
+        description: 'The folder the node reads its configuration in.'
+        type: string
+      source:
+        description: 'The node.xmip it was shipped, signed.'
+        type: string
+      certificate:
+        description: 'The certificate of the authority that signed it, as shipped.'
         type: string
       node:
         description: 'The node this machine is.'
-        type: string
-      cluster:
-        description: 'The cluster''s name.'
-        type: string
-      bind:
-        description: >-
-          The Parties' far end, host or host:port, where each Receive Location
-          and Send Port is bound over SFTP; with nodes.
-        type: string
-      nodes:
-        description: >-
-          The nodes the environment runs, comma separated, which the Locations
-          are placed over; with bind.
         type: string
       _exist:
         type: boolean

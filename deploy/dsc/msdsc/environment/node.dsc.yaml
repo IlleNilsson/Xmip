@@ -1,16 +1,17 @@
 # One Xmip node on its own machine, Windows or AlmaLinux alike: its account,
-# cluster.xmip, its certificate from the cluster's own authority,
-# the estate's package, which installs and starts its service, its slice
-# with its Receive Locations and Send Ports bound on the Parties' far end,
-# the firewall openings its configuration listens on, and its service
-# running. Applied on the node machine itself by Xmip.Environment/Machine
+# its slice, node.xmip, as the machine deploying the environment sliced and
+# signed it, with the certificate of the authority that signed it, its
+# certificate from the cluster's own authority, the estate's package, which
+# installs and starts its service, the firewall openings its configuration
+# listens on, and its service running. The node never slices
+# (ADR-0031, amendment 2026-11-06). Applied on the node machine itself by Xmip.Environment/Machine
 # (environment.example.dsc.yaml), which copies this folder and the files
 # below to the machine's staging folder first; README.md says how.
 #
 # Where a built-in resource of DSC fits, it is used: Microsoft.Windows/Service
 # for the Windows service. Everything else is an Xmip resource of this
-# folder (node.resource.ps1), because the rules it applies — the slice, the
-# ports, the layout — are xmip-service's, which it asks.
+# folder (node.resource.ps1), because the rules it applies — the ports, the
+# layout — are xmip-service's, which it asks.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.3
@@ -20,7 +21,8 @@ parameters:
     type: string
     description: >-
       Where Xmip.Environment/Machine copied this folder and the files:
-      cluster.xmip, node.pem, node.key, anchors.pem and the package.
+      node.xmip, authority.pem, node.pem, node.key, anchors.pem and the
+      package.
   family:
     type: string
     allowedValues: [Windows, Linux]
@@ -30,17 +32,8 @@ parameters:
     description: The node this machine is, as cluster.xmip declares it.
   cluster:
     type: string
-    description: The cluster's name; cluster.xmip names none.
-  bind:
-    type: string
-    description: >-
-      The Parties' far end the Essentials serves, where the machines reach
-      it: each Receive Location and Send Port is bound there over SFTP.
-  placed:
-    type: string
-    description: >-
-      Every node the environment runs on a machine of its own, comma
-      separated: the nodes the cluster's Locations are placed over.
+    description: The cluster's name, which the package's install is given.
+
   account:
     type: string
     description: >-
@@ -61,12 +54,14 @@ resources:
     condition: "[equals(parameters('family'), 'Linux')]"
     properties:
       name: "[parameters('account')]"
-  - name: Cluster configuration
-    type: Xmip.Node/File
+  - name: Slice
+    type: Xmip.Node/Slice
     requireVersion: ^0.1
     properties:
-      path: "[path(parameters('layout').configuration, 'cluster.xmip')]"
-      source: "[path(parameters('staging'), 'files', 'cluster.xmip')]"
+      configuration: "[parameters('layout').configuration]"
+      source: "[path(parameters('staging'), 'files', 'node.xmip')]"
+      certificate: "[path(parameters('staging'), 'files', 'authority.pem')]"
+      node: "[parameters('node')]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -93,7 +88,7 @@ resources:
     type: Xmip.Node/Package
     requireVersion: ^0.1
     dependsOn:
-      - "[resourceId('Xmip.Node/File', 'Cluster configuration')]"
+      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
       - "[resourceId('Xmip.Node/File', 'Key')]"
       - "[resourceId('Xmip.Node/File', 'Anchors')]"
     properties:
@@ -101,23 +96,12 @@ resources:
       node: "[parameters('node')]"
       cluster: "[parameters('cluster')]"
       account: "[parameters('account')]"
-  - name: Slice
-    type: Xmip.Node/Slice
-    requireVersion: ^0.1
-    dependsOn:
-      - "[resourceId('Xmip.Node/Package', 'Package')]"
-    properties:
-      program: "[parameters('layout').program]"
-      configuration: "[path(parameters('layout').configuration, 'cluster.xmip')]"
-      node: "[parameters('node')]"
-      cluster: "[parameters('cluster')]"
-      bind: "[parameters('bind')]"
-      nodes: "[parameters('placed')]"
+
   - name: Opening
     type: Xmip.Node/Opening
     requireVersion: ^0.1
     dependsOn:
-      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+      - "[resourceId('Xmip.Node/Package', 'Package')]"
     properties:
       program: "[parameters('layout').program]"
       configuration: "[path(parameters('layout').configuration, 'node.xmip')]"
@@ -127,7 +111,7 @@ resources:
     requireVersion: ^0.1
     condition: "[equals(parameters('family'), 'Windows')]"
     dependsOn:
-      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+      - "[resourceId('Xmip.Node/Package', 'Package')]"
     properties:
       name: "[concat('xmip-', parameters('node'))]"
       status: Running
@@ -138,6 +122,6 @@ resources:
     requireVersion: ^0.1
     condition: "[equals(parameters('family'), 'Linux')]"
     dependsOn:
-      - "[resourceId('Xmip.Node/Slice', 'Slice')]"
+      - "[resourceId('Xmip.Node/Package', 'Package')]"
     properties:
       name: "[concat('xmip-', parameters('node'))]"

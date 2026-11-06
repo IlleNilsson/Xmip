@@ -12,11 +12,35 @@
     - "{{ xmip_configuration }}"
     - "{{ xmip_staging }}"
 
-- name: cluster.xmip
+- name: The folder of the authority that signed the node's configuration
+  ansible.windows.win_file:
+    path: "{{ xmip_configuration }}\\authority"
+    state: directory
+  when: xmip_slice is not skipped
+
+- name: The certificate of the authority that signed it, which the node checks it by
   ansible.windows.win_copy:
-    src: "{{ xmip_cluster_configuration }}"
-    dest: "{{ xmip_configuration }}\\cluster.xmip"
-  when: xmip_cluster_configuration | length > 0
+    src: "{{ xmip_authority }}/authority.pem"
+    dest: "{{ xmip_configuration }}\\authority\\authority.pem"
+  when: xmip_slice is not skipped
+  notify: Restart the Xmip node
+
+- name: The node's configuration as it is
+  ansible.builtin.slurp:
+    src: "{{ xmip_configuration }}\\node.xmip"
+  register: xmip_held
+  failed_when: false
+  when: xmip_slice is not skipped
+
+- name: The node's configuration where it reads it, where the text it signs differs
+  ansible.windows.win_copy:
+    content: "{{ xmip_slice.stdout }}\n"
+    dest: "{{ xmip_configuration }}\\node.xmip"
+  when: >-
+    xmip_slice is not skipped and (xmip_held.content is not defined
+    or (xmip_held.content | b64decode).split('\n[signature]\n')[0]
+    != xmip_slice.stdout.split('\n[signature]\n')[0])
+  notify: Restart the Xmip node
 
 - name: The certificate's folder, inheriting nothing
   ansible.windows.win_file:
@@ -69,20 +93,6 @@
     creates_service: "xmip-{{ xmip_node_name }}"
     state: present
 
-- name: The node's configuration as xmip-service slices it
-  ansible.windows.win_command:
-    argv: >-
-      {{ [xmip_program, '--configuration', xmip_configuration ~ '\\cluster.xmip',
-      '--node', xmip_node_name, '--cluster', xmip_cluster_name]
-      + xmip_bound + ['--slice'] }}
-  register: xmip_slice
-  changed_when: false
-
-- name: The node's configuration where it reads it
-  ansible.windows.win_copy:
-    content: "{{ xmip_slice.stdout }}"
-    dest: "{{ xmip_configuration }}\\node.xmip"
-  notify: Restart the Xmip node
 
 - name: The ports the node's configuration listens on
   ansible.windows.win_command:
