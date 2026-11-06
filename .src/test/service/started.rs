@@ -221,7 +221,7 @@ pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
         node(receive, &unheld().to_string()),
         endpoint(directory)
     );
-    std::fs::write(&path, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&path, &text);
     path
 }
 

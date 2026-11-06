@@ -117,7 +117,7 @@ mod tests {
              [nodes.{node}]\nroles = \"storage\"\n"
         );
         let text = xmip_configure::slice_named(&cluster, &node, "account").expect("slices");
-        std::fs::write(&file, text).expect("writes");
+        xmip_runtime::fixture::write_signed(&file, &text);
 
         let given = given(&file).expect("reads");
         let folders: Vec<(PathBuf, Access)> = given

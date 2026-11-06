@@ -103,7 +103,8 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
         } else {
             xmip_configure::slice_named(&source, node, cluster)?
         };
-        write(&node_file, &sliced)?;
+        let signed = xmip_runtime::signed::signed_beside(&node_file, cluster, &source, &sliced)?;
+        write(&node_file, &signed)?;
     }
 
     if let Some(root) = directory.parent() {
@@ -415,7 +416,9 @@ mod tests {
         let directory = std::env::temp_dir().join(format!("xmip-starter-{}", std::process::id()));
         std::fs::create_dir_all(&directory).expect("a directory");
         let file = directory.join(NODE_FILE);
-        std::fs::write(&file, &sliced).expect("written");
+        let signed = xmip_runtime::signed::signed_beside(&file, &cluster.name, &source, &sliced)
+            .expect("signed");
+        std::fs::write(&file, signed).expect("written");
         let read = xmip_runtime::start::read(&text(&file));
         std::fs::remove_dir_all(&directory).expect("removed");
 

@@ -101,7 +101,7 @@ local = "{local}"
         local = endpoint(directory),
     );
     let configuration = directory.join(format!("{node}.xmip"));
-    std::fs::write(&configuration, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
     configuration
 }
 

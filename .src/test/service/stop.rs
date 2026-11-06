@@ -82,11 +82,11 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
         std::env::temp_dir().join(format!("xmip-service-refused-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
-    let text = std::fs::read_to_string(&configuration).expect("reads");
+    let text = xmip_runtime::fixture::unsigned(&configuration);
     // A transport no build of xmip-service links: a feature of its own for
     // it would make this node start (sftp was this test's until it was
     // linked, 2026-10-22, and the node then ran on instead of being refused).
-    std::fs::write(&configuration, text.replacen("tcp://", UNLINKED, 1)).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text.replacen("tcp://", UNLINKED, 1));
 
     let said = refused(&configuration, &directory);
     assert!(said.contains("no transport for smb://"), "{said}");
@@ -221,28 +221,26 @@ fn a_storage_node_the_build_did_not_link_or_that_does_not_open_is_refused() {
         std::env::temp_dir().join(format!("xmip-service-unstored-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
-    let text = std::fs::read_to_string(&configuration).expect("reads");
+    let text = xmip_runtime::fixture::unsigned(&configuration);
 
     // The engine is no node's choice (ADR-0015, amendment 2026-10-01).
-    std::fs::write(
+    xmip_runtime::fixture::write_signed(
         &configuration,
-        format!("{text}\n[store]\nengine = \"xmip-core-persist-lmdb\"\n"),
-    )
-    .expect("writes");
+        &format!("{text}\n[store]\nengine = \"xmip-core-persist-lmdb\"\n"),
+    );
     let said = refused(&configuration, &directory);
     assert!(said.contains("engine"), "{said}");
 
     let unlinked = "[store]
 key_store = \"xmip-core-secret-vault\"
 ";
-    std::fs::write(
+    xmip_runtime::fixture::write_signed(
         &configuration,
-        format!(
+        &format!(
             "{text}
 {unlinked}"
         ),
-    )
-    .expect("writes");
+    );
     let said = refused(&configuration, &directory);
     assert!(
         said.contains("'xmip-core-secret-vault', which this node was not built with"),
@@ -250,23 +248,22 @@ key_store = \"xmip-core-secret-vault\"
     );
 
     // A place is no node's choice either: the Storage node is the layout's.
-    std::fs::write(
+    xmip_runtime::fixture::write_signed(
         &configuration,
-        format!(
+        &format!(
             "{text}
 [store]
 place = \"taken\"
 "
         ),
-    )
-    .expect("writes");
+    );
     let said = refused(&configuration, &directory);
     assert!(said.contains("place"), "{said}");
 
     // Only a node with the Storage role stores (ADR-0056, amendment
     // 2026-10-20): without it, and with no Storage node listed, refused.
     let roleless = text.replace("roles = \"executing, storage\"", "roles = \"executing\"");
-    std::fs::write(&configuration, &roleless).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &roleless);
     let said = refused(&configuration, &directory);
     assert!(
         said.contains("storage role") && said.contains("[storage] nodes"),
@@ -274,7 +271,7 @@ place = \"taken\"
     );
 
     // A file where its Storage node wants its directory.
-    std::fs::write(&configuration, &text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
     std::fs::create_dir_all(directory.join("data")).expect("its data");
     std::fs::write(directory.join("data").join("storage"), "not a Storage node").expect("writes");
     let said = refused(&configuration, &directory);

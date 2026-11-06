@@ -109,9 +109,13 @@ Records: ADR-0033 (amendment 2026-10-19), ADR-0063.
 
 **Saving and slicing the cluster's configuration.** The Operation Desktop
 saves `cluster.xmip`, validated by the runtime and audited, and slices it
-through `xmip_cluster_slices_v1`; desired state slices it on each node
-(`xmip-service --slice`). A changed slice takes effect when the node starts
-again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05).
+through `xmip_cluster_signed_slice_v1`, each slice signed by the cluster's
+authority beside the file; desired state slices it on each node (`xmip-service
+--slice`), signed the same way. A node runs only a slice that verifies against
+the authority's certificate beside it, refuses and audits one changed by hand
+and runs its last accepted slice instead (`runtime::signed`). A changed slice
+takes effect when the node starts again. Records: ADR-0031 (amendments
+2026-10-01, 2026-10-05, 2026-11-06).
 
 #### `embedded-storage`
 
@@ -407,7 +411,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 324205 lines of production
+Where each repository mounts and what it holds: 324754 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -521,7 +525,7 @@ hold no source to count.
 │   │   │   │   ├── named-pipe                   330
 │   │   │   │   ├── tcp                          280
 │   │   │   │   └── udp                          219
-│   │   │   ├── provision                       4199
+│   │   │   ├── provision                       4220
 │   │   │   │   ├── internal-ca                 2394
 │   │   │   │   ├── acme                        1217
 │   │   │   │   ├── self-signed                   80
@@ -587,7 +591,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1259
+│   │   │   ├── secret                          1267
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -659,7 +663,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             6601
+│   │   │   ├── net                             6643
 │   │   │   ├── codec                           2898
 │   │   │   ├── tls                             2458
 │   │   │   ├── mariadb                         1764
@@ -694,7 +698,7 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31975  C# 29408 · Rust 2271 · PowerShell 296
+│   │   ├── abi                                32040  C# 29467 · Rust 2277 · PowerShell 296
 │   │   ├── event                               5644
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -722,16 +726,16 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37499
+│       ├── runtime                            37799
 │       ├── persist                            14708
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8262
+│       └── configure                           8371
 └── test/
     └── core/
-        ├── essentials                         13871
+        ├── essentials                         13875
         └── module                                83
 ```
 

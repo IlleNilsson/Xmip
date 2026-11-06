@@ -59,7 +59,7 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
         })
         .collect::<Vec<_>>()
         .concat();
-    let text = std::fs::read_to_string(&configuration).expect("reads");
+    let text = xmip_runtime::fixture::unsigned(&configuration);
     let text = text
         .replacen(
             "[[applications]]",
@@ -81,7 +81,7 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
              anchors = \"parties.pem\"\n\n[operate]",
             1,
         );
-    std::fs::write(&configuration, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
     configuration
 }
 

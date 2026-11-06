@@ -16,14 +16,14 @@ use super::*;
 /// `serve` and publishing on `publish`, asking http-01 on `challenge`.
 fn serving(directory: &Path, serve: &str, publish: &str, challenge: u16) -> PathBuf {
     let configuration = written(directory, "");
-    let text = std::fs::read_to_string(&configuration).expect("reads");
+    let text = xmip_runtime::fixture::unsigned(&configuration);
     let table = format!(
         "\n[provision.node]\nsource = \"xmip-core-provision-internal-ca\"\n\
          names = \"localhost\"\nlifetime = \"2160h\"\nauthority_lifetime = \"87600h\"\n\
          serve = \"{serve}\"\npublish = \"{publish}\"\n\
          published_at = \"http://{publish}\"\nchallenge_port = {challenge}\n\n[operate]"
     );
-    std::fs::write(&configuration, text.replacen("\n[operate]", &table, 1)).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text.replacen("\n[operate]", &table, 1));
     configuration
 }
 

@@ -623,3 +623,57 @@ installed reads `prerequisite.xmip`: *Do your best.*
   cargo is there. There is one reader either way.
 - Not built: the estate's PowerShell still reads through `Read-XmipToml`
   and PSToml. Their replacement follows.
+
+## Amendment, 2026-11-06: a node runs only the slice its cluster signed
+
+The owner, 2026-11-06: *Having a cluster.xmip file is good, but not all. If
+we have multiple nodes in a cluster, performing the same work we have a
+problem. What if someone goes in and edit the node.xmip file and it should
+not have been done.* Asked which way, he left it to the assistant, who
+recommended a signed slice; the owner: *Go ahead.*
+
+Seeing drift (the amendment of 2026-10-05, point 4) tells of an edit after
+the node ran it, and a digest anyone may compute again proves nothing. So
+the node itself refuses:
+
+1. **A slice is signed as it is sliced to be placed.** Under the slice's
+   text, a `[signature]` table holds `cluster`, the SHA-256 of the
+   `cluster.xmip` it was sliced from (which save it is), `by`, the SHA-256
+   of the signing certificate, and `value`, the cluster authority's
+   signature over the text above the table and `cluster` together. The
+   signing key is the cluster's authority (`provision::Issuer`, the
+   `authority` folder beside the configuration), kept on the node that keeps
+   the authority and on no other. A one-node install makes that authority
+   as it is installed and signs its starter slice by the same code.
+2. **A node runs only a slice that verifies.** As it starts, a node checks
+   its `node.xmip` against the authority's certificate in the `authority`
+   folder beside it, a certificate the file itself never names. One that
+   verifies is kept as the node's accepted slice,
+   `<node>.accepted.xmip` in its data directory. One that does not —
+   edited by hand, unsigned, signed by another authority — is refused in
+   words and audited, and the node runs its accepted slice instead; with
+   none accepted, it does not start (`runtime::signed`, `start::read`).
+3. **Every node says which save it runs.** A node reports `cluster` from
+   its accepted slice; the Monitor flags one whose save is not its peers'.
+4. **The file is the node's alone to write.** The install makes
+   `node.xmip` writable by the node's service account and administrators
+   only.
+
+Signed with the authority's P-256 key, the signing `provision` has; a
+hybrid ML-DSA signature beside it follows once Xmip signs with ML-DSA, not
+only verifies.
+
+Neither competitor signs: a BizTalk host reads one management database and
+stops with it; MuleSoft's Runtime Manager writes over a local change at the
+next deployment and runs it until then.
+
+Every writer of a slice signs it through `runtime::signed`: the install's
+starter, `xmip-service --slice` (with the authority beside the cluster's
+file, made there where none is), the Essentials, and the Operation
+Desktop's save (`xmip_cluster_signed_slice_v1`), which writes the
+authority's certificate beside each slice it delivers. A test writes its
+node through `runtime::fixture::write_signed`.
+
+Not built: points 3 and 4. The desired-state templates slice
+`cluster.xmip` on each node they deploy, so each node signs its own slice
+there; signing moves to the machine that deploys.
