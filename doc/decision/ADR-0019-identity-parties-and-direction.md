@@ -546,8 +546,8 @@ Parties became configuration (`[[parties]]`, ADR-0028, amendment
   binding reports, and a node refuses to start on it.
 - **A verified identity resolves to the Party holding it** (clause 4), after
   it was verified and never before: the Party whose `identities` hold the
-  value as its mechanism wrote it (`configure::party::holding`, the
-  runtime's `Recognized`).
+  value as its mechanism wrote it (the runtime's `Parties`, amendment
+  2026-11-06).
 - **A Location naming Parties refuses, at authentication, an identity that
   resolves to another Party or to none** (`Refusal::PartyNotPermitted`,
   `Refusal::NoParty`). Until this change an identity resolving to no Party
@@ -614,7 +614,7 @@ Built the same day:
   offered by the designer as a choice of those two. A bare string is
   refused. A verified identity resolves to the Party holding its value
   under the mechanism that verified it, for `receive`
-  (`configure::party::holding`, the runtime's `Recognized`), and an
+  (the runtime's `Parties`, amendment 2026-11-06), and an
   identity is held twice only where two Parties hold the same mechanism,
   purpose and value.
 - **`circumstance`** (`xmip-core-authenticate`'s `Circumstance`): every
@@ -916,3 +916,44 @@ is *proven*, by the node, as one its own listener had terminated would be;
 the host it came through is recorded beside it (`through`), and the
 plane's word `Vouch` names the host's act of handing it over, not the
 verdict.
+
+## Amendment, 2026-11-06: one set of Parties per node, built from `[[parties]]`, and a `send` identity names its secret
+
+Until this amendment a node held its Parties twice: the gates resolved a
+verified value through the configuration's shape (the runtime's
+`Recognized`), and the send side's directory, which reads a Party's
+identities per direction and mechanism (clause 4; ADR-0006), was built
+empty, because `[[parties]]` did not say what a send presents. The owner
+agreed on 2026-11-06 (*Agreed, go ahead*) to what follows:
+
+- **A `send` identity names its secret** (`configure::PartyIdentity`'s
+  `secret`), by name and never the secret, as a Location names its own
+  (amendment 2026-10-29): `{ mechanism = "ssh-key", purpose = "send",
+  value = "xmip", secret = "<party>-sftp" }`. A `send` identity without one,
+  and a `receive` identity with one, are problems the binding reports in
+  words (`configure::party::problems`): what arrives is matched, and no
+  secret is kept for it.
+- **A node builds its Parties once, at startup phase 3**
+  (`runtime::parties::Parties::of`), as `xmip-core-party`'s `Party`, each
+  identity with its declared `Mechanism`. A mechanism is never built from
+  configuration (`xcore::mechanism`), so an identity's word is looked up
+  among the declarations: the mechanisms the node's authenticators declare
+  first, which a third party's module may add to, then the ones Xmip
+  declares itself (`xcore::mechanism::named`). A word nothing declares is
+  refused as the node starts: *the Party 'x' has an identity under 'y', a
+  mechanism neither this node's authenticators nor Xmip declare*.
+- **One registry answers both sides**: the gates' question, whose is this
+  verified value (`Party::holds`, every value a Party has under a mechanism,
+  not only its first), and the send side's, which identity a Party presents.
+  `Recognized` and `configure::party::holding` are deleted;
+  `configure::party::place_holding` stays for readers of the configuration,
+  such as the Essentials.
+
+Not built: a Send Location presents the Party's `send` identity's secret —
+the transports present the Location's own (amendment 2026-10-29). A Party's
+kind (`PartyKind`) is not configured, and a Party `[[parties]]` declares
+has none.
+
+Provenance: the agreement is the owner's, 2026-11-06; the key's name, the
+lookup order, the problems' words and what is left unbuilt are the
+assistant's, 2026-11-06.

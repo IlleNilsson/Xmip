@@ -407,7 +407,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 324366 lines of production
+Where each repository mounts and what it holds: 324533 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -694,11 +694,11 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                31974  C# 29407 · Rust 2271 · PowerShell 296
+│   │   ├── abi                                31975  C# 29408 · Rust 2271 · PowerShell 296
 │   │   ├── event                               5725
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                4059
+│   │   ├── core                                4111
 │   │   ├── message                             1733
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -719,16 +719,16 @@ hold no source to count.
 │   │   ├── node                                 955
 │   │   ├── journey                              745
 │   │   ├── stream                               232
-│   │   ├── party                                179
+│   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37586
+│       ├── runtime                            37663
 │       ├── persist                            14756
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8244
+│       └── configure                           8267
 └── test/
     └── core/
         ├── essentials                         13871
