@@ -1480,10 +1480,12 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.resilience.circuit-breaker]
     maturity = "scaffolded"
+    dependency = ["xmip-core"]
     [xmip.core.resilience.fallback]
     maturity = "scaffolded"
     [xmip.core.resilience.rate-limit]
     maturity = "scaffolded"
+    dependency = ["xmip-core"]
     [xmip.core.resilience.retry]
     maturity = "scaffolded"
     [xmip.core.resilience.timeout]
