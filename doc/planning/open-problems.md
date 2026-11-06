@@ -822,7 +822,7 @@ runtime's tests do (`arrival.rs`).
 `accept.party` is read (`configure::Accept`), each name a `[[parties]]`
 Party, and a name none declares is a problem the binding reports; a
 verified identity resolves to the Party holding it (the runtime's
-`Recognized`, `configure::party::holding`), and a Location naming Parties
+`Parties`; ADR-0019, amendment 2026-11-06), and a Location naming Parties
 refuses at authentication one resolving to another or to none
 (`Refusal::NoParty`, new; clause 1 of ADR-0019, amendment 2026-10-19). The
 `location` policy is set up from the Receive Locations a node starts
