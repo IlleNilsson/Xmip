@@ -45,12 +45,11 @@ fn started(name: &str, starts: bool) -> (PathBuf, Child, Ending, Receiver<String
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
     if !starts {
-        let text = std::fs::read_to_string(&configuration).expect("reads");
-        std::fs::write(
+        let text = xmip_runtime::fixture::unsigned(&configuration);
+        xmip_runtime::fixture::write_signed(
             &configuration,
-            text.replace("address = ", "start = false\naddress = "),
-        )
-        .expect("writes");
+            &text.replace("address = ", "start = false\naddress = "),
+        );
     }
     let mut child = spawned(&configuration, &directory);
     let ending = Ending(Some(child.id()));

@@ -91,7 +91,7 @@ fn configured(
         nodes = quoted.join(", "),
     );
     let path = own.join(format!("{node}.xmip"));
-    std::fs::write(&path, text).expect("written");
+    xmip_runtime::fixture::write_signed(&path, &text);
     path
 }
 

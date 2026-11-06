@@ -69,7 +69,7 @@ fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
     let config = directory.join(name).join("config");
     std::fs::create_dir_all(&config).expect("creates the layout");
     let path: PathBuf = config.join("node.xmip");
-    std::fs::write(&path, text).expect("writes the configuration");
+    xmip_runtime::fixture::write_signed(&path, text);
 
     let (document, applications, _) = xmip_runtime::start::read(&path.to_string_lossy())
         .unwrap_or_else(|unread| panic!("{name} is refused: {}\n{text}", unread.reason));

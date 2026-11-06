@@ -86,6 +86,9 @@ pub fn serve(
             return Ended::Refused;
         }
     };
+    if let Some(refused) = running.refused() {
+        fail(audit, "configuration", &format!("{program}: {refused}"));
+    }
     let location = running.location();
     let orders = orders::place(&running);
     let place = orders.display().to_string();

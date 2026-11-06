@@ -31,9 +31,9 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     let text = format!(
         "{}listen = \"{listen}\"\ncertificate = \"node.pem\"\nkey = \"node.key\"\n\
          anchors = \"anchor.pem\"\nrole = \"operator\"\n",
-        std::fs::read_to_string(&configuration).expect("reads")
+        xmip_runtime::fixture::unsigned(&configuration)
     );
-    std::fs::write(&configuration, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
 
     let mut child = spawned(&configuration, &directory);
     let mut ending = Ending(Some(child.id()));
@@ -85,9 +85,9 @@ fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
     let configuration = written(&directory, &unheld().to_string());
     let text = format!(
         "{}role = \"operator\"\n",
-        std::fs::read_to_string(&configuration).expect("reads")
+        xmip_runtime::fixture::unsigned(&configuration)
     );
-    std::fs::write(&configuration, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &endpoint(&directory));
     let _ = std::fs::remove_dir_all(&directory);
 }
@@ -107,7 +107,7 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
         "{}\n[operate]\nrole = \"operator\"\n",
         node(&unheld().to_string(), &unheld().to_string())
     );
-    std::fs::write(&configuration, text).expect("writes");
+    xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &format!("xmip-{}", node_name()));
     let _ = std::fs::remove_dir_all(&directory);
 }
