@@ -41,6 +41,8 @@ function Get-NodeMachineState {
             $state._exist = Test-NodePackage -Node $Instance.node
         }
         'Slice' {
+            [string] $placed = Join-Path -Path $Instance.configuration -ChildPath 'node.xmip'
+            $state.access = @(Get-NodeSliceAccess -Path $placed)
             $state._exist = Test-NodeSlice -Instance $Instance
         }
         'Opening' {
@@ -246,8 +248,9 @@ function Get-NodeSlicePlace {
 function Test-NodeSlice {
     <#
     .SYNOPSIS
-    Whether the node reads the slice it was shipped, and checks it by the
-    certificate it was shipped with.
+    Whether the node reads the slice it was shipped, checks it by the
+    certificate it was shipped with, and alone with the administrators may
+    write it (ADR-0031, amendment 2026-11-06, point 4).
     #>
     [CmdletBinding()]
     [OutputType([bool])]
@@ -256,21 +259,27 @@ function Test-NodeSlice {
         [hashtable] $Instance
     )
 
-    foreach ($file in Get-NodeSlicePlace -Instance $Instance) {
+    [hashtable[]] $files = Get-NodeSlicePlace -Instance $Instance
+
+    foreach ($file in $files) {
         if (-not (Get-NodeFileState -Instance $file)._exist) {
             return $false
         }
     }
-    return $true
+
+    [string] $found = @(Get-NodeSliceAccess -Path $files[0].path) -join ','
+    return $found -eq (@(Get-NodeSliceWanted -Account $Instance.account) -join ',')
 }
 
 function Set-NodeSlice {
     <#
     .SYNOPSIS
     Put the shipped slice and its authority's certificate where the node
-    reads them, and restart its service where it is installed, so it runs by
-    it: a changed slice takes effect when the node starts again. Placed before
-    the package, the slice is what xmip-service --install reads.
+    reads them, make node.xmip writable by the node's account and the
+    administrators alone, and restart its service where it is installed and
+    a file changed, so it runs by it: a changed slice takes effect when the
+    node starts again. Placed before the package, the slice is what
+    xmip-service --install reads.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -284,11 +293,18 @@ function Set-NodeSlice {
         return
     }
 
+    [bool] $changed = $false
+
     foreach ($file in $files) {
-        Set-NodeFile -Instance $file -Confirm:$false
+        if (-not (Get-NodeFileState -Instance $file)._exist) {
+            Set-NodeFile -Instance $file -Confirm:$false
+            $changed = $true
+        }
     }
 
-    if (-not (Test-NodePackage -Node $Instance.node)) {
+    Set-NodeSliceAccess -Path $files[0].path -Account $Instance.account -Confirm:$false
+
+    if (-not $changed -or -not (Test-NodePackage -Node $Instance.node)) {
         return
     }
 

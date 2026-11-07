@@ -19,6 +19,7 @@ get:
     - -Operation
     - get
   input: stdin
+  requireSecurityContext: elevated
 test:
   executable: pwsh
   args:
@@ -32,6 +33,7 @@ test:
     - -Operation
     - test
   input: stdin
+  requireSecurityContext: elevated
   return: state
 set:
   executable: pwsh
@@ -46,6 +48,7 @@ set:
     - -Operation
     - set
   input: stdin
+  requireSecurityContext: elevated
   implementsPretest: true
   return: state
 exitCodes:

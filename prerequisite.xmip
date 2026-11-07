@@ -247,16 +247,31 @@ elevation = true
 role = "operator"
 optional = true
 probe = "dsc --version"
-minimum = "3.3"
-channel = "stable"
-note = "Microsoft DSC v3, the standalone dsc command (3.3.0 the current release on 2026-11-02, and the floor; 3.2.0 generally available 2026-04-29). The host that runs deploy/dsc/msdsc and every machine an environment document is applied on need it, with PowerShell 7.7, which the Xmip resources run in."
+minimum = "3.4.0-preview.2"
+channel = "preview"
+note = """
+Microsoft DSC v3, the standalone dsc command: 3.4.0-preview.2 of 2026-10-28,
+the latest release and the floor, since Xmip adopts previews until its first
+Linear release (CONTRIBUTING; 3.3.0 the latest stable). The host that runs
+deploy/dsc/msdsc and every machine an environment document is applied on
+need it, with PowerShell 7.7, which the Xmip resources run in.
+
+winget's Microsoft.DSC.Preview carries only 3.2's previews, so on Windows it
+is the release's own MSIX bundle, signed by Microsoft, installed for the
+current user with no elevation; it is the package
+Microsoft.DesiredStateConfiguration-Preview, and where winget's stable
+Microsoft.DSC is installed too, that one keeps the dsc alias until it is
+removed: Get-AppxPackage -Name Microsoft.DesiredStateConfiguration |
+Remove-AppxPackage, also without elevation.
+"""
 
 [prerequisite.dsc.windows]
-winget = "Microsoft.DSC"
+command = "Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle"
 
 [prerequisite.dsc.linux]
-dnf = "dsc"
-note = "From Microsoft's package repository, packages.microsoft.com, where DSC 3.3 publishes its Linux packages."
+dnf = "dsc-preview"
+apt = "dsc-preview"
+note = "From Microsoft's package repository, packages.microsoft.com, where a preview is published as dsc-preview since PowerShell/DSC#1747 and the stable release as dsc."
 
 [prerequisite.ansible]
 role = "operator"

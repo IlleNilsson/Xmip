@@ -131,6 +131,14 @@ function Test-XmipFloor {
     # never stops the machine being surveyed.
     [string] $floor = $Minimum.Trim()
 
+    # A preview floor, while Xmip adopts previews (CONTRIBUTING): DSC's is
+    # 3.4.0-preview.2, and its preview.1 is below it, which the numbers
+    # alone cannot tell. Such a floor is compared as a semantic version, and
+    # a release is above every preview of it.
+    if ($floor -match '^\d+\.\d+\.\d+-') {
+        return Test-XmipPreviewFloor -Name $Name -Found $Found -Floor $floor
+    }
+
     if ($floor -match '^\d+$') {
         $floor = "$floor.0"
     }
@@ -147,6 +155,48 @@ function Test-XmipFloor {
     }
 
     return $false
+}
+
+function Test-XmipPreviewFloor {
+    <#
+        Test-XmipFloor for a floor with a preview label, 3.4.0-preview.2:
+        the version a tool reports, its label included, compared as a
+        semantic version. Returns $true where none can be read, as
+        Test-XmipFloor does.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [string] $Found,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Floor
+    )
+
+    [semver] $required = $null
+
+    if (-not [semver]::TryParse($Floor, [ref] $required)) {
+        Write-Warning "UNREADABLE FLOOR: $Name declares '$Floor', which is no version."
+        return $true
+    }
+
+    [regex] $pattern = [regex]::new('\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?')
+    [System.Text.RegularExpressions.Match] $match = $pattern.Match([string] $Found)
+    [semver] $actual = $null
+
+    if (-not $match.Success -or -not [semver]::TryParse($match.Value, [ref] $actual)) {
+        Write-Warning ("UNVERIFIABLE: $Name reports '$Found', " +
+            "which carries no version to compare against $Floor.")
+        return $true
+    }
+
+    return $actual -ge $required
 }
 
 function Resolve-XmipRole {

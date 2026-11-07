@@ -61,7 +61,8 @@ sudo usermod --append --groups libvirt,kvm <account>
 sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket
 ```
 
-then sign in again. PowerShell 7.7 and Microsoft DSC 3.3 on `PATH`, and the
+then sign in again. PowerShell 7.7 and Microsoft DSC 3.4.0-preview.2 on `PATH`
+(`sudo dnf install --assumeyes dsc-preview` from packages.microsoft.com), and the
 Xmip module's prerequisites, `Install-XmipPrerequisite -Role operator
 -Install`. Copy the example to `.local-work/deploy/libvirt.xmip` and write
 in `linux_account` and `ssh_public_key`.

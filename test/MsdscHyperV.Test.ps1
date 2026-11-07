@@ -129,6 +129,14 @@ Describe 'The documents' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
+    It 'requires DSC 3.4.0-preview.2 or newer in <_>, elevated' -ForEach @(
+        'network.dsc.yaml', 'machine.dsc.yaml') {
+        # Its resources are adapted, HyperVDsc's, and state no context of
+        # their own, so the document does.
+        $script:Parsed[$_].directives.version | Should -Be '^3.4.0-preview.2'
+        $script:Parsed[$_].directives.securityContext | Should -Be 'elevated'
+    }
+
     It 'depends in <_> only on its own instances' -ForEach @(
         'network.dsc.yaml', 'machine.dsc.yaml') {
         [object[]] $resources = $script:Parsed[$_].resources

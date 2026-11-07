@@ -52,10 +52,25 @@ and its service running and started with the machine. The role writes no starter
 its own: a node given no cluster file gets the package's, written once in
 `xmip-service --install`.
 
+The node's `node.xmip` is its alone to write (ADR-0031, amendment
+2026-11-06, point 4), the package's starter included: on AlmaLinux owned by
+the node's account, group root, mode 0640; on Windows inheriting nothing,
+SYSTEM and the administrators in full control and the node's account with
+Modify, set once the package has registered the service its virtual account
+exists with.
+
 ansible-core 2.22 (checked 2026-11-07: 2.22.0 of 2026-11-02) runs the
 Windows modules in PowerShell 7 where `ansible_pwsh_interpreter` says, as
 the inventory does. The collections are `ansible.windows` and
-`ansible.posix`.
+`ansible.posix`. Its secret masking redacts every registered secret as
+`$REDACTED$` in whatever Ansible shows: the Administrator password
+`--ask-pass` reads is registered by Ansible itself, and the one secret the
+role ships, the node's `node.key`, is read on the controller through the
+`register_secret` filter and copied by a task of its own with `no_log` and
+`diff: false`, so even `--check --diff` never prints it. No task handles a
+Location's secret: a Location names its secret, whose value is kept in the
+Xmip Administration Database, set with `Set-XmipSecret`, never in a file
+the role ships.
 
 ## Before the first run
 

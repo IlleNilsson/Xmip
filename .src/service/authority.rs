@@ -79,44 +79,50 @@ pub fn serve(
     served(document, configuration).map(Some)
 }
 
-#[cfg(feature = "provision-internal-ca")]
-fn served(document: &XmipConfigurationDocument, configuration: &Path) -> Result<Served, String> {
-    use xmip_provision_internal_ca::{InternalCa, SETTINGS};
+cfg_select! {
+    feature = "provision-internal-ca" => {
+        fn served(
+            document: &XmipConfigurationDocument,
+            configuration: &Path,
+        ) -> Result<Served, String> {
+            use xmip_provision_internal_ca::{InternalCa, SETTINGS};
 
-    let said = |why: String| format!("[provision.{NODE}]: {why}");
-    let table = document
-        .provision
-        .get(NODE)
-        .map(xmip_configure::LocationSettings::given);
-    let read = xmip_provision::read(NODE, &table.unwrap_or_default(), &[SETTINGS])
-        .map_err(|refused| said(refused.to_string()))?;
-    let ca = InternalCa::configured(&read.settings);
-    let names = xmip_provision::names(&read.settings);
-    let keep = configuration.parent().unwrap_or_else(|| Path::new("."));
-    let serving = match ca.serves_on() {
-        Some(listen) => ca
-            .serve(keep, listen, &names, None)
-            .map_err(|failure| said(failure.message))?,
-        None => return Err(said("publish names no serve beside it".to_string())),
-    };
-    let publishing = ca
-        .publishes_on()
-        .map(|listen| ca.publish(keep, listen, &names))
-        .transpose()
-        .map_err(|failure| said(failure.message))?;
-    Ok(Served {
-        directory: serving.directory().to_string(),
-        published: publishing
-            .as_ref()
-            .map(|it| format!("http://{}", it.address())),
-        _held: (serving, publishing),
-    })
-}
-
-#[cfg(not(feature = "provision-internal-ca"))]
-fn served(_: &XmipConfigurationDocument, _: &Path) -> Result<Served, String> {
-    Err(format!(
-        "[provision.{NODE}] serves the cluster's authority ({TECHNOLOGY}), which this build \
-         does not link"
-    ))
+            let said = |why: String| format!("[provision.{NODE}]: {why}");
+            let table = document
+                .provision
+                .get(NODE)
+                .map(xmip_configure::LocationSettings::given);
+            let read = xmip_provision::read(NODE, &table.unwrap_or_default(), &[SETTINGS])
+                .map_err(|refused| said(refused.to_string()))?;
+            let ca = InternalCa::configured(&read.settings);
+            let names = xmip_provision::names(&read.settings);
+            let keep = configuration.parent().unwrap_or_else(|| Path::new("."));
+            let serving = match ca.serves_on() {
+                Some(listen) => ca
+                    .serve(keep, listen, &names, None)
+                    .map_err(|failure| said(failure.message))?,
+                None => return Err(said("publish names no serve beside it".to_string())),
+            };
+            let publishing = ca
+                .publishes_on()
+                .map(|listen| ca.publish(keep, listen, &names))
+                .transpose()
+                .map_err(|failure| said(failure.message))?;
+            Ok(Served {
+                directory: serving.directory().to_string(),
+                published: publishing
+                    .as_ref()
+                    .map(|it| format!("http://{}", it.address())),
+                _held: (serving, publishing),
+            })
+        }
+    }
+    _ => {
+        fn served(_: &XmipConfigurationDocument, _: &Path) -> Result<Served, String> {
+            Err(format!(
+                "[provision.{NODE}] serves the cluster's authority ({TECHNOLOGY}), which this \
+                 build does not link"
+            ))
+        }
+    }
 }

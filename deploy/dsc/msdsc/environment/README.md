@@ -72,7 +72,13 @@ again only where the text it signs differs.
 2. its slice, `node.xmip`, in the package's config folder, and the
    authority's certificate in `authority/authority.pem` beside it, as they
    were shipped; the service restarted when they changed and the package is
-   installed;
+   installed only when a file changed. `node.xmip` is the node's alone to
+   write (ADR-0031, amendment 2026-11-06, point 4): on Windows it inherits
+   nothing, SYSTEM and the administrators hold it in full and the node's
+   account may modify it, the virtual account's SID computed as Windows
+   computes it, since the account exists only once the package registers the
+   service; on AlmaLinux it is the account's, group root, mode 0640;
+   `Xmip.Node/Slice` sets it (`NodeAccess.ps1`), and get and test report it;
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;
@@ -92,11 +98,11 @@ slices it or knows a port.
 ## The resources
 
 DSC v3 is a standalone command, and its resources are executables that
-speak JSON (checked 2026-11-02: 3.3.0 the current release, 3.2.0 general availability
-on 2026-04-29). The documents use a built-in resource wherever one fits and
-an Xmip resource of this folder for the rest: PowerShell 7 scripts behind
-resource manifests, on Windows and AlmaLinux alike. The Windows PowerShell
-adapter is used nowhere here.
+speak JSON (checked 2026-11-07: 3.4.0-preview.2 the latest release, adopted as
+Xmip adopts previews; 3.3.0 the latest stable). The documents use a built-in
+resource wherever one fits and an Xmip resource of this folder for the rest:
+PowerShell 7 scripts behind resource manifests, on Windows and AlmaLinux
+alike. The Windows PowerShell adapter is used nowhere here.
 
 | Instance | Resource |
 | --- | --- |
@@ -117,7 +123,15 @@ a document on the machine it runs on, so `Xmip.Environment/Machine` copies
 this folder, a node's files and its parameters to the machine's staging
 folder — WinRM to a Windows machine as its Administrator, SSH to an
 AlmaLinux one with its key — and runs `dsc` there, elevated. Every document
-requires DSC `^3.3`, the current release, and each resource `^0.1`.
+requires DSC `^3.4.0-preview.2`, the latest release, and each resource `^0.1`.
+No document asks for elevation as a whole: each resource's manifest states
+`requireSecurityContext: elevated` on exactly the methods that need
+administrator rights — every method of `Xmip.Environment/Name`,
+`Xmip.Node/File`, `Xmip.Node/Opening` and `Xmip.Node/Slice`, which read
+what only an administrator may, and the set of `Xmip.Node/Account`,
+`Xmip.Node/Package` and `Xmip.Node/Service`; `Xmip.Environment/Machine`
+and `Xmip.Environment/Slice` run unelevated on this machine, and
+`Microsoft.Windows/Service` states its own.
 
 | File | Is |
 | --- | --- |
@@ -126,7 +140,7 @@ requires DSC `^3.3`, the current release, and each resource `^0.1`.
 | `machine.dsc.yaml` | one node machine, from the host |
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
-| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1` | the `Xmip.Node` resources |
+| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentName.ps1` | the `Xmip.Environment` resources |
 | `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 
@@ -136,10 +150,12 @@ The machines are installed (`deploy/dsc/msdsc/hyperv`), and XMIP-DC01 runs
 the DNS Server role; the domain controller's own template is not written.
 
 **On each machine**, once, as its Administrator or with sudo: PowerShell
-7.7 and Microsoft DSC 3.3 or newer — `winget install --id Microsoft.PowerShell
---exact` and `winget install --id Microsoft.DSC --exact` on Windows, the
-`powershell` and `dsc` packages from Microsoft's package repository on
-AlmaLinux — and on AlmaLinux PowerShell as an SSH subsystem,
+7.7 and Microsoft DSC 3.4.0-preview.2 or newer — `winget install --id
+Microsoft.PowerShell --exact` and `Add-AppxPackage -Path
+https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle`
+on Windows (winget carries no 3.4 preview), the `powershell` and
+`dsc-preview` packages from Microsoft's package repository on AlmaLinux —
+and on AlmaLinux PowerShell as an SSH subsystem,
 `Subsystem powershell /usr/bin/pwsh -sshs -NoLogo` in
 `/etc/ssh/sshd_config`.
 

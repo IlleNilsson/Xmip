@@ -131,6 +131,24 @@ Describe 'The domain' {
     }
 }
 
+Describe 'The documents and the resources' {
+    It 'requires DSC 3.4.0-preview.2 or newer in <_>, never elevated' -ForEach @(
+        'network.dsc.yaml', 'machine.dsc.yaml') {
+        [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $_)
+
+        $document.directives.version | Should -Be '^3.4.0-preview.2'
+        $document.directives.Contains('securityContext') | Should -BeFalse
+    }
+
+    It 'elevates no method of <_>: it runs as the account in the libvirt group' -ForEach @(
+        'xmip-libvirt-machine', 'xmip-libvirt-network', 'xmip-libvirt-pool') {
+        [string] $text = Get-Content -LiteralPath (
+            Join-Path $script:Template "$_.dsc.resource.yaml") -Raw
+
+        $text | Should -Not -Match 'requireSecurityContext: elevated'
+    }
+}
+
 Describe 'The example, as Deploy-XmipEnvironment reads it' {
     It 'applies the network, then each machine, with every parameter declared' {
         [hashtable[]] $steps = @(InModuleScope Xmip -Parameters @{

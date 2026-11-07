@@ -3,6 +3,8 @@
 # name and answer the names the environment adds, and a directory pool for
 # the machines' disks, images and answer media. README.md says how to run it.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.2
 parameters:
   environment:
     type: string

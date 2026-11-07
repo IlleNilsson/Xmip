@@ -51,7 +51,9 @@
   ansible.builtin.copy:
     content: "{{ xmip_slice.stdout }}\n"
     dest: "{{ xmip_configuration }}/node.xmip"
-    mode: '0644'
+    owner: "{{ xmip_account }}"
+    group: root
+    mode: '0640'
   when: >-
     xmip_slice is not skipped and (xmip_held.content is not defined
     or (xmip_held.content | b64decode).split('\n[signature]\n')[0]
@@ -68,17 +70,34 @@
   when: xmip_identity | length > 0
   become: true
 
-- name: The node's certificate, key and anchors from the cluster's authority
+- name: The node's certificate and anchors from the cluster's authority
   ansible.builtin.copy:
-    src: "{{ xmip_identity }}/{{ item.file }}"
-    dest: "{{ xmip_configuration }}/tls/{{ item.file }}"
+    src: "{{ xmip_identity }}/{{ item }}"
+    dest: "{{ xmip_configuration }}/tls/{{ item }}"
     owner: "{{ xmip_account }}"
-    mode: "{{ item.mode }}"
+    mode: '0644'
   loop:
-    - { file: node.pem, mode: '0644' }
-    - { file: node.key, mode: '0600' }
-    - { file: anchors.pem, mode: '0644' }
+    - node.pem
+    - anchors.pem
   when: xmip_identity | length > 0
+  notify: Restart the Xmip node
+  become: true
+
+# The key is a secret: registered for ansible-core 2.22's masking, so it is
+# $REDACTED$ wherever Ansible would show it, and never logged or diffed.
+- name: The node's key from the cluster's authority, readable by the node alone
+  ansible.builtin.copy:
+    content: "{{ xmip_node_key }}"
+    dest: "{{ xmip_configuration }}/tls/node.key"
+    owner: "{{ xmip_account }}"
+    mode: '0600'
+  vars:
+    xmip_node_key: >-
+      {{ lookup('ansible.builtin.file', xmip_identity ~ '/node.key', rstrip=false)
+      | ansible.builtin.register_secret }}
+  when: xmip_identity | length > 0
+  no_log: true
+  diff: false
   notify: Restart the Xmip node
   become: true
 
@@ -100,6 +119,16 @@
     XMIP_ACCOUNT: "{{ xmip_account }}"
   become: true
 
+# The file is the node's alone to write: its account's and root's, read by
+# no other (ADR-0031, amendment 2026-11-06, point 4), the starter too.
+- name: The node's configuration writable by the node's account and root alone
+  ansible.builtin.file:
+    path: "{{ xmip_configuration }}/node.xmip"
+    state: file
+    owner: "{{ xmip_account }}"
+    group: root
+    mode: '0640'
+  become: true
 
 - name: The ports the node's configuration listens on
   ansible.builtin.command:

@@ -193,8 +193,7 @@ function Test-XmipDotnetModule {
     # and the first instinct — close the terminal — is the wrong fix.
     #
     # Verifying is not delivering. Nothing here needs bin/ to be current.
-    [string] $stamp = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
-    [string] $output = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-verify-$stamp"
+    [string] $output = (New-TemporaryDirectory).FullName
 
     # Removed whatever the build said: one left per landing filled the
     # owner's C: with 142 of them, 5 GB, by 2026-10-14.

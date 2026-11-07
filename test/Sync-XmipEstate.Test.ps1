@@ -282,6 +282,25 @@ Describe 'ADR-0021: current platforms only, enforced' {
         }
     }
 
+    It 'holds a preview floor by its preview, a release above every preview of it' {
+        # Previews are adopted until the first Linear release (CONTRIBUTING),
+        # and DSC's floor is 3.4.0-preview.2: [version] reads none of it.
+        [hashtable] $judged = InModuleScope Xmip {
+            [hashtable] $said = @{}
+            foreach ($found in 'dsc 3.4.0-preview.1', 'dsc 3.4.0-preview.2',
+                'dsc 3.4.0-preview.10', 'dsc 3.4.0', 'dsc 3.3.0') {
+                $said[$found] = Test-XmipFloor -Name 'dsc' -Found $found -Minimum '3.4.0-preview.2'
+            }
+            $said
+        }
+
+        $judged['dsc 3.4.0-preview.1'] | Should -BeFalse
+        $judged['dsc 3.4.0-preview.2'] | Should -BeTrue
+        $judged['dsc 3.4.0-preview.10'] | Should -BeTrue
+        $judged['dsc 3.4.0'] | Should -BeTrue
+        $judged['dsc 3.3.0'] | Should -BeFalse
+    }
+
     It 'fails rather than reports when a floor is not met' {
         $script = Get-Content (Join-Path $script:ModuleRoot 'Install-XmipPrerequisite.ps1') -Raw
         $script | Should -Match 'Write-Error' -Because 'an unmet floor must be an error, not a warning'

@@ -2,6 +2,8 @@
 # system's ISO into the environment's pool and network (network.dsc.yaml).
 # Deploy-XmipEnvironment applies it once per machine; README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.2
 parameters:
   environment:
     type: string

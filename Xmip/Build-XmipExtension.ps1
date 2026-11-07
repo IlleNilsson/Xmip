@@ -235,7 +235,7 @@ function New-XmipExtensionPackage {
         ConvertFrom-Json
     [hashtable] $lock = Get-Content -LiteralPath (Join-Path $Extension 'package-lock.json') -Raw |
         ConvertFrom-Json -AsHashtable
-    [string] $stage = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-vsix-$([guid]::NewGuid())"
+    [string] $stage = (New-TemporaryDirectory).FullName
     [string] $content = Join-Path -Path $stage -ChildPath 'extension'
 
     try {

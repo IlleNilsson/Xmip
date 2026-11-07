@@ -15,8 +15,9 @@
       asked, readable by its owner alone.
     - Package: the estate's package installed, which runs xmip-service
       --install with the node, the cluster and the account.
-    - Slice: the node's configuration, node.xmip, as xmip-service
-      --slice prints it from cluster.xmip; the service is
+    - Slice: the node's configuration, node.xmip, as the machine deploying
+      the environment sliced and signed it, writable by the node's account
+      and the administrators alone (NodeAccess.ps1); the service is
       restarted when it changed.
     - Opening: a firewall opening for each port xmip-service --listening
       says the node's configuration listens on, and no other.
@@ -42,7 +43,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1') {
+[string[]] $parts = @('Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
+    'NodeAccess.ps1')
+
+foreach ($part in $parts) {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
 }
 

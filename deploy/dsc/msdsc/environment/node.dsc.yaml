@@ -1,7 +1,8 @@
 # One Xmip node on its own machine, Windows or AlmaLinux alike: its account,
 # its slice, node.xmip, as the machine deploying the environment sliced and
-# signed it, with the certificate of the authority that signed it, its
-# certificate from the cluster's own authority, the estate's package, which
+# signed it, writable by its account and the administrators alone (ADR-0031,
+# amendment 2026-11-06, point 4), with the certificate of the authority
+# that signed it, its certificate from the cluster's own authority, the estate's package, which
 # installs and starts its service, the firewall openings its configuration
 # listens on, and its service running. The node never slices
 # (ADR-0031, amendment 2026-11-06). Applied on the node machine itself by Xmip.Environment/Machine
@@ -14,8 +15,7 @@
 # layout — are xmip-service's, which it asks.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
-  version: ^3.3
-  securityContext: elevated
+  version: ^3.4.0-preview.2
 parameters:
   staging:
     type: string
@@ -62,6 +62,7 @@ resources:
       source: "[path(parameters('staging'), 'files', 'node.xmip')]"
       certificate: "[path(parameters('staging'), 'files', 'authority.pem')]"
       node: "[parameters('node')]"
+      account: "[parameters('account')]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1

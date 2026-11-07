@@ -27,10 +27,10 @@ pub fn directory(test: &str) -> PathBuf {
 /// The platform's key store over `keys` (ADR-0063 clause 4), so a child
 /// and the test that reopens what it wrote unwrap the same data key.
 pub fn keys(keys: &Path) -> Box<dyn KeyStore> {
-    #[cfg(windows)]
-    let store = Held::new(xmip_secret_dpapi::Dpapi::new(keys));
-    #[cfg(not(windows))]
-    let store = Held::new(xmip_secret_file::KeyFile::new(keys));
+    let store = cfg_select! {
+        windows => Held::new(xmip_secret_dpapi::Dpapi::new(keys)),
+        _ => Held::new(xmip_secret_file::KeyFile::new(keys)),
+    };
     Box::new(store)
 }
 
