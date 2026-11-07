@@ -6,12 +6,13 @@ This directory is the working home for both formats. Revise them together.
 ## View
 
 - [PowerPoint: 28 slides](Xmip-overview.pptx)
-- [Animated video: about 10 minutes 54 seconds](Xmip-overview.mp4)
+- [Animated video: about 11 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
-files. The current exports were reviewed on 2026-11-05. Project source references
-record the documentation used, rather than a promise of release readiness.
+files. Narration, flex poses and accessibility notes were updated on 2026-11-07. Project
+source references record the documentation used, rather than a promise of
+release readiness.
 
 ## Edit
 
@@ -29,6 +30,8 @@ The logo stays in [the brand directory](../README.md).
 
 - Explain Xmip through its own purpose and strengths. Do not name competitors,
   shame other products or users, or imply superiority through belittling comparisons.
+- Xmip stands for **Cross OS Messaging & Integration Platform**. Declare the full
+  name in both openings, including video narration and captions.
 - Use English. Pronounce Xmip as **Smip**, one syllable.
 - Keep the female voice as the reference for a warm, conversational pairing.
   The male voice should sound natural, clear and assured, with comparable loudness.
@@ -43,6 +46,10 @@ The logo stays in [the brand directory](../README.md).
   and cross-operating-system working. Do not turn these into exclusivity claims.
 - Keep architecture, working capabilities and validation milestones accurate,
   while concentrating on what Xmip offers its audience.
+- Keep flex poses modest, with visible rounded biceps and restrained shoulders.
+- Keep flex poses visual. Do not announce a "flex moment" in narration.
+  Describe the poses in each affected slide's notes for accessibility; keep
+  these descriptions in the story's `accessibility_notes` field.
 - Review changed sections in both formats, including narration and captions.
   Keep slides understandable without a presenter.
 
