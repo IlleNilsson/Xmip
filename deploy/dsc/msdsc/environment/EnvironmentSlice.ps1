@@ -1,4 +1,5 @@
-#requires -Version 7.6
+#requires -PSEdition Core
+#requires -Version 7.7.0
 
 <#
     Slice, on the machine deploying the environment: a node's configuration as

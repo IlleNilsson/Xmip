@@ -1,4 +1,5 @@
-#requires -Version 7.6
+#requires -PSEdition Core
+#requires -Version 7.7.0
 
 <#
     The Xmip resources an environment runs beyond one node (README.md):

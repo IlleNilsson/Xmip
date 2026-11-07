@@ -194,6 +194,27 @@ Describe 'ADR-0021: current platforms only, enforced' {
         }
     }
 
+    It 'gives every script in the estate that floor, never an older one' {
+        # The entry points alone missed nine desired-state scripts that said
+        # 7.6 until 2026-11-07, while prerequisite.xmip said 7.7.0.
+        [string] $declared = [string]$script:Prereq.prerequisite.powershell.minimum
+        [string[]] $older = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                foreach ($filter in '*.ps1', '*.psm1') {
+                    Find-XmipFile -Path $Root -Filter $filter
+                }
+            } |
+                Select-String -Pattern '^#requires -Version (\S+)' |
+                Where-Object { $_.Matches[0].Groups[1].Value -ne $declared } |
+                ForEach-Object {
+                    "$($_.Path):$($_.LineNumber) says $($_.Matches[0].Groups[1].Value)"
+                }
+        )
+
+        $older.Count | Should -Be 0 -Because ($older -join "`n")
+    }
+
     It 'tracks channels rather than pinning versions, in every repository' {
         # Every repository, not the root alone. Until 2026-09-22 this read
         # only the root's file, while the Rust template pinned 1.94.1 and 210

@@ -1,4 +1,5 @@
-#requires -Version 7.6
+#requires -PSEdition Core
+#requires -Version 7.7.0
 
 <#
     The Name kind of environment.resource.ps1: on the environment's DNS

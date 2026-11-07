@@ -136,7 +136,7 @@ The machines are installed (`deploy/dsc/msdsc/hyperv`), and XMIP-DC01 runs
 the DNS Server role; the domain controller's own template is not written.
 
 **On each machine**, once, as its Administrator or with sudo: PowerShell
-7.6 and Microsoft DSC 3.3 or newer — `winget install --id Microsoft.PowerShell
+7.7 and Microsoft DSC 3.3 or newer — `winget install --id Microsoft.PowerShell
 --exact` and `winget install --id Microsoft.DSC --exact` on Windows, the
 `powershell` and `dsc` packages from Microsoft's package repository on
 AlmaLinux — and on AlmaLinux PowerShell as an SSH subsystem,
