@@ -1851,3 +1851,16 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   module/core/capability/transport/mariadb/src/session.rs
 #     the far end -> src/session.rs; the Stream an insert is, as the
 #     Location's column holds it, stays in the transport (taken)
+
+# Code moved on 2026-11-07, a value's one binary form placed once in
+# xmip-core-library-codec at module/core/library/codec/src/form.rs:
+#   module/platform/persist/.src/storage/record.rs
+#     the Form trait, its Box and Vec forms -> codec::form::Form; the
+#     fourteen write_/read_ wrappers deleted, every record written and read
+#     over codec's ByteWriter, Cursor and field; a refusal becomes a
+#     PersistError once, by From
+#   module/platform/persist/.src/storage/wire/frame.rs
+#     removed: the wire's send and receive (.src/storage/wire.rs) frame
+#     through net::frame
+#   module/core/capability/process/.src/form.rs
+#     the Form trait -> codec::form::Form; written and read stay

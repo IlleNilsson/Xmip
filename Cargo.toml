@@ -259,6 +259,9 @@ toml = "1"
 # certificates made for the test alone.
 xmip-tls = { package = "xmip-core-library-tls", git = "https://github.com/IlleNilsson/xmip-core-library-tls", branch = "main" }
 rcgen = "0.14"
+# The storage test reads an audit record's body back in its one binary form
+# (`codec::form::Form`).
+xmip-codec = { package = "xmip-core-library-codec", git = "https://github.com/IlleNilsson/xmip-core-library-codec", branch = "main" }
 # The service test's operate listener reached as a surface reaches it: the
 # runtime's remote surface, and its test authority (`fixture::Authority`),
 # which only the test-support feature turns on.

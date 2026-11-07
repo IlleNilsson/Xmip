@@ -529,6 +529,16 @@ OK has not reached any node but the one the desktop starts
 (`module/platform/configure/doc/cluster-configuration.md`, *Saving is not
 delivering*; ADR-0031, amendments 2026-10-05; open problem 31).
 
+## Report and Quest
+
+Two words, never one for the other. The owner, 2026-11-07: *A report
+present existing data, a Quest probes for data to present in a Report.*
+
+| Term | Meaning |
+| --- | --- |
+| **Report** | Presents data that already exists: configuration and records, read and never authored by hand (`xmip-core-report`, `module/core/operation/report/doc/reports.md`). |
+| **Quest** | Probes for data a Report then presents: it acts on an installation to find out. Named by the owner 2026-11-05, none designed yet: the Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time and Firewall Quests. |
+
 ## Retired terms
 
 | Retired | Use instead |

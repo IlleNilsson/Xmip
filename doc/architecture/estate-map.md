@@ -412,7 +412,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 324770 lines of production
+Where each repository mounts and what it holds: 324759 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -561,7 +561,7 @@ hold no source to count.
 │   │   │   │   ├── regex                        158
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
-│   │   │   ├── process                         2412
+│   │   │   ├── process                         2406
 │   │   │   │   └── bpmn                        3173
 │   │   │   ├── prepare                         2232
 │   │   │   │   ├── rpgp                         255
@@ -665,7 +665,7 @@ hold no source to count.
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
 │   │   │   ├── net                             6643
-│   │   │   ├── codec                           2898
+│   │   │   ├── codec                           2984
 │   │   │   ├── tls                             2458
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1756
@@ -728,7 +728,7 @@ hold no source to count.
 │   │   └── cluster                               21
 │   └── platform/
 │       ├── runtime                            37815
-│       ├── persist                            14708
+│       ├── persist                            14617
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
