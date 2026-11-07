@@ -15,10 +15,11 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+use xmip_codec::form::Form;
 use xmip_core::AuditId;
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::{
-    AuditBody, AuditEntry, Audited, ChunkReader, Form, StorageClient, StorageServer, StreamChunk,
+    AuditBody, AuditEntry, Audited, ChunkReader, StorageClient, StorageServer, StreamChunk,
     StreamDigest, StreamRecord, XmipStorage,
 };
 use xmip_persist_sqlite::Sqlite;

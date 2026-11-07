@@ -242,7 +242,9 @@ addressing model Xmip had written down anywhere.
 of them mandatory because a security review board and an auditor need them
 before they know to ask, and every one derived from configuration and
 records, never authored by hand. Which four, and how each is derived, is
-`module/core/operation/report/doc/reports.md`.
+`module/core/operation/report/doc/reports.md`. A Report presents existing
+data; a Quest probes for data to present in a Report (the owner,
+2026-11-07; `doc/terminology.md`, *Report and Quest*).
 
 ## 9. Ownership
 
