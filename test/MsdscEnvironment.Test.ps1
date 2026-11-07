@@ -11,7 +11,13 @@
       each document declares every parameter it
       uses and uses every one it declares — but staging, which
       Xmip.Environment/Machine gives every document it applies.
+    - Every document requires DSC 3.4.0-preview.2 and none asks for
+      elevation whole; each resource manifest elevates exactly the methods
+      that need administrator rights.
     - The resource manifests of the folder are found by DSC.
+    - The Ansible role makes node.xmip the node's alone to write, and masks
+      the node's key, never logging or diffing it; ansible-playbook
+      --syntax-check where Ansible is here, SKIPPED where it is not.
     - The example environment runs through DSC with every resource replaced
       by Microsoft.DSC.Debug/Echo: the names are given every node machine's
       address, each node machine is given its node's files and values, the
@@ -19,7 +25,8 @@
       node mapped is one the Essentials' cluster file declares.
     - The Xmip resources' own steps that touch nothing but a folder:
       a file in place, the ports a configuration listens on, the staging
-      folder.
+      folder, and node.xmip made the node's alone to write on a file of the
+      test's own (Windows; on Linux that needs root and is SKIPPED).
 
     The machines themselves are proved by running the templates:
     deploy/dsc/msdsc/environment/README.md and deploy/dsc/ansible/README.md.
@@ -32,7 +39,7 @@ BeforeAll {
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
     foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-        'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1') {
+        'NodeAccess.ps1', 'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1') {
         . (Join-Path $script:Template $part)
     }
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
@@ -143,9 +150,35 @@ Describe 'The documents' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
-    It 'requires DSC 3.3 or newer in <_>' -ForEach @('environment.example.dsc.yaml',
+    It 'requires DSC 3.4.0-preview.2 or newer in <_>' -ForEach @('environment.example.dsc.yaml',
         'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
-        $script:Parsed[$_].directives.version | Should -Be '^3.3'
+        $script:Parsed[$_].directives.version | Should -Be '^3.4.0-preview.2'
+    }
+
+    It 'leaves elevation in <_> to each resource, never the whole document' -ForEach @(
+        'environment.example.dsc.yaml', 'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
+        $script:Parsed[$_].directives.Contains('securityContext') | Should -BeFalse
+    }
+
+    It 'elevates exactly the methods of <Type> that need administrator rights' -ForEach @(
+        @{ Type = 'Xmip.Environment/Machine'; Elevated = @() }
+        @{ Type = 'Xmip.Environment/Slice'; Elevated = @() }
+        @{ Type = 'Xmip.Environment/Name'; Elevated = @('get', 'set', 'test') }
+        @{ Type = 'Xmip.Node/Account'; Elevated = @('set') }
+        @{ Type = 'Xmip.Node/File'; Elevated = @('get', 'set', 'test') }
+        @{ Type = 'Xmip.Node/Opening'; Elevated = @('get', 'set', 'test') }
+        @{ Type = 'Xmip.Node/Package'; Elevated = @('set') }
+        @{ Type = 'Xmip.Node/Service'; Elevated = @('set') }
+        @{ Type = 'Xmip.Node/Slice'; Elevated = @('get', 'set', 'test') }
+    ) {
+        [string] $file = ($Type -replace '^Xmip\.', 'xmip-' -replace '/', '-').ToLowerInvariant()
+        [hashtable] $manifest = Read-XmipTestYaml -Path (
+            Join-Path $script:Template "$file.dsc.resource.yaml")
+        [string[]] $found = @('get', 'set', 'test' | Where-Object {
+            $manifest[$_]['requireSecurityContext'] -eq 'elevated'
+        })
+
+        ($found -join ',') | Should -Be ($Elevated -join ',')
     }
 
     It 'uses no Windows PowerShell adapter' {
@@ -248,6 +281,78 @@ Describe 'The example environment' {
     }
 }
 
+Describe 'The Ansible role xmip_node' {
+    BeforeAll {
+        [string] $script:Tasks = Join-Path $script:Root 'deploy/dsc/ansible/roles/xmip_node/tasks'
+        $script:Role = @{}
+        foreach ($family in 'linux', 'windows') {
+            $script:Role[$family] = @(Read-XmipTestYaml -Path (
+                Join-Path $script:Tasks "$family.yml"))
+        }
+        [bool] $script:HasAnsible = $null -ne (
+            Get-Command -Name ansible-playbook -ErrorAction SilentlyContinue)
+    }
+
+    It 'makes node.xmip on Linux the node account''s and root''s, mode 0640' {
+        [object[]] $held = @($script:Role.linux | Where-Object {
+            $_.Contains('ansible.builtin.file') -and
+            $_['ansible.builtin.file'].path -like '*/node.xmip'
+        })
+        [object[]] $written = @($script:Role.linux | Where-Object {
+            $_.Contains('ansible.builtin.copy') -and
+            $_['ansible.builtin.copy'].dest -like '*/node.xmip'
+        })
+
+        $held.Count | Should -Be 1
+        $written.Count | Should -Be 1
+        foreach ($task in $held[0]['ansible.builtin.file'], $written[0]['ansible.builtin.copy']) {
+            $task.owner | Should -Be '{{ xmip_account }}'
+            $task.group | Should -Be 'root'
+            $task.mode | Should -Be '0640'
+        }
+    }
+
+    It 'makes node.xmip on Windows writable by the node''s account and the administrators alone' {
+        $inheritance = $script:Role.windows | Where-Object {
+            $_.Contains('ansible.windows.win_acl_inheritance') -and
+            $_['ansible.windows.win_acl_inheritance'].path -like '*node.xmip'
+        }
+        $acl = $script:Role.windows | Where-Object {
+            $_.Contains('ansible.windows.win_acl') -and
+            $_['ansible.windows.win_acl'].path -like '*node.xmip'
+        }
+
+        $inheritance['ansible.windows.win_acl_inheritance'].state | Should -Be 'absent'
+        @($acl.loop | ForEach-Object { "$($_.user)=$($_.rights)" }) | Should -Be @(
+            'SYSTEM=FullControl', 'Administrators=FullControl', '{{ xmip_account }}=Modify')
+    }
+
+    It 'masks the node''s key on <_>, never logged or diffed' -ForEach 'linux', 'windows' {
+        [object[]] $key = @($script:Role[$_] | Where-Object { $_.name -like '*key*' })
+
+        $key.Count | Should -Be 1
+        $key[0].no_log | Should -BeTrue
+        $key[0].Contains('diff') | Should -BeTrue
+        $key[0].diff | Should -BeFalse
+        $key[0].vars.xmip_node_key | Should -Match 'register_secret'
+        @($script:Role[$_] | Where-Object { "$($_['loop'])" -match 'node\.key' }) |
+            Should -BeNullOrEmpty -Because 'the key is copied by its own task alone'
+    }
+
+    It 'passes ansible-playbook --syntax-check' {
+        if (-not $script:HasAnsible) {
+            Set-ItResult -Skipped -Because ('SKIPPED: ansible-playbook is not on PATH; ' +
+                'deploy/dsc/ansible/README.md installs it')
+            return
+        }
+
+        [string] $playbook = Join-Path $script:Root 'deploy/dsc/ansible/environment.yml'
+        [string] $inventory = Join-Path $script:Root 'deploy/dsc/ansible/inventory.example.yml'
+        & ansible-playbook --syntax-check -i $inventory $playbook *> $null
+        $LASTEXITCODE | Should -Be 0
+    }
+}
+
 Describe 'The Xmip resources'' own steps' {
     It 'finds a file in place only once it holds its source''s bytes' {
         [string] $source = Join-Path $TestDrive 'source.xmip'
@@ -296,7 +401,15 @@ Describe 'The Xmip resources'' own steps' {
     }
 
     It 'places the node''s shipped slice and its authority''s certificate, then finds them' {
+        # Who may write it is the next tests'; here it is as wanted once set.
         Mock -CommandName Test-NodePackage -MockWith { $false }
+        Mock -CommandName Set-NodeSliceAccess -MockWith { $script:AccessSet = $true }
+        Mock -CommandName Get-NodeSliceAccess -MockWith {
+            if ($script:AccessSet) {
+                @(Get-NodeSliceWanted -Account 'NT SERVICE\xmip-n')
+            }
+        }
+        $script:AccessSet = $false
         [string] $shipped = Join-Path $TestDrive 'files'
         New-Item -ItemType Directory -Force -Path $shipped | Out-Null
         Set-Content -LiteralPath (Join-Path $shipped 'node.xmip') -Value 'slice'
@@ -306,12 +419,76 @@ Describe 'The Xmip resources'' own steps' {
             source        = Join-Path $shipped 'node.xmip'
             certificate   = Join-Path $shipped 'authority.pem'
             node          = 'n'
+            account       = 'NT SERVICE\xmip-n'
         }
 
         Test-NodeSlice -Instance $slice | Should -BeFalse
         Set-NodeSlice -Instance $slice -Confirm:$false
         Test-NodeSlice -Instance $slice | Should -BeTrue
         Join-Path $TestDrive 'config/authority/authority.pem' | Should -Exist
+        Should -Invoke -CommandName Set-NodeSliceAccess -Times 1 -ParameterFilter {
+            $Account -eq 'NT SERVICE\xmip-n' -and $Path -like '*node.xmip'
+        }
+
+        # Its bytes in place and its access list another: out of desired state.
+        $script:AccessSet = $false
+        Test-NodeSlice -Instance $slice | Should -BeFalse
+    }
+
+    It 'hands the slice its node''s account in node.dsc.yaml' {
+        if (-not $script:HasDsc) {
+            Set-ItResult -Skipped -Because $script:NoDsc
+            return
+        }
+
+        $slice = $script:Parsed['node.dsc.yaml'].resources | Where-Object {
+            $_.type -eq 'Xmip.Node/Slice'
+        }
+        $slice.properties.account | Should -Be "[parameters('account')]"
+    }
+
+    It 'computes a virtual account''s SID as Windows does, before its service exists' {
+        if (-not $IsWindows) {
+            Set-ItResult -Skipped -Because 'SKIPPED: a virtual account is Windows'' alone'
+            return
+        }
+
+        [string] $named = 'NT SERVICE\TrustedInstaller'
+        [string] $windows = [System.Security.Principal.NTAccount]::new($named).Translate(
+            [System.Security.Principal.SecurityIdentifier]).Value
+
+        Get-NodeAccountSid -Account $named | Should -Be $windows
+        Get-NodeAccountSid -Account 'NT SERVICE\xmip-no-such-node' |
+            Should -Match '^S-1-5-80(-\d+){5}$'
+    }
+
+    It 'makes node.xmip the node''s alone to write, and finds it so' {
+        if (-not $IsWindows) {
+            Set-ItResult -Skipped -Because ('SKIPPED: on Linux the slice is chowned to the ' +
+                'node''s account, which needs root')
+            return
+        }
+
+        # Unelevated: the file's owner may set its access list, and read it.
+        [string] $path = Join-Path $TestDrive 'access/node.xmip'
+        New-Item -ItemType Directory -Force -Path (Split-Path -Path $path) | Out-Null
+        Set-Content -LiteralPath $path -Value 'slice'
+        [string] $account = 'NT SERVICE\xmip-n'
+        [string] $wanted = @(Get-NodeSliceWanted -Account $account) -join ','
+
+        (@(Get-NodeSliceAccess -Path $path) -join ',') | Should -Not -Be $wanted
+
+        try {
+            Set-NodeSliceAccess -Path $path -Account $account -Confirm:$false
+            (@(Get-NodeSliceAccess -Path $path) -join ',') | Should -Be $wanted
+        }
+        finally {
+            # Inheritance given back, so Pester may remove its drive.
+            $open = [System.Security.AccessControl.FileSecurity]::new()
+            $open.SetAccessRuleProtection($false, $false)
+            [System.IO.FileSystemAclExtensions]::SetAccessControl(
+                [System.IO.FileInfo]::new($path), $open)
+        }
     }
 
     It 'stages a machine''s files in a folder of the machine''s own' {

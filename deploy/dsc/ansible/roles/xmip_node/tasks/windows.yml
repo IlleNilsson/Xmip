@@ -67,15 +67,29 @@
     - Administrators
   when: xmip_identity | length > 0
 
-- name: The node's certificate, key and anchors from the cluster's authority
+- name: The node's certificate and anchors from the cluster's authority
   ansible.windows.win_copy:
     src: "{{ xmip_identity }}/{{ item }}"
     dest: "{{ xmip_configuration }}\\tls\\{{ item }}"
   loop:
     - node.pem
-    - node.key
     - anchors.pem
   when: xmip_identity | length > 0
+  notify: Restart the Xmip node
+
+# The key is a secret: registered for ansible-core 2.22's masking, so it is
+# $REDACTED$ wherever Ansible would show it, and never logged or diffed.
+- name: The node's key from the cluster's authority
+  ansible.windows.win_copy:
+    content: "{{ xmip_node_key }}"
+    dest: "{{ xmip_configuration }}\\tls\\node.key"
+  vars:
+    xmip_node_key: >-
+      {{ lookup('ansible.builtin.file', xmip_identity ~ '/node.key', rstrip=false)
+      | ansible.builtin.register_secret }}
+  when: xmip_identity | length > 0
+  no_log: true
+  diff: false
   notify: Restart the Xmip node
 
 - name: The package, copied to the machine
@@ -92,6 +106,27 @@
       - XMIP_ACCOUNT={{ xmip_account }}
     creates_service: "xmip-{{ xmip_node_name }}"
     state: present
+
+# The file is the node's alone to write: its account's and the
+# administrators' (ADR-0031, amendment 2026-11-06, point 4), the starter
+# too. The virtual account exists once the package has registered its
+# service, so this follows the install.
+- name: The node's configuration inheriting nothing
+  ansible.windows.win_acl_inheritance:
+    path: "{{ xmip_configuration }}\\node.xmip"
+    state: absent
+    reorganize: false
+
+- name: The node's configuration writable by the node's account and the administrators alone
+  ansible.windows.win_acl:
+    path: "{{ xmip_configuration }}\\node.xmip"
+    user: "{{ item.user }}"
+    rights: "{{ item.rights }}"
+    type: allow
+  loop:
+    - { user: SYSTEM, rights: FullControl }
+    - { user: Administrators, rights: FullControl }
+    - { user: "{{ xmip_account }}", rights: Modify }
 
 
 - name: The ports the node's configuration listens on

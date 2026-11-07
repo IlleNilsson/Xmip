@@ -218,7 +218,7 @@ Describe 'Resolve-XmipCommitSubject' {
 
 Describe 'Get-XmipBuildableFeature' {
     BeforeAll {
-        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-feat-$([guid]::NewGuid())"
+        $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'feat'
         New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
 
         $script:Manifest = Join-Path $script:Fixture 'Cargo.toml'
@@ -235,10 +235,6 @@ uuid-v7 = ["dep:uuid"]
 [dependencies]
 rustls = { version = "0.23", optional = true }
 '@
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'names every declared feature except default' {
@@ -304,7 +300,7 @@ Describe 'A module''s timing program runs last, alone' {
     # rust-style.md section 5c: landings failed at random on timing tests run
     # inside a module's parallel suite (2026-11-01).
     BeforeAll {
-        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-measured-$([guid]::NewGuid())"
+        $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'measured'
         New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
 
         $script:Declared = Join-Path $script:Fixture 'declared.xmip'
@@ -334,10 +330,6 @@ name = "xmip-core-example"
 name = "measured"
 path = "tests/measured/main.rs"
 '@
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'finds the program named measured, and nothing where none is declared' {
@@ -505,7 +497,7 @@ Describe 'Sort-XmipModuleDependency' {
         # a regex, and a mock would test the mock. c aliases b as `b`, the way
         # a technology names a sibling; the sort read only `xmip` aliases and
         # landed ethercat before ethernet on 2026-09-11.
-        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-sort-$([guid]::NewGuid())"
+        $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'sort'
 
         $modules = @{
             'module/foundation/a' = @'
@@ -541,10 +533,6 @@ b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main
             'module/foundation/a'
             'module/foundation/b'
         )
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'returns every module it was given' {
@@ -607,7 +595,7 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
         # regex, and a mock would test the mock. This is the shape that was
         # invisible before — a Technology's path lives in its parent's
         # .gitmodules, never the root's.
-        $script:Nest = Join-Path ([IO.Path]::GetTempPath()) "xmip-nest-$([guid]::NewGuid())"
+        $script:Nest = Join-Path -Path $TestDrive -ChildPath 'nest'
 
         $files = @{
             '.gitmodules' = @'
@@ -630,10 +618,6 @@ Describe 'Get-XmipDeclaredModule sees nested submodules' {
             New-Item -Path (Split-Path $target) -ItemType Directory -Force | Out-Null
             Set-Content -LiteralPath $target -Value $files[$relative]
         }
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Nest -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'emits the nested module as its full path from the estate root' {

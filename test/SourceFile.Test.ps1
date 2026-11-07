@@ -58,7 +58,7 @@ BeforeAll {
 
 Describe 'Get-XmipSourceFile counts what a file holds' {
     BeforeAll {
-        $script:Fixture = Join-Path ([IO.Path]::GetTempPath()) "xmip-source-$(New-Guid)"
+        $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'source'
 
         New-FixtureFile -Path 'module/one/src/lib.rs' -Text @(
             'pub fn one() {}'
@@ -81,10 +81,6 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
         New-FixtureFile -Path 'test/two/Thing.Test.ps1' -Text @('one', 'two', 'three')
 
         $script:Found = @(Get-XmipSourceFile -Root $script:Fixture)
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'ends a Rust file''s production code at its first #[cfg(test)]' {

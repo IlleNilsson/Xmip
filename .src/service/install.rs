@@ -220,187 +220,198 @@ fn give(service: &ServiceDefinition, given: &[Given]) -> Result<(), String> {
     }
 }
 
-/// Register `service`, node `node`'s, with this platform's service manager,
-/// give its account what it reads and writes, and start it.
-#[cfg(windows)]
-fn register(service: &ServiceDefinition, node: &str, given: &[Given]) -> Result<(), String> {
-    use xmip_runtime::registration::{windows_service_arguments, windows_service_settings};
-    use xmip_runtime::service_control::{Act, control};
-    // 1073: the service exists already, as on a repair.
-    command("sc.exe", &windows_service_arguments(service), &[1073])?;
-    for (program, arguments) in windows_service_settings(service) {
-        command(&program, &arguments, &[])?;
-    }
-    // A virtual account is there once its service is.
-    give(service, given)?;
-    control(Act::Start, node).map(|_| ())
-}
-
-#[cfg(target_os = "linux")]
-fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
-    give(service, given)?;
-    let unit = format!("/etc/systemd/system/{}.service", service.name);
-    write(
-        Path::new(&unit),
-        &xmip_runtime::registration::systemd_unit(service),
-    )?;
-    let unit_name = format!("{}.service", service.name);
-    command("systemctl", &[String::from("daemon-reload")], &[])?;
-    command(
-        "systemctl",
-        &[String::from("enable"), unit_name.clone()],
-        &[],
-    )?;
-    // A restart starts a stopped unit and runs an upgraded program.
-    command("systemctl", &[String::from("restart"), unit_name], &[])
-}
-
-#[cfg(target_os = "macos")]
-fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
-    give(service, given)?;
-    // The local endpoints' folder first, made now and at every boot.
-    let run = format!("/Library/LaunchDaemons/{}.run.plist", service.name);
-    write(
-        Path::new(&run),
-        &xmip_runtime::registration::launchd_run_directory(service),
-    )?;
-    let _ = command(
-        "launchctl",
-        &[
-            String::from("bootout"),
-            format!("system/{}.run", service.name),
-        ],
-        &[],
-    );
-    command(
-        "launchctl",
-        &[String::from("bootstrap"), String::from("system"), run],
-        &[],
-    )?;
-    let plist = format!("/Library/LaunchDaemons/{}.plist", service.name);
-    write(
-        Path::new(&plist),
-        &xmip_runtime::registration::launchd_plist(service),
-    )?;
-    // An upgrade finds the daemon loaded; launchd loads it again only after
-    // it is out, and a daemon that was never loaded is not, which is fine.
-    let _ = command(
-        "launchctl",
-        &[String::from("bootout"), format!("system/{}", service.name)],
-        &[],
-    );
-    command(
-        "launchctl",
-        &[String::from("bootstrap"), String::from("system"), plist],
-        &[],
-    )
-}
-
-#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
-fn register(_: &ServiceDefinition, _: &str, _: &[Given]) -> Result<(), String> {
-    Err("this platform has no service manager".to_string())
-}
-
-/// Stop the service named `name`, node `node`'s, waiting for its drain, and
-/// remove it.
-#[cfg(windows)]
-fn deregister(name: &str, node: &str) -> Result<String, String> {
-    use std::time::{Duration, Instant};
-    use windows_service::service::{ServiceAccess, ServiceState};
-    use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
-    use xmip_runtime::service_control::{Act, control};
-
-    /// The Service Control Manager's word for a service it does not have.
-    const DOES_NOT_EXIST: i32 = 1060;
-    /// How long a drain may take before the removal says so.
-    const DRAIN: Duration = Duration::from_secs(60);
-
-    let manager = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)
-        .map_err(|error| format!("the Service Control Manager: {error}"))?;
-    let access = ServiceAccess::QUERY_STATUS | ServiceAccess::DELETE;
-    let service = match manager.open_service(name, access) {
-        Ok(service) => service,
-        Err(windows_service::Error::Winapi(error))
-            if error.raw_os_error() == Some(DOES_NOT_EXIST) =>
-        {
-            return Ok(format!("{name} is not registered; nothing to remove"));
-        }
-        Err(error) => return Err(format!("{name}: {error}")),
-    };
-    let state = |service: &windows_service::service::Service| {
-        service
-            .query_status()
-            .map(|status| status.current_state)
-            .map_err(|error| format!("{name}: {error}"))
-    };
-    if state(&service)? != ServiceState::Stopped {
-        control(Act::Stop, node)?;
-        let began = Instant::now();
-        while state(&service)? != ServiceState::Stopped {
-            if began.elapsed() > DRAIN {
-                return Err(format!("{name} did not stop within {} s", DRAIN.as_secs()));
+cfg_select! {
+    windows => {
+        /// Register `service`, node `node`'s, with this platform's service
+        /// manager, give its account what it reads and writes, and start it.
+        fn register(
+            service: &ServiceDefinition,
+            node: &str,
+            given: &[Given],
+        ) -> Result<(), String> {
+            use xmip_runtime::registration::{windows_service_arguments, windows_service_settings};
+            use xmip_runtime::service_control::{Act, control};
+            // 1073: the service exists already, as on a repair.
+            command("sc.exe", &windows_service_arguments(service), &[1073])?;
+            for (program, arguments) in windows_service_settings(service) {
+                command(&program, &arguments, &[])?;
             }
-            std::thread::sleep(Duration::from_millis(20));
+            // A virtual account is there once its service is.
+            give(service, given)?;
+            control(Act::Start, node).map(|_| ())
         }
     }
-    service
-        .delete()
-        .map_err(|error| format!("{name}: {error}"))?;
-    Ok(format!(
-        "{name} stopped and removed; its configuration and data are kept"
-    ))
-}
-
-#[cfg(target_os = "linux")]
-fn deregister(name: &str, _: &str) -> Result<String, String> {
-    let unit = format!("/etc/systemd/system/{name}.service");
-    if !Path::new(&unit).exists() {
-        return Ok(format!("{name} is not registered; nothing to remove"));
+    target_os = "linux" => {
+        fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
+            give(service, given)?;
+            let unit = format!("/etc/systemd/system/{}.service", service.name);
+            write(
+                Path::new(&unit),
+                &xmip_runtime::registration::systemd_unit(service),
+            )?;
+            let unit_name = format!("{}.service", service.name);
+            command("systemctl", &[String::from("daemon-reload")], &[])?;
+            command(
+                "systemctl",
+                &[String::from("enable"), unit_name.clone()],
+                &[],
+            )?;
+            // A restart starts a stopped unit and runs an upgraded program.
+            command("systemctl", &[String::from("restart"), unit_name], &[])
+        }
     }
-    command(
-        "systemctl",
-        &[
-            String::from("disable"),
-            String::from("--now"),
-            format!("{name}.service"),
-        ],
-        &[],
-    )?;
-    std::fs::remove_file(&unit).map_err(|error| said(Path::new(&unit), &error))?;
-    command("systemctl", &[String::from("daemon-reload")], &[])?;
-    Ok(format!(
-        "{name} stopped and removed; its configuration and data are kept"
-    ))
-}
-
-#[cfg(target_os = "macos")]
-fn deregister(name: &str, _: &str) -> Result<String, String> {
-    let plist = format!("/Library/LaunchDaemons/{name}.plist");
-    if !Path::new(&plist).exists() {
-        return Ok(format!("{name} is not registered; nothing to remove"));
+    target_os = "macos" => {
+        fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
+            give(service, given)?;
+            // The local endpoints' folder first, made now and at every boot.
+            let run = format!("/Library/LaunchDaemons/{}.run.plist", service.name);
+            write(
+                Path::new(&run),
+                &xmip_runtime::registration::launchd_run_directory(service),
+            )?;
+            let _ = command(
+                "launchctl",
+                &[
+                    String::from("bootout"),
+                    format!("system/{}.run", service.name),
+                ],
+                &[],
+            );
+            command(
+                "launchctl",
+                &[String::from("bootstrap"), String::from("system"), run],
+                &[],
+            )?;
+            let plist = format!("/Library/LaunchDaemons/{}.plist", service.name);
+            write(
+                Path::new(&plist),
+                &xmip_runtime::registration::launchd_plist(service),
+            )?;
+            // An upgrade finds the daemon loaded; launchd loads it again only after
+            // it is out, and a daemon that was never loaded is not, which is fine.
+            let _ = command(
+                "launchctl",
+                &[String::from("bootout"), format!("system/{}", service.name)],
+                &[],
+            );
+            command(
+                "launchctl",
+                &[String::from("bootstrap"), String::from("system"), plist],
+                &[],
+            )
+        }
     }
-    command(
-        "launchctl",
-        &[String::from("bootout"), format!("system/{name}")],
-        &[],
-    )?;
-    std::fs::remove_file(&plist).map_err(|error| said(Path::new(&plist), &error))?;
-    // The folder's daemon goes with it; the folder stays for other nodes.
-    let run = format!("/Library/LaunchDaemons/{name}.run.plist");
-    let _ = command(
-        "launchctl",
-        &[String::from("bootout"), format!("system/{name}.run")],
-        &[],
-    );
-    let _ = std::fs::remove_file(&run);
-    Ok(format!(
-        "{name} stopped and removed; its configuration and data are kept"
-    ))
+    _ => {
+        fn register(_: &ServiceDefinition, _: &str, _: &[Given]) -> Result<(), String> {
+            Err("this platform has no service manager".to_string())
+        }
+    }
 }
 
-#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
-fn deregister(_: &str, _: &str) -> Result<String, String> {
-    Err("this platform has no service manager".to_string())
+cfg_select! {
+    windows => {
+        /// Stop the service named `name`, node `node`'s, waiting for its
+        /// drain, and remove it.
+        fn deregister(name: &str, node: &str) -> Result<String, String> {
+            use std::time::{Duration, Instant};
+            use windows_service::service::{ServiceAccess, ServiceState};
+            use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
+            use xmip_runtime::service_control::{Act, control};
+
+            /// The Service Control Manager's word for a service it does not have.
+            const DOES_NOT_EXIST: i32 = 1060;
+            /// How long a drain may take before the removal says so.
+            const DRAIN: Duration = Duration::from_secs(60);
+
+            let manager =
+                ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)
+                    .map_err(|error| format!("the Service Control Manager: {error}"))?;
+            let access = ServiceAccess::QUERY_STATUS | ServiceAccess::DELETE;
+            let service = match manager.open_service(name, access) {
+                Ok(service) => service,
+                Err(windows_service::Error::Winapi(error))
+                    if error.raw_os_error() == Some(DOES_NOT_EXIST) =>
+                {
+                    return Ok(format!("{name} is not registered; nothing to remove"));
+                }
+                Err(error) => return Err(format!("{name}: {error}")),
+            };
+            let state = |service: &windows_service::service::Service| {
+                service
+                    .query_status()
+                    .map(|status| status.current_state)
+                    .map_err(|error| format!("{name}: {error}"))
+            };
+            if state(&service)? != ServiceState::Stopped {
+                control(Act::Stop, node)?;
+                let began = Instant::now();
+                while state(&service)? != ServiceState::Stopped {
+                    if began.elapsed() > DRAIN {
+                        return Err(format!("{name} did not stop within {} s", DRAIN.as_secs()));
+                    }
+                    std::thread::sleep(Duration::from_millis(20));
+                }
+            }
+            service
+                .delete()
+                .map_err(|error| format!("{name}: {error}"))?;
+            Ok(format!(
+                "{name} stopped and removed; its configuration and data are kept"
+            ))
+        }
+    }
+    target_os = "linux" => {
+        fn deregister(name: &str, _: &str) -> Result<String, String> {
+            let unit = format!("/etc/systemd/system/{name}.service");
+            if !Path::new(&unit).exists() {
+                return Ok(format!("{name} is not registered; nothing to remove"));
+            }
+            command(
+                "systemctl",
+                &[
+                    String::from("disable"),
+                    String::from("--now"),
+                    format!("{name}.service"),
+                ],
+                &[],
+            )?;
+            std::fs::remove_file(&unit).map_err(|error| said(Path::new(&unit), &error))?;
+            command("systemctl", &[String::from("daemon-reload")], &[])?;
+            Ok(format!(
+                "{name} stopped and removed; its configuration and data are kept"
+            ))
+        }
+    }
+    target_os = "macos" => {
+        fn deregister(name: &str, _: &str) -> Result<String, String> {
+            let plist = format!("/Library/LaunchDaemons/{name}.plist");
+            if !Path::new(&plist).exists() {
+                return Ok(format!("{name} is not registered; nothing to remove"));
+            }
+            command(
+                "launchctl",
+                &[String::from("bootout"), format!("system/{name}")],
+                &[],
+            )?;
+            std::fs::remove_file(&plist).map_err(|error| said(Path::new(&plist), &error))?;
+            // The folder's daemon goes with it; the folder stays for other nodes.
+            let run = format!("/Library/LaunchDaemons/{name}.run.plist");
+            let _ = command(
+                "launchctl",
+                &[String::from("bootout"), format!("system/{name}.run")],
+                &[],
+            );
+            let _ = std::fs::remove_file(&run);
+            Ok(format!(
+                "{name} stopped and removed; its configuration and data are kept"
+            ))
+        }
+    }
+    _ => {
+        fn deregister(_: &str, _: &str) -> Result<String, String> {
+            Err("this platform has no service manager".to_string())
+        }
+    }
 }
 
 #[cfg(test)]

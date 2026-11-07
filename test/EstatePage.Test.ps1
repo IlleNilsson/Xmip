@@ -45,10 +45,7 @@ BeforeAll {
 
 Describe 'What a repository uses is read from its build' {
     BeforeAll {
-        # The long form of the path, as Get-ChildItem reports it: %TEMP% comes
-        # back from GetTempPath in its 8.3 short form, and the two never match.
-        [string] $made = Join-Path ([IO.Path]::GetTempPath()) "xmip-use-$(New-Guid)"
-        $script:Fixture = (New-Item -ItemType Directory -Path $made).FullName
+        $script:Fixture = [string] $TestDrive
 
         New-FixtureFile -Path 'module/one/Cargo.toml' -Text @'
 [package]
@@ -96,10 +93,6 @@ four = { package = "xmip-core-four", git = "https://example.invalid/four" }
             [string] $full = [IO.Path]::GetFullPath((Join-Path $script:Fixture $mount))
             $script:Owner[$full.TrimEnd([char] 92, [char] 47)] = $mounts[$mount]
         }
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Fixture -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'names the estate crates under [dependencies], by package where renamed' {

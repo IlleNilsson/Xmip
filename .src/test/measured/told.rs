@@ -147,52 +147,57 @@ fn a_service_nothing_tells_uses_next_to_no_processor() {
     ended(&directory, child, ending, &said);
 }
 
-/// The processor time the service's process has used, as Windows counts
-/// it for every process (`TotalProcessorTime`). Reading another process's
-/// counters is a call into kernel32 no safe Rust crate makes, and this
-/// estate writes no unsafe outside the files it lists (ADR-0050), so
-/// PowerShell reads it, as it presses Ctrl+Break.
-#[cfg(windows)]
-fn processor_time(child: &Child) -> Duration {
-    let script = format!("(Get-Process -Id {}).TotalProcessorTime.Ticks", child.id());
-    let read = Command::new("pwsh")
-        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
-        .output()
-        .expect("pwsh runs");
-    let ticks: u64 = String::from_utf8_lossy(&read.stdout)
-        .trim()
-        .parse()
-        .expect("a count of ticks");
-    Duration::from_nanos(ticks * 100)
-}
-
-/// The processor time the service's process has used, user and system,
-/// in the clock ticks Linux counts (`/proc/<pid>/stat`, a hundred a
-/// second).
-#[cfg(target_os = "linux")]
-fn processor_time(child: &Child) -> Duration {
-    let stat = std::fs::read_to_string(format!("/proc/{}/stat", child.id())).expect("its stat");
-    // The fields after the command, which is in parentheses and may hold
-    // spaces: state is the first, user time the twelfth, system the
-    // thirteenth.
-    let after = &stat[stat.rfind(')').expect("a command") + 2..];
-    let fields: Vec<&str> = after.split_whitespace().collect();
-    let ticks: u64 =
-        fields[11].parse::<u64>().expect("user") + fields[12].parse::<u64>().expect("system");
-    Duration::from_millis(ticks * 10)
-}
-
-/// The processor time the service's process has used, as `ps` says it:
-/// `minutes:seconds.hundredths`.
-#[cfg(all(unix, not(target_os = "linux")))]
-fn processor_time(child: &Child) -> Duration {
-    let read = Command::new("ps")
-        .args(["-o", "time=", "-p", &child.id().to_string()])
-        .output()
-        .expect("ps runs");
-    let text = String::from_utf8_lossy(&read.stdout);
-    let (minutes, seconds) = text.trim().split_once(':').expect("minutes:seconds");
-    let minutes: u64 = minutes.parse().expect("minutes");
-    let seconds: f64 = seconds.parse().expect("seconds");
-    Duration::from_secs(minutes * 60) + Duration::from_secs_f64(seconds)
+cfg_select! {
+    windows => {
+        /// The processor time the service's process has used, as Windows
+        /// counts it for every process (`TotalProcessorTime`). Reading another
+        /// process's counters is a call into kernel32 no safe Rust crate
+        /// makes, and this estate writes no unsafe outside the files it lists
+        /// (ADR-0050), so PowerShell reads it, as it presses Ctrl+Break.
+        fn processor_time(child: &Child) -> Duration {
+            let script = format!("(Get-Process -Id {}).TotalProcessorTime.Ticks", child.id());
+            let read = Command::new("pwsh")
+                .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+                .output()
+                .expect("pwsh runs");
+            let ticks: u64 = String::from_utf8_lossy(&read.stdout)
+                .trim()
+                .parse()
+                .expect("a count of ticks");
+            Duration::from_nanos(ticks * 100)
+        }
+    }
+    target_os = "linux" => {
+        /// The processor time the service's process has used, user and
+        /// system, in the clock ticks Linux counts (`/proc/<pid>/stat`, a
+        /// hundred a second).
+        fn processor_time(child: &Child) -> Duration {
+            let stat =
+                std::fs::read_to_string(format!("/proc/{}/stat", child.id())).expect("its stat");
+            // The fields after the command, which is in parentheses and may
+            // hold spaces: state is the first, user time the twelfth, system
+            // the thirteenth.
+            let after = &stat[stat.rfind(')').expect("a command") + 2..];
+            let fields: Vec<&str> = after.split_whitespace().collect();
+            let ticks: u64 = fields[11].parse::<u64>().expect("user")
+                + fields[12].parse::<u64>().expect("system");
+            Duration::from_millis(ticks * 10)
+        }
+    }
+    unix => {
+        /// The processor time the service's process has used, as `ps` says
+        /// it: `minutes:seconds.hundredths`.
+        fn processor_time(child: &Child) -> Duration {
+            let read = Command::new("ps")
+                .args(["-o", "time=", "-p", &child.id().to_string()])
+                .output()
+                .expect("ps runs");
+            let text = String::from_utf8_lossy(&read.stdout);
+            let (minutes, seconds) = text.trim().split_once(':').expect("minutes:seconds");
+            let minutes: u64 = minutes.parse().expect("minutes");
+            let seconds: f64 = seconds.parse().expect("seconds");
+            Duration::from_secs(minutes * 60) + Duration::from_secs_f64(seconds)
+        }
+    }
+    _ => {}
 }

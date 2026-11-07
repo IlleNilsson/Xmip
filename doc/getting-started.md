@@ -703,7 +703,7 @@ one. Each README says each step in full.
    D:\Repos\Xmip\.local-work\deploy\hyperv.xmip` (*Running it*). On a Linux
    host, the libvirt template does the same (`deploy/dsc/msdsc/libvirt/README.md`).
 4. **E** On each machine once, as its Administrator or with sudo:
-   PowerShell 7.7 and DSC 3.3 (`deploy/dsc/msdsc/environment/README.md`,
+   PowerShell 7.7 and DSC 3.4.0-preview.2 (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).
 5. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,

@@ -149,6 +149,7 @@ fn answer(control: ServiceControl, stop: &Sender<run::Told>) -> ServiceControlHa
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::assert_matches;
 
     #[test]
     fn a_stop_and_a_shutdown_each_ask_for_the_drain_once() {
@@ -158,10 +159,7 @@ mod tests {
             (ServiceControl::Stop, "the Service Control Manager"),
             (ServiceControl::Shutdown, "the system shutting down"),
         ] {
-            assert!(matches!(
-                answer(control, &stop),
-                ServiceControlHandlerResult::NoError
-            ));
+            assert_matches!(answer(control, &stop), ServiceControlHandlerResult::NoError);
             assert_eq!(stops.try_recv(), Ok(run::Told::Stop(by)));
         }
         assert!(stops.try_recv().is_err(), "one stop per control");
@@ -171,14 +169,14 @@ mod tests {
     fn nothing_else_the_manager_sends_stops_the_node() {
         let (stop, stops) = mpsc::channel();
 
-        assert!(matches!(
+        assert_matches!(
             answer(ServiceControl::Interrogate, &stop),
             ServiceControlHandlerResult::NoError
-        ));
-        assert!(matches!(
+        );
+        assert_matches!(
             answer(ServiceControl::Pause, &stop),
             ServiceControlHandlerResult::NotImplemented
-        ));
+        );
         assert!(stops.try_recv().is_err());
     }
 
@@ -187,9 +185,9 @@ mod tests {
         let (stop, stops) = mpsc::channel();
         drop(stops);
 
-        assert!(matches!(
+        assert_matches!(
             answer(ServiceControl::Stop, &stop),
             ServiceControlHandlerResult::NoError
-        ));
+        );
     }
 }

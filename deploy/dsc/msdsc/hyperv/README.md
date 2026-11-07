@@ -86,7 +86,7 @@ Microsoft DSC v3, and the two Windows PowerShell DSC modules the documents use
 
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
-winget install --id Microsoft.DSC --exact
+Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle
 [string] $modules = 'C:\Program Files\WindowsPowerShell\Modules'
 Save-PSResource -Name HyperVDsc -Prerelease -Repository PSGallery -Path $modules -TrustRepository
 Save-PSResource -Name NetworkingDsc -Repository PSGallery -Path $modules -TrustRepository
@@ -171,8 +171,10 @@ The resources, and where a script stands in for one:
 The Windows PowerShell DSC modules run through the
 [`Microsoft.Adapter/WindowsPowerShell`][adapter]
 adapter, the scripts through `Microsoft.DSC.Transitional/PowerShellScript` in
-PowerShell 7. The documents ask for elevation with the `securityContext`
-directive, the form DSC 3.3 reads.
+PowerShell 7. Each document requires DSC `^3.4.0-preview.2`, the latest
+release, and asks for elevation as a whole with the `securityContext`
+directive: its resources are adapted ones, which state no security context of
+their own.
 HyperVDsc is [dsccommunity/HyperVDsc](https://github.com/dsccommunity/HyperVDsc),
 NetworkingDsc [dsccommunity/NetworkingDsc](https://github.com/dsccommunity/NetworkingDsc).
 

@@ -16,32 +16,34 @@ pub fn stopping() {
     notify("STOPPING=1");
 }
 
-#[cfg(target_os = "linux")]
-fn notify(state: &str) {
-    if let Some(socket) = std::env::var_os("NOTIFY_SOCKET")
-        && let Err(error) = notify_at(&socket.to_string_lossy(), state)
-    {
-        eprintln!("xmip-service: could not tell systemd {state}: {error}");
+cfg_select! {
+    target_os = "linux" => {
+        fn notify(state: &str) {
+            if let Some(socket) = std::env::var_os("NOTIFY_SOCKET")
+                && let Err(error) = notify_at(&socket.to_string_lossy(), state)
+            {
+                eprintln!("xmip-service: could not tell systemd {state}: {error}");
+            }
+        }
+
+        /// Send `state` to the socket `socket` names: `@name` is an abstract
+        /// socket, anything else a path.
+        fn notify_at(socket: &str, state: &str) -> std::io::Result<()> {
+            use std::os::linux::net::SocketAddrExt;
+            use std::os::unix::net::{SocketAddr, UnixDatagram};
+
+            let address = match socket.strip_prefix('@') {
+                Some(name) => SocketAddr::from_abstract_name(name.as_bytes())?,
+                None => SocketAddr::from_pathname(socket)?,
+            };
+            UnixDatagram::unbound()?.send_to_addr(state.as_bytes(), &address)?;
+            Ok(())
+        }
+    }
+    _ => {
+        fn notify(_state: &str) {}
     }
 }
-
-/// Send `state` to the socket `socket` names: `@name` is an abstract
-/// socket, anything else a path.
-#[cfg(target_os = "linux")]
-fn notify_at(socket: &str, state: &str) -> std::io::Result<()> {
-    use std::os::linux::net::SocketAddrExt;
-    use std::os::unix::net::{SocketAddr, UnixDatagram};
-
-    let address = match socket.strip_prefix('@') {
-        Some(name) => SocketAddr::from_abstract_name(name.as_bytes())?,
-        None => SocketAddr::from_pathname(socket)?,
-    };
-    UnixDatagram::unbound()?.send_to_addr(state.as_bytes(), &address)?;
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
-fn notify(_state: &str) {}
 
 #[cfg(all(test, target_os = "linux"))]
 mod tests {

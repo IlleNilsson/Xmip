@@ -128,12 +128,14 @@ fn location(started: xmip_runtime::linked::Started<'_>) -> Box<dyn xmip_authoriz
     reason = "a build without persist-rocksdb carries no engine"
 )]
 pub fn engine() -> Option<LinkedEngine> {
-    #[cfg(feature = "persist-rocksdb")]
-    return Some(LinkedEngine::new(xmip_configure::store::ENGINE, |place| {
-        Ok(Box::new(xmip_persist_rocksdb::RocksDb::open(place)?))
-    }));
-    #[cfg(not(feature = "persist-rocksdb"))]
-    None
+    cfg_select! {
+        feature = "persist-rocksdb" => {
+            Some(LinkedEngine::new(xmip_configure::store::ENGINE, |place| {
+                Ok(Box::new(xmip_persist_rocksdb::RocksDb::open(place)?))
+            }))
+        }
+        _ => None,
+    }
 }
 
 /// The administration database's engine, where this build carries it.
@@ -142,13 +144,13 @@ pub fn engine() -> Option<LinkedEngine> {
     reason = "a build without persist-sqlite carries no administration database"
 )]
 pub fn administration() -> Option<LinkedEngine> {
-    #[cfg(feature = "persist-sqlite")]
-    return Some(LinkedEngine::new(
-        xmip_runtime::storage::ADMINISTRATION,
-        |place| Ok(Box::new(xmip_persist_sqlite::Sqlite::open(place)?)),
-    ));
-    #[cfg(not(feature = "persist-sqlite"))]
-    None
+    cfg_select! {
+        feature = "persist-sqlite" => Some(LinkedEngine::new(
+            xmip_runtime::storage::ADMINISTRATION,
+            |place| Ok(Box::new(xmip_persist_sqlite::Sqlite::open(place)?)),
+        )),
+        _ => None,
+    }
 }
 
 /// The key stores this build carries: the platform's (ADR-0063 clause 4),

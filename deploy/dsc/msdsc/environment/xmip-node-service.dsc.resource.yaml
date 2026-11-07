@@ -44,6 +44,7 @@ set:
     - -Operation
     - set
   input: stdin
+  requireSecurityContext: elevated
   implementsPretest: true
   return: state
 exitCodes:

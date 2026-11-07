@@ -4,8 +4,9 @@ version: '0.1.0'
 description: >-
   The node's configuration, node.xmip, as the machine deploying the environment
   sliced and signed it, and the certificate of the authority that signed it,
-  authority/authority.pem beside it, in place; the service restarted when they
-  changed and it is installed. The node never slices.
+  authority/authority.pem beside it, in place, node.xmip writable by the node's
+  account and the administrators alone; the service restarted when they changed
+  and it is installed. The node never slices.
 tags:
   - Xmip
 get:
@@ -21,6 +22,7 @@ get:
     - -Operation
     - get
   input: stdin
+  requireSecurityContext: elevated
 test:
   executable: pwsh
   args:
@@ -34,6 +36,7 @@ test:
     - -Operation
     - test
   input: stdin
+  requireSecurityContext: elevated
   return: state
 set:
   executable: pwsh
@@ -48,6 +51,7 @@ set:
     - -Operation
     - set
   input: stdin
+  requireSecurityContext: elevated
   implementsPretest: true
   return: state
 exitCodes:
@@ -61,6 +65,7 @@ schema: !embedded
       - source
       - certificate
       - node
+      - account
     properties:
       configuration:
         description: 'The folder the node reads its configuration in.'
@@ -74,6 +79,20 @@ schema: !embedded
       node:
         description: 'The node this machine is.'
         type: string
+      account:
+        description: >-
+          The account the node's service runs as, which with the administrators
+          alone may write node.xmip.
+        type: string
+      access:
+        description: >-
+          Who may write node.xmip as found: on Windows each rule as
+          <SID>:<rights> and protected, that it inherits nothing; on Linux
+          owner:group and the mode.
+        readOnly: true
+        type: array
+        items:
+          type: string
       _exist:
         type: boolean
         readOnly: true

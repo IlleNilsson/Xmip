@@ -683,4 +683,16 @@ is shipped its slice and that authority's certificate alone
 role `xmip_node`'s `tasks/slice.yml` in Ansible). `--install` writes a
 starter `cluster.xmip` only for a node that has no slice yet.
 
-Not built: points 3 and 4.
+Point 4 is built in both desired-state templates (2026-11-07): `node.xmip`
+is, on Linux, the node's account's, group root, mode 0640, and on Windows
+inherits nothing, SYSTEM and the administrators in full control and the
+node's account with Modify. In Ansible the role `xmip_node` sets it, the
+package's starter included; in Microsoft DSC `Xmip.Node/Slice` sets it as
+it places the slice, the file being its own, and its get and test report
+it, out of the desired state where it differs. The virtual account's SID
+is computed in the resource as Windows computes it, since the account
+exists only once the package has registered the service. DSC's own
+`Microsoft.Filesystem/ACL` is not used: it takes the whole access list as
+SDDL, and 3.4.0-preview.2 ships it in none of its packages.
+
+Not built: point 3.

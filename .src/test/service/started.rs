@@ -38,9 +38,9 @@ filter = "xmip.transport.mechanism = 'circumstance'"
 
 /// The test cluster, read once: a publication's poll asks for its node.
 pub(crate) fn test_cluster() -> &'static xmip_configure::fixture::TestCluster {
-    static CLUSTER: std::sync::OnceLock<xmip_configure::fixture::TestCluster> =
-        std::sync::OnceLock::new();
-    CLUSTER.get_or_init(xmip_configure::fixture::test_cluster)
+    static CLUSTER: std::sync::LazyLock<xmip_configure::fixture::TestCluster> =
+        std::sync::LazyLock::new(xmip_configure::fixture::test_cluster);
+    &CLUSTER
 }
 
 /// The node the service runs as: the test cluster's first node, by name.
@@ -133,40 +133,45 @@ pub(crate) fn exited(child: Child, bound: Duration) -> ExitStatus {
         .expect("its status")
 }
 
-/// Stop it the way a service manager does on Linux and macOS.
-#[cfg(unix)]
-pub(crate) fn stop(child: &Child) {
-    let sent = Command::new("kill")
-        .args(["-TERM", &child.id().to_string()])
-        .status()
-        .expect("kill runs");
-    assert!(sent.success(), "SIGTERM sent");
-}
-
-/// Press Ctrl+Break in its console: the console stop that reaches one
-/// process group alone, where Ctrl+C reaches every process on the console
-/// and is ignored by a group of its own. Sending a console control event is
-/// a call into kernel32 no safe Rust crate makes, and this estate writes no
-/// unsafe outside the files it lists (ADR-0050), so PowerShell makes it: it
-/// leaves its own console, attaches to the service's and raises the event
-/// in the service's group.
-#[cfg(windows)]
-pub(crate) fn stop(child: &Child) {
-    let script = format!(
-        "$k = Add-Type -Name Console -Namespace XmipStop -PassThru -MemberDefinition '\
-         [DllImport(\"kernel32.dll\")] public static extern bool FreeConsole(); \
-         [DllImport(\"kernel32.dll\")] public static extern bool AttachConsole(uint p); \
-         [DllImport(\"kernel32.dll\")] public static extern bool GenerateConsoleCtrlEvent(uint e, uint g);'; \
-         [void]$k::FreeConsole(); \
-         if (-not $k::AttachConsole({pid})) {{ exit 3 }}; \
-         if (-not $k::GenerateConsoleCtrlEvent(1, {pid})) {{ exit 4 }}; exit 0",
-        pid = child.id()
-    );
-    let sent = Command::new("pwsh")
-        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
-        .status()
-        .expect("pwsh runs");
-    assert!(sent.success(), "Ctrl+Break pressed: {sent}");
+cfg_select! {
+    unix => {
+        /// Stop it the way a service manager does on Linux and macOS.
+        pub(crate) fn stop(child: &Child) {
+            let sent = Command::new("kill")
+                .args(["-TERM", &child.id().to_string()])
+                .status()
+                .expect("kill runs");
+            assert!(sent.success(), "SIGTERM sent");
+        }
+    }
+    windows => {
+        /// Press Ctrl+Break in its console: the console stop that reaches one
+        /// process group alone, where Ctrl+C reaches every process on the
+        /// console and is ignored by a group of its own. Sending a console
+        /// control event is a call into kernel32 no safe Rust crate makes, and
+        /// this estate writes no unsafe outside the files it lists (ADR-0050),
+        /// so PowerShell makes it: it leaves its own console, attaches to the
+        /// service's and raises the event in the service's group.
+        pub(crate) fn stop(child: &Child) {
+            let script = format!(
+                "$k = Add-Type -Name Console -Namespace XmipStop -PassThru -MemberDefinition '\
+                 [DllImport(\"kernel32.dll\")] public static extern bool FreeConsole(); \
+                 [DllImport(\"kernel32.dll\")] public static extern bool AttachConsole(uint p); \
+                 [DllImport(\"kernel32.dll\")] public static extern bool \
+                 GenerateConsoleCtrlEvent(uint e, uint g);'; \
+                 [void]$k::FreeConsole(); \
+                 if (-not $k::AttachConsole({pid})) {{ exit 3 }}; \
+                 if (-not $k::GenerateConsoleCtrlEvent(1, {pid})) {{ exit 4 }}; exit 0",
+                pid = child.id()
+            );
+            let sent = Command::new("pwsh")
+                .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+                .status()
+                .expect("pwsh runs");
+            assert!(sent.success(), "Ctrl+Break pressed: {sent}");
+        }
+    }
+    _ => {}
 }
 
 /// A console of its own that nobody sees, and on Windows a process group of
