@@ -1,395 +1,387 @@
 1
-00:00:00,500 --> 00:00:06,125
-Welcome to Xmip, an open-source messaging and integration platform written in Rust.
+00:00:00,500 --> 00:00:02,300
+Welcome to Xmip.
 
 2
-00:00:06,305 --> 00:00:12,880
-It is on premises first and cloud installable, so organizations choose where their integration runs.
+00:00:02,480 --> 00:00:07,230
+Xmip stands for Cross OS Messaging & Integration Platform.
 
 3
-00:00:13,060 --> 00:00:20,885
-This is the Xmip project story: what it connects, how it records responsibility, and how people design and operate it.
+00:00:07,410 --> 00:00:12,385
+It is an open-source messaging and integration platform written in Rust.
 
 4
-00:00:23,065 --> 00:00:30,490
-Xmip is being developed for organizations that need dependable messaging and integration under their own control.
+00:00:12,565 --> 00:00:19,140
+It is on premises first and cloud installable, so organizations choose where their integration runs.
 
 5
-00:00:30,670 --> 00:00:38,170
-It carries forward familiar integration concepts while putting deployment and data under organizational control.
+00:00:19,320 --> 00:00:27,145
+This is the Xmip project story: what it connects, how it records responsibility, and how people design and operate it.
 
 6
-00:00:38,350 --> 00:00:47,250
-Its central promise is accountability: once a message is accepted, its journey and outcome give operators evidence they can act on.
+00:00:29,325 --> 00:00:36,750
+Xmip is being developed for organizations that need dependable messaging and integration under their own control.
 
 7
-00:00:49,430 --> 00:00:55,205
-For a CEO, the question is what happens to the business when a system exchange stops.
+00:00:36,930 --> 00:00:44,430
+It carries forward familiar integration concepts while putting deployment and data under organizational control.
 
 8
-00:00:55,385 --> 00:01:00,810
-Xmip focuses on accountable outcomes, recovery and organizational choice.
+00:00:44,610 --> 00:00:53,510
+Its central promise is accountability: once a message is accepted, its journey and outcome give operators evidence they can act on.
 
 9
-00:01:00,990 --> 00:01:07,965
-A practical evaluation connects those principles to a real process, its owner and its business impact.
+00:00:55,690 --> 00:01:01,465
+For a CEO, the question is what happens to the business when a system exchange stops.
 
 10
-00:01:10,145 --> 00:01:15,345
-For a CIO, Xmip keeps infrastructure decisions within the organization.
+00:01:01,645 --> 00:01:07,070
+Xmip focuses on accountable outcomes, recovery and organizational choice.
 
 11
-00:01:15,525 --> 00:01:21,925
-Nodes can be placed close to systems, at remote sites or on chosen hosting infrastructure.
+00:01:07,250 --> 00:01:14,225
+A practical evaluation connects those principles to a real process, its owner and its business impact.
 
 12
-00:01:22,105 --> 00:01:30,005
-Open implementation and recorded architecture make it possible to assess the platform and understand how it evolves.
+00:01:16,405 --> 00:01:21,605
+For a CIO, Xmip keeps infrastructure decisions within the organization.
 
 13
-00:01:32,185 --> 00:01:37,060
-Consider an illustrative order travelling from a sales system to a warehouse.
+00:01:21,785 --> 00:01:28,185
+Nodes can be placed close to systems, at remote sites or on chosen hosting infrastructure.
 
 14
-00:01:37,240 --> 00:01:41,915
-A Receive Location accepts the stream, and Xmip persists a message.
+00:01:28,365 --> 00:01:36,265
+Open implementation and recorded architecture make it possible to assess the platform and understand how it evolves.
 
 15
-00:01:42,095 --> 00:01:46,845
-Matching subscriptions open journeys to the destinations that want it.
+00:01:38,445 --> 00:01:43,320
+Consider an illustrative order travelling from a sales system to a warehouse.
 
 16
-00:01:47,025 --> 00:01:50,875
-A Send Location attempts delivery to the warehouse.
+00:01:43,500 --> 00:01:48,175
+A Receive Location accepts the stream, and Xmip persists a message.
 
 17
-00:01:51,055 --> 00:01:56,355
-That journey gives an interrupted exchange a place and an outcome to investigate.
+00:01:48,355 --> 00:01:53,105
+Matching subscriptions open journeys to the destinations that want it.
 
 18
-00:01:58,535 --> 00:02:01,810
-Acceptance is the handover of responsibility.
+00:01:53,285 --> 00:01:57,135
+A Send Location attempts delivery to the warehouse.
 
 19
-00:02:01,990 --> 00:02:04,565
-Before it, the sender owns the stream.
+00:01:57,315 --> 00:02:02,615
+That journey gives an interrupted exchange a place and an outcome to investigate.
 
 20
-00:02:04,745 --> 00:02:08,670
-After it, Xmip persists a message and records its progress.
+00:02:04,795 --> 00:02:08,070
+Acceptance is the handover of responsibility.
 
 21
-00:02:08,850 --> 00:02:16,825
-Keeping refusal distinct from a later delivery failure helps both organizations understand which side should act next.
+00:02:08,250 --> 00:02:10,825
+Before it, the sender owns the stream.
 
 22
-00:02:19,005 --> 00:02:23,305
-A subscription expresses which messages a destination wants.
+00:02:11,005 --> 00:02:14,930
+After it, Xmip persists a message and records its progress.
 
 23
-00:02:23,485 --> 00:02:29,135
-Each match opens a journey, while an unmatched message remains available for replay.
+00:02:15,110 --> 00:02:23,085
+Keeping refusal distinct from a later delivery failure helps both organizations understand which side should act next.
 
 24
-00:02:29,315 --> 00:02:37,140
-Operators can pause a subscription without discarding its work, then resume the held messages in the order they arrived.
+00:02:25,265 --> 00:02:29,565
+A subscription expresses which messages a destination wants.
 
 25
-00:02:39,320 --> 00:02:41,570
-Recovery starts with the outcome.
+00:02:29,745 --> 00:02:35,395
+Each match opens a journey, while an unmatched message remains available for replay.
 
 26
-00:02:41,750 --> 00:02:44,900
-A routing issue calls for correction and replay.
+00:02:35,575 --> 00:02:43,400
+Operators can pause a subscription without discarding its work, then resume the held messages in the order they arrived.
 
 27
-00:02:45,080 --> 00:02:51,405
-A failed delivery calls for investigation and retry, or an intentional dismissal.
+00:02:45,580 --> 00:02:47,830
+Recovery starts with the outcome.
 
 28
-00:02:51,585 --> 00:02:58,660
-Xmip keeps those actions distinct, while configured attempts and backoff handle repeated delivery attempts.
+00:02:48,010 --> 00:02:51,160
+A routing issue calls for correction and replay.
 
 29
-00:03:00,840 --> 00:03:04,790
-An Xmip Application describes the integration itself.
+00:02:51,340 --> 00:02:57,665
+A failed delivery calls for investigation and retry, or an intentional dismissal.
 
 30
-00:03:04,970 --> 00:03:10,120
-A binding places that application on a node and supplies its environment.
+00:02:57,845 --> 00:03:04,920
+Xmip keeps those actions distinct, while configured attempts and backoff handle repeated delivery attempts.
 
 31
-00:03:10,300 --> 00:03:20,300
-This separation lets developers reason about the business exchange while deployment choices determine which systems, addresses and machines participate.
+00:03:07,100 --> 00:03:11,050
+An Xmip Application describes the integration itself.
 
 32
-00:03:22,480 --> 00:03:26,630
-Configuration in Visual Studio Code is a flex moment.
+00:03:11,230 --> 00:03:16,380
+A binding places that application on a node and supplies its environment.
 
 33
-00:03:26,810 --> 00:03:31,710
-Text editing and graphical designers work with the same configuration.
+00:03:16,560 --> 00:03:26,560
+This separation lets developers reason about the business exchange while deployment choices determine which systems, addresses and machines participate.
 
 34
-00:03:31,890 --> 00:03:42,490
-Completion, validation and reference-aware renaming help developers make consistent changes, while Xmip’s language server supplies the rules behind the design.
+00:03:28,740 --> 00:03:35,240
+In Visual Studio Code, text editing and graphical designers work with the same configuration.
 
 35
-00:03:44,670 --> 00:03:47,020
-TOML is another flex moment.
+00:03:35,420 --> 00:03:46,020
+Completion, validation and reference-aware renaming help developers make consistent changes, while Xmip’s language server supplies the rules behind the design.
 
 36
-00:03:47,200 --> 00:03:53,325
-Xmip configuration stays in readable text that teams can version, compare and review.
+00:03:48,200 --> 00:03:54,525
+Xmip configuration uses readable TOML that teams can version, compare and review.
 
 37
-00:03:53,505 --> 00:03:56,030
+00:03:54,705 --> 00:03:57,230
 The designer works with that same source.
 
 38
-00:03:56,210 --> 00:04:02,760
+00:03:57,410 --> 00:04:03,960
 This makes configuration an engineering artifact the team can understand and maintain together.
 
 39
-00:04:04,940 --> 00:04:08,990
+00:04:06,140 --> 00:04:10,190
 Some exchanges need business steps as well as delivery.
 
 40
-00:04:09,170 --> 00:04:16,395
+00:04:10,370 --> 00:04:17,595
 Xmip models these as Work Processes, designed in BPMN and compiled into executable units.
 
 41
-00:04:16,575 --> 00:04:21,225
+00:04:17,775 --> 00:04:22,425
 Their state belongs to the ledger, so waiting work does not hold a thread.
 
 42
-00:04:21,405 --> 00:04:29,805
+00:04:22,605 --> 00:04:31,005
 Compilation and execution exist as components; connecting them into the assembled service remains a project milestone.
 
 43
-00:04:31,985 --> 00:04:38,285
+00:04:33,185 --> 00:04:39,485
 Xmip separates how data travels, how it is represented, and what the integration does with it.
 
 44
-00:04:38,465 --> 00:04:43,815
+00:04:39,665 --> 00:04:45,015
 Contracts define acceptance rules, while processing expresses business flow.
 
 45
-00:04:43,995 --> 00:04:50,820
+00:04:45,195 --> 00:04:52,020
 Providers extend individual capabilities through explicit interfaces and a versioned C boundary.
 
 46
-00:04:51,000 --> 00:04:57,550
+00:04:52,200 --> 00:04:58,750
 That modular architecture lets the platform evolve without treating every change as a replacement.
 
 47
-00:04:59,730 --> 00:05:08,230
+00:05:00,930 --> 00:05:09,430
 Xmip’s technology estate spans file transfer, web communication, message brokers, databases and industrial systems.
 
 48
-00:05:08,410 --> 00:05:16,510
+00:05:09,610 --> 00:05:17,710
 SFTP, HTTP, AMQP, Kafka, PostgreSQL and OPC UA are examples of that scope.
 
 49
-00:05:16,690 --> 00:05:20,015
+00:05:17,890 --> 00:05:21,215
 A site build chooses the technologies it needs.
 
 50
-00:05:20,195 --> 00:05:27,245
+00:05:21,395 --> 00:05:28,445
 This is the estate’s breadth, with availability depending on the capability and its integration into the service.
 
 51
-00:05:29,425 --> 00:05:32,125
+00:05:30,625 --> 00:05:33,325
 Trust is explicit at Xmip’s boundaries.
 
 52
-00:05:32,305 --> 00:05:40,605
+00:05:33,505 --> 00:05:41,805
 Parties carry identities, receive locations define what they accept, and outbound exchanges use their own identity.
 
 53
-00:05:40,785 --> 00:05:49,660
+00:05:41,985 --> 00:05:50,860
 Certificate authentication, protected storage connections and encrypted embedded data give that architecture concrete foundations.
 
 54
-00:05:51,840 --> 00:05:54,915
+00:05:53,040 --> 00:05:56,115
 Xmip Storage gives work a persistent home.
 
 55
-00:05:55,095 --> 00:06:02,070
+00:05:56,295 --> 00:06:03,270
 A small deployment can host storage within its own node, while other nodes reach it over mutual TLS.
 
 56
-00:06:02,250 --> 00:06:08,950
+00:06:03,450 --> 00:06:10,150
 The ledger holds messages, journeys and pending work, separate from administration and audit concerns.
 
 57
-00:06:11,130 --> 00:06:15,230
+00:06:12,330 --> 00:06:16,430
 A deployment is a composition of roles and capabilities.
 
 58
-00:06:15,410 --> 00:06:23,960
+00:06:16,610 --> 00:06:25,160
 Executing brings the message stages together in one process, while other roles serve storage, observation and operation.
 
 59
-00:06:24,140 --> 00:06:30,590
+00:06:25,340 --> 00:06:31,790
 Site builds select the target and technologies; configuration determines what the node starts.
 
 60
-00:06:32,770 --> 00:06:36,695
-Cross-operating-system working is a shared flex moment.
-
-61
-00:06:36,875 --> 00:06:42,950
+00:06:33,970 --> 00:06:40,045
 Xmip’s architecture targets Windows, Linux and Mac computers with one integration model.
 
-62
-00:06:43,130 --> 00:06:49,655
+61
+00:06:40,225 --> 00:06:46,750
 Site builds select the roles and technologies for a developer machine, an edge gateway or a server.
 
-63
-00:06:49,835 --> 00:06:54,360
+62
+00:06:46,930 --> 00:06:51,455
 Packaging and validation progress separately on each platform.
 
-64
-00:06:56,540 --> 00:06:59,940
+63
+00:06:53,635 --> 00:06:57,035
 Offline operation is part of Xmip’s design.
 
-65
-00:07:00,120 --> 00:07:06,695
+64
+00:06:57,215 --> 00:07:03,790
 Packages can be prepared where dependencies are reachable, then brought into disconnected environments.
 
-66
-00:07:06,875 --> 00:07:15,675
+65
+00:07:03,970 --> 00:07:12,770
 Internet access is an explicit capability, supporting sites where connectivity is restricted, intermittent or deliberately absent.
 
-67
-00:07:17,855 --> 00:07:25,680
+66
+00:07:14,950 --> 00:07:22,775
 Operators can choose a command line, PowerShell, desktop or web interface without learning a different platform model.
 
-68
-00:07:25,860 --> 00:07:29,060
+67
+00:07:22,955 --> 00:07:26,155
 The same scopes and meanings guide investigation.
 
-69
-00:07:29,240 --> 00:07:35,790
+68
+00:07:26,335 --> 00:07:32,885
 Automation and visual inspection become different ways to work with the same operational evidence.
 
+69
+00:07:35,065 --> 00:07:42,215
+Xmip’s mobile host brings the same cluster health and scope navigation to Android and iPhone targets.
+
 70
-00:07:37,970 --> 00:07:42,270
-Operations in your phone is a flex moment in Xmip’s design.
-
-71
-00:07:42,450 --> 00:07:49,400
-The mobile host brings the same cluster health and scope navigation to Android and iPhone targets.
-
-72
-00:07:49,580 --> 00:07:53,030
+00:07:42,395 --> 00:07:45,845
 It follows nodes remotely in the Observer role.
 
-73
-00:07:53,210 --> 00:08:01,685
+71
+00:07:46,025 --> 00:07:54,500
 Device validation remains a project milestone, while the principle stays the same: understand the affected scope wherever you are.
 
-74
-00:08:03,865 --> 00:08:07,340
+72
+00:07:56,680 --> 00:08:00,155
 Health should tell an operator where to look and what to do.
 
-75
-00:08:07,520 --> 00:08:11,170
+73
+00:08:00,335 --> 00:08:03,985
 Xmip uses named conditions and scope navigation.
 
-76
-00:08:11,350 --> 00:08:20,575
+74
+00:08:04,165 --> 00:08:13,390
 A parent holding points into its children, where the affected resource and its reason help distinguish a deliberate pause from strain or failure.
 
-77
-00:08:22,755 --> 00:08:26,705
+75
+00:08:15,570 --> 00:08:19,520
 Current observation and audit answer different questions.
 
-78
-00:08:26,885 --> 00:08:29,885
+76
+00:08:19,700 --> 00:08:22,700
 Observation shows what is happening now.
 
-79
-00:08:30,065 --> 00:08:33,515
+77
+00:08:22,880 --> 00:08:26,330
 Audit records actions and outcomes over time.
 
-80
-00:08:33,695 --> 00:08:43,970
+78
+00:08:26,510 --> 00:08:36,785
 Chained program records, verification and journey evidence help the team investigate a specific exchange instead of guessing from disconnected symptoms.
 
-81
-00:08:46,150 --> 00:08:51,425
+79
+00:08:38,965 --> 00:08:44,240
 Xmip also exposes read-only access through the Model Context Protocol.
 
-82
-00:08:51,605 --> 00:08:57,655
+80
+00:08:44,420 --> 00:08:50,470
 Clients can inspect health, measurements, audit and journeys through tools and scoped resources.
 
-83
-00:08:57,835 --> 00:09:06,660
+81
+00:08:50,650 --> 00:08:59,475
 The behavior follows the command line, and each answer is audited, keeping observation connected to established operational controls.
 
-84
-00:09:08,840 --> 00:09:14,790
-Open source is a flex moment because teams can inspect, improve and extend Xmip.
+82
+00:09:01,655 --> 00:09:06,480
+Xmip is open source, so teams can inspect, improve and extend it.
 
-85
-00:09:14,970 --> 00:09:21,845
+83
+00:09:06,660 --> 00:09:13,535
 The platform is licensed under the GNU Affero General Public License, version three or later.
 
-86
-00:09:22,025 --> 00:09:27,625
+84
+00:09:13,715 --> 00:09:19,315
 Recorded architecture and explicit capability interfaces support that freedom.
 
-87
-00:09:27,805 --> 00:09:34,680
+85
+00:09:19,495 --> 00:09:26,370
 Independent modules loaded across the documented boundary can use their publisher’s chosen license.
 
-88
-00:09:36,860 --> 00:09:42,210
+86
+00:09:28,550 --> 00:09:33,900
 The engineering approach connects decisions to implementation and verification.
 
-89
-00:09:42,390 --> 00:09:50,665
+87
+00:09:34,080 --> 00:09:42,355
 Capability boundaries make ownership clear, while the Essentials and test harnesses exercise behavior and expose evidence.
 
-90
-00:09:50,845 --> 00:09:58,420
+88
+00:09:42,535 --> 00:09:50,110
 For the project team, progress means a demonstrated flow and reproducible results, alongside the design.
 
-91
-00:10:00,600 --> 00:10:04,150
+89
+00:09:52,290 --> 00:09:55,840
 Xmip Continuum is the active development stream.
 
-92
-00:10:04,330 --> 00:10:09,805
+90
+00:09:56,020 --> 00:10:01,495
 The working foundation covers messaging, recovery, storage and program audit.
 
-93
-00:10:09,985 --> 00:10:17,060
+91
+00:10:01,675 --> 00:10:08,750
 Next milestones bring the broader components into the assembled service and complete deployment validation.
 
-94
-00:10:17,240 --> 00:10:21,890
+92
+00:10:08,930 --> 00:10:13,580
 Linear names the product release model; no Linear release has shipped yet.
 
-95
-00:10:24,070 --> 00:10:34,020
+93
+00:10:15,760 --> 00:10:25,710
 Xmip brings the story together: connect systems under your control, define the exchange in readable configuration, and follow its recorded outcome.
 
-96
-00:10:34,200 --> 00:10:38,350
+94
+00:10:25,890 --> 00:10:30,040
 Leaders assess business continuity and infrastructure choice.
 
-97
-00:10:38,530 --> 00:10:42,405
+95
+00:10:30,220 --> 00:10:34,095
 Developers work in TOML and Visual Studio Code.
 
-98
-00:10:42,585 --> 00:10:48,810
+96
+00:10:34,275 --> 00:10:40,500
 Operators follow health, messages and journeys to investigate and recover the exchange.
 
-99
-00:10:48,990 --> 00:10:52,140
+97
+00:10:40,680 --> 00:10:43,830
 That is the platform this project is building.

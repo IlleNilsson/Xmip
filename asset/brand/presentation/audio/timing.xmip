@@ -4,19 +4,26 @@
 file = "scene-01.wav"
 
 [[scene.caption]]
-text = """\
-Welcome to Xmip, an open-source messaging and integration platform written \
-in Rust.\
-"""
+text = "Welcome to Xmip."
 start = 0
-duration = 5.625
+duration = 1.8
+
+[[scene.caption]]
+text = "Xmip stands for Cross OS Messaging & Integration Platform."
+start = 1.98
+duration = 4.75
+
+[[scene.caption]]
+text = "It is an open-source messaging and integration platform written in Rust."
+start = 6.91
+duration = 4.975
 
 [[scene.caption]]
 text = """\
-It is on premises first and cloud installable, so organizations choose \
-where their integration runs.\
+It is on premises first and cloud installable, so organizations choose where \
+their integration runs.\
 """
-start = 5.805
+start = 12.065
 duration = 6.575
 
 [[scene.caption]]
@@ -24,7 +31,7 @@ text = """\
 This is the Xmip project story: what it connects, how it records \
 responsibility, and how people design and operate it.\
 """
-start = 12.56
+start = 18.82
 duration = 7.825
 
 [[scene]]
@@ -241,14 +248,12 @@ duration = 10
 file = "scene-10.wav"
 
 [[scene.caption]]
-text = "Configuration in Visual Studio Code is a flex moment."
+text = """\
+In Visual Studio Code, text editing and graphical designers work with the \
+same configuration.\
+"""
 start = 0
-duration = 4.15
-
-[[scene.caption]]
-text = "Text editing and graphical designers work with the same configuration."
-start = 4.33
-duration = 4.9
+duration = 6.5
 
 [[scene.caption]]
 text = """\
@@ -256,36 +261,28 @@ Completion, validation and reference-aware renaming help developers make \
 consistent changes, while Xmip’s language server supplies the rules behind \
 the design.\
 """
-start = 9.41
+start = 6.68
 duration = 10.6
 
 [[scene]]
 file = "scene-11.wav"
 
 [[scene.caption]]
-text = "TOML is another flex moment."
+text = "Xmip configuration uses readable TOML that teams can version, compare and review."
 start = 0
-duration = 2.35
-
-[[scene.caption]]
-text = """\
-Xmip configuration stays in readable text that teams can version, compare \
-and review.\
-"""
-start = 2.53
-duration = 6.125
+duration = 6.325
 
 [[scene.caption]]
 text = "The designer works with that same source."
-start = 8.835
+start = 6.505
 duration = 2.525
 
 [[scene.caption]]
 text = """\
-This makes configuration an engineering artifact the team can understand \
-and maintain together.\
+This makes configuration an engineering artifact the team can understand and \
+maintain together.\
 """
-start = 11.54
+start = 9.21
 duration = 6.55
 
 [[scene]]
@@ -457,16 +454,8 @@ duration = 6.45
 file = "scene-18.wav"
 
 [[scene.caption]]
-text = "Cross-operating-system working is a shared flex moment."
+text = "Xmip’s architecture targets Windows, Linux and Mac computers with one integration model."
 start = 0
-duration = 3.925
-
-[[scene.caption]]
-text = """\
-Xmip’s architecture targets Windows, Linux and Mac computers with one \
-integration model.\
-"""
-start = 4.105
 duration = 6.075
 
 [[scene.caption]]
@@ -474,12 +463,12 @@ text = """\
 Site builds select the roles and technologies for a developer machine, an \
 edge gateway or a server.\
 """
-start = 10.36
+start = 6.255
 duration = 6.525
 
 [[scene.caption]]
 text = "Packaging and validation progress separately on each platform."
-start = 17.065
+start = 12.96
 duration = 4.525
 
 [[scene]]
@@ -534,29 +523,24 @@ duration = 6.55
 file = "scene-21.wav"
 
 [[scene.caption]]
-text = "Operations in your phone is a flex moment in Xmip’s design."
-start = 0
-duration = 4.3
-
-[[scene.caption]]
 text = """\
-The mobile host brings the same cluster health and scope navigation to \
+Xmip’s mobile host brings the same cluster health and scope navigation to \
 Android and iPhone targets.\
 """
-start = 4.48
-duration = 6.95
+start = 0
+duration = 7.15
 
 [[scene.caption]]
 text = "It follows nodes remotely in the Observer role."
-start = 11.61
+start = 7.33
 duration = 3.45
 
 [[scene.caption]]
 text = """\
-Device validation remains a project milestone, while the principle stays \
-the same: understand the affected scope wherever you are.\
+Device validation remains a project milestone, while the principle stays the \
+same: understand the affected scope wherever you are.\
 """
-start = 15.24
+start = 10.96
 duration = 8.475
 
 [[scene]]
@@ -635,27 +619,21 @@ duration = 8.825
 file = "scene-25.wav"
 
 [[scene.caption]]
-text = """\
-Open source is a flex moment because teams can inspect, improve and extend \
-Xmip.\
-"""
+text = "Xmip is open source, so teams can inspect, improve and extend it."
 start = 0
-duration = 5.95
+duration = 4.825
 
 [[scene.caption]]
 text = """\
 The platform is licensed under the GNU Affero General Public License, \
 version three or later.\
 """
-start = 6.13
+start = 5.005
 duration = 6.875
 
 [[scene.caption]]
-text = """\
-Recorded architecture and explicit capability interfaces support that \
-freedom.\
-"""
-start = 13.185
+text = "Recorded architecture and explicit capability interfaces support that freedom."
+start = 12.06
 duration = 5.6
 
 [[scene.caption]]
@@ -663,7 +641,7 @@ text = """\
 Independent modules loaded across the documented boundary can use their \
 publisher’s chosen license.\
 """
-start = 18.965
+start = 17.84
 duration = 6.875
 
 [[scene]]
