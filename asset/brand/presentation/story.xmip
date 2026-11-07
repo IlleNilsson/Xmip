@@ -424,7 +424,7 @@ sources = [
 ]
 note = ""
 accessibility_notes = """\
-The male host flexes their muscles to emphasize configuration in Visual \
+The male host gently flexes their arms to emphasize configuration in Visual \
 Studio Code.\
 """
 layout = [
@@ -466,7 +466,7 @@ sources = [
 ]
 note = ""
 accessibility_notes = """\
-The male host flexes their muscles to emphasize readable TOML configuration.\
+The male host gently flexes their arms to emphasize readable TOML configuration.\
 """
 layout = [
   "feature",
@@ -797,8 +797,8 @@ sources = [
 ]
 note = "Architecture targets; packaging and validation vary"
 accessibility_notes = """\
-The female host on the left and the male host on the right flex their \
-muscles to emphasize working across operating systems.\
+The female host on the left and the male host on the right gently flex their \
+arms to emphasize working across operating systems.\
 """
 layout = [
   "feature-pair",
@@ -920,7 +920,7 @@ sources = [
 ]
 note = "Mobile design; device validation remains ahead"
 accessibility_notes = """\
-The female host flexes their muscles to emphasize phone-based operations.\
+The female host gently flexes their arms to emphasize phone-based operations.\
 """
 layout = [
   "feature",
@@ -1093,7 +1093,7 @@ sources = [
 ]
 note = "AGPL-3.0-or-later"
 accessibility_notes = """\
-The female host flexes their muscles to emphasize open-source freedom.\
+The female host gently flexes their arms to emphasize open-source freedom.\
 """
 layout = [
   "feature",

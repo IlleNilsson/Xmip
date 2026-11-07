@@ -10,7 +10,7 @@ This directory is the working home for both formats. Revise them together.
 - [Video captions](Xmip-overview.srt)
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
-files. Narration and accessibility notes were updated on 2026-11-07. Project
+files. Narration, flex poses and accessibility notes were updated on 2026-11-07. Project
 source references record the documentation used, rather than a promise of
 release readiness.
 
@@ -46,6 +46,7 @@ The logo stays in [the brand directory](../README.md).
   and cross-operating-system working. Do not turn these into exclusivity claims.
 - Keep architecture, working capabilities and validation milestones accurate,
   while concentrating on what Xmip offers its audience.
+- Keep flex poses gentle, with slim arms and little muscle definition.
 - Keep flex poses visual. Do not announce a "flex moment" in narration.
   Describe the poses in each affected slide's notes for accessibility; keep
   these descriptions in the story's `accessibility_notes` field.
