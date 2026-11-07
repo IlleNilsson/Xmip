@@ -1,4 +1,5 @@
-#requires -Version 7.6
+#requires -PSEdition Core
+#requires -Version 7.7.0
 
 <#
     What node.resource.ps1 does for each kind: read the state, judge it and

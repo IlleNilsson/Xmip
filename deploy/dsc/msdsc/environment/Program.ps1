@@ -1,4 +1,5 @@
-#requires -Version 7.6
+#requires -PSEdition Core
+#requires -Version 7.7.0
 
 <#
     The one way the resources of this folder run a program: on the node, its
