@@ -202,8 +202,8 @@ function Test-XmipModule {
 
             try {
                 Write-Host '   checking as a consumer...' -ForegroundColor DarkGray
-                [string[]] $linting = @('clippy') + $through + '--all-targets' + $withFeatures +
-                    '--' + '-D' + 'warnings'
+                # Warnings are denied by the estate's .cargo/config.toml.
+                [string[]] $linting = @('clippy') + $through + '--all-targets' + $withFeatures
                 [bool] $checked = (Invoke-XmipTool -Tool cargo -Argument $linting).Passed
 
                 if ($checked) {
@@ -302,8 +302,7 @@ function Test-XmipModule {
             if ($passed) {
                 Write-Host '   checking lints...' -ForegroundColor DarkGray
 
-                [string[]] $linting = @('clippy') + $through + '--all-targets' +
-                    '--' + '-D' + 'warnings'
+                [string[]] $linting = @('clippy') + $through + '--all-targets'
                 $passed = (Invoke-XmipTool -Tool cargo -Argument $linting).Passed
 
                 if (-not $passed) {

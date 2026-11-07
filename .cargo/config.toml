@@ -18,6 +18,14 @@ ROCKSDB_STATIC = "1"
 [profile.dev]
 opt-level = 3
 
+# A warning fails every build under the estate root: cargo build, check,
+# clippy and test alike (Cargo 1.97). Lint levels no longer change between
+# check, clippy and test, as `-- -D warnings` on clippy alone made them, so
+# one build serves all three. A module repository checked out alone does not
+# read this file; the shared rust-verify.yml denies warnings there.
+[build]
+warnings = "deny"
+
 # The Windows libraries RocksDB's port layer calls (UUIDs, paths). Its own
 # build names them when it compiles RocksDB; linking the kept one, we do.
 [target.'cfg(windows)']

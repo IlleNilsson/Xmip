@@ -66,7 +66,7 @@ breaking.
 | Rule | Section | Enforced |
 | --- | --- | --- |
 | Formatting | — | yes, by `Publish-XmipChange` at landing |
-| Clippy, `-D warnings` | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, a consumer with every feature it declares |
+| Clippy, warnings denied | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, a consumer with every feature it declares; a warning fails every cargo build under the estate root (`[build] warnings = "deny"`, `.cargo/config.toml`), and a module repository alone denies them in the shared `rust-verify.yml` |
 | File over 400 lines before `#[cfg(test)]` | 1, 2 | yes |
 | Function length | 3 | **warned by clippy, never gated** |
 | A filename repeating its crate | 5 | yes |

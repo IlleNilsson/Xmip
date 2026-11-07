@@ -896,8 +896,9 @@ working tree and built in the one shared directory, the first failure
 stopping the run with nothing pushed:
 
 - **Each changed Rust module, leaves first:** `cargo test` with its default
-  features, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`
-  with its default features, then `cargo test --features` naming every
+  features, `cargo fmt --check`, `cargo clippy --all-targets` with its
+  default features (a warning fails every cargo build under the estate
+  root: `[build] warnings = "deny"` in `.cargo/config.toml`), then `cargo test --features` naming every
   feature its `Cargo.toml` declares. Clippy is not run with those features.
   Last, the module's timing program, `measured`, where it has one: linted,
   then `cargo test --test measured --features` naming every feature, with
@@ -919,7 +920,7 @@ stopping the run with nothing pushed:
   not installed; the Java Event binding is not verified` — and fails nothing;
   one whose tool is here and fails stops the run.
 - **Each unchanged module that consumes a changed one:** `cargo clippy
-  --all-targets --features <every declared feature> -- -D warnings`, which
+  --all-targets --features <every declared feature>`, which
   compiles it and its tests against the change; its tests do not run. A
   change that is only comments, Markdown or `doc/` has no consumers
   checked: it cannot change what they do.
