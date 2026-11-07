@@ -67,6 +67,9 @@ automaticVerification = false
 primaryLanguage = "dotnet"
 targetFramework = "net11.0"
 sdk = "preview"
+# The youngest NuGet package a build takes, in hours: every .NET repository's
+# nuget.config says it as minPublishAgeHours (ADR-0021, amendment 2026-11-07).
+nugetMinimumAgeHours = 24
 
 #
 # The PowerShell module and the binding it loads target it too: pwsh 7.7, the

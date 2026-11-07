@@ -54,7 +54,7 @@ applies it. The versions below change often; **see
 | You need | For | Version |
 | --- | --- | --- |
 | PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.xmip |
-| Git | cloning and submodules | 2.41 or later; see prerequisite.xmip |
+| Git | cloning and submodules | 2.56 or later; see prerequisite.xmip |
 | PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.xmip |
 | Pester | the estate's tests | 6.0 or later; see prerequisite.xmip |
 | Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.xmip |
