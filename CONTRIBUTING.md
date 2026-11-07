@@ -124,7 +124,12 @@ and it cost real work.
   PowerShell, every crate, package, module and tool: the latest release when
   the work is done, a release candidate included — PowerShell 7.7.0-rc.x,
   .NET 11 rc.x, Rust's latest — and every floor set to it the day it is
-  out. Whoever works here tells the
+  out. Until the first Linear release that includes previews: a preview
+  release and a preview or experimental feature of a language or runtime
+  are adopted, and reworked when they change (the owner, 2026-11-07:
+  *Xmip adopts previews until Xmip goes Linear, GA*). One exception: NuGet
+  takes no package published less than 24 hours ago (ADR-0021, amendment
+  2026-11-07). Whoever works here tells the
   owner when an underlying component has a newer release. The owner,
   2026-11-02: *We shall always go with the latest. We are designing. Latest
   Rust, .NET, and whatever*; *Set the latest to what we have. Do that

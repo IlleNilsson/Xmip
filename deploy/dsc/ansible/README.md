@@ -52,7 +52,7 @@ and its service running and started with the machine. The role writes no starter
 its own: a node given no cluster file gets the package's, written once in
 `xmip-service --install`.
 
-ansible-core 2.21 (checked 2026-10-21: 2.21.5 of 2026-10-05) runs the
+ansible-core 2.22 (checked 2026-11-07: 2.22.0 of 2026-11-02) runs the
 Windows modules in PowerShell 7 where `ansible_pwsh_interpreter` says, as
 the inventory does. The collections are `ansible.windows` and
 `ansible.posix`.

@@ -114,4 +114,48 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
 
         $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
     }
+
+    It 'gives every .NET repository nuget.org alone, at the age the manifest declares' {
+        # A repository is a folder holding a global.json. Its nuget.config
+        # clears the inherited sources, so a machine's own feed is never
+        # asked, and names each source it keeps with the manifest's
+        # nugetMinimumAgeHours (ADR-0021, amendment 2026-11-07).
+        [string] $age = [string] $script:Policy.nugetMinimumAgeHours
+        [string[]] $wrong = @()
+
+        [System.IO.FileInfo[]] $sdks = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                Find-XmipFile -Path $Root -Filter 'global.json'
+            }
+        )
+
+        $sdks.Count | Should -BeGreaterThan 0
+
+        foreach ($sdk in $sdks) {
+            [string] $where = $sdk.Directory.FullName.Replace($script:Root, '').TrimStart('\', '/')
+            [string] $config = Join-Path $sdk.Directory.FullName 'nuget.config'
+
+            if (-not (Test-Path -LiteralPath $config)) {
+                $wrong += "$where has no nuget.config"
+                continue
+            }
+
+            [xml] $read = Get-Content -LiteralPath $config -Raw
+            $sources = $read.configuration.packageSources
+
+            if ($null -eq $sources.clear) {
+                $wrong += "$where does not clear the inherited sources"
+            }
+
+            foreach ($source in @($sources.add)) {
+                if ($source.minPublishAgeHours -ne $age) {
+                    [string] $set = $source.minPublishAgeHours
+                    $wrong += "$where names $($source.key) at '$set', expected '$age'"
+                }
+            }
+        }
+
+        $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
+    }
 }

@@ -236,6 +236,33 @@ Applied that day:
 PowerShell 7.7 hosts .NET 11, so the exception above for what pwsh loads
 follows it (ADR-0014).
 
+## Amendment, 2026-11-07: previews too, and a package a day old
+
+The owner, 2026-11-07: *Xmip adopts previews until Xmip goes Linear, GA.*
+Until the first Linear release, a preview is the latest too: a preview
+release (Microsoft DSC 3.4.0-preview.x) and a preview or experimental
+feature of a language or runtime (C# 15's updated memory-safety rules,
+.NET 11's Runtime Async) are adopted, and reworked when they change.
+
+One exception, the owner's choice the same day: NuGet takes no package
+published less than 24 hours ago, so a package withdrawn in its first day
+as malicious never reaches a build. Every .NET repository carries a
+`nuget.config` that clears the inherited sources and names nuget.org with
+`minPublishAgeHours`, the number `architecture.xmip` declares once
+(`[project] nugetMinimumAgeHours`); `test/Dotnet.Target.Test.ps1` holds
+them equal. NuGet refuses a floating version while an age is set (NU1020),
+so every package reference names its exact version, raised to the newest
+release old enough the day one is out: the four that floated as
+`11.0.0-rc.3.*` name `11.0.0-rc.3.26522.148`.
+
+Applied that day:
+
+| | Xmip requires | Source |
+| --- | --- | --- |
+| Git | 2.56 | git-scm.com, 2026-09-28 |
+| ansible-core | 2.22, with four security fixes over 2.21 | GitHub releases, 2026-11-02 |
+| NuGet packages | the newest release at least 24 hours old | nuget.org |
+
 ## Alternatives considered
 
 **Support the previous major of each platform.** The conventional choice, and
