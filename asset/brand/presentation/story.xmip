@@ -414,16 +414,19 @@ reference-aware rename\nRules come from Xmip’s language server\
 voice = "male"
 power = true
 narration = """\
-Configuration in Visual Studio Code is a flex moment. Text editing and \
-graphical designers work with the same configuration. Completion, \
-validation and reference-aware renaming help developers make consistent \
-changes, while Xmip’s language server supplies the rules behind the \
-design.\
+In Visual Studio Code, text editing and graphical designers work with the \
+same configuration. Completion, validation and reference-aware renaming help \
+developers make consistent changes, while Xmip’s language server supplies \
+the rules behind the design.\
 """
 sources = [
   "doc/decision/ADR-0064-developers-design-in-vs-code.md"
 ]
 note = ""
+accessibility_notes = """\
+The male host flexes their muscles to emphasize configuration in Visual \
+Studio Code.\
+"""
 layout = [
   "feature",
   "Configuration\nin VS Code",
@@ -453,16 +456,18 @@ the shared source of design\
 voice = "male"
 power = true
 narration = """\
-TOML is another flex moment. Xmip configuration stays in readable text \
-that teams can version, compare and review. The designer works with that \
-same source. This makes configuration an engineering artifact the team can \
-understand and maintain together.\
+Xmip configuration uses readable TOML that teams can version, compare and \
+review. The designer works with that same source. This makes configuration \
+an engineering artifact the team can understand and maintain together.\
 """
 sources = [
   "CONTRIBUTING.md",
   "doc/decision/ADR-0064-developers-design-in-vs-code.md"
 ]
 note = ""
+accessibility_notes = """\
+The male host flexes their muscles to emphasize readable TOML configuration.\
+"""
 layout = [
   "feature",
   "Configuration\nyou can read",
@@ -782,16 +787,19 @@ roles and technologies\
 voice = "female"
 power = "both-power"
 narration = """\
-Cross-operating-system working is a shared flex moment. Xmip’s \
-architecture targets Windows, Linux and Mac computers with one integration \
-model. Site builds select the roles and technologies for a developer \
-machine, an edge gateway or a server. Packaging and validation progress \
-separately on each platform.\
+Xmip’s architecture targets Windows, Linux and Mac computers with one \
+integration model. Site builds select the roles and technologies for a \
+developer machine, an edge gateway or a server. Packaging and validation \
+progress separately on each platform.\
 """
 sources = [
   "doc/architecture/deployment-model.md"
 ]
 note = "Architecture targets; packaging and validation vary"
+accessibility_notes = """\
+The female host on the left and the male host on the right flex their \
+muscles to emphasize working across operating systems.\
+"""
 layout = [
   "feature-pair",
   "One model\nAcross operating systems",
@@ -902,16 +910,18 @@ design\
 voice = "female"
 power = true
 narration = """\
-Operations in your phone is a flex moment in Xmip’s design. The mobile \
-host brings the same cluster health and scope navigation to Android and \
-iPhone targets. It follows nodes remotely in the Observer role. Device \
-validation remains a project milestone, while the principle stays the \
+Xmip’s mobile host brings the same cluster health and scope navigation to \
+Android and iPhone targets. It follows nodes remotely in the Observer role. \
+Device validation remains a project milestone, while the principle stays the \
 same: understand the affected scope wherever you are.\
 """
 sources = [
   "doc/decision/ADR-0014-operator-surfaces.md"
 ]
 note = "Mobile design; device validation remains ahead"
+accessibility_notes = """\
+The female host flexes their muscles to emphasize phone-based operations.\
+"""
 layout = [
   "feature",
   "Operations\nin your phone",
@@ -1071,17 +1081,20 @@ specialist providers\
 voice = "female"
 power = true
 narration = """\
-Open source is a flex moment because teams can inspect, improve and extend \
-Xmip. The platform is licensed under the GNU Affero General Public \
-License, version three or later. Recorded architecture and explicit \
-capability interfaces support that freedom. Independent modules loaded \
-across the documented boundary can use their publisher’s chosen license.\
+Xmip is open source, so teams can inspect, improve and extend it. The \
+platform is licensed under the GNU Affero General Public License, version \
+three or later. Recorded architecture and explicit capability interfaces \
+support that freedom. Independent modules loaded across the documented \
+boundary can use their publisher’s chosen license.\
 """
 sources = [
   "CONTRIBUTING.md",
   "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md"
 ]
 note = "AGPL-3.0-or-later"
+accessibility_notes = """\
+The female host flexes their muscles to emphasize open-source freedom.\
+"""
 layout = [
   "feature",
   "Open source\nOpen to your team",
