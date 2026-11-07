@@ -46,7 +46,7 @@ The logo stays in [the brand directory](../README.md).
   and cross-operating-system working. Do not turn these into exclusivity claims.
 - Keep architecture, working capabilities and validation milestones accurate,
   while concentrating on what Xmip offers its audience.
-- Keep flex poses gentle, with slim arms and little muscle definition.
+- Keep flex poses modest, with visible rounded biceps and restrained shoulders.
 - Keep flex poses visual. Do not announce a "flex moment" in narration.
   Describe the poses in each affected slide's notes for accessibility; keep
   these descriptions in the story's `accessibility_notes` field.
