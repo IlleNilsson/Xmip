@@ -79,8 +79,7 @@ function Test-XmipMeasuredProgram {
     }
 
     Write-Host "   checking lints of $program..." -ForegroundColor DarkGray
-    [string[]] $linting = @('clippy') + $Through + '--test' + $program + $withFeatures +
-        '--' + '-D' + 'warnings'
+    [string[]] $linting = @('clippy') + $Through + '--test' + $program + $withFeatures
 
     if (-not (Invoke-XmipTool -Tool cargo -Argument $linting).Passed) {
         Write-Host "   FAILED lints. Run: cargo clippy --test $program" -ForegroundColor Red

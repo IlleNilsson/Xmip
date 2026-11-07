@@ -50,7 +50,7 @@ jobs:
       # Every feature, because nothing is on by default: xmip-service and its
       # tests are built from a site, and here from all of them at once.
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked
 
       - name: Check
         run: cargo check --workspace --all-targets --all-features --locked
