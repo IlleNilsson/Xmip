@@ -49,13 +49,10 @@ BeforeAll {
         # estate keeps on disk (secret::private_file).
         'module/core/capability/secret/.src/private_file/windows.rs' = 'ADR-0063 clause 4'
         # xmip-core's calls to the operating system: the timed wait's kernel
-        # event and high-resolution timer on Windows, and the processor time
-        # tests measure with.
+        # event and high-resolution timer on Windows, the processor time tests
+        # measure with, and the one counting allocator every test of bounded
+        # memory installs (`xcore::held`), the runtime's Ledger tests' too.
         'module/foundation/core/src/system.rs'                 = 'ADR-0050, amendment 2026-10-17'
-        # A test's counting allocator, beside the runtime's folder: what proves
-        # a Stream far larger than a chunk passes in bounded memory
-        # (runtime-model.md section 3, What proves it). Test code only.
-        'module/platform/runtime/tests/ledger/bounded.rs'       = 'runtime-model.md section 3'
     }
 
     # The crate a file belongs to: the nearest directory above it with a

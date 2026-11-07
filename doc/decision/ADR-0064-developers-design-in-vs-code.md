@@ -430,3 +430,66 @@ secret cannot have is a problem every node's binding reports, in words
 naming the Location (`configure::ConfiguredLocation::secret_name`, read by
 `settings::location_problems`, the one check the runtime and every surface
 ask). Steps 4 and 5 are not built.
+
+## Amendment, 2026-11-07: the Wizard and the Guides
+
+The owner, 2026-11-07: *for the VS Code extension we need wizard and
+guides. How to sort out files and streams and also how to put them
+together. There is a jungle of knowledge out there that has to be
+formalized in Xmip Design, VS Code extensions*; asked how it starts, *Go
+ahead*. Clause 5 and the amendment of 2026-09-26 decide where the
+knowledge lives: in the technology it is about, declared once, never in
+the extension.
+
+- **A technology declares how its form is recognized.** Beside its
+  settings, each technology that reads a form — a contract above all —
+  declares the signs of it as plain data: the bytes it begins with and
+  where (`ISA` for X12, `UNA` or `UNB` for EDIFACT, `MSH|` for HL7 v2), its
+  media types, its file name patterns; and, where signs are not enough, a
+  probe of its own that reads a sample and answers how sure it is and why.
+  A module from a third party declares the same and is recognized the same
+  way: the set of forms is open.
+- **A technology declares what it fits with.** Which contracts read its
+  form, what commonly comes before and after it (an X12 interchange and its
+  acknowledgment), and which of its settings a developer sets first.
+- **The Wizard** is the extension's step-by-step way through both, entered
+  two ways, from a sample or from a goal. *Sort out*: a sample file or
+  Stream is given; the runtime answers what it most likely is, with the
+  evidence, and which contract reads it. *Put together*: from the Receive
+  Location through contract, prepare, transform and route to the Send
+  Location, offering at each step only what fits the step before; what it
+  makes is written as the Xmip Application's text (clause 4), which the
+  designers then show.
+- **Fluent, not a traditional wizard.** The owner, 2026-11-07: *I'd like
+  the wizards and guides to be more of a fluent UI, not like traditional
+  Wizzards and Guides*; *For example the Flat-file wizard in biztalk, not
+  very intuative*. That wizard asks for delimiters, tags and records page
+  by page, in the abstract, and shows only at its end whether the schema
+  reads the file. Here the work is on the sample itself: Xmip proposes its
+  reading first, overlaid on the sample — records, fields, the header, what
+  repeats, with the evidence; the developer corrects it there, by pointing
+  at the text (this line is a header, split here, this repeats); the
+  sample, what it parses to and the text being written stand side by side,
+  each correction read again at once; and every step is already the
+  Application's text, so nothing is finished or abandoned, and anything can
+  be undone or edited later in the designers.
+- **The Guides** are the same declarations, written as text a developer
+  reads: one per technology — what it is, how it is recognized, what it
+  fits with, its settings — and one per way through, each generated, never
+  authored, so a Guide cannot say what the technology does not.
+- **The runtime in Rust, the Wizard and the Guides in .NET.** The owner,
+  2026-11-07: *The wizards and guides can be built in dotnet, no issue with
+  the GC. All VS Code things can be built in .NET. The Runtime has to be
+  built in Rust.* The declarations are the technologies' own, in their Rust
+  crates, and the runtime's library answers them through the ABI
+  (`Xmip.Abi`); the Wizard's steps and the Guides' writing are .NET, which
+  reads them there, as the PowerShell module and the Operation Desktop do
+  (ADR-0014). The extension's TypeScript only draws.
+
+Decided, not built. It needs first what open problem 48 decided and did
+not build: the runtime library the surfaces load carrying every
+technology's declaration. The Wizard's form — its pages, what each shows —
+is asked of the owner before it is drawn. Provenance: the ruling is the
+owner's, 2026-11-07; recognition and fit as declarations, the two ways in,
+and the names Wizard, Guide, *Sort out* and *Put together* (his words) are
+the assistant's drafting, for the owner to overrule.
