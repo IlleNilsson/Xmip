@@ -412,7 +412,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 324759 lines of production
+Where each repository mounts and what it holds: 325023 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -444,7 +444,7 @@ hold no source to count.
 │   │   │   │   ├── nfs                         2166
 │   │   │   │   ├── smb                         2025
 │   │   │   │   ├── http                        1986
-│   │   │   │   ├── mssql                       1897
+│   │   │   │   ├── mssql                       1893
 │   │   │   │   ├── ibm-mq                      1887
 │   │   │   │   ├── ftp                         1871
 │   │   │   │   ├── kafka                       1841
@@ -489,7 +489,7 @@ hold no source to count.
 │   │   │   │   ├── thread                       796
 │   │   │   │   ├── zigbee                       789
 │   │   │   │   ├── smtp                         770
-│   │   │   │   ├── peppol                       759
+│   │   │   │   ├── peppol                       757
 │   │   │   │   ├── knx                          751
 │   │   │   │   ├── iso-tp                       727
 │   │   │   │   ├── syslog                       718
@@ -532,13 +532,13 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    2898
+│   │   │   ├── authenticate                    2896
 │   │   │   │   ├── saml                         947
 │   │   │   │   ├── ntlm                         585
 │   │   │   │   ├── kerberos                     569
 │   │   │   │   ├── ldap                         488
 │   │   │   │   ├── oauth2                       465
-│   │   │   │   ├── digest                       446
+│   │   │   │   ├── digest                       447
 │   │   │   │   ├── scram                        392
 │   │   │   │   ├── windows                      377
 │   │   │   │   ├── pam                          339
@@ -554,7 +554,7 @@ hold no source to count.
 │   │   │   ├── path                            2431
 │   │   │   │   ├── jsonpath                     660
 │   │   │   │   ├── fhirpath                     614
-│   │   │   │   ├── dot                          291
+│   │   │   │   ├── dot                          288
 │   │   │   │   ├── hl7-v2                       253
 │   │   │   │   ├── edi                          216
 │   │   │   │   ├── index                        158
@@ -562,7 +562,7 @@ hold no source to count.
 │   │   │   │   ├── json-pointer                  60
 │   │   │   │   └── xpath                         49
 │   │   │   ├── process                         2406
-│   │   │   │   └── bpmn                        3173
+│   │   │   │   └── bpmn                        3171
 │   │   │   ├── prepare                         2232
 │   │   │   │   ├── rpgp                         255
 │   │   │   │       declared, not built 9
@@ -581,7 +581,7 @@ hold no source to count.
 │   │   │   │   ├── jwt                          165
 │   │   │   │   ├── ntlm                         155
 │   │   │   │   ├── header                       148
-│   │   │   │   ├── cookie                       130
+│   │   │   │   ├── cookie                       127
 │   │   │   │   ├── oidc                         126
 │   │   │   │   ├── certificate                  124
 │   │   │   │   ├── kerberos                     116
@@ -592,7 +592,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1267
+│   │   │   ├── secret                          1271
 │   │   │   │   ├── dpapi                        319
 │   │   │   │   ├── file                         202
 │   │   │   │   ├── keychain                     106
@@ -603,7 +603,7 @@ hold no source to count.
 │   │   │   │   ├── graphql-schema               846
 │   │   │   │   ├── xml-schema                   821
 │   │   │   │   ├── avro                         748
-│   │   │   │   ├── toon                         711
+│   │   │   │   ├── toon                         710
 │   │   │   │   ├── protobuf                     691
 │   │   │   │   ├── sql                          633
 │   │   │   │   ├── edi-x12                      534
@@ -664,29 +664,29 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             6643
-│   │   │   ├── codec                           2984
-│   │   │   ├── tls                             2458
+│   │   │   ├── net                             6659
+│   │   │   ├── codec                           3056
+│   │   │   ├── tls                             2478
 │   │   │   ├── mariadb                         1764
 │   │   │   ├── ssh                             1756
 │   │   │   ├── sql                             1013
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             526
 │   │   └── operation/
-│   │       ├── cli                             9128
+│   │       ├── cli                             9101
 │   │       ├── gui                             5363
 │   │       │   └── vscode                      3516
-│   │       ├── audit                           4113
+│   │       ├── audit                           4117
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
 │   │       ├── observe                         3905
 │   │       │   ├── otlp                         578
 │   │       │   └── prometheus                   328
-│   │       ├── powershell                      3473  C# 3473 · PowerShell 0
+│   │       ├── powershell                      3492  C# 3492 · PowerShell 0
 │   │       ├── archive                          612
 │   │       │   ├── sql                          263
-│   │       │   ├── file                         254
+│   │       │   ├── file                         251
 │   │       │   ├── azure-blob                   165
 │   │       │   ├── s3                           155
 │   │       │   ├── parquet                      147
@@ -699,12 +699,12 @@ hold no source to count.
 │   │               declared, not built 6
 │   │               csv  html  json  pdf  prometheus  sql
 │   ├── foundation/
-│   │   ├── abi                                32040  C# 29467 · Rust 2277 · PowerShell 296
+│   │   ├── abi                                32265  C# 29692 · Rust 2277 · PowerShell 296
 │   │   ├── event                               5644
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                4221
-│   │   ├── message                             1733
+│   │   ├── core                                4220
+│   │   ├── message                             1730
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             256
@@ -716,7 +716,7 @@ hold no source to count.
 │   │   │   ├── form-urlencoded                   92
 │   │   │   ├── edi-x12                           77
 │   │   │   ├── edi-edifact                       75
-│   │   │   ├── ubl                               67
+│   │   │   ├── ubl                               65
 │   │   │   ├── text                              58
 │   │   │   ├── edi-tradacoms                     55
 │   │   │   └── binary                            38
@@ -727,13 +727,13 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            37815
+│       ├── runtime                            37774
 │       ├── persist                            14617
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8371
+│       └── configure                           8368
 └── test/
     └── core/
         ├── essentials                         13875
