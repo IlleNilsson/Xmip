@@ -1533,7 +1533,7 @@ declaration stays placed once. The plan, its own work after the current:
 
 The standard units stream (ADR-0066, amendment 2026-10-22), and the
 contract technologies Validate calls, and the path languages Promote and
-Demote call, mostly do not: they read `Stream::text` or `Stream::bytes`, so
+Demote call, mostly do not: they read `Stream::text` or `Stream::load`, so
 what one holds grows with the payload. Recorded as the owner's rule asks
 (*streamed, bounded in memory*), each with its bound and why:
 

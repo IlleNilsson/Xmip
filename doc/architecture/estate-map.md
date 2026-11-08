@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 334586 lines of production
+Where each repository mounts and what it holds: 334849 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -563,14 +563,14 @@ hold no source to count.
 │   │   │   │   ├── password                      81
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── mutual-tls                    74
-│   │   │   ├── path                            2534
+│   │   │   ├── path                            2546
 │   │   │   │   ├── jsonpath                     665
 │   │   │   │   ├── fhirpath                     619
 │   │   │   │   ├── dot                          293
-│   │   │   │   ├── hl7-v2                       258
-│   │   │   │   ├── edi                          221
-│   │   │   │   ├── index                        163
+│   │   │   │   ├── hl7-v2                       256
+│   │   │   │   ├── edi                          219
 │   │   │   │   ├── regex                        163
+│   │   │   │   ├── index                        161
 │   │   │   │   ├── xpath                        118
 │   │   │   │   └── json-pointer                  65
 │   │   │   ├── prepare                         2426
@@ -584,7 +584,7 @@ hold no source to count.
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
-│   │   │   ├── identify                        1563
+│   │   │   ├── identify                        1592
 │   │   │   │   ├── saml                         439
 │   │   │   │   ├── ip                           231
 │   │   │   │   ├── api-key                      227
@@ -610,16 +610,16 @@ hold no source to count.
 │   │   │   │   ├── keychain                     107
 │   │   │   │       declared, not built 5
 │   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
-│   │   │   ├── contract                         955
+│   │   │   ├── contract                         979
 │   │   │   │   ├── graphql-schema               874
 │   │   │   │   ├── json-schema                  851
 │   │   │   │   ├── xml-schema                   821
 │   │   │   │   ├── avro                         802
 │   │   │   │   ├── toon                         716
 │   │   │   │   ├── protobuf                     714
-│   │   │   │   ├── sql                          633
+│   │   │   │   ├── sql                          631
 │   │   │   │   ├── edi-x12                      534
-│   │   │   │   ├── edi-edifact                  520
+│   │   │   │   ├── edi-edifact                  521
 │   │   │   │   ├── fixed-width                  512
 │   │   │   │   ├── yaml                         504
 │   │   │   │   ├── hl7-v2                       397
@@ -657,6 +657,11 @@ hold no source to count.
 │   │   │   ├── unit                             431
 │   │   │   ├── receive                          178
 │   │   │   ├── demote                           175
+│   │   │   ├── logic                            164
+│   │   │   │   ├── matter                      1129
+│   │   │   │   ├── soap                         274
+│   │   │   │   ├── http-api                     259
+│   │   │   │   └── grpc                         178
 │   │   │   ├── promote                          160
 │   │   │   ├── resilience                       159
 │   │   │   │   ├── circuit-breaker              134
@@ -665,11 +670,6 @@ hold no source to count.
 │   │   │   │   ├── retry                         82
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
-│   │   │   ├── logic                            156
-│   │   │   │   ├── matter                      1129
-│   │   │   │   ├── soap                         274
-│   │   │   │   ├── http-api                     259
-│   │   │   │   └── grpc                         178
 │   │   │   ├── send                              88
 │   │   │   ├── assign                            39
 │   │   │   └── retain                            27
@@ -716,30 +716,30 @@ hold no source to count.
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                4274
-│   │   ├── message                             1728
+│   │   ├── message                             1753
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
-│   │   │   ├── json                             256
+│   │   │   ├── json                             257
 │   │   │   ├── protobuf                         173
 │   │   │   ├── csv                              150
 │   │   │   ├── fixed-width                      105
-│   │   │   ├── multipart                         98
-│   │   │   ├── hl7-er7                           93
+│   │   │   ├── multipart                         99
+│   │   │   ├── hl7-er7                           94
 │   │   │   ├── form-urlencoded                   86
-│   │   │   ├── edi-x12                           77
-│   │   │   ├── edi-edifact                       75
+│   │   │   ├── edi-x12                           78
+│   │   │   ├── edi-edifact                       76
 │   │   │   ├── ubl                               65
-│   │   │   ├── text                              58
-│   │   │   ├── edi-tradacoms                     55
+│   │   │   ├── text                              59
+│   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
 │   │   ├── context                             1022
 │   │   ├── node                                 988
 │   │   ├── journey                              745
-│   │   ├── stream                               232
+│   │   ├── stream                               382
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            40485
+│       ├── runtime                            40500
 │       ├── persist                            15273
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
