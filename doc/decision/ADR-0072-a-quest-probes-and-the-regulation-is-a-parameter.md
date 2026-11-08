@@ -16,7 +16,7 @@
 - Subject: What a Quest is, and how the Regulation Quest presents a regulation's evidence and gaps
 - Name: A Quest probes, and the regulation is a parameter
 - Order: 22
-- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR
+- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR; erasure, of the identity
 
 **A Quest probes an installation handed to it and returns what it found,
 the data a Report presents; it changes nothing it probes. The first is the
@@ -114,21 +114,34 @@ configuration can say today:
 | Storage limitation | Article 5(1)(e) | A gap: a node reads no retention window — retention and archiving are built and not in the node (`estate-map.md`, `retention-archiving`) — so its configuration says nothing of how long what Xmip keeps is kept; a retention window on a node is not yet available in Xmip. |
 | Accountability: the audit | Article 5(2) | Evidence: every Xmip program records through `xmip-core-audit`, each record chained to the one before it (ADR-0062, ADR-0070); behind it `[audit] storage` where the node names it. |
 | Right of access | Article 15 | A gap: finding one data subject's personal data is not yet available in Xmip. |
-| Right to erasure | Article 17 | A gap: erasure per data subject is not yet available in Xmip. |
+| Right to erasure | Article 17 | A gap: erasure per data subject is not yet available in Xmip. What erases is decided below, *Erasure is of the identity*. |
 | Records of processing activities | Article 30 | A gap: declaring the flows that carry personal data is not yet available in Xmip. |
 | Encryption at rest | Article 32(1)(a) | Evidence where every domain this node keeps is sealed on its embedded Storage node, behind it `[store] key_store`; a gap closed outside Xmip where a domain is on a database server IT runs, whose encryption at rest is IT's (ADR-0063, amendment 2026-10-01); not applicable where the Storage nodes the node lists keep everything. |
 | Encryption in transit | Article 32(1)(a) | Per Receive and Send Location: evidence where every technology declares its wire encrypted; a gap where one is plain, closed by entering the Location as its technology encrypts, or undeclared, closed by a declaration not yet available in Xmip; not applicable with no Location. |
 | Transfers outside the European Union | Chapter V, Article 44 | A gap: probing transfers of personal data outside the European Union is not yet available in Xmip. |
 
+### Erasure is of the identity
+
+Decided by the owner, 2026-11-08: *A person's data does not necessarily
+have to be erased. The person's identity regarding the data has. The
+actual data will be deleted when retention occurs.*
+
+- **What is erased is the identity, irreversibly.** The data stays until
+  retention removes it (ADR-0040). Pseudonymized data is still personal
+  data (GDPR, recital 26), so a link that a table or a key could restore
+  does not erase.
+- **Per-subject keys.** The fields that identify a person are sealed under
+  a key of that person's alone; erasing the person deletes the key, and the
+  identity is unreadable everywhere it was written — Storage, standbys and
+  archive alike. No record is rewritten, so ADR-0040 holds and the audit
+  chain (ADR-0070) stays whole.
+- **A Stream declares its identifying fields**, as Promote declares what it
+  reads; Xmip seals what is declared.
+- Not built. Until it is, the Quest finds Article 17 a gap.
+
 ## Open
 
-1. **Erasure and ADR-0040.** ADR-0040 decides that Xmip retains and
-   archives and never deletes; deletion is the archive owner's. The owner's
-   wording for Article 17 is *not yet available in Xmip*, which reads as a
-   promise ADR-0040 rules out. Which holds — erasure per data subject as a
-   future capability, amending ADR-0040, or an action outside Xmip, for
-   the archive owner — is the owner's.
-2. **A transport declaring its wire.** `transport::Configured` declares a
+1. **A transport declaring its wire.** `transport::Configured` declares a
    technology's schemes and settings, and nothing of whether its wire is
    encrypted; until it does, whoever composes an `Installation` can only
    answer `Undeclared`, and every Location is a gap. A declaration beside
@@ -160,7 +173,8 @@ that close a gap, applied by the operator and never by the Quest; no word
 saying compliant, conformant or certified; the three levels; GDPR first,
 probing retention, encryption at rest, the Locations' wire and the audit,
 and the five requirements Xmip cannot support reported as gaps *not yet
-available in Xmip*. The trait shapes, the `Installation` seam, the
+available in Xmip*; erasure of the identity, the data left to retention,
+and per-subject keys deleted to erase it ("Go with 1"). The trait shapes, the `Installation` seam, the
 `Outside` action for a database server IT runs, the requirement names and
 the article each cites were drafted by the assistant and are the owner's
 to change.
