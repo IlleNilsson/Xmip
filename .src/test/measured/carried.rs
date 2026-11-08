@@ -58,7 +58,6 @@ const CARRY: Duration = Duration::from_secs(10);
 /// `in`, accepting the circumstance; the Loopback Application's
 /// Subscription onward; a file Send Port writing in `out`.
 fn file_node(directory: &Path) -> std::path::PathBuf {
-    std::fs::create_dir_all(directory).expect("a directory");
     let cluster = &test_cluster().name;
     let node = node_name();
     let path = |name: &str| {
@@ -75,7 +74,6 @@ fn file_node(directory: &Path) -> std::path::PathBuf {
 name = "xmip-{node}"
 cluster_name = "{cluster}"
 node_name = "{node}"
-data = "data"
 
 [[applications]]
 name = "Loopback"
@@ -100,8 +98,8 @@ local = "{local}"
         out = path("out"),
         local = endpoint(directory),
     );
-    // Named for its directory, as `started::written` says why.
-    let configuration = directory.join(format!("{}.xmip", endpoint(directory)));
+    // In its configuration folder, as `started::written` puts one.
+    let configuration = xmip_runtime::fixture::configuration_folder(directory).join("node.xmip");
     xmip_runtime::fixture::write_signed(&configuration, &text);
     configuration
 }

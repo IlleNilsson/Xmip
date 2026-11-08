@@ -67,8 +67,7 @@ fn holds(table: &toml::Table, path: &str) -> bool {
 /// Write `text` where an installed node keeps it, read it as `xmip-service`
 /// does, and hold every key it writes to what the reader kept.
 fn read(directory: &Path, name: &str, text: &str) -> XmipConfigurationDocument {
-    let config = directory.join(name).join("config");
-    std::fs::create_dir_all(&config).expect("creates the layout");
+    let config = xmip_runtime::fixture::configuration_folder(&directory.join(name));
     let path: PathBuf = config.join("node.xmip");
     xmip_runtime::fixture::write_signed(&path, text);
 

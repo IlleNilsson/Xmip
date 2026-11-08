@@ -71,7 +71,8 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
     let directory_url = at.split_whitespace().next().expect("a URL").to_string();
     heard(&lines, "accepts work", Duration::from_secs(30));
 
-    let anchor = std::fs::read_to_string(directory.join("authority").join("authority.pem"))
+    let beside = configuration.parent().expect("its folder");
+    let anchor = std::fs::read_to_string(beside.join("authority").join("authority.pem"))
         .expect("the authority is kept beside the configuration");
     let channel = Channel::new(Some(&anchor), Duration::from_secs(5)).expect("a channel");
     let key = xmip_provision::KeyPair::generate().expect("an account key");

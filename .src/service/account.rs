@@ -108,8 +108,7 @@ mod tests {
     fn the_account_reads_the_configuration_and_its_key_and_writes_data_and_logs() {
         let node = xmip_configure::fixture::test_cluster().node(0).name.clone();
         let base = std::env::temp_dir().join(format!("xmip-account-{}", std::process::id()));
-        let config = base.join("config");
-        std::fs::create_dir_all(&config).expect("makes the layout");
+        let config = xmip_runtime::fixture::configuration_folder(&base);
         let file = config.join("node.xmip");
         let cluster = format!(
             "[operate]\nlisten = \"0.0.0.0:7401\"\ncertificate = \"tls/node.pem\"\n\

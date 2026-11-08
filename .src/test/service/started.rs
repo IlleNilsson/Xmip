@@ -62,8 +62,9 @@ pub(crate) fn operator() -> String {
 /// on `receive` and a tcp Send Port to `far`. Its Location waits a tenth
 /// of a second per receive, which is what bounds the drain. It declares the
 /// storage role, so it keeps Xmip Storage itself; its data — its own
-/// Storage node, its keys, its orders — is in `data` beside the
-/// configuration.
+/// Storage node, its keys, its orders, its accepted slice — is in the
+/// default data directory, the `data` beside its configuration folder
+/// ([`written`]).
 pub(crate) fn node(receive: &str, far: &str) -> String {
     let cluster = &test_cluster().name;
     let node = node_name();
@@ -74,7 +75,6 @@ pub(crate) fn node(receive: &str, far: &str) -> String {
 name = "xmip-{node}"
 cluster_name = "{cluster}"
 node_name = "{node}"
-data = "data"
 
 [[applications]]
 name = "Loopback"
@@ -214,16 +214,14 @@ impl Drop for Ending {
     }
 }
 
-/// The node's configuration in `directory`, its local operate endpoint —
+/// The node's configuration in `directory`'s configuration folder
+/// (`fixture::configuration_folder`), so its data, the accepted slice it
+/// keeps included, is `directory`'s own `data`; its local operate endpoint —
 /// which always starts — named for the directory, so tests running at once
-/// never meet on `xmip-<node>`. The file is named for the directory too:
-/// every test's directory sits in one folder, so their nodes share its
-/// default data directory, and the accepted slice a node keeps there is
-/// named after its configuration's file (`signed::kept_at`). `[operate]`
-/// is its last table: a test adds a key to it by adding a line.
+/// never meet on `xmip-<node>`. `[operate]` is its last table: a test adds
+/// a key to it by adding a line.
 pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
-    std::fs::create_dir_all(directory).expect("a directory");
-    let path = directory.join(format!("{}.xmip", endpoint(directory)));
+    let path = xmip_runtime::fixture::configuration_folder(directory).join("node.xmip");
     let text = format!(
         "{}\n[operate]\nlocal = \"{}\"\n",
         node(receive, &unheld().to_string()),
