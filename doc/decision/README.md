@@ -1115,6 +1115,7 @@ You have a word. This gives you the decision that governs it.
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | environment template | [Packaging and distribution](ADR-0015-packaging.md) |
+| erasure, of the identity | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Essentials, exercise, verdict | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
