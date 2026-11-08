@@ -210,7 +210,8 @@ build the package from the estate ([Getting started](doc/getting-started.md), th
 
 The installer writes a starter configuration, `config/cluster.xmip` — one node
 named after the machine, offline, operated on this machine through its
-local endpoint `xmip-<node>` — unless one is there already, and starts the
+local endpoint `xmip-<node>` by the account that installed it, its one
+operator — unless one is there already, and starts the
 service. Give the MSI `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>` to name them
 yourself. Removing Xmip stops and removes the service and keeps your
 configuration, data, audit and logs. The portable archive is for no
@@ -526,11 +527,12 @@ caller is, not who: a tcp connection over it presents a certificate like any
 other (open problem 35). Both GUIs grant a caller a role by one rule: a role the run states
 (`Role` in `gui.xmip`, else `XMIP_ROLE`) is every proven caller's; else
 the directory the host is told (`Directory`) answers; else Observer. A node's
-operate listener grants every caller it proved — by certificate, or on its
+operate listener grants each caller it proved — by certificate, or on its
 local endpoint by the operating system, which lets open it only the node's
 account, the machine's administrators and whom `[operate] admit` names —
-the role its `[operate] role` states (ADR-0014, amendments 2026-10-12,
-2026-10-13 and 2026-10-21). The
+the role its own name is listed with in `[operate] observers`, `operators`
+or `developers`, and a caller no list names nothing (ADR-0014, amendments
+2026-10-12, 2026-10-13 and 2026-10-21; ADR-0009, amendment 2026-11-07). The
 Essentials' directory is a fake one that allows the tester, and
 `Start-XmipOperationWeb` names it for a host over a roll. Every act passes one
 gate as its caller, never under a name the caller gives, refused in words

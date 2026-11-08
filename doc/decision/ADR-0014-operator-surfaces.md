@@ -752,7 +752,7 @@ disagree more often, just tell me first.*
   machine at its operate address, inside Xmip's mutual TLS, as before.
   `LocalOperator` and `RemoteOperator` in `Xmip.Surface` are the two faces
   of one `ListenerOperator` over the runtime's client (`xmip_operate.h`
-  section 17: `xmip_remote_open_local_v1`, `xmip_operate_serve_local_v1`);
+  section 17: `xmip_remote_open_local_v1`, `xmip_operate_serve_local_v2`);
   `NativeOperator`, which loaded the runtime into the surface's own process
   and so operated only the nodes that process ran, is deleted with every
   use, and `Surface = "native"` with it: a host's document says
@@ -777,8 +777,9 @@ disagree more often, just tell me first.*
   machine; on Unix the socket file is `0600`. Who acts is the user the
   operating system says the connecting process runs as — `DOMAIN\user` on
   Windows, the user name elsewhere — never a name the caller gives, and its
-  role is the one `[operate] role` states for every proven caller (ADR-0009,
-  note of 2026-10-12). `xmip-service` declares where it is operated
+  role is the one `[operate] observers`, `operators` or `developers` lists
+  that account with, none where none does (ADR-0009, amendment
+  2026-11-07). `xmip-service` declares where it is operated
   (ADR-0053).
 - **Told first, read after.** A `ListenerOperator` tells every watch when the
   node's publication advances and reads it by the next question; until this
@@ -1020,8 +1021,8 @@ longer trusted by itself* (ADR-0009, amendment 2026-10-21).
   socket where a surface looks; a node refuses to make its endpoint in any
   other (`plane::local::unix::guarded`).
 - **What authorization judges** is that account: who acts, audited, and
-  admitted by the role `[operate] role` states (ADR-0009, note of
-  2026-10-12).
+  admitted by the role `[operate] observers`, `operators` or `developers`
+  lists it with (ADR-0009, amendment 2026-11-07).
 - **Measured** on the owner's Windows machine, debug build: a surface's
   connection from nothing to its first answer — the pipe opened, the
   account read, HTTP/2 agreed and one call answered — about 0.28 to

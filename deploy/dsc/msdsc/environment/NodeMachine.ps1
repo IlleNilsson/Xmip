@@ -224,7 +224,8 @@ function Get-NodeSlicePlace {
     Each file of the node's slice where the node reads it, beside what it
     was shipped as: node.xmip in the configuration folder, and the
     certificate of the authority that signed it in authority/authority.pem
-    there, which the node checks it by (ADR-0031, amendment 2026-11-06).
+    there, which the node checks it by, the one its accepted slice pinned
+    (ADR-0031, amendments 2026-11-06 and 2026-11-07).
     #>
     [CmdletBinding()]
     [OutputType([hashtable[]])]

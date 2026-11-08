@@ -696,3 +696,57 @@ exists only once the package has registered the service. DSC's own
 SDDL, and 3.4.0-preview.2 ships it in none of its packages.
 
 Not built: point 3.
+
+## Amendment, 2026-11-07: the node pins its authority, its name and its serial
+
+A review of the signed slice found five ways past it. The anchor was read
+from the `authority` folder beside the slice it checked, so whoever could
+write the configuration folder replaced both and the node took the forgery.
+The signature carried no serial, so an older slice the same authority
+signed ran again. It carried no node, so another node's slice ran. The
+accepted slice was written as an ordinary file, and where it was written was
+the data directory the unverified file named. So, in place of point 2's
+anchor and keeping:
+
+1. **The signature says which node, which serial and when.** Beside
+   `cluster`, `by` and `value`, the `[signature]` table holds `node`, the
+   slice's `[service]` `node_name`; `serial`, strictly increasing from one
+   signing to the next (the signer's clock in nanoseconds, one above the
+   last it gave where the clock has not moved); and `issued`, Unix seconds.
+   The signature is over the text and every one of them but `by` and
+   `value`. A slice naming no node is not signed.
+2. **The node holds its trust outside the configuration folder.** Its
+   accepted slice is `<stem>.accepted.xmip`, after the configuration file's
+   stem, in the default data directory, `../data` from the configuration
+   folder: found from where the configuration is and never from what a
+   slice says, and written by the node alone, as a private file
+   (`secret::private_file`). That folder is the node's own and the slice's
+   writers — the deploying machine, the Operation Desktop, an administrator
+   — write the configuration folder, so a file that changes the one cannot
+   change the other. The accepted slice's signature is the pin: its `by`,
+   the authority's fingerprint; its `node`, the node's name; its `serial`,
+   the last accepted.
+3. **A slice runs only where it follows the pin.** The certificate beside
+   the configuration must be the one the pin names, or the node does not
+   start and says so. The slice must verify against it, be signed for the
+   node the pin names, and carry a serial above the pin's, or be the
+   accepted slice itself again. Anything else is refused in words and the
+   node runs its accepted slice.
+4. **The first slice a node accepts pins all three.** Every deployment
+   starts the node as it installs it, so that slice is the administrator's.
+   An authority replaced on purpose is taken by removing the node's
+   accepted slice, which pins the next.
+5. **Only the running node keeps.** `runtime::signed::accepted` checks and
+   keeps; `runtime::signed::checked` checks the same and writes nothing,
+   and is what `start::read` uses: a plan, `xmip-service --install` running
+   as an administrator, and a surface.
+
+Every signer is unchanged in how it is called (`runtime::signed::sign`,
+`xmip-service --slice`, the Essentials, the Operation Desktop's
+`xmip_cluster_signed_slice_v1`), and the desired-state templates still
+ship `node.xmip` and `authority/authority.pem` alone.
+
+The serial is the signer's clock: a deploying machine whose clock is set
+back signs slices a node refuses until the clock passes the pin, said in
+words where it happens. Not built: the deployment seeding the pin itself
+rather than the node's first start.

@@ -210,7 +210,11 @@ else once it heard no primary for `[tuning] storage_silence` — and each
 promotion raises the **epoch**, a primary of an earlier one asked by no node
 that met the later. A primary stopped in order hands on everything it
 wrote; one killed loses what it had not handed on, which the owner accepted
-on 2026-10-01.
+on 2026-10-01. A standby is handed a write only once its primary has synced
+it, and each epoch is written, durable, before a role is taken in it; what
+a failover loses and duplicates is `xmip-core-persist`'s README, *What a
+failover loses*. A Storage node whose sync fails stops: it reads and writes
+nothing more until it is opened again over its log.
 
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an

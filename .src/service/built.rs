@@ -329,21 +329,21 @@ mod tests {
 
         assert!(
             policy
-                .decide(&facts, &Attempt::new(Action::Receive, "In"))
+                .decide(&facts, &Attempt::now(Action::Receive, "In"))
                 .is_some_and(|decision| decision.allowed())
         );
         assert_eq!(
-            policy.decide(&facts, &Attempt::new(Action::Receive, "Elsewhere")),
+            policy.decide(&facts, &Attempt::now(Action::Receive, "Elsewhere")),
             None
         );
         assert!(
             policy
-                .decide(&facts, &Attempt::new(Action::Send, "Out"))
+                .decide(&facts, &Attempt::now(Action::Send, "Out"))
                 .is_some_and(|decision| decision.allowed()),
             "the owner, 2026-10-19: a Send Location the node starts is admitted"
         );
         assert_eq!(
-            policy.decide(&facts, &Attempt::new(Action::Send, "Elsewhere")),
+            policy.decide(&facts, &Attempt::now(Action::Send, "Elsewhere")),
             None
         );
     }

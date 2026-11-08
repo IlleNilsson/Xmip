@@ -12,7 +12,9 @@
 //!    role, for one node keeps Xmip Storage itself (ADR-0056, amendment
 //!    2026-10-20), offline (ADR-0045); its
 //!    local operate endpoint needs no line, for it always starts, named
-//!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13);
+//!    `xmip-<node>` as its service is (ADR-0014, amendments 2026-10-13),
+//!    and the account that installs is its one operator (ADR-0009,
+//!    amendment 2026-11-07);
 //! 2. slices the node's configuration, `node.xmip` beside it, where
 //!    there is none — `xmip-core-configure`'s one slicing, as the cluster
 //!    `--cluster` names where the cluster's file names none (ADR-0028,
@@ -45,6 +47,7 @@ use crate::account::{self, Given};
 use crate::arguments::Arguments;
 use crate::definition::{self, text};
 use crate::run;
+use crate::starter::starter;
 
 /// The node's configuration, sliced beside its cluster's `cluster.xmip`.
 pub const NODE_FILE: &str = "node.xmip";
@@ -97,7 +100,10 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
     // (ADR-0031, amendment 2026-11-06).
     if !node_file.exists() {
         if !cluster_file.exists() {
-            write(&cluster_file, &starter(cluster, node))?;
+            // Whoever installs operates the node: a caller no list names
+            // holds no role (ADR-0009, amendment 2026-11-07).
+            let operator = xmip_runtime::plane::local::running_as()?;
+            write(&cluster_file, &starter(cluster, node, &operator))?;
         }
         let source =
             std::fs::read_to_string(&cluster_file).map_err(|error| said(&cluster_file, &error))?;
@@ -147,39 +153,6 @@ fn uninstalled(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, St
         &[("service", &name)],
     );
     deregister(&name, &node)
-}
-
-/// The starter `cluster.xmip` of a one-node cluster: what a package writes
-/// where the machine has none of its own.
-fn starter(cluster: &str, node: &str) -> String {
-    let service = node_service_name(node);
-    format!(
-        "# The cluster's configuration, cluster.xmip, as an Xmip package starts it:\n\
-         # one node, offline, operated from this machine on its local endpoint,\n\
-         # {service}, which always starts (ADR-0015, amendment 2026-10-13;\n\
-         # ADR-0014, amendments 2026-10-13). The node's configuration,\n\
-         # {NODE_FILE}, is sliced from this file; change this one, slice again\n\
-         # (xmip-service --slice) and restart the service.\n\
-         [service]\n\
-         name = {service}\n\
-         cluster_name = {cluster}\n\
-         \n\
-         # One node, so it keeps Xmip Storage itself: only a node with the\n\
-         # storage role stores (ADR-0056, amendment 2026-10-20).\n\
-         [nodes.{node_key}]\n\
-         roles = \"storage\"\n\
-         \n\
-         [nodes.{node_key}.service]\n\
-         online = false\n",
-        service = quoted(&service),
-        cluster = quoted(cluster),
-        node_key = quoted(node),
-    )
-}
-
-/// `text` as a TOML basic string.
-fn quoted(text: &str) -> String {
-    format!("\"{}\"", text.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
 fn write(path: &Path, content: &str) -> Result<(), String> {
@@ -411,48 +384,5 @@ cfg_select! {
         fn deregister(_: &str, _: &str) -> Result<String, String> {
             Err("this platform has no service manager".to_string())
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The starter slices for its node and reads as `xmip-service` reads a
-    /// node's configuration, naming no operate listener.
-    #[test]
-    fn the_starter_slices_and_reads_as_the_service_reads_it() {
-        let cluster = xmip_configure::fixture::test_cluster();
-        let node = cluster.node(0).name.clone();
-        let source = starter(&cluster.name, &node);
-
-        let sliced = xmip_configure::slice(&source, &node).expect("slices");
-        let directory = std::env::temp_dir().join(format!("xmip-starter-{}", std::process::id()));
-        std::fs::create_dir_all(&directory).expect("a directory");
-        let file = directory.join(NODE_FILE);
-        let signed = xmip_runtime::signed::signed_beside(&file, &cluster.name, &source, &sliced)
-            .expect("signed");
-        std::fs::write(&file, signed).expect("written");
-        let read = xmip_runtime::start::read(&text(&file));
-        std::fs::remove_dir_all(&directory).expect("removed");
-
-        let (document, _, _) = read.expect("reads");
-        assert_eq!(document.service.node_name, node);
-        assert_eq!(document.service.cluster_name, cluster.name);
-        assert!(!document.service.online);
-        assert_eq!(
-            document.roles.as_deref(),
-            Some("storage"),
-            "one node stores"
-        );
-        // No [operate]: the local endpoint starts all the same, named as
-        // the service is, and nothing else listens.
-        assert!(document.operate.is_none());
-        assert!(source.contains(&quoted(&node_service_name(&node))));
-    }
-
-    #[test]
-    fn a_name_is_quoted_as_toml_says_it() {
-        assert_eq!(quoted(r#"a"b\c"#), r#""a\"b\\c""#);
     }
 }

@@ -30,7 +30,7 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     let listen = unheld().to_string();
     let text = format!(
         "{}listen = \"{listen}\"\ncertificate = \"node.pem\"\nkey = \"node.key\"\n\
-         anchors = \"anchor.pem\"\nrole = \"operator\"\n",
+         anchors = \"anchor.pem\"\noperators = [\"CN=surface\"]\n",
         xmip_runtime::fixture::unsigned(&configuration)
     );
     xmip_runtime::fixture::write_signed(&configuration, &text);
@@ -84,8 +84,9 @@ fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
     let text = format!(
-        "{}role = \"operator\"\n",
-        xmip_runtime::fixture::unsigned(&configuration)
+        "{}{}",
+        xmip_runtime::fixture::unsigned(&configuration),
+        operator()
     );
     xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &endpoint(&directory));
@@ -102,14 +103,22 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
         std::env::temp_dir().join(format!("xmip-service-unnamed-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     std::fs::create_dir_all(&directory).expect("a directory");
-    let configuration = directory.join(format!("{}.xmip", node_name()));
+    // Named for its directory, as `written` names one (`written` says why).
+    let configuration = directory.join(format!("{}.xmip", endpoint(&directory)));
     let text = format!(
-        "{}\n[operate]\nrole = \"operator\"\n",
-        node(&unheld().to_string(), &unheld().to_string())
+        "{}\n[operate]\n{}",
+        node(&unheld().to_string(), &unheld().to_string()),
+        operator()
     );
     xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &format!("xmip-{}", node_name()));
     let _ = std::fs::remove_dir_all(&directory);
+}
+
+/// `[operate]`'s line listing the account this test runs as an Operator.
+fn operator() -> String {
+    let account = xmip_runtime::plane::local::running_as().expect("this test's account");
+    format!("operators = ['{account}']\n")
 }
 
 /// Start the node configured at `configuration`, read and act on it at its

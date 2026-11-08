@@ -891,7 +891,7 @@ dependency = []
     specification = "TOML v1.0.0"
     [xmip.core.contract.yaml]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core", "xmip-core-library-codec"]
     description = "YAML contract: a document is well-formed YAML always, and conforms to a named layout when one is named. A xmip-core-contract technology."
     specification = "YAML 1.2"
     [xmip.core.contract.toon]
@@ -1136,7 +1136,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec"]
     [xmip.core.authenticate.ldap]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-net"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-net", "xmip-core-library-tls"]
     [xmip.core.authenticate.mutual-tls]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
@@ -1145,7 +1145,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec", "xmip-core-library-ntlm"]
     [xmip.core.authenticate.oauth2]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-tls"]
     [xmip.core.authenticate.oidc]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]

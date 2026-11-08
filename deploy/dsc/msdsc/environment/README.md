@@ -60,9 +60,12 @@ node fetches what the Essentials drops and puts what it sends where the
 Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
 parameters' `nodes`, never written again. A node never slices and never
 holds the authority's key, so a `node.xmip` edited on it is refused there
-and the node runs its last accepted slice (ADR-0031, amendment
-2026-11-06). A signature differs each time it is made, so a slice is made
-again only where the text it signs differs.
+and the node runs its last accepted slice; that slice, kept in the node's
+data folder, pins the authority, the node's name and the serial, so a
+swapped certificate, an older slice or another node's is refused too
+(ADR-0031, amendments 2026-11-06 and 2026-11-07). A signature and its
+serial differ each time it is made, so a slice is made again only where
+the text it signs differs.
 
 **Each node machine** (`node.dsc.yaml`), in this order:
 

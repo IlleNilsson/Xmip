@@ -287,8 +287,8 @@ proved, and only a role that may operate acts — is written once in Rust
 and by a node's operate listener alike (ADR-0014, amendment 2026-10-12), so
 a screen and a node refuse in the same words. On the operate listener every
 caller is proven by its client certificate, and its role is the one the
-node's `[operate] role` states, Observer where it states none; no directory
-is asked there yet.
+node's configuration lists that caller with (the amendment of 2026-11-07);
+no directory is asked there yet.
 
 ## Amendment, 2026-10-21: loopback proves where a caller is, not who
 
@@ -727,3 +727,67 @@ Provenance: the owner's decision of 2026-11-02, as the coordinator relayed
 it, with its three additions (the server certificate, the pinned draw, the
 secrets kept for one handshake); the names `Nonces`, `plane::fresh`,
 `plane::possessed`, `tls::possession` and `secured` the assistant's.
+
+## Amendment, 2026-11-07: each caller of the operate listener holds its own role, and the listener is bounded
+
+Found by a security review: a node's operate listener granted one role,
+`[operate] role`, to every caller the gate proved, so any certificate that
+reached `[operate] anchors` — a second person's, a node's — held that role,
+setting secrets included; and the listener took connections without a
+bound, started a thread for each, spun on a failing accept, and bounded a
+handshake read by read, so a client sending a byte at a time held it
+forever. Decided by the assistant, for the owner to overrule:
+
+- **The role is the caller's own, by name** (`plane::grant`).
+  `[operate] observers`, `operators` and `developers` each list the
+  callers holding that role: a certificate by its subject or by an
+  alternative name it carries, a DNS name or a user principal name — the
+  one reading of what a certificate names,
+  `authenticate::x509::name::names`; an account on the local endpoint by
+  the name the operating system gives it, without regard to case on
+  Windows. `[operate] role` is deleted with every use.
+- **Closed by default.** A caller no list names holds no role and is
+  refused every call, the publication included, in words
+  (`plane::role::admitted`): proving who it is grants nothing. The rule is
+  the one admission's, `authorize::plane::granted`: the standing a plane
+  grants a caller is the least its own entries are listed with, none where
+  none is. A name listed under two roles is refused as the node starts.
+- **A caller a relay vouches for** holds the role its own certificate is
+  listed with, read as the node vouches (`plane::vouched`); never the
+  relay's, nor one for the whole node. The relay's own calls hold the
+  relay's own listing: a web host that follows the node is listed, as an
+  Observer at least.
+- **The listener is bounded** (`plane::limits`): at most
+  `[tuning] operate_connections` connections at once (256) and
+  `operate_handshakes` of them in their handshake (32), a connection past
+  either closed as it is accepted and the first of a run of them told to
+  the audit; a handshake done within `operate_handshake` in all (10 s, the
+  web host's `HANDSHAKE_WITHIN`), however it is read; and a failing accept
+  asked again after a pause that doubles, 1 ms to 100 ms, the web host's
+  secure listener's too. Defaults only, per cluster and per node.
+- **The audit says the role** each act was judged by, `none` where none
+  was granted.
+
+- **A program hosting a listener through the C ABI** lists its callers
+  the same way: `xmip_operate_serve_v2` and `xmip_operate_serve_local_v2`
+  take the three lists, one name a line, checked by `[operate]`'s own rule
+  (`configure::operate::OperateConfiguration::grants`), a name two lists
+  name refused; `Xmip.Abi`'s `RuntimeRemotes.Serve` and `ServeLocal` take
+  them as lists. The `_v1` exports, which took one role for every proven
+  caller, are deleted, and no grant for every caller is left.
+
+Not built: the web host's secure listener still bounds its handshake read
+by read.
+
+Proved in the runtime (`plane::grant`, `plane::role`, `plane::vouched`,
+`plane::limits`; `tests/plane/granted.rs`: a second certificate from the
+same anchors as an Operator's reads and acts on nothing, an account is
+listed apart, a relayed browser acts by its own listed role and the
+relay's own act is refused; `tests/plane/bounded.rs`: a connection past
+the connections or the handshakes taken is closed, a place freed is taken
+again, a handshake dribbled a byte each 20 ms is cut at its deadline),
+`xmip-core-configure` (`[operate]`'s lists, one role a caller) and
+`xmip-core-authorize` (`plane::granted`).
+
+Provenance: the review's findings; the keys, the defaults and closing by
+default are the assistant's, for the owner to overrule.

@@ -89,9 +89,10 @@ The operate plane is built (ADR-0014, amendment 2026-10-12):
 `xmip-core-runtime`'s `plane::Listener`, gRPC on the estate's own HTTP/2
 inside Xmip's mutual TLS, answering the node's publication, a wait on its
 next revision and an operator's acts, each admitted by the role the node's
-`[operate] role` grants the subject of the caller's certificate, and
-audited. `xmip-service` starts it from `[operate]` (`listen`,
-`certificate`, `key`, `anchors`, `role`) and refuses to start where it
+`[operate] observers`, `operators` or `developers` lists the caller's own
+certificate with (ADR-0009, amendment 2026-11-07), and audited.
+`xmip-service` starts it from `[operate]` (`listen`, `certificate`, `key`,
+`anchors` and the three lists) and refuses to start where it
 cannot listen; a node whose `[operate]` names no `listen` serves no
 network listener. The address and port are the configuration's; no port is
 assumed.
