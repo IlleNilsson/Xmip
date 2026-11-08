@@ -204,13 +204,16 @@ their own, so a cluster's are one **primary**, serving every operation, and
 its **standbys**, each copying the primary's engine writes behind it, in
 the order written, asynchronously. A standby serves no operation and says
 so, and a node asks the next listed. The Storage nodes settle which is the
-primary themselves, the first listed the first: a standby is promoted once
-the primary is gone — at once where every one listed before it answered,
-else once it heard no primary for `[tuning] storage_silence` — and each
-promotion raises the **epoch**, a primary of an earlier one asked by no node
-that met the later. A primary stopped in order hands on everything it
-wrote; one killed loses what it had not handed on, which the owner accepted
-on 2026-10-01. A standby is handed a write only once its primary has synced
+primary themselves, the first listed the first: one is promoted only where
+every one listed answers and none is a primary — the one holding most of
+the latest epoch, the first listed of equals — and each promotion raises
+the **epoch**, a primary of an earlier one asked by no node that met the
+later. **There is no witness, so there is no automatic failover**: a
+primary that is gone is waited for, never replaced, and the cluster settles
+once it is back (the owner, 2026-11-08: *automatic standby promotion is off
+until there is a witness*; ADR-0056, amendment 2026-11-08). A primary
+stopped in order hands on everything it wrote; one killed loses what it had
+not handed on, which the owner accepted on 2026-10-01. A standby is handed a write only once its primary has synced
 it, and each epoch is written, durable, before a role is taken in it; what
 a failover loses and duplicates is `xmip-core-persist`'s README, *What a
 failover loses*. A Storage node whose sync fails stops: it reads and writes
@@ -308,7 +311,8 @@ two forms are recorded for later, and only for then
 with Xmip copying from a claimed primary to standbys, and D, C for the hot
 Ledger with A for history. C is built for embedded Storage nodes, drafted on
 2026-10-22 while A is not built (*Embedded Storage nodes are a primary and
-its standbys*, above); its witness is not.
+its standbys*, above); its witness is not, so its failover waits for the
+primary to return (ADR-0056, amendment 2026-11-08).
 
 **Every Ledger write counts only once the database has it durably** (the
 owner, 2026-10-01: *Safe way*), the hand-ons between steps included. Behind a
@@ -651,8 +655,8 @@ on through the next; the audit keeper moves each record once; and a
 write's latency, measured idle, in process and over TLS. And for the
 assembled service, built 2026-10-22 (the root's `failover` and `wire`
 tests): a receiving and a sending node, keeping no Storage, carry every
-file dropped once while the primary Storage node is stopped mid-run and its
-standby promoted; and a call over the wire to the primary, its standby
+file dropped once while the primary Storage node is stopped mid-run, its
+standby not promoted, and started again (since 2026-11-08); and a call over the wire to the primary, its standby
 copying, costs less than a millisecond beyond the same call in process — a
 read about 80 µs against 6 µs, a write and its sync about 1.2 ms against
 1.1 ms. And for the receive

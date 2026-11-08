@@ -1431,24 +1431,32 @@ release:
 ## 45. Embedded Storage nodes have no witness, and a standby behind is copied whole
 
 Built 2026-10-22, drafted (ADR-0056, amendment 2026-10-22): embedded
-Storage nodes are a primary and its standbys, settled among themselves, a
-standby promoted once its primary is gone. Three things are left:
+Storage nodes are a primary and its standbys, settled among themselves.
+Three things are left:
 
-- **No witness.** The owner's design of 2026-10-01 had *a witness holding
-  the claim on which node is primary*, and IT's infrastructure calling a
-  promote. Without one, two sides of a network partition can each promote a
-  primary; a node that met the later epoch never asks the earlier, and a
-  primary that meets a later epoch steps down, but writes taken by the
-  earlier one meanwhile are lost when it follows the later. Proposed: a
-  witness of the cluster's own — any node, asked like a Storage node —
-  whose word a standby needs before it is promoted; or the promote kept a
-  command, with an Operator's act on every surface.
+- **No witness, so no automatic failover.** The owner's design of
+  2026-10-01 had *a witness holding the claim on which node is primary*,
+  and IT's infrastructure calling a promote. Without one, two sides of a
+  network partition could each promote a primary, so on 2026-11-08 the
+  owner accepted turning automatic standby promotion off until there is a
+  witness (ADR-0056, amendment 2026-11-08). One is promoted only where
+  every Storage node listed answers and none is a primary; a primary that
+  is gone — stopped, killed or cut off — is waited for, and the nodes that
+  cannot reach it store nothing until it is back. Open: the witness or a
+  quorum that lets a standby replace a gone primary without a second one
+  serving beside it. Proposed: a witness of the cluster's own — any node,
+  asked like a Storage node — whose word a standby needs before it is
+  promoted; or the promote kept a command, with an Operator's act on every
+  surface.
 - **A standby behind is copied whole.** A standby that restarts after its
   primary did, or falls further behind than `[tuning] storage_kept`, is
   wiped and copied whole, every record read once over the wire; a primary
   restarting starts a history of its own, so every standby is copied whole
-  then too. Proposed: the primary's numbering kept in each database, so a
-  restarted primary goes on and a standby takes on from where it is.
+  then too. And a primary that comes back holds no position — it gave its
+  up when promoted — so it counts as holding nothing: a standby that copied
+  anything is promoted over it, and what it had not handed on is lost.
+  Proposed: the primary's numbering kept in each database, so a restarted
+  primary goes on and a standby takes on from where it is.
 - **The loss window of a kill.** The owner accepted it on 2026-10-01; it is
   unmeasured. Proposed: a kill test that says how many writes a killed
   primary had not handed on, under load.

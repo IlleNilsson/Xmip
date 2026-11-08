@@ -5,9 +5,11 @@
 //! a file Receive Location; a sending node writing each to a file Send
 //! Location; neither keeping Xmip Storage itself (ADR-0056, amendments
 //! 2026-10-20 and 2026-10-22). The primary is stopped while files are
-//! dropped, and the standby is promoted: every file dropped arrives, once,
-//! whole, and the time a file takes from its claim to its file sent is
-//! measured on both sides of the failover.
+//! dropped, and the standby is not promoted: with no witness, a primary
+//! gone is waited for (ADR-0056, amendment 2026-11-08), so no file dropped
+//! after the stop arrives until the primary is started again. Once it is,
+//! every one listed answers, they settle, and every file dropped arrives,
+//! once, whole; the time a file takes is measured on both sides.
 
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -20,8 +22,8 @@ use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, wat
 /// The files dropped before the primary stops, and as many after.
 const HALF: usize = 20;
 
-/// What bounds a file's way from its drop to its file sent, failover
-/// included: a bound on the test, never on Xmip.
+/// What bounds a file's way from its drop to its file sent, the primary's
+/// return included: a bound on the test, never on Xmip.
 const CARRY: Duration = Duration::from_secs(30);
 
 /// The Application the receiving and the sending node share: one file
@@ -177,8 +179,12 @@ fn scope(node: &str) -> String {
 }
 
 /// The cluster's two Storage nodes started, each serving at its own of
-/// `addresses`: the primary, then its standby.
-fn storage_started(directory: &Path, addresses: &[String]) -> (Running, Running) {
+/// `addresses`: the primary, with its configuration and the scope it says
+/// it accepts work in, then its standby.
+fn storage_started(
+    directory: &Path,
+    addresses: &[String],
+) -> ((Running, PathBuf, String), Running) {
     let mut primary = None;
     let mut standby = None;
     for (place, node) in declaring("storage").iter().enumerate().take(2) {
@@ -190,7 +196,7 @@ fn storage_started(directory: &Path, addresses: &[String]) -> (Running, Running)
         );
         let running = started(&path, &scope(node));
         if place == 0 {
-            primary = Some(running);
+            primary = Some((running, path, scope(node)));
         } else {
             standby = Some(running);
         }
@@ -266,7 +272,7 @@ fn all_arrived_whole(arrived: &[String], out: &Path) {
 }
 
 #[test]
-fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run() {
+fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_and_returns() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-failover-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
@@ -278,33 +284,47 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run()
         .iter()
         .map(|_| xmip_net::fixture::unheld().to_string())
         .collect();
-    let (primary, standby) = storage_started(&directory, &addresses);
+    let ((primary, primary_path, primary_scope), standby) = storage_started(&directory, &addresses);
     let (receiving, sending) = carriers_started(&directory, (&drop, &out), &addresses);
 
     let began = Instant::now();
     dropped(&directory, &drop, (0, HALF));
     let (changed, _watch) = watched(&out);
     let before = arrived(&changed, &out, HALF);
-    assert_eq!(before.len(), HALF, "before the failover: {before:?}");
+    assert_eq!(before.len(), HALF, "before the primary stops: {before:?}");
     let carried_before = began.elapsed();
 
     let stopping = Instant::now();
     dropped(&directory, &drop, (HALF, HALF / 2));
     stopped(primary);
     let primary_stopped = stopping.elapsed();
-    dropped(&directory, &drop, (HALF + HALF / 2, HALF - HALF / 2));
+    let late = HALF + HALF / 2;
+    dropped(&directory, &drop, (late, HALF - HALF / 2));
+
+    // No witness: the standby is not promoted, so nothing dropped after the
+    // stop is taken in while the primary is gone: six times its silence.
+    std::thread::sleep(Duration::from_secs(3));
+    let waiting = names(&out);
+    assert!(
+        (late..2 * HALF).all(|n| !waiting.contains(&format!("order-{n}.edi"))),
+        "a file dropped after the primary stopped arrived without it: {waiting:?}"
+    );
+
+    let returning = Instant::now();
+    let primary = started(&primary_path, &primary_scope);
     let after = arrived(&changed, &out, 2 * HALF);
-    let failed_over = stopping.elapsed();
+    let settled = returning.elapsed();
 
     all_arrived_whole(&after, &out);
     println!(
         "carried {HALF} files through the primary in {carried_before:?}, and {HALF} more across \
-         its stop and the standby's promotion in {failed_over:?}, the primary stopped after \
-         {primary_stopped:?}"
+         its stop, after {primary_stopped:?}, and its return, the rest arriving {settled:?} \
+         after it was started again"
     );
 
     stopped(sending);
     stopped(receiving);
     stopped(standby);
+    stopped(primary);
     let _ = std::fs::remove_dir_all(&directory);
 }

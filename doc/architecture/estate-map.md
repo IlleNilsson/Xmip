@@ -176,17 +176,18 @@ level 1, every node a process. Records: ADR-0056 (amendments 2026-10-01 and
 
 **Embedded Storage nodes as a primary and its standbys.** Storage nodes that
 list every Storage node of the cluster settle which is the primary by asking
-each what it is: the first listed of equals is promoted, at once where every
-one before it answered, else after `[tuning] storage_silence`; each standby
-copies the primary's engine writes in order, asynchronously, copied whole
-first where it cannot take them on (its data keys handed inside the mutual
-TLS, wrapped under its own key-encryption key); each promotion raises the
-epoch, a primary that meets a later one steps down, and a primary stopped in
-order hands on everything it wrote. No witness: a partition can promote a
-second primary, which the nodes that met the later epoch do not ask. Drafted,
-for the owner (ADR-0056, amendment 2026-10-22). Records: ADR-0056 (amendment
-2026-10-22), ADR-0063 (amendment 2026-10-22), deployment-model.md sections 7
-and 9.
+each what it is: one is promoted only where every one listed answers and none
+is a primary, the one holding most of the latest epoch, the first listed of
+equals; each standby copies the primary's engine writes in order,
+asynchronously, copied whole first where it cannot take them on (its data keys
+handed inside the mutual TLS, wrapped under its own key-encryption key); each
+promotion raises the epoch, a primary that meets a later one steps down, and a
+primary stopped in order hands on everything it wrote. No witness, so no
+automatic failover: a primary that is gone is waited for, never replaced, and
+automatic failover returns with a witness (the owner, 2026-11-08). Drafted,
+for the owner (ADR-0056, amendment 2026-10-22); promotion decided (amendment
+2026-11-08). Records: ADR-0056 (amendments 2026-10-22 and 2026-11-08),
+ADR-0063 (amendment 2026-10-22), deployment-model.md sections 7 and 9.
 
 #### `subscription-pause`
 
@@ -412,7 +413,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 332818 lines of production
+Where each repository mounts and what it holds: 333195 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -455,7 +456,7 @@ hold no source to count.
 │   │   │   │   ├── postgresql                  1391
 │   │   │   │   ├── as4                         1333
 │   │   │   │   ├── s7comm                      1239
-│   │   │   │   ├── secs-gem                    1204
+│   │   │   │   ├── secs-gem                    1199
 │   │   │   │   ├── canopen                     1148
 │   │   │   │   ├── dns                         1142
 │   │   │   │   ├── mqtt                        1135
@@ -645,19 +646,19 @@ hold no source to count.
 │   │   │   ├── unit                             417
 │   │   │   ├── receive                          178
 │   │   │   ├── demote                           168
-│   │   │   ├── logic                            156
-│   │   │   │   ├── matter                      1129
-│   │   │   │   ├── soap                         274
-│   │   │   │   ├── http-api                     259
-│   │   │   │   └── grpc                         178
-│   │   │   ├── promote                          153
-│   │   │   ├── resilience                       129
+│   │   │   ├── resilience                       159
 │   │   │   │   ├── circuit-breaker              134
 │   │   │   │   ├── rate-limit                   107
 │   │   │   │   ├── bulkhead                      83
 │   │   │   │   ├── retry                         82
 │   │   │   │   ├── timeout                       74
 │   │   │   │   └── fallback                      66
+│   │   │   ├── logic                            156
+│   │   │   │   ├── matter                      1129
+│   │   │   │   ├── soap                         274
+│   │   │   │   ├── http-api                     259
+│   │   │   │   └── grpc                         178
+│   │   │   ├── promote                          153
 │   │   │   ├── send                              88
 │   │   │   ├── assign                            39
 │   │   │   └── retain                            27
@@ -669,7 +670,7 @@ hold no source to count.
 │   │   │   ├── tls                             3051
 │   │   │   ├── mariadb                         1800
 │   │   │   ├── ssh                             1756
-│   │   │   ├── sql                             1079
+│   │   │   ├── sql                             1304
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             678
 │   │   └── operation/
@@ -681,12 +682,12 @@ hold no source to count.
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
 │   │       ├── observe                         3905
-│   │       │   ├── otlp                         578
+│   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      3487  C# 3487 · PowerShell 0
 │   │       ├── archive                          612
+│   │       │   ├── file                         292
 │   │       │   ├── sql                          263
-│   │       │   ├── file                         251
 │   │       │   ├── azure-blob                   165
 │   │       │   ├── s3                           155
 │   │       │   ├── parquet                      147
@@ -704,7 +705,7 @@ hold no source to count.
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
 │   │   ├── core                                4245
-│   │   ├── message                             1730
+│   │   ├── message                             1728
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             256
@@ -727,13 +728,13 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            40483
-│       ├── persist                            15197
+│       ├── runtime                            40485
+│       ├── persist                            15273
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8427
+│       └── configure                           8428
 └── test/
     └── core/
         ├── essentials                         13911
