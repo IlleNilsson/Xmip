@@ -36,7 +36,10 @@ the environment's authority kept on the controller in `xmip_authority`, with
 that authority's certificate in `config/authority/authority.pem`, replaced
 only where the text it signs differs and restarting the node when it
 changed — the node never slices and never holds the authority's key, so a
-`node.xmip` edited on it is refused there (ADR-0031, amendment 2026-11-06) —
+`node.xmip` edited on it is refused there, and the first slice it accepts
+pins that authority, its name and its serial in its data folder, so a
+swapped certificate, an older slice or another node's is refused too
+(ADR-0031, amendments 2026-11-06 and 2026-11-07) —
 every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
 `xmip_nodes`, round robin by their roles, and bound over SFTP on the

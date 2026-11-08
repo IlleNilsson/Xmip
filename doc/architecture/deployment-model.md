@@ -313,7 +313,8 @@ system lets only that group's members connect before the node judges them
 the account the operating system says the connecting process runs as —
 `DOMAIN\user` on Windows, lent for identification alone, the user name
 elsewhere — never a name the caller gives, and its role is the one
-`[operate] role` states. A tcp connection over loopback is trusted for
+`[operate] observers`, `operators` or `developers` lists that account
+under, none where none does. A tcp connection over loopback is trusted for
 nothing: it presents a certificate like any caller from another machine.
 **The local endpoint always starts** — decided by the owner, 2026-10-13:
 *the local endpoint always starts, named `xmip-<node>` unless the
@@ -343,19 +344,24 @@ listen = "0.0.0.0:7401"             # the node's address, the plane's port
 certificate = "tls/node.pem"
 key = "tls/node.key"
 anchors = "tls/cluster-anchor.pem"  # what a surface's certificate reaches
-role = "operator"                   # every proven caller's; Observer if left out
+operators = ['CONTOSO\jane', "CN=jane@example.org"]  # who acts; observers, developers alike
 admit = ['CONTOSO\xmip-operators']  # who else may open the local endpoint
 group = "xmip-operators"            # on Unix, the socket's group; the node's own if left out
 ```
 
 `listen` takes `certificate`, `key` and `anchors`, and adds the network
 listener to the local endpoint. Every caller on the network presents a certificate reaching
-`anchors`, and its subject is who acts — never a name the caller gives;
-`role` is what every proven caller may do, on either endpoint, and an act a
-role may not take is refused in words and audited (ADR-0009). A node with
-no `[operate]` serves its local endpoint, `xmip-<node>`, every caller there
-an Observer, and no network listener. SignalR is only between a web host
-and the browser it serves.
+`anchors`, and its subject is who acts — never a name the caller gives.
+Which role each caller holds is its own: `observers`, `operators` and
+`developers` list who holds which, by a certificate's subject or an
+alternative name it carries and by an account's name, on either endpoint;
+a caller no list names holds none and is refused every call, and an act a
+role may not take is refused in words and audited (ADR-0009, amendment
+2026-11-07). A node with no `[operate]` serves its local endpoint,
+`xmip-<node>`, to no one, and no network listener. Each listener answers
+at most `[tuning] operate_connections` at once, `operate_handshakes` of
+them in their handshake, each handshake done within `operate_handshake` in
+all. SignalR is only between a web host and the browser it serves.
 
 **Every purpose has a listener of its own** — decided by the owner,
 2026-10-13 (ADR-0067, amendment of that date): IT operators on the
@@ -464,8 +470,9 @@ configuration, and registers the Xmip Service where services exist.
 **Every package does that by running one command**, `xmip-service --install`
 (ADR-0015, amendment 2026-10-13; `deploy/package`): it lays the node out,
 writes a starter cluster `cluster.xmip` where there is none — one node,
-offline, operated at its local endpoint `xmip-<node>`, which always starts
-— slices the node's `node.xmip` from it, makes `data/audit`, and
+offline, operated at its local endpoint `xmip-<node>`, which always starts,
+by the account that installed it, its one operator — slices the node's
+`node.xmip` from it, makes `data/audit`, and
 registers and starts the Xmip Service as `registration.rs` defines it, to
 start with the machine: a Windows service, a systemd unit that makes
 `/run/xmip` for the node's account, a launchd daemon beside one that makes

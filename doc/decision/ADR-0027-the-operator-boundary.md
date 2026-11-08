@@ -608,7 +608,7 @@ runtime's, so every language follows a node the same way.
   2026-10-05); `xmip_remote_act_v1` asks an act on section 14's nouns as the
   identity the certificate proves; `xmip_remote_end_v1` and
   `xmip_remote_free_v1` end it. A program hosting a node through the
-  boundary serves it on `xmip_operate_serve_v1`, posts what it publishes
+  boundary serves it on `xmip_operate_serve_v2`, posts what it publishes
   with `xmip_operate_post_v1` and stops with `xmip_operate_serve_stop_v1`.
 - **Section 18, a person's security role and the one gate.**
   `xmip_security_role_named_v1`, `xmip_security_role_words_v1` and

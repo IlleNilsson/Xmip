@@ -393,7 +393,9 @@ among them yet.
 --cluster <cluster> --install` (`.src/service/install.rs`): it writes a
 starter cluster `cluster.xmip` where there is none — one node, offline
 (ADR-0045), its operate listener's local endpoint named `xmip-<node>` like
-its service (ADR-0014, amendment 2026-10-13) — slices `node.xmip` from
+its service (ADR-0014, amendment 2026-10-13), the account that installs it
+its one operator, `[operate] operators`, as the operating system names that
+account (ADR-0009, amendment 2026-11-07) — slices `node.xmip` from
 it, makes `modules`, `logs`, the data directory and `data/audit`, and
 registers and starts the Xmip Service that `registration.rs` defines, to
 start with the machine. `--configuration <layout>/config/node.xmip
@@ -436,11 +438,16 @@ and `pkg` are REFUSED in words naming what their build needs.
   download address of a GitHub release, the macOS identifier
   `io.github.illenilsson.xmip`, and the publisher `Xmip`. Nothing is
   published yet.
-- **What the local endpoint grants.** The starter leaves `[operate] role`
-  out, so a local operator tool reads the node and acts on nothing
-  (Observer); whether a package's starter should grant more, and whether
-  every node serves a local endpoint by default, stay his (ADR-0014,
-  amendment 2026-10-13).
+- **What the local endpoint grants.** The starter lists the account that
+  installs as the node's one operator, so the node is not closed to
+  everyone; any other account is refused every call, reading included,
+  until the configuration names it (ADR-0009, amendment 2026-11-07). That
+  account is the one `xmip-service --install` runs as: the person who
+  unpacked the archive and ran it, but the MSI's deferred action and the
+  Linux packages' `postinstall.sh` run it as LocalSystem and root, so a
+  package's starter lists those until the package hands over the person
+  who installed; how it does, and whether every node serves a local
+  endpoint by default, stay his (ADR-0014, amendment 2026-10-13).
 - **Signing.** Nothing is signed: no Authenticode on the MSI or the
   programs, no Developer ID on macOS, no package signature on Linux.
 - **Two starters.** The Ansible role writes its own starter from a template

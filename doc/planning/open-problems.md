@@ -2421,7 +2421,8 @@ the admitted only to read and write it (`plane::local::windows::openers`).
 node admits its own account, the superuser and whom `admit` names
 (`plane::local::unix::Admitted`), in a folder only the node's account or
 the superuser may write (`unix::guarded`). The account is what
-authorization judges, by `[operate] role`.
+authorization judges, by the role `[operate] observers`, `operators` or
+`developers` lists it with (ADR-0009, amendment 2026-11-07).
 
 Measured, Windows, a debug build: a surface's connection from nothing to
 its first answer, the caller proven, about 0.28 to 0.45 ms the fastest of

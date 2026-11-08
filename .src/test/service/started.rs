@@ -216,11 +216,14 @@ impl Drop for Ending {
 
 /// The node's configuration in `directory`, its local operate endpoint —
 /// which always starts — named for the directory, so tests running at once
-/// never meet on `xmip-<node>`. `[operate]` is its last table: a test adds
-/// a key to it by adding a line.
+/// never meet on `xmip-<node>`. The file is named for the directory too:
+/// every test's directory sits in one folder, so their nodes share its
+/// default data directory, and the accepted slice a node keeps there is
+/// named after its configuration's file (`signed::kept_at`). `[operate]`
+/// is its last table: a test adds a key to it by adding a line.
 pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
     std::fs::create_dir_all(directory).expect("a directory");
-    let path = directory.join(format!("{}.xmip", node_name()));
+    let path = directory.join(format!("{}.xmip", endpoint(directory)));
     let text = format!(
         "{}\n[operate]\nlocal = \"{}\"\n",
         node(receive, &unheld().to_string()),

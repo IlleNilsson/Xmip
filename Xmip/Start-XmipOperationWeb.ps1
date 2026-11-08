@@ -31,8 +31,11 @@ function Start-XmipOperationWeb {
             nothing proved watches and acts on nothing. The node decides
             again (ADR-0009, amended 2026-11-01): the host hands it the
             browser's certificate, and each roll's node names the account the
-            run runs as in [operate] relay, so the node acts for the browser
-            by the browser's own role and audits it through the host.
+            run runs as in [operate] relay and lists the tester among its
+            operators — that account, and CN=<person> of every operator
+            certificate the Essentials' authority signed before the roll
+            started — so the node acts for the browser by the browser's own
+            role and audits it through the host.
 
             Over a roll, unless -Url or -Certificate says otherwise, the host
             is served https://127.0.0.1:5087 in Xmip's own TLS under the

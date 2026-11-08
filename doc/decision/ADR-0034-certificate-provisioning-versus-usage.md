@@ -666,3 +666,48 @@ Proved by `provision`'s tests: eight makers racing for one empty place hold
 byte-identical certificates, the one on disk, and a certificate each issues
 verifies against it; a key kept alone is given its certificate; a
 certificate left with no key is replaced by one for the key made.
+
+## Amendment, 2026-11-07: a node's mutual-TLS listeners refuse what the authority revoked
+
+Found by a security review: the register's list (amendment of 2026-10-22,
+item 1) was published for others to fetch, and no listener of Xmip's own
+read it, so a node certificate or a person's certificate the operator
+revoked was still let in by every mutual-TLS listener whose anchors it
+reached. Decided by the assistant, for the owner to overrule:
+
+- **One place reads the list for a node's listeners**:
+  `xmip-core-runtime`'s `presented::identity`, which every listener a
+  node's configuration names takes its identity from — `[operate]`'s
+  network listener and `[storage]`'s, the Storage wire served by
+  `xmip-core-persist` — gives that identity the authority's list
+  (`tls::Identity::revoking`, `tls::Revocation`). An identity handed to the
+  Event link (`xmip-core-event`'s `Joining`) carries it the same way.
+- **The list is the register's, found as the authority's certificate is**:
+  `authority.crl` in the folder `authority` beside the configuration, where
+  `authority.pem` is (ADR-0031, amendment 2026-11-06). No configuration key
+  is added. It is read again whenever it changes, so a revocation is
+  refused from the next handshake on. A list past its nextUpdate refuses
+  every client: a listener that cannot know whether a certificate stands
+  does not guess. Where no list is kept beside the configuration, nothing
+  is revoked, as before.
+- **The node keeping the authority keeps the list current**: every hour it
+  asks the register for its list (`running::revocation_list`), which the
+  register remakes once a day old — six days before a week's list expires
+  — whether or not the authority serves ACME or anyone fetches the list.
+  A node keeps current a list that is kept; it makes none where none was
+  made.
+
+Not built: the list reaches only the node that keeps the authority. A node
+shipped `node.xmip` and `authority.pem` alone (DSC, Ansible) holds no list
+and revokes nothing until one is shipped or fetched beside its
+certificate, and a list shipped is current a week. A Party's listener
+(`[provision.receive]`) trusts anchors that may be another authority's, a
+list of the cluster's refusing every certificate of theirs as of unknown
+status, so it takes no list; and the web host's secure listener, handed its
+files across the C ABI, takes none yet.
+
+Proved in the runtime: `tests/plane/revoked.rs`, an operator the authority
+revoked refused by the operate plane and its neighbor reading, no list
+revoking nothing and an empty one refused in words; and
+`running::revocation_list`, a list a day old made again, a fresh one kept
+and a node keeping none making none.

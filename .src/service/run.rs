@@ -120,7 +120,7 @@ pub fn serve(
     // What this process says of itself while it runs (ADR-0053); the file
     // goes when `declared` does, after the drain.
     let declared = Declaration::new(program, location.as_str(), arguments.purpose)
-        .with("configuration", configuration)
+        .and_then(|declaration| declaration.with("configuration", configuration))
         .and_then(|declaration| declaration.with("orders", place.as_str()))
         .and_then(|declaration| declaration.with("snapshot", snapshot.as_str()))
         .and_then(|declaration| match listening.as_deref() {
@@ -191,9 +191,14 @@ fn served(
     told: &Receiver<Told>,
 ) -> StoppedBy {
     let location = running.location();
+    // The authority's list, kept current where the node keeps it (ADR-0034).
+    let mut list = running.revocation_list();
     // Orders left before the watch began are taken at once.
     let (mut taking, mut acted) = (true, false);
     loop {
+        if let Err(problem) = list.keep() {
+            fail(audit, "revocation-list", &format!("{program}: {problem}"));
+        }
         let applied = if taking {
             orders::take(program, audit, orders, &location)
         } else {

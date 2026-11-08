@@ -91,6 +91,7 @@ mod publication;
 mod readiness;
 mod run;
 mod slice;
+mod starter;
 
 use std::process::ExitCode;
 
