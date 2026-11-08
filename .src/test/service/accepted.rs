@@ -38,13 +38,14 @@ fn subject(party: &str) -> String {
 /// receive wait was never the fix; 2026-10-20).
 fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path::PathBuf {
     let configuration = written(directory, receive);
+    let folder = configuration.parent().expect("its folder");
     let (certificate, key, anchors) = authority.pem("localhost");
     for (name, text) in [
         ("receive.pem", &certificate),
         ("receive.key", &key),
         ("parties.pem", &anchors),
     ] {
-        std::fs::write(directory.join(name), text).expect("written");
+        std::fs::write(folder.join(name), text).expect("written");
     }
     let [accepted, other] = parties();
     let declared = [&accepted, &other]

@@ -20,12 +20,13 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     let configuration = written(&directory, &receive);
     let authority = Authority::new();
     let (certificate, key, anchors) = authority.pem("node");
+    let folder = configuration.parent().expect("its folder");
     for (name, text) in [
         ("node.pem", &certificate),
         ("node.key", &key),
         ("anchor.pem", &anchors),
     ] {
-        std::fs::write(directory.join(name), text).expect("writes");
+        std::fs::write(folder.join(name), text).expect("writes");
     }
     let listen = unheld().to_string();
     let text = format!(
@@ -102,9 +103,8 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-unnamed-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    std::fs::create_dir_all(&directory).expect("a directory");
-    // Named for its directory, as `written` names one (`written` says why).
-    let configuration = directory.join(format!("{}.xmip", endpoint(&directory)));
+    // In its configuration folder, as `written` puts one (`written` says why).
+    let configuration = xmip_runtime::fixture::configuration_folder(&directory).join("node.xmip");
     let text = format!(
         "{}\n[operate]\n{}",
         node(&unheld().to_string(), &unheld().to_string()),
