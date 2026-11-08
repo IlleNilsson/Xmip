@@ -1231,6 +1231,12 @@ technologies until Assignment or Transformation creates a new Message.
 **Path addresses materialized content.** It is the tool for a Transformation
 that has a document in hand.
 
+**A Path's prefixes are its configuration's.** A Path is a language, an
+expression and a `namespaces` table binding each prefix the expression uses
+to a URI; the language receives the table as it compiles, a prefix resolves
+through it and never through the content, and a prefix it does not bind is
+refused then (ADR-0066, amendment 2026-11-08).
+
 ### Content Selectors, promotion and demotion
 
 Promotion and demotion cannot use Path: promotion runs against a Stream that

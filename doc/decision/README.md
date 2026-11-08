@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Seventy-one decisions, read as one document.
+Seventy-two decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -990,6 +990,20 @@ is found.**
 
 → [An audit record holds what it audits, in full](ADR-0070-an-audit-record-holds-what-it-audits.md)
 
+### What a Quest is, and how the Regulation Quest presents a regulation's evidence and gaps
+
+**A Quest probes an installation handed to it and returns what it found,
+the data a Report presents; it changes nothing it probes. The first is the
+Regulation Quest: one Quest, the regulation its parameter, the set of
+regulations open to any module. For each of a regulation's requirements,
+citing its article, it shows evidence, a gap or not applicable, what is
+behind it, and the actions that close a gap, which the operator applies. It
+reads at three levels — the regulation with its tally, a row per
+requirement, one requirement in full — and never judges whether an
+installation meets the regulation. GDPR is the first regulation.**
+
+→ [A Quest probes, and the regulation is a parameter, in full](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md)
+
 ---
 
 ## 6. How the work is done
@@ -1106,11 +1120,14 @@ You have a word. This gives you the decision that governs it.
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
+| evidence | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | expression | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | far end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | feature capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
+| gap | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
+| GDPR | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Guard | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
@@ -1188,13 +1205,16 @@ You have a word. This gives you the decision that governs it.
 | purpose, test, runtime | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | qualification | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | qualified suite name | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
+| Quest | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | read only, the Observer's reach | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| regulation | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Replay | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
+| requirement | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | resilience technology | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Retention | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | retention hold | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
@@ -1240,6 +1260,7 @@ You have a word. This gives you the decision that governs it.
 | the one adapter | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | the operating system's log | [Every Xmip tool audits](ADR-0062-every-xmip-tool-audits.md) |
 | the prefix | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
+| the Regulation Quest | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | the scope tree | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the vendor crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
@@ -1354,3 +1375,4 @@ is nowhere else.
 | [0069](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) | A Journey whose circumstances changed is a Dead Message | |
 | [0070](ADR-0070-an-audit-record-holds-what-it-audits.md) | An audit record holds what it audits | |
 | [0071](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) | Xmip is reached over MCP through the command line | |
+| [0072](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) | A Quest probes, and the regulation is a parameter | |

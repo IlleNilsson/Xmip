@@ -320,8 +320,8 @@ a setting.
 | Encryption | prepare | receive, process, send | `format` openpgp, cms, jose; `engine`; `key`; `recipients`; `direction` | `xmip-core-prepare` |
 | Signature | prepare | receive, process, send | `format`; `engine`; `key`; `signers`; `direction` | `xmip-core-prepare` |
 | Validate | validate | receive, process, send | `format`, a contract technology's name; `contract` | `xmip-core-contract` and its technologies |
-| Promote | promote | receive | `property`; `language`, a path language or `context`; `expression` | `xmip-core-promote`, `xmip-core-path` |
-| Demote | demote | send | `property`; `language`; `expression` | `xmip-core-demote`, `xmip-core-path` |
+| Promote | promote | receive | `property`; `language`, a path language or `context`; `expression`; `namespaces` | `xmip-core-promote`, `xmip-core-path` |
+| Demote | demote | send | `property`; `language`; `expression`; `namespaces` | `xmip-core-demote`, `xmip-core-path` |
 | Convert | transform | receive, process, send | `from`, `to` xml, json, csv; `arrays`; `root`; `separator`; `header`; `columns` | `xmip-core-transform` |
 | Stylesheet | transform | receive, process, send | `engine`; `stylesheet`; `version` | `xmip-core-transform` |
 | Script | transform | receive, process, send | `runtime` powershell; `script` | `xmip-core-transform` |
@@ -656,3 +656,32 @@ a Work Process, a Send Port Group, a Send Port or Send Location on send.
 The type is `configure::Correlation`. A Send Port Group's holds its key
 for a delivery until every member has succeeded or failed (ADR-0024,
 amendment 2026-10-27).
+
+## Amendment, 2026-11-08: a Path's prefixes are its configuration's
+
+The deep review found XPath's prefixes resolved from the document: the
+evaluation context was built from the prefixes the root element declared,
+so `/o:order` meant whatever a sender's document bound `o` to, read
+nothing where the document wrote the same namespace under another prefix
+or declared it below the root, and stopped the thread on a prefix the
+document did not declare. The owner, 2026-11-08, decided the fix.
+
+- **A Path is a language, an expression and a `namespaces` table** binding
+  each prefix the expression uses to a URI (`path::Path`,
+  `path::Namespaces`). A Promote or Demote step writes it beside
+  `language` and `expression`, as `namespaces = { o = "urn:..." }`; the
+  setting's kind is `table`, text by its key, each value never empty
+  (`xcore::settings::Kind::Table`), and every surface that lists a
+  technology's settings carries the kind.
+- **The language receives the table as it compiles** (`PathLanguage::compile`
+  takes it). A prefix resolves through the table and never through the
+  content, so `/o:order` reads the URI the configuration gave `o`, whatever
+  prefix a document writes for it and wherever it is declared.
+- **An unbound prefix is refused at compile**, when the step opens, naming
+  the prefix; it is never met while a Message is read.
+- **A language without namespaces refuses a table that binds anything**
+  (`Namespaces::unused_by`), and so does a Promote whose `language` is
+  `context`: a binding nobody reads is said at configuration, not ignored.
+- A route's `content:<language>:<expression>` property compiles through the
+  same engine with the namespaces its source is built with (ADR-0046);
+  where a filter configures that table is not yet decided.
