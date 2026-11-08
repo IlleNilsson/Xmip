@@ -656,9 +656,10 @@ every other node reaches from its `[storage] nodes` over Xmip's own mutual
 TLS, presenting the certificate `[storage]` names — is in `xmip-service`
 ([built, in the assembled service](doc/architecture/estate-map.md#storage-nodes)),
 and several such nodes are a primary and its standbys, each standby copying
-the primary's writes and promoted once it is gone
+the primary's writes, and a primary that is gone waited for, never
+replaced, until there is a witness
 ([built, in the assembled service](doc/architecture/estate-map.md#storage-standby);
-drafted, ADR-0056, amendment 2026-10-22); every node publishes at
+ADR-0056, amendments 2026-10-22, drafted, and 2026-11-08); every node publishes at
 `<node>/storage` which Storage it uses and whether it answers. A
 node declaring neither the `storage` role nor `[storage] nodes` is refused
 as it starts, in words naming both. The

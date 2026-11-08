@@ -614,11 +614,11 @@ names no `listen` is refused at phase 3, in words. `xmip-service
   list every node of the cluster reaches them through, the first listed
   the first primary. Each asks every one listed what it is now (wire
   operation 29, its standing); it finds itself among them by the process it
-  answers as, never by a name. A primary that answers is followed. Where
-  none answers, the standby holding most of the latest epoch is promoted,
-  the first listed of equals — at once where every one listed before it
-  answered, else once it heard no primary for `[tuning] storage_silence`
-  (1 s).
+  answers as, never by a name. A primary that answers is followed. One is
+  promoted only where every one listed answered and none of them is a
+  primary: the one holding most of the latest epoch, the first listed of
+  equals, none whose whole copy is under way. A primary that is gone is
+  waited for, never replaced (amendment 2026-11-08).
 - **A standby copies the primary's engine writes, in order,
   asynchronously** (wire operation 30): each write as the primary's engine
   took it, numbered in that order under the write's own lock, so claims are
@@ -641,13 +641,12 @@ names no `listen` is refused at phase 3, in words. `xmip-service
 - **A primary stopped in order hands on everything it wrote** — it serves
   no operation more, waits for each one under way, and ends each standby's
   connection only once it has had every write. One killed loses the writes
-  it had not handed on, as the owner accepted on 2026-10-01; a former
-  primary that comes back follows the new one, copied whole, and what it
-  held alone is gone.
-- **What is not built**: a witness — two sides of a partition can each
-  promote a primary, and only the nodes that met the later epoch refuse
-  the earlier one — and copying a standby whole without reading every
-  record once (open problem 45).
+  it had not handed on, as the owner accepted on 2026-10-01: once it is
+  back, a standby holding more is promoted, the former primary follows it,
+  copied whole, and what it held alone is gone.
+- **What is not built**: a witness — and with none, no automatic failover
+  (amendment 2026-11-08) — and copying a standby whole without reading
+  every record once (open problem 45).
 
 **Every surface shows which Storage a node uses and whether it is
 reached**: at `<node>/storage`, Fine, or Done where every Storage node
@@ -666,8 +665,8 @@ Built 2026-10-22: `persist::storage::standby` (`StorageNode`, `Copies`,
 `Planned::open` (`Kept`, `Reaching`, `Serving`; `runtime::presented`, the
 one reading of a plane's identity, which `[operate]` reads through too);
 `[tuning] storage_beat`, `storage_silence` and `storage_kept`. Held by the
-root's `failover` test (every file dropped arrives once while the primary
-stops mid-run) and `wire` test (a call over the wire within a millisecond
+root's `failover` test (every file dropped arrives once across the
+primary's stop and return, since amendment 2026-11-08) and `wire` test (a call over the wire within a millisecond
 of the same in process), the runtime's and persist's tests, and the
 Essentials at level 1, every node a process (ADR-0028, amendment of this
 date).
@@ -686,3 +685,35 @@ PowerShell on its computer.*
   run on the operator's own computer, reaching the cluster from outside.
 - Not built: today the web host is started on the operator's computer by
   `Start-XmipOperationWeb`. Hosting it on a Monitoring node follows.
+
+## Amendment, 2026-11-08: no automatic promotion until there is a witness
+
+The owner, 2026-11-08, accepting the recommendation that automatic standby
+promotion is off until there is a witness: *Do what you recommend.* As built on 2026-10-22, a standby promoted itself once it had
+heard no primary for `[tuning] storage_silence`, and the first listed
+promoted itself at once where every one listed before it answered — true
+of the first listed with nothing before it. A primary cut off from the
+others serves on, so either made two primaries.
+
+- **A Storage node is promoted only where every one listed answered and
+  none of them is a primary.** Among them the one holding most of the
+  latest epoch is promoted, the first listed of equals, and never one
+  whose whole copy is under way or was cut short.
+- **A primary that is gone is not replaced.** Stopped, killed or cut off,
+  it is waited for: the cluster settles once it is back and every one
+  listed answers again. Until then the nodes that cannot reach it store
+  nothing, and say so at `<node>/storage`. Automatic failover returns with
+  a witness (open problem 45).
+- **The silence-based promotion is deleted**, not switched off: no flag
+  and no configuration key keeps it. `[tuning] storage_silence` stays for
+  what it still bounds: how long a Storage node waits for another's
+  standing, a standby's wait for its primary's next write or beat, and how
+  often a primary asks the others whether one is the primary of a later
+  epoch.
+
+Built 2026-11-08: `persist::storage::standby` (`StorageNode`'s
+promotion, its doc and `storage_silence`'s meaning), held by persist's
+standby tests (the first listed alone is not promoted; a standby is not
+promoted while its primary is gone, and one is once every one answers),
+the runtime's storage test, and the root's `failover` test, every file
+dropped arriving once across the primary's stop and return.

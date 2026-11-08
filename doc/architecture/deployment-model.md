@@ -663,9 +663,11 @@ key (ADR-0063, amendment 2026-10-22), and is never promoted while a whole
 copy into it is under way or was cut short (ADR-0056, amendment
 2026-11-04); each promotion raises the epoch, and
 a primary of an earlier one is not asked. The promote is the standbys' own,
-not a command, and there is no witness: two sides of a partition can each
-promote a primary (open problem 45). A stays the choice for a database
-server.
+not a command, and there is no witness, so it happens only where every one
+listed answers and none is a primary: a primary that is gone is waited for,
+never replaced, and automatic failover returns with a witness (the owner,
+2026-11-08; ADR-0056, amendment 2026-11-08; open problem 45). A stays the
+choice for a database server.
 
 **Rejected: option B**, an embedded engine on a shared disk. RocksDB is not
 supported on network file systems.
@@ -884,10 +886,11 @@ Xmip Service dying stops no work** (ADR-0018 clause 5). **A Storage node
 dying stops no work either** while another is left: every node reaches the
 next one round robin. **The database server's failover is IT's.** One
 embedded Storage node alone has none: while it is down, its site stores
-nothing. Several are a primary and its standbys, and a standby is promoted
-once the primary is gone (section 7, *C is built for embedded Storage
-nodes*): a primary stopped in order loses nothing, one killed loses the
-writes it had not handed on.
+nothing. Several are a primary and its standbys, and with no witness a
+primary that is gone is waited for, not replaced: the site stores nothing
+until it is back (section 7, *C is built for embedded Storage nodes*). A
+primary stopped in order loses nothing; one killed loses the writes it had
+not handed on.
 
 ### What Xmip does, and what the infrastructure does
 
@@ -905,7 +908,8 @@ implement.* The split agreed, as re-decided later that day:
 Replication between Storage nodes, a promote command and epoch fencing are
 not Xmip's under option A; they are option C's, recorded in section 7, and
 built for embedded Storage nodes on 2026-10-22 — the promote the standbys'
-own, with no witness yet.
+own, with no witness yet, and so never while the primary is gone
+(2026-11-08).
 
 Xmip cannot own every bad decision in configuration or custom code, but it
 mitigates avoidable loss:

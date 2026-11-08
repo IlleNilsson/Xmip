@@ -410,9 +410,11 @@ other node reaches one through `[storage] nodes`, over Xmip's mutual TLS with
 the certificate `[storage]` names, and a one-machine node carries the role
 (ADR-0056, amendments 2026-10-20 and 2026-10-22). Several embedded Storage
 nodes are a **primary**, serving every operation, and its **standbys**, each
-copying the primary's writes behind it and promoted once it is gone; each
-promotion raises the **epoch**, and a primary of an earlier one is not asked
-(drafted, ADR-0056, amendment 2026-10-22). It always keeps three databases, one to each
+copying the primary's writes behind it; one is promoted only where every
+Storage node listed answers and none is a primary, so a primary that is
+gone is waited for until there is a witness; each promotion raises the
+**epoch**, and a primary of an earlier one is not asked (ADR-0056,
+amendments 2026-10-22, drafted, and 2026-11-08). It always keeps three databases, one to each
 data domain, whatever the backend: the **runtime database**, which is the
 Ledger; the **administration database** — administration, deployment state,
 cluster membership, operator state, and the Subscriptions each Host Service
@@ -537,7 +539,7 @@ present existing data, a Quest probes for data to present in a Report.*
 | Term | Meaning |
 | --- | --- |
 | **Report** | Presents data that already exists: configuration and records, read and never authored by hand (`xmip-core-report`, `module/core/operation/report/doc/reports.md`). |
-| **Quest** | Probes for data a Report then presents: it acts on an installation to find out. Named by the owner 2026-11-05, none designed yet: the Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time and Firewall Quests. |
+| **Quest** | Probes for data a Report then presents: it acts on an installation to find out. Named by the owner 2026-11-05, none designed yet: the Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time and Firewall Quests. The **Regulation Quest** (agreed 2026-11-08) takes the regulation as a parameter — GDPR, the patient data law, the Cyber Resilience Act, NIS2, the AI Act — and a module may add one. For each of the regulation's requirements it probes, shows the evidence or the gap, and offers the actions that close a gap. The operator applies an action; the Quest never does. It presents evidence and gaps and never says "compliant": compliance is the customer's legal judgment. Its form is not yet agreed. |
 
 ## Retired terms
 

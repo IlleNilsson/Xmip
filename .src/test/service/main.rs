@@ -18,7 +18,9 @@
 //! - `failover.rs`: a receiving and a sending node reach the test cluster's
 //!   two Storage nodes over Xmip's mutual TLS, keeping none themselves;
 //!   the primary Storage node is stopped while files are dropped, its
-//!   standby is promoted, and every file dropped arrives once, whole.
+//!   standby is not promoted and nothing more is taken in until the
+//!   primary is started again, and then every file dropped arrives once,
+//!   whole.
 //! - `authority.rs`: a node whose `[provision.node]` serves the cluster's
 //!   authority answers ACME for the premises and publishes its revocation
 //!   list, `--listening` names both ports, and a client obtains, is told

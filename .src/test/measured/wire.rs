@@ -30,7 +30,8 @@ const TIMEOUT: Duration = Duration::from_secs(10);
 const CALLS: u64 = 500;
 
 /// One Storage node of `listed`, at `listener`, on `RocksDB` and `SQLite`
-/// in memory in `place`, served and settled.
+/// in memory in `place`, served; it settles once started, every one listed
+/// answering.
 fn storage_node(
     place: &Path,
     (listener, listed): (TcpListener, &[String]),
@@ -61,7 +62,6 @@ fn storage_node(
     )
     .expect("a Storage node");
     let server = StorageServer::several(&node, listener, identity).expect("served");
-    node.start(Duration::from_secs(10)).expect("settled");
     (node, server)
 }
 
@@ -101,6 +101,11 @@ fn a_storage_call_over_the_wire_costs_less_than_a_millisecond_beyond_its_load() 
     for (place, listener) in listeners.into_iter().enumerate() {
         let at = test.join(format!("storage-{place}"));
         nodes.push(storage_node(&at, (listener, &listed), &issue(&test)));
+    }
+    // Both served before either starts: a Storage node is promoted only
+    // where every one listed answers (ADR-0056, amendment 2026-11-08).
+    for (node, _) in &nodes {
+        node.start(Duration::from_secs(10)).expect("settled");
     }
     assert!(nodes[0].0.is_primary(), "{}", nodes[0].0.said());
     let client = StorageClient::new(&listed, &issue(&test), TIMEOUT, PASS_OVER).expect("a client");

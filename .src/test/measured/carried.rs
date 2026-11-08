@@ -100,7 +100,8 @@ local = "{local}"
         out = path("out"),
         local = endpoint(directory),
     );
-    let configuration = directory.join(format!("{node}.xmip"));
+    // Named for its directory, as `started::written` says why.
+    let configuration = directory.join(format!("{}.xmip", endpoint(directory)));
     xmip_runtime::fixture::write_signed(&configuration, &text);
     configuration
 }

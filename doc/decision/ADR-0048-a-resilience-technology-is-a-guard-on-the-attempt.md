@@ -150,3 +150,26 @@ table are the assistant's.
   words naming the guard, the kind and why. An unconfirmed send is said to
   be at most once (`runtime-model.md` section 15).
 - Not built.
+
+## Amendment, 2026-11-08: every guard applies, in its order
+
+Section 2 said every guard is asked before and after every attempt, and
+`execute` did not: the first guard that did not say proceed ended the
+asking. A bulkhead behind a retry that asked for another try never freed its
+slot and refused the next attempt; a circuit breaker there never counted the
+failure; a bulkhead behind a rate limit's wait was never asked before the
+attempt and freed a slot it had not taken (the deep review, group 2).
+
+- **After an attempt every guard is asked, in order, whatever the ones
+  before it said**, and the first that does not say proceed decides, as
+  section 2 has it.
+- **Before an attempt every guard is asked, in order, until one refuses or
+  falls back**: that one decides, and no guard after it is admitted to an
+  attempt that will not happen. Otherwise the attempt goes after the
+  longest wait any guard asked for: a wait is a guard's condition for the
+  attempt, so a refusal behind it still refuses and each guard's wait is
+  kept.
+- Open: a guard admitted before a later one refused — a bulkhead's slot, a
+  half-open circuit breaker's trial — is not told that the attempt will not
+  happen, so it keeps what it took. Telling it is a method on `Guard`, a
+  change to the trait, and waits on the owner.
