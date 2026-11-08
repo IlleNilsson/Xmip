@@ -244,7 +244,11 @@ before they know to ask, and every one derived from configuration and
 records, never authored by hand. Which four, and how each is derived, is
 `module/core/operation/report/doc/reports.md`. A Report presents existing
 data; a Quest probes for data to present in a Report (the owner,
-2026-11-07; `doc/terminology.md`, *Report and Quest*).
+2026-11-07; `doc/terminology.md`, *Report and Quest*). Every Quest probes an
+installation handed to it and changes nothing; the first is the Regulation
+Quest, its regulation a parameter and GDPR the first, presenting evidence
+and gaps per requirement and never a verdict (ADR-0072;
+[built, not in the assembled service](estate-map.md#regulation-quest)).
 
 ## 9. Ownership
 

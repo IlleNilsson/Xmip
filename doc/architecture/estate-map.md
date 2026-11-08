@@ -259,6 +259,17 @@ the runtime's `dynamic-loading` feature, which `xmip-service` is not built
 with; a unit's settings and calls through the standard units are decided, not
 built. Records: ADR-0066 (amendment 2026-10-22), runtime-model.md section 22.
 
+#### `regulation-quest`
+
+**The Regulation Quest: a regulation's evidence and gaps.** `xmip-core-report`
+holds the Quest seam and the Regulation Quest, its regulations an open set a
+module adds to, and GDPR's nine requirements, each citing its article:
+encryption at rest, encryption on each Location's wire and the audit probed in
+a node's configuration, the rest gaps not yet available in Xmip. Proved in its
+tests; nothing composes an `Installation` from a running node, and no surface
+shows it. Every transport declares nothing of its wire yet, so every Location
+would be a gap. Records: ADR-0072.
+
 #### `resilience-guards`
 
 **The six resilience guards.** Retry, timeout, circuit breaker, rate limit,
@@ -413,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 333195 lines of production
+Where each repository mounts and what it holds: 334586 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -552,16 +563,16 @@ hold no source to count.
 │   │   │   │   ├── password                      81
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── mutual-tls                    74
-│   │   │   ├── path                            2431
-│   │   │   │   ├── jsonpath                     660
-│   │   │   │   ├── fhirpath                     614
-│   │   │   │   ├── dot                          288
-│   │   │   │   ├── hl7-v2                       253
-│   │   │   │   ├── edi                          216
-│   │   │   │   ├── index                        158
-│   │   │   │   ├── regex                        158
-│   │   │   │   ├── json-pointer                  60
-│   │   │   │   └── xpath                         49
+│   │   │   ├── path                            2534
+│   │   │   │   ├── jsonpath                     665
+│   │   │   │   ├── fhirpath                     619
+│   │   │   │   ├── dot                          293
+│   │   │   │   ├── hl7-v2                       258
+│   │   │   │   ├── edi                          221
+│   │   │   │   ├── index                        163
+│   │   │   │   ├── regex                        163
+│   │   │   │   ├── xpath                        118
+│   │   │   │   └── json-pointer                  65
 │   │   │   ├── prepare                         2426
 │   │   │   │   ├── rpgp                         255
 │   │   │   │       declared, not built 9
@@ -622,8 +633,8 @@ hold no source to count.
 │   │   │   │   └── csv                          140
 │   │   │   ├── route                            739
 │   │   │   │   ├── metadata                     125
+│   │   │   │   ├── content                       88
 │   │   │   │   ├── contract                      86
-│   │   │   │   ├── content                       80
 │   │   │   │   ├── regex                         76
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
@@ -643,9 +654,10 @@ hold no source to count.
 │   │   │   │   ├── acl                          147
 │   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
-│   │   │   ├── unit                             417
+│   │   │   ├── unit                             431
 │   │   │   ├── receive                          178
-│   │   │   ├── demote                           168
+│   │   │   ├── demote                           175
+│   │   │   ├── promote                          160
 │   │   │   ├── resilience                       159
 │   │   │   │   ├── circuit-breaker              134
 │   │   │   │   ├── rate-limit                   107
@@ -658,7 +670,6 @@ hold no source to count.
 │   │   │   │   ├── soap                         274
 │   │   │   │   ├── http-api                     259
 │   │   │   │   └── grpc                         178
-│   │   │   ├── promote                          153
 │   │   │   ├── send                              88
 │   │   │   ├── assign                            39
 │   │   │   └── retain                            27
@@ -676,7 +687,7 @@ hold no source to count.
 │   │   └── operation/
 │   │       ├── cli                             9099
 │   │       ├── gui                             5366
-│   │       │   └── vscode                      3516
+│   │       │   └── vscode                      3517
 │   │       ├── audit                           4121
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
@@ -685,26 +696,26 @@ hold no source to count.
 │   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   328
 │   │       ├── powershell                      3487  C# 3487 · PowerShell 0
-│   │       ├── archive                          612
-│   │       │   ├── file                         292
-│   │       │   ├── sql                          263
-│   │       │   ├── azure-blob                   165
-│   │       │   ├── s3                           155
-│   │       │   ├── parquet                      147
-│   │       │   ├── gcs                          135
-│   │       │   ├── sqlite                       125
-│   │       │   ├── mariadb                       82
-│   │       │   ├── postgresql                    62
-│   │       │   └── mssql                         59
-│   │       └── report                            18
-│   │               declared, not built 6
-│   │               csv  html  json  pdf  prometheus  sql
+│   │       ├── report                          1119
+│   │       │       declared, not built 6
+│   │       │       csv  html  json  pdf  prometheus  sql
+│   │       └── archive                          612
+│   │           ├── file                         292
+│   │           ├── sql                          263
+│   │           ├── azure-blob                   165
+│   │           ├── s3                           155
+│   │           ├── parquet                      147
+│   │           ├── gcs                          135
+│   │           ├── sqlite                       125
+│   │           ├── mariadb                       82
+│   │           ├── postgresql                    62
+│   │           └── mssql                         59
 │   ├── foundation/
 │   │   ├── abi                                33186  C# 30569 · Rust 2324 · PowerShell 293
 │   │   ├── event                               5648
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                4245
+│   │   ├── core                                4274
 │   │   ├── message                             1728
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -734,7 +745,7 @@ hold no source to count.
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8428
+│       └── configure                           8440
 └── test/
     └── core/
         ├── essentials                         13911

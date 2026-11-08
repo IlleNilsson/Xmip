@@ -252,6 +252,12 @@ state = "built"
 note = "`xmip-core-retain` and `xmip-core-archive` are driven by the Essentials on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
 record = ["ADR-0040"]
 
+[implementation.regulation-quest]
+name = "The Regulation Quest: a regulation's evidence and gaps"
+state = "built"
+note = "`xmip-core-report` holds the Quest seam and the Regulation Quest, its regulations an open set a module adds to, and GDPR's nine requirements, each citing its article: encryption at rest, encryption on each Location's wire and the audit probed in a node's configuration, the rest gaps not yet available in Xmip. Proved in its tests; nothing composes an `Installation` from a running node, and no surface shows it. Every transport declares nothing of its wire yet, so every Location would be a gap."
+record = ["ADR-0072"]
+
 [implementation.embedded-storage]
 name = "A node as its own embedded Storage node"
 state = "assembled"
@@ -1385,11 +1391,11 @@ dependency = []
     specification = "Prometheus text-based exposition format 0.0.4"
 
   [xmip.core.report]
-  description = "Reportable Xmip data and report production functionality."
+  description = "Reportable Xmip data and report production functionality, and the Quests that probe for it: the Quest seam and the Regulation Quest, its regulation a parameter, GDPR the first (ADR-0072)."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core"]
+  dependency = ["xmip-core", "xmip-core-configure"]
     [xmip.core.report.csv]
     maturity = "reserved"
     [xmip.core.report.html]
