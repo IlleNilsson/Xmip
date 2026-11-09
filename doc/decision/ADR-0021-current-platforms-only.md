@@ -208,9 +208,10 @@ The rule above, applied on that date; each version read from its publisher:
 
 **Java follows the current release, not the long-term one.** The foreign
 function and memory API the Java binding uses is final since 22, so the
-binding compiles with `--release 27` and no preview flag. Microsoft builds
-OpenJDK only for long-term support releases, so the Windows package is
-Amazon Corretto 27.
+binding compiles with `--release 27` and no preview flag. The Windows
+package is Eclipse Temurin 27, the Eclipse Foundation's vendor-neutral
+OpenJDK build (the owner, 2026-11-09: *Lets go with Temurin*); Microsoft
+builds OpenJDK only for long-term support releases.
 
 **Python 3.15 is installed on Windows through the Python install manager**
 (`py install 3.15`); winget carries no package for 3.15 itself.
