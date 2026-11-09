@@ -917,7 +917,8 @@ stopping the run with nothing pushed:
   four MSBuild nodes (`-m:4`).
 - **The Event bindings in other languages,** where a changed module carries
   `verify-event-bindings.ps1` (`module/foundation/abi`): C and C++ through
-  zig, Java and Python, against the runtime library built first. Every
+  the compiler Rust requires (`cl.exe` on Windows, `cc` and `c++`
+  elsewhere), Java and Python, against the runtime library built first. Every
   language but Rust is optional (the owner, 2026-10-20), so a binding whose
   tool is absent, or older than its floor, is said in words — `SKIPPED: Java
   not installed; the Java Event binding is not verified` — and fails nothing;

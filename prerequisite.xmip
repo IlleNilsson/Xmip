@@ -157,7 +157,7 @@ note = "Older distributions do not package rustup. The upstream installer pipes 
 
 [prerequisite.linker]
 role = "developer"
-note = "Rust compiles but cannot link without a system toolchain, and the failure appears at the linker rather than the compiler, which reads as a Rust problem and is not one."
+note = "Rust compiles but cannot link without a system toolchain, and the failure appears at the linker rather than the compiler, which reads as a Rust problem and is not one. The same toolchain's C and C++ compiler builds the C and C++ event bindings (ADR-0065): cl.exe on Windows, cc and c++ on macOS and Linux."
 
 [prerequisite.linker.windows]
 present_path = ['%ProgramFiles(x86)%\Microsoft Visual Studio\*\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe', '%ProgramFiles%\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe']
@@ -293,6 +293,10 @@ command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-an
 # is its own process, and no such runtime is loaded into an Xmip process
 # (ADR-0018, amendment 2026-10-05). Each language below is the toolchain
 # xmip-core-abi's verify-event-bindings.ps1 builds and tests its binding with.
+# C and C++ have no entry of their own: they build with the compiler Rust
+# already requires, the linker entry above (and cxx on Linux), the MSVC build
+# tools' cl.exe on Windows, cc and c++ elsewhere (ADR-0065, amendment
+# 2026-11-09).
 #
 # Every one is optional, and stays so. The owner, 2026-10-20: "Xmip is able
 # to use Java, but it is not in the core", and "every language except Rust is
@@ -302,24 +306,6 @@ command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-an
 # not "SKIPPED: Java not installed; the Java Event binding is not verified",
 # failing nothing in the core for it. .NET and PowerShell are another matter:
 # the operator surfaces and the estate's tooling are built on them.
-
-[prerequisite.c]
-role = "developer"
-optional = true
-probe = "zig version"
-note = "One compiler for C and C++ on every platform: zig cc and zig c++ are clang with the platform libc bundled, so the C and C++ event bindings build the same way on Windows, macOS and Linux with no Visual Studio, Xcode or gcc dependency. Chosen 2026-09-07 over a per-platform compiler because the build has to be one line in a script."
-
-[prerequisite.c.windows]
-winget = "zig.zig"
-
-[prerequisite.c.macos]
-brew = "zig"
-
-[prerequisite.c.linux]
-apt = "zig"
-dnf = "zig"
-pacman = "zig"
-fallback = "https://ziglang.org/download/"
 
 [prerequisite.java]
 role = "developer"
@@ -425,7 +411,7 @@ pacman = "clang"
 [prerequisite.cxx]
 role = "developer"
 probe = "c++ --version"
-note = "Linux only: the C++ compiler RocksDB's crate builds with (libclang above). The linker entry installs gcc, which compiles C and not C++; build-essential and base-devel already carry g++, so apt and pacman repeat them only to say so. Found on 2026-09-25 building the runtime store on the AlmaLinux guest, which had gcc and no g++."
+note = "Linux only: the C++ compiler RocksDB's crate builds with (libclang above), and the C++ event binding (ADR-0065). The linker entry installs gcc, which compiles C and not C++; build-essential and base-devel already carry g++, so apt and pacman repeat them only to say so. Found on 2026-09-25 building the runtime store on the AlmaLinux guest, which had gcc and no g++."
 
 [prerequisite.cxx.linux]
 apt = "build-essential"
