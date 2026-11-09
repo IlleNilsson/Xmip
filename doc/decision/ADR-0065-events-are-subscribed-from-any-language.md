@@ -368,8 +368,9 @@ potential perfect Rust code.*
   technologies did that and are gone, with the reserved transform and
   process entries in C, C++, Go, Java, Lua, PowerShell and Python (ADR-0042,
   amendment 2026-10-05).
-- The JDK, Python and zig stay in `prerequisite.xmip`, now for these
-  bindings alone; the Go toolchain served only a contract technology and is
+- The JDK and Python stay in `prerequisite.xmip`, now for these bindings
+  alone, and C and C++ build with the compiler Rust requires (amendment
+  2026-11-09); the Go toolchain served only a contract technology and is
   gone.
 
 Provenance: the owner's ruling, quoted; the wording is the assistant's.
@@ -394,4 +395,37 @@ right?* — and, told yes: *It should be documented.*
   any other and hears the whole cluster from there.
 
 Provenance: the owner's question and ruling, quoted; the wording is the
+assistant's.
+
+## Amendment, 2026-11-09: C and C++ build with the compiler Rust uses
+
+The owner, 2026-11-09, of the C and C++ bindings' own compiler: *Remove it
+and use the compiler Rust uses.*
+
+- **One C and C++ compiler, the one Rust already requires.** Rust's msvc
+  target links with the MSVC build tools on Windows, and with the system's
+  `cc` on macOS and Linux (`prerequisite.xmip`, `linker`; `cxx` adds `c++`
+  on Linux). The C and C++ bindings build with the same tools: `cl.exe` on
+  Windows, `cc` and `c++` elsewhere. `prerequisite.xmip` has no C entry of
+  its own.
+- **`verify-event-bindings.ps1` finds `cl.exe` the way Microsoft documents.**
+  `vswhere.exe`, at the fixed path the Visual Studio Installer puts it,
+  names the newest installation carrying the C and C++ tools for the
+  machine's architecture, and that installation's `VsDevCmd.bat` sets the
+  environment `cl.exe` compiles in: the C runtime's and the Windows SDK's
+  headers and libraries. The environment is read once and applied only
+  around each compiler call.
+- **The same promise on every compiler.** C11 and C++17, optimized, every
+  warning in the binding's own code an error: `/W4 /WX` with the system
+  headers' warnings left out (`/external:W0`) on Windows, `-Wall -Wextra
+  -Werror` elsewhere. `cl.exe` needs `/experimental:c11atomics` for C11's
+  `<stdatomic.h>`, `/EHsc` for C++'s standard exceptions and
+  `_CRT_SECURE_NO_WARNINGS` to take the standard `getenv`. The bindings load
+  the runtime's library by path at run time, so nothing links its import
+  library.
+- **Still optional where absent.** A machine without the compiler says
+  `SKIPPED` for the C and C++ bindings and fails nothing; a developer
+  machine has it, since Rust does not link without it.
+
+Provenance: the owner's ruling, quoted; the wording and the flags are the
 assistant's.

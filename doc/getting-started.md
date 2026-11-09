@@ -65,9 +65,11 @@ applies it. The versions below change often; **see
 | .NET MAUI workloads | the desktop GUI only | see prerequisite.xmip |
 
 The linker is Visual Studio Build Tools with the C++ workload on Windows, the
-command line tools on macOS, and `build-essential` or `gcc` on Linux.
-Every language but Rust is optional for Xmip itself: Java, Python and zig
-build the event bindings, and TypeScript's native compiler the VS Code
+command line tools on macOS, and `build-essential` or `gcc` on Linux; its C
+and C++ compiler (`cl.exe` on Windows, `cc` and `c++` elsewhere) also builds
+the C and C++ event bindings.
+Every language but Rust is optional for Xmip itself: Java and Python build
+the other event bindings, and TypeScript's native compiler the VS Code
 extension, and a machine without them builds and runs a node all the same.
 Node.js is needed nowhere on your machine.
 
@@ -145,7 +147,7 @@ Install-XmipPrerequisite -Role developer -Install
 ```
 
 Add `-IncludeOptional` to both to take the optional toolchains too: the event
-bindings' Java, Python and zig, and TypeScript's native compiler for the VS
+bindings' Java and Python, and TypeScript's native compiler for the VS
 Code extension, fetched and checked by its digest, under .local-work/tool.
 
 It never elevates. Where a package needs administrator rights, it says

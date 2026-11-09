@@ -97,9 +97,10 @@ function Test-XmipEventBinding {
 
         .DESCRIPTION
             Every language but Rust is optional for Xmip itself (the owner,
-            2026-10-20: *every language except Rust is optional*): C and C++
-            through zig, Java and Python are optional prerequisites
-            (prerequisite.xmip). A binding whose tool is absent here is
+            2026-10-20: *every language except Rust is optional*): Java and
+            Python are optional prerequisites (prerequisite.xmip), and C and
+            C++ build with the compiler Rust requires, prerequisite.linker
+            (ADR-0065, amendment 2026-11-09). A binding whose tool is absent here is
             SKIPPED in words by the script — "SKIPPED: Java not installed;
             the Java Event binding is not verified" — and fails nothing; one
             whose tool is here and fails fails the module. The script loads

@@ -210,8 +210,10 @@ PowerShell Core 7.7.0 or newer, with PSToml, powershell-yaml and posh-git, and P
 Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
 .NET 11 SDK, release candidate 3 (11.0.100-rc.3.26522.148) until GA on
 2026-11-10, and every project targets net11.0, the PowerShell binary module
-included, which pwsh 7.7 hosts on .NET 11 (ADR-0014, amendment 2026-11-02). The event bindings build with Java 27, Python 3.15 and zig,
-the VS Code extension's shell with TypeScript 7's native compiler, and no
+included, which pwsh 7.7 hosts on .NET 11 (ADR-0014, amendment 2026-11-02). The event bindings build with Java 27, Python 3.15 and,
+for C and C++, the compiler Rust already requires (the MSVC build tools'
+`cl.exe` on Windows, `cc` and `c++` elsewhere; ADR-0065, amendment
+2026-11-09), the VS Code extension's shell with TypeScript 7's native compiler, and no
 Node.js outside its CI (ADR-0014, amendment 2026-10-22), and each of those is optional: every
 language but Rust is optional for Xmip itself (the owner, 2026-10-20), a
 binding whose tool is absent is said SKIPPED and fails nothing, and .NET
