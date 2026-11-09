@@ -257,18 +257,29 @@ fn drained_record(
     properties.extend(counts.iter().map(|(name, count)| (*name, count.as_str())));
     // Xmip's own share of a sent Message's time, the fastest of five, where
     // the node measured one (`Outcomes::own_share`): what the millisecond
-    // rule holds.
-    let own = outcomes.own_share.map(|own| own.as_nanos().to_string());
-    if let Some(own) = &own {
-        properties.push(("own_share_ns", own.as_str()));
+    // rule holds; and the disk's time beside it (`Outcomes::disk_sync`),
+    // which it never holds.
+    let measured = [
+        ("own_share_ns", outcomes.own_share),
+        ("disk_sync_ns", outcomes.disk_sync),
+    ]
+    .map(|(name, taken)| (name, taken.map(|taken| taken.as_nanos().to_string())));
+    for (name, taken) in &measured {
+        if let Some(taken) = taken {
+            properties.push((*name, taken.as_str()));
+        }
     }
     record(audit, "stop", ExecutionPhase::Finished, &properties);
     let share = outcomes
         .own_share
         .map(|own| format!("; Xmip's own share per Message {own:?}"))
         .unwrap_or_default();
+    let disk = outcomes
+        .disk_sync
+        .map(|disk| format!(", the disk's sync beside it {disk:?}"))
+        .unwrap_or_default();
     format!(
-        "stopped by {by}, drained in {drained} ms: {}{share}",
+        "stopped by {by}, drained in {drained} ms: {}{share}{disk}",
         counts
             .iter()
             .map(|(name, count)| format!("{name} {count}"))

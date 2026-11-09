@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 334951 lines of production
+Where each repository mounts and what it holds: 335108 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -486,7 +486,7 @@ hold no source to count.
 │   │   │   │   ├── j1939                        903
 │   │   │   │   ├── uds                          898
 │   │   │   │   ├── bluetooth                    891
-│   │   │   │   ├── file                         884
+│   │   │   │   ├── file                         888
 │   │   │   │   ├── aws-kinesis                  883
 │   │   │   │   ├── lorawan                      880
 │   │   │   │   ├── redis-streams                880
@@ -604,7 +604,7 @@ hold no source to count.
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
 │   │   │   │   └── ssh-key                       63
-│   │   │   ├── secret                          1267
+│   │   │   ├── secret                          1273
 │   │   │   │   ├── dpapi                        317
 │   │   │   │   ├── file                         197
 │   │   │   │   ├── keychain                     107
@@ -715,7 +715,7 @@ hold no source to count.
 │   │   ├── event                               5648
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                4274
+│   │   ├── core                                4332
 │   │   ├── message                             1753
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -739,8 +739,8 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            40516
-│       ├── persist                            15273
+│       ├── runtime                            40555
+│       ├── persist                            15323
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1

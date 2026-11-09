@@ -249,9 +249,13 @@ written again rather than shared.
 the device to sync — `fsync`, `FlushFileBuffers`, a directory's sync, the
 Ledger's sync — is measured and reported apart from Xmip's own share, and
 the millisecond holds Xmip's own work only; a bound is never raised for
-it. The owner, 2026-11-09 (ADR-0018, amendment 2026-11-09). A Message's own
-share leaves every sync out (`xcore::spent::on_io`); a figure for the
-disk's time beside it is not reported yet.
+it. The owner, 2026-11-09 (ADR-0018, amendment 2026-11-09). Every sync
+Xmip makes waits through one helper, `xcore::spent::on_sync`, which runs
+it as the payload's I/O, so a Message's own share leaves it out, and adds
+the time it waited to the Message's disk time (`Spent::disk_sync`); no
+sync is timed anywhere else. A node reports both, the fastest of five, in
+its stop record: `own_share_ns`, held under the millisecond, and
+`disk_sync_ns` beside it, held to nothing.
 
 `test/Timing.Test.ps1` holds it: a timing assertion — an `assert!` holding
 a measured time, a fastest of five or a figure read in milliseconds or

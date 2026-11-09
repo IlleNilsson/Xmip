@@ -20,7 +20,11 @@
 //! (`xcore::spent`; the owner, 2026-11-01); **that is Xmip's own share, and
 //! it is held under a millisecond**, the fastest of five as the node reports
 //! it in its stop record (`Outcomes::own_share`; `CONTRIBUTING.md`, *Rust is
-//! here for one reason*), built optimized and run alone, in
+//! here for one reason*). The waits for the disk to sync among that I/O —
+//! the Ledger's, the sent file's and its directory's — are the disk's time,
+//! printed beside it as the stop record says it (`Outcomes::disk_sync`) and
+//! held to nothing (ADR-0018, amendment 2026-11-09). Built optimized and run
+//! alone, in
 //! the root's timing program, `measured` (`measured.rs`). A thread waiting for a wake
 //! runs nothing, so no wake is counted; the file's time end to end is
 //! printed beside it. How long a file
@@ -198,10 +202,13 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
         let said = format!("\"{each}\" = \"{ROUNDS}\"");
         assert!(audit.contains(&said), "{said} in {audit}");
     }
-    let own = own_share(&audit);
+    let own = said_ns(&audit, "own_share_ns");
+    // The disk's time beside it, for information: never Xmip's, and never
+    // held to a bound (ADR-0018, amendment 2026-11-09).
+    let disk = said_ns(&audit, "disk_sync_ns");
     println!(
-        "carried {ROUNDS} files: {:?} fastest of five, Xmip's own share {own:?} as the node \
-         measured it; waiting for the claim {:?}",
+        "carried {ROUNDS} files: {:?} fastest of five, Xmip's own share {own:?} and the disk's \
+         sync {disk:?} as the node measured them; waiting for the claim {:?}",
         worked.fastest_of_five, waited.fastest_of_five
     );
     assert!(own < OWN, "Xmip's own share {own:?}, over {OWN:?}");
@@ -213,14 +220,15 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
     let _ = std::fs::remove_dir_all(&directory);
 }
 
-/// Xmip's own share of a carried file's time, the fastest of five, as the
-/// node measured it and its stop record in `audit` says
-/// (`xmip_runtime::outcome::Outcomes::own_share`).
-fn own_share(audit: &str) -> Duration {
-    let said = "\"own_share_ns\" = \"";
+/// A figure of a carried file's time, the fastest of five, as the node
+/// measured it and its stop record in `audit` says under `name`: Xmip's
+/// own share, `own_share_ns`, or the disk's time, `disk_sync_ns`
+/// (`xmip_runtime::outcome::Outcomes`).
+fn said_ns(audit: &str, name: &str) -> Duration {
+    let said = format!("\"{name}\" = \"");
     let (_, after) = audit
-        .split_once(said)
-        .unwrap_or_else(|| panic!("the node measured its own share: {audit}"));
+        .split_once(&said)
+        .unwrap_or_else(|| panic!("the node measured {name}: {audit}"));
     let nanos = after.split('"').next().expect("a value");
     Duration::from_nanos(nanos.parse().expect("nanoseconds"))
 }
