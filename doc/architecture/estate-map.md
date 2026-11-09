@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 335378 lines of production
+Where each repository mounts and what it holds: 335630 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -546,18 +546,18 @@ hold no source to count.
 │   │   │   │       platform
 │   │   │   ├── authenticate                    3139
 │   │   │   │   ├── saml                        1129
+│   │   │   │   ├── kerberos                     806
 │   │   │   │   ├── ldap                         784
-│   │   │   │   ├── kerberos                     718
+│   │   │   │   ├── oauth2                       591
 │   │   │   │   ├── ntlm                         590
-│   │   │   │   ├── oauth2                       511
 │   │   │   │   ├── digest                       447
 │   │   │   │   ├── scram                        392
 │   │   │   │   ├── windows                      377
 │   │   │   │   ├── pam                          339
 │   │   │   │   ├── ssh-key                      268
 │   │   │   │   ├── oidc                         233
+│   │   │   │   ├── jwt                          214
 │   │   │   │   ├── certificate                  142
-│   │   │   │   ├── jwt                          130
 │   │   │   │   ├── api-key                       99
 │   │   │   │   ├── bearer                        94
 │   │   │   │   ├── password                      81
