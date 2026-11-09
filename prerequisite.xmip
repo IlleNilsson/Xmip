@@ -316,9 +316,9 @@ channel = "stable"
 note = "For the Java event binding in xmip-core-abi: the foreign function and memory API, final since Java 22, compiled with javac --release 27. A perimeter program in its own process (ADR-0065). JDK 27 is the current release (2026-09-15); JDK 25 is the current long-term support release."
 
 [prerequisite.java.windows]
-winget = "Amazon.Corretto.27.JDK"
+winget = "EclipseAdoptium.Temurin.27.JDK"
 elevation = true
-note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation. Microsoft builds OpenJDK only for long-term support releases (Microsoft.OpenJDK.25), so JDK 27 comes from Amazon Corretto."
+note = "A machine-scope MSI; winget offers no per-user installer, so the install prompts for elevation. Eclipse Temurin, the Eclipse Foundation's vendor-neutral OpenJDK build and the most used one (the owner, 2026-11-09); Microsoft builds OpenJDK only for long-term support releases (Microsoft.OpenJDK.25)."
 
 [prerequisite.java.macos]
 brew = "openjdk"
