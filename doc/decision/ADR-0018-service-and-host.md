@@ -1348,3 +1348,28 @@ Measured after (2026-11-01, `carried.rs` alone, the optimized build): 0.44,
 machine; the runtime's
 loopback node test, alone, 0.24, 0.28 and 0.28 ms, against 0.71 to
 0.87 ms. Storage keeps the same records in the same tables.
+
+## Amendment, 2026-11-09: a storage device's sync is the disk's time
+
+The owner, 2026-11-09, agreed: *time spent waiting for the storage device
+to sync* — `fsync`, `FlushFileBuffers`, a directory's sync — *is the disk's
+time*, measured and reported apart from Xmip's own share; the millisecond
+holds Xmip's own work only, and no limit is raised. It widens the decision
+of 2026-10-21, that the Ledger's disk sync counts as load, to every sync:
+the sent file's, the directory's it is renamed in (synced since
+2026-11-07), the Ledger's.
+
+- **Xmip's own share already leaves every sync out.** It is processor
+  time, which a thread waiting on a disk does not run, and every sync is
+  inside the payload's I/O (`xcore::spent::on_io`): the file send whole,
+  its file's and directory's syncs among it (`departure::depart_one`), the
+  Storage node's sync on its own thread, which works for no Message
+  (`persist::storage::commit::syncer`). Nothing changes in how it is
+  counted.
+- **Measured (2026-11-09, `carried.rs` alone, twenty runs, a quiet
+  machine):** Xmip's own share 331 to 724 µs, median 430 µs, every run
+  under the millisecond; the 0.9 to 1.44 ms seen before was read beside
+  other builds. On the same machine a file send's two syncs take about
+  2.4 ms (the file's 1.3 ms, the directory's 1.1 ms), outside the share.
+- **Open:** the disk's time is not yet reported beside the share — not in
+  the stop record's `own_share_ns`, nor anywhere else.

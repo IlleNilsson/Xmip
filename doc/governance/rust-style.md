@@ -245,6 +245,14 @@ under the program's folder both include with `#[path]`, or behind
 `test-support`; a helper of a line or two, such as a scratch directory, is
 written again rather than shared.
 
+**A storage device's sync is the disk's time, never Xmip's.** Waiting for
+the device to sync — `fsync`, `FlushFileBuffers`, a directory's sync, the
+Ledger's sync — is measured and reported apart from Xmip's own share, and
+the millisecond holds Xmip's own work only; a bound is never raised for
+it. The owner, 2026-11-09 (ADR-0018, amendment 2026-11-09). A Message's own
+share leaves every sync out (`xcore::spent::on_io`); a figure for the
+disk's time beside it is not reported yet.
+
 `test/Timing.Test.ps1` holds it: a timing assertion — an `assert!` holding
 a measured time, a fastest of five or a figure read in milliseconds or
 less, under a bound below a second, or a call of `xcore::latency::at_once` —

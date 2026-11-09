@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 334941 lines of production
+Where each repository mounts and what it holds: 334951 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -486,11 +486,11 @@ hold no source to count.
 │   │   │   │   ├── j1939                        903
 │   │   │   │   ├── uds                          898
 │   │   │   │   ├── bluetooth                    891
+│   │   │   │   ├── file                         884
 │   │   │   │   ├── aws-kinesis                  883
 │   │   │   │   ├── lorawan                      880
 │   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── pop3                         877
-│   │   │   │   ├── file                         874
 │   │   │   │   ├── azure-service-bus            867
 │   │   │   │   ├── azure-event-grid             861
 │   │   │   │   ├── google-pub-sub               854
