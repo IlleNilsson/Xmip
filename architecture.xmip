@@ -1512,7 +1512,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec"]
+  dependency = ["xmip-core", "xmip-core-library-codec"]
     [xmip.core.secret.dpapi]
     description = "Windows DPAPI: a key-encryption key in a file sealed by CryptProtectData under the Service Identity, readable by that identity on that machine alone. A xmip-core-secret technology."
     maturity = "scaffolded"

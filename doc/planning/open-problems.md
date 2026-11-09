@@ -913,7 +913,12 @@ on an account of its own and shares it equally among the batch's writes
 (`xcore::fastest`) as `Outcomes::own_share` and says it as its stop
 record's `own_share_ns`; both `carried.rs` and the runtime's loopback node
 test hold it under a millisecond, with no allowance for a wake, since a
-thread waiting runs nothing, and print the time end to end beside it.
+thread waiting runs nothing, and print the time end to end beside it. The
+waits for a storage device to sync among that I/O are the disk's time
+(ADR-0018, amendment 2026-11-09): counted through `xcore::spent::on_sync`,
+the Ledger's shared like the writer's work (`Durable::synced`), kept as
+`Outcomes::disk_sync`, said as the stop record's `disk_sync_ns` and
+printed beside the share, never held to it.
 Two things are not counted: the scheduler's and an interrupt's time the
 operating system charges to a thread it wakes, a few microseconds at a
 time, and whatever a transport does before it hands a Message over — its

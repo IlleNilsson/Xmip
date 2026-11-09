@@ -1371,5 +1371,23 @@ the sent file's, the directory's it is renamed in (synced since
   under the millisecond; the 0.9 to 1.44 ms seen before was read beside
   other builds. On the same machine a file send's two syncs take about
   2.4 ms (the file's 1.3 ms, the directory's 1.1 ms), outside the share.
-- **Open:** the disk's time is not yet reported beside the share — not in
-  the stop record's `own_share_ns`, nor anywhere else.
+- **The disk's time is reported beside the share (2026-11-09).** Every
+  sync Xmip makes — the sent file's and its directory's
+  (`transport-file`'s `sending`), the Ledger's (`EncryptedStore::sync`), a
+  standby's (`storage::standby::copies`), a private file's and its
+  directory's (`secret`'s `private_file`), a pinned key's
+  (`transport::pinned`), a publication's (`observe::write_atomic`) — waits
+  through one helper, `xcore::spent::on_sync`: the sync runs as the
+  payload's I/O, and the time it waited, by the clock, is added to the
+  disk's time of the Message the thread works for (`Spent::disk_sync`), or
+  to nothing where it works for none. The Storage node's sync thread
+  counts each sync on an account of its own and shares its wait equally
+  among every write it made durable (`persist::storage::Durable::synced`),
+  as the writer's work is shared (`Durable::worked`). The node keeps the
+  fastest of five as `Outcomes::disk_sync`, says it as its stop record's
+  `disk_sync_ns` beside `own_share_ns` and on the console's stop line, and
+  `carried.rs` prints it beside the share, asserting nothing of it. A
+  rename is not a sync, and an engine's write that is durable on return
+  (`Engine::apply`, which no Message's path makes) is a write and its sync
+  in one call: both stay the payload's I/O, out of the share and out of
+  this figure.
