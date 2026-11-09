@@ -131,6 +131,18 @@ function Invoke-XmipEssentialsBuild {
         # tests what is here and never only what was pushed.
         [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
 
+        # In a build directory other workspaces share, a library cargo names
+        # without a hash may be another workspace's; it is removed first, as
+        # a landing does (Clear-XmipUnhashedLibrary says why).
+        if ($env:CARGO_TARGET_DIR) {
+            [string[]] $unhashed = @(
+                Get-XmipEstateCrate -RepositoryRoot $layout.Root |
+                    Where-Object -Property Unhashed |
+                    ForEach-Object -MemberName Unhashed
+            )
+            Clear-XmipUnhashedLibrary -TargetDirectory $env:CARGO_TARGET_DIR -Library $unhashed
+        }
+
         # Cargo's first error is kept, so a failed build says why in its own
         # words and not only its exit code (Get-XmipTestStatus shows it).
         [string[]] $building = @('build', '--config', $patch) + $bins
