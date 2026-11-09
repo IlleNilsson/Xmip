@@ -48,6 +48,48 @@ function Assert-XmipPhonePackage {
 }
 
 
+function Find-XmipAndroidJdk {
+    <#
+        .SYNOPSIS
+            The Java Development Kit the .NET for Android build runs its tools
+            with, Microsoft's OpenJDK 21; empty when this machine has none.
+
+        .DESCRIPTION
+            Named to the build as JavaSdkDirectory, never through JAVA_HOME,
+            which names the Java Event binding's JDK 27 (prerequisite.xmip,
+            android-jdk and java; the owner, 2026-11-09). The newest
+            %ProgramFiles%\Microsoft\jdk-21* on Windows, the newest
+            /usr/lib/jvm/msopenjdk-21* or java-21-openjdk* elsewhere; the
+            first with bin/java wins.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    [string[]] $pattern = if ($IsWindows) {
+        @(Join-Path -Path $env:ProgramFiles -ChildPath 'Microsoft/jdk-21*')
+    }
+    else {
+        @('/usr/lib/jvm/msopenjdk-21*', '/usr/lib/jvm/java-21-openjdk*')
+    }
+
+    [string] $java = if ($IsWindows) { 'bin/java.exe' } else { 'bin/java' }
+
+    foreach ($each in $pattern) {
+        [string] $found = Get-Item -Path $each -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path -Path $_.FullName -ChildPath $java) } |
+            Sort-Object -Property Name -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+
+        if ($found) {
+            return $found
+        }
+    }
+
+    return ''
+}
+
+
 function New-XmipApk {
     <#
         .SYNOPSIS
@@ -86,9 +128,16 @@ function New-XmipApk {
         Remove-Item -LiteralPath $stage -Recurse -Force
     }
 
+    [string] $jdk = Find-XmipAndroidJdk
+
+    if (-not $jdk) {
+        throw ('FAILED: no OpenJDK 21 for the .NET for Android build; install the ' +
+            'android-jdk prerequisite (Install-XmipPrerequisite).')
+    }
+
     [string[]] $argument = @(
         'publish', $project, '--framework', 'net11.0-android', '--configuration', 'Release'
-        '--output', $stage, '-p:AndroidPackageFormat=apk'
+        '--output', $stage, '-p:AndroidPackageFormat=apk', "-p:JavaSdkDirectory=$jdk"
     )
 
     if ($Address) {
