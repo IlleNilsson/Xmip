@@ -227,7 +227,7 @@ note = "The latest LTS is r30, 30.0.16248370 (checked 2026-10-22 on developer.an
 [prerequisite.android-jdk]
 role = "developer"
 optional = true
-note = "The Java Development Kit the .NET for Android build runs its tools with: Microsoft's OpenJDK 21, the one Microsoft tests .NET for Android against (checked 2026-10-22 on learn.microsoft.com/dotnet/android/getting-started/installation/dependencies). Only the phone's APK needs it; it is not the Java event binding's JDK 27 (prerequisite.java). JAVA_HOME names it. Nothing in the phone build uses Node.js."
+note = "The Java Development Kit the .NET for Android build runs its tools with: Microsoft's OpenJDK 21, the one Microsoft tests .NET for Android against (checked 2026-10-22 on learn.microsoft.com/dotnet/android/getting-started/installation/dependencies). Only the phone's APK needs it; it is not the Java event binding's JDK 27 (prerequisite.java). New-XmipApk names it to the build as JavaSdkDirectory (Find-XmipAndroidJdk), so JAVA_HOME stays the binding's (the owner, 2026-11-09). Nothing in the phone build uses Node.js."
 
 [prerequisite.android-jdk.windows]
 present_path = ['%ProgramFiles%\Microsoft\jdk-21*\bin\java.exe']
