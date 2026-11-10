@@ -246,7 +246,7 @@ preservation host, recovery coordinator and cluster coordinator are
 capabilities or operational responsibilities, implemented by Artifact
 Instances, Modules or profiles, and they do not extend the role model.
 
-**A role also picks what is built.** `deploy/profile/role/<role>.xmip`, one
+**A role also picks what is built.** `deploy/profile/role/<role>.toml`, one
 per role, says which capabilities a deployment's program carries for it,
 and a site names its roles beside its target and its technologies, archive
 targets among them (ADR-0015, amendments 2026-10-01, 2026-10-19 and
@@ -548,11 +548,11 @@ time:**
   2026-10-01: *RocksDB is the first storage for audit records, then
   transferred to SQLite, RocksDB for speed, SQLite for persistence over
   time* — so the audit database is SQLite on an embedded Storage node). The
-  `audit.xmip` file sink is to be replaced by this, for the
+  `audit.toml` file sink is to be replaced by this, for the
   tools outside a node as well — the cmdlets, the operation web and
   `xmip` writing to the cluster's Storage nodes (ADR-0062, amendment
   2026-10-01; [decided, not built](estate-map.md#audit-through-storage)); until then
-  every program appends to its `audit.xmip`
+  every program appends to its `audit.toml`
   ([built, in the assembled service](estate-map.md#program-audit)), and the operating
   system's log stays the fallback (ADR-0062 clause 3).
 

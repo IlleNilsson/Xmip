@@ -92,7 +92,7 @@ function Build-XmipService {
             Code extension (ADR-0014, amendment 2026-10-22). Its packages
             are restored from its lock, each checked against the lock's
             integrity; its TypeScript shell is compiled by TypeScript's
-            native compiler, the [archive.typescript] of prerequisite.xmip;
+            native compiler, the [archive.typescript] of prerequisite.toml;
             and its VSIX is zipped by PowerShell into
             .local-work/package/vscode. No Node.js. Returns Extension and
             Path.

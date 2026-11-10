@@ -2,7 +2,7 @@
 #requires -Version 7.7.0
 
 # Resolved per call rather than at load: the repository is found by looking
-# for architecture.xmip, and the module may be loaded from outside it.
+# for architecture.toml, and the module may be loaded from outside it.
 
 <#
     .SYNOPSIS
@@ -58,7 +58,7 @@ function Sync-XmipRepository {
         [ValidateNotNullOrEmpty()]
         [string] $Push,
 
-        # Executes doc/planning/allocation.xmip: puts every document and every
+        # Executes doc/planning/allocation.toml: puts every document and every
         # source file in the repository that owns it. Local only. It stages and
         # commits in each working copy and pushes nothing, so the whole estate
         # can be read before any of it leaves the machine.
@@ -67,7 +67,7 @@ function Sync-XmipRepository {
 
         [Parameter(ParameterSetName = 'Distribute')]
         [string] $AllocationPath = (
-            Join-Path (Get-XmipRepositoryRoot) 'doc/planning/allocation.xmip'
+            Join-Path (Get-XmipRepositoryRoot) 'doc/planning/allocation.toml'
         ),
 
         [Parameter(ParameterSetName = 'Distribute')]

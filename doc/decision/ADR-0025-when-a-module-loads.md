@@ -15,7 +15,7 @@
 
 Load timing is configuration, per Module. The default comes from
 `architecturalDomain`, which every repository already declares in
-`architecture.xmip`: Foundation, Capabilities and Platform load **eager**
+`architecture.toml`: Foundation, Capabilities and Platform load **eager**
 because they are on the path a Message travels, and Operations load **delayed**
 because they observe the path rather than carry it. Nothing new to declare.
 
@@ -55,7 +55,7 @@ implies when it should load, and an operator who depends on an audit sink being
 up before the first Message arrives must be able to say so.
 
 **The default comes from `architecturalDomain`, which every repository already
-declares in `architecture.xmip`:**
+declares in `architecture.toml`:**
 
 | domain | default | why |
 | --- | --- | --- |
@@ -145,7 +145,7 @@ whenever it is first called.
   than the last.
 - ADR-0018 clause 4 phase 6 reads "its own Modules" and now means "its own eager
   Modules". Phase 9 is reached without the delayed set.
-- `architecture.xmip` gains an optional per-module load timing. Absent, the
+- `architecture.toml` gains an optional per-module load timing. Absent, the
   domain decides, so 43 modules need no edit.
 - Startup time becomes a function of the eager set rather than of the estate's
   size. A node that adds a reporting Module does not start more slowly.
@@ -179,7 +179,7 @@ loads (ADR-0064). Every `[[modules]]` entry it starts is opened from its
 library once through the C ABI under the `dynamic-loading` feature, and
 refused without it. All of these are Capabilities, eager by clause 1; the
 node loads no Operations Module, so clause 3's delayed load is still not
-exercised, and a deployed node reads no `architecture.xmip`, so where it
+exercised, and a deployed node reads no `architecture.toml`, so where it
 learns a Module's domain, or an explicit timing, is open. Dependencies
 between technologies are resolved when the program is built (Cargo) or are
 inside a loaded library; a descriptor declares none.

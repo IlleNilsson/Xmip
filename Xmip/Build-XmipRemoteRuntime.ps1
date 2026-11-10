@@ -40,7 +40,7 @@ function Find-XmipAndroidNdk {
             ANDROID_NDK_HOME names an NDK itself. Else the newest version
             under the Android SDK's ndk directory: ANDROID_HOME's when that
             is set, else the per-user SDK, %LOCALAPPDATA%\Android\Sdk on
-            Windows and ~/Android/Sdk elsewhere (prerequisite.xmip,
+            Windows and ~/Android/Sdk elsewhere (prerequisite.toml,
             android-ndk). The first whose bin directory is there wins.
     #>
     [CmdletBinding()]

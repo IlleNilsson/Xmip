@@ -37,7 +37,7 @@ whole node, and getting it wrong is not a wrong answer — it is a breach.
 
 The material for this decision was recovered from `_origins`, the early design
 export, on 2026-08-26. It survived nowhere else: not in `doc/`, not in `src/`,
-not in `architecture.xmip`. It is written there in the retired Artifact and
+not in `architecture.toml`. It is written there in the retired Artifact and
 Handler vocabulary and asserts a Rust-only runtime that ADR-0014 and ADR-0021
 have since contradicted, so the vocabulary is translated here and the
 contradicted parts are dropped. The isolation rules themselves are unaffected by

@@ -201,7 +201,7 @@ A six-line crate with no public API is either a placeholder with a purpose or
 clutter, and the estate's own records say which. Open problem 23 names it in
 the same breath as persistence: *`xmip-core-persist` is types and a trait only
 — with no backend implementing it. `schedule` is a stub; `resilience` is
-types.* Its `architecture.xmip` maturity is `planned`, not `reserved`, and the
+types.* Its `architecture.toml` maturity is `planned`, not `reserved`, and the
 recovery model already depends on it — *an inbound claim is an atomic rename,
 so a schedule finds an artifact claimed-or-gone and moves on.*
 
@@ -224,7 +224,7 @@ this record**; a repository is never deleted by tooling or by an assistant
   section name in that file is already historical — they are all plural where
   the paths are singular — and the tooling reads `path` and `url` and never
   the name.
-- `architecture.xmip` moves resilience to `architecturalDomain = "Capability"`
+- `architecture.toml` moves resilience to `architecturalDomain = "Capability"`
   and `repositoryRole = "common-capability"`, which is the pairing all
   eighteen other Capabilities use. `Sync-XmipEstate -Compose` computes the
   mount from that field, so the manifest and the tree agree again.

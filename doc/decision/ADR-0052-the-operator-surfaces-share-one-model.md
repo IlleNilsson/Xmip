@@ -132,7 +132,7 @@ The web host reads a surface and renders it. It does not load the runtime
 to start a node, and it shows no Pause or Resume: its role is Observer, and
 that is not configurable. The desktop host monitors and configures, as
 ADR-0014 says. Which surface a host reads — native over a library, or a
-snapshot at a path — is stated in its `gui.xmip`; nothing is chosen by
+snapshot at a path — is stated in its `gui.toml`; nothing is chosen by
 finding a file in the temp directory. A snapshot path that does not exist is
 said so on the page, not silently replaced.
 
@@ -465,11 +465,11 @@ and renamed. Two consequences, built the same day:
   same order.
 - **The executable's document chooses its surface, as every other host's
   does.** Clause 3 and the amendment of 2026-09-15 said *any host's
-  document*, and `cli.xmip` was read for `RuntimeLibrary` alone; the
+  document*, and `cli.toml` was read for `RuntimeLibrary` alone; the
   executable could follow a library or `--remote`, never a snapshot. Now
   `SurfaceOpen` reads the same `[Xmip]` keys — `Surface`, `RuntimeLibrary`,
   `Snapshot`, `Url` — and the line wins over the document: `--remote`, then
-  `--runtime`, then what is written. As shipped, `cli.xmip` follows
+  `--runtime`, then what is written. As shipped, `cli.toml` follows
   the C1 roll, the same file the PowerShell prompt follows, so `xmip show
   xmip:///C1` and `[R… P… S… T… F…]` say the same thing from the same
   publication. `validate` still asks a runtime. Proved in `Xmip.Cli.Test`:
@@ -817,7 +817,7 @@ rolling at once, and it was wider than a missing page:
   `PromptMonitor.Follow` on every start (amendment of 2026-09-18), so the last
   roll started won and the segment silently followed one publication of two.
 - **The web views showed neither.** A host started without `-Snapshot` falls
-  back to its own `gui.xmip`, which names the native surface, and the page
+  back to its own `gui.toml`, which names the native surface, and the page
   read `NATIVE — no runtime library at … · nothing recorded · 0 node(s)`.
 - **The documented easy path refused itself.** `Get-XmipTestStatus |
   Start-XmipOperationWeb` piped two objects at a `[string]` parameter, and the
@@ -883,7 +883,7 @@ banner, tile, figure or prompt ever spans them. What is shared is the face.
 **The executable owes one thing, and it is not several clusters.** `xmip-cli`
 answers one question at one scope and ends; it has no session to navigate and
 nothing it could combine. What it lacked over two rolls was a way to say *which*
-without editing `cli.xmip`, so it gains `--snapshot <path>`, between
+without editing `cli.toml`, so it gains `--snapshot <path>`, between
 `--remote` and `--runtime` in the precedence the amendment of 2026-09-18 set,
 and reads the first where a document names several. The desktop routes to the
 same pages and holds its one surface as a set of one. The VS Code extension is
@@ -1000,8 +1000,8 @@ is the model's — and each face now renders it; neither writes it.
   cmdlet that reads a scope ask it. So `Get-XmipHealth`, `Suspend-XmipScope`
   and `Resume-XmipScope` take `-Remote`, `-Snapshot` and `-Library` as named
   parameters in the executable's order, `-Library` is no longer mandatory, and
-  with none of them the module's own `powershell.xmip` decides, as
-  `cli.xmip` decides for the executable: clause 1's one discovery rule,
+  with none of them the module's own `powershell.toml` decides, as
+  `cli.toml` decides for the executable: clause 1's one discovery rule,
   reaching the cmdlets at last. `Test-XmipNodeConfiguration -Library` finds
   its runtime by `RuntimeLibrary.Stated`, as `xmip-cli validate --runtime`.
 - **What a scope argument selects** is `ScopeSelection`, moved out of the
@@ -1541,7 +1541,7 @@ record; what it changes here:
   date the web host was hard-wired Observer, two weeks after this record
   and ADR-0014 said the web offers every role. Both hosts now take the role
   by one rule, `RoleAssignment` in `Xmip.Surface` since 2026-10-06, for
-  each proven caller: a role the run states, `Role` in `gui.xmip` else
+  each proven caller: a role the run states, `Role` in `gui.toml` else
   `XMIP_ROLE`, is the role, and a word that is no role is Observer; a run
   that states none has its role from the directory — the Essentials' fake
   one allows the tester (ADR-0009, amendment 2026-09-14, *the tester is
@@ -1752,7 +1752,7 @@ list view to open one. The record names the header's `location`
 The owner, 2026-10-02: *make it so that the desktop version opens multiple
 clusters too.* The amendment of 2026-09-20 had the desktop hold "its one
 surface as a set of one". It now opens its surfaces by the web host's one rule,
-`SurfaceChoice.OpenAll`: one snapshot per cluster where its `gui.xmip`
+`SurfaceChoice.OpenAll`: one snapshot per cluster where its `gui.toml`
 names several (`Snapshot` as a list), and moves between them as the web does.
 Configure's commands still answer one surface, the first cluster's
 (`SurfaceChoice.OpenFirst`'s rule), which is the one a node is started from.

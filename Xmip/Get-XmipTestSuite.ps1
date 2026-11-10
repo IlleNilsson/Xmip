@@ -62,7 +62,7 @@ function Get-XmipTestSuite {
     # broken one is warned about by name and is absent, so asking for it
     # refuses with the same words as a suite nobody declared, and Xmip's two
     # are unaffected (ADR-0055 clause 5; a warning is not silence).
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter '*.xmip' -File)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter '*.toml' -File)) {
         try {
             Read-XmipTestSuiteDeclaration -Path $file.FullName
         }

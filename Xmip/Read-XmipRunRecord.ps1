@@ -4,7 +4,7 @@
 <#
 .SYNOPSIS
     The records a run, a roll or a build leaves in its area, read in one
-    place: `<kind>-<name>.xmip`, each as a file and what it says.
+    place: `<kind>-<name>.toml`, each as a file and what it says.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -13,7 +13,7 @@
 function Read-XmipRunRecord {
     <#
         .SYNOPSIS
-            Each `<Kind>-*.xmip` record in -Path: Name, what follows the
+            Each `<Kind>-*.toml` record in -Path: Name, what follows the
             kind in its file name; File; and Record, as Read-XmipToml read
             it. With -Name, that record alone, and nothing when it is not
             there.
@@ -45,7 +45,7 @@ function Read-XmipRunRecord {
         return
     }
 
-    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter "$Kind-$Name.xmip" -File)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Path -Filter "$Kind-$Name.toml" -File)) {
         [pscustomobject] @{
             Name   = $file.BaseName.Substring($Kind.Length + 1)
             File   = $file.FullName

@@ -9,7 +9,7 @@
     Reports and installs what a machine needs to run or build Xmip.
 
 .DESCRIPTION
-    prerequisite.xmip declares what is needed; this decides what to do about it
+    prerequisite.toml declares what is needed; this decides what to do about it
     on the machine it is running on.
 
     PowerShell runs on Windows, Linux and macOS and the package manager differs

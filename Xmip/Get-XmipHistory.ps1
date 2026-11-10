@@ -26,7 +26,7 @@ function Get-XmipHistory {
 
         .PARAMETER Path
             The history file to read, or a directory holding one cluster's
-            history file, `<cluster>-history.xmip`. Defaults to the run area,
+            history file, `<cluster>-history.toml`. Defaults to the run area,
             `.local-work/essentials` under the repository, so no argument is
             needed while one cluster rolls.
 

@@ -62,7 +62,7 @@ lines and the superseded file is deleted. The history is in git.
 ### 3. The document lives where its subject lives
 
 The root repository holds what is true of Xmip as a whole. Anything true of one
-module belongs in that module's repository, per `allocation.xmip`. A document
+module belongs in that module's repository, per `allocation.toml`. A document
 about FTP does not live in the root because FTP does not.
 
 ### 4. The structure
@@ -84,11 +84,11 @@ doc/
 Five architecture documents in the root. The sixth, identity per technology
 against the standards, lives with the repository that owns its subject, at
 `module/capability/authenticate/doc/identity-by-technology.md`, by clause 3
-(`doc/planning/allocation.xmip` records the move; the tree above was
+(`doc/planning/allocation.toml` records the move; the tree above was
 corrected on 2026-09-12). A further one requires a reason that is not "this
 document got long", because length is solved by sections.
 
-### 5. `architecture.xmip` is the estate, not a document
+### 5. `architecture.toml` is the estate, not a document
 
 Any document that lists repositories is a second source of truth and will be
 wrong within a week. Documents hold reasoning; the manifest holds facts. The
@@ -140,7 +140,7 @@ nothing in them that can fall out of step — which is what clause 1 protects.
 - 110 documents become roughly 30: six architecture documents, terminology,
   twenty ADRs, two governance documents, and the planning notes.
 - Everything technology-specific leaves the root for the repository that owns
-  it, per `doc/planning/allocation.xmip`.
+  it, per `doc/planning/allocation.toml`.
 - `doc/planning/*` is explicitly non-authoritative. It is where thinking is
   allowed to be duplicated and contradictory, which is what it is for.
 - A reader who finds a document can trust it is the current one, because there

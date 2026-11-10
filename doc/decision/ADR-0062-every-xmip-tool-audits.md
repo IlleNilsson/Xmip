@@ -92,7 +92,7 @@ record behind it is a defect.
   prerequisite installer does it, and until it has, the fallback writes
   under the Application log's existing .NET runtime source and says so.
 - The audit capability grows an operating-system sink per platform; each is
-  a technology under it, declared in `architecture.xmip`.
+  a technology under it, declared in `architecture.toml`.
 - Every surface and tool changes in the same change (the owner's rule:
   surfaces stay current).
 
@@ -102,7 +102,7 @@ record behind it is a defect.
   keeps failures always, persists to the sink, and sends what the sink could
   not keep — or everything, with no sink — to `OperatingSystemLog`; clause
   3's rule is written there once. `ProgramAudit` is a program's audit, and
-  its default sink is `FileSink`, `audit.xmip` in the directory the program
+  its default sink is `FileSink`, `audit.toml` in the directory the program
   was told, else `XMIP_AUDIT_DIRECTORY`, else none. An address's user and
   password never reach a record (`redaction.rs`).
 - **The operating system's log.** On Unix one datagram to the local syslog
@@ -157,7 +157,7 @@ The owner, 2026-09-29: *The operation web needs an audit view: audited
 entries in the clusters. Drill-down, sorting and filtering.* The form was
 left to the assistant (*do your best and I'll view it*). Every program had
 audited since 2026-09-25 and nothing read the records back: an operator
-opened `audit.xmip` in an editor, and nothing in a record said which cluster
+opened `audit.toml` in an editor, and nothing in a record said which cluster
 or node it belonged to except a program's name, which nothing at runtime may
 read for meaning.
 
@@ -176,7 +176,7 @@ none and stand under their host too; nothing is inferred from their names.
 ### 6. The audit is read in one place
 
 The reader is the capability's, beside the writer: `audit_store` reads
-`audit.xmip`, and reads again only what was appended since — the file only
+`audit.toml`, and reads again only what was appended since — the file only
 grows, so a view that reads again on every change of a cluster reads a few
 hundred bytes. It keeps an index of the file, never its records, and reads
 a page at a time (amendment 2026-10-16). `audit_query::AuditQuery` is
@@ -264,7 +264,7 @@ speed, SQLite for persistence over time.*
   an embedded Storage node those are RocksDB and SQLite; behind a database
   server they are two separate databases on IT's servers
   (`deployment-model.md` section 7).
-- **The file sink is replaced.** `ProgramAudit`'s `FileSink`, `audit.xmip`,
+- **The file sink is replaced.** `ProgramAudit`'s `FileSink`, `audit.toml`,
   and the reader over it (clause 6) give way to Xmip Storage; the code
   follows this record.
 - **Clause 3 stands.** When audit cannot persist, the record goes to the
@@ -290,7 +290,7 @@ filtered, grouped and sorted all of them for every query whatever page it
 returned, and the keeper's inbox had no bound.
 
 - **The reader keeps no record** (clause 6 amended). `audit_store::ask`
-  answers an `AuditQuery` a page at a time from `audit.xmip`, through an
+  answers an `AuditQuery` a page at a time from `audit.toml`, through an
   index of the file it extends with what was appended since: blocks of
   records by their bytes, each with its earliest and latest time and how
   many records of each kind it holds. The words, the groups, the counts and

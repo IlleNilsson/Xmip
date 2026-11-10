@@ -16,7 +16,7 @@ it. `transport/src/lib.rs` was called "transport" and held five protocols, a
 TLS client, an error taxonomy, a claim model and a header parser. Every one of
 those is a thing; none of them is "transport".
 
-**The estate already declares this shape one level up.** `architecture.xmip`
+**The estate already declares this shape one level up.** `architecture.toml`
 gives each protocol its own repository — `xmip-core-transport-kafka` and eighty
 siblings. One file per subject is the same principle inside a crate, and it is
 what makes lifting a subject out into its own repository a move rather than a

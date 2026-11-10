@@ -29,7 +29,7 @@ generated = "2026-08-25"
 # This list is the proposal as it stood on 2026-08-25 and is not pruned when a
 # name later retires — `xmip-core-webapi` retired on 2026-09-06 and stayed
 # here, and `xmip-core-migrate`, `xmip-core-schedule` and `xmip-core-diagnose`
-# were unmounted on 2026-09-19 (ADR-0058, amendment). architecture.xmip is
+# were unmounted on 2026-09-19 (ADR-0058, amendment). architecture.toml is
 # where a repository's current standing is read; this section is history.
 
 [create]
@@ -373,7 +373,7 @@ to = "xmip-core-authenticate"
 path = "doc/identity-by-technology.md"
 reason = """
 Where identity lives per technology, against the standards that define it, for
-every transport, representation and logic technology in architecture.xmip.
+every transport, representation and logic technology in architecture.toml.
 Belongs with the capability that has to implement it. RFC numbers verified
 against rfc-editor.org and the IETF Datatracker on 2026-08-25.
 
@@ -520,14 +520,14 @@ difference decides whether a retry is safe.
 
 [[superseded]]
 path = "doc/architecture/protocol-landscape.md"
-replacedBy = "architecture.xmip and doc/architecture/module-model.md"
+replacedBy = "architecture.toml and doc/architecture/module-model.md"
 why = """
 Held back through two consolidation passes because its taxonomy was absorbed
 into module-model.md section 6 while its **catalogue** was not — it named
 protocols that the manifest had never heard of, and deleting it would have
 deleted the only record they were intended.
 
-Twenty repositories added to architecture.xmip on 2026-08-26, at which point
+Twenty repositories added to architecture.toml on 2026-08-26, at which point
 the catalogue was in the manifest and the document had nothing left to hold.
 
 Transports: bacnet, bluetooth, canopen, coap, dds, dicom, ethernet-ip, j1939,
@@ -645,7 +645,7 @@ Port completes when one of its Send Locations succeeds, is stated in section
 
 [[superseded]]
 path = "doc/architecture/handler-specification-map.md"
-replacedBy = "architecture.xmip and doc/architecture/repository-model.md"
+replacedBy = "architecture.toml and doc/architecture/repository-model.md"
 why = """
 The only record of which external specification each transport implements. Not
 superseded when it was classified — it became superseded on 2026-08-26, when
@@ -688,7 +688,7 @@ path = "doc/handler-implementation-plan.md"
 question = """
 Planning note or superseded? It plans an implementation order for handlers, in
 the retired vocabulary. If the order still holds it belongs in doc/planning/;
-if architecture.xmip maturity now expresses it, it is superseded.
+if architecture.toml maturity now expresses it, it is superseded.
 """
 
 # ===========================================================================
@@ -780,9 +780,9 @@ path = "ROADMAP.md"
 [[keep]]
 path = ".gitignore"
 [[keep]]
-path = "architecture.xmip"
+path = "architecture.toml"
 [[keep]]
-path = "prerequisite.xmip"
+path = "prerequisite.toml"
 [[keep]]
 path = "Xmip/Sync-XmipEstate.ps1"
 [[keep]]
@@ -1126,7 +1126,7 @@ to = "xmip-core-transport"
 newPath = "doc/technology-lineage.md"
 reason = """
 handler-taxonomy.md and the four *-lineage.md files are the reasoning that
-produced the implementation lists now in architecture.xmip. That reasoning is
+produced the implementation lists now in architecture.toml. That reasoning is
 the expensive part and it belongs beside the module that owns the
 technologies. content-handlers.md and handler-implementation-plan.md are a
 plan for a design ADR-0010 and ADR-0011 retired, and a plan for a retired
@@ -1208,7 +1208,7 @@ question = 8
 path = "the five repository documents"
 decision = "Consolidate into doc/architecture/repository-model.md with v1.2. Keep the reasoning, drop the inventories."
 reason = """
-architecture.xmip is now the answer to what the estate contains, so any
+architecture.toml is now the answer to what the estate contains, so any
 document that lists repositories is a second source of truth and will be
 wrong within a week. What the manifest cannot hold is why — why the estate is
 shaped this way, why a technology implementation is level two, why a crate
@@ -1233,7 +1233,7 @@ decision = "Delete both files. Flag: say if forge is a live idea."
 reason = """
 Nothing in the repository references forge, neither file has been touched
 since 21 July, and xmip-technology-tree.md is 118 lines describing a
-technology tree that architecture.xmip now holds with 249 implementations.
+technology tree that architecture.toml now holds with 249 implementations.
 module-rules.md is 13 lines. If forge means something planned that has not
 been written down, this is the wrong call and git will give them back — but
 a directory nothing references is dead until someone says otherwise.
@@ -1407,12 +1407,12 @@ why = "Classification, naming and maturity, now sections 1 to 3. Its plan/apply 
 [[superseded]]
 path = "doc/architecture/repository-structure.md"
 replacedBy = "doc/architecture/repository-model.md"
-why = "Note: allocation.xmip recorded this at doc/ and it is at doc/architecture/."
+why = "Note: allocation.toml recorded this at doc/ and it is at doc/architecture/."
 
 [[superseded]]
 path = "doc/architecture/repository-and-crate-plan.md"
 replacedBy = "doc/architecture/repository-model.md"
-why = "Note: allocation.xmip recorded this at doc/ and it is at doc/architecture/."
+why = "Note: allocation.toml recorded this at doc/ and it is at doc/architecture/."
 
 [[superseded]]
 path = "doc/Xmip-Architecture-Specification-v1.1.md"
@@ -1436,7 +1436,7 @@ why = "Stale by construction. Decision 9."
 
 [[superseded]]
 path = "forge/module-rules.md, forge/xmip-technology-tree.md"
-replacedBy = "architecture.xmip"
+replacedBy = "architecture.toml"
 why = "Decision 10. Flagged: say if forge is a live idea and this reverses."
 
 # Composed 2026-08-25. runtime-model.md carries all 25 sections of v1.0, all 16
@@ -1600,7 +1600,7 @@ reason = "Zero bytes. ADR-0020 clause 7."
 # claims this block used to make and fails when they stop being true:
 #
 #   - every [[move]] and [[superseded]] path exists on disk
-#   - every [[move]] destination is a repository in architecture.xmip
+#   - every [[move]] destination is a repository in architecture.toml
 #   - no path appears in two sections
 #   - nothing under doc/ is unaccounted for
 #
@@ -1618,7 +1618,7 @@ verifiedBy = "test/Allocation.Test.ps1"
 
 [[superseded]]
 path = "doc/planning/architecture-consolidation.md"
-replacedBy = "doc/planning/allocation.xmip"
+replacedBy = "doc/planning/allocation.toml"
 why = """
 Its own header: working notes, delete when the consolidation is done. It was
 written when doc/architecture/ held 31 documents; it holds five models. The

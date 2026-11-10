@@ -2,7 +2,7 @@
 #requires -Version 7.7.0
 
 <#
-    doc/planning/allocation.xmip is the plan for moving every document and
+    doc/planning/allocation.toml is the plan for moving every document and
     source file into the repository that owns it. Sync-XmipRepository -Distribute
     executes it.
 
@@ -18,7 +18,7 @@
 
 # A ratchet, not a target. doc/architecture holds thirty-one files against
 # ADR-0020's six; asserting six today would fail on day one, and a test that is
-# always red is a test nobody reads. Lower this as allocation.xmip section 3b
+# always red is a test nobody reads. Lower this as allocation.toml section 3b
 # is worked through — it may fall and may not rise, so the consolidation cannot
 # go backwards while nobody is looking.
 #
@@ -29,7 +29,7 @@
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
-    $script:AllocationPath = Join-Path $script:Root 'doc/planning/allocation.xmip'
+    $script:AllocationPath = Join-Path $script:Root 'doc/planning/allocation.toml'
     [int] $script:ExtraCeiling = 0
 
     $script:Allocation = InModuleScope Xmip -Parameters @{ Path = $script:AllocationPath } {
@@ -42,7 +42,7 @@ BeforeAll {
         # 'cannot call a method on a null-valued expression' — which is what
         # happened on 2026-08-30, when two orphaned reason keys cost a
         # diagnosis round that one honest message would have saved.
-        throw ('allocation.xmip did not parse; every test below reads it, ' +
+        throw ('allocation.toml did not parse; every test below reads it, ' +
             'so nothing else matters until it does.')
     }
 
@@ -219,8 +219,8 @@ Describe 'Every executable entry names a file that exists' {
 }
 
 Describe 'Every destination is a real repository' {
-    It 'moves only to repositories architecture.xmip declares' {
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
+    It 'moves only to repositories architecture.toml declares' {
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
         [string[]] $declared = @($manifest.repositories | ForEach-Object { [string] $_.name })
 
         foreach ($entry in (Get-AllocationEntry -Section 'move')) {
@@ -230,7 +230,7 @@ Describe 'Every destination is a real repository' {
                 continue
             }
 
-            [string] $because = "allocation.xmip moves a file to $destination"
+            [string] $because = "allocation.toml moves a file to $destination"
 
             $declared | Should -Contain $destination -Because $because
         }
@@ -291,7 +291,7 @@ Describe 'ADR-0020: six architecture documents' {
 
             # The seventh, and not a seventh model. ADR-0060 clause 6 gives
             # the reason ADR-0020 clause 4 requires for a further document:
-            # it is generated from architecture.xmip rather than written, so
+            # it is generated from architecture.toml rather than written, so
             # it is a rendering of the manifest and not a document that can
             # come to disagree with it. Held by test/EstateMap.Test.ps1.
             'estate-map.md'
@@ -307,7 +307,7 @@ Describe 'ADR-0020: six architecture documents' {
         Write-Host "  doc/architecture holds $($extra.Count) files beyond the six"
 
         [string] $detail = ($extra | Sort-Object) -join "`n"
-        [string] $because = "waiting on allocation.xmip section 3b:`n$detail"
+        [string] $because = "waiting on allocation.toml section 3b:`n$detail"
 
         $extra.Count | Should -BeLessOrEqual $script:ExtraCeiling -Because $because
     }
@@ -317,7 +317,7 @@ Describe 'ADR-0020: six architecture documents' {
         # must not lose a target document while removing its sources.
         #
         # Five, not six. identity-by-technology.md is the sixth and it moves to
-        # xmip-core-authenticate per allocation.xmip section 3, so requiring it
+        # xmip-core-authenticate per allocation.toml section 3, so requiring it
         # here would fail the moment Distribute succeeds.
         [string] $architecture = Join-Path $script:Root 'doc/architecture'
 

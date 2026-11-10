@@ -21,7 +21,7 @@ BeforeDiscovery {
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
+    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
     # Everything the tests ask, read once through the module's own readers
     # and handed out as plain values.

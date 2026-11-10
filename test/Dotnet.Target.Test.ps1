@@ -3,7 +3,7 @@
 
 <#
     ADR-0021 for .NET: every project the estate ships targets the framework
-    architecture.xmip declares, the PowerShell module and the binding pwsh
+    architecture.toml declares, the PowerShell module and the binding pwsh
     loads included.
 #>
 
@@ -11,7 +11,7 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
     BeforeAll {
         . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
-        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
+        $manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
         $script:Policy = $manifest.project
 

@@ -100,7 +100,7 @@ Three things, said by the process itself and readable while it runs:
   is test. A process is runtime unless what started it says test.
 
 Built the same day. A process writes its declaration where it starts, to
-one file named for it and its pid — `xmip-gui-web-4242.xmip` — and takes it
+one file named for it and its pid — `xmip-gui-web-4242.toml` — and takes it
 away where it ends. The directory is the node's to say, in
 `XMIP_PROCESS_DIRECTORY`; unset, it is `xmip/process` under the system's
 temporary directory, the same for every process on the machine, so a reader

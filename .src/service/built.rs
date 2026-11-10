@@ -11,7 +11,7 @@
 //! Storage over `RocksDB`,
 //! the runtime database's one engine (ADR-0015 and ADR-0018, amendments
 //! 2026-10-01), and `SQLite`, the administration database's, which the
-//! storage role builds (`deploy/profile/role/storage.xmip`), sealed under a
+//! storage role builds (`deploy/profile/role/storage.toml`), sealed under a
 //! key store this build carries; one built without either engine, or
 //! naming a key store it left out, is refused as it starts
 //! (`xmip_runtime::storage`).

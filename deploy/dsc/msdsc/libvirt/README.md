@@ -21,7 +21,7 @@ network, a pool or a domain is libvirt's.
 
 ## The example environment
 
-`environment.example.xmip`, which `Deploy-XmipEnvironment` reads, describes
+`environment.example.toml`, which `Deploy-XmipEnvironment` reads, describes
 one machine, XMIP-IN01, AlmaLinux 10, the Essentials' R1, on 10.77.0.0/24.
 The network's DNS answers `R1` and the cluster, `C1`, at the addresses of the
 machines that run them, so the environment needs no DNS server of its own.
@@ -64,7 +64,7 @@ sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.so
 then sign in again. PowerShell 7.7 and Microsoft DSC 3.4.0-preview.2 on `PATH`
 (`sudo dnf install --assumeyes dsc-preview` from packages.microsoft.com), and the
 Xmip module's prerequisites, `Install-XmipPrerequisite -Role operator
--Install`. Copy the example to `.local-work/deploy/libvirt.xmip` and write
+-Install`. Copy the example to `.local-work/deploy/libvirt.toml` and write
 in `linux_account` and `ssh_public_key`.
 
 ## Running it
@@ -73,7 +73,7 @@ As the account in the `libvirt` group, never root; `-WhatIf` says what
 differs and changes nothing:
 
 ```text
-pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/.local-work/deploy/libvirt.xmip"
+pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/.local-work/deploy/libvirt.toml"
 ```
 
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,
@@ -87,7 +87,7 @@ the WSL guest.
 | --- | --- |
 | `network.dsc.yaml` | the network and the pool |
 | `machine.dsc.yaml` | one machine |
-| `environment.example.xmip` | the example environment |
+| `environment.example.toml` | the example environment |
 | `libvirt.resource.ps1` | the resources' entry, run by DSC with the kind and the operation |
 | `LibvirtCommon.ps1` | `virsh` and the static MAC |
 | `LibvirtNetwork.ps1` | the network and the pool |

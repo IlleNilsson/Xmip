@@ -7,7 +7,7 @@
 
 .DESCRIPTION
     What `New-XmipEstateMap` renders, as objects. Two facts are joined here:
-    `architecture.xmip` says what the estate is, and the `.gitmodules` files
+    `architecture.toml` says what the estate is, and the `.gitmodules` files
     say what this working tree has composed of it.
 
     Composition is read at two levels, because that is where it is written

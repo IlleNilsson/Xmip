@@ -167,9 +167,9 @@ Describe 'The built operator module reads the snapshot under the estate root' {
             [string] $tree = Join-Path -Path $Area -ChildPath 'estate'
             [string] $build = Join-Path -Path $tree -ChildPath '.local-work/operator/KEY.build-1'
             New-Item -ItemType Directory -Path $build -Force | Out-Null
-            [string] $document = Join-Path -Path $build -ChildPath 'powershell.xmip'
+            [string] $document = Join-Path -Path $build -ChildPath 'powershell.toml'
             [string] $shipped = Join-Path -Path $Estate -ChildPath (
-                'module/core/operation/powershell/src/Xmip.PowerShell/powershell.xmip')
+                'module/core/operation/powershell/src/Xmip.PowerShell/powershell.toml')
             Copy-Item -LiteralPath $shipped -Destination $document
 
             Set-XmipOperatorModuleRoot -Directory $build -Root $tree

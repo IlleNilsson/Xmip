@@ -17,12 +17,12 @@ function Start-XmipOperationWeb {
             .local-work/web/web-<start time>.log and .err, and every start,
             refusal and failure is audited (ADR-0062), as the host itself
             audits its own start, stop and every error it logs.
-            Without -Snapshot the host reads what its own gui.xmip says.
+            Without -Snapshot the host reads what its own gui.toml says.
 
             Each browser acts as the caller its connection proved — a client
             certificate, over this machine's loopback as from anywhere — with
             the role the host grants that caller (ADR-0009, amended 2026-10-06
-            and 2026-10-21): the role gui.xmip or XMIP_ROLE states, else
+            and 2026-10-21): the role gui.toml or XMIP_ROLE states, else
             the directory it names, else Observer. Over an Essentials roll the
             host is told the Essentials' fake directory, which allows the
             tester every role and no one else: the user the host runs as, and
@@ -93,7 +93,7 @@ function Start-XmipOperationWeb {
 
         .PARAMETER Certificate
             The PEM certificate chain, leaf first, the host presents on https.
-            Named with -PrivateKey. Unset, the host's gui.xmip or
+            Named with -PrivateKey. Unset, the host's gui.toml or
             XMIP_CERTIFICATE decides (ADR-0063 clause 1; where the file comes from
             is provisioning's, ADR-0034).
 
@@ -102,7 +102,7 @@ function Start-XmipOperationWeb {
 
         .PARAMETER TrustAnchor
             The PEM anchors a caller's certificate must reach. Unset, the host's
-            gui.xmip or XMIP_TRUST_ANCHOR; https needs one, since Xmip
+            gui.toml or XMIP_TRUST_ANCHOR; https needs one, since Xmip
             trusts no operating system's trust store (ADR-0063).
 
         .PARAMETER Tester
@@ -293,7 +293,7 @@ function Start-XmipOperationWeb {
                     ForEach-Object -MemberName Cluster) -join ', '
 
             if ($rolling) {
-                Write-Warning ("No -Snapshot: this host reads its own gui.xmip and will " +
+                Write-Warning ("No -Snapshot: this host reads its own gui.toml and will " +
                     "not show the roll $rolling. To follow it: " +
                     'Get-XmipTestStatus | Start-XmipOperationWeb')
             }

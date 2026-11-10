@@ -19,8 +19,8 @@
 
 
 # The estate's own files, at its root.
-[string] $script:XmipManifestName = 'architecture.xmip'
-[string] $script:XmipPrerequisiteName = 'prerequisite.xmip'
+[string] $script:XmipManifestName = 'architecture.toml'
+[string] $script:XmipPrerequisiteName = 'prerequisite.toml'
 
 # The working area's folder name, at the estate's root.
 [string] $script:XmipWorkName = '.local-work'

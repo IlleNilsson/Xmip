@@ -411,7 +411,7 @@ prefix.**
 
 Load timing is configuration, per Module. The default comes from
 `architecturalDomain`, which every repository already declares in
-`architecture.xmip`: Foundation, Capabilities and Platform load **eager**
+`architecture.toml`: Foundation, Capabilities and Platform load **eager**
 because they are on the path a Message travels, and Operations load **delayed**
 because they observe the path rather than carry it. Nothing new to declare.
 
@@ -541,7 +541,7 @@ interface lives in the repository it belongs to. A Rust contract becomes a
 library a node loads through the C ABI by one line, the contract capability's
 `export_contract!`. A module loaded through the ABI is a separate work under
 any license; a module linked into Xmip is AGPL-3.0-or-later. A provider
-declares its modules in core's `architecture.xmip`. The SDK, `xmip-core-sdk`
+declares its modules in core's `architecture.toml`. The SDK, `xmip-core-sdk`
 at the estate root, `sdk/`, holds only what a module is tested on:
 simulators, emulators and, for now, the local ACME server.**
 
@@ -563,7 +563,7 @@ xmip-<provider>-<module>-<standard>
 ```
 
 Shortest singular form, a verb where the module does something, the recognized
-standard name for a technology. In `architecture.xmip` the TOML tree path **is**
+standard name for a technology. In `architecture.toml` the TOML tree path **is**
 the name — dots become hyphens and nothing else happens.
 
 → [Module and repository naming, in full](ADR-0011-module-naming.md)
@@ -595,7 +595,7 @@ integration, business, cloud, healthcare, industrial, energy, finance,
 logistics, government, database, file, network, messaging and device.
 
 **Superseded by *Contract, transport and representation stay separate*.** Kept
-because its reasoning produced the technology lists `architecture.xmip` now
+because its reasoning produced the technology lists `architecture.toml` now
 carries. Nothing in it is current — do not implement from it.
 
 → [The handler universe, in full](ADR-0004-handler-universe.md) — **superseded by [ADR-0010](ADR-0010-contract-transport-repository-boundaries.md)**
@@ -700,7 +700,7 @@ observation test is placed there first, and only what is left is Platform.**
 ### How a reader sees the whole estate, and why it is not drawn by hand
 
 **The whole estate is one generated document. `New-XmipEstateMap` reads
-`architecture.xmip` and the `.gitmodules` files and writes
+`architecture.toml` and the `.gitmodules` files and writes
 `doc/architecture/estate-map.md`, which names every declared repository, the
 domain and parent it sits under, its declared maturity, and whether it is
 composed in this working tree. `test/EstateMap.Test.ps1` regenerates it and
@@ -787,7 +787,7 @@ stable Rust, Pester 6 (the amendments of 2026-10-19 and 2026-11-02 have every
 version).
 
 **The version numbers are not the decision** — they will be history soon enough.
-The decision is the rule that produced them, which is why `prerequisite.xmip`
+The decision is the rule that produced them, which is why `prerequisite.toml`
 and `rust-toolchain.toml` express channels rather than pins. A floor states what
 would break; it does not freeze anything.
 

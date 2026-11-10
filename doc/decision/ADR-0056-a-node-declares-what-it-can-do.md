@@ -378,7 +378,7 @@ name, and the name is the role.
   capability* named receive, process and send hosts among the capabilities it
   kept out of the role model; the owner ruled them in, and the section says
   so. A deployment's roles also pick what its program is built with
-  (`deploy/profile/role/<role>.xmip`, one per role; ADR-0015, amendment
+  (`deploy/profile/role/<role>.toml`, one per role; ADR-0015, amendment
   2026-10-01).
 
 **Not decided here.** How a node's TOML configuration states its roles —
@@ -430,7 +430,7 @@ nodes*.
 
 Built 2026-10-01: `node::NodeRole::Storage`, the eighth word, `storage`,
 serving no stage; the surfaces read it through `xmip_role_words_v1` as they
-read the others, and `deploy/profile/role/storage.xmip` is what a Storage
+read the others, and `deploy/profile/role/storage.toml` is what a Storage
 node's program is built with. Xmip Storage itself — its operations, the
 embedded Storage node, the wire over Xmip's TLS and the round robin — is
 `xmip-core-persist`'s `storage`. How a node's configuration declares the
@@ -540,7 +540,7 @@ one-machine node carries Storage, and so does `development`.
   naming both: the storage role, and `[storage] nodes`. A role word that is
   no role is refused there too, in `NodeRole::declared`'s words.
 - **A one-machine node carries Storage**, and so does the `development`
-  role (`deploy/profile/role/development.xmip`; ADR-0015, amendment
+  role (`deploy/profile/role/development.toml`; ADR-0015, amendment
   2026-10-20). The starter `xmip-service --install` writes and the Ansible
   role's starter declare `storage` for their one node, and the example site
   `personal-computer` declares it.

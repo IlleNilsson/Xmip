@@ -16,7 +16,7 @@ Set-StrictMode -Version Latest
     ends it early; what reads a run is here.
 
     A run is one TOML record under .local-work/estate (Get-XmipEssentialsLayout's
-    Estate), named for the time it started: estate-<yyyyMMdd-HHmmss-fff>.xmip,
+    Estate), named for the time it started: estate-<yyyyMMdd-HHmmss-fff>.toml,
     beside the run's own log. Start writes what it started; the run itself
     writes the verdict over it when Pester returns — the counts, the duration
     and every failure's path and message. Read through Get-TomlValue, the one

@@ -197,7 +197,7 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
     // Message's own record is kept in its Storage node's audit database
     // (ADR-0070).
     let audit =
-        std::fs::read_to_string(directory.join("audit").join("audit.xmip")).expect("it audited");
+        std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
     for each in ["received", "routed", "sent"] {
         let said = format!("\"{each}\" = \"{ROUNDS}\"");
         assert!(audit.contains(&said), "{said} in {audit}");

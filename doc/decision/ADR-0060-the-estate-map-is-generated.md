@@ -20,7 +20,7 @@
 - Concepts: estate map; declared repository; mounted repository; declared maturity
 
 **The whole estate is one generated document. `New-XmipEstateMap` reads
-`architecture.xmip` and the `.gitmodules` files and writes
+`architecture.toml` and the `.gitmodules` files and writes
 `doc/architecture/estate-map.md`, which names every declared repository, the
 domain and parent it sits under, its declared maturity, and whether it is
 composed in this working tree. `test/EstateMap.Test.ps1` regenerates it and
@@ -94,7 +94,7 @@ walking twelve `.gitmodules` files by hand.
    so.** The manifest's `maturity` is known to disagree with what a repository
    contains; `xmip-core-transport` is `planned` and holds six figures of Rust.
    The map makes the disagreement visible and takes no view on it. Correcting
-   `architecture.xmip` is the owner's decision and is not this record's.
+   `architecture.toml` is the owner's decision and is not this record's.
 
 5. **Section 7 keeps its tree.** It answers *where does a module mount*, which
    is the owner's layout and is worth drawing by hand at two levels. It gains
@@ -146,7 +146,7 @@ Three hundred and thirty names in a fenced block, correct on the day and wrong
 by the next landing. The tree was wrong on the day this was written, which is
 the whole argument.
 
-**Put the map in `architecture.xmip` as comments.** The manifest is read by
+**Put the map in `architecture.toml` as comments.** The manifest is read by
 machines and is already 1,170 lines. A reader wanting to see the estate would
 be reading the source of the thing rather than a rendering of it, and TOML
 comments are held by nothing.
@@ -328,7 +328,7 @@ what is already there*, which is what the map's seventy-seven read like.
 
 ### 6. What this touched
 
-- `architecture.xmip` — `maturity` removed from `[default]`; 155 declarations
+- `architecture.toml` — `maturity` removed from `[default]`; 155 declarations
   gain an explicit one; six `planned` become `scaffolded`.
 - `test/Sync-XmipEstate.Test.ps1` — one test, in the `The manifest` block.
 - `deploy/dsc/xmip-node.dsc.yaml` and

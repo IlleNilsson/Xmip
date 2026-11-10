@@ -5,7 +5,7 @@ using namespace System.Collections.Generic
 
 <#
 .SYNOPSIS
-    The modules architecture.xmip declares whose crate is on disk and which
+    The modules architecture.toml declares whose crate is on disk and which
     are not submodules yet.
 
 .DESCRIPTION
@@ -25,7 +25,7 @@ function Get-XmipNewModule {
     <#
         .SYNOPSIS
             Every folder holding a Cargo.toml, without a .git of its own and
-            not a submodule, where architecture.xmip mounts the repository
+            not a submodule, where architecture.toml mounts the repository
             its package names; each as its path from the estate root.
 
         .DESCRIPTION
@@ -35,7 +35,7 @@ function Get-XmipNewModule {
             place gives is a candidate, so the manifest is read only when one
             is found: none, the ordinary case, costs a directory listing.
             Then the candidate is new when the manifest declares its package
-            and mounts it exactly there. Nothing without architecture.xmip.
+            and mounts it exactly there. Nothing without architecture.toml.
 
         .PARAMETER RepositoryRoot
             The Xmip working tree.

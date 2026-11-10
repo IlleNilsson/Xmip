@@ -301,7 +301,7 @@ the network could write to.
 - The identity vocabulary — mechanism, layer, class, assurance, purpose, and
   clause 8's two — lives in `xmip-core`. `xmip-core-identify`, `-authenticate`
   and `-authorize` depend on it and **never on `xmip-core-party`**, which is what
-  `architecture.xmip` already said. The gates answer with a `PartyId`; resolving
+  `architecture.toml` already said. The gates answer with a `PartyId`; resolving
   the Party happens elsewhere. Proving a credential and knowing whose it is are
   different questions, and a gate able to see the answer to the second would
   eventually decide something with it.
@@ -838,7 +838,7 @@ the Essentials' — admitted any password, and the SFTP far end chose a
 user's directory by that unchecked name.
 
 - **The server is handed the check; it links no authenticator.**
-  `architecture.xmip`: *Credential and identity presentation is a
+  `architecture.toml`: *Credential and identity presentation is a
   security responsibility, not a transport technology.* A login offered
   is `net::login::Offered` (user, secret), asked of a
   `net::login::Check`, one home for SSH and FTP. `ssh::userauth::serve`

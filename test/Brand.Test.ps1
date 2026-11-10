@@ -6,7 +6,7 @@
 
     The owner, 2026-11-04: *Why dont we use the brand, the assets, the
     Icons. For the VS Code extension and executables and what not?*
-    asset/brand/brand.xmip names each surface: what it shows, the copy it
+    asset/brand/brand.toml names each surface: what it shows, the copy it
     keeps where it is a repository of its own, and the file that names it.
     Held here: the icon and the resource made from the mark are what
     Write-XmipBrand makes of it now, each copy is the source byte for byte,

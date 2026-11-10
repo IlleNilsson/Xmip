@@ -110,7 +110,7 @@ Each is security-critical and lands on its own, tested, rather than as one drop.
 - The transport crate's `tls` feature grows a server path; it stops being
   client-only. Its crypto still comes from rustls, the one place the estate
   admits a crypto dependency, kept behind the feature.
-- `xmip-core-authenticate-certificate` (already declared in `architecture.xmip`)
+- `xmip-core-authenticate-certificate` (already declared in `architecture.toml`)
   gains the two authenticators; an ACME capability is added for provisioning.
 - The Essentials' authentication faults (ADR-0028) become exercisable against a
   real mechanism rather than only simulated.

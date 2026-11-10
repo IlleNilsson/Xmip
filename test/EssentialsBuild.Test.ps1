@@ -145,7 +145,7 @@ Describe 'A build says how it stands' {
                 Log = Join-Path $Area 'build-1.log'
             }
             [string] $handed = Join-Path $Area 'build-1.clixml'
-            [string] $record = Join-Path $Area 'build-1.xmip'
+            [string] $record = Join-Path $Area 'build-1.toml'
             Export-Clixml -LiteralPath $handed -InputObject $start -Depth 5
 
             Mock Invoke-XmipEssentialsBuild {
@@ -175,7 +175,7 @@ Describe 'A build says how it stands' {
 
             [hashtable] $start = @{ Cluster = $Cluster; Nodes = @($Node); Path = $Area }
             [string] $handed = Join-Path $Area 'build-2.clixml'
-            [string] $record = Join-Path $Area 'build-2.xmip'
+            [string] $record = Join-Path $Area 'build-2.toml'
             Export-Clixml -LiteralPath $handed -InputObject $start -Depth 5
             Set-Content -LiteralPath $record -Value 'pid = 1'
 
@@ -202,7 +202,7 @@ Describe 'A build says how it stands' {
                 [hashtable] $start = @{ Cluster = $pair[1]; Log = "$Area/build-$($pair[0]).log" }
                 $written = New-XmipEssentialsBuildRecord -Start $start -Id 2000000000 -Started (
                     [datetime] '2026-10-13T10:00:00Z')
-                Write-XmipToml -Path (Join-Path $Area "build-$($pair[0]).xmip") -Value $written
+                Write-XmipToml -Path (Join-Path $Area "build-$($pair[0]).toml") -Value $written
             }
 
             [object[]] $builds = @(Get-XmipEssentialsBuild -Path $Area)
@@ -239,7 +239,7 @@ Describe 'Stop-XmipTest stops a build' {
             Set-Content -LiteralPath $log -Value '   Compiling only-crate v0.1.0'
             [hashtable] $start = @{ Suite = 'Core.Essentials'; Cluster = $Cluster; Log = $log }
             [hashtable] $began = @{ Start = $start; Id = $process.Id; Started = $process.StartTime }
-            [string] $record = Join-Path $Area 'build-5.xmip'
+            [string] $record = Join-Path $Area 'build-5.toml'
             Write-XmipToml -Path $record -Value (New-XmipEssentialsBuildRecord @began)
 
             $build = Get-XmipEssentialsBuild -Path $Area

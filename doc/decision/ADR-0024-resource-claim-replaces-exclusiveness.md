@@ -174,7 +174,7 @@ lease expiry was invented to provide, obtained without inventing it.
 
 ## Consequences
 
-- `xmip-core-exclusiveness` is removed from `architecture.xmip`, from the root
+- `xmip-core-exclusiveness` is removed from `architecture.toml`, from the root
   `Cargo.toml` features and dependencies, from `server-profile`, and from
   `.gitmodules` — it was mounted at `modules/platform/exclusiveness`. The
   repository is archived rather than deleted; ADR-0017 is part of the record.

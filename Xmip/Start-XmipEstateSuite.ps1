@@ -91,7 +91,7 @@ function Start-XmipEstateSuite {
 
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [hashtable] $run = @{
-        Record = Join-Path -Path $area -ChildPath "estate-$stamp.xmip"
+        Record = Join-Path -Path $area -ChildPath "estate-$stamp.toml"
         Suite  = $script:XmipEstateSuite
         Path   = (Resolve-Path -LiteralPath $Path).ProviderPath
         Test   = $named

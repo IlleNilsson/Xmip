@@ -181,7 +181,7 @@ Describe 'README lists every document that exists' {
         [string] $detail = $unlisted -join ', '
 
         # A ratchet, not a target. Twenty-three of these are pre-consolidation
-        # documents that allocation.xmip section 3b is merging into the six,
+        # documents that allocation.toml section 3b is merging into the six,
         # and the README is right not to list them — they are leaving. Asserting
         # zero here fails on work that is already planned and tracked, and a
         # test that is always red is a test nobody reads.
@@ -263,9 +263,9 @@ Describe 'The setup procedure is present' {
         $script:Readme | Should -Match '\(doc/getting-started\.md\)'
     }
 
-    It 'states the PowerShell floor that prerequisite.xmip declares' {
+    It 'states the PowerShell floor that prerequisite.toml declares' {
         $prerequisite = InModuleScope Xmip {
-            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.xmip')
+            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
         }
         [string] $floor = [string] $prerequisite.prerequisite.powershell.minimum
 
@@ -285,11 +285,11 @@ Describe 'A document cites what is built in the manifest''s words' {
     # A documentation review, 2026-10-06: documents described decided
     # behavior in the present tense where it was not built, or built and not
     # in the assembled service. Each capability's state is declared once, in
-    # architecture.xmip's [implementation], and rendered into estate-map.md;
+    # architecture.toml's [implementation], and rendered into estate-map.md;
     # a promise cites it beside itself as a link whose words are the state.
     # Decision records keep the words of their day and are not read here.
     BeforeAll {
-        [string] $path = Join-Path -Path $script:Root -ChildPath 'architecture.xmip'
+        [string] $path = Join-Path -Path $script:Root -ChildPath 'architecture.toml'
         [PSCustomObject] $manifest = Get-XmipManifest -Path $path
         [PSCustomObject[]] $script:Built = @(
             InModuleScope Xmip -Parameters @{ Manifest = $manifest } {
@@ -333,7 +333,7 @@ Describe 'A document cites what is built in the manifest''s words' {
     }
 
     It 'declares the states the documents cite' {
-        [string] $because = 'architecture.xmip says what is built'
+        [string] $because = 'architecture.toml says what is built'
         $script:Built.Count | Should -BeGreaterThan 10 -Because $because
         $script:Cited.Count | Should -BeGreaterThan 30 -Because 'the documents cite it'
     }
@@ -366,7 +366,7 @@ Describe 'A document cites what is built in the manifest''s words' {
 
                 if ($one.Words -ne $said[$one.Key]) {
                     "$($one.Document): '$($one.Key)' cited as '$($one.Words)', " +
-                    "and architecture.xmip says '$($said[$one.Key])'"
+                    "and architecture.toml says '$($said[$one.Key])'"
                 }
             }
         )

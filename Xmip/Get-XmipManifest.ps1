@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Reading architecture.xmip, checking its version, and validating what it declares.
+    Reading architecture.toml, checking its version, and validating what it declares.
 
 .DESCRIPTION
     Apart from Xmip.psm1 since 2026-09-22, when that file was 977 lines against the
@@ -136,7 +136,7 @@ function Assert-XmipManifestVersion {
 
 function Get-XmipManifest {
     <#
-        Reads architecture.xmip and returns it with the estate flattened.
+        Reads architecture.toml and returns it with the estate flattened.
 
         TOML only. architecture.json was schema 1 and is deleted; keeping a
         fallback would keep a second reader alive for a file that no longer
@@ -152,7 +152,7 @@ function Get-XmipManifest {
         throw "Manifest not found: $Path"
     }
 
-    if ([IO.Path]::GetExtension($Path) -ine '.xmip') {
+    if ([IO.Path]::GetExtension($Path) -ine '.toml') {
         throw "The manifest must be TOML: $Path"
     }
 

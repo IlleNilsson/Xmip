@@ -7,7 +7,7 @@
     Install-XmipPrerequisite: no package manager, and no Node.js.
 
 .DESCRIPTION
-    prerequisite.xmip's [archive.<name>] tables: a version, and per
+    prerequisite.toml's [archive.<name>] tables: a version, and per
     operating system and architecture (windows-x64, linux-arm64, ...) the
     release asset's url, its SHA-256 and the program inside it. The archive
     is unpacked under .local-work/tool/<name>/<version>, device-local state
@@ -30,7 +30,7 @@ function Get-XmipArchiveTool {
             this platform takes, and whether the tool is there.
 
         .PARAMETER Root
-            The estate root, holding prerequisite.xmip.
+            The estate root, holding prerequisite.toml.
 
         .PARAMETER Name
             The tool's key under [archive], such as typescript.
@@ -91,7 +91,7 @@ function Install-XmipArchive {
             for each.
 
         .PARAMETER Manifest
-            prerequisite.xmip, as Read-XmipToml read it.
+            prerequisite.toml, as Read-XmipToml read it.
 
         .PARAMETER ManifestPath
             Its path, at the estate root.

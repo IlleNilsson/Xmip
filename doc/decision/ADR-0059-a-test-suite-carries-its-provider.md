@@ -454,8 +454,8 @@ tree; `module/foundation/core/src/mechanism.rs`; and the module and test files
 above.
 
 Two shipped documents were checked and needed nothing:
-`module/operation/cli/src/Xmip.Cli/cli.xmip` and
-`module/operation/powershell/src/Xmip.PowerShell/powershell.xmip` name the
+`module/operation/cli/src/Xmip.Cli/cli.toml` and
+`module/operation/powershell/src/Xmip.PowerShell/powershell.toml` name the
 Essentials as the rig of ADR-0028 and no longer name a suite or the command that
 produced their snapshot, which the Consequences above said they did.
 
@@ -483,7 +483,7 @@ to say so.**
   The PowerShell module is where a suite is named and is changed throughout.
   The API and the CLI owe nothing: neither has a notion of a test suite —
   the CLI reads a snapshot and never starts a run — and the only mention is
-  a comment in `cli.xmip` naming the command that produced the shipped
+  a comment in `cli.toml` naming the command that produced the shipped
   snapshot, which is corrected. The web GUI owes nothing for the same
   reason: it follows a snapshot and shows scopes, and no page of it names a
   suite. If a surface ever shows a run, it shows the qualified name.
@@ -548,7 +548,7 @@ be right for a session that started after the declaration was dropped and
 wrong for one that started before, and nothing would say which. A pattern at
 the door and a refusal in the body are right in both.
 
-**A registry in `architecture.xmip`.** ADR-0011 says the manifest is the
+**A registry in `architecture.toml`.** ADR-0011 says the manifest is the
 registry and the only place that will know a third-party module exists, so
 this is the candidate with the best record behind it. It is not taken yet
 because the manifest names repositories and a suite is not one, and because
@@ -680,7 +680,7 @@ itself: Start starts, Status observes, Stop stops.
    `$PSHOME`, no window on Windows, detached from the console, so it outlives
    it; the test files' own removal and re-import of the module happens in that
    process and cannot reach the console's.
-2. **The run records itself, as a roll does.** `estate-<start time>.xmip` under
+2. **The run records itself, as a roll does.** `estate-<start time>.toml` under
    `.local-work/estate` (`Get-XmipEssentialsLayout`'s `Estate`), beside its
    log: the suite, the pid, when it started, the files named. When Pester
    returns, the run writes its verdict over it — `state` OK or FAILED, the

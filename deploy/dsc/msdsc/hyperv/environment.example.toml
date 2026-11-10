@@ -1,6 +1,6 @@
 # The Essentials' machines on a Windows host's Hyper-V: what
 # Deploy-XmipEnvironment reads, in an elevated Xmip PowerShell Console. Copy
-# it to .local-work/deploy/hyperv.xmip and write in linux_account,
+# it to .local-work/deploy/hyperv.toml and write in linux_account,
 # ssh_public_key and credential.
 
 name = "Xmip-HyperV"

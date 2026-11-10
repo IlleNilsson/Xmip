@@ -6,7 +6,7 @@
 
 <#
 .SYNOPSIS
-    Reconciles the Xmip repository estate on GitHub with architecture.xmip.
+    Reconciles the Xmip repository estate on GitHub with architecture.toml.
 
 .DESCRIPTION
     Remote only. Creates repositories that the manifest names and GitHub does
@@ -150,7 +150,7 @@ function Sync-XmipEstate {
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
-        # The brand carried to every surface asset/brand/brand.xmip names:
+        # The brand carried to every surface asset/brand/brand.toml names:
         # the icon and resource made from the mark, and each repository's
         # copy (Write-XmipBrand). Local; alone, GitHub is not asked.
         [switch] $Brand,

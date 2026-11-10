@@ -112,7 +112,7 @@ account of how software reaches it at all.
 
 - **A node with the online capability is the estate's door.** It fetches what
   the estate needs from the world — Xmip's own releases, the prerequisites of
-  `prerequisite.xmip`, Visual Studio Code and the Xmip extension, a module a
+  `prerequisite.toml`, Visual Studio Code and the Xmip extension, a module a
   provider published — and the offline nodes take it from there rather than
   from the internet. Online capability is ADR-0056's first kind, and this is
   the first thing it is *for* rather than merely a fact about a node.

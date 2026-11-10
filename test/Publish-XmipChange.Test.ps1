@@ -271,7 +271,7 @@ rustls = { version = "0.23", optional = true }
 
     It 'says nothing for a manifest with no features table' {
         InModuleScope Xmip -Parameters @{ Fixture = $script:Fixture } {
-            $bare = Join-Path $Fixture 'bare.xmip'
+            $bare = Join-Path $Fixture 'bare.toml'
             Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
 
             @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'module/nowhere').Count |
@@ -303,7 +303,7 @@ Describe 'A module''s timing program runs last, alone' {
         $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'measured'
         New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
 
-        $script:Declared = Join-Path $script:Fixture 'declared.xmip'
+        $script:Declared = Join-Path $script:Fixture 'declared.toml'
         Set-Content -LiteralPath $script:Declared -Value @'
 [package]
 name = "xmip-core-example"
@@ -321,7 +321,7 @@ required-features = ["test-support"]
 
 [dev-dependencies]
 '@
-        $script:Tested = Join-Path $script:Fixture 'tested.xmip'
+        $script:Tested = Join-Path $script:Fixture 'tested.toml'
         Set-Content -LiteralPath $script:Tested -Value @'
 [package]
 name = "xmip-core-example"
@@ -336,7 +336,7 @@ path = "tests/measured/main.rs"
         InModuleScope Xmip -Parameters @{ Declared = $script:Declared; Fixture = $script:Fixture } {
             Get-XmipMeasuredDeclaration -ManifestPath $Declared | Should -Match 'test = false'
 
-            $bare = Join-Path $Fixture 'bare.xmip'
+            $bare = Join-Path $Fixture 'bare.toml'
             Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
             Get-XmipMeasuredDeclaration -ManifestPath $bare | Should -BeNullOrEmpty
         }

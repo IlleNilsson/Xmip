@@ -368,7 +368,7 @@ potential perfect Rust code.*
   technologies did that and are gone, with the reserved transform and
   process entries in C, C++, Go, Java, Lua, PowerShell and Python (ADR-0042,
   amendment 2026-10-05).
-- The JDK and Python stay in `prerequisite.xmip`, now for these bindings
+- The JDK and Python stay in `prerequisite.toml`, now for these bindings
   alone, and C and C++ build with the compiler Rust requires (amendment
   2026-11-09); the Go toolchain served only a contract technology and is
   gone.
@@ -404,9 +404,9 @@ and use the compiler Rust uses.*
 
 - **One C and C++ compiler, the one Rust already requires.** Rust's msvc
   target links with the MSVC build tools on Windows, and with the system's
-  `cc` on macOS and Linux (`prerequisite.xmip`, `linker`; `cxx` adds `c++`
+  `cc` on macOS and Linux (`prerequisite.toml`, `linker`; `cxx` adds `c++`
   on Linux). The C and C++ bindings build with the same tools: `cl.exe` on
-  Windows, `cc` and `c++` elsewhere. `prerequisite.xmip` has no C entry of
+  Windows, `cc` and `c++` elsewhere. `prerequisite.toml` has no C entry of
   its own.
 - **`verify-event-bindings.ps1` finds `cl.exe` the way Microsoft documents.**
   `vswhere.exe`, at the fixed path the Visual Studio Installer puts it,
