@@ -4,7 +4,7 @@ Options per problem, with a lean. Nothing here is decided.
 
 **A problem keeps its number for life.** The numbers are cited from outside
 this file — ADR-0024 cites 18, ADR-0014 cites 16, ADR-0002 and
-`allocation.xmip` cite 19 — so renumbering would silently repoint a citation at
+`allocation.toml` cite 19 — so renumbering would silently repoint a citation at
 someone else's problem. Sections are ordered so the numbers ascend; they are
 not renumbered to make them.
 
@@ -625,7 +625,7 @@ still a stage inside `round-trip`.
 | 1 | `xmip-core-provision` declared and created, its trait in the capability (a provider may ship a certificate source) | done 2026-10-13 |
 | 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names | done 2026-10-13: http-01 on any port, dns-01 through a provider's `DnsWriter`; tls-alpn-01 not built |
 | 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME | done 2026-10-13; `internal-ca` also serves ACME to the cluster |
-| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Essentials test is not built, and whether it runs step-ca (the SDK, `prerequisite.xmip`) is the owner's |
+| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Essentials test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
 | 5 | `identity-online` on nodes that declare online, against Let's Encrypt | configuration only; open below |
 
 The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
@@ -713,14 +713,14 @@ and no engine.
 |---|---|
 | 1 | the key home, **decided 2026-09-25** (ADR-0063 clause 4): `xmip-core-secret`, a new capability, created and declared; the platform key store its first technology per platform (DPAPI/CNG, the kernel keyring or a service-only file, the keychain), PKCS#11 and vaults after. **Built 2026-09-25:** `KeyStore`, `DataKey` (the one AES-256-GCM, HKDF and HMAC), `dpapi` tested on Windows, `file` on AlmaLinux, `keychain` built and not run on macOS; `pkcs11`, `vault`, `azure-key-vault`, `aws-kms` reserved; `keyring` reserved, because the kernel keyring forgets a key at a restart — the owner decides what it is for |
 | 2 | `persist` gains its encryption layer: AES-256-GCM per record, lookup keys by keyed hash, a record that fails its tag audited as a failure. **Built 2026-09-25:** `EncryptedStore` over the `Engine` trait, and a `RuntimeStore`; a failed tag is `PersistError::Refused` with scope and reason, audited by the caller — wiring that caller to `xmip-core-audit` is open |
-| 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.xmip`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
+| 3 | `persist-rocksdb`, a technology under `persist`, the runtime store; the C++ toolchain and libclang in `prerequisite.toml`; built and tested on the AlmaLinux guest. **Built 2026-09-25**, Windows and AlmaLinux |
 | 4 | `persist-sqlite`, the management store. **Built 2026-09-25**, Windows and AlmaLinux |
 | 5 | the web host and the remote surfaces over TLS; the node-to-node protocol (problems 17, 18) mutual TLS from its first line. **Web host and remote surfaces built 2026-09-25:** `SecureSurface` in `Xmip.Surface` (PEM certificate, key and anchors; HTTPS always, plain HTTP on loopback only), `SurfaceBinding` in `Xmip.Surface.Relay` (plain HTTP beyond loopback refused before listening, the loopback binding logged and audited, a client certificate checked and required at the hub), `RemoteOperator` presenting and checking; `Start-XmipOperationWeb -Certificate -PrivateKey -TrustAnchor`; proved over mutual TLS on a loopback port, wrong certificates refused. The TLS is the platform's through Kestrel, not `xmip-core-library-tls`; the node-to-node protocol is open |
 | 6 | the .NET programs' TLS through `xmip-core-library-tls`, not the platform's (the owner, 2026-09-26; ADR-0063, amendment): the web host's and the remote surface's connections terminate in the Rust library — through the runtime's library as a stream the .NET side reads and writes, or a Rust front in the web host's process — so the hybrid exchange holds on every Xmip connection |
 
 ## 30. HTTP/3 is declared and not built
 
-`architecture.xmip` declares the http technology over *IETF RFC 9110, with
+`architecture.toml` declares the http technology over *IETF RFC 9110, with
 the applicable HTTP/1.1, HTTP/2 and HTTP/3 documents*. HTTP/1.1 is
 `net::http` and HTTP/2 `net::http2` since 2026-09-25 (ADR-0043 and ADR-0044,
 amendments 2026-09-25), the version chosen per connection by ALPN or prior
@@ -753,7 +753,7 @@ The owner, 2026-10-05 (ADR-0031, amendment): *When editing is done, the
 cluster TOML file is sliced into node TOML files and shipped to each node on
 save.* The Operation Desktop slices on save through `xmip_cluster_slices_v1`
 and writes each slice to `<SliceDirectory>/<node>/node.xmip`; only its
-own node, `gui.xmip`'s `Node`, counts as shipped, and every other node
+own node, `gui.toml`'s `Node`, counts as shipped, and every other node
 shows *sliced, not shipped*. Desired state slices on the node itself
 (`xmip-service --slice --cluster`; the environment templates of ADR-0015,
 amendment 2026-10-21). Missing: an operate-plane act that places a
@@ -796,7 +796,7 @@ inside the runtime's tests, which hand it stand-in gates; the program an
 operator installs runs none of it. Needed: the identity technologies of
 ADR-0050 linked into the service and chosen by configuration (ADR-0068: handed
 in), a Storage node in the service, and the first database server client.
-`architecture.xmip` `[implementation]` says the same per capability.
+`architecture.toml` `[implementation]` says the same per capability.
 
 *Narrowed the same day.* The owner: *The first stream will come from
 somewhere, it will carry its identity via transport or on its message*, and
@@ -1532,7 +1532,7 @@ declaration stays placed once. The plan, its own work after the current:
 2. The crates in batches, each landed in its own repository.
 3. A gathering crate last, which the surfaces' runtime build links every
    declaration through, since a platform service depends on no technology
-   (`architecture.xmip`).
+   (`architecture.toml`).
 
 ## 50. Validation and the path languages hold a Stream whole
 
@@ -1670,7 +1670,7 @@ Rust mirror in `xmip-core-abi`, and the five moved onto it.
 Decided by the owner, 2026-10-27, resolving problem 8: option A, always
 name the vendor. Not done: `s3` renamed `aws-s3`, and every other cloud
 technology that names no vendor renamed the same way, in
-`architecture.xmip`, the repositories, the crates, the configuration words
+`architecture.toml`, the repositories, the crates, the configuration words
 and every document that names them.
 
 ## 58. Resilience and exclusiveness are not pluggable
@@ -1746,7 +1746,7 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 - **The SSH and FTP servers check the password.** Xmip's server sides
   for the loopbacks and the Essentials' far ends are handed the check
   rather than linking an authenticator, since identity presentation is
-  not a transport's (`architecture.xmip`): `net::login::Offered` (user,
+  not a transport's (`architecture.toml`): `net::login::Offered` (user,
   secret) asked of a `net::login::Check`. `ssh::userauth::serve` admits a
   password only where the check admits it and lets a client go after six
   requests; the FTP session answers `PASS` 230 only where the check
@@ -2038,7 +2038,7 @@ them. Moving them out of `src/` stops them reading as live code, which is the ac
 
 *Resolved by option B, recorded here 2026-09-03.*
 
-`architecture.xmip` and the workspace `Cargo.toml` both say edition 2021. The
+`architecture.toml` and the workspace `Cargo.toml` both say edition 2021. The
 manifest key is `[crate]`; `cratePolicy` appears nowhere in its history, so the
 name below was already wrong when it was written.
 

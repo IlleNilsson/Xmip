@@ -59,7 +59,7 @@ it.
 2. **The fifth way in, as the other four.** It calls `Xmip.Surface` and so
    `xmip_operate.h`, as every surface does (ADR-0014), and the surface it
    reads is chosen by the one rule: `--runtime`, `--remote` and
-   `--snapshot` on its line, else `cli.xmip` (ADR-0052 clause 1).
+   `--snapshot` on its line, else `cli.toml` (ADR-0052 clause 1).
 3. **The tools are the read commands, exactly.** Each tool is a command the
    line already has, named by its word — `abi`, `status`, `health`,
    `measure`, `list`, `show`, `validate`, `audit` (with `verify`),

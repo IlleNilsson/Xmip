@@ -59,7 +59,7 @@ Describe 'What a killed process left behind' {
 
             # No process has this id: the highest a pid can be on Windows is
             # far below it, and Linux stops at four million by default.
-            [string] $stale = Join-Path $Area 'xmip-essentials-node-2000000000.xmip'
+            [string] $stale = Join-Path $Area 'xmip-essentials-node-2000000000.toml'
             Set-Content -LiteralPath $stale -Encoding utf8 -Value @(
                 'name = "xmip-essentials-node"'
                 "location = `"$Location`""
@@ -80,7 +80,7 @@ Describe 'What a killed process left behind' {
 
             # This shell is alive and is not named xmip or xmip-*: a recycled pid
             # must not lend a dead declaration to a stranger.
-            [string] $borrowed = Join-Path $Area "xmip-$PID.xmip"
+            [string] $borrowed = Join-Path $Area "xmip-$PID.toml"
             Set-Content -LiteralPath $borrowed -Encoding utf8 -Value @(
                 'name = "xmip"'
                 'location = "xmip:///"'

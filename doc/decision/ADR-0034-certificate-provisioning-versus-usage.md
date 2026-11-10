@@ -195,7 +195,7 @@ assistant's draft, each point marked, for the owner to strike.
    other assumption (ADR-0031, amendment 2026-10-03). The table names no
    `source`.
 5. **Where the code is** — the assistant's draft, because of a rule in
-   `architecture.xmip`: *Platform services must not depend on specific
+   `architecture.toml`: *Platform services must not depend on specific
    Technology repositories.* The surfaces reach Rust through the runtime's
    library (ADR-0014, amendment 2026-10-12), which may not link
    `internal-ca`. So what an authority signs and how — the request read and

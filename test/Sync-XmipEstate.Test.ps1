@@ -17,7 +17,7 @@ BeforeAll {
     )
 
     # Read once: every test below asks the same manifest.
-    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.xmip')
+    $script:Manifest = Get-XmipManifest -Path (Join-Path $script:Root 'architecture.toml')
 
     # What the estate actually checks out, from .gitmodules rather than from
     # the manifest: the tests that compare the two would pass comparing the
@@ -60,7 +60,7 @@ Describe 'The manifest' {
         # built work as un-started. The reader refuses a silent one now, so
         # reading the manifest above is the check. ADR-0060, amendment
         # 2026-09-19.
-        [string] $path = Join-Path $TestDrive 'silent.xmip'
+        [string] $path = Join-Path $TestDrive 'silent.toml'
         Set-Content -LiteralPath $path -Encoding utf8 -Value @(
             'schemaVersion = "2.0.0"'
             '[xmip.core]'
@@ -151,7 +151,7 @@ Describe 'The module is the entry point' {
 Describe 'ADR-0021: current platforms only, enforced' {
     BeforeAll {
         $script:Prereq = InModuleScope Xmip {
-            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.xmip')
+            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
         }
     }
 
@@ -186,14 +186,14 @@ Describe 'ADR-0021: current platforms only, enforced' {
     }
 
     It 'keeps the manifest floor and the #requires floor in step' {
-        # The one that drifts silently: prerequisite.xmip says 7.6.7 while an
+        # The one that drifts silently: prerequisite.toml says 7.6.7 while an
         # entry point still says 7.6, and nothing notices. On 2026-08-27 three
         # documents said 7.6, one said 7.6.3, and an example printed 7.6.5.
         $declared = [string]$script:Prereq.prerequisite.powershell.minimum
 
         foreach ($file in $script:EntryPoints) {
             $head = (Get-Content (Join-Path $script:ModuleRoot $file) -TotalCount 3) -join "`n"
-            [string] $because = "$file must state the same floor as prerequisite.xmip"
+            [string] $because = "$file must state the same floor as prerequisite.toml"
 
             $head | Should -Match ([regex]::Escape("#requires -Version $declared")) -Because $because
         }
@@ -201,7 +201,7 @@ Describe 'ADR-0021: current platforms only, enforced' {
 
     It 'gives every script in the estate that floor, never an older one' {
         # The entry points alone missed nine desired-state scripts that said
-        # 7.6 until 2026-11-07, while prerequisite.xmip said 7.7.0.
+        # 7.6 until 2026-11-07, while prerequisite.toml said 7.7.0.
         [string] $declared = [string]$script:Prereq.prerequisite.powershell.minimum
         [string[]] $older = @(
             InModuleScope Xmip -Parameters @{ Root = $script:Root } {

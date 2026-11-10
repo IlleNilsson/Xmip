@@ -16,7 +16,7 @@ release readiness.
 
 ## Edit
 
-`story.xmip` is the shared editorial source, in TOML. Each section contains
+`story.toml` is the shared editorial source, in TOML. Each section contains
 slide layout text, concise video text, narration, host selection and project
 source references. The PowerPoint is editable; carry textual corrections back
 into the story so the video does not drift from it.

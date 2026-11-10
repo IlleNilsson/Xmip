@@ -162,7 +162,7 @@ which the node's TOML names it.
 
 ## 6. The manifest
 
-Each Module carries a manifest, `xmip-module.xmip`, beside its library. What
+Each Module carries a manifest, `xmip-module.toml`, beside its library. What
 identifies the Module — provider, module, standard, the ABI handshake and the
 trait and module versions — is the descriptor ADR-0012 defines and
 `module/foundation/abi/doc/specification.md` specifies, stated once there and

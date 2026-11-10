@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Generates doc/architecture/estate-map.md from architecture.xmip.
+    Generates doc/architecture/estate-map.md from architecture.toml.
 
 .DESCRIPTION
     `repository-model.md` section 7 draws where the modules mount. It is

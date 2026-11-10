@@ -36,10 +36,10 @@ The estate is governed by its own records, and they are current:
   exempt, and whatever can reformat a file in a second is exempt least of all.
 - `doc/planning/open-problems.md` — what is open and in what order. Problem
   19 and the Suggested order section are the queue.
-- `doc/planning/allocation.xmip` — the ledger of what moved where. Tested by
+- `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
   `test/Allocation.Test.ps1`; keep it true when files move.
 
-Repository placement is governed by [`architecture.xmip`](architecture.xmip).
+Repository placement is governed by [`architecture.toml`](architecture.toml).
 New repositories, dependencies and technology implementations must fit the
 classification and dependency rules in that manifest.
 
@@ -217,7 +217,7 @@ for C and C++, the compiler Rust already requires (the MSVC build tools'
 Node.js outside its CI (ADR-0014, amendment 2026-10-22), and each of those is optional: every
 language but Rust is optional for Xmip itself (the owner, 2026-10-20), a
 binding whose tool is absent is said SKIPPED and fails nothing, and .NET
-and PowerShell are the operator surfaces' and the tooling's. `prerequisite.xmip` has
+and PowerShell are the operator surfaces' and the tooling's. `prerequisite.toml` has
 each. Spelling, in American English, is checked by whoever writes, the
 owner's own words quoted included, corrected where he misspelled (the
 owner, 2026-11-02: *I think we can take away the _typos, I'll just let you

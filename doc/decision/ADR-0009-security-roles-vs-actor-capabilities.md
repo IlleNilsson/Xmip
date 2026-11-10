@@ -236,7 +236,7 @@ guarded remote surfaces, not the browser.
   and acts on nothing. The desktop's caller is the user running it.
 - **The role is the caller's, by one rule for every host and the hub.**
   `RoleAssignment` in `Xmip.Surface`: a caller nothing proved is an
-  Observer; a role the run states (`Role` in `gui.xmip`, else
+  Observer; a role the run states (`Role` in `gui.toml`, else
   `XMIP_ROLE`) is every proven caller's, as the amendment of 2026-10-03 left
   it until a directory is asked; else the directory the host is handed
   (`IDirectory`, ADR-0068) answers for the caller; else Observer. **An
@@ -476,7 +476,7 @@ spelling of it.
   named, and `authenticate::Handshake`, the handshake's rule moved down
   from the `mutual-tls` technology, which now asks it before it narrows by
   issuer — a platform service may not depend on a technology
-  (`architecture.xmip`), and the rule has one home.
+  (`architecture.toml`), and the rule has one home.
 - **`plane::role::admitted` takes the authenticated identity**, and only
   one the gate called *proven* is anyone; vouched, claimed and refused act
   on nothing. A screen's act is admitted by the same rule

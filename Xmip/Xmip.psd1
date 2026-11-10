@@ -22,9 +22,9 @@
     PowerShellVersion    = '7.7.0'
     CompatiblePSEditions = @('Core')
 
-    # Two modules from the gallery, both declared in prerequisite.xmip:
+    # Two modules from the gallery, both declared in prerequisite.toml:
     #
-    #   PSToml     reads architecture.xmip and prerequisite.xmip. PowerShell has
+    #   PSToml     reads architecture.toml and prerequisite.toml. PowerShell has
     #              no built-in TOML parser.
     #   posh-git   the prompt: branch, ahead, behind and changes in front of
     #              every command. Get-XmipStatus asks git itself.

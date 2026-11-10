@@ -101,7 +101,7 @@ SQLite store did not move when the monolith was distributed on 2026-08-26.
 
 What it costs, as the Open section said and the owner took knowingly: a C++
 toolchain and libclang in every build that includes the runtime store,
-harder cross-compilation to arm64, larger artifacts. `prerequisite.xmip`
+harder cross-compilation to arm64, larger artifacts. `prerequisite.toml`
 declares the toolchain; the AlmaLinux guest verifies the Linux build. Each
 engine is a technology under `persist`, so a device build can leave RocksDB
 out.
@@ -110,7 +110,7 @@ Encryption of what is stored is not the engine's (ADR-0063).
 
 Built 2026-09-25: `xmip-core-persist-rocksdb` and `xmip-core-persist-sqlite`,
 each a `persist::Engine` under persist's `EncryptedStore`, tested on Windows
-and on the AlmaLinux guest. `prerequisite.xmip` declares libclang (and, on
+and on the AlmaLinux guest. `prerequisite.toml` declares libclang (and, on
 Linux, the C++ compiler); the first Windows build of RocksDB took some twenty
 minutes. RocksDB is built without compression, since what it stores is
 ciphertext.
@@ -284,7 +284,7 @@ and Xmip Storage is reached over Xmip's TLS (ADR-0063, amendment of this
 date). The target profiles follow this record since the build of the same
 day: every target that keeps a store carries RocksDB and claims both
 engines, none refuses either, and the storage role,
-`deploy/profile/role/storage.xmip`, brings SQLite for the administration
+`deploy/profile/role/storage.toml`, brings SQLite for the administration
 database.
 
 **An operator guide per database server** (the owner, 2026-10-01: *We have
@@ -486,8 +486,8 @@ the archive targets, he answered *Yes*.
 only the `archive` feature.*
 
 **Archive targets are chosen by the roles that archive.** The roles that
-carry the `archive` feature, `deploy/profile/role/sending.xmip` and
-`operational.xmip`, name the archive targets they carry in `archives`, by
+carry the `archive` feature, `deploy/profile/role/sending.toml` and
+`operational.toml`, name the archive targets they carry in `archives`, by
 repository name, as a target names its technologies in `claims`: the ten
 under `xmip-core-archive` — `azure-blob`, `file`, `gcs`, `mariadb`,
 `mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite`. A composed role
@@ -539,7 +539,7 @@ as `Technologies`; the target vetoes a technology's feature as it vetoes a
 role's. The five example sites name what their descriptions say.
 
 **Every built technology is built and tested.** `test/Deploy.Test.ps1`
-holds each technology `architecture.xmip` declares built to being mounted
+holds each technology `architecture.toml` declares built to being mounted
 as a declared module, which the landing builds with every feature it
 declares and tests (`Publish-XmipChange`, `Test-XmipModule`), and to having
 tests of its own. It found `xmip-core-persist-postgresql` declared
@@ -568,7 +568,7 @@ amendment 2026-10-20).
 roles.** A site names the archive targets its end user chose in its
 `technologies`, by repository name, as it names every other technology
 (amendment 2026-10-19). The roles that archive keep the `archive` feature —
-`sending.xmip` and `operational.xmip` — and name no target. Deleted, with
+`sending.toml` and `operational.toml` — and name no target. Deleted, with
 every use: the roles' `archives`, `Get-XmipRoleArchive`,
 `Get-XmipArchiveTarget`, the plan's `Archives`, and the tests that held a
 role carrying `archive` to naming targets and a site's archiving roles to
@@ -583,7 +583,7 @@ build carries.
 
 **`retain` joins the sending role's features** (the owner, 2026-10-20).
 
-**Only a node with the Storage role stores.** `development.xmip` composes
+**Only a node with the Storage role stores.** `development.toml` composes
 `storage` beside executing, operational and monitoring, and the example
 site `personal-computer`, one machine, declares `storage`: this answers
 the 2026-10-13 open item *a site whose node starts on its own*. The other
@@ -777,7 +777,7 @@ the WSL AlmaLinux guest. Neither has been run against a machine.
 Which account a node runs as was open (the amendment of 2026-10-13); the
 virtual account and `xmip` are the assistant's draft of 2026-10-21, for the
 owner to strike. DSC and Ansible are optional prerequisites, for test level
-2 alone (`prerequisite.xmip`).
+2 alone (`prerequisite.toml`).
 
 ## Amendment, 2026-10-22: every node of the example environment runs
 
@@ -815,7 +815,7 @@ by a command*; *From whatever platform, you should be able fire up the test
 environment with DSC*; and of the language of what manages it: *.NET or
 PowerShell. That is for management, Rust is for runtime.*
 
-**One command.** `Deploy-XmipEnvironment -Path <environment.xmip>` makes an
+**One command.** `Deploy-XmipEnvironment -Path <environment.toml>` makes an
 environment's machines and waits until each is installed. The environment
 file is TOML, Xmip's configuration: the hypervisor, whose template it
 selects (`deploy/dsc/msdsc/<hypervisor>`), the network, the images and the

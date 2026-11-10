@@ -191,7 +191,7 @@ rather than felt as a complaint.
 
 ## Consequences
 
-- `xmip-test-essentials` is declared in `architecture.xmip` and created through
+- `xmip-test-essentials` is declared in `architecture.toml` and created through
   `Sync-XmipEstate`, from the Rust template, mounted at
   `test/essentials`.
 - **Xmip Essentials** is a term in terminology.md.
@@ -618,7 +618,7 @@ from the start, and the estate's Pester suite since 2026-09-25.
   finished (`Start-XmipEssentialsRollProcess`) and writes its run record as
   before.
 - **Building is the run's state.** The build writes a record,
-  `build-<start time>.xmip`, beside the rolls' records, and its output to
+  `build-<start time>.toml`, beside the rolls' records, and its output to
   `build-<start time>.log`. `Get-XmipTestStatus` lists it as kind `build`,
   state `building`, with how many crates cargo has compiled and the last of
   them — cargo prints no total when its output is not a terminal, so the

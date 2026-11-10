@@ -46,7 +46,7 @@ function Start-XmipEssentialsBuild {
     $layout = Get-XmipEssentialsLayout
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [string] $stem = Join-Path -Path $Start.Path -ChildPath "build-$stamp"
-    [string] $record = "$stem.xmip"
+    [string] $record = "$stem.toml"
     [string] $handed = "$stem.clixml"
     $Start.Log = "$stem.log"
 

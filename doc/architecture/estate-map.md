@@ -3,7 +3,7 @@
 326 repositories are declared and 275 of them are
 mounted in this working tree.
 
-**Generated from `architecture.xmip` and from the `.gitmodules` files
+**Generated from `architecture.toml` and from the `.gitmodules` files
 of the estate, by `New-XmipEstateMap`.** ADR-0020 clause 5 rules that
 a document listing repositories is a second source of truth and will
 be wrong within a week; a view of the manifest is not a second source
@@ -143,7 +143,7 @@ started. Records: ADR-0018, ADR-0064.
 
 **Every Xmip program audits to its audit file.** `xmip-service`, `xmip`, both
 PowerShell modules, the web host, the language server and the Essentials
-record through `xmip-core-audit`'s `ProgramAudit` into `audit.xmip`,
+record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
 synchronously: a record is appended before `record` returns, chained in its
 writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
 system's log the fallback; the next append seals a record whose write was

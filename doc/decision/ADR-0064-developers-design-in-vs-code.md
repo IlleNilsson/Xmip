@@ -181,7 +181,7 @@ and answers them through `xmip_operate.h` section 12,
 `xmip_technology_catalogue_v1`, bound in `Xmip.Abi` as `RuntimeCatalogue`;
 `xmip-lsp` completes and explains a Location's transport, contract and
 settings from it and answers `xmip/technologies` for the form the next
-slice draws. The runtime names no technology (`architecture.xmip`: a
+slice draws. The runtime names no technology (`architecture.toml`: a
 platform service depends on no technology repository), so a technology
 enters its catalogue through `catalogue::carry`; which technologies the
 runtime library the surfaces load carries is the owner's to decide.
@@ -357,7 +357,7 @@ how it is drawn and edited and what it compiles to are the design format's
 (`xmip-core-process-bpmn`) and `xmip-core-process`'s, answered by
 `xmip-lsp` itself (`xmip/process`, `xmip/processEdit`,
 `xmip/processCompile`), because a design format is a technology and the
-runtime's library, a platform service, names none (`architecture.xmip`).
+runtime's library, a platform service, names none (`architecture.toml`).
 **Compile** writes the Work Process unit's crate and its `[[modules]]`
 entry beside the design. Which design formats the runtime's library the
 .NET surfaces load carries, so that the PowerShell module and the Operation

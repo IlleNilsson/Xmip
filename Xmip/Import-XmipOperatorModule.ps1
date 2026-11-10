@@ -208,7 +208,7 @@ function Set-XmipOperatorModuleRoot {
             the build lies.
 
         .DESCRIPTION
-            powershell.xmip as shipped reaches the estate root from the
+            powershell.toml as shipped reaches the estate root from the
             project's bin/Debug/net11.0, nine levels up, and its Snapshot is
             relative to the module's directory. A build under
             .local-work/operator/<key> lies three levels down, so the shipped
@@ -227,7 +227,7 @@ function Set-XmipOperatorModuleRoot {
         [string] $Root
     )
 
-    [string] $document = Join-Path -Path $Directory -ChildPath 'powershell.xmip'
+    [string] $document = Join-Path -Path $Directory -ChildPath 'powershell.toml'
 
     if (-not (Test-Path -LiteralPath $document -PathType Leaf)) {
         return

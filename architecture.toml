@@ -57,7 +57,7 @@ automaticVerification = false
 # The .NET counterpart of [crate]. ADR-0021: current platforms only, which for
 # a build target means the latest — and .NET 11 is a release candidate (rc.3,
 # go-live, 2026-10-25) on the preview channel until it goes stable on
-# 2026-11-10, which prerequisite.xmip already records.
+# 2026-11-10, which prerequisite.toml already records.
 #
 # Declared here because it was previously written in three places and checked in
 # none: the template's Directory.Build.props, and a <TargetFramework> in each of
@@ -171,7 +171,7 @@ record = ["ADR-0034 (amendments 2026-10-15 and 2026-10-22)", "ADR-0033 (amendmen
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.xmip`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
+note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
 record = ["ADR-0062", "ADR-0070"]
 
 [implementation.audit-through-storage]
@@ -1351,7 +1351,7 @@ dependency = []
     maturity = "reserved"
     [xmip.core.audit.file]
     maturity = "reserved"
-    description = "Records appended as TOML tables to audit.xmip in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
+    description = "Records appended as TOML tables to audit.toml in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
     [xmip.core.audit.kafka]
     maturity = "reserved"
     [xmip.core.audit.mssql]

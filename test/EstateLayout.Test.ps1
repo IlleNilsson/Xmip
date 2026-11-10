@@ -30,7 +30,7 @@ Describe 'The estate layout' {
     It 'is the only module code that names the working area or the estate''s files' {
         # Read as tokens, so a comment or help text may say where something
         # is; a string in code asks the layout.
-        [string] $named = '\.local-work|architecture\.xmip|prerequisite\.xmip'
+        [string] $named = '\.local-work|architecture\.toml|prerequisite\.toml'
         [string[]] $spelled = @(Get-ChildItem -LiteralPath $script:ModuleFolder -Filter '*.ps1' |
             Where-Object { $_.Name -ne 'Get-XmipEstateLayout.ps1' } |
             ForEach-Object {

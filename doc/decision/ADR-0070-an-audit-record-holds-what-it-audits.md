@@ -54,7 +54,7 @@ that for now.*
 ## Not decided
 
 - what an auditor is given to read a held Stream, and under which role;
-- whether a node's records in its program's `audit.xmip` and those Xmip
+- whether a node's records in its program's `audit.toml` and those Xmip
   Storage keeps for it are one chain: they are two, one in each log, today;
 - that a record deleted from the end of a chain is found: nothing outside
   the chain holds where it ends;
@@ -84,7 +84,7 @@ that for now.*
   else the program's name. A record carries its number in its writer's
   chain, the SHA-256 digest of the record before it there (none, zeros, for
   the first) and its own, taken over its canonical form, which holds the
-  number and the digest before it. In a program's `audit.xmip` the file sink
+  number and the digest before it. In a program's `audit.toml` the file sink
   forms the chain as it appends, holding `audit.lock` beside the file, and
   reads where the writer's chain stands from the file's end — so a restarted
   program goes on from its last record; the canonical form is the record's

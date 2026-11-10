@@ -29,6 +29,6 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
-# Xmip's own files are TOML inside (ADR-0031, amendment 2026-11-04); GitHub
-# shows them so.
+# What describes an installation ends in .xmip and is TOML inside (ADR-0031,
+# amendments 2026-11-04 and 2026-11-10); GitHub shows it so.
 *.xmip linguist-language=TOML

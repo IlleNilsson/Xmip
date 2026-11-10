@@ -82,7 +82,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
                 [bool] $hidden = $Id -eq $script:Two[0].Id
                 [PSCustomObject]@{
                     Id     = $Id
-                    File   = "roll-$Id.xmip"
+                    File   = "roll-$Id.toml"
                     Record = @{
                         suite    = 'Core.Essentials'
                         cluster  = if ($hidden) {
@@ -123,7 +123,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             Mock Get-XmipRollRecord {
                 [PSCustomObject]@{
                     Id     = $Id
-                    File   = "roll-$Id.xmip"
+                    File   = "roll-$Id.toml"
                     Record = @{
                         cluster = $script:HiddenCluster; snapshot = 'nowhere-snapshot.xmip'
                     }

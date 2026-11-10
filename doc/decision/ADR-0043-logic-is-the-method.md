@@ -100,7 +100,7 @@ implements the four methods over that, mounted beside `soap`, `http-api` and
 
 The consequence *gRPC rides HTTP/2 and the `http` transport speaks HTTP/1.1
 today* is withdrawn. The owner asked on 2026-09-25 why HTTP/2 was not in
-the estate when `architecture.xmip` declared the http technology over
+the estate when `architecture.toml` declared the http technology over
 HTTP/1.1, HTTP/2 and HTTP/3; the connection this record left *the
 transport's to grow* has grown.
 

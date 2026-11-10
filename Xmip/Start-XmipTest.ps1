@@ -43,7 +43,7 @@ function Start-XmipTest {
             Get-XmipTestStatus says building, with the crates compiled, until
             the nodes start, or FAILED with cargo's first error; Stop-XmipTest
             stops it. Under -Path: `build-<start time>.log`, the roll's
-            `roll-<start time>.log` and `.err`, and `roll-<pid>.xmip`.
+            `roll-<start time>.log` and `.err`, and `roll-<pid>.toml`.
 
         .PARAMETER Suite
             Which test suite to run: Core.Essentials (the default) or

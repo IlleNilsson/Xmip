@@ -57,7 +57,7 @@ Describe 'Reading a TOML node, whichever shape PSToml returned' -ForEach @(
             provider = 'example'; name = 'Nightly'; command = 'run.ps1'
         }
         Mock ConvertFrom-Toml -ModuleName Xmip { $declared }.GetNewClosure()
-        [string] $path = Join-Path $TestDrive 'suite.xmip'
+        [string] $path = Join-Path $TestDrive 'suite.toml'
         Set-Content -LiteralPath $path -Value '# read through the mock'
 
         $suite = InModuleScope Xmip -Parameters @{ Path = $path } {
@@ -73,7 +73,7 @@ Describe 'Reading a TOML node, whichever shape PSToml returned' -ForEach @(
     It 'refuses a suite declaration that leaves a key out, in words (<Shape>)' {
         $declared = New-TomlShape -Shape $Shape -Value @{ provider = 'example'; name = 'Nightly' }
         Mock ConvertFrom-Toml -ModuleName Xmip { $declared }.GetNewClosure()
-        [string] $path = Join-Path $TestDrive 'half.xmip'
+        [string] $path = Join-Path $TestDrive 'half.toml'
         Set-Content -LiteralPath $path -Value '# read through the mock'
 
         {

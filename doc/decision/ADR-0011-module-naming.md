@@ -17,7 +17,7 @@ xmip-<provider>-<module>-<standard>
 ```
 
 Shortest singular form, a verb where the module does something, the recognized
-standard name for a technology. In `architecture.xmip` the TOML tree path **is**
+standard name for a technology. In `architecture.toml` the TOML tree path **is**
 the name — dots become hyphens and nothing else happens.
 
 ## Context

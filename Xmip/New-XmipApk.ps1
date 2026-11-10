@@ -56,7 +56,7 @@ function Find-XmipAndroidJdk {
 
         .DESCRIPTION
             Named to the build as JavaSdkDirectory, never through JAVA_HOME,
-            which names the Java Event binding's JDK 27 (prerequisite.xmip,
+            which names the Java Event binding's JDK 27 (prerequisite.toml,
             android-jdk and java; the owner, 2026-11-09). The newest
             %ProgramFiles%\Microsoft\jdk-21* on Windows, the newest
             /usr/lib/jvm/msopenjdk-21* or java-21-openjdk* elsewhere; the
@@ -141,8 +141,8 @@ function New-XmipApk {
     )
 
     if ($Address) {
-        [string] $shipped = Join-Path $project 'Resources/Raw/gui.xmip'
-        [string] $document = Join-Path $output 'android-gui.xmip'
+        [string] $shipped = Join-Path $project 'Resources/Raw/gui.toml'
+        [string] $document = Join-Path $output 'android-gui.toml'
         $null = New-Item -ItemType Directory -Path $output -Force
         [string] $text = Get-Content -LiteralPath $shipped -Raw
         [string] $line = "Address = `"$Address`""

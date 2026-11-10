@@ -253,9 +253,9 @@ Describe 'Start, Get and Stop, and nothing else' {
 
     It 'finds the repository from any directory, through where the module lives' {
         # 2026-09-12: from his home directory every cmdlet threw "No
-        # architecture.xmip found at or above". The module is a junction into
+        # architecture.toml found at or above". The module is a junction into
         # the repository; its own location answers when the directory does not.
-        $manifest = Get-Item (Join-Path $script:Root 'architecture.xmip')
+        $manifest = Get-Item (Join-Path $script:Root 'architecture.toml')
         [string] $expected = $manifest.Directory.FullName
 
         Get-XmipRepositoryRoot -StartAt ([System.IO.Path]::GetTempPath()) | Should -Be $expected
@@ -733,7 +733,7 @@ Describe 'A suite carries its provider' {
 
             [string] $area = Join-Path $Area 'suite'
             New-Item -ItemType Directory -Path $area | Out-Null
-            Set-Content -LiteralPath (Join-Path $area 'example.xmip') -Encoding utf8 -Value @(
+            Set-Content -LiteralPath (Join-Path $area 'example.toml') -Encoding utf8 -Value @(
                 'provider = "Example"'
                 'name = "Essentials"'
                 'command = "Start-ExampleXmipTest"'
@@ -757,7 +757,7 @@ Describe 'A suite carries its provider' {
 
             [string] $area = Join-Path $Area 'bad'
             New-Item -ItemType Directory -Path $area | Out-Null
-            [string] $file = Join-Path $area 'half.xmip'
+            [string] $file = Join-Path $area 'half.toml'
             Set-Content -LiteralPath $file -Encoding utf8 -Value @(
                 'provider = "Example"'
                 'name = "Essentials"'
@@ -808,7 +808,7 @@ Describe 'A suite carries its provider' {
                 Name     = 'Essentials'
                 Kind     = 'command'
                 Command  = 'Start-ExampleXmipTest'
-                Source   = 'example.xmip'
+                Source   = 'example.toml'
             }
             $theirs = New-XmipTestSuite @made
 
@@ -1169,12 +1169,12 @@ Describe 'A cluster rolls once' {
             # the first, which begins the second.
             [string] $one = "$($Name[0])$Name"
             [string] $ten = "${one}0"
-            Set-Content -LiteralPath (Join-Path $Area 'roll-4242.xmip') -Encoding utf8 -Value @(
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4242.toml') -Encoding utf8 -Value @(
                 'suite = "Essentials"'
                 "cluster = `"$one`""
                 'pid = 4242'
             )
-            Set-Content -LiteralPath (Join-Path $Area 'roll-4343.xmip') -Encoding utf8 -Value @(
+            Set-Content -LiteralPath (Join-Path $Area 'roll-4343.toml') -Encoding utf8 -Value @(
                 'suite = "Core.Essentials"'
                 "cluster = `"$ten`""
                 'pid = 4343'
@@ -1506,7 +1506,7 @@ Describe 'What a history file holds' {
         InModuleScope Xmip -Parameters $given {
             param($Area, $Scope)
 
-            [string] $path = Join-Path $Area 'history.xmip'
+            [string] $path = Join-Path $Area 'history.toml'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
                 "node = `"$Scope`""
                 '[[points]]'
@@ -1547,7 +1547,7 @@ Describe 'What a history file holds' {
         InModuleScope Xmip -Parameters $given {
             param($Area, $Scope)
 
-            [string] $path = Join-Path $Area 'empty-history.xmip'
+            [string] $path = Join-Path $Area 'empty-history.toml'
             Set-Content -LiteralPath $path -Encoding utf8 -Value @(
                 "node = `"$Scope`""
                 'points = []'
@@ -1768,7 +1768,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
             param($Area)
 
             New-Item -ItemType Directory -Path $Area | Out-Null
-            Set-Content -LiteralPath (Join-Path $Area 'estate-20260925-120000-000.xmip') -Value @(
+            Set-Content -LiteralPath (Join-Path $Area 'estate-20260925-120000-000.toml') -Value @(
                 'suite = "Core.Estate"'
                 'pid = 2000000000'
                 'started = "2026-09-25T10:00:00.0000000Z"'
@@ -1804,7 +1804,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
 
             $process = Start-Process @sleeping
             [hashtable] $start = @{
-                Record  = Join-Path $Area 'estate-20260925-120000-001.xmip'
+                Record  = Join-Path $Area 'estate-20260925-120000-001.toml'
                 Suite   = 'Core.Estate'
                 Path    = $Area
                 Log     = Join-Path $Area 'estate-20260925-120000-001.log'

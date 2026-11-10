@@ -26,7 +26,7 @@ function New-XmipLocalPatch {
 
     [string] $directory = (Get-XmipEstateLayout -Root $RepositoryRoot).Landing
     $null = New-Item -ItemType Directory -Path $directory -Force
-    [string] $patch = Join-Path -Path $directory -ChildPath 'patch.xmip'
+    [string] $patch = Join-Path -Path $directory -ChildPath 'patch.toml'
 
     [List[string]] $lines = [List[string]]::new()
     $lines.Add('# Written by New-XmipLocalPatch for one landing. Never committed.')

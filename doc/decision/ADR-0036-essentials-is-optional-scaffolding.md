@@ -61,7 +61,7 @@ are added; the repository, its name, and its dependencies are untouched.
 
 ## Consequences
 
-- `architecture.xmip` gains `mount` and `optional` on `[xmip.test.essentials]`;
+- `architecture.toml` gains `mount` and `optional` on `[xmip.test.essentials]`;
   `Resolve-XmipNodeFacts`, `Expand-XmipEstate` and `New-XmipRepositoryEntry` carry
   them onto the manifest, and `Get-XmipMountPath` honors `mount`.
 - `.gitmodules` mounts the submodule at `test/essentials`; the working tree moves

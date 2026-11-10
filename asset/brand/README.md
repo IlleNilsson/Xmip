@@ -13,9 +13,9 @@ same values.
 | `xmip-logo.png` | The logo: the X mark followed by "mip", 888 × 403, transparent background. |
 | `xmip-x.ico` | The Windows icon: the PNGs at 16 to 256 packed as they are, nothing redrawn. Made by `Sync-XmipEstate -Brand`. |
 | `xmip-x.res` | That icon as a Windows resource, linked into each Rust executable by its `build.rs`. Made by `Sync-XmipEstate -Brand`. |
-| `brand.xmip` | Every surface that shows the mark or the logo, the copy it keeps and the file that names it. |
+| `brand.toml` | Every surface that shows the mark or the logo, the copy it keeps and the file that names it. |
 
-**Where it is used.** [`brand.xmip`](brand.xmip) lists every surface: this
+**Where it is used.** [`brand.toml`](brand.toml) lists every surface: this
 README's repository, `xmip-service`, `xmip-lsp`, the `xmip` command line,
 the VS Code extension, the PowerShell module, the desktop and phone app, and
 the web GUI. A repository of its own cannot reach this directory, so it keeps

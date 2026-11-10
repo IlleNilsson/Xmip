@@ -85,7 +85,7 @@ that builds and evaluates the same tree, so the tree lives below all of
 them. Not in route: a transform depending on route for its expressions
 would depend on the wrong capability. Not in `path/predicate`, where the
 grammar was: that is a technology, and `configure` is a platform service,
-which `architecture.xmip`'s policy lets depend on a capability and never on
+which `architecture.toml`'s policy lets depend on a capability and never on
 a technology. Path is what route (its `content` technology) and transform
 already build on, and its parser cursor is shared with FHIRPath
 (ADR-0044); FHIRPath stays its own language. `xmip-core-path-predicate`,

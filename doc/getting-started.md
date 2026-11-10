@@ -46,23 +46,23 @@ Ports, promoted properties. The words Xmip uses are defined once, in
 
 ## 2. What you need
 
-`prerequisite.xmip` at the root of the estate decides what a machine needs, per
+`prerequisite.toml` at the root of the estate decides what a machine needs, per
 role and per operating system, and `Install-XmipPrerequisite` (section 3)
 applies it. The versions below change often; **see
-[prerequisite.xmip](../prerequisite.xmip)** for the current ones.
+[prerequisite.toml](../prerequisite.toml)** for the current ones.
 
 | You need | For | Version |
 | --- | --- | --- |
-| PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.xmip |
-| Git | cloning and submodules | 2.56 or later; see prerequisite.xmip |
-| PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.xmip |
-| Pester | the estate's tests | 6.0 or later; see prerequisite.xmip |
-| Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.xmip |
-| A linker | linking Rust | see prerequisite.xmip |
-| libclang (LLVM) | building the runtime store, RocksDB | see prerequisite.xmip |
-| A C++ compiler, libudev | Linux only | see prerequisite.xmip |
-| .NET SDK 11 | the command line, the PowerShell operator module, the GUIs | see prerequisite.xmip |
-| .NET MAUI workloads | the desktop GUI only | see prerequisite.xmip |
+| PowerShell, Core edition | all Xmip tooling | 7.7.0 or later; see prerequisite.toml |
+| Git | cloning and submodules | 2.56 or later; see prerequisite.toml |
+| PSToml, powershell-yaml and posh-git | reading Xmip's TOML; the YAML Microsoft DSC is given; the prompt | the latest release; see prerequisite.toml |
+| Pester | the estate's tests | 6.0 or later; see prerequisite.toml |
+| Rust (rustup, rustfmt, clippy) | the runtime and every module | stable; see prerequisite.toml |
+| A linker | linking Rust | see prerequisite.toml |
+| libclang (LLVM) | building the runtime store, RocksDB | see prerequisite.toml |
+| A C++ compiler, libudev | Linux only | see prerequisite.toml |
+| .NET SDK 11 | the command line, the PowerShell operator module, the GUIs | see prerequisite.toml |
+| .NET MAUI workloads | the desktop GUI only | see prerequisite.toml |
 
 The linker is Visual Studio Build Tools with the C++ workload on Windows, the
 command line tools on macOS, and `build-essential` or `gcc` on Linux; its C
@@ -702,7 +702,7 @@ one. Each README says each step in full.
    SSH key and the environment file (the same section).
 3. **E** The machines, made and installed in one command:
    `Deploy-XmipEnvironment -Path
-   D:\Repos\Xmip\.local-work\deploy\hyperv.xmip` (*Running it*). On a Linux
+   D:\Repos\Xmip\.local-work\deploy\hyperv.toml` (*Running it*). On a Linux
    host, the libvirt template does the same (`deploy/dsc/msdsc/libvirt/README.md`).
 4. **E** On each machine once, as its Administrator or with sudo:
    PowerShell 7.7 and DSC 3.4.0-preview.2 (`deploy/dsc/msdsc/environment/README.md`,
@@ -762,7 +762,7 @@ Build-XmipService -Remote Android -Package apk -Address 10.77.0.53:7401
 ```
 
 It needs the maui-android workload, the Android SDK and NDK and
-Microsoft's OpenJDK 21, each optional in `prerequisite.xmip`, which says
+Microsoft's OpenJDK 21, each optional in `prerequisite.toml`, which says
 how to install each; none needs Node.js. The APK lands at
 `.local-work/package/<version>/xmip-operations-<version>-android.apk`,
 signed with the Android SDK's debug key: for side-loading, not for a

@@ -35,7 +35,7 @@ function Get-XmipDeclaredModule {
             each.
 
             Then every module that is not a submodule yet: a crate on disk
-            where architecture.xmip mounts a repository (Get-XmipNewModule).
+            where architecture.toml mounts a repository (Get-XmipNewModule).
             It has no .git of its own, which is how a caller tells it apart.
     #>
     [CmdletBinding()]

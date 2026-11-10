@@ -19,7 +19,7 @@
       extension/node_modules. The linter and the test runner are not
       restored; they run in the CI alone.
     - The shell and its webview are compiled by the native compiler that
-      prerequisite.xmip's [archive.typescript] names (Install-XmipArchive).
+      prerequisite.toml's [archive.typescript] names (Install-XmipArchive).
     - The VSIX is a zip: extension.vsixmanifest, [Content_Types].xml, and
       extension/ holding package.json, the README, the license, the compiled
       out/ without its tests, media/ and the runtime packages.
@@ -300,7 +300,7 @@ function Get-XmipExtensionManifest {
 
     [string] $description = [System.Security.SecurityElement]::Escape($Package.description)
     [string] $categories = $Package.categories -join ','
-    # The mark package.json names as its icon (asset/brand/brand.xmip), where
+    # The mark package.json names as its icon (asset/brand/brand.toml), where
     # VS Code and a gallery show the extension, as vsce writes it.
     [string] $icon = "extension/$($Package.icon)"
 

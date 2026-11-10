@@ -1935,7 +1935,7 @@ to SQLite, RocksDB for speed, SQLite for persistence over time*). The
 operating system's log stays the fallback when it cannot be written
 (ADR-0062, amendment 2026-10-01;
 [decided, not built](estate-map.md#audit-through-storage)). Every program writes its
-records to its `audit.xmip` today
+records to its `audit.toml` today
 ([built, in the assembled service](estate-map.md#program-audit)).
 
 **Retention** (`xmip-core-retain`) holds Messages, Streams or durable Stream
@@ -1979,13 +1979,13 @@ stream, in chunks*).
 2026-10-10): every record carries its number in its writer's chain — the
 node's, or the program's where no node writes it — and the SHA-256 digest of
 the record before it there, and its own over its canonical form. The file
-sink forms a program's chain as it appends to `audit.xmip`; the audit keeper
+sink forms a program's chain as it appends to `audit.toml`; the audit keeper
 forms a node's as it keeps each record, the `audit` table laying out the
 writer, the number and both digests. One walk says the first place a chain
 breaks — a record deleted, changed or out of order — or that it is whole:
 `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view for the
 file, `ledger::verify_audit_chain` for Xmip Storage. A record whose write to
-`audit.xmip` was interrupted is kept as written: the next append seals it
+`audit.toml` was interrupted is kept as written: the next append seals it
 with a comment line and a blank line before its own record, so it is in no
 chain and the next record continues from the last complete one, and a
 verification reports it per file apart from the chain verdict — FAILED once
@@ -2606,7 +2606,7 @@ both a liability and a denial-of-service surface. Section 4 states the result.
 **2. Journey states — two different enums.**
 v1.0 named seven operational states. The root's `src/journey_model.rs`
 implemented six when this conflict was written; it merged into
-`xmip-core-journey` on 2026-08-27 (`doc/planning/allocation.xmip`), which
+`xmip-core-journey` on 2026-08-27 (`doc/planning/allocation.toml`), which
 implements seven, and ADR-0013 clause 7 records the code.
 
 *Resolved:* the code. The mapping, and the two that had no equivalent:

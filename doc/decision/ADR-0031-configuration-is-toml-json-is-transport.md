@@ -29,15 +29,15 @@ transport"*; *"we only want JSON in memory or on the network, not as
 configuration."* It is written down here so it is not re-litigated a fifth time.
 
 The estate already lived this before it was recorded: `architecture.json` was
-deleted for `architecture.xmip`, and the .NET hosts read `gui.xmip` through
+deleted for `architecture.toml`, and the .NET hosts read `gui.toml` through
 a TOML configuration provider rather than `appsettings.json`.
 
 ## Decision
 
 ### 1. Configuration is TOML
 
-Everything Xmip reads its own settings from is TOML: `architecture.xmip`, node
-configuration, `gui.xmip`, and any file that follows. There is no JSON
+Everything Xmip reads its own settings from is TOML: `architecture.toml`, node
+configuration, `gui.toml`, and any file that follows. There is no JSON
 configuration anywhere in the estate, and none is to be added.
 
 ### 2. JSON is transport
@@ -415,7 +415,7 @@ this rule. The owner: *Change it, we edit the cluster TOML file, drilling
 down to nodes and artifacts from the overview of the cluster.*
 
 Built 2026-10-05, the Operation Desktop: its Configure page opens the
-cluster's file `gui.xmip`'s `ClusterConfiguration` names, on an
+cluster's file `gui.toml`'s `ClusterConfiguration` names, on an
 overview of the cluster, and drills to a node, to artifacts by kind and to
 an entry, every view and edit through `xmip_operate.h` section 10; a
 node's own document is shown with the slicing's refusal and never edited.
@@ -607,13 +607,17 @@ owns, and names without the prefix the extension now says.
   validates every `.xmip` document; `.gitattributes` has GitHub show it as
   TOML.
 
+Narrowed by the amendment of 2026-11-10: only what describes an installation
+ends in `.xmip`.
+
 ## Amendment, 2026-11-05: one module reads, handles and saves configuration
 
 The owner, 2026-11-05: *we need one module, functionality that reads,
 handles and saves configuration*; and on how a machine with nothing yet
-installed reads `prerequisite.xmip`: *Do your best.*
+installed reads `prerequisite.toml`: *Do your best.*
 
-- `xmip-core-configure` is that module for every `.xmip` file: it knows each
+- `xmip-core-configure` is that module for every file Xmip owns, `.xmip`
+  and `.toml` alike (amendment 2026-11-10): it knows each
   file's name and place, reads it, validates it, and saves an edit with
   `toml_edit`, keeping comments and layout. The surfaces reach it in the
   order ABI, CLI, PowerShell, GUI; nothing else parses TOML or builds a
@@ -750,3 +754,39 @@ The serial is the signer's clock: a deploying machine whose clock is set
 back signs slices a node refuses until the clock passes the pin, said in
 words where it happens. Not built: the deployment seeding the pin itself
 rather than the node's first start.
+
+## Amendment, 2026-11-10: only what describes an installation ends in `.xmip`
+
+The owner, 2026-11-10: *I did not want to change the extension from .toml to
+.xmip for all .toml files, just the ones that need to be associated with VS
+Code designer and other tools.* `.xmip` is for what describes an
+installation, the files the designer and Xmip's tools open; everything else
+Xmip keeps is `.toml` again. The amendment of 2026-11-04 stands as the record
+of what was done; this one narrows it.
+
+- **`.xmip`, unchanged**: a cluster's `cluster.xmip` (and the Essentials'
+  `<cluster>.xmip`, the test clusters' and the samples'), a node's slice
+  `node.xmip` and its accepted copy `<stem>.accepted.xmip`, a node
+  configuration the runtime reads (the Essentials' `authority/operator.xmip`),
+  a snapshot (`snapshot.xmip`, `<cluster>-snapshot.xmip`, a node's
+  publication), and a site, `deploy/site/<name>.xmip`.
+- **`.toml` again**: the estate's `architecture.toml`, `prerequisite.toml`,
+  `asset/brand/brand.toml`, `asset/brand/presentation/story.toml` and
+  `audio/timing.toml`, `doc/planning/allocation.toml`; the deploy profiles,
+  `deploy/profile/role/<role>.toml` and `deploy/profile/target/<target>.toml`;
+  the desired-state environments, `environment.example.toml` and the copy
+  `Deploy-XmipEnvironment` reads (`.local-work/deploy/hyperv.toml`,
+  `libvirt.toml`); the surfaces' `gui.toml` (the phone's
+  `android-gui.toml` too), `cli.toml` and `powershell.toml`; the landing's
+  `.local-work/landing/patch.toml`; `audit.toml`; the Essentials' records,
+  `<cluster>-history.toml`, `<cluster>-activity.toml`, `roll-<pid>.toml`,
+  `build-<start time>.toml` and `estate-<start time>.toml`; a process's
+  declaration, `<name>-<pid>.toml`; an operator's order,
+  `<nanos>-<sequence>-<act>.toml`; a test suite's declaration under
+  `test/suite`; a module's manifest, `xmip-module.toml`, and the designer's
+  `module.toml`.
+- **No compatibility**: no reader takes the old `.xmip` name of a file that
+  is `.toml` again.
+- **Editors**: the VS Code extension maps and validates `.xmip` alone; a
+  `.toml` file is TOML to every editor, and `.gitattributes` keeps showing
+  `.xmip` as TOML on GitHub.

@@ -18,7 +18,7 @@ stable Rust, Pester 6 (the amendments of 2026-10-19 and 2026-11-02 have every
 version).
 
 **The version numbers are not the decision** — they will be history soon enough.
-The decision is the rule that produced them, which is why `prerequisite.xmip`
+The decision is the rule that produced them, which is why `prerequisite.toml`
 and `rust-toolchain.toml` express channels rather than pins. A floor states what
 would break; it does not freeze anything.
 
@@ -90,7 +90,7 @@ decision is the rule that produced them:
 > record the date it becomes stable. Do not accumulate support for what a
 > platform has already superseded.
 
-This is why `prerequisite.xmip` and `rust-toolchain.toml` express **channels**
+This is why `prerequisite.toml` and `rust-toolchain.toml` express **channels**
 rather than pins — `channel = "stable"`, `channel = "preview"` — and why a
 `minimum` is a floor rather than a target. A floor states what would break; it
 does not freeze anything.
@@ -124,7 +124,7 @@ not.
 - CI tracks stable rather than a pinned toolchain, so a Rust release can break
   the build. That is the cost, and it is paid in small, immediate increments
   rather than in one large migration later.
-- A .NET preview dependency means a dated obligation: `prerequisite.xmip`
+- A .NET preview dependency means a dated obligation: `prerequisite.toml`
   records that .NET 11 is preview until 10 November 2026 and what to change on
   that date.
 - Where a deployment genuinely cannot move — an air-gapped site, a regulated
@@ -249,7 +249,7 @@ One exception, the owner's choice the same day: NuGet takes no package
 published less than 24 hours ago, so a package withdrawn in its first day
 as malicious never reaches a build. Every .NET repository carries a
 `nuget.config` that clears the inherited sources and names nuget.org with
-`minPublishAgeHours`, the number `architecture.xmip` declares once
+`minPublishAgeHours`, the number `architecture.toml` declares once
 (`[project] nugetMinimumAgeHours`); `test/Dotnet.Target.Test.ps1` holds
 them equal. NuGet refuses a floating version while an age is set (NU1020),
 so every package reference names its exact version, raised to the newest

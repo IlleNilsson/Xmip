@@ -15,8 +15,8 @@ def quoted(value):
 
 
 def load():
-    story = tomllib.loads((MATERIAL / 'story.xmip').read_text(encoding='utf-8'))
-    timing = tomllib.loads((MATERIAL / 'audio/timing.xmip').read_text(encoding='utf-8'))
+    story = tomllib.loads((MATERIAL / 'story.toml').read_text(encoding='utf-8'))
+    timing = tomllib.loads((MATERIAL / 'audio/timing.toml').read_text(encoding='utf-8'))
     sections = story['section']
     if len(sections) != len(timing['scene']):
         raise ValueError('Story and audio timing must have the same number of sections.')
@@ -74,7 +74,7 @@ def collect(sections):
             lines.append('')
     for source, destination in pending:
         shutil.copyfile(source, destination)
-    (MATERIAL / 'audio/timing.xmip').write_text('\n'.join(lines), encoding='utf-8')
+    (MATERIAL / 'audio/timing.toml').write_text('\n'.join(lines), encoding='utf-8')
     print('Collected matching narration and timing into the repository.')
 
 

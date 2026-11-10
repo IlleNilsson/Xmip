@@ -4,7 +4,7 @@ Xmip is a centrally governed architecture and software project.
 
 ## Authority
 
-The authoritative architecture is defined by the five architecture models in `doc/architecture/`, the decision records in `doc/decision/`, `architecture.xmip`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
+The authoritative architecture is defined by the five architecture models in `doc/architecture/`, the decision records in `doc/decision/`, `architecture.toml`, and accepted pull-request history. When these disagree, the conflict must be resolved through an explicit architecture change.
 
 ## Decision process
 
@@ -20,7 +20,7 @@ Architecture decisions are made before implementation when a change affects repo
 
 Each repository has one role in the classification
 [`doc/architecture/repository-model.md`](doc/architecture/repository-model.md)
-defines in section 1, and `architecture.xmip` declares it. Repository
+defines in section 1, and `architecture.toml` declares it. Repository
 responsibilities must remain narrow: a capability repository defines reusable
 behavior and contracts; a technology repository implements one technology
 beneath its owning capability.
@@ -35,7 +35,7 @@ Xmip is licensed under the GNU Affero General Public License, version 3 or later
 
 The license is chosen so that Xmip source remains free and so that modifications are returned to the community, including when a modified version is made available to users over a network rather than distributed as software.
 
-`architecture.xmip` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
+`architecture.toml` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
 
 Contributions are accepted under the same license. The license governs the freedoms attached to the source; it does not replace the contribution and review process defined in this document.
 

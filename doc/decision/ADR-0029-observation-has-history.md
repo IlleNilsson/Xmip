@@ -73,7 +73,7 @@ Until a runtime retains it, the Essentials writes its snapshot and its history
 to files beside each other, and the file surface reads them. The files are
 **TOML**: on disk the estate is TOML, and JSON is reserved for what lives in
 memory or on the wire (the owner's rule, 2026-09-05 — the same reason
-`architecture.json` was deleted for `architecture.xmip`). They are bounded the
+`architecture.json` was deleted for `architecture.toml`). They are bounded the
 same way the in-memory series is: the writer keeps the last N points.
 
 ## Consequences
@@ -114,7 +114,7 @@ exact scope back. The Essentials' scenarios record beneath the node, each
 under its own subtree, and nothing was ever recorded at the node itself, so the
 series for the node was empty.
 
-**What it cost.** Every `*-history.xmip` the Essentials ever published held
+**What it cost.** Every `*-history.toml` the Essentials ever published held
 `points = []` — from the day this record was accepted, 2026-09-05, to the day
 it was found, 2026-09-19. `Get-XmipHistory` emitted nothing, the ABI's series
 held nothing and the GUI drew no curve. Nobody noticed for a fortnight because

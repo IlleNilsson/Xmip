@@ -140,9 +140,9 @@ that ruling:
   process: the JVM through JNI and CPython through a C shim, Go through
   cgo, C and C++ as native code with no Rust checks. They are gone, with
   their repositories' mounts under `xmip-core-contract`, their
-  `architecture.xmip` entries, the probe that drove them, xgit's `verify.ps1`
+  `architecture.toml` entries, the probe that drove them, xgit's `verify.ps1`
   gate that existed only for them, and the Go toolchain in
-  `prerequisite.xmip`.
+  `prerequisite.toml`.
 - The reserved transform and process entries in C, C++, Go, Java, Lua,
   PowerShell and Python went with them for the same reason; the .NET ones
   stay.

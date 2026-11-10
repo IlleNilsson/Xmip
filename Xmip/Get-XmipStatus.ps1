@@ -23,7 +23,7 @@ function Get-XmipStatus {
         .DESCRIPTION
             Every module that has something uncommitted, what it is, and whether
             it looks like source or like build output. A module that is no
-            repository yet, a crate where architecture.xmip mounts one, is
+            repository yet, a crate where architecture.toml mounts one, is
             listed by its own path with New true, branch 'new', and every file
             of it untracked; the repository around it no longer lists them.
 

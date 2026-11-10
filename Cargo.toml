@@ -174,7 +174,7 @@ provision-internal-ca = ["dep:xmip-provision", "dep:xmip-provision-internal-ca"]
 # store over, and which every target that keeps a store links
 # (deploy/profile/target); and SQLite, an embedded Storage node's
 # administration database, which the storage role links
-# (deploy/profile/role/storage.xmip). Each brings the key home with it: a
+# (deploy/profile/role/storage.toml). Each brings the key home with it: a
 # store is always sealed (ADR-0063).
 persist-rocksdb = ["persist", "secret", "dep:xmip-persist-rocksdb"]
 persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]

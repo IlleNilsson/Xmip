@@ -277,7 +277,7 @@ because their recovery actions differ.
 
 ### Boundaries and scale
 
-The architecture manifest, [`architecture.xmip`](architecture.xmip), is the
+The architecture manifest, [`architecture.toml`](architecture.toml), is the
 estate's dependency graph and the only place its repositories are counted.
 Foundation defines what Xmip is; Capabilities define what it does; Technology
 repositories implement those capabilities; Operations run and govern the
@@ -525,7 +525,7 @@ account the operating system names; the desktop's, the user running it — and
 one nothing proved watches and acts on nothing. Loopback proves where a
 caller is, not who: a tcp connection over it presents a certificate like any
 other (open problem 35). Both GUIs grant a caller a role by one rule: a role the run states
-(`Role` in `gui.xmip`, else `XMIP_ROLE`) is every proven caller's; else
+(`Role` in `gui.toml`, else `XMIP_ROLE`) is every proven caller's; else
 the directory the host is told (`Directory`) answers; else Observer. A node's
 operate listener grants each caller it proved — by certificate, or on its
 local endpoint by the operating system, which lets open it only the node's
@@ -546,7 +546,7 @@ Every Xmip program audits, not only the runtime
 ([ADR-0062](doc/decision/ADR-0062-every-xmip-tool-audits.md)): the monitors,
 `xmip`, both PowerShell modules, the Essentials and the language server
 record what they start and stop, every act taken through them and every
-failure, through `xmip-core-audit`. A program's records go to `audit.xmip` in
+failure, through `xmip-core-audit`. A program's records go to `audit.toml` in
 the directory its configuration names as `AuditDirectory`, else the one
 `XMIP_AUDIT_DIRECTORY` names, appended before the act that recorded them
 goes on ([built, in the assembled service](doc/architecture/estate-map.md#program-audit)); writing
@@ -569,7 +569,7 @@ amendment 2026-10-19).
 | | Windows | Linux | macOS |
 | --- | --- | --- | --- |
 | PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
-| Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.xmip`](prerequisite.xmip), one package per operating system and package manager | | |
+| Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
 | Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`), made by `Deploy-XmipEnvironment`, and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the machines on KVM through libvirt (`libvirt`), by the same command; the rest the same | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
@@ -931,7 +931,7 @@ stopping the run with nothing pushed:
 - **The root:** its crate is tested as a changed module whenever a module
   lands, and its `test/` suite runs when the root itself changed. A change
   to the root alone runs `test/` and not the root crate's cargo steps.
-- **A new module:** a crate where `architecture.xmip` mounts a repository
+- **A new module:** a crate where `architecture.toml` mounts a repository
   that is not a submodule yet. `Get-XmipStatus` lists it by its own path,
   `(new)`, and not among the files of the module around it; it is verified
   as a changed module, and then the run is REFUSED with nothing landed,
@@ -986,8 +986,8 @@ on `Start-XmipTest` — is exact.
 ### Layout
 
 ```text
-architecture.xmip     the estate: every repository, named by its position in the tree
-prerequisite.xmip     what a machine needs, per role and operating system
+architecture.toml     the estate: every repository, named by its position in the tree
+prerequisite.toml     what a machine needs, per role and operating system
 rust-toolchain.toml   channel = stable
 Xmip/                 the estate's PowerShell module
 .src/                 the assembly crate xmip, and xmip-service, the Xmip Service
@@ -1044,7 +1044,7 @@ authoritative.
 4. Put shared behavior in the capability that owns it, never in each
    technology ([ADR-0044](doc/decision/ADR-0044-a-technology-shares-through-its-capability.md)).
 5. Keep dependencies explicit and within the direction rules of
-   `architecture.xmip`.
+   `architecture.toml`.
 6. Add the test for the behavior or the defect before landing the change.
 
 ### The estate module
@@ -1055,10 +1055,10 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.xmip`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
-| `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.xmip`. |
+| `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
@@ -1070,7 +1070,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
-| `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.xmip`'s nesting into repositories. |
+| `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |
 
 ```powershell
 Sync-XmipEstate                                       # report drift
@@ -1088,7 +1088,7 @@ Get-XmipStatus
 The module audits its own acts through the audit capability, reached through
 the operator module (ADR-0062): every start and stop of a test or a web
 monitor, every refusal and failure of those commands, and a landing that
-stopped or finished, into `.local-work/audit/audit.xmip` — the directory it
+stopped or finished, into `.local-work/audit/audit.toml` — the directory it
 sets `XMIP_AUDIT_DIRECTORY` to for the session when nothing else did, so
 everything it starts records there too. `Start-XmipOperationWeb` keeps the
 host's console in `.local-work/web`, as a roll's is kept beside the roll.

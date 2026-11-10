@@ -47,7 +47,7 @@ A name is internal when it lives only within Xmip's own operation, read by Xmip
 and no one else. These drop the prefix:
 
 - **Local runtime files** the estate writes for itself — `<cluster>-snapshot.xmip`,
-  `<cluster>-history.xmip`, the `essentials` directory under `.local-work`.
+  `<cluster>-history.toml`, the `essentials` directory under `.local-work`.
 - Modules, types, functions and fields **within** a crate — a struct is not named
   `XmipSnapshot` inside `xmip-core-observe`; it is `Snapshot`.
 - Internal configuration **sections and keys**, which sit under a context that

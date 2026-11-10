@@ -28,7 +28,7 @@ interface lives in the repository it belongs to. A Rust contract becomes a
 library a node loads through the C ABI by one line, the contract capability's
 `export_contract!`. A module loaded through the ABI is a separate work under
 any license; a module linked into Xmip is AGPL-3.0-or-later. A provider
-declares its modules in core's `architecture.xmip`. The SDK, `xmip-core-sdk`
+declares its modules in core's `architecture.toml`. The SDK, `xmip-core-sdk`
 at the estate root, `sdk/`, holds only what a module is tested on:
 simulators, emulators and, for now, the local ACME server.**
 
@@ -96,7 +96,7 @@ choose. A module linked into Xmip at build time is part of Xmip and is
 AGPL-3.0-or-later, as ADR-0023 says. No license text changes. CONTRIBUTING's
 *the boundary is the trait* becomes *the boundary is the ABI*.
 
-**7. A provider declares its modules in core's `architecture.xmip`**, under its
+**7. A provider declares its modules in core's `architecture.toml`**, under its
 own provider — `[xmip.<provider>.…]` — through a change to this repository, as
 core's are. The mount follows ADR-0016: `module/<provider>/<domain>/<leaf>`,
 and an Essentials at `test/<provider>/essentials`.

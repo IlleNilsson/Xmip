@@ -59,7 +59,7 @@ Set-StrictMode -Version Latest
 function Get-XmipRepositoryRoot {
     <#
         Finds the Xmip repository by walking up from the current location until
-        architecture.xmip appears.
+        architecture.toml appears.
 
         $PSScriptRoot cannot answer this. Once the module is linked onto
         PSModulePath it lives outside the repository, and when it is loaded by

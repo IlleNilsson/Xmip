@@ -9,7 +9,7 @@
     A roll builds before it rolls, and since 2026-10-13 the build runs detached
     as the roll does: the owner, that day, of Start-XmipTest holding his console
     during the first build. Start-XmipEssentialsBuild starts it and writes one
-    record per build, build-<start time>.xmip, in the roll area; the build
+    record per build, build-<start time>.toml, in the roll area; the build
     removes it once the roll it spawned has its own run record, or writes into
     it why it FAILED. Get-XmipTestStatus lists what is here beside the rolls;
     Stop-XmipTest stops a build as it stops an estate run.
@@ -219,9 +219,9 @@ function Remove-XmipEssentialsBuildEnded {
             continue
         }
 
-        [string] $stem = $build.Record -replace '\.xmip$', ''
+        [string] $stem = $build.Record -replace '\.toml$', ''
 
-        foreach ($extension in 'xmip', 'log', 'err', 'clixml') {
+        foreach ($extension in 'toml', 'log', 'err', 'clixml') {
             Remove-Item -LiteralPath "$stem.$extension" -Force -ErrorAction SilentlyContinue
         }
     }

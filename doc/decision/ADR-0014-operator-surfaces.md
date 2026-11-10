@@ -113,7 +113,7 @@ repository and does not belong there.
 
 **.NET 11 reaches GA on 10 November 2026**, so all three need a preview SDK
 until then. ADR-0021 permits tracking a preview provided the date it becomes
-stable is recorded, and `prerequisite.xmip` records it.
+stable is recorded, and `prerequisite.toml` records it.
 
 ## Amendment, 2026-08-26: the ABI is the interface into Xmip
 
@@ -187,7 +187,7 @@ a command run there.
 
 ## Amendment, 2026-08-26: xmip-core-webapi is deprecated
 
-`xmip-core-webapi` was declared in `architecture.xmip` as *"HTTP Web API for
+`xmip-core-webapi` was declared in `architecture.toml` as *"HTTP Web API for
 addressing Xmip Streams, Messages and Journeys"*, created on GitHub, and mounted
 as a submodule — with no architecture document describing it and no decision
 record authorizing it. It is now `maturity = "deprecated"`.
@@ -382,7 +382,7 @@ times: `xmip-core-cli` and `xmip-core-powershell` each carried a copy of the
 header is the drift ADR-0012 and this record exist to prevent, one header at a
 time.
 
-**The binding lives with the header.** architecture.xmip already says so —
+**The binding lives with the header.** architecture.toml already says so —
 `xmip-core-abi` is *C header, specification and language bindings* — and
 ADR-0044 says shared code goes up to what both already depend on. So
 `module/foundation/abi/dotnet/Xmip.Abi` is the one .NET binding: the module
@@ -1190,7 +1190,7 @@ it is named. Everything it runs is in the extension's package.
 - **The compiler is TypeScript 7's native one**, the Go port, stable since
   2026-07-08, released as a program of its own for each platform outside
   npm (<https://github.com/microsoft/typescript-go/releases/tag/typescript/v7.0.2>,
-  checked 2026-10-22). `prerequisite.xmip`'s `[archive.typescript]` names
+  checked 2026-10-22). `prerequisite.toml`'s `[archive.typescript]` names
   each platform's asset and its SHA-256, and `Install-XmipPrerequisite
   -Install -IncludeOptional` fetches, verifies and unpacks it under
   `.local-work/tool` (`Install-XmipArchive.ps1`), no package manager and no
@@ -1243,7 +1243,7 @@ made the file a person puts on a phone.
   as one APK holding both, to
   `.local-work/package/<version>/xmip-operations-<version>-android.apk`
   (`Xmip/New-XmipApk.ps1`). `-Address` is the node the app follows: the
-  shipped `Resources/Raw/gui.xmip` with that `Address` written in is
+  shipped `Resources/Raw/gui.toml` with that `Address` written in is
   the document the APK carries (`XmipPhoneDocument`), so nobody edits the
   shipped one; left out, the shipped one goes as it is. `-Package apk` is
   refused for a site and without Android, and `-Address` without an APK,
@@ -1252,7 +1252,7 @@ made the file a person puts on a phone.
   so the build signs with the Android SDK's debug key, made once per user.
   `adb install -r <apk>`, or the file copied to the phone and opened, puts
   it on a phone whose owner allowed installing from that source.
-- **What it needs is optional and said** (`prerequisite.xmip`, checked
+- **What it needs is optional and said** (`prerequisite.toml`, checked
   2026-10-22): the maui-android workload of the SDK's band, the Android
   SDK at the API level the workload targets (37), the NDK's latest LTS
   (r30, 30.0.16248370), and Microsoft's OpenJDK 21, the JDK Microsoft tests
@@ -1355,7 +1355,7 @@ names from a node's listing, and none is built for it.
 PowerShell's floor is 7.7.0 (ADR-0021, amendment 2026-11-02), and pwsh 7.7
 hosts .NET 11, so the exception of 2026-08-30 is gone: the PowerShell module
 and the binding it loads, `Xmip.Abi` and `Xmip.Surface`, target net11.0 like
-every other project, and `architecture.xmip` no longer names a hosted target.
+every other project, and `architecture.toml` no longer names a hosted target.
 The module compiles against `Microsoft.PowerShell.SDK` 7.7.0-rc.1, PowerShell
 7's own surface, in place of `PowerShellStandard.Library`, Windows PowerShell
 5.1's, and takes only its compile assets: pwsh provides the rest. The

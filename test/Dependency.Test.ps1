@@ -18,7 +18,7 @@
     repository has no build to compare, and its list stays the plan.
 
     When this fails, the build changed and the manifest did not. Put the
-    repositories it names into `architecture.xmip` as it says — the build is
+    repositories it names into `architecture.toml` as it says — the build is
     what is true.
 #>
 
@@ -49,7 +49,7 @@ Describe 'The manifest says what each build uses' {
         )
 
         $drift | Should -BeNullOrEmpty -Because (
-            "the build is what is true, so architecture.xmip follows it:`n" + ($drift -join "`n")
+            "the build is what is true, so architecture.toml follows it:`n" + ($drift -join "`n")
         )
     }
 
