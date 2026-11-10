@@ -618,3 +618,16 @@ runtime's, so every language follows a node the same way.
   section 7's node roles (`xmip_role_words_v1`).
 
 Optional symbols, as section 7's; `XMIP_OPERATE_VERSION` is unchanged.
+
+## Amendment, 2026-11-10: the protocols between nodes
+
+Clause 8 says there is no inter-node protocol. Since ADR-0067 a node has
+one address and its planes are listeners on it: the Storage listener is
+built (ADR-0067, amendment 2026-10-22), and a node reaches Xmip Storage on
+another over it; the sync and alive listeners are decided and not built,
+and the sync plane is part of the cluster consolidation open problem 19
+records. Clause 8's rule, that a surface asking about a cluster asks each
+node, is not reopened here.
+
+Provenance: the assistant's, 2026-11-10, bringing the record to what is
+built.
