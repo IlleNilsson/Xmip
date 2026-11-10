@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 335630 lines of production
+Where each repository mounts and what it holds: 335637 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -450,7 +450,7 @@ hold no source to count.
 │   ├── core/
 │   │   ├── capability/
 │   │   │   ├── transport                       7532
-│   │   │   │   ├── db2                         2757
+│   │   │   │   ├── db2                         2754
 │   │   │   │   ├── amqp                        2703
 │   │   │   │   ├── opc-ua                      2513
 │   │   │   │   ├── nfs                         2166
@@ -459,7 +459,7 @@ hold no source to count.
 │   │   │   │   ├── http                        1997
 │   │   │   │   ├── mssql                       1893
 │   │   │   │   ├── ibm-mq                      1887
-│   │   │   │   ├── ftp                         1878
+│   │   │   │   ├── ftp                         1875
 │   │   │   │   ├── sftp                        1827
 │   │   │   │   ├── oracle                      1585
 │   │   │   │   ├── snmp                        1448
@@ -540,15 +540,15 @@ hold no source to count.
 │   │   │   │   └── udp                          219
 │   │   │   ├── provision                       4220
 │   │   │   │   ├── internal-ca                 2548
-│   │   │   │   ├── acme                        1217
+│   │   │   │   ├── acme                        1214
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
 │   │   │   ├── authenticate                    3139
 │   │   │   │   ├── saml                        1129
 │   │   │   │   ├── kerberos                     806
-│   │   │   │   ├── ldap                         784
-│   │   │   │   ├── oauth2                       591
+│   │   │   │   ├── ldap                         780
+│   │   │   │   ├── oauth2                       594
 │   │   │   │   ├── ntlm                         590
 │   │   │   │   ├── digest                       447
 │   │   │   │   ├── scram                        392
@@ -678,8 +678,8 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             7332
 │   │   │   ├── codec                           3159
-│   │   │   ├── tls                             3051
-│   │   │   ├── mariadb                         1800
+│   │   │   ├── tls                             3071
+│   │   │   ├── mariadb                         1797
 │   │   │   ├── ssh                             1756
 │   │   │   ├── sql                             1304
 │   │   │   ├── ntlm                             804
