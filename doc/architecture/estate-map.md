@@ -424,7 +424,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 335637 lines of production
+Where each repository mounts and what it holds: 335770 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -468,12 +468,12 @@ hold no source to count.
 │   │   │   │   ├── as4                         1333
 │   │   │   │   ├── s7comm                      1239
 │   │   │   │   ├── secs-gem                    1199
+│   │   │   │   ├── mqtt                        1193
+│   │   │   │   ├── imap                        1154
 │   │   │   │   ├── canopen                     1148
 │   │   │   │   ├── dns                         1142
-│   │   │   │   ├── mqtt                        1135
 │   │   │   │   ├── webdav                      1131
 │   │   │   │   ├── iec-61850                   1107
-│   │   │   │   ├── imap                        1079
 │   │   │   │   ├── nats                        1049
 │   │   │   │   ├── dicom                        992
 │   │   │   │   ├── ethercat                     988

@@ -177,7 +177,7 @@ properties beside the origin and the bytes — and the runtime writes them into
 the Message Context once, as `<protocol>.header.<name>` through
 `context::property::header`, case folded where the protocol folds it. No
 transport writes into a context. Chosen from two: the runtime at arrival, or
-each transport. Not yet built (problem 25, row r).
+each transport. Built 2026-10-08 (problem 25, row r).
 
 *Confirmed by the owner, 2026-09-26:* a Message whose Subscription filter
 names a value that cannot be read — bytes where text is read, or a prefix no

@@ -1652,7 +1652,7 @@ replacedBy = "doc/planning/open-problems.md"
 why = """
 A next-steps list that had gone mostly false: it said the submodules were
 planned when 43 were real, that no module loading existed when ADR-0025 had
-landed. Its four surviving items are open-problems.md problem 19, and
+landed. Its surviving items are open-problems.md problem 19, and
 ADR-0002's state anchor carries a retirement note."""
 
 [[superseded]]

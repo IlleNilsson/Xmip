@@ -195,28 +195,22 @@ loading existed when ADR-0025 had landed, that no identity implementation
 existed when the three gates did. A next-steps list that is mostly wrong is
 worse than none, because it is trusted exactly when nobody is checking.
 
-Four of its items were still true, and this register is where they belong:
+Three of its items are still open, and this register is where they belong:
 
-- **Journey replay end to end.** No store exists to replay from: the RocksDB
-  runtime store of 2026-06-14 was dropped from the build on 2026-06-26 and
-  deleted on 2026-08-20, and the SQLite store did not move when the monolith
-  was distributed on 2026-08-26, so `xmip-core-persist` holds the types and
-  no engine (corrected 2026-09-25; which engine is ADR-0015's open question).
-  The replay model is not implemented, and interchange history is not yet
-  queryable. Related to problem 17 and to ADR-0024's open consequence on
-  Journey recovery across nodes.
-- **Cluster coordination.** No inter-node protocol, no failover execution.
-  ADR-0024 dissolved the lease half; the placement half is ADR-0025's clause 6
-  question and ADR-0018's Host Services, still undesigned between nodes.
-- **A typed configuration loader.** `xmip-core-configure` exists;
-  full validation against what the manifests declare does not. The format
-  half is decided: one `cluster.xmip` per cluster, sliced to each node
-  (ADR-0031, amendment 2026-10-03).
-- **The management plane.** `webapi` and `gui` are empty repositories.
-  `powershell` no longer is — three cmdlets over the ABI and eighteen tests
-  since 2026-09-03, seven of which hold the C# binding to `xmip_module.h`
-  itself. ADR-0014 decided the shape of all of them; one of the four now has
-  something behind it.
+- **Tracking and message search.** Finding a Message by a promoted
+  property is not built: the laid-out columns a search reads wait on the
+  owner (`deployment-model.md`, *Proposed 2026-10-09: laid-out columns, in
+  the clear*; the amendment drafted for ADR-0063).
+- **Cluster coordination.** The consolidation the owner agreed on
+  2026-11-07, not started: the cluster code moved from Foundation to
+  Platform, where it runs the sync plane, the protocol between nodes
+  (ADR-0067); placement by a node's stages; and membership through Xmip
+  Storage. One Rotation for Storage's round robin and placement is the
+  assistant's, told to the owner the same day.
+- **A typed configuration loader.** The surfaces' library carries no
+  technology's declaration (problem 48), and the estate's PowerShell still
+  reads TOML through `Read-XmipToml` and PSToml, not through `configure`
+  (ADR-0031, amendment 2026-11-05).
 
 ---
 
@@ -484,7 +478,7 @@ escaping and nothing else.
 | n | Promotion at arrival | `runtime/src/arrival.rs` routes with `Promoted::from_context` rather than `route::promote`, so in a running node bytes under a bare `X` decline as nothing promoted instead of being refused, and no prefixed property (`header:`, `party:`, ...) is read at arrival | **Resolved 2026-09-25:** arrival promotes every name its Subscriptions' filters use through `route::Gathering`, compiled once with the Runtime, before the Journey opens; a Null is absent, and bytes under a bare `X` or a prefix no loaded technology provides refuse the Message (`Refused::Promotion`), and the runtime's tests hold a bare `X` of bytes, a Null and `party:sender` read at arrival (ADR-0046) |
 | p | The operator surfaces' rules | the CLI and `Xmip.PowerShell` each wrote which surface to read, the runtime override, wildcard selection, the acts, the validation verdict, status meaning, the ABI boundaries, probe conformance and the mood, figure and nothing-at wording; five of them disagreed (the cmdlets took scopes literally, never used the discovery rule, reported one boundary, never judged a probe, and said `Unknown` where the CLI said `unknown`) | **Resolved 2026-09-24** (the owner: *CLI and PowerShell shall share*; *code shall be uniquely placed*): each rule is written once — in its Rust crate where the runtime owns it (scope, stage, mood word and color, worst-first order, called through `xmip_operate.h` section 7), else in `Xmip.Abi` or `Xmip.Surface` — and tested there; the cmdlets take `-Remote`, `-Snapshot`, an optional `-Library` and wildcard scopes as the executable does, and the script module loads the operator module and keeps no capability words, snapshot reader or mood ranking of its own (ADR-0052, amendments 2026-09-24) |
 | q | Where a node sits in a scope | `ScopeTree.Node` takes segment 0, so the Monitor's rows name the cluster as a record's node, and the prompt's `SegmentRender.At` reads the literal `node` segment itself: the scope's shape known in two surfaces (found 2026-09-25) | **Resolved 2026-09-25:** `observe::Scope::node` and `Scope::stage` are the one reading — the node the segment after the `node` marker beneath the cluster, never the cluster, the stage the first stage word beneath it — forwarded as `xmip_scope_node_v1` (`xmip_operate.h` section 7) and bound once in `RuntimeRules.Node`; `ScopeTree.Node`, `ScopeTree.Stage`, `ScopeIndex` and the prompt's `SegmentRender.At` call it, and a Monitor row names the node, not the cluster (ADR-0027, ADR-0052, amendments 2026-09-25) |
-| r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | the owner, 2026-09-25: the runtime writes them at arrival from properties the transport hands with `Arrived` (ADR-0046, amendment) |
+| r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | **Resolved 2026-10-08:** a transport hands the headers it received with `transport::Arrived` (`transport::Headers`, under the protocol's word) and writes into no context; the runtime writes each into the Message Context once, at arrival, as `<protocol>.header.<name>` through `context::property::header`, case folded where the protocol folds it (`arrival::identity_context`; ADR-0046, amendment 2026-09-25, later) |
 | s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Essentials' `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
 | t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
 | u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dogfooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded |
@@ -510,8 +504,6 @@ a test.
 **Done 2026-09-24, phase B's first wave.** `xmip-core-library-codec` holds the one hex, base64 and base64url, SHA-1, parameterised CRC, byte cursor and writer, varint with zig-zag, civil calendar, character reader, TOML string and SQL delimiter, and every copy is gone (transport's cursor, hex and CRC among them). `xmip-core-transport-aws` and `xmip-core-transport-azure` exist and hold SigV4, the Query API, JSON 1.1, SAS and Shared Key; http holds HTTP (ADR-0044, amendment 2026-09-24). `rabbitmq` rides the one AMQP 0-9-1 in `amqp`; the three SQL row archives are one `archive::sql::SqlArchive<D>`. Identity reads Kerberos, NTLM type 3, JOSE keys, the clock and window, and the names crossing the gates each in one place, and the 2026-09-22 `ber`/`der` shims are gone (ADR-0050, amendment 2026-09-24). Found by it and fixed: hex took a sign, AS2's base64 a `=` anywhere, SAML and asn1 30 February, the MariaDB and PostgreSQL far ends a doubled delimiter as an end, and jwt, oidc and oauth2 a token at its `exp`.
 
 **Done 2026-09-24, phase B's second wave.** The transport capability holds the one far-end rig (`Listening`, `Bound`, `Held`, `Standing`, `both_ends`, `poke`, `ceiling::within`), and 84 technologies keep only what their far end does (ADR-0051, amendment). `xmip-core-library-ntlm` is the NTLM layout for identify, both gates and SMB; `context::property` holds every name one layer writes and another reads; `authenticate::secret` is the one secret store (ADR-0050, ADR-0019, amendments). `xmip-core-library-net` holds the authority, the minimal HTTP/1.1 client, MAC notation, percent-encoding and a path as a URI; codec gained MIME and UTF-16. dns owns the DNS codec, canopen the SDO, http the message webdav writes; `archive/sqlite` is `SqlArchive<Sqlite>`. The rollup, counted words, stage facts, capability evidence, topology, run header and the publication, history and activity formats are each written once in `observe` or `node`, and the surfaces read them through `xmip_operate.h` sections 7 and 8 (ADR-0052, ADR-0027). Found and fixed: percent-decoders took a sign, the snapshot reader counted an unknown kind as streams, msmq split MIME mid-line, EtherCAT cut an SDO to four bytes, the topology drew parents in a leaf's mood.
-
-**Still to do in phase B:** row r (headers at arrival).
 
 **Done 2026-09-27 and 2026-09-28:** one body ceiling `net::MAX_BODY` and one refusal `net::ceiling::within`; one TCP connect `net::connect`; one target reading `net::Target`, technologies declaring their `Schemes` (no `as_http`, websocket and `msmq::queue_url` read through it); one form and query reader `net::percent::decode_pairs`, which `aws::query` calls; redpanda through `http::endpoint::Connections` and `http::status::judge`; as2 and as4 answering through `http::server::serve_one_from`, which hands them the peer; Receive Locations keep their listener (`transport::kept`, `transport::serving`) and connected sessions share one pool (`transport::pool`).
 
@@ -689,8 +681,9 @@ Essentials may use. Its configuration is `[provision.receive]` with `source =
 ## 28. A node cannot run under a group Managed Service Account
 
 The owner, 2026-09-25: *where it exists it should be supported* (ADR-0019,
-amendment 2026-09-25). Nothing installs a node as a service yet, so nothing
-runs under any Service Identity, a gMSA least of all.
+amendment 2026-09-25). A node installs as a service — the Windows service
+control manager, systemd or launchd (`runtime::registration`) — as the
+platform's default account or a named one, and none of them as a gMSA.
 
 | step | what |
 |---|---|
@@ -1135,16 +1128,17 @@ What remains of the first part:
   Xmip whatever store keeps it, read as the Location connects, set with
   `Set-XmipSecret` and never read back out (ADR-0019, ADR-0015, ADR-0063,
   ADR-0064 and ADR-0014, amendments 2026-10-29); SFTP presents a password
-  or a key, FTP, FTPS, HTTP and HTTPS a password, and SQL Server,
+  or a key, FTP, FTPS, HTTP and HTTPS a password, IMAP and MQTT a password
+  with the Location's user (ADR-0019, amendment 2026-11-10), and SQL Server,
   PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
-  password. Built in pieces by the owner's order of the same day, the command
+  password. Built in pieces by the owner's order of 2026-10-29, the command
   line's `xmip secret` with them, and the GUI's Secrets page and the VS Code
   extension's `secret` on 2026-10-30 (ADR-0014, amendment 2026-10-30): the
   extension reaches no node, so it suggests the key and not a node's secret
   names. Not built: a `certificate`
   secret presented by any technology (a client certificate over HTTPS or
-  FTPS); the other technologies that log in — AMQP, MQTT, RabbitMQ,
-  ActiveMQ, IMAP, POP3, SMB, S3 and the vendors' — which refuse a Location
+  FTPS); the other technologies that log in — AMQP, RabbitMQ, ActiveMQ,
+  POP3, SMB, S3 and the vendors' — which refuse a Location
   naming a secret as the node starts; and one key the Storage nodes in
   front of one database server share, so a value one seals another opens:
   each seals under its own administration data key today, and no server
@@ -1795,50 +1789,32 @@ owner's ruling; each is a gap in a built transport.
 
 # Suggested order
 
-Rewritten 2026-09-23. The owner asked what Xmip needs against the
-competition; the answer, surveyed that day with sources, is in
-`market-position.md` section 8. It sorts into four phases, and the phases are
-the order:
+Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
+owner asked what Xmip needs against the competition; the answer, surveyed
+that day with sources, is in `market-position.md` section 8. It sorts into
+phases, and the phases are the order:
 
 ```text
-A. Divergences          problem 25 (a)-(m): copies that disagree are bugs
-B. One home each        problem 25's list; the 2026-09-22 shims removed;
-                        transport-aws and transport-azure created (approved
-                        2026-09-22); dead code deleted or wired
-C. A node runs          the 2026-09-05 item 1 below, in the smallest honest
-                        sequence: the Work Process vocabulary settled; subscriptions
-                        and location bindings in the configuration; file
-                        claims by rename (ADR-0024); one transport trait; a
-                        file-backed store that writes the Stream and Message
-                        before execution; an xmip-service executable doing
-                        phases 4-9 with technologies linked by feature (the
-                        purpose-compiled runtime, deployment-model.md); a
-                        Work Process branch in departure; checkpoint, resume
+B. One home each        problem 25's list; dead code deleted or wired
+C. A node runs          item 1 below: whether a surface may run a node
+                        (problem 20)
 D. What a buyer checks  transformation (XSLT first: BizTalk maps are XSLT);
-                        tracking, message search and resubmit; EDI
-                        acknowledgements and Party agreements;
-                        sign, encrypt, compress (prepare); secrets; an
-                        OpenTelemetry exporter; a signed release with an SBOM
-                        (the Cyber Resilience Act's reporting duties began
+                        tracking and message search; EDI acknowledgements
+                        and Party agreements; sign, encrypt, compress
+                        (prepare); the OpenTelemetry exporter linked into
+                        the service; a signed release with an SBOM (the
+                        Cyber Resilience Act's reporting duties began
                         2026-09-11); BizTalk artifact import
 ```
 
-Phase D: the routes designer's first slice is built, 2026-09-26 (ADR-0064):
-the Xmip Application document and the node's binding in `configure`, and
-the designer in the VS Code extension; running Applications in the
-Essentials is the next slice.
+Phase D's transformation and prepare: a node runs none of their standard
+units (ADR-0066, amendment 2026-10-22), and CMS, JOSE and XSLT have no
+engine (problems 50 to 53).
 
-Phase D's transformation and prepare are standard units since 2026-10-22
-(ADR-0066, amendment 2026-10-22): XSLT through the engine a step chooses,
-none linked yet; XML, JSON and CSV converted, streamed; compression,
-character and transfer encoding; OpenPGP encryption and signature through
-rpgp. A node runs none of them yet, and CMS, JOSE and XSLT have no engine
-(problems 50 to 53).
+Phase D's BizTalk import has no home in the manifest, and a visual mapper
+none in the surfaces; the owner decides each.
 
-Phase D's secrets and BizTalk import have no home in the manifest, and a
-visual mapper none in the surfaces; the owner decides each.
-
-The 2026-09-05 order follows unchanged; its entries sit inside phases C and D.
+The 2026-09-05 order follows; its entries sit inside phases C and D.
 
 Rewritten 2026-09-05. The 2026-08-30 list had gone stale the way its own
 predecessor did: its first two entries — the .NET verification gate and the
@@ -1864,104 +1840,38 @@ retires entries from stops being an order.
   stood as undone until 2026-09-08 while the screen existed; retired then.
 
 ```text
-1. Run a node for real                 the runtime runs all nine startup
-                                       phases (2026-09-28):
-                                       `running::Running::start` takes a
-                                       node's configuration and the
-                                       technologies the program starting it
-                                       linked, loads each once (a library
-                                       through the C ABI), and serves every
-                                       Receive Location through arrival,
-                                       routing and departure until it is
-                                       stopped; a test starts a node over
-                                       loopback tcp and carries two hundred
-                                       Messages, about a millisecond each in
-                                       a debug build. What is left is a
-                                       program that does it outside a test —
-                                       `xmip-service`, the root crate's
-                                       executable (ADR-0018, amendment
-                                       2026-09-26) — and the Essentials
-                                       running Applications on it; the
-                                       surfaces' `xmip_start_v1` still plans
-                                       and does not run (problem 20)
-2. Protocol implementations            eighty-two of eighty-four transports,
-                                       every contract, message, route, logic,
-                                       resilience, path and archive technology
-                                       built (2026-09-11; twenty-seven of the
-                                       transports had been reported built
-                                       that morning over a template stub and
-                                       were built for real that afternoon).
-                                       Every transport is its own far end
-                                       (ADR-0051). sftp and peppol joined
-                                       them on 2026-09-19, and the fifty-one
-                                       identity technologies ADR-0050 sorts
-                                       are written (its amendment of that
-                                       day says what writing them found).
-                                       What is left is theirs to grow:
-                                       principal names (ADR-0054), a second
-                                       SSH cipher suite and known hosts,
+1. Run a node for real                 a surface's `xmip_start_v1` validates
+                                       and plans a node and runs none
+                                       (`runtime::start`); whether a surface
+                                       may run one at all is problem 20
+2. Protocol implementations            a second SSH cipher suite
+                                       (`xmip-core-library-ssh` speaks
+                                       `aes256-ctr` alone), `tls-unique`
+                                       (ADR-0054: `tls-server-end-point` is
+                                       the only channel type built), and
                                        peppol's SMP lookup
-3. The three views and the exact scope ADR-0052, amendment 2026-09-14:
-                                       Configuration (the classic tree,
-                                       landed as a first cut), Monitor (the
-                                       default) and Topology; the tree is
-                                       Cluster → Node → receive → process →
-                                       send, open and still, reaching the
-                                       configuration and the binaries (not
-                                       yet published); Topology navigates
-                                       to another cluster when allowed, a
-                                       second named roll in the essentials,
-                                       Start-XmipTest -Cluster <cluster> (the
-                                       essentials topology, -Cluster and the
-                                       chooser that moves a view between
-                                       clusters are all landed, ADR-0052,
-                                       amendment 2026-09-20); every
-                                       surface drills to the leaf; every view
-                                       names the Receive Location, the
-                                       Work Process and the Send Location,
-                                       not the transport and contract
-                                       beneath; the
-                                       topology draws Xmip's own configured
-                                       and observed communication; the
-                                       drill reaches configuration, an
-                                       Operator changes it and a Developer
-                                       opens it, on the web as on the
-                                       desktop; the prompt names the node
-                                       when the session is remote; a role
-                                       comes from a directory, the
-                                       essentials' is a fake one that
-                                       allows the tester, and
-                                       Start-XmipTest -Directory names
-                                       which: kind, name and address
-                                       (ADR-0009,
-                                       amendment 2026-09-14). The surfaces
-                                       are demonstrable over the essentials
-                                       and not yet testable for real (the
-                                       owner, 2026-09-14 evening): the runtime
-                                       module had no tests, the GUI none of
-                                       its own, and the web offers no role.
-                                       The runtime has them since, and the
-                                       GUI since 2026-09-19 (Xmip.Gui.Test,
-                                       the three views over a published
-                                       fixture); the role is what is left. A surface
-                                       is told, never asks: the change feed
-                                       is signaled, and crosses a network
-                                       over gRPC to a node's operate
-                                       listener — built, the runtime's
-                                       remote surface (ADR-0014, amendment
-                                       2026-10-12). The names
-                                       need item 1's
-                                       configured node; the directory needs
-                                       the role gate ADR-0027 blocks on
-4. Journey replay end to end           problem 19, and the half of ADR-0024
-                                       that stayed open
-5. Cluster coordination and placement  problems 17 and 19; ADR-0025 clause 6
-                                       says where it belongs, not what it is
-6. xmip-core-webapi                    declared, mounted nowhere, one orphan
-                                       gitdir — decide it lives or retire it
-7. Cross-compilation                   four declared targets, verified on host
-                                       only
-8. Organization and second owner       problem 15, independent of all the above
+3. The three views and the exact scope a role from a real directory: which
+                                       directory group means which role, the
+                                       callers Kerberos and Active Directory
+                                       prove, and the account behind an SSH
+                                       key (ADR-0014, Reach) (ADR-0009,
+                                       amendment 2026-10-06); the Essentials'
+                                       directory is the fake
+                                       `TesterDirectory`
+4. Tracking and message search         problem 19: finding a Message by a
+                                       promoted property, its laid-out
+                                       columns waiting on the owner
+5. Cluster coordination and placement  problem 19: the consolidation the
+                                       owner agreed on 2026-11-07, not
+                                       started — the cluster code moved to
+                                       Platform, where it runs the sync
+                                       plane; placement by a node's stages;
+                                       membership through Xmip Storage
+6. Cross-compilation                   paused by the owner's choice of
+                                       2026-11-02, Windows only: the other
+                                       targets are written and not run until
+                                       he lifts it (compatibility.md)
+7. Organization and second owner       problem 15, independent of all the above
 ```
 
 **The vocabulary is settled** (the owner, 2026-09-26, confirming
@@ -1969,9 +1879,6 @@ retires entries from stops being an order.
 passes through it; Xmip Host Services do the work; a Work Process is the
 integration process a Subscription starts. Phases 4-9 name their code after
 it.
-
-Problems 4, 5, 7, 8 and 9 remain naming judgments with no deadline. They cost
-nothing to leave open and should not block the build work.
 
 
 ---

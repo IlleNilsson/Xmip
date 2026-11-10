@@ -440,9 +440,8 @@ open-source `credentials-fetcher` is one), unverified here on AlmaLinux 10.
 macOS has none. Where none exists, the platform's own Service Identity in
 section 5's table stands, and nothing is emulated.
 
-Nothing implements this yet: no node runs as a service (open-problems.md,
-the Suggested order's phase C). It is a requirement on that work, filed as
-problem 28.
+Not built: a node running under a group Managed Service Account, filed as
+open problem 28.
 
 The owner's, the requirement; the platform list and the unverified Linux
 route are the assistant's.
@@ -957,3 +956,51 @@ has none.
 Provenance: the agreement is the owner's, 2026-11-06; the key's name, the
 lookup order, the problems' words and what is left unbuilt are the
 assistant's, 2026-11-06.
+
+## Amendment, 2026-11-10: IMAP and MQTT present the Location's secret
+
+The owner, 2026-11-10: *Go ahead*. The deep review of 2026-11-07 found two
+technologies that said their password was the Location's and never took
+it: IMAP and MQTT built their login with an empty password and kept the
+transport capability's default `Configured::secured_by`, which refuses a
+secret. A Location of either that named its secret was refused as the node
+started; one that named none logged in, IMAP with an empty password and
+MQTT with its user name and no password.
+
+- **Both present the password through `transport::secured::logged_in`**,
+  the one way a technology with a user and a password presents it, as FTP
+  does (amendment 2026-10-29): IMAP as the password of `LOGIN` for the
+  Location's `user`, MQTT as the password of `CONNECT` beside the
+  Location's `username`.
+- **Read at each connection**: as IMAP logs in and as MQTT connects, never
+  as the node starts and never per Message on a kept connection, so a
+  secret set or replaced reaches the next connection without a restart.
+- **MQTT presents a password with the Location's user**: a Location that
+  names a secret and no `username` is refused as the node starts: MQTT
+  3.1.1, the level Xmip speaks, sends no password without a user name
+  (section 3.1.2.9).
+- **A Location that names no secret** is unchanged, and presents only the
+  user it names, as FTP does with the user its address names (`USER`, then
+  an empty `PASS` where the server asks): IMAP sends `LOGIN` with an empty
+  password for its required `user`, and MQTT sends its `username` alone,
+  with no password. The amendment of 2026-11-01 deleted the logins Xmip
+  made up — SFTP's `xmip`/`xmip`, FTP's anonymous one — and a user the
+  Location names is not one of them.
+- **SMB still logs on as a guest.** It presents no secret, and a Location
+  of it naming one is refused as the node starts, until its client
+  computes the NTLMv2 response (MS-NLMP) and signs its messages: a guest
+  logon is never signed. Windows 11, version 24H2 (Enterprise, Pro and
+  Education) requires every inbound and outbound SMB connection signed by
+  default, and Windows Server 2025 every outbound one; a server requiring
+  signing refuses a guest (Microsoft Learn, *Control SMB signing
+  behavior*). That is a separate piece, not built.
+
+Not built: Xmip's own IMAP and MQTT servers — the loopbacks' far ends —
+admit any login, as the SSH and FTP servers did until the amendment of
+2026-11-01; IMAP's `Session` takes `LOGIN` unchecked, and MQTT's
+`Session::login` reports what a `CONNECT` carried and checks nothing.
+
+Provenance: the finding is the deep review's, 2026-11-07, and the agreement
+the owner's, 2026-11-10; reading a Location that names a user and no secret
+as FTP's, and leaving SMB's NTLMv2 response and signing to a piece of their
+own, are the assistant's, for the owner to overrule.
