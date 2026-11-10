@@ -112,7 +112,7 @@ as the transports are.
 | `scram` | a SCRAM-SHA-256 exchange against stored verifiers |
 | `jwt` | a token's signature (HS256, RS256, ES256), expiry, issuer, audience |
 | `oidc` | an ID token against the issuer's published keys and the nonce |
-| `oauth2` | a token by introspection at the authorization server |
+| `oauth2` | a token by introspection at the authorization server over https, its issuer and audience |
 | `saml` | an assertion's signature and conditions against the IdP metadata |
 | `certificate` | a certificate chain to a configured trust anchor, validity and revocation as ADR-0033 says |
 | `mutual-tls` | the client certificate the TLS handshake proved, bound to the connection |
@@ -583,3 +583,18 @@ with OS or platform identity, permissions, belonging.*
   authentication and authorization alike.
 - Not built: both verifiers still refuse a real login. The bindings, and
   what reads an account's permissions and groups, follow.
+
+## Amendment, 2026-11-10: `oauth2` requires the issuer and the audience, over https alone
+
+The owner, 2026-11-10: *Do so that OAuth2 require the issuer and audience,
+as JWT now does.*
+
+- An `oauth2` Location names its `issuer` and `audience`, both required, as
+  a `jwt` one does; a configuration without either is refused when it is
+  read. An active introspection answer whose `iss` is not the issuer, or
+  whose `aud` does not name the audience, is refused, missing ones
+  included. The check is `authenticate::claims::Expected`, the one `jwt`
+  calls.
+- The introspection endpoint is `https`, loopback included (2026-11-09):
+  any process on the host may listen on a loopback port, and TLS is what
+  proves the server is the authorization server.
