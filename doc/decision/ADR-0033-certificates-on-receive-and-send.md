@@ -47,7 +47,9 @@ not built.
 - **Receive** — a Receive Location can require and verify a peer certificate.
   For `mutual-tls` the transport's TLS server requests and verifies the client
   certificate during the handshake and hands the proven subject to the gate; for
-  `certificate` the presented X.509 is verified where the content arrives. The
+  `certificate` the presented X.509 is verified where the content arrives — and,
+  since 2026-11-11, proven only with its sender's signature over this arrival
+  (ADR-0019, amendment 2026-11-11). The
   verified subject becomes the [`Presented`] value the `Acceptance` gate checks.
 - **Send** — a Send Location presents a client certificate: the transport's TLS
   client is configured with a key pair, so the far end can authenticate Xmip.
@@ -131,7 +133,11 @@ day, tested, each in its own repository as the manifest already had them:
   requires the leaf to name the claimed value — subject or DNS name — and
   the reported fingerprint to be the leaf's. The usage the leaf must be for
   is configuration, any unless said, because an S/MIME certificate in AS2
-  is not a client-auth certificate.
+  is not a client-auth certificate. Since 2026-11-11 a chain alone proves
+  nobody: the leaf's key must also have signed this arrival — signed
+  attributes whose `messageDigest` is the digest the transport measured of
+  its content — so a `certificate` claim is refused until a transport
+  reports that possession (ADR-0019, amendment 2026-11-11).
 - **`authenticate/mutual-tls`** records what the transport proved and redoes
   no cryptography, as clause 1 says: the transport that verified the client
   chain in its handshake promotes `tls.peer.verified = verified`, the first

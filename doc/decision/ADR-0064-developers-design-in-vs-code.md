@@ -6,8 +6,10 @@
 - Related: ADR-0014 (operator surfaces; its 2026-09-10 amendment made the VS
   Code extension the developer's face), ADR-0031 (configuration is TOML),
   ADR-0046 (a route technology is a source the filter reads), ADR-0052 (the
-  surfaces share one model), `doc/planning/market-position.md` (*every
-  competitor leads with a visual designer*), `doc/terminology.md`
+  surfaces share one model), ADR-0072 (the Dependency Quest reports per
+  integration, amendment 2026-11-11), ADR-0013 (a Subscription's
+  Application, amendment 2026-11-11), `doc/planning/market-position.md`
+  (*every competitor leads with a visual designer*), `doc/terminology.md`
 
 ## In brief
 
@@ -16,15 +18,18 @@
   design lives
 - Name: Developers design in VS Code
 - Order: 20
-- Concepts: Xmip Application; designer; binding; Send Location target, destination::OWN
+- Concepts: Xmip Application; Integration; designer; binding; Send Location target, destination::OWN
 
 **A developer designs graphically in VS Code, as in BizTalk: routes first,
-then transforms, then processes. What they draw belongs to an Xmip Application —
-the integration, drawn once and deployed to whichever nodes run it — and a
+then transforms, then processes. What they draw belongs to an Xmip
+Application — drawn once and deployed to whichever nodes run it — and a
 node's configuration binds it: which Application, on which node, with which
 addresses. Every design is a text document in the repository; the designer
 is a view of that text, its rules are Xmip's own in the Rust language server,
-and only the drawing is in the extension.**
+and only the drawing is in the extension. The integration — one forward path
+from a Receive Location to a Send Location, which replay re-enters forward —
+is to replace the Xmip Application group (amendment 2026-11-11; decided, not
+built).**
 
 ## Context
 
@@ -555,3 +560,85 @@ read as a URL. Provenance: the defect is the 2026-11-10 finding; the names
 `destination::on_server`, the empty target rather than the address with
 its scheme, and `peppol://` as `as4://` on the wire, are the assistant's,
 for the owner to overrule.
+
+## Amendment, 2026-11-11: the integration replaces the Xmip Application group
+
+The owner, the morning of 2026-11-11, in this order. Shown BizTalk's
+Applications (07:00): *I do not like the BizTalk way, I do not like
+applications for integration.* At 07:05: *What I would like is a dependency
+tree, a Quest, to tell me how things are connected within Xmip* — the
+Dependency Quest (ADR-0072, amendment 2026-11-11). At 07:12: *There is no
+such thing as a working installation. There is only working integrations,
+hence a gap is a gap, report it.* At 07:15, asked whether an integration is
+one path from a Receive Location through its Subscriptions and Work
+Processes to a Send Location, and so the unit in place of the Xmip
+Application group: *Yes it is, it never goes backwards, but there is
+replay. Read up on it, it is in there.* Shown the drawing below (07:30):
+*Yes the image was correct*; at 07:40: *It is nice, good. So simple so
+correct, it has to be in the video and presentation*; at 07:45: *I miss
+Auditing in the image though*, and the audit lane was added.
+
+![An integration's path from Receive Location to Send Location, where replay enters it, and the audit each step writes](../architecture/integration-path.svg)
+
+1. **An integration is one forward path.** Receive Location, Receive Port,
+   Publication, Subscription, a Work Process where the route has one, Send
+   Port or Send Port Group, Send Location. A Work Process that publishes
+   hands its Message on to the next Subscription, still forward
+   (`runtime-model.md` section 9, *Subscription Instances form a chain*); a
+   Subscription with no Work Process leads straight to its Send Port or Send
+   Port Group. It never runs backwards.
+2. **Replay re-enters the path forward.** A replay is a new Journey, its
+   lineage recorded to its source and to the original Journey where one
+   exists, entering the path at a retained source and going on forward
+   (`runtime-model.md` section 14; `terminology.md`, *Dead Message Queue*):
+   at a Receive Location event, or a Journey's start for its whole travel;
+   at the Receive Port, as the Message entered it, or its Publication; from
+   the Dead Message Queue, re-published and matched again with the context
+   it gathered; and a stopped Journey resumed from its last checkpoint, with
+   the Message generation current there. The source is unchanged, and the
+   replay is itself audited.
+3. **The integration replaces the Xmip Application group.** What clause 2
+   made an application definition, clause 3 named Xmip Application and the
+   amendment of 2026-10-03 made the cluster's `[[xmip_applications]]`
+   section is no longer the unit: the integration is. Only an integration
+   works or has gaps, never an installation, and the Dependency Quest reports
+   each gap per integration. Clause 3 had weighed *Integration* as the
+   group's name on 2026-09-26; it now names the path, never a group.
+
+**What changes when it is built** (open problem 64). The
+`[[xmip_applications]]` section and its one reading (`XmipApplication`,
+`parse_application`) give way to the integration, with no alias; the slice
+gives a node what it runs of each integration; the runtime's execution tree
+takes those steps, and what a node publishes of a Subscription names its
+integrations where it names the Application that draws it (ADR-0013,
+amendment 2026-11-11); the designer's Route view draws integrations, each
+one path, and the Wizard's *Put together* writes one (amendment
+2026-11-07); the Essentials' RoundTrip Application becomes its
+integrations; and every surface follows, the C ABI, the command line,
+PowerShell and the GUI in that order. Whether a binding
+then names integrations or the Locations they hold is **left open**, the
+owner's to choose before it is built. Also left open, for him: how a
+response is drawn on a path that never runs backwards — a Work Process's
+answer, carried back to the caller by the Receive Location that took the
+request, or a far end's response Message, recorded by the same Journey
+(`runtime-model.md` section 11).
+
+**What stays.** One `cluster.xmip` per cluster, which developers and
+operators author and which is sliced into each node's file (amendment
+2026-10-03); every designer a view of its own sections of it (clauses 4
+and 5); Subscriptions added and removed in that TOML and nowhere else
+(ADR-0013, amendment 2026-09-30).
+
+Decided, not built: until it is, the Xmip Application is what the code
+reads. The drawing goes into the video and the presentation
+(`asset/brand/presentation`), which wait on the owner's answer about the
+voice tool.
+
+Provenance: the owner's, 2026-11-11: an integration is one path that never
+goes backwards, replay re-entering it; it is the unit in place of the Xmip
+Application group; only integrations work, never an installation; the
+drawing, with its audit lane. The assistant's, for the owner to overrule:
+the question's list of steps, read from `runtime-model.md` sections 9
+and 10; the replay entry points, read from section 14 and `terminology.md`
+as he asked; the drawing's layout and words; and what changes and stays
+when it is built.

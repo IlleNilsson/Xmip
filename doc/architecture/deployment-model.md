@@ -812,7 +812,9 @@ v3's first is `deploy/dsc/msdsc/hyperv`: an internal switch with NAT, and for
 each machine a generation 2 VM that installs its operating system unattended
 from the publisher's ISO (*the lab shall install from the ISO's*), with a
 generated `autounattend.xml` for Windows or kickstart for AlmaLinux, built
-from HyperVDsc's resources and three scripts where no resource exists. What
+from Xmip's own resources, `Xmip.HyperV/Network` and `Xmip.HyperV/Machine`,
+PowerShell 7 behind manifests as the libvirt template's are, each answering
+what is not there yet as absent (ADR-0015, amendment 2026-11-11). What
 runs inside a machine once installed belongs to the environment templates
 above.
 

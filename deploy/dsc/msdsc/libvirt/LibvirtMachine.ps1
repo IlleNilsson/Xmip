@@ -305,7 +305,9 @@ function Set-LibvirtMachine {
     .SYNOPSIS
     Moves the machine on: one never defined is started installing, an
     installed one that is off is started from its disk, one whose guest
-    answers has its media removed. One still installing is left to it.
+    answers has its media removed. One still installing is left to it, and
+    its state says so: DSC reads what the resource writes as its answer, so
+    nothing else is written.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
@@ -327,10 +329,6 @@ function Set-LibvirtMachine {
             if (-not $state.running) {
                 Start-LibvirtMachine -Instance $Instance
             }
-        }
-        'Installing' {
-            Write-Warning -Message (
-                "$($Instance['name']): installing from its ISO; run set again once it has.")
         }
     }
 }

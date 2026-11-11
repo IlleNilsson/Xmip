@@ -430,7 +430,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 343327 lines of production
+Where each repository mounts and what it holds: 343522 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -550,7 +550,7 @@ hold no source to count.
 │   │   │   │   ├── self-signed                   80
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    3139
+│   │   │   ├── authenticate                    3349
 │   │   │   │   ├── saml                        1129
 │   │   │   │   ├── kerberos                     806
 │   │   │   │   ├── ldap                         780
@@ -563,7 +563,7 @@ hold no source to count.
 │   │   │   │   ├── ssh-key                      268
 │   │   │   │   ├── oidc                         233
 │   │   │   │   ├── jwt                          214
-│   │   │   │   ├── certificate                  142
+│   │   │   │   ├── certificate                  152
 │   │   │   │   ├── api-key                       99
 │   │   │   │   ├── bearer                        94
 │   │   │   │   ├── password                      81
@@ -590,7 +590,7 @@ hold no source to count.
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
-│   │   │   ├── identify                        1592
+│   │   │   ├── identify                        1606
 │   │   │   │   ├── saml                         439
 │   │   │   │   ├── ip                           231
 │   │   │   │   ├── api-key                      227
@@ -599,17 +599,17 @@ hold no source to count.
 │   │   │   │   ├── jwt                          165
 │   │   │   │   ├── ntlm                         155
 │   │   │   │   ├── header                       148
+│   │   │   │   ├── certificate                  130
 │   │   │   │   ├── cookie                       127
 │   │   │   │   ├── oidc                         126
-│   │   │   │   ├── certificate                  124
 │   │   │   │   ├── kerberos                     116
 │   │   │   │   ├── transport                    109
-│   │   │   │   ├── contract                      88
 │   │   │   │   ├── party                         88
 │   │   │   │   ├── endpoint                      82
 │   │   │   │   ├── message                       81
 │   │   │   │   ├── mac                           71
-│   │   │   │   └── ssh-key                       63
+│   │   │   │   ├── ssh-key                       63
+│   │   │   │   └── contract                      52
 │   │   │   ├── secret                          1273
 │   │   │   │   ├── dpapi                        317
 │   │   │   │   ├── file                         197
@@ -645,7 +645,7 @@ hold no source to count.
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
-│   │   │   ├── authorize                        547
+│   │   │   ├── authorize                        552
 │   │   │   │   ├── location                     397
 │   │   │   │   ├── abac                         359
 │   │   │   │   ├── opa                          289
@@ -653,12 +653,12 @@ hold no source to count.
 │   │   │   │   ├── policy                       249
 │   │   │   │   ├── transport                    206
 │   │   │   │   ├── role                         200
+│   │   │   │   ├── contract                     189
 │   │   │   │   ├── artifact                     178
 │   │   │   │   ├── scope                        173
 │   │   │   │   ├── claim                        168
 │   │   │   │   ├── rbac                         163
 │   │   │   │   ├── acl                          147
-│   │   │   │   ├── contract                     141
 │   │   │   │   └── party                        131
 │   │   │   ├── unit                             431
 │   │   │   ├── receive                          178
@@ -717,11 +717,11 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                34264  C# 31506 · Rust 2359 · PowerShell 399
-│   │   ├── event                               5648
+│   │   ├── abi                                33907  C# 31144 · Rust 2360 · PowerShell 403
+│   │   ├── event                               5753
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
-│   │   ├── core                                4332
+│   │   ├── core                                4333
 │   │   ├── message                             1753
 │   │   │   ├── xml                              348
 │   │   │   ├── avro                             300
@@ -738,14 +738,14 @@ hold no source to count.
 │   │   │   ├── text                              59
 │   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
-│   │   ├── context                             1022
+│   │   ├── context                             1037
 │   │   ├── node                                 988
 │   │   ├── journey                              745
 │   │   ├── stream                               382
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            41455
+│       ├── runtime                            41628
 │       ├── persist                            15340
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
@@ -754,7 +754,7 @@ hold no source to count.
 │       └── configure                           8440
 └── test/
     └── core/
-        ├── essentials                         15174
+        ├── essentials                         15175
         └── module                                83
 ```
 

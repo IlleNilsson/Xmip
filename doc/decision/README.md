@@ -222,10 +222,13 @@ Nothing an Xmip program does fails silently.**
 A program subscribes two ways, both through that one rule: in process,
 through a subscribe call in the runtime's C library — C and C++ through the
 header, .NET through `Xmip.Abi`, Java through its foreign-function API,
-Python through ctypes, and any language that can call C — or over the wire,
-in the Event wire form delivered through Xmip's own transports, which any language's
-ordinary client receives. Every subscriber is a Party, authorized for what it
-may see, and every delivery is audited.**
+Python through ctypes, and any language that can call C — by code in a
+node's own process, as the Party the account it runs as proves to be; or
+over the wire, in the Event wire form delivered through Xmip's own
+transports, which any language's ordinary client receives. Every
+subscriber is a Party it proved to be, never one it names (amendment
+2026-11-11), authorized for what it may see, and every delivery is
+audited.**
 
 → [Events are subscribed from any language, in full](ADR-0065-events-are-subscribed-from-any-language.md)
 
@@ -344,9 +347,11 @@ true identity do this — and the capabilities behind them already carry one
 trait each. An identity technology is one mechanism at one of those gates and
 nothing at the others. An identify technology reads one mechanism's claim out
 of an arrival or a Message and proves nothing. An authenticate technology
-verifies one mechanism's presented claim and resolves it to a Party. An
-authorize technology is one policy that decides an attempt at one layer.
-Nineteen, eighteen and fourteen of them, each its own repository.**
+verifies one mechanism's presented claim, and only a proven or vouched
+identity is resolved to a Party (ADR-0019, amendment 2026-11-11, and the
+amendment of that day below). An authorize technology is one policy that
+decides an attempt at one layer. Nineteen, eighteen and fourteen of them,
+each its own repository.**
 
 → [An identity technology is one mechanism at one gate, in full](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md)
 
@@ -971,12 +976,15 @@ runs the whole suite, for every suite and every provider.**
 design lives
 
 **A developer designs graphically in VS Code, as in BizTalk: routes first,
-then transforms, then processes. What they draw belongs to an Xmip Application —
-the integration, drawn once and deployed to whichever nodes run it — and a
+then transforms, then processes. What they draw belongs to an Xmip
+Application — drawn once and deployed to whichever nodes run it — and a
 node's configuration binds it: which Application, on which node, with which
 addresses. Every design is a text document in the repository; the designer
 is a view of that text, its rules are Xmip's own in the Rust language server,
-and only the drawing is in the extension.**
+and only the drawing is in the extension. The integration — one forward path
+from a Receive Location to a Send Location, which replay re-enters forward —
+is to replace the Xmip Application group (amendment 2026-11-11; decided, not
+built).**
 
 → [Developers design in VS Code, in full](ADR-0064-developers-design-in-vs-code.md)
 
@@ -1000,7 +1008,11 @@ citing its article, it shows evidence, a gap or not applicable, what is
 behind it, and the actions that close a gap, which the operator applies. It
 reads at three levels — the regulation with its tally, a row per
 requirement, one requirement in full — and never judges whether an
-installation meets the regulation. GDPR is the first regulation.**
+installation meets the regulation. GDPR is the first regulation. The
+Dependency Quest shows how things are connected within Xmip, at three
+levels too: only integrations work or not, never the installation, and
+every gap is reported with the action that closes it (amendment 2026-11-11;
+decided, not built).**
 
 → [A Quest probes, and the regulation is a parameter, in full](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md)
 
@@ -1143,6 +1155,7 @@ You have a word. This gives you the decision that governs it.
 | Identity context, co-residency | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | Identity technology | [An identity technology is one mechanism at one gate](ADR-0050-an-identity-technology-is-one-mechanism-at-one-gate.md) |
 | installing offline | [Offline is the default](ADR-0045-offline-is-the-default.md) |
+| Integration | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | interface | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
@@ -1255,6 +1268,7 @@ You have a word. This gives you the decision that governs it.
 | the capability crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the carrier technology | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the data boundary | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
+| the Dependency Quest | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | the Event wire form | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | the Foundation-Platform test | [Foundation is a noun; Platform is a lifecycle](ADR-0058-foundation-is-a-noun-platform-is-a-lifecycle.md) |
 | the glossary as arbiter | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |

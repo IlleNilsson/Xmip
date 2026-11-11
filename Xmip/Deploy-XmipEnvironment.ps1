@@ -22,9 +22,12 @@ function Deploy-XmipEnvironment {
 
             One line is written per step: ETD, ATD and ETA, the time elapsed,
             left and in all. Everything DSC
-            says goes to .local-work/deploy/<environment>/run.log. A Hyper-V
-            template asks for elevation: run it in an elevated Xmip
-            PowerShell Console. -WhatIf tests and changes nothing.
+            says goes to .local-work/deploy/<environment>/run.log. The
+            Hyper-V template's network asks for elevation and its machines
+            for a member of the Hyper-V Administrators group: run it in an
+            elevated Xmip PowerShell Console. A resource answers what is
+            not there yet as absent, so -WhatIf tests a fresh host too, and
+            changes nothing.
 
         .PARAMETER Path
             The environment file, as deploy/dsc/msdsc/<hypervisor>/
@@ -110,7 +113,6 @@ function Get-XmipDeployStep {
     [string] $prefix = Get-TomlValue -Node $network -Name 'prefix'
     [object[]] $machines = @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())
     [hashtable] $common = @{
-        template = $Template
         environment = Get-TomlValue -Node $Environment -Name 'name'
         root = Get-TomlValue -Node $Environment -Name 'root'
         credentialPath = Get-TomlValue -Node $Environment -Name 'credential' -Default ''
@@ -119,7 +121,6 @@ function Get-XmipDeployStep {
         domainName = Get-TomlValue -Node $Environment -Name 'domain'
         network = @{
             name = Get-TomlValue -Node $network -Name 'name'
-            switchName = Get-TomlValue -Node $network -Name 'name'
             bridge = Get-TomlValue -Node $network -Name 'bridge' -Default ''
             prefix = $prefix
             gateway = Get-TomlValue -Node $network -Name 'gateway'
@@ -235,14 +236,8 @@ function Invoke-XmipDeployStep {
     [int] $seconds = ([datetime]::UtcNow - $begun).TotalSeconds
     [string[]] $errors = @(Get-Content -LiteralPath $trace -Tail 200 |
         Where-Object { $_ -match 'ERROR' } | Select-Object -Last 3)
-    [bool] $elevation = ($errors -join ' ') -match 'Elevated security context required'
-    if ($exit -ne 0 -and $Operation -eq 'test' -and -not $elevation) {
-        # Some resources (HyperVDsc's DVD drives, NetworkingDsc's address)
-        # throw when tested before what they build on exists, as on a fresh
-        # host; set makes that first. Testing says so and goes on.
-        return @{ Step = $Step.Name; InDesiredState = $false; Seconds = $seconds
-            Note = 'cannot be tested until the steps before it are made' }
-    }
+    # Every template's resources answer what is not there yet as absent, so a
+    # dsc that fails is refused, tested or set.
     if ($exit -ne 0) {
         throw "REFUSED: $($Step.Name): dsc $Operation exit $exit. $($errors -join ' ') ($trace)"
     }
@@ -252,7 +247,6 @@ function Invoke-XmipDeployStep {
         Step = $Step.Name
         InDesiredState = $differ.Count -eq 0
         Seconds = $seconds
-        Note = ''
     }
 }
 
@@ -285,7 +279,6 @@ function Write-XmipDeployLine {
     [datetime] $now = [datetime]::UtcNow
     [timespan] $elapsed = $now - $Started
     [string] $state = if ($Result.InDesiredState) { 'in its desired state' }
-    elseif ($Result.Note) { "not yet in its desired state, $($Result.Note)" }
     else { 'not yet in its desired state' }
     # The departure, expected and actual, is the command's start; the arrival
     # is estimated at the pace so far. A round of waiting has no estimate.

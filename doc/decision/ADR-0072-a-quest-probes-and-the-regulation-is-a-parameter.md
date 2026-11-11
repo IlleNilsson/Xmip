@@ -7,8 +7,9 @@
   (Xmip retains and archives, it does not delete), ADR-0062 (every Xmip
   tool audits), ADR-0063 (Xmip encrypts its own traffic and its own
   storage), ADR-0070 (an audit record holds what it audits), ADR-0014 (the
-  operator surfaces), `doc/terminology.md` *Report and Quest*,
-  `observability-model.md` section 8
+  operator surfaces), ADR-0064 (the integration, amendment 2026-11-11),
+  `doc/terminology.md` *Report and Quest*, `observability-model.md`
+  section 8
 
 ## In brief
 
@@ -16,7 +17,7 @@
 - Subject: What a Quest is, and how the Regulation Report presents what the Regulation Quest finds: a regulation's evidence and gaps
 - Name: A Quest probes, and the regulation is a parameter
 - Order: 22
-- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR; erasure, of the identity; every Report in one list
+- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR; erasure, of the identity; every Report in one list; the Dependency Quest
 
 **A Quest probes an installation handed to it and returns what it found,
 the data a Report presents; it changes nothing it probes. The first is the
@@ -26,7 +27,11 @@ citing its article, it shows evidence, a gap or not applicable, what is
 behind it, and the actions that close a gap, which the operator applies. It
 reads at three levels — the regulation with its tally, a row per
 requirement, one requirement in full — and never judges whether an
-installation meets the regulation. GDPR is the first regulation.**
+installation meets the regulation. GDPR is the first regulation. The
+Dependency Quest shows how things are connected within Xmip, at three
+levels too: only integrations work or not, never the installation, and
+every gap is reported with the action that closes it (amendment 2026-11-11;
+decided, not built).**
 
 ## Context
 
@@ -381,3 +386,65 @@ probed; and the view asks the runtime again only when the address moves.
   and `ScopeLink.Presented`; and `ReportHosting`, through which the desktop
   hosts the view over its `SliceDelivery`. The list is built on every
   surface: the C ABI, the command line, PowerShell and the GUI.
+
+## Amendment, 2026-11-11: the Dependency Quest
+
+The owner, 2026-11-11, shown BizTalk's Applications (ADR-0064, amendment
+of this date): *What I would like is a dependency tree, a Quest, to tell me
+how things are connected within Xmip*; and *There is no such thing as a
+working installation. There is only working integrations, hence a gap is a
+gap, report it.* An integration is one forward path, from a Receive
+Location to a Send Location, never running backwards, which replay
+re-enters forward (ADR-0064, amendment of this date, with its drawing,
+`doc/architecture/integration-path.svg`).
+
+1. **A Quest on this record's seam.** It probes what it is handed and
+   changes nothing (clause 1); what it probes beyond a node's configuration
+   is added to `Installation`, with a default for the Quests it does not
+   concern (clause 2). It is in the one list of every Report as one that
+   takes longer (amendment 2026-11-10).
+2. **Three levels.**
+   1. The cluster, with a tally of its integrations, things, connections
+      and gaps.
+   2. One row per integration: it works, or its gaps.
+   3. One integration in full: each step with what it needs — its node,
+      transport module, secret, certificate and Party; a Subscription's
+      filter and the properties it reads; a Work Process's module — and
+      what needs it; each link, live or not; the replay entry points, with
+      their lineage (ADR-0064, amendment of this date, clause 2); and the
+      audit events each step writes (`terminology.md`, *Audit and Failure
+      Persistence*; ADR-0070).
+3. **Only integrations work or not, never the installation.** No level
+   says an installation works; the first tallies, as clause 8 keeps every
+   verdict out of a Report.
+4. **A gap is a gap: every one is reported, every time, with the action
+   that closes it.** The operator applies the action; the Quest never does
+   (clause 5; amendment 2026-11-10, clause 6).
+
+**What counts as a gap**, the assistant's draft, which the owner has not
+confirmed:
+
+- an accepted Message no Subscription wanted: a Dead Message Queue entry;
+- a Subscription nothing can reach: its filter reads a property no Receive
+  Port promotes;
+- a Send Port or Send Port Group no Subscription feeds;
+- a Location, Work Process or Send Port no node runs, or a stopped node on
+  the path;
+- a secret, certificate or Party a Location names that its node does not
+  hold, or a certificate past its date;
+- a module a step needs that its node does not carry.
+
+A configuration file answers the path and what each step names. Whether a
+node runs, holds what a Location names and carries what a step needs, and
+what the Dead Message Queue holds, are the running cluster's, which the
+probe of a running node, *Left open* 4 of the amendment of 2026-11-10,
+reaches; and the first level is the cluster's, where a probe reads one
+node's slice today (*What a probe reads*). Decided, not built: open
+problem 65.
+
+Who decided what. The owner's, 2026-11-11: a dependency tree, a Quest,
+showing how things are connected within Xmip; no working installation,
+only working integrations; a gap is a gap, reported. The assistant's, for
+the owner to change: the name *Dependency Quest*, from his words; the three
+levels, after the Regulation Quest's, and what each shows; and the draft
+of what counts as a gap.

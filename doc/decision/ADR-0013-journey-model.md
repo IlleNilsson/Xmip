@@ -856,3 +856,23 @@ Journey. So a Receive Location's `interaction` — `composite`,
 and the problem of a Location stating none), the samples, the Essentials'
 `cluster.xmip` and the documents (`runtime-model.md` sections 5, 6, 7, 11 and
 20; ADR-0031). Processing depth stays.
+
+## Amendment, 2026-11-11: a Subscription is a step of an integration
+
+The owner decided on 2026-11-11 that the integration — one forward path
+from a Receive Location through its Subscriptions and Work Processes to a
+Send Location — replaces the Xmip Application group (ADR-0064, amendment
+2026-11-11): *Yes it is, it never goes backwards, but there is replay.*
+Where the amendment of 2026-09-30 says a Subscription is drawn in an Xmip
+Application, and `observe::Subscription` names the Application that draws
+it and the file it was read from, both name the integrations it is on once
+that is built (open problem 64); until then they say what the code reads.
+
+Nothing of this record's model changes. Clause 5 holds: a Message three
+Subscriptions match travels three ways, each a Journey of its own. Replay is
+this record's: from the Dead Message Queue it re-publishes with the context
+gathered, and a terminal Journey resumes from its checkpoint (amendments
+2026-08-26 and 2026-10-01), each a new travel forward on the path, never
+back along it (`runtime-model.md` section 14). The draft of what the
+Dependency Quest counts as a gap, which the owner has not confirmed, counts
+a Dead Message Queue entry as one (ADR-0072, amendment 2026-11-11).

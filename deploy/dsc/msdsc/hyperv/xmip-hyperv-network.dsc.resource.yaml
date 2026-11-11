@@ -1,0 +1,91 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.HyperV/Network
+version: '0.1.0'
+description: >-
+  The network an environment's machines share on one Hyper-V host: an
+  internal switch, the host's address on it, the machines' gateway, and
+  outbound NAT for the network's prefix.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Network
+    - -Operation
+    - set
+  input: stdin
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - environment
+      - prefix
+      - gateway
+      - prefixLength
+      - nat
+    properties:
+      name:
+        description: 'The internal switch''s name; its host adapter is vEthernet (<name>).'
+        type: string
+      environment:
+        description: 'The environment''s name, the NAT''s.'
+        type: string
+      prefix:
+        description: 'The network in CIDR notation, which the NAT translates.'
+        type: string
+      gateway:
+        description: 'The host''s address on the switch, the machines'' gateway.'
+        type: string
+      prefixLength:
+        type: integer
+      nat:
+        description: 'Whether the network has outbound NAT.'
+        type: boolean
+      findings:
+        readOnly: true
+        type: array
+      _exist:
+        description: 'Whether the switch exists.'
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true
