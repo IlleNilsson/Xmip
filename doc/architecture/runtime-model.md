@@ -1843,6 +1843,19 @@ lineage to that source and to the original Journey where one exists.
 Replay and detailed inspection are possible only while the required retained or
 archived evidence can be restored.
 
+**A replay re-enters an integration forward.** An integration is one path —
+Receive Location, Receive Port, Publication, Subscription, a Work Process
+where the route has one, Send Port or Send Port Group, Send Location — and
+it never runs backwards (the owner, 2026-11-11: *it never goes backwards,
+but there is replay*; ADR-0064, amendment 2026-11-11, decided, not built).
+Each source above is a point on that path, and a replay starts there and
+goes on forward; from the Dead Message Queue it re-publishes with the
+context the Message gathered (section 9), and a stopped Journey resumes
+from its last checkpoint with the Message generation current there
+(`terminology.md`, *Dead Message Queue*).
+
+![An integration's path from Receive Location to Send Location, where replay enters it, and the audit each step writes](integration-path.svg)
+
 ## 15. Resilience
 
 `xmip-core-resilience` owns the guards on an attempt (ADR-0048); its README

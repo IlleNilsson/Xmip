@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1110 600" width="1110" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">An integration's path from Receive Location to Send Location</title>
+  <desc id="desc">Seven steps left to right, one direction, never backwards: Receive Location, Receive Port, Publication, Subscription, Work Process where the route has one, Send Port or Send Port Group, Send Location; a Subscription may also lead straight to a Send Port. Replay enters forward, as a new Journey with lineage: at a Receive Location event or a Journey's start, at the Receive Port or its Publication, from the Dead Message Queue (a gap: an accepted Message no Subscription matched), which re-publishes with the context it gathered, and from a stopped Journey, which resumes from its last checkpoint. Beneath the path, the audit: every step writes its record. ADR-0064, amendment 2026-11-11; runtime-model.md section 14.</desc>
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #ffffff; stroke: #8a96a3; stroke-width: 1.5; }
+    .box.end { stroke: #75c93b; stroke-width: 2.5; }
+    .box.optional { stroke-dasharray: 6 4; }
+    .box.gapbox { fill: #fdf0e8; stroke: #c05621; stroke-width: 2; }
+    .box.terminal { fill: #ffffff; stroke: #8a96a3; stroke-dasharray: 3 3; }
+    .t-name { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 15px; fill: #1a202c; }
+    .t-sub { font-family: "Segoe UI", system-ui, sans-serif; font-size: 11.5px; fill: #5f6b78; }
+    .t-dir { font-family: "Cascadia Mono", ui-monospace, Consolas, monospace; font-size: 12px; fill: #4f9a24; letter-spacing: 0.06em; }
+    .t-replay { font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px; fill: #2b6cb0; }
+    .t-replay-b { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 13px; fill: #2b6cb0; }
+    .t-gap { font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px; fill: #c05621; }
+    .t-gap-b { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 13px; fill: #c05621; }
+    .flow { stroke: #75c93b; stroke-width: 3; fill: none; }
+    .flow.faint { opacity: 0.55; }
+    .dir { stroke: #75c93b; stroke-width: 2; fill: none; opacity: 0.55; }
+    .replay { stroke: #2b6cb0; stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+    .gapline { stroke: #c05621; stroke-width: 2; fill: none; }
+    .head-flow { fill: #75c93b; }
+    .head-replay { fill: #2b6cb0; }
+    .head-gap { fill: #c05621; }
+    .tag { fill: #e8f1fb; stroke: #2b6cb0; stroke-width: 1.2; }
+    .audit-lane { fill: #edf0f4; stroke: #3d4a5c; stroke-width: 1.5; }
+    .t-audit-b { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 15px; fill: #3d4a5c; }
+    .t-audit { font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px; fill: #3d4a5c; }
+    .t-audit-ev { font-family: "Cascadia Mono", ui-monospace, Consolas, monospace; font-size: 12px; fill: #3d4a5c; }
+    .audit-tick { stroke: #3d4a5c; stroke-width: 1.5; }
+  </style>
+  <defs>
+    <marker id="hf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head-flow"/></marker>
+    <marker id="hr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head-replay"/></marker>
+    <marker id="hg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head-gap"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1110" height="600" class="bg"/>
+
+  <!-- direction -->
+  <line x1="24" y1="150" x2="1076" y2="150" class="dir" marker-end="url(#hf)"/>
+  <text x="555" y="140" text-anchor="middle" class="t-dir">ONE DIRECTION · NEVER BACKWARDS</text>
+
+  <!-- replay tags -->
+  <rect x="14" y="20" width="200" height="58" rx="8" class="tag"/>
+  <text x="26" y="42" class="t-replay-b">Replay</text>
+  <text x="26" y="59" class="t-replay">a Receive Location event, or a</text>
+  <text x="26" y="73" class="t-replay">Journey's start (its whole travel)</text>
+  <path d="M86 80 L86 178" class="replay" marker-end="url(#hr)"/>
+
+  <rect x="300" y="20" width="200" height="58" rx="8" class="tag"/>
+  <text x="312" y="42" class="t-replay-b">Replay</text>
+  <text x="312" y="59" class="t-replay">as it entered the Receive Port,</text>
+  <text x="312" y="73" class="t-replay">or its Publication</text>
+  <path d="M360 80 L360 120 L250 120 L250 178" class="replay" marker-end="url(#hr)"/>
+  <path d="M420 80 L420 178" class="replay" marker-end="url(#hr)"/>
+
+  <!-- the seven steps -->
+  <g>
+    <rect x="24" y="180" width="124" height="68" rx="10" class="box end"/>
+    <text x="86" y="210" text-anchor="middle" class="t-name">Receive</text>
+    <text x="86" y="228" text-anchor="middle" class="t-name">Location</text>
+
+    <rect x="180" y="180" width="124" height="68" rx="10" class="box"/>
+    <text x="242" y="210" text-anchor="middle" class="t-name">Receive Port</text>
+    <text x="242" y="230" text-anchor="middle" class="t-sub">promotes properties</text>
+
+    <rect x="336" y="180" width="124" height="68" rx="10" class="box"/>
+    <text x="398" y="210" text-anchor="middle" class="t-name">Publication</text>
+    <text x="398" y="230" text-anchor="middle" class="t-sub">in the Ledger</text>
+
+    <rect x="492" y="180" width="124" height="68" rx="10" class="box"/>
+    <text x="554" y="210" text-anchor="middle" class="t-name">Subscription</text>
+    <text x="554" y="230" text-anchor="middle" class="t-sub">filter · destination</text>
+
+    <rect x="648" y="180" width="124" height="68" rx="10" class="box optional"/>
+    <text x="710" y="210" text-anchor="middle" class="t-name">Work Process</text>
+    <text x="710" y="230" text-anchor="middle" class="t-sub">when the route has one</text>
+
+    <rect x="804" y="180" width="124" height="68" rx="10" class="box"/>
+    <text x="866" y="210" text-anchor="middle" class="t-name">Send Port</text>
+    <text x="866" y="230" text-anchor="middle" class="t-sub">or Send Port Group</text>
+
+    <rect x="960" y="180" width="124" height="68" rx="10" class="box end"/>
+    <text x="1022" y="210" text-anchor="middle" class="t-name">Send</text>
+    <text x="1022" y="228" text-anchor="middle" class="t-name">Location</text>
+  </g>
+
+  <!-- forward flow -->
+  <path d="M148 214 L178 214" class="flow" marker-end="url(#hf)"/>
+  <path d="M304 214 L334 214" class="flow" marker-end="url(#hf)"/>
+  <path d="M460 214 L490 214" class="flow" marker-end="url(#hf)"/>
+  <path d="M616 214 L646 214" class="flow" marker-end="url(#hf)"/>
+  <path d="M772 214 L802 214" class="flow" marker-end="url(#hf)"/>
+  <path d="M928 214 L958 214" class="flow" marker-end="url(#hf)"/>
+  <!-- a Subscription straight to a Send Port -->
+  <path d="M600 248 C 640 290, 800 290, 846 250" class="flow faint" marker-end="url(#hf)"/>
+  <text x="723" y="300" text-anchor="middle" class="t-sub">or straight to a Send Port</text>
+
+  <!-- Dead Message Queue: a gap -->
+  <path d="M398 248 L398 352" class="gapline" marker-end="url(#hg)"/>
+  <text x="408" y="290" class="t-gap">no Subscription</text>
+  <text x="408" y="305" class="t-gap">matched</text>
+  <rect x="300" y="354" width="196" height="70" rx="10" class="box gapbox"/>
+  <text x="398" y="382" text-anchor="middle" class="t-gap-b">Dead Message Queue</text>
+  <text x="398" y="402" text-anchor="middle" class="t-sub">a gap: accepted, nothing wanted it</text>
+  <path d="M496 389 L540 389 L540 250" class="replay" marker-end="url(#hr)"/>
+  <text x="548" y="372" class="t-replay-b">Replay: re-publish</text>
+  <text x="548" y="389" class="t-replay">matched again, with the</text>
+  <text x="548" y="404" class="t-replay">context it already gathered</text>
+
+  <!-- a stopped Journey: resume -->
+  <rect x="860" y="354" width="200" height="70" rx="10" class="box terminal"/>
+  <text x="960" y="382" text-anchor="middle" class="t-name">Stopped Journey</text>
+  <text x="960" y="402" text-anchor="middle" class="t-sub">failed or dismissed</text>
+  <path d="M880 352 L880 252" class="replay" marker-end="url(#hr)"/>
+  <text x="600" y="444" class="t-replay-b">Replay: resume</text>
+  <text x="600" y="461" class="t-replay">from its last checkpoint, with the Message generation current there</text>
+
+  <!-- the audit, beneath every step -->
+  <rect x="14" y="486" width="1082" height="104" rx="10" class="audit-lane"/>
+  <text x="30" y="512" class="t-audit-b">Audit</text>
+  <text x="84" y="512" class="t-audit">every step writes its record: the Message in full as it was, its Stream's bytes and digest, each record chained to the one before</text>
+  <line x1="86" y1="526" x2="86" y2="534" class="audit-tick"/>
+  <text x="86" y="550" text-anchor="middle" class="t-audit-ev">entry into Xmip</text>
+  <line x1="242" y1="526" x2="242" y2="534" class="audit-tick"/>
+  <text x="242" y="550" text-anchor="middle" class="t-audit-ev">passed on</text>
+  <line x1="554" y1="526" x2="554" y2="534" class="audit-tick"/>
+  <text x="554" y="550" text-anchor="middle" class="t-audit-ev">picked up</text>
+  <line x1="710" y1="526" x2="710" y2="534" class="audit-tick"/>
+  <text x="710" y="550" text-anchor="middle" class="t-audit-ev">assigned · transformed</text>
+  <line x1="866" y1="526" x2="866" y2="534" class="audit-tick"/>
+  <text x="866" y="550" text-anchor="middle" class="t-audit-ev">passed on</text>
+  <line x1="1022" y1="526" x2="1022" y2="534" class="audit-tick"/>
+  <text x="1022" y="550" text-anchor="middle" class="t-audit-ev">sent · leaving Xmip</text>
+  <text x="30" y="576" class="t-audit">Failure: always, at any step, with the Message kept as it was when it failed.   Replay: itself audited.   Policy may add more records, never remove these.</text>
+</svg>

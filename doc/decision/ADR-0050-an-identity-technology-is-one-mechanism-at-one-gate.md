@@ -23,9 +23,11 @@ true identity do this — and the capabilities behind them already carry one
 trait each. An identity technology is one mechanism at one of those gates and
 nothing at the others. An identify technology reads one mechanism's claim out
 of an arrival or a Message and proves nothing. An authenticate technology
-verifies one mechanism's presented claim and resolves it to a Party. An
-authorize technology is one policy that decides an attempt at one layer.
-Nineteen, eighteen and fourteen of them, each its own repository.**
+verifies one mechanism's presented claim, and only a proven or vouched
+identity is resolved to a Party (ADR-0019, amendment 2026-11-11, and the
+amendment of that day below). An authorize technology is one policy that
+decides an attempt at one layer. Nineteen, eighteen and fourteen of them,
+each its own repository.**
 
 ## Context
 
@@ -62,7 +64,8 @@ estate knows.
   an error only where it recognizes something it cannot read.
 - An authenticate technology implements `Authenticator`: `mechanism()` and
   `verify(&Presented) -> Verified`. It never takes a Party; the Party is what
-  the capability resolves the verified value to.
+  the capability resolves the verified value to, where it was proven or
+  vouched for and never where it was only claimed (amendment 2026-11-11).
 - An authorize technology implements `Authorizer`: `name()`, `layer()` and
   `decide(&IdentityFacts, &Attempt) -> Option<Decision>`, where `None` is
   "this policy has no opinion" and a denial names the policy that denied.
@@ -91,7 +94,7 @@ Each reads one thing and calls it the claim.
 | `party` | the Party the Location's configuration names | transport | inferred |
 | `transport` | one named transport property the carrier promoted | transport | passed |
 | `message` | one named property of the Message | message | detected |
-| `contract` | the identity the content's contract names: ISA06, UNB S002, MSH-3 | message | detected |
+| `contract` | the Contract the first section is bound to, naming no Party (ADR-0019, amendment 2026-11-11) | message | detected |
 
 ### 4. Eighteen authenticate technologies
 
@@ -114,7 +117,7 @@ as the transports are.
 | `oidc` | an ID token against the issuer's published keys and the nonce |
 | `oauth2` | a token by introspection at the authorization server over https, its issuer and audience |
 | `saml` | an assertion's signature and conditions against the IdP metadata |
-| `certificate` | a certificate chain to a configured trust anchor, validity and revocation as ADR-0033 says |
+| `certificate` | a certificate chain to a configured trust anchor, validity and revocation as ADR-0033 says, and the leaf's signature over this arrival's signed attributes, their `messageDigest` the arrival's (ADR-0019, amendment 2026-11-11) |
 | `mutual-tls` | the client certificate the TLS handshake proved, bound to the connection |
 | `ssh-key` | a signature over a challenge by the presented key |
 | `kerberos` | a service ticket with the node's keytab |
@@ -140,7 +143,7 @@ in order and the first denial stands.
 | `artifact` | what this identity may do to this named artifact | transport |
 | `scope` | the scopes a token carries against the scope an action needs | transport |
 | `claim` | a claim the identity carries, its value against a rule | message |
-| `contract` | whether this identity may present content under this contract | message |
+| `contract` | whether the identity the sender proved may present content under this contract, a contract agreed with another Party refused; asked wherever the attempt names a contract (ADR-0019, amendment 2026-11-11) | message |
 | `policy` | a declarative policy document in the estate's own TOML | transport |
 | `cedar` | a Cedar policy set, evaluated with the Cedar engine | transport |
 | `opa` | a decision fetched from an Open Policy Agent, proven against an in-process one | transport |
@@ -598,3 +601,30 @@ as JWT now does.*
 - The introspection endpoint is `https`, loopback included (2026-11-09):
   any process on the host may listen on a loopback port, and TLS is what
   proves the server is the authorization server.
+
+## Amendment, 2026-11-11: only a proven or vouched identity names a Party
+
+The owner, 2026-11-10: *A Party is never resolved from what a Message says,
+only from what the sender proved*; a sender identifier in the content is a
+claim checked against the proven Party; and no Guest fallback (ADR-0019,
+amendment 2026-11-11, which holds the rules and what was built). For the
+three gates this record describes:
+
+- **Authenticate.** The capability resolves a verified value to a Party
+  only where its verdict is proven or vouched for
+  (`context::Verified::names_a_party`); a claim nothing proved is
+  authenticated as claimed and names nobody, so a Location that names its
+  Parties refuses it (the In brief and section 2). `certificate` proves a
+  chain only with its sender's signature over this arrival (section 4).
+- **Identify.** `contract` presents the Contract the first section is bound
+  to and no Party: a binding is a statement about shape that anyone can
+  write (section 3). The interchange senders are `message`'s, under their
+  promoted names, and remain claims.
+- **Authorize.** `contract` judges the identity the sender proved,
+  `IdentityFacts::subject`, and refuses content bound to a Contract agreed
+  with another Party; the capability asks a message-layer policy wherever
+  the attempt names a Contract, the content proving an identity of its own
+  or not (section 5).
+
+Provenance: the rules are the owner's, 2026-11-10; how they land at each
+gate is the assistant's, 2026-11-11, for the owner to overrule.

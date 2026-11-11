@@ -13,6 +13,9 @@
       Windows, a TPM only where the host has swtpm.
     - The example, as Deploy-XmipEnvironment reads it: the network, then
       each machine, each with every parameter its document declares.
+    - The machine's set while it installs, virsh a stub: it is left to
+      install and nothing is written, since DSC reads what the resource
+      writes as its answer.
 
     The machines themselves are proved by running the template:
     deploy/dsc/msdsc/libvirt/README.md.
@@ -169,5 +172,27 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
         }
         @($steps[0].Value['names'] | ForEach-Object { $_.name }) |
             Should -Be @($script:Node, $script:Cluster)
+    }
+}
+
+Describe 'The machine, virsh a stub' {
+    It 'leaves a machine that installs to it, and writes nothing on any stream' {
+        # DSC reads the first line a resource writes as its answer, and
+        # pwsh -File writes a warning to standard output too.
+        $script:Asked = [Collections.Generic.List[string]]::new()
+        function Invoke-Virsh {
+            param([string[]] $Argument, [switch] $Quiet)
+            $script:Asked.Add($Argument -join ' ')
+            if ($Argument[0] -eq 'dominfo') {
+                return "Name:           XMIP-IN01`nState:          running"
+            }
+            return $null
+        }
+        # The guest does not answer while it installs.
+        function Test-Connection { $false }
+        [hashtable] $machine = New-Machine -Family 'Linux'
+        @(Set-LibvirtMachine -Instance $machine -Confirm:$false *>&1) | Should -BeNullOrEmpty
+        $script:Asked | Should -Be @('dominfo XMIP-IN01',
+            'metadata XMIP-IN01 urn:xmip:machine --config')
     }
 }

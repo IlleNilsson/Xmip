@@ -696,8 +696,9 @@ The whole way, in order, with Microsoft DSC. **E** marks a step that needs
 an elevated Xmip PowerShell Console; every other step runs in an ordinary
 one. Each README says each step in full.
 
-1. **E** Hyper-V, DSC and the two DSC modules, then restart the computer
-   (`deploy/dsc/msdsc/hyperv/README.md`, *Before the first run*).
+1. **E** Hyper-V, DSC and your account in the Hyper-V Administrators group,
+   then restart the computer (`deploy/dsc/msdsc/hyperv/README.md`, *Before
+   the first run*).
 2. The Windows machines' Administrator credential, the AlmaLinux machines'
    SSH key and the environment file (the same section).
 3. **E** The machines, made and installed in one command:

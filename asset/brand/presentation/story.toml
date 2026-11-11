@@ -362,47 +362,49 @@ outcomes.\
 ]
 
 [[section]]
-title = "Applications and bindings"
-headline = "Design the integration once"
+title = "One integration, one direction"
+headline = "One path, forward only"
 screen = """\
-Application: integration intent\nBinding: placement and addresses\nOne \
-design across deployment environments\
+Receive Location → Receive Port → Publication → Subscription → Work \
+Process → Send Port → Send Location\nReplay starts a new Journey, \
+forward\nEvery step is audited\
 """
 voice = "female"
 power = false
 narration = """\
-An Xmip Application describes the integration itself. A binding places \
-that application on a node and supplies its environment. This separation \
-lets developers reason about the business exchange while deployment \
-choices determine which systems, addresses and machines participate.\
+In Xmip, an integration is one path. A Receive Location accepts the \
+stream and its Receive Port publishes it. Subscriptions pick it up and \
+take it, through a Work Process where the route has one, to a Send Port \
+and its Send Location. The path only runs forward. Replay starts a new \
+journey from an earlier point, linked to the original, and every step \
+writes its audit record.\
 """
 sources = [
-  "doc/decision/ADR-0064-developers-design-in-vs-code.md"
+  "doc/terminology.md",
+  "doc/architecture/runtime-model.md",
+  "doc/architecture/integration-path.svg",
+  "doc/decision/ADR-0064-developers-design-in-vs-code.md",
+  "doc/decision/ADR-0070-an-audit-record-holds-what-it-audits.md"
 ]
-note = ""
+note = "The integration path"
 layout = [
-  "split",
-  "Application and binding",
-  [
-    [
-      "Application",
-      "What the integration does",
-      """\
-Receive Ports, Subscriptions, Send Ports and Work Processes describe the \
-exchange.\
+  "figure",
+  "One integration, one direction",
+  "doc/architecture/integration-path.svg",
+  """\
+Forward only. Replay starts a new Journey from an earlier point, linked \
+to the original. Every step is audited.\
 """
-    ],
-    [
-      "Binding",
-      "Where it runs",
-      """\
-A node selects the Application and supplies its deployment context and \
-addresses.\
-"""
-    ]
-  ],
-  "The integration’s intent stays separate from its machines and endpoints."
 ]
+accessibility_notes = """\
+The slide shows the integration path drawn left to right in seven steps: \
+Receive Location, Receive Port, Publication, Subscription, Work Process, \
+Send Port or Send Port Group, and Send Location. Replay markers enter the \
+path from above, always forward. Below Publication, a Dead Message Queue \
+box marks a gap: a Message nothing wanted. Below the Send Port, a stopped \
+Journey resumes from its last checkpoint. An audit lane runs under every \
+step.\
+"""
 
 [[section]]
 title = "Configuration in VS Code"

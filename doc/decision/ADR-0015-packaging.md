@@ -731,7 +731,8 @@ elevated. The documents require DSC `^3.2` and each resource `^0.1`. The
 Windows PowerShell adapter is used nowhere in them. The Hyper-V template
 keeps `PSDesiredStateConfiguration/File` and the HyperVDsc and
 NetworkingDsc resources through that adapter: no built-in of 3.2 or 3.3
-replaces any of them.
+replaces any of them (superseded by the amendment of 2026-11-11: the
+template's resources are Xmip's own).
 
 **Ansible as it is** (ansible-core 2.21.5, 2026-10-05): PowerShell 7 on
 the Windows machines (`ansible_pwsh_interpreter`), WinRM to them and SSH to
@@ -832,7 +833,9 @@ where the switch or VM is not yet there.
 **Hyper-V keeps its DSC resources.** HyperVDsc and NetworkingDsc stay, run
 through the Windows PowerShell adapter; that adapter needs the machine's
 execution policy at RemoteSigned, set once. The documents ask for
-elevation with the `securityContext` directive, DSC 3.3's form.
+elevation with the `securityContext` directive, DSC 3.3's form (superseded
+by the amendment of 2026-11-11: Xmip's own resources, and only the
+network's document elevated).
 
 **libvirt, for a Linux host.** DSC v3 has no resource for libvirt and none
 is published (checked 2026-11-03), so `deploy/dsc/msdsc/libvirt` brings
@@ -851,3 +854,80 @@ kickstart and the answer medium moved to `deploy/dsc/msdsc/answer`; the MAC
 prefix and the guest services' package are each hypervisor's, and the
 medium is written with the image mastering API where the host has it, with
 xorriso otherwise.
+
+## Amendment, 2026-11-11: the Hyper-V template's resources are Xmip's own
+
+The Hyper-V template's last real run, 2026-11-03, stopped at its first
+machine: HyperVDsc's DVD drive resource, tested before XMIP-IN01 was made,
+threw *Hyper-V was unable to find a virtual machine with name "XMIP-IN01"*
+(`.local-work/deploy/Xmip-HyperV/run.log`). A resource that throws for what
+is not there yet cannot be tested on a fresh host, and
+`Deploy-XmipEnvironment` carried an exception for it.
+
+**Xmip's own, as libvirt's are.** `deploy/dsc/msdsc/hyperv` brings two
+resources in PowerShell 7 behind manifests, as `deploy/dsc/msdsc/libvirt`
+does (the amendment of 2026-11-03). `Xmip.HyperV/Network`: an internal
+switch, the host's address on it as its adapter's one manual IPv4 address,
+and NAT for the network's prefix, named for the environment, or none where
+the environment turns it off. `Xmip.HyperV/Machine`: the machine's folder
+and dynamic disk, made once and never resized or replaced; a generation 2
+VM with static memory, its processors, its one adapter on the switch with a
+static MAC of Hyper-V's prefix, 00155D, two DVD drives, Secure Boot with
+its image's template and a virtual TPM where its image asks for one, the
+disk booted first; and its installation from the ISO with the answer
+medium of `deploy/dsc/msdsc/answer`, started, its media removed once the
+guest answers. Each `get` and `test` answers what is not there yet as
+absent, `_exist` false with a finding that says so, never as a failure:
+every switch, address, NAT and VM is listed and the instance looked for in
+the list, so the host's own refusal, Hyper-V's permission for one, is still
+an error. Hardware changes only while the VM is off; one running is
+refused, never stopped, and so is one with more than one adapter, since
+each would be given the machine's MAC: an adapter is never removed.
+
+**A resource writes its answer alone.** DSC 3.4.0-preview.2 reads the first
+line a resource writes on its standard output as its answer, and
+`pwsh -File` writes a warning there too, before it. A machine still
+installing is said by its state alone, `installation` `Installing` and its
+finding, and the warning both templates' machines wrote on a `set` while
+they installed, Hyper-V's and libvirt's (the amendment of 2026-11-03), is
+deleted: with it, `dsc` failed with *JSON: expected value at line 1 column
+1*, so `Deploy-XmipEnvironment` refused the first round in which a machine
+was still installing, and no installation could finish through it.
+
+**HyperVDsc and NetworkingDsc are deleted** from the template, its
+prerequisites and its documents, with the Windows PowerShell adapter,
+`PSDesiredStateConfiguration/File`, the two
+`Microsoft.DSC.Transitional/PowerShellScript` resources and the
+machine-wide execution policy the adapter needed. `Deploy-XmipEnvironment`
+no longer reads a failed `test` as a step not yet made: every template's
+resources answer absent, so a failure is refused, tested or set. The steps'
+`template` value, which only the script resources read, is deleted, and so
+is `switchName`, a second name for the network's `name`, which the switch
+now takes as libvirt's network does. So the amendment of 2026-11-03 is
+superseded where it kept HyperVDsc and NetworkingDsc, and the amendment of
+2026-10-21 where it kept them and `PSDesiredStateConfiguration/File`
+through the adapter.
+
+**Elevation.** The network's document keeps `securityContext: elevated`: a
+switch's host address and NAT are an administrator's to set. The machine's
+document asks for none: a member of the host's Hyper-V Administrators group
+manages VMs unelevated (the owner was told to join it, 2026-11-11), and the
+template's README makes the account one, once, by the group's SID,
+S-1-5-32-578. No manifest elevates a method.
+
+**Validated, not yet run.** `test/MsdscHyperV.Test.ps1` holds the manifests
+found by DSC, every property each requires given by its document, the
+document order, and the resources' `get`, `test` and `set` with every
+Hyper-V and network command a stub: a switch, a NAT and a machine that are
+not there answered absent, the host's refusal kept an error, an absent
+network and machine made, a Windows 11 machine's TPM given before its media
+and Space pressed for its first twenty seconds, a machine still installing
+answered by its state alone, a VM with two adapters refused, an installed
+machine's media removed; `test/MsdscLibvirt.Test.ps1` holds libvirt's
+machine left to install with nothing written. The template has not been
+run against Hyper-V since. Not yet known: whether a member of Hyper-V
+Administrators gives XMIP-DEV01 its virtual TPM unelevated. Its local key
+protector rests on the host's Untrusted Guardian, whose certificates
+Windows keeps in the LocalMachine store *Shielded VM Local Certificates*,
+not on this host yet; the first run shows it, and the documents follow.
+The assistant's, 2026-11-11.

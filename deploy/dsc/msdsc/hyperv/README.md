@@ -4,15 +4,30 @@ A template for the virtual machines an Xmip environment runs on, for one
 virtualization technology: Hyper-V on a Windows host. It makes the network
 and, for each machine, a VM that installs its operating system unattended
 from the publisher's ISO. Another technology gets a folder of its own beside
-this one, `deploy/dsc/msdsc/<technology>`; Ansible's desired state is
-`deploy/dsc/ansible`, and an environment uses one of the two, never a mix
-(ADR-0015, amendment 2026-10-09).
+this one, `deploy/dsc/msdsc/<technology>`, as `libvirt` is for a Linux
+host; Ansible's desired state is `deploy/dsc/ansible`, and an environment
+uses one of the two, never a mix (ADR-0015, amendment 2026-10-09).
 
 What runs inside a machine once it is installed is not this template's. The
 Xmip nodes and the names of the cluster and its nodes are the environment
 templates', `deploy/dsc/msdsc/environment` and, the same set in Ansible,
 `deploy/dsc/ansible`, each for Windows and AlmaLinux alike (ADR-0015,
 amendment 2026-10-21); the domain and PostgreSQL are not written yet.
+
+The template's resources are Xmip's own: PowerShell 7 behind resource
+manifests, as the libvirt template's and `Xmip.Node` are, asking Hyper-V's
+and Windows's own commands. Every rule about a switch, an address, a NAT or
+a VM is theirs (ADR-0015, amendment 2026-11-11).
+
+| Resource | Is |
+| --- | --- |
+| `Xmip.HyperV/Network` | an internal switch, the host's address on it, the machines' gateway, and outbound NAT for the network's prefix |
+| `Xmip.HyperV/Machine` | one machine, a generation 2 VM installed unattended from its ISO |
+
+Each answers what is not there yet as absent — `_exist` false, and a
+finding that says so — never as a failure, so `get` and `test` read a host
+before anything is made on it. Only the host's own refusal, such as an
+account Hyper-V does not let manage VMs, is an error.
 
 ## The example environment
 
@@ -33,20 +48,26 @@ describes ten machines:
 | XMIP-OUT01 | AlmaLinux 10 | Xmip node | 4 GiB | 2 | 32 GiB | 10.77.0.71 |
 
 They share an internal switch, `Xmip`, on 10.77.0.0/24. The host is
-10.77.0.1 on it, the machines' gateway, with outbound NAT; the domain is
-`xmip.test`, and XMIP-DC01's address is the DNS server the AlmaLinux
-machines are given. The roles are the environment templates' business; here
-they are a comment above each machine.
+10.77.0.1 on it, the machines' gateway and the one manual IPv4 address of
+the switch's host adapter, with outbound NAT; the domain is `xmip.test`, and
+XMIP-DC01's address is the DNS server the AlmaLinux machines are given. The
+roles are the environment templates' business; here they are a comment
+above each machine.
 
 ## What each machine is given
 
-A folder, `<root>\<machine>`, and in it a new dynamic disk, `os.vhdx`. A
-generation 2 VM with static memory, its CPUs, the disk, its adapter on the
-switch with a static MAC made from its address (00-15-5D and the address's
-last three octets), Secure Boot on with the template its image names —
-`MicrosoftWindows` for Windows, `MicrosoftUEFICertificateAuthority` for
-AlmaLinux — and a virtual TPM where its image asks for one (Windows 11). Two
-DVD drives, and the boot order disk first, then the two drives.
+A folder, `<root>\<machine>`, and in it a new dynamic disk, `os.vhdx`, made
+once and never resized or replaced. A generation 2 VM holding it, whose own
+files Hyper-V keeps in that folder, with static memory, its CPUs, no
+automatic checkpoints and the environment's name in its notes; its one
+adapter on the switch with a static MAC made from its address (00-15-5D and
+the address's last three octets); Secure Boot on with the template its image
+names — `MicrosoftWindows` for Windows, `MicrosoftUEFICertificateAuthority`
+for AlmaLinux — and a virtual TPM where its image asks for one (Windows 11).
+Two DVD drives, and the boot order disk first, then the two drives. The
+hardware is set only while the VM is off: one running and differing is
+refused, never stopped, and so is one with more than one adapter, since
+each would be given the machine's MAC: an adapter is never removed.
 
 On its first start the VM holds its ISO, checked against the SHA-256 the
 parameters give, and an answer medium this template writes for it, an ISO
@@ -73,32 +94,26 @@ the disk; every later boot starts from the disk.
 
 The installation is done when the guest answers from its disk: a Windows
 machine opens PowerShell Direct as its Administrator, an AlmaLinux machine
-answers SSH at its address. The next `set` then empties both DVD drives,
-deletes the answer medium and writes `installed` in the machine's folder, so a
-VM found off later is started from its disk and never installed again.
-Delete that file and the disk to install a machine anew.
+answers SSH at its address. Until then `set` leaves it, and its state says
+so, `installation` `Installing`: a resource writes nothing but its answer,
+which DSC reads from its standard output. The next `set` then empties both
+DVD drives, deletes the answer medium and writes `installed` in the
+machine's folder, so a VM found off later is started from its disk and
+never installed again. Delete that file and the disk to install a machine
+anew.
 
 ## Before the first run
 
-Once, in an elevated Xmip PowerShell Console, then restart the host. Hyper-V,
-Microsoft DSC v3, and the two Windows PowerShell DSC modules the documents use
-(HyperVDsc has only prerelease versions on the PowerShell Gallery):
+Once, in an elevated Xmip PowerShell Console, then restart the host:
+Hyper-V, Microsoft DSC v3, and your account a member of the host's Hyper-V
+Administrators group (its SID is `S-1-5-32-578` in every language), which
+lets it manage VMs unelevated:
 
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
 Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle
-[string] $modules = 'C:\Program Files\WindowsPowerShell\Modules'
-Save-PSResource -Name HyperVDsc -Prerelease -Repository PSGallery -Path $modules -TrustRepository
-Save-PSResource -Name NetworkingDsc -Repository PSGallery -Path $modules -TrustRepository
-```
-
-The two Windows PowerShell DSC modules run in Windows PowerShell 5.1 through
-DSC's adapter, whose default execution policy refuses every script; the
-policy for the user alone was not enough (2026-11-03), so it is set for the
-machine, once, in the same console:
-
-```powershell
-powershell.exe -NoProfile -Command 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force'
+[string] $account = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $account
 ```
 
 The ISOs go where the environment file names them, under
@@ -123,10 +138,12 @@ machines you do not want.
 
 ## Running it
 
-In an elevated Xmip PowerShell Console, as the same user; the documents
-refuse to run unelevated. One command makes the network and every machine,
-and waits until each is installed; `-WhatIf` says what differs and changes
-nothing:
+In an elevated Xmip PowerShell Console, as the same user: the network
+document asks for elevation as a whole, because a switch's host address and
+NAT are an administrator's to set; the machine documents ask for none, since
+a member of Hyper-V Administrators manages VMs unelevated. One command makes
+the network and every machine, and waits until each is installed; `-WhatIf`
+says what differs and changes nothing, on a fresh host too:
 
 ```powershell
 Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
@@ -134,11 +151,9 @@ Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
 ```
 
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,
-each on its own with the parameters it declares, and writes one line per
-step with the time left. It does not use `Microsoft.DSC/Include`: DSC reads
-an included document's state before it sets anything, and NetworkingDsc's
-address and HyperVDsc's DVD drives throw where the switch or the VM is not
-there yet. An installation runs on its own; while a machine installs, its
+each on its own with the parameters it declares and with this folder on
+`PATH` so DSC finds the resources, and writes one line per step with the
+time left. An installation runs on its own; while a machine installs, its
 document is applied again every thirty seconds until it is installed, its
 media gone, and running. Everything DSC says goes to
 `.local-work\deploy\<environment>\run.log`.
@@ -147,41 +162,31 @@ media gone, and running. Everything DSC says goes to
 
 | File | Is |
 | --- | --- |
-| `network.dsc.yaml` | the switch, the host's address on it, NAT |
-| `machine.dsc.yaml` | one machine: folder, disk, VM, DVD drives, hardware, installation |
+| `network.dsc.yaml` | the network, `Xmip.HyperV/Network` |
+| `machine.dsc.yaml` | one machine, `Xmip.HyperV/Machine` |
 | `environment.example.toml` | the example environment: the network and its ten machines, as `Deploy-XmipEnvironment` reads it |
-| `HyperVMachine.ps1` | the hardware and the installation, run by `machine.dsc.yaml` |
+| `hyperv.resource.ps1` | the resources' entry, run by DSC with the kind and the operation |
+| `HyperVResource.ps1` | what the entry runs: the state each operation answers, and the parts below |
+| `HyperVNetwork.ps1` | the switch, the host's address and NAT |
+| `HyperVMachine.ps1` | the machine: its folder, disk and VM, and where it is |
+| `HyperVHardware.ps1` | the VM's settings, devices and firmware |
+| `HyperVInstallation.ps1` | the installation from the ISO |
+| `xmip-hyperv-*.dsc.resource.yaml` | the resource manifests |
 | `../answer/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
 | `../answer/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
 
-The resources, and where a script stands in for one:
-
-| Instance | Resource |
-| --- | --- |
-| switch | `HyperVDsc/VMSwitch` |
-| host address | `NetworkingDsc/IPAddress` |
-| NAT | a script: no DSC resource manages a NetNat |
-| machine folder | `PSDesiredStateConfiguration/File` |
-| disk | `HyperVDsc/Vhd` |
-| VM | `HyperVDsc/VMHyperV` |
-| DVD drives | `HyperVDsc/VMDvdDrive` |
-| static MAC, Secure Boot template, TPM, boot order | a script: HyperVDsc sets none of them |
-| answer medium, media in and out, start | a script: no resource writes or removes them |
-
-The Windows PowerShell DSC modules run through the
-[`Microsoft.Adapter/WindowsPowerShell`][adapter]
-adapter, the scripts through `Microsoft.DSC.Transitional/PowerShellScript` in
-PowerShell 7. Each document requires DSC `^3.4.0-preview.2`, the latest
-release, and asks for elevation as a whole with the `securityContext`
-directive: its resources are adapted ones, which state no security context of
-their own.
-HyperVDsc is [dsccommunity/HyperVDsc](https://github.com/dsccommunity/HyperVDsc),
-NetworkingDsc [dsccommunity/NetworkingDsc](https://github.com/dsccommunity/NetworkingDsc).
+Each document requires DSC `^3.4.0-preview.2`, the latest release.
 
 `test/MsdscHyperV.Test.ps1` holds what can be held without Hyper-V: the
-documents read as YAML by DSC, their parameters, the example environment as
-`Deploy-XmipEnvironment` applies it, each step evaluated by DSC with every
-resource replaced by an echo, this table of
-machines against it, the install answers and the answer medium.
-
-[adapter]: https://learn.microsoft.com/powershell/dsc/reference/resources/microsoft/windows/windowspowershell
+documents read as YAML by DSC, their parameters and elevation, the
+manifests found by DSC and every property each requires given, the example
+environment as `Deploy-XmipEnvironment` applies it — the network, then each
+machine — each step evaluated by DSC with every resource replaced by an
+echo, this table of machines against it, the install answers and the answer
+medium, and the resources' `get`, `test` and `set` with every Hyper-V and
+network command a stub: a switch, a NAT and a machine that are not there
+answered absent, a host's refusal kept an error, an absent network and
+machine made, a Windows 11 machine's TPM given before its media and Space
+pressed for its first twenty seconds, a machine still installing answered
+by its state alone, a VM with two adapters refused, and an installed
+machine's media removed.

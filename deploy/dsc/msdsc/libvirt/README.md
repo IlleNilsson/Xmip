@@ -46,9 +46,12 @@ installer has drivers for. A Windows ISO boots only after *Press any key*,
 so for its first twenty seconds Space is sent.
 
 The installation is done when the guest answers at its address, SSH for
-AlmaLinux and WinRM for Windows. The next `set` empties both drives, deletes
-the answer medium and records the machine installed in its domain's
-metadata, so it is never installed again.
+AlmaLinux and WinRM for Windows. Until then `set` leaves it, and its state
+says so, `installation` `Installing`: a resource writes nothing but its
+answer, which DSC reads from its standard output (ADR-0015, amendment
+2026-11-11). The next `set` empties both drives, deletes the answer medium
+and records the machine installed in its domain's metadata, so it is never
+installed again.
 
 ## Before the first run
 
@@ -95,5 +98,7 @@ the WSL guest.
 | `xmip-libvirt-*.dsc.resource.yaml` | the resource manifests |
 
 `test/MsdscLibvirt.Test.ps1` holds what can be held without libvirt: the
-network's and the domain's definitions, and the example as
-`Deploy-XmipEnvironment` reads it.
+network's and the domain's definitions, the example as
+`Deploy-XmipEnvironment` reads it, and the machine's `set` while it
+installs, with `virsh` a stub: it leaves the machine to install and writes
+nothing.

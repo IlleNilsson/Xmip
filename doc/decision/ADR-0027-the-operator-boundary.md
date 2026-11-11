@@ -479,7 +479,8 @@ from it until it is freed. The header adds `XmipAction` and `XmipOutcome`,
 the `XmipEvent` and `XmipEventFilter` structs and a callback type. A
 subscriber is a Party, authorized by the gate when it subscribes; a refusal
 is `XMIP_E_AUTH` with the gate's sentence written as `xmip_validate_v1`
-writes its report. It touches no snapshot, so clause 6 is not in play: a
+writes its report. Subscribe and listen take no Party (amendment
+2026-11-11, below). It touches no snapshot, so clause 6 is not in play: a
 publisher never waits for a subscriber, and `next` wakes on arrival.
 
 The runtime's `src/ffi/event.rs` and `src/ffi/event/crossing.rs` implement
@@ -631,3 +632,31 @@ node, is not reopened here.
 
 Provenance: the assistant's, 2026-11-10, bringing the record to what is
 built.
+
+## Amendment, 2026-11-11: subscribe and listen take no Party
+
+Section 11's `xmip_event_subscribe_v1` and `xmip_event_listen_v1` named the
+subscribing Party as text, and the runtime made it a proven identity no
+gate had proven. Under the owner's rules of 2026-11-10 — a Party only from
+what the sender proved, and no Guest fallback (ADR-0019, amendment
+2026-11-11) — that argument is deleted, changed in place and not as a
+`_v2`, in the header, `operate::event`'s shapes and every binding:
+
+- The subscriber is the account the operating system says the calling
+  process runs as, proven as `peer-credentials` and resolved to the one
+  Party of the nodes serving in that process whose identity names it
+  (`plane::caller::subscriber`). One no Party holds, one more than one
+  holds, and a process where no node serves are refused `XMIP_E_AUTH` with
+  the sentence in `said`, and audited in the program's audit with who
+  asked and what for.
+- Only code in a node's own process can be such a subscriber. No export
+  lets a node serve in a surface's process — `xmip_start_v1` validates and
+  plans and runs nothing (open problem 20) — so a surface subscribing
+  through section 11 is refused today (ADR-0065, amendment 2026-11-11;
+  open problem 66).
+
+`XMIP_OPERATE_VERSION` is unchanged: the symbols keep their names, and
+their argument lists are the boundary's own, held by the runtime's tests.
+
+Provenance: the defect is the trust path review's, the rules the owner's,
+2026-11-10; the in-place change is the assistant's, 2026-11-11.

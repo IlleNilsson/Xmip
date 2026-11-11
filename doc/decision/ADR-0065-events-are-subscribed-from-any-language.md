@@ -25,10 +25,13 @@
 A program subscribes two ways, both through that one rule: in process,
 through a subscribe call in the runtime's C library — C and C++ through the
 header, .NET through `Xmip.Abi`, Java through its foreign-function API,
-Python through ctypes, and any language that can call C — or over the wire,
-in the Event wire form delivered through Xmip's own transports, which any language's
-ordinary client receives. Every subscriber is a Party, authorized for what it
-may see, and every delivery is audited.**
+Python through ctypes, and any language that can call C — by code in a
+node's own process, as the Party the account it runs as proves to be; or
+over the wire, in the Event wire form delivered through Xmip's own
+transports, which any language's ordinary client receives. Every
+subscriber is a Party it proved to be, never one it names (amendment
+2026-11-11), authorized for what it may see, and every delivery is
+audited.**
 
 ## Context
 
@@ -94,7 +97,9 @@ which Event types, scopes and metadata it may receive (runtime-model section
 - **Authorized and audited (clause 4).** `subscriber::Subscriber` is a Party;
   the gate is `authorize::authorize`, asked once at subscribe as a Send at
   the scope reached, each type as the Contract; a program in this process
-  is admitted to nothing for being here (amendment 2026-09-26, below).
+  is admitted to nothing for being here (amendment 2026-09-26, below), and
+  is the Party its proven caller resolves to, never one it names (amendment
+  2026-11-11, below).
   Every subscription, delivery, refusal and forward
   is recorded through `ProgramAudit`, handed to the audit capability's
   keeper (`audit::keeper`, amendment 2026-09-27), so no Event waits for a
@@ -140,7 +145,9 @@ may see; which node answers it is the cluster's business. Two things
 follow. Events cross between nodes, so they ride the node-to-node protocol
 (problems 17 and 18), mutual TLS as ADR-0063 requires; and no subscriber is
 admitted for its place — `SameProcess` goes, and every subscriber, in process
-or remote, names its Party and is authorized as one (clause 4).
+or remote, names its Party and is authorized as one (clause 4). Since
+2026-11-11 a subscriber in process names none: it is the Party the account
+its process runs as proves to be (amendment 2026-11-11, below).
 
 ## Amendment, 2026-09-26: the wire form is hidden
 
@@ -179,7 +186,7 @@ point the owner's to overrule.
   subscription as `observe::EventSubscription`: the node whose hub holds it and
   its number there, which together name it; the subscriber, by the name its
   Party was declared with (`party::Party`, carried by
-  `Subscriber::declared`), and the Party's identifier beside it — a
+  `Subscriber::proven` since 2026-11-11), and the Party's identifier beside it — a
   subscriber known by its identifier alone is shown by it, and no name is
   made from one; what
   it subscribes to in words (`Filter::said`: every Event, or the types, then
@@ -219,7 +226,9 @@ point the owner's to overrule.
   it was taken.
 - **Every Essentials node subscribes two Parties**, through the hub and
   nothing of its own: *operations* hears every Event on the node and is
-  called back; *on-call* hears the failures and is drained each round. A
+  called back; *on-call* hears the failures and is drained each round
+  (since the amendment of 2026-11-11, one Party, *operations*, subscribes
+  both, the Party the run's account proves to be). A
   node raises an Event for each stage it serves whose failing pairs changed
   since the round before, and takes its orders under the directory the
   cluster shares. The subscriptions are real: a paused one is seen to fill.
@@ -429,3 +438,58 @@ and use the compiler Rust uses.*
 
 Provenance: the owner's ruling, quoted; the wording and the flags are the
 assistant's.
+
+## Amendment, 2026-11-11: a subscriber names no Party
+
+A program subscribing named its Party in `xmip_event_subscribe_v1` and
+`xmip_event_listen_v1`, and `Subscriber::in_process` made it a proven
+identity no gate had proven. Under the owner's rules of 2026-11-10 — a
+Party only from what the sender proved, and no Guest fallback (ADR-0019,
+amendment 2026-11-11) — that argument is gone, changed in place and not as
+a `_v2`:
+
+- **The subscriber is the caller its gate proved**: the account the
+  operating system says the subscribing process runs as, proven as
+  `peer-credentials` and resolved to the one Party whose identity names it,
+  by the runtime's one rule, `plane::caller::subscriber`; the C boundary
+  asks it through the Parties of the nodes serving in that process. A
+  caller no Party holds, one that more than one Party holds, or a process
+  where no node serves, is refused `XMIP_E_AUTH`, and the sentence says so
+  and is audited in the program's audit with who asked and what for, under
+  the names the hub records its own refusals with
+  (`subscriber::refused`). The policy a program hands the hub
+  (`xmip_event_authorize_v1`) still decides what a proven Party may see; no
+  node hands its own yet (open problem 67).
+- **Who can subscribe in process.** Only code in a node's own process — a
+  module the node loaded — can be such a subscriber. No export lets a node
+  serve in a standalone program's process: `xmip_start_v1` validates and
+  plans and runs nothing (open problem 20). So a C, C++, .NET, Java or
+  Python program on its own is refused today, `EventFeed` in a face
+  included, which no face calls (the In brief).
+- **Every binding follows**: the header and `operate::event`, C's example
+  and test (its loader needed no change: it resolves the symbols by name),
+  `xmip_event.hpp`, Java's `Library`, Python's `xmip_event`, and .NET's
+  `RuntimeEvents` and `EventFeed`, which takes the program's audit alone.
+  No CLI, PowerShell or GUI code subscribed. The Essentials did: each node
+  now subscribes through `plane::caller::subscriber` as *operations*,
+  declared holding the run's account as its `peer-credentials` identity,
+  and since one account is one Party, *operations* hears both what the
+  amendment of 2026-09-29 gave it and what it gave *on-call*: every Event,
+  called back, and the failures, drained each round.
+- **What the bindings' tests prove changed.** Each ran in a process where no
+  node serves, subscribing as a Party it named; each now proves subscribe
+  and listen refused with the sentence, and that a publish, the policy and
+  who is unheard cross. Untested since, until a node serves in a binding's
+  process (open problem 66): each binding's drain, listen and call back
+  marshalling — .NET's `RuntimeEvents.Subscription` and `EventFeed.Follow`,
+  C++'s trampoline, Java's `Library.called`, Python's `_CALLBACK` and
+  `_copied` — and the near real time of clause 2 through a binding. The
+  runtime's own tests (`ffi::event`) reach the C exports and the event
+  crate's timing program the hub, never a binding's marshalling. The .NET
+  latency test, which could no longer subscribe, is deleted; the figures of
+  *Built, 2026-09-26* for .NET, Java and Python through a binding are not
+  measured again until then.
+
+Provenance: the defect is the review's, the rules the owner's, 2026-11-10;
+the in-place change, what the bindings' tests prove and the Essentials'
+one Party are the assistant's, 2026-11-11, for the owner to overrule.

@@ -1832,6 +1832,116 @@ the publication carries the window's figures per scope, `FigureFlow.Between`
 is deleted, and every reader takes what was stated — the ABI, the CLI,
 PowerShell, the prompt and the GUIs alike.
 
+## 64. The configuration groups routes in Xmip Applications, not integrations
+
+Decided by the owner, 2026-11-11 (ADR-0064, amendment 2026-11-11), shown
+BizTalk's Applications: *I do not like the BizTalk way, I do not like
+applications for integration*; and, asked whether an integration is one
+path from a Receive Location through its Subscriptions and Work Processes
+to a Send Location, and so the unit in place of the Xmip Application group:
+*Yes it is, it never goes backwards, but there is replay.* An integration is
+Receive Location, Receive Port, Publication, Subscription, a Work Process
+where the route has one, Send Port or Send Port Group, Send Location; a
+replay re-enters it forward as a new Journey with lineage
+(`doc/architecture/integration-path.svg`). Not built: the code reads the
+cluster's `[[xmip_applications]]` section. To build, the integration in its
+place, with no alias:
+
+- **configure**: the section and its one reading, `XmipApplication` and
+  `parse_application` (`module/platform/configure/src/application.rs`,
+  `section.rs`), the binding (`binding.rs`, `configure::bind`,
+  `binding_problems`) and `module/platform/configure/doc/application.md`
+  and `node-configuration.md`;
+- **slicing**: `configure::slice` gives a node what it runs of each
+  integration;
+- **the runtime**: the execution tree takes those steps, and what a node
+  publishes of a Subscription (`observe::Subscription`) names its
+  integrations where it names its Application (ADR-0013, amendment
+  2026-11-11);
+- **the VS Code designer**: the views and references
+  (`views.rs`, `references.rs`) and the Route view draw integrations, each
+  one path, and the Wizard's *Put together* writes one;
+- **the Essentials**: the RoundTrip Application of
+  `test/core/essentials/configuration/cluster.xmip` becomes its
+  integrations;
+- **every surface**, in order: the ABI (`xmip_operate.h` section 10's
+  views, edits and slices), the CLI, PowerShell and the GUI (the Operation
+  Desktop's Configure page);
+- **the records**: `terminology.md`'s Xmip Application row deleted, and
+  every document that names an Application follows.
+
+For the owner before it is built: whether a binding names integrations or
+the Locations they hold; and how a response is drawn on a path that never
+runs backwards — a Work Process's answer carried back by the Receive
+Location that took the request, or a far end's response Message on the
+same Journey (`runtime-model.md` section 11).
+
+## 65. Nothing shows how things are connected, integration by integration
+
+Decided by the owner, 2026-11-11 (ADR-0072, amendment 2026-11-11): *What I
+would like is a dependency tree, a Quest, to tell me how things are
+connected within Xmip*; and *There is no such thing as a working
+installation. There is only working integrations, hence a gap is a gap,
+report it.* The Dependency Quest, on ADR-0072's seam, probes and changes
+nothing, at three levels: the cluster with a tally of integrations, things,
+connections and gaps; a row per integration, which works or has its gaps;
+one integration in full, each step with what it needs (node, transport
+module, secret, certificate, Party; a Subscription's filter and the
+properties it reads; a Work Process's module) and what needs it, each link
+live or not, the replay entry points with their lineage, and the audit
+events each step writes. Every gap is reported, every time, with the action
+that closes it, which the operator applies. What counts as a gap is the
+assistant's draft, which the owner has not confirmed (the amendment lists
+it). To build:
+
+- **the Quest** in `xmip-core-report`
+  (`module/core/operation/report/src/quest.rs`), listed in
+  `Reports::standard()` (`catalog.rs`) as one that takes longer, not yet
+  available until it is built; it reads the cluster's `cluster.xmip`
+  whole, where the Regulation Quest reads one node's slice, and what a
+  configuration cannot answer — whether a node runs, holds the secret,
+  certificate or Party a Location names and carries the module a step
+  needs, and what the Dead Message Queue holds — needs the probe of a
+  running node, ADR-0072's *Left open* 4;
+- **every surface**, in order, through the one answer every Quest has: the
+  ABI (`xmip_report_v1`, `xmip_operate.h` section 25), the CLI (`xmip
+  report`), PowerShell (`Get-XmipReport`) and the GUI (the Reports view),
+  its row an integration, with no command of its own.
+
+It waits on problem 64 for the integration it reports by.
+
+## 66. No binding's draining, call back or latency is tested
+
+Since 2026-11-11 a program subscribing to Events names no Party: it is the
+Party the account its process runs as proves to be, resolved through the
+Parties of a node serving in that process (ADR-0019 and ADR-0065,
+amendments 2026-11-11). No export lets a node serve in a binding's process
+— `xmip_start_v1` validates and plans and runs nothing (problem 20) — so a
+standalone C, C++, .NET, Java or Python program is always refused, and
+each binding's tests prove that refusal alone. Untested since: each
+binding's drain, listen and call back marshalling — .NET's
+`RuntimeEvents.Subscription` and `EventFeed.Follow`, C++'s
+`xmip_event.hpp` trampoline, Java's `Library.called`, Python's
+`_CALLBACK` and `_copied` — and the near real time of ADR-0065 clause 2
+through a binding: the .NET latency test was deleted, and the figures for
+.NET, Java and Python are not measured again. The runtime's Rust tests
+reach the C exports, never a binding's marshalling. To build: an export,
+or the Essentials' test node, that serves a node in a test's process, so
+the drain, call back and latency tests return in every binding.
+
+## 67. A node hands its process's hub no policy, and an act names its own actor
+
+Found by the trust path's review, 2026-11-11, and outside its piece.
+Nothing in the runtime calls `Hub::process().authorize_by` as a node
+starts, so the only policy an in-process subscriber is judged by is the
+one the same program hands through `xmip_event_authorize_v1`: a program
+grants itself what it may see (every binding's test and the C example hand
+one that allows all). And `xmip_event_subscription_act_v1` audits the
+`who` its caller passes as the actor of a pause, resume or remove. To
+build: a serving node hands the process's hub its configured policy, which
+`xmip_event_authorize_v1` cannot replace while it serves, and an act's
+actor is the proven caller (`plane::caller::local_of`), never an argument.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

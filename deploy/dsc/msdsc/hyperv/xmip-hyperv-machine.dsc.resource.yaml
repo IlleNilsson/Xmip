@@ -1,0 +1,117 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.HyperV/Machine
+version: '0.1.0'
+description: >-
+  One machine as a generation 2 Hyper-V VM, installed unattended from its
+  operating system's ISO.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./hyperv.resource.ps1
+    - -Kind
+    - Machine
+    - -Operation
+    - set
+  input: stdin
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - root
+      - address
+      - memoryGB
+      - cpu
+      - diskGB
+      - network
+      - image
+    properties:
+      name:
+        description: 'The machine''s name, its VM''s and its computer''s.'
+        type: string
+      environment:
+        description: 'The environment''s name, written in the VM''s notes.'
+        type: string
+      root:
+        description: 'The folder that holds a folder per machine on the host.'
+        type: string
+      address:
+        type: string
+      memoryGB:
+        description: 'The VM''s memory, static, in GiB.'
+        type: integer
+      cpu:
+        description: 'The VM''s virtual processors.'
+        type: integer
+      diskGB:
+        description: 'The size of the VM''s new dynamic disk, in GiB, when it is made.'
+        type: integer
+      network:
+        description: 'name (the switch''s), gateway, prefixLength and dnsServer.'
+        type: object
+      image:
+        description: >-
+          path, sha256, family (Windows or Linux), edition, secureBootTemplate
+          and tpm.
+        type: object
+      domainName:
+        type: string
+      linuxAccount:
+        type: string
+      sshPublicKeyPath:
+        type: string
+      credentialPath:
+        type: string
+      installation:
+        readOnly: true
+        type: string
+      running:
+        readOnly: true
+        type: boolean
+      findings:
+        readOnly: true
+        type: array
+      _exist:
+        description: 'Whether the VM exists.'
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

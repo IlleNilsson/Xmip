@@ -133,7 +133,9 @@ Party  party-x
 ```
 
 - **On receive**, a Receive Location names the Parties it accepts. Authentication
-  verifies the presented credential and resolves it to a Party, or refuses.
+  verifies the presented credential and resolves it to a Party, or refuses;
+  only a proven or vouched identity is resolved, never a claim nothing
+  proved (amendment 2026-11-11).
 - **On send**, a Send Location names the Party whose identity it presents, and
   the transport handler applies it.
 
@@ -1004,3 +1006,118 @@ Provenance: the finding is the deep review's, 2026-11-07, and the agreement
 the owner's, 2026-11-10; reading a Location that names a user and no secret
 as FTP's, and leaving SMB's NTLMv2 response and signing to a piece of their
 own, are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-11: a Party only from what the sender proved
+
+The review of the trust path found three defects live: an Event subscriber
+named its own Party, a certificate that merely arrived was proven, and a
+Contract's Party, read from the content, was presented and never compared.
+The owner, 2026-11-10, on how far to go: *I'd like to follow you, make it
+functional but safe, in this case per protocol, if I'm not wrong.* Agreed
+the same day:
+
+1. **A Party is never resolved from what a Message says, only from what the
+   sender proved.**
+2. **A sender identifier in the content is a claim, checked against the
+   proven Party**: a mismatch is refused, and audited with severity Error
+   and category Security.
+3. **No Guest fallback**: what cannot be proven is refused, never let in as
+   a default identity.
+
+Built:
+
+- **The gate resolves only what was proven or vouched for**
+  (`authenticate::authenticate`, asking `context::Verified::names_a_party`,
+  the one answer; clause 4 and ADR-0050, amendment 2026-11-11). A claim
+  nothing proved — an ISA06, a drop folder's circumstance — is still
+  authenticated, as claimed, and resolves to no Party, so a Receive
+  Location that names its Parties refuses it (`NoParty`) instead of letting
+  it in. Who a Message is for is `context`'s `IdentityFacts::subject`, one
+  rule: the message identity only where it was proven or vouched for, the
+  transport identity otherwise.
+- **An Event subscriber is the caller its gate proved.**
+  `xmip_event_subscribe_v1` and `xmip_event_listen_v1` take no Party any
+  more, changed in place: the subscriber is the account the operating
+  system says the process runs as, `peer-credentials` through the operate
+  plane's gate, resolved to the one declared Party whose identity names it
+  (`plane::caller::subscriber`, the one rule, which the C boundary asks
+  through the Parties every node serving in the process lends it as it
+  starts, `parties::Parties::serve`). A caller no Party holds, one that
+  more than one Party holds — each named, whichever node lent first — and a
+  process where no node serves, are refused `XMIP_E_AUTH` with the sentence
+  and audited in the program's audit with who asked and what for, under the
+  names the hub records its own refusals with
+  (`xmip-core-event`'s `subscriber::refused`). `Subscriber::proven` takes
+  the gate's identity and the declared Party it resolved to and refuses
+  anything else; it checks what it is handed and guards nothing more, since
+  any code linked into a process can build a proven identity.
+  `Subscriber::in_process` and `Subscriber::declared` are deleted; tests
+  build theirs through `subscriber::fixture`, test support behind
+  `test-support`. The C, C++, .NET, Java and Python bindings follow, and so
+  does the Essentials: each node subscribes through
+  `plane::caller::subscriber` as *operations*, declared holding the run's
+  account, the one Party it hears every Event and the failures as
+  (ADR-0065 and ADR-0027, amendments 2026-11-11).
+- **A certificate is proven only with possession, of this arrival**
+  (`authenticate/certificate`): the chain, its names and the reported
+  fingerprint as before, and then the leaf's signature over this arrival —
+  the `certificate.signature` over the `certificate.signed` attributes, a
+  CMS SignerInfo's signed attributes as S/MIME signs them (RFC 5652 section
+  5.4), whose one `messageDigest` must be the `certificate.digest` the
+  transport measured of this arrival's content (`identify::evidence`),
+  checked once by `authenticate::x509::possessed`. A chain without it, one
+  another key signed, and the holder's own signature replayed from an
+  earlier arrival are refused. The proofs carry attributes and a digest,
+  never the content. The leaf's classical key is the one checked: under
+  `Hybrid::Required` the path's alternative signatures are verified, and
+  possession is by the classical key alone. `mutual-tls`, whose handshake
+  binds the certificate to the connection, is unchanged.
+- **A Contract's Party is compared, once** (`authorize/contract`). The
+  identity judged is `IdentityFacts::subject`, the one the sender proved,
+  and the gate asks a message-layer policy wherever the attempt names a
+  Contract, the content proving an identity of its own or not
+  (`authorize::authorize`). A Contract agreed with a Party
+  (`Contract::agreed`) presented by an identity that proved to be another
+  Party, or none, is denied before any permission is read.
+  `identify/contract` presents the Contract the first section is bound to,
+  detected, and no Party (ADR-0050, sections 3 and 5).
+
+Not built:
+
+- Rule 2's audit. No node links `authorize/contract` or
+  `identify/contract`, so no node refuses a Contract's mismatch yet. When
+  one does, the denial reaches `Receiving::audit_refused`, which audits an
+  authentication refusal at severity Warning today and an authorization
+  denial not at all: it is to audit that denial at severity Error, which
+  `xcore::Severity` has. The category alone is missing: the audit has no
+  Security category, and none is invented here.
+- Rule 3, in part: a Receive Location that names no Parties and takes
+  `claimed` on a layer (`accept.transport` or `accept.message`) still
+  admits a claim — a claimed ISA06, a drop folder's circumstance — as
+  authenticated, resolved to no Party, for its policies to judge.
+- No transport reports `certificate.signature`, `certificate.signed` and
+  `certificate.digest`, so a `certificate` claim — `identify/certificate`'s
+  among them, which reads `tls.peer.*` alone — is refused until AS2's
+  S/MIME does; OPC UA's instance certificate signs the node's nonce, not
+  signed attributes, and waits for its own (ADR-0033, clause 1).
+- The rest of the review's findings: a sender-claim check across every
+  content reader, far-end claims, broker vouching, a word for the place a
+  found or fetched Stream came from, and whether circumstance, anonymous
+  and `accept.message` stay.
+- A program draining Events through a binding, and its latency: no export
+  lets a node serve in a binding's process, so each binding's test proves
+  the refusal alone, and each binding's drain, call back marshalling and
+  latency are untested; the runtime's own tests reach the C exports, never
+  a binding's marshalling (open problem 66; ADR-0065, amendment
+  2026-11-11).
+- A serving node hands its process's hub no policy, so in a program's
+  process its own policy decides what a proven Party may see, and an act's
+  actor is the `who` its caller passes (open problem 67).
+
+Provenance: the rules and the scope are the owner's, 2026-11-10; the names
+`certificate.signature`, `certificate.signed`, `certificate.digest`,
+`Contract::agreed`, `Parties::serve`, `plane::caller::subscriber` and
+`subscriber::refused`, the sentence's words, resolving at the gate only
+what was proven or vouched for, binding possession to the arrival by the
+signed `messageDigest`, and the Essentials' one Party are the assistant's,
+2026-11-11, for the owner to overrule.
