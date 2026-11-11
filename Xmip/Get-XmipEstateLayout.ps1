@@ -50,6 +50,7 @@ function Get-XmipEstateLayout {
         Work         = $work
         Essentials   = Join-Path -Path $work -ChildPath 'essentials'
         Estate       = Join-Path -Path $work -ChildPath 'estate'
+        Demo         = Join-Path -Path $work -ChildPath 'demo'
         Landing      = Join-Path -Path $work -ChildPath 'landing'
         Package      = Join-Path -Path $work -ChildPath 'package'
         Operator     = Join-Path -Path $work -ChildPath 'operator'

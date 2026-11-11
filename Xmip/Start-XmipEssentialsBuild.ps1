@@ -43,7 +43,6 @@ function Start-XmipEssentialsBuild {
         [hashtable] $Start
     )
 
-    $layout = Get-XmipEssentialsLayout
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [string] $stem = Join-Path -Path $Start.Path -ChildPath "build-$stamp"
     [string] $record = "$stem.toml"
@@ -52,26 +51,9 @@ function Start-XmipEssentialsBuild {
 
     Export-Clixml -LiteralPath $handed -InputObject $Start -Depth 5
 
-    [string] $shell = Join-Path -Path $PSHOME -ChildPath "pwsh$($layout.Suffix)"
+    # Its output to build-<start time>.log, its errors to .err beside it.
     [string] $script = New-XmipEssentialsBuildCommand -Record $record -Handed $handed
-    [string] $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($script))
-
-    [hashtable] $launch = @{
-        FilePath               = $shell
-        ArgumentList           = @('-NoProfile', '-NonInteractive', '-EncodedCommand', $encoded)
-        WorkingDirectory       = $layout.Root
-        RedirectStandardOutput = $Start.Log
-        RedirectStandardError  = "$stem.err"
-        PassThru               = $true
-    }
-
-    if ($IsWindows) {
-        $launch.WindowStyle = 'Hidden'
-    }
-
-    # What it starts audits where the tooling does (ADR-0062).
-    Initialize-XmipAudit
-    $process = Start-Process @launch
+    $process = Start-XmipDetachedShell -Script $script -Log $Start.Log
 
     # Written only where the build has not already written its own: a record
     # that cannot be clobbered never relies on the build being slower.
@@ -115,8 +97,10 @@ function New-XmipEssentialsBuildCommand {
         [string] $Handed
     )
 
-    [scriptblock] $quote = { param([string] $Text) "'" + ($Text -replace "'", "''") + "'" }
-    [string] $manifest = & $quote (Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1')
+    [string] $module = Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1'
+    [string] $manifest = ConvertTo-XmipLiteral -Text $module
+    [string] $records = ConvertTo-XmipLiteral -Text $Record
+    [string] $hands = ConvertTo-XmipLiteral -Text $Handed
 
     return @(
         '$ErrorActionPreference = ''Stop'''
@@ -124,7 +108,7 @@ function New-XmipEssentialsBuildCommand {
         '& (Get-Module -Name Xmip | Select-Object -First 1) {'
         '    param([string] $Record, [string] $Handed)'
         '    Complete-XmipEssentialsBuild -Record $Record -Handed $Handed -Verbose'
-        "} $(& $quote $Record) $(& $quote $Handed) *>&1 | ForEach-Object { `"`$_`" }"
+        "} $records $hands *>&1 | ForEach-Object { `"`$_`" }"
     ) -join [Environment]::NewLine
 }
 

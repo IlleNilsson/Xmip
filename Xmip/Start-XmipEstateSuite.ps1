@@ -87,7 +87,7 @@ function Start-XmipEstateSuite {
 
     [string] $area = $layout.Estate
     New-Item -ItemType Directory -Path $area -Force | Out-Null
-    Remove-XmipEstateFinished -Path $area
+    Remove-XmipRunFinished -Run @(Get-XmipEstateRun -Path $area)
 
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [hashtable] $run = @{
@@ -98,26 +98,8 @@ function Start-XmipEstateSuite {
         Log    = Join-Path -Path $area -ChildPath "estate-$stamp.log"
     }
 
-    [string] $shell = Join-Path -Path $PSHOME -ChildPath "pwsh$($layout.Suffix)"
     [string] $script = New-XmipEstateCommand @run
-    [string] $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($script))
-
-    $launch = @{
-        FilePath               = $shell
-        ArgumentList           = @('-NoProfile', '-NonInteractive', '-EncodedCommand', $encoded)
-        WorkingDirectory       = $layout.Root
-        RedirectStandardOutput = $run.Log
-        RedirectStandardError  = [System.IO.Path]::ChangeExtension($run.Log, '.err')
-        PassThru               = $true
-    }
-
-    if ($IsWindows) {
-        $launch.WindowStyle = 'Hidden'
-    }
-
-    # What it starts audits where the tooling does (ADR-0062).
-    Initialize-XmipAudit
-    $process = Start-Process @launch
+    $process = Start-XmipDetachedShell -Script $script -Log $run.Log
 
     Write-XmipEstateStart @run -Id $process.Id -Started $process.StartTime
 
@@ -179,19 +161,24 @@ function New-XmipEstateCommand {
         [string] $Log
     )
 
-    [scriptblock] $quote = { param([string] $Text) "'" + ($Text -replace "'", "''") + "'" }
-    [string] $manifest = & $quote (Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1')
-    [string] $tests = '@(' + (@($Test | ForEach-Object { & $quote $_ }) -join ', ') + ')'
+    [string] $module = Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1'
+    [string] $manifest = ConvertTo-XmipLiteral -Text $module
+    [string[]] $named = @($Test | ForEach-Object { ConvertTo-XmipLiteral -Text $_ })
     [string[]] $files = @(
-        $Test | ForEach-Object { Join-Path -Path $Path -ChildPath "$_.Test.ps1" }
+        $Test | ForEach-Object {
+            ConvertTo-XmipLiteral -Text (Join-Path -Path $Path -ChildPath "$_.Test.ps1")
+        }
     )
-    [string] $paths = '@(' + (@($files | ForEach-Object { & $quote $_ }) -join ', ') + ')'
+    [string] $tests = '@(' + ($named -join ', ') + ')'
+    [string] $paths = '@(' + ($files -join ', ') + ')'
 
     return @(
         '$ErrorActionPreference = ''Stop'''
         "Import-Module -Name $manifest"
-        "`$run = @{ Record = $(& $quote $Record); Suite = $(& $quote $Suite)"
-        "    Path = $(& $quote $Path); Test = $tests; Log = $(& $quote $Log) }"
+        "`$run = @{ Record = $(ConvertTo-XmipLiteral -Text $Record)"
+        "    Suite = $(ConvertTo-XmipLiteral -Text $Suite)"
+        "    Path = $(ConvertTo-XmipLiteral -Text $Path)"
+        "    Test = $tests; Log = $(ConvertTo-XmipLiteral -Text $Log) }"
         '$configuration = & (Get-Module -Name Xmip) {'
         '    param($Path) Get-XmipPesterConfiguration -Path $Path } $run.Path'
         "[string[]] `$files = $paths"
@@ -292,31 +279,32 @@ function Write-XmipEstateStart {
 }
 
 
-function Remove-XmipEstateFinished {
+function Remove-XmipRunFinished {
     <#
         .SYNOPSIS
-            Deletes the records and logs of estate runs that have ended, so a
-            new run is the one Get-XmipTestStatus and Get-XmipTestResult read.
-            A run still running is left alone.
+            Deletes the records and logs of detached runs that have ended, so
+            a new run is the one Get-XmipTestStatus and Get-XmipTestResult
+            read. A run still running is left alone.
 
-        .PARAMETER Path
-            Where the records are.
+        .PARAMETER Run
+            The runs of one suite, from Get-XmipEstateRun or Get-XmipDemoRun.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([void])]
     param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [AllowEmptyCollection()]
+        [object[]] $Run
     )
 
-    foreach ($run in @(Get-XmipEstateRun -Path $Path)) {
-        if ($run.State -eq 'running' -or -not $PSCmdlet.ShouldProcess($run.Record, 'Remove')) {
+    foreach ($ended in $Run) {
+        if ($ended.State -eq 'running' -or -not $PSCmdlet.ShouldProcess($ended.Record, 'Remove')) {
             continue
         }
 
-        [string] $err = [System.IO.Path]::ChangeExtension($run.Log, '.err')
+        [string] $err = [System.IO.Path]::ChangeExtension($ended.Log, '.err')
 
-        foreach ($left in @($run.Record, $run.Log, $err)) {
+        foreach ($left in @($ended.Record, $ended.Log, $err)) {
             if (-not [string]::IsNullOrWhiteSpace($left)) {
                 Remove-Item -LiteralPath $left -Force -ErrorAction SilentlyContinue
             }

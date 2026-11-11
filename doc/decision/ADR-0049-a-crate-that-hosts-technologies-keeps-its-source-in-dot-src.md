@@ -109,3 +109,30 @@ lets go; the four above move in the same change as this amendment.
 
 The owner asked on 2026-09-11 to check the code base again after the eleven
 had moved, and these four are what that check found.
+
+## Amendment, 2026-11-11: the root's `.src` is measured, as clause 3 says
+
+Clause 3 holds the line and file limits to `.src` exactly as to `src`, and
+the amendment above moved the platform repository's own crate, `xmip`, to
+`.src` at the estate root. The limits never reached it. `Get-XmipSourceFile`,
+the one count every style gate reads, walked only the trees the estate
+composes into, `module/`, `test/`, `template/` and `sdk/`, so no gate read
+the root's `.src`, `xmip-service` among it, and the size-gate review of
+2026-11-11 found `.src/service/run.rs` at 407 lines with no test module.
+
+`.src` is now on the count's one list of trees, `$script:XmipSourceRoot`,
+and every gate that calls it reads the root as it reads a module: the file
+length gate (`rust-style.md` section 4), the bounded-wait, unsafe and timing
+gates. `test/Timing.Test.ps1` walked `.src` apart, a second walk; it reads
+the count alone now. `test/SourceFile.Test.ps1` holds the rule: a fixture's
+root `.src` file one line over the gate is reported. The naming gate reads a
+root file as the crate `xmip`'s.
+
+`run.rs` is split by subject, and nothing the service does changed. What the
+program audits of itself in every mode, a failure and an action's record, is
+`audit.rs`, which every mode calls; serving the cluster's authority as the
+node starts went to `authority.rs`, beside the authority it serves.
+`run.rs` is 336 lines. Read by the bounded-wait gate for the first time, the
+service test of the cluster's authority opened its connection to the
+published list with a bare connect; it connects through
+`transport::socket::connect_tcp`, as the root's other tests do.

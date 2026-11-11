@@ -205,13 +205,17 @@ function Build-XmipService {
     }
 
     if ($PSCmdlet.ParameterSetName -eq 'Extension') {
-        [string] $module = Join-Path -Path $root -ChildPath 'module/core/operation/gui/vscode'
+        [string] $module = (Get-XmipEssentialsLayout).Extension
         [string] $shell = Join-Path -Path $module -ChildPath 'extension'
 
         if (-not $PSCmdlet.ShouldProcess($shell, 'restore, compile with tsc and zip a VSIX')) {
             return
         }
 
+        # Audited as a site's build is, begun and finished (ADR-0062).
+        Write-XmipAudit -Action 'Build-XmipService' -Phase Begin -Property @{
+            Extension = $Extension
+        }
         Restore-XmipExtensionPackage -Extension $shell
         Invoke-XmipExtensionCompile -Root $root -Extension $shell
         [hashtable] $packaging = @{
@@ -222,6 +226,10 @@ function Build-XmipService {
         }
         [string] $vsix = New-XmipExtensionPackage @packaging
         Write-XmipStep -Message "OK: built the VS Code extension, $vsix"
+        Write-XmipAudit -Action 'Build-XmipService' -Phase Finished -Property @{
+            Extension = $Extension
+            Package   = $vsix
+        }
 
         return [pscustomobject]@{ Extension = $Extension; Path = $vsix }
     }

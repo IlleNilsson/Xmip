@@ -28,10 +28,10 @@ BeforeAll {
     # The counter used to live here, where nothing else could reach it, and
     # the estate map needed the same number. Two counters disagree within a
     # week — ADR-0020 clause 5 — so it moved into the module and this calls
-    # it. `Get-XmipSourceFile` reads `module/`, `test/`, `template/` and
-    # `sdk/`, and the template is Rust every new repository is generated
-    # from, so a rule it breaks is a rule every new repository starts out
-    # breaking.
+    # it. `Get-XmipSourceFile` reads the root crate's `.src`, `module/`,
+    # `test/`, `template/` and `sdk/`, and the template is Rust every new
+    # repository is generated from, so a rule it breaks is a rule every new
+    # repository starts out breaking.
     $script:Files = @(Get-XmipSourceFile -Root $script:Root -Language Rust)
 }
 
@@ -49,7 +49,8 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
     BeforeAll {
         # The crate a file belongs to, taken from the path rather than from
         # Cargo.toml: module/<domain>/<crate>/src/... for what starts a node,
-        # module/<provider>/<domain>/<crate>/src/... otherwise. Reading the manifest
+        # module/<provider>/<domain>/<crate>/src/... otherwise; the root's .src is
+        # the platform repository's crate, xmip. Reading the manifest
         # would be more correct and would also make this test depend on every one of
         # them being parseable, which is a different test's job.
         $script:Named = $script:Files | ForEach-Object {
@@ -59,6 +60,7 @@ Describe 'Rust style, section 5: a file is named for what it defines' {
                 Path  = $_.Path
                 Name  = [IO.Path]::GetFileNameWithoutExtension($_.Path)
                 Crate = if ($parts[0] -eq 'sdk') { 'sdk' }
+                        elseif ($parts[0] -eq '.src') { 'xmip' }
                         elseif ($parts[0] -eq 'module' -and
                             $parts[1] -notin 'foundation', 'platform' -and
                             $parts.Count -ge 4) { $parts[3] }

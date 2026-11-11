@@ -102,13 +102,9 @@ BeforeAll {
         }
     }
 
-    # The estate's Rust: the composed trees, and the root's own sources.
+    # The estate's Rust: the composed trees and the root's own .src.
     [string[]] $script:Paths = @(
         Get-XmipSourceFile -Root $script:Root -Language Rust | ForEach-Object -MemberName Path
-        Get-ChildItem -LiteralPath (Join-Path $script:Root '.src') -Recurse -Filter '*.rs' -File |
-            ForEach-Object {
-                [IO.Path]::GetRelativePath($script:Root, $_.FullName) -replace '\\', '/'
-            }
     )
 }
 

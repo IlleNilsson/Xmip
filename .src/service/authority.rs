@@ -6,7 +6,8 @@
 //! nodes and any third party's — and, where it names `publish`, its
 //! revocation list and certificate over plain HTTP, both until the node
 //! drains. Provisioning beside the node's path, never on it (ADR-0045
-//! clause 1): nothing here reaches beyond the cluster.
+//! clause 1): nothing here reaches beyond the cluster. The node serves it
+//! as it starts (`authorized`), said on the console and audited.
 //!
 //! The authority is kept beside the configuration, in the folder
 //! `authority` names, `authority` unless said: the folder every surface
@@ -15,8 +16,12 @@
 
 use std::path::Path;
 
+use xmip_audit::program_audit::ProgramAudit;
 use xmip_configure::XmipConfigurationDocument;
+use xmip_core::ExecutionPhase;
 use xmip_core::settings::Given;
+
+use crate::audit;
 
 /// The technology whose table this serves.
 const TECHNOLOGY: &str = "xmip-core-provision-internal-ca";
@@ -77,6 +82,49 @@ pub fn serve(
         return Ok(None);
     }
     served(document, configuration).map(Some)
+}
+
+/// The cluster's authority the configuration at `configuration` serves,
+/// said on the console and audited where it serves one, held until the
+/// node drains; refused where it cannot serve, which is audited.
+pub fn authorized(
+    program: &str,
+    audit: &ProgramAudit,
+    configuration: &str,
+) -> Result<Option<Served>, ()> {
+    let served = xmip_runtime::start::read(configuration)
+        .map_err(|unread| unread.reason)
+        .and_then(|(document, _, _)| serve(&document, Path::new(configuration)));
+    match served {
+        Ok(Some(served)) => {
+            println!(
+                "{program}: the cluster's authority answers ACME at {}",
+                served.directory
+            );
+            if let Some(published) = &served.published {
+                println!("{program}: the cluster's authority publishes its list at {published}");
+            }
+            audit::record(
+                audit,
+                "authority",
+                ExecutionPhase::Begin,
+                &[
+                    ("directory", served.directory.as_str()),
+                    ("published", served.published.as_deref().unwrap_or("")),
+                ],
+            );
+            Ok(Some(served))
+        }
+        Ok(None) => Ok(None),
+        Err(refusal) => {
+            audit::fail(
+                audit,
+                "authority",
+                &format!("{program}: {configuration} {refusal}"),
+            );
+            Err(())
+        }
+    }
 }
 
 cfg_select! {

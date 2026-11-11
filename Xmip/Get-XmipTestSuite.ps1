@@ -3,14 +3,16 @@
 Set-StrictMode -Version Latest
 
 # A test suite carries a provider, exactly as a module does (ADR-0011), and
-# the qualified form is the canonical one: Xmip's own two are Core.Essentials
-# and Core.Estate, which is what every surface prints, records and documents
-# (ADR-0059, amendment 2026-09-20; the owner: "It's name is Core.Essentials,
-# to give place for third parties"). A bare name is still accepted and is
-# canonicalized to the qualified one. Said once here, so no surface spells the
-# Essentials' name for itself and none of them can disagree.
+# the qualified form is the canonical one: Xmip's own are Core.Essentials,
+# Core.Estate and Core.Demo, which is what every surface prints, records and
+# documents (ADR-0059, amendment 2026-09-20; the owner: "It's name is
+# Core.Essentials, to give place for third parties"). A bare name is still
+# accepted and canonicalized. Said once here, so no surface spells a name for
+# itself and none of them can disagree. Core.Demo is the demo readiness check
+# (ADR-0028, amendment 2026-11-10).
 [string] $script:XmipEssentialsSuite = 'Core.Essentials'
 [string] $script:XmipEstateSuite = 'Core.Estate'
+[string] $script:XmipDemoSuite = 'Core.Demo'
 
 # Where a provider declares a suite of its own: one TOML file per suite in
 # this directory, relative to the repository root. Xmip's own source is not
@@ -24,8 +26,8 @@ function Get-XmipTestSuite {
             caller gives -Suite, who provides it, and how it starts.
 
         .DESCRIPTION
-            Core.Essentials and Core.Estate are known to the module, so the
-            estate's own gate runs on a fresh clone with nothing declared.
+            Core.Essentials, Core.Estate and Core.Demo are known to the module,
+            so the estate's own gate runs on a fresh clone with nothing declared.
             Every other suite is a third party's, declared in a TOML file under
             test/suite and read here. A declaration that is malformed is
             REFUSED by name (ADR-0055) rather than skipped, because a suite
@@ -34,7 +36,7 @@ function Get-XmipTestSuite {
         .PARAMETER Path
             The directory of declarations. Defaults to test/suite under the
             repository. Nothing there, or no directory at all, means Xmip's
-            own two suites and no others.
+            own suites and no others.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestSuite')]
@@ -45,6 +47,7 @@ function Get-XmipTestSuite {
 
     New-XmipTestSuite -Provider 'Core' -Name 'Essentials' -Kind 'roll'
     New-XmipTestSuite -Provider 'Core' -Name 'Estate' -Kind 'pester'
+    New-XmipTestSuite -Provider 'Core' -Name 'Demo' -Kind 'demo' -ByName
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         [string] $root = Get-XmipRepositoryRoot
@@ -72,7 +75,6 @@ function Get-XmipTestSuite {
     }
 }
 
-
 function New-XmipTestSuite {
     <#
         .SYNOPSIS
@@ -89,13 +91,20 @@ function New-XmipTestSuite {
 
         .PARAMETER Kind
             How it starts: roll is the Essentials' detached roll, pester is
-            the estate's Pester files, command is a provider's own command.
+            the estate's Pester files, demo the demo readiness check (Start-
+            XmipDemoSuite), command is a provider's own command.
 
         .PARAMETER Command
             The command that starts a provider's suite.
 
         .PARAMETER Source
-            The declaration this came from; empty for Xmip's own two.
+            The declaration this came from; empty for Xmip's own.
+
+        .PARAMETER ByName
+            Started by its name alone, never by a pattern naming a group:
+            Core.Demo, which builds and opens the desktop app, holds the web
+            host's address and rolls a cluster of its own (ADR-0028,
+            amendment 2026-11-10).
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestSuite')]
@@ -107,14 +116,17 @@ function New-XmipTestSuite {
         [string] $Name,
 
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'pester', 'command')]
+        [ValidateSet('roll', 'pester', 'demo', 'command')]
         [string] $Kind,
 
         [Parameter()]
         [string] $Command = '',
 
         [Parameter()]
-        [string] $Source = ''
+        [string] $Source = '',
+
+        [Parameter()]
+        [switch] $ByName
     )
 
     # Every suite is spelled <Provider>.<Name>, Xmip's own included: the slot
@@ -132,9 +144,9 @@ function New-XmipTestSuite {
         Kind       = $Kind
         Command    = $Command
         Source     = $Source
+        ByName     = [bool] $ByName
     }
 }
-
 
 function Get-XmipNamedTestSuite {
     <#
@@ -157,7 +169,9 @@ function Get-XmipNamedTestSuite {
             parameter"), so -Suite * is every suite this estate knows and
             -Suite *Ess* is the Essentials. A literal name holds no wildcard
             character and selects exactly one suite, so nothing an operator
-            typed before this means anything else now.
+            typed before this means anything else now. A suite started by
+            name alone (ByName: Core.Demo) is never selected by a pattern,
+            so -Suite * means what it meant before it came (2026-11-10).
 
         .PARAMETER Name
             The suite a caller asked for: a name, or a pattern naming a group.
@@ -177,11 +191,14 @@ function Get-XmipNamedTestSuite {
         [object[]] $Known = @()
     )
 
+    [bool] $pattern = [System.Management.Automation.WildcardPattern]::ContainsWildcardCharacters(
+        $Name)
+
     return $Known | Where-Object {
-        $_.Name -like $Name -or ($_.Provider -ieq 'Core' -and $_.Suite -like $Name)
+        -not ($pattern -and [bool] $_.ByName) -and
+            ($_.Name -like $Name -or ($_.Provider -ieq 'Core' -and $_.Suite -like $Name))
     }
 }
-
 
 function Get-XmipTestSuiteRefusal {
     <#
@@ -233,14 +250,24 @@ function Get-XmipTestSuiteRefusal {
     # is not told that no suite is called Nope*, which would read as a
     # spelling complaint about something he never spelled.
     [type] $wild = [System.Management.Automation.WildcardPattern]
-    [string] $how = if ($wild::ContainsWildcardCharacters($Name)) { 'matches' } else { 'is called' }
+    [bool] $pattern = $wild::ContainsWildcardCharacters($Name)
+    [string] $how = if ($pattern) { 'matches' } else { 'is called' }
 
-    return ("REFUSED. No test suite $how $Name. The suites are $there. A " +
+    # A pattern that would have reached a suite started by name alone says
+    # so, rather than reading as a misspelling of it.
+    [string[]] $alone = @(
+        $Known | Where-Object { $pattern -and [bool] $_.ByName -and $_.Name -like $Name } |
+            ForEach-Object { $_.Name }
+    )
+    [string] $named = if ($alone.Count -gt 0) {
+        " $($alone -join ', ') is started by its name alone, never by a pattern."
+    }
+
+    return ("REFUSED. No test suite $how $Name.$named The suites are $there. A " +
         "suite is <Provider>.<Name>, and a bare name is accepted as Xmip's " +
         "own; a provider declares one under $area — provider, name and the " +
         'command that starts it.')
 }
-
 
 function Test-XmipWholeSuite {
     <#
@@ -275,7 +302,6 @@ function Test-XmipWholeSuite {
 
     return $named.Count -eq 0
 }
-
 
 function Expand-XmipTestName {
     <#
@@ -335,62 +361,4 @@ function Expand-XmipTestName {
     return $chosen.ToArray()
 }
 
-function Get-XmipTestChoice {
-    <#
-        .SYNOPSIS
-            The tests Start-XmipTest's -Test completes to, for the suite named
-            so far. Private; the completer asks the module for it.
-
-        .PARAMETER Suite
-            The suite typed so far; empty is the Essentials.
-
-        .PARAMETER Word
-            What has been typed of the test.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter()]
-        [AllowEmptyString()]
-        [string] $Suite = '',
-
-        [Parameter()]
-        [AllowEmptyString()]
-        [string] $Word = ''
-    )
-
-    # Qualified or bare, both name the estate's suite, and Core.Estate is the
-    # spelling (ADR-0059, amendment 2026-09-20); omitted, -Suite is the
-    # Essentials.
-    [string[]] $names = if ($Suite -ieq 'Estate' -or $Suite -ieq 'Core.Estate') {
-        [string] $root = Get-XmipRepositoryRoot
-        Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
-            ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
-    }
-    else {
-        @($script:XmipEssentialsTest.Keys)
-    }
-
-    $names | Where-Object { $_ -like "$Word*" }
-}
-
-
-function Get-XmipTestSuiteChoice {
-    <#
-        .SYNOPSIS
-            The suites Start-XmipTest's -Suite completes to. Private; a
-            completer runs in the caller's scope, so it asks the module.
-
-        .PARAMETER Word
-            What has been typed of the suite.
-    #>
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param(
-        [Parameter()]
-        [AllowEmptyString()]
-        [string] $Word = ''
-    )
-
-    Get-XmipTestSuite | ForEach-Object { $_.Name } | Where-Object { $_ -like "$Word*" }
-}
+# What -Suite and -Test complete to is Get-XmipTestChoice.ps1 (2026-11-10).

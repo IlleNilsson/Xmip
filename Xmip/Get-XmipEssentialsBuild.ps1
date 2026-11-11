@@ -75,38 +75,34 @@ function ConvertTo-XmipEssentialsBuild {
         [string] $Area
     )
 
-    [int] $id = [int](Get-TomlValue -Node $Record -Name 'pid' -Default 0)
-    [datetime] $started = [datetime]::Parse(
-        [string](Get-TomlValue -Node $Record -Name 'started' -Default '0001-01-01'),
-        [cultureinfo]::InvariantCulture,
-        [System.Globalization.DateTimeStyles]::RoundtripKind)
-    [string] $state = [string](Get-TomlValue -Node $Record -Name 'state' -Default '')
-    [string] $fault = [string](Get-TomlValue -Node $Record -Name 'fault' -Default '')
     [string] $log = [string](Get-TomlValue -Node $Record -Name 'log' -Default '')
-    [string] $tally = ''
+    [hashtable] $read = @{
+        Record  = $Record
+        Running = 'building'
+        Ended   = ('The build ended without starting its roll: it was stopped, or its ' +
+            "pwsh died. $([System.IO.Path]::ChangeExtension($log, '.err')) says why.")
+    }
+    $run = Resolve-XmipDetachedRun @read
 
-    if ($state -eq '' -and (Test-XmipDetachedAlive -Id $id -Started $started)) {
-        $state = 'building'
-        $tally = Get-XmipEssentialsBuildProgress -Log $log
+    # A build writes a verdict only where it FAILED: one that started its
+    # roll has given way to the roll's record.
+    [string] $state = if ($run.State -eq 'building') { 'building' } else { 'FAILED' }
+    [string] $fault = $run.Fault
+    [string] $tally = if ($state -eq 'building') {
+        Get-XmipEssentialsBuildProgress -Log $log
     }
     else {
-        if ($state -eq '') {
-            $fault = ('The build ended without starting its roll: it was stopped, or its ' +
-                "pwsh died. $([System.IO.Path]::ChangeExtension($log, '.err')) says why.")
-        }
-
-        $state = 'FAILED'
-        $tally = $fault
+        $fault
     }
 
     [hashtable] $row = @{
         Suite    = [string](Get-TomlValue -Node $Record -Name 'suite' -Default '')
         Kind     = 'build'
         State    = $state
-        Id       = $id
+        Id       = $run.Id
         Property = @{
             Cluster     = [string](Get-TomlValue -Node $Record -Name 'cluster' -Default '')
-            StartTime   = $started.ToLocalTime()
+            StartTime   = $run.Started.ToLocalTime()
             Stress      = Get-TomlValue -Node $Record -Name 'stress'
             Tests       = @(Get-TomlValue -Node $Record -Name 'tests' -Default @())
             Rounds      = [int](Get-TomlValue -Node $Record -Name 'rounds' -Default 0)

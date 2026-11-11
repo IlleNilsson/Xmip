@@ -255,7 +255,7 @@ record = ["ADR-0040"]
 [implementation.regulation-quest]
 name = "The Regulation Quest: a regulation's evidence and gaps"
 state = "built"
-note = "`xmip-core-report` holds the Quest seam and the Regulation Quest, its regulations an open set a module adds to, and GDPR's nine requirements, each citing its article: encryption at rest, encryption on each Location's wire and the audit probed in a node's configuration, the rest gaps not yet available in Xmip. Proved in its tests; nothing composes an `Installation` from a running node, and no surface shows it. Every transport declares nothing of its wire yet, so every Location would be a gap."
+note = "`xmip-core-report` holds the Quest seam and the Regulation Quest, its regulations an open set a module adds to, and GDPR's nine requirements, each citing its article: encryption at rest, encryption on each Location's wire and the audit probed in a node's configuration, the rest gaps not yet available in Xmip. It is listed as the Regulation Report in the one list of every Report (ADR-0072, amendment 2026-11-10), which the runtime's library answers through `xmip_operate.h` section 25, composing the `Installation` from a node's configuration file or a cluster's `cluster.xmip` sliced for one node, and recording each probe in the audit; every surface lists and opens it: the command line as `xmip report`, PowerShell as `Get-XmipReport` and the GUI's Reports view, which probes the desktop's `cluster.xmip`. Nothing composes it from a running node yet, and every transport declares nothing of its wire yet, so every Location is a gap."
 record = ["ADR-0072"]
 
 [implementation.embedded-storage]
@@ -1391,11 +1391,13 @@ dependency = []
     specification = "Prometheus text-based exposition format 0.0.4"
 
   [xmip.core.report]
-  description = "Reportable Xmip data and report production functionality, and the Quests that probe for it: the Quest seam and the Regulation Quest, its regulation a parameter, GDPR the first (ADR-0072)."
+  description = "Reportable Xmip data and report production functionality, and the Quests that probe for it: every Report in one list, each quick or taking longer by what it holds (ADR-0072, amendment 2026-11-10), the Quest seam and the Regulation Quest, its regulation a parameter, GDPR the first (ADR-0072)."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-configure"]
+  # xmip-core-abi: a quick Report's reader named by its xmip_operate.h
+  # entrypoint, and each kind by its number in section 25.
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-configure"]
     [xmip.core.report.csv]
     maturity = "reserved"
     [xmip.core.report.html]
@@ -1579,7 +1581,7 @@ dependency = []
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
-      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16, section 17's serve exports and section 19's signing of a person's request; includes remote",
+      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16, section 17's serve exports, section 19's signing of a person's request and section 25, every Report listed and a Quest probing a node's configuration (xmip-core-report); includes remote",
       "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request, a person's key and request made",
       "dynamic-loading: the module loader (xmip_module.h), a contract module and a Work Process unit (section 13); includes node",
       "test-support: the test fixtures; enabled only by the crate's own dev-dependency",
@@ -1617,6 +1619,9 @@ dependency = []
       # amendment 2026-10-15): the capability, never a technology of it.
       "xmip-core-provision",
       "xmip-core-receive",
+      # Every Report in one list, and a Quest probing a node's configuration
+      # the runtime composes (ADR-0072, amendment 2026-11-10).
+      "xmip-core-report",
       "xmip-core-route",
       "xmip-core-secret",
       "xmip-core-send",

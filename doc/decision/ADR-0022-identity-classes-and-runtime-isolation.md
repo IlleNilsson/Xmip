@@ -121,8 +121,8 @@ not start. It is not a warning, it does not degrade, and it does not start the
 compliant half.
 
 The violation is logged as a security-critical failure (observability-model.md
-section on failure classes) and appears in the Identity and Isolation Compliance
-Report. That report is mandatory rather than optional, because the population it
+section on failure classes) and appears in the Identity and isolation Report
+(amendment 2026-11-10). That report is mandatory rather than optional, because the population it
 matters to — auditors, security review boards — is exactly the population that
 will not think to ask for it by name.
 
@@ -173,3 +173,17 @@ classification is that it cannot be argued with.
 isolates nothing that matters: a compromised Module reads the address space it
 runs in. Process isolation is the boundary the operating system enforces, which
 is the only kind worth claiming in a compliance report.
+
+## Amendment, 2026-11-10: the Identity and isolation Report
+
+The report clause 5 makes mandatory is the **Identity and isolation Report**
+in the one list of every Report (ADR-0072, amendment 2026-11-10): every
+identity context, its class and where it runs, and every isolation rule
+evaluated on it with its result. The word *Compliance* is dropped from its
+name, as ADR-0072 clause 8 keeps every verdict out of a Report: whether an
+installation complies is the customer's judgment, and the Report presents
+what it rests on. Its data is computed from the identity contexts and the
+rules above, so a Quest probes for it, and it is listed on every surface as
+not yet available until that Quest is built. Being in the list on every
+installation is what *mandatory* asks: nobody has to know its name to ask
+for it.

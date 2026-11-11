@@ -29,7 +29,8 @@ use xmip_runtime::applied::apply;
 use xmip_runtime::directory_watch::DirectoryWatch;
 use xmip_runtime::running::Running;
 
-use crate::run::{self, Told};
+use crate::audit;
+use crate::run::Told;
 
 /// Where the node takes its orders, beneath its data directory.
 pub fn place(running: &Running) -> PathBuf {
@@ -66,7 +67,7 @@ pub fn take(program: &str, audit: &ProgramAudit, orders: &Path, node: &str) -> u
                 applied_count += 1;
                 println!("{program}: {said}");
             }
-            Err(problem) => run::fail(audit, "order", &format!("{program}: {problem}")),
+            Err(problem) => audit::fail(audit, "order", &format!("{program}: {problem}")),
         }
     }
     applied_count

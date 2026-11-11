@@ -32,6 +32,12 @@ function Get-XmipTestResult {
             and returns nothing; one still running says so and returns
             nothing, since it has no verdict yet.
 
+            -Suite Core.Demo reads the latest run of the demo readiness check:
+            one object per part, OK, FAILED or SKIPPED, the reason in Message
+            and Evidence — the parts written so far while it runs. It is read
+            by its name alone: -Suite * leaves it out, so a group never ends
+            on a check that has not run.
+
         .PARAMETER Path
             The snapshot file, or a directory holding exactly one
             `<cluster>-snapshot.xmip`; with more than one cluster there, name
@@ -55,8 +61,8 @@ function Get-XmipTestResult {
             the scope. For Core.Estate, the first failure.
 
         .PARAMETER Suite
-            Which suite's results: Core.Essentials, the default, or
-            Core.Estate, as Start-XmipTest -Suite names them, wildcards
+            Which suite's results: Core.Essentials, the default, Core.Estate
+            or Core.Demo, as Start-XmipTest -Suite names them, wildcards
             allowed. A provider's suite reports through its own command and
             is REFUSED here, naming it.
 
@@ -113,6 +119,11 @@ function Get-XmipTestResult {
     foreach ($one in @($matched | Where-Object { $_.Kind -eq 'command' })) {
         Write-Error ("REFUSED. $($one.Name) reports through its provider's own command, " +
             "$($one.Command); Xmip keeps no record of it.")
+    }
+
+    # The demo readiness check's latest run, every part in words.
+    if (@($matched | Where-Object { $_.Kind -eq 'demo' }).Count -gt 0) {
+        Get-XmipDemoResult -Path (Get-XmipEssentialsLayout).Demo
     }
 
     [bool] $rolls = @($matched | Where-Object { $_.Kind -eq 'roll' }).Count -gt 0

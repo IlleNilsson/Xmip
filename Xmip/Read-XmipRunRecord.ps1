@@ -22,8 +22,8 @@ function Read-XmipRunRecord {
             The area.
 
         .PARAMETER Kind
-            The record's kind, the start of its file name: roll, estate or
-            build.
+            The record's kind, the start of its file name: roll, estate,
+            build or demo.
 
         .PARAMETER Name
             One record's name, such as a roll's pid.
@@ -35,7 +35,7 @@ function Read-XmipRunRecord {
         [string] $Path,
 
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'estate', 'build')]
+        [ValidateSet('roll', 'estate', 'build', 'demo')]
         [string] $Kind,
 
         [string] $Name = '*'

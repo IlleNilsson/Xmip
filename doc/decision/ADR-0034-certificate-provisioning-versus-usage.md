@@ -686,10 +686,12 @@ reached. Decided by the assistant, for the owner to overrule:
   `authority.crl` in the folder `authority` beside the configuration, where
   `authority.pem` is (ADR-0031, amendment 2026-11-06). No configuration key
   is added. It is read again whenever it changes, so a revocation is
-  refused from the next handshake on. A list past its nextUpdate refuses
-  every client: a listener that cannot know whether a certificate stands
-  does not guess. Where no list is kept beside the configuration, nothing
-  is revoked, as before.
+  refused from the next handshake on (amended 2026-11-10: this holds
+  because no listener resumes a session; until then a client resuming one
+  was let in unchecked — ADR-0033, amendment 2026-11-10). A list past its
+  nextUpdate refuses every client: a listener that cannot know whether a
+  certificate stands does not guess. Where no list is kept beside the
+  configuration, nothing is revoked, as before.
 - **The node keeping the authority keeps the list current**: every hour it
   asks the register for its list (`running::revocation_list`), which the
   register remakes once a day old — six days before a week's list expires

@@ -40,7 +40,11 @@ function Get-XmipEssentialsLayout {
 
             Estate is where a run of the estate's Pester suite writes its
             record and its log: .local-work/estate, beside the Essentials'
-            area and not inside it, since it is no roll's.
+            area and not inside it, since it is no roll's. Demo is the same
+            for a run of Core.Demo, the demo readiness check, which reads a
+            roll through Desktop, the Desktop operations app's project, and
+            builds Extension, the VS Code extension's crate (ADR-0028,
+            amendment 2026-11-10).
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -66,6 +70,7 @@ function Get-XmipEssentialsLayout {
 
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
     [string] $web = 'module/core/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
+    [string] $desktop = 'module/core/operation/gui/src/Xmip.Operations'
 
     return [PSCustomObject]@{
         Root       = $root
@@ -75,10 +80,13 @@ function Get-XmipEssentialsLayout {
         Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
+        Desktop    = Join-Path -Path $root -ChildPath $desktop
+        Extension  = Join-Path -Path $root -ChildPath 'module/core/operation/gui/vscode'
         Area       = $estate.Essentials
         Authority  = Join-Path -Path $estate.Essentials -ChildPath 'authority'
         Image      = Join-Path -Path $estate.Essentials -ChildPath 'image'
         Estate     = $estate.Estate
+        Demo       = $estate.Demo
         Suffix     = $suffix
     }
 }
@@ -113,47 +121,22 @@ function Invoke-XmipEssentialsBuild {
     }
 
     Write-Verbose "cargo build --bin $Binary in $($layout.Essentials)"
-    Push-Location -LiteralPath $layout.Essentials
+    [string[]] $bins = @('--bin', 'xmip-essentials-node')
 
-    try {
-        [string[]] $bins = @('--bin', 'xmip-essentials-node')
-
-        if ($Binary -in 'roll', 'cluster') {
-            $bins += @('--bin', 'xmip-essentials-cluster')
-        }
-
-        if ($Binary -eq 'roll') {
-            $bins += @('--bin', 'xmip-essentials-roll')
-        }
-
-        # The estate as it is on disk, every estate crate patched to its
-        # working tree as a landing verifies (New-XmipLocalPatch), so a run
-        # tests what is here and never only what was pushed.
-        [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
-
-        # In a build directory other workspaces share, a library cargo names
-        # without a hash may be another workspace's; it is removed first, as
-        # a landing does (Clear-XmipUnhashedLibrary says why).
-        if ($env:CARGO_TARGET_DIR) {
-            [string[]] $unhashed = @(
-                Get-XmipEstateCrate -RepositoryRoot $layout.Root |
-                    Where-Object -Property Unhashed |
-                    ForEach-Object -MemberName Unhashed
-            )
-            Clear-XmipUnhashedLibrary -TargetDirectory $env:CARGO_TARGET_DIR -Library $unhashed
-        }
-
-        # Cargo's first error is kept, so a failed build says why in its own
-        # words and not only its exit code (Get-XmipTestStatus shows it).
-        [string[]] $building = @('build', '--config', $patch) + $bins
-        [pscustomobject] $built = Invoke-XmipTool -Tool cargo -Argument $building -Output Keep
-        $built.Said | ForEach-Object { Write-Verbose $_ }
-        [string] $first = @($built.Said | Where-Object { $_ -match '^error' } |
-            Select-Object -First 1) -join ''
+    if ($Binary -in 'roll', 'cluster') {
+        $bins += @('--bin', 'xmip-essentials-cluster')
     }
-    finally {
-        Pop-Location
+
+    if ($Binary -eq 'roll') {
+        $bins += @('--bin', 'xmip-essentials-roll')
     }
+
+    # Cargo's first error is kept, so a failed build says why in its own
+    # words and not only its exit code (Get-XmipTestStatus shows it).
+    [pscustomobject] $built = Invoke-XmipPatchedBuild -Directory $layout.Essentials -Argument $bins
+    $built.Said | ForEach-Object { Write-Verbose $_ }
+    [string] $first = @($built.Said | Where-Object { $_ -match '^error' } |
+        Select-Object -First 1) -join ''
 
     if (-not $built.Passed) {
         [string] $why = if ($first -ne '') { ": $first" } else { '.' }
@@ -161,6 +144,62 @@ function Invoke-XmipEssentialsBuild {
     }
 
     return $path
+}
+
+function Invoke-XmipPatchedBuild {
+    <#
+        .SYNOPSIS
+            cargo build in a crate's directory against the estate as it is on
+            disk, and what Invoke-XmipTool says of it, cargo's lines kept.
+
+        .DESCRIPTION
+            Every estate crate is patched to its working tree as a landing
+            verifies (New-XmipLocalPatch), so a build tests what is here and
+            never only what was pushed. In a build directory other workspaces
+            share, a library cargo names without a hash may be another
+            workspace's, and it is removed first, as a landing does
+            (Clear-XmipUnhashedLibrary says why). The one patched build of the
+            tooling: the Essentials' binaries and the demo readiness check's
+            language server both run it (2026-11-10).
+
+        .PARAMETER Directory
+            The crate's directory.
+
+        .PARAMETER Argument
+            What follows `cargo build --config <patch>`: the targets, and any
+            message format.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Directory,
+
+        [Parameter(Mandatory)]
+        [string[]] $Argument
+    )
+
+    $layout = Get-XmipEssentialsLayout
+    [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
+
+    if ($env:CARGO_TARGET_DIR) {
+        [string[]] $unhashed = @(
+            Get-XmipEstateCrate -RepositoryRoot $layout.Root |
+                Where-Object -Property Unhashed |
+                ForEach-Object -MemberName Unhashed
+        )
+        Clear-XmipUnhashedLibrary -TargetDirectory $env:CARGO_TARGET_DIR -Library $unhashed
+    }
+
+    [string[]] $building = @('build', '--config', $patch) + $Argument
+    Push-Location -LiteralPath $Directory
+
+    try {
+        return Invoke-XmipTool -Tool cargo -Argument $building -Output Keep
+    }
+    finally {
+        Pop-Location
+    }
 }
 
 function Invoke-XmipEssentialsService {

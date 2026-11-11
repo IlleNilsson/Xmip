@@ -10,8 +10,8 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_node::Purpose;
 
 use crate::arguments::{Arguments, Mode};
-use crate::readiness;
 use crate::run::{self, StoppedBy, Told};
+use crate::{audit, readiness};
 
 /// Run the node until a signal stops it.
 pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
@@ -27,7 +27,7 @@ pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCo
     if let Err(error) = ctrlc::set_handler(move || {
         let _ = stop.send(Told::Stop(by));
     }) {
-        run::fail(
+        audit::fail(
             audit,
             "start",
             &format!("{program}: cannot take the stop signal: {error}"),

@@ -28,16 +28,25 @@
 # Nobody wrote these and they would dominate every count that included them;
 # Find-XmipFile never descends into one.
 [string[]] $script:XmipSourceSkip = @(
-    'target', 'bin', 'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work',
+    'target', 'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work',
     $script:XmipWorkName
 )
+
+# .NET's build output, skipped only beside the project that builds into it.
+# Rust keeps a crate's further programs in src/bin, written by hand: skipped by
+# name until 2026-11-11, the Essentials' roll and node grew past the 400-line
+# gate without its reading a line of either.
+[string] $script:XmipDotnetOutput = 'bin'
+[string] $script:XmipDotnetProject = '*.csproj'
 
 # The trees the estate composes into: ADR-0016. `template/` is Rust the estate
 # ships and every new repository is generated from, so it is counted like the
 # rest rather than treated as an example. `sdk/` is what a provider builds
 # against, mounted at the root since 2026-09-24 (ADR-0061); left off this list
-# it would be the one crate no style gate reads.
-[string[]] $script:XmipSourceRoot = @('module', 'test', 'template', 'sdk')
+# it would be the one crate no style gate reads. `.src` is the root crate's own
+# source, xmip-service among it (ADR-0049, amendment 2026-09-11): off this list
+# until 2026-11-11, when its run.rs had reached 407 lines unmeasured.
+[string[]] $script:XmipSourceRoot = @('.src', 'module', 'test', 'template', 'sdk')
 
 
 function Measure-XmipSourceCode {
@@ -105,10 +114,12 @@ function Find-XmipFile {
             the landing's question whether a module holds a .NET project, the
             projects a surface builds and what a repository's build uses, and
             the tests that read every Cargo.toml or project. A directory named
-            in $script:XmipSourceSkip is pruned before it is entered, so a
-            built tree is walked as fast as a clean one; a link is not
-            followed, as Get-ChildItem -Recurse does not. Depth first, each
-            directory's files before its subdirectories, both in name order.
+            in $script:XmipSourceSkip is pruned before it is entered, and so
+            is a bin beside a .NET project, which is that project's build
+            output; a Rust crate's src/bin is walked. A built tree is walked
+            as fast as a clean one; a link is not followed, as Get-ChildItem
+            -Recurse does not. Depth first, each directory's files before its
+            subdirectories, both in name order.
 
         .PARAMETER Path
             The directories to walk. One that does not exist is skipped.
@@ -153,9 +164,15 @@ function Find-XmipFileBelow {
 
     $Directory.GetFiles($Filter) | Sort-Object -Property Name
 
+    # A directory's projects are listed only where it has a child called bin,
+    # so a directory without one is read once.
     [System.IO.DirectoryInfo[]] $children = @(
         $Directory.GetDirectories() |
             Where-Object { $_.Name -notin $script:XmipSourceSkip } |
+            Where-Object {
+                $_.Name -ne $script:XmipDotnetOutput -or
+                    $Directory.GetFiles($script:XmipDotnetProject).Count -eq 0
+            } |
             Where-Object { -not $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint) } |
             Sort-Object -Property Name
     )
@@ -169,7 +186,8 @@ function Find-XmipFileBelow {
 function Get-XmipSourceFile {
     <#
         .SYNOPSIS
-            Every source file under the estate's composed trees, counted.
+            Every source file under the estate's composed trees and the root
+            crate's own `.src`, counted.
 
         .DESCRIPTION
             One object per file: where it is, what it is written in, and how
@@ -178,7 +196,8 @@ function Get-XmipSourceFile {
             the same on every platform and can be compared against a mount.
 
             Build output is excluded, so a clean tree and a built one count
-            the same.
+            the same: target, obj, and the bin beside a .NET project. A Rust
+            crate's src/bin holds programs written by hand, and is counted.
 
         .PARAMETER Root
             The repository root. Defaults to the one this module was imported

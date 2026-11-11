@@ -1787,6 +1787,51 @@ owner's ruling; each is a gap in a built transport.
 - **To check:** the clause numbers cited for DNP3, Zigbee, LoRaWAN, J1939
   and BACnet.
 
+## 61. No test holds an FTPS data connection to resuming its login's session
+
+Found 2026-11-10, when TLS session resumption was turned off in
+`xmip-core-library-tls` (ADR-0033, amendment 2026-11-10). The ftp
+transport builds a client configuration for each login (`Secured::login`,
+`tls::login_trusting`), so a login's data connections resume its control
+connection's session, which a server insisting on reuse checks (vsftpd's
+`require_ssl_reuse`, on by default). Xmip's own FTP server insists on
+nothing, so no test fails if they stop resuming. Left: a test against a
+far end that refuses a data connection that is not `Resumed`.
+
+## 62. Nothing travels between real nodes on the Topology
+
+Found 2026-11-11, building motion that follows traffic (ADR-0052,
+amendment 2026-11-10). An Essentials roll of real nodes — C1, the board of
+the demo of 2026-12-18 — draws no line at all: the hops between nodes are
+counted by the simulated relay alone, a real node hands a Stream on through
+Xmip Storage and publishes nothing of it as a figure, and the roll draws
+its Parties over transport words while a real node names each endpoint by
+its Location, so no Party faces a stage (`observe::topology::party`). The
+nodes' rings now move with what moved through them, and nothing moves on a
+line. Left, from the plan of 2026-11-10: each Subscription published with
+the Send Ports it reaches, `send_ports`, through the ABI, the CLI,
+PowerShell and the Subscriptions view; the hand-over drawn once, in
+`observe::topology::handoff`, from the process stage of the node that
+routed a Message to the send stage of the node that sends its Port, the
+runtime's drawing and the roll both calling it; and a real node's Parties
+drawn by what its configuration says each Location takes (problem 33). To
+land by 2026-12-08, so the demo's board shows pulses traveling between its
+nodes.
+
+## 63. The board and the Topology measure a rate in two places
+
+Found 2026-11-11, in the review of motion that follows traffic. The
+Monitor board and the prompt read a rate of Streams, Journeys and Messages
+from `FigureFlow.Between` in `Xmip.Surface`: the rise between the two
+publications a reader saw, one round, a fall read as unknown. The Topology
+reads what `observe::topology::window` stated at the publisher: over thirty
+seconds, a fall measured from the new start. For one node the board can say
+`0/s` in a quiet round while the Topology says `0.5/s through it`, and a
+burst reads far higher on the board than on the line. One rule is wanted:
+the publication carries the window's figures per scope, `FigureFlow.Between`
+is deleted, and every reader takes what was stated — the ABI, the CLI,
+PowerShell, the prompt and the GUIs alike.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

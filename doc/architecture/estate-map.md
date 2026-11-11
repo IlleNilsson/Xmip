@@ -265,10 +265,16 @@ built. Records: ADR-0066 (amendment 2026-10-22), runtime-model.md section 22.
 holds the Quest seam and the Regulation Quest, its regulations an open set a
 module adds to, and GDPR's nine requirements, each citing its article:
 encryption at rest, encryption on each Location's wire and the audit probed in
-a node's configuration, the rest gaps not yet available in Xmip. Proved in its
-tests; nothing composes an `Installation` from a running node, and no surface
-shows it. Every transport declares nothing of its wire yet, so every Location
-would be a gap. Records: ADR-0072.
+a node's configuration, the rest gaps not yet available in Xmip. It is listed
+as the Regulation Report in the one list of every Report (ADR-0072, amendment
+2026-11-10), which the runtime's library answers through `xmip_operate.h`
+section 25, composing the `Installation` from a node's configuration file or a
+cluster's `cluster.xmip` sliced for one node, and recording each probe in the
+audit; every surface lists and opens it: the command line as `xmip report`,
+PowerShell as `Get-XmipReport` and the GUI's Reports view, which probes the
+desktop's `cluster.xmip`. Nothing composes it from a running node yet, and
+every transport declares nothing of its wire yet, so every Location is a gap.
+Records: ADR-0072.
 
 #### `resilience-guards`
 
@@ -424,7 +430,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 335770 lines of production
+Where each repository mounts and what it holds: 343327 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -449,59 +455,59 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       7532
+│   │   │   ├── transport                       7613
 │   │   │   │   ├── db2                         2754
-│   │   │   │   ├── amqp                        2703
+│   │   │   │   ├── amqp                        2707
 │   │   │   │   ├── opc-ua                      2513
 │   │   │   │   ├── nfs                         2166
 │   │   │   │   ├── smb                         2025
-│   │   │   │   ├── kafka                       2019
+│   │   │   │   ├── kafka                       2023
 │   │   │   │   ├── http                        1997
+│   │   │   │   ├── ibm-mq                      1909
+│   │   │   │   ├── ftp                         1893
 │   │   │   │   ├── mssql                       1893
-│   │   │   │   ├── ibm-mq                      1887
-│   │   │   │   ├── ftp                         1875
 │   │   │   │   ├── sftp                        1827
 │   │   │   │   ├── oracle                      1585
 │   │   │   │   ├── snmp                        1448
-│   │   │   │   ├── nats-jetstream              1395
+│   │   │   │   ├── nats-jetstream              1399
 │   │   │   │   ├── postgresql                  1391
-│   │   │   │   ├── as4                         1333
+│   │   │   │   ├── as4                         1331
 │   │   │   │   ├── s7comm                      1239
 │   │   │   │   ├── secs-gem                    1199
-│   │   │   │   ├── mqtt                        1193
-│   │   │   │   ├── imap                        1154
-│   │   │   │   ├── canopen                     1148
+│   │   │   │   ├── imap                        1197
+│   │   │   │   ├── mqtt                        1192
+│   │   │   │   ├── canopen                     1153
 │   │   │   │   ├── dns                         1142
 │   │   │   │   ├── webdav                      1131
 │   │   │   │   ├── iec-61850                   1107
-│   │   │   │   ├── nats                        1049
+│   │   │   │   ├── nats                        1053
+│   │   │   │   ├── ethercat                     994
 │   │   │   │   ├── dicom                        992
-│   │   │   │   ├── ethercat                     988
-│   │   │   │   ├── as2                          970
+│   │   │   │   ├── as2                          966
 │   │   │   │   ├── ethernet-ip                  943
+│   │   │   │   ├── aws-sns                      931
 │   │   │   │   ├── m-bus                        931
-│   │   │   │   ├── aws-sns                      930
 │   │   │   │   ├── activemq                     921
 │   │   │   │   ├── hart                         918
 │   │   │   │   ├── j1939                        903
 │   │   │   │   ├── uds                          898
+│   │   │   │   ├── aws-kinesis                  894
 │   │   │   │   ├── bluetooth                    891
 │   │   │   │   ├── file                         888
-│   │   │   │   ├── aws-kinesis                  883
+│   │   │   │   ├── redis-streams                884
 │   │   │   │   ├── lorawan                      880
-│   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── pop3                         877
-│   │   │   │   ├── azure-service-bus            867
-│   │   │   │   ├── azure-event-grid             861
-│   │   │   │   ├── google-pub-sub               854
-│   │   │   │   ├── aws-sqs                      853
+│   │   │   │   ├── azure-service-bus            868
+│   │   │   │   ├── azure-event-grid             857
+│   │   │   │   ├── google-pub-sub               857
+│   │   │   │   ├── aws-sqs                      849
 │   │   │   │   ├── profinet                     846
 │   │   │   │   ├── dhcp                         827
 │   │   │   │   ├── wireless-hart                825
 │   │   │   │   ├── thread                       796
 │   │   │   │   ├── zigbee                       789
 │   │   │   │   ├── smtp                         770
-│   │   │   │   ├── peppol                       757
+│   │   │   │   ├── peppol                       769
 │   │   │   │   ├── knx                          751
 │   │   │   │   ├── iso-tp                       727
 │   │   │   │   ├── mysql                        721
@@ -514,7 +520,7 @@ hold no source to count.
 │   │   │   │   ├── dds                          695
 │   │   │   │   ├── google-cloud-storage         685
 │   │   │   │   ├── websocket                    682
-│   │   │   │   ├── io-link                      675
+│   │   │   │   ├── io-link                      680
 │   │   │   │   ├── dnp3                         663
 │   │   │   │   ├── msmq                         657
 │   │   │   │   ├── obd-ii                       621
@@ -522,9 +528,9 @@ hold no source to count.
 │   │   │   │   ├── coap                         586
 │   │   │   │   ├── mariadb                      578
 │   │   │   │   ├── modbus                       578
-│   │   │   │   ├── redpanda                     574
+│   │   │   │   ├── redpanda                     578
+│   │   │   │   ├── azure-event-hubs             540
 │   │   │   │   ├── wireless-m-bus               536
-│   │   │   │   ├── azure-event-hubs             534
 │   │   │   │   ├── serial                       518
 │   │   │   │   ├── aws                          514
 │   │   │   │   ├── ethernet                     493
@@ -533,7 +539,7 @@ hold no source to count.
 │   │   │   │   ├── bacnet                       459
 │   │   │   │   ├── azure                        449
 │   │   │   │   ├── mllp                         444
-│   │   │   │   ├── rabbitmq                     430
+│   │   │   │   ├── rabbitmq                     434
 │   │   │   │   ├── unix-socket                  367
 │   │   │   │   ├── named-pipe                   330
 │   │   │   │   ├── tcp                          280
@@ -677,26 +683,26 @@ hold no source to count.
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
 │   │   │   ├── net                             7332
+│   │   │   ├── tls                             3474
 │   │   │   ├── codec                           3159
-│   │   │   ├── tls                             3071
 │   │   │   ├── mariadb                         1797
 │   │   │   ├── ssh                             1756
 │   │   │   ├── sql                             1304
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             678
 │   │   └── operation/
-│   │       ├── cli                             9099
-│   │       ├── gui                             5366
+│   │       ├── cli                             9770
+│   │       ├── gui                             6595
 │   │       │   └── vscode                      3517
+│   │       ├── observe                         4464
+│   │       │   ├── otlp                         587
+│   │       │   └── prometheus                   328
 │   │       ├── audit                           4121
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── observe                         3905
-│   │       │   ├── otlp                         587
-│   │       │   └── prometheus                   328
-│   │       ├── powershell                      3487  C# 3487 · PowerShell 0
-│   │       ├── report                          1119
+│   │       ├── powershell                      3717  C# 3717 · PowerShell 0
+│   │       ├── report                          2281
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
 │   │       └── archive                          612
@@ -711,7 +717,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                33292  C# 30569 · Rust 2324 · PowerShell 399
+│   │   ├── abi                                34264  C# 31506 · Rust 2359 · PowerShell 399
 │   │   ├── event                               5648
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -739,8 +745,8 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            40555
-│       ├── persist                            15323
+│       ├── runtime                            41455
+│       ├── persist                            15340
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
@@ -748,7 +754,7 @@ hold no source to count.
 │       └── configure                           8440
 └── test/
     └── core/
-        ├── essentials                         13987
+        ├── essentials                         15174
         └── module                                83
 ```
 

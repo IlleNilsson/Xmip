@@ -74,10 +74,11 @@
 //!
 //! It declares itself (ADR-0053) — its configuration, its orders and its
 //! snapshot among what it says — and audits its start, its stop, every
-//! order and every failure (ADR-0062).
+//! order and every failure (`audit.rs`; ADR-0062).
 
 mod account;
 mod arguments;
+mod audit;
 mod authority;
 mod built;
 mod console;
@@ -117,7 +118,7 @@ fn main() -> ExitCode {
     let arguments = match Arguments::parse(std::env::args().skip(1)) {
         Ok(arguments) => arguments,
         Err(problem) => {
-            run::fail(&audit, "start", &format!("{program}: {problem}"));
+            audit::fail(&audit, "start", &format!("{program}: {problem}"));
             eprintln!("{USAGE}");
             return ExitCode::from(xmip_runtime::registration::REFUSED);
         }

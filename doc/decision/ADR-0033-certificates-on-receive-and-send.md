@@ -13,7 +13,7 @@
 - Subject: Certificate identity is the first mechanism built, provisioned by ACME
 - Name: Certificates on Receive and Send
 - Order: 5
-- Concepts: Certificates, mutual-TLS; ACME, Let's Encrypt
+- Concepts: Certificates, mutual-TLS; ACME, Let's Encrypt; TLS session resumption
 
 **Certificate identity is the first authentication mechanism Xmip implements,
 on both directions: a Receive Location verifies the certificate a caller
@@ -405,3 +405,92 @@ go after the Location's wait, not the guard's.
 Provenance: the bound's place and its key are the assistant's, 2026-10-20,
 for the owner to overrule. **Decided by the owner, 2026-10-21:** the TLS
 handshake's default of five seconds.
+
+## Amendment, 2026-11-10: TLS session resumption is off
+
+Found 2026-11-10, designing how trust is taken back (the trust design,
+*taking trust back*): a peer whose certificate was revoked, expired or
+whose anchor was withdrawn could keep connecting for as long as it resumed
+a session. rustls resumes one without calling the verifier — a resumed
+TLS 1.3 handshake asks the client for no certificate and copies the chain
+the session stored onto the connection (`server/tls13.rs` of rustls
+0.23.46, the version `xmip-core-library-tls` pins), and a client resuming
+does not look at the server's certificate again. The library kept rustls's
+defaults: a server's session cache and two tickets after every handshake,
+a client's cache of 256 sessions. So the revocation lists every mutual-TLS
+listener refuses by (ADR-0034, amendment 2026-11-07) decided a client's
+first handshake and none it resumed, and a test proved it: a client
+admitted, then revoked, was admitted again on its kept configuration, its
+handshake `Resumed`. Only the proving server of the possession proof
+resumed nothing (ADR-0009, amendment 2026-11-02).
+
+- **No configuration the library builds resumes a session.** A server
+  stores no session and sends no ticket; a client keeps none to offer; TLS
+  1.3 and 1.2 alike. It is placed once, the library's `configuration`,
+  which builds every server and client configuration — `server_config`,
+  `configure`, `Identity::server`, `server_asking` and `client`, and
+  `possession::proving`. A test reads the library's source and fails where
+  another file builds a configuration or sets its resumption; a caller
+  holding a `ClientConfig` or `ServerConfig` can still set those fields
+  back, and no module does. Every handshake is full and verifies
+  the peer's certificate as it stands. A client still keeps the key
+  exchange group each server chose, as rustls's cache did, so a server
+  that takes neither X25519MLKEM768 nor X25519 — one limited to P-256 or
+  P-384 — asks for another group with a `HelloRetryRequest` at the first
+  connection only.
+- **Off, not limited.** RFC 8446 section 4.6.1 caps a ticket's life at
+  seven days and lets a server hold one valid for less, and Go's
+  `crypto/tls` checks a resumed session against the trust it holds now
+  since its fix for CVE-2025-68121 (February 2026). rustls 0.23 makes no
+  check during a resumed handshake, but hands the stored chain over after
+  one (`server/tls13.rs`, `client/tls13.rs`), so verifying it again in
+  `peer::completed`, as Go does, was possible. It was not chosen: resuming
+  saved a fraction of a millisecond (below), and every connection would
+  have carried a second path to trust beside the verifier's. A lifetime of
+  any length lets a revoked peer in for that long.
+- **What it costs.** Measured by the library's timing program
+  (`tests/measured/resumption.rs`), both ends on one thread over memory
+  against rustls's defaults, 201 rounds each, four runs on 2026-11-10 with
+  the processor at 80 to 94% from other builds: a mutual-TLS handshake
+  1.66 to 2.24 ms at its fastest where a resumed one took 1.27 to 1.42 ms,
+  0.38 to 0.87 ms more (medians 2.37 to 3.68 ms against 1.86 to 2.91 ms);
+  a server authenticated alone 1.37 to 1.63 ms where it took 1.24 to
+  1.49 ms, 0.07 to 0.29 ms more (medians 2.04 to 2.92 ms against 1.82 to
+  2.60 ms). The program holds the added cost, at the fastest, under a
+  millisecond; a run on a quiet machine is still owed, and the more loaded
+  the machine, the closer the mutual-TLS cost came to the bound. Resuming
+  saved only the certificates' signatures and their checks, since a
+  resumed TLS 1.3 handshake still agrees a fresh X25519MLKEM768 key in the
+  same one round trip. A TLS 1.2 peer pays a round trip more: a full TLS
+  1.2 handshake takes two where a resumed one took one, milliseconds to
+  tens of milliseconds to a Party across a wide-area link. The cost is
+  paid once per connection, and what is sent on a connection already open
+  pays nothing more.
+- **Taking trust back depends on it.** The trust design of 2026-11-10 — a
+  certificate withdrawn, revoked or expired is refused from the next
+  connection on — holds only while no session is resumed. Turning
+  resumption back on reopens it, and the tests say so: the revocation test
+  above, which checks the refusal is the revocation's; a kept client
+  configuration resuming nothing from a server of rustls's defaults; and a
+  client of rustls's defaults given nothing to resume, in TLS 1.3 or by a
+  TLS 1.2 session ID.
+- **One login resumes its own session.** The ftp transport's data
+  connections resumed the control connection's session, which a server
+  insisting on session reuse checks (vsftpd's `require_ssl_reuse`, on by
+  default), and such a server refuses a guarded transfer that does not.
+  `login_trusting` builds a client configuration for one login with a
+  session store of its own: the control connection's handshake is full and
+  checks the server's certificate, and only the data connections of that
+  login resume it, while the control connection they belong to stays open
+  and is checked no more than they are. No other login and no other
+  connection sees the store, and a listener of Xmip's still resumes
+  nothing. The ftp transport builds one per login (`Secured::login`, called
+  as `Client::connect_secured` starts the login) and guards that login's
+  control and data connections with it; no test yet holds a data
+  connection to resuming against a far end that refuses one that does not
+  (open problem 61).
+
+Provenance: the defect and the reading of rustls are the trust design's,
+2026-11-10; turning resumption off on both sides, placing it once, keeping
+the client's group and resuming within one login are the assistant's, for
+the owner to overrule.

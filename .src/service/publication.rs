@@ -4,8 +4,10 @@
 //! (ADR-0018, amendment 2026-09-30; ADR-0052).
 //!
 //! The runtime says what the node is (`Running::publication`), observe
-//! writes it whole or not at all (`observe::Publication::write`), and this
-//! decides only where and when. **Where**: `<data>/snapshot.xmip`, beside
+//! writes it whole or not at all (`observe::Publication::write`) and states
+//! what moved over the window this keeps from one publication to the next
+//! (`observe::topology::window`), and this decides only where and when.
+//! **Where**: `<data>/snapshot.xmip`, beside
 //! the node's `orders`, in its data directory (`[service] data`); the
 //! service declares it (ADR-0053, `snapshot`), so whoever finds the process
 //! finds its publication, and `Start-XmipOperationWeb -Snapshot` opens the
@@ -34,11 +36,13 @@ use std::time::{Duration, Instant};
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_observe::Publication;
+use xmip_observe::topology::window::Window;
 use xmip_runtime::plane::{Board, Published};
 use xmip_runtime::running::Running;
 use xmip_runtime::running::publication::stopped;
 
-use crate::run::{self, Told};
+use crate::audit;
+use crate::run::Told;
 
 /// How often the node publishes when nothing an operator did asks sooner.
 pub const EVERY: Duration = Duration::from_millis(250);
@@ -52,7 +56,9 @@ pub fn place(running: &Running) -> PathBuf {
     running.data().join("snapshot.xmip")
 }
 
-/// What publishes the node, and what it published last.
+/// What publishes the node, what it published last, and the window its
+/// drawing is stated over: what moved over the last half minute of its
+/// publications (`xmip_observe::topology::window`).
 pub struct Publisher<'a> {
     program: &'a str,
     audit: &'a ProgramAudit,
@@ -64,6 +70,7 @@ pub struct Publisher<'a> {
     last: Option<Publication>,
     failing: Option<Failing>,
     board: Arc<Board>,
+    window: Window,
 }
 
 impl<'a> Publisher<'a> {
@@ -87,6 +94,7 @@ impl<'a> Publisher<'a> {
             last: None,
             failing: None,
             board: Arc::default(),
+            window: Window::new(),
         }
     }
 
@@ -123,7 +131,7 @@ impl<'a> Publisher<'a> {
     /// Publish what the node says of itself now.
     pub fn publish(&mut self, running: &Running) {
         let publication = running
-            .publication(self.program)
+            .publication(self.program, &mut self.window)
             .with_orders(self.orders.clone());
         self.write(&publication);
         self.last = Some(publication);
@@ -179,7 +187,7 @@ impl<'a> Publisher<'a> {
                         self.program,
                         self.path.display()
                     );
-                    run::fail(self.audit, "publish", &problem);
+                    audit::fail(self.audit, "publish", &problem);
                 }
                 self.failing = Some(Failing {
                     since,

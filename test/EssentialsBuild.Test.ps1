@@ -103,9 +103,13 @@ Describe 'Start-XmipTest returns before the build' {
         [string] $detached = Get-Content -Raw -LiteralPath (
             Join-Path $module 'Start-XmipEssentialsBuild.ps1')
 
+        [string] $shell = Get-Content -Raw -LiteralPath (
+            Join-Path $module 'Start-XmipDetachedShell.ps1')
+
         $console | Should -Not -Match 'Invoke-XmipEssentialsBuild'
         $detached | Should -Match 'Invoke-XmipEssentialsBuild -Binary roll'
-        $detached | Should -Match '-EncodedCommand'
+        $detached | Should -Match 'Start-XmipDetachedShell -Script'
+        $shell | Should -Match '-EncodedCommand'
     }
 }
 

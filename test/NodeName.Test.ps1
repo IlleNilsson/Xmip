@@ -139,36 +139,36 @@ BeforeAll {
     $script:Candidate = [regex]::new(
         '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSNLOD][0-9]+|CT)\b|' +
         "=(?:$role)\b|cluster_name|node_name|\[nodes\.", 'Compiled')
-    $script:Skip = @(
-        'target', 'bin', 'obj', 'node_modules', '.ai-interaction', '.ai-work',
-        '.local-work', '.git'
-    )
     $script:Tree = @('.src', 'module', 'test', 'template', 'sdk', 'Xmip', 'doc')
     $script:Self = 'test/NodeName.Test.ps1'
 
     <#
         .SYNOPSIS
-        Every searched file beneath a directory, build output pruned.
+        Every searched file, as a path relative to the estate root: the
+        module's one walk (Find-XmipFile), which prunes build output and the
+        working areas, narrowed to the searched texts and with doc/decision/
+        left out.
     #>
-    function Get-NodeNameFile([string] $At) {
-        foreach ($file in [IO.Directory]::EnumerateFiles($At)) {
+    function Get-NodeNameFile {
+        [string[]] $at = @($script:Tree | ForEach-Object { Join-Path $script:Root $_ })
+
+        [System.IO.FileInfo[]] $file = @(
+            InModuleScope Xmip -Parameters @{ At = $at } {
+                param($At)
+                Find-XmipFile -Path $At -Filter '*'
+            }
+        )
+
+        foreach ($one in $file) {
+            [string] $path = [IO.Path]::GetRelativePath($script:Root, $one.FullName)
+            $path = $path -replace '\\', '/'
+
             # A package manager's lock file is written by the tool, and its
             # hashes spell anything.
-            if ([IO.Path]::GetExtension($file) -in $script:Extension -and
-                (Split-Path -Leaf $file) -ne 'packages.lock.json') {
-                $file
+            if ($one.Extension -in $script:Extension -and $one.Name -ne 'packages.lock.json' -and
+                -not $path.StartsWith('doc/decision/')) {
+                $path
             }
-        }
-
-        foreach ($directory in [IO.Directory]::EnumerateDirectories($At)) {
-            [string] $leaf = Split-Path -Leaf $directory
-            [string] $relative = [IO.Path]::GetRelativePath($script:Root, $directory)
-
-            if ($leaf -in $script:Skip -or ($relative -replace '\\', '/') -eq 'doc/decision') {
-                continue
-            }
-
-            Get-NodeNameFile -At $directory
         }
     }
 
@@ -279,33 +279,22 @@ BeforeAll {
 Describe 'No cluster or node is named in code or tests' {
     It 'finds no literal cluster or node name in code, tests, fixtures or documents' {
         [string[]] $found = @(
-            foreach ($tree in $script:Tree) {
-                [string] $at = Join-Path $script:Root $tree
-
-                if (-not (Test-Path -LiteralPath $at)) {
+            foreach ($path in (Get-NodeNameFile)) {
+                if ($path -eq $script:Self -or $script:Value.ContainsKey($path) -or
+                    $script:Held.ContainsKey($path)) {
                     continue
                 }
 
-                foreach ($file in (Get-NodeNameFile -At $at)) {
-                    [string] $path =
-                        [IO.Path]::GetRelativePath($script:Root, $file) -replace '\\', '/'
+                # One pass over the file's text decides whether its lines
+                # need reading at all: most hold no name, and a line-by-line
+                # match over the estate took over an hour.
+                [string] $text = [IO.File]::ReadAllText((Join-Path $script:Root $path))
 
-                    if ($path -eq $script:Self -or $script:Value.ContainsKey($path) -or
-                        $script:Held.ContainsKey($path)) {
-                        continue
-                    }
-
-                    # One pass over the file's text decides whether its lines
-                    # need reading at all: most hold no name, and a
-                    # line-by-line match over the estate took over an hour.
-                    [string] $text = [IO.File]::ReadAllText($file)
-
-                    if (-not $script:Candidate.IsMatch($text)) {
-                        continue
-                    }
-
-                    Find-NodeName -Path $path -Line ($text -split '\r?\n')
+                if (-not $script:Candidate.IsMatch($text)) {
+                    continue
                 }
+
+                Find-NodeName -Path $path -Line ($text -split '\r?\n')
             }
         )
 

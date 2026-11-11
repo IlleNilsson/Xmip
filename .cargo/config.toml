@@ -30,3 +30,11 @@ warnings = "deny"
 # build names them when it compiles RocksDB; linking the kept one, we do.
 [target.'cfg(windows)']
 rustflags = ["-l", "rpcrt4", "-l", "shlwapi"]
+
+# Links with LLVM's lld, the one the Rust toolchain ships beside rustc
+# (lib/rustlib/<host>/bin/rust-lld), in place of Microsoft's link.exe: a
+# rebuild of the service, the roll and every test binary is mostly linking
+# (the owner, 2026-11-10: "Go ahead, lets get the faster linker"). Nothing to
+# install; rustc finds it in its own sysroot.
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld"

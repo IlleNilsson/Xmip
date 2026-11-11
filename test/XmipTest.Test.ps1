@@ -118,7 +118,7 @@ Describe 'Start, Get and Stop, and nothing else' {
             $completer.ScriptBlock.Invoke('Start-XmipTest', 'Suite', '', $null, @{})
         )
 
-        $offered | Should -Be @('Core.Essentials', 'Core.Estate')
+        $offered | Should -Be @('Core.Essentials', 'Core.Estate', 'Core.Demo')
     }
 
     It 'canonicalizes every spelling to the qualified name, and accepts the bare one' {
@@ -175,11 +175,18 @@ Describe 'Start, Get and Stop, and nothing else' {
         InModuleScope Xmip {
             [object[]] $known = @(Get-XmipTestSuite)
 
+            # Core.Demo is started by its name alone, never by a pattern
+            # (ADR-0028, amendment 2026-11-10).
             @(Get-XmipNamedTestSuite -Name '*' -Known $known | ForEach-Object { $_.Name }) |
                 Should -Be @('Core.Essentials', 'Core.Estate')
             @(Get-XmipNamedTestSuite -Name '*Ess*' -Known $known).Name |
                 Should -Be 'Core.Essentials'
             @(Get-XmipNamedTestSuite -Name 'Core.*' -Known $known).Count | Should -Be 2
+            @(Get-XmipNamedTestSuite -Name '*Demo*' -Known $known).Count | Should -Be 0
+            @(Get-XmipNamedTestSuite -Name 'core.demo' -Known $known).Name |
+                Should -Be 'Core.Demo'
+            Get-XmipTestSuiteRefusal -Name '*Demo*' -Known $known |
+                Should -BeLike '*Core.Demo is started by its name alone, never by a pattern.*'
             @(Get-XmipNamedTestSuite -Name 'Nope*' -Known $known).Count | Should -Be 0
 
             Get-XmipTestSuiteRefusal -Name '*' -Known $known | Should -Be ''
@@ -201,8 +208,12 @@ Describe 'Start, Get and Stop, and nothing else' {
                 ForEach-Object { "$_" }
         )
 
+        # Never Core.Demo, which a pattern does not start: it would build and
+        # open the desktop app and hold the web host's address beside the
+        # roll (ADR-0028, amendment 2026-11-10).
         "$said" | Should -BeLike '*Running 2 suites in order: Core.Essentials, Core.Estate.*'
         "$said" | Should -BeLike '*OK 2 suites started: Core.Essentials, Core.Estate.*'
+        "$said" | Should -Not -BeLike '*Core.Demo*'
     }
 
     It 'refuses a qualified suite nobody provides, naming the suites there are' {
@@ -220,8 +231,10 @@ Describe 'Start, Get and Stop, and nothing else' {
         # the console until it ended: ten minutes, on 2026-09-25. A process
         # of its own keeps both apart, and nothing waits for it.
         [string] $door = InModuleScope Xmip { "${function:Start-XmipEstateSuite}" }
+        [string] $shell = InModuleScope Xmip { "${function:Start-XmipDetachedShell}" }
 
-        $door | Should -Match '-EncodedCommand' -Because 'the suite removes the module it runs in'
+        $door | Should -Match 'Start-XmipDetachedShell -Script'
+        $shell | Should -Match '-EncodedCommand' -Because 'the suite removes the module it runs in'
         $door | Should -Not -Match 'Start-ThreadJob|Receive-Job'
         $door | Should -Not -Match '(?m)^\s*\$result = Invoke-Pester'
     }
@@ -264,14 +277,17 @@ Describe 'Start, Get and Stop, and nothing else' {
     It 'names no automatic start anywhere in the module' {
         # The keeper is gone and nothing may grow back in its place: no module
         # file starts a roll, a node or the web host outside its Start-* door.
+        # .NET's own start counts as Start-Process does: the demo check's
+        # language server was started with it from a Test-* file (2026-11-10).
         [string[]] $files = @(
             Get-ChildItem -Path (Join-Path $script:Root 'Xmip') -Filter '*.ps*1' |
                 Where-Object { $_.Name -notlike 'Start-Xmip*' } |
                 Select-Object -ExpandProperty FullName
         )
+        [string] $starts = 'Start-Process|Process\]::Start\b|ProcessStartInfo'
 
         foreach ($file in $files) {
-            Get-Content -LiteralPath $file -Raw | Should -Not -Match 'Start-Process' -Because $file
+            Get-Content -LiteralPath $file -Raw | Should -Not -Match $starts -Because $file
         }
     }
 }
@@ -742,10 +758,10 @@ Describe 'A suite carries its provider' {
             [object[]] $known = @(Get-XmipTestSuite -Path $area)
 
             @($known | ForEach-Object { $_.Name }) |
-                Should -Be @('Core.Essentials', 'Core.Estate', 'Example.Essentials')
-            $known[2].Kind | Should -Be 'command'
-            $known[2].Command | Should -Be 'Start-ExampleXmipTest'
-            $known[2].Provider | Should -Be 'Example'
+                Should -Be @('Core.Essentials', 'Core.Estate', 'Core.Demo', 'Example.Essentials')
+            $known[3].Kind | Should -Be 'command'
+            $known[3].Command | Should -Be 'Start-ExampleXmipTest'
+            $known[3].Provider | Should -Be 'Example'
             Get-XmipTestSuiteRefusal -Name 'example.essentials' -Known $known |
                 Should -Be ''
         }
@@ -1259,6 +1275,7 @@ Describe 'What a web host reads' {
             $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $coming }
 
             Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
+            Mock -CommandName Get-XmipClusterRunning -MockWith { 4242 }
             Mock -CommandName Start-Sleep -MockWith {
                 # The round ends while the wait sleeps.
                 Set-Content -LiteralPath $coming -Value 'published'
@@ -1270,23 +1287,55 @@ Describe 'What a web host reads' {
         }
     }
 
-    It 'refuses a snapshot a run names and then stops without publishing' {
+    It 'refuses at once a snapshot whose roll stopped, whatever rows outlive it' {
+        # 2026-11-10: a demo run's verdict and a build that FAILED stay listed
+        # by Get-XmipTestStatus with the cluster's name, and counting them as
+        # rolling waited out the whole bound for a roll that had died.
         InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
             param($Name)
 
             [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) (
                 "xmip-$Name-never-snapshot.xmip")
-            $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $never }
-            $script:asked = 0
+            $script:Rows = @(
+                [PSCustomObject]@{ Cluster = $Name; Snapshot = $never; Kind = 'roll' }
+                [PSCustomObject]@{ Cluster = $Name; Snapshot = $null; Kind = 'demo' }
+            )
 
             Mock -CommandName Start-Sleep -MockWith { }
-            Mock -CommandName Get-XmipTestStatus -MockWith {
-                $script:asked++
-                if ($script:asked -eq 1) { $rolling } else { @() }
-            }
+            Mock -CommandName Get-XmipTestStatus -MockWith { $script:Rows }
+            Mock -CommandName Get-XmipClusterRunning -MockWith { }
 
-            { Wait-XmipSnapshot -Path $never } |
-                Should -Throw -ExpectedMessage "*REFUSED*$Name stopped without publishing*"
+            [timespan] $bound = $script:SnapshotWait
+            $script:SnapshotWait = [timespan]::FromMilliseconds(300)
+
+            try {
+                { Wait-XmipSnapshot -Path $never } |
+                    Should -Throw -ExpectedMessage "*REFUSED*$Name stopped without publishing*"
+            }
+            finally {
+                $script:SnapshotWait = $bound
+            }
+        }
+    }
+
+    It 'counts its bound from the moment it is given, the roll''s spawn' {
+        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
+            param($Name)
+
+            [string] $late = Join-Path ([System.IO.Path]::GetTempPath()) (
+                "xmip-$Name-late-snapshot.xmip")
+            $script:Rows = @([PSCustomObject]@{ Cluster = $Name; Snapshot = $late })
+
+            Mock -CommandName Start-Sleep -MockWith { }
+            Mock -CommandName Get-XmipTestStatus -MockWith { $script:Rows }
+            Mock -CommandName Get-XmipClusterRunning -MockWith { 4242 }
+
+            # Spawned longer ago than the bound: nothing is waited for.
+            [datetime] $spawned = (Get-Date) - $script:SnapshotWait - [timespan]::FromSeconds(1)
+
+            { Wait-XmipSnapshot -Path $late -Since $spawned } |
+                Should -Throw -ExpectedMessage "*REFUSED. $Name published no snapshot within*"
+            Should -Invoke -CommandName Get-XmipClusterRunning -Times 0
         }
     }
 
@@ -1782,7 +1831,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
 
             (Get-XmipEstateResult -Path $Area).Message | Should -BeLike '*without a verdict*'
 
-            Remove-XmipEstateFinished -Path $Area
+            Remove-XmipRunFinished -Run @(Get-XmipEstateRun -Path $Area)
             @(Get-XmipEstateRun -Path $Area).Count | Should -Be 0
         }
     }
